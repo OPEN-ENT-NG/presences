@@ -1,0 +1,11 @@
+{
+	"main" : "fr.openent.presences.Presences",
+	"port" : 8062,
+	"app-name" : "Presences",
+	"app-address" : "/presences",
+	"app-icon" : "presences-large",
+	"app-displayName" : "Presences",
+	"mode": "dev",
+	"entcore.port" : 8090,
+	"auto-redeploy": false
+}

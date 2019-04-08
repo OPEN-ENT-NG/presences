@@ -1,0 +1,41 @@
+{
+  "name": "Presences",
+  "version": "0.1.0",
+  "description": "Presences",
+  "main": "gulpfile.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": ""
+  },
+  "author": "",
+  "license": "",
+  "bugs": {
+    "url": ""
+  },
+  "homepage": "",
+  "dependencies": {
+    "entcore": "^3.3.6",
+    "@types/core-js": "0.9.42",
+    "awesome-typescript-loader": "3.2.1",
+    "axios": "0.16.2",
+    "core-js": "2.4.1",
+    "gulp": "3.9.1",
+    "gulp-clean": "^0.3.2",
+    "gulp-rev": "^7.1.2",
+    "gulp-rev-replace": "^0.4.3",
+    "gulp-sourcemaps": "^2.6.0",
+    "merge2": "^1.1.0",
+    "ts-loader": "^3.2.0",
+    "typescript": "2.4.1",
+    "webpack": "3.1.0",
+    "webpack-stream": "3.2.0",
+    "yargs": "^8.0.2",
+    "entcore-toolkit": "^1.0.1"
+  },
+  "devDependencies": {
+     "@types/jquery": "^2.0.34"
+  }
+}
