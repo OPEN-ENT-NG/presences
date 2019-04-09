@@ -1,0 +1,18 @@
+$presences-main: #ffb600;
+$presences-red: #e61610;
+$presences-purple: #9c29b7;
+$presences-green: #24a1ac;
+
+$portal-header-height: 64px;
+$responsive-portal-header-height: 50px;
+$navbar-width: $portal-header-height;
+
+body.presences {
+  @import "components/index";
+
+  container[template="main"] {
+    display: block;
+    width: calc(100% - #{$navbar-width});
+    margin-left: $navbar-width;
+  }
+}

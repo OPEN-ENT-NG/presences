@@ -1,0 +1,37 @@
+i{
+  &.home::before {
+    content: "\e82b";
+  }
+
+  &.register::before {
+    content: "\e065";
+  }
+
+  &.absence::before {
+    content: "\f413";
+  }
+
+  &.group-absence::before {
+    content: "\e7fb";
+  }
+
+  &.permission::before {
+    content: "\f02f";
+  }
+
+  &.incident::before {
+    content: "\e903";
+  }
+
+  &.punishment::before {
+    content: "\e3e7";
+  }
+
+  &.sanction::before {
+    content: "\e946";
+  }
+
+  &.mass-mailing::before {
+    content: "\f224";
+  }
+}

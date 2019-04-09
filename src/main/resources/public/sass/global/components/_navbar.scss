@@ -1,0 +1,86 @@
+nav.navbar {
+  position: fixed;
+  left: 0;
+  top: $portal-header-height;
+  height: calc(100% - #{$portal-header-height});
+  background-color: $white;
+  width: $navbar-width;
+  z-index: 100001;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  .items {
+    width: 100%;
+    height: 70%;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-direction: column;
+  }
+
+  a {
+    display: block;
+    color: $grey;
+    padding: 10px;
+    text-align: center;
+    font-size: 28px;
+    position: relative;
+    width: 100%;
+    box-sizing: border-box;
+
+    &.active {
+      i::after {
+        background-color: $presences-main;
+      }
+    }
+
+    i {
+      &::after {
+        content: " ";
+        position: absolute;
+        left: 0;
+        top: 0;
+        height: 100%;
+        display: block;
+        background-color: transparent;
+        width: 5px;
+      }
+
+      &.home::before {
+        font-size: 26px;
+      }
+
+      &.register::before {
+        font-size: 34px;
+      }
+
+      &.absence::before {
+        font-size: 26px;
+      }
+
+      &.permission::before {
+        font-size: 21px;
+      }
+
+      &.incident::before {
+        font-size: 24px;
+      }
+
+      &.sanction::before {
+        font-size: 24px;
+      }
+
+      &.mass-mailing::before {
+        font-size: 20px;
+      }
+    }
+  }
+}
+
+@media screen and (max-width: $tablette) {
+  nav.navbar {
+    top: $responsive-portal-header-height;
+    height: calc(100% - #{$responsive-portal-header-height});
+  }
+}
