@@ -32,6 +32,11 @@ buildNode () {
   esac
 }
 
+runNodeTests () {
+  docker-compose run --rm -u "$USER_UID:$GROUP_GID" node sh -c "npm test"
+}
+
+
 buildGradle () {
   docker-compose run --rm -u "$USER_UID:$GROUP_GID" gradle gradle shadowJar install publishToMavenLocal
 }
@@ -60,10 +65,13 @@ do
       buildGradle
       ;;
     install)
-      buildNode && buildGradle
+      buildNode && runNodeTests && buildGradle
       ;;
     publish)
       publish
+      ;;
+    runNodeTests)
+      runNodeTests
       ;;
     *)
       echo "Invalid argument : $param"
