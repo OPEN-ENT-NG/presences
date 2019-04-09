@@ -5,8 +5,7 @@
   "main": "gulpfile.js",
   "scripts": {
     "coverage": "./node_modules/.bin/jest --config jest.config.js --forceExit --coverage",
-    "clean": "rm -rf build && rm -rf src/main/resources/public/dist && rm -rf coverage && rm -rf src/main/resources/public/js",
-    "test": "npm run clean && npm run coverage"
+    "test": "npm run coverage"
   },
   "repository": {
     "type": "git",

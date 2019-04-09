@@ -11,6 +11,7 @@ module.exports = {
         "tsx",
         "js"
     ],
+    "testPathIgnorePatterns": ["/node_modules/", "/build/"],
     "verbose": true,
     "testURL": "http://localhost/"
 };
