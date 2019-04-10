@@ -1,4 +1,4 @@
-import {LoadingCollection} from '@model'
+import {LoadingCollection} from '../LoadingCollection'
 
 describe('LoadingCollection', () => {
     const collection = new LoadingCollection();

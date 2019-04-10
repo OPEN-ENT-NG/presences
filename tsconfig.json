@@ -10,14 +10,14 @@
       "es2015",
       "dom"
     ],
-    "baseUrl": ".",
-    "paths": {
-      "@model": [
-        "src/main/resources/public/ts/models/index.ts"
-      ]
-    }
+    "types": [
+      "jquery",
+      "core-js",
+      "jest"
+    ]
   },
   "exclude": [
-    "build", "node_modules"
+    "build",
+    "node_modules"
   ]
 }

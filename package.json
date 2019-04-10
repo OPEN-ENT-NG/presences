@@ -4,7 +4,7 @@
   "description": "Presences",
   "main": "gulpfile.js",
   "scripts": {
-    "coverage": "./node_modules/.bin/jest --config jest.config.js --forceExit --coverage",
+    "coverage": "./node_modules/.bin/jest --config jest.config.js --coverage",
     "test": "npm run coverage"
   },
   "repository": {
@@ -19,7 +19,6 @@
   "homepage": "",
   "dependencies": {
     "entcore": "^3.3.6",
-    "@types/core-js": "0.9.42",
     "awesome-typescript-loader": "3.2.1",
     "axios": "0.16.2",
     "core-js": "2.4.1",
@@ -39,7 +38,8 @@
   "devDependencies": {
     "@types/jquery": "^2.0.34",
     "@types/jest": "^22.2.0",
-    "jest": "^22.4.2",
+    "@types/core-js": "0.9.42",
+    "jest": "^24.7.1",
     "jest-environment-node": "^23.0.0",
     "moment": "^2.21.0",
     "ts-jest": "^22.4.2",

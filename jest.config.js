@@ -3,9 +3,6 @@ module.exports = {
         ".(ts|tsx)": "<rootDir>/node_modules/ts-jest/preprocessor.js"
     },
     "testRegex": "(/__tests__/.*|\\.(test|spec))\\.(ts|tsx|js)$",
-    "moduleNameMapper": {
-        "@model": "<rootDir>/src/main/resources/public/ts/models/index.ts"
-    },
     "moduleFileExtensions": [
         "ts",
         "tsx",
@@ -13,5 +10,10 @@ module.exports = {
     ],
     "testPathIgnorePatterns": ["/node_modules/", "/build/"],
     "verbose": true,
-    "testURL": "http://localhost/"
+    "testURL": "http://localhost/",
+    "coverageDirectory": "coverage/front",
+    "coverageReporters": [
+        "text",
+        "cobertura"
+    ]
 };
