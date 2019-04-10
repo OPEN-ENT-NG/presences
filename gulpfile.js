@@ -4,8 +4,13 @@ var merge = require('merge2');
 var rev = require('gulp-rev');
 var revReplace = require("gulp-rev-replace");
 var clean = require('gulp-clean');
+var args = require('yargs').argv;
 
 var apps = ['presences', 'incidents'];
+
+if (args.module) {
+    apps = [args.module];
+}
 
 gulp.task('drop-cache', function(){
     var streams = [];

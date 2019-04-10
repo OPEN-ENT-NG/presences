@@ -59,6 +59,29 @@ publish () {
   docker-compose run --rm -u "$USER_UID:$GROUP_GID" gradle gradle publish
 }
 
+presences () {
+  case `uname -s` in
+    MINGW*)
+      docker-compose run --rm -u "$USER_UID:$GROUP_GID" node sh -c "npm install --no-bin-links && node_modules/gulp/bin/gulp.js build --module=presences"
+      ;;
+    *)
+      docker-compose run --rm -u "$USER_UID:$GROUP_GID" node sh -c "npm install && node_modules/gulp/bin/gulp.js build --module=presences"
+  esac
+  docker-compose run --rm -u "$USER_UID:$GROUP_GID" gradle gradle :presences:shadowJar :presences:install :presences:publishToMavenLocal
+}
+
+incidents () {
+  case `uname -s` in
+    MINGW*)
+      docker-compose run --rm -u "$USER_UID:$GROUP_GID" node sh -c "npm install --no-bin-links && node_modules/gulp/bin/gulp.js build --module=incidents"
+      ;;
+    *)
+      docker-compose run --rm -u "$USER_UID:$GROUP_GID" node sh -c "npm install && node_modules/gulp/bin/gulp.js build --module=incidents"
+  esac
+  docker-compose run --rm -u "$USER_UID:$GROUP_GID" gradle gradle :incidents:shadowJar :incidents:install :incidents:publishToMavenLocal
+}
+
+
 for param in "$@"
 do
   case $param in
@@ -79,6 +102,12 @@ do
       ;;
     runTests)
       runTests
+      ;;
+    presences)
+      presences
+      ;;
+    incidents)
+      incidents
       ;;
     *)
       echo "Invalid argument : $param"
