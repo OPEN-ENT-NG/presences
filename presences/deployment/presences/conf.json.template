@@ -13,6 +13,8 @@
         "integration-mode" : "HTTP",
         "app-registry.port" : 8012,
         "mode" : "${mode}",
-        "entcore.port" : 8009
+        "entcore.port" : 8009,
+        "sql": true,
+        "db-schema": "presences"
       }
     }
