@@ -70,6 +70,10 @@ presences () {
   docker-compose run --rm -u "$USER_UID:$GROUP_GID" gradle gradle :presences:shadowJar :presences:install :presences:publishToMavenLocal
 }
 
+presences:buildGradle () {
+  docker-compose run --rm -u "$USER_UID:$GROUP_GID" gradle gradle :presences:shadowJar :presences:install :presences:publishToMavenLocal
+}
+
 incidents () {
   case `uname -s` in
     MINGW*)
@@ -78,6 +82,10 @@ incidents () {
     *)
       docker-compose run --rm -u "$USER_UID:$GROUP_GID" node sh -c "npm install && node_modules/gulp/bin/gulp.js build --module=incidents"
   esac
+  docker-compose run --rm -u "$USER_UID:$GROUP_GID" gradle gradle :incidents:shadowJar :incidents:install :incidents:publishToMavenLocal
+}
+
+incidents:buildGradle () {
   docker-compose run --rm -u "$USER_UID:$GROUP_GID" gradle gradle :incidents:shadowJar :incidents:install :incidents:publishToMavenLocal
 }
 
@@ -108,6 +116,12 @@ do
       ;;
     incidents)
       incidents
+      ;;
+    presences:buildGradle)
+      presences:buildGradle
+      ;;
+    incidents:buildGradle)
+      incidents:buildGradle
       ;;
     *)
       echo "Invalid argument : $param"
