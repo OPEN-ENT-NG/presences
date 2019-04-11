@@ -4,11 +4,19 @@ i{
   }
 
   &.register::before {
-    content: "\e065";
+    content: "\f0e6";
   }
 
   &.absence::before {
     content: "\f413";
+  }
+
+  &.presence:before {
+    content: "\f5c7";
+  }
+
+  &.events:before {
+    content: "\f005";
   }
 
   &.group-absence::before {
@@ -24,14 +32,22 @@ i{
   }
 
   &.punishment::before {
-    content: "\e3e7";
+    content: "\e862";
   }
 
   &.sanction::before {
-    content: "\e946";
+    content: "\f29b";
   }
 
   &.mass-mailing::before {
-    content: "\f224";
+    content: "\fab8";
+  }
+
+  &.testimony::before {
+    content: "\f362";
+  }
+
+  &.group-absence::before {
+    content: "\fb34";
   }
 }

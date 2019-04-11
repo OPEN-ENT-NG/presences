@@ -9,8 +9,6 @@ export const mainController = ng.controller('MainController', ['$scope', 'route'
     const openContainer = () => template.open('main', `containers/${$route.current.action}`);
     $rootScope.$on("$routeChangeSuccess", openContainer);
 
-    $scope.getCurrentState = () => $route.current.action;
-
     route({
         dashboard: () => {
         },
@@ -21,14 +19,6 @@ export const mainController = ng.controller('MainController', ['$scope', 'route'
         'group-absences': () => {
         },
         permissions: () => {
-        },
-        incidents: () => {
-        },
-        punishments: () => {
-        },
-        sanctions: () => {
-        },
-        'mass-mailings': () => {
         }
     })
 }]);

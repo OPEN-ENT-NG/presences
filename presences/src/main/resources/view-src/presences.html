@@ -12,46 +12,8 @@
 
     <body ng-controller="MainController" class="presences">
 		<portal>
-            <nav class="navbar" role="navigation" aria-label="main navigation">
-                <div class="items">
-                    <a role="menuitem" href="#/dashboard"
-                       ng-class="{active: getCurrentState() === 'dashboard'}"><i
-                            class="home"></i>
-                    </a>
-                    <a role="menuitem" href="#/registers"
-                       ng-class="{active: getCurrentState() === 'registers'}"><i
-                            class="register"></i>
-                    </a>
-                    <a role="menuitem" href="#/absences"
-                       ng-class="{active: getCurrentState() === 'absences'}">
-                        <i class="absence"></i>
-                    </a>
-                    <a role="menuitem" href="#/group-absences"
-                       ng-class="{active: getCurrentState() === 'group-absences'}"><i
-                            class="group-absence"></i>
-                    </a>
-                    <a role="menuitem" href="#/permissions"
-                       ng-class="{active: getCurrentState() === 'permissions'}"><i
-                            class="permission"></i>
-                    </a>
-                    <a role="menuitem" href="#"
-                       ng-class="{active: getCurrentState() === 'incidents'}"><i
-                            class="incident"></i>
-                    </a>
-                    <a role="menuitem" href="#"
-                       ng-class="{active: getCurrentState() === 'punishments'}"><i
-                            class="punishment"></i>
-                    </a>
-                    <a role="menuitem" href="#"
-                       ng-class="{active: getCurrentState() === 'sanctions'}"><i
-                            class="sanction"></i>
-                    </a>
-                    <a role="menuitem" href="#"
-                       ng-class="{active: getCurrentState() === 'mass-mailings'}"><i
-                            class="mass-mailing"></i>
-                    </a>
-                </div>
-            </nav>
+            <nav role="navigation" aria-label="main navigation" ng-controller="NavigationController"
+                 ng-include="'/presences/public/template/navigation.html'"></nav>
 			<container template="main"></container>
 		</portal>
 	</body>

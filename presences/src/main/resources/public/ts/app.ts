@@ -22,18 +22,6 @@ routes.define(function($routeProvider){
         .when('/permissions', {
             action: 'permissions'
         })
-        .when('/incidents', {
-            action: 'incidents'
-        })
-        .when('/punishments', {
-            action: 'punishments'
-        })
-        .when('/sanctions', {
-            action: 'sanctions'
-        })
-        .when('/mass-mailings', {
-            action: 'mass-mailings'
-        })
 		.otherwise({
             redirectTo: '/dashboard'
 		});

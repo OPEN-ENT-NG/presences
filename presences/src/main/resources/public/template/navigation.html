@@ -1,0 +1,86 @@
+<div class="nav">
+    <div class="items">
+        <a role="menuitem" href="#/dashboard" class="item"
+           ng-class="{active: getCurrentState() === 'dashboard'}">
+            <i class="home" aria-hidden="true"></i>
+        </a>
+        <a role="menuitem" class="item" ng-class="{active: getCurrentState() === 'registers'}"
+           href="#/registers">
+            <i class="register" aria-hidden="true"></i>
+        </a>
+        <div role="menuitem" class="item"
+             data-ng-click="hoverIn('ABSENCES')"
+             data-ng-mouseover="hoverIn('ABSENCES')"
+             data-ng-mouseleave="hoverOut()">
+            <i class="absence" aria-hidden="true"></i>
+        </div>
+        <a role="menuitem" class="item" href="#/presences">
+            <i class="presence" aria-hidden="true"></i>
+        </a>
+        <div role="menuitem" class="item"
+             data-ng-click="hoverIn('INCIDENTS')"
+             data-ng-mouseover="hoverIn('INCIDENTS')"
+             data-ng-mouseleave="hoverOut()">
+            <i class="events" aria-hidden="true"></i>
+        </div>
+        <a role="menuitem" class="item" href="#">
+            <i class="mass-mailing" aria-hidden="true"></i>
+        </a>
+    </div>
+</div>
+<div class="sub-nav" role="navigation" aria-label="sub navigation">
+    <div class="items">
+        <div class="item"></div>
+        <div class="item"></div>
+        <div class="item">
+            <div class="sub-items" ng-class="{hovered: menu.hovered === 'ABSENCES'}"
+                 data-ng-mouseover="hoverIn('ABSENCES')"
+                 data-ng-mouseleave="hoverOut()">
+                <h2>Absences</h2>
+                <a href="#/absences" class="sub-item">
+                    <i class="absence" aria-hidden="true"></i>
+                    <span>Liste des absences</span>
+                </a>
+                <div class="sub-item">
+                    <i class="testimony" aria-hidden="true"></i>
+                    <span>Déclaration en ligne</span>
+                </div>
+                <a href="#/permission" class="sub-item">
+                    <i class="permission" aria-hidden="true"></i>
+                    <span>Dispense</span>
+                </a>
+                <a href="#/group-absences" class="sub-item">
+                    <i class="group-absence" aria-hidden="true"></i>
+                    <span>Absence collective</span>
+                </a>
+            </div>
+        </div>
+        <div class="item"></div>
+        <div class="item">
+            <div class="sub-items" ng-class="{hovered: menu.hovered === 'INCIDENTS'}"
+                 data-ng-mouseover="hoverIn('INCIDENTS')"
+                 data-ng-mouseleave="hoverOut()">
+                <h2>Gestion des incidents</h2>
+                <div class="sub-item">
+                    <a href="/incidents">
+                        <i class="incident" aria-hidden="true"></i>
+                        <span>Incidents</span>
+                    </a>
+                </div>
+                <div class="sub-item">
+                    <a href="/incidents">
+                        <i class="punishment" aria-hidden="true"></i>
+                        <span>Punition</span>
+                    </a>
+                </div>
+                <div class="sub-item">
+                    <a href="/incidents">
+                        <i class="sanction" aria-hidden="true"></i>
+                        <span>Sanction</span>
+                    </a>
+                </div>
+            </div>
+        </div>
+        <div class="item"></div>
+    </div>
+</div>
