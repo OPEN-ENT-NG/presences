@@ -12,8 +12,7 @@
 
     <body ng-controller="MainController" class="presences">
 		<portal>
-            <nav role="navigation" aria-label="main navigation" ng-controller="NavigationController"
-                 ng-include="'/presences/public/template/navigation.html'"></nav>
+            <sniplet template="navigation" application="presences"></sniplet>
 			<container template="main"></container>
 		</portal>
 	</body>

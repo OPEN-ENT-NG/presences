@@ -7,7 +7,7 @@ $portal-header-height: 64px;
 $responsive-portal-header-height: 50px;
 $navbar-width: $portal-header-height;
 
-body.presences {
+body.presences, .sniplet.presences {
   @import "components/index";
 
   container[template="main"] {

@@ -1,3 +1,6 @@
 {
-  "incidents.title": "Incidents"
+  "incidents.title": "Incidents",
+  "incidents.navigation.management": "Gestion des incidents",
+  "incidents.navigation.punishment": "Punition",
+  "incidents.navigation.sanction": "Sanction"
 }

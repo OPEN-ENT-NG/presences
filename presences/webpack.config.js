@@ -7,7 +7,6 @@ module.exports = {
     },
     output: {
         filename: '[name].js',
-        
         path: __dirname + 'dest'
     },
     externals: {

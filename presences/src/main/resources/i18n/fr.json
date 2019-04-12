@@ -1,3 +1,10 @@
 {
-  "presences.title": "Presences"
+  "presences.title": "Presences",
+  "sniplet.navigation.title": "Navigation",
+  "sniplet.navigation.description": "Barre de navigation du module Présences",
+  "presences.navigation.absence": "Absences",
+  "presences.navigation.absence.list": "Liste des absences",
+  "presences.navigation.absence.group": "Absence collective",
+  "presences.navigation.statements.online": "Déclaration en ligne",
+  "presences.navigation.permission": "Dispense"
 }

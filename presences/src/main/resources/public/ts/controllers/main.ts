@@ -1,4 +1,4 @@
-import {ng, template} from 'entcore';
+import {idiom, ng, template} from 'entcore';
 
 /**
 	Wrapper controller
@@ -6,6 +6,7 @@ import {ng, template} from 'entcore';
 	Main controller.
 **/
 export const mainController = ng.controller('MainController', ['$scope', 'route', '$rootScope', '$route', ($scope, route, $rootScope, $route) => {
+    idiom.addBundle('/incidents/i18n');
     const openContainer = () => template.open('main', `containers/${$route.current.action}`);
     $rootScope.$on("$routeChangeSuccess", openContainer);
 
