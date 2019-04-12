@@ -61,8 +61,8 @@ gulp.task('build', ['rev'], function () {
         streams.push(gulp.src("./" + app + "/src/main/resources/view-src/**/*.html")
             .pipe(revReplace({manifest: gulp.src("./rev-manifest.json")}))
             .pipe(gulp.dest("./" + app + "/src/main/resources/view")));
-        streams.push(gulp.src('./" + app + "/src/main/resources/public/dist/behaviours.js')
-            .pipe(gulp.dest('./" + app + "/src/main/resources/public/js')));
+        streams.push(gulp.src("./" + app + "/src/main/resources/public/dist/behaviours.js")
+            .pipe(gulp.dest("./" + app + "/src/main/resources/public/js")));
     });
     return merge(streams);
 });
