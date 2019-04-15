@@ -59,7 +59,7 @@ gulp.task('build', ['rev'], function () {
     var streams = [];
     apps.forEach(function (app) {
         streams.push(gulp.src("./" + app + "/src/main/resources/view-src/**/*.html")
-            .pipe(revReplace({manifest: gulp.src("./rev-manifest.json")}))
+            .pipe(revReplace({manifest: gulp.src("./" + app + "/rev-manifest.json")}))
             .pipe(gulp.dest("./" + app + "/src/main/resources/view")));
         streams.push(gulp.src("./" + app + "/src/main/resources/public/dist/behaviours.js")
             .pipe(gulp.dest("./" + app + "/src/main/resources/public/js")));
