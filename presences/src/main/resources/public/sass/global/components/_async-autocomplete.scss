@@ -1,0 +1,46 @@
+.async-autocomplete {
+  .input-async-autocomplete {
+    &.loading {
+      @include fonticon();
+
+      &::after {
+        content: '\e85a';
+        position: absolute;
+        right: 10px;
+        color: $primary;
+        animation: spinner 1.25s linear infinite;
+      }
+    }
+  }
+
+  .scroll.drop-down {
+    top: 80%;
+    max-height: 200px;
+    overflow-y: scroll;
+  }
+
+  .drop-down {
+    top: 80%;
+  }
+}
+
+@mixin keyframes($animationName) {
+  @-webkit-keyframes #{$animationName} {
+    @content;
+  }
+  @-moz-keyframes #{$animationName} {
+    @content;
+  }
+  @-o-keyframes #{$animationName} {
+    @content;
+  }
+  @keyframes #{$animationName} {
+    @content;
+  }
+}
+
+@include keyframes(spinner) {
+  to {
+    transform: rotate(360deg);
+  }
+}

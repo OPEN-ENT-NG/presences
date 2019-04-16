@@ -1,0 +1,40 @@
+{
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "id": "http://jsonschema.net",
+  "type": "object",
+  "properties": {
+    "structure_id ": {
+      "type": "string"
+    },
+    "subject_id": {
+      "type": "string"
+    },
+    "student_id": {
+      "type": [
+        "array",
+        "string"
+      ]
+    },
+    "start_date": {
+      "type": "string"
+    },
+    "end_date": {
+      "type": "string"
+    },
+    "attendance": {
+      "type": "boolean"
+    },
+    "comment": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "structure_id",
+    "subject_id",
+    "student_id",
+    "start_date",
+    "end_date",
+    "attendance",
+    "comment"
+  ]
+}

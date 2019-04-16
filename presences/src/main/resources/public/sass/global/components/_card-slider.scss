@@ -1,0 +1,50 @@
+$card-width: 150px;
+$card-height: 85px;
+
+.card-slider {
+  .card {
+    width: $card-width;
+    height: $card-height;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12), 0 1px 2px rgba(0, 0, 0, 0.24);
+    transition: all 0.3s cubic-bezier(.25, .8, .25, 1);
+    background-color: $white;
+    color: $black;
+    margin: 10px;
+    padding: 5px;
+    position: relative;
+    border-radius: 7px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-direction: column;
+
+    &:hover {
+      box-shadow: 0 14px 28px rgba(0, 0, 0, 0.25), 0 10px 10px rgba(0, 0, 0, 0.22);
+    }
+
+    &:first-child {
+      margin-left: 0 !important;
+    }
+
+    .hour {
+      font-weight: bold;
+    }
+
+    .classes, .subject {
+      text-align: center;
+    }
+
+    .classes {
+      font-size: 20px;
+    }
+
+    .subject {
+      font-size: 12px;
+    }
+
+    &.active {
+      background-color: $presences-main;
+      color: $white;
+    }
+  }
+}

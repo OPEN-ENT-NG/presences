@@ -6,5 +6,21 @@
   "presences.navigation.absence.list": "Liste des absences",
   "presences.navigation.absence.group": "Absence collective",
   "presences.navigation.statements.online": "Déclaration en ligne",
-  "presences.navigation.permission": "Dispense"
+  "presences.navigation.exemption": "Dispense",
+  "presences.exemptions.student": "Élèves",
+  "presences.exemptions.audience": "Classe",
+  "presences.exemptions.subject": "Matière",
+  "presences.exemptions.dates": "Dates",
+  "presences.exemptions.comment": "Commentaire",
+  "presences.exemptions.attendance": "Présence",
+  "presences.exemptions.noexemptions": "Aucune dispense",
+  "presences.exemptions.tocsv": "Exporter csv",
+  "presences.exemptions.create": "Saisir une dispense",
+  "presences.exemptions.form.attendance": "Présence obligatoire",
+  "presences.exemptions.form.defautValue.comment": "Ecrire un texte",
+  "presences.exemptions.form.submit": "Valider",
+  "presences.exemptions.form.cancel": "Annuler",
+  "presences.exemptions.form.delete": "Supprimer",
+  "presences.exemptions.form.succeed": "Dispense(s) créée avec succès.",
+  "presences.exemptions.delete.succeed": "Dispense supprimée avec succès."
 }

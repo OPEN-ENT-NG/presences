@@ -1,0 +1,30 @@
+.date-picker {
+  position: relative;
+  line-height: 30px;
+
+  &:before {
+    content: "\e917";
+    @include fonticon();
+    color: $presences-main;
+    position: absolute;
+    left: 7px;
+    font-size: 18px;
+    z-index: 1;
+  }
+
+  input[type="text"] {
+    background-color: $white;
+    width: 100px !important;
+    text-align: right;
+    height: 30px;
+    line-height: 30px;
+    border-bottom: none;
+    box-shadow: none;
+    padding: 0 5px 0 0;
+    text-indent: 20px;
+  }
+}
+
+.datepicker table tr .active {
+  background: $presences-main;
+}

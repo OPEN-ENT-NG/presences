@@ -20,6 +20,8 @@ export const mainController = ng.controller('MainController', ['$scope', 'route'
         'group-absences': () => {
         },
         permissions: () => {
+        },
+        exemptions: () => {
         }
     })
 }]);

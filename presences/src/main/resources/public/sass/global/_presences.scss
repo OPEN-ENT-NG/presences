@@ -2,6 +2,8 @@ $presences-main: #ffb600;
 $presences-red: #e61610;
 $presences-purple: #9c29b7;
 $presences-green: #24a1ac;
+$presences-grey: #aaaaaa;
+$presences-white: #ffffff;
 
 $portal-header-height: 64px;
 $responsive-portal-header-height: 50px;
@@ -10,9 +12,55 @@ $navbar-width: $portal-header-height;
 body.presences, .sniplet.presences {
   @import "components/index";
 
+  .left-magnet {
+    float: left;
+  }
   container[template="main"] {
     display: block;
     width: calc(100% - #{$navbar-width});
     margin-left: $navbar-width;
+  }
+
+  .exemptions {
+    .top20 {margin-top:20px;}
+    .paddingRight {padding-right: 15px;}
+    .paddingLeft {padding-left: 15px;}
+    .search-input {
+      background: #fff;
+      padding: 15px;
+      vertical-align: middle;
+      input {
+        margin: auto;
+      }
+    }
+    ul.search-input-ul {
+      padding: 5px;
+      margin: 0;
+      font-weight: bold;
+      li {
+        display: inline;
+        margin:0 5px;
+
+      }
+    }
+
+    .lightbox-form {
+      select {
+        border: none;
+        border-bottom: solid 1px #aaa;
+      }
+
+      .row.spacing{
+        .cell.twelve {
+          padding: 10px 20px;        }
+      }
+    }
+  }
+
+  h1 {
+    font-size: 28px;
+    line-height: 40px;
+    color: $black;
+    font-weight: bold;
   }
 }

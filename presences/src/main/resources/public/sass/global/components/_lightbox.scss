@@ -1,0 +1,22 @@
+.lightbox {
+  z-index: 100030;
+  height: auto;
+  .content {
+    padding: 0;
+  }
+  .close-lightbox {
+    color: $presences-white;
+  }
+  section.head {
+    background: $presences-main;
+    padding: 15px;
+    border-radius: 5px 5px 0 0;
+    h1, h2, h3, h4, h5, h6 {
+      color: $presences-white;
+    }
+  }
+
+  section.body {
+    padding: 8px 20px;
+  }
+}

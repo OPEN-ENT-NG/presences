@@ -1,0 +1,102 @@
+.toasts {
+  position: fixed;
+  top: 74px;
+  right: 25px;
+  width: 350px;
+  z-index: 1000;
+  box-sizing: border-box;
+
+  .toast-content {
+    //@include material-card();
+    margin-bottom: 10px;
+    position: relative;
+    opacity: 0;
+    margin-top: 40px;
+    box-sizing: border-box;
+    font-size: 16px !important;
+    border-left: none !important;
+    height: 0 !important;
+    overflow: hidden;
+    transition: all 0.25s ease;
+
+    .content {
+      padding: 15px 10px;
+      line-height: 28px;
+
+      &:before {
+        @include fonticon();
+        margin-right: 10px;
+      }
+    }
+
+    &.show {
+      margin-top: 10px !important;
+      opacity: 1;
+      height: auto !important;
+      overflow: auto !important;
+    }
+
+    &.confirm {
+      color: darken($green, 35%);
+      background-color: lighten($green, 30%);
+
+      .content:before {
+        content: '\e871';
+      }
+
+      .timer {
+        background-color: darken($green, 15%);
+      }
+    }
+
+    &.info {
+      color: darken($cyan, 35%);
+      background-color: lighten($cyan, 30%);
+
+      .content:before {
+        content: '\e84b';
+      }
+
+      .timer {
+        background-color: darken($cyan, 15%);
+      }
+    }
+
+    &.warning {
+      color: darken($warning-color, 35%);
+      background-color: lighten($warning-color, 30%);
+
+      .content:before {
+        content: '\e903';
+      }
+
+      .timer {
+        background-color: darken($warning-color, 15%);
+      }
+    }
+
+    &.info, &.warning {
+      .content:before {
+        font-size: 20px !important;
+      }
+    }
+
+    .timer {
+      width: 100%;
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      height: 4px;
+      border-bottom-left-radius: 2px;
+      border-bottom-right-radius: 2px;
+      transition-timing-function: linear;
+      transition-property: all;
+      transition-duration: 3s;
+
+      &.animation {
+        width: 0;
+        border-bottom-right-radius: 0;
+      }
+    }
+  }
+}

@@ -1,7 +1,12 @@
 import {ng, routes} from 'entcore';
 import * as controllers from './controllers';
+import * as directives from './directives';
 
-for(let controller in controllers){
+for (let directive in directives) {
+    ng.directives.push(directives[directive]);
+}
+
+for (let controller in controllers) {
     ng.controllers.push(controllers[controller]);
 }
 
@@ -19,8 +24,8 @@ routes.define(function($routeProvider){
         .when('/group-absences', {
             action: 'group-absences'
         })
-        .when('/permissions', {
-            action: 'permissions'
+        .when('/exemptions', {
+            action: 'exemptions'
         })
 		.otherwise({
             redirectTo: '/dashboard'

@@ -1,0 +1,9 @@
+button, a.button {
+  color: $presences-white;
+  background: $presences-main;
+  box-shadow: none;
+  &.cancel {
+    background: $presences-grey;
+    color: $presences-white;
+  }
+}
