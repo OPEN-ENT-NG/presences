@@ -1,3 +1,6 @@
+import {model} from 'entcore';
+import {rights} from '../rights';
+
 export const navigation = {
     title: 'sniplet.navigation.title',
     description: 'sniplet.navigation.description',
@@ -24,6 +27,9 @@ export const navigation = {
             const regexp = /#\/([a-z].*)/;
             const res = regexp.exec(window.location.hash);
             return (res !== null && res.length > 1) ? res[1] : '';
+        },
+        hasRight: (right) => {
+            return model.me.hasWorkflow(rights.workflow[right]);
         }
     }
 };

@@ -1,3 +1,62 @@
-<div class="registers" ng-controller="RegistersController">
-    <h1>registers</h1>
+<div class="registers" ng-controller="RegistersController as vm" role="main">
+    <h1>
+        <i18n>presences.register.register.title</i18n>
+    </h1>
+    <div class="row">
+        <span data-ng-click="vm.previousDate()">
+            <i class="left-open"></i>
+        </span>
+        <span class="date-picker">
+            <date-picker ng-model="vm.filter.date" ng-change="vm.loadCourses()"></date-picker>
+        </span>
+        <span data-ng-click="vm.nextDate()">
+            <i class="open-right"></i>
+        </span>
+    </div>
+    <div class="row card-slider">
+        <div class="card cell" ng-repeat="course in vm.courses.all|orderBy:'timestamp'"
+             data-ng-click="vm.openRegister(course)"
+             ng-class="{active: course._id === vm.register.course_id, disabled: vm.isFuturCourse(course)}">
+            <div class="row hour">[[::vm.formatHour(course.startDate)]] -
+                [[::vm.formatHour(course.endDate)]]
+            </div>
+            <div class="row classes">
+                <span ng-repeat="class in course.classes">[[::class]]</span>
+                <span ng-repeat="group in course.groups">[[::group]]</span>
+            </div>
+            <div class="row subject">[[::course.subjectName]]</div>
+        </div>
+    </div>
+    <div class="row register" ng-if="vm.register">
+        <loader ng-show="vm.register.loading"
+                title="lang.translate('presences.register.loading.text')"
+                min-height="'250px'"/>
+        <panel opened="vm.filter.student !== undefined">
+            <container template="register-panel"></container>
+        </panel>
+        <div class="row settings" ng-show="!vm.register.loading">
+            <div class="cell view-settings" ng-if="vm.register.groupMap !== undefined">
+                <i class="show-list"
+                   ng-click="template.open('register', 'register/list-view')"
+                   ng-class="{ active: template.contains('register', 'register/list-view') }"></i>
+                <i class="split-view"
+                   ng-click="template.open('register', 'register/split-view')"
+                   ng-class="{ active: template.contains('register', 'register/split-view') }"></i>
+            </div>
+            <div class="card cell radius">
+                <div class="horizontal-spacing vertical-spacing-twice font-bold">
+                    [[vm.register.students.length - vm.register.absenceCounter]]
+                    /
+                    [[vm.register.students.length]]
+                </div>
+            </div>
+        </div>
+        <div class="row vertical-spacing-four" role="grid" ng-show="!vm.register.loading">
+            <container template="register"></container>
+        </div>
+        <button data-ng-click="vm.register.setStatus(vm.RegisterStatus.DONE)"
+                ng-show="!vm.register.loading">
+            <i18n>presences.register.validation</i18n>
+        </button>
+    </div>
 </div>

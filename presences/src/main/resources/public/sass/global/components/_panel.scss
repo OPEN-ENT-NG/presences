@@ -1,0 +1,87 @@
+panel .content {
+  background-color: $white;
+  position: fixed;
+  height: calc(100% - #{$portal-header-height} - 1px);
+  width: 500px;
+  max-width: 30%;
+  z-index: 100001;
+  top: $portal-header-height;
+  right: -35%;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.26);
+  transition: right 0.3s cubic-bezier(.25, .8, .25, 1);
+
+  &.opened {
+    right: 0;
+  }
+
+  .student-panel {
+    .bio {
+      background-color: $presences-main;
+      color: $white;
+
+      i.close {
+        @include fonticon();
+        position: absolute;
+        right: 5px;
+        top: 5px;
+
+        &::before {
+          content: "\f156";
+          font-size: 24px;
+        }
+      }
+
+      i.mail, i.bar-chart {
+        @include fonticon();
+
+        &::before {
+          font-size: 19px;
+          color: $white;
+          margin-right: 5px;
+        }
+      }
+
+      i.mail::before {
+        content: "\e808";
+      }
+
+      i.bar-chart::before {
+        content: "\e810";
+      }
+
+      img {
+        border-radius: 100%;
+        padding: 10%;
+        box-sizing: border-box;
+      }
+
+      .cell.three {
+        text-align: center;
+      }
+
+      .cell.nine {
+        position: relative;
+      }
+
+      h4 {
+        color: $white;
+        font-weight: 400;
+      }
+    }
+
+    textarea {
+      height: 75px;
+    }
+  }
+}
+
+
+@media screen and (max-width: $tablette) {
+  panel .content {
+    top: $responsive-portal-header-height;
+    height: calc(100% - #{$responsive-portal-header-height} - 1px);
+    width: 100%;
+    max-width: 100%;
+    right: -100%;
+  }
+}

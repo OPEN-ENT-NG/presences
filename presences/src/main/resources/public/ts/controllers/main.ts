@@ -10,6 +10,9 @@ export const mainController = ng.controller('MainController', ['$scope', 'route'
     const openContainer = () => template.open('main', `containers/${$route.current.action}`);
     $rootScope.$on("$routeChangeSuccess", openContainer);
 
+    $scope.lang = idiom;
+    $scope.template = template;
+
     route({
         dashboard: () => {
         },

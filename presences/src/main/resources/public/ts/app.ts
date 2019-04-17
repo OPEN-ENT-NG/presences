@@ -1,4 +1,5 @@
-import {ng, routes} from 'entcore';
+import {model, ng, routes} from 'entcore';
+import {rights} from './rights'
 import * as controllers from './controllers';
 import * as directives from './directives';
 
@@ -10,13 +11,14 @@ for (let controller in controllers) {
     ng.controllers.push(controllers[controller]);
 }
 
+for (let directive in directives) {
+    ng.directives.push(directives[directive]);
+}
+
 routes.define(function($routeProvider){
 	$routeProvider
         .when('/dashboard', {
             action: 'dashboard'
-        })
-        .when('/registers', {
-            action: 'registers'
         })
         .when('/absences', {
             action: 'absences'
@@ -30,4 +32,11 @@ routes.define(function($routeProvider){
 		.otherwise({
             redirectTo: '/dashboard'
 		});
+
+
+    if (model.me.hasWorkflow(rights.workflow.readRegister)) {
+        $routeProvider.when('/registers', {
+            action: 'registers'
+        });
+    }
 });

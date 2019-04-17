@@ -1,0 +1,53 @@
+.date-picker, .time-picker {
+  position: relative;
+  line-height: 30px;
+
+  &:before {
+    @include fonticon();
+    color: $presences-main;
+    position: absolute;
+    left: 7px;
+    font-size: 18px;
+    z-index: 1;
+  }
+
+  input[type="text"], input[type="time"] {
+    background-color: $white;
+    width: 100px !important;
+    text-align: right;
+    height: 30px;
+    line-height: 30px;
+    border: none;
+    box-shadow: none;
+    padding: 0 5px 0 0;
+    text-indent: 20px;
+    -moz-appearance: textfield;
+
+    &::-webkit-outer-spin-button, &::-webkit-inner-spin-button {
+      -webkit-appearance: none;
+      margin: 0;
+    }
+
+    &:focus {
+      outline: none;
+    }
+  }
+}
+
+.datepicker table tr .active {
+  background: $presences-main;
+}
+
+.date-picker:before {
+  content: "\e917";
+}
+
+.time-picker {
+  width: 80px !important;
+  text-indent: 10px;
+
+  &:before {
+    content: "\f017";
+    top: -4px;
+  }
+}

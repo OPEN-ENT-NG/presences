@@ -8,7 +8,7 @@ module.exports = {
         "tsx",
         "js"
     ],
-    "testPathIgnorePatterns": ["/node_modules/", "/build/"],
+    "testPathIgnorePatterns": ["/node_modules/", "<rootDir>/presences/build/"],
     "verbose": true,
     "testURL": "http://localhost/",
     "coverageDirectory": "coverage/front",

@@ -1,0 +1,37 @@
+{
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "course_id": {
+      "type": "string"
+    },
+    "structure_id": {
+      "type": "string"
+    },
+    "start_date": {
+      "type": "string"
+    },
+    "end_date": {
+      "type": "string"
+    },
+    "subject_id": {
+      "type": "string"
+    },
+    "groups": {
+      "type": "array"
+    },
+    "classes": {
+      "type": "array"
+    }
+  },
+  "required": [
+    "course_id",
+    "structure_id",
+    "start_date",
+    "end_date",
+    "subject_id",
+    "groups",
+    "classes"
+  ]
+}

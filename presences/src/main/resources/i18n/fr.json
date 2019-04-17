@@ -22,5 +22,20 @@
   "presences.exemptions.form.cancel": "Annuler",
   "presences.exemptions.form.delete": "Supprimer",
   "presences.exemptions.form.succeed": "Dispense(s) créée avec succès.",
-  "presences.exemptions.delete.succeed": "Dispense supprimée avec succès."
+  "presences.exemptions.delete.succeed": "Dispense supprimée avec succès.",
+  "presences.register.status.todo": "A faire",
+  "presences.register.status.inprogress": "En cours",
+  "presences.register.status.done": "Terminé",
+  "presences.register.event_type.absences": "Absence",
+  "presences.register.event_type.lateness": "Retard",
+  "presences.register.event_type.departure": "Départ",
+  "presences.register.event_type.remark": "Observation",
+  "presences.register.register.title": "Saisir un appel",
+  "presences.lateness.reason": "Motif du retard",
+  "presences.departure.reason": "Motif du départ",
+  "presences.register.loading.text": "Les élèves s'installent...",
+  "presences.register.validation": "Valider appel",
+  "presences.register.creation.err": "Une erreur est survenue lors de la création de l'appel",
+  "presences.event.creation.err": "Une erreur est survenue lors de la création de l'évènement",
+  "presences.event.deletion.err": "Une erreur est survenue lors de la suppression de l'évènement"
 }

@@ -16,6 +16,7 @@ gulp.task('drop-cache', function(){
     var streams = [];
     apps.forEach(function (app) {
         streams.push(gulp.src(['./' + app + '/src/main/resources/public/dist'], {read: false}).pipe(clean()))
+        streams.push(gulp.src(['./' + app + '/build'], {read: false}).pipe(clean()))
     });
     return merge(streams);
 });

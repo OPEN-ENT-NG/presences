@@ -13,7 +13,6 @@ module.exports = {
     externals: {
         "entcore/entcore": "entcore",
         "entcore": "entcore",
-        "moment": "entcore",
         "underscore": "entcore",
         "jquery": "entcore",
         "angular": "angular"

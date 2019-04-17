@@ -1,0 +1,70 @@
+<div class="student-panel" ng-if="vm.filter.student !== undefined">
+    <div class="bio">
+        <div class="row">
+            <div class="cell three horizontal-spacing">
+                <img src="/userbook/avatar/[[vm.filter.student.id]]">
+            </div>
+            <div class="cell nine">
+                <i class="close" data-ng-click="vm.closePanel()"></i>
+                <h4>[[vm.filter.student.name]]</h4>
+                <div>
+                    <i class="mail"></i>
+                    <i class="bar-chart"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="remark eleven centered vertical-spacing">
+        <label>
+            <i18n>presences.register.event_type.remark</i18n>
+            <textarea ng-model="vm.filter.student.remark.comment"
+                      end-user-typing="vm.handleRemark(vm.filter.student)"></textarea>
+        </label>
+    </div>
+    <div class="lateness eleven centered vertical-spacing">
+        <div class="row">
+            <label class="checkbox">
+                <input type="checkbox"
+                       ng-disabled="vm.filter.student.absence !== undefined"
+                       ng-checked="vm.filter.student.lateness !== undefined"
+                       ng-click="vm.toggleLateness(vm.filter.student)"/>
+                <span><i18n>presences.register.event_type.lateness</i18n></span>
+            </label>
+            <time-picker
+                    ng-disabled="vm.filter.student.absence !== undefined"
+                    ng-model="vm.filter.student.lateness.end_date_time"
+                    ng-change="vm.filter.student.lateness.update()"></time-picker>
+        </div>
+        <div class="row">
+            <label>
+                <i18n>presences.lateness.reason</i18n>
+                <textarea
+                        ng-disabled="vm.filter.student.lateness === undefined && vm.filter.student.absence !== undefined"
+                        ng-model="vm.filter.student.lateness.comment"
+                        end-user-typing="vm.filter.student.lateness.update()"></textarea>
+            </label>
+        </div>
+    </div>
+    <div class="departure eleven centered vertical-spacing">
+        <div class="row">
+            <label class="checkbox">
+                <input type="checkbox" ng-disabled="vm.filter.student.absence !== undefined"
+                       ng-checked="vm.filter.student.departure !== undefined"
+                       ng-click="vm.toggleDeparture(vm.filter.student)"/>
+                <span><i18n>presences.register.event_type.departure</i18n></span>
+            </label>
+            <time-picker ng-disabled="vm.filter.student.absence !== undefined"
+                         ng-model="vm.filter.student.departure.start_date_time"
+                         ng-change="vm.filter.student.departure.update()"></time-picker>
+        </div>
+        <div class="row">
+            <label>
+                <i18n>presences.departure.reason</i18n>
+                <textarea
+                        ng-disabled="vm.filter.student.departure === undefined && vm.filter.student.absence !== undefined"
+                        ng-model="vm.filter.student.departure.comment"
+                        end-user-typing="vm.filter.student.departure.update()"></textarea>
+            </label>
+        </div>
+    </div>
+</div>

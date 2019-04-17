@@ -1,0 +1,177 @@
+$student-height: 50px;
+$absence-button-width: 20px;
+
+.register {
+
+  .settings {
+    > div {
+      display: inline-block;
+      min-height: 40px;
+
+      &.view-settings {
+        display: inline-block;
+        min-height: 40px;
+        line-height: 40px;
+        font-size: 24px;
+        text-align: center;
+        margin-right: 10px;
+
+        i {
+          float: left;
+          height: 40px;
+          width: 40px;
+          position: relative;
+          color: $presences-grey;
+          opacity: 1 !important;
+          transition: all 0.25s ease;
+
+          &.split-view::before {
+            position: absolute;
+            top: -2px;
+            left: 0;
+            height: 23px;
+            width: 100%;
+          }
+
+          &.active {
+            color: $darkest-grey !important;
+          }
+        }
+      }
+    }
+  }
+
+  .student {
+    background-color: $white;
+    margin: 4px 0;
+    padding: 0 10px;
+    height: $student-height;
+    line-height: $student-height;
+    font-size: 15px;
+    display: flex;
+    justify-content: space-between;
+
+
+    .student-name.last-course-absent {
+      color: $presences-red;
+    }
+
+    .history-container {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .history {
+      margin: 0;
+      padding: 0;
+      display: flex;
+      list-style-type: none;
+      justify-content: space-between;
+      position: relative;
+      width: 100%;
+
+      &::before {
+        content: "";
+        position: absolute;
+        top: 50%;
+        left: 0;
+        width: 100%;
+        height: 2px;
+        background-color: $presences-grey;
+        z-index: 0;
+      }
+
+      li {
+        width: $absence-button-width - 2;
+        height: $absence-button-width - 2;
+        display: block;
+        background-color: $presences-grey;
+        border-radius: ($absence-button-width - 2)/2;
+        z-index: 1;
+
+        &.current {
+          box-shadow: 0 0 0 rgba(0, 0, 0, 0.25), 0 5px 5px rgba(0, 0, 0, 0.22);
+          transform: scale(1.25);
+        }
+
+        &.absence {
+          background-color: $presences-red;
+        }
+
+        &.lateness {
+          background-color: $presences-purple;
+        }
+
+        &.departure {
+          background-color: $presences-green;
+        }
+      }
+    }
+
+    .absence-button {
+      width: 26px;
+      height: $student-height;
+      display: block;
+      background-color: $white;
+      float: left;
+      margin-right: 10px;
+      position: relative;
+      cursor: pointer;
+
+      &::before {
+        content: " ";
+        width: $absence-button-width;
+        height: $absence-button-width;
+        display: block;
+        position: absolute;
+        top: 50%;
+        margin-top: -(($absence-button-width + 1)/2);
+        border-radius: ($absence-button-width/2)+1;
+        border: solid 1px #929292;
+        transition: all 0.3s ease;
+        background-color: $white;
+      }
+
+      &.active::before {
+        background-color: $presences-red;
+        border-color: $presences-red;
+      }
+
+
+      &.disabled::before {
+        background-color: $presences-grey !important;
+        border-color: $presences-grey !important;
+      }
+    }
+
+    .register-event-status {
+      display: flex;
+      flex-direction: column;
+      justify-content: space-around;
+      align-items: center;
+      height: 100%;
+
+      > div {
+        width: 44px;
+        height: $student-height/3;
+        background-color: pink;
+        border-radius: $student-height/5;
+
+
+        &.absence {
+          background-color: $presences-red;
+        }
+
+        &.lateness {
+          background-color: $presences-purple;
+        }
+
+        &.departure {
+          background-color: $presences-green;
+        }
+      }
+    }
+  }
+}

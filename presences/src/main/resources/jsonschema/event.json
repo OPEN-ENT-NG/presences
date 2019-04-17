@@ -1,0 +1,35 @@
+{
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "start_date": {
+      "type": "string"
+    },
+    "end_date": {
+      "type": "string"
+    },
+    "comment": {
+      "type": "string"
+    },
+    "counsellor_input": {
+      "type": "boolean"
+    },
+    "student_id": {
+      "type": "string"
+    },
+    "register_id": {
+      "type": "number"
+    },
+    "type_id": {
+      "type": "number"
+    },
+    "reason_id": {
+      "type": "number"
+    }
+  },
+  "required": [
+    "register_id",
+    "type_id"
+  ]
+}

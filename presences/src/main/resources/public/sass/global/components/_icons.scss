@@ -50,4 +50,12 @@ i{
   &.group-absence::before {
     content: "\fb34";
   }
+
+  &.split-view::before {
+    content: "\f575";
+  }
+
+  &.show-list::before {
+    content: "\e8ad";
+  }
 }

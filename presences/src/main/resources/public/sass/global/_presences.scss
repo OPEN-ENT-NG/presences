@@ -12,13 +12,58 @@ $navbar-width: $portal-header-height;
 body.presences, .sniplet.presences {
   @import "components/index";
 
+  .font-bold {
+    font-weight: bold;
+  }
+
   .left-magnet {
     float: left;
   }
+
   container[template="main"] {
     display: block;
     width: calc(100% - #{$navbar-width});
     margin-left: $navbar-width;
+  }
+
+  .radius {
+    border-radius: 5px;
+  }
+
+  h1 {
+    font-size: 28px;
+    line-height: 40px;
+    color: $black;
+    font-weight: bold;
+  }
+
+  textarea:focus {
+    outline: none;
+    border: 2px solid $presences-main;
+  }
+
+  label.checkbox {
+    input[type=checkbox] {
+      + span:before {
+        border: 2px solid $presences-main;
+        border-radius: 3px;
+        color: $white;
+      }
+
+      &:checked + span::before {
+        @include fonticon();
+        content: "\e871";
+        transform: rotate(0deg);
+        border-color: $presences-main;
+        background-color: $presences-main;
+        height: 20px;
+        width: 20px;
+        margin-top: 0;
+        font-size: 12px;
+        text-align: center;
+        line-height: 16px;
+      }
+    }
   }
 
   .exemptions {
