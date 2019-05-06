@@ -10,12 +10,14 @@ import {
     RegisterStatus,
     Remark
 } from '../models'
+import {UserService} from '../services';
 import {CourseUtils, DateUtils} from '../utilities'
+import rights from '../rights'
 
 interface ViewModel {
     register: Register;
     courses: Courses;
-    filter: { date: Date, student: any };
+    filter: { date: Date, student: any, teachers: any[], teacher: any; };
     RegisterStatus: any;
 
     openRegister(course: Course): Promise<void>;
@@ -46,21 +48,53 @@ interface ViewModel {
 
     closePanel(): void;
 
-    loadCourses(): Promise<void>;
+    loadCourses(user?: string, structure?: string): Promise<void>;
 
     isFuturCourse(course: Course): boolean;
+
+    searchTeacher(value: string): void;
+
+    selectTeacher(model: any, teacher: any): void;
+
+    dropTeacherFilter(): void;
 }
 
-export const registersController = ng.controller('RegistersController', ['$scope', function ($scope) {
+export const registersController = ng.controller('RegistersController', ['$scope', 'UserService', function ($scope, UserService: UserService) {
     const vm: ViewModel = this;
     vm.register = undefined;
     vm.courses = new Courses();
     vm.RegisterStatus = RegisterStatus;
-    vm.courses.eventer.on('loading::true', () => $scope.$apply());
-    vm.courses.eventer.on('loading::false', () => $scope.$apply());
+    vm.courses.eventer.on('loading::true', () => $scope.safeApply());
+    vm.courses.eventer.on('loading::false', () => $scope.safeApply());
     vm.filter = {
         date: new Date(),
-        student: undefined
+        student: undefined,
+        teachers: undefined,
+        teacher: undefined
+    };
+
+    vm.searchTeacher = async function (value) {
+        const structureId = model.me.structures[0];
+        try {
+            vm.filter.teachers = await UserService.search(structureId, value, 'Teacher');
+            vm.filter.teachers.map((teacher) => teacher.toString = () => teacher.displayName);
+            $scope.safeApply();
+        } catch (err) {
+            throw err;
+        }
+    };
+
+    vm.selectTeacher = function (model, teacher) {
+        vm.filter.teacher = teacher;
+        vm.filter.teachers = undefined;
+        vm.loadCourses(vm.filter.teacher.id);
+    };
+
+    vm.dropTeacherFilter = function () {
+        delete vm.filter.teacher;
+        delete vm.register;
+        vm.courses.clear();
+        $scope.safeApply();
     };
 
     vm.formatHour = (date: string) => DateUtils.format(date, DateUtils.FORMAT["HOUR-MINUTES"]);
@@ -68,7 +102,9 @@ export const registersController = ng.controller('RegistersController', ['$scope
     const changeDate = function (step: number) {
         delete vm.register;
         vm.filter.date = DateUtils.add(vm.filter.date, step);
-        vm.loadCourses();
+        if (model.me.hasWorkflow(rights.workflow.search) && !vm.filter.teacher) return;
+        const id = model.me.hasWorkflow(rights.workflow.search) ? vm.filter.teacher.id : model.me.userId;
+        vm.loadCourses(id);
     };
 
     vm.nextDate = () => changeDate(1);
@@ -101,7 +137,7 @@ export const registersController = ng.controller('RegistersController', ['$scope
             i++;
         }
         vm.openRegister(course || vm.courses.all[0]);
-        $scope.$apply();
+        $scope.safeApply();
     };
 
     vm.openRegister = async function (course: Course) {
@@ -114,12 +150,12 @@ export const registersController = ng.controller('RegistersController', ['$scope
             } catch (err) {
                 notify.error('presences.register.creation.err');
                 vm.register.loading = false;
-                $scope.$apply();
+                $scope.safeApply();
                 throw err;
             }
         }
-        vm.register.eventer.once('loading::true', () => $scope.$apply());
-        vm.register.eventer.once('loading::false', () => $scope.$apply());
+        vm.register.eventer.once('loading::true', () => $scope.safeApply());
+        vm.register.eventer.once('loading::false', () => $scope.safeApply());
         vm.register.sync();
         delete vm.filter.student;
         template.open('register', 'register/list-view');
@@ -182,7 +218,7 @@ export const registersController = ng.controller('RegistersController', ['$scope
             if (event === 'absence') vm.register.absenceCounter++;
         }
         vm.register.setStatus(RegisterStatus.IN_PROGRESS);
-        $scope.$apply();
+        $scope.safeApply();
     };
 
     vm.toggleAbsence = async (student) => {
@@ -190,21 +226,21 @@ export const registersController = ng.controller('RegistersController', ['$scope
         await toggleEvent(student, 'absence', vm.register.start_date, vm.register.end_date);
         student.departure = undefined;
         student.lateness = undefined;
-        $scope.$apply();
+        $scope.safeApply();
     };
 
     vm.toggleLateness = async (student) => {
         const time = moment().millisecond(0).second(0);
         await toggleEvent(student, 'lateness', vm.register.start_date, time.format(DateUtils.FORMAT["YEAR-MONTH-DAY-HOUR-MIN-SEC"]));
         student.lateness.end_date_time = time.toDate();
-        $scope.$apply();
+        $scope.safeApply();
     };
 
     vm.toggleDeparture = async (student) => {
         const time = moment().millisecond(0).second(0);
         await toggleEvent(student, 'departure', time.format(DateUtils.FORMAT["YEAR-MONTH-DAY-HOUR-MIN-SEC"]), vm.register.end_date);
         student.departure.start_date_time = time.toDate();
-        $scope.$apply();
+        $scope.safeApply();
     };
 
     vm.handleRemark = async (student) => {
@@ -222,7 +258,7 @@ export const registersController = ng.controller('RegistersController', ['$scope
 
     vm.openPanel = function (student) {
         vm.filter.student = student;
-        $scope.$apply();
+        $scope.safeApply();
     };
 
     vm.closePanel = function () {
@@ -246,11 +282,11 @@ export const registersController = ng.controller('RegistersController', ['$scope
         return Math.abs(moment(slot.start).diff(vm.register.start_date)) < 3000 && Math.abs(moment(slot.end).diff(vm.register.end_date)) < 3000;
     };
 
-    vm.loadCourses = async function (): Promise<void> {
+    vm.loadCourses = async function (user: string = model.me.userId, structure: string = model.me.structures[0]): Promise<void> {
         delete vm.register;
         vm.courses.all = [];
-        $scope.$apply();
-        await vm.courses.sync(model.me.userId, model.me.structures[0], DateUtils.format(vm.filter.date, DateUtils.FORMAT["YEAR-MONTH-DAY"]), DateUtils.format(vm.filter.date, DateUtils.FORMAT["YEAR-MONTH-DAY"]));
+        $scope.safeApply();
+        await vm.courses.sync(user, structure, DateUtils.format(vm.filter.date, DateUtils.FORMAT["YEAR-MONTH-DAY"]), DateUtils.format(vm.filter.date, DateUtils.FORMAT["YEAR-MONTH-DAY"]));
         if (vm.courses.all.length > 0) {
             await setCurrentRegister();
         }
@@ -261,5 +297,7 @@ export const registersController = ng.controller('RegistersController', ['$scope
         return moment().isSameOrBefore(course.startDate);
     };
 
-    vm.loadCourses();
+    if (!model.me.hasWorkflow(rights.workflow.search)) {
+        vm.loadCourses();
+    }
 }]);

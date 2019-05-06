@@ -66,38 +66,49 @@ body.presences, .sniplet.presences {
     }
   }
 
-  .exemptions {
-    .top20 {margin-top:20px;}
-    .paddingRight {padding-right: 15px;}
-    .paddingLeft {padding-left: 15px;}
-    .search-input {
-      background: #fff;
-      padding: 15px;
-      vertical-align: middle;
-      input {
-        margin: auto;
-      }
+  .top20 {
+    margin-top: 20px;
+  }
+
+  .paddingRight {
+    padding-right: 15px;
+  }
+
+  .paddingLeft {
+    padding-left: 15px;
+  }
+
+  .search-input {
+    background: #fff;
+    padding: 15px;
+    vertical-align: middle;
+
+    input {
+      margin: auto;
     }
-    ul.search-input-ul {
-      padding: 5px;
-      margin: 0;
-      font-weight: bold;
-      li {
-        display: inline;
-        margin:0 5px;
+  }
 
-      }
+  ul.search-input-ul {
+    padding: 5px;
+    margin: 0;
+    font-weight: bold;
+
+    li {
+      display: inline;
+      margin: 0 5px;
+
+    }
+  }
+
+  .lightbox-form {
+    select {
+      border: none;
+      border-bottom: solid 1px #aaa;
     }
 
-    .lightbox-form {
-      select {
-        border: none;
-        border-bottom: solid 1px #aaa;
-      }
-
-      .row.spacing{
-        .cell.twelve {
-          padding: 10px 20px;        }
+    .row.spacing {
+      .cell.twelve {
+        padding: 10px 20px;
       }
     }
   }

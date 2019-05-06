@@ -26,6 +26,7 @@ public class Presences extends BaseServer {
         addController(new RegisterController(eb));
         addController(new EventController());
 		addController(new ExemptionController(eb));
+        addController(new SearchController(eb));
 	}
 
 }

@@ -2,7 +2,25 @@
     <h1>
         <i18n>presences.register.register.title</i18n>
     </h1>
-    <div class="row">
+    <div class="row" workflow="presences.search">
+        <div class="cell six search-input">
+            <async-autocomplete ng-disabled="false"
+                                ng-model="vm.filter.teacher"
+                                ng-change="vm.selectTeacher"
+                                on-search="vm.searchTeacher"
+                                options="vm.filter.teachers"
+                                search="vm.filter.teachers.displayName"></async-autocomplete>
+        </div>
+        <div class="cell six">
+            <ul class="cell twelve search-input-ul">
+                <li ng-if="vm.filter.teacher !== undefined">
+                    [[vm.filter.teacher.toString()]]
+                    <i class="close" ng-click="vm.dropTeacherFilter()"></i>
+                </li>
+            </ul>
+        </div>
+    </div>
+    <div class="row vertical-spacing">
         <span data-ng-click="vm.previousDate()">
             <i class="left-open"></i>
         </span>

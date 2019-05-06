@@ -1,6 +1,6 @@
 import {Behaviours} from 'entcore';
 import {navigation} from './sniplets'
-import {rights} from './rights';
+import rights from './rights';
 
 Behaviours.register('presences', {
     rights,

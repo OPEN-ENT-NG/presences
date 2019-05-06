@@ -374,7 +374,7 @@ public class DefaultRegisterService implements RegisterService {
                 "INNER JOIN presences.rel_group_register ON (register.id = rel_group_register.register_id) " +
                 "WHERE register.id = ?) " +
                 "AND register.id < ? " +
-                "ORDER BY id DESC " +
+                "ORDER BY start_date DESC " +
                 "LIMIT 1) " +
                 "SELECT student_id " +
                 "FROM presences.event " +

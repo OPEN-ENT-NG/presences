@@ -1,13 +1,13 @@
-import {_, ng, idiom as lang} from 'entcore';
+import {_, idiom as lang, ng} from 'entcore';
 import {
-    Exemptions,
-    Exemption,
-    Subjects,
-    Students,
-    Student,
     Audiences,
+    Exemption,
+    Exemptions,
+    Structure,
     Structures,
-    Structure
+    Student,
+    Students,
+    Subjects
 } from "../models";
 import {DateUtils, Toast} from "../utilities";
 
@@ -74,17 +74,6 @@ export const exemptionsController = ng.controller('ExemptionsController', ['$sco
     /**
      * Init usefull var and function PART
      */
-    $scope.safeApply = function (fn) {
-        var phase = this.$root.$$phase;
-        if (phase == '$apply' || phase == '$digest') {
-            if (fn && (typeof (fn) === 'function')) {
-                fn();
-            }
-        } else {
-            this.$apply(fn);
-        }
-    };
-
     vm.structures = new Structures();
     vm.structures.sync();
     vm.structure = vm.structures.first();

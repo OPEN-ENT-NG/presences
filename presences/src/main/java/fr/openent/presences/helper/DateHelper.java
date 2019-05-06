@@ -9,8 +9,8 @@ public class DateHelper {
     //TODO Add unit test
 
     public static final Integer TOLERANCE = 3000;
-    public static final String SQL_FORMAT = "yyyy-MM-d'T'HH:mm:ss";
-    public static final String MONGO_FORMAT = "yyyy-MM-d HH:mm:ss";
+    public static final String SQL_FORMAT = "yyyy-MM-dd'T'HH:mm:ss";
+    public static final String MONGO_FORMAT = "yyyy-MM-dd HH:mm:ss";
 
     /**
      * Return time difference between 2 dates.

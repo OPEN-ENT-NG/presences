@@ -1,5 +1,5 @@
 import {model} from 'entcore';
-import {rights} from '../rights';
+import rights from '../rights';
 
 export const navigation = {
     title: 'sniplet.navigation.title',

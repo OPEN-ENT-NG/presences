@@ -1,5 +1,5 @@
 import http from 'axios';
-import {moment} from 'entcore';
+import {_, moment} from 'entcore';
 import {Mix} from 'entcore-toolkit';
 import {LoadingCollection} from './LoadingCollection'
 
@@ -37,9 +37,14 @@ export class Courses extends LoadingCollection {
             const {data} = await http.get(`/presences/courses?teacher=${teacher}&structure=${structure}&start=${start}&end=${end}`);
             this.all = Mix.castArrayAs(Course, data);
             this.all.map((course: Course) => course.timestamp = moment(course.startDate).unix())
+            this.all = _.sortBy(this.all, 'timestamp');
         } catch (err) {
             throw err;
         }
         this.loading = false;
+    }
+
+    clear(): void {
+        this.all = [];
     }
 }
