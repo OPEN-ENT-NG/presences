@@ -1,4 +1,4 @@
-package fr.openent.presences.helper;
+package fr.openent.presences.common.helper;
 
 import org.entcore.common.user.UserInfos;
 

@@ -1,4 +1,4 @@
-package fr.openent.presences.helper;
+package fr.openent.presences.common.helper;
 
 import java.text.ParseException;
 import java.text.SimpleDateFormat;

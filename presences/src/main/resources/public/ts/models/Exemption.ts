@@ -1,7 +1,7 @@
 import http from 'axios';
 import {Mix} from 'entcore-toolkit';
 import {LoadingCollection} from './LoadingCollection'
-import {DateUtils} from "../utilities";
+import {DateUtils} from "@common/utils";
 import {_, moment} from "entcore";
 
 export interface Exemption {

@@ -9,7 +9,8 @@ import {
     Students,
     Subjects
 } from "../models";
-import {DateUtils, Toast} from "../utilities";
+import {Toast} from "../utilities";
+import {DateUtils} from "@common/utils"
 
 
 interface ViewModel {

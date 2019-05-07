@@ -1,1 +1,1 @@
-include 'presences', 'incidents'
+include 'common', 'presences', 'incidents'

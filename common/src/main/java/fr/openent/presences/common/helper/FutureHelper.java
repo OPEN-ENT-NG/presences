@@ -1,4 +1,4 @@
-package fr.openent.presences.helper;
+package fr.openent.presences.common.helper;
 
 import fr.wseduc.webutils.Either;
 import io.vertx.core.Future;

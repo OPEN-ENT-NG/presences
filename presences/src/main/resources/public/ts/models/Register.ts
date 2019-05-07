@@ -1,7 +1,8 @@
 import http from 'axios';
 import {_, moment} from 'entcore'
 import {Mix} from 'entcore-toolkit'
-import {Event, EventType, LoadingCollection, Remark} from './index'
+import {Event, EventType, Remark} from './index'
+import {LoadingCollection} from "@common/model"
 
 export interface Register {
     id: number;

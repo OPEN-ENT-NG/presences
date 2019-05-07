@@ -1,6 +1,6 @@
 import http from 'axios';
 import {moment} from 'entcore';
-import {DateUtils} from '../utilities'
+import {DateUtils} from '@common/utils'
 import {EventType} from "./EventType";
 
 export interface Event {

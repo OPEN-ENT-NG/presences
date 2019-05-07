@@ -1,5 +1,6 @@
 package fr.openent.presences.helper;
 
+import fr.openent.presences.common.helper.DateHelper;
 import fr.openent.presences.service.RegisterService;
 import fr.openent.presences.service.impl.DefaultRegisterService;
 import fr.wseduc.webutils.Either;

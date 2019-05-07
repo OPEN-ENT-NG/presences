@@ -14,7 +14,13 @@
       "jquery",
       "core-js",
       "jest"
-    ]
+    ],
+    "baseUrl": ".",
+    "paths": {
+      "@common/*": [
+        "common/src/main/resources/ts/*"
+      ]
+    }
   },
   "exclude": [
     "*/build",

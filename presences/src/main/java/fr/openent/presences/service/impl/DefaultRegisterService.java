@@ -1,10 +1,10 @@
 package fr.openent.presences.service.impl;
 
 import fr.openent.presences.Presences;
+import fr.openent.presences.common.helper.DateHelper;
+import fr.openent.presences.common.helper.FutureHelper;
 import fr.openent.presences.enums.EventType;
 import fr.openent.presences.enums.GroupType;
-import fr.openent.presences.helper.DateHelper;
-import fr.openent.presences.helper.FutureHelper;
 import fr.openent.presences.service.GroupService;
 import fr.openent.presences.service.RegisterService;
 import fr.wseduc.webutils.Either;

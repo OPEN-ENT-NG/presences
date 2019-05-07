@@ -1,7 +1,7 @@
 package fr.openent.presences.security;
 
+import fr.openent.presences.common.helper.WorkflowHelper;
 import fr.openent.presences.enums.WorkflowActions;
-import fr.openent.presences.helper.WorkflowHelper;
 import fr.wseduc.webutils.http.Binding;
 import io.vertx.core.Handler;
 import io.vertx.core.http.HttpServerRequest;

@@ -20,7 +20,10 @@ module.exports = {
     resolve: {
         modulesDirectories: ['node_modules'],
         root: path.resolve(__dirname),
-        extensions: ['', '.ts', '.js']
+        extensions: ['', '.ts', '.js'],
+        alias: {
+            "@common": path.resolve(__dirname, '../common/src/main/resources/ts')
+        }
     },
     devtool: "source-map",
     module: {

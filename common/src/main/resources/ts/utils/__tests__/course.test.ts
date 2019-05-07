@@ -1,8 +1,7 @@
 import {moment} from 'entcore';
 import {CourseUtils, DateUtils} from '../index'
-import {Course} from "../../models";
 
-const course: Course = {
+const course = {
     "_id": "d28ab187-dffa-4cdc-bee4-37c5aa1f484b",
     "structureId": "5c04e497-cb43-4589-8332-16cc8a873920",
     "subjectId": "a494d671-77f2-4fd6-9a04-2035dfe736b7",

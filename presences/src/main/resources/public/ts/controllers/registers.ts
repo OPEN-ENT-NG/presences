@@ -11,7 +11,7 @@ import {
     Remark
 } from '../models'
 import {UserService} from '../services';
-import {CourseUtils, DateUtils} from '../utilities'
+import {CourseUtils, DateUtils} from '@common/utils'
 import rights from '../rights'
 
 interface ViewModel {
