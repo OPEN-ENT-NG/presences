@@ -11,7 +11,7 @@ public class Presences extends BaseServer {
 
     public static final String READ_REGISTER = "presences.register.read";
     public static final String CREATE_REGISTER = "presences.register.create";
-    public static final String SEARCH_REGISTER = "presences.register.search";
+    public static final String SEARCH = "presences.search";
     public static final String CREATE_EVENT = "presences.event.create";
 
 	@Override

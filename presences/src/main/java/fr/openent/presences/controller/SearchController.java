@@ -25,7 +25,7 @@ public class SearchController extends ControllerHelper {
 
     @Get("/search/users")
     @ApiDoc("Search for users")
-    @SecuredAction(Presences.SEARCH_REGISTER)
+    @SecuredAction(Presences.SEARCH)
     public void searchUsers(HttpServerRequest request) {
         if (request.params().contains("q") && !"".equals(request.params().get("q").trim())
                 && request.params().contains("field")
