@@ -408,7 +408,7 @@ public class DefaultRegisterService implements RegisterService {
             if ("error".equals(status)) {
                 LOGGER.error("[Presences@DefaultRegistrerService] Failed to retrieve slot profile");
             } else {
-                slots = event.result().body().getJsonObject("result").getJsonArray("slots");
+                slots = event.result().body().getJsonArray("results");
             }
             JsonArray students = register.getJsonArray("students");
 
