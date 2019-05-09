@@ -404,11 +404,12 @@ public class DefaultRegisterService implements RegisterService {
 
         eb.send("viescolaire", action, (Handler<AsyncResult<Message<JsonObject>>>) event -> {
             String status = event.result().body().getString("status");
+            JsonObject body = event.result().body();
             JsonArray slots = new JsonArray();
             if ("error".equals(status)) {
                 LOGGER.error("[Presences@DefaultRegistrerService] Failed to retrieve slot profile");
-            } else {
-                slots = event.result().body().getJsonArray("results");
+            } else if (body.getJsonObject("result").containsKey("slots") && !body.getJsonObject("result").getJsonArray("slots").isEmpty()) {
+                slots = body.getJsonObject("result").getJsonArray("slots");
             }
             JsonArray students = register.getJsonArray("students");
 
