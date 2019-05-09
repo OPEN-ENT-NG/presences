@@ -32,7 +32,7 @@ buildNode () {
   esac
 }
 
-runTests () {
+test () {
   rm -rf coverage
   case `uname -s` in
     MINGW*)
@@ -41,6 +41,7 @@ runTests () {
     *)
       docker-compose run --rm -u "$USER_UID:$GROUP_GID" node sh -c "npm install && node_modules/gulp/bin/gulp.js drop-cache && npm test"
   esac
+  docker-compose run --rm -u "$USER_UID:$GROUP_GID" gradle gradle test jacocoTestReport
 }
 
 
@@ -108,8 +109,8 @@ do
     publish)
       publish
       ;;
-    runTests)
-      runTests
+    test)
+      test
       ;;
     presences)
       presences

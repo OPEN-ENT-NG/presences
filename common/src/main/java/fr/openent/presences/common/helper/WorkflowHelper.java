@@ -7,7 +7,6 @@ import java.util.List;
 public class WorkflowHelper {
 
     private WorkflowHelper() {
-        throw new IllegalAccessError("Utility class");
     }
 
     public static boolean hasRight(UserInfos user, String action) {

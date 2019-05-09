@@ -15,6 +15,7 @@ subprojects {
     apply plugin: 'maven'
     apply plugin: 'maven-publish'
     apply plugin: 'com.github.johnrengelman.shadow'
+    apply plugin: 'jacoco'
 
     repositories {
         mavenLocal()
@@ -32,7 +33,7 @@ subprojects {
 
     configurations {
         provided
-        runtime.exclude module: 'vertx-core'
+//        runtime.exclude module: 'vertx-core'
     }
 
     sourceSets {
@@ -57,7 +58,9 @@ subprojects {
     }
     dependencies {
         compileOnly "io.vertx:vertx-core:$vertxVersion"
-        testCompile "junit:junit:$junitVersion"
+        testCompile "io.vertx:vertx-core:$vertxVersion"
+        testCompile "org.junit.jupiter:junit-jupiter-engine:$junitVersion"
+        testCompile "io.vertx:testtools:$toolsVersion"
     }
 
     jar {
@@ -83,6 +86,11 @@ subprojects {
     artifacts {
         archives testJar
         archives deploymentJar
+    }
+
+    jacoco {
+        toolVersion = "0.8.3"
+        reportsDir = file("$buildDir/reports")
     }
 
     shadowJar {
@@ -148,6 +156,13 @@ subprojects {
         classpath += configurations.compile
     }
 
+    jacocoTestReport {
+        reports {
+            xml.enabled true
+            xml.destination file("$buildDir/../../coverage/server/${project.name}.xml")
+        }
+    }
+
     afterEvaluate { project ->
         project.tasks['publishToMavenLocal'].doLast {
             rootProject.delete "build"
@@ -157,8 +172,10 @@ subprojects {
 
 project(":common") {
     dependencies {
-        compileOnly "io.vertx:vertx-core:$vertxVersion"
+        compile "io.vertx:vertx-core:$vertxVersion"
         compile "org.entcore:common:$entCoreVersion"
+        testCompile "io.vertx:vertx-core:$vertxVersion"
+        testCompile "org.entcore:common:$entCoreVersion"
         testCompile "org.entcore:tests:$entCoreVersion"
         testCompile 'io.gatling.highcharts:gatling-charts-highcharts:2.2.2'
     }

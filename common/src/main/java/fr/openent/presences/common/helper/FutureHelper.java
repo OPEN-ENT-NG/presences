@@ -12,6 +12,9 @@ public class FutureHelper {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(FutureHelper.class);
 
+    private FutureHelper() {
+    }
+
     public static Handler<Either<String, JsonArray>> handlerJsonArray(Future<JsonArray> future) {
         return event -> {
             if (event.isRight()) {
