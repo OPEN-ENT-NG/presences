@@ -4,6 +4,20 @@ import {Mix} from 'entcore-toolkit'
 import {Event, EventType, Remark} from './index'
 import {LoadingCollection} from "@common/model"
 
+interface Student {
+    id: string,
+    name: string,
+    group: string,
+    events: any[],
+    day_history: any[],
+    group_name: string,
+    absence?: Event,
+    departure?: Event;
+    lateness?: Event,
+    remark?: Event,
+    birth_date: string
+}
+
 export interface Register {
     id: number;
     structure_id: string;
@@ -19,7 +33,7 @@ export interface Register {
     proof_id?: number;
     absenceCounter: number;
     groupMap?: any;
-    students: { id: string, name: string, group: string, events: any[], day_history: any[], group_name: string, absence?: Event, departure?: Event; lateness?: Event, remark?: Event, birth_date: string }[];
+    students: Student[];
 }
 
 export class Register extends LoadingCollection {

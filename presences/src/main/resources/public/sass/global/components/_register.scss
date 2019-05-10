@@ -1,4 +1,4 @@
-$student-height: 50px;
+$student-height: 40px;
 $absence-button-width: 20px;
 
 .register {
@@ -71,6 +71,12 @@ $absence-button-width: 20px;
       justify-content: space-between;
       position: relative;
       width: 100%;
+      opacity: 1;
+      transition: all 0.25s ease;
+
+      &.disabled {
+        opacity: 0.15;
+      }
 
       &::before {
         content: "";
@@ -106,6 +112,10 @@ $absence-button-width: 20px;
 
         &.departure {
           background-color: $presences-green;
+        }
+
+        &.remark {
+          background-color: $presences-main;
         }
       }
     }
@@ -170,6 +180,10 @@ $absence-button-width: 20px;
 
         &.departure {
           background-color: $presences-green;
+        }
+
+        &.remark {
+          background-color: $presences-main;
         }
       }
     }

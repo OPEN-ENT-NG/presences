@@ -17,7 +17,7 @@ import rights from '../rights'
 interface ViewModel {
     register: Register;
     courses: Courses;
-    filter: { date: Date, student: any, teachers: any[], teacher: any; };
+    filter: { date: Date, student: any, teachers: any[], teacher: any; selected: { teacher: any } };
     RegisterStatus: any;
 
     openRegister(course: Course): Promise<void>;
@@ -57,6 +57,8 @@ interface ViewModel {
     selectTeacher(model: any, teacher: any): void;
 
     dropTeacherFilter(): void;
+
+    isEmptyDayHistory(student): boolean;
 }
 
 export const registersController = ng.controller('RegistersController', ['$scope', 'UserService', function ($scope, UserService: UserService) {
@@ -70,7 +72,10 @@ export const registersController = ng.controller('RegistersController', ['$scope
         date: new Date(),
         student: undefined,
         teachers: undefined,
-        teacher: undefined
+        teacher: "",
+        selected: {
+            teacher: undefined
+        }
     };
 
     vm.searchTeacher = async function (value) {
@@ -80,18 +85,21 @@ export const registersController = ng.controller('RegistersController', ['$scope
             vm.filter.teachers.map((teacher) => teacher.toString = () => teacher.displayName);
             $scope.safeApply();
         } catch (err) {
+            vm.filter.teachers = [];
             throw err;
         }
     };
 
     vm.selectTeacher = function (model, teacher) {
-        vm.filter.teacher = teacher;
+        vm.filter.selected.teacher = teacher;
+        vm.filter.teacher = '';
         vm.filter.teachers = undefined;
-        vm.loadCourses(vm.filter.teacher.id);
+        vm.loadCourses(vm.filter.selected.teacher.id);
+        $scope.safeApply();
     };
 
     vm.dropTeacherFilter = function () {
-        delete vm.filter.teacher;
+        delete vm.filter.selected.teacher;
         delete vm.register;
         vm.courses.clear();
         $scope.safeApply();
@@ -176,7 +184,9 @@ export const registersController = ng.controller('RegistersController', ['$scope
         for (let i = 0; i < student.day_history.length; i++) {
             const slot = student.day_history[i];
             if (vm.isCurrentSlot(slot)) {
-                slot.events.push(event);
+                if (_.findWhere(slot.events, {id: event.id}) === undefined) {
+                    slot.events.push(event);
+                }
             }
         }
     };
@@ -245,11 +255,14 @@ export const registersController = ng.controller('RegistersController', ['$scope
 
     vm.handleRemark = async (student) => {
         if (student.remark.comment.trim() !== '') {
-            student.remark.save();
+            await student.remark.save();
+            addEventToSlot(student, student.remark);
         } else {
-            student.remark.delete();
+            await student.remark.delete();
+            removeEventFromSlot(student, student.remark);
             student.remark = new Remark(vm.register.id, student.id, vm.register.start_date, vm.register.end_date);
         }
+        $scope.safeApply();
     };
 
     vm.getBirthDate = function (student) {
@@ -267,9 +280,9 @@ export const registersController = ng.controller('RegistersController', ['$scope
 
     vm.getHistoryEventClassName = function (events) {
         if (events.length === 0) return '';
-        const priority = [EventType.ABSENCE, EventType.LATENESS, EventType.DEPARTURE];
-        const className = ['absence', 'lateness', 'departure'];
-        let index = 3;
+        const priority = [EventType.ABSENCE, EventType.LATENESS, EventType.DEPARTURE, EventType.REMARK];
+        const className = ['absence', 'lateness', 'departure', 'remark'];
+        let index = 4;
         for (let i = 0; i < events.length; i++) {
             let arrayIndex = priority.indexOf(events[i].type_id);
             index = arrayIndex < index ? arrayIndex : index;
@@ -295,6 +308,15 @@ export const registersController = ng.controller('RegistersController', ['$scope
     vm.isFuturCourse = function (course) {
         if (!course) return true;
         return moment().isSameOrBefore(course.startDate);
+    };
+
+    vm.isEmptyDayHistory = function (student) {
+        let count = 0;
+        for (let i = 0; i < student.day_history.length; i++) {
+            const {events} = student.day_history[i];
+            count += (events.length || 0)
+        }
+        return count === 0;
     };
 
     if (!model.me.hasWorkflow(rights.workflow.search)) {

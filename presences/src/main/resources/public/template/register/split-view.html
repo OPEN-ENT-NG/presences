@@ -18,9 +18,13 @@
             <div class="absence" ng-show="student.absence !== undefined">&nbsp;</div>
             <div class="lateness" ng-show="student.lateness !== undefined">&nbsp;</div>
             <div class="departure" ng-show="student.departure !== undefined">&nbsp;</div>
+            <div class="remark" ng-show="student.remark.id !== undefined">
+                &nbsp;
+            </div>
         </div>
         <div class="six history-container">
-            <ul class="history" ng-if="student.day_history.length > 0">
+            <ul class="history" ng-if="student.day_history.length > 0"
+                ng-class="{ disabled: vm.isEmptyDayHistory(student) }">
                 <li ng-repeat="slot in student.day_history"
                     class="[[vm.getHistoryEventClassName(slot.events)]]"
                     ng-class="{current: vm.isCurrentSlot(slot)}"

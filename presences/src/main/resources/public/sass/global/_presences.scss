@@ -4,6 +4,7 @@ $presences-purple: #9c29b7;
 $presences-green: #24a1ac;
 $presences-grey: #aaaaaa;
 $presences-white: #ffffff;
+$presences-black: rgba(0, 0, 0, .87);
 
 $portal-header-height: 64px;
 $responsive-portal-header-height: 50px;
@@ -11,6 +12,8 @@ $navbar-width: $portal-header-height;
 
 body.presences, .sniplet.presences {
   @import "components/index";
+
+  color: $presences-black;
 
   .font-bold {
     font-weight: bold;

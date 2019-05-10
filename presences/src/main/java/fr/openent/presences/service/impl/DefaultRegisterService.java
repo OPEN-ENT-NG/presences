@@ -482,11 +482,11 @@ public class DefaultRegisterService implements RegisterService {
                 && DateHelper.getAbsTimeDiff(event.getString("end_date"), slot.getString("end")) < DateHelper.TOLERANCE
                 && DateHelper.isAfter(event.getString("start_date"), slot.getString("start"));
 
-        boolean absence = type.equals(EventType.ABSENCE.getType())
+        boolean absence_remark = (type.equals(EventType.ABSENCE.getType()) || type.equals(EventType.REMARK.getType()))
                 && DateHelper.getAbsTimeDiff(event.getString("start_date"), slot.getString("start")) < DateHelper.TOLERANCE
                 && DateHelper.getAbsTimeDiff(event.getString("end_date"), slot.getString("end")) < DateHelper.TOLERANCE;
 
-        return lateness || departure || absence;
+        return lateness || departure || absence_remark;
     }
 
     /**

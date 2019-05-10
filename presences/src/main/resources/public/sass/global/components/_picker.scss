@@ -5,22 +5,24 @@
   &:before {
     @include fonticon();
     color: $presences-main;
-    position: absolute;
-    left: 7px;
-    font-size: 18px;
     z-index: 1;
+    display: inline-block;
+    font-size: 20px;
+  }
+
+  input[type="text"] {
+    width: 80px !important;
+    margin-bottom: 0;
+    box-sizing: border-box;
   }
 
   input[type="text"], input[type="time"] {
     background-color: $white;
-    width: 100px !important;
-    text-align: right;
+    text-align: center;
     height: 30px;
-    line-height: 30px;
     border: none;
     box-shadow: none;
     padding: 0 5px 0 0;
-    text-indent: 20px;
     -moz-appearance: textfield;
 
     &::-webkit-outer-spin-button, &::-webkit-inner-spin-button {
@@ -34,20 +36,42 @@
   }
 }
 
-.datepicker table tr .active {
-  background: $presences-main;
+.datepicker {
+  box-shadow: 0 2px 4px -1px rgba(0, 0, 0, .2), 0 4px 5px 0 rgba(0, 0, 0, .14), 0 1px 10px 0 rgba(0, 0, 0, .12);
+
+  table {
+    thead {
+      tr th {
+        color: $presences-black;
+
+        &:hover {
+          background: $presences-main !important;
+        }
+      }
+    }
+
+    tr .active {
+      background: $presences-main;
+    }
+  }
 }
 
-.date-picker:before {
-  content: "\e917";
+.date-picker {
+  background-color: $presences-white;
+  display: inline-block;
+  padding-left: 5px;
+
+  &:before {
+    content: "\e917";
+  }
 }
 
 .time-picker {
-  width: 80px !important;
   text-indent: 10px;
 
   &:before {
     content: "\f017";
-    top: -4px;
+    margin-right: 5px;
   }
 }
+

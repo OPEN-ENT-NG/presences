@@ -3,19 +3,20 @@
         <i18n>presences.register.register.title</i18n>
     </h1>
     <div class="row" workflow="presences.search">
-        <div class="cell six search-input">
+        <div class="cell seven search-input">
             <async-autocomplete ng-disabled="false"
                                 ng-model="vm.filter.teacher"
                                 ng-change="vm.selectTeacher"
                                 on-search="vm.searchTeacher"
                                 options="vm.filter.teachers"
-                                search="vm.filter.teachers.displayName"></async-autocomplete>
+                                search="vm.filter.teacher"></async-autocomplete>
         </div>
-        <div class="cell six">
+        <div class="cell five">
             <ul class="cell twelve search-input-ul">
-                <li ng-if="vm.filter.teacher !== undefined">
-                    [[vm.filter.teacher.toString()]]
-                    <i class="close" ng-click="vm.dropTeacherFilter()"></i>
+                <li ng-if="vm.filter.selected.teacher !== undefined"
+                    ng-click="vm.dropTeacherFilter()">
+                    [[vm.filter.selected.teacher.toString()]]
+                    <i class="close"></i>
                 </li>
             </ul>
         </div>

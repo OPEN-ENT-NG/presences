@@ -1,8 +1,16 @@
 import {ng} from 'entcore'
 import http from 'axios';
 
+export interface User {
+    displayName: string;
+    firstName: string;
+    lastName: string;
+    id: string;
+    idClasse: any;
+}
+
 export interface UserService {
-    search(structureId: string, value: string, profile: string)
+    search(structureId: string, value: string, profile: string): Promise<User[]>
 }
 
 export const UserService = ng.service('UserService', (): UserService => ({
