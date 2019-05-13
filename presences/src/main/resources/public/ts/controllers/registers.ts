@@ -14,6 +14,8 @@ import {UserService} from '../services';
 import {CourseUtils, DateUtils} from '@common/utils'
 import rights from '../rights'
 
+declare let window: any;
+
 interface ViewModel {
     register: Register;
     courses: Courses;
@@ -79,7 +81,7 @@ export const registersController = ng.controller('RegistersController', ['$scope
     };
 
     vm.searchTeacher = async function (value) {
-        const structureId = model.me.structures[0];
+        const structureId = window.structure.id;
         try {
             vm.filter.teachers = await UserService.search(structureId, value, 'Teacher');
             vm.filter.teachers.map((teacher) => teacher.toString = () => teacher.displayName);
@@ -295,7 +297,7 @@ export const registersController = ng.controller('RegistersController', ['$scope
         return Math.abs(moment(slot.start).diff(vm.register.start_date)) < 3000 && Math.abs(moment(slot.end).diff(vm.register.end_date)) < 3000;
     };
 
-    vm.loadCourses = async function (user: string = model.me.userId, structure: string = model.me.structures[0]): Promise<void> {
+    vm.loadCourses = async function (user: string = model.me.userId, structure: string = window.structure.id): Promise<void> {
         delete vm.register;
         vm.courses.all = [];
         $scope.safeApply();
@@ -321,5 +323,18 @@ export const registersController = ng.controller('RegistersController', ['$scope
 
     if (!model.me.hasWorkflow(rights.workflow.search)) {
         vm.loadCourses();
+        window.eventer.on('structure::set', () => vm.loadCourses());
+    } else {
+        window.eventer.on('structure::set', () => {
+            vm.courses.clear();
+            delete vm.register;
+            vm.filter = {
+                ...vm.filter,
+                teacher: '',
+                teachers: undefined,
+                selected: {teacher: undefined}
+            };
+            $scope.safeApply();
+        });
     }
 }]);

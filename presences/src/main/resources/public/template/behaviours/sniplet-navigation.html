@@ -2,6 +2,13 @@
     <nav role="navigation" aria-label="main navigation">
         <div class="nav">
             <div class="items">
+                <div role="menuitem" ng-if="structures.length > 1"
+                     class="item structure-choice-item"
+                     data-ng-click="hoverIn('STRUCTURES')"
+                     data-ng-mouseover="hoverIn('STRUCTURES')"
+                     data-ng-mouseleave="hoverOut()">
+                    <i class="open-right">&nbsp;</i>
+                </div>
                 <a role="menuitem" href="/presences#/dashboard" class="item"
                    ng-class="{active: getCurrentState() === 'dashboard'}">
                     <i class="home" aria-hidden="true"></i>
@@ -34,6 +41,20 @@
         </div>
         <div class="sub-nav" role="navigation" aria-label="sub navigation">
             <div class="items">
+                <div class="item structure-choice-item">
+                    <div class="sub-items" data-ng-mouseover="hoverIn('STRUCTURES')"
+                         data-ng-mouseleave="hoverOut()"
+                         ng-class="{hovered: menu.hovered === 'STRUCTURES'}">
+                        <h2>
+                            <i18n>presences.structures</i18n>
+                        </h2>
+                        <div ng-repeat="structure in structures" class="sub-item"
+                             ng-class="{active: menu.structure.id === structure.id}"
+                             data-ng-click="setStructure(structure)">
+                            <i>&nbsp;</i><span>[[structure.name]]</span>
+                        </div>
+                    </div>
+                </div>
                 <div class="item"></div>
                 <div class="item"></div>
                 <div class="item">

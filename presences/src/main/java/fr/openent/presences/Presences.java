@@ -21,7 +21,7 @@ public class Presences extends BaseServer {
 		ebViescoAddress = "viescolaire";
 		final EventBus eb = getEventBus(vertx);
 
-		addController(new PresenceController());
+        addController(new PresencesController(eb));
         addController(new CourseController(eb));
         addController(new RegisterController(eb));
         addController(new EventController());

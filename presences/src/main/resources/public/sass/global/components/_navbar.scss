@@ -1,4 +1,17 @@
 nav {
+  .structure-choice-item {
+    position: absolute !important;
+    top: 0;
+
+    .sub-item {
+      position: relative;
+
+      i {
+        width: 5px !important;
+      }
+    }
+  }
+
   .nav, .sub-nav {
     position: fixed;
     left: 0;
@@ -92,15 +105,16 @@ nav {
       .sub-item {
         padding: 7px 0;
 
+        &:hover, &.active {
+          i::after {
+            background-color: $presences-main;
+            left: -10px;
+          }
+        }
 
         &:hover {
           i {
             color: $presences-main;
-
-            &::after {
-              background-color: $presences-main;
-              left: -10px;
-            }
           }
         }
 
