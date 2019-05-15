@@ -36,8 +36,12 @@ routes.define(function($routeProvider){
 
 
     if (model.me.hasWorkflow(rights.workflow.readRegister)) {
-        $routeProvider.when('/registers', {
+        $routeProvider
+            .when('/registers', {
             action: 'registers'
-        });
+            })
+            .when('/registers/:id', {
+                action: "getRegister"
+            })
     }
 });

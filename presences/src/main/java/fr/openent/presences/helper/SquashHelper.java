@@ -54,6 +54,7 @@ public class SquashHelper {
                         if (DateHelper.getAbsTimeDiff(course.getString("startDate"), register.getString("start_date")) < DateHelper.TOLERANCE
                                 && DateHelper.getAbsTimeDiff(course.getString("endDate"), register.getString("end_date")) < DateHelper.TOLERANCE) {
                             course.put("register_id", register.getInteger("id"));
+                            course.put("register_state_id", register.getInteger("state_id"));
                             found = true;
                         }
                     } catch (ParseException err) {
@@ -86,7 +87,8 @@ public class SquashHelper {
             o = new JsonObject()
                     .put("id", register.getInteger("id"))
                     .put("start_date", register.getString("start_date"))
-                    .put("end_date", register.getString("end_date"));
+                    .put("end_date", register.getString("end_date"))
+                    .put("state_id", register.getInteger("state_id"));
             values.getJsonArray(register.getString("course_id")).add(o);
         }
 

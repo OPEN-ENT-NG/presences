@@ -9,12 +9,13 @@ export const asyncAutocomplete = ng.directive('asyncAutocomplete', ['$timeout', 
         ngChange: '&',
         onSearch: '=',
         search: '=',
-        options: '='
+        options: '=',
+        placeholder: '=?'
     },
     template: `
     <div class="row async-autocomplete">
         <span class="input-async-autocomplete" ng-class="{loading: loading}">
-            <input type="text" class="twelve cell" ng-disabled="disabled" ng-model="search" translate attr="placeholder" placeholder="search" autocomplete="off" />
+            <input type="text" class="twelve cell" ng-disabled="disabled" ng-model="search" placeholder="[[translate(placeholder)]]" autocomplete="off" />
         </span>
         <div data-drop-down class="drop-down" ng-class="{scroll: match.length > 0}">
             <div ng-if="match && match.length > 0">
@@ -46,6 +47,7 @@ export const asyncAutocomplete = ng.directive('asyncAutocomplete', ['$timeout', 
         $scope.disabled = false || $scope.ngDisabled;
         $scope.translate = lang.translate;
         $scope.search = $scope.search || "";
+        $scope.placeholder = $scope.placeholder || "search";
 
         const setLoadingStatus = (status: boolean = true) => {
             $scope.loading = status;
@@ -108,7 +110,11 @@ export const asyncAutocomplete = ng.directive('asyncAutocomplete', ['$timeout', 
             dropDownContainer.remove();
         });
 
-        $('body').on('click', closeDropDown);
+        $('body').on('click', ($event) => {
+            if ($scope.match) {
+                closeDropDown($event);
+            }
+        });
 
         $scope.$watch('search', function (newVal, oldVal) {
             if (!newVal) {

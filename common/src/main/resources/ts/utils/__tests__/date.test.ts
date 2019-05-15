@@ -1,8 +1,14 @@
 import {DateUtils} from '../date'
+import {moment} from "entcore";
 
 const date = '2019-04-16 18:15:00';
 
 describe('format', () => {
+
+    beforeAll(() => {
+        moment.locale('fr');
+    });
+
     test(`Using "${DateUtils.FORMAT["YEAR-MONTH-DAY"]}" it should return "2019-04-16"`, () => {
         expect(DateUtils.format(date, DateUtils.FORMAT["YEAR-MONTH-DAY"])).toEqual("2019-04-16");
     });
@@ -17,7 +23,11 @@ describe('format', () => {
 
     test(`Using "${DateUtils.FORMAT.BIRTHDATE}" it should return "16/04/2019`, () => {
         expect(DateUtils.format(date, DateUtils.FORMAT.BIRTHDATE)).toEqual("16/04/2019");
-    })
+    });
+
+    test(`Using "${DateUtils.FORMAT["DAY-DATE"]} it should return "mardi 16/04/2019"`, () => {
+        expect(DateUtils.format(date, DateUtils.FORMAT["DAY-DATE"])).toEqual("mardi 16/04/2019");
+    });
 });
 
 describe('getDayNumberDate', () => {

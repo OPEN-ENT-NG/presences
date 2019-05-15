@@ -1,0 +1,97 @@
+$avatar-size: 50px;
+
+@keyframes slideIn {
+  0% {
+    transform: translateY(1rem);
+    opacity: 0;
+  }
+  100% {
+    transform: translateY(0rem);
+    opacity: 1;
+  }
+  0% {
+    transform: translateY(1rem);
+    opacity: 0;
+  }
+}
+
+.user-cards {
+  position: fixed;
+  right: 0;
+  top: $portal-header-height;
+  z-index: 100001;
+
+  .users {
+    margin-top: 5px;
+    display: none;
+    opacity: 0;
+    animation-duration: 0.3s;
+    animation-fill-mode: both;
+
+    &.displayed {
+      display: block;
+      animation-name: slideIn;
+    }
+
+    .user-card {
+      box-shadow: 0 1px 1px rgba(0, 0, 0, 0.16);
+      background-color: $presences-white !important;
+      border-bottom: solid 1px $presences-grey;
+
+      h2 {
+        color: $presences-black !important;
+      }
+
+      &:first-child {
+        border-bottom: none;
+      }
+    }
+  }
+
+  .user-card {
+    background-color: $presences-main;
+    padding: 15px;
+    display: flex;
+    align-items: center;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.26);
+
+    .avatar {
+      width: $avatar-size;
+      height: $avatar-size;
+      background-size: 100%;
+      background-position: center center;
+      border-radius: 50%;
+      margin-right: 10px;
+    }
+
+    h2 {
+      color: $presences-white;
+      margin-bottom: 0;
+      margin-top: 0;
+      line-height: inherit;
+
+
+      i.arrow {
+        margin-left: 10px;
+
+        &:before {
+          font-size: 16px;
+        }
+      }
+    }
+
+    .functions {
+      color: $presences-white;
+
+      .function {
+        &::after {
+          content: ' / ';
+        }
+
+        &:last-child::after {
+          content: ''
+        }
+      }
+    }
+  }
+}

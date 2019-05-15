@@ -1,0 +1,13 @@
+.chips {
+  .chip {
+    box-shadow: none;
+
+    &.selected, &:hover {
+      box-shadow: none;
+    }
+
+    &.selected {
+      background: $presences-main;
+    }
+  }
+}

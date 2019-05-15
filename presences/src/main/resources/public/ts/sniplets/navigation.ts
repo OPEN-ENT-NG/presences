@@ -1,5 +1,4 @@
 import {model} from 'entcore';
-import {Eventer} from 'entcore-toolkit';
 import rights from '../rights';
 
 declare let window: any;
@@ -26,9 +25,6 @@ export const navigation = {
     public: false,
     controller: {
         init: function () {
-            if (!window.eventer) {
-                window.eventer = new Eventer();
-            }
             this.structures = initStructures();
             this.menu = {
                 structure: this.structures[0],
@@ -42,7 +38,6 @@ export const navigation = {
         setStructure: function (structure: Structure) {
             window.structure = structure;
             this.menu.structure = structure;
-            window.eventer.trigger('structure::set', structure);
             this.$apply();
         },
         hoverIn: function (menuItem) {
@@ -56,8 +51,7 @@ export const navigation = {
             }, 250);
         },
         getCurrentState: () => {
-            const regexp = /#\/([a-z].*)/;
-            const res = regexp.exec(window.location.hash);
+            const res = window.location.hash.split('/');
             return (res !== null && res.length > 1) ? res[1] : '';
         },
         hasRight: (right) => {

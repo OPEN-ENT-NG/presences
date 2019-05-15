@@ -1,6 +1,9 @@
 {
   "presences.title": "Presences",
   "presences.structures": "Établissements",
+  "presences.from": "Du",
+  "presences.to": "au",
+  "presences.register.forgotten": "Appels oubliés",
   "sniplet.navigation.title": "Navigation",
   "sniplet.navigation.description": "Barre de navigation du module Présences",
   "presences.navigation.absence": "Absences",
@@ -31,6 +34,7 @@
   "presences.register.event_type.lateness": "Retard",
   "presences.register.event_type.departure": "Départ",
   "presences.register.event_type.remark": "Observation",
+  "presences.register.list.title": "Liste des appels",
   "presences.register.register.title": "Saisir un appel",
   "presences.lateness.reason": "Motif du retard",
   "presences.departure.reason": "Motif du départ",
@@ -38,5 +42,8 @@
   "presences.register.validation": "Valider appel",
   "presences.register.creation.err": "Une erreur est survenue lors de la création de l'appel",
   "presences.event.creation.err": "Une erreur est survenue lors de la création de l'évènement",
-  "presences.event.deletion.err": "Une erreur est survenue lors de la suppression de l'évènement"
+  "presences.event.deletion.err": "Une erreur est survenue lors de la suppression de l'évènement",
+  "presences.search.teacher": "Rechercher un enseignant",
+  "presences.search.class": "Rechercher une classe",
+  "presences.register.open.404": "L'appel sélectionné n'a pas été trouvé"
 }

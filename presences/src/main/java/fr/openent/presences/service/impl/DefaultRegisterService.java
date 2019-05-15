@@ -7,6 +7,7 @@ import fr.openent.presences.enums.EventType;
 import fr.openent.presences.enums.GroupType;
 import fr.openent.presences.service.GroupService;
 import fr.openent.presences.service.RegisterService;
+import fr.wseduc.mongodb.MongoDb;
 import fr.wseduc.webutils.Either;
 import io.vertx.core.AsyncResult;
 import io.vertx.core.CompositeFuture;
@@ -18,6 +19,7 @@ import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
+import org.entcore.common.mongodb.MongoDbResult;
 import org.entcore.common.neo4j.Neo4j;
 import org.entcore.common.neo4j.Neo4jResult;
 import org.entcore.common.sql.Sql;
@@ -42,7 +44,7 @@ public class DefaultRegisterService implements RegisterService {
 
     @Override
     public void list(String structureId, String start, String end, Handler<Either<String, JsonArray>> handler) {
-        String query = "SELECT id, start_date, end_date, course_id " +
+        String query = "SELECT id, start_date, end_date, course_id, state_id " +
                 "FROM " + Presences.dbSchema + ".register " +
                 "WHERE register.structure_id = ? " +
                 "AND register.start_date > ? " +
@@ -150,8 +152,9 @@ public class DefaultRegisterService implements RegisterService {
             Future<JsonArray> usersFuture = Future.future();
             Future<JsonArray> lastAbsentsFuture = Future.future();
             Future<JsonArray> groupsNameFuture = Future.future();
+            Future<JsonArray> teachersFuture = Future.future();
 
-            CompositeFuture.all(usersFuture, lastAbsentsFuture, groupsNameFuture).setHandler(asyncEvent -> {
+            CompositeFuture.all(usersFuture, lastAbsentsFuture, groupsNameFuture, teachersFuture).setHandler(asyncEvent -> {
                 if (asyncEvent.failed()) {
                     String message = "[Presences@DefaultRegisterService] Failed to retrieve groups users or last absents students";
                     LOGGER.error(message);
@@ -184,6 +187,7 @@ public class DefaultRegisterService implements RegisterService {
                     }
                     register.put("students", formattedUsers);
                     register.put("groups", groups);
+                    register.put("teachers", teachersFuture.result());
 
                     matchSlots(register, register.getString("structure_id"), slotEvent -> {
                         if (slotEvent.isLeft()) {
@@ -199,7 +203,35 @@ public class DefaultRegisterService implements RegisterService {
             getUsers(groups, FutureHelper.handlerJsonArray(usersFuture));
             getLastAbsentsStudent(register.getString("personnel_id"), id, FutureHelper.handlerJsonArray(lastAbsentsFuture));
             getGroupsName(groups, FutureHelper.handlerJsonArray(groupsNameFuture));
+            getCourseTeachers(register.getString("course_id"), FutureHelper.handlerJsonArray(teachersFuture));
         }));
+    }
+
+    /**
+     * Retrieve course teachers. Based on given course identifier, it returns user identifier, user name and user function
+     *
+     * @param courseId Course identifier
+     * @param handler  Function handler returning data
+     */
+    private void getCourseTeachers(String courseId, Handler<Either<String, JsonArray>> handler) {
+        JsonObject courseQuery = new JsonObject()
+                .put("_id", courseId);
+
+        MongoDb.getInstance().findOne("courses", courseQuery, message -> {
+            Either<String, JsonObject> either = MongoDbResult.validResult(message);
+            if (either.isLeft()) {
+                LOGGER.error("[Presences@DefaultRegisterService] Failed to retrieve course");
+                handler.handle(new Either.Left(either.left().getValue()));
+                return;
+            }
+
+            JsonObject course = either.right().getValue();
+            JsonArray teacherIds = course.getJsonArray("teacherIds", new JsonArray());
+
+            String teacherQuery = "MATCH (u:User) WHERE u.id IN {teacherIds} RETURN u.id as id, u.displayName as displayName, " +
+                    "CASE WHEN u.functions IS NULL THEN [] ELSE EXTRACT(function IN u.functions | last(split(function, \"$\"))) END as functions";
+            Neo4j.getInstance().execute(teacherQuery, new JsonObject().put("teacherIds", teacherIds), Neo4jResult.validResultHandler(handler));
+        });
     }
 
     /**

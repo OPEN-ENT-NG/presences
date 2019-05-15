@@ -18,6 +18,12 @@ interface Student {
     birth_date: string
 }
 
+interface Teacher {
+    id: string;
+    displayName: string;
+    functions: string[]
+}
+
 export interface Register {
     id: number;
     structure_id: string;
@@ -34,6 +40,7 @@ export interface Register {
     absenceCounter: number;
     groupMap?: any;
     students: Student[];
+    teachers: Teacher[];
 }
 
 export class Register extends LoadingCollection {
@@ -102,6 +109,7 @@ export class Register extends LoadingCollection {
             this.counsellor_input = data.counsellor_input;
             this.students = data.students;
             this.state_id = data.state_id;
+            this.teachers = data.teachers;
             this.formatStudents();
             this.absenceCounter = 0;
             this.students.map((student) => {

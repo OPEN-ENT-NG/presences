@@ -1,5 +1,6 @@
 package fr.openent.presences.controller;
 
+import fr.openent.presences.enums.RegisterStatus;
 import fr.openent.presences.helper.SquashHelper;
 import fr.openent.presences.service.GroupService;
 import fr.openent.presences.service.RegisterService;
@@ -20,8 +21,6 @@ import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import org.entcore.common.controller.ControllerHelper;
 
-import static org.entcore.common.http.response.DefaultResponseHandler.arrayResponseHandler;
-
 public class CourseController extends ControllerHelper {
 
     private EventBus eb;
@@ -40,13 +39,14 @@ public class CourseController extends ControllerHelper {
     @SecuredAction(value = "", type = ActionType.AUTHENTICATED)
     public void getCourses(HttpServerRequest request) {
         MultiMap params = request.params();
-        if (!params.contains("teacher") || !params.contains("structure")
+        if (!params.contains("structure")
                 || !params.contains("start") || !params.contains("end")
                 || !params.get("start").matches("\\d{4}-\\d{2}-\\d{2}")
                 || !params.get("end").matches("\\d{4}-\\d{2}-\\d{2}")) {
             badRequest(request);
             return;
         }
+        boolean forgottenFilter = request.params().contains("forgotten_registers") ? Boolean.parseBoolean(request.getParam("forgotten_registers")) : false;
 
         getCourses(params, event -> {
             if (event.isLeft()) {
@@ -82,10 +82,30 @@ public class CourseController extends ControllerHelper {
                     }
 
                     SquashHelper squashHelper = new SquashHelper(eb);
-                    squashHelper.squash(params.get("structure"), params.get("start") + " 00:00:00", params.get("end") + " 23:59:59", courses, arrayResponseHandler(request));
+                    squashHelper.squash(params.get("structure"), params.get("start") + " 00:00:00", params.get("end") + " 23:59:59", courses, squashEvent -> {
+                        renderJson(request, forgottenFilter ? filterForgottenCourses(squashEvent.right().getValue()) : squashEvent.right().getValue());
+                    });
                 });
             }
         });
+    }
+
+    private JsonArray filterForgottenCourses(JsonArray courses) {
+        JsonArray forgottenRegisters = new JsonArray();
+        for (int i = 0; i < courses.size(); i++) {
+            JsonObject course = courses.getJsonObject(i);
+            if (!course.containsKey("register_id")) {
+                forgottenRegisters.add(course);
+                continue;
+            }
+
+            Integer registerState = course.getInteger("register_state_id");
+            if (!registerState.equals(RegisterStatus.DONE.getStatus())) {
+                forgottenRegisters.add(course);
+            }
+        }
+
+        return forgottenRegisters;
     }
 
     private JsonObject transformSubjectsToMap(JsonArray subjects) {
