@@ -1,7 +1,7 @@
 import http from 'axios';
 import {Mix} from 'entcore-toolkit';
-import {LoadingCollection} from './LoadingCollection'
 import {DateUtils} from "@common/utils";
+import {LoadingCollection} from "@common/model";
 import {_, moment} from "entcore";
 
 export interface Exemption {
@@ -98,28 +98,45 @@ export class Exemption {
 
 export class Exemptions extends LoadingCollection {
     all: Exemption[];
+    pageCount: number;
+    structureId: string;
+    start_date: string;
+    end_date: string;
+    students?: string[];
+    audiences?: string[];
 
     constructor() {
         super();
         this.all = [];
     }
 
+    async prepareSync(structureId: string, start_date: string, end_date: string, studentsFiltered?: any[], audiencesFiltered?: any[]) {
+        this.structureId = structureId;
+        this.start_date = start_date;
+        this.end_date = end_date;
+        this.students = studentsFiltered ? _.pluck(studentsFiltered, 'id') : null;
+        this.audiences = audiencesFiltered ? _.pluck(audiencesFiltered, 'id') : null;
+        this.page = 0;
+    }
 
-    async sync(structure: string, start_date: string, end_date: string, students?: string[], audiences?: string[]) {
+    async syncPagination() {
         this.loading = true;
         let dateFormat = DateUtils.FORMAT['YEAR-MONTH-DAY-HOUR-MIN-SEC'];
         try {
-            let url = `/presences/exemptions?structure_id=${structure}` +
-                `&start_date=${DateUtils.format(DateUtils.setFirtTime(start_date), dateFormat)}` +
-                `&end_date=${DateUtils.format(DateUtils.setLastTime(end_date), dateFormat)}`;
-            if (students && students.length > 0) {
-                url += `&students=${_.pluck(students, 'id').join(',')}`;
+            let url = `/presences/exemptions?structure_id=${this.structureId}` +
+                `&start_date=${DateUtils.format(DateUtils.setFirtTime(this.start_date), dateFormat)}` +
+                `&end_date=${DateUtils.format(DateUtils.setLastTime(this.end_date), dateFormat)}`;
+            if (this.students && this.students.length > 0) {
+                url += `&student_id=${this.students.join(',')}`;
             }
-            if (audiences && audiences.length > 0) {
-                url += `&audiences=${_.pluck(audiences, 'id').join(',')}`;
+            if (this.audiences && this.audiences.length > 0) {
+                url += `&audience_id=${this.audiences.join(',')}`;
             }
+            url += `&page=${this.page? this.page:0}`;
             const {data} = await http.get(url);
-            this.all = Mix.castArrayAs(Exemption, Exemption.loadData(data));
+            this.all = Mix.castArrayAs(Exemption, Exemption.loadData(data.values));
+            this.pageCount = data.page_count;
+
         } catch (err) {
             throw err;
         }

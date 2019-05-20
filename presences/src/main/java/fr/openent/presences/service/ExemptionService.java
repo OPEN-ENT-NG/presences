@@ -1,6 +1,7 @@
 package fr.openent.presences.service;
 
 import fr.wseduc.webutils.Either;
+import io.vertx.core.Future;
 import io.vertx.core.Handler;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
@@ -12,14 +13,24 @@ public interface ExemptionService {
     /**
      * Fetch exemptions
      *
-     * @param structure_id structure identifier structure identifier
+     *  @param structure_id structure identifier structure identifier
      * @param start_date start date
      * @param end_date start date
      * @param student_ids student identifier (optionnal can be null)
      * @param handler function handler returning da
      */
-    void get(String structure_id, String start_date, String end_date, List<String> student_ids, Handler<Either<String, JsonArray>> handler);
+    void get(String structure_id, String start_date, String end_date, List<String> student_ids, String page, Handler<Either<String, JsonArray>> handler);
 
+    /**
+     * Get exemptions count
+     *
+     * @param structure_id
+     * @param start_date
+     * @param end_date
+     * @param student_ids
+     * @param handler
+     */
+    void getPageNumber(String structure_id, String start_date, String end_date, List<String> student_ids, Handler<Either<String, JsonObject>> handler);
 
     /**
      * Create exemptions for a list of students

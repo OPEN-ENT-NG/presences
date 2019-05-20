@@ -1,4 +1,4 @@
-import {_, idiom as lang, ng} from 'entcore';
+import {_, idiom as lang, model, ng} from 'entcore';
 import {
     Audiences,
     Exemption,
@@ -11,12 +11,12 @@ import {
 } from "../models";
 import {Toast} from "../utilities";
 import {DateUtils} from "@common/utils"
-
+export * from '@common/directives/pagination';
 
 interface ViewModel {
     structures: Structures;
     structure: Structure;
-    filter: { start_date: Date, end_date: Date, students: any };
+    filter: { start_date: any, end_date: any, students: any };
     translate: any;
     subjects: Subjects;
     audiences: Audiences;
@@ -79,7 +79,6 @@ export const exemptionsController = ng.controller('ExemptionsController', ['$sco
     vm.structures.sync();
     vm.structure = vm.structures.first();
     vm.translate = lang.translate;
-    let exemptions;
     const initData = () => {
         vm.notifications = [];
         vm.createExemptionLightBox = false;
@@ -89,8 +88,9 @@ export const exemptionsController = ng.controller('ExemptionsController', ['$sco
             students: []
         };
 
-        exemptions = new Exemptions();
         vm.exemptions = new Exemptions();
+        vm.exemptions.eventer.on('loading::false', () => $scope.safeApply());
+
         vm.subjects = new Subjects();
         vm.subjects.sync(vm.structure.id);
         vm.audiences = new Audiences();
@@ -107,8 +107,7 @@ export const exemptionsController = ng.controller('ExemptionsController', ['$sco
 
     };
     const loadExemptions = async (): Promise<void> => {
-        await exemptions.sync(vm.structure.id, vm.filter.start_date, vm.filter.end_date);
-        vm.exemptions.all = _.clone(exemptions.all);
+        await vm.exemptions.prepareSync(vm.structure.id, vm.filter.start_date, vm.filter.end_date, vm.studentsFiltered, vm.audiencesFiltered);
         $scope.safeApply();
     };
 
@@ -125,7 +124,7 @@ export const exemptionsController = ng.controller('ExemptionsController', ['$sco
     };
 
     vm.dateFormater = (date) => {
-        return DateUtils.format(date, 'DD-MM-YYYY');
+        return DateUtils.format(date, 'DD/MM/YYYY');
     };
 
     /**
@@ -153,14 +152,7 @@ export const exemptionsController = ng.controller('ExemptionsController', ['$sco
             vm.studentsFiltered.push(student);
         }
 
-        let idsStudent = _.pluck(vm.studentsFiltered, 'id');
-        let idsAudience = _.pluck(vm.audiencesFiltered, 'id');
-
-        vm.exemptions.all = _.clone(exemptions.all).filter(
-            (item) =>
-                (vm.audiencesFiltered.length == 0 && vm.studentsFiltered.length == 0)
-                || idsAudience.indexOf(item.student.idClasse) > -1
-                || idsStudent.indexOf(item.studentId) > -1);
+        vm.exemptions.prepareSync(vm.structure.id, vm.filter.start_date, vm.filter.end_date, vm.studentsFiltered, vm.audiencesFiltered);
         $scope.safeApply();
     };
     vm.excludeStudentFromFilter = (student) => {
@@ -219,16 +211,13 @@ export const exemptionsController = ng.controller('ExemptionsController', ['$sco
     };
 
     vm.editExemption = (obj) => {
+        if($scope.hasRight('manageExemption') != true)
+            return;
         vm.createExemptionLightBox = true;
         vm.form = _.clone(obj);
-        let studentFinder = _.chain(vm.students.all)
-            .filter((item) => {
-                return item.id == obj.studentId;
-            })
-            .first()
-            .value()
-        vm.form.students = [studentFinder];
-        vm.formStudentSelected = [studentFinder];
+        let studentTmp = new Student(obj.student);
+        vm.form.students = [studentTmp];
+        vm.formStudentSelected = [studentTmp];
 
         vm.form.subject = _.chain(vm.subjects.all)
             .filter((item) => {

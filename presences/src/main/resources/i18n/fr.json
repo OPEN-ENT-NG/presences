@@ -27,6 +27,8 @@
   "presences.exemptions.form.delete": "Supprimer",
   "presences.exemptions.form.succeed": "Dispense(s) créée avec succès.",
   "presences.exemptions.delete.succeed": "Dispense supprimée avec succès.",
+  "presences.exemptions.search.student": "Rechercher un élève",
+  "presences.exemptions.search.audience": "Rechercher une classe",
   "presences.register.status.todo": "A faire",
   "presences.register.status.inprogress": "En cours",
   "presences.register.status.done": "Terminé",

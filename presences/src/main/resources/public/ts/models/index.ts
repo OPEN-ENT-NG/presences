@@ -1,4 +1,3 @@
-export * from './LoadingCollection';
 export * from './Course';
 export * from './Register';
 export * from './EventType';

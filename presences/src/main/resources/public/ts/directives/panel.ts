@@ -1,3 +1,4 @@
+
 import {ng} from 'entcore';
 
 export const Panel = ng.directive('panel', () => {

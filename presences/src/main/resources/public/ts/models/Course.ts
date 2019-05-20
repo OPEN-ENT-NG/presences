@@ -1,7 +1,7 @@
 import http from 'axios';
 import {_, moment} from 'entcore';
 import {Mix} from 'entcore-toolkit';
-import {LoadingCollection} from './LoadingCollection'
+import {LoadingCollection} from '@common/model/LoadingCollection'
 
 export interface Course {
     _id: string;

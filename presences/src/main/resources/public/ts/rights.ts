@@ -4,7 +4,9 @@ const rights = {
         readRegister: 'fr.openent.presences.controller.RegisterController|getRegister',
         createRegister: 'fr.openent.presences.controller.RegisterController|postRegister',
         createEvent: 'fr.openent.presences.controller.EventController|postEvent',
-        search: 'fr.openent.presences.controller.SearchController|searchUsers'
+        search: 'fr.openent.presences.controller.SearchController|searchUsers',
+        readExemption: 'fr.openent.presences.controller.ExemptionController|getExemptions',
+        manageExemption: 'fr.openent.presences.controller.ExemptionController|createExemptions'
     }
 };
 

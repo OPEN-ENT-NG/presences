@@ -12,6 +12,7 @@ $navbar-width: $portal-header-height;
 
 body.presences, .sniplet.presences {
   @import "components/index";
+  @import "../../../sass/global/common";
 
   color: $presences-black;
 
@@ -125,5 +126,23 @@ body.presences, .sniplet.presences {
     line-height: 40px;
     color: $black;
     font-weight: bold;
+  }
+
+  i {
+    text-align: center;
+    font-size: 24px;
+    line-height: 32px;
+
+    &.account:before {
+      content: "\f004";
+    }
+
+    &.account-outline {
+      font-size: 32px;
+
+      &:before {
+        content: "\e946";
+      }
+    }
   }
 }

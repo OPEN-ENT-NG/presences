@@ -14,12 +14,13 @@
                                         ng-change="vm.selectStudentForm"
                                         on-search="vm.searchFormByStudent"
                                         options="vm.studentsFrom.all"
+                                        placeholder="presences.exemptions.search.student"
                                         search="vm.studentsFrom.all.displayName"></async-autocomplete>
                 </div>
                 <div class="cell twelve">
                     <ul class="cell twelve search-input-ul">
                         <li ng-repeat="stud in vm.form.students">
-                            [[stud.displayName]] <i class="close"
+                            [[stud.toString()]] <i class="close"
                                                     ng-click="vm.excludeStudentFromForm(stud)"></i>
                         </li>
                     </ul>
@@ -46,6 +47,7 @@
                 <select required
                         ng-model="vm.form.subject"
                         ng-options="subject.label for subject in vm.subjects.all track by subject.id">
+                        <option value="" disabled selected>[[vm.translate('presences.exemptions.subject')]]</option>
                 </select>
             </label>
         </div>

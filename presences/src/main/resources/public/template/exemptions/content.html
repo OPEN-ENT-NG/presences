@@ -1,6 +1,6 @@
 <div class="row top20">
-    <div class="twelve">
-
+    <loader ng-show="vm.exemptions.loading" min-height="'250px'"/>
+    <div ng-show="!vm.exemptions.loading"  class="twelve">
         <table class="table table-hover">
             <thead>
             <tr>
@@ -25,18 +25,29 @@
             </tr>
             </thead>
             <tbody>
-            <tr ng-show="vm.exemptions.all && vm.exemptions.all.length > 0" ng-click="vm.editExemption(exemption)" data-ng-repeat="exemption in vm.exemptions.all">
+            <tr ng-show="vm.exemptions.all && vm.exemptions.all.length > 0"
+                ng-disabled="hasRight('manageExemption') != true"
+                ng-click="vm.editExemption(exemption)"
+                data-ng-repeat="exemption in vm.exemptions.all">
                 <th class="uppercase">[[exemption.student.lastName]] [[exemption.student.firstName]]</th>
                 <th class="uppercase playdown text-center">[[exemption.student.classeName]]</th>
                 <th class="uppercase playdown">[[exemption.subject.name]]</th>
                 <th class="highlight">
-                    <span class="half">[[vm.dateFormater(exemption.start_date)]]</span>
-                    <span class="half right">[[vm.dateFormater(exemption.end_date)]]</span>
+                    <span class="half">[[vm.dateFormater(exemption.startDate)]]</span>
+                    <span class="half right">[[vm.dateFormater(exemption.endDate)]]</span>
                 </th>
                 <th>[[exemption.comment]]</th>
-                <th class="text-center">[[exemption.attendance]]</th>
+                <th class="text-center">
+                    <i ng-show="!exemption.attendance" class="account-outline"></i>
+                    <i ng-show="exemption.attendance" class="account"></i>
+                </th>
             </tr>
             </tbody>
         </table>
+        <pagination page-count="vm.exemptions.pageCount"
+                    page-number="vm.exemptions.page"
+                    class="pagination"
+        ></pagination>
     </div>
+
 </div>

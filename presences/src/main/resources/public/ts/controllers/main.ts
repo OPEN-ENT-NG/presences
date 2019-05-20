@@ -1,4 +1,6 @@
-import {idiom, ng, template} from 'entcore';
+import {idiom, model, ng, template} from 'entcore';
+import rights from "../rights";
+
 
 /**
  Wrapper controller
@@ -43,6 +45,10 @@ export const mainController = ng.controller('MainController', ['$scope', 'route'
                 this.$apply(fn);
             }
         };
+
+    $scope.hasRight = function (right) {
+        return model.me.hasWorkflow(rights.workflow[right]);
+    }
 
         $scope.redirectTo = (path: string) => {
             $location.path(path);

@@ -11,7 +11,12 @@ export class Student {
     constructor(o?: any) {
         if (o && typeof o === 'object') {
             for (let key in o) {
-                this[key] = o[key];
+                if(key == 'idEleve'){
+                    this.id = o['idEleve'];
+                }
+                else {
+                    this[key] = o[key];
+                }
             }
         }
     }
@@ -23,10 +28,6 @@ export class Student {
 
 export class Students {
     all: Student[];
-
-    constructor() {
-        this.all = [];
-    }
 
     /**
      * Return student ids array of this.all

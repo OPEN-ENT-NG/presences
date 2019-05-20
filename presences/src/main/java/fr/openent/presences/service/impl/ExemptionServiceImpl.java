@@ -3,7 +3,6 @@ package fr.openent.presences.service.impl;
 import fr.openent.presences.Presences;
 import fr.openent.presences.service.ExemptionService;
 import fr.wseduc.webutils.Either;
-import fr.wseduc.webutils.http.Renders;
 import io.vertx.core.CompositeFuture;
 import io.vertx.core.Future;
 import io.vertx.core.Handler;
@@ -11,7 +10,6 @@ import io.vertx.core.eventbus.EventBus;
 import io.vertx.core.eventbus.Message;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
-import org.entcore.common.http.response.DefaultResponseHandler;
 import org.entcore.common.service.impl.SqlCrudService;
 import org.entcore.common.sql.Sql;
 import org.entcore.common.sql.SqlResult;
@@ -31,27 +29,17 @@ public class ExemptionServiceImpl extends SqlCrudService implements ExemptionSer
     }
 
     @Override
-    public void get(String structure_id, String start_date, String end_date, List<String> student_ids, Handler<Either<String, JsonArray>> handler) {
+    public void get(String structure_id, String start_date, String end_date, List<String> student_ids, String page, Handler<Either<String, JsonArray>> handler) {
+        String query = "SELECT * " + this.getterFROMBuilder(structure_id, start_date, end_date, student_ids);
+        JsonArray values = new JsonArray();
 
-        String query = "SELECT * " +
-                " FROM " + Presences.dbSchema + "." + this.DATABASE_TABLE +
-                " WHERE structure_id = ? " +
-                " AND (" +
-                "(start_date >= ? AND start_date <= ?)" +
-                " OR (end_date >= ? AND end_date <= ?)" +
-                ")";
-
-        JsonArray values = new JsonArray()
-                .add(structure_id)
-                .add(start_date)
-                .add(end_date)
-                .add(start_date)
-                .add(end_date);
-
-        if (student_ids != null && !student_ids.isEmpty() && student_ids.size() > 0) {
-            query += " AND student_id IN " + Sql.listPrepared(student_ids.toArray());
-            values.addAll(new JsonArray(student_ids));
+        if (page != null) {
+            query += " ORDER BY start_date";
+            query += " OFFSET ? LIMIT ?";
+            values.add(Presences.PAGE_SIZE * Integer.parseInt(page));
+            values.add(Presences.PAGE_SIZE);
         }
+
 
         Sql.getInstance().prepared(query, values, SqlResult.validResultHandler(new Handler<Either<String, JsonArray>>() {
             @Override
@@ -80,6 +68,33 @@ public class ExemptionServiceImpl extends SqlCrudService implements ExemptionSer
             }
         }));
     }
+
+    @Override
+    public void getPageNumber(String structure_id, String start_date, String end_date, List<String> student_ids, Handler<Either<String, JsonObject>> handler) {
+        String query =
+        "SELECT count(" + Presences.dbSchema + "." + this.DATABASE_TABLE + ".id)" +
+        this.getterFROMBuilder(structure_id, start_date, end_date, student_ids);
+        Sql.getInstance().raw(query, SqlResult.validUniqueResultHandler(handler));
+    }
+
+    private String getterFROMBuilder (String structure_id, String start_date, String end_date, List<String> student_ids){
+        String query = " FROM " + Presences.dbSchema + "." + this.DATABASE_TABLE +
+                " WHERE structure_id = '"+ structure_id +"'"+
+                " AND (" +
+                " (start_date >= '" + start_date + "' AND start_date <= '" + end_date + "')" +
+                " OR (end_date >= '" + start_date +"' AND end_date <= '" + end_date + "')" +
+                ")";
+
+        if (student_ids != null && !student_ids.isEmpty() && student_ids.size() > 0) {
+            query += " AND student_id IN (";
+            for (int i = 0; i < student_ids.size(); ++i) {
+                query += "'"+student_ids.get(i) + "',";
+            }
+            query = query.substring(0, query.length() - 1) + ")";
+
+        }
+        return query;
+    };
 
     @Override
     public void create(String structure_id, JsonArray student_ids, String subject_id, String start_date, String end_date, Boolean attendance, String comment, Handler<Either<String, JsonArray>> handler) {

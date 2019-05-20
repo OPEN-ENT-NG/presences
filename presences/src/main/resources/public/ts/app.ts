@@ -3,6 +3,7 @@ import rights from './rights'
 import * as controllers from './controllers';
 import * as directives from './directives';
 import * as services from './services';
+import {pagination} from '@common/directives/pagination';
 
 for (let controller in controllers) {
     ng.controllers.push(controllers[controller]);
@@ -11,6 +12,8 @@ for (let controller in controllers) {
 for (let directive in directives) {
     ng.directives.push(directives[directive]);
 }
+ng.directives.push(pagination);
+
 
 for (let service in services) {
     ng.services.push(services[service]);
@@ -27,9 +30,6 @@ routes.define(function($routeProvider){
         .when('/group-absences', {
             action: 'group-absences'
         })
-        .when('/exemptions', {
-            action: 'exemptions'
-        })
 		.otherwise({
             redirectTo: '/dashboard'
 		});
@@ -43,5 +43,10 @@ routes.define(function($routeProvider){
             .when('/registers/:id', {
                 action: "getRegister"
             })
+    }
+    if (model.me.hasWorkflow(rights.workflow.readExemption)) {
+        $routeProvider.when('/exemptions', {
+            action: 'exemptions'
+        });
     }
 });

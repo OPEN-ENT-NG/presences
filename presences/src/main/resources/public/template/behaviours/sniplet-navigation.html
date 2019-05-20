@@ -72,7 +72,9 @@
                             <i class="testimony" aria-hidden="true"></i>
                             <span><i18n>presences.navigation.statements.online</i18n></span>
                         </div>
-                        <a href="/presences#/exemptions" class="sub-item">
+                        <a href="/presences#/exemptions"
+                           ng-if="::hasRight('readExemption')"
+                           class="sub-item">
                             <i class="permission" aria-hidden="true"></i>
                             <span><i18n>presences.navigation.exemption</i18n></span>
                         </a>

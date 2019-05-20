@@ -22,10 +22,6 @@ export class Audience {
 export class Audiences {
     all: Audience[];
 
-    constructor() {
-        this.all = [];
-    }
-
     /**
      * Synchronize groups belongs to the parameter structure
      * @param structureId structure id

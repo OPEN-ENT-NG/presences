@@ -1,21 +1,23 @@
 package fr.openent.presences.controller;
 
 import fr.openent.presences.Presences;
+import fr.openent.presences.security.ManageExemptionRight;
 import fr.openent.presences.service.ExemptionService;
 import fr.openent.presences.service.impl.ExemptionServiceImpl;
-import fr.wseduc.rs.Get;
-import fr.wseduc.rs.Post;
-import fr.wseduc.rs.Put;
-import fr.wseduc.rs.Delete;
+import fr.wseduc.rs.*;
+import fr.wseduc.security.ActionType;
+import fr.wseduc.security.SecuredAction;
 import fr.wseduc.webutils.http.Renders;
 import fr.wseduc.webutils.request.RequestUtils;
-import io.vertx.core.Handler;
+import io.vertx.core.CompositeFuture;
+import io.vertx.core.Future;
 import io.vertx.core.eventbus.EventBus;
-import io.vertx.core.eventbus.Message;
+import fr.openent.presences.common.helper.FutureHelper;
 import io.vertx.core.http.HttpServerRequest;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import org.entcore.common.controller.ControllerHelper;
+import org.entcore.common.http.filter.ResourceFilter;
 import org.entcore.common.http.response.DefaultResponseHandler;
 
 import java.util.ArrayList;
@@ -36,32 +38,55 @@ public class ExemptionController extends ControllerHelper {
     }
 
     @Get("/exemptions")
+    @ApiDoc("Retrieve exemptions")
+    @SecuredAction(Presences.READ_EXEMPTION)
     public void getExemptions(final HttpServerRequest request) {
         if (!request.params().contains("structure_id") || !request.params().contains("start_date") || !request.params().contains("end_date")) {
             badRequest(request);
             return;
         }
+        //Manage pagination
+        String page = request.getParam("page");
+
+        Future<JsonArray> exemptionsFuture = Future.future();
+        Future<JsonObject> pageNumberFuture = Future.future();
+
+        CompositeFuture.all(exemptionsFuture, pageNumberFuture).setHandler(event -> {
+            if (event.failed()) {
+                renderError(request, JsonObject.mapFrom(event.cause()));
+            } else {
+                JsonObject res = new JsonObject()
+                        .put("page", Integer.parseInt(page))
+                        .put("page_count", pageNumberFuture.result().getLong("count") / Presences.PAGE_SIZE)
+                        .put("values", exemptionsFuture.result());
+
+                renderJson(request, res);
+            }
+        });
+        //get usefull data to get
         String structure_id = String.valueOf(request.getParam("structure_id"));
         String start_date = String.valueOf(request.getParam("start_date"));
         String end_date = String.valueOf(request.getParam("end_date"));
-        List<String> student_ids = request.params().contains("student_id") ? new ArrayList<String>(Arrays.asList(request.getParam("student_id").split("\\s*,\\s*"))) : null;
+        List<String> student_ids = request.params().contains("student_id") ? new ArrayList<String>(Arrays.asList(request.getParam("student_id").split("\\s*,\\s*"))) : new ArrayList<String>();
         List<String> audience_ids = request.params().contains("audience_id") ? new ArrayList<String>(Arrays.asList(request.getParam("audience_id").split("\\s*,\\s*"))) : null;
 
+        //get class's users
         if (audience_ids != null && !audience_ids.isEmpty() && audience_ids.size() > 0) {
-
             JsonObject action = new JsonObject()
                     .put("action", "user.getElevesRelatives")
                     .put("idsClass", audience_ids);
 
-            eb.send(Presences.ebViescoAddress, action, handlerToAsyncHandler((Handler<Message<JsonObject>>) message -> {
+            eb.send(Presences.ebViescoAddress, action, handlerToAsyncHandler(message -> {
                 JsonObject body = message.body();
                 if ("ok".equals(body.getString("status"))) {
-                    JsonArray stuent_ids_fromClasses = body.getJsonArray("results");
-                    for (int i = 0; i < stuent_ids_fromClasses.size(); i++) {
-                        JsonObject student = stuent_ids_fromClasses.getJsonObject(i);
+                    JsonArray student_ids_fromClasses = body.getJsonArray("results");
+                    for (int i = 0; i < student_ids_fromClasses.size(); i++) {
+                        JsonObject student = student_ids_fromClasses.getJsonObject(i);
                         student_ids.add(student.getString("idNeo4j"));
                     }
-                    exemptionService.get(structure_id, start_date, end_date, student_ids, DefaultResponseHandler.arrayResponseHandler(request));
+                    exemptionService.get(structure_id, start_date, end_date, student_ids, page, FutureHelper.handlerJsonArray(exemptionsFuture));
+                    exemptionService.getPageNumber(structure_id, start_date, end_date, student_ids, FutureHelper.handlerJsonObject(pageNumberFuture));
+
 
                 } else {
                     JsonObject error = new JsonObject()
@@ -70,12 +95,14 @@ public class ExemptionController extends ControllerHelper {
                 }
             }));
         } else {
-            exemptionService.get(structure_id, start_date, end_date, student_ids, DefaultResponseHandler.arrayResponseHandler(request));
-
+            exemptionService.get(structure_id, start_date, end_date, student_ids, page, FutureHelper.handlerJsonArray(exemptionsFuture));
+            exemptionService.getPageNumber(structure_id, start_date, end_date, student_ids, FutureHelper.handlerJsonObject(pageNumberFuture));
         }
     }
 
     @Post("/exemptions")
+    @ApiDoc("Create given exemptions")
+    @SecuredAction(Presences.MANAGE_EXEMPTION)
     public void createExemptions(final HttpServerRequest request) {
         RequestUtils.bodyToJson(request, pathPrefix + "exemption", exemptions -> {
             exemptionService.create(
@@ -91,6 +118,9 @@ public class ExemptionController extends ControllerHelper {
     }
 
     @Put("/exemption/:id")
+    @ApiDoc("Update given exemption")
+    @ResourceFilter(ManageExemptionRight.class)
+    @SecuredAction(value = "", type = ActionType.RESOURCE)
     public void updateExemption(final HttpServerRequest request) {
         if (!request.params().contains("id")) {
             badRequest(request);
@@ -112,6 +142,9 @@ public class ExemptionController extends ControllerHelper {
     }
 
     @Delete("/exemption")
+    @ApiDoc("Update given exemption")
+    @ResourceFilter(ManageExemptionRight.class)
+    @SecuredAction(value = "", type = ActionType.RESOURCE)
     public void deleteExemption(final HttpServerRequest request) {
         List<String> exemption_ids = request.params().contains("id") ? Arrays.asList(request.getParam("id").split("\\s*,\\s*")) : null;
         exemptionService.delete(exemption_ids, DefaultResponseHandler.arrayResponseHandler(request));
