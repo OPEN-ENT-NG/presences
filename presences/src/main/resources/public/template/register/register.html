@@ -6,7 +6,7 @@
         min-height="'250px'"/>
 <user-cards users="vm.register.teachers"
             workflow="presences.search"
-            ng-model="vm.register.teachers[0]"
+            ng-model="vm.filter.selected.registerTeacher"
             ng-change="vm.switchRegisterTeacher"
             ng-if="vm.register && vm.register.teachers"
             ng-show="!vm.register.loading && vm.register.teachers.length > 0">

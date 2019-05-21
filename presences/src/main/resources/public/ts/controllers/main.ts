@@ -1,6 +1,19 @@
 import {idiom, model, ng, template} from 'entcore';
-import rights from "../rights";
+import rights from '../rights'
+import {Idiom, Template} from '@common/interfaces'
 
+export interface Scope {
+    lang: Idiom;
+    template: Template;
+
+    safeApply(fn?: () => void): void;
+
+    hasSearchRight(): boolean;
+
+    redirectTo(path: string): void;
+
+    $watch(value: any, trigger: (oldVal: any, newVal: any) => void): void;
+}
 
 /**
  Wrapper controller
@@ -8,7 +21,7 @@ import rights from "../rights";
  Main controller.
  **/
 export const mainController = ng.controller('MainController', ['$scope', 'route', '$rootScope', '$route', '$location',
-    ($scope, route, $rootScope, $route, $location) => {
+    ($scope: Scope, route, $rootScope, $route, $location) => {
         idiom.addBundle('/incidents/i18n');
 
         route({
@@ -46,9 +59,13 @@ export const mainController = ng.controller('MainController', ['$scope', 'route'
             }
         };
 
-    $scope.hasRight = function (right) {
-        return model.me.hasWorkflow(rights.workflow[right]);
-    }
+        $scope.hasSearchRight = function () {
+            return model.me.hasWorkflow(rights.workflow.search);
+        };
+
+        $scope.hasRight = function (right) {
+            return model.me.hasWorkflow(rights.workflow[right]);
+        };
 
         $scope.redirectTo = (path: string) => {
             $location.path(path);

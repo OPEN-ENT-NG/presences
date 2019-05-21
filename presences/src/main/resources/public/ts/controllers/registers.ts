@@ -13,6 +13,7 @@ import {
 import {GroupService, UserService} from '../services';
 import {CourseUtils, DateUtils} from '@common/utils'
 import rights from '../rights'
+import {Scope} from './main'
 
 declare let window: any;
 
@@ -93,7 +94,7 @@ interface ViewModel {
 
 export const registersController = ng.controller('RegistersController',
     ['$scope', '$route', '$rootScope', 'UserService', 'GroupService',
-        function ($scope, $route, $rootScope, UserService: UserService, GroupService: GroupService) {
+        function ($scope: Scope, $route, $rootScope, UserService: UserService, GroupService: GroupService) {
             const vm: ViewModel = this;
             const actions = {
                 registers: () => {
@@ -122,12 +123,13 @@ export const registersController = ng.controller('RegistersController',
                         template.open('register', 'register/list-view');
                         template.open('register-panel', 'register/panel');
                         let promises = [vm.register.sync()];
-                        if (vm.filter.course.teacherIds.length > 0) {
-                            let cp = vm.loadCourses([vm.filter.course.teacherIds[0]], [], window.structure.id, DateUtils.format(vm.filter.date, DateUtils.FORMAT["YEAR-MONTH-DAY"]),
+                        if (vm.filter.course.teachers.length > 0) {
+                            let cp = vm.loadCourses([vm.filter.course.teachers[0].id], [], window.structure.id, DateUtils.format(vm.filter.date, DateUtils.FORMAT["YEAR-MONTH-DAY"]),
                                 DateUtils.format(vm.filter.date, DateUtils.FORMAT["YEAR-MONTH-DAY"]), false);
                             promises.push(cp);
                         }
                         await Promise.all(promises);
+                        if (vm.register.teachers.length > 0) vm.filter.selected.registerTeacher = vm.register.teachers[0];
                         $scope.safeApply();
                     } else {
                         $scope.redirectTo('/registers');
@@ -165,11 +167,12 @@ export const registersController = ng.controller('RegistersController',
                 await vm.loadCourses(extractSelectedTeacherIds(), extractSelectedGroupsName());
             };
 
-            const changeDate = function (step: number) {
+            const changeDate = async function (step: number) {
                 vm.filter.date = DateUtils.add(vm.filter.date, step);
                 delete vm.register;
-                vm.loadCourses([vm.filter.selected.registerTeacher.id], [], window.structure.id, DateUtils.format(vm.filter.date, DateUtils.FORMAT["YEAR-MONTH-DAY"]),
+                await vm.loadCourses(extractSelectedTeacherIds(), [], window.structure.id, DateUtils.format(vm.filter.date, DateUtils.FORMAT["YEAR-MONTH-DAY"]),
                     DateUtils.format(vm.filter.date, DateUtils.FORMAT["YEAR-MONTH-DAY"]), false);
+                setCurrentRegister();
             };
 
             vm.nextDate = () => changeDate(1);
@@ -215,7 +218,11 @@ export const registersController = ng.controller('RegistersController',
             const extractSelectedTeacherIds = function () {
                 const ids = [];
                 if (model.me.hasWorkflow(rights.workflow.search)) {
-                    vm.filter.selected.teachers.map((teacher) => ids.push(teacher.id));
+                    if ($route.current.action === 'getRegister') {
+                        ids.push(vm.filter.selected.registerTeacher.id || vm.register.teachers[0].id);
+                    } else {
+                        vm.filter.selected.teachers.map((teacher) => ids.push(teacher.id));
+                    }
                 } else {
                     ids.push(model.me.userId);
                 }
@@ -302,7 +309,8 @@ export const registersController = ng.controller('RegistersController',
                     vm.register.eventer.on('loading::true', () => $scope.safeApply());
                     vm.register.eventer.on('loading::false', () => $scope.safeApply());
                     await vm.register.sync();
-                    if (vm.register.teachers.length > 0) vm.filter.selected.registerTeacher = vm.register.teachers[0];
+                    if (vm.register.teachers.length > 0 && _.countBy(vm.register.teachers, (teacher) => teacher.id === vm.filter.selected.registerTeacher.id) === 0)
+                        vm.filter.selected.registerTeacher = vm.register.teachers[0];
                 }
             };
 
@@ -466,6 +474,7 @@ export const registersController = ng.controller('RegistersController',
             };
 
             vm.switchRegisterTeacher = function (teacher) {
+                vm.filter.selected.registerTeacher = teacher;
                 vm.courses.sync([teacher.id], [], window.structure.id, DateUtils.format(vm.filter.date, DateUtils.FORMAT["YEAR-MONTH-DAY"]),
                     DateUtils.format(vm.filter.date, DateUtils.FORMAT["YEAR-MONTH-DAY"]), false);
             };

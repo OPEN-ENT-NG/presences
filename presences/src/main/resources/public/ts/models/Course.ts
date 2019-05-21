@@ -8,7 +8,6 @@ export interface Course {
     structureId: string;
     subjectId: string;
     subjectName: string;
-    teacherIds: string[];
     classes: string[];
     groups: string[];
     roomLabels: string[];
@@ -17,6 +16,7 @@ export interface Course {
     endDate: string;
     register_id?: number;
     timestamp?: number;
+    teachers: { id: string, displayName: string }[];
 }
 
 export class Course {

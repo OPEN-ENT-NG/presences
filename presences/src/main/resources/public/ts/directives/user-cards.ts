@@ -1,4 +1,4 @@
-import {_, ng} from 'entcore';
+import {$, _, ng} from 'entcore';
 
 export const UserCard = ng.directive('userCards', () => {
     return {
@@ -20,7 +20,7 @@ export const UserCard = ng.directive('userCards', () => {
                 <div class="cell">
                     <h2>
                         [[ngModel.displayName]] 
-                        <i ng-if="users.length > 1" ng-click="display.users = !display.users" class="arrow bottom"></i>
+                        <i ng-if="users.length > 1" ng-click="display.users = !display.users" class="arrow bottom user-card-arrow-button"></i>
                      </h2>
                     <div class="functions"><em class="function metadata"
                                                ng-repeat="function in ngModel.functions"
@@ -48,6 +48,7 @@ export const UserCard = ng.directive('userCards', () => {
         controller: function ($scope) {
             $scope.display = {users: false};
             const users = _.clone($scope.users);
+            $scope.ngModel = $scope.ngModel || users[0];
 
             const setList = () => {
                 $scope.list = _.filter(users, (user) => user.id !== $scope.ngModel.id);
@@ -61,7 +62,17 @@ export const UserCard = ng.directive('userCards', () => {
                 $scope.$apply();
             };
 
+            $scope.$watch('ngModel', () => $scope.$apply());
+
             setList();
+
+            $("body").click((evt: Event) => {
+                console.log(evt);
+                if (!(evt.target as Element).className.includes('user-card-arrow-button')) {
+                    $scope.display.users = false;
+                    $scope.$apply();
+                }
+            })
         }
     };
 });
