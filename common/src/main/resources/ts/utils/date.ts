@@ -43,7 +43,7 @@ export class DateUtils {
      * Set Date to first Time of day (fr format)
      * @param date Date to set
      */
-    static setFirtTime(date: any): Date {
+    static setFirstTime(date: any): Date {
         return moment(date).set({hour: 0, minute: 0, second: 0}).toDate();
     }
 

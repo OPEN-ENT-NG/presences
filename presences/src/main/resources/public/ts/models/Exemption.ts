@@ -124,7 +124,7 @@ export class Exemptions extends LoadingCollection {
         let dateFormat = DateUtils.FORMAT['YEAR-MONTH-DAY-HOUR-MIN-SEC'];
         try {
             let url = `/presences/exemptions?structure_id=${this.structureId}` +
-                `&start_date=${DateUtils.format(DateUtils.setFirtTime(this.start_date), dateFormat)}` +
+                `&start_date=${DateUtils.format(DateUtils.setFirstTime(this.start_date), dateFormat)}` +
                 `&end_date=${DateUtils.format(DateUtils.setLastTime(this.end_date), dateFormat)}`;
             if (this.students && this.students.length > 0) {
                 url += `&student_id=${this.students.join(',')}`;

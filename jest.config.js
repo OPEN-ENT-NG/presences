@@ -8,7 +8,14 @@ module.exports = {
         "tsx",
         "js"
     ],
-    "testPathIgnorePatterns": ["/node_modules/", "<rootDir>/presences/build/", "<rootDir>/incidents/build/", "<rootDir>/common/build/"],
+    "testPathIgnorePatterns": [
+        "/node_modules/",
+        "<rootDir>/presences/build/",
+        "<rootDir>/presences/out/",
+        "<rootDir>/incidents/build/",
+        "<rootDir>/incidents/out/",
+        "<rootDir>/common/build/"
+    ],
     "verbose": true,
     "testURL": "http://localhost/",
     "coverageDirectory": "coverage/front",
