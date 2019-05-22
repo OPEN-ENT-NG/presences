@@ -2,14 +2,6 @@
     <toasts notifications="vm.notifications"></toasts>
     <h1>
         <i18n>presences.navigation.exemption</i18n>
-        <select
-                class="right-magnet"
-                ng-if="vm.structures.all.length > 1"
-                ng-model="vm.structure"
-                id="structure-list"
-                ng-change="vm.updateStructure(vm.structure)"
-                ng-options="structure as structure.name for structure in vm.structures.all">
-        </select>
     </h1>
     <div static-include="/presences/public/template/exemptions/filters.html"></div>
     <div static-include="/presences/public/template/exemptions/content.html"></div>

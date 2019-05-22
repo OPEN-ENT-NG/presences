@@ -13,6 +13,8 @@ import {Toast} from "../utilities";
 import {DateUtils} from "@common/utils"
 export * from '@common/directives/pagination';
 
+declare let window: any;
+
 interface ViewModel {
     structures: Structures;
     structure: Structure;
@@ -34,8 +36,6 @@ interface ViewModel {
     initData(): void;
 
     updateDate(): void;
-
-    updateStructure(Structure): void;
 
     dateFormater(date): Date;
 
@@ -64,11 +64,10 @@ interface ViewModel {
     closeCreateExemption(): void;
 
     excludeStudentFromForm(student): void;
-
 }
 
 
-export const exemptionsController = ng.controller('ExemptionsController', ['$scope', function ($scope) {
+export const exemptionsController = ng.controller('ExemptionsController', ['$scope', '$route', function ($scope, $route) {
     const vm: ViewModel = this;
 
     console.log('ExemptionsController');
@@ -92,9 +91,9 @@ export const exemptionsController = ng.controller('ExemptionsController', ['$sco
         vm.exemptions.eventer.on('loading::false', () => $scope.safeApply());
 
         vm.subjects = new Subjects();
-        vm.subjects.sync(vm.structure.id);
+        vm.subjects.sync(window.structure.id);
         vm.audiences = new Audiences();
-        vm.audiences.sync(vm.structure.id);
+        vm.audiences.sync(window.structure.id);
 
         vm.students = new Students();
         vm.studentsFrom = new Students();
@@ -107,16 +106,11 @@ export const exemptionsController = ng.controller('ExemptionsController', ['$sco
 
     };
     const loadExemptions = async (): Promise<void> => {
-        await vm.exemptions.prepareSync(vm.structure.id, vm.filter.start_date, vm.filter.end_date, vm.studentsFiltered, vm.audiencesFiltered);
+        await vm.exemptions.prepareSync(window.structure.id, vm.filter.start_date, vm.filter.end_date, vm.studentsFiltered, vm.audiencesFiltered);
         $scope.safeApply();
     };
 
     initData();
-
-    vm.updateStructure = (structure) => {
-        vm.structure = structure;
-        initData();
-    };
 
     vm.updateDate = async () => {
         await loadExemptions();
@@ -186,7 +180,6 @@ export const exemptionsController = ng.controller('ExemptionsController', ['$sco
         } else {
             vm.notifications.push(new Toast(response.data.toString(), 'error'));
         }
-        await loadExemptions();
         vm.filters()
         $scope.safeApply();
     };
@@ -241,4 +234,12 @@ export const exemptionsController = ng.controller('ExemptionsController', ['$sco
         vm.form.students = _.without(vm.form.students, _.findWhere(vm.form.students));
         vm.filters();
     };
+
+    $scope.$watch(() => window.structure, () => {
+        if ($route.current.action === "exemptions") {
+            initData();
+        } else {
+            $scope.redirectTo('/exemptions');
+        }
+    });
 }]);
