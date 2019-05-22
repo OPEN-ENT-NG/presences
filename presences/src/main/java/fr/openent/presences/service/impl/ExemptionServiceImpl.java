@@ -49,21 +49,25 @@ public class ExemptionServiceImpl extends SqlCrudService implements ExemptionSer
                 }
                 else {
                     JsonArray exemptions = event.right().getValue();
-                    Future<JsonObject> userInfoFuture = Future.future();
-                    Future<JsonObject> subjectInfoFuture = Future.future();
+                    if(exemptions.size() == 0){
+                        handler.handle(new Either.Right<>(exemptions));
+                    }
+                    else {
+                        Future<JsonObject> userInfoFuture = Future.future();
+                        Future<JsonObject> subjectInfoFuture = Future.future();
 
-                    addUsersInfo(structure_id, exemptions, userInfoFuture);
-                    addSubjectsInfo(structure_id, exemptions, subjectInfoFuture);
+                        addUsersInfo(structure_id, exemptions, userInfoFuture);
+                        addSubjectsInfo(structure_id, exemptions, subjectInfoFuture);
 
 
-                    CompositeFuture.all(userInfoFuture, subjectInfoFuture).setHandler(eventFutured -> {
-                        if (eventFutured.succeeded()) {
-                            handler.handle(new Either.Right<>(exemptions));
-                        } else {
-                            handler.handle(new Either.Left<>(eventFutured.cause().getMessage()));
-                        }
-                    });
-
+                        CompositeFuture.all(userInfoFuture, subjectInfoFuture).setHandler(eventFutured -> {
+                            if (eventFutured.succeeded()) {
+                                handler.handle(new Either.Right<>(exemptions));
+                            } else {
+                                handler.handle(new Either.Left<>(eventFutured.cause().getMessage()));
+                            }
+                        });
+                    }
                 }
             }
         }));
