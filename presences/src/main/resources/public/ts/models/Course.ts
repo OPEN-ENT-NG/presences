@@ -25,11 +25,13 @@ export class Course {
 export class Courses extends LoadingCollection {
     all: Course[];
     map: any;
+    keysOrder: string[];
 
     constructor() {
         super();
         this.all = [];
         this.map = {};
+        this.keysOrder = [];
     }
 
 
@@ -50,6 +52,7 @@ export class Courses extends LoadingCollection {
             this.all.map((course: Course) => course.timestamp = moment(course.startDate).valueOf());
             this.all = _.sortBy(this.all, 'timestamp');
             this.map = this.groupByDate();
+            this.keysOrder = Object.keys(this.map).reverse();
         } catch (err) {
             throw err;
         }

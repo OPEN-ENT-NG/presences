@@ -51,6 +51,12 @@ public class DateHelper {
         return new SimpleDateFormat(SQL_FORMAT);
     }
 
+    public static Date parse(String date) throws ParseException {
+        SimpleDateFormat ssdf = new SimpleDateFormat(SQL_FORMAT);
+        SimpleDateFormat msdf = new SimpleDateFormat(MONGO_FORMAT);
+        return date.contains("T") ? ssdf.parse(date) : msdf.parse(date);
+    }
+
     /**
      * Check if the first date is after the second date
      *

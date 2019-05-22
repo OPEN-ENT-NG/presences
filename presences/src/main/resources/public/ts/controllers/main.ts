@@ -10,6 +10,8 @@ export interface Scope {
 
     hasSearchRight(): boolean;
 
+    hasRight(right: string): boolean;
+
     redirectTo(path: string): void;
 
     $watch(value: any, trigger: (oldVal: any, newVal: any) => void): void;

@@ -9,7 +9,7 @@
                                 ng-change="vm.selectTeacher"
                                 on-search="vm.searchTeacher"
                                 options="vm.filter.teachers"
-                                placeholder="'presences.search.teacher'"
+                                placeholder="presences.search.teacher"
                                 search="vm.filter.teacher"></async-autocomplete>
         </div>
         <div class="cell twelve">
@@ -29,7 +29,7 @@
                                 ng-change="vm.selectClass"
                                 on-search="vm.searchClass"
                                 options="vm.filter.classes"
-                                placeholder="'presences.search.class'"
+                                placeholder="presences.search.class"
                                 search="vm.filter.class"></async-autocomplete>
         </div>
         <div class="cell twelve">
@@ -67,10 +67,10 @@
     <loader ng-show="vm.courses.loading"
             title="lang.translate('presences.register.loading.text')"
             min-height="'250px'"/>
-    <div class="row" ng-repeat="(date, courses) in vm.courses.map"
+    <div class="row" ng-repeat="date in vm.courses.keysOrder"
          ng-if="vm.courses.all.length > 0">
         <h2 class="capitalized">[[::vm.formatDayDate(date)]]</h2>
-        <div class="card cell" ng-repeat="course in courses|orderBy:'timestamp'"
+        <div class="card cell" ng-repeat="course in vm.courses.map[date]|orderBy:'timestamp'"
              data-ng-click="vm.openRegister(course)"
              ng-class="{active: course._id === vm.register.course_id, disabled: vm.isFuturCourse(course)}">
             <div ng-if="hasSearchRight()" class="row has-search-right">

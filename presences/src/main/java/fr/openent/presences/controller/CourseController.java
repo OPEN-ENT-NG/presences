@@ -1,5 +1,6 @@
 package fr.openent.presences.controller;
 
+import fr.openent.presences.common.helper.DateHelper;
 import fr.openent.presences.common.helper.FutureHelper;
 import fr.openent.presences.enums.RegisterStatus;
 import fr.openent.presences.helper.SquashHelper;
@@ -21,6 +22,11 @@ import io.vertx.core.json.JsonObject;
 import org.entcore.common.controller.ControllerHelper;
 import org.entcore.common.neo4j.Neo4j;
 import org.entcore.common.neo4j.Neo4jResult;
+
+import java.text.ParseException;
+import java.time.Instant;
+import java.time.ZoneId;
+import java.util.Date;
 
 public class CourseController extends ControllerHelper {
 
@@ -121,15 +127,25 @@ public class CourseController extends ControllerHelper {
     private JsonArray filterForgottenCourses(JsonArray courses) {
         JsonArray forgottenRegisters = new JsonArray();
         for (int i = 0; i < courses.size(); i++) {
-            JsonObject course = courses.getJsonObject(i);
-            if (!course.containsKey("register_id")) {
-                forgottenRegisters.add(course);
-                continue;
-            }
+            try {
+                //TODO Fix timezone trick
+                long timeDifference = ZoneId.of("Europe/Paris").getRules().getOffset(Instant.now()).getTotalSeconds();
+                Date forgottenBeforeThatDate = new Date(System.currentTimeMillis() + (15 * 60000) + (timeDifference * 1000));
 
-            Integer registerState = course.getInteger("register_state_id");
-            if (!registerState.equals(RegisterStatus.DONE.getStatus())) {
-                forgottenRegisters.add(course);
+                JsonObject course = courses.getJsonObject(i);
+                if (forgottenBeforeThatDate.after(DateHelper.parse(course.getString("startDate")))) {
+                    if (!course.containsKey("register_id")) {
+                        forgottenRegisters.add(course);
+                        continue;
+                    }
+                    Integer registerState = course.getInteger("register_state_id");
+
+                    if (!registerState.equals(RegisterStatus.DONE.getStatus())) {
+                        forgottenRegisters.add(course);
+                    }
+                }
+            } catch (ParseException e) {
+                log.error("[Presences@CourseController] Failed to parse date", e);
             }
         }
 
