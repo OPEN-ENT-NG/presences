@@ -54,6 +54,9 @@
             <date-picker ng-model="vm.filter.end_date"
                          ng-change="vm.changeFiltersDate()"></date-picker>
         </span>
+    <button class="right-magnet" ng-click="vm.export()" workflow="presences.export">
+        <i18n>presences.export.tocsv</i18n>
+    </button>
 </div>
 <div class="row">
     <div class="chips">

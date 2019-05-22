@@ -18,7 +18,7 @@
   "presences.exemptions.comment": "Commentaire",
   "presences.exemptions.attendance": "Présence",
   "presences.exemptions.noexemptions": "Aucune dispense",
-  "presences.exemptions.tocsv": "Exporter csv",
+  "presences.export.tocsv": "Exporter csv",
   "presences.exemptions.create": "Saisir une dispense",
   "presences.exemptions.form.attendance": "Présence obligatoire",
   "presences.exemptions.form.defautValue.comment": "Ecrire un texte",
@@ -47,5 +47,10 @@
   "presences.event.deletion.err": "Une erreur est survenue lors de la suppression de l'évènement",
   "presences.search.teacher": "Rechercher un enseignant",
   "presences.search.class": "Rechercher une classe",
-  "presences.register.open.404": "L'appel sélectionné n'a pas été trouvé"
+  "presences.register.open.404": "L'appel sélectionné n'a pas été trouvé",
+  "presences.register.csv.header.date": "Date/heure",
+  "presences.register.csv.header.teacher": "Enseignant(s)",
+  "presences.register.csv.header.groups": "Classe(s)/Groupe(s)",
+  "presences.register.csv.header.subject": "Matière",
+  "presences.register.csv.filename": "export_appels.csv"
 }

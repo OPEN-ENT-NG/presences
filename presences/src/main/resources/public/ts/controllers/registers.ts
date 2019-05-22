@@ -90,6 +90,8 @@ interface ViewModel {
     changeFiltersDate(): void;
 
     switchRegisterTeacher(teacher): void;
+
+    export(): void;
 }
 
 export const registersController = ng.controller('RegistersController',
@@ -165,6 +167,11 @@ export const registersController = ng.controller('RegistersController',
 
             vm.changeFiltersDate = async function () {
                 await vm.loadCourses(extractSelectedTeacherIds(), extractSelectedGroupsName());
+            };
+
+            vm.export = function () {
+                vm.courses.export(extractSelectedTeacherIds(), extractSelectedGroupsName(), window.structure.id,
+                    DateUtils.format(vm.filter.start_date, DateUtils.FORMAT["YEAR-MONTH-DAY"]), DateUtils.format(vm.filter.end_date, DateUtils.FORMAT["YEAR-MONTH-DAY"]), vm.filter.forgotten)
             };
 
             const changeDate = async function (step: number) {

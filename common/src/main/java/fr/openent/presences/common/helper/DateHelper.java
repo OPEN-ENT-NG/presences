@@ -22,8 +22,8 @@ public class DateHelper {
      * @throws ParseException
      */
     public static long getTimeDiff(String date1, String date2) throws ParseException {
-        SimpleDateFormat ssdf = new SimpleDateFormat(SQL_FORMAT);
-        SimpleDateFormat msdf = new SimpleDateFormat(MONGO_FORMAT);
+        SimpleDateFormat ssdf = DateHelper.getPsqlSimpleDateFormat();
+        SimpleDateFormat msdf = DateHelper.getMongoSimpleDateFormat();
         Date firstDate = date1.contains("T") ? ssdf.parse(date1) : msdf.parse(date1);
         Date secondDate = date2.contains("T") ? ssdf.parse(date2) : msdf.parse(date2);
 
@@ -51,9 +51,13 @@ public class DateHelper {
         return new SimpleDateFormat(SQL_FORMAT);
     }
 
+    public static SimpleDateFormat getMongoSimpleDateFormat() {
+        return new SimpleDateFormat(MONGO_FORMAT);
+    }
+
     public static Date parse(String date) throws ParseException {
-        SimpleDateFormat ssdf = new SimpleDateFormat(SQL_FORMAT);
-        SimpleDateFormat msdf = new SimpleDateFormat(MONGO_FORMAT);
+        SimpleDateFormat ssdf = DateHelper.getPsqlSimpleDateFormat();
+        SimpleDateFormat msdf = DateHelper.getMongoSimpleDateFormat();
         return date.contains("T") ? ssdf.parse(date) : msdf.parse(date);
     }
 

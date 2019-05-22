@@ -12,6 +12,7 @@ public class Presences extends BaseServer {
     public static final String READ_REGISTER = "presences.register.read";
     public static final String CREATE_REGISTER = "presences.register.create";
     public static final String SEARCH = "presences.search";
+    public static final String EXPORT = "presences.export";
     public static final String CREATE_EVENT = "presences.event.create";
     public static final String READ_EXEMPTION = "presences.exemption.read";
     public static final String MANAGE_EXEMPTION = "presences.exemption.manage";

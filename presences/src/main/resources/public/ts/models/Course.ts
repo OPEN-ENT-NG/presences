@@ -59,6 +59,19 @@ export class Courses extends LoadingCollection {
         this.loading = false;
     }
 
+    export(teachers: string[] = null, groups: string[], structure: string, start: string, end: string, forgottenRegisters: boolean = false) {
+        let teacherFilter = '';
+        let groupFilter = '';
+        if (teachers && teachers.length > 0) {
+            teachers.map((teacher) => teacherFilter += `teacher=${teacher}&`);
+        }
+        if (groups && groups.length > 0) {
+            groups.map((group) => groupFilter += `group=${group}&`);
+        }
+
+        window.open(`/presences/courses/export?${teacherFilter}${groupFilter}structure=${structure}&start=${start}&end=${end}&forgotten_registers=${forgottenRegisters}`);
+    }
+
     groupByDate() {
         const map = {};
         for (let i = 0; i < this.all.length; i++) {
