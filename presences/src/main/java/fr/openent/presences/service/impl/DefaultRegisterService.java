@@ -44,7 +44,7 @@ public class DefaultRegisterService implements RegisterService {
 
     @Override
     public void list(String structureId, String start, String end, Handler<Either<String, JsonArray>> handler) {
-        String query = "SELECT id, start_date, end_date, course_id, state_id " +
+        String query = "SELECT id, start_date, end_date, course_id, state_id, notified " +
                 "FROM " + Presences.dbSchema + ".register " +
                 "WHERE register.structure_id = ? " +
                 "AND register.start_date > ? " +
@@ -119,7 +119,7 @@ public class DefaultRegisterService implements RegisterService {
 
     @Override
     public void get(Integer id, Handler<Either<String, JsonObject>> handler) {
-        String query = "SELECT personnel_id, proof_id, course_id, subject_id, start_date, end_date, structure_id, counsellor_input, state_id, json_agg(\"group\".*) as groups " +
+        String query = "SELECT personnel_id, proof_id, course_id, notified, subject_id, start_date, end_date, structure_id, counsellor_input, state_id, json_agg(\"group\".*) as groups " +
                 "FROM " + Presences.dbSchema + ".register " +
                 "INNER JOIN " + Presences.dbSchema + ".rel_group_register ON (register.id = rel_group_register.register_id) " +
                 "INNER JOIN " + Presences.dbSchema + ".\"group\" ON (rel_group_register.group_id = \"group\".id) " +
@@ -207,6 +207,43 @@ public class DefaultRegisterService implements RegisterService {
         }));
     }
 
+    @Override
+    public void exists(String courseId, String startDate, String endDate, Handler<Either<String, JsonObject>> handler) {
+        String query = "SELECT id " +
+                "FROM " + Presences.dbSchema + ".register " +
+                "WHERE course_id = ? AND start_date = ? AND end_date = ?";
+
+        JsonArray params = new JsonArray()
+                .add(courseId)
+                .add(startDate)
+                .add(endDate);
+
+        Sql.getInstance().prepared(query, params, message -> {
+            Either<String, JsonObject> either = SqlResult.validUniqueResult(message);
+            if (either.isLeft()) {
+                LOGGER.error("[Presences@DefaultRegisterService] An error occurred when recovering register identifier", either.left().getValue());
+                handler.handle(new Either.Left<>("[Presences@DefaultRegisterService] Failed to recover register identifier"));
+                return;
+            }
+            Long count = SqlResult.countResult(message);
+            JsonObject response = new JsonObject()
+                    .put("exists", count != null && count > 0)
+                    .put("id", either.right().getValue().getLong("id"));
+            handler.handle(new Either.Right<>(response));
+        });
+    }
+
+    @Override
+    public void setNotified(Long registerId, Handler<Either<String, JsonObject>> handler) {
+        String query = "UPDATE " + Presences.dbSchema + ".register SET notified = true " +
+                "WHERE id = ?";
+
+        JsonArray params = new JsonArray()
+                .add(registerId);
+
+        Sql.getInstance().prepared(query, params, SqlResult.validRowsResultHandler(handler));
+    }
+
     /**
      * Retrieve course teachers. Based on given course identifier, it returns user identifier, user name and user function
      *
@@ -228,7 +265,7 @@ public class DefaultRegisterService implements RegisterService {
             JsonObject course = either.right().getValue();
             JsonArray teacherIds = course.getJsonArray("teacherIds", new JsonArray());
 
-            String teacherQuery = "MATCH (u:User) WHERE u.id IN {teacherIds} RETURN u.id as id, u.displayName as displayName, " +
+            String teacherQuery = "MATCH (u:User) WHERE u.id IN {teacherIds} RETURN u.id as id, (u.lastName + ' ' + u.firstName) as displayName, " +
                     "CASE WHEN u.functions IS NULL THEN [] ELSE EXTRACT(function IN u.functions | last(split(function, \"$\"))) END as functions";
             Neo4j.getInstance().execute(teacherQuery, new JsonObject().put("teacherIds", teacherIds), Neo4jResult.validResultHandler(handler));
         });
@@ -313,11 +350,11 @@ public class DefaultRegisterService implements RegisterService {
     /**
      * Format user. It creates an object containing its identifier, its name, its group, its events and its event day history
      *
-     * @param registerId Register identifier. The function needs the register identifier to extract events that concern the current register.
-     * @param student    Student
-     * @param events     Student events list
+     * @param registerId       Register identifier. The function needs the register identifier to extract events that concern the current register.
+     * @param student          Student
+     * @param events           Student events list
      * @param lastCourseAbsent Define if user was absent during last teacher course$
-     * @param groupName User group name
+     * @param groupName        User group name
      * @return Formatted student
      */
     private JsonObject formatStudent(Integer registerId, JsonObject student, JsonArray events, boolean lastCourseAbsent, String groupName) {

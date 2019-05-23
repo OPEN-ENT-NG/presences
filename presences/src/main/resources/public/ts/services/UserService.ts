@@ -16,7 +16,7 @@ export interface UserService {
 export const UserService = ng.service('UserService', (): UserService => ({
     search: async (structureId: string, value: string, profile: string) => {
         try {
-            const {data} = await http.get(`/presences/search/users?structureId=${structureId}&profile=${profile}&q=${value}&field=displayName`);
+            const {data} = await http.get(`/presences/search/users?structureId=${structureId}&profile=${profile}&q=${value}&field=firstName&field=lastName`);
             return data;
         } catch (err) {
             throw err;

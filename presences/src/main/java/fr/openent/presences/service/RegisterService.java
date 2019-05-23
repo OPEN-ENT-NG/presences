@@ -43,4 +43,22 @@ public interface RegisterService {
      * @param handler Function handler returning data
      */
     void get(Integer id, Handler<Either<String, JsonObject>> handler);
+
+    /**
+     * Check if a register exists for given information
+     *
+     * @param courseId  Course identifier
+     * @param startDate Start date
+     * @param endDate   End date
+     * @param handler   Function handler returning data
+     */
+    void exists(String courseId, String startDate, String endDate, Handler<Either<String, JsonObject>> handler);
+
+    /**
+     * Check if given course exists. It use course identifier (_id), start date course (startDate) and end date course (endDate).
+     *
+     * @param registerId Register identifier
+     * @param handler    Function handler returning data
+     */
+    void setNotified(Long registerId, Handler<Either<String, JsonObject>> handler);
 }

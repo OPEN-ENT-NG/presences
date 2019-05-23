@@ -7,6 +7,9 @@
 <user-cards users="vm.register.teachers"
             workflow="presences.search"
             ng-model="vm.filter.selected.registerTeacher"
+            notified="vm.register.notified"
+            can-notify="[[vm.canNotify(vm.register.start_date, vm.register.state_id)]]"
+            on-notify="::vm.notify"
             ng-change="vm.switchRegisterTeacher"
             ng-if="vm.register && vm.register.teachers"
             ng-show="!vm.register.loading && vm.register.teachers.length > 0">

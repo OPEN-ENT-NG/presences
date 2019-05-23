@@ -7,17 +7,20 @@ export const UserCard = ng.directive('userCards', () => {
             users: '=',
             ngShow: '=',
             ngModel: '=',
-            ngChange: '&?'
+            ngChange: '&?',
+            notified: '=?',
+            onNotify: '=?',
+            canNotify: '='
         },
         template: `
         <div class="user-cards"
                  ng-show="ngShow">
            <div class="user-card">
-                <div class="cell avatar"
+                <div class="avatar"
                      ng-style="{'background-image': 'url(/userbook/avatar/' + ngModel.id + ')'}">
                     &nbsp;
                 </div>
-                <div class="cell">
+                <div>
                     <h2>
                         [[ngModel.displayName]] 
                         <i ng-if="users.length > 1" ng-click="display.users = !display.users" class="arrow bottom user-card-arrow-button"></i>
@@ -25,6 +28,9 @@ export const UserCard = ng.directive('userCards', () => {
                     <div class="functions"><em class="function metadata"
                                                ng-repeat="function in ngModel.functions"
                                                ng-bind="function"></em></div>
+                </div>
+                 <div class="notify" ng-if="canNotify">
+                    <i class="notify-bell right-magnet" ng-click="notify()" ng-class="{active: notified}">&nbsp;</i>
                 </div>
            </div>
            <div class="users" ng-class="{'displayed': display.users}">
@@ -49,6 +55,8 @@ export const UserCard = ng.directive('userCards', () => {
             $scope.display = {users: false};
             const users = _.clone($scope.users);
             $scope.ngModel = $scope.ngModel || users[0];
+            $scope.notified = $scope.notified || false;
+            $scope.onNotify = $scope.onNotify || (() => false);
 
             const setList = () => {
                 $scope.list = _.filter(users, (user) => user.id !== $scope.ngModel.id);
@@ -62,12 +70,14 @@ export const UserCard = ng.directive('userCards', () => {
                 $scope.$apply();
             };
 
+            $scope.notify = () => $scope.onNotify();
+
             $scope.$watch('ngModel', () => $scope.$apply());
+            $scope.$watch('notified', () => $scope.$apply());
 
             setList();
 
             $("body").click((evt: Event) => {
-                console.log(evt);
                 if (!(evt.target as Element).className.includes('user-card-arrow-button')) {
                     $scope.display.users = false;
                     $scope.$apply();

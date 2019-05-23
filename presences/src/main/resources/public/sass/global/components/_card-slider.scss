@@ -37,6 +37,16 @@ $card-height: 85px;
       margin-left: 0 !important;
     }
 
+    .notify-bell {
+      font-size: 20px;
+      line-height: 20px;
+      color: $presences-grey;
+
+      &.active {
+        color: $presences-main;
+      }
+    }
+
     .hour {
       font-weight: bold;
     }
@@ -79,6 +89,10 @@ $card-height: 85px;
     &:hover, &.active {
       background-color: $presences-main;
       color: $white;
+
+      .notify-bell {
+        color: $presences-white;
+      }
     }
   }
 }

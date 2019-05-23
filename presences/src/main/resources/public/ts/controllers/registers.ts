@@ -1,19 +1,10 @@
 import {_, model, moment, ng, notify, template} from 'entcore';
-import {
-    Absence,
-    Course,
-    Courses,
-    Departure,
-    EventType,
-    Lateness,
-    Register,
-    RegisterStatus,
-    Remark
-} from '../models'
+import {Absence, Course, Courses, Departure, EventType, Lateness, Register, RegisterStatus, Remark} from '../models'
 import {GroupService, UserService} from '../services';
 import {CourseUtils, DateUtils} from '@common/utils'
 import rights from '../rights'
 import {Scope} from './main'
+import http from 'axios'
 
 declare let window: any;
 
@@ -37,7 +28,7 @@ interface ViewModel {
     filter: Filter;
     RegisterStatus: any;
 
-    openRegister(course: Course): Promise<void>;
+    openRegister(course: Course, $event: Event): Promise<void>;
 
     nextDate(): void;
 
@@ -91,6 +82,10 @@ interface ViewModel {
 
     switchRegisterTeacher(teacher): void;
 
+    notify(): Promise<void>;
+
+    canNotify(start_date: string, state: RegisterStatus): boolean;
+
     export(): void;
 }
 
@@ -138,10 +133,10 @@ export const registersController = ng.controller('RegistersController',
                     }
                 }
             };
-            $rootScope.$on("$routeChangeSuccess", () => {
-                actions[$route.current.action]($route.current.params)
-            });
 
+            $scope.$watch(() => $route.current.action, () => {
+                actions[$route.current.action]($route.current.params);
+            });
             vm.register = undefined;
             vm.courses = new Courses();
             vm.courses.eventer.on('loading::true', () => $scope.safeApply());
@@ -290,10 +285,14 @@ export const registersController = ng.controller('RegistersController',
                     if (CourseUtils.isCurrentCourse(vm.courses.all[i])) course = vm.courses.all[i];
                     i++;
                 }
-                return vm.openRegister(course || vm.courses.all[0]);
+                return vm.openRegister(course || vm.courses.all[0], null);
             };
 
-            vm.openRegister = async function (course: Course) {
+            vm.openRegister = async function (course: Course, $event: Event) {
+                if ($event !== null && ($event.target as Element).className.includes('notify-bell')) {
+                    notifyCourse(course);
+                    return;
+                }
                 if (vm.isFuturCourse(course)) return;
                 vm.register = createRegisterFromCourse(course);
                 if (!course.register_id) {
@@ -486,6 +485,45 @@ export const registersController = ng.controller('RegistersController',
                     DateUtils.format(vm.filter.date, DateUtils.FORMAT["YEAR-MONTH-DAY"]), false);
             };
 
+            const notifyCourse = async function (course: Course) {
+                try {
+                    const {data} = await notifyTeachers(course._id, course.startDate, course.endDate);
+                    if ('register_id' in data) {
+                        course.register_id = data.register_id;
+                    }
+                    course.notified = true;
+                    $scope.safeApply();
+                } catch (err) {
+                    notify.error('presences.register.notify.err');
+                    throw err;
+                }
+            };
+
+            const notifyTeachers = async function (id, start, end) {
+                return await http.post(`/presences/courses/${id}/notify`, {start, end});
+            };
+
+            vm.notify = async function () {
+                try {
+                    const {course_id, start_date, end_date} = vm.register;
+                    await notifyTeachers(course_id, start_date, end_date);
+                    vm.register.notified = true;
+                    $scope.safeApply();
+                } catch (err) {
+                    notify.error('presences.register.notify.err');
+                    throw err;
+                }
+            };
+
+            vm.canNotify = function (start_date, state) {
+                if (state && state === RegisterStatus.DONE) {
+                    return false;
+                }
+
+                return model.me.hasWorkflow(rights.workflow.notify)
+                    && !vm.isFuturCourse(({startDate: start_date} as Course))
+                    && moment(DateUtils.setFirstTime(moment())).diff(moment(DateUtils.setFirstTime(start_date)), 'days') < 2
+            };
 
             $scope.$watch(() => window.structure, () => {
                 if ($route.current.action === "registers") {

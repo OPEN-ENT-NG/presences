@@ -55,6 +55,15 @@ $avatar-size: 50px;
     align-items: center;
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.26);
 
+    .notify {
+      margin-left: 15px;
+
+      .notify-bell {
+        font-size: 32px;
+        color: $presences-white;
+      }
+    }
+
     .avatar {
       width: $avatar-size;
       height: $avatar-size;

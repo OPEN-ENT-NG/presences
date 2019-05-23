@@ -74,17 +74,19 @@
          ng-if="vm.courses.all.length > 0">
         <h2 class="capitalized">[[::vm.formatDayDate(date)]]</h2>
         <div class="card cell" ng-repeat="course in vm.courses.map[date]|orderBy:'timestamp'"
-             data-ng-click="vm.openRegister(course)"
+             data-ng-click="vm.openRegister(course, $event)"
              ng-class="{active: course._id === vm.register.course_id, disabled: vm.isFuturCourse(course)}">
             <div ng-if="hasSearchRight()" class="row has-search-right">
-                <div class="row hour">[[::vm.formatHour(course.startDate)]] -
-                    [[::vm.formatHour(course.endDate)]]
+                <div class="row hour">
+                    <span>[[::vm.formatHour(course.startDate)]] - [[::vm.formatHour(course.endDate)]]</span>
+                    <i class="right-magnet notify-bell" ng-if="vm.canNotify(course.startDate, course.register_state_id)"
+                       ng-class="{active: course.notified}">&nbsp;</i>
                 </div>
                 <div class="row teachers">
                     <span ng-repeat="teacher in course.teachers">[[::teacher.displayName]]</span>
                 </div>
                 <em class="row metadata">[[::course.subjectName]]</em>
-                <div class="classes">
+                <div class="classes row ellipsis">
                     <span ng-repeat="class in course.classes">[[::class]]</span>
                     <span ng-repeat="group in course.groups">[[::group]]</span>
                 </div>
@@ -93,7 +95,7 @@
                 <div class="row hour">[[::vm.formatHour(course.startDate)]] -
                     [[::vm.formatHour(course.endDate)]]
                 </div>
-                <div class="row classes">
+                <div class="row classes ellipsis">
                     <span ng-repeat="class in course.classes">[[::class]]</span>
                     <span ng-repeat="group in course.groups">[[::group]]</span>
                 </div>

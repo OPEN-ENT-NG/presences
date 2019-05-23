@@ -1,4 +1,4 @@
-i{
+i {
   &.home::before {
     content: "\e82b";
   }
@@ -57,5 +57,13 @@ i{
 
   &.show-list::before {
     content: "\e8ad";
+  }
+
+  &.notify-bell::before {
+    content: "\e7f4";
+  }
+
+  &.notify-bell.active::before {
+    content: "\e7f7";
   }
 }

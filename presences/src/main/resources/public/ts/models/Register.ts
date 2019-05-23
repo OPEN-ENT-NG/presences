@@ -39,6 +39,7 @@ export interface Register {
     proof_id?: number;
     absenceCounter: number;
     groupMap?: any;
+    notified: boolean;
     students: Student[];
     teachers: Teacher[];
 }
@@ -110,6 +111,7 @@ export class Register extends LoadingCollection {
             this.students = data.students;
             this.state_id = data.state_id;
             this.teachers = data.teachers;
+            this.notified = data.notified;
             this.formatStudents();
             this.absenceCounter = 0;
             this.students.map((student) => {

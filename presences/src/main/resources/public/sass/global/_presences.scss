@@ -30,6 +30,12 @@ body.presences, .sniplet.presences {
     margin-left: $navbar-width;
   }
 
+  .ellipsis {
+    text-overflow: ellipsis;
+    overflow: hidden;
+    white-space: nowrap;
+  }
+
   .radius {
     border-radius: 5px;
   }

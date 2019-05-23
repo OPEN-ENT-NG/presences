@@ -1,5 +1,9 @@
 .async-autocomplete {
   .input-async-autocomplete {
+    input[type="text"]:focus {
+      border-bottom: 2px solid $presences-main !important;
+    }
+
     &.loading {
       @include fonticon();
 
@@ -17,6 +21,11 @@
     top: 80%;
     max-height: 200px;
     overflow-y: scroll;
+    width: 100%;
+
+    li:hover {
+      background-color: $presences-main;
+    }
   }
 
   .drop-down {

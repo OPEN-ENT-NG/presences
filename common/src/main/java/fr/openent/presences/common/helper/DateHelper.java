@@ -22,10 +22,8 @@ public class DateHelper {
      * @throws ParseException
      */
     public static long getTimeDiff(String date1, String date2) throws ParseException {
-        SimpleDateFormat ssdf = DateHelper.getPsqlSimpleDateFormat();
-        SimpleDateFormat msdf = DateHelper.getMongoSimpleDateFormat();
-        Date firstDate = date1.contains("T") ? ssdf.parse(date1) : msdf.parse(date1);
-        Date secondDate = date2.contains("T") ? ssdf.parse(date2) : msdf.parse(date2);
+        Date firstDate = parse(date1);
+        Date secondDate = parse(date2);
 
         return secondDate.getTime() - firstDate.getTime();
     }

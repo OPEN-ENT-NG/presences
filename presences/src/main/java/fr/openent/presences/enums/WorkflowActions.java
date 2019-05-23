@@ -7,6 +7,7 @@ public enum WorkflowActions {
     READ_REGISTER(Presences.READ_REGISTER),
     SEARCH(Presences.SEARCH),
     EXPORT(Presences.EXPORT),
+    NOTIFY(Presences.NOTIFY),
     CREATE_EVENT(Presences.CREATE_EVENT),
     MANAGE_EXEMPTION(Presences.MANAGE_EXEMPTION);
 

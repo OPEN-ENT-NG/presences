@@ -17,6 +17,7 @@ export interface Course {
     register_id?: number;
     timestamp?: number;
     teachers: { id: string, displayName: string }[];
+    notified: boolean;
 }
 
 export class Course {

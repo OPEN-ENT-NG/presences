@@ -6,6 +6,7 @@ const rights = {
         createEvent: 'fr.openent.presences.controller.EventController|postEvent',
         search: 'fr.openent.presences.controller.SearchController|searchUsers',
         export: 'fr.openent.presences.controller.CourseController|exportCourses',
+        notify: 'fr.openent.presences.controller.CourseController|notify',
         readExemption: 'fr.openent.presences.controller.ExemptionController|getExemptions',
         manageExemption: 'fr.openent.presences.controller.ExemptionController|createExemptions'
     }
