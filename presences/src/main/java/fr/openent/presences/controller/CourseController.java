@@ -160,7 +160,7 @@ public class CourseController extends ControllerHelper {
                     object.remove("endCourse");
                     object.remove("is_periodic");
                     object.remove("is_recurrent");
-                    object.put("subjectName", subjectMap.getJsonObject(object.getString("subjectId")).getString("externalId"));
+                    object.put("subjectName", subjectMap.getJsonObject(object.getString("subjectId"), new JsonObject()).getString("externalId", object.getString("subjectId")));
                     JsonArray courseTeachers = new JsonArray();
                     JsonArray teacherIds = object.getJsonArray("teacherIds");
                     for (int j = 0; j < teacherIds.size(); j++) {
