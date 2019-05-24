@@ -1,16 +1,20 @@
 package fr.openent.presences.controller;
 
 import fr.openent.presences.Presences;
+import fr.openent.presences.export.ExemptionCSVExport;
+import fr.openent.presences.security.ExportRight;
 import fr.openent.presences.security.ManageExemptionRight;
 import fr.openent.presences.service.ExemptionService;
 import fr.openent.presences.service.impl.ExemptionServiceImpl;
 import fr.wseduc.rs.*;
 import fr.wseduc.security.ActionType;
 import fr.wseduc.security.SecuredAction;
+import fr.wseduc.webutils.Either;
 import fr.wseduc.webutils.http.Renders;
 import fr.wseduc.webutils.request.RequestUtils;
 import io.vertx.core.CompositeFuture;
 import io.vertx.core.Future;
+import io.vertx.core.Handler;
 import io.vertx.core.eventbus.EventBus;
 import fr.openent.presences.common.helper.FutureHelper;
 import io.vertx.core.http.HttpServerRequest;
@@ -41,28 +45,29 @@ public class ExemptionController extends ControllerHelper {
     @ApiDoc("Retrieve exemptions")
     @SecuredAction(Presences.READ_EXEMPTION)
     public void getExemptions(final HttpServerRequest request) {
+        if (!request.params().contains("structure_id") || !request.params().contains("start_date") || !request.params().contains("end_date") || !request.params().contains("page")) {
+            badRequest(request);
+            return;
+        }
+        getExemptionsORCreateCSV(request, false);
+    }
+
+    @Get("/exemptions/export")
+    @ApiDoc("Export exemptions")
+    @ResourceFilter(ExportRight.class)
+    @SecuredAction(value = "", type = ActionType.RESOURCE)
+    public void exportExemptions(HttpServerRequest request) {
         if (!request.params().contains("structure_id") || !request.params().contains("start_date") || !request.params().contains("end_date")) {
             badRequest(request);
             return;
         }
+        getExemptionsORCreateCSV(request, true);
+    }
+
+    private void getExemptionsORCreateCSV(HttpServerRequest request, boolean wantCSV) {
         //Manage pagination
         String page = request.getParam("page");
 
-        Future<JsonArray> exemptionsFuture = Future.future();
-        Future<JsonObject> pageNumberFuture = Future.future();
-
-        CompositeFuture.all(exemptionsFuture, pageNumberFuture).setHandler(event -> {
-            if (event.failed()) {
-                renderError(request, JsonObject.mapFrom(event.cause()));
-            } else {
-                JsonObject res = new JsonObject()
-                        .put("page", Integer.parseInt(page))
-                        .put("page_count", pageNumberFuture.result().getLong("count") / Presences.PAGE_SIZE)
-                        .put("values", exemptionsFuture.result());
-
-                renderJson(request, res);
-            }
-        });
         //get usefull data to get
         String structure_id = String.valueOf(request.getParam("structure_id"));
         String start_date = String.valueOf(request.getParam("start_date"));
@@ -84,10 +89,13 @@ public class ExemptionController extends ControllerHelper {
                         JsonObject student = student_ids_fromClasses.getJsonObject(i);
                         student_ids.add(student.getString("idNeo4j"));
                     }
-                    exemptionService.get(structure_id, start_date, end_date, student_ids, page, FutureHelper.handlerJsonArray(exemptionsFuture));
-                    exemptionService.getPageNumber(structure_id, start_date, end_date, student_ids, FutureHelper.handlerJsonObject(pageNumberFuture));
+                    if(wantCSV){
+                        csvResponse(request, structure_id, start_date, end_date, student_ids);
+                    }
+                    else {
+                        paginateResponse(request, page, structure_id, start_date, end_date, student_ids);
 
-
+                    }
                 } else {
                     JsonObject error = new JsonObject()
                             .put("error", body.getString("message"));
@@ -95,9 +103,56 @@ public class ExemptionController extends ControllerHelper {
                 }
             }));
         } else {
-            exemptionService.get(structure_id, start_date, end_date, student_ids, page, FutureHelper.handlerJsonArray(exemptionsFuture));
-            exemptionService.getPageNumber(structure_id, start_date, end_date, student_ids, FutureHelper.handlerJsonObject(pageNumberFuture));
+            if (wantCSV) {
+                csvResponse(request, structure_id, start_date, end_date, student_ids);
+            } else {
+                paginateResponse(request, page, structure_id, start_date, end_date, student_ids);
+            }
         }
+    }
+
+    private void csvResponse(HttpServerRequest request, String structure_id, String start_date, String end_date, List<String> student_ids) {
+        exemptionService.get(structure_id, start_date, end_date, student_ids, null, new Handler<Either<String, JsonArray>>() {
+            @Override
+            public void handle(Either<String, JsonArray> event) {
+                JsonArray exemptions = event.right().getValue();
+                List<String> csvHeaders = Arrays.asList(
+                                "presences.exemptions.csv.header.student.firstName",
+                                "presences.exemptions.csv.header.student.lastName",
+                                "presences.exemptions.csv.header.audiance",
+                                "presences.exemptions.csv.header.subject",
+                                "presences.exemptions.csv.header.startDate",
+                                "presences.exemptions.csv.header.endDate",
+                                "presences.exemptions.csv.header.comment",
+                                "presences.exemptions.csv.header.attendance");
+                ExemptionCSVExport ecs = new ExemptionCSVExport(exemptions);
+                ecs.setRequest(request);
+                ecs.setHeader(csvHeaders);
+                ecs.export();
+            }
+        });
+    }
+
+
+    private void paginateResponse(final HttpServerRequest request, String page, String structure_id, String start_date, String end_date, List<String> student_ids) {
+        Future<JsonArray> exemptionsFuture = Future.future();
+        Future<JsonObject> pageNumberFuture = Future.future();
+
+        CompositeFuture.all(exemptionsFuture, pageNumberFuture).setHandler(event -> {
+            if (event.failed()) {
+                renderError(request, JsonObject.mapFrom(event.cause()));
+            } else {
+                JsonObject res = new JsonObject()
+                        .put("page", Integer.parseInt(page))
+                        .put("page_count", pageNumberFuture.result().getLong("count") / Presences.PAGE_SIZE)
+                        .put("values", exemptionsFuture.result());
+
+                renderJson(request, res);
+            }
+        });
+
+        exemptionService.get(structure_id, start_date, end_date, student_ids, page, FutureHelper.handlerJsonArray(exemptionsFuture));
+        exemptionService.getPageNumber(structure_id, start_date, end_date, student_ids, FutureHelper.handlerJsonObject(pageNumberFuture));
     }
 
     @Post("/exemptions")

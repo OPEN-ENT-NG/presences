@@ -3,8 +3,6 @@ import {
     Audiences,
     Exemption,
     Exemptions,
-    Structure,
-    Structures,
     Student,
     Students,
     Subjects
@@ -16,8 +14,6 @@ export * from '@common/directives/pagination';
 declare let window: any;
 
 interface ViewModel {
-    structures: Structures;
-    structure: Structure;
     filter: { start_date: any, end_date: any, students: any };
     translate: any;
     subjects: Subjects;
@@ -64,6 +60,8 @@ interface ViewModel {
     closeCreateExemption(): void;
 
     excludeStudentFromForm(student): void;
+
+    export(): void;
 }
 
 
@@ -74,9 +72,6 @@ export const exemptionsController = ng.controller('ExemptionsController', ['$sco
     /**
      * Init usefull var and function PART
      */
-    vm.structures = new Structures();
-    vm.structures.sync();
-    vm.structure = vm.structures.first();
     vm.translate = lang.translate;
     const initData = () => {
         vm.notifications = [];
@@ -106,7 +101,7 @@ export const exemptionsController = ng.controller('ExemptionsController', ['$sco
 
     };
     const loadExemptions = async (): Promise<void> => {
-        await vm.exemptions.prepareSync(window.structure.id, vm.filter.start_date, vm.filter.end_date, vm.studentsFiltered, vm.audiencesFiltered);
+        await vm.exemptions.prepareSyncPaginate(window.structure.id, vm.filter.start_date, vm.filter.end_date, vm.studentsFiltered, vm.audiencesFiltered);
         $scope.safeApply();
     };
 
@@ -126,11 +121,11 @@ export const exemptionsController = ng.controller('ExemptionsController', ['$sco
      */
 
     vm.searchByStudent = async (searchText: string) => {
-        await vm.students.search(vm.structure.id, searchText);
+        await vm.students.search(window.structure.id, searchText);
         $scope.safeApply();
     }
     vm.searchFormByStudent = async (searchText: string) => {
-        await vm.studentsFrom.search(vm.structure.id, searchText);
+        await vm.studentsFrom.search(window.structure.id, searchText);
         $scope.safeApply();
     }
 
@@ -146,7 +141,7 @@ export const exemptionsController = ng.controller('ExemptionsController', ['$sco
             vm.studentsFiltered.push(student);
         }
 
-        vm.exemptions.prepareSync(vm.structure.id, vm.filter.start_date, vm.filter.end_date, vm.studentsFiltered, vm.audiencesFiltered);
+        vm.exemptions.prepareSyncPaginate(window.structure.id, vm.filter.start_date, vm.filter.end_date, vm.studentsFiltered, vm.audiencesFiltered);
         $scope.safeApply();
     };
     vm.excludeStudentFromFilter = (student) => {
@@ -158,6 +153,19 @@ export const exemptionsController = ng.controller('ExemptionsController', ['$sco
         vm.filters();
     };
 
+    vm.export = function () {
+        if (vm.exemptions.all.length == 0) {
+            vm.notifications.push(new Toast(vm.translate("presences.exemptions.csv.nothing"), 'info'));
+            $scope.safeApply();
+            return;
+        }
+        if (vm.exemptions.pageCount > 50) {
+            vm.notifications.push(new Toast(vm.translate("presences.exemptions.csv.toMuchExemptions"), 'info'));
+            $scope.safeApply();
+            return;
+        }
+        vm.exemptions.export(window.structure.id, vm.filter.start_date, vm.filter.end_date, vm.studentsFiltered, vm.audiencesFiltered);
+    };
 
     /**
      * FORM PART
@@ -199,7 +207,7 @@ export const exemptionsController = ng.controller('ExemptionsController', ['$sco
 
     vm.createExemption = () => {
         vm.createExemptionLightBox = true;
-        vm.form = new Exemption(vm.structure.id, true);
+        vm.form = new Exemption(window.structure.id, true);
         $scope.safeApply()
     };
 
@@ -242,4 +250,5 @@ export const exemptionsController = ng.controller('ExemptionsController', ['$sco
             $scope.redirectTo('/exemptions');
         }
     });
+
 }]);

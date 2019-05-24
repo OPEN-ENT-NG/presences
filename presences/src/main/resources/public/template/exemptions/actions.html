@@ -1,0 +1,28 @@
+<div class="row top20">
+    <div class="cell six">
+        <p> Du:
+            <span class="search-input">
+                    <date-picker ng-change="vm.updateDate();" ng-model="vm.filter.start_date"></date-picker>
+                </span>
+            Au:
+            <span class="search-input">
+                    <date-picker ng-change="vm.updateDate();" ng-model="vm.filter.end_date"></date-picker>
+                </span>
+        </p>
+    </div>
+    <div class="cell six">
+        <button class="right-magnet"
+                ng-click="vm.createExemption()"
+                ng-if="::hasRight('manageExemption')"
+        >
+            <i18n>presences.exemptions.create</i18n>
+        </button>
+        <button class="right-magnet"
+                ng-click="vm.export()"
+                workflow="presences.export"
+        >
+            <i18n>presences.export.tocsv</i18n>
+        </button>
+
+    </div>
+</div>

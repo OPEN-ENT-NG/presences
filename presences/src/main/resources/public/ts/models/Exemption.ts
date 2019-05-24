@@ -110,28 +110,37 @@ export class Exemptions extends LoadingCollection {
         this.all = [];
     }
 
-    async prepareSync(structureId: string, start_date: string, end_date: string, studentsFiltered?: any[], audiencesFiltered?: any[]) {
+    prepareUrl = () => {
+        let dateFormat = DateUtils.FORMAT['YEAR-MONTH-DAY-HOUR-MIN-SEC'];
+        let url = `?structure_id=${this.structureId}` +
+        `&start_date=${DateUtils.format(DateUtils.setFirstTime(this.start_date), dateFormat)}` +
+        `&end_date=${DateUtils.format(DateUtils.setLastTime(this.end_date), dateFormat)}`;
+        if (this.students && this.students.length > 0) {
+            url += `&student_id=${this.students.join(',')}`;
+        }
+        if (this.audiences && this.audiences.length > 0) {
+            url += `&audience_id=${this.audiences.join(',')}`;
+        }
+        return url;
+    };
+
+    prepareSync = (structureId: string, start_date: string, end_date: string, studentsFiltered?: any[], audiencesFiltered?: any[]) => {
         this.structureId = structureId;
         this.start_date = start_date;
         this.end_date = end_date;
         this.students = studentsFiltered ? _.pluck(studentsFiltered, 'id') : null;
         this.audiences = audiencesFiltered ? _.pluck(audiencesFiltered, 'id') : null;
-        this.page = 0;
+    }
+
+    async prepareSyncPaginate(structureId: string, start_date: string, end_date: string, studentsFiltered?: any[], audiencesFiltered?: any[]) {
+        this.prepareSync(structureId, start_date, end_date, studentsFiltered, audiencesFiltered);
+        this.page = 0; //auto sync
     }
 
     async syncPagination() {
         this.loading = true;
-        let dateFormat = DateUtils.FORMAT['YEAR-MONTH-DAY-HOUR-MIN-SEC'];
         try {
-            let url = `/presences/exemptions?structure_id=${this.structureId}` +
-                `&start_date=${DateUtils.format(DateUtils.setFirstTime(this.start_date), dateFormat)}` +
-                `&end_date=${DateUtils.format(DateUtils.setLastTime(this.end_date), dateFormat)}`;
-            if (this.students && this.students.length > 0) {
-                url += `&student_id=${this.students.join(',')}`;
-            }
-            if (this.audiences && this.audiences.length > 0) {
-                url += `&audience_id=${this.audiences.join(',')}`;
-            }
+            let url = `/presences/exemptions` + this.prepareUrl();
             url += `&page=${this.page? this.page:0}`;
             const {data} = await http.get(url);
             this.all = Mix.castArrayAs(Exemption, Exemption.loadData(data.values));
@@ -141,5 +150,11 @@ export class Exemptions extends LoadingCollection {
             throw err;
         }
         this.loading = false;
+    }
+
+    export(structureId: string, start_date: string, end_date: string, studentsFiltered?: any[], audiencesFiltered?: any[]) {
+        this.prepareSync(structureId, start_date, end_date, studentsFiltered, audiencesFiltered);
+        let url = `/presences/exemptions/export` + this.prepareUrl();
+        window.open(url);
     }
 }
