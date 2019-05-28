@@ -86,7 +86,8 @@ public class ExemptionServiceImpl extends SqlCrudService implements ExemptionSer
                 " WHERE structure_id = '"+ structure_id +"'"+
                 " AND (" +
                 " (start_date >= '" + start_date + "' AND start_date <= '" + end_date + "')" +
-                " OR (end_date >= '" + start_date +"' AND end_date <= '" + end_date + "')" +
+                " OR (end_date >= '" + start_date + "' AND end_date <= '" + end_date + "')" +
+                " OR (start_date >= '" + start_date + "' AND end_date <= '" + end_date + "')" +
                 ")";
 
         if (student_ids != null && !student_ids.isEmpty() && student_ids.size() > 0) {
