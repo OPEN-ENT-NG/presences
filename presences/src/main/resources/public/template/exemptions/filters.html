@@ -21,16 +21,18 @@
     </div>
     <div class="cell six paddingLeft">
         <div class="cell twelve search-input">
-            <autocomplete
-                    options="vm.audiences.all"
-                    ng-change="vm.filters(null, ngModel)"
-                    ng-model="vm.audienceFiltered"
-            ></autocomplete>
+            <async-autocomplete ng-disabled="false"
+                                ng-model="vm.classesSearchInput"
+                                ng-change="vm.selectFilterClass"
+                                on-search="vm.searchByClass"
+                                options="vm.classes"
+                                placeholder="presences.search.class"
+                                search="vm.classes.name"></async-autocomplete>
         </div>
         <div class="cell twelve">
             <ul class="cell twelve search-input-ul">
-                <li ng-repeat="audience in vm.audiencesFiltered">
-                    [[audience.name]] <i class="close" ng-click="vm.excludeAudienceFromFilter(audience)"></i>
+                <li ng-repeat="class in vm.classesFiltered">
+                    [[class.name]] <i class="close" ng-click="vm.excludeClassFromFilter(class)"></i>
                 </li>
             </ul>
         </div>
