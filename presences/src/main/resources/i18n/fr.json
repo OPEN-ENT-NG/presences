@@ -40,7 +40,7 @@
   "presences.exemptions.form.create.succeed": "Dispense(s) créée(s) avec succès",
   "presences.exemptions.delete.succeed": "Dispense supprimée avec succès",
   "presences.exemptions.search.student": "Rechercher un élève",
-  "presences.exemptions.search.audience": "Rechercher une classe",
+  "presences.exemptions.search.audience": "Rechercher une classe ou un groupe",
   "presences.register.status.todo": "A faire",
   "presences.register.status.inprogress": "En cours",
   "presences.register.status.done": "Terminé",
