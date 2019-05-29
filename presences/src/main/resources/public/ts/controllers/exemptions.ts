@@ -235,6 +235,9 @@ export const exemptionsController = ng.controller('ExemptionsController',
     vm.createExemption = () => {
         vm.createExemptionLightBox = true;
         vm.form = new Exemption(window.structure.id, true);
+        vm.form.subject = vm.subjects.findEPS();
+        if(!vm.form.subject)
+            vm.form.subject = vm.subjects.all[0];
         $scope.safeApply()
     };
 
@@ -246,7 +249,6 @@ export const exemptionsController = ng.controller('ExemptionsController',
         let studentTmp = new Student(obj.student);
         vm.form.students = [studentTmp];
         vm.formStudentSelected = [studentTmp];
-
         vm.form.subject = _.chain(vm.subjects.all)
             .filter((item) => {
                 return item.id == obj.subjectId;

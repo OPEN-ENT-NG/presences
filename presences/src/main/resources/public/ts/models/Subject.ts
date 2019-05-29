@@ -1,4 +1,4 @@
-import {model, notify} from 'entcore';
+import {_, model, notify} from 'entcore';
 import http from 'axios';
 
 export class Subject {
@@ -45,5 +45,19 @@ export class Subjects {
         } catch (e) {
             notify.error('app.notify.e500');
         }
+    }
+
+    findEPS () {
+        return _.chain(this.all)
+            .filter((item) => {
+                let label = item.label.replace(/\s+/g, '').toLowerCase();
+                return label == 'eps' ||
+                    label == 'educationphysiqueetsportive' ||
+                    label == 'educationphysiquesportive' ||
+                    label == 'educationphysique' ||
+                    (label.indexOf('physique') >= 0 && label.indexOf('sport') >= 0);
+            })
+            .first()
+            .value();
     }
 }
