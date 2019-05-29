@@ -94,6 +94,12 @@ body.presences, .sniplet.presences {
     input {
       margin: auto;
     }
+    &.small {
+      margin-right: 15px;
+      input {
+        max-width: 75px;
+      }
+    }
   }
 
   ul.search-input-ul {
