@@ -86,6 +86,11 @@ body.presences, .sniplet.presences {
     padding-left: 15px;
   }
 
+  .no-vertical-padding {
+    padding-top: 0!important;
+    padding-bottom: 0!important;;
+  }
+
   .search-input {
     background: #fff;
     padding: 15px;
