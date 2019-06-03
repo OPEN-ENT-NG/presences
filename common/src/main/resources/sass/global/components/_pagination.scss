@@ -54,6 +54,10 @@ $line-heigh-size: 42px;
       border-color: $yellow-main;
       color: $white;
     }
+
+    &:nth-child(3), &:nth-child(5) {
+      pointer-events: none;
+    }
   }
 }
 

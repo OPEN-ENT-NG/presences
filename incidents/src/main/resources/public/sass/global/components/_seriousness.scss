@@ -1,0 +1,31 @@
+.seriousness {
+  &-1 {
+    color: $white;
+    background: $light-red;
+  }
+
+  &-2 {
+    color: $white;
+    background: $medium-red;
+  }
+
+  &-3 {
+    color: $white;
+    background: $red;
+  }
+
+  &-4 {
+    color: $white;
+    background: $severe-red;
+  }
+
+  &-5 {
+    color: $white;
+    background: $deep-red;
+  }
+
+  &-6 {
+    color: $white;
+    background: $dark-red;
+  }
+}

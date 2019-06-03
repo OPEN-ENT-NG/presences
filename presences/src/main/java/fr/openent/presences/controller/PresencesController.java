@@ -34,14 +34,7 @@ public class PresencesController extends ControllerHelper {
                     log.error("[Presences@PresencesController] Failed to retrieve actives structures");
                     renderError(request);
                 } else {
-//                    StringBuilder structures = new StringBuilder();
-//                    JsonArray results = body.getJsonArray("results");
-//                    for (int i = 0; i < results.size(); i++) {
-//                        structures.append(results.getJsonObject(i).getString("id_etablissement")).append(",");
-//                    }
-//                    structures = new StringBuilder(structures.substring(0, structures.length() - 1));
-//                    renderView(request, new JsonObject().put("structures", structures.toString()));
-                    renderView(request, new JsonObject().put("structures", body.getJsonArray("results")));
+                    renderView(request, new JsonObject().put("structures", body.getJsonArray("results", new JsonArray())));
                 }
             });
         });

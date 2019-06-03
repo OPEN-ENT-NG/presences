@@ -1,0 +1,94 @@
+<div class="row top20 incident-content">
+
+    <loader data-ng-show="vm.incidents.loading"
+            min-height="'250px'"/>
+
+    <div class="twelve" data-ng-show="!vm.incidents.loading">
+
+
+        <!-- Empty state -->
+        <div class="incident-content-empty" data-ng-show="vm.incidents.all.length === 0">
+            <div class="incident-content-empty-description">
+                <span class="purple-bar"></span>
+                <i18n class="incident-content-empty-description-title">incidents.empty.title</i18n>
+                <span class="red-bar"></span>
+            </div>
+            <img data-ng-src="/incidents/public/img/illustration-boy-sheet-empty-incidents.svg"/>
+        </div>
+
+        <table class="table table-hover incident-content-table"
+               data-ng-show="vm.incidents.all && vm.incidents.all.length > 0">
+            <thead>
+            <tr>
+                <th width="1%">
+                    <i18n>incidents.date</i18n>
+                </th>
+                <th width="1%">
+                    <i18n>incidents.time</i18n>
+                </th>
+                <th width="2%">
+                    <i18n>incidents.place</i18n>
+                </th>
+                <th width="4%">
+                    <i18n>incidents.type</i18n>
+                </th>
+                <th width="4%">
+                    <i18n>incidents.seriousness</i18n>
+                </th>
+                <th width="1%">
+                    <i18n>incidents.treated</i18n>
+                </th>
+            </tr>
+            </thead>
+            <tbody class="incident-content-table-body"
+                   data-ng-repeat="incident in vm.incidents.all">
+            <tr data-id="[[incident.id]]"
+                data-ng-click="vm.toggleCollapse(incident, $event)">
+                <th class="uppercase text-center">[[incident.date | date:'dd/MM/yyyy']]</th>
+                <th class="uppercase text-center">[[incident.date | date:'HH:mm']]</th>
+                <th class="text-center">[[incident.place.label]]</th>
+                <th class="uppercase playdown highlight text-center">[[incident.incidentType.label]]</th>
+                <th class="text-center seriousness-[[incident.seriousness.id]]">
+                    <div class="incident-content-table-body-seriousness">
+                        <i class="seriousness"></i>
+                        <span class="incident-content-table-body-seriousness-label">[[incident.seriousness.label]]</span>
+                    </div>
+                </th>
+                <th class="incident-content-table-body-treated text-center">
+                    <i18n>incidents.treated</i18n>
+                    <switch class="vertical-spacing" ng-change="vm.isProcessed(incident)" ng-model="incident.processed">
+                        <label class="switch"></label>
+                    </switch>
+                </th>
+            <tr ng-class="{open: vm.isCollapsibleOpen(incident.id)}"
+                class="incident-content-table-body-row">
+                <td colspan="6">
+                    <div class="incident-content-table-body-row-collapsible">
+
+                        <div class="incident-content-table-body-row-collapsible-edit">
+                            <i class="edit" data-ng-click="vm.editIncidentLightbox(incident)"></i>
+                        </div>
+
+                        <ul class="incident-content-table-body-row-collapsible-protagonist">
+                            <li data-ng-repeat="protagonist in incident.protagonists">
+                                [[protagonist.protagonistType.label]] :
+                                <span class="incident-content-bold">[[protagonist.label]]</span>
+                            </li>
+                            <li>
+                                <i18n>incidents.partner</i18n>
+                                : <span class="incident-content-bold">[[incident.partner.label]]</span>
+                            </li>
+                        </ul>
+                        <div class="incident-content-table-body-row-collapsible-description">
+                            [[incident.description]]
+                        </div>
+                    </div>
+                </td>
+            <tr>
+            </tr>
+            </tbody>
+        </table>
+    </div>
+    <pagination data-page-count="vm.incidents.pageCount" data-page-number="vm.incidents.page"
+                class="pagination"></pagination>
+</div>

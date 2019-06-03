@@ -34,7 +34,6 @@ import org.entcore.common.user.UserInfos;
 import org.entcore.common.user.UserUtils;
 
 import java.text.ParseException;
-import java.text.SimpleDateFormat;
 import java.time.Instant;
 import java.time.ZoneId;
 import java.util.Arrays;
@@ -133,9 +132,9 @@ public class CourseController extends ControllerHelper {
                         } else {
                             subjectName = subjects.getJsonObject(0).getString("externalId");
                         }
-                        String startHour = getDateString(start, "kk'h'mm");
-                        String endHour = getDateString(end, "kk'h'mm");
-                        String subjectDate = getDateString(start, "dd/MM");
+                        String startHour = DateHelper.getDateString(start, "kk'h'mm");
+                        String endHour = DateHelper.getDateString(end, "kk'h'mm");
+                        String subjectDate = DateHelper.getDateString(start, "dd/MM");
                         JsonArray teachers = course.getJsonArray("teacherIds");
                         String structureName = getStructureName(user, course.getString("structureId"));
                         String groups = getGroupsName(course.getJsonArray("classes"), course.getJsonArray("groups"));
@@ -213,16 +212,6 @@ public class CourseController extends ControllerHelper {
                 });
             }
         });
-    }
-
-    private String getDateString(String date, String format) {
-        try {
-            Date parsedDate = DateHelper.parse(date);
-            return new SimpleDateFormat(format).format(parsedDate);
-        } catch (ParseException err) {
-            log.error("[Presences@CourseController] Failed to parse date " + date, err);
-            return date;
-        }
     }
 
     private String getStructureName(UserInfos user, String structureId) {

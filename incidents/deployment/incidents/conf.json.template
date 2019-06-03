@@ -8,6 +8,8 @@
     	"app-icon" : "Incidents-large",
         "host": "${host}",
         "ssl" : $ssl,
+        "sql": true,
+        "db-schema": "incidents",
         "auto-redeploy": false,
         "userbook-host": "${host}",
         "integration-mode" : "HTTP",
