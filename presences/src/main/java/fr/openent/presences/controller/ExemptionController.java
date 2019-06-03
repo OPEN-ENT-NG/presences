@@ -1,11 +1,12 @@
 package fr.openent.presences.controller;
 
 import fr.openent.presences.Presences;
+import fr.openent.presences.common.helper.FutureHelper;
 import fr.openent.presences.export.ExemptionCSVExport;
 import fr.openent.presences.security.ExportRight;
 import fr.openent.presences.security.ManageExemptionRight;
 import fr.openent.presences.service.ExemptionService;
-import fr.openent.presences.service.impl.ExemptionServiceImpl;
+import fr.openent.presences.service.impl.DefaultExemptionService;
 import fr.wseduc.rs.*;
 import fr.wseduc.security.ActionType;
 import fr.wseduc.security.SecuredAction;
@@ -16,7 +17,6 @@ import io.vertx.core.CompositeFuture;
 import io.vertx.core.Future;
 import io.vertx.core.Handler;
 import io.vertx.core.eventbus.EventBus;
-import fr.openent.presences.common.helper.FutureHelper;
 import io.vertx.core.http.HttpServerRequest;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
@@ -37,7 +37,7 @@ public class ExemptionController extends ControllerHelper {
 
     public ExemptionController(EventBus eb) {
         super();
-        this.exemptionService = new ExemptionServiceImpl(eb);
+        this.exemptionService = new DefaultExemptionService(eb);
         this.eb = eb;
     }
 
@@ -89,10 +89,9 @@ public class ExemptionController extends ControllerHelper {
                         JsonObject student = student_ids_fromClasses.getJsonObject(i);
                         student_ids.add(student.getString("idNeo4j"));
                     }
-                    if(wantCSV){
+                    if (wantCSV) {
                         csvResponse(request, structure_id, start_date, end_date, student_ids);
-                    }
-                    else {
+                    } else {
                         paginateResponse(request, page, structure_id, start_date, end_date, student_ids);
 
                     }
@@ -117,14 +116,14 @@ public class ExemptionController extends ControllerHelper {
             public void handle(Either<String, JsonArray> event) {
                 JsonArray exemptions = event.right().getValue();
                 List<String> csvHeaders = Arrays.asList(
-                                "presences.exemptions.csv.header.student.firstName",
-                                "presences.exemptions.csv.header.student.lastName",
-                                "presences.exemptions.csv.header.audiance",
-                                "presences.exemptions.csv.header.subject",
-                                "presences.exemptions.csv.header.startDate",
-                                "presences.exemptions.csv.header.endDate",
-                                "presences.exemptions.csv.header.comment",
-                                "presences.exemptions.csv.header.attendance");
+                        "presences.exemptions.csv.header.student.firstName",
+                        "presences.exemptions.csv.header.student.lastName",
+                        "presences.exemptions.csv.header.audiance",
+                        "presences.exemptions.csv.header.subject",
+                        "presences.exemptions.csv.header.startDate",
+                        "presences.exemptions.csv.header.endDate",
+                        "presences.exemptions.csv.header.comment",
+                        "presences.exemptions.csv.header.attendance");
                 ExemptionCSVExport ecs = new ExemptionCSVExport(exemptions);
                 ecs.setRequest(request);
                 ecs.setHeader(csvHeaders);

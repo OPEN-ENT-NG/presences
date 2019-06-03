@@ -18,11 +18,11 @@ import java.util.List;
 
 import static fr.wseduc.webutils.Utils.handlerToAsyncHandler;
 
-public class ExemptionServiceImpl extends SqlCrudService implements ExemptionService {
+public class DefaultExemptionService extends SqlCrudService implements ExemptionService {
     private final static String DATABASE_TABLE = "exemption";
     private EventBus eb;
 
-    public ExemptionServiceImpl(EventBus eb) {
+    public DefaultExemptionService(EventBus eb) {
 
         super(Presences.dbSchema, DATABASE_TABLE);
         this.eb = eb;
@@ -44,15 +44,13 @@ public class ExemptionServiceImpl extends SqlCrudService implements ExemptionSer
         Sql.getInstance().prepared(query, values, SqlResult.validResultHandler(new Handler<Either<String, JsonArray>>() {
             @Override
             public void handle(Either<String, JsonArray> event) {
-                if(event.isLeft()){
+                if (event.isLeft()) {
                     handler.handle(new Either.Left<>(event.left().getValue()));
-                }
-                else {
+                } else {
                     JsonArray exemptions = event.right().getValue();
-                    if(exemptions.size() == 0){
+                    if (exemptions.size() == 0) {
                         handler.handle(new Either.Right<>(exemptions));
-                    }
-                    else {
+                    } else {
                         Future<JsonObject> userInfoFuture = Future.future();
                         Future<JsonObject> subjectInfoFuture = Future.future();
 
@@ -76,14 +74,14 @@ public class ExemptionServiceImpl extends SqlCrudService implements ExemptionSer
     @Override
     public void getPageNumber(String structure_id, String start_date, String end_date, List<String> student_ids, Handler<Either<String, JsonObject>> handler) {
         String query =
-        "SELECT count(" + Presences.dbSchema + "." + this.DATABASE_TABLE + ".id)" +
-        this.getterFROMBuilder(structure_id, start_date, end_date, student_ids);
+                "SELECT count(" + Presences.dbSchema + "." + this.DATABASE_TABLE + ".id)" +
+                        this.getterFROMBuilder(structure_id, start_date, end_date, student_ids);
         Sql.getInstance().raw(query, SqlResult.validUniqueResultHandler(handler));
     }
 
-    private String getterFROMBuilder (String structure_id, String start_date, String end_date, List<String> student_ids){
+    private String getterFROMBuilder(String structure_id, String start_date, String end_date, List<String> student_ids) {
         String query = " FROM " + Presences.dbSchema + "." + this.DATABASE_TABLE +
-                " WHERE structure_id = '"+ structure_id +"'"+
+                " WHERE structure_id = '" + structure_id + "'" +
                 " AND (" +
                 " (start_date >= '" + start_date + "' AND start_date <= '" + end_date + "')" +
                 " OR (end_date >= '" + start_date + "' AND end_date <= '" + end_date + "')" +
@@ -93,13 +91,15 @@ public class ExemptionServiceImpl extends SqlCrudService implements ExemptionSer
         if (student_ids != null && !student_ids.isEmpty() && student_ids.size() > 0) {
             query += " AND student_id IN (";
             for (int i = 0; i < student_ids.size(); ++i) {
-                query += "'"+student_ids.get(i) + "',";
+                query += "'" + student_ids.get(i) + "',";
             }
             query = query.substring(0, query.length() - 1) + ")";
 
         }
         return query;
-    };
+    }
+
+    ;
 
     @Override
     public void create(String structure_id, JsonArray student_ids, String subject_id, String start_date, String end_date, Boolean attendance, String comment, Handler<Either<String, JsonArray>> handler) {
