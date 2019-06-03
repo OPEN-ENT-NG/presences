@@ -127,7 +127,12 @@ public class CourseController extends ControllerHelper {
                             log.error("[Presences@CourseController] Failed to retrieve course subject");
                         }
                         JsonArray subjects = event.right().getValue();
-                        String subjectName = subjects.isEmpty() ? course.getString("subjectId") : subjects.getJsonObject(0).getString("externalId");
+                        String subjectName;
+                        if (subjects.isEmpty()) {
+                            subjectName = course.containsKey("exceptionnal") ? course.getString("exceptionnal") : course.getString("subjectId");
+                        } else {
+                            subjectName = subjects.getJsonObject(0).getString("externalId");
+                        }
                         String startHour = getDateString(start, "kk'h'mm");
                         String endHour = getDateString(end, "kk'h'mm");
                         String subjectDate = getDateString(start, "dd/MM");
@@ -350,11 +355,11 @@ public class CourseController extends ControllerHelper {
             try {
                 //FIXME Fix timezone trick
                 long timeDifference = ZoneId.of("Europe/Paris").getRules().getOffset(Instant.now()).getTotalSeconds();
-                Date forgottenAfterThatDate = new Date(System.currentTimeMillis() + (15 * 60000) + (timeDifference * 1000));
+                Date currentDate = new Date(System.currentTimeMillis() + (timeDifference * 1000));
 
                 JsonObject course = courses.getJsonObject(i);
                 Date forgottenStartDateCourse = new Date(DateHelper.parse(course.getString("startDate")).getTime() + (15 * 60000));
-                if (forgottenAfterThatDate.after(forgottenStartDateCourse)) {
+                if (currentDate.after(forgottenStartDateCourse)) {
                     if (!course.containsKey("register_id")) {
                         forgottenRegisters.add(course);
                         continue;

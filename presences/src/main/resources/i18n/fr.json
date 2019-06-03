@@ -65,7 +65,8 @@
   "presences.register.csv.header.groups": "Classe(s)/Groupe(s)",
   "presences.register.csv.header.subject": "Matière",
   "presences.register.csv.filename": "export_appels.csv",
-  "presences.register.notify.subject": "Rappel: Appel du {0} non saisi",
+  "presences.register.notify.subject": "Rappel : Appel du {0} non saisi",
   "presences.register.notify.body": "<p>L'appel du cours <em>{0} {1}</em> de <em>{2}</em> à <em>{3}</em> n'a pas encore été saisi.</p><p style=\"margin-top: 15px;\">La vie scolaire de l'établissement <em>{4}</em></p>",
-  "presences.register.notify.err": "Une erreur est survenue lors de l'envoie de la notification"
+  "presences.register.notify.err": "Une erreur est survenue lors de l'envoie de la notification",
+  "noresult": "Pas de résultat"
 }

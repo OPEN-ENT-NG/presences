@@ -289,7 +289,7 @@ export const registersController = ng.controller('RegistersController',
             };
 
             vm.openRegister = async function (course: Course, $event: Event) {
-                if ($event !== null && ($event.target as Element).className.includes('notify-bell')) {
+                if ($event && ($event.target as Element).className.includes('notify-bell')) {
                     notifyCourse(course);
                     return;
                 }
@@ -515,12 +515,17 @@ export const registersController = ng.controller('RegistersController',
                 }
             };
 
+            const isForgotten = function (start_date): boolean {
+                return moment().isAfter(moment(start_date).add(15, 'm'));
+            };
+
             vm.canNotify = function (start_date, state) {
                 if (state && state === RegisterStatus.DONE) {
                     return false;
                 }
 
                 return model.me.hasWorkflow(rights.workflow.notify)
+                    && isForgotten(start_date)
                     && !vm.isFuturCourse(({startDate: start_date} as Course))
                     && moment(DateUtils.setFirstTime(moment())).diff(moment(DateUtils.setFirstTime(start_date)), 'days') < 2
             };
