@@ -1,0 +1,174 @@
+<lightbox ng-class="{editMode: vm.lightbox.editMode}"
+          class="incident-lightbox"
+          show="vm.isLightboxActive"
+          on-close="vm.closeIncidentLightbox()">
+    <section class="head">
+        <h3>
+            <i18n ng-if="vm.lightbox.createMode">incidents.create</i18n>
+            <i18n ng-if="vm.lightbox.editMode">incidents.edit</i18n>
+        </h3>
+    </section>
+
+    <section class="incident-lightbox-body body lightbox-form">
+
+        <!-- Date -->
+        <div class="incident-lightbox-body-date row spacing">
+            <div class="twelve cell">
+                <i18n>incidents.date</i18n>
+            </div>
+
+            <div class="twelve cell">
+                <span class="date-picker">
+                    <date-picker required ng-model="vm.incidentForm.date"></date-picker>
+                </span>
+
+                <span class="incident-lightbox-body-date-timePicker">
+                    <time-picker required ng-model="vm.incidentForm.date"></time-picker>
+                </span>
+            </div>
+        </div>
+
+        <!-- Content form -->
+        <div class="row spacing">
+            <div class="incident-lightbox-body-content">
+
+                <!-- Incident parameter type -->
+                <div class="incident-lightbox-body-content-parameter">
+                    <label class="twelve cell twelve-mobile">
+                        <div class="twelve margin-bottom-md">
+                            <i18n>incidents.type</i18n>
+                        </div>
+                        <select required
+                                data-ng-model="vm.incidentForm.incidentType"
+                                ng-options="incidentType.label for incidentType in vm.incidentParameterType.incidentType track by incidentType.id">
+                        </select>
+                    </label>
+
+                    <label class="twelve cell twelve-mobile">
+                        <div class="twelve margin-bottom-md">
+                            <i18n>incidents.seriousness</i18n>
+                        </div>
+                        <select required
+                                data-ng-model="vm.incidentForm.seriousness"
+                                ng-options="seriousnessLevel.label for seriousnessLevel in vm.incidentParameterType.seriousnessLevel track by seriousnessLevel.id">
+                        </select>
+                    </label>
+
+                    <label class="twelve cell twelve-mobile">
+                        <div class="twelve margin-bottom-md">
+                            <i18n>incidents.place</i18n>
+                        </div>
+                        <select required
+                                data-ng-model="vm.incidentForm.place"
+                                ng-options="place.label for place in vm.incidentParameterType.place track by place.id">
+                        </select>
+                    </label>
+
+                    <label class="twelve cell twelve-mobile">
+                        <div class="twelve margin-bottom-md">
+                            <i18n>incidents.partner</i18n>
+                        </div>
+                        <select required
+                                data-ng-model="vm.incidentForm.partner"
+                                ng-options="partner.label for partner in vm.incidentParameterType.partner track by partner.id">
+                        </select>
+                    </label>
+                </div>
+
+                <!-- set protagonist -->
+                <div class="incident-lightbox-body-content-protagonist cell twelve search-input">
+                    <div class="incident-lightbox-body-content-protagonist-search twelve margin-bottom-md">
+                        <i18n>incidents.protagonists</i18n>
+                        <async-autocomplete data-ng-disabled="false"
+                                            data-ng-model="vm.studentSearchInputForm"
+                                            data-ng-change="vm.selectIncidentStudentForm"
+                                            data-on-search="vm.searchIncidentStudentForm"
+                                            data-options="vm.incidentStudentsForm.all"
+                                            data-search="vm.incidentStudentsForm.all.displayName">
+                        </async-autocomplete>
+                    </div>
+
+                    <ul class="incident-lightbox-body-content-protagonist-list search-input-ul">
+                        <li class="incident-lightbox-body-content-protagonist-list-item"
+                            ng-repeat="protagonist in vm.incidentForm.protagonists">
+
+                            <!-- create mode-->
+                            <div class="incident-lightbox-body-content-protagonist-list-item-content">
+                                 <span>[[protagonist.label]]
+                                     <i class="close" data-ng-click="vm.removeIncidentStudentForm()"></i>
+                                 </span>
+                                <select required
+                                        data-ng-model="protagonist.protagonistType"
+                                        ng-options="protagonistType.label for protagonistType in vm.incidentParameterType.protagonistType track by protagonistType.id">
+                                </select>
+                            </div>
+
+                        </li>
+                    </ul>
+                </div>
+
+            </div>
+        </div>
+
+
+        <!-- description -->
+        <div class="incident-lightbox-body-description row spacing">
+            <label class="twelve cell twelve-mobile">
+                <div class="twelve margin-bottom-md">
+                    <i18n>incidents.description</i18n>
+                    <input class="twelve" type="text" data-ng-model="vm.incidentForm.description"
+                           i18n-placeholder="incidents.form.description.placeholder">
+                </div>
+            </label>
+        </div>
+
+        <!-- treated -->
+        <div class="incident-lightbox-body-treated row spacing">
+            <label class="twelve cell twelve-mobile">
+                <span class="left-magnet"><i18n>incidents.treated</i18n></span>
+                <switch class="vertical-spacing" ng-model="vm.incidentForm.processed">
+                    <label class="switch"></label>
+                </switch>
+            </label>
+        </div>
+
+        <!-- Button/submit -->
+        <div class="row">
+            <div class="incident-lightbox-body-submit twelve cell">
+                <!-- Valid mode -->
+                <button ng-if="vm.lightbox.createMode" class="right-magnet"
+                        data-ng-disabled="!vm.incidentForm.isIncidentFormValid()"
+                        data-ng-click="vm.createIncident()">
+                    <i18n>incidents.form.submit</i18n>
+                </button>
+
+                <!-- Edit mode  -->
+                <button ng-if="vm.lightbox.editMode" class="right-magnet"
+                        data-ng-disabled="!vm.incidentForm.isIncidentFormValid()"
+                        data-ng-click="vm.saveIncident()">
+                    <i18n>incidents.form.save</i18n>
+                </button>
+
+                <!-- delete incident on Edit mode  -->
+                <button ng-if="vm.lightbox.editMode" class="right-magnet"
+                        data-ng-click="vm.deleteIncident()">
+                    <i18n>incidents.form.delete</i18n>
+                </button>
+
+                <button class="right-magnet">
+                    <i18n>incidents.create.sanction</i18n>
+                </button>
+
+                <button class="right-magnet">
+                    <i18n>incidents.create.punishment</i18n>
+                </button>
+
+                <button class="right-magnet cancel" data-ng-click="vm.closeIncidentLightbox()">
+                    <i18n>incidents.form.cancel</i18n>
+                </button>
+            </div>
+        </div>
+
+    </section>
+
+</lightbox>

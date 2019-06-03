@@ -1,0 +1,203 @@
+body.presences, .sniplet.presences {
+  @import "components/index";
+  @import "../../../sass/global/common";
+
+  /* filters */
+  .incident-filters {
+    &-options {
+      &-date {
+        span {
+          background: none;
+
+          &.date-picker input[type="text"] {
+            background: none;
+          }
+        }
+      }
+    }
+  }
+
+  /* content */
+  .incident-content {
+    &-empty {
+      text-align: center;
+
+      &-description {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding-bottom: $spacing-L;
+
+        &-title {
+          color: $grey;
+          padding: 0 $spacing-S;
+        }
+      }
+
+      img {
+        width: 32%;
+      }
+    }
+    &-table {
+      &-body {
+        &-row {
+          display: none;
+          background: $incident-light-grey;
+
+          &:hover {
+            background: $incident-light-grey !important;
+          }
+
+          &.open {
+            display: table-row;
+          }
+
+          &-collapsible {
+            display: flex;
+            align-content: center;
+
+            &-edit {
+              cursor: pointer;
+              align-self: center;
+              text-align: center;
+              flex: 0.04;
+            }
+
+            &-protagonist {
+              flex: 0.61;
+              padding-left: 0;
+
+              li {
+                list-style-type: none;
+                &:hover {
+                  background: $incident-light-grey !important;
+                }
+              }
+            }
+
+            &-description {
+              flex: 1;
+            }
+          }
+        }
+
+        &-seriousness {
+          display: flex;
+          align-items: center;
+
+          &-label {
+            flex: 0.9;
+          }
+        }
+
+        &-treated {
+          switch {
+            .switch {
+              float: none;
+            }
+          }
+        }
+      }
+    }
+
+    &-bold {
+      font-weight: bold;
+    }
+  }
+
+
+  /* lightbox */
+  .incident-lightbox {
+    &.editMode {
+      .content {
+        width: 740px;
+      }
+    }
+    &-body {
+      &-date {
+        &-timePicker {
+          background-color: $white;
+          display: inline-block;
+        }
+      }
+
+      &-content {
+        display: flex;
+
+        &-parameter {
+          select {
+            width: $select-size;
+            background-color: $incident-select-color;
+          }
+        }
+
+        &-protagonist {
+          overflow-y: auto;
+          height: 300px;
+
+          &-search {
+            padding-bottom: $spacing-LXS;
+          }
+
+          &-list {
+            &.search-input-ul {
+              display: table;
+              width: 266px;
+            }
+
+            &-item {
+              display: block !important;
+
+              &-content {
+                display: flex;
+                flex-direction: column;
+                padding-bottom: $spacing-LXS;
+
+                select {
+                  width: $select-size;
+                  background-color: $incident-select-color;
+                }
+
+                i {
+                  float: right;
+                }
+              }
+            }
+          }
+        }
+      }
+
+      &-treated {
+        label {
+          switch {
+            .switch {
+              float: none;
+            }
+          }
+        }
+      }
+    }
+  }
+
+  .lightbox-form .row.spacing .cell.twelve {
+    padding: 5px 20px !important;
+  }
+
+  .pagination {
+    float: right;
+
+    &.lightbox {
+      float: none;
+    }
+  }
+
+  i.seriousness:before {
+    content: '\e903';
+    font-size: 24px;
+  }
+
+  i.edit:before {
+    font-size: 24px;
+    color: $grey-light;
+  }
+}

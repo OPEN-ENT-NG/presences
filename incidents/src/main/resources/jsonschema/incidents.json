@@ -1,0 +1,56 @@
+{
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "type": "object",
+  "properties": {
+    "owner": {
+      "type": "string"
+    },
+    "structure_id": {
+      "type": "string"
+    },
+    "date": {
+      "type": "string"
+    },
+    "selected_hour": {
+      "type": "boolean"
+    },
+    "description": {
+      "type": "string"
+    },
+    "created": {
+      "type": "string"
+    },
+    "processed": {
+      "type": "boolean"
+    },
+    "place_id": {
+      "type": "number"
+    },
+    "partner_id": {
+      "type": "number"
+    },
+    "type_id": {
+      "type": "number"
+    },
+    "seriousness_id": {
+      "type": "number"
+    },
+    "student_ids": {
+      "type": "array"
+    }
+  },
+  "required": [
+    "owner",
+    "structure_id",
+    "date",
+    "selected_hour",
+    "description",
+    "created",
+    "processed",
+    "place_id",
+    "partner_id",
+    "type_id",
+    "seriousness_id",
+    "students"
+  ]
+}
