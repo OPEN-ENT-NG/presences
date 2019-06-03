@@ -87,8 +87,7 @@
                 </div>
                 <em class="row metadata">[[::course.subjectName]]</em>
                 <div class="classes row ellipsis">
-                    <span ng-repeat="class in course.classes">[[::class]]</span>
-                    <span ng-repeat="group in course.groups">[[::group]]</span>
+                    <span ng-repeat="group in ::vm.getGroups(course.classes, course.groups)">[[::group]]</span>
                 </div>
             </div>
             <div ng-if="!hasSearchRight()" class="row">
@@ -96,8 +95,7 @@
                     [[::vm.formatHour(course.endDate)]]
                 </div>
                 <div class="row classes ellipsis">
-                    <span ng-repeat="class in course.classes">[[::class]]</span>
-                    <span ng-repeat="group in course.groups">[[::group]]</span>
+                    <span ng-repeat="group in ::vm.getGroups(course.classes, course.groups)">[[::group]]</span>
                 </div>
                 <div class="row subject">[[::course.subjectName]]</div>
             </div>

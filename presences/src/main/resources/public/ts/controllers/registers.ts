@@ -86,6 +86,8 @@ interface ViewModel {
 
     canNotify(start_date: string, state: RegisterStatus): boolean;
 
+    getGroups(classes: string[], groups: string[]): string[];
+
     export(): void;
 }
 
@@ -106,8 +108,8 @@ export const registersController = ng.controller('RegistersController',
                             teachers: undefined,
                             classes: undefined,
                             selected: {
-                                teachers: [],
-                                classes: [],
+                                teachers: vm.filter.selected.teachers,
+                                classes: vm.filter.selected.classes,
                                 registerTeacher: undefined
                             }
                         };
@@ -528,6 +530,10 @@ export const registersController = ng.controller('RegistersController',
                     && isForgotten(start_date)
                     && !vm.isFuturCourse(({startDate: start_date} as Course))
                     && moment(DateUtils.setFirstTime(moment())).diff(moment(DateUtils.setFirstTime(start_date)), 'days') < 2
+            };
+            
+            vm.getGroups = function (classes, groups) {
+                return [...classes, ...groups];
             };
 
             $scope.$watch(() => window.structure, () => {
