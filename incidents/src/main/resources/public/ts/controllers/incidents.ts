@@ -3,6 +3,7 @@ import {Incident, Incidents, ProtagonistForm, Student, Students} from "../models
 import {DateUtils} from '@common/utils'
 import {IncidentParameterType, IncidentService} from "../services";
 import {Toast} from "@common/utils/toast";
+import {Scope} from "./main";
 
 declare let window: any;
 
@@ -32,7 +33,8 @@ interface ViewModel {
     studentSearchInput: string;
 
     searchStudent(string): void;
-    selectStudents(model: Student, option: Student): void;
+
+    selectStudents(model, option: Student): void;
     removeStudents(audience): void;
 
     // incident light box
@@ -52,12 +54,12 @@ interface ViewModel {
     deleteIncident(): void;
     searchIncidentStudentForm(string): void;
 
-    selectIncidentStudentForm(option: Student): void;
+    selectIncidentStudentForm(model: Student, student: Student): void;
     removeIncidentStudentForm(): void;
     closeIncidentLightbox(): void;
 }
 
-export const incidentsController = ng.controller('IncidentsController', ['$scope', 'IncidentService', function ($scope, IncidentService: IncidentService) {
+export const incidentsController = ng.controller('IncidentsController', ['$scope', 'IncidentService', function ($scope: Scope, IncidentService: IncidentService) {
     const vm: ViewModel = this;
     vm.notifications = [];
     vm.studentSearchInput = "";
@@ -80,18 +82,7 @@ export const incidentsController = ng.controller('IncidentsController', ['$scope
     vm.incidents.eventer.on('loading::false', () => $scope.safeApply());
 
 
-    $scope.safeApply = function (fn) {
-        var phase = this.$root.$$phase;
-        if (phase == '$apply' || phase == '$digest') {
-            if (fn && (typeof (fn) === 'function')) {
-                fn();
-            }
-        } else {
-            this.$apply(fn);
-        }
-    };
-
-    $scope.setStudentToSync = function () {
+    const setStudentToSync = () => {
         vm.incidents.userId = vm.filter.students ? vm.filter.students
             .map(students => students.id)
             .filter(function () {
@@ -105,7 +96,7 @@ export const incidentsController = ng.controller('IncidentsController', ['$scope
         vm.incidents.startDate = vm.filter.startDate.toDateString();
         vm.incidents.endDate = vm.filter.endDate.toDateString();
 
-        $scope.setStudentToSync();
+        setStudentToSync();
 
         // "page" uses sync() method at the same time it sets 0 (See LoadingCollection)
         vm.incidents.page = 0;
@@ -131,7 +122,7 @@ export const incidentsController = ng.controller('IncidentsController', ['$scope
         if (student && !_.find(vm.filter.students, student)) {
             vm.filter.students.push(student);
         }
-        $scope.setStudentToSync();
+        setStudentToSync();
         vm.incidents.page = 0;
         $scope.safeApply();
     };
@@ -210,7 +201,7 @@ export const incidentsController = ng.controller('IncidentsController', ['$scope
         vm.incidentForm.incidentType = vm.incidentParameterType.incidentType[0];
         vm.incidentForm.seriousness = vm.incidentParameterType.seriousnessLevel[0];
         vm.incidentForm.place = vm.incidentParameterType.place[0];
-        vm.incidentForm.partner = vm.incidentParameterType.partner[0];
+        vm.incidentForm.partner = vm.incidentParameterType.partner[vm.incidentParameterType.partner.length - 1];
 
         $scope.safeApply()
     };
@@ -291,8 +282,8 @@ export const incidentsController = ng.controller('IncidentsController', ['$scope
         $scope.safeApply();
     };
 
-    vm.selectIncidentStudentForm = async (student: Student) => {
-        if (!_.find(vm.incidentForm.protagonists, student)) {
+    vm.selectIncidentStudentForm = (model, student: Student): void => {
+        if (student && !_.find(vm.incidentForm.protagonists, student)) {
             let protagonist = {} as ProtagonistForm;
             protagonist.label = student.displayName;
             protagonist.userId = student.id;

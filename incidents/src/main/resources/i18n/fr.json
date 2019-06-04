@@ -1,9 +1,9 @@
 {
   "incidents.title": "Incidents",
-  "incidents.empty.title": "Aucun incidents sur cette période",
+  "incidents.empty.title": "Aucun incident sur cette période",
   "incidents.export.tocsv": "Exporter csv",
   "incidents.csv.full": "Vous ne pouvez pas exporter plus de 1 000 incidents, filter votre recherche.",
-  "incidents.csv.empty": "Aucun incidents à exporter",
+  "incidents.csv.empty": "Aucun incident à exporter",
   "incidents.csv.filename": "incidents.csv",
   "incidents.csv.header.date": "Date",
   "incidents.csv.header.place": "Lieu",
@@ -20,6 +20,7 @@
   "incidents.navigation.sanction": "Sanction",
   "incidents.search.student": "Rechercher un élève",
   "incidents.create": "Saisir un incident",
+  "incidents.form.title": "Contexte et caractéristiques",
   "incidents.edit": "Modifier un incident",
   "incidents.create.punishment": "Saisir une punition",
   "incidents.create.sanction": "Saisir une sanction",
@@ -47,5 +48,6 @@
   "incidents.treated": "Traité",
   "incidents.partner": "Partenaires à prévenir",
   "incidents.protagonists": "Protagonistes",
-  "incidents.loading.text": "Veuillez patienter..."
+  "incidents.loading.text": "Veuillez patienter...",
+  "empty": "Aucun"
 }

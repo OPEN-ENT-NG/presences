@@ -2,6 +2,7 @@
           class="incident-lightbox"
           show="vm.isLightboxActive"
           on-close="vm.closeIncidentLightbox()">
+
     <section class="head">
         <h3>
             <i18n ng-if="vm.lightbox.createMode">incidents.create</i18n>
@@ -11,21 +12,37 @@
 
     <section class="incident-lightbox-body body lightbox-form">
 
-        <!-- Date -->
-        <div class="incident-lightbox-body-date row spacing">
-            <div class="twelve cell">
-                <i18n>incidents.date</i18n>
-            </div>
+        <h3>
+            <i18n>incidents.form.title</i18n>
+        </h3>
 
-            <div class="twelve cell">
+        <!-- Date -->
+        <div class="incident-lightbox-body-dateAndPlace row spacing">
+            <div>
+                <div class="twelve cell">
+                    <i18n>incidents.date</i18n>
+                </div>
+
+                <div class="twelve cell">
                 <span class="date-picker">
                     <date-picker required ng-model="vm.incidentForm.date"></date-picker>
                 </span>
 
-                <span class="incident-lightbox-body-date-timePicker">
+                    <span class="incident-lightbox-body-dateAndPlace-timePicker">
                     <time-picker required ng-model="vm.incidentForm.date"></time-picker>
                 </span>
+                </div>
             </div>
+
+            <label>
+                <div class="twelve margin-bottom-md">
+                    <i18n>incidents.place</i18n>
+                </div>
+                <select required
+                        data-ng-model="vm.incidentForm.place"
+                        ng-options="place.label for place in vm.incidentParameterType.place track by place.id">
+                </select>
+            </label>
         </div>
 
         <!-- Content form -->
@@ -56,21 +73,11 @@
 
                     <label class="twelve cell twelve-mobile">
                         <div class="twelve margin-bottom-md">
-                            <i18n>incidents.place</i18n>
-                        </div>
-                        <select required
-                                data-ng-model="vm.incidentForm.place"
-                                ng-options="place.label for place in vm.incidentParameterType.place track by place.id">
-                        </select>
-                    </label>
-
-                    <label class="twelve cell twelve-mobile">
-                        <div class="twelve margin-bottom-md">
                             <i18n>incidents.partner</i18n>
                         </div>
                         <select required
                                 data-ng-model="vm.incidentForm.partner"
-                                ng-options="partner.label for partner in vm.incidentParameterType.partner track by partner.id">
+                                ng-options="lang.translate(partner.label) for partner in vm.incidentParameterType.partner track by partner.id">
                         </select>
                     </label>
                 </div>

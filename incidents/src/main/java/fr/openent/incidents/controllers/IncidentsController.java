@@ -3,7 +3,7 @@ package fr.openent.incidents.controllers;
 import fr.openent.incidents.Incidents;
 import fr.openent.incidents.export.IncidentsCSVExport;
 import fr.openent.incidents.service.IncidentsService;
-import fr.openent.incidents.service.impl.IncidentsServiceImpl;
+import fr.openent.incidents.service.impl.DefaultIncidentsService;
 import fr.openent.presences.common.helper.FutureHelper;
 import fr.wseduc.rs.*;
 import fr.wseduc.security.SecuredAction;
@@ -29,7 +29,7 @@ public class IncidentsController extends ControllerHelper {
 
     public IncidentsController(EventBus eb) {
         super();
-        this.incidentsService = new IncidentsServiceImpl(eb);
+        this.incidentsService = new DefaultIncidentsService(eb);
         this.eb = eb;
     }
 

@@ -18,11 +18,11 @@ import java.util.List;
 
 import static fr.wseduc.webutils.Utils.handlerToAsyncHandler;
 
-public class IncidentsServiceImpl extends SqlCrudService implements IncidentsService {
+public class DefaultIncidentsService extends SqlCrudService implements IncidentsService {
     private final static String DATABASE_TABLE = "incident";
     private EventBus eb;
 
-    public IncidentsServiceImpl(EventBus eb) {
+    public DefaultIncidentsService(EventBus eb) {
         super(Incidents.dbSchema, DATABASE_TABLE);
         this.eb = eb;
     }
@@ -113,7 +113,8 @@ public class IncidentsServiceImpl extends SqlCrudService implements IncidentsSer
                     "AS protagonists ON (i.id = protagonists.incident_id) " +
 
                     "GROUP BY i.id, i.date, i.description, i.processed, i.place_id, i.partner_id, " +
-                    "i.type_id, i.seriousness_id, place.id, partner.id, incident_type.id, seriousness.id";
+                    "i.type_id, i.seriousness_id, place.id, partner.id, incident_type.id, seriousness.id " +
+                    "ORDER BY i.date desc";
         } else {
             query += ") SELECT count(*) from ids";
         }
@@ -201,7 +202,8 @@ public class IncidentsServiceImpl extends SqlCrudService implements IncidentsSer
     }
 
     private void getPartnerType(String structureId, Handler<Either<String, JsonArray>> handler) {
-        String partnerTypeQuery = "SELECT * FROM " + Incidents.dbSchema + ".partner where structure_id = '" + structureId + "'";
+        String partnerTypeQuery = "SELECT * FROM " + Incidents.dbSchema + ".partner where " +
+                "structure_id = '" + structureId + "' OR structure_id = '' ORDER BY structure_id desc";
         Sql.getInstance().raw(partnerTypeQuery, SqlResult.validResultHandler(handler));
 
     }
