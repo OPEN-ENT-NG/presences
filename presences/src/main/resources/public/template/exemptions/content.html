@@ -1,6 +1,15 @@
 <div class="row top20">
     <loader ng-show="vm.exemptions.loading" min-height="'250px'"/>
-    <div ng-show="!vm.exemptions.loading"  class="twelve">
+    <div class="nine empty-content" data-ng-show="vm.exemptions.all.length === 0 &amp;&amp; !vm.exemptions.loading">
+        <img data-ng-src="/presences/public/img/exemptions_empty.svg" src="/presences/public/img/exemptions_empty.svg"
+             class="four">
+        <div class="eight description">
+            <span class="purple-bar bar"></span>
+            <i18n><span class="no-style ng-scope">Aucune dispense sur cette période</span></i18n>
+            <span class="yellow-bar bar"></span>
+        </div>
+    </div>
+    <div ng-show="!vm.exemptions.loading && vm.exemptions.all.length > 0" class="twelve">
         <table class="table table-hover">
             <thead>
             <tr>
@@ -25,11 +34,14 @@
             </tr>
             </thead>
             <tbody>
-            <tr ng-show="vm.exemptions.all && vm.exemptions.all.length > 0"
-                ng-disabled="hasRight('manageExemption') != true"
+            <tr ng-disabled="hasRight('manageExemption') != true"
                 ng-click="vm.editExemption(exemption)"
                 data-ng-repeat="exemption in vm.exemptions.all">
-                <th class="uppercase">[[exemption.student.lastName]] [[exemption.student.firstName]]</th>
+                <th class="uppercase flex-th">
+                    <span class="avatar"
+                          ng-style="{'background-image': 'url(/userbook/avatar/' + exemption.studentId + ')'}">&nbsp;</span>
+                    <span>[[exemption.student.lastName]] [[exemption.student.firstName]]</span>
+                </th>
                 <th class="uppercase playdown text-center">[[exemption.student.classeName]]</th>
                 <th class="uppercase playdown">[[exemption.subject.name]]</th>
                 <th class="highlight">

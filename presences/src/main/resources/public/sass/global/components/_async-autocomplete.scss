@@ -22,6 +22,7 @@
     max-height: 200px;
     overflow-y: scroll;
     width: 100%;
+    display: block;
 
     li:hover {
       background-color: $presences-main;
@@ -30,6 +31,7 @@
 
   .drop-down {
     top: 80%;
+    display: none;
   }
 }
 

@@ -4,6 +4,7 @@ $presences-purple: #9c29b7;
 $presences-green: #24a1ac;
 $presences-grey: #aaaaaa;
 $presences-white: #ffffff;
+$presences-middle-grey: #929292;
 $presences-black: rgba(0, 0, 0, .87);
 
 $portal-header-height: 64px;
@@ -93,8 +94,8 @@ body.presences, .sniplet.presences {
   }
 
   .no-vertical-padding {
-    padding-top: 0!important;
-    padding-bottom: 0!important;;
+    padding-top: 0 !important;
+    padding-bottom: 0 !important;;
   }
 
   .search-input {
@@ -105,8 +106,10 @@ body.presences, .sniplet.presences {
     input {
       margin: auto;
     }
+
     &.small {
       margin-right: 15px;
+
       input {
         max-width: 75px;
       }
@@ -138,29 +141,19 @@ body.presences, .sniplet.presences {
     }
   }
 
-  .exemptions i {
-    text-align: center;
-    font-size: 24px;
-    line-height: 32px;
-
-    &.account:before {
-      content: "\f004";
-    }
-
-    &.account-outline {
-      font-size: 32px;
-
-      &:before {
-        content: "\e946";
-      }
-    }
-  }
-
   .purple-bar {
     display: block;
     width: 50px;
     height: 10px;
     background: $presences-purple;
+    border-radius: 5px;
+  }
+
+  .yellow-bar {
+    display: block;
+    width: 50px;
+    height: 10px;
+    background: $presences-main;
     border-radius: 5px;
   }
 

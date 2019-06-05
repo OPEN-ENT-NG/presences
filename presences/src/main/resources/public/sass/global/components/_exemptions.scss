@@ -1,0 +1,41 @@
+.exemptions {
+  i {
+    text-align: center;
+    font-size: 24px;
+    line-height: 32px;
+
+    &.account:before {
+      content: "\f004";
+    }
+
+    &.account-outline {
+      font-size: 32px;
+
+      &:before {
+        content: "\e946";
+      }
+    }
+  }
+
+  .flex-th {
+    display: flex;
+    align-items: center;
+    align-content: center;
+
+    .avatar {
+      width: 40px;
+      height: 40px;
+      display: inline-block;
+      background-size: 100%;
+      background-position: center center;
+      border-radius: 50%;
+      margin-right: 15px;
+    }
+  }
+
+  .exemptions-content-empty {
+    img {
+      width: 35%;
+    }
+  }
+}
