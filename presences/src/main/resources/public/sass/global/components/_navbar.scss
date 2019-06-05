@@ -71,7 +71,11 @@ nav {
         height: 52px;
         line-height: 32px;
 
-        &.active {
+        &:hover {
+          color: $presences-main !important;
+        }
+
+        &.active, &:hover {
           i::after {
             background-color: $presences-main;
           }
@@ -106,6 +110,8 @@ nav {
         padding: 7px 0;
 
         &:hover, &.active {
+          color: $presences-main !important;
+
           i::after {
             background-color: $presences-main;
             left: -10px;

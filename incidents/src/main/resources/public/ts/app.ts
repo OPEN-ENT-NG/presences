@@ -4,23 +4,23 @@ import * as directives from './directives';
 import * as services from './services';
 
 for (let directive in directives) {
-	ng.directives.push(directives[directive]);
+    ng.directives.push(directives[directive]);
 }
 
-for(let controller in controllers){
+for (let controller in controllers) {
     ng.controllers.push(controllers[controller]);
 }
 
 for (let service in services) {
-	ng.services.push(services[service]);
+    ng.services.push(services[service]);
 }
 
-routes.define(function($routeProvider){
-	$routeProvider
-		.when('/incidents', {
-			action: 'incidents'
-		})
-		.otherwise({
-			action: 'incidents'
-		});
+routes.define(function ($routeProvider) {
+    $routeProvider
+        .when('/incidents', {
+            action: 'incidents'
+        })
+        .otherwise({
+            redirectTo: '/incidents'
+        });
 })

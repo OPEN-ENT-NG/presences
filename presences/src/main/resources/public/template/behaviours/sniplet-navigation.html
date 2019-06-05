@@ -20,6 +20,7 @@
                     <i class="register" aria-hidden="true"></i>
                 </a>
                 <div role="menuitem" class="item"
+                     ng-class="{active: getCurrentState() === 'exemptions'}"
                      data-ng-click="hoverIn('ABSENCES')"
                      data-ng-mouseover="hoverIn('ABSENCES')"
                      data-ng-mouseleave="hoverOut()">
@@ -29,6 +30,7 @@
                     <i class="presence" aria-hidden="true"></i>
                 </a>
                 <div role="menuitem" class="item"
+                     ng-class="{active: getCurrentState() === 'incidents'}"
                      data-ng-click="hoverIn('INCIDENTS')"
                      data-ng-mouseover="hoverIn('INCIDENTS')"
                      data-ng-mouseleave="hoverOut()">
@@ -68,12 +70,13 @@
                             <i class="absence" aria-hidden="true"></i>
                             <span><i18n>presences.navigation.absence.list</i18n></span>
                         </a>
-                        <div class="sub-item">
+                        <a href="#" class="sub-item">
                             <i class="testimony" aria-hidden="true"></i>
                             <span><i18n>presences.navigation.statements.online</i18n></span>
-                        </div>
+                        </a>
                         <a href="/presences#/exemptions"
                            ng-if="::hasRight('readExemption')"
+                           ng-class="{active: getCurrentState() === 'exemptions'}"
                            class="sub-item">
                             <i class="permission" aria-hidden="true"></i>
                             <span><i18n>presences.navigation.exemption</i18n></span>
@@ -92,24 +95,16 @@
                         <h2>
                             <i18n>incidents.navigation.management</i18n>
                         </h2>
-                        <div class="sub-item">
-                            <a href="/incidents">
-                                <i class="incident" aria-hidden="true"></i>
-                                <span><i18n>incidents.title</i18n></span>
-                            </a>
-                        </div>
-                        <div class="sub-item">
-                            <a href="/incidents">
-                                <i class="punishment" aria-hidden="true"></i>
-                                <span><i18n>incidents.navigation.punishment</i18n></span>
-                            </a>
-                        </div>
-                        <div class="sub-item">
-                            <a href="/incidents">
-                                <i class="sanction" aria-hidden="true"></i>
-                                <span><i18n>incidents.navigation.sanction</i18n></span>
-                            </a>
-                        </div>
+                        <a class="sub-item"
+                           href="/incidents#/incidents"
+                           ng-class="{active: getCurrentState() === 'incidents'}">
+                            <i class="incident" aria-hidden="true"></i>
+                            <span><i18n>incidents.title</i18n></span>
+                        </a>
+                        <a class="sub-item" href="#">
+                            <i class="punishment" aria-hidden="true"></i>
+                            <span><i18n>incidents.navigation.punishment.sanction</i18n></span>
+                        </a>
                     </div>
                 </div>
                 <div class="item"></div>
