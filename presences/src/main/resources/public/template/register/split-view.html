@@ -4,7 +4,7 @@
          role="row">
         <div class="four">
             <div class="absence-button" role="button"
-                 ng-class="{active: student.absence !== undefined, disabled: student.absence !== undefined && student.absence.counsellor_input}"
+                 ng-class="{active: student.absence !== undefined, disabled: (student.absence !== undefined && student.absence.counsellor_input) || (student.exempted && !student.exemption_attendance)}"
                  ng-click="vm.toggleAbsence(student)">
                 &nbsp;
             </div>

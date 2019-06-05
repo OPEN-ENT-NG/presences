@@ -5,6 +5,7 @@ import fr.openent.presences.common.helper.DateHelper;
 import fr.openent.presences.common.helper.FutureHelper;
 import fr.openent.presences.enums.EventType;
 import fr.openent.presences.enums.GroupType;
+import fr.openent.presences.service.ExemptionService;
 import fr.openent.presences.service.GroupService;
 import fr.openent.presences.service.RegisterService;
 import fr.wseduc.mongodb.MongoDb;
@@ -35,11 +36,13 @@ public class DefaultRegisterService implements RegisterService {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(DefaultRegisterService.class);
     private GroupService groupService;
+    private ExemptionService exemptionService;
     private EventBus eb;
 
     public DefaultRegisterService(EventBus eb) {
         this.eb = eb;
         this.groupService = new DefaultGroupService(eb);
+        this.exemptionService = new DefaultExemptionService(eb);
     }
 
     @Override
@@ -149,61 +152,74 @@ public class DefaultRegisterService implements RegisterService {
                 return;
             }
             JsonArray groups = new JsonArray(register.getString("groups"));
-            Future<JsonArray> usersFuture = Future.future();
-            Future<JsonArray> lastAbsentsFuture = Future.future();
-            Future<JsonArray> groupsNameFuture = Future.future();
-            Future<JsonArray> teachersFuture = Future.future();
-
-            CompositeFuture.all(usersFuture, lastAbsentsFuture, groupsNameFuture, teachersFuture).setHandler(asyncEvent -> {
-                if (asyncEvent.failed()) {
-                    String message = "[Presences@DefaultRegisterService] Failed to retrieve groups users or last absents students";
-                    LOGGER.error(message);
-                    handler.handle(new Either.Left<>(message));
+            getUsers(groups, userEither -> {
+                if (userEither.isLeft()) {
+                    LOGGER.error("[Presences@DefaultRegisterService] Failed to retrieve users", userEither.left().getValue());
+                    handler.handle(new Either.Left<>(userEither.left().getValue()));
                     return;
                 }
-                JsonArray users = usersFuture.result();
-                JsonArray lastAbsentUsers = reduce(lastAbsentsFuture.result(), "student_id");
-                JsonObject groupsNameMap = mapGroupsName(groupsNameFuture.result());
-                JsonArray userIds = new JsonArray();
+                JsonArray users = userEither.right().getValue();
+                List<String> userIds = new ArrayList<>();
                 for (int i = 0; i < users.size(); i++) {
                     userIds.add(users.getJsonObject(i).getString("id"));
                 }
 
-                getRegisterEventHistory(day, userIds, historyEvent -> {
-                    if (historyEvent.isLeft()) {
-                        String message = "[Presences@DefaultRegisterService] Failed to retrieve register history";
+                Future<JsonArray> lastAbsentsFuture = Future.future();
+                Future<JsonArray> groupsNameFuture = Future.future();
+                Future<JsonArray> teachersFuture = Future.future();
+                Future<JsonArray> exemptionFuture = Future.future();
+
+                CompositeFuture.all(lastAbsentsFuture, groupsNameFuture, teachersFuture).setHandler(asyncEvent -> {
+                    if (asyncEvent.failed()) {
+                        String message = "[Presences@DefaultRegisterService] Failed to retrieve groups users or last absents students";
                         LOGGER.error(message);
                         handler.handle(new Either.Left<>(message));
                         return;
                     }
-                    JsonArray events = historyEvent.right().getValue();
-                    JsonObject historyMap = extractUsersEvents(events);
 
-                    JsonArray formattedUsers = new JsonArray();
-                    for (int i = 0; i < users.size(); i++) {
-                        JsonObject user = users.getJsonObject(i);
-                        formattedUsers.add(formatStudent(id, user, historyMap.getJsonArray(user.getString("id"), new JsonArray()),
-                                lastAbsentUsers.contains(user.getString("id")), groupsNameMap.getString(user.getString("groupId"))));
-                    }
-                    register.put("students", formattedUsers);
-                    register.put("groups", groups);
-                    register.put("teachers", teachersFuture.result());
+                    JsonObject exemptionsMap = mapExemptions(exemptionFuture.result());
+                    JsonArray lastAbsentUsers = reduce(lastAbsentsFuture.result(), "student_id");
+                    JsonObject groupsNameMap = mapGroupsName(groupsNameFuture.result());
 
-                    matchSlots(register, register.getString("structure_id"), slotEvent -> {
-                        if (slotEvent.isLeft()) {
-                            String message = "[Presences@DefaultRegisterService] Failed to match slots";
-                            LOGGER.error(message, slotEvent.left().getValue());
+                    getRegisterEventHistory(day, new JsonArray(userIds), historyEvent -> {
+                        if (historyEvent.isLeft()) {
+                            String message = "[Presences@DefaultRegisterService] Failed to retrieve register history";
+                            LOGGER.error(message);
                             handler.handle(new Either.Left<>(message));
-                        } else {
-                            handler.handle(new Either.Right<>(slotEvent.right().getValue()));
+                            return;
                         }
+                        JsonArray events = historyEvent.right().getValue();
+                        JsonObject historyMap = extractUsersEvents(events);
+
+                        JsonArray formattedUsers = new JsonArray();
+                        for (int i = 0; i < users.size(); i++) {
+                            JsonObject user = users.getJsonObject(i);
+                            boolean exempted = exemptionsMap.containsKey(user.getString("id"));
+                            boolean exemption_attendance = exemptionsMap.containsKey(user.getString("id")) ? exemptionsMap.getBoolean(user.getString("id")) : false;
+                            formattedUsers.add(formatStudent(id, user, historyMap.getJsonArray(user.getString("id"), new JsonArray()),
+                                    lastAbsentUsers.contains(user.getString("id")), groupsNameMap.getString(user.getString("groupId")),
+                                    exempted, exemption_attendance));
+                        }
+                        register.put("students", formattedUsers);
+                        register.put("groups", groups);
+                        register.put("teachers", teachersFuture.result());
+
+                        matchSlots(register, register.getString("structure_id"), slotEvent -> {
+                            if (slotEvent.isLeft()) {
+                                String message = "[Presences@DefaultRegisterService] Failed to match slots";
+                                LOGGER.error(message, slotEvent.left().getValue());
+                                handler.handle(new Either.Left<>(message));
+                            } else {
+                                handler.handle(new Either.Right<>(slotEvent.right().getValue()));
+                            }
+                        });
                     });
                 });
+                exemptionService.getRegisterExemptions(userIds, register.getString("structure_id"), register.getString("start_date"), register.getString("end_date"), FutureHelper.handlerJsonArray(exemptionFuture));
+                getLastAbsentsStudent(register.getString("personnel_id"), id, FutureHelper.handlerJsonArray(lastAbsentsFuture));
+                getGroupsName(groups, FutureHelper.handlerJsonArray(groupsNameFuture));
+                getCourseTeachers(register.getString("course_id"), FutureHelper.handlerJsonArray(teachersFuture));
             });
-            getUsers(groups, FutureHelper.handlerJsonArray(usersFuture));
-            getLastAbsentsStudent(register.getString("personnel_id"), id, FutureHelper.handlerJsonArray(lastAbsentsFuture));
-            getGroupsName(groups, FutureHelper.handlerJsonArray(groupsNameFuture));
-            getCourseTeachers(register.getString("course_id"), FutureHelper.handlerJsonArray(teachersFuture));
         }));
     }
 
@@ -299,6 +315,15 @@ public class DefaultRegisterService implements RegisterService {
         return map;
     }
 
+    private JsonObject mapExemptions(JsonArray exemptions) {
+        JsonObject map = new JsonObject();
+        for (int i = 0; i < exemptions.size(); i++) {
+            map.put(exemptions.getJsonObject(i).getString("student_id"), exemptions.getJsonObject(i).getBoolean("attendance", false));
+        }
+
+        return map;
+    }
+
     private JsonObject extractUsersEvents(JsonArray events) {
         JsonObject map = new JsonObject();
         for (int i = 0; i < events.size(); i++) {
@@ -350,14 +375,17 @@ public class DefaultRegisterService implements RegisterService {
     /**
      * Format user. It creates an object containing its identifier, its name, its group, its events and its event day history
      *
-     * @param registerId       Register identifier. The function needs the register identifier to extract events that concern the current register.
-     * @param student          Student
-     * @param events           Student events list
-     * @param lastCourseAbsent Define if user was absent during last teacher course$
-     * @param groupName        User group name
+     * @param registerId           Register identifier. The function needs the register identifier to extract events that concern the current register.
+     * @param student              Student
+     * @param events               Student events list
+     * @param lastCourseAbsent     Define if user was absent during last teacher course$
+     * @param groupName            User group name
+     * @param exempted             User exemption status
+     * @param exemption_attendance User exemption attendance status. Sometime, the exemption needs attendance
      * @return Formatted student
      */
-    private JsonObject formatStudent(Integer registerId, JsonObject student, JsonArray events, boolean lastCourseAbsent, String groupName) {
+    private JsonObject formatStudent(Integer registerId, JsonObject student, JsonArray events, boolean lastCourseAbsent,
+                                     String groupName, Boolean exempted, Boolean exemption_attendance) {
         JsonArray registerEvents = new JsonArray();
         for (int i = 0; i < events.size(); i++) {
             JsonObject event = events.getJsonObject(i);
@@ -365,7 +393,7 @@ public class DefaultRegisterService implements RegisterService {
                 registerEvents.add(event);
             }
         }
-        return new JsonObject()
+        JsonObject user = new JsonObject()
                 .put("id", student.getString("id"))
                 .put("name", student.getString("lastName") + " " + student.getString("firstName"))
                 .put("birth_date", student.getString("birthDate"))
@@ -373,7 +401,15 @@ public class DefaultRegisterService implements RegisterService {
                 .put("group_name", groupName)
                 .put("events", registerEvents)
                 .put("last_course_absent", lastCourseAbsent)
-                .put("day_history", events);
+                .put("day_history", events)
+                .put("exempted", exempted);
+
+
+        if (exempted) {
+            user.put("exemption_attendance", exemption_attendance);
+        }
+
+        return user;
     }
 
     /**

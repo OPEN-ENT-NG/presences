@@ -384,7 +384,7 @@ export const registersController = ng.controller('RegistersController',
             };
 
             vm.toggleAbsence = async (student) => {
-                if (student.absence && student.absence.counsellor_input) return;
+                if ((student.absence && student.absence.counsellor_input) || (student.exempted && !student.exemption_attendance)) return;
                 await toggleEvent(student, 'absence', vm.register.start_date, vm.register.end_date);
                 student.departure = undefined;
                 student.lateness = undefined;
@@ -531,7 +531,7 @@ export const registersController = ng.controller('RegistersController',
                     && !vm.isFuturCourse(({startDate: start_date} as Course))
                     && moment(DateUtils.setFirstTime(moment())).diff(moment(DateUtils.setFirstTime(start_date)), 'days') < 2
             };
-            
+
             vm.getGroups = function (classes, groups) {
                 return [...classes, ...groups];
             };

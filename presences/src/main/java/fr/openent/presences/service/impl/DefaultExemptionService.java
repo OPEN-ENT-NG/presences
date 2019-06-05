@@ -165,6 +165,15 @@ public class DefaultExemptionService extends SqlCrudService implements Exemption
         Sql.getInstance().prepared(query, values, SqlResult.validResultHandler(handler));
     }
 
+    @Override
+    public void getRegisterExemptions(List<String> studentList, String structure_id, String start_date, String end_date, Handler<Either<String, JsonArray>> handler) {
+        String query = "SELECT student_id, attendance FROM " + Presences.dbSchema + "." + DATABASE_TABLE + " WHERE start_date < ? AND end_date > ? AND student_id IN " + Sql.listPrepared(studentList);
+        JsonArray params = new JsonArray()
+                .add(start_date)
+                .add(end_date)
+                .addAll(new JsonArray(studentList));
+        Sql.getInstance().prepared(query, params, SqlResult.validResultHandler(handler));
+    }
 
     private void addUsersInfo(String structure_id, JsonArray exemptions, Future future) {
         JsonArray student_ids = new JsonArray();
