@@ -1,11 +1,10 @@
 <div class="row top20">
     <loader ng-show="vm.exemptions.loading" min-height="'250px'"/>
     <div class="nine empty-content" data-ng-show="vm.exemptions.all.length === 0 &amp;&amp; !vm.exemptions.loading">
-        <img data-ng-src="/presences/public/img/exemptions_empty.svg" src="/presences/public/img/exemptions_empty.svg"
-             class="four">
+        <img data-ng-src="/presences/public/img/exemptions_empty.svg" class="four">
         <div class="eight description">
             <span class="purple-bar bar"></span>
-            <i18n><span class="no-style ng-scope">Aucune dispense sur cette période</span></i18n>
+            <i18n>presences.exemptions.empty</i18n>
             <span class="yellow-bar bar"></span>
         </div>
     </div>

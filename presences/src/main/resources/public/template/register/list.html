@@ -70,6 +70,14 @@
     <loader ng-show="vm.courses.loading"
             title="lang.translate('presences.register.loading.text')"
             min-height="'250px'"/>
+    <div class="nine empty-content" data-ng-show="vm.courses.all.length === 0 &amp;&amp; !vm.courses.loading">
+        <div class="eight description">
+            <span class="red-bar bar"></span>
+            <i18n>presences.registers.empty</i18n>
+            <span class="purple-bar bar"></span>
+        </div>
+        <img data-ng-src="/presences/public/img/registers_empty.svg" class="four">
+    </div>
     <div class="row" ng-repeat="date in vm.courses.keysOrder"
          ng-if="vm.courses.all.length > 0">
         <h2 class="capitalized">[[::vm.formatDayDate(date)]]</h2>
