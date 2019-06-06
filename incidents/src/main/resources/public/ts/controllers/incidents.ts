@@ -113,7 +113,7 @@ export const incidentsController = ng.controller('IncidentsController', ['$scope
                 vm.incidents.export();
             }
         } else {
-            vm.notifications.push(new Toast('incidents.csv.empty', 'warning'));
+            vm.notifications.push(new Toast('incidents.csv.empty', 'info'));
         }
     };
 
@@ -198,9 +198,6 @@ export const incidentsController = ng.controller('IncidentsController', ['$scope
         vm.incidentStudentsForm = new Students();
 
         /* Setting incident parameter type select */
-        vm.incidentForm.incidentType = vm.incidentParameterType.incidentType[0];
-        vm.incidentForm.seriousness = vm.incidentParameterType.seriousnessLevel[0];
-        vm.incidentForm.place = vm.incidentParameterType.place[0];
         vm.incidentForm.partner = vm.incidentParameterType.partner[vm.incidentParameterType.partner.length - 1];
 
         $scope.safeApply()

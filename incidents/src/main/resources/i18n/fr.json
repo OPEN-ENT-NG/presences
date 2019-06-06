@@ -24,6 +24,7 @@
   "incidents.edit": "Modifier un incident",
   "incidents.create.punishment": "Saisir une punition",
   "incidents.create.sanction": "Saisir une sanction",
+  "incidents.form.treated": "Incident traité",
   "incidents.form.submit": "Valider",
   "incidents.form.save": "Modifier",
   "incidents.form.delete": "Supprimer",

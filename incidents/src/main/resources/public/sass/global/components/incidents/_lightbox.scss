@@ -1,0 +1,158 @@
+/* lightbox */
+.incident-lightbox {
+  &.editMode {
+    .content {
+      width: 740px;
+    }
+  }
+
+  // body part
+  &-body {
+    background: #F5F5F5;
+
+    &-title {
+      color: $black;
+      margin-top: 0;
+    }
+
+    &-dateAndPlace {
+      display: flex;
+
+      &.row:after {
+        width: unset;
+      }
+
+      &-date {
+        display: flex;
+        flex-direction: column;
+        flex: 0.6;
+
+        &-content {
+          display: flex;
+          justify-content: space-between;
+
+          &-timePicker {
+            background-color: $white;
+            display: inline-block;
+          }
+        }
+      }
+
+      &-place {
+        padding-left: $spacing-L;
+        flex: 1;
+        align-self: flex-end;
+
+        select {
+          margin-top: $spacing-XLXS;
+        }
+      }
+    }
+
+
+    &-parameter {
+      display: flex;
+
+      &.row:after {
+        width: unset;
+      }
+
+      select {
+        margin-top: $spacing-XLXS;
+        width: $select-size;
+      }
+    }
+
+    &-descriptionTreated {
+      &-content {
+        margin-top: $spacing-XLXS;
+        display: flex;
+
+        &.row:after {
+          width: unset;
+        }
+
+        &-description {
+          background: $white;
+          flex: 5;
+        }
+
+        &-treated {
+          align-self: flex-end;
+          flex: 2;
+        }
+      }
+    }
+
+    &-treated {
+      label {
+        switch {
+          .switch {
+            float: none;
+          }
+        }
+      }
+    }
+  }
+
+  // footer part
+  &-footer {
+    &-protagonist {
+      &-search {
+        align-items: center;
+        display: flex;
+        padding-bottom: $spacing-LXS;
+
+        &-title {
+          flex: 1;
+          text-align: center;
+        }
+
+        &-input {
+          flex: 2;
+        }
+
+        &-space {
+          flex: 2;
+          visibility: collapse;
+        }
+      }
+
+      &-list {
+        &.search-input-ul {
+          display: flex;
+          flex-direction: column;
+          max-height: 140px;
+          overflow-y: auto;
+        }
+
+        &-item {
+          display: block !important;
+
+          &-content {
+            display: flex;
+            align-items: baseline;
+            padding-bottom: $spacing-LXS;
+
+            select {
+              width: $select-size;
+              margin: 0 $spacing-L;
+            }
+
+            i {
+              float: right;
+            }
+          }
+        }
+      }
+    }
+
+    &-submit {
+      padding-right: $spacing-S;
+    }
+  }
+}
+
+.lightbox-form .row.spacing .cell.twelve {
+  padding: 5px 10px !important;
+}

@@ -86,13 +86,19 @@ export class Incident {
     };
 
     isIncidentFormValid(): boolean {
+        // set empty object on undefined while selecting default value
+        this.place = this.place == undefined ? {} as Place : this.place;
+        this.partner = this.partner == undefined ? {} as Partner : this.partner;
+        this.incidentType = this.incidentType == undefined ? {} as IncidentType : this.incidentType;
+        this.seriousness = this.seriousness == undefined ? {} as SeriousnessLevel : this.seriousness;
+
         return this.owner
             && this.description
             && this.date
-            && this.place
-            && this.partner
-            && this.incidentType
-            && this.seriousness
+            && Object.keys(this.place).length !== 0
+            && Object.keys(this.partner).length !== 0
+            && Object.keys(this.incidentType).length !== 0
+            && Object.keys(this.seriousness).length !== 0
             && this.protagonists.length > 0;
     };
 
