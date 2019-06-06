@@ -71,6 +71,10 @@ public abstract class CSVExport {
         this.setHeader(line.toString());
     }
 
+    public String translate(String key) {
+        return i18n.translate(key, Renders.getHost(this.request), I18n.acceptLanguage(this.request));
+    }
+
     public void setFilename(String filename) {
         this.filename = filename;
     }

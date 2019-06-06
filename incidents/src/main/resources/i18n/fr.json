@@ -16,7 +16,7 @@
   "incidents.csv.header.processed.done": "Traité",
   "incidents.csv.header.processed.undone": "Non traité",
   "incidents.navigation.management": "Gestion des incidents",
-  "incidents.navigation.punishment": "Punition",
+  "incidents.navigation.punishment.sanction": "Punitions & sanctions",
   "incidents.navigation.sanction": "Sanction",
   "incidents.search.student": "Rechercher un élève",
   "incidents.create": "Saisir un incident",

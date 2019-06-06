@@ -2,12 +2,15 @@ table {
   width: 100%;
   font-size: 15px;
   text-align: left;
-  .text-center {text-align: center;}
+
+  .text-center {
+    text-align: center;
+  }
+
   thead tr {
     background: $presences-white;
-    -webkit-box-shadow: 0px 1px 1px #eeeded;
-    -moz-box-shadow: 0px 1px 1px #eeeded;
-    box-shadow: 0px 10px 10px #eeeded;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.12);
+
     th {
       color: $presences-grey;
       text-align: center;
@@ -15,14 +18,21 @@ table {
       font-size: 17px;
     }
   }
+
   tbody tr {
+    &:first-child {
+      border-top: none;
+    }
+
     th {
       padding: 15px 20px;
       font-weight: normal;
       font-size: 15px;
+
       &.uppercase {
         text-transform: uppercase;
       }
+
       &.highlight {
         color: $presences-white;;
         background: $presences-main;
@@ -32,8 +42,9 @@ table {
         padding: 5px 10px;
         font-size: 12px;
       }
+
       span.right {
-          float: right;
+        float: right;
       }
     }
   }

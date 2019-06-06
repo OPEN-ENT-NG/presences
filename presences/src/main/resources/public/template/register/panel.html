@@ -25,13 +25,13 @@
         <div class="row">
             <label class="checkbox">
                 <input type="checkbox"
-                       ng-disabled="vm.filter.student.absence !== undefined"
+                       ng-disabled="vm.filter.student.absence !== undefined || (vm.filter.student.exempted && !vm.filter.student.exemption_attendance)"
                        ng-checked="vm.filter.student.lateness !== undefined"
                        ng-click="vm.toggleLateness(vm.filter.student)"/>
                 <span><i18n>presences.register.event_type.lateness</i18n></span>
             </label>
             <time-picker
-                    ng-disabled="vm.filter.student.absence !== undefined"
+                    ng-disabled="vm.filter.student.absence !== undefined || (vm.filter.student.exempted && !vm.filter.student.exemption_attendance)"
                     ng-model="vm.filter.student.lateness.end_date_time"
                     ng-change="vm.filter.student.lateness.update()"></time-picker>
         </div>
@@ -39,7 +39,7 @@
             <label>
                 <i18n>presences.lateness.reason</i18n>
                 <textarea
-                        ng-disabled="vm.filter.student.lateness === undefined && vm.filter.student.absence !== undefined"
+                        ng-disabled="vm.filter.student.lateness === undefined && vm.filter.student.absence !== undefined || (vm.filter.student.exempted && !vm.filter.student.exemption_attendance)"
                         ng-model="vm.filter.student.lateness.comment"
                         end-user-typing="vm.filter.student.lateness.update()"></textarea>
             </label>
@@ -48,20 +48,22 @@
     <div class="departure eleven centered vertical-spacing">
         <div class="row">
             <label class="checkbox">
-                <input type="checkbox" ng-disabled="vm.filter.student.absence !== undefined"
+                <input type="checkbox"
+                       ng-disabled="vm.filter.student.absence !== undefined || (vm.filter.student.exempted && !vm.filter.student.exemption_attendance)"
                        ng-checked="vm.filter.student.departure !== undefined"
                        ng-click="vm.toggleDeparture(vm.filter.student)"/>
                 <span><i18n>presences.register.event_type.departure</i18n></span>
             </label>
-            <time-picker ng-disabled="vm.filter.student.absence !== undefined"
-                         ng-model="vm.filter.student.departure.start_date_time"
-                         ng-change="vm.filter.student.departure.update()"></time-picker>
+            <time-picker
+                    ng-disabled="vm.filter.student.absence !== undefined  || (vm.filter.student.exempted && !vm.filter.student.exemption_attendance)"
+                    ng-model="vm.filter.student.departure.start_date_time"
+                    ng-change="vm.filter.student.departure.update()"></time-picker>
         </div>
         <div class="row">
             <label>
                 <i18n>presences.departure.reason</i18n>
                 <textarea
-                        ng-disabled="vm.filter.student.departure === undefined && vm.filter.student.absence !== undefined"
+                        ng-disabled="vm.filter.student.departure === undefined && vm.filter.student.absence !== undefined  || (vm.filter.student.exempted && !vm.filter.student.exemption_attendance)"
                         ng-model="vm.filter.student.departure.comment"
                         end-user-typing="vm.filter.student.departure.update()"></textarea>
             </label>

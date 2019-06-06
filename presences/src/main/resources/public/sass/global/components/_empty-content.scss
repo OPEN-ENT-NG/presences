@@ -1,0 +1,24 @@
+.empty-content {
+  margin: 0 auto;
+  display: flex;
+
+  .description {
+    height: 300px;
+    font-size: 18px;
+    color: $presences-middle-grey;
+    display: flex;
+    align-self: flex-start;
+    align-items: center;
+    justify-content: center;
+
+    .bar {
+      &:first-child {
+        margin-right: 20px;
+      }
+
+      &:last-child {
+        margin-left: 20px;
+      }
+    }
+  }
+}
