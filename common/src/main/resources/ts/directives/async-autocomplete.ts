@@ -17,7 +17,7 @@ export const asyncAutocomplete = ng.directive('asyncAutocomplete', ['$timeout', 
         <span class="input-async-autocomplete" ng-class="{loading: loading}">
             <input type="text" class="twelve cell" ng-disabled="disabled" ng-model="search" placeholder="[[translate(placeholder || 'search')]]" autocomplete="off" />
         </span>
-        <div data-drop-down class="drop-down" ng-class="{scroll: match.length > 0}">
+        <div data-drop-down class="drop-down" ng-class="{scroll: match.length > 0, empty: match.length === 0}">
             <div ng-if="match && match.length > 0">
                 <ul class="ten cell right-magnet">
                     <li class="block-container" ng-repeat="option in match" ng-model="option" ng-click="select(option)">

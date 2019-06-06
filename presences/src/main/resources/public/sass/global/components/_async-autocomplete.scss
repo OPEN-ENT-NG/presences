@@ -18,10 +18,7 @@
   }
 
   .scroll.drop-down {
-    top: 80%;
-    max-height: 200px;
     overflow-y: scroll;
-    width: 100%;
     display: block;
 
     li:hover {
@@ -29,8 +26,14 @@
     }
   }
 
+  .drop-down.empty {
+    display: block;
+  }
+
   .drop-down {
     top: 80%;
+    max-height: 200px;
+    width: 100%;
     display: none;
   }
 }
