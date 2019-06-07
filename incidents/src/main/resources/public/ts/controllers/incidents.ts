@@ -28,6 +28,8 @@ interface ViewModel {
     updateDate(): void;
     updateFilter(student?): void;
 
+    sortField(field: string);
+
     // Students
     students: Students;
     studentSearchInput: string;
@@ -124,6 +126,31 @@ export const incidentsController = ng.controller('IncidentsController', ['$scope
         }
         setStudentToSync();
         vm.incidents.page = 0;
+        $scope.safeApply();
+    };
+
+    vm.sortField = async (field) => {
+        switch (field) {
+            case 'date':
+                vm.incidents.order = field;
+                break;
+            case 'place':
+                vm.incidents.order = field;
+                break;
+            case 'type':
+                vm.incidents.order = field;
+                break;
+            case 'seriousness':
+                vm.incidents.order = field;
+                break;
+            case 'treated':
+                vm.incidents.order = field;
+                break;
+            default:
+                vm.incidents.order = 'date';
+        }
+        vm.incidents.reverse = !vm.incidents.reverse;
+        await vm.incidents.syncPagination();
         $scope.safeApply();
     };
 

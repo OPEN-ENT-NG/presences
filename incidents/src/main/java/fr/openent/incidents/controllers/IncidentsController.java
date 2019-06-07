@@ -60,6 +60,9 @@ public class IncidentsController extends ControllerHelper {
         String structureId = request.getParam("structureId");
         String startDate = request.getParam("startDate");
         String endDate = request.getParam("endDate");
+        String field = request.params().contains("order") ? request.getParam("order") : "date";
+        boolean reverse = request.params().contains("reverse") && Boolean.parseBoolean(request.getParam("reverse"));
+
         List<String> userId = request.getParam("userId") != null ? Arrays.asList(request.getParam("userId").split("\\s*,\\s*")) : null;
 
         String page = request.getParam("page") != null ? request.getParam("page") : "0";
@@ -86,8 +89,10 @@ public class IncidentsController extends ControllerHelper {
             }
         });
 
-        incidentsService.get(structureId, startDate, endDate, userId, page, false, FutureHelper.handlerJsonArray(incidentsFuture));
-        incidentsService.getPageNumber(structureId, startDate, endDate, userId, page, FutureHelper.handlerJsonObject(pageNumberFuture));
+        incidentsService.get(structureId, startDate, endDate,
+                userId, page, false, field, reverse, FutureHelper.handlerJsonArray(incidentsFuture));
+        incidentsService.getPageNumber(structureId, startDate, endDate, userId,
+                page, field, reverse, FutureHelper.handlerJsonObject(pageNumberFuture));
     }
 
     @Get("/incidents/export")
@@ -97,8 +102,11 @@ public class IncidentsController extends ControllerHelper {
         String startDate = request.getParam("startDate");
         String endDate = request.getParam("endDate");
         List<String> userId = request.getParam("userId") != null ? Arrays.asList(request.getParam("userId").split("\\s*,\\s*")) : null;
+        String field = request.params().contains("order") ? request.getParam("order") : "date";
+        boolean reverse = request.params().contains("reverse") && Boolean.parseBoolean(request.getParam("reverse"));
 
-        incidentsService.get(structureId, startDate, endDate, userId, null, false, event -> {
+        incidentsService.get(structureId, startDate, endDate, userId,
+                null, false, field, reverse, event -> {
             if (event.isLeft()) {
                 log.error("[Incidents@IncidentsController] Failed to fetch incidents", event.left().getValue());
                 renderError(request);

@@ -156,6 +156,8 @@ export class Incidents extends LoadingCollection {
     startDate: string;
     endDate: string;
     userId: string;
+    order: string;
+    reverse: boolean;
 
     constructor() {
         super();
@@ -173,6 +175,14 @@ export class Incidents extends LoadingCollection {
 
             if (this.userId) {
                 url += `&userId=${this.userId}`;
+            }
+
+            if (this.order) {
+                url += `&order=${this.order}`;
+            }
+
+            if (this.reverse) {
+                url += `&reverse=${this.reverse}`;
             }
 
             url += `&page=${this.page}`;

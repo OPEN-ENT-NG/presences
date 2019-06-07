@@ -17,7 +17,8 @@ public interface IncidentsService {
      * @param page page
      * @param handler function handler returning da
      */
-    void get(String structureId, String startDate, String endDate, List<String> userId, String page, boolean paginationMode, Handler<Either<String, JsonArray>> handler);
+    void get(String structureId, String startDate, String endDate, List<String> userId,
+             String page, boolean paginationMode, String field, boolean reverse, Handler<Either<String, JsonArray>> handler);
 
     /**
      * Get Incidents count
@@ -29,7 +30,8 @@ public interface IncidentsService {
      * @param page page
      * @param handler handler
      */
-    void getPageNumber(String structureId, String startDate, String endDate, List<String> userId, String page, Handler<Either<String, JsonObject>> handler);
+    void getPageNumber(String structureId, String startDate, String endDate, List<String> userId,
+                       String page, String order, boolean reverse, Handler<Either<String, JsonObject>> handler);
 
     /**
      * Get all parameter type linked to incident (place, type of incident...)

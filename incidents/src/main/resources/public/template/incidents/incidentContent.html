@@ -20,22 +20,22 @@
                data-ng-show="vm.incidents.all && vm.incidents.all.length > 0">
             <thead>
             <tr>
-                <th width="1%">
+                <th width="1%" data-ng-click="vm.sortField('date')">
                     <i18n>incidents.date</i18n>
                 </th>
-                <th width="1%">
+                <th width="1%" data-ng-click="vm.sortField('date')">
                     <i18n>incidents.time</i18n>
                 </th>
-                <th width="2%">
+                <th width="2%" data-ng-click="vm.sortField('place')">
                     <i18n>incidents.place</i18n>
                 </th>
-                <th width="4%">
+                <th width="4%" data-ng-click="vm.sortField('type')">
                     <i18n>incidents.type</i18n>
                 </th>
-                <th width="4%">
+                <th width="4%" data-ng-click="vm.sortField('seriousness')">
                     <i18n>incidents.seriousness</i18n>
                 </th>
-                <th width="1%">
+                <th width="1%" data-ng-click="vm.sortField('treated')">
                     <i18n>incidents.treated</i18n>
                 </th>
             </tr>

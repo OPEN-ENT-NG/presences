@@ -28,9 +28,12 @@ public class DefaultIncidentsService extends SqlCrudService implements Incidents
     }
 
     @Override
-    public void get(String structureId, String startDate, String endDate, List<String> userId, String page, boolean paginationMode, Handler<Either<String, JsonArray>> handler) {
+    public void get(String structureId, String startDate, String endDate,
+                    List<String> userId, String page, boolean paginationMode,
+                    String order, boolean reverse, Handler<Either<String, JsonArray>> handler) {
         JsonArray params = new JsonArray();
-        Sql.getInstance().prepared(this.getQuery(structureId, startDate, endDate, userId, page, params, paginationMode), params, SqlResult.validResultHandler(result -> {
+        Sql.getInstance().prepared(this.getQuery(structureId, startDate, endDate,
+                userId, page, params, paginationMode, order, reverse), params, SqlResult.validResultHandler(result -> {
             if (result.isRight()) {
                 JsonArray arrayIncidents = result.right().getValue();
                 for (int i = 0; i < arrayIncidents.size(); i++) {
@@ -53,10 +56,41 @@ public class DefaultIncidentsService extends SqlCrudService implements Incidents
 
 
     @Override
-    public void getPageNumber(String structureId, String startDate, String endDate, List<String> userId, String page, Handler<Either<String, JsonObject>> handler) {
+    public void getPageNumber(String structureId, String startDate, String endDate, List<String> userId,
+                              String page, String order, boolean reverse, Handler<Either<String, JsonObject>> handler) {
         JsonArray params = new JsonArray();
-        Sql.getInstance().prepared(this.getQuery(structureId, startDate, endDate, userId, page, params, true),
+        Sql.getInstance().prepared(this.getQuery(structureId, startDate, endDate,
+                userId, page, params, true, order, reverse),
                 params, SqlResult.validUniqueResultHandler(handler));
+    }
+
+
+    private String getSqlOrderValue(String field) {
+        String typeField;
+        switch (field) {
+            case "date":
+                typeField = "i.date";
+                break;
+            case "place":
+                typeField = "i.place_id";
+                break;
+            case "type":
+                typeField = "i.type_id";
+                break;
+            case "seriousness":
+                typeField = "i.seriousness_id";
+                break;
+            case "treated":
+                typeField = "i.processed";
+                break;
+            default:
+                typeField = "i.date";
+        }
+        return typeField;
+    }
+
+    private String getSqlReverseString(Boolean reverse) {
+        return reverse ? "ASC" : "DESC";
     }
 
     /**
@@ -68,7 +102,8 @@ public class DefaultIncidentsService extends SqlCrudService implements Incidents
      * @param userId      List userId []
      * @param page        page
      */
-    private String getQuery(String structureId, String startDate, String endDate, List<String> userId, String page, JsonArray params, boolean paginationMode) {
+    private String getQuery(String structureId, String startDate, String endDate,
+                            List<String> userId, String page, JsonArray params, boolean paginationMode, String field, boolean reverse) {
         String query = "WITH ids AS (SELECT id FROM " + Incidents.dbSchema + ".incident i ";
 
         if (userId != null && !userId.isEmpty()) {
@@ -87,10 +122,10 @@ public class DefaultIncidentsService extends SqlCrudService implements Incidents
             params.add(endDate);
         }
 
-        query += "ORDER BY i.date desc ";
+        query += "ORDER BY " + getSqlOrderValue(field) + " " + getSqlReverseString(reverse);
 
         if (page != null && !paginationMode) {
-            query += "OFFSET ? LIMIT ? ";
+            query += " OFFSET ? LIMIT ? ";
             params.add(Incidents.PAGE_SIZE * Integer.parseInt(page));
             params.add(Incidents.PAGE_SIZE);
         }
@@ -114,7 +149,7 @@ public class DefaultIncidentsService extends SqlCrudService implements Incidents
 
                     "GROUP BY i.id, i.date, i.description, i.processed, i.place_id, i.partner_id, " +
                     "i.type_id, i.seriousness_id, place.id, partner.id, incident_type.id, seriousness.id " +
-                    "ORDER BY i.date desc";
+                    "ORDER BY " + getSqlOrderValue(field) + " " + getSqlReverseString(reverse);
         } else {
             query += ") SELECT count(*) from ids";
         }
