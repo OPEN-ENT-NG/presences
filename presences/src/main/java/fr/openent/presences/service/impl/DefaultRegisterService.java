@@ -169,7 +169,7 @@ public class DefaultRegisterService implements RegisterService {
                 Future<JsonArray> teachersFuture = Future.future();
                 Future<JsonArray> exemptionFuture = Future.future();
 
-                CompositeFuture.all(lastAbsentsFuture, groupsNameFuture, teachersFuture).setHandler(asyncEvent -> {
+                CompositeFuture.all(lastAbsentsFuture, groupsNameFuture, teachersFuture, exemptionFuture).setHandler(asyncEvent -> {
                     if (asyncEvent.failed()) {
                         String message = "[Presences@DefaultRegisterService] Failed to retrieve groups users or last absents students";
                         LOGGER.error(message);
