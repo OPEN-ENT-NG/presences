@@ -1,3 +1,14 @@
-<div class="dashboard" ng-controller="DashboardController">
+<div class="dashboard" ng-controller="DashboardController as vm">
     <h1>presences.title</h1>
+    <div class="dashboard-search-row">
+        <div class="six centered">
+            <async-autocomplete ng-disabled="false"
+                                ng-model="vm.filter.student"
+                                ng-change="vm.selectStudent"
+                                on-search="vm.searchStudent"
+                                options="vm.filter.students"
+                                placeholder="presences.exemptions.search.student"
+                                search="vm.filter.student"></async-autocomplete>
+        </div>
+    </div>
 </div>

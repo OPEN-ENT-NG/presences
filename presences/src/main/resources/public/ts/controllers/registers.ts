@@ -187,7 +187,6 @@ export const registersController = ng.controller('RegistersController',
                 const structureId = window.structure.id;
                 try {
                     vm.filter.teachers = await UserService.search(structureId, value, 'Teacher');
-                    vm.filter.teachers.map((teacher) => teacher.toString = () => teacher.displayName);
                     $scope.safeApply();
                 } catch (err) {
                     vm.filter.teachers = [];

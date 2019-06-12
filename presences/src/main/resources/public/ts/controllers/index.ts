@@ -4,3 +4,4 @@ export *from './registers';
 export * from './absences';
 export * from './group-absences';
 export * from './exemptions';
+export * from './calendar';

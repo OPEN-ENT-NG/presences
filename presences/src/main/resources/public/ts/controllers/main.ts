@@ -44,7 +44,8 @@ export const mainController = ng.controller('MainController', ['$scope', 'route'
             },
             exemptions: () => {
                 template.open('main', `containers/exemptions`);
-            }
+            },
+            calendar: () => template.open('main', 'containers/calendar')
         });
 
         $scope.lang = idiom;

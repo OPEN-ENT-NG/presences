@@ -19,8 +19,8 @@ for (let service in services) {
     ng.services.push(services[service]);
 }
 
-routes.define(function($routeProvider){
-	$routeProvider
+routes.define(function ($routeProvider) {
+    $routeProvider
         .when('/dashboard', {
             action: 'dashboard'
         })
@@ -30,15 +30,18 @@ routes.define(function($routeProvider){
         .when('/group-absences', {
             action: 'group-absences'
         })
-		.otherwise({
+        .when('/calendar/:studentId', {
+            action: 'calendar'
+        })
+        .otherwise({
             redirectTo: '/dashboard'
-		});
+        });
 
 
     if (model.me.hasWorkflow(rights.workflow.readRegister)) {
         $routeProvider
             .when('/registers', {
-            action: 'registers'
+                action: 'registers'
             })
             .when('/registers/:id', {
                 action: "getRegister"

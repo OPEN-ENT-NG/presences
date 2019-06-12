@@ -17,6 +17,7 @@ export const UserService = ng.service('UserService', (): UserService => ({
     search: async (structureId: string, value: string, profile: string) => {
         try {
             const {data} = await http.get(`/presences/search/users?structureId=${structureId}&profile=${profile}&q=${value}&field=firstName&field=lastName`);
+            data.forEach((user) => user.toString = () => user.displayName);
             return data;
         } catch (err) {
             throw err;

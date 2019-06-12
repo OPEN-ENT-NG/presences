@@ -1,0 +1,26 @@
+.dashboard {
+  .dashboard-search-row {
+    .input-async-autocomplete {
+      line-height: 48px;
+
+
+      &::before {
+        @include fonticon();
+        content: "\e930";
+        font-size: 24px;
+        position: absolute;
+        z-index: 10;
+        margin-left: 10px;
+      }
+
+      input[type="text"] {
+        background-color: $white;
+        height: 48px;
+        line-height: 48px;
+        border: solid 3px $presences-main;
+        border-radius: 30px;
+        text-indent: 35px;
+      }
+    }
+  }
+}

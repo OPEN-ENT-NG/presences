@@ -1,0 +1,10 @@
+<div ng-controller="CalendarController as vm">
+    <calendar enable-display-modes="true"
+              display-template="calendar/course-item"
+              display-month-template="calendar/course-item"
+              item-tooltip-template="calendar/course-tooltip"
+              items="::vm.courses"
+              slots="vm.slots.list"
+              show-quarter-hours="true"
+              show-next-previous-button="true"/>
+</div>
