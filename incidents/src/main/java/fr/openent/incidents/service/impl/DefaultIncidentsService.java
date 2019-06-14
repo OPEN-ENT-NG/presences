@@ -10,13 +10,13 @@ import io.vertx.core.Handler;
 import io.vertx.core.eventbus.EventBus;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
+import org.entcore.common.neo4j.Neo4j;
+import org.entcore.common.neo4j.Neo4jResult;
 import org.entcore.common.service.impl.SqlCrudService;
 import org.entcore.common.sql.Sql;
 import org.entcore.common.sql.SqlResult;
 
 import java.util.List;
-
-import static fr.wseduc.webutils.Utils.handlerToAsyncHandler;
 
 public class DefaultIncidentsService extends SqlCrudService implements IncidentsService {
     private final static String DATABASE_TABLE = "incident";
@@ -175,15 +175,13 @@ public class DefaultIncidentsService extends SqlCrudService implements Incidents
             }
         }
 
-        JsonObject action = new JsonObject()
-                .put("action", "eleve.getInfoEleve")
-                .put("idEleves", protagonists)
-                .put("idEtablissement", structure_id);
+        String query = "MATCH (u:User) WHERE u.id IN {idStudents} " +
+                "RETURN (u.lastName + ' ' + u.firstName) as displayName, u.id as idEleve";
+        JsonObject params = new JsonObject().put("idStudents", protagonists);
 
-        eb.send(Incidents.ebViescoAddress, action, handlerToAsyncHandler(message -> {
-            JsonObject body = message.body();
-            if ("ok".equals(body.getString("status"))) {
-                JsonArray protagonistResult = body.getJsonArray("results");
+        Neo4j.getInstance().execute(query, params, Neo4jResult.validResultHandler(result -> {
+            if (result.isRight()) {
+                JsonArray protagonistResult = result.right().getValue();
 
                 for (int i = 0; i < arrayIncidents.size(); i++) {
                     JsonArray protagonist = arrayIncidents.getJsonObject(i).getJsonArray("protagonists");

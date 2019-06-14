@@ -11,6 +11,7 @@ export interface Incident {
     structureId: string;
 
     date: Date;
+    dateTime: Date;
     created: Date;
 
     selectedHour: boolean;
@@ -39,6 +40,7 @@ export class Incident {
         this.structureId = structureId;
 
         this.date = moment(new Date()).set({second: 0, millisecond: 0}).toDate();
+        this.dateTime = moment(this.date).set({second: 0, millisecond: 0}).toDate();
         this.created = moment(new Date()).set({second: 0, millisecond: 0}).toDate();
 
         this.selectedHour = false;
@@ -61,7 +63,7 @@ export class Incident {
             response.protagonists.forEach(protagonist => {
                 let protagonistForm = {} as ProtagonistForm;
                 protagonistForm.userId = protagonist.user_id;
-                protagonistForm.label = protagonist.student.firstName + ' ' + protagonist.student.lastName;
+                protagonistForm.label = protagonist.student.displayName;
                 protagonistForm.protagonistType = protagonist.type;
                 protagonists.push(protagonistForm);
             });
@@ -107,10 +109,14 @@ export class Incident {
         this.protagonists.forEach(protagonist => {
             students.push({user_id: protagonist.userId, type_id: protagonist.protagonistType.id})
         });
+        let date = moment(moment(this.date).format('YYYY-MM-DD') + ' ' + moment(this.dateTime)
+            .format('HH:mm'), 'YYYY-MM-DD HH:mm')
+            .format('YYYY-MM-DD HH:mm');
+
         return {
             owner: this.owner,
             structure_id: this.structureId,
-            date: moment(this.date).format('YYYY-MM-DD HH:mm'),
+            date: date,
             selected_hour: this.selectedHour,
             description: this.description,
             created: moment(this.created).format('YYYY-MM-DD HH:mm'),
