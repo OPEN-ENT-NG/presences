@@ -10,7 +10,7 @@
   "incidents.csv.header.type": "Type",
   "incidents.csv.header.description": "Description",
   "incidents.csv.header.seriousness": "Gravité",
-  "incidents.csv.header.protagonists": "Protagonists",
+  "incidents.csv.header.protagonists": "Protagonistes",
   "incidents.csv.header.partner": "Partenaire",
   "incidents.csv.header.processed": "Traité",
   "incidents.csv.header.processed.done": "Traité",

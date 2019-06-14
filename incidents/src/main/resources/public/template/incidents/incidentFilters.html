@@ -3,12 +3,12 @@
         <div class="cell six paddingRight">
             <div class="cell twelve search-input">
                 <async-autocomplete data-ng-disabled="false"
-                                    data-ng-model="vm.studentSearchInput"
+                                    data-ng-model="vm.filter.student.search"
                                     data-ng-change="vm.selectStudents"
                                     data-on-search="vm.searchStudent"
                                     data-options="vm.students.all"
                                     data-placeholder="incidents.search.student"
-                                    data-search="vm.students.all.displayName">
+                                    data-search="vm.filter.student.search">
                 </async-autocomplete>
             </div>
 

@@ -39,7 +39,7 @@ public class DefaultIncidentsService extends SqlCrudService implements Incidents
                 for (int i = 0; i < arrayIncidents.size(); i++) {
                     toFormatJson(arrayIncidents.getJsonObject(i));
                 }
-                getUsersInfo(structureId, arrayIncidents, handler);
+                getUsersInfo(arrayIncidents, handler);
             } else {
                 handler.handle(new Either.Left<>(result.left().getValue()));
             }
@@ -96,11 +96,15 @@ public class DefaultIncidentsService extends SqlCrudService implements Incidents
     /**
      * GET query to fetch incidents
      *
-     * @param structureId structure identifier
-     * @param startDate   start date
-     * @param endDate     end date
-     * @param userId      List userId []
-     * @param page        page
+     * @param structureId     structure identifier
+     * @param startDate       start date
+     * @param endDate         end date
+     * @param userId          List userId []
+     * @param page            page
+     * @param params          Json parameters
+     * @param paginationMode  pagination mode
+     * @param field           field order to sort
+     * @param reverse         reverse data sorting
      */
     private String getQuery(String structureId, String startDate, String endDate,
                             List<String> userId, String page, JsonArray params, boolean paginationMode, String field, boolean reverse) {
@@ -159,12 +163,11 @@ public class DefaultIncidentsService extends SqlCrudService implements Incidents
 
 
     /**
-     * Get user infos using eventBus
-     * @param structure_id  structure identifier
+     * Get user infos from neo4j
      * @param arrayIncidents incidents []
      * @param handler handler
      */
-    private void getUsersInfo(String structure_id, JsonArray arrayIncidents, Handler<Either<String, JsonArray>> handler) {
+    private void getUsersInfo(JsonArray arrayIncidents, Handler<Either<String, JsonArray>> handler) {
         JsonArray protagonists = new JsonArray();
         for (int i = 0; i < arrayIncidents.size(); i++) {
             JsonArray protagonist = arrayIncidents.getJsonObject(i).getJsonArray("protagonists");

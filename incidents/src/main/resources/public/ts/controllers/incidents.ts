@@ -24,7 +24,7 @@ interface ViewModel {
     exportCsv(): void;
 
     // Filter
-    filter: { startDate: Date, endDate: Date, students: Student[] };
+    filter: { startDate: Date, endDate: Date, students: Student[], student: { search: string } };
     updateDate(): void;
     updateFilter(student?): void;
 
@@ -32,7 +32,6 @@ interface ViewModel {
 
     // Students
     students: Students;
-    studentSearchInput: string;
 
     searchStudent(string): void;
 
@@ -64,11 +63,13 @@ interface ViewModel {
 export const incidentsController = ng.controller('IncidentsController', ['$scope', 'IncidentService', function ($scope: Scope, IncidentService: IncidentService) {
     const vm: ViewModel = this;
     vm.notifications = [];
-    vm.studentSearchInput = "";
     vm.filter = {
         startDate: DateUtils.add(new Date(), -30, "d"),
         endDate: DateUtils.add(new Date(), +30, "d"),
-        students: []
+        students: [],
+        student: {
+            search: ''
+        }
     };
     vm.students = new Students();
     vm.collapse = false;
@@ -161,6 +162,7 @@ export const incidentsController = ng.controller('IncidentsController', ['$scope
 
     vm.selectStudents = async (model: Student, option: Student) => {
         vm.updateFilter(option);
+        vm.filter.student.search = '';
     };
 
     vm.removeStudents = (student): void => {
