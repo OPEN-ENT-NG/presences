@@ -6,9 +6,13 @@
     }
   }
 
+  &-header {
+    padding: 1px 15px !important;
+  }
+
   // body part
   &-body {
-    background: #F5F5F5;
+    background: $whitesmoke;
 
     &-title {
       color: $black;
@@ -34,6 +38,10 @@
           &-timePicker {
             background-color: $white;
             display: inline-block;
+
+            input {
+              font-family: Roboto;
+            }
           }
         }
       }
@@ -75,20 +83,31 @@
         &-description {
           background: $white;
           flex: 5;
+
+          textarea {
+            height: 50px;
+            resize: none;
+            border: none;
+            font-family: Roboto;
+          }
         }
 
         &-treated {
           align-self: flex-end;
           flex: 2;
-        }
-      }
-    }
 
-    &-treated {
-      label {
-        switch {
-          .switch {
-            float: none;
+          switch {
+            .switch {
+              float: none;
+
+              input[type=checkbox]:checked + .tick {
+                background: $green;
+              }
+
+              input[type=checkbox]:checked + .tick:before {
+                background: $deep-green;
+              }
+            }
           }
         }
       }
@@ -104,12 +123,12 @@
         padding-bottom: $spacing-LXS;
 
         &-title {
-          flex: 1;
-          text-align: center;
+          color: $black;
+          flex: 2;
         }
 
         &-input {
-          flex: 2;
+          flex: 3;
         }
 
         &-space {

@@ -108,14 +108,14 @@ export const incidentsController = ng.controller('IncidentsController', ['$scope
 
     /* CSV  */
     vm.exportCsv = (): void => {
-        if (vm.incidents.pageCount * 20 !== 0) {
-            if (vm.incidents.pageCount * 20 > 1000) {
-                vm.notifications.push(new Toast('incidents.csv.full', 'warning'));
+        if (vm.incidents.pageCount > 50) {
+            vm.notifications.push(new Toast('incidents.csv.full', 'warning'));
+        } else {
+            if (vm.incidents.all.length === 0) {
+                vm.notifications.push(new Toast('incidents.csv.empty', 'info'));
             } else {
                 vm.incidents.export();
             }
-        } else {
-            vm.notifications.push(new Toast('incidents.csv.empty', 'info'));
         }
     };
 
@@ -258,6 +258,7 @@ export const incidentsController = ng.controller('IncidentsController', ['$scope
         vm.incidentStudentsForm = new Students();
         vm.incidentForm = _.clone(incident);
         vm.incidentForm.date = new Date(incident.date);
+        vm.incidentForm.dateTime = new Date(incident.date);
         vm.incidentForm.protagonists = JSON.parse(JSON.stringify(incident.protagonists));
         $scope.safeApply()
     };
@@ -269,6 +270,7 @@ export const incidentsController = ng.controller('IncidentsController', ['$scope
                 vm.closeIncidentLightbox();
 
                 /* assign new value to the concerned array (find by id) */
+                vm.incidentForm.date.setHours(vm.incidentForm.dateTime.getHours(), vm.incidentForm.dateTime.getMinutes());
                 vm.incidents.all[vm.incidents.all
                     .findIndex(incident => incident.id === vm.incidentForm.id)] = vm.incidentForm;
 

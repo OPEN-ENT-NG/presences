@@ -61,7 +61,7 @@
                     </switch>
                 </th>
             <tr ng-class="{open: vm.isCollapsibleOpen(incident.id)}"
-                class="incident-content-table-body-row">
+                data-ng-click="vm.editIncidentLightbox(incident)" class="incident-content-table-body-row">
                 <td colspan="6">
                     <div class="incident-content-table-body-row-collapsible">
 

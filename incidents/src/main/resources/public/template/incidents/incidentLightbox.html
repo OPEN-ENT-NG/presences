@@ -29,7 +29,7 @@
                     </span>
 
                     <span class="card incident-lightbox-body-dateAndPlace-date-content-timePicker">
-                          <time-picker required ng-model="vm.incidentForm.date"></time-picker>
+                          <time-picker required ng-model="vm.incidentForm.dateTime"></time-picker>
                     </span>
                 </div>
             </div>
@@ -92,8 +92,10 @@
                     <!--description-->
                     <label class="incident-lightbox-body-descriptionTreated-content-description twelve cell twelve-mobile">
                         <div class="twelve margin-bottom-md">
-                            <input class="twelve" type="text" data-ng-model="vm.incidentForm.description"
-                                   i18n-placeholder="incidents.form.description.placeholder">
+                            <textarea class="twelve" type="text" data-ng-model="vm.incidentForm.description"
+                                      i18n-placeholder="incidents.form.description.placeholder">
+
+                            </textarea>
                         </div>
                     </label>
 
@@ -113,9 +115,11 @@
         <!-- set protagonist -->
         <div class="incident-lightbox-footer-protagonist cell twelve search-input row spacing">
             <div class="incident-lightbox-footer-protagonist-search twelve margin-bottom-md">
-                <i18n class="incident-lightbox-footer-protagonist-search-title">
-                    incidents.protagonists
-                </i18n>
+                <h3 class="incident-lightbox-footer-protagonist-search-title">
+                    <i18n>
+                        incidents.protagonists
+                    </i18n>
+                </h3>
                 <async-autocomplete class="incident-lightbox-footer-protagonist-search-input"
                                     data-ng-disabled="false"
                                     data-ng-model="vm.studentSearchInputForm"
