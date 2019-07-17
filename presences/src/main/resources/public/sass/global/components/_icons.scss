@@ -66,4 +66,12 @@ i {
   &.notify-bell.active::before {
     content: "\e7f7";
   }
+
+  &.attach:before {
+    content: '\e805';
+  }
+
+  &.add:before {
+    content: '\e8a1';
+  }
 }

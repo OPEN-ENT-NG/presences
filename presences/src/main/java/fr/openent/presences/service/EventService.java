@@ -2,10 +2,54 @@ package fr.openent.presences.service;
 
 import fr.wseduc.webutils.Either;
 import io.vertx.core.Handler;
+import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import org.entcore.common.user.UserInfos;
 
+import java.util.List;
+
 public interface EventService {
+
+    /**
+     * Get events
+     * @param structureId      structure identifier
+     * @param startDate         startDate start date
+     * @param endDate           endDate end date
+     * @param eventType         event type
+     * @param userId            userId userId neo4j
+     * @param userIdFromClasses userId fetched from classes neo4j
+     * @param classes           classes list
+     * @param unjustified
+     * @param regularized
+     * @param page              page
+     * @param handler           function handler returning data
+     */
+    void get(String structureId, String startDate, String endDate,
+             List<String> eventType, List<String> userId, JsonArray userIdFromClasses, List<String> classes, boolean unjustified, boolean regularized, Integer page, Handler<Either<String, JsonArray>> handler);
+
+    /**
+     * Get events page number
+     * @param structureId       structure identifier
+     * @param startDate         startDate start date
+     * @param endDate           endDate end date
+     * @param eventType         event type
+     * @param userId            userId userId neo4j
+     * @param unjustified       filter unjustified absence
+     * @param regularized       filter regularized absence
+     * @param userIdFromClasses userId fetched from classes neo4j
+     * @param handler           function handler returning data
+     */
+    void getPageNumber(String structureId, String startDate, String endDate, List<String> eventType,
+                       List<String> userId, boolean unjustified, boolean regularized, JsonArray userIdFromClasses, Handler<Either<String, JsonObject>> handler);
+
+    /**
+     * Get events reason type
+     *
+     * @param structureId   structure identifier
+     * @param handler       function handler returning data
+     */
+    void getEventsReasonType(String structureId, Handler<Either<String, JsonArray>> handler);
+
     /**
      * Create event
      *
@@ -23,6 +67,14 @@ public interface EventService {
      * @param handler Function handler returning data
      */
     void update(Integer id, JsonObject event, Handler<Either<String, JsonObject>> handler);
+
+
+    /**
+     * Update reason for each event
+     * @param eventBody Event body that can contain list of id's events and its reason_id retrieved
+     * @param handler   Function handler returning data
+     */
+    void changeReasonEvents(JsonObject eventBody, Handler<Either<String, JsonObject>> handler);
 
     /**
      * Delete given identifier

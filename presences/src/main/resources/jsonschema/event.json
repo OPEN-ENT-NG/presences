@@ -15,6 +15,9 @@
     "counsellor_input": {
       "type": "boolean"
     },
+    "counsellor_regularisation": {
+      "type": "boolean"
+    },
     "student_id": {
       "type": "string"
     },
