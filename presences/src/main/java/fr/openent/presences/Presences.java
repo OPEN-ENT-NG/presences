@@ -30,7 +30,7 @@ public class Presences extends BaseServer {
         addController(new PresencesController(eb));
         addController(new CourseController(eb));
         addController(new RegisterController(eb));
-        addController(new EventController());
+        addController(new EventController(eb));
         addController(new ExemptionController(eb));
         addController(new SearchController(eb));
     }

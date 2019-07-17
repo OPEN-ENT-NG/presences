@@ -1,0 +1,25 @@
+<div class="absences-content row top20">
+
+    <loader data-ng-show="vm.events.loading" min-height="'250px'"/>
+
+    <div class="twelve" data-ng-show="!vm.events.loading">
+
+
+        <!-- Empty state -->
+        <div class="absences-content-empty" data-ng-show="vm.events.all.length === 0">
+            <div class="absences-content-empty-description">
+                <span class="red-bar"></span>
+                <i18n class="absences-content-empty-description-title">presences.absence.empty</i18n>
+                <span class="yellow-bar"></span>
+            </div>
+            <img data-ng-src="/presences/public/img/absences_empty.svg" alt="empty absence">
+        </div>
+
+        <!-- Content Table -->
+        <div static-include="/presences/public/template/absences/table.html"></div>
+    </div>
+    <pagination data-page-count="vm.events.pageCount"
+                data-page-number="vm.events.page"
+                class="pagination">
+    </pagination>
+</div>
