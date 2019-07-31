@@ -13,12 +13,12 @@
     <div class="dashboard-search-row">
         <div class="six centered">
             <async-autocomplete ng-disabled="false"
-                                ng-model="vm.filter.student"
-                                ng-change="vm.selectStudent"
-                                on-search="vm.searchStudent"
-                                options="vm.filter.students"
-                                placeholder="presences.exemptions.search.student"
-                                search="vm.filter.student"></async-autocomplete>
+                                ng-model="vm.filter.search.item"
+                                ng-change="vm.selectItem"
+                                on-search="vm.searchItem"
+                                options="vm.filter.search.items"
+                                placeholder="presences.dashboard.search.placeholder"
+                                search="vm.filter.search.item"></async-autocomplete>
         </div>
     </div>
 </div>

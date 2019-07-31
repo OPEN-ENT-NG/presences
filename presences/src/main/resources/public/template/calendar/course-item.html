@@ -1,0 +1,26 @@
+<div class="course-item-container">
+    <div class="absence" ng-if="item.containsAbsence">
+        &nbsp;
+    </div>
+    <div class="exemption" ng-if="item.exempted">
+        &nbsp;
+    </div>
+    <div class="course-item"
+         ng-class="{'contains-absence': item.containsAbsence, 'contains-events': item.events.length > 0 || item.exempted}">
+        <div class="data">
+            <div class="subject cell">[[item.subject_name]]</div>
+            <em class="metadata right-magnet"><span ng-repeat="room in item.roomLabels">[[room]]</span> </em>
+        </div>
+        <div class="events">
+            <i ng-if="item.incident" class="report incident"></i>
+            <div class="event event-type-[[event.type_id]]" ng-repeat="event in item.events">&nbsp;</div>
+        </div>
+    </div>
+    <div class="right-side">
+        <div ng-mouseenter="hoverExemption($event, item.exemption)" ng-mouseleave="hoverOutExemption()"
+             class="exemption-label"
+             ng-if="item.exempted">
+            <i18n>presences.calendar.exemption.code</i18n>
+        </div>
+    </div>
+</div>

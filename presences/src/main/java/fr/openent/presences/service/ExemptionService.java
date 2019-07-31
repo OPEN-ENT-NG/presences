@@ -21,6 +21,18 @@ public interface ExemptionService {
     void get(String structure_id, String start_date, String end_date, List<String> student_ids, String page, Handler<Either<String, JsonArray>> handler);
 
     /**
+     * Retrieve user exemptions
+     *
+     * @param structure_id Structure identifier
+     * @param start_date   Start date
+     * @param end_date     End date
+     * @param userId       user identifier
+     * @param page         Page number. Can be null
+     * @param handler      Function handler returning data
+     */
+    void get(String structure_id, String start_date, String end_date, String userId, String page, Handler<Either<String, JsonArray>> handler);
+
+    /**
      * Get exemptions count
      *
      * @param structure_id

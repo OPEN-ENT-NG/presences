@@ -14,6 +14,7 @@ import org.entcore.common.service.impl.SqlCrudService;
 import org.entcore.common.sql.Sql;
 import org.entcore.common.sql.SqlResult;
 
+import java.util.Arrays;
 import java.util.List;
 
 import static fr.wseduc.webutils.Utils.handlerToAsyncHandler;
@@ -69,6 +70,21 @@ public class DefaultExemptionService extends SqlCrudService implements Exemption
                 }
             }
         }));
+    }
+
+    @Override
+    public void get(String structure_id, String start_date, String end_date, String userId, String page, Handler<Either<String, JsonArray>> handler) {
+        String query = "SELECT * " + this.getterFROMBuilder(structure_id, start_date, end_date, Arrays.asList(userId));
+        JsonArray values = new JsonArray();
+
+        if (page != null) {
+            query += " ORDER BY start_date";
+            query += " OFFSET ? LIMIT ?";
+            values.add(Presences.PAGE_SIZE * Integer.parseInt(page));
+            values.add(Presences.PAGE_SIZE);
+        }
+
+        Sql.getInstance().prepared(query, values, SqlResult.validResultHandler(handler));
     }
 
     @Override

@@ -5,12 +5,14 @@ import fr.openent.incidents.export.IncidentsCSVExport;
 import fr.openent.incidents.service.IncidentsService;
 import fr.openent.incidents.service.impl.DefaultIncidentsService;
 import fr.openent.presences.common.helper.FutureHelper;
+import fr.wseduc.bus.BusAddress;
 import fr.wseduc.rs.*;
 import fr.wseduc.security.SecuredAction;
 import fr.wseduc.webutils.request.RequestUtils;
 import io.vertx.core.CompositeFuture;
 import io.vertx.core.Future;
 import io.vertx.core.eventbus.EventBus;
+import io.vertx.core.eventbus.Message;
 import io.vertx.core.http.HttpServerRequest;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
@@ -107,23 +109,23 @@ public class IncidentsController extends ControllerHelper {
 
         incidentsService.get(structureId, startDate, endDate, userId,
                 null, false, field, reverse, event -> {
-            if (event.isLeft()) {
-                log.error("[Incidents@IncidentsController] Failed to fetch incidents", event.left().getValue());
-                renderError(request);
-                return;
-            }
+                    if (event.isLeft()) {
+                        log.error("[Incidents@IncidentsController] Failed to fetch incidents", event.left().getValue());
+                        renderError(request);
+                        return;
+                    }
 
-            JsonArray incidents = event.right().getValue();
-            List<String> csvHeaders = new ArrayList<>(Arrays.asList(
-                    "incidents.csv.header.date", "incidents.csv.header.place",
-                    "incidents.csv.header.type", "incidents.csv.header.description",
-                    "incidents.csv.header.seriousness", "incidents.csv.header.protagonists",
-                    "incidents.csv.header.partner", "incidents.csv.header.processed"));
-            IncidentsCSVExport ice = new IncidentsCSVExport(incidents);
-            ice.setRequest(request);
-            ice.setHeader(csvHeaders);
-            ice.export();
-        });
+                    JsonArray incidents = event.right().getValue();
+                    List<String> csvHeaders = new ArrayList<>(Arrays.asList(
+                            "incidents.csv.header.date", "incidents.csv.header.place",
+                            "incidents.csv.header.type", "incidents.csv.header.description",
+                            "incidents.csv.header.seriousness", "incidents.csv.header.protagonists",
+                            "incidents.csv.header.partner", "incidents.csv.header.processed"));
+                    IncidentsCSVExport ice = new IncidentsCSVExport(incidents);
+                    ice.setRequest(request);
+                    ice.setHeader(csvHeaders);
+                    ice.export();
+                });
     }
 
     @Get("/incidents/parameter/types")
@@ -168,5 +170,39 @@ public class IncidentsController extends ControllerHelper {
         }
         String incidentId = request.getParam("id");
         incidentsService.delete(incidentId, DefaultResponseHandler.defaultResponseHandler(request));
+    }
+
+    @BusAddress("fr.openent.incident")
+    public void busHandler(Message<JsonObject> message) {
+        String action = message.body().getString("action", "");
+        switch (action) {
+            case "getUserIncident": {
+                String structureId = message.body().getString("structureId");
+                String userId = message.body().getString("userId");
+                String startDate = message.body().getString("start_date");
+                String endDate = message.body().getString("end_date");
+                incidentsService.get(structureId, startDate, endDate, userId, event -> {
+                    if (event.isLeft()) {
+                        JsonObject json = (new JsonObject())
+                                .put("status", "error")
+                                .put("message", event.left().getValue());
+                        message.reply(json);
+                    } else {
+                        JsonObject json = (new JsonObject())
+                                .put("status", "ok")
+                                .put("results", event.right().getValue());
+                        message.reply(json);
+                    }
+                });
+            }
+            break;
+            default: {
+                log.error("[IncidentsController@busHandler] invalid action " + action);
+                JsonObject json = (new JsonObject())
+                        .put("status", "error")
+                        .put("message", "invalid.action");
+                message.reply(json);
+            }
+        }
     }
 }

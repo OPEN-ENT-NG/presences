@@ -15,13 +15,13 @@
                                         on-search="vm.searchFormByStudent"
                                         options="vm.studentsFrom.all"
                                         placeholder="presences.exemptions.search.student"
-                                        search="vm.studentsFrom.all.displayName"></async-autocomplete>
+                                        search="vm.studentsFrom.searchValue"></async-autocomplete>
                 </div>
                 <div class="cell twelve">
                     <ul class="cell twelve search-input-ul">
                         <li ng-repeat="stud in vm.form.students">
                             [[stud.toString()]] <i class="close"
-                                                    ng-click="vm.excludeStudentFromForm(stud)"></i>
+                                                   ng-click="vm.excludeStudentFromForm(stud)"></i>
                         </li>
                     </ul>
                 </div>

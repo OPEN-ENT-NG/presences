@@ -246,6 +246,7 @@ public class DefaultEventService implements EventService {
         }
         return filteredEvents;
     }
+
     /**
      * Squash events student event history and structure slot profile.
      *
@@ -442,6 +443,26 @@ public class DefaultEventService implements EventService {
                 .add(id);
 
         Sql.getInstance().prepared(query, params, SqlResult.validRowsResultHandler(handler));
+    }
+
+    @Override
+    public void list(String structureId, String startDate, String endDate, List<Integer> eventType, List<String> userId, Handler<Either<String, JsonArray>> handler) {
+        String query = "SELECT event.id, event.start_date, event.end_date, event.type_id, to_char(register.start_date, 'YYYY-MM-DD HH24:MI:SS') as course_start_date, to_char(register.end_date, 'YYYY-MM-DD HH24:MI:SS') as course_end_date, register.course_id " +
+                "FROM  " + Presences.dbSchema + ".event " +
+                "INNER JOIN " + Presences.dbSchema + ".register ON (event.register_id = register.id) " +
+                "WHERE student_id IN " + Sql.listPrepared(userId) +
+                " AND event.start_date >= ? " +
+                "AND event.end_date <= ? " +
+                "AND register.structure_id = ? " +
+                "AND event.type_id IN " + Sql.listPrepared(eventType);
+        JsonArray params = new JsonArray()
+                .addAll(new JsonArray(userId))
+                .add(startDate)
+                .add(endDate)
+                .add(structureId)
+                .addAll(new JsonArray(eventType));
+
+        Sql.getInstance().prepared(query, params, SqlResult.validResultHandler(handler));
     }
 
     private JsonObject getDeletionEventStatement(JsonObject event) {

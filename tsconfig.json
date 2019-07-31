@@ -19,6 +19,9 @@
     "paths": {
       "@common/*": [
         "common/src/main/resources/ts/*"
+      ],
+      "@incidents/*": [
+        "incidents/src/main/resources/ts/*"
       ]
     }
   },

@@ -1,7 +1,9 @@
 import {_, idiom as lang, ng} from 'entcore';
-import {Exemption, Exemptions, Student, Students, Subjects} from "../models";
+import {Exemptions, Student, Students, Subjects} from "../models";
+import {EXEMPTIONS_FORM_EVENTS} from '../sniplets';
 import {Toast} from "../utilities";
 import {DateUtils} from "@common/utils"
+import {SNIPLET_FORM_EMIT_EVENTS} from '@common/model';
 import {GroupService} from "@common/services/GroupService";
 import {Scope} from './main'
 
@@ -135,10 +137,10 @@ export const exemptionsController = ng.controller('ExemptionsController',
                 $scope.safeApply();
             };
 
-            vm.searchFormByStudent = async (searchText: string) => {
-                await vm.studentsFrom.search(window.structure.id, searchText);
-                $scope.safeApply();
-            };
+            // vm.searchFormByStudent = async (searchText: string) => {
+            //     await vm.studentsFrom.search(window.structure.id, searchText);
+            //     $scope.safeApply();
+            // };
 
             vm.selectFilterClass = function (model: Student, option: Student) {
                 vm.filters(null, option);
@@ -159,6 +161,7 @@ export const exemptionsController = ng.controller('ExemptionsController',
                 vm.exemptions.prepareSyncPaginate(window.structure.id, vm.filter.start_date, vm.filter.end_date, vm.studentsFiltered, vm.classesFiltered);
                 $scope.safeApply();
             };
+
             vm.excludeStudentFromFilter = (student) => {
                 vm.studentsFiltered = _.without(vm.studentsFiltered, _.findWhere(vm.studentsFiltered, student));
                 vm.filters();
@@ -182,88 +185,9 @@ export const exemptionsController = ng.controller('ExemptionsController',
                 vm.exemptions.export(window.structure.id, vm.filter.start_date, vm.filter.end_date, vm.studentsFiltered, vm.classesFiltered);
             };
 
-            /**
-             * FORM PART
-             */
 
-            /**
-             * Add student from multi select choice
-             * @param student
-             */
-            vm.selectStudentForm = (model: Student, student) => {
-                if (!_.find(vm.form.students, student)) {
-                    vm.form.students.push(student);
-                }
+            vm.editExemption = (obj) => $scope.$broadcast(EXEMPTIONS_FORM_EVENTS.EDIT, obj);
 
-                vm.studentsFrom.all = [];
-            };
-
-            const updateAfterSaveOrDelete = async (response, message) => {
-                if (response.status == 200 || response.status == 201) {
-                    vm.closeCreateExemption();
-                    vm.notifications.push(new Toast(message, 'confirm'));
-                } else {
-                    vm.notifications.push(new Toast(response.data.toString(), 'error'));
-                }
-                vm.filters()
-                $scope.safeApply();
-            };
-            vm.saveExemption = async () => {
-                let response = await vm.form.save();
-                if (vm.form.id) {
-                    updateAfterSaveOrDelete(response, lang.translate('presences.exemptions.form.edit.succeed'));
-                } else {
-                    updateAfterSaveOrDelete(response, lang.translate('presences.exemptions.form.create.succeed'));
-                }
-            };
-            vm.deleteExemption = async () => {
-                let response = await vm.form.delete();
-                updateAfterSaveOrDelete(response, lang.translate('presences.exemptions.delete.succeed'));
-            };
-
-
-            /**
-             * Manage Lightbox display PART
-             */
-
-            vm.createExemption = () => {
-                vm.createExemptionLightBox = true;
-                vm.form = new Exemption(window.structure.id, true);
-                vm.form.subject = vm.subjects.findEPS();
-                if (!vm.form.subject)
-                    vm.form.subject = vm.subjects.all[0];
-                $scope.safeApply()
-            };
-
-            vm.editExemption = (obj) => {
-                if ($scope.hasRight('manageExemption') != true)
-                    return;
-                vm.createExemptionLightBox = true;
-                vm.form = _.clone(obj);
-                let studentTmp = new Student(obj.student);
-                vm.form.students = [studentTmp];
-                vm.formStudentSelected = [studentTmp];
-                vm.form.subject = _.chain(vm.subjects.all)
-                    .filter((item) => {
-                        return item.id == obj.subjectId;
-                    })
-                    .first()
-                    .value();
-                $scope.safeApply();
-            };
-
-            vm.closeCreateExemption = () => {
-                vm.createExemptionLightBox = null;
-            };
-
-
-            /**
-             * Exclude student from multi select choice
-             * @param student
-             */
-            vm.excludeStudentFromForm = (student) => {
-                vm.form.students = _.without(vm.form.students, student);
-            };
 
             $scope.$watch(() => window.structure, () => {
                 if ($route.current.action === "exemptions") {
@@ -273,4 +197,5 @@ export const exemptionsController = ng.controller('ExemptionsController',
                 }
             });
 
+            $scope.$on(SNIPLET_FORM_EMIT_EVENTS.FILTER, () => vm.filters());
         }]);

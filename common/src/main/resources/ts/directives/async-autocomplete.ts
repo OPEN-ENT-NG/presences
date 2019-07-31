@@ -60,12 +60,10 @@ export const asyncAutocomplete = ng.directive('asyncAutocomplete', ['$timeout', 
         };
 
         $scope.$watch('options', (newVal) => {
-            if (newVal) {
-                $scope.match = newVal;
-                cancelAnimationFrame(token);
-                setLoadingStatus(false);
-                $scope.$apply();
-            }
+            $scope.match = newVal;
+            cancelAnimationFrame(token);
+            setLoadingStatus(false);
+            $scope.$apply();
         });
 
         $scope.select = (option) => $scope.$eval($scope.ngChange)($scope.ngModel, option);

@@ -1,6 +1,12 @@
 import {ng} from 'entcore'
 import http from 'axios';
 
+export interface StructureSlot {
+    _id: string;
+    name: string;
+    slots: TimeSlot[];
+}
+
 export interface TimeSlot {
     name: string;
     startHour: string;
@@ -9,7 +15,7 @@ export interface TimeSlot {
 }
 
 export interface StructureService {
-    getSlotProfile(structureId: string): Promise<TimeSlot[]>
+    getSlotProfile(structureId: string): Promise<StructureSlot>
 }
 
 export const StructureService = ng.service('StructureService', (): StructureService => ({

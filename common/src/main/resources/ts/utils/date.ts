@@ -5,6 +5,7 @@ export class DateUtils {
     static FORMAT = {
         'YEAR-MONTH-DAY-HOUR-MIN-SEC': 'YYYY-MM-DD HH:mm:ss',
         'YEAR-MONTH-DAY': 'YYYY-MM-DD',
+        'DAY-MONTH-YEAR': 'DD/MM/YYYY',
         'HOUR-MINUTES': 'kk:mm',
         'BIRTHDATE': 'L',
         'DAY-DATE': 'dddd L'
@@ -55,7 +56,7 @@ export class DateUtils {
         return moment(date).set({hour: 23, minute: 59, second: 59}).toDate();
     }
 
-    static isValid (date: any, format: string): Boolean {
+    static isValid(date: any, format: string): Boolean {
         return (moment(date, format, true).isValid());
     }
 }

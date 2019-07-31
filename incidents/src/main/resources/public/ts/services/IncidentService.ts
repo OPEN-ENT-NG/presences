@@ -44,7 +44,7 @@ export interface IncidentService {
     getIncidentParameterType(structureId: string): Promise<IncidentParameterType>
 }
 
-export const IncidentService = ng.service('IncidentService', (): IncidentService => ({
+export const incidentService: IncidentService = {
     getIncidentParameterType: async (structureId: string) => {
         try {
             const {data} = await http.get(`/incidents/incidents/parameter/types?structureId=${structureId}`);
@@ -53,5 +53,7 @@ export const IncidentService = ng.service('IncidentService', (): IncidentService
             throw err;
         }
     }
-}));
+};
+
+export const IncidentService = ng.service('IncidentService', (): IncidentService => incidentService);
 

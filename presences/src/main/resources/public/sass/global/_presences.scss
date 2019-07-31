@@ -20,6 +20,14 @@ body.presences, .sniplet.presences {
 
   color: $presences-black;
 
+  .lowercase {
+    text-transform: lowercase;
+  }
+
+  .forbidden {
+    cursor: not-allowed;
+  }
+
   .font-bold {
     font-weight: bold;
   }

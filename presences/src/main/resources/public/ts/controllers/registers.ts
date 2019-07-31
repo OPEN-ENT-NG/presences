@@ -1,6 +1,6 @@
 import {_, model, moment, ng, notify, template} from 'entcore';
 import {Absence, Course, Courses, Departure, EventType, Lateness, Register, RegisterStatus, Remark} from '../models'
-import {GroupService, UserService} from '../services';
+import {GroupService, SearchService} from '../services';
 import {CourseUtils, DateUtils} from '@common/utils'
 import rights from '../rights'
 import {Scope} from './main'
@@ -92,8 +92,8 @@ interface ViewModel {
 }
 
 export const registersController = ng.controller('RegistersController',
-    ['$scope', '$route', '$rootScope', 'UserService', 'GroupService',
-        function ($scope: Scope, $route, $rootScope, UserService: UserService, GroupService: GroupService) {
+    ['$scope', '$route', '$rootScope', 'SearchService', 'GroupService',
+        function ($scope: Scope, $route, $rootScope, SearchService: SearchService, GroupService: GroupService) {
             const vm: ViewModel = this;
             const actions = {
                 registers: () => {
@@ -186,7 +186,7 @@ export const registersController = ng.controller('RegistersController',
             vm.searchTeacher = async function (value) {
                 const structureId = window.structure.id;
                 try {
-                    vm.filter.teachers = await UserService.search(structureId, value, 'Teacher');
+                    vm.filter.teachers = await SearchService.searchUser(structureId, value, 'Teacher');
                     $scope.safeApply();
                 } catch (err) {
                     vm.filter.teachers = [];

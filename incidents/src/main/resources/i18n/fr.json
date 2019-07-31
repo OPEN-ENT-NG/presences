@@ -50,5 +50,8 @@
   "incidents.partner": "Partenaires à prévenir",
   "incidents.protagonists": "Protagonistes",
   "incidents.loading.text": "Veuillez patienter...",
-  "empty": "Aucun"
+  "incidents.incident": "Incident",
+  "incidents.punishment.sanction": "Punition & sanction",
+  "empty": "Aucun",
+  "incidents.incident.form.sniplet.title": "Créer un incident"
 }

@@ -29,6 +29,7 @@
         position: absolute;
         z-index: 10;
         margin-left: 10px;
+        left: 0;
       }
 
       input[type="text"] {
@@ -41,7 +42,7 @@
         box-shadow: 0 1px 5px rgba(189, 189, 189, 0.75);
 
         &:focus {
-          border: solid 3px $presences-main;
+          border-bottom: solid 3px $presences-main !important;
         }
       }
     }

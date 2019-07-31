@@ -5,7 +5,10 @@ import fr.openent.presences.common.helper.DateHelper;
 import fr.openent.presences.common.helper.FutureHelper;
 import fr.openent.presences.enums.RegisterStatus;
 import fr.openent.presences.export.RegisterCSVExport;
+import fr.openent.presences.helper.CourseHelper;
+import fr.openent.presences.helper.MapHelper;
 import fr.openent.presences.helper.SquashHelper;
+import fr.openent.presences.helper.SubjectHelper;
 import fr.openent.presences.service.CourseService;
 import fr.openent.presences.service.GroupService;
 import fr.openent.presences.service.RegisterService;
@@ -21,9 +24,11 @@ import fr.wseduc.webutils.Either;
 import fr.wseduc.webutils.I18n;
 import fr.wseduc.webutils.http.Renders;
 import fr.wseduc.webutils.request.RequestUtils;
-import io.vertx.core.*;
+import io.vertx.core.CompositeFuture;
+import io.vertx.core.Future;
+import io.vertx.core.Handler;
+import io.vertx.core.MultiMap;
 import io.vertx.core.eventbus.EventBus;
-import io.vertx.core.eventbus.Message;
 import io.vertx.core.http.HttpServerRequest;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
@@ -49,6 +54,8 @@ public class CourseController extends ControllerHelper {
     private EventBus eb;
     private RegisterService registerService;
     private GroupService groupService;
+    private SubjectHelper subjectHelper;
+    private CourseHelper courseHelper;
     private CourseService courseService = new DefaultCourseService();
 
     public CourseController(EventBus eb) {
@@ -56,6 +63,8 @@ public class CourseController extends ControllerHelper {
         this.eb = eb;
         this.registerService = new DefaultRegisterService(eb);
         this.groupService = new DefaultGroupService(eb);
+        this.courseHelper = new CourseHelper(eb);
+        this.subjectHelper = new SubjectHelper(eb);
     }
 
     @Get("/courses")
@@ -63,7 +72,7 @@ public class CourseController extends ControllerHelper {
     @SecuredAction(value = "", type = ActionType.AUTHENTICATED)
     public void getCourses(HttpServerRequest request) {
         MultiMap params = request.params();
-        if (!checkParams(params)) {
+        if (!courseHelper.checkParams(params)) {
             badRequest(request);
             return;
         }
@@ -77,7 +86,7 @@ public class CourseController extends ControllerHelper {
     @SecuredAction(Presences.EXPORT)
     public void exportCourses(HttpServerRequest request) {
         MultiMap params = request.params();
-        if (!checkParams(params)) {
+        if (!courseHelper.checkParams(params)) {
             badRequest(request);
             return;
         }
@@ -121,7 +130,7 @@ public class CourseController extends ControllerHelper {
                     }
 
                     JsonObject course = either.right().getValue();
-                    getSubjects(new JsonArray().add(course.getString("subjectId")), event -> {
+                    subjectHelper.getSubjects(new JsonArray().add(course.getString("subjectId")), event -> {
                         if (event.isLeft()) {
                             log.error("[Presences@CourseController] Failed to retrieve course subject");
                         }
@@ -242,23 +251,6 @@ public class CourseController extends ControllerHelper {
     }
 
     /**
-     * Parameters validation
-     *
-     * @param params parameters list
-     * @return if parameters are valids or not
-     */
-    private boolean checkParams(MultiMap params) {
-        if (!params.contains("structure")
-                || !params.contains("start") || !params.contains("end")
-                || !params.get("start").matches("\\d{4}-\\d{2}-\\d{2}")
-                || !params.get("end").matches("\\d{4}-\\d{2}-\\d{2}")) {
-            return false;
-        }
-
-        return true;
-    }
-
-    /**
      * List courses
      *
      * @param structureId  Structure identifier
@@ -269,7 +261,7 @@ public class CourseController extends ControllerHelper {
      * @param handler      Function handler returning data
      */
     private void listCourses(String structureId, List<String> teachersList, List<String> groupsList, String start, String end, boolean forgottenFilter, Handler<Either<String, JsonArray>> handler) {
-        getCourses(structureId, teachersList, groupsList, start, end, event -> {
+        courseHelper.getCourses(structureId, teachersList, groupsList, start, end, event -> {
             if (event.isLeft()) {
                 handler.handle(new Either.Left<>(event.left().getValue()));
                 return;
@@ -303,8 +295,8 @@ public class CourseController extends ControllerHelper {
 
                 JsonArray subjects = subjectsFuture.result();
                 JsonArray teachers = teachersFuture.result();
-                JsonObject subjectMap = transformToMap(subjects, "id");
-                JsonObject teacherMap = transformToMap(teachers, "id");
+                JsonObject subjectMap = MapHelper.transformToMap(subjects, "id");
+                JsonObject teacherMap = MapHelper.transformToMap(teachers, "id");
                 JsonObject object;
                 for (int i = 0; i < courses.size(); i++) {
                     object = courses.getJsonObject(i);
@@ -328,7 +320,7 @@ public class CourseController extends ControllerHelper {
                 });
             });
 
-            getSubjects(subjectIds, FutureHelper.handlerJsonArray(subjectsFuture));
+            subjectHelper.getSubjects(subjectIds, FutureHelper.handlerJsonArray(subjectsFuture));
             getCourseTeachers(teachersIds, FutureHelper.handlerJsonArray(teachersFuture));
         });
     }
@@ -365,48 +357,5 @@ public class CourseController extends ControllerHelper {
         }
 
         return forgottenRegisters;
-    }
-
-    private JsonObject transformToMap(JsonArray objects, String key) {
-        JsonObject object;
-        JsonObject map = new JsonObject();
-        for (int i = 0; i < objects.size(); i++) {
-            object = objects.getJsonObject(i);
-            map.put(object.getString(key), object);
-        }
-
-        return map;
-    }
-
-    private void getCourses(String structure, List<String> teachers, List<String> groups, String start, String end, Handler<Either<String, JsonArray>> handler) {
-        JsonObject action = new JsonObject()
-                .put("action", "course.getCoursesOccurences")
-                .put("structureId", structure)
-                .put("teacherId", new JsonArray(teachers))
-                .put("group", new JsonArray(groups))
-                .put("begin", start)
-                .put("end", end);
-
-        eb.send("viescolaire", action, getEvtBusHandler("Failed to recover courses", handler));
-    }
-
-    private void getSubjects(JsonArray subjects, Handler<Either<String, JsonArray>> handler) {
-        JsonObject action = new JsonObject()
-                .put("action", "matiere.getMatieres")
-                .put("idMatieres", subjects);
-
-        eb.send("viescolaire", action, getEvtBusHandler("Failed to recover subjects", handler));
-    }
-
-    private Handler<AsyncResult<Message<JsonObject>>> getEvtBusHandler(String errorMessage, Handler<Either<String, JsonArray>> handler) {
-        return event -> {
-            JsonObject body = event.result().body();
-            if (event.failed() || "error".equals(body.getString("status"))) {
-                log.error("[Presences@CourseController] " + errorMessage);
-                handler.handle(new Either.Left<>(errorMessage));
-            } else {
-                handler.handle(new Either.Right<>(body.getJsonArray("results")));
-            }
-        };
     }
 }

@@ -11,10 +11,9 @@ export class Student {
     constructor(o?: any) {
         if (o && typeof o === 'object') {
             for (let key in o) {
-                if(key == 'idEleve'){
+                if (key == 'idEleve') {
                     this.id = o['idEleve'];
-                }
-                else {
+                } else {
                     this[key] = o[key];
                 }
             }
@@ -28,11 +27,17 @@ export class Student {
 
 export class Students {
     all: Student[];
+    searchValue: string;
+
+    constructor() {
+        this.all = null;
+        this.searchValue = null;
+    }
 
     /**
      * Return student ids array of this.all
      */
-    getIds () {
+    getIds() {
         return _.pluck(this.all, "studentId");
     }
 
@@ -48,7 +53,7 @@ export class Students {
         try {
             let url = `/viescolaire/classe/eleves?idEtablissement=${structureId}`;
             const {data} = await http.get(url);
-            this.all = data.map((item)=> {
+            this.all = data.map((item) => {
                 return new Student(item);
             });
             return;

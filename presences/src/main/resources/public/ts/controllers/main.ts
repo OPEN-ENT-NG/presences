@@ -1,14 +1,15 @@
 import {idiom, model, ng, template} from 'entcore';
 import rights from '../rights'
 import {Idiom, Template} from '@common/interfaces'
+import {IRootScopeService} from "angular";
 
 declare let window: any;
 
-export interface Scope {
+export interface Scope extends IRootScopeService {
     lang: Idiom;
     template: Template;
     structure: { id: string, name: string };
-
+    
     safeApply(fn?: () => void): void;
 
     hasSearchRight(): boolean;
@@ -16,8 +17,6 @@ export interface Scope {
     hasRight(right: string): boolean;
 
     redirectTo(path: string): void;
-
-    $watch(value: any, trigger: (oldVal: any, newVal: any) => void): void;
 }
 
 /**
@@ -52,20 +51,23 @@ export const mainController = ng.controller('MainController', ['$scope', 'route'
             exemptions: () => {
                 template.open('main', `containers/exemptions`);
             },
-            calendar: () => template.open('main', 'containers/calendar')
+            calendar: () => {
+                if (!window.item) $location.path('/');
+                template.open('main', 'containers/calendar')
+            }
         });
 
         $scope.lang = idiom;
         $scope.template = template;
 
         $scope.safeApply = function (fn?) {
-            const phase = this.$root.$$phase;
+            const phase = $scope.$root.$$phase;
             if (phase == '$apply' || phase == '$digest') {
                 if (fn && (typeof (fn) === 'function')) {
                     fn();
                 }
             } else {
-                this.$apply(fn);
+                $scope.$apply(fn);
             }
         };
 

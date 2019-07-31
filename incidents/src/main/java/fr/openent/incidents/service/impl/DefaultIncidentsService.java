@@ -16,6 +16,7 @@ import org.entcore.common.service.impl.SqlCrudService;
 import org.entcore.common.sql.Sql;
 import org.entcore.common.sql.SqlResult;
 
+import java.util.Arrays;
 import java.util.List;
 
 public class DefaultIncidentsService extends SqlCrudService implements IncidentsService {
@@ -44,6 +45,20 @@ public class DefaultIncidentsService extends SqlCrudService implements Incidents
                 handler.handle(new Either.Left<>(result.left().getValue()));
             }
         }));
+    }
+
+    @Override
+    public void get(String structureId, String startDate, String endDate, String userId, Handler<Either<String, JsonArray>> handler) {
+        String query = "SELECT incident.* " +
+                "FROM " + Incidents.dbSchema + ".incident " +
+                "INNER JOIN " + Incidents.dbSchema + ".protagonist ON (incident.id = protagonist.incident_id) " +
+                "WHERE protagonist.user_id = ? " +
+                "AND incident.structure_id = ? " +
+                "AND incident.date >= to_date(?, 'YYYY-MM-DD') " +
+                "AND incident.date <= to_date(?, 'YYYY-MM-DD')";
+        JsonArray params = new JsonArray(Arrays.asList(userId, structureId, startDate, endDate));
+
+        Sql.getInstance().prepared(query, params, SqlResult.validResultHandler(handler));
     }
 
     private void toFormatJson(JsonObject incidents) {
@@ -96,15 +111,15 @@ public class DefaultIncidentsService extends SqlCrudService implements Incidents
     /**
      * GET query to fetch incidents
      *
-     * @param structureId     structure identifier
-     * @param startDate       start date
-     * @param endDate         end date
-     * @param userId          List userId []
-     * @param page            page
-     * @param params          Json parameters
-     * @param paginationMode  pagination mode
-     * @param field           field order to sort
-     * @param reverse         reverse data sorting
+     * @param structureId    structure identifier
+     * @param startDate      start date
+     * @param endDate        end date
+     * @param userId         List userId []
+     * @param page           page
+     * @param params         Json parameters
+     * @param paginationMode pagination mode
+     * @param field          field order to sort
+     * @param reverse        reverse data sorting
      */
     private String getQuery(String structureId, String startDate, String endDate,
                             List<String> userId, String page, JsonArray params, boolean paginationMode, String field, boolean reverse) {
@@ -164,8 +179,9 @@ public class DefaultIncidentsService extends SqlCrudService implements Incidents
 
     /**
      * Get user infos from neo4j
+     *
      * @param arrayIncidents incidents []
-     * @param handler handler
+     * @param handler        handler
      */
     private void getUsersInfo(JsonArray arrayIncidents, Handler<Either<String, JsonArray>> handler) {
         JsonArray protagonists = new JsonArray();
@@ -284,6 +300,7 @@ public class DefaultIncidentsService extends SqlCrudService implements Incidents
         }));
 
     }
+
     /**
      * Get statement that create Incident
      *
@@ -294,22 +311,22 @@ public class DefaultIncidentsService extends SqlCrudService implements Incidents
     private JsonObject createIncidentStatement(Number id, JsonObject incident) {
 
         String query = "INSERT INTO " + Incidents.dbSchema + "." + DATABASE_TABLE +
-                    " (id, owner, structure_id, date, selected_hour, description, created, processed, place_id," +
-                    "partner_id, type_id, seriousness_id)" +
-                    "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
-            JsonArray values = new JsonArray()
-                    .add(id)
-                    .add(incident.getString("owner"))
-                    .add(incident.getString("structure_id"))
-                    .add(incident.getString("date"))
-                    .add(incident.getBoolean("selected_hour"))
-                    .add(incident.getString("description"))
-                    .add(incident.getString("created"))
-                    .add(incident.getBoolean("processed"))
-                    .add(incident.getInteger("place_id"))
-                    .add(incident.getInteger("partner_id"))
-                    .add(incident.getInteger("type_id"))
-                    .add(incident.getInteger("seriousness_id"));
+                " (id, owner, structure_id, date, selected_hour, description, created, processed, place_id," +
+                "partner_id, type_id, seriousness_id)" +
+                "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+        JsonArray values = new JsonArray()
+                .add(id)
+                .add(incident.getString("owner"))
+                .add(incident.getString("structure_id"))
+                .add(incident.getString("date"))
+                .add(incident.getBoolean("selected_hour"))
+                .add(incident.getString("description"))
+                .add(incident.getString("created"))
+                .add(incident.getBoolean("processed"))
+                .add(incident.getInteger("place_id"))
+                .add(incident.getInteger("partner_id"))
+                .add(incident.getInteger("type_id"))
+                .add(incident.getInteger("seriousness_id"));
 
         return new JsonObject()
                 .put("statement", query)
@@ -412,8 +429,8 @@ public class DefaultIncidentsService extends SqlCrudService implements Incidents
     /**
      * statement that delete Protagonist
      *
-     * @param userId       user identifier
-     * @param incidentId   incident identifier
+     * @param userId     user identifier
+     * @param incidentId incident identifier
      * @return Statement
      */
     private JsonObject deleteProtagonistStatement(String userId, Number incidentId) {

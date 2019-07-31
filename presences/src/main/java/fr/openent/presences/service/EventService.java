@@ -12,7 +12,8 @@ public interface EventService {
 
     /**
      * Get events
-     * @param structureId      structure identifier
+     *
+     * @param structureId       structure identifier
      * @param startDate         startDate start date
      * @param endDate           endDate end date
      * @param eventType         event type
@@ -29,6 +30,7 @@ public interface EventService {
 
     /**
      * Get events page number
+     *
      * @param structureId       structure identifier
      * @param startDate         startDate start date
      * @param endDate           endDate end date
@@ -45,8 +47,8 @@ public interface EventService {
     /**
      * Get events reason type
      *
-     * @param structureId   structure identifier
-     * @param handler       function handler returning data
+     * @param structureId structure identifier
+     * @param handler     function handler returning data
      */
     void getEventsReasonType(String structureId, Handler<Either<String, JsonArray>> handler);
 
@@ -71,6 +73,7 @@ public interface EventService {
 
     /**
      * Update reason for each event
+     *
      * @param eventBody Event body that can contain list of id's events and its reason_id retrieved
      * @param handler   Function handler returning data
      */
@@ -83,4 +86,16 @@ public interface EventService {
      * @param handler function handler returning data
      */
     void delete(Integer id, Handler<Either<String, JsonObject>> handler);
+
+    /**
+     * List events as strict values based parameters
+     *
+     * @param structureId Structure identifier
+     * @param startDate   Event start date
+     * @param endDate     event end date
+     * @param eventType   Event type
+     * @param userId      User identifiers
+     * @param handler     Function handler return data
+     */
+    void list(String structureId, String startDate, String endDate, List<Integer> eventType, List<String> userId, Handler<Either<String, JsonArray>> handler);
 }

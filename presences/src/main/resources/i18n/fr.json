@@ -88,5 +88,13 @@
   "presences.absence.regularise": "Régul.",
   "presences.absence.empty": "Aucune absence sur cette période",
   "presences.absence.select.multiple": "Motifs multiples",
-  "presences.absence.select.empty": "Sans motif"
+  "presences.absence.select.empty": "Sans motif",
+  "presences.event.calendar.title": "Saisir un événement",
+  "presences.dashboard.search.placeholder": "Rechercher un élève ou une classe pour saisir une absence",
+  "presences.calendar.students.group": "Autres élèves de ",
+  "presences.input": "Saisir",
+  "presences.forgotten.notebook": "Carnet oublié",
+  "presences.exemption": "Dispense",
+  "presences.calendar.exemption.code": "D",
+  "presences.exemptions.form.sniplet.title": "Créer une dispense"
 }

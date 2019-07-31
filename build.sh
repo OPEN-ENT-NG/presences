@@ -64,10 +64,10 @@ publish () {
 presences () {
   case `uname -s` in
     MINGW*)
-      docker-compose run --rm -u "$USER_UID:$GROUP_GID" node sh -c "node_modules/gulp/bin/gulp.js build --module=presences"
+      docker-compose run --rm -u "$USER_UID:$GROUP_GID" node sh -c "npm install --no-bin-links && node_modules/gulp/bin/gulp.js build --module=presences"
       ;;
     *)
-      docker-compose run --rm -u "$USER_UID:$GROUP_GID" node sh -c "node_modules/gulp/bin/gulp.js build --module=presences"
+      docker-compose run --rm -u "$USER_UID:$GROUP_GID" node sh -c "npm install && node_modules/gulp/bin/gulp.js build --module=presences"
   esac
   docker-compose run --rm -u "$USER_UID:$GROUP_GID" gradle gradle :presences:shadowJar :presences:install :presences:publishToMavenLocal
 }

@@ -19,7 +19,7 @@ nav {
     height: calc(100% - #{$portal-header-height});
     background-color: $white;
     width: $navbar-width;
-    z-index: 100001;
+    z-index: 1001;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -136,7 +136,7 @@ nav {
   }
 
   .sub-nav {
-    z-index: 100000;
+    z-index: 1000;
   }
 }
 

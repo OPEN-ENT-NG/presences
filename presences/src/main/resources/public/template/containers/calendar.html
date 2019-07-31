@@ -1,10 +1,66 @@
-<div ng-controller="CalendarController as vm">
-    <calendar enable-display-modes="true"
-              display-template="calendar/course-item"
-              display-month-template="calendar/course-item"
-              item-tooltip-template="calendar/course-tooltip"
-              items="::vm.courses"
-              slots="vm.slots.list"
-              show-quarter-hours="true"
-              show-next-previous-button="true"/>
+<div class="calendar" ng-controller="CalendarController as vm">
+    <script>
+        window.entcore.calendar.dayHeight = 52;
+    </script>
+    <h1>
+        <i18n>presences.event.calendar.title</i18n>
+    </h1>
+    <div class="row search-toolbar">
+        <div class="cell four search-input">
+            <async-autocomplete ng-disabled="false"
+                                ng-model="vm.filter.search.item"
+                                ng-change="vm.selectItem"
+                                on-search="vm.searchItem"
+                                options="vm.filter.search.items"
+                                placeholder="presences.dashboard.search.placeholder"
+                                search="vm.filter.search.item"></async-autocomplete>
+        </div>
+        <div class="cell eight">
+            <div class="right-magnet">
+                <span class="horizontal-margin">
+                    <i18n>presences.input</i18n> :
+                </span>
+                <button class="forbidden">
+                    <i18n>presences.register.event_type.absences</i18n>
+                </button>
+                <sniplet template="exemption-form" application="presences"></sniplet>
+                <sniplet application="incidents" template="incident-form"></sniplet>
+                <button class="forbidden">
+                    <i18n>incidents.punishment.sanction</i18n>
+                </button>
+                <button class="forbidden">
+                    <i18n>presences.forgotten.notebook</i18n>
+                </button>
+            </div>
+        </div>
+    </div>
+    <div ng-include="'/presences/public/template/calendar/user-card.html'"></div>
+    <div class="calendar-container row">
+        <!--        item-tooltip-template="calendar/course-tooltip"-->
+        <calendar enable-display-modes="true"
+                  display-template="calendar/course-item"
+                  items="vm.courses.list"
+                  slots="vm.slots.list"
+                  show-quarter-hours="true"
+                  show-next-previous-button="true"/>
+        <loader ng-show="vm.show.loader" title="lang.translate('presences.register.loading.text')"/>
+    </div>
+    <div id="exemption-hover">
+        <div>
+            <div>
+                <i18n>presences.exemption</i18n>
+            </div>
+            <div class="lowercase">
+                <i18n>presences.from</i18n>
+                [[vm.formatExemptionDate(vm.show.exemption.start_date)]]
+            </div>
+            <div class="lowercase">
+                <i18n>presences.to</i18n>
+                [[vm.formatExemptionDate(vm.show.exemption.end_date)]]
+            </div>
+        </div>
+        <div style="padding: 0 10px 0 20px;">
+            <i class="mine">&nbsp;</i>
+        </div>
+    </div>
 </div>

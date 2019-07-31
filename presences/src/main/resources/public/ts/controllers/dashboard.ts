@@ -1,41 +1,45 @@
 import {ng} from 'entcore';
-import {User, UserService} from "../services";
+import {SearchItem, SearchService} from "../services";
 
 declare let window: any;
 
 interface Filter {
-    student: string;
-    students: User[];
+    search: {
+        item: string;
+        items: SearchItem[];
+    }
 }
 
 interface ViewModel {
     filter: Filter;
 
-    selectStudent(model: any, student: any): void;
+    selectItem(model: any, student: any): void;
 
-    searchStudent(value: string): void;
+    searchItem(value: string): void;
 }
 
-export const dashboardController = ng.controller('DashboardController', ['$scope', 'route', '$location', 'UserService',
-    function ($scope, route, $location, UserService: UserService) {
+export const dashboardController = ng.controller('DashboardController', ['$scope', 'route', '$location', 'SearchService',
+    function ($scope, route, $location, SearchService: SearchService) {
         const vm: ViewModel = this;
         vm.filter = {
-            students: null,
-            student: null
+            search: {
+                item: null,
+                items: null
+            }
         };
 
-        vm.selectStudent = function (model, student) {
-            console.log('selected student: ', student);
-            $location.path(`/calendar/${student.id}`);
+        vm.selectItem = function (model, item) {
+            window.item = item;
+            $location.path(`/calendar/${item.id}`);
         };
 
-        vm.searchStudent = async function (value) {
+        vm.searchItem = async function (value) {
             const structureId = window.structure.id;
             try {
-                vm.filter.students = await UserService.search(structureId, value, 'Student');
+                vm.filter.search.items = await SearchService.search(structureId, value);
                 $scope.safeApply();
             } catch (err) {
-                vm.filter.students = [];
+                vm.filter.search.items = [];
             }
         }
     }]);
