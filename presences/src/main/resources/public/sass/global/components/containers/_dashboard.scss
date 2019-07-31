@@ -1,4 +1,22 @@
 .dashboard {
+  .presences-title {
+    display: flex;
+    align-items: center;
+
+    img {
+      height: 41px;
+    }
+
+    h1 {
+      font-size: 36px;
+    }
+
+    .structure {
+      min-width: 300px;
+      font-size: 18px;
+    }
+  }
+
   .dashboard-search-row {
     .input-async-autocomplete {
       line-height: 48px;
@@ -20,6 +38,11 @@
         border: solid 3px $presences-main;
         border-radius: 30px;
         text-indent: 35px;
+        box-shadow: 0 1px 5px rgba(189, 189, 189, 0.75);
+
+        &:focus {
+          border: solid 3px $presences-main;
+        }
       }
     }
   }

@@ -5,7 +5,7 @@
         "port" : 8062,
         "app-name" : "Presences",
     	"app-address" : "/presences",
-    	"app-icon" : "Presences-large",
+    	"app-icon" : "${host}/presences/public/img/uni-presence.svg",
         "host": "${host}",
         "ssl" : $ssl,
         "auto-redeploy": false,

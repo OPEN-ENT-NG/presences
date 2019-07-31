@@ -2,9 +2,12 @@ import {idiom, model, ng, template} from 'entcore';
 import rights from '../rights'
 import {Idiom, Template} from '@common/interfaces'
 
+declare let window: any;
+
 export interface Scope {
     lang: Idiom;
     template: Template;
+    structure: { id: string, name: string };
 
     safeApply(fn?: () => void): void;
 
@@ -25,6 +28,10 @@ export interface Scope {
 export const mainController = ng.controller('MainController', ['$scope', 'route', '$rootScope', '$route', '$location',
     ($scope: Scope, route, $rootScope, $route, $location) => {
         idiom.addBundle('/incidents/i18n');
+        $scope.structure = {
+            id: '',
+            name: ''
+        };
 
         route({
             dashboard: () => {
@@ -73,4 +80,6 @@ export const mainController = ng.controller('MainController', ['$scope', 'route'
         $scope.redirectTo = (path: string) => {
             $location.path(path);
         };
+
+        $scope.$watch(() => window.structure, () => $scope.structure = window.structure);
     }]);
