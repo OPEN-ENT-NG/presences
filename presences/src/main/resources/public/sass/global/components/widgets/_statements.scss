@@ -1,0 +1,20 @@
+.statements-widgets {
+  .statement {
+    display: flex;
+    padding: 15px;
+    justify-content: space-around;
+    align-items: center;
+    height: 96px;
+    box-sizing: border-box;
+
+    > div {
+      color: $presences-grey-light;
+      font-size: 18px;
+      font-weight: bold;
+    }
+
+    img {
+      height: 57px;
+    }
+  }
+}

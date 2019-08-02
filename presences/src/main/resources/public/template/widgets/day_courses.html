@@ -1,0 +1,35 @@
+<div class="forgotten-registers-alerts registers" ng-controller="RegistersController as vm"
+     ng-init="vm.widget.dayCourses = true;">
+    <h2>
+        <i18n>presences.widgets.day.courses</i18n>
+    </h2>
+    <div class="row card-slider">
+        <div class="card cell" ng-repeat="course in vm.courses.all|orderBy:'timestamp'"
+             data-ng-click="vm.openRegister(course, $event)"
+             ng-class="{active: course._id === vm.register.course_id}">
+            <div ng-if="hasSearchRight()" class="row has-search-right">
+                <div class="row hour">
+                    <span>[[::vm.formatHour(course.startDate)]] - [[::vm.formatHour(course.endDate)]]</span>
+                    <i class="right-magnet notify-bell" ng-if="vm.canNotify(course.startDate, course.register_state_id)"
+                       ng-class="{active: course.notified}">&nbsp;</i>
+                </div>
+                <div class="row teachers">
+                    <span ng-repeat="teacher in course.teachers">[[::teacher.displayName]]</span>
+                </div>
+                <em class="row metadata">[[::course.subjectName]]</em>
+                <div class="classes row ellipsis">
+                    <span ng-repeat="group in ::vm.getGroups(course.classes, course.groups)">[[::group]]</span>
+                </div>
+            </div>
+            <div ng-if="!hasSearchRight()" class="row">
+                <div class="row hour">[[::vm.formatHour(course.startDate)]] -
+                    [[::vm.formatHour(course.endDate)]]
+                </div>
+                <div class="row classes ellipsis">
+                    <span ng-repeat="group in ::vm.getGroups(course.classes, course.groups)">[[::group]]</span>
+                </div>
+                <div class="row subject">[[::course.subjectName]]</div>
+            </div>
+        </div>
+    </div>
+</div>

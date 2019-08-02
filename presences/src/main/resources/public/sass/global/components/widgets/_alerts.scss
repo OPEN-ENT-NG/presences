@@ -1,0 +1,58 @@
+$alert-height: 117px;
+
+.widget-alerts {
+  .grid {
+    display: grid;
+    grid-template-columns: auto auto auto auto;
+    grid-column-gap: 25px;
+    grid-template-rows: $alert-height;
+  }
+
+  .widget-alert {
+    border-radius: 7px;
+    background-color: $white;
+    position: relative;
+    box-shadow: 0 5px 5px rgba(0, 0, 0, 0.21);
+    display: flex;
+    flex-direction: column;
+    justify-content: space-around;
+    align-items: center;
+
+    &:after {
+      content: ' ';
+      width: 100%;
+      height: 10px;
+      position: absolute;
+      border-bottom-left-radius: 7px;
+      border-bottom-right-radius: 7px;
+      display: block;
+      bottom: 0;
+    }
+
+    &.absences:after {
+      background-color: $presences-red;
+    }
+
+    &.lateness:after {
+      background-color: $presences-purple;
+    }
+
+    &.incidents:after {
+      background-color: $presences-grey;
+    }
+
+    &.textbooks:after {
+      background-color: $presences-main;
+    }
+
+    .value {
+      font-size: 37px;
+      font-weight: bold;
+      color: $presences-grey-light;
+    }
+
+    .subtitle {
+      font-size: 14px;
+    }
+  }
+}

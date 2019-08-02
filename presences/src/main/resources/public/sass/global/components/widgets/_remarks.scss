@@ -1,0 +1,23 @@
+.remarks-widgets {
+  .remark {
+    display: flex;
+    padding: 15px;
+    justify-content: space-between;
+    align-items: center;
+    height: 74px;
+    box-sizing: border-box;
+
+    > div {
+      color: $presences-grey-light;
+      font-size: 18px;
+      font-weight: bold;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+
+    img {
+      height: 57px;
+    }
+  }
+}

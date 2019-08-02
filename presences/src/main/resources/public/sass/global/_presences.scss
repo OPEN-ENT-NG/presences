@@ -36,6 +36,10 @@ body.presences, .sniplet.presences {
     float: left;
   }
 
+  .height-100 {
+    height: 100%;
+  }
+
   container[template="main"] {
     display: block;
     width: calc(100% - #{$navbar-width});
@@ -67,17 +71,10 @@ body.presences, .sniplet.presences {
   label.checkbox {
     input[type=checkbox] {
       + span:before {
+        @include fonticon();
         border: 2px solid $presences-main;
         border-radius: 3px;
         color: $white;
-      }
-
-      &:checked + span::before {
-        @include fonticon();
-        content: "\e871";
-        transform: rotate(0deg);
-        border-color: $presences-main;
-        background-color: $presences-main;
         height: 20px;
         width: 20px;
         margin-top: 0;
@@ -85,6 +82,20 @@ body.presences, .sniplet.presences {
         text-align: center;
         line-height: 16px;
       }
+
+      &:checked + span::before {
+        content: "\e871";
+        transform: rotate(0deg);
+        border-color: $presences-main;
+        background-color: $presences-main;
+      }
+    }
+
+    &.half input[type="checkbox"] + span:before {
+      content: "\f374";
+      transform: rotate(0deg);
+      border-color: $presences-main;
+      background-color: $presences-main;
     }
   }
 

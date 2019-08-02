@@ -1,0 +1,75 @@
+<div class="absences absences-widget height-100" ng-controller="AbsencesController as vm">
+    <div class="widget-filters">
+        <div class="row">
+            <div class="cell six">
+                <i18n>presences.from</i18n>
+            </div>
+            <div class="cell six">
+                <i18n>presences.to</i18n>
+            </div>
+        </div>
+        <div class="row">
+            <div class="cell six">
+                <span class="date-picker">
+                    <date-picker ng-change="vm.updateDate();" ng-model="vm.filter.startDate"></date-picker>
+                </span>
+            </div>
+            <div class="cell six">
+                <span class="date-picker">
+                    <date-picker ng-change="vm.updateDate();" ng-model="vm.filter.endDate"></date-picker>
+                </span>
+            </div>
+        </div>
+    </div>
+    <div class="search-field">
+        <div class="twelve search-input">
+            <async-autocomplete data-ng-disabled="false"
+                                data-ng-model="vm.studentSearchInput"
+                                data-ng-change="vm.selectStudentFromDashboard"
+                                data-on-search="vm.searchByStudent"
+                                data-options="vm.students.all"
+                                data-placeholder="presences.exemptions.search.student"
+                                data-search="vm.studentSearchInput">
+            </async-autocomplete>
+        </div>
+        <div class="cell twelve">
+            <ul class="cell twelve search-input-ul">
+                <li ng-repeat="student in vm.filter.students">
+                    [[student.toString()]] <i class="close"
+                                              data-ng-click="vm.excludeStudentFromFilter(student)"></i>
+                </li>
+            </ul>
+        </div>
+    </div>
+    <div class="absence-list">
+        <div ng-repeat="event in vm.events.events" class="event">
+            <div>
+                <div>
+                    <div>[[event.student.displayName]]</div>
+                    <div><em class="metadata">[[event.student.classeName]]</em></div>
+                </div>
+                <div>
+                    <select data-ng-model="event.reason_id"
+                            data-ng-change="vm.changeReason(event)"
+                            ng-options="reason.id as reason.label for reason in vm.eventReasonsType">
+                        <option value="">[[lang.translate('presences.absence.select.empty')]]</option>
+                    </select>
+                </div>
+            </div>
+            <div>
+                <em class="metadata">
+                    [[event.start_date | date: 'dd/MM/yyyy']]
+                    [[event.start_date | date:'HH:mm']]-[[event.end_date | date:'HH:mm']]
+                </em>
+                <div>
+                    <i18n>presences.widgets.absences.regularized</i18n>
+                    <label class="checkbox">
+                        <input type="checkbox" data-ng-model="event.counsellor_regularisation"
+                               data-ng-change="vm.toggleAbsenceRegularised(event)">
+                        <span></span>
+                    </label>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

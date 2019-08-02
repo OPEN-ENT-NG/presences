@@ -8,7 +8,8 @@ export class DateUtils {
         'DAY-MONTH-YEAR': 'DD/MM/YYYY',
         'HOUR-MINUTES': 'kk:mm',
         'BIRTHDATE': 'L',
-        'DAY-DATE': 'dddd L'
+        'DAY-DATE': 'dddd L',
+        'DATE-FULL-LETTER': 'dddd LL'
     };
 
     /**

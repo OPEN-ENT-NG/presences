@@ -21,7 +21,6 @@ import org.entcore.common.neo4j.Neo4jResult;
 import org.entcore.common.sql.Sql;
 import org.entcore.common.sql.SqlResult;
 import org.entcore.common.user.UserInfos;
-import org.omg.CORBA.Request;
 
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
@@ -45,7 +44,7 @@ public class DefaultEventService implements EventService {
     @Override
     public void get(String structureId, String startDate, String endDate,
                     List<String> eventType, List<String> userId, JsonArray userIdFromClasses, List<String> classes,
-                    boolean regularized, Integer page, Handler<Either<String, JsonArray>> handler) {
+                    Boolean regularized, Integer page, Handler<Either<String, JsonArray>> handler) {
         JsonArray params = new JsonArray();
 
         Sql.getInstance().prepared(this.getEventsQuery(structureId, startDate, endDate,
@@ -99,7 +98,7 @@ public class DefaultEventService implements EventService {
      * @param params            Json params
      */
     private String getEventsQuery(String structureId, String startDate, String endDate, List<String> eventType,
-                                  boolean regularized, List<String> userId, JsonArray userIdFromClasses,
+                                  Boolean regularized, List<String> userId, JsonArray userIdFromClasses,
                                   Integer page, JsonArray params) {
 
         String query = "WITH ids AS (SELECT e.id FROM presences.event e ";
@@ -146,9 +145,8 @@ public class DefaultEventService implements EventService {
             future.complete();
             return;
         }
-        String query = "SELECT r.id, to_json(r.*) as reason, to_json(type.*) as type FROM " + Presences.dbSchema +
-                ".reason r INNER JOIN " + Presences.dbSchema + ".reason_type as type ON type.id = r.type_id " +
-                "WHERE r.id IN " + Sql.listPrepared(reasonIds.getList());
+        String query = "SELECT r.id, to_json(r.*) as reason FROM " + Presences.dbSchema +
+                ".reason r WHERE r.id IN " + Sql.listPrepared(reasonIds.getList());
         JsonArray params = new JsonArray().addAll(reasonIds);
 
         Sql.getInstance().prepared(query, params, SqlResult.validResultHandler((reasonResult -> {
@@ -157,8 +155,8 @@ public class DefaultEventService implements EventService {
                 for (int i = 0; i < reasonResult.right().getValue().size(); i++) {
                     reasonResult.right().getValue().getJsonObject(i).put("reason",
                             new JsonObject(reasonResult.right().getValue().getJsonObject(i).getString("reason")));
-                    reasonResult.right().getValue().getJsonObject(i).put("type",
-                            new JsonObject(reasonResult.right().getValue().getJsonObject(i).getString("type")));
+//                    reasonResult.right().getValue().getJsonObject(i).put("type",
+//                            new JsonObject(reasonResult.right().getValue().getJsonObject(i).getString("type")));
                 }
 
                 // Adding reason object to event who possesses reason id (ignore if reason_id is null)
@@ -206,7 +204,7 @@ public class DefaultEventService implements EventService {
                         "(u:User {profiles:['Student']})-[:IN]->(:ProfileGroup)-[:DEPENDS]->(c:Class) WHERE u.id IN {idStudents} " +
                         "RETURN distinct (u.lastName + ' ' + u.firstName) as displayName, u.id as id, c.name as classeName";
                 JsonObject params = new JsonObject().put("structureId", structureId).put("idStudents", idStudents);
-                courseHelper.getCourses(structureId, new ArrayList<>(),  new ArrayList<>(), startDate, endDate, coursesResult -> {
+                courseHelper.getCourses(structureId, new ArrayList<>(), new ArrayList<>(), startDate, endDate, coursesResult -> {
                     if (coursesResult.isRight()) {
                         Neo4j.getInstance().execute(query, params, Neo4jResult.validResultHandler(studentResult -> {
                             if (studentResult.isRight()) {
@@ -231,7 +229,7 @@ public class DefaultEventService implements EventService {
                                                                 .put("classeName", student.getString("classeName"))
                                                                 .put("courses", getCourses(student, studentEvents.getJsonObject(k), coursesResult.right().getValue(),
                                                                         filterEvents(studentEvents.getJsonObject(k).getJsonArray("events"),
-                                                                        arrayEvents.getJsonObject(i).getString("start_date"))))
+                                                                                arrayEvents.getJsonObject(i).getString("start_date"))))
                                                                 .put("day_history",
                                                                         filterEvents(studentEvents.getJsonObject(k).getJsonArray("events"),
                                                                                 arrayEvents.getJsonObject(i).getString("start_date"))));
@@ -262,7 +260,7 @@ public class DefaultEventService implements EventService {
                 JsonObject course = coursesResultValue.getJsonObject(i);
                 String studentId = studentEvents.getString("student_id");
                 Date coursesStartDate = sdf.parse(course.getString("startDate"));
-                for (int j = 0; j < filterEvents.size() ; j++) {
+                for (int j = 0; j < filterEvents.size(); j++) {
                     Date studentStartDate = sdf.parse(filterEvents.getJsonObject(j).getString("start_date"));
 
                     if (student.getString("id").equals(studentId) &&
@@ -352,7 +350,7 @@ public class DefaultEventService implements EventService {
 
     @Override
     public void getPageNumber(String structureId, String startDate, String endDate, List<String> eventType,
-                              List<String> userId, boolean regularized,
+                              List<String> userId, Boolean regularized,
                               JsonArray userIdFromClasses, Handler<Either<String, JsonObject>> handler) {
         JsonArray params = new JsonArray();
         Sql.getInstance().prepared(this.getEventsQueryPagination(structureId, startDate, endDate, eventType,
@@ -361,7 +359,7 @@ public class DefaultEventService implements EventService {
     }
 
     private String getEventsQueryPagination(String structureId, String startDate, String endDate, List<String> eventType,
-                                            List<String> userId, boolean regularized,
+                                            List<String> userId, Boolean regularized,
                                             JsonArray userIdFromClasses, JsonArray params) {
 
         String query = "SELECT count(*) FROM presences.event e " +
@@ -382,7 +380,7 @@ public class DefaultEventService implements EventService {
         return query;
     }
 
-    private String setParamsForQueryEvents(List<String> userId, boolean regularized, JsonArray userIdFromClasses, JsonArray params) {
+    private String setParamsForQueryEvents(List<String> userId, Boolean regularized, JsonArray userIdFromClasses, JsonArray params) {
         String query = "";
         if (userIdFromClasses != null && !userIdFromClasses.isEmpty()) {
             query += "AND student_id IN " + Sql.listPrepared(userIdFromClasses.getList());
@@ -395,8 +393,8 @@ public class DefaultEventService implements EventService {
             params.addAll(new JsonArray(userId));
         }
 
-        if (regularized) {
-            query += "AND e.counsellor_regularisation = true ";
+        if (regularized != null) {
+            query += "AND e.counsellor_regularisation = " + regularized + " ";
         }
         return query;
     }

@@ -20,6 +20,8 @@ export interface Event {
 }
 
 export interface EventResponse {
+    id: number;
+    reason_id: number;
     studentId: string;
     displayName: string;
     className: string;
@@ -93,6 +95,7 @@ export class Event {
 
 export class Events extends LoadingCollection {
     all: EventResponse[];
+    events: EventResponse[];
 
     pageCount: number;
     structureId: string;
@@ -103,6 +106,11 @@ export class Events extends LoadingCollection {
 
     eventType: string;
     regularized: boolean;
+
+    constructor() {
+        super();
+        this.events = [];
+    }
 
     static buildEventResponse(data: any[]): EventResponse[] {
         let dataModel = [];
@@ -139,13 +147,13 @@ export class Events extends LoadingCollection {
 
                 /* check all events regularized in this event to display the global regularized value */
                 let globalCounsellorRegularisation;
-                globalCounsellorRegularisation = regularizedEvents.reduce( (accumulator, currentValue) => accumulator && currentValue);
+                globalCounsellorRegularisation = regularizedEvents.reduce((accumulator, currentValue) => accumulator && currentValue);
 
                 dataModel.push({
                     studentId: item.student_id,
                     displayName: item.student.displayName,
                     className: item.student.classeName,
-                    date:  moment(item.start_date).format(DateUtils.FORMAT["YEAR-MONTH-DAY"]),
+                    date: moment(item.start_date).format(DateUtils.FORMAT["YEAR-MONTH-DAY"]),
                     dayHistory: item.student.day_history,
                     events: eventsResponse,
                     courses: _.uniq(item.student.courses, "_id"),
@@ -179,13 +187,14 @@ export class Events extends LoadingCollection {
                 url += `&classes=${this.classes}`;
             }
 
-            if (this.regularized) {
+            if (this.regularized != null) {
                 url += `&regularized=${this.regularized}`;
             }
 
             url += `&page=${this.page}`;
             const {data} = await http.get(url);
             this.pageCount = data.page_count;
+            this.events = data.all;
             this.all = Events.buildEventResponse(data.all);
             console.log("events.all: ", this.all);
         } catch (err) {

@@ -1,5 +1,5 @@
-import {_, model, moment, idiom as lang, ng} from 'entcore';
-import {Events, EventType, Student, Students, EventResponse, Absence, Event} from "../models";
+import {_, idiom as lang, model, moment, ng} from 'entcore';
+import {Absence, Event, EventResponse, Events, EventType, Student, Students} from "../models";
 import {DateUtils} from "@common/utils";
 import {GroupService} from "@common/services/GroupService";
 import {EventService, ReasonType} from "../services";
@@ -29,30 +29,48 @@ interface ViewModel {
     multipleSelect: ReasonType;
 
     eventTypeState(periods, event): string;
+
     isDayHistoryEmpty(periods, event): boolean;
+
     editPeriod($event): void;
 
     /* dayHistory interaction */
     mouseIsDown: boolean;
     indexDayHistory: number;
     indexDayHistoryArray: number[];
+
     period($event): void;
+
     setAbsent(): void;
+
     treatAbsentAfterMouseLeave(event: EventResponse): Promise<void>;
+
     drawAbsent($event): void;
+
     interactAbsent(period, event: EventResponse, $event, parentIndex): void;
 
-    /* setAbsent(periods, event, $event, $index): void; */
+    /* setAbsent(periods, event, $event, $index): void;
+*/
     reasonSelect($event): void;
+
     getSelectValue(event): number;
+
     getRegularizedValue(event): boolean;
+
     filterSelect(options: ReasonType[], event): ReasonType[];
+
     changeReason(event): void;
+
     downloadFile($event): void;
+
     doAction($event): void;
+
     stopAbsencePropagation($event): void;
+
     regularizedChecked(event: EventResponse): boolean;
+
     toggleAllAbsenceRegularised(event: EventResponse): void;
+
     toggleAbsenceRegularised(history, event): void;
 
     /* Events description */
@@ -61,35 +79,51 @@ interface ViewModel {
     /* Collapse event */
     eventId: number;
     collapse: boolean;
+
     toggleCollapse(event): void;
+
     isCollapsibleOpen($index): boolean;
 
     /* Students */
     studentSearchInput: string;
     students: Students;
+
     searchByStudent(string): void;
+
     selectStudent(model: Student, option: Student): void;
+
+    selectStudentFromDashboard(model: Student, option: Student): void;
+
     excludeStudentFromFilter(audience): void;
 
     /* Classes */
     classesSearchInput: string;
     classes: any;
     classesFiltered: any[];
+
     searchByClass(value: string): Promise<void>;
+
     selectClass(model: any, option: any): void;
+
     excludeClassFromFilter(audience): void;
 
     /* update filter */
     updateFilter(student?, audience?): void;
+
     updateDate(): void;
 
     /*  switch event type */
     switchAbsencesFilter(): void;
+
+    switchUnjustifiedFilter(): Promise<void>;
+
     switchLateFilter(): void;
+
     switchAbsenceRegularizedFilter(): Promise<void>;
 
     /* Export*/
     exportPdf(): void;
+
     exportCsv(): void;
 }
 
@@ -97,25 +131,35 @@ export const absencesController = ng.controller('AbsencesController', ['$scope',
     'GroupService', 'EventService',
     function ($scope, $route, GroupService: GroupService, EventService: EventService) {
         console.log('AbsencesController');
+        const isWidget = $route.current.action === 'dashboard';
         const vm: ViewModel = this;
         vm.filter = {
-            startDate: DateUtils.add(new Date(), -30, "d"),
-            endDate: moment().endOf('day').toDate(),
+            startDate: isWidget ? DateUtils.add(new Date(), -5, "d") : DateUtils.add(new Date(), -30, "d"),
+            endDate: isWidget ? DateUtils.add(new Date(), -1, "d") : moment().endOf('day').toDate(),
             students: [],
             classes: [],
-            absences: false,
-            late: false,
+            absences: true,
+            late: $route.current.action !== 'dashboard',
             regularized: false,
         };
         vm.mouseIsDown = false;
         vm.eventType = [];
-        vm.multipleSelect = {id: 0, label: lang.translate("presences.absence.select.multiple"), structureId: ""} as ReasonType;
+        vm.multipleSelect = {
+            id: 0,
+            label: lang.translate("presences.absence.select.multiple"),
+            structure_id: "",
+            comment: "",
+            default: false,
+            proving: false,
+            group: false
+        } as ReasonType;
         vm.studentSearchInput = '';
         vm.classesSearchInput = '';
         vm.students = new Students();
         vm.classesFiltered = undefined;
 
         vm.events = new Events();
+        vm.events.regularized = isWidget ? vm.filter.regularized : null;
         vm.events.eventer.on('loading::true', () => $scope.safeApply());
         vm.events.eventer.on('loading::false', () => $scope.safeApply());
 
@@ -160,7 +204,7 @@ export const absencesController = ng.controller('AbsencesController', ['$scope',
             if (!vm.eventReasonsType) {
                 vm.eventReasonsType = await EventService.getReasonsType(window.structure.id);
                 vm.eventReasonsTypeDescription = _.clone(vm.eventReasonsType);
-                vm.eventReasonsType.push(vm.multipleSelect);
+                if (!isWidget) vm.eventReasonsType.push(vm.multipleSelect);
             }
 
             setStudentToSync();
@@ -204,7 +248,7 @@ export const absencesController = ng.controller('AbsencesController', ['$scope',
                         vm.indexDayHistoryArray.forEach((item) => {
                             response.data.events.forEach(e => {
                                 if (((event.dayHistory[item].start >= e.start_date) || (e.start_date < event.dayHistory[item].end)) &&
-                                ((event.dayHistory[item].end <= e.end_date) || (e.end_date > event.dayHistory[item].start ))) {
+                                    ((event.dayHistory[item].end <= e.end_date) || (e.end_date > event.dayHistory[item].start))) {
                                     event.dayHistory[item].events.push(e);
                                 }
                             });
@@ -262,7 +306,7 @@ export const absencesController = ng.controller('AbsencesController', ['$scope',
             let event = $event.currentTarget.children[vm.indexDayHistory];
             if (vm.mouseIsDown) {
                 if (event.getAttribute("class") === "empty" &&
-                    (event.getAttribute("class") === "late"  || vm.indexDayHistory === 4)) {
+                    (event.getAttribute("class") === "late" || vm.indexDayHistory === 4)) {
                     return;
                 }
 
@@ -348,12 +392,12 @@ export const absencesController = ng.controller('AbsencesController', ['$scope',
             const className = ['absent', 'justified', 'late', 'empty'];
             let index;
             for (let i = 0; i < periods.events.length; i++) {
-              if (periods.events[i].type_id === 1) {
-                  index = periods.events[i].reason_id !== null ? 1 : 0;
-              }
-              if (periods.events[i].type_id === 2) {
-                  index = 2;
-              }
+                if (periods.events[i].type_id === 1) {
+                    index = periods.events[i].reason_id !== null ? 1 : 0;
+                }
+                if (periods.events[i].type_id === 2) {
+                    index = 2;
+                }
 
             }
             return className[index] || '';
@@ -376,17 +420,22 @@ export const absencesController = ng.controller('AbsencesController', ['$scope',
         vm.changeReason = (event: EventResponse): void => {
             /* Fetch all event id */
             let eventsArrayId = [];
-            event.dayHistory.forEach(periods => {
-                periods.events.forEach(period => {
-                    if ("reason_id" in period) {
-                        period.reason_id = event.globalReason;
-                        eventsArrayId.push(period.id);
-                    }
-                })
-            });
-            event.events.forEach(item => {
-                item.reason_id = event.globalReason;
-            });
+            if (isWidget) {
+                eventsArrayId.push(event.id);
+                event.globalReason = event.reason_id;
+            } else {
+                event.dayHistory.forEach(periods => {
+                    periods.events.forEach(period => {
+                        if ("reason_id" in period) {
+                            period.reason_id = event.globalReason;
+                            eventsArrayId.push(period.id);
+                        }
+                    })
+                });
+                event.events.forEach(item => {
+                    item.reason_id = event.globalReason;
+                });
+            }
             eventsArrayId = eventsArrayId.filter((item, index) => eventsArrayId.indexOf(item) === index);
             vm.events.updateReason(eventsArrayId, event.globalReason);
         };
@@ -430,7 +479,8 @@ export const absencesController = ng.controller('AbsencesController', ['$scope',
         vm.toggleAbsenceRegularised = (history, event): void => {
             let eventsId = [history.id];
             vm.events.updateRegularized(eventsId, history.counsellor_regularisation);
-            event.globalCounsellorRegularisation = initGlobalCounsellorRegularisation(event);
+            if (!isWidget) event.globalCounsellorRegularisation = initGlobalCounsellorRegularisation(event);
+            else vm.events.page = 0;
         };
 
         /* Toggle Collapse */
@@ -459,14 +509,14 @@ export const absencesController = ng.controller('AbsencesController', ['$scope',
             let eventsArrayId = [history.id];
             event.dayHistory.forEach(e => {
                 e.events.forEach(item => {
-                   if (item.id === history.id) {
-                       item.reason_id = history.reason_id;
+                    if (item.id === history.id) {
+                        item.reason_id = history.reason_id;
 
-                       // check if id already exist in array
-                       if (eventsArrayId.indexOf(item.id) === -1) {
-                           eventsArrayId.push(item.id);
-                       }
-                   }
+                        // check if id already exist in array
+                        if (eventsArrayId.indexOf(item.id) === -1) {
+                            eventsArrayId.push(item.id);
+                        }
+                    }
                 });
             });
             vm.events.updateReason(eventsArrayId, history.reason_id);
@@ -484,6 +534,11 @@ export const absencesController = ng.controller('AbsencesController', ['$scope',
         vm.selectStudent = function (model: Student, option: Student) {
             vm.updateFilter(option);
             vm.studentSearchInput = '';
+        };
+
+        vm.selectStudentFromDashboard = function (model: Student, option: Student) {
+            vm.filter.students = [];
+            vm.selectStudent(model, option);
         };
 
         vm.excludeStudentFromFilter = (student) => {
@@ -587,4 +642,4 @@ export const absencesController = ng.controller('AbsencesController', ['$scope',
         $scope.$watch(() => window.structure, () => {
             getEvents();
         });
-}]);
+    }]);

@@ -1,0 +1,81 @@
+.side-widget {
+  height: 100%;
+  display: inline-block;
+  position: relative;
+  float: left;
+
+  .content {
+    border-left: solid 54px $presences-main;
+    padding-left: 0;
+    height: 100%;
+    width: 0;
+    overflow: hidden;
+    background: $white;
+
+    > div {
+      height: 100%;
+    }
+  }
+
+  .title {
+    position: absolute;
+    bottom: 100%;
+    left: 52px;
+    background: none;
+    transform-origin: 0 0;
+    transform: rotate(90deg);
+    width: 100%;
+    margin-bottom: -52px;
+    white-space: nowrap;
+    line-height: 52px;
+    text-indent: 25px;
+
+    h2 {
+      color: $white;
+      font-size: 20px;
+    }
+  }
+
+  .triangle.open-button {
+    width: 26px;
+    height: 27px;
+    display: inline-block;
+    margin-right: 15px;
+    transform: rotate(180deg);
+
+    &:before {
+      content: ' ';
+      width: 0;
+      height: 0;
+      border-style: solid;
+      border-width: 0 12px 18px 12px;
+      border-color: transparent transparent $white transparent;
+      display: inline-block;
+      margin-left: -24px;
+    }
+  }
+
+  &.opened {
+    .title {
+      transform: rotate(0deg) !important;
+      margin-bottom: unset !important;
+      bottom: unset !important;
+      left: unset !important;
+      transform-origin: unset !important;
+      line-height: initial !important;
+      text-indent: 15px !important;
+    }
+
+    .triangle.open-button {
+      transform: rotate(90deg);
+      float: right;
+      margin-top: 10px;
+    }
+
+    .content {
+      width: 405px;
+      border-top: solid 54px $presences-main;
+      border-left: none;
+    }
+  }
+}

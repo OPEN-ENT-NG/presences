@@ -84,16 +84,19 @@
 
         <!-- Absence regularised -->
         <th class="text-center">
-            <label class="regularized-absence" data-ng-click="vm.stopAbsencePropagation($event)">
-                <input type="checkbox" data-ng-model="event.globalCounsellorRegularisation" data-ng-change="vm.toggleAllAbsenceRegularised(event)">
-                <span ng-class="{active: event.globalCounsellorRegularisation, half: vm.regularizedChecked(event)}" class="checkmark"></span>
+            <label class="checkbox" ng-class="{half: vm.regularizedChecked(event)}"
+                   data-ng-click="vm.stopAbsencePropagation($event)">
+                <input type="checkbox" data-ng-model="event.globalCounsellorRegularisation"
+                       data-ng-change="vm.toggleAllAbsenceRegularised(event)">
+                <span></span>
             </label>
         </th>
 
         <!-- description content -->
     <tr ng-class="{open: vm.isCollapsibleOpen($index)}" class="absences-table-body-description">
         <td colspan="7" data-ng-show="event.events.length !== 0">
-            <div class="absences-table-body-description-content" data-ng-repeat="history in event.events |  orderBy:'+end_date'">
+            <div class="absences-table-body-description-content"
+                 data-ng-repeat="history in event.events |  orderBy:'+end_date'">
 
                 <!--Add space-->
                 <span></span>
@@ -114,9 +117,10 @@
                 </span>
 
                 <!--Regularized-->
-                <label class="absences-table-body-description-content-checkbox regularized-absence">
-                    <input type="checkbox" data-ng-model="history.counsellor_regularisation" data-ng-change="vm.toggleAbsenceRegularised(history, event)">
-                    <span ng-class="{active: history.counsellor_regularisation}" class="checkmark"></span>
+                <label class="absences-table-body-description-content-checkbox checkbox">
+                    <input type="checkbox" data-ng-model="history.counsellor_regularisation"
+                           data-ng-change="vm.toggleAbsenceRegularised(history, event)">
+                    <span></span>
                 </label>
 
             </div>

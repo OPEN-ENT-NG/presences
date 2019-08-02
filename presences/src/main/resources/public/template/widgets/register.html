@@ -1,0 +1,19 @@
+<div class="registers register-widget height-100">
+    <div class="search-field">
+        <div class="eleven centered search-input">
+            <async-autocomplete ng-disabled="false"
+                                ng-model=""
+                                ng-change=""
+                                on-search=""
+                                options=""
+                                placeholder="presences.exemptions.search.student"
+                                search=""></async-autocomplete>
+        </div>
+    </div>
+    <div class="students eleven centered ">
+        <div class="student" ng-repeat="x in [].constructor(30) track by $index">
+            <span ng-if="$index !== 5">&nbsp;</span>
+            <span ng-if="$index === 5">En cours de développement</span>
+        </div>
+    </div>
+</div>

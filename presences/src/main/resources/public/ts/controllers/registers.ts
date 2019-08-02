@@ -23,6 +23,7 @@ interface Filter {
 }
 
 interface ViewModel {
+    widget: { forgottenRegisters: boolean, dayCourses: boolean };
     register: Register;
     courses: Courses;
     filter: Filter;
@@ -97,6 +98,10 @@ export const registersController = ng.controller('RegistersController',
     ['$scope', '$route', '$rootScope', 'SearchService', 'GroupService',
         function ($scope: Scope, $route, $rootScope, SearchService: SearchService, GroupService: GroupService) {
             const vm: ViewModel = this;
+            vm.widget = {
+                forgottenRegisters: false,
+                dayCourses: false
+            };
             const actions = {
                 registers: () => {
                     template.open('registers', 'register/list');
@@ -118,7 +123,7 @@ export const registersController = ng.controller('RegistersController',
                     }
                     vm.loadCourses(extractSelectedTeacherIds(), extractSelectedGroupsName());
                 },
-                getRegister: async () => {
+                getRegister: async ({id}) => {
                     template.open('registers', 'register/register');
                     if (vm.register !== undefined) {
                         template.open('register', 'register/list-view');
@@ -133,14 +138,19 @@ export const registersController = ng.controller('RegistersController',
                         if (vm.register.teachers.length > 0) vm.filter.selected.registerTeacher = vm.register.teachers[0];
                         $scope.safeApply();
                     } else {
-                        $scope.redirectTo('/registers');
+                        vm.register = new Register();
+                        vm.register.id = id;
+                        vm.register.eventer.once('loading::true', () => $scope.safeApply());
+                        vm.register.eventer.once('loading::false', () => $scope.safeApply());
+                        await vm.register.sync();
+                        if (vm.register.teachers.length > 0 && _.countBy(vm.register.teachers, (teacher) => teacher.id === vm.filter.selected.registerTeacher.id) === 0)
+                            vm.filter.selected.registerTeacher = vm.register.teachers[0];
                     }
-                }
+                },
+                forgottenRegisterWidget: () => vm.loadCourses(extractSelectedTeacherIds(), extractSelectedGroupsName()),
+                dayCoursesWidget: () => vm.loadCourses(extractSelectedTeacherIds(), extractSelectedGroupsName(), undefined, undefined, undefined, false)
             };
 
-            $scope.$watch(() => $route.current.action, () => {
-                actions[$route.current.action]($route.current.params);
-            });
             vm.register = undefined;
             vm.courses = new Courses();
             vm.courses.eventer.on('loading::true', () => $scope.safeApply());
@@ -393,7 +403,7 @@ export const registersController = ng.controller('RegistersController',
             };
 
             vm.toggleLateness = async (student) => {
-                const endDateTime = moment(moment(vm.register.start_date).format(DateUtils.FORMAT["YEAR-MONTH-DAY"]) +  ' ' +
+                const endDateTime = moment(moment(vm.register.start_date).format(DateUtils.FORMAT["YEAR-MONTH-DAY"]) + ' ' +
                     moment().millisecond(0).second(0).format(DateUtils.FORMAT["HOUR-MINUTES"]));
                 await toggleEvent(student, 'lateness', vm.register.start_date, endDateTime.format(DateUtils.FORMAT["YEAR-MONTH-DAY-HOUR-MIN-SEC"]));
                 student.lateness.end_date_time = endDateTime.toDate();
@@ -436,7 +446,7 @@ export const registersController = ng.controller('RegistersController',
                     const endDate = moment(vm.filter.student.lateness.end_date_time).format("YYYY-MM-DDTHH:mm:ss");
                     item.events.forEach((e, index) => {
                         if (e.id === vm.filter.student.lateness.id) {
-                            if (!((item.end <= endDate ) || (endDate > item.start))) {
+                            if (!((item.end <= endDate) || (endDate > item.start))) {
                                 item.events.splice(index, 1);
                             }
                         }
@@ -466,7 +476,7 @@ export const registersController = ng.controller('RegistersController',
 
             vm.isCurrentSlot = function (slot) {
                 // return Math.abs(moment(slot.start).diff(vm.register.start_date)) < 3000 && Math.abs(moment(slot.end).diff(vm.register.end_date)) < 3000;
-                return ((slot.start >= vm.register.start_date) || (vm.register.start_date < slot.end)) && ((slot.end <= vm.register.end_date) || (vm.register.end_date > slot.start ))
+                return ((slot.start >= vm.register.start_date) || (vm.register.start_date < slot.end)) && ((slot.end <= vm.register.end_date) || (vm.register.end_date > slot.start))
             };
 
             vm.loadCourses = async function (users: string[] = [model.me.userId], groups: string[] = [], structure: string = window.structure.id,
@@ -475,9 +485,6 @@ export const registersController = ng.controller('RegistersController',
                                              forgotten_registers: boolean = vm.filter.forgotten): Promise<void> {
                 vm.courses.clear();
                 await vm.courses.sync(users, groups, structure, start_date, end_date, forgotten_registers);
-                // if (vm.courses.all.length > 0 && $route.current.action === 'getRegister') {
-                //     await setCurrentRegister();
-                // }
             };
 
             vm.isFuturCourse = function (course) {
@@ -558,13 +565,27 @@ export const registersController = ng.controller('RegistersController',
                 return [...classes, ...groups];
             };
 
-            $scope.$watch(() => window.structure, () => {
-                if ($route.current.action === "registers") {
-                    actions[$route.current.action]($route.current.params)
-                } else {
-                    $scope.redirectTo('/registers');
+            function startAction() {
+                switch ($route.current.action) {
+                    case 'getRegister':
+                    case 'registers': {
+                        actions[$route.current.action]($route.current.params);
+                        break;
+                    }
+                    case 'dashboard': {
+                        if (vm.widget.forgottenRegisters) {
+                            actions.forgottenRegisterWidget();
+                        } else if (vm.widget.dayCourses) {
+                            actions.dayCoursesWidget();
+                        }
+                        break;
+                    }
+                    default:
+                        return;
                 }
-            });
+            }
 
-            actions[$route.current.action]($route.current.params)
+            $scope.$watch(() => window.structure, startAction);
+            $scope.$watch(() => $route.current.action, startAction);
+            startAction();
         }]);

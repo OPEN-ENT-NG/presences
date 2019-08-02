@@ -1,0 +1,30 @@
+.register-widget {
+  .search-field {
+    margin-top: 5px;
+  }
+
+  .search-input {
+    box-shadow: 0 2px 2px rgba(0, 0, 0, 0.21);
+    box-sizing: border-box;
+  }
+
+  .students {
+    margin-top: 15px;
+    box-sizing: border-box;
+    height: calc(100% - 130px);
+    overflow-y: scroll;
+  }
+
+  .student {
+    width: 100%;
+    height: 38px;
+    background: $presences-grey-smoke;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: $presences-middle-grey;
+    font-size: 18px;
+    font-weight: bold;
+    margin: 4px 0;
+  }
+}

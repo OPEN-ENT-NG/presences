@@ -37,6 +37,7 @@ export class Courses extends LoadingCollection {
 
 
     async sync(teachers: string[] = null, groups: string[], structure: string, start: string, end: string, forgottenRegisters: boolean = false) {
+        if (this.loading) return;
         this.loading = true;
         try {
             let teacherFilter = '';

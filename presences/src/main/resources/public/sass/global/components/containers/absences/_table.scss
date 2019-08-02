@@ -6,8 +6,13 @@
       }
     }
   }
+
   &-body {
     border-bottom: 1px solid $presences-grey-light;
+
+    .regularized-absence .checkmark {
+      margin-top: -8px;
+    }
 
     &-student {
       display: flex;
@@ -59,6 +64,10 @@
         &-checkbox {
           margin-left: 100px;
           padding-right: 14px;
+
+          .checkmark {
+            margin-top: -1px !important;
+          }
         }
       }
     }
@@ -111,6 +120,8 @@ i.add:before {
   margin-bottom: 0;
   cursor: pointer;
   font-size: 22px;
+  width: 20px;
+  height: 20px;
 }
 
 /* Hide the browser's default checkbox */
@@ -124,16 +135,18 @@ i.add:before {
 
 /* Create a custom regularized checkbox */
 .checkmark {
-  height: 25px;
-  width: 25px;
+  height: 18px;
+  width: 18px;
   border: 2px solid $presences-main;
   border-radius: 4px;
+
   &.active {
     background: $presences-main;
+
     &:after {
       display: block;
-      left: 11px;
-      top: 6px;
+      left: 7px;
+      top: 3px;
       width: 6px;
       height: 11px;
       border: solid $white;
@@ -143,12 +156,14 @@ i.add:before {
       transform: rotate(45deg);
     }
   }
+
   &.half {
     background: $presences-main;
+
     &:after {
       display: block;
-      left: 13px;
-      top: 8px;
+      left: 10px;
+      top: 5px;
       height: 11px;
       border: solid $white;
       border-width: 0 3px 3px 0;

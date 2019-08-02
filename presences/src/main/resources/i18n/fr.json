@@ -99,5 +99,17 @@
   "presences.register.legend.student": "Elève",
   "presences.register.legend.state": "Etat",
   "presences.register.legend.history": "Historique du jour",
-  "presences.registers.attenders": "Présents"
+  "presences.registers.attenders": "Présents",
+  "presences.widgets.alerts.absences": "alertes absences",
+  "presences.widgets.alerts.lateness": "alertes retards",
+  "presences.widgets.alerts.incidents": "alertes incidents",
+  "presences.widgets.alerts.textbooks": "alertes carnet oublié",
+  "presences.widgets.day.forgotten.registers": "Appels oubliés du jour",
+  "presences.widgets.day.courses": "Appels du jour",
+  "presences.widgets.statements": "Déclarations des parents à traiter",
+  "presences.widgets.remarks": "Observations",
+  "presences.widgets.absences": "Régularisation des absences",
+  "presences.widgets.absences.regularized": "Régularisé",
+  "presences.widgets.register": "Appel en cours",
+  "presences.widgets.day_presences": "Présences du jour"
 }

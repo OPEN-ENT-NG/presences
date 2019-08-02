@@ -26,7 +26,7 @@ public interface EventService {
      */
     void get(String structureId, String startDate, String endDate,
              List<String> eventType, List<String> userId, JsonArray userIdFromClasses,
-             List<String> classes, boolean regularized, Integer page, Handler<Either<String, JsonArray>> handler);
+             List<String> classes, Boolean regularized, Integer page, Handler<Either<String, JsonArray>> handler);
 
     /**
      * Get events page number
@@ -41,7 +41,7 @@ public interface EventService {
      * @param handler           function handler returning data
      */
     void getPageNumber(String structureId, String startDate, String endDate, List<String> eventType,
-                       List<String> userId, boolean regularized, JsonArray userIdFromClasses,
+                       List<String> userId, Boolean regularized, JsonArray userIdFromClasses,
                        Handler<Either<String, JsonObject>> handler);
 
     /**
@@ -81,8 +81,9 @@ public interface EventService {
 
     /**
      * Update regularized for each event
-     * @param event     Event body that can contain list of id's events and its reason_id retrieved
-     * @param handler   Function handler returning data
+     *
+     * @param event   Event body that can contain list of id's events and its reason_id retrieved
+     * @param handler Function handler returning data
      */
     void changeRegularizedEvents(JsonObject event, Handler<Either<String, JsonObject>> handler);
 

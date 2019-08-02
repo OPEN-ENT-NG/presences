@@ -22,6 +22,16 @@ public class Presences extends BaseServer {
     public static final String READ_EXEMPTION = "presences.exemption.read";
     public static final String MANAGE_EXEMPTION = "presences.exemption.manage";
 
+    // Widget rights
+    public static final String ALERTS_WIDGET = "presences.widget.alerts";
+    public static final String FORGOTTEN_REGISTERS_WIDGET = "presences.widget.forgotten_registers";
+    public static final String STATEMENTS_WIDGET = "presences.widget.statements";
+    public static final String REMARKS_WIDGET = "presences.widget.remarks";
+    public static final String ABSENCES_WIDGET = "presences.widget.absences";
+    public static final String DAY_COURSES_WIDGET = "presences.widget.day_courses";
+    public static final String CURRENT_COURSE_WIDGET = "presences.widget.current_course";
+    public static final String DAY_PRESENCES_WIDGET = "presences.widget.day_presences";
+
     public static Integer PAGE_SIZE = 20;
 
     @Override
@@ -41,6 +51,9 @@ public class Presences extends BaseServer {
         addController(new ExemptionController(eb));
         addController(new SearchController(eb));
         addController(new CalendarController(eb));
+
+        // Controller that create fake rights for widgets
+        addController(new FakeRight());
 
         try {
             new CronTrigger(vertx, exportCron).schedule(new AbsenceRemovalTask(vertx.eventBus()));
