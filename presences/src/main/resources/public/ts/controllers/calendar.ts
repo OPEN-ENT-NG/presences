@@ -63,13 +63,13 @@ export const calendarController = ng.controller('CalendarController', ['$scope',
         vm.courses = {list: []};
         vm.slots = {list: []};
 
-        model.calendar.eventer.on('calendar.create-item', () => {
-            console.info(model.calendar.newItem);
-            console.info(model.calendar.newItem.beginning.format());
-            console.info(model.calendar.newItem.beginning.toString());
-            console.info(model.calendar.newItem.beginning.isValid());
-            console.info(model.calendar.newItem.beginning.toLocaleString());
-        });
+        // model.calendar.eventer.on('calendar.create-item', () => {
+        //     console.info(model.calendar.newItem);
+        //     console.info(model.calendar.newItem.beginning.format());
+        //     console.info(model.calendar.newItem.beginning.toString());
+        //     console.info(model.calendar.newItem.beginning.isValid());
+        //     console.info(model.calendar.newItem.beginning.toLocaleString());
+        // });
 
         $scope.$watch(() => window.structure, async () => {
             const structure_slots = await StructureService.getSlotProfile(window.structure.id);
@@ -79,6 +79,8 @@ export const calendarController = ng.controller('CalendarController', ['$scope',
         });
 
         model.calendar.on('date-change', initCalendar);
+
+        $scope.$on('$destroy', () => model.calendar.callbacks['date-change'] = []);
 
         async function initCalendar() {
             vm.show.loader = true;
