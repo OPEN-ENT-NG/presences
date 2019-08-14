@@ -1,6 +1,7 @@
 package fr.openent.incidents.controllers;
 
 import fr.openent.incidents.Incidents;
+import fr.openent.incidents.constants.Actions;
 import fr.openent.incidents.export.IncidentsCSVExport;
 import fr.openent.incidents.service.IncidentsService;
 import fr.openent.incidents.service.impl.DefaultIncidentsService;
@@ -17,6 +18,7 @@ import io.vertx.core.http.HttpServerRequest;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import org.entcore.common.controller.ControllerHelper;
+import org.entcore.common.http.filter.Trace;
 import org.entcore.common.http.response.DefaultResponseHandler;
 import org.entcore.common.user.UserUtils;
 
@@ -142,6 +144,7 @@ public class IncidentsController extends ControllerHelper {
 
     @Post("/incidents")
     @ApiDoc("Create incident")
+    @Trace(Actions.INCIDENT_CREATION)
     public void createIncident(final HttpServerRequest request) {
         RequestUtils.bodyToJson(request, pathPrefix + "incidents", incidents -> {
             incidentsService.create(incidents, DefaultResponseHandler.arrayResponseHandler(request));
@@ -150,6 +153,7 @@ public class IncidentsController extends ControllerHelper {
 
     @Put("/incidents/:id")
     @ApiDoc("Update incident")
+    @Trace(Actions.INCIDENT_UPDATE)
     public void updateIncident(final HttpServerRequest request) {
         if (!request.params().contains("id")) {
             badRequest(request);
@@ -163,6 +167,7 @@ public class IncidentsController extends ControllerHelper {
 
     @Delete("/incidents/:id")
     @ApiDoc("Delete incident")
+    @Trace(Actions.INCIDENT_DELETION)
     public void deleteIncident(final HttpServerRequest request) {
         if (!request.params().contains("id")) {
             badRequest(request);

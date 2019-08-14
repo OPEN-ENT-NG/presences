@@ -1,6 +1,7 @@
 package fr.openent.presences.controller;
 
 import fr.openent.presences.Presences;
+import fr.openent.presences.constants.Actions;
 import fr.openent.presences.enums.RegisterStatus;
 import fr.openent.presences.security.CreateRegisterRight;
 import fr.openent.presences.service.RegisterService;
@@ -16,6 +17,7 @@ import io.vertx.core.eventbus.EventBus;
 import io.vertx.core.http.HttpServerRequest;
 import org.entcore.common.controller.ControllerHelper;
 import org.entcore.common.http.filter.ResourceFilter;
+import org.entcore.common.http.filter.Trace;
 import org.entcore.common.user.UserUtils;
 
 public class RegisterController extends ControllerHelper {
@@ -53,6 +55,7 @@ public class RegisterController extends ControllerHelper {
     @Post("/registers")
     @ApiDoc("Create given register")
     @SecuredAction(Presences.CREATE_REGISTER)
+    @Trace(Actions.REGISTER_CREATION)
     public void postRegister(HttpServerRequest request) {
         RequestUtils.bodyToJson(request, pathPrefix + "register", register -> UserUtils.getUserInfos(eb, request, user -> {
             registerService.create(register, user, either -> {
@@ -70,6 +73,7 @@ public class RegisterController extends ControllerHelper {
     @ApiDoc("Update given register status")
     @ResourceFilter(CreateRegisterRight.class)
     @SecuredAction(value = "", type = ActionType.RESOURCE)
+    @Trace(Actions.REGISTER_VALIDATION)
     public void updateStatus(HttpServerRequest request) {
         RequestUtils.bodyToJson(request, body -> {
             if (!body.containsKey("state_id") && !RegisterStatus.TODO.getStatus().equals(body.getInteger("state_id"))

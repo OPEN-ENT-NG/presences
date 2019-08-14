@@ -2,6 +2,7 @@ package fr.openent.presences.controller;
 
 import fr.openent.presences.Presences;
 import fr.openent.presences.common.helper.FutureHelper;
+import fr.openent.presences.constants.Actions;
 import fr.openent.presences.export.ExemptionCSVExport;
 import fr.openent.presences.security.ExportRight;
 import fr.openent.presences.security.ManageExemptionRight;
@@ -22,6 +23,7 @@ import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import org.entcore.common.controller.ControllerHelper;
 import org.entcore.common.http.filter.ResourceFilter;
+import org.entcore.common.http.filter.Trace;
 import org.entcore.common.http.response.DefaultResponseHandler;
 
 import java.util.ArrayList;
@@ -157,6 +159,7 @@ public class ExemptionController extends ControllerHelper {
     @Post("/exemptions")
     @ApiDoc("Create given exemptions")
     @SecuredAction(Presences.MANAGE_EXEMPTION)
+    @Trace(Actions.EXEMPTION_CREATION)
     public void createExemptions(final HttpServerRequest request) {
         RequestUtils.bodyToJson(request, pathPrefix + "exemption", exemptions -> {
             exemptionService.create(
@@ -175,6 +178,7 @@ public class ExemptionController extends ControllerHelper {
     @ApiDoc("Update given exemption")
     @ResourceFilter(ManageExemptionRight.class)
     @SecuredAction(value = "", type = ActionType.RESOURCE)
+    @Trace(Actions.EXEMPTION_UPDATE)
     public void updateExemption(final HttpServerRequest request) {
         if (!request.params().contains("id")) {
             badRequest(request);
@@ -199,6 +203,7 @@ public class ExemptionController extends ControllerHelper {
     @ApiDoc("Update given exemption")
     @ResourceFilter(ManageExemptionRight.class)
     @SecuredAction(value = "", type = ActionType.RESOURCE)
+    @Trace(Actions.EXEMPTION_DELETION)
     public void deleteExemption(final HttpServerRequest request) {
         List<String> exemption_ids = request.params().contains("id") ? Arrays.asList(request.getParam("id").split("\\s*,\\s*")) : null;
         exemptionService.delete(exemption_ids, DefaultResponseHandler.arrayResponseHandler(request));

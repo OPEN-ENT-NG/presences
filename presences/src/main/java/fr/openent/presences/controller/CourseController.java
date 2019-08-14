@@ -3,6 +3,7 @@ package fr.openent.presences.controller;
 import fr.openent.presences.Presences;
 import fr.openent.presences.common.helper.DateHelper;
 import fr.openent.presences.common.helper.FutureHelper;
+import fr.openent.presences.constants.Actions;
 import fr.openent.presences.enums.RegisterStatus;
 import fr.openent.presences.export.RegisterCSVExport;
 import fr.openent.presences.helper.CourseHelper;
@@ -33,6 +34,7 @@ import io.vertx.core.http.HttpServerRequest;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import org.entcore.common.controller.ControllerHelper;
+import org.entcore.common.http.filter.Trace;
 import org.entcore.common.neo4j.Neo4j;
 import org.entcore.common.neo4j.Neo4jResult;
 import org.entcore.common.user.UserInfos;
@@ -112,6 +114,7 @@ public class CourseController extends ControllerHelper {
     @Post("/courses/:id/notify")
     @ApiDoc("Notify user that it does not made register in time")
     @SecuredAction(Presences.NOTIFY)
+    @Trace(Actions.NOTIFY_REGISTER_TEACHER)
     public void notify(HttpServerRequest request) {
         RequestUtils.bodyToJson(request, requestBody -> {
             if (!requestBody.containsKey("start") || !requestBody.containsKey("end")) {

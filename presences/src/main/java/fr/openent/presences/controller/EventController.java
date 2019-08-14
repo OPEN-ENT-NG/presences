@@ -2,6 +2,7 @@ package fr.openent.presences.controller;
 
 import fr.openent.presences.Presences;
 import fr.openent.presences.common.helper.FutureHelper;
+import fr.openent.presences.constants.Actions;
 import fr.openent.presences.enums.EventType;
 import fr.openent.presences.security.CreateEventRight;
 import fr.openent.presences.service.EventService;
@@ -20,6 +21,7 @@ import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import org.entcore.common.controller.ControllerHelper;
 import org.entcore.common.http.filter.ResourceFilter;
+import org.entcore.common.http.filter.Trace;
 import org.entcore.common.http.response.DefaultResponseHandler;
 import org.entcore.common.neo4j.Neo4j;
 import org.entcore.common.neo4j.Neo4jResult;
@@ -116,6 +118,7 @@ public class EventController extends ControllerHelper {
     @Post("/events")
     @ApiDoc("Create event")
     @SecuredAction(Presences.CREATE_EVENT)
+    @Trace(Actions.EVENT_CREATION)
     public void postEvent(HttpServerRequest request) {
         RequestUtils.bodyToJson(request, pathPrefix + "event", event -> {
             if (!isValidBody(event)) {
@@ -139,6 +142,7 @@ public class EventController extends ControllerHelper {
     @ApiDoc("Update reason in event")
     @ResourceFilter(CreateEventRight.class)
     @SecuredAction(value = "", type = ActionType.RESOURCE)
+    @Trace(Actions.EVENT_SET_REASON)
     public void changeReasonEvents(HttpServerRequest request) {
         RequestUtils.bodyToJson(request, event -> {
             eventService.changeReasonEvents(event, DefaultResponseHandler.defaultResponseHandler(request));
@@ -149,6 +153,7 @@ public class EventController extends ControllerHelper {
     @ApiDoc("Update given event")
     @ResourceFilter(CreateEventRight.class)
     @SecuredAction(value = "", type = ActionType.RESOURCE)
+    @Trace(Actions.EVENT_UPDATE)
     public void putEvent(HttpServerRequest request) {
         RequestUtils.bodyToJson(request, pathPrefix + "event", event -> {
             if (!isValidBody(event)
@@ -181,6 +186,7 @@ public class EventController extends ControllerHelper {
     @ApiDoc("Delete given event")
     @ResourceFilter(CreateEventRight.class)
     @SecuredAction(value = "", type = ActionType.RESOURCE)
+    @Trace(Actions.EVENT_DELETION)
     public void deleteEvent(HttpServerRequest request) {
         try {
             Integer eventId = Integer.parseInt(request.getParam("id"));
