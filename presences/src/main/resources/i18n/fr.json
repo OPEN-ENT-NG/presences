@@ -96,5 +96,9 @@
   "presences.forgotten.notebook": "Carnet oublié",
   "presences.exemption": "Dispense",
   "presences.calendar.exemption.code": "D",
-  "presences.exemptions.form.sniplet.title": "Créer une dispense"
+  "presences.exemptions.form.sniplet.title": "Créer une dispense",
+  "presences.register.legend.student": "Elève",
+  "presences.register.legend.state": "Etat",
+  "presences.register.legend.history": "Historique du jour",
+  "presences.registers.attenders": "Présents"
 }

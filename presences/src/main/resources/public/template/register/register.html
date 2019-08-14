@@ -52,12 +52,31 @@
                ng-click="template.open('register', 'register/split-view')"
                ng-class="{ active: template.contains('register', 'register/split-view') }"></i>
         </div>
-        <div class="card cell radius">
-            <div class="horizontal-spacing vertical-spacing-twice font-bold">
+        <div class="card radius cell">
+            <span class="cell horizontal-spacing vertical-spacing-twice" style="padding-right: 0;">
+                <i18n>presences.registers.attenders</i18n> :
+            </span>
+            <div class="horizontal-spacing vertical-spacing-twice font-bold cell">
                 [[vm.register.students.length - vm.register.absenceCounter]]
                 /
                 [[vm.register.students.length]]
             </div>
+        </div>
+        <div class="card event-legend radius cell horizontal-margin">
+            <ul class="vertical-spacing-twice horizontal-margin">
+                <li class="absence">
+                    <i18n>presences.register.event_type.absences</i18n>
+                </li>
+                <li class="lateness">
+                    <i18n>presences.register.event_type.lateness</i18n>
+                </li>
+                <li class="departure">
+                    <i18n>presences.register.event_type.departure</i18n>
+                </li>
+                <li class="remark">
+                    <i18n>presences.register.event_type.remark</i18n>
+                </li>
+            </ul>
         </div>
         <button class="right-magnet"
                 data-ng-click="vm.register.setStatus(vm.RegisterStatus.DONE)"
@@ -69,8 +88,8 @@
          ng-show="vm.register && !vm.register.loading">
         <container template="register"></container>
     </div>
-    <button data-ng-click="vm.register.setStatus(vm.RegisterStatus.DONE)"
-            ng-show="vm.register && !vm.register.loading">
-        <i18n>presences.register.validation</i18n>
-    </button>
+    <!--    <button data-ng-click="vm.register.setStatus(vm.RegisterStatus.DONE)"-->
+    <!--            ng-show="vm.register && !vm.register.loading">-->
+    <!--        <i18n>presences.register.validation</i18n>-->
+    <!--    </button>-->
 </div>
