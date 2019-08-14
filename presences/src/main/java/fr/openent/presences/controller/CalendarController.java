@@ -2,6 +2,7 @@ package fr.openent.presences.controller;
 
 import fr.openent.presences.common.helper.DateHelper;
 import fr.openent.presences.common.helper.FutureHelper;
+import fr.openent.presences.common.security.SearchRight;
 import fr.openent.presences.helper.CourseHelper;
 import fr.openent.presences.helper.MapHelper;
 import fr.openent.presences.helper.SubjectHelper;
@@ -24,6 +25,7 @@ import io.vertx.core.http.HttpServerRequest;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import org.entcore.common.controller.ControllerHelper;
+import org.entcore.common.http.filter.ResourceFilter;
 
 import java.security.NoSuchAlgorithmException;
 import java.text.ParseException;
@@ -55,7 +57,9 @@ public class CalendarController extends ControllerHelper {
     }
 
     @Get("/calendar/courses")
-    @SecuredAction(value = "", type = ActionType.AUTHENTICATED)
+    @ApiDoc("Retrieve all courses and events")
+    @SecuredAction(value = "", type = ActionType.RESOURCE)
+    @ResourceFilter(SearchRight.class)
     public void getCalendarCourses(HttpServerRequest request) {
         MultiMap params = request.params();
         if (!courseHelper.checkParams(params)) {
@@ -257,7 +261,8 @@ public class CalendarController extends ControllerHelper {
 
     @Get("/calendar/groups/:id/students")
     @ApiDoc("Retrieve students in given group")
-    @SecuredAction(value = "", type = ActionType.AUTHENTICATED)
+    @SecuredAction(value = "", type = ActionType.RESOURCE)
+    @ResourceFilter(SearchRight.class)
     public void getGroupStudents(HttpServerRequest request) {
         String groupIdentifier = request.getParam("id");
         groupService.getGroupStudents(groupIdentifier, arrayResponseHandler(request));

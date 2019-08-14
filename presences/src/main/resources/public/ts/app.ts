@@ -30,9 +30,6 @@ routes.define(function ($routeProvider) {
         .when('/group-absences', {
             action: 'group-absences'
         })
-        .when('/calendar/:studentId', {
-            action: 'calendar'
-        })
         .otherwise({
             redirectTo: '/dashboard'
         });
@@ -47,6 +44,14 @@ routes.define(function ($routeProvider) {
                 action: "getRegister"
             })
     }
+
+    if (model.me.hasWorkflow(rights.workflow.search)) {
+        $routeProvider
+            .when('/calendar/:studentId', {
+                action: 'calendar'
+            })
+    }
+
     if (model.me.hasWorkflow(rights.workflow.readExemption)) {
         $routeProvider.when('/exemptions', {
             action: 'exemptions'
