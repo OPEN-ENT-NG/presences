@@ -100,7 +100,7 @@ public class CalendarController extends ControllerHelper {
                         Future<JsonArray> eventsFuture = Future.future();
                         Future<JsonArray> exemptionsFuture = Future.future();
                         Future<JsonArray> incidentsFuture = Future.future();
-                        CompositeFuture.all(subjectsFuture, eventsFuture, exemptionsFuture).setHandler(futureEvent -> {
+                        CompositeFuture.all(subjectsFuture, eventsFuture, exemptionsFuture, incidentsFuture).setHandler(futureEvent -> {
                             if (futureEvent.failed()) {
                                 log.error("[CalendarController@getCalendarCourses] Failed to retrieve information", futureEvent.cause());
                                 renderError(request);
