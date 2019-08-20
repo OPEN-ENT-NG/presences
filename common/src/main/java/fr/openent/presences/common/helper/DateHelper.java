@@ -106,6 +106,28 @@ public class DateHelper {
         Date secondDate = parse(date2);
 
         return firstDate.after(secondDate) || firstDate.equals(secondDate);
+
+    }
+
+    /**
+     * Check if the date to compare is between start and end date
+     *
+     * @param startDateEventToCompareParam  startDateEvent chosen to compare
+     * @param endDateEventToCompareParam    endDateEvent chosen to compare
+     * @param startDateParam                start date compared
+     * @param endDateParam                  end date compared
+     * @return Boolean that match if the date to compare is between start and end date
+     */
+    public static boolean isBetween(String startDateEventToCompareParam, String endDateEventToCompareParam,
+                                    String startDateParam, String endDateParam) throws ParseException {
+        SimpleDateFormat sdf = getPsqlSimpleDateFormat();
+        Date startDateEventToCompare = sdf.parse(startDateEventToCompareParam);
+        Date endDateEventToCompare = sdf.parse(endDateEventToCompareParam);
+        Date slotStartDate = sdf.parse(startDateParam);
+        Date slotEndDate = sdf.parse(endDateParam);
+
+        return ((slotStartDate.after(startDateEventToCompare) || slotStartDate.equals(startDateEventToCompare)) || (startDateEventToCompare.before(slotEndDate)))
+                && ((slotEndDate.before(endDateEventToCompare) || slotEndDate.equals(endDateEventToCompare)) || (endDateEventToCompare.after(slotStartDate)));
     }
 
     /**

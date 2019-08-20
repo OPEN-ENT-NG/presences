@@ -1,8 +1,12 @@
 package fr.openent.presences;
 
 import fr.openent.presences.controller.*;
+import fr.openent.presences.cron.AbsenceRemovalTask;
+import fr.wseduc.cron.CronTrigger;
 import io.vertx.core.eventbus.EventBus;
 import org.entcore.common.http.BaseServer;
+
+import java.text.ParseException;
 
 public class Presences extends BaseServer {
 
@@ -26,14 +30,24 @@ public class Presences extends BaseServer {
         dbSchema = config.getString("db-schema");
         ebViescoAddress = "viescolaire";
         final EventBus eb = getEventBus(vertx);
+        final String exportCron = config.getString("export-cron");
+
 
         addController(new PresencesController(eb));
         addController(new CourseController(eb));
         addController(new RegisterController(eb));
+        addController(new AbsenceController(eb));
         addController(new EventController(eb));
         addController(new ExemptionController(eb));
         addController(new SearchController(eb));
         addController(new CalendarController(eb));
+
+        try {
+            new CronTrigger(vertx, exportCron).schedule(new AbsenceRemovalTask(vertx.eventBus()));
+        } catch (ParseException e) {
+            log.fatal(e.getMessage(), e);
+        }
+
     }
 
 }

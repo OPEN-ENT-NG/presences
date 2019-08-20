@@ -1,8 +1,7 @@
-import http from 'axios';
-import {moment} from 'entcore';
+import http, {AxiosResponse} from 'axios';
+import {_, moment} from 'entcore';
 import {DateUtils} from '@common/utils'
 import {EventType} from "./EventType";
-import {Mix} from "entcore-toolkit";
 import {LoadingCollection} from "@common/model";
 
 export interface Event {
@@ -18,6 +17,17 @@ export interface Event {
     register_id: number;
     type_id: number;
     event_type?: { id: number, label: string };
+}
+
+export interface EventResponse {
+    studentId: string;
+    displayName: string;
+    className: string;
+    date: string;
+    dayHistory: any[];
+    events: any[];
+    globalReason?: number;
+    globalCounsellorRegularisation?: boolean;
 }
 
 export class Event {
@@ -82,33 +92,71 @@ export class Event {
 }
 
 export class Events extends LoadingCollection {
-    all: Event[];
+    all: EventResponse[];
 
     pageCount: number;
     structureId: string;
     startDate: string;
     endDate: string;
-    eventType: string;
     userId: string;
     classes: string;
-    unjustified: boolean;
+
+    eventType: string;
     regularized: boolean;
 
-    // extract duplicated events
-    extractEvents(): void {
-        this.all.forEach((storedItem, storedIndex) => {
-            this.all.map((item, index) => {
-                if (storedIndex != index) {
-                    if (storedItem.event_type.id === item.event_type.id &&
-                        storedItem.student_id === item.student_id &&
-                        moment(storedItem.start_date).format('YYYY-MM-DD') === moment(item.start_date).format('YYYY-MM-DD')) {
-                        this.all.splice(storedIndex, 1);
+    static buildEventResponse(data: any[]): EventResponse[] {
+        let dataModel = [];
+        data.forEach(item => {
+            if (!dataModel.some(e => (JSON.stringify(e.dayHistory) == JSON.stringify(item.student.day_history)))) {
+                let eventsResponse = [];
+                let reasonIds = [];
+                let regularizedEvents = [];
+
+                item.student.day_history.forEach(eventsHistory => {
+                    eventsHistory.events.forEach(event => {
+                        if (!eventsResponse.some(element => element.id == event.id)) {
+                            eventsResponse.push(event);
+                        }
+                        if ("reason_id" in event) {
+                            reasonIds.push(event.reason_id);
+                        }
+                        regularizedEvents.push(event.counsellor_regularisation);
+                    });
+                });
+
+                /* store all reason id in an array and check if they are all
+                the same to display multiple select or unique */
+                let globalReason: number;
+                if (!reasonIds.every((val, i, arr) => val === arr[0])) {
+                    // all events will have different reason id
+                    globalReason = 0;
+                } else {
+                    globalReason = parseInt(_.uniq(reasonIds));
+                    if (isNaN(globalReason)) {
+                        globalReason = null;
                     }
                 }
-            })
-        })
 
-    }
+                /* check all events regularized in this event to display the global regularized value */
+                let globalCounsellorRegularisation;
+                globalCounsellorRegularisation = regularizedEvents.reduce( (accumulator, currentValue) => accumulator && currentValue);
+
+                dataModel.push({
+                    studentId: item.student_id,
+                    displayName: item.student.displayName,
+                    className: item.student.classeName,
+                    date:  moment(item.start_date).format(DateUtils.FORMAT["YEAR-MONTH-DAY"]),
+                    dayHistory: item.student.day_history,
+                    events: eventsResponse,
+                    courses: _.uniq(item.student.courses, "_id"),
+                    globalReason: globalReason,
+                    globalCounsellorRegularisation: globalCounsellorRegularisation,
+
+                });
+            }
+        });
+        return dataModel;
+    };
 
     async syncPagination() {
         this.loading = true;
@@ -131,10 +179,6 @@ export class Events extends LoadingCollection {
                 url += `&classes=${this.classes}`;
             }
 
-            if (this.unjustified) {
-                url += `&unjustified=${this.unjustified}`;
-            }
-
             if (this.regularized) {
                 url += `&regularized=${this.regularized}`;
             }
@@ -142,8 +186,8 @@ export class Events extends LoadingCollection {
             url += `&page=${this.page}`;
             const {data} = await http.get(url);
             this.pageCount = data.page_count;
-            this.all = Mix.castArrayAs(Event, data.all);
-            this.extractEvents();
+            this.all = Events.buildEventResponse(data.all);
+            console.log("events.all: ", this.all);
         } catch (err) {
             throw err;
         } finally {
@@ -158,12 +202,39 @@ export class Events extends LoadingCollection {
             throw err;
         }
     }
+
+    async updateRegularized(eventsId, regularized): Promise<void> {
+        try {
+            await http.put(`/presences/events/regularized`, {ids: eventsId, regularized: regularized});
+        } catch (err) {
+            throw err;
+        }
+    }
 }
 
 export class Absence extends Event {
     constructor(register_id: number, student_id: string, start_date: string, end_date: string) {
         super(register_id, student_id, start_date, end_date);
         this.type_id = EventType.ABSENCE;
+    }
+
+    toAbsenceJson(structureId: string, ownerId: string): Object {
+        return {
+            structure_id: structureId,
+            owner: ownerId,
+            reason_id: null,
+            ...(this.student_id ? {student_id: this.student_id} : {}),
+            ...(this.start_date ? {start_date: this.start_date} : {}),
+            ...(this.end_date ? {end_date: this.end_date} : {})
+        }
+    }
+
+    async createAbsence(structureId: string, ownerId: string): Promise<AxiosResponse> {
+        try {
+            return await http.post('/presences/absence', this.toAbsenceJson(structureId, ownerId));
+        } catch (err) {
+            throw err;
+        }
     }
 }
 

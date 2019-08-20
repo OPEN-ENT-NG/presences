@@ -5,6 +5,7 @@ import fr.openent.presences.common.helper.FutureHelper;
 import fr.openent.presences.common.helper.RegisterHelper;
 import fr.openent.presences.enums.EventType;
 import fr.openent.presences.enums.GroupType;
+import fr.openent.presences.service.AbsenceService;
 import fr.openent.presences.service.ExemptionService;
 import fr.openent.presences.service.GroupService;
 import fr.openent.presences.service.RegisterService;
@@ -16,6 +17,7 @@ import io.vertx.core.Future;
 import io.vertx.core.Handler;
 import io.vertx.core.eventbus.EventBus;
 import io.vertx.core.eventbus.Message;
+import io.vertx.core.json.Json;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import io.vertx.core.logging.Logger;
@@ -39,12 +41,14 @@ public class DefaultRegisterService implements RegisterService {
     private ExemptionService exemptionService;
     private EventBus eb;
     private RegisterHelper registerHelper;
+    private AbsenceService absenceService;
 
     public DefaultRegisterService(EventBus eb) {
         this.eb = eb;
         this.groupService = new DefaultGroupService(eb);
         this.exemptionService = new DefaultExemptionService(eb);
         this.registerHelper = new RegisterHelper(eb, Presences.dbSchema);
+        this.absenceService = new DefaultAbsenceService(eb);
     }
 
     @Override
@@ -102,7 +106,8 @@ public class DefaultRegisterService implements RegisterService {
                             LOGGER.error(message, result.left().getValue());
                             handler.handle(new Either.Left<>(message));
                         } else {
-                            handler.handle(new Either.Right<>(result.right().getValue()));
+                            /* Create absence on register */
+                            absenceInteraction(user, result.right().getValue(), handler);
                         }
                     });
                 });
@@ -110,6 +115,73 @@ public class DefaultRegisterService implements RegisterService {
                 handler.handle(new Either.Left<>("[Presences@DefaultRegisterService] Failed cast next register identifier"));
             }
         }));
+    }
+
+    private void absenceInteraction(UserInfos user, JsonObject finalResult, Handler<Either<String, JsonObject>> handler) {
+        absenceService.get(absenceResult -> {
+            if (absenceResult.isLeft()) {
+                String message = "[Presences@DefaultRegisterService] Failed to retrieve absence";
+                LOGGER.error(message, absenceResult.left().getValue());
+                handler.handle(new Either.Left<>(message));
+            } else {
+                getRegisterIdGroup(finalResult.getLong("id"), registerIdGroupResult -> {
+                    if (registerIdGroupResult.isLeft()) {
+                        String message = "[Presences@DefaultRegisterService] Failed to retrieve register id group reference";
+                        LOGGER.error(message, registerIdGroupResult.left().getValue());
+                        handler.handle(new Either.Left<>(message));
+                    } else {
+                        groupService.getGroupStudents(registerIdGroupResult.right().getValue().getString("group_id"), studentsIdsResult -> {
+                            if (studentsIdsResult.isLeft()) {
+                                String message = "[Presences@DefaultRegisterService] Failed to retrieve students info";
+                                LOGGER.error(message, studentsIdsResult.left().getValue());
+                                handler.handle(new Either.Left<>(message));
+                            } else {
+                                List<String> users = new ArrayList<>();
+                                for (int i = 0; i < studentsIdsResult.right().getValue().size() ; i++) {
+                                    users.add(studentsIdsResult.right().getValue().getJsonObject(i).getString("id"));
+                                }
+                                matchAbsenceToEvent(finalResult, users, user, matchingResult -> {
+                                    if (matchingResult.isLeft()) {
+                                        String message = "[Presences@DefaultRegisterService] Failed to create events with absence information";
+                                        LOGGER.error(message, studentsIdsResult.left().getValue());
+                                        handler.handle(new Either.Left<>(message));
+                                    } else {
+                                        /* Finish handler */
+                                        handler.handle(new Either.Right<>(finalResult));
+                                    }
+                                });
+                            }
+                        });
+                    }
+                });
+            }
+        });
+    }
+
+    private void getRegisterIdGroup(Long id, Handler<Either<String, JsonObject>> handler) {
+        String query = "SELECT * FROM presences.rel_group_register where register_id = ?";
+        JsonArray params = new JsonArray().add(id);
+        Sql.getInstance().prepared(query, params, SqlResult.validUniqueResultHandler(handler));
+    }
+
+    private void matchAbsenceToEvent(JsonObject finalResult, List<String> users, UserInfos user, Handler<Either<String, JsonArray>> handler) {
+        JsonArray params = new JsonArray();
+        String query = "WITH absence as (SELECT absence.id, absence.start_date, absence.end_date, absence.student_id " +
+                " FROM presences.absence WHERE absence.student_id IN " + Sql.listPrepared(users.toArray()) +
+                " AND absence.start_date <= ?" +
+                " AND absence.end_date >= ?)" +
+                " INSERT INTO presences.event (start_date, end_date, comment, counsellor_input, student_id, register_id, type_id, owner)" +
+                " (SELECT ?, ?, '', false, absence.student_id, ?, 1, ? FROM absence) ";
+
+        params.addAll(new JsonArray(users));
+        params.add(finalResult.getString("start_date"));
+        params.add(finalResult.getString("end_date"));
+        params.add(finalResult.getString("start_date"));
+        params.add(finalResult.getString("end_date"));
+        params.add(finalResult.getLong("id"));
+        params.add(user.getUserId());
+
+        Sql.getInstance().prepared(query, params, SqlResult.validResultHandler(handler));
     }
 
     @Override

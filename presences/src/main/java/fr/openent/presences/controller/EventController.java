@@ -51,10 +51,7 @@ public class EventController extends ControllerHelper {
         List<String> eventType = request.getParam("eventType") != null ? Arrays.asList(request.getParam("eventType").split("\\s*,\\s*")) : null;
         List<String> userId = request.getParam("userId") != null ? Arrays.asList(request.getParam("userId").split("\\s*,\\s*")) : null;
         List<String> classes = request.getParam("classes") != null ? Arrays.asList(request.getParam("classes").split("\\s*,\\s*")) : null;
-
-        boolean unjustified = request.params().contains("unjustified") && Boolean.parseBoolean(request.getParam("unjustified"));
         boolean regularized = request.params().contains("regularized") && Boolean.parseBoolean(request.getParam("regularized"));
-
         Integer page = request.getParam("page") != null ? Integer.parseInt(request.getParam("page")) : 0;
 
         if (!request.params().contains("structureId") || !request.params().contains("startDate") ||
@@ -86,9 +83,9 @@ public class EventController extends ControllerHelper {
                 }
             });
             eventService.get(structureId, startDate, endDate, eventType, userId, userIdFromClasses,
-                    classes, unjustified, regularized, page, FutureHelper.handlerJsonArray(eventsFuture));
+                    classes, regularized, page, FutureHelper.handlerJsonArray(eventsFuture));
             eventService.getPageNumber(structureId, startDate, endDate, eventType, userId,
-                    unjustified, regularized, userIdFromClasses, FutureHelper.handlerJsonObject(pageNumberFuture));
+                    regularized, userIdFromClasses, FutureHelper.handlerJsonObject(pageNumberFuture));
         });
     }
 
@@ -146,6 +143,16 @@ public class EventController extends ControllerHelper {
     public void changeReasonEvents(HttpServerRequest request) {
         RequestUtils.bodyToJson(request, event -> {
             eventService.changeReasonEvents(event, DefaultResponseHandler.defaultResponseHandler(request));
+        });
+    }
+
+    @Put("/events/regularized")
+    @ApiDoc("Update regularized absent in event")
+    @ResourceFilter(CreateEventRight.class)
+    @SecuredAction(value = "", type = ActionType.RESOURCE)
+    public void regularizedEvents(HttpServerRequest request) {
+        RequestUtils.bodyToJson(request, event -> {
+            eventService.changeRegularizedEvents(event, DefaultResponseHandler.defaultResponseHandler(request));
         });
     }
 

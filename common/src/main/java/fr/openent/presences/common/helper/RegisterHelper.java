@@ -3,6 +3,7 @@ package fr.openent.presences.common.helper;
 import fr.openent.presences.enums.EventType;
 import fr.wseduc.webutils.Either;
 import io.vertx.core.AsyncResult;
+import io.vertx.core.Future;
 import io.vertx.core.Handler;
 import io.vertx.core.eventbus.EventBus;
 import io.vertx.core.eventbus.Message;
@@ -44,7 +45,7 @@ public class RegisterHelper {
             return;
         }
         String query = "SELECT student_id, json_agg(jsonb_build_object" +
-                "('id', event.id, 'counsellor_input', event.counsellor_input, 'type_id'," +
+                "('id', event.id, 'counsellor_input', event.counsellor_input, 'counsellor_regularisation', event.counsellor_regularisation, 'type_id'," +
                 " event.type_id, 'start_date', event.start_date, 'end_date', event.end_date," +
                 " 'comment', event.comment, 'register_id', register.id, 'reason_id', reason_id)) as events " +
                 "FROM " + presenceDbSchema + ".event " +
@@ -64,6 +65,56 @@ public class RegisterHelper {
         }
 
         Sql.getInstance().prepared(query, params, SqlResult.validResultHandler(handler));
+    }
+
+    /**
+     * Future way to get register event history. From the register users list, it retrieve all day events
+     *
+     * @param registerDate  Register date
+     * @param endDate       endDate optional parameter which is end_date
+     * @param registerUsers Register users list
+     * @param future        Function handler returning data
+     */
+    public void getRegisterEventHistory(String registerDate, String endDate, JsonArray registerUsers, Future<JsonArray> future) {
+        getRegisterEventHistory(registerDate, endDate, registerUsers, FutureHelper.handlerJsonArray(future));
+    }
+
+    /**
+     * get absence event history.
+     *
+     * @param startDate     startDate absence
+     * @param endDate       endDate absence
+     * @param registerUsers Register users list
+     * @param handler       Function handler returning data
+     */
+    public void getAbsence(String startDate, String endDate, JsonArray registerUsers, Handler<Either<String, JsonArray>> handler) {
+        if (registerUsers.isEmpty() && (startDate != null && !startDate.isEmpty()) && (endDate != null && !endDate.isEmpty())) {
+            handler.handle(new Either.Right<>(new JsonArray()));
+            return;
+        }
+        String query = "SELECT * FROM presences.absence " +
+                "WHERE student_id IN " + Sql.listPrepared(registerUsers.getList()) +
+                "AND start_date > ? " +
+                "AND end_date < ? ";
+
+        JsonArray params = new JsonArray()
+                .addAll(registerUsers)
+                .add(startDate + " 00:00:00")
+                .add(endDate + " 23:59:59");
+
+        Sql.getInstance().prepared(query, params, SqlResult.validResultHandler(handler));
+    }
+
+    /**
+     * Future way to get absence event history.
+     *
+     * @param startDate     startDate absence
+     * @param endDate       endDate absence
+     * @param idStudents    Users list retrieved
+     * @param future        Function handler returning data
+     */
+    public void getAbsence(String startDate, String endDate, JsonArray idStudents, Future<JsonArray> future) {
+        getAbsence(startDate, endDate, idStudents, FutureHelper.handlerJsonArray(future));
     }
 
     /**
@@ -150,17 +201,19 @@ public class RegisterHelper {
      * @throws ParseException Throws when dates can not be parsed
      */
     private Boolean matchSlot(Integer type, JsonObject event, JsonObject slot) throws ParseException {
-        boolean lateness = type.equals(EventType.LATENESS.getType())
-                && DateHelper.getAbsTimeDiff(event.getString("start_date"), slot.getString("start")) < DateHelper.TOLERANCE
-                && DateHelper.isBefore(event.getString("end_date"), slot.getString("end"));
+        boolean lateness = type.equals(EventType.LATENESS.getType()) &&
+                DateHelper.isBetween(event.getString("start_date"), event.getString("end_date"), slot.getString("start"), slot.getString("end"));
 
         boolean departure = type.equals(EventType.DEPARTURE.getType())
                 && DateHelper.getAbsTimeDiff(event.getString("end_date"), slot.getString("end")) < DateHelper.TOLERANCE
                 && DateHelper.isAfter(event.getString("start_date"), slot.getString("start"));
 
+//        boolean absence_remark = (type.equals(EventType.ABSENCE.getType()) || type.equals(EventType.REMARK.getType()))
+//                && DateHelper.getAbsTimeDiff(event.getString("start_date"), slot.getString("start")) < DateHelper.TOLERANCE
+//                && DateHelper.getAbsTimeDiff(event.getString("end_date"), slot.getString("end")) < DateHelper.TOLERANCE;
+
         boolean absence_remark = (type.equals(EventType.ABSENCE.getType()) || type.equals(EventType.REMARK.getType()))
-                && DateHelper.getAbsTimeDiff(event.getString("start_date"), slot.getString("start")) < DateHelper.TOLERANCE
-                && DateHelper.getAbsTimeDiff(event.getString("end_date"), slot.getString("end")) < DateHelper.TOLERANCE;
+                && DateHelper.isBetween(event.getString("start_date"), event.getString("end_date"), slot.getString("start"), slot.getString("end"));
 
         return lateness || departure || absence_remark;
     }

@@ -60,6 +60,7 @@ subprojects {
         compileOnly "io.vertx:vertx-core:$vertxVersion"
         testCompile "io.vertx:vertx-core:$vertxVersion"
         testCompile "org.junit.jupiter:junit-jupiter-engine:$junitVersion"
+        compile "fr.wseduc:vertx-cron-timer:$vertxCronTimer"
         testCompile "io.vertx:testtools:$toolsVersion"
     }
 

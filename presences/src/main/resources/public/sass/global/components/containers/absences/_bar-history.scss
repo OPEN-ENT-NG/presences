@@ -71,6 +71,10 @@
   width: 23px;
 }
 
+.period li.empty:before {
+  cursor: not-allowed;
+}
+
 .period li.absent:before {
   border-color: $presences-red;
   background: $presences-red;

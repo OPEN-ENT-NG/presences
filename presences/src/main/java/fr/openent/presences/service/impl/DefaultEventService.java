@@ -3,6 +3,7 @@ package fr.openent.presences.service.impl;
 import fr.openent.presences.Presences;
 import fr.openent.presences.common.helper.RegisterHelper;
 import fr.openent.presences.enums.EventType;
+import fr.openent.presences.helper.CourseHelper;
 import fr.openent.presences.service.EventService;
 import fr.wseduc.webutils.Either;
 import io.vertx.core.AsyncResult;
@@ -20,28 +21,35 @@ import org.entcore.common.neo4j.Neo4jResult;
 import org.entcore.common.sql.Sql;
 import org.entcore.common.sql.SqlResult;
 import org.entcore.common.user.UserInfos;
+import org.omg.CORBA.Request;
 
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 
 public class DefaultEventService implements EventService {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(DefaultEventService.class);
+    private CourseHelper courseHelper;
     private RegisterHelper registerHelper;
     private EventBus eb;
 
     public DefaultEventService(EventBus eb) {
         this.eb = eb;
+        this.courseHelper = new CourseHelper(eb);
         this.registerHelper = new RegisterHelper(eb, Presences.dbSchema);
     }
 
     @Override
     public void get(String structureId, String startDate, String endDate,
                     List<String> eventType, List<String> userId, JsonArray userIdFromClasses, List<String> classes,
-                    boolean unjustified, boolean regularized, Integer page, Handler<Either<String, JsonArray>> handler) {
+                    boolean regularized, Integer page, Handler<Either<String, JsonArray>> handler) {
         JsonArray params = new JsonArray();
 
         Sql.getInstance().prepared(this.getEventsQuery(structureId, startDate, endDate,
-                eventType, unjustified, regularized, userId, userIdFromClasses, page, params),
+                eventType, regularized, userId, userIdFromClasses, page, params),
                 params, SqlResult.validResultHandler((result -> {
                     if (result.isRight()) {
                         JsonArray reasonIds = new JsonArray();
@@ -91,18 +99,13 @@ public class DefaultEventService implements EventService {
      * @param params            Json params
      */
     private String getEventsQuery(String structureId, String startDate, String endDate, List<String> eventType,
-                                  boolean unjustified, boolean regularized,
-                                  List<String> userId, JsonArray userIdFromClasses, Integer page, JsonArray params) {
+                                  boolean regularized, List<String> userId, JsonArray userIdFromClasses,
+                                  Integer page, JsonArray params) {
 
         String query = "WITH ids AS (SELECT e.id FROM presences.event e ";
 
         query += "INNER JOIN presences.register AS r ON (r.id = e.register_id AND r.structure_id = ?) ";
         params.add(structureId);
-
-        if (eventType != null && !eventType.isEmpty()) {
-            query += "INNER JOIN presences.event_type AS event_type ON (event_type.id = e.type_id AND e.type_id IN " + Sql.listPrepared(eventType.toArray()) + " )";
-            params.addAll(new JsonArray(eventType));
-        }
 
         if (startDate != null && endDate != null) {
             query += "WHERE e.start_date > ? ";
@@ -111,7 +114,7 @@ public class DefaultEventService implements EventService {
             params.add(endDate + " 23:59:59");
         }
 
-        query += setParamsForQueryEvents(userId, unjustified, regularized, userIdFromClasses, params);
+        query += setParamsForQueryEvents(userId, regularized, userIdFromClasses, params);
 
         if (page != null) {
             query += "ORDER BY e.start_date OFFSET ? LIMIT ? ";
@@ -124,8 +127,14 @@ public class DefaultEventService implements EventService {
                 "to_json(event_type) as event_type, " +
                 "to_json(e.reason_id) as reason " +
                 "FROM presences.event e " +
-                "INNER JOIN ids ON (ids.id = e.id) " +
-                "INNER JOIN presences.event_type AS event_type ON event_type.id = e.type_id ";
+                "INNER JOIN ids ON (ids.id = e.id) ";
+        if (eventType != null && !eventType.isEmpty()) {
+            query += "INNER JOIN presences.event_type AS event_type ON (event_type.id =" +
+                    " e.type_id AND e.type_id IN " + Sql.listPrepared(eventType.toArray()) + " ) ";
+            params.addAll(new JsonArray(eventType));
+        } else {
+            query += "INNER JOIN presences.event_type AS event_type ON event_type.id = e.type_id ";
+        }
 
         query += "GROUP BY e.id, e.start_date, event_type.id";
 
@@ -181,69 +190,115 @@ public class DefaultEventService implements EventService {
             }
         }
 
-        registerHelper.getRegisterEventHistory(startDate, endDate, idStudents, historyEvent -> {
-            if (historyEvent.isLeft()) {
-                future.fail("[Presences@DefaultEventService] Failed to retrieve register history");
-                return;
-            }
-            for (int i = 0; i < historyEvent.right().getValue().size(); i++) {
-                historyEvent.right().getValue().getJsonObject(i).put("events",
-                        new JsonArray(historyEvent.right().getValue().getJsonObject(i).getString("events")));
-            }
-            JsonArray studentEvents = historyEvent.right().getValue();
+        registerHelper.getRegisterEventHistory(startDate, endDate, idStudents, registerEvent -> {
+            if (registerEvent.isLeft()) {
+                String message = "[Presences@DefaultEventService] Failed to retrieve reason or student info";
+                LOGGER.error(message);
+                future.fail("Failed to get register event history and absence");
+            } else {
+                for (int i = 0; i < registerEvent.right().getValue().size(); i++) {
+                    registerEvent.right().getValue().getJsonObject(i).put("events",
+                            new JsonArray(registerEvent.right().getValue().getJsonObject(i).getString("events")));
+                }
+                JsonArray studentEvents = registerEvent.right().getValue();
 
-            String query = "MATCH (s:Structure {id: {structureId} })<-[:ADMINISTRATIVE_ATTACHMENT]-" +
-                    "(u:User {profiles:['Student']})-[:IN]->(:ProfileGroup)-[:DEPENDS]->(c:Class) WHERE u.id IN {idStudents} " +
-                    "RETURN distinct (u.lastName + ' ' + u.firstName) as displayName, u.id as id, c.name as classeName";
-            JsonObject params = new JsonObject().put("structureId", structureId).put("idStudents", idStudents);
-            Neo4j.getInstance().execute(query, params, Neo4jResult.validResultHandler(studentResult -> {
-                if (studentResult.isRight()) {
-                    JsonArray students = studentResult.right().getValue();
-
-                    // Adding student object to event who possesses student_id
-                    for (int i = 0; i < arrayEvents.size(); i++) {
-                        for (int j = 0; j < students.size(); j++) {
-                            JsonObject student = students.getJsonObject(j);
-                            //  Add student object if there's no event anyway
-                            if (studentEvents.isEmpty()) {
-                                if (arrayEvents.getJsonObject(i).getString("student_id").equals(student.getString("id"))) {
-                                    student.put("day_history", new JsonArray());
-                                    arrayEvents.getJsonObject(i).put("student", student);
-                                }
-                            } else {
-                                for (int k = 0; k < studentEvents.size(); k++) {
-                                    if (arrayEvents.getJsonObject(i).getString("student_id").equals(student.getString("id"))) {
-                                        if (student.getString("id").equals(studentEvents.getJsonObject(k).getString("student_id"))) {
-                                            arrayEvents.getJsonObject(i).put("student", new JsonObject()
-                                                    .put("displayName", student.getString("displayName"))
-                                                    .put("id", student.getString("id"))
-                                                    .put("classeName", student.getString("classeName"))
-                                                    .put("day_history",
-                                                            filterEvents(studentEvents.getJsonObject(k).getJsonArray("events"),
-                                                                    arrayEvents.getJsonObject(i).getJsonObject("event_type").getInteger("id"))));
+                String query = "MATCH (s:Structure {id: {structureId} })<-[:ADMINISTRATIVE_ATTACHMENT]-" +
+                        "(u:User {profiles:['Student']})-[:IN]->(:ProfileGroup)-[:DEPENDS]->(c:Class) WHERE u.id IN {idStudents} " +
+                        "RETURN distinct (u.lastName + ' ' + u.firstName) as displayName, u.id as id, c.name as classeName";
+                JsonObject params = new JsonObject().put("structureId", structureId).put("idStudents", idStudents);
+                courseHelper.getCourses(structureId, new ArrayList<>(),  new ArrayList<>(), startDate, endDate, coursesResult -> {
+                    if (coursesResult.isRight()) {
+                        Neo4j.getInstance().execute(query, params, Neo4jResult.validResultHandler(studentResult -> {
+                            if (studentResult.isRight()) {
+                                JsonArray students = studentResult.right().getValue();
+                                // Adding student object to event who possesses student_id
+                                for (int i = 0; i < arrayEvents.size(); i++) {
+                                    for (int j = 0; j < students.size(); j++) {
+                                        JsonObject student = students.getJsonObject(j);
+                                        //  Add student object if there's no event anyway
+                                        if (studentEvents.isEmpty()) {
+                                            if (arrayEvents.getJsonObject(i).getString("student_id").equals(student.getString("id"))) {
+                                                student.put("day_history", new JsonArray());
+                                                arrayEvents.getJsonObject(i).put("student", student);
+                                            }
+                                        } else {
+                                            for (int k = 0; k < studentEvents.size(); k++) {
+                                                if (arrayEvents.getJsonObject(i).getString("student_id").equals(student.getString("id"))) {
+                                                    if (student.getString("id").equals(studentEvents.getJsonObject(k).getString("student_id"))) {
+                                                        arrayEvents.getJsonObject(i).put("student", new JsonObject()
+                                                                .put("displayName", student.getString("displayName"))
+                                                                .put("id", student.getString("id"))
+                                                                .put("classeName", student.getString("classeName"))
+                                                                .put("courses", getCourses(student, studentEvents.getJsonObject(k), coursesResult.right().getValue(),
+                                                                        filterEvents(studentEvents.getJsonObject(k).getJsonArray("events"),
+                                                                        arrayEvents.getJsonObject(i).getString("start_date"))))
+                                                                .put("day_history",
+                                                                        filterEvents(studentEvents.getJsonObject(k).getJsonArray("events"),
+                                                                                arrayEvents.getJsonObject(i).getString("start_date"))));
+                                                    }
+                                                }
+                                            }
                                         }
                                     }
                                 }
+                                matchSlots(arrayEvents, structureId, future);
+                            } else {
+                                future.fail("Failed to query student info");
                             }
-                        }
+                        }));
+                    } else {
+                        future.fail("Failed to query courses info");
                     }
-                    matchSlots(arrayEvents, structureId, future);
-                } else {
-                    future.fail("Failed to query student info");
-                }
-            }));
+                });
+            }
         });
     }
 
-    private JsonArray filterEvents(JsonArray events, Integer eventTypeId) {
-        JsonArray filteredEvents = new JsonArray();
+    private JsonArray getCourses(JsonObject student, JsonObject studentEvents, JsonArray coursesResultValue, JsonArray filterEvents) {
+        JsonArray courses = new JsonArray();
+        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
+        try {
+            for (int i = 0; i < coursesResultValue.size(); i++) {
+                JsonObject course = coursesResultValue.getJsonObject(i);
+                String studentId = studentEvents.getString("student_id");
+                Date coursesStartDate = sdf.parse(course.getString("startDate"));
+                for (int j = 0; j < filterEvents.size() ; j++) {
+                    Date studentStartDate = sdf.parse(filterEvents.getJsonObject(j).getString("start_date"));
 
-        for (int i = 0; i < events.size(); ++i) {
-            JsonObject obj = events.getJsonObject(i);
-            if (obj.getInteger("type_id").equals(eventTypeId)) {
-                filteredEvents.add(obj);
+                    if (student.getString("id").equals(studentId) &&
+                            course.getJsonArray("classes").contains(student.getString("classeName")) &&
+                            coursesStartDate.equals(studentStartDate)) {
+                        courses.add(course);
+                    }
+                }
             }
+
+        } catch (ParseException e) {
+            String message = "[Presences@DefaultEventService] Failed to add existed courses to student";
+            LOGGER.error(message, e);
+            return courses;
         }
+        return courses;
+    }
+
+    private JsonArray filterEvents(JsonArray studentEvents, String eventStartDate) {
+        JsonArray filteredEvents = new JsonArray();
+        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
+        try {
+            Date startDate = sdf.parse(eventStartDate);
+            for (int i = 0; i < studentEvents.size(); ++i) {
+                JsonObject studentEvent = studentEvents.getJsonObject(i);
+                Date studentStartDate = sdf.parse(studentEvent.getString("start_date"));
+                if (startDate.equals(studentStartDate)) {
+                    filteredEvents.add(studentEvent);
+                }
+            }
+        } catch (ParseException e) {
+            String message = "[Presences@DefaultEventService] Failed to filter events";
+            LOGGER.error(message, e);
+            return filteredEvents;
+        }
+
         return filteredEvents;
     }
 
@@ -297,16 +352,16 @@ public class DefaultEventService implements EventService {
 
     @Override
     public void getPageNumber(String structureId, String startDate, String endDate, List<String> eventType,
-                              List<String> userId, boolean unjustified, boolean regularized,
+                              List<String> userId, boolean regularized,
                               JsonArray userIdFromClasses, Handler<Either<String, JsonObject>> handler) {
         JsonArray params = new JsonArray();
         Sql.getInstance().prepared(this.getEventsQueryPagination(structureId, startDate, endDate, eventType,
-                userId, unjustified, regularized, userIdFromClasses, params),
+                userId, regularized, userIdFromClasses, params),
                 params, SqlResult.validUniqueResultHandler(handler));
     }
 
     private String getEventsQueryPagination(String structureId, String startDate, String endDate, List<String> eventType,
-                                            List<String> userId, boolean unjustified, boolean regularized,
+                                            List<String> userId, boolean regularized,
                                             JsonArray userIdFromClasses, JsonArray params) {
 
         String query = "SELECT count(*) FROM presences.event e " +
@@ -323,11 +378,11 @@ public class DefaultEventService implements EventService {
         query += "AND register.end_date <= to_date(?, 'YYYY-MM-DD') ";
         params.add(endDate);
 
-        query += setParamsForQueryEvents(userId, unjustified, regularized, userIdFromClasses, params);
+        query += setParamsForQueryEvents(userId, regularized, userIdFromClasses, params);
         return query;
     }
 
-    private String setParamsForQueryEvents(List<String> userId, boolean unjustified, boolean regularized, JsonArray userIdFromClasses, JsonArray params) {
+    private String setParamsForQueryEvents(List<String> userId, boolean regularized, JsonArray userIdFromClasses, JsonArray params) {
         String query = "";
         if (userIdFromClasses != null && !userIdFromClasses.isEmpty()) {
             query += "AND student_id IN " + Sql.listPrepared(userIdFromClasses.getList());
@@ -338,10 +393,6 @@ public class DefaultEventService implements EventService {
         if (userId != null && !userId.isEmpty()) {
             query += "AND student_id IN " + Sql.listPrepared(userId.toArray());
             params.addAll(new JsonArray(userId));
-        }
-
-        if (unjustified) {
-            query += "AND e.reason_id IS NULL ";
         }
 
         if (regularized) {
@@ -396,18 +447,6 @@ public class DefaultEventService implements EventService {
             setter += ", comment = ?";
             params.add(event.getString("comment"));
         }
-
-        // add comma "," if there's more than 1 comma
-        if (event.containsKey("counsellor_regularisation")) {
-            if (setter.length() - setter.replace(",", "").length() >= 1) {
-                setter += ", ";
-            } else {
-                setter += "";
-            }
-            setter += "counsellor_regularisation = ?";
-            params.add(event.getBoolean("counsellor_regularisation"));
-        }
-
         String query = "UPDATE " + Presences.dbSchema + ".event SET " + setter + " WHERE id = ?;";
         params.add(id);
 
@@ -431,6 +470,17 @@ public class DefaultEventService implements EventService {
         } else {
             params.addNull();
         }
+        query += " WHERE id IN " + Sql.listPrepared(eventBody.getJsonArray("ids").getList());
+        params.addAll(eventBody.getJsonArray("ids"));
+        Sql.getInstance().prepared(query, params, SqlResult.validUniqueResultHandler(handler));
+    }
+
+    @Override
+    public void changeRegularizedEvents(JsonObject eventBody, Handler<Either<String, JsonObject>> handler) {
+        JsonArray params = new JsonArray();
+        String query = "UPDATE " + Presences.dbSchema + ".event SET counsellor_regularisation = ? ";
+        params.add(eventBody.getBoolean("regularized"));
+
         query += " WHERE id IN " + Sql.listPrepared(eventBody.getJsonArray("ids").getList());
         params.addAll(eventBody.getJsonArray("ids"));
         Sql.getInstance().prepared(query, params, SqlResult.validUniqueResultHandler(handler));

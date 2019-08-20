@@ -20,13 +20,13 @@ public interface EventService {
      * @param userId            userId userId neo4j
      * @param userIdFromClasses userId fetched from classes neo4j
      * @param classes           classes list
-     * @param unjustified
-     * @param regularized
+     * @param regularized       regularized filter
      * @param page              page
      * @param handler           function handler returning data
      */
     void get(String structureId, String startDate, String endDate,
-             List<String> eventType, List<String> userId, JsonArray userIdFromClasses, List<String> classes, boolean unjustified, boolean regularized, Integer page, Handler<Either<String, JsonArray>> handler);
+             List<String> eventType, List<String> userId, JsonArray userIdFromClasses,
+             List<String> classes, boolean regularized, Integer page, Handler<Either<String, JsonArray>> handler);
 
     /**
      * Get events page number
@@ -36,13 +36,13 @@ public interface EventService {
      * @param endDate           endDate end date
      * @param eventType         event type
      * @param userId            userId userId neo4j
-     * @param unjustified       filter unjustified absence
      * @param regularized       filter regularized absence
      * @param userIdFromClasses userId fetched from classes neo4j
      * @param handler           function handler returning data
      */
     void getPageNumber(String structureId, String startDate, String endDate, List<String> eventType,
-                       List<String> userId, boolean unjustified, boolean regularized, JsonArray userIdFromClasses, Handler<Either<String, JsonObject>> handler);
+                       List<String> userId, boolean regularized, JsonArray userIdFromClasses,
+                       Handler<Either<String, JsonObject>> handler);
 
     /**
      * Get events reason type
@@ -78,6 +78,14 @@ public interface EventService {
      * @param handler   Function handler returning data
      */
     void changeReasonEvents(JsonObject eventBody, Handler<Either<String, JsonObject>> handler);
+
+    /**
+     * Update regularized for each event
+     * @param event     Event body that can contain list of id's events and its reason_id retrieved
+     * @param handler   Function handler returning data
+     */
+    void changeRegularizedEvents(JsonObject event, Handler<Either<String, JsonObject>> handler);
+
 
     /**
      * Delete given identifier

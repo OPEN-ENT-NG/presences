@@ -50,6 +50,8 @@ interface ViewModel {
 
     openPanel(student): void;
 
+    updateLateness(): void;
+
     getHistoryEventClassName(events): string;
 
     isCurrentSlot(slot: { end: string, start: string }): boolean;
@@ -391,9 +393,10 @@ export const registersController = ng.controller('RegistersController',
             };
 
             vm.toggleLateness = async (student) => {
-                const time = moment().millisecond(0).second(0);
-                await toggleEvent(student, 'lateness', vm.register.start_date, time.format(DateUtils.FORMAT["YEAR-MONTH-DAY-HOUR-MIN-SEC"]));
-                student.lateness.end_date_time = time.toDate();
+                const endDateTime = moment(moment(vm.register.start_date).format(DateUtils.FORMAT["YEAR-MONTH-DAY"]) +  ' ' +
+                    moment().millisecond(0).second(0).format(DateUtils.FORMAT["HOUR-MINUTES"]));
+                await toggleEvent(student, 'lateness', vm.register.start_date, endDateTime.format(DateUtils.FORMAT["YEAR-MONTH-DAY-HOUR-MIN-SEC"]));
+                student.lateness.end_date_time = endDateTime.toDate();
                 $scope.safeApply();
             };
 
@@ -425,6 +428,25 @@ export const registersController = ng.controller('RegistersController',
                 $scope.safeApply();
             };
 
+            vm.updateLateness = function () {
+                vm.filter.student.lateness.update();
+
+                // update day_history events
+                vm.filter.student.day_history.forEach(item => {
+                    const endDate = moment(vm.filter.student.lateness.end_date_time).format("YYYY-MM-DDTHH:mm:ss");
+                    item.events.forEach((e, index) => {
+                        if (e.id === vm.filter.student.lateness.id) {
+                            if (!((item.end <= endDate ) || (endDate > item.start))) {
+                                item.events.splice(index, 1);
+                            }
+                        }
+                    });
+                    if ((item.end <= endDate) || (endDate > item.start)) {
+                        item.events.push(vm.filter.student.lateness);
+                    }
+                });
+            };
+
             vm.closePanel = function () {
                 delete vm.filter.student;
             };
@@ -443,7 +465,8 @@ export const registersController = ng.controller('RegistersController',
             };
 
             vm.isCurrentSlot = function (slot) {
-                return Math.abs(moment(slot.start).diff(vm.register.start_date)) < 3000 && Math.abs(moment(slot.end).diff(vm.register.end_date)) < 3000;
+                // return Math.abs(moment(slot.start).diff(vm.register.start_date)) < 3000 && Math.abs(moment(slot.end).diff(vm.register.end_date)) < 3000;
+                return ((slot.start >= vm.register.start_date) || (vm.register.start_date < slot.end)) && ((slot.end <= vm.register.end_date) || (vm.register.end_date > slot.start ))
             };
 
             vm.loadCourses = async function (users: string[] = [model.me.userId], groups: string[] = [], structure: string = window.structure.id,

@@ -37,9 +37,6 @@
       }
     }
 
-    &-reason {
-    }
-
     &-file {
       transform: rotate(-45deg);
       -webkit-transform: rotate(-45deg);
@@ -55,13 +52,13 @@
 
       &-content {
         text-align: center;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
 
-        span {
-          margin-right: 100px;
-        }
-
-        label {
+        &-checkbox {
           margin-left: 100px;
+          padding-right: 14px;
         }
       }
     }
@@ -109,7 +106,6 @@ i.add:before {
 
 /* regularized-absence */
 .regularized-absence {
-  display: block;
   position: relative;
   overflow: visible;
   margin-bottom: 0;
@@ -128,13 +124,37 @@ i.add:before {
 
 /* Create a custom regularized checkbox */
 .checkmark {
-  position: absolute;
-  top: -15px;
-  left: 0;
   height: 25px;
   width: 25px;
   border: 2px solid $presences-main;
   border-radius: 4px;
+  &.active {
+    background: $presences-main;
+    &:after {
+      display: block;
+      left: 11px;
+      top: 6px;
+      width: 6px;
+      height: 11px;
+      border: solid $white;
+      border-width: 0 3px 3px 0;
+      -webkit-transform: rotate(45deg);
+      -ms-transform: rotate(45deg);
+      transform: rotate(45deg);
+    }
+  }
+  &.half {
+    background: $presences-main;
+    &:after {
+      display: block;
+      left: 13px;
+      top: 8px;
+      height: 11px;
+      border: solid $white;
+      border-width: 0 3px 3px 0;
+      transform: rotate(91deg);
+    }
+  }
 }
 
 /* Create the checkmark/indicator (hidden when not checked) */
@@ -146,22 +166,4 @@ i.add:before {
   content: "";
   position: absolute;
   display: none;
-}
-
-/* Show the checkmark when checked */
-.regularized-absence input:checked ~ .checkmark:after {
-  display: block;
-}
-
-/* Style the checkmark/indicator */
-.regularized-absence .checkmark:after {
-  left: 9px;
-  top: 5px;
-  width: 5px;
-  height: 10px;
-  border: solid $presences-main;
-  border-width: 0 3px 3px 0;
-  -webkit-transform: rotate(45deg);
-  -ms-transform: rotate(45deg);
-  transform: rotate(45deg);
 }

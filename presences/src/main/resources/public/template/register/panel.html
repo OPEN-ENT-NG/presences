@@ -33,7 +33,7 @@
             <time-picker
                     ng-disabled="vm.filter.student.absence !== undefined || (vm.filter.student.exempted && !vm.filter.student.exemption_attendance)"
                     ng-model="vm.filter.student.lateness.end_date_time"
-                    ng-change="vm.filter.student.lateness.update()"></time-picker>
+                    ng-change="vm.updateLateness()"></time-picker>
         </div>
         <div class="row">
             <label>

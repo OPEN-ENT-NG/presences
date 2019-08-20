@@ -25,30 +25,38 @@
         </th>
     </tr>
     </thead>
-    <tbody class="absences-table-body" data-ng-repeat="event in vm.events.all">
-    <tr data-id="[[event.id]]" data-ng-click="vm.toggleCollapse($event)">
+    <tbody class="absences-table-body" data-ng-repeat="event in vm.events.all track by $index">
+    <tr data-id="[[$index]]" data-ng-click="vm.toggleCollapse($event)">
 
         <!-- Profile -->
         <th class="absences-table-body-student">
             <img src="https://cdn1.iconfinder.com/data/icons/user-pictures/100/unknown-512.png" height="43"
                  width="43">
             <div class="absences-table-body-student-content">
-                <span>[[event.student.displayName]]</span>
-                <span>[[event.student.classeName]]</span>
+                <span>[[event.displayName]]</span>
+                <span>[[event.classeName]]</span>
             </div>
         </th>
 
         <!-- Date -->
-        <th class="absences-table-body-date uppercase text-center">[[event.start_date | date:'dd/MM/yyyy']]</th>
+        <th class="absences-table-body-date uppercase text-center">[[event.date | date: 'dd/MM/yyyy']]</th>
 
         <!-- Period -->
         <th class="absences-table-body-period text-center">
-            <ul class="period">
-                <li ng-repeat="periods in event.student.day_history track by $index"
-                    data-ng-click="vm.setAbsent(periods, event, $event)"
-                    class="[[vm.eventTypeState(periods, event, $index)]]"
+            <ul class="period"
+                data-ng-click="vm.period($event)"
+                data-ng-mousedown="vm.setAbsent($event)"
+                data-ng-mouseup="vm.treatAbsentAfterMouseLeave(event)"
+                data-ng-mousemove="vm.drawAbsent($event)">
+
+                <!-- planning  -->
+                <li ng-repeat="periods in event.dayHistory track by $index"
+                    data-ng-mousemove="vm.indexDayHistory = $index;"
+                    data-ng-click="vm.interactAbsent(periods, event, $event, $parent.$index)"
+                    class="[[vm.eventTypeState(periods, event)]]"
                     tooltip="[[periods.name]]">
                 </li>
+
                 <li><i class="tableEdit" data-ng-click="vm.editPeriod($event)"></i></li>
             </ul>
         </th>
@@ -56,13 +64,13 @@
         <!-- Select reason-->
         <th class="table-reason text-center">
             <label>
-                <select data-ng-model="event.reason_id"
-                        ng-init="vm.getSelectValue(event)"
+                <select data-ng-model="event.globalReason"
                         data-ng-click="vm.reasonSelect($event)"
                         data-ng-change="vm.changeReason(event)"
-                        ng-options="reason.id as reason.label for reason in vm.eventReasonsType">
+                        ng-options="reason.id as reason.label for reason in vm.filterSelect(vm.eventReasonsType, event)">
                     <option value="">[[lang.translate('presences.absence.select.empty')]]</option>
                 </select>
+
             </label>
         </th>
 
@@ -77,25 +85,40 @@
         <!-- Absence regularised -->
         <th class="text-center">
             <label class="regularized-absence" data-ng-click="vm.stopAbsencePropagation($event)">
-                <input type="checkbox" data-ng-model="event.counsellor_regularisation" data-ng-change="vm.toggleAbsenceRegularised(event)">
-                <span class="checkmark"></span>
+                <input type="checkbox" data-ng-model="event.globalCounsellorRegularisation" data-ng-change="vm.toggleAllAbsenceRegularised(event)">
+                <span ng-class="{active: event.globalCounsellorRegularisation, half: vm.regularizedChecked(event)}" class="checkmark"></span>
             </label>
         </th>
 
         <!-- description content -->
-    <tr ng-class="{open: vm.isCollapsibleOpen(event)}" class="absences-table-body-description">
-        <td colspan="7" data-ng-show="vm.isDayHistoryEmpty(event)">
-            <div class="absences-table-body-description-content table-reason"
-                 data-ng-repeat="periods in event.student.day_history"
-                 ng-if="!($index == 4) && vm.hasPeriod(periods)">
-                <span>[[vm.getPeriodStartDate(periods, event)]]-[[vm.getPeriodEndDate(periods, event)]]</span>
-                <label>
-                    <select data-ng-model="vm.getPeriodData(periods, event).reason_id"
-                            data-ng-change="vm.changeDescriptionReason(vm.getPeriodData(periods, event), event)"
-                            ng-options="reason.id as reason.label for reason in vm.eventReasonsTypeDescription">
-                        <option value="">[[lang.translate('presences.absence.select.empty')]]</option>
-                    </select>
+    <tr ng-class="{open: vm.isCollapsibleOpen($index)}" class="absences-table-body-description">
+        <td colspan="7" data-ng-show="event.events.length !== 0">
+            <div class="absences-table-body-description-content" data-ng-repeat="history in event.events |  orderBy:'+end_date'">
+
+                <!--Add space-->
+                <span></span>
+                <span></span>
+
+                <!--Date-->
+                <span class="absences-table-body-description-content-date">[[history.start_date | date:'HH:mm']]-[[history.end_date | date:'HH:mm']]</span>
+
+                <!--Select-->
+                <span class="absences-table-body-description-content-select table-reason">
+                     <label>
+                        <select data-ng-model="history.reason_id"
+                                data-ng-change="vm.changeDescriptionReason(history, event)"
+                                ng-options="reason.id as reason.label for reason in vm.eventReasonsTypeDescription">
+                            <option value="">[[lang.translate('presences.absence.select.empty')]]</option>
+                        </select>
+                    </label>
+                </span>
+
+                <!--Regularized-->
+                <label class="absences-table-body-description-content-checkbox regularized-absence">
+                    <input type="checkbox" data-ng-model="history.counsellor_regularisation" data-ng-change="vm.toggleAbsenceRegularised(history, event)">
+                    <span ng-class="{active: history.counsellor_regularisation}" class="checkmark"></span>
                 </label>
+
             </div>
         </td>
     <tr>
