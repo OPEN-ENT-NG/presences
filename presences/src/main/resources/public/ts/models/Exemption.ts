@@ -76,7 +76,8 @@ export class Exemption {
             && this.subject
             && this.structureId
             && this.students
-            && this.students.length;
+            && this.students.length
+            && this.startDate <= this.endDate;
     };
 
     async save(structure: string, start_date: string, end_date: string, students?: string[], audiences?: string[]) {
@@ -113,8 +114,8 @@ export class Exemptions extends LoadingCollection {
     prepareUrl = () => {
         let dateFormat = DateUtils.FORMAT['YEAR-MONTH-DAY-HOUR-MIN-SEC'];
         let url = `?structure_id=${this.structureId}` +
-        `&start_date=${DateUtils.format(DateUtils.setFirstTime(this.start_date), dateFormat)}` +
-        `&end_date=${DateUtils.format(DateUtils.setLastTime(this.end_date), dateFormat)}`;
+            `&start_date=${DateUtils.format(DateUtils.setFirstTime(this.start_date), dateFormat)}` +
+            `&end_date=${DateUtils.format(DateUtils.setLastTime(this.end_date), dateFormat)}`;
         if (this.students && this.students.length > 0) {
             url += `&student_id=${this.students.join(',')}`;
         }
@@ -141,7 +142,7 @@ export class Exemptions extends LoadingCollection {
         this.loading = true;
         try {
             let url = `/presences/exemptions` + this.prepareUrl();
-            url += `&page=${this.page? this.page:0}`;
+            url += `&page=${this.page ? this.page : 0}`;
             const {data} = await http.get(url);
             this.all = Mix.castArrayAs(Exemption, Exemption.loadData(data.values));
             this.pageCount = data.page_count;
