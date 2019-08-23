@@ -129,6 +129,9 @@ $calendar-user-card-height: 56px;
 
             .timeslot {
               background: $white !important;
+              display: flex;
+              flex-direction: column;
+              justify-content: space-around;
             }
           }
         }
@@ -165,6 +168,10 @@ $calendar-user-card-height: 56px;
           display: flex;
           justify-content: flex-end;
           align-items: center;
+
+          &.absent {
+            background-color: $presences-red !important;
+          }
         }
 
         .course-item-container {
@@ -402,4 +409,31 @@ $calendar-user-card-height: 56px;
       left: calc(50% - 5px);
     }
   }
+
+  container[template="calendarDefaultDisplayOptionsTemplate"] {
+    > div {
+      float: left;
+      width: 100%;
+
+      h2 {
+        background: $presences-main;
+        box-sizing: border-box;
+        margin: 0;
+        padding: 10px 5px;
+        color: $white;
+        border-top-left-radius: 5px;
+        border-top-right-radius: 5px;
+        text-indent: 20px;
+
+        ~ div {
+          padding-left: 20px;
+
+          &:last-child {
+            margin-bottom: 20px !important;
+          }
+        }
+      }
+    }
+  }
+
 }

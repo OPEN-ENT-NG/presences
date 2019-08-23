@@ -1,4 +1,4 @@
-import {_, model, notify} from 'entcore';
+import {_, notify} from 'entcore';
 import http from 'axios';
 
 export class Subject {
@@ -35,6 +35,7 @@ export class Subjects {
             return;
         }
         try {
+            this.all = [];
             let url = `/directory/timetable/subjects/${structureId}`;
             let subjects = await http.get(url);
             subjects.data.forEach((subject) => {
@@ -47,7 +48,7 @@ export class Subjects {
         }
     }
 
-    findEPS () {
+    findEPS() {
         return _.chain(this.all)
             .filter((item) => {
                 let label = item.label.replace(/\s+/g, '').toLowerCase();

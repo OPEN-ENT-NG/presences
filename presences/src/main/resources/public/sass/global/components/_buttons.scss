@@ -2,6 +2,11 @@ button, a.button {
   color: $presences-white;
   background: $presences-main;
   box-shadow: none;
+
+  &:disabled {
+    background: #555;
+  }
+
   &.cancel {
     background: $presences-grey;
     color: $presences-white;

@@ -2,7 +2,7 @@
     <div class="absence" ng-if="item.containsAbsence">
         &nbsp;
     </div>
-    <div class="exemption" ng-if="item.exempted">
+    <div class="exemption" ng-if="item.exempted" ng-class="{absent: item.containsAbsence}">
         &nbsp;
     </div>
     <div class="course-item"

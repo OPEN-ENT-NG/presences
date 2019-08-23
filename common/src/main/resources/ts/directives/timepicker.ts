@@ -1,5 +1,7 @@
 import {ng} from 'entcore';
 
+export * from '@common/directives/timeformat';
+
 export const TimePicker = ng.directive('timePicker', () => {
     return {
         restrict: 'E',
@@ -10,7 +12,7 @@ export const TimePicker = ng.directive('timePicker', () => {
         },
         template: `
             <label class="time-picker">
-               <input type="time" data-ng-model="ngModel" ng-disabled="ngDisabled" ng-change="onChange()" step="60">
+               <input type="time" data-ng-model="ngModel" ng-disabled="ngDisabled" ng-change="onChange()" step="60" pattern="[0-9]{2}:[0-9]{2}">
             </label>
         `,
         link: function ($scope, $element, $attrs) {
