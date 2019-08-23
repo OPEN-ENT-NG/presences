@@ -10,7 +10,7 @@ import {Scope} from './main'
 declare let window: any;
 
 interface ViewModel {
-    filter: { start_date: any, end_date: any, students: any, classes: any };
+    filter: { start_date: any, end_date: any, students: any, classes: any, className: string };
     translate: any;
     subjects: Subjects;
     classes: any;
@@ -81,7 +81,8 @@ export const exemptionsController = ng.controller('ExemptionsController',
                     start_date: DateUtils.add(new Date(), -30, "d"),
                     end_date: new Date(),
                     students: [],
-                    classes: []
+                    classes: [],
+                    className: ''
                 };
 
                 vm.exemptions = new Exemptions();
@@ -143,10 +144,14 @@ export const exemptionsController = ng.controller('ExemptionsController',
             // };
 
             vm.selectFilterClass = function (model: Student, option: Student) {
+                vm.classes = undefined;
+                vm.filter.className = '';
                 vm.filters(null, option);
             };
 
             vm.selectFilterStudent = function (model: Student, option: Student) {
+                vm.students.all = undefined;
+                vm.students.searchValue = '';
                 vm.filters(option);
             };
 

@@ -96,6 +96,7 @@
   "presences.exemption": "Dispense",
   "presences.calendar.exemption.code": "D",
   "presences.exemptions.form.sniplet.title": "Créer une dispense",
+  "presences.exemptions.form.dates.error": "La date de début doit être antérieure à la date de fin",
   "presences.register.legend.student": "Elève",
   "presences.register.legend.state": "Etat",
   "presences.register.legend.history": "Historique du jour",
