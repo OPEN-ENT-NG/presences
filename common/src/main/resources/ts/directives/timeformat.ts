@@ -10,7 +10,7 @@ export const timeformat = ng.directive('ngModel', function () {
                 return;
 
             ngModel.$formatters.unshift(function (value) {
-                return value.replace(/:00\.000$/, '')
+                return value.replace(/:[0-9]{2}\.[0-9]{3}$/, '')
             });
         }
     }
