@@ -6,6 +6,8 @@ import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import org.entcore.common.user.UserInfos;
 
+import java.util.List;
+
 public interface AbsenceService {
 
     /**
@@ -13,7 +15,7 @@ public interface AbsenceService {
      *
      * @param handler       Function handler returning data
      */
-    void get(Handler<Either<String, JsonArray>> handler);
+    void get(String startDate, String endDate, List<String> users, Handler<Either<String, JsonArray>> handler);
 
     /**
      * create absence

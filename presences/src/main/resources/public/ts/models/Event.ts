@@ -227,20 +227,20 @@ export class Absence extends Event {
         this.type_id = EventType.ABSENCE;
     }
 
-    toAbsenceJson(structureId: string, ownerId: string): Object {
+    toAbsenceJson(structureId: string, reasonId: number, ownerId: string): Object {
         return {
             structure_id: structureId,
             owner: ownerId,
-            reason_id: null,
+            reason_id: reasonId ? reasonId : null,
             ...(this.student_id ? {student_id: this.student_id} : {}),
             ...(this.start_date ? {start_date: this.start_date} : {}),
             ...(this.end_date ? {end_date: this.end_date} : {})
         }
     }
 
-    async createAbsence(structureId: string, ownerId: string): Promise<AxiosResponse> {
+    async createAbsence(structureId: string, reasonId: number, ownerId: string): Promise<AxiosResponse> {
         try {
-            return await http.post('/presences/absence', this.toAbsenceJson(structureId, ownerId));
+            return await http.post('/presences/absence', this.toAbsenceJson(structureId, reasonId, ownerId));
         } catch (err) {
             throw err;
         }

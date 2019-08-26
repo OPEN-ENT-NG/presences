@@ -1,5 +1,5 @@
-import {_, idiom as lang, model, moment, ng} from 'entcore';
-import {Absence, Event, EventResponse, Events, EventType, Student, Students} from "../models";
+import {_, model, moment, idiom as lang, ng, angular} from 'entcore';
+import {Events, EventType, Student, Students, EventResponse, Absence, Event} from "../models";
 import {DateUtils} from "@common/utils";
 import {GroupService} from "@common/services/GroupService";
 import {EventService, ReasonType} from "../services";
@@ -229,47 +229,9 @@ export const absencesController = ng.controller('AbsencesController', ['$scope',
 
         vm.treatAbsentAfterMouseLeave = async (event: EventResponse) => {
             vm.mouseIsDown = false;
-            if (!vm.mouseIsDown) {
-
-                /*  Avoid wrong index order */
-                vm.indexDayHistoryArray.sort();
-                if (vm.indexDayHistoryArray.length !== 0) {
-
-                    // Remove concerned dayHistory events via index Array
-                    vm.indexDayHistoryArray.forEach(item => {
-                        event.dayHistory[item].events = event.dayHistory[item].events.filter(item => item.type_id !== 1)
-                    });
-
-                    let response = await new Absence(null, event.studentId, event.dayHistory[vm.indexDayHistoryArray[0]].start,
-                        event.dayHistory[vm.indexDayHistoryArray[vm.indexDayHistoryArray.length - 1]].end).createAbsence(window.structure.id, model.me.userId);
-                    if (response.status === 201) {
-
-                        // add events created and fetched to dayHistory
-                        vm.indexDayHistoryArray.forEach((item) => {
-                            response.data.events.forEach(e => {
-                                if (((event.dayHistory[item].start >= e.start_date) || (e.start_date < event.dayHistory[item].end)) &&
-                                    ((event.dayHistory[item].end <= e.end_date) || (e.end_date > event.dayHistory[item].start))) {
-                                    event.dayHistory[item].events.push(e);
-                                }
-                            });
-                        });
-
-                        // add events from dayHistory to events array
-                        let updateEvents = [];
-                        event.dayHistory.forEach(item => {
-                            item.events.forEach(e => {
-                                updateEvents.push(e);
-                            });
-                        });
-
-                        event.events = _.uniq(updateEvents, "id");
-                        initGlobalReason(event);
-                        event.globalCounsellorRegularisation = initGlobalCounsellorRegularisation(event);
-                        console.log("event: ", event);
-                    }
-                }
-            }
-
+            /* @TODO !!feature not available yet!! While sliding on node, create absence
+                  that fit on register_id date and time to create event */
+            return;
         };
 
         const initGlobalCounsellorRegularisation = function (event: EventResponse): boolean {
@@ -303,86 +265,52 @@ export const absencesController = ng.controller('AbsencesController', ['$scope',
         };
 
         vm.drawAbsent = ($event): void => {
-            let event = $event.currentTarget.children[vm.indexDayHistory];
-            if (vm.mouseIsDown) {
-                if (event.getAttribute("class") === "empty" &&
-                    (event.getAttribute("class") === "late" || vm.indexDayHistory === 4)) {
-                    return;
-                }
-
-                // Avoid lunch time as our day history
-                if (vm.indexDayHistoryArray.indexOf(vm.indexDayHistory) === -1 && vm.indexDayHistory !== 4) {
-                    event.setAttribute("class", "absent");
-                    vm.indexDayHistoryArray.push(vm.indexDayHistory);
-                }
-
-                if (vm.indexDayHistory < vm.indexDayHistoryArray[vm.indexDayHistoryArray.length - 1]) {
-                    $event.currentTarget.children[vm.indexDayHistoryArray[vm.indexDayHistoryArray.length - 1]].setAttribute("class", "");
-                    vm.indexDayHistoryArray.pop();
-                }
-            }
+            /* @TODO !!feature not available yet!! When clicking on node, create absence that
+                 should match with register_id date/time to create event */
+            return;
         };
 
         vm.interactAbsent = (period, event: EventResponse, $event, parentIndex): void => {
             $event.stopPropagation();
-            let eventClass = $event.currentTarget.getAttribute("class");
+            if (vm.indexDayHistoryArray.length === 0) {
+                let eventClass = $event.currentTarget.getAttribute("class");
 
-            if (eventClass === "late" && period.name === "Repas") {
-                return;
-            }
+                if (eventClass === "late" && period.name === "Repas") {
+                    return;
+                }
 
-            // delete event
-            if (eventClass === "justified" || eventClass === "absent") {
-                let eventIdToDelete;
-                period.events.forEach((event, index) => {
-                    if (event.type_id === 1) {
-                        eventIdToDelete = event.id;
-                        period.events.splice(index, 1);
-                    }
-                });
-                let eventToDelete = event.events.find(element => element.id === eventIdToDelete);
-                let eventObj = new Event(eventToDelete.register_id, event.studentId, eventToDelete.start_date, eventToDelete.end_date);
-                eventObj.id = eventToDelete.id;
-                eventObj.delete();
-                event.dayHistory.forEach(history => {
-                    history.events.forEach((event, index) => {
-                        if (event.id === eventIdToDelete) {
-                            history.events.splice(index, 1);
+                // delete event
+                if (eventClass === "justified" || eventClass === "absent") {
+                    let eventIdToDelete;
+                    period.events.forEach((event, index) => {
+                        if (event.type_id === 1) {
+                            eventIdToDelete = event.id;
+                            period.events.splice(index, 1);
                         }
-                    })
-                });
-                event.events = event.events.filter(item => item.id !== eventIdToDelete);
-                if (event.events.length === 0) {
-                    vm.events.all.splice(parentIndex, 1);
+                    });
+                    let eventToDelete = event.events.find(element => element.id === eventIdToDelete);
+                    let eventObj = new Event(eventToDelete.register_id, event.studentId, eventToDelete.start_date, eventToDelete.end_date);
+                    eventObj.id = eventToDelete.id;
+                    eventObj.delete();
+                    event.dayHistory.forEach(history => {
+                        history.events.forEach((event, index) => {
+                            if (event.id === eventIdToDelete) {
+                                history.events.splice(index, 1);
+                            }
+                        })
+                    });
+                    event.events = event.events.filter(item => item.id !== eventIdToDelete);
+                    if (event.events.length === 0) {
+                        vm.events.all.splice(parentIndex, 1);
+                        return;
+                    }
+                    initGlobalReason(event);
+                    event.globalCounsellorRegularisation = initGlobalCounsellorRegularisation(event);
+                } else {
+                    /* @TODO !!feature not available yet!! When click on node,
+                         add absent/justified class to fill node and create absence */
                     return;
                 }
-                initGlobalReason(event);
-                event.globalCounsellorRegularisation = initGlobalCounsellorRegularisation(event);
-            } else {
-                // Adding event
-                if ($event.currentTarget.setAttribute("class") === "empty") {
-                    return;
-                }
-                $event.currentTarget.setAttribute("class", "absent");
-
-                // let data = new Absence(null, event.studentId, period.start, period.end).createAbsence(window.structure.id, model.me.userId);
-                // console.log("data done: ", data);
-                /* data test to inject after route creqte event/absent */
-                let eventObj = {
-                    counsellor_input: false,
-                    counsellor_regularisation: false,
-                    end_date: period.end,
-                    start_date: period.start,
-                    id: Math.floor(Math.random() * Math.floor(125000)), //?
-                    reason_id: null,
-                    register_id: Math.floor(Math.random() * Math.floor(125000)), //?
-                    type_id: 1
-                };
-                period.events.push(eventObj);
-                event.events.push(eventObj);
-
-                initGlobalReason(event);
-                event.globalCounsellorRegularisation = initGlobalCounsellorRegularisation(event);
             }
         };
 
@@ -642,4 +570,10 @@ export const absencesController = ng.controller('AbsencesController', ['$scope',
         $scope.$watch(() => window.structure, () => {
             getEvents();
         });
-    }]);
+
+        $scope.$on("$destroy", () => {
+            /* Remove directive/ghost div that remains on the view before changing route */
+            angular.element(document.querySelectorAll(".datepicker")).remove();
+            angular.element(document.querySelectorAll(".tooltip")).remove();
+        });
+}]);

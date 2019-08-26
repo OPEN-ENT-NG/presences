@@ -6,9 +6,11 @@ import fr.openent.presences.common.security.SearchRight;
 import fr.openent.presences.helper.CourseHelper;
 import fr.openent.presences.helper.MapHelper;
 import fr.openent.presences.helper.SubjectHelper;
+import fr.openent.presences.service.AbsenceService;
 import fr.openent.presences.service.EventService;
 import fr.openent.presences.service.ExemptionService;
 import fr.openent.presences.service.GroupService;
+import fr.openent.presences.service.impl.DefaultAbsenceService;
 import fr.openent.presences.service.impl.DefaultEventService;
 import fr.openent.presences.service.impl.DefaultExemptionService;
 import fr.openent.presences.service.impl.DefaultGroupService;
@@ -29,17 +31,17 @@ import org.entcore.common.http.filter.ResourceFilter;
 
 import java.security.NoSuchAlgorithmException;
 import java.text.ParseException;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.List;
+import java.text.SimpleDateFormat;
+import java.util.*;
 
+import static fr.openent.presences.common.helper.DateHelper.DAY_MONTH_YEAR;
 import static fr.wseduc.webutils.Utils.handlerToAsyncHandler;
 import static org.entcore.common.http.response.DefaultResponseHandler.arrayResponseHandler;
 
 public class CalendarController extends ControllerHelper {
 
     private final EventBus eb;
+    private AbsenceService absenceService;
     private CourseHelper courseHelper;
     private SubjectHelper subjectHelper;
     private EventService eventService;
@@ -49,6 +51,7 @@ public class CalendarController extends ControllerHelper {
     public CalendarController(EventBus eb) {
         super();
         this.eb = eb;
+        this.absenceService = new DefaultAbsenceService(eb);
         this.courseHelper = new CourseHelper(eb);
         this.subjectHelper = new SubjectHelper(eb);
         this.eventService = new DefaultEventService(eb);
@@ -100,6 +103,7 @@ public class CalendarController extends ControllerHelper {
                         Future<JsonArray> eventsFuture = Future.future();
                         Future<JsonArray> exemptionsFuture = Future.future();
                         Future<JsonArray> incidentsFuture = Future.future();
+                        Future<JsonArray> absentFuture = Future.future();
                         CompositeFuture.all(subjectsFuture, eventsFuture, exemptionsFuture, incidentsFuture).setHandler(futureEvent -> {
                             if (futureEvent.failed()) {
                                 log.error("[CalendarController@getCalendarCourses] Failed to retrieve information", futureEvent.cause());
@@ -111,6 +115,7 @@ public class CalendarController extends ControllerHelper {
                             JsonObject exemptionsMap = MapHelper.transformToMapMultiple(exemptionsFuture.result(), "subject_id");
                             JsonObject subjectMap = MapHelper.transformToMap(subjectList, "id");
                             JsonArray incidents = incidentsFuture.result();
+                            JsonArray absents = absentFuture.result();
                             for (int i = 0; i < events.size(); i++) {
                                 JsonObject event = events.getJsonObject(i);
                                 String eventHash = hash(event.getString("course_id") + event.getString("course_start_date") + event.getString("course_end_date"));
@@ -151,6 +156,9 @@ public class CalendarController extends ControllerHelper {
                                 }
                             }
 
+                            for (int i = 0; i < absents.size() ; i++) {
+                                courses.add(addNewCourse(absents.getJsonObject(i), params.get("structure")));
+                            }
                             renderJson(request, courses);
                         });
 
@@ -158,8 +166,42 @@ public class CalendarController extends ControllerHelper {
                         getEvents(params.get("structure"), params.get("start") + " 00:00:00", params.get("end") + " 23:59:59", eventTypes, Arrays.asList(params.get("user")), eventsFuture);
                         getExemptions(params.get("structure"), params.get("start") + " 00:00:00", params.get("end") + " 23:59:59", params.get("user"), exemptionsFuture);
                         getIncidents(params.get("structure"), params.get("start") + " 00:00:00", params.get("end") + " 23:59:59", params.get("user"), incidentsFuture);
+                        getAbsences(params.get("start"), params.get("end"), params.get("user"), absentFuture);
                     });
         });
+    }
+
+    private JsonObject addNewCourse(JsonObject absent, String structure) {
+        try {
+
+            SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
+            Date date = sdf.parse(absent.getString("start_date"));
+            Calendar calendar = Calendar.getInstance();
+            calendar.setTime(date);
+            int dayOfWeek = calendar.get(Calendar.DAY_OF_WEEK) - 1;
+
+            return new JsonObject()
+                    .put("_id", "0")
+                    .put("dayOfWeek", dayOfWeek == 0 ? 7 : dayOfWeek)
+                    .put("locked", true)
+                    .put("is_periodic", false)
+                    .put("is_recurrent", true)
+                    .put("absence", true)
+                    .put("structureId", structure)
+                    .put("events", new JsonArray())
+                    .put("startDate", absent.getString("start_date"))
+                    .put("endDate", absent.getString("end_date"))
+                    .put("roomLabels", new JsonArray())
+                    .put("subjectId", "")
+                    .put("subject_name", "")
+                    .put("startMomentDate", DateHelper.getDateString(absent.getString("start_date"), DAY_MONTH_YEAR))
+                    .put("startMomentTime", DateHelper.getDateString(absent.getString("start_date"), DateHelper.HOUR_MINUTES))
+                    .put("endMomentDate", DateHelper.getDateString(absent.getString("end_date"), DAY_MONTH_YEAR))
+                    .put("endMomentTime", DateHelper.getDateString(absent.getString("end_date"), DateHelper.HOUR_MINUTES));
+        } catch (ParseException e) {
+            log.error("[CalendarController@absent] Failed to parse date", e);
+            return new JsonObject();
+        }
     }
 
     private JsonObject incident(JsonObject course, JsonArray incidents) {
@@ -201,9 +243,9 @@ public class CalendarController extends ControllerHelper {
         course.remove("teacherIds");
         course.remove("manual");
         course.put("locked", true);
-        course.put("startMomentDate", DateHelper.getDateString(course.getString("startDate"), DateHelper.DAY_MONTH_YEAR));
+        course.put("startMomentDate", DateHelper.getDateString(course.getString("startDate"), DAY_MONTH_YEAR));
         course.put("startMomentTime", DateHelper.getDateString(course.getString("startDate"), DateHelper.HOUR_MINUTES));
-        course.put("endMomentDate", DateHelper.getDateString(course.getString("endDate"), DateHelper.DAY_MONTH_YEAR));
+        course.put("endMomentDate", DateHelper.getDateString(course.getString("endDate"), DAY_MONTH_YEAR));
         course.put("endMomentTime", DateHelper.getDateString(course.getString("endDate"), DateHelper.HOUR_MINUTES));
     }
 
@@ -257,6 +299,12 @@ public class CalendarController extends ControllerHelper {
 
     private void getEvents(String structureId, String startDate, String endDate, List<Integer> eventType, List<String> users, Future<JsonArray> future) {
         eventService.list(structureId, startDate, endDate, eventType, users, FutureHelper.handlerJsonArray(future));
+    }
+
+    private void getAbsences(String start, String end, String userId, Future<JsonArray> future) {
+        List<String> users = new ArrayList<>();
+        users.add(userId);
+        absenceService.get(start, end, users, FutureHelper.handlerJsonArray(future));
     }
 
     @Get("/calendar/groups/:id/students")

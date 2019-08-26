@@ -5,8 +5,15 @@
     <div class="exemption" ng-if="item.exempted" ng-class="{absent: item.containsAbsence}">
         &nbsp;
     </div>
+    <div class="absenceOnly" ng-if="isAbsenceOnly(item)">
+        &nbsp;
+    </div>
+    <div class="courses-inside-absenceOnly" ng-if="isAbsenceOnly(item)">
+        &nbsp;
+    </div>
     <div class="course-item"
-         ng-class="{'contains-absence': item.containsAbsence, 'contains-events': item.events.length > 0 || item.exempted}">
+         data-ng-attr-id="[[isAbsenceOnly(item) ? 'absent-' + item.hash : null]]"
+         ng-class="{'contains-absenceOnly': isAbsenceOnly(item), 'contains-absence': item.containsAbsence, 'contains-events': item.events.length > 0 || item.exempted, 'is-absence': item.hasOwnProperty('hash')}">
         <div class="data">
             <div class="subject cell">[[item.subject_name]]</div>
             <em class="metadata right-magnet"><span ng-repeat="room in item.roomLabels">[[room]]</span> </em>
@@ -23,4 +30,5 @@
             <i18n>presences.calendar.exemption.code</i18n>
         </div>
     </div>
+    <span ng-bind="::vm.changeAbsence(item)"></span>
 </div>

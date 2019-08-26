@@ -30,20 +30,33 @@ public class DefaultAbsenceService implements AbsenceService {
     }
 
     @Override
-    public void get(Handler<Either<String, JsonArray>> handler) {
+    public void get(String startDate, String endDate, List<String> users, Handler<Either<String, JsonArray>> handler) {
         JsonArray params = new JsonArray();
-        String query = "SELECT * FROM " + Presences.dbSchema + ".absence";
+        String query = "SELECT * FROM " + Presences.dbSchema + ".absence" +
+                " WHERE student_id IN " + Sql.listPrepared(users.toArray()) +
+                " AND start_date > ?" +
+                " AND end_date < ?";
+
+        params.addAll(new JsonArray(users));
+        params.add(startDate + " 00:00:00");
+        params.add(endDate + " 23:59:59");
+
         Sql.getInstance().prepared(query, params, SqlResult.validResultHandler(handler));
     }
 
     @Override
     public void create(JsonObject absenceBody, UserInfos user, Handler<Either<String, JsonArray>> handler) {
-        String query = "INSERT INTO " + Presences.dbSchema + ".absence(start_date, end_date, student_id) " +
-                "VALUES (?, ?, ?) RETURNING id;";
+        String query = "INSERT INTO " + Presences.dbSchema + ".absence(start_date, end_date, student_id, reason_id) " +
+                "VALUES (?, ?, ?, ?) RETURNING id;";
         JsonArray params = new JsonArray()
                 .add(absenceBody.getString("start_date"))
                 .add(absenceBody.getString("end_date"))
                 .add(absenceBody.getString("student_id"));
+        if (absenceBody.getInteger("reason_id") != null) {
+            params.add(absenceBody.getInteger("reason_id"));
+        } else {
+            params.addNull();
+        }
 
         Sql.getInstance().prepared(query, params, SqlResult.validUniqueResultHandler(absenceResult -> {
             if (absenceResult.isLeft()) {
@@ -89,16 +102,22 @@ public class DefaultAbsenceService implements AbsenceService {
                 " AND register.end_date <= ? " +
                 "AND register.id NOT IN (SELECT event.register_id FROM " + Presences.dbSchema + ".event " +
                 "WHERE event.type_id = 1 and event.register_id = register.id and event.student_id = ? ))" +
-                "INSERT INTO " + Presences.dbSchema + ".event (start_date, end_date, comment, counsellor_input, student_id, register_id, type_id, owner)" +
-               "(SELECT  register.start_date, register.end_date, '', false, ?, register.id, 1, ? FROM register) returning register_id";
+                "INSERT INTO " + Presences.dbSchema + ".event (start_date, end_date, comment, counsellor_input, student_id, register_id, type_id, reason_id, owner)" +
+               "(SELECT  register.start_date, register.end_date, '', false, ?, register.id, 1, ?, ? FROM register) returning register_id";
 
         JsonArray params = new JsonArray()
                 .add(id)
                 .add(absenceBody.getString("start_date"))
                 .add(absenceBody.getString("end_date"))
                 .add(absenceBody.getString("student_id"))
-                .add(absenceBody.getString("student_id"))
-                .add(absenceBody.getString("owner"));
+                .add(absenceBody.getString("student_id"));
+
+        if (absenceBody.getInteger("reason_id") != null) {
+            params.add(absenceBody.getInteger("reason_id"));
+        } else {
+            params.addNull();
+        }
+        params.add(absenceBody.getString("owner"));
 
        Sql.getInstance().prepared(query, params, SqlResult.validResultHandler(handler));
     }

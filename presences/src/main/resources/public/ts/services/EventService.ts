@@ -15,7 +15,7 @@ export interface EventService {
     getReasonsType(structureId: string): Promise<ReasonType[]>
 }
 
-export const EventService = ng.service('EventService', (): EventService => ({
+export const eventService : EventService = {
     getReasonsType: async (structureId: string) => {
         try {
             const {data} = await http.get(`/presences/event/reason/types?structureId=${structureId}`);
@@ -24,5 +24,6 @@ export const EventService = ng.service('EventService', (): EventService => ({
             throw err;
         }
     }
-}));
+};
 
+export const EventService = ng.service('EventService', (): EventService => eventService);

@@ -1,4 +1,5 @@
 $calendar-item-color: rgba(247, 246, 246, 1);
+$calendar-item-pink-colored: #CC6F6A;
 $calendar-item-color-opacity: rgba(247, 247, 246, 0.34);
 $calendar-exemption-color: #c0c0c0;
 $calendar-item-border-color: rgba(96, 96, 96, 0.15);
@@ -151,7 +152,18 @@ $calendar-user-card-height: 56px;
           box-sizing: border-box;
         }
 
-        .absence, .exemption {
+        &.schedule-absenceOnly {
+          width: 99% !important;
+          left: 0 !important;
+          z-index: 1 !important;
+        }
+
+        &.schedule-course-absenceOnly {
+          width: 99%!important;
+          left: 0!important;
+        }
+
+        .absence, .exemption, .absenceOnly {
           position: absolute;
           height: 100%;
           width: 100%;
@@ -161,6 +173,10 @@ $calendar-user-card-height: 56px;
 
         .absence {
           background-color: $presences-red;
+        }
+
+        .absenceOnly {
+          background-color: $presences-pink;
         }
 
         .exemption {
@@ -210,8 +226,22 @@ $calendar-user-card-height: 56px;
           flex-direction: column;
           justify-content: space-between;
 
+          &.isAbsent {
+            background-color: $calendar-item-pink-colored;
+            color: $presences-white;
+          }
+
           .data > em.metadata {
             margin-right: 4px;
+          }
+
+          &.contains-absenceOnly {
+            background-color: $presences-pink;
+            border: none;
+
+            .schedule-item & {
+
+            }
           }
 
           &.contains-absence {

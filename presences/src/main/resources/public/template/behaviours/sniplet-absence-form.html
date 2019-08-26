@@ -1,0 +1,70 @@
+<button class="right-magnet"
+        data-ng-click="vm.openAbsenceLightbox()">
+    <i18n>presences.register.event_type.absences</i18n>
+</button>
+
+<lightbox class="absentLightbox" show="vm.createAbsenceLightBox" on-close="vm.closeAbsenceLightbox()">
+    <section class="absentLightbox-head head"><h3><i18n>presences.absence.create</i18n></h3></section>
+
+    <section class="absentLightbox-body body lightbox-form">
+
+        <h3 class="absentLightbox-body-title row spacing"><i18n>presences.absence.form.title</i18n></h3>
+
+        <!-- Info Date/reason -->
+        <div class="absentLightbox-body-info row spacing">
+
+                <!-- Start date -->
+                <div class="absentLightbox-body-info-startDate twelve cell">
+                    <i18n>presences.from</i18n>
+                    <span class="absentLightbox-body-info-startDate-datepicker card date-picker">
+                        <date-picker required ng-model="vm.form.startDate"></date-picker>
+                    </span>
+
+                    <span class="card incident-lightbox-body-dateAndPlace-date-content-timePicker">
+                          <time-picker required ng-model="vm.form.startDateTime"></time-picker>
+                    </span>
+                </div>
+
+                <!-- End date -->
+                <div class="absentLightbox-body-info-endDate twelve cell">
+                    <i18n>presences.from</i18n>
+                    <span class="absentLightbox-body-info-endDate-datepicker card date-picker">
+                        <date-picker required ng-model="vm.form.startDate"></date-picker>
+                    </span>
+
+                    <span class="card incident-lightbox-body-dateAndPlace-date-content-timePicker">
+                          <time-picker required ng-model="vm.form.endDateTime"></time-picker>
+                    </span>
+                </div>
+
+                <div class="absentLightbox-body-info-reason twelve cell table-reason">
+                    <label>
+                        <select data-ng-model="vm.form.reason_id"
+                                ng-options="reason.id as reason.label for reason in vm.reasonsType">
+                            <option value="">[[lang.translate('presences.absence.select.empty')]]</option>
+                        </select>
+                    </label>
+                </div>
+        </div>
+
+    </section>
+
+    <section class="absentLightbox-footer">
+
+        <!-- Button/submit -->
+        <div class="absentLightbox-footer-button row">
+            <!-- Submit mode -->
+            <button class="right-magnet" data-ng-click="vm.createAbsence()"
+                    data-ng-disabled="!vm.isFormValid()">
+                <i18n>presences.absence.form.create</i18n>
+            </button>
+
+            <!-- Edit mode  -->
+            <button class="right-magnet cancel" data-ng-click="vm.closeAbsenceLightbox()">
+                <i18n>presences.exemptions.form.cancel</i18n>
+            </button>
+        </div>
+
+    </section>
+
+</lightbox>

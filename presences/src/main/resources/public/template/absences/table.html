@@ -47,7 +47,7 @@
                 data-ng-click="vm.period($event)"
                 data-ng-mousedown="vm.setAbsent($event)"
                 data-ng-mouseup="vm.treatAbsentAfterMouseLeave(event)"
-                data-ng-mousemove="vm.drawAbsent($event)">
+                data-ng-mouseover="vm.drawAbsent($event)">
 
                 <!-- planning  -->
                 <li ng-repeat="periods in event.dayHistory track by $index"

@@ -118,38 +118,30 @@ public class DefaultRegisterService implements RegisterService {
     }
 
     private void absenceInteraction(UserInfos user, JsonObject finalResult, Handler<Either<String, JsonObject>> handler) {
-        absenceService.get(absenceResult -> {
-            if (absenceResult.isLeft()) {
-                String message = "[Presences@DefaultRegisterService] Failed to retrieve absence";
-                LOGGER.error(message, absenceResult.left().getValue());
+        getRegisterIdGroup(finalResult.getLong("id"), registerIdGroupResult -> {
+            if (registerIdGroupResult.isLeft()) {
+                String message = "[Presences@DefaultRegisterService] Failed to retrieve register id group reference";
+                LOGGER.error(message, registerIdGroupResult.left().getValue());
                 handler.handle(new Either.Left<>(message));
             } else {
-                getRegisterIdGroup(finalResult.getLong("id"), registerIdGroupResult -> {
-                    if (registerIdGroupResult.isLeft()) {
-                        String message = "[Presences@DefaultRegisterService] Failed to retrieve register id group reference";
-                        LOGGER.error(message, registerIdGroupResult.left().getValue());
+                groupService.getGroupStudents(registerIdGroupResult.right().getValue().getString("group_id"), studentsIdsResult -> {
+                    if (studentsIdsResult.isLeft()) {
+                        String message = "[Presences@DefaultRegisterService] Failed to retrieve students info";
+                        LOGGER.error(message, studentsIdsResult.left().getValue());
                         handler.handle(new Either.Left<>(message));
                     } else {
-                        groupService.getGroupStudents(registerIdGroupResult.right().getValue().getString("group_id"), studentsIdsResult -> {
-                            if (studentsIdsResult.isLeft()) {
-                                String message = "[Presences@DefaultRegisterService] Failed to retrieve students info";
+                        List<String> users = new ArrayList<>();
+                        for (int i = 0; i < studentsIdsResult.right().getValue().size() ; i++) {
+                            users.add(studentsIdsResult.right().getValue().getJsonObject(i).getString("id"));
+                        }
+                        matchAbsenceToEvent(finalResult, users, user, matchingResult -> {
+                            if (matchingResult.isLeft()) {
+                                String message = "[Presences@DefaultRegisterService] Failed to create events with absence information";
                                 LOGGER.error(message, studentsIdsResult.left().getValue());
                                 handler.handle(new Either.Left<>(message));
                             } else {
-                                List<String> users = new ArrayList<>();
-                                for (int i = 0; i < studentsIdsResult.right().getValue().size() ; i++) {
-                                    users.add(studentsIdsResult.right().getValue().getJsonObject(i).getString("id"));
-                                }
-                                matchAbsenceToEvent(finalResult, users, user, matchingResult -> {
-                                    if (matchingResult.isLeft()) {
-                                        String message = "[Presences@DefaultRegisterService] Failed to create events with absence information";
-                                        LOGGER.error(message, studentsIdsResult.left().getValue());
-                                        handler.handle(new Either.Left<>(message));
-                                    } else {
-                                        /* Finish handler */
-                                        handler.handle(new Either.Right<>(finalResult));
-                                    }
-                                });
+                                /* Finish handler */
+                                handler.handle(new Either.Right<>(finalResult));
                             }
                         });
                     }
@@ -166,12 +158,12 @@ public class DefaultRegisterService implements RegisterService {
 
     private void matchAbsenceToEvent(JsonObject finalResult, List<String> users, UserInfos user, Handler<Either<String, JsonArray>> handler) {
         JsonArray params = new JsonArray();
-        String query = "WITH absence as (SELECT absence.id, absence.start_date, absence.end_date, absence.student_id " +
+        String query = "WITH absence as (SELECT absence.id, absence.start_date, absence.end_date, absence.student_id, absence.reason_id" +
                 " FROM presences.absence WHERE absence.student_id IN " + Sql.listPrepared(users.toArray()) +
                 " AND absence.start_date <= ?" +
                 " AND absence.end_date >= ?)" +
-                " INSERT INTO presences.event (start_date, end_date, comment, counsellor_input, student_id, register_id, type_id, owner)" +
-                " (SELECT ?, ?, '', false, absence.student_id, ?, 1, ? FROM absence) ";
+                " INSERT INTO presences.event (start_date, end_date, comment, counsellor_input, student_id, register_id, type_id, reason_id, owner)" +
+                " (SELECT ?, ?, '', false, absence.student_id, ?, 1, absence.reason_id, ? FROM absence) ";
 
         params.addAll(new JsonArray(users));
         params.add(finalResult.getString("start_date"));

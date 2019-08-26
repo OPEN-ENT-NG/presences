@@ -22,7 +22,8 @@ export interface Course {
     endDate: string;
     is_recurrent: boolean;
     subject_name: string;
-    events: CourseEvent[]
+    events: CourseEvent[];
+    hash?: string;
 }
 
 export interface CalendarService {
@@ -46,6 +47,9 @@ export const CalendarService = ng.service('CalendarService', (): CalendarService
                 course.endMoment = moment(course.endDate);
                 course.containsAbsence = containsAbsence(course);
                 this.locked = true;
+
+                // create hash to fetch in html in order to recognize "absence" course
+                if (course.absence) course.hash = Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
             });
             return data;
         } catch (err) {

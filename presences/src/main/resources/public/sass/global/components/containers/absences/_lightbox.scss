@@ -1,0 +1,47 @@
+.absentLightbox {
+
+  /* Header part */
+  &-head {
+
+  }
+
+  /* Body part */
+  &-body {
+    background: $presences-grey-smoke;
+    &-title {
+      color: $black;
+    }
+    &-info {
+
+      &-startDate {
+        margin: 16px 0 8px 0;
+        &-datepicker {
+          margin-right: 24px;
+        }
+      }
+
+      &-endDate {
+        margin: 8px 0 16px 0;
+        &-datepicker {
+          margin-right: 24px;
+        }
+      }
+
+      &-reason {
+        select {
+          border: unset!important;
+        }
+      }
+    }
+  }
+
+  /* Footer part */
+  &-footer {
+    &-button {
+      padding: 8px;
+      button {
+        margin: 8px;
+      }
+    }
+  }
+}

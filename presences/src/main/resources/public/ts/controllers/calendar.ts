@@ -34,6 +34,7 @@ interface ViewModel {
 
     searchItem(value: string): void;
 
+    changeAbsence(item: Course): string;
     loadCourses(): Promise<void>;
 
     formatExemptionDate(date: any): string;
@@ -43,6 +44,7 @@ interface CalendarScope extends Scope {
     hoverExemption($event, exemption: { start_date: string, end_date: string }): void;
 
     hoverOutExemption(): void;
+    isAbsenceOnly($event, item, items): boolean;
 }
 
 export const calendarController = ng.controller('CalendarController', ['$scope', 'route', '$location', 'StructureService', 'CalendarService', 'GroupService', 'SearchService',
@@ -99,6 +101,52 @@ export const calendarController = ng.controller('CalendarController', ['$scope',
                 $location.path(`/calendar/${vm.filter.student.id}`);
             }
             await vm.loadCourses();
+        }
+
+        vm.changeAbsence = function (item): string {
+            if ('hash' in item) changeAbsenceView(item);
+            return "";
+        };
+
+        function changeAbsenceView({ hash }: Course) {
+            let courseItems = document.getElementById(`absent-${hash}`).closest('.fiveDays').querySelectorAll('.course-item:not(.is-absence)');
+            let items = [];
+            Array.from(courseItems).forEach((course: HTMLElement) => {
+                const item = course.closest('.schedule-item');
+                items.push(item);
+                if (item === undefined || item === null) return;
+                if ((item.parentNode as Element).querySelector('.absenceOnly')) {
+                    item.setAttribute("class", "schedule-item schedule-absenceOnly");
+                } else {
+                    item.setAttribute("class", "schedule-item schedule-course-absenceOnly");
+                }
+            });
+
+            let absenceItem = items.filter(item => item.getAttribute("class") === "schedule-item schedule-absenceOnly");
+            let coursesItems = items.filter(item => item.getAttribute("class") !== "schedule-item schedule-absenceOnly");
+
+            coursesItems.forEach(course => {
+                if (isItemInside(course, absenceItem[0])) {
+                    course.querySelectorAll(".course-item")[0].classList.add("isAbsent");
+                }
+            });
+        }
+
+        function isItemInside(item, itemAbsence): boolean {
+            let itemPosX = item.offsetLeft;
+            let itemPosY = item.offsetTop;
+            let itemHeight = item.clientHeight;
+            let itemWidth = item.clientWidth;
+            let itemBottom = itemPosY + itemHeight;
+            let itemRight = itemPosX + itemWidth;
+
+            let itemAbsenceX = itemAbsence.offsetLeft;
+            let itemAbsenceY = itemAbsence.offsetTop;
+            let itemAbsenceHeight = itemAbsence.clientHeight;
+            let itemAbsenceWidth = itemAbsence.clientWidth;
+            let itemAbsenceBottom = itemAbsenceY + itemAbsenceHeight;
+            let itemAbsenceRight = itemAbsenceX + itemAbsenceWidth;
+            return !(itemBottom < itemAbsenceY || itemPosY > itemAbsenceBottom || itemRight < itemAbsenceX || itemPosX > itemAbsenceRight);
         }
 
         vm.loadCourses = async function (student = vm.filter.student) {
@@ -164,6 +212,10 @@ export const calendarController = ng.controller('CalendarController', ['$scope',
 
         $scope.hoverOutExemption = function () {
             hover.style.display = 'none';
+        };
+
+        $scope.isAbsenceOnly = function(item): boolean {
+            return item.absence;
         };
 
         vm.formatExemptionDate = function (date) {
