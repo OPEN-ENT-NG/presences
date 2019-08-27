@@ -11,7 +11,7 @@ export const SideWidget = ng.directive('sideWidget', () => {
         template: `
         <aside class="side-widget" ng-class="{opened: opened}">
             <div class="title">
-                <h2>
+                <h2 title="[[::translatedTitle]]">
                     <span class="triangle open-button" ng-click="opened = !opened" role="button">&nbsp;</span>
                     [[::translatedTitle]]
                 </h2>
