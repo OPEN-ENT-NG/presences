@@ -150,6 +150,7 @@ public class EventController extends ControllerHelper {
     @ApiDoc("Update regularized absent in event")
     @ResourceFilter(CreateEventRight.class)
     @SecuredAction(value = "", type = ActionType.RESOURCE)
+    @Trace(Actions.ABSENCE_REGULARIZATION)
     public void regularizedEvents(HttpServerRequest request) {
         RequestUtils.bodyToJson(request, event -> {
             eventService.changeRegularizedEvents(event, DefaultResponseHandler.defaultResponseHandler(request));

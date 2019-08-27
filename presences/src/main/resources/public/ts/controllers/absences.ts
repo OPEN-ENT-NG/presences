@@ -201,7 +201,7 @@ export const absencesController = ng.controller('AbsencesController', ['$scope',
             }
             vm.events.eventType = vm.eventType.toString();
 
-            if (!vm.eventReasonsType) {
+            if (!vm.eventReasonsType || vm.eventReasonsType.length <= 1) {
                 vm.eventReasonsType = await EventService.getReasonsType(window.structure.id);
                 vm.eventReasonsTypeDescription = _.clone(vm.eventReasonsType);
                 if (!isWidget) vm.eventReasonsType.push(vm.multipleSelect);

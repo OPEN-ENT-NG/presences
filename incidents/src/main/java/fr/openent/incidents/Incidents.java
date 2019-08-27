@@ -9,6 +9,9 @@ public class Incidents extends BaseServer {
 	public static String dbSchema;
 	public static String ebViescoAddress = "viescolaire";
 	;
+	public static final String READ_INCIDENT = "incidents.incident.read";
+	public static final String MANAGE_INCIDENT = "incidents.incident.manage";
+
 	public static Integer PAGE_SIZE = 20;
 
 	@Override

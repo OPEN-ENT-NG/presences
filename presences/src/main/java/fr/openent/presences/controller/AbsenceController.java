@@ -1,6 +1,7 @@
 package fr.openent.presences.controller;
 
 import fr.openent.presences.Presences;
+import fr.openent.presences.constants.Actions;
 import fr.openent.presences.enums.EventType;
 import fr.openent.presences.service.AbsenceService;
 import fr.openent.presences.service.impl.DefaultAbsenceService;
@@ -12,6 +13,7 @@ import io.vertx.core.eventbus.EventBus;
 import io.vertx.core.http.HttpServerRequest;
 import io.vertx.core.json.JsonObject;
 import org.entcore.common.controller.ControllerHelper;
+import org.entcore.common.http.filter.Trace;
 import org.entcore.common.user.UserUtils;
 
 public class AbsenceController extends ControllerHelper {
@@ -29,6 +31,7 @@ public class AbsenceController extends ControllerHelper {
     @Post("/absence")
     @ApiDoc("Create absence")
     @SecuredAction(Presences.CREATE_EVENT)
+    @Trace(Actions.ABSENCE_ACTION_CREATION)
     public void postEvent(HttpServerRequest request) {
         RequestUtils.bodyToJson(request, event -> {
             if (!isValidAbsenceBody(event)) {

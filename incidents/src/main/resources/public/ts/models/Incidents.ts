@@ -36,7 +36,7 @@ export class Incident {
 
     constructor(structureId) {
         this.id = null;
-        this.owner = model.me.login;
+        this.owner = model.me.userId;
         this.structureId = structureId;
 
         this.date = moment(new Date()).set({second: 0, millisecond: 0}).toDate();
