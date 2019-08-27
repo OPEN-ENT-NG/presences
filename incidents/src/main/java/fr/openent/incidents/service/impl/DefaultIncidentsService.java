@@ -125,12 +125,6 @@ public class DefaultIncidentsService extends SqlCrudService implements Incidents
                             List<String> userId, String page, JsonArray params, boolean paginationMode, String field, boolean reverse) {
         String query = "WITH ids AS (SELECT id FROM " + Incidents.dbSchema + ".incident i ";
 
-        if (userId != null && !userId.isEmpty()) {
-            query += "INNER JOIN " + Incidents.dbSchema + ".protagonist AS userProtagonist " +
-                    "ON (i.id = userProtagonist.incident_id AND userProtagonist.user_id IN " + Sql.listPrepared(userId.toArray()) + " ) ";
-            params.addAll(new JsonArray(userId));
-        }
-
         query += "WHERE i.structure_id = ? ";
         params.add(structureId);
 
@@ -164,11 +158,19 @@ public class DefaultIncidentsService extends SqlCrudService implements Incidents
                     "INNER JOIN " + Incidents.dbSchema + ".seriousness AS seriousness ON seriousness.id = i.seriousness_id " +
                     "INNER JOIN (SELECT pt.*, to_json(protagonist_type) as type FROM incidents.protagonist pt " +
                     "INNER JOIN " + Incidents.dbSchema + ".protagonist_type ON pt.type_id = protagonist_type.id) " +
-                    "AS protagonists ON (i.id = protagonists.incident_id) " +
+                    "AS protagonists ON (i.id = protagonists.incident_id ";
 
-                    "GROUP BY i.id, i.date, i.description, i.processed, i.place_id, i.partner_id, " +
-                    "i.type_id, i.seriousness_id, place.id, partner.id, incident_type.id, seriousness.id " +
-                    "ORDER BY " + getSqlOrderValue(field) + " " + getSqlReverseString(reverse);
+            if (userId != null && !userId.isEmpty()) {
+                query += " AND protagonists.user_id IN " + Sql.listPrepared(userId.toArray()) + " ) ";
+                params.addAll(new JsonArray(userId));
+            } else {
+                query += ") ";
+            }
+
+            query += "GROUP BY i.id, i.date, i.description, i.processed, i.place_id, i.partner_id, " +
+            "i.type_id, i.seriousness_id, place.id, partner.id, incident_type.id, seriousness.id " +
+            "ORDER BY " + getSqlOrderValue(field) + " " + getSqlReverseString(reverse);
+
         } else {
             query += ") SELECT count(*) from ids";
         }

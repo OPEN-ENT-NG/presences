@@ -1,4 +1,4 @@
-import {_, ng, notify} from 'entcore';
+import {_, angular, ng, notify} from 'entcore';
 import {Incident, Incidents, Student, Students} from "../models";
 import {DateUtils} from '@common/utils'
 import {IncidentService} from "../services";
@@ -202,5 +202,15 @@ export const incidentsController = ng.controller('IncidentsController', ['$scope
             $scope.$broadcast(INCIDENTS_FORM_EVENTS.EDIT, incident);
             $scope.safeApply()
         };
-    }])
-;
+
+        /* on switch (watch) */
+        $scope.$watch(() => window.structure, () => {
+            getIncidents();
+        });
+
+        /* Destroy directive and scope */
+        $scope.$on('$destroy', function() {
+            angular.element(document.querySelectorAll(".datepicker")).remove();
+            $scope.$destroy();
+        })
+    }]);

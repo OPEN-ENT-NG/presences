@@ -236,10 +236,8 @@ export const absencesController = ng.controller('AbsencesController', ['$scope',
 
         const initGlobalCounsellorRegularisation = function (event: EventResponse): boolean {
             let regularizedArray = [];
-            event.dayHistory.forEach(item => {
-                item.events.forEach(e => {
-                    regularizedArray.push(e.counsellor_regularisation);
-                });
+            event.events.forEach(e => {
+                regularizedArray.push(e.counsellor_regularisation);
             });
             return regularizedArray.reduce((current, initial) => initial && current)
         };
@@ -571,9 +569,11 @@ export const absencesController = ng.controller('AbsencesController', ['$scope',
             getEvents();
         });
 
+        /* Destroy directive and scope */
         $scope.$on("$destroy", () => {
             /* Remove directive/ghost div that remains on the view before changing route */
             angular.element(document.querySelectorAll(".datepicker")).remove();
             angular.element(document.querySelectorAll(".tooltip")).remove();
+            $scope.$destroy();
         });
 }]);

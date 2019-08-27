@@ -41,7 +41,6 @@
                 <select class="card" required
                         data-ng-model="vm.incidentForm.place"
                         ng-options="place.label for place in vm.incidentParameterType.place track by place.id">
-                    <option value=""></option>
                 </select>
             </label>
         </div>
@@ -55,7 +54,6 @@
                 <select class="card" required
                         data-ng-model="vm.incidentForm.incidentType"
                         ng-options="incidentType.label for incidentType in vm.incidentParameterType.incidentType track by incidentType.id">
-                    <option value=""></option>
                 </select>
             </label>
 
@@ -66,7 +64,6 @@
                 <select class="card" required
                         data-ng-model="vm.incidentForm.seriousness"
                         ng-options="seriousnessLevel.label for seriousnessLevel in vm.incidentParameterType.seriousnessLevel track by seriousnessLevel.id">
-                    <option value=""></option>
                 </select>
             </label>
 
