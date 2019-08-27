@@ -1,5 +1,5 @@
-import {_, model, moment, idiom as lang, ng, angular} from 'entcore';
-import {Events, EventType, Student, Students, EventResponse, Absence, Event} from "../models";
+import {_, angular, idiom as lang, moment, ng} from 'entcore';
+import {Event, EventResponse, Events, EventType, Student, Students} from "../models";
 import {DateUtils} from "@common/utils";
 import {GroupService} from "@common/services/GroupService";
 import {EventService, ReasonType} from "../services";
@@ -574,6 +574,5 @@ export const absencesController = ng.controller('AbsencesController', ['$scope',
             /* Remove directive/ghost div that remains on the view before changing route */
             angular.element(document.querySelectorAll(".datepicker")).remove();
             angular.element(document.querySelectorAll(".tooltip")).remove();
-            $scope.$destroy();
         });
-}]);
+    }]);

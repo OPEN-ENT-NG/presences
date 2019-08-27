@@ -211,6 +211,5 @@ export const incidentsController = ng.controller('IncidentsController', ['$scope
         /* Destroy directive and scope */
         $scope.$on('$destroy', function() {
             angular.element(document.querySelectorAll(".datepicker")).remove();
-            $scope.$destroy();
         })
     }]);
