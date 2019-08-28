@@ -20,6 +20,23 @@
     overflow-y: scroll;
     height: calc(100% - 90px - 71px - 54px);
     display: block;
+
+    &.empty {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+
+      .tick-color {
+        &:first-child {
+          margin-bottom: 50px;
+        }
+
+        &:last-child {
+          margin-top: 50px;
+        }
+      }
+    }
   }
 
   .event {

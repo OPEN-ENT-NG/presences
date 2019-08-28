@@ -110,10 +110,13 @@
   "presences.widgets.alerts.incidents": "alertes incidents",
   "presences.widgets.alerts.textbooks": "alertes carnet oublié",
   "presences.widgets.day.forgotten.registers": "Appels oubliés du jour",
+  "presences.widgets.day.forgotten.registers.empty": "Pas d'appel oublié aujourd'hui",
   "presences.widgets.day.courses": "Appels du jour",
+  "presences.widgets.day.courses.empty": "Pas d'appel aujourd'hui",
   "presences.widgets.statements": "Déclarations des parents à traiter",
   "presences.widgets.remarks": "Observations",
   "presences.widgets.absences": "Régularisation des absences",
+  "presences.widgets.absences.empty": "Aucune absence à régulariser sur cette période",
   "presences.widgets.absences.regularized": "Régularisé",
   "presences.widgets.register": "Appel en cours",
   "presences.widgets.day_presences": "Présences du jour"

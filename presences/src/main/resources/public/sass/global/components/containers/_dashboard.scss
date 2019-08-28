@@ -3,6 +3,32 @@
     color: $black;
   }
 
+  .empty-title {
+    color: $presences-middle-grey;
+    font-size: 18px;
+    width: 80%;
+    text-align: center;
+  }
+
+  .tick-color {
+    min-width: 50px;
+    height: 16px;
+    border-radius: 8px;
+    display: inline-block;
+
+    &.purple {
+      background: $presences-purple;
+    }
+
+    &.red {
+      background: $presences-red;
+    }
+
+    &.yellow {
+      background: $presences-main;
+    }
+  }
+
   .presences-title {
     display: flex;
     align-items: center;

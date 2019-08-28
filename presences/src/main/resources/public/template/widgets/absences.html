@@ -41,7 +41,7 @@
             </ul>
         </div>
     </div>
-    <div class="absence-list">
+    <div class="absence-list" ng-show="vm.events.events.length > 0">
         <div ng-repeat="event in vm.events.events" class="event">
             <div>
                 <div>
@@ -71,5 +71,12 @@
                 </div>
             </div>
         </div>
+    </div>
+    <div class="absence-list empty" ng-show="vm.events.events.length === 0">
+        <div class="tick-color red">&nbsp;</div>
+        <div class="empty-title">
+            <i18n>presences.widgets.absences.empty</i18n>
+        </div>
+        <div class="tick-color purple">&nbsp;</div>
     </div>
 </div>

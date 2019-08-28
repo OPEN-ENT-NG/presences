@@ -1,12 +1,12 @@
-<div class="forgotten-registers-alerts registers" ng-controller="RegistersController as vm"
+<div class="forgotten-registers-widget registers" ng-controller="RegistersController as vm"
      ng-init="vm.widget.dayCourses = true;">
     <h2>
         <i18n>presences.widgets.day.courses</i18n>
     </h2>
-    <div class="row card-slider">
+    <div class="row card-slider" ng-show="vm.courses.all.length > 0">
         <div class="card cell" ng-repeat="course in vm.courses.all|orderBy:'timestamp'"
              data-ng-click="vm.openRegister(course, $event)"
-             ng-class="{active: course._id === vm.register.course_id}">
+             ng-class="{active: course._id === vm.register.course_id, disabled: vm.isFuturCourse(course)}">
             <div ng-if="hasSearchRight()" class="row has-search-right">
                 <div class="row hour">
                     <span>[[::vm.formatHour(course.startDate)]] - [[::vm.formatHour(course.endDate)]]</span>
@@ -31,5 +31,12 @@
                 <div class="row subject">[[::course.subjectName]]</div>
             </div>
         </div>
+    </div>
+    <div class="card-slider empty" ng-show="vm.courses.all.length === 0">
+        <div class="tick-color yellow">&nbsp;</div>
+        <div class="empty-title">
+            <i18n>presences.widgets.day.courses.empty</i18n>
+        </div>
+        <div class="tick-color purple">&nbsp;</div>
     </div>
 </div>

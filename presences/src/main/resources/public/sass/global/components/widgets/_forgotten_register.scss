@@ -1,0 +1,23 @@
+.forgotten-registers-widget {
+  .card-slider.empty {
+    display: flex;
+    align-items: center;
+    flex-direction: row;
+    width: 100%;
+    justify-content: center;
+
+    .empty-title {
+      width: auto !important;
+    }
+
+    .tick-color {
+      &:first-child {
+        margin-right: 50px;
+      }
+
+      &:last-child {
+        margin-left: 50px;
+      }
+    }
+  }
+}
