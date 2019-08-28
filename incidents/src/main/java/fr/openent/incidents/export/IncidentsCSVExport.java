@@ -35,7 +35,7 @@ public class IncidentsCSVExport extends CSVExport {
         String line = DateHelper.getDateString(incident.getString("date"), "dd/MM/YYYY kk'h'mm") + SEPARATOR;
         line += incident.getJsonObject("place").getString("label") + SEPARATOR;
         line += incident.getJsonObject("incident_type").getString("label") + SEPARATOR;
-        line += incident.getString("description") + SEPARATOR;
+        line += incident.getString("description").replaceAll("\\s+",  " ").trim() + SEPARATOR;
         line += incident.getJsonObject("seriousness").getString("label") + SEPARATOR;
         line += getProtagonists(incident.getJsonArray("protagonists")) + SEPARATOR;
         line += incident.getJsonObject("partner").getString("label") + SEPARATOR;
