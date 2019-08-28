@@ -146,8 +146,8 @@ export class Events extends LoadingCollection {
                 }
 
                 /* check all events regularized in this event to display the global regularized value */
-                let globalCounsellorRegularisation;
-                globalCounsellorRegularisation = regularizedEvents.reduce((accumulator, currentValue) => accumulator && currentValue);
+                let globalCounsellorRegularisation = regularizedEvents.length === 0 ? false
+                    : regularizedEvents.reduce((accumulator, currentValue) => accumulator && currentValue);
 
                 dataModel.push({
                     studentId: item.student_id,
