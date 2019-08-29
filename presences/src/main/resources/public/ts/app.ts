@@ -24,9 +24,9 @@ routes.define(function ($routeProvider) {
         .when('/absences', {
             action: 'absences'
         })
-        .when('/group-absences', {
-            action: 'group-absences'
-        })
+        // .when('/group-absences', {
+        //     action: 'group-absences'
+        // })
         .otherwise({
             redirectTo: '/dashboard'
         });
