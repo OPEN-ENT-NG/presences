@@ -38,7 +38,7 @@ interface ViewModel {
 
     deleteExemption(): void;
 
-    isValidDate(): boolean;
+    isValidDate(startDate, endDate): boolean;
 
     safeApply(fn?: () => void): void;
 }
@@ -78,7 +78,14 @@ const vm: ViewModel = {
             vm.safeApply();
         }
     },
-    isValidDate: () => moment(vm.form.startDate).toDate() <= moment(vm.form.endDate).toDate(),
+
+    isValidDate: (startDate, endDate): boolean => {
+        if(startDate || endDate) {
+            return moment(startDate).toDate() <= moment(endDate).toDate();
+        }
+        return false;
+    },
+
     editExemption: (obj) => {
         if (!model.me.hasWorkflow(rights.workflow['manageExemption'])) {
             return;

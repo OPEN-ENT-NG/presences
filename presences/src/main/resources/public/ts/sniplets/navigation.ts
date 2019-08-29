@@ -1,6 +1,6 @@
 import {model} from 'entcore';
 import rights from '../rights';
-import incidentsRights from '../../../../../../../incidents/src/main/resources/public/ts/rights';
+import incidentsRights from '../../../../../../../incidents/src/main/resources/public/ts/rights'
 
 declare let window: any;
 
