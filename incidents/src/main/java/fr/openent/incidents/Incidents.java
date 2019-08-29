@@ -1,6 +1,6 @@
 package fr.openent.incidents;
 
-import fr.openent.incidents.controllers.IncidentsController;
+import fr.openent.incidents.controller.IncidentsController;
 import io.vertx.core.eventbus.EventBus;
 import org.entcore.common.http.BaseServer;
 

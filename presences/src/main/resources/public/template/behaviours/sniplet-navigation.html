@@ -97,6 +97,7 @@
                         </h2>
                         <a class="sub-item"
                            href="/incidents#/incidents"
+                           ng-if="::hasIncidentRight('access')"
                            ng-class="{active: getCurrentState() === 'incidents'}">
                             <i class="incident" aria-hidden="true"></i>
                             <span><i18n>incidents.title</i18n></span>

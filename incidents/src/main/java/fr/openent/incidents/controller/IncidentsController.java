@@ -1,4 +1,4 @@
-package fr.openent.incidents.controllers;
+package fr.openent.incidents.controller;
 
 import fr.openent.incidents.Incidents;
 import fr.openent.incidents.constants.Actions;

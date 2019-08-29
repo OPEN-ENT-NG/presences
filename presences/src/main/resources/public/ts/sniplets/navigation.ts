@@ -1,5 +1,6 @@
 import {model} from 'entcore';
 import rights from '../rights';
+import incidentsRights from '../../../../../../../incidents/src/main/resources/public/ts/rights';
 
 declare let window: any;
 
@@ -56,6 +57,9 @@ export const navigation = {
         },
         hasRight: (right) => {
             return model.me.hasWorkflow(rights.workflow[right]);
+        },
+        hasIncidentRight: (right) => {
+            return model.me.hasWorkflow(incidentsRights.workflow[right]);
         }
     }
 };

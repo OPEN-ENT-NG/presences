@@ -82,6 +82,7 @@
   label::after {
     content: '';
     border-color: $presences-main transparent transparent;
+    background: $presences-white;
     border-width: 11px;
     border-style: solid;
 

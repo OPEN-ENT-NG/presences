@@ -16,6 +16,7 @@ for (let service in services) {
 }
 
 routes.define(function ($routeProvider) {
+
     $routeProvider
         .when('/incidents', {
             action: 'incidents'
