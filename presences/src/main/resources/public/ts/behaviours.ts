@@ -1,8 +1,7 @@
 import {Behaviours} from 'entcore';
 import {absenceForm, exemptionForm, navigation} from './sniplets'
 import rights from './rights';
-import incidentsRights from '../../../../../../incidents/src/main/resources/public/ts/rights';
-
+import incidentsRights from '@incidents/rights';
 
 Behaviours.register('presences', {
     rights,

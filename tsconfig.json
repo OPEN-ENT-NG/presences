@@ -21,7 +21,7 @@
         "common/src/main/resources/ts/*"
       ],
       "@incidents/*": [
-        "incidents/src/main/resources/ts/*"
+        "incidents/src/main/resources/public/ts/*"
       ]
     }
   },
