@@ -1,7 +1,7 @@
 <button class="right-magnet"
         ng-click="vm.createExemption()"
         workflow="presences.manageExemption">
-    <i18n>presences.exemptions.create</i18n>
+    [[vm.getButtonLabel()]]
 </button>
 <lightbox show="vm.createExemptionLightBox" on-close="vm.closeCreateExemption()">
     <section class="head">

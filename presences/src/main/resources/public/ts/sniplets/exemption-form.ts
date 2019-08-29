@@ -12,6 +12,7 @@ export enum EXEMPTIONS_FORM_EVENTS {
 declare let window: any;
 
 interface ViewModel {
+    isCalendar: boolean;
     createExemptionLightBox: boolean;
     subjects: Subjects;
     studentsFrom: Students;
@@ -41,9 +42,12 @@ interface ViewModel {
     isValidDate(startDate, endDate): boolean;
 
     safeApply(fn?: () => void): void;
+
+    getButtonLabel(): string;
 }
 
 const vm: ViewModel = {
+    isCalendar: false,
     form: null,
     safeApply: null,
     createExemptionLightBox: false,
@@ -80,7 +84,7 @@ const vm: ViewModel = {
     },
 
     isValidDate: (startDate, endDate): boolean => {
-        if(startDate || endDate) {
+        if (startDate || endDate) {
             return moment(startDate).toDate() <= moment(endDate).toDate();
         }
         return false;
@@ -131,7 +135,8 @@ const vm: ViewModel = {
     },
     closeCreateExemption: () => {
         vm.createExemptionLightBox = false;
-    }
+    },
+    getButtonLabel: () => lang.translate(`presences.exemptions${vm.isCalendar ? '.calendar' : ''}.create`)
 };
 
 export const exemptionForm = {
@@ -141,6 +146,7 @@ export const exemptionForm = {
     controller: {
         init: function () {
             this.vm = vm;
+            this.vm.isCalendar = new RegExp('\#\/calendar').test(window.location.hash);
             this.setHandler();
             exemptionForm.that = this;
             vm.safeApply = this.safeApply;

@@ -1,5 +1,5 @@
 <button class="right-magnet" data-ng-click="vm.createIncidentLightbox()">
-    <i18n>incidents.create</i18n>
+    [[vm.getButtonLabel()]]
 </button>
 <lightbox ng-class="{editMode: vm.lightbox.editMode}"
           class="incident-lightbox"

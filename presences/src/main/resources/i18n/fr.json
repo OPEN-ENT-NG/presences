@@ -38,6 +38,7 @@
   "presences.export.tocsv": "Exporter csv",
   "presences.export.topdf": "Exporter pdf",
   "presences.exemptions.create": "Saisir une dispense",
+  "presences.exemptions.calendar.create": "dispense",
   "presences.exemptions.form.attendance": "Présence obligatoire",
   "presences.exemptions.form.defautValue.comment": "Ecrire un texte",
   "presences.exemptions.form.submit": "Valider",

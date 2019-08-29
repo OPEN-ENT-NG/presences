@@ -1,7 +1,7 @@
 import {Incident, ProtagonistForm, Student, Students} from "../models";
 import {IncidentParameterType} from "../services";
 import {incidentService} from "../services/IncidentService";
-import {_, moment, notify, toasts} from "entcore";
+import {_, idiom as lang, moment, notify, toasts} from "entcore";
 import {SNIPLET_FORM_EMIT_EVENTS, SNIPLET_FORM_EVENTS} from '@common/model'
 
 declare let window: any;
@@ -13,6 +13,7 @@ export enum INCIDENTS_FORM_EVENTS {
 }
 
 interface ViewModel {
+    isCalendar: boolean;
     incidentForm: Incident;
     lightbox: { createMode: boolean, editMode: boolean };
     incidentStudentsForm: Students;
@@ -38,9 +39,12 @@ interface ViewModel {
     removeIncidentStudentForm(): void;
 
     searchIncidentStudentForm(string): void;
+
+    getButtonLabel(): string;
 }
 
 const vm: ViewModel = {
+    isCalendar: false,
     safeApply: null,
     lightbox: {
         createMode: false,
@@ -159,7 +163,8 @@ const vm: ViewModel = {
         vm.incidentForm.dateTime = new Date(incident.date);
         vm.incidentForm.protagonists = JSON.parse(JSON.stringify(incident.protagonists));
         vm.safeApply()
-    }
+    },
+    getButtonLabel: () => lang.translate(`incidents${vm.isCalendar ? '.calendar' : ''}.create`)
 };
 
 export const incidentForm = {
@@ -169,6 +174,7 @@ export const incidentForm = {
     controller: {
         init: function () {
             this.vm = vm;
+            this.vm.isCalendar = new RegExp('\#\/calendar').test(window.location.hash);
             vm.safeApply = this.safeApply;
             incidentForm.that = this;
             this.setHandler();
