@@ -54,7 +54,7 @@ const vm: ViewModel = {
             vm.form.endDateTime = moment(new Date().setHours(17)).set({minute: 0, second: 0, millisecond: 0}).toDate();
 
             vm.form.start_date = getDateFormat(vm.form.startDate, vm.form.startDateTime);
-            vm.form.end_date = getDateFormat(vm.form.startDate, vm.form.endDateTime);
+            vm.form.end_date = getDateFormat(vm.form.endDate, vm.form.endDateTime);
 
             vm.safeApply();
         }
@@ -67,14 +67,14 @@ const vm: ViewModel = {
 
     isFormValid(): boolean {
         if (vm.form) {
-            return vm.form.startDateTime < vm.form.endDateTime;
+            return getDateFormat(vm.form.startDate, vm.form.startDateTime) < getDateFormat(vm.form.endDate, vm.form.startDateTime)
         }
         return false;
     },
 
     async createAbsence(): Promise<void> {
         vm.form.start_date = getDateFormat(vm.form.startDate, vm.form.startDateTime);
-        vm.form.end_date = getDateFormat(vm.form.startDate, vm.form.endDateTime);
+        vm.form.end_date = getDateFormat(vm.form.endDate, vm.form.endDateTime);
         let response = await vm.form.createAbsence(window.structure.id, vm.form.reason_id, model.me.userId);
         if (response.status == 200 || response.status == 201) {
             vm.closeAbsenceLightbox();

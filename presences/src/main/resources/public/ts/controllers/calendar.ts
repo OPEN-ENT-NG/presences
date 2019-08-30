@@ -108,8 +108,8 @@ export const calendarController = ng.controller('CalendarController', ['$scope',
             return "";
         };
 
-        function changeAbsenceView({ hash }: Course) {
-            let courseItems = document.getElementById(`absent-${hash}`).closest('.fiveDays').querySelectorAll('.course-item:not(.is-absence)');
+        function changeAbsenceView(item: Course) {
+            let courseItems = document.getElementById(`absent${item.dayOfWeek}-${item.hash}`).closest('.fiveDays').querySelectorAll('.course-item:not(.is-absence)');
             let items = [];
             Array.from(courseItems).forEach((course: HTMLElement) => {
                 const item = course.closest('.schedule-item');
