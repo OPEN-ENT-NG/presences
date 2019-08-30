@@ -57,8 +57,9 @@
                 [[vm.formatExemptionDate(vm.show.exemption.end_date)]]
             </div>
         </div>
-        <div style="padding: 0 10px 0 20px;">
-            <i class="mine">&nbsp;</i>
+        <div style="padding: 0 5px 0 10px;" class="exemptions">
+            <i ng-show="!vm.show.exemption.attendance" class="account-outline"></i>
+            <i ng-show="vm.show.exemption.attendance" class="account"></i>
         </div>
     </div>
 </div>

@@ -144,7 +144,10 @@ public class CalendarController extends ControllerHelper {
                                     JsonObject exemption = exempted(course, exemptionsMap.getJsonArray(subjectId));
                                     if (exemption != null) {
                                         course.put("exempted", true)
-                                                .put("exemption", new JsonObject().put("start_date", exemption.getString("start_date")).put("end_date", exemption.getString("end_date")));
+                                                .put("exemption", new JsonObject()
+                                                        .put("start_date", exemption.getString("start_date"))
+                                                        .put("end_date", exemption.getString("end_date"))
+                                                        .put("attendance", exemption.getBoolean("attendance")));
                                     } else {
                                         course.put("exempted", false);
                                     }
@@ -156,7 +159,7 @@ public class CalendarController extends ControllerHelper {
                                 }
                             }
 
-                            for (int i = 0; i < absents.size() ; i++) {
+                            for (int i = 0; i < absents.size(); i++) {
                                 courses.add(addNewCourse(absents.getJsonObject(i), params.get("structure")));
                             }
                             renderJson(request, courses);
