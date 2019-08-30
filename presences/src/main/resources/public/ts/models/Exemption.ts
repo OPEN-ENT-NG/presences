@@ -71,13 +71,15 @@ export class Exemption {
     };
 
     isValidOnForm() {
-        return this.startDate
-            && this.endDate
+        let startDate = moment(this.startDate).format('YYYY-MM-DD');
+        let endDate = moment(this.endDate).format('YYYY-MM-DD');
+        return startDate
+            && endDate
             && this.subject
             && this.structureId
             && this.students
             && this.students.length
-            && this.startDate <= this.endDate;
+            && startDate <= endDate;
     };
 
     async save(structure: string, start_date: string, end_date: string, students?: string[], audiences?: string[]) {

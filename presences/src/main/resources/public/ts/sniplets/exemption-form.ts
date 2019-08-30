@@ -18,6 +18,7 @@ interface ViewModel {
     studentsFrom: Students;
     formStudentSelected: any[];
     form: any;
+    searchValue: string;
 
     createExemption(): void;
 
@@ -51,6 +52,7 @@ const vm: ViewModel = {
     form: null,
     safeApply: null,
     createExemptionLightBox: false,
+    searchValue: '',
     formStudentSelected: [],
     subjects: new Subjects(),
     studentsFrom: new Students(),
@@ -67,6 +69,7 @@ const vm: ViewModel = {
     createExemption: () => {
         vm.createExemptionLightBox = true;
         vm.form = new Exemption(window.structure.id, true);
+        vm.studentsFrom.searchValue = "";
         vm.form.subject = vm.subjects.findEPS();
         if (!vm.form.subject) {
             vm.form.subject = vm.subjects.all[0];
@@ -113,6 +116,7 @@ const vm: ViewModel = {
         }
 
         vm.studentsFrom.all = [];
+        vm.studentsFrom.searchValue = "";
     },
     searchFormByStudent: async (searchText: string) => {
         await vm.studentsFrom.search(window.structure.id, searchText);
