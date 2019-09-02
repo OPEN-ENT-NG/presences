@@ -196,7 +196,6 @@ export class Events extends LoadingCollection {
             this.pageCount = data.page_count;
             this.events = data.all;
             this.all = Events.buildEventResponse(data.all);
-            console.log("events.all: ", this.all);
         } catch (err) {
             throw err;
         } finally {

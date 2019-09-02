@@ -164,8 +164,10 @@ public class CalendarController extends ControllerHelper {
                                 }
                             }
 
-                            for (int i = 0; i < absents.size(); i++) {
-                                courses.addAll(addNewCourse(absents.getJsonObject(i), params.get("structure")));
+                            if (absents != null) {
+                                for (int i = 0; i < absents.size(); i++) {
+                                    courses.addAll(addNewCourse(absents.getJsonObject(i), params.get("structure")));
+                                }
                             }
                             renderJson(request, courses);
                         });
@@ -218,10 +220,10 @@ public class CalendarController extends ControllerHelper {
                                 .put("roomLabels", new JsonArray())
                                 .put("subjectId", "")
                                 .put("subject_name", "")
-                                .put("startMomentDate", DateHelper.getDateString(totalDates.get(j).toString() + " " + startDateTime, DAY_MONTH_YEAR))
-                                .put("startMomentTime", DateHelper.getDateString(totalDates.get(j).toString() + " " + startDateTime, DateHelper.HOUR_MINUTES))
-                                .put("endMomentDate", DateHelper.getDateString(totalDates.get(j).toString() + " " + endDateTime, DAY_MONTH_YEAR))
-                                .put("endMomentTime", DateHelper.getDateString(totalDates.get(j).toString() + " " + endDateTime, DateHelper.HOUR_MINUTES))
+                                .put("startMomentDate", totalDates.get(j).toString() + " " + startDateTime)
+                                .put("startMomentTime", startDateTime)
+                                .put("endMomentDate", totalDates.get(j).toString() + " " + endDateTime)
+                                .put("endMomentTime", endDateTime)
                 );
             }
             return coursesAdded;

@@ -182,8 +182,10 @@ export const incidentForm = {
         setHandler: function () {
             this.$on(INCIDENTS_FORM_EVENTS.EDIT, (event, incident) => vm.editIncidentLightbox(incident));
             this.$on(SNIPLET_FORM_EVENTS.SET_PARAMS, (event, {student, start_date}) => {
-                vm.selectIncidentStudentForm(null, student);
-                vm.incidentForm.date = moment(start_date).toDate();
+                if (vm.incidentForm) {
+                    vm.selectIncidentStudentForm(null, student);
+                    vm.incidentForm.date = moment(start_date).toDate();
+                }
             });
         }
     }
