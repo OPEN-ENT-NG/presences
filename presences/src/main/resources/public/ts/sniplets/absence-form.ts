@@ -67,7 +67,7 @@ const vm: ViewModel = {
 
     isFormValid(): boolean {
         if (vm.form) {
-            return getDateFormat(vm.form.startDate, vm.form.startDateTime) < getDateFormat(vm.form.endDate, vm.form.startDateTime)
+            return getDateFormat(vm.form.startDate, vm.form.startDateTime) <= getDateFormat(vm.form.endDate, vm.form.startDateTime);
         }
         return false;
     },

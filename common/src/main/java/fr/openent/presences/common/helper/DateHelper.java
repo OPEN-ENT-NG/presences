@@ -5,7 +5,11 @@ import io.vertx.core.logging.LoggerFactory;
 
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
+import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.Date;
+import java.util.List;
 
 public class DateHelper {
 
@@ -160,6 +164,44 @@ public class DateHelper {
             LOGGER.error("[Common@DataHelper] Failed to parse date " + date, err);
             return date;
         }
+    }
+
+    /**
+     * Get Simple Time as string
+     *
+     * @param date   date to format into time
+     * @param format the format wished
+     * @return Simple Time format as string
+     */
+    public static String getTimeString(String date, String format) throws ParseException {
+        Calendar cal = Calendar.getInstance();
+
+        SimpleDateFormat sdf = new SimpleDateFormat(format);
+        SimpleDateFormat sdft = new SimpleDateFormat(HOUR_MINUTES);
+
+        cal.setTime(sdf.parse(date));
+        return sdft.format(cal.getTime());
+    }
+
+    /**
+     * Get list of dates between two dates
+     *
+     * @param startDate startDate
+     * @param endDate   endDate
+     * @return list of dates
+     */
+    public static List<LocalDate> getDatesBetweenTwoDates(String startDate, String endDate) {
+        LocalDate start = LocalDate.parse(startDate);
+        LocalDate end = LocalDate.parse(endDate);
+
+        List<LocalDate> totalDates = new ArrayList<>();
+
+        while (!start.isAfter(end)) {
+            totalDates.add(start);
+            start = start.plusDays(1);
+        }
+
+        return totalDates;
     }
 
 }

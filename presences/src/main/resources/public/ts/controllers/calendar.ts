@@ -122,13 +122,15 @@ export const calendarController = ng.controller('CalendarController', ['$scope',
                 }
             });
 
-            let absenceItem = items.filter(item => item.getAttribute("class") === "schedule-item schedule-absenceOnly");
+            let absenceItems = items.filter(item => item.getAttribute("class") === "schedule-item schedule-absenceOnly");
             let coursesItems = items.filter(item => item.getAttribute("class") !== "schedule-item schedule-absenceOnly");
 
             coursesItems.forEach(course => {
-                if (isItemInside(course, absenceItem[0])) {
-                    course.querySelectorAll(".course-item")[0].classList.add("isAbsent");
-                }
+                absenceItems.forEach(absenceItem => {
+                    if (isItemInside(course, absenceItem)) {
+                        course.querySelectorAll(".course-item")[0].classList.add("isAbsent");
+                    }
+                })
             });
         }
 
@@ -137,14 +139,14 @@ export const calendarController = ng.controller('CalendarController', ['$scope',
             let itemPosY = item.offsetTop;
             let itemHeight = item.clientHeight;
             let itemWidth = item.clientWidth;
-            let itemBottom = itemPosY + itemHeight;
+            let itemBottom = itemPosY + itemHeight - 2;
             let itemRight = itemPosX + itemWidth;
 
             let itemAbsenceX = itemAbsence.offsetLeft;
             let itemAbsenceY = itemAbsence.offsetTop;
             let itemAbsenceHeight = itemAbsence.clientHeight;
             let itemAbsenceWidth = itemAbsence.clientWidth;
-            let itemAbsenceBottom = itemAbsenceY + itemAbsenceHeight;
+            let itemAbsenceBottom = itemAbsenceY + itemAbsenceHeight - 2;
             let itemAbsenceRight = itemAbsenceX + itemAbsenceWidth;
             return !(itemBottom < itemAbsenceY || itemPosY > itemAbsenceBottom || itemRight < itemAbsenceX || itemPosX > itemAbsenceRight);
         }

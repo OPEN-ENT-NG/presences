@@ -1,5 +1,6 @@
 package fr.openent.presences.controller;
 
+import com.mongodb.util.JSON;
 import fr.openent.presences.common.helper.DateHelper;
 import fr.openent.presences.common.helper.FutureHelper;
 import fr.openent.presences.common.security.SearchRight;
@@ -32,9 +33,13 @@ import org.entcore.common.http.filter.ResourceFilter;
 import java.security.NoSuchAlgorithmException;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
+import java.time.LocalDate;
+import java.time.LocalTime;
+import java.time.format.DateTimeFormatter;
 import java.util.*;
 
 import static fr.openent.presences.common.helper.DateHelper.DAY_MONTH_YEAR;
+import static fr.openent.presences.common.helper.DateHelper.SQL_FORMAT;
 import static fr.wseduc.webutils.Utils.handlerToAsyncHandler;
 import static org.entcore.common.http.response.DefaultResponseHandler.arrayResponseHandler;
 
@@ -160,7 +165,7 @@ public class CalendarController extends ControllerHelper {
                             }
 
                             for (int i = 0; i < absents.size(); i++) {
-                                courses.add(addNewCourse(absents.getJsonObject(i), params.get("structure")));
+                                courses.addAll(addNewCourse(absents.getJsonObject(i), params.get("structure")));
                             }
                             renderJson(request, courses);
                         });
@@ -174,36 +179,55 @@ public class CalendarController extends ControllerHelper {
         });
     }
 
-    private JsonObject addNewCourse(JsonObject absent, String structure) {
+    private JsonArray addNewCourse(JsonObject absent, String structure) {
         try {
-
             SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
-            Date date = sdf.parse(absent.getString("start_date"));
-            Calendar calendar = Calendar.getInstance();
-            calendar.setTime(date);
-            int dayOfWeek = calendar.get(Calendar.DAY_OF_WEEK) - 1;
 
-            return new JsonObject()
-                    .put("_id", "0")
-                    .put("dayOfWeek", dayOfWeek == 0 ? 7 : dayOfWeek)
-                    .put("locked", true)
-                    .put("is_periodic", false)
-                    .put("is_recurrent", true)
-                    .put("absence", true)
-                    .put("structureId", structure)
-                    .put("events", new JsonArray())
-                    .put("startDate", absent.getString("start_date"))
-                    .put("endDate", absent.getString("end_date"))
-                    .put("roomLabels", new JsonArray())
-                    .put("subjectId", "")
-                    .put("subject_name", "")
-                    .put("startMomentDate", DateHelper.getDateString(absent.getString("start_date"), DAY_MONTH_YEAR))
-                    .put("startMomentTime", DateHelper.getDateString(absent.getString("start_date"), DateHelper.HOUR_MINUTES))
-                    .put("endMomentDate", DateHelper.getDateString(absent.getString("end_date"), DAY_MONTH_YEAR))
-                    .put("endMomentTime", DateHelper.getDateString(absent.getString("end_date"), DateHelper.HOUR_MINUTES));
+            Date startDate = sdf.parse(absent.getString("start_date"));
+            Date endDate = sdf.parse(absent.getString("end_date"));
+
+            Calendar calendar = Calendar.getInstance();
+            calendar.setTime(startDate);
+            int dayOfWeekFromStartDate = calendar.get(Calendar.DAY_OF_WEEK) - 1;
+            calendar.setTime(endDate);
+            int dayOfWeekFromEndDate = calendar.get(Calendar.DAY_OF_WEEK) - 1;
+
+            String startDateTime = DateHelper.getTimeString(absent.getString("start_date"), SQL_FORMAT);
+            String endDateTime = DateHelper.getTimeString(absent.getString("end_date"), SQL_FORMAT);
+
+            JsonArray coursesAdded = new JsonArray();
+
+            List<LocalDate> totalDates = DateHelper.getDatesBetweenTwoDates(
+                    DateHelper.getDateString(absent.getString("start_date"), "yyyy-MM-dd"),
+                    DateHelper.getDateString(absent.getString("end_date"), "yyyy-MM-dd")
+            );
+
+            for (int i = dayOfWeekFromStartDate, j = 0; i <= dayOfWeekFromEndDate; j++, i++) {
+                coursesAdded.add(
+                        new JsonObject()
+                                .put("_id", "0")
+                                .put("dayOfWeek", i == 0 ? 7 : i)
+                                .put("locked", true)
+                                .put("is_periodic", false)
+                                .put("is_recurrent", true)
+                                .put("absence", true)
+                                .put("structureId", structure)
+                                .put("events", new JsonArray())
+                                .put("startDate", totalDates.get(j).toString() + " " + startDateTime)
+                                .put("endDate", totalDates.get(j).toString() + " " + endDateTime)
+                                .put("roomLabels", new JsonArray())
+                                .put("subjectId", "")
+                                .put("subject_name", "")
+                                .put("startMomentDate", DateHelper.getDateString(totalDates.get(j).toString() + " " + startDateTime, DAY_MONTH_YEAR))
+                                .put("startMomentTime", DateHelper.getDateString(totalDates.get(j).toString() + " " + startDateTime, DateHelper.HOUR_MINUTES))
+                                .put("endMomentDate", DateHelper.getDateString(totalDates.get(j).toString() + " " + endDateTime, DAY_MONTH_YEAR))
+                                .put("endMomentTime", DateHelper.getDateString(totalDates.get(j).toString() + " " + endDateTime, DateHelper.HOUR_MINUTES))
+                );
+            }
+            return coursesAdded;
         } catch (ParseException e) {
             log.error("[CalendarController@absent] Failed to parse date", e);
-            return new JsonObject();
+            return new JsonArray();
         }
     }
 
