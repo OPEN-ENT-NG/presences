@@ -1,5 +1,5 @@
 import {_, idiom as lang, ng} from 'entcore';
-import {Exemptions, Student, Students, Subjects} from "../models";
+import {Exemptions, Student, Students} from "../models";
 import {EXEMPTIONS_FORM_EVENTS} from '../sniplets';
 import {Toast} from "../utilities";
 import {DateUtils} from "@common/utils"
@@ -12,7 +12,7 @@ declare let window: any;
 interface ViewModel {
     filter: { start_date: any, end_date: any, students: any, classes: any, className: string };
     translate: any;
-    subjects: Subjects;
+    // subjects: Subjects;
     classes: any;
     notifications: any[];
     createExemptionLightBox: Boolean;
@@ -87,10 +87,7 @@ export const exemptionsController = ng.controller('ExemptionsController',
 
                 vm.exemptions = new Exemptions();
                 vm.exemptions.eventer.on('loading::false', () => $scope.safeApply());
-
-                vm.subjects = new Subjects();
-                vm.subjects.sync(window.structure.id);
-
+                
                 vm.classes = undefined;
 
                 vm.students = new Students();

@@ -159,6 +159,10 @@ export const exemptionForm = {
         setHandler: function () {
             this.$on(EXEMPTIONS_FORM_EVENTS.EDIT, (event, arg) => vm.editExemption(arg));
             this.$on(SNIPLET_FORM_EVENTS.SET_PARAMS, (event, arg) => vm.setFormParams(arg));
+            this.$watch(() => window.structure, async () => {
+                await vm.subjects.sync(window.structure.id);
+                vm.safeApply();
+            });
         }
     }
 };
