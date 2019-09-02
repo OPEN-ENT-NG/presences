@@ -1,4 +1,4 @@
-import {model, ng} from 'entcore';
+import {model, moment, ng} from 'entcore';
 import {
     CalendarService,
     Course,
@@ -81,6 +81,7 @@ export const calendarController = ng.controller('CalendarController', ['$scope',
         });
 
         model.calendar.on('date-change', initCalendar);
+        model.calendar.setDate(moment());
 
         $scope.$on('$destroy', () => model.calendar.callbacks['date-change'] = []);
 

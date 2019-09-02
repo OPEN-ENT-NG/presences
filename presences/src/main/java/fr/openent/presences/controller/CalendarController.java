@@ -215,15 +215,15 @@ public class CalendarController extends ControllerHelper {
                                 .put("absence", true)
                                 .put("structureId", structure)
                                 .put("events", new JsonArray())
-                                .put("startDate", totalDates.get(j).toString() + " " + startDateTime)
-                                .put("endDate", totalDates.get(j).toString() + " " + endDateTime)
+                                .put("startDate", totalDates.get(j).toString() + " " + (j == 0 ? startDateTime : "00:00"))
+                                .put("endDate", totalDates.get(j).toString() + " " + (j == (totalDates.size() - 1)? endDateTime : "23:59"))
                                 .put("roomLabels", new JsonArray())
                                 .put("subjectId", "")
                                 .put("subject_name", "")
-                                .put("startMomentDate", totalDates.get(j).toString() + " " + startDateTime)
-                                .put("startMomentTime", startDateTime)
-                                .put("endMomentDate", totalDates.get(j).toString() + " " + endDateTime)
-                                .put("endMomentTime", endDateTime)
+                                .put("startMomentDate", totalDates.get(j).toString() + " " + (j == 0 ? startDateTime : "00:00"))
+                                .put("startMomentTime", j == 0 ? startDateTime : "00:00")
+                                .put("endMomentDate", totalDates.get(j).toString() + " " + (j == (totalDates.size() - 1) ? endDateTime : "23:59"))
+                                .put("endMomentTime", j == (totalDates.size() - 1) ? endDateTime : "23:59")
                 );
             }
             return coursesAdded;
