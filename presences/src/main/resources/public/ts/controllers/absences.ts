@@ -13,6 +13,7 @@ interface Filter {
     classes: any;
     absences: boolean;
     late: boolean;
+    departure: boolean;
     regularized: boolean;
 }
 
@@ -115,11 +116,11 @@ interface ViewModel {
     /*  switch event type */
     switchAbsencesFilter(): void;
 
-    switchUnjustifiedFilter(): Promise<void>;
-
     switchLateFilter(): void;
 
-    switchAbsenceRegularizedFilter(): Promise<void>;
+    switchDepartureFilter(): void;
+
+    switchRegularizedFilter(): Promise<void>;
 
     /* Export*/
     exportPdf(): void;
@@ -139,6 +140,7 @@ export const absencesController = ng.controller('AbsencesController', ['$scope',
             students: [],
             classes: [],
             absences: true,
+            departure: true,
             late: $route.current.action !== 'dashboard',
             regularized: false,
         };
@@ -197,6 +199,11 @@ export const absencesController = ng.controller('AbsencesController', ['$scope',
             if (vm.filter.late) {
                 if (!vm.eventType.some(e => e == EventType.LATENESS)) {
                     vm.eventType.push(EventType.LATENESS);
+                }
+            }
+            if (vm.filter.departure) {
+                if (!vm.eventType.some(e => e == EventType.DEPARTURE)) {
+                    vm.eventType.push(EventType.DEPARTURE);
                 }
             }
             vm.events.eventType = vm.eventType.toString();
@@ -558,7 +565,19 @@ export const absencesController = ng.controller('AbsencesController', ['$scope',
             vm.updateFilter();
         };
 
-        vm.switchAbsenceRegularizedFilter = async function () {
+        vm.switchDepartureFilter = function () {
+            vm.filter.departure = !vm.filter.departure;
+            if (vm.filter.departure) {
+                if (!vm.eventType.some(e => e == EventType.DEPARTURE)) {
+                    vm.eventType.push(EventType.LATENESS);
+                }
+            } else {
+                vm.eventType = _.without(vm.eventType, EventType.DEPARTURE);
+            }
+            vm.updateFilter();
+        };
+
+        vm.switchRegularizedFilter = async function () {
             vm.filter.regularized = !vm.filter.regularized;
             vm.events.regularized = vm.filter.regularized;
             vm.events.page = 0;

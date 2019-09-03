@@ -83,7 +83,7 @@
   "presences.absence.title": "Liste des absences & retards",
   "presences.absence.absences": "Absences",
   "presences.absence.retards": "Retards",
-  "presences.absence.regularized": "Absences régularisées",
+  "presences.absence.regularized": "Non régularisés",
   "presences.absence.period": "Période",
   "presences.absence.reason": "Motif",
   "presences.absence.no.reason": "Sans motif",

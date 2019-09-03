@@ -187,8 +187,8 @@ export class Events extends LoadingCollection {
                 url += `&classes=${this.classes}`;
             }
 
-            if (this.regularized != null) {
-                url += `&regularized=${this.regularized}`;
+            if (this.regularized) {
+                url += `&regularized=${!this.regularized}`;
             }
 
             url += `&page=${this.page}`;

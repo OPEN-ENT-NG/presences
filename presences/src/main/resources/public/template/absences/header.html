@@ -85,8 +85,12 @@
                data-ng-click="vm.switchLateFilter()">
             <i18n>presences.absence.retards</i18n>
         </label>
+        <label class="chip" ng-class="{selected: vm.filter.departure}"
+               data-ng-click="vm.switchDepartureFilter()">
+            <i18n>presences.register.event_type.departure</i18n>
+        </label>
         <label class="chip" ng-class="{selected: vm.filter.regularized}"
-               data-ng-click="vm.switchAbsenceRegularizedFilter()">
+               data-ng-click="vm.switchRegularizedFilter()">
             <i18n>presences.absence.regularized</i18n>
         </label>
     </div>
