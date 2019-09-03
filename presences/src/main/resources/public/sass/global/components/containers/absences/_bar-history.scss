@@ -87,3 +87,8 @@
   border-color: $presences-purple;
   background: $presences-purple;
 }
+
+.period li.departure:before {
+  border-color: $presences-green;
+  background-color: $presences-green;
+}

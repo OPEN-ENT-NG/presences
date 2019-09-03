@@ -280,7 +280,7 @@ export const absencesController = ng.controller('AbsencesController', ['$scope',
             if (vm.indexDayHistoryArray.length === 0) {
                 let eventClass = $event.currentTarget.getAttribute("class");
 
-                if (eventClass === "late" && period.name === "Repas") {
+                if (eventClass === "late" && period.name === "Repas" && eventClass === "departure") {
                     return;
                 }
 
@@ -322,16 +322,18 @@ export const absencesController = ng.controller('AbsencesController', ['$scope',
         /* Change CSS class depending on their event_type id */
         vm.eventTypeState = (periods, event): string => {
             if (periods.events.length === 0) return '';
-            const className = ['absent', 'justified', 'late', 'empty'];
-            let index;
+            const priority = [EventType.ABSENCE, EventType.LATENESS, EventType.DEPARTURE, EventType.REMARK];
+            const className = ['absent', 'late', 'departure', 'remark', 'justified','empty'];
+            let index = 4;
             for (let i = 0; i < periods.events.length; i++) {
                 if (periods.events[i].type_id === 1) {
-                    index = periods.events[i].reason_id !== null ? 1 : 0;
+                    index = periods.events[i].reason_id !== null ? 4 : 0;
+                } else if (periods.events[i].type_id === 2) {
+                    index = 1;
+                } else {
+                    let arrayIndex = priority.indexOf(periods.events[i].type_id);
+                    index = arrayIndex < index ? arrayIndex : index;
                 }
-                if (periods.events[i].type_id === 2) {
-                    index = 2;
-                }
-
             }
             return className[index] || '';
         };
