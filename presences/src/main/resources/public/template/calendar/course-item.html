@@ -13,7 +13,12 @@
     </div>
     <div class="course-item"
          data-ng-attr-id="[[isAbsenceOnly(item) ? 'absent' + item.dayOfWeek + '-' + item.hash : null]]"
-         ng-class="{'contains-absenceOnly': isAbsenceOnly(item), 'contains-absence': item.containsAbsence, 'contains-events': item.events.length > 0 || item.exempted, 'is-absence': item.hasOwnProperty('hash')}">
+         ng-class="{
+         'contains-absenceOnly': isAbsenceOnly(item),
+         'contains-absence': item.containsAbsence,
+         'contains-events': item.events.length > 0 || item.exempted,
+         'is-absence': item.hasOwnProperty('hash')
+         }">
         <div class="data">
             <div class="subject cell">[[item.subject_name]]</div>
             <em class="metadata right-magnet"><span ng-repeat="room in item.roomLabels">[[room]]</span> </em>

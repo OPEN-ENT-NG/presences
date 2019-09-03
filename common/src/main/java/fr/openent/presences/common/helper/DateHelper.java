@@ -18,6 +18,7 @@ public class DateHelper {
     public static final String SQL_FORMAT = "yyyy-MM-dd'T'HH:mm:ss";
     public static final String MONGO_FORMAT = "yyyy-MM-dd HH:mm:ss";
 
+    public static final String YEAR_MONTH_DAY = "yyyy-MM-dd";
     public static final String DAY_MONTH_YEAR = "dd/MM/yyyy";
     public static final String HOUR_MINUTES = "HH:mm";
 

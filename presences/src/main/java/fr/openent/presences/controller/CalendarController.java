@@ -35,11 +35,12 @@ import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.time.LocalDate;
 import java.time.LocalTime;
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
 
-import static fr.openent.presences.common.helper.DateHelper.DAY_MONTH_YEAR;
-import static fr.openent.presences.common.helper.DateHelper.SQL_FORMAT;
+import static fr.openent.presences.common.helper.DateHelper.*;
 import static fr.wseduc.webutils.Utils.handlerToAsyncHandler;
 import static org.entcore.common.http.response.DefaultResponseHandler.arrayResponseHandler;
 
@@ -183,13 +184,15 @@ public class CalendarController extends ControllerHelper {
 
     private JsonArray addNewCourse(JsonObject absent, String structure) {
         try {
-            SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
+            SimpleDateFormat sdf = new SimpleDateFormat(YEAR_MONTH_DAY);
 
             Date startDate = sdf.parse(absent.getString("start_date"));
             Date endDate = sdf.parse(absent.getString("end_date"));
 
             Calendar calendar = Calendar.getInstance();
-            calendar.setTime(startDate);
+
+            // Set calendar the current date if it is after or equal than our absent date
+            calendar.setTime(new Date().after(startDate) || new Date().equals(startDate) ? new Date() : startDate);
             int dayOfWeekFromStartDate = calendar.get(Calendar.DAY_OF_WEEK) - 1;
             calendar.setTime(endDate);
             int dayOfWeekFromEndDate = calendar.get(Calendar.DAY_OF_WEEK) - 1;
@@ -200,31 +203,45 @@ public class CalendarController extends ControllerHelper {
             JsonArray coursesAdded = new JsonArray();
 
             List<LocalDate> totalDates = DateHelper.getDatesBetweenTwoDates(
-                    DateHelper.getDateString(absent.getString("start_date"), "yyyy-MM-dd"),
-                    DateHelper.getDateString(absent.getString("end_date"), "yyyy-MM-dd")
+                    DateHelper.getDateString(absent.getString("start_date"), YEAR_MONTH_DAY),
+                    DateHelper.getDateString(absent.getString("end_date"), YEAR_MONTH_DAY)
             );
 
-            for (int i = dayOfWeekFromStartDate, j = 0; i <= dayOfWeekFromEndDate; j++, i++) {
-                coursesAdded.add(
-                        new JsonObject()
-                                .put("_id", "0")
-                                .put("dayOfWeek", i == 0 ? 7 : i)
-                                .put("locked", true)
-                                .put("is_periodic", false)
-                                .put("is_recurrent", true)
-                                .put("absence", true)
-                                .put("structureId", structure)
-                                .put("events", new JsonArray())
-                                .put("startDate", totalDates.get(j).toString() + " " + (j == 0 ? startDateTime : "00:00"))
-                                .put("endDate", totalDates.get(j).toString() + " " + (j == (totalDates.size() - 1)? endDateTime : "23:59"))
-                                .put("roomLabels", new JsonArray())
-                                .put("subjectId", "")
-                                .put("subject_name", "")
-                                .put("startMomentDate", totalDates.get(j).toString() + " " + (j == 0 ? startDateTime : "00:00"))
-                                .put("startMomentTime", j == 0 ? startDateTime : "00:00")
-                                .put("endMomentDate", totalDates.get(j).toString() + " " + (j == (totalDates.size() - 1) ? endDateTime : "23:59"))
-                                .put("endMomentTime", j == (totalDates.size() - 1) ? endDateTime : "23:59")
-                );
+            LocalDate currentDate = LocalDate.now();
+            // Find right time
+            LocalTime currentTime = ZonedDateTime.now(ZoneId.of("Europe/Paris")).toLocalTime();
+
+            // Remove past dates
+            List<LocalDate> totalDatesInFuture = new ArrayList<>();
+            for (LocalDate totalDate : totalDates) {
+                if (totalDate.isAfter(currentDate) || totalDate.isEqual(currentDate)) {
+                    totalDatesInFuture.add(totalDate);
+                }
+            }
+
+            if (!totalDatesInFuture.isEmpty()) {
+                for (int i = dayOfWeekFromStartDate, j = 0; i <= dayOfWeekFromEndDate; j++, i++) {
+                    coursesAdded.add(
+                            new JsonObject()
+                                    .put("_id", "0")
+                                    .put("dayOfWeek", i == 0 ? 7 : i)
+                                    .put("locked", true)
+                                    .put("is_periodic", false)
+                                    .put("is_recurrent", true)
+                                    .put("absence", true)
+                                    .put("structureId", structure)
+                                    .put("events", new JsonArray())
+                                    .put("startDate", totalDatesInFuture.get(j).toString() + " " + (j == 0 ? currentTime.toString() : "00:00"))
+                                    .put("endDate", totalDatesInFuture.get(j).toString() + " " + (j == (totalDatesInFuture.size() - 1)? endDateTime : "23:59"))
+                                    .put("roomLabels", new JsonArray())
+                                    .put("subjectId", "")
+                                    .put("subject_name", "")
+                                    .put("startMomentDate", totalDatesInFuture.get(j).toString() + " " + (j == 0 ? currentTime.toString() : "00:00"))
+                                    .put("startMomentTime", (j == 0 ? currentTime.toString() : "00:00"))
+                                    .put("endMomentDate", totalDatesInFuture.get(j).toString() + " " + (j == (totalDatesInFuture.size() - 1) ? endDateTime : "23:59"))
+                                    .put("endMomentTime", j == (totalDatesInFuture.size() - 1) ? endDateTime : "23:59")
+                    );
+                }
             }
             return coursesAdded;
         } catch (ParseException e) {

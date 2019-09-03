@@ -176,7 +176,7 @@ $calendar-user-card-height: 56px;
         }
 
         .absenceOnly {
-          background-color: $presences-pink;
+          background-color: $presences-red;
         }
 
         .exemption {
@@ -236,7 +236,7 @@ $calendar-user-card-height: 56px;
           }
 
           &.contains-absenceOnly {
-            background-color: $presences-pink;
+            background-color: $presences-red;
             border: none;
 
             .schedule-item & {
