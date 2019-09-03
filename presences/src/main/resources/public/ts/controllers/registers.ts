@@ -53,7 +53,7 @@ interface ViewModel {
 
     updateLateness(): void;
 
-    getHistoryEventClassName(events): string;
+    getHistoryEventClassName(events, slot): string;
 
     isCurrentSlot(slot: { end: string, start: string }): boolean;
 
@@ -461,7 +461,7 @@ export const registersController = ng.controller('RegistersController',
                 delete vm.filter.student;
             };
 
-            vm.getHistoryEventClassName = function (events) {
+            vm.getHistoryEventClassName = function (events, slot) {
                 if (events.length === 0) return '';
                 const priority = [EventType.ABSENCE, EventType.LATENESS, EventType.DEPARTURE, EventType.REMARK];
                 const className = ['absence', 'lateness', 'departure', 'remark'];
@@ -470,13 +470,15 @@ export const registersController = ng.controller('RegistersController',
                     let arrayIndex = priority.indexOf(events[i].type_id);
                     index = arrayIndex < index ? arrayIndex : index;
                 }
-
-                return className[index] || '';
+                if (vm.isCurrentSlot(slot)) {
+                    return className[index] || '';
+                }
+                return '';
             };
 
             vm.isCurrentSlot = function (slot) {
                 // return Math.abs(moment(slot.start).diff(vm.register.start_date)) < 3000 && Math.abs(moment(slot.end).diff(vm.register.end_date)) < 3000;
-                return ((slot.start >= vm.register.start_date) || (vm.register.start_date < slot.end)) && ((slot.end <= vm.register.end_date) || (vm.register.end_date > slot.start))
+                return ((slot.start >= vm.register.start_date) || (vm.register.start_date < slot.end)) && (slot.end <= vm.register.end_date);
             };
 
             vm.loadCourses = async function (users: string[] = [model.me.userId], groups: string[] = [], structure: string = window.structure.id,

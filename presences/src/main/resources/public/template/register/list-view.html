@@ -35,7 +35,7 @@
         <ul class="history" ng-if="student.day_history.length > 0"
             ng-class="{ disabled: vm.isEmptyDayHistory(student) }">
             <li ng-repeat="slot in student.day_history"
-                class="[[vm.getHistoryEventClassName(slot.events)]]"
+                class="[[vm.getHistoryEventClassName(slot.events, slot)]]"
                 ng-class="{current: vm.isCurrentSlot(slot)}"
                 tooltip="[[::slot.name]]">
                 &nbsp;
