@@ -116,7 +116,7 @@ public class DefaultEventService implements EventService {
         query += setParamsForQueryEvents(userId, regularized, userIdFromClasses, params);
 
         if (page != null) {
-            query += "ORDER BY e.start_date OFFSET ? LIMIT ? ";
+            query += "ORDER BY e.start_date DESC OFFSET ? LIMIT ? ";
             params.add(Presences.PAGE_SIZE * page);
             params.add(Presences.PAGE_SIZE);
         }
@@ -135,7 +135,7 @@ public class DefaultEventService implements EventService {
             query += "INNER JOIN presences.event_type AS event_type ON event_type.id = e.type_id ";
         }
 
-        query += "GROUP BY e.id, e.start_date, event_type.id";
+        query += "GROUP BY e.id, e.start_date, event_type.id ORDER BY e.start_date DESC";
 
         return query;
     }

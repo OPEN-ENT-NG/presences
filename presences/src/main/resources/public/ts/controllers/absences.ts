@@ -277,46 +277,9 @@ export const absencesController = ng.controller('AbsencesController', ['$scope',
 
         vm.interactAbsent = (period, event: EventResponse, $event, parentIndex): void => {
             $event.stopPropagation();
-            if (vm.indexDayHistoryArray.length === 0) {
-                let eventClass = $event.currentTarget.getAttribute("class");
-
-                if (eventClass === "late" && period.name === "Repas" && eventClass === "departure") {
-                    return;
-                }
-
-                // delete event
-                if (eventClass === "justified" || eventClass === "absent") {
-                    let eventIdToDelete;
-                    period.events.forEach((event, index) => {
-                        if (event.type_id === 1) {
-                            eventIdToDelete = event.id;
-                            period.events.splice(index, 1);
-                        }
-                    });
-                    let eventToDelete = event.events.find(element => element.id === eventIdToDelete);
-                    let eventObj = new Event(eventToDelete.register_id, event.studentId, eventToDelete.start_date, eventToDelete.end_date);
-                    eventObj.id = eventToDelete.id;
-                    eventObj.delete();
-                    event.dayHistory.forEach(history => {
-                        history.events.forEach((event, index) => {
-                            if (event.id === eventIdToDelete) {
-                                history.events.splice(index, 1);
-                            }
-                        })
-                    });
-                    event.events = event.events.filter(item => item.id !== eventIdToDelete);
-                    if (event.events.length === 0) {
-                        vm.events.all.splice(parentIndex, 1);
-                        return;
-                    }
-                    initGlobalReason(event);
-                    event.globalCounsellorRegularisation = initGlobalCounsellorRegularisation(event);
-                } else {
-                    /* @TODO !!feature not available yet!! When click on node,
-                         add absent/justified class to fill node and create absence */
-                    return;
-                }
-            }
+            /* @TODO !!feature not available yet!! When click on node,
+                        add absent/justified class to fill node and create absence OR DELETE if absent or justified absent */
+            return;
         };
 
         /* Change CSS class depending on their event_type id */
