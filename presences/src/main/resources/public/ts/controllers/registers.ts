@@ -470,10 +470,8 @@ export const registersController = ng.controller('RegistersController',
                     let arrayIndex = priority.indexOf(events[i].type_id);
                     index = arrayIndex < index ? arrayIndex : index;
                 }
-                if (vm.isCurrentSlot(slot)) {
-                    return className[index] || '';
-                }
-                return '';
+                
+                return className[index] || '';
             };
 
             vm.isCurrentSlot = function (slot) {
