@@ -406,13 +406,15 @@ export const registersController = ng.controller('RegistersController',
                 const endDateTime = moment(moment(vm.register.start_date).format(DateUtils.FORMAT["YEAR-MONTH-DAY"]) + ' ' +
                     moment().millisecond(0).second(0).format(DateUtils.FORMAT["HOUR-MINUTES"]));
                 await toggleEvent(student, 'lateness', vm.register.start_date, endDateTime.format(DateUtils.FORMAT["YEAR-MONTH-DAY-HOUR-MIN-SEC"]));
-                student.lateness.end_date_time = endDateTime.toDate();
+                if (student.lateness) student.lateness.end_date_time = endDateTime.toDate();
                 $scope.safeApply();
             };
 
             vm.toggleDeparture = async (student) => {
+                const startDateTime = moment(moment(vm.register.start_date).format(DateUtils.FORMAT["YEAR-MONTH-DAY"]) + ' ' +
+                    moment().millisecond(0).second(0).format(DateUtils.FORMAT["HOUR-MINUTES"]));
                 const time = moment().millisecond(0).second(0);
-                await toggleEvent(student, 'departure', time.format(DateUtils.FORMAT["YEAR-MONTH-DAY-HOUR-MIN-SEC"]), vm.register.end_date);
+                await toggleEvent(student, 'departure', startDateTime, vm.register.end_date);
                 student.departure.start_date_time = time.toDate();
                 $scope.safeApply();
             };
@@ -441,8 +443,12 @@ export const registersController = ng.controller('RegistersController',
             vm.updateLateness = function () {
                 vm.filter.student.lateness.update();
 
+                const startRegister = vm.register.start_date;
+                const endRegister = vm.register.end_date;
+
                 // update day_history events
                 vm.filter.student.day_history.forEach(item => {
+                    if (!(item.start >= startRegister && item.end <= endRegister)) return;
                     const endDate = moment(vm.filter.student.lateness.end_date_time).format("YYYY-MM-DDTHH:mm:ss");
                     item.events.forEach((e, index) => {
                         if (e.id === vm.filter.student.lateness.id) {
@@ -470,7 +476,7 @@ export const registersController = ng.controller('RegistersController',
                     let arrayIndex = priority.indexOf(events[i].type_id);
                     index = arrayIndex < index ? arrayIndex : index;
                 }
-                
+
                 return className[index] || '';
             };
 
