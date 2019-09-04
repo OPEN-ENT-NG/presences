@@ -66,9 +66,10 @@
                         <h2>
                             <i18n>presences.navigation.absence</i18n>
                         </h2>
-                        <a href="/presences#/absences" class="sub-item">
+                        <a href="/presences#/events" class="sub-item"
+                           ng-if="::hasRight('readEvent')">
                             <i class="absence" aria-hidden="true"></i>
-                            <span><i18n>presences.navigation.absence.list</i18n></span>
+                            <span><i18n>presences.navigation.event.list</i18n></span>
                         </a>
                         <a href="#" class="sub-item forbidden">
                             <i class="testimony" aria-hidden="true"></i>

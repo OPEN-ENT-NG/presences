@@ -42,8 +42,8 @@ export const mainController = ng.controller('MainController', ['$scope', 'route'
             getRegister: () => {
                 template.open('main', `containers/registers`);
             },
-            absences: () => {
-                template.open('main', `containers/absences`);
+            events: () => {
+                template.open('main', `containers/events`);
             },
             'group-absences': () => {
                 template.open('main', `containers/group-absences`);

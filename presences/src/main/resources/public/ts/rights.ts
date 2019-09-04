@@ -3,6 +3,7 @@ const rights = {
         access: 'fr.openent.presences.controller.PresencesController|view',
         readRegister: 'fr.openent.presences.controller.RegisterController|getRegister',
         createRegister: 'fr.openent.presences.controller.RegisterController|postRegister',
+        readEvent: 'fr.openent.presences.controller.EventController|getEvents',
         createEvent: 'fr.openent.presences.controller.EventController|postEvent',
         search: 'fr.openent.presences.controller.SearchController|searchUsers',
         export: 'fr.openent.presences.controller.CourseController|exportCourses',

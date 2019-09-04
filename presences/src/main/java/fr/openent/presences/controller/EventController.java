@@ -43,6 +43,7 @@ public class EventController extends ControllerHelper {
 
     @Get("/events")
     @ApiDoc("get events")
+    @SecuredAction(Presences.READ_EVENT)
     public void getEvents(HttpServerRequest request) {
         String structureId = request.getParam("structureId");
         String startDate = request.getParam("startDate");
