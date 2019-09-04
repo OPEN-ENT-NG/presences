@@ -53,6 +53,8 @@ interface ViewModel {
 
     updateLateness(): void;
 
+    updateDeparture(): void;
+
     getHistoryEventClassName(events, slot): string;
 
     isCurrentSlot(slot: { end: string, start: string }): boolean;
@@ -413,9 +415,8 @@ export const registersController = ng.controller('RegistersController',
             vm.toggleDeparture = async (student) => {
                 const startDateTime = moment(moment(vm.register.start_date).format(DateUtils.FORMAT["YEAR-MONTH-DAY"]) + ' ' +
                     moment().millisecond(0).second(0).format(DateUtils.FORMAT["HOUR-MINUTES"]));
-                const time = moment().millisecond(0).second(0);
                 await toggleEvent(student, 'departure', startDateTime, vm.register.end_date);
-                student.departure.start_date_time = time.toDate();
+                student.departure.start_date_time = startDateTime.toDate();
                 $scope.safeApply();
             };
 
@@ -462,6 +463,31 @@ export const registersController = ng.controller('RegistersController',
                     }
                 });
             };
+
+            vm.updateDeparture = function () {
+                vm.filter.student.departure.update();
+
+                const startRegister = vm.register.start_date;
+                const endRegister = vm.register.end_date;
+
+                // update day_history events
+                vm.filter.student.day_history.forEach(item => {
+                    if (!(item.start >= startRegister && item.end <= endRegister)) return;
+                    const endDate = moment(vm.filter.student.departure.end_date_time).format("YYYY-MM-DDTHH:mm:ss");
+                    item.events.forEach((e, index) => {
+                        if (e.id === vm.filter.student.departure.id) {
+                            if (!((item.end <= endDate) || (endDate > item.start))) {
+                                item.events.splice(index, 1);
+                            }
+                        }
+                    });
+                    if ((item.end <= endDate) || (endDate > item.start)) {
+                        item.events.push(vm.filter.student.departure);
+                    }
+                });
+            };
+
+
 
             vm.closePanel = function () {
                 delete vm.filter.student;
