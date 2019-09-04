@@ -229,15 +229,17 @@ public class CalendarController extends ControllerHelper {
                                     .put("is_periodic", false)
                                     .put("is_recurrent", true)
                                     .put("absence", true)
+                                    .put("absenceId", absent.getLong("id"))
+                                    .put("absenceReason", absent.getInteger("reason_id") != null ? absent.getInteger("reason_id") : 0)
                                     .put("structureId", structure)
                                     .put("events", new JsonArray())
-                                    .put("startDate", totalDatesInFuture.get(j).toString() + " " + (j == 0 ? currentTime.toString() : "00:00"))
-                                    .put("endDate", totalDatesInFuture.get(j).toString() + " " + (j == (totalDatesInFuture.size() - 1)? endDateTime : "23:59"))
+                                    .put("startDate", totalDatesInFuture.get(j).toString() + " " + (j == 0 ? getAbsenceStartTime(currentTime.toString(), absent.getString("start_date"), sdf, startDateTime) : "00:00"))
+                                    .put("endDate", totalDatesInFuture.get(j).toString() + " " + (j == (totalDatesInFuture.size() - 1) ? endDateTime : "23:59"))
                                     .put("roomLabels", new JsonArray())
                                     .put("subjectId", "")
                                     .put("subject_name", "")
-                                    .put("startMomentDate", totalDatesInFuture.get(j).toString() + " " + (j == 0 ? currentTime.toString() : "00:00"))
-                                    .put("startMomentTime", (j == 0 ? currentTime.toString() : "00:00"))
+                                    .put("startMomentDate", totalDatesInFuture.get(j).toString() + " " + (j == 0 ? getAbsenceStartTime(currentTime.toString(), absent.getString("start_date"), sdf, startDateTime)  : "00:00"))
+                                    .put("startMomentTime", (j == 0 ? getAbsenceStartTime(currentTime.toString(), absent.getString("start_date"), sdf, startDateTime)  : "00:00"))
                                     .put("endMomentDate", totalDatesInFuture.get(j).toString() + " " + (j == (totalDatesInFuture.size() - 1) ? endDateTime : "23:59"))
                                     .put("endMomentTime", j == (totalDatesInFuture.size() - 1) ? endDateTime : "23:59")
                     );
@@ -247,6 +249,14 @@ public class CalendarController extends ControllerHelper {
         } catch (ParseException e) {
             log.error("[CalendarController@absent] Failed to parse date", e);
             return new JsonArray();
+        }
+    }
+
+    private String getAbsenceStartTime(String currentTime, String startDate, SimpleDateFormat sdf, String startDateTime) throws ParseException {
+        if (new Date().after(sdf.parse(startDate)) || new Date().equals(sdf.parse(startDate))) {
+            return currentTime;
+        } else {
+            return startDateTime;
         }
     }
 

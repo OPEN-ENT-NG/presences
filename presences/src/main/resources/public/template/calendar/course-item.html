@@ -8,13 +8,14 @@
     <div class="absenceOnly" ng-if="isAbsenceOnly(item)">
         &nbsp;
     </div>
-    <div class="courses-inside-absenceOnly" ng-if="isAbsenceOnly(item)">
+    <div class="absenceReasonOnly" ng-if="isAbsenceJustifiedOnly(item)">
         &nbsp;
     </div>
     <div class="course-item"
-         data-ng-attr-id="[[isAbsenceOnly(item) ? 'absent' + item.dayOfWeek + '-' + item.hash : null]]"
+         data-ng-attr-id="[[isAbsenceOnly(item) || isAbsenceJustifiedOnly(item) ? 'absent' + item.dayOfWeek + '-' + item.hash : null]]"
          ng-class="{
          'contains-absenceOnly': isAbsenceOnly(item),
+         'contains-absenceReasonOnly': isAbsenceJustifiedOnly(item),
          'contains-absence': item.containsAbsence,
          'contains-events': item.events.length > 0 || item.exempted,
          'is-absence': item.hasOwnProperty('hash')

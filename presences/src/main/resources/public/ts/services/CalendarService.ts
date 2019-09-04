@@ -24,6 +24,9 @@ export interface Course {
     subject_name: string;
     events: CourseEvent[];
     hash?: string;
+    absence?: boolean;
+    absenceId?: string;
+    absenceReason?: number;
 }
 
 export interface CalendarService {
