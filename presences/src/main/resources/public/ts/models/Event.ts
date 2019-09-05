@@ -43,7 +43,7 @@ export class Event {
 
     toJson() {
         return {
-            register_id: this.register_id,
+            register_id: parseInt(this.register_id.toString()),
             counsellor_regularisation: this.counsellor_regularisation,
             type_id: this.type_id,
             ...(this.student_id ? {student_id: this.student_id} : {}),
