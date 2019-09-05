@@ -90,7 +90,7 @@
   "presences.absence.file": "Doc",
   "presences.absence.action": "Action",
   "presences.absence.regularise": "Régul.",
-  "presences.absence.empty": "Aucune absence sur cette période",
+  "presences.event.empty": "Aucun événement sur cette période",
   "presences.absence.select.multiple": "Motifs multiples",
   "presences.absence.select.empty": "Sans motif",
   "presences.event.calendar.title": "Saisir un événement",

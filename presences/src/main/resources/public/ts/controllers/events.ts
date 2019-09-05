@@ -533,7 +533,7 @@ export const eventsController = ng.controller('EventsController', ['$scope', '$r
             vm.filter.departure = !vm.filter.departure;
             if (vm.filter.departure) {
                 if (!vm.eventType.some(e => e == EventType.DEPARTURE)) {
-                    vm.eventType.push(EventType.LATENESS);
+                    vm.eventType.push(EventType.DEPARTURE);
                 }
             } else {
                 vm.eventType = _.without(vm.eventType, EventType.DEPARTURE);
