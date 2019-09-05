@@ -36,7 +36,7 @@ interface ViewModel {
 
     selectIncidentStudentForm(model: Student, student: Student): void;
 
-    removeIncidentStudentForm(): void;
+    removeIncidentStudentForm(student): void;
 
     searchIncidentStudentForm(string): void;
 
@@ -142,8 +142,8 @@ const vm: ViewModel = {
             vm.incidentStudentsForm.searchValue = null;
         }
     },
-    removeIncidentStudentForm: function () {
-        vm.incidentForm.protagonists = _.without(vm.incidentForm.protagonists, _.findWhere(vm.incidentForm.protagonists));
+    removeIncidentStudentForm: function (student) {
+        vm.incidentForm.protagonists = _.without(vm.incidentForm.protagonists, student);
         vm.safeApply();
     },
     searchIncidentStudentForm: async function (searchText: string) {

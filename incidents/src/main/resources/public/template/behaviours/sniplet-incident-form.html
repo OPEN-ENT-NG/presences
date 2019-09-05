@@ -142,7 +142,7 @@
                                 data-ng-model="protagonist.protagonistType"
                                 ng-options="protagonistType.label for protagonistType in vm.incidentParameterType.protagonistType track by protagonistType.id">
                         </select>
-                        <i class="close" data-ng-click="vm.removeIncidentStudentForm()"></i>
+                        <i class="close" data-ng-click="vm.removeIncidentStudentForm(protagonist)"></i>
                     </div>
 
                 </li>
