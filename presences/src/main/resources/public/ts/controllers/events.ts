@@ -128,10 +128,9 @@ interface ViewModel {
     exportCsv(): void;
 }
 
-export const absencesController = ng.controller('AbsencesController', ['$scope', '$route',
+export const eventsController = ng.controller('EventsController', ['$scope', '$route',
     'GroupService', 'EventService',
     function ($scope, $route, GroupService: GroupService, EventService: EventService) {
-        console.log('AbsencesController');
         const isWidget = $route.current.action === 'dashboard';
         const vm: ViewModel = this;
         vm.filter = {
