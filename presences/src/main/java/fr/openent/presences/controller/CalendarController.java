@@ -110,7 +110,7 @@ public class CalendarController extends ControllerHelper {
                         Future<JsonArray> exemptionsFuture = Future.future();
                         Future<JsonArray> incidentsFuture = Future.future();
                         Future<JsonArray> absentFuture = Future.future();
-                        CompositeFuture.all(subjectsFuture, eventsFuture, exemptionsFuture, incidentsFuture).setHandler(futureEvent -> {
+                        CompositeFuture.all(subjectsFuture, eventsFuture, exemptionsFuture, incidentsFuture, absentFuture).setHandler(futureEvent -> {
                             if (futureEvent.failed()) {
                                 log.error("[CalendarController@getCalendarCourses] Failed to retrieve information", futureEvent.cause());
                                 renderError(request);
@@ -233,13 +233,13 @@ public class CalendarController extends ControllerHelper {
                                     .put("absenceReason", absent.getInteger("reason_id") != null ? absent.getInteger("reason_id") : 0)
                                     .put("structureId", structure)
                                     .put("events", new JsonArray())
-                                    .put("startDate", totalDatesInFuture.get(j).toString() + " " + (j == 0 ? getAbsenceStartTime(currentTime.toString(), absent.getString("start_date"), sdf, startDateTime) : "00:00"))
+                                    .put("startDate", totalDatesInFuture.get(j).toString() + " " + (j == 0 ? getAbsenceStartTime(currentTime.toString(), absent.getString("start_date"), startDateTime) : "00:00"))
                                     .put("endDate", totalDatesInFuture.get(j).toString() + " " + (j == (totalDatesInFuture.size() - 1) ? endDateTime : "23:59"))
                                     .put("roomLabels", new JsonArray())
                                     .put("subjectId", "")
                                     .put("subject_name", "")
-                                    .put("startMomentDate", totalDatesInFuture.get(j).toString() + " " + (j == 0 ? getAbsenceStartTime(currentTime.toString(), absent.getString("start_date"), sdf, startDateTime)  : "00:00"))
-                                    .put("startMomentTime", (j == 0 ? getAbsenceStartTime(currentTime.toString(), absent.getString("start_date"), sdf, startDateTime)  : "00:00"))
+                                    .put("startMomentDate", totalDatesInFuture.get(j).toString() + " " + (j == 0 ? getAbsenceStartTime(currentTime.toString(), absent.getString("start_date"), startDateTime)  : "00:00"))
+                                    .put("startMomentTime", (j == 0 ? getAbsenceStartTime(currentTime.toString(), absent.getString("start_date"), startDateTime)  : "00:00"))
                                     .put("endMomentDate", totalDatesInFuture.get(j).toString() + " " + (j == (totalDatesInFuture.size() - 1) ? endDateTime : "23:59"))
                                     .put("endMomentTime", j == (totalDatesInFuture.size() - 1) ? endDateTime : "23:59")
                     );
@@ -252,7 +252,8 @@ public class CalendarController extends ControllerHelper {
         }
     }
 
-    private String getAbsenceStartTime(String currentTime, String startDate, SimpleDateFormat sdf, String startDateTime) throws ParseException {
+    private String getAbsenceStartTime(String currentTime, String startDate, String startDateTime) throws ParseException {
+        SimpleDateFormat sdf = new SimpleDateFormat(SQL_FORMAT);
         if (new Date().after(sdf.parse(startDate)) || new Date().equals(sdf.parse(startDate))) {
             return currentTime;
         } else {

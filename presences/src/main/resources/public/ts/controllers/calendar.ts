@@ -117,7 +117,8 @@ export const calendarController = ng.controller('CalendarController', ['$scope',
                 const item = course.closest('.schedule-item');
                 items.push(item);
                 if (item === undefined || item === null) return;
-                if ((item.parentNode as Element).querySelector('.absenceOnly')) {
+                if ((item.parentNode as Element).querySelector('.absenceOnly') ||
+                    (item.parentNode as Element).querySelector('.absenceReasonOnly')) {
                     item.setAttribute("class", "schedule-item schedule-absenceOnly");
                 } else {
                     item.setAttribute("class", "schedule-item schedule-course-absenceOnly");
