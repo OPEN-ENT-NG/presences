@@ -35,7 +35,7 @@ public class DefaultExemptionService extends SqlCrudService implements Exemption
         JsonArray values = new JsonArray();
 
         if (page != null) {
-            query += " ORDER BY start_date";
+            query += " ORDER BY end_date DESC";
             query += " OFFSET ? LIMIT ?";
             values.add(Presences.PAGE_SIZE * Integer.parseInt(page));
             values.add(Presences.PAGE_SIZE);
