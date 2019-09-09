@@ -131,10 +131,12 @@ export const registersController = ng.controller('RegistersController',
                         template.open('register', 'register/list-view');
                         template.open('register-panel', 'register/panel');
                         let promises = [vm.register.sync()];
-                        if (vm.filter.course.teachers.length > 0) {
-                            let cp = vm.loadCourses([vm.filter.course.teachers[0].id], [], window.structure.id, DateUtils.format(vm.filter.date, DateUtils.FORMAT["YEAR-MONTH-DAY"]),
-                                DateUtils.format(vm.filter.date, DateUtils.FORMAT["YEAR-MONTH-DAY"]), false);
-                            promises.push(cp);
+                        if (vm.filter.course) {
+                            if (vm.filter.course.teachers.length > 0) {
+                                let cp = vm.loadCourses([vm.filter.course.teachers[0].id], [], window.structure.id, DateUtils.format(vm.filter.date, DateUtils.FORMAT["YEAR-MONTH-DAY"]),
+                                    DateUtils.format(vm.filter.date, DateUtils.FORMAT["YEAR-MONTH-DAY"]), false);
+                                promises.push(cp);
+                            }
                         }
                         await Promise.all(promises);
                         if (vm.register.teachers.length > 0) vm.filter.selected.registerTeacher = vm.register.teachers[0];
@@ -145,8 +147,10 @@ export const registersController = ng.controller('RegistersController',
                         vm.register.eventer.once('loading::true', () => $scope.safeApply());
                         vm.register.eventer.once('loading::false', () => $scope.safeApply());
                         await vm.register.sync();
-                        if (vm.register.teachers.length > 0 && _.countBy(vm.register.teachers, (teacher) => teacher.id === vm.filter.selected.registerTeacher.id) === 0)
-                            vm.filter.selected.registerTeacher = vm.register.teachers[0];
+                        if (vm.filter.selected.registerTeacher) {
+                            if (vm.register.teachers.length > 0 && _.countBy(vm.register.teachers, (teacher) => teacher.id === vm.filter.selected.registerTeacher.id) === 0)
+                                vm.filter.selected.registerTeacher = vm.register.teachers[0];
+                        }
                     }
                 },
                 forgottenRegisterWidget: () => vm.loadCourses(extractSelectedTeacherIds(), extractSelectedGroupsName()),
@@ -383,6 +387,7 @@ export const registersController = ng.controller('RegistersController',
                         }
                     }
                     student[event] = o;
+                    console.log("student: ", student);
                     try {
                         await student[event].create();
                     } catch (err) {
@@ -397,8 +402,10 @@ export const registersController = ng.controller('RegistersController',
             };
 
             vm.toggleAbsence = async (student) => {
+                console.log("studentAbs: ", student);
                 if ((student.absence && student.absence.counsellor_input) || (student.exempted && !student.exemption_attendance)) return;
                 await toggleEvent(student, 'absence', vm.register.start_date, vm.register.end_date);
+                console.log("studentAbsAfter: ", student);
                 student.departure = undefined;
                 student.lateness = undefined;
                 $scope.safeApply();
