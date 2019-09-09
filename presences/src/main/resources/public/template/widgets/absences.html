@@ -42,7 +42,7 @@
         </div>
     </div>
     <div class="absence-list" ng-show="vm.events.events.length > 0">
-        <div ng-repeat="event in vm.events.events" class="event">
+        <div ng-repeat="event in vm.getNonRegularizedEvents(vm.events.events)" class="event">
             <div>
                 <div>
                     <div>[[event.student.displayName]]</div>

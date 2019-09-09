@@ -74,6 +74,8 @@ interface ViewModel {
 
     toggleAbsenceRegularised(history, event): void;
 
+    getNonRegularizedEvents(events): any[];
+
     /* Events description */
     changeDescriptionReason(periods, event): void;
 
@@ -378,6 +380,10 @@ export const eventsController = ng.controller('EventsController', ['$scope', '$r
             vm.events.updateRegularized(eventsId, history.counsellor_regularisation);
             if (!isWidget) event.globalCounsellorRegularisation = initGlobalCounsellorRegularisation(event);
             else vm.events.page = 0;
+        };
+
+        vm.getNonRegularizedEvents = (events): any[] => {
+            return events.filter(item => item.counsellor_regularisation === false);
         };
 
         /* Toggle Collapse */
