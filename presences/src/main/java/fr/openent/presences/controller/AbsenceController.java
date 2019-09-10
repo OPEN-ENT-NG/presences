@@ -1,14 +1,11 @@
 package fr.openent.presences.controller;
 
-import fr.openent.presences.Presences;
 import fr.openent.presences.constants.Actions;
-import fr.openent.presences.enums.EventType;
 import fr.openent.presences.security.CreateEventRight;
 import fr.openent.presences.service.AbsenceService;
 import fr.openent.presences.service.impl.DefaultAbsenceService;
 import fr.wseduc.rs.ApiDoc;
 import fr.wseduc.rs.Post;
-import fr.wseduc.security.SecuredAction;
 import fr.wseduc.webutils.request.RequestUtils;
 import io.vertx.core.eventbus.EventBus;
 import io.vertx.core.http.HttpServerRequest;
@@ -41,17 +38,15 @@ public class AbsenceController extends ControllerHelper {
                 return;
             }
 
-            UserUtils.getUserInfos(eb, request, user -> {
-                absenceService.create(event, user, either -> {
-                    if (either.isLeft()) {
-                        log.error("[Presences@AbsenceController] failed to create absent or events", either.left().getValue());
-                        renderError(request);
-                    } else {
-                        JsonObject res = new JsonObject().put("events", either.right().getValue());
-                        renderJson(request, res, 201);
-                    }
-                });
-            });
+            UserUtils.getUserInfos(eb, request, user -> absenceService.create(event, user, either -> {
+                if (either.isLeft()) {
+                    log.error("[Presences@AbsenceController] failed to create absent or events", either.left().getValue());
+                    renderError(request);
+                } else {
+                    JsonObject res = new JsonObject().put("events", either.right().getValue());
+                    renderJson(request, res, 201);
+                }
+            }));
         });
     }
 

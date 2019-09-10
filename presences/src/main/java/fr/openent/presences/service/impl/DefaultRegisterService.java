@@ -261,10 +261,11 @@ public class DefaultRegisterService implements RegisterService {
                         for (int i = 0; i < users.size(); i++) {
                             JsonObject user = users.getJsonObject(i);
                             boolean exempted = exemptionsMap.containsKey(user.getString("id"));
-                            boolean exemption_attendance = exemptionsMap.containsKey(user.getString("id")) ? exemptionsMap.getBoolean(user.getString("id")) : false;
+                            String exempted_subjectId = exemptionsMap.containsKey(user.getString("id")) ? exemptionsMap.getJsonObject(user.getString("id")).getString("subject_id") : "0";
+                            boolean exemption_attendance = exemptionsMap.containsKey(user.getString("id")) ? exemptionsMap.getJsonObject(user.getString("id")).getBoolean("attendance") : false;
                             formattedUsers.add(formatStudent(id, user, historyMap.getJsonArray(user.getString("id"), new JsonArray()),
                                     lastAbsentUsers.contains(user.getString("id")), groupsNameMap.getString(user.getString("groupId")),
-                                    exempted, exemption_attendance));
+                                    exempted, exemption_attendance, exempted_subjectId));
                         }
                         register.put("students", formattedUsers);
                         register.put("groups", groups);
@@ -384,7 +385,10 @@ public class DefaultRegisterService implements RegisterService {
     private JsonObject mapExemptions(JsonArray exemptions) {
         JsonObject map = new JsonObject();
         for (int i = 0; i < exemptions.size(); i++) {
-            map.put(exemptions.getJsonObject(i).getString("student_id"), exemptions.getJsonObject(i).getBoolean("attendance", false));
+            map.put(exemptions.getJsonObject(i).getString("student_id"),
+                    new JsonObject()
+                            .put("attendance", exemptions.getJsonObject(i).getBoolean("attendance", false))
+                            .put("subject_id", exemptions.getJsonObject(i).getString("subject_id")));
         }
 
         return map;
@@ -422,7 +426,7 @@ public class DefaultRegisterService implements RegisterService {
      * @return Formatted student
      */
     private JsonObject formatStudent(Integer registerId, JsonObject student, JsonArray events, boolean lastCourseAbsent,
-                                     String groupName, Boolean exempted, Boolean exemption_attendance) {
+                                     String groupName, Boolean exempted, Boolean exemption_attendance, String exempted_subjectId) {
         JsonArray registerEvents = new JsonArray();
         for (int i = 0; i < events.size(); i++) {
             JsonObject event = events.getJsonObject(i);
@@ -444,6 +448,7 @@ public class DefaultRegisterService implements RegisterService {
 
         if (exempted) {
             user.put("exemption_attendance", exemption_attendance);
+            user.put("exempted_subjectId", exempted_subjectId);
         }
 
         return user;

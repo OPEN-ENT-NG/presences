@@ -10,6 +10,7 @@ const rights = {
         notify: 'fr.openent.presences.controller.CourseController|notify',
         readExemption: 'fr.openent.presences.controller.ExemptionController|getExemptions',
         manageExemption: 'fr.openent.presences.controller.ExemptionController|createExemptions',
+        managePresences: 'fr.openent.presences.controller.FakeRight|managePresences',
         widget_alerts: 'fr.openent.presences.controller.FakeRight|widgetAlerts',
         widget_forgotten_registers: 'fr.openent.presences.controller.FakeRight|widgetForgottenRegisters',
         widget_statements: 'fr.openent.presences.controller.FakeRight|widgetStatements',

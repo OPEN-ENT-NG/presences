@@ -22,6 +22,7 @@ public class Presences extends BaseServer {
     public static final String READ_EVENT = "presences.event.read";
     public static final String READ_EXEMPTION = "presences.exemption.read";
     public static final String MANAGE_EXEMPTION = "presences.exemption.manage";
+    public static final String MANAGE = "presences.manage";
 
     // Widget rights
     public static final String ALERTS_WIDGET = "presences.widget.alerts";

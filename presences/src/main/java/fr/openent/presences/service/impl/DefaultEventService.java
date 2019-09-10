@@ -2,7 +2,9 @@ package fr.openent.presences.service.impl;
 
 import fr.openent.presences.Presences;
 import fr.openent.presences.common.helper.RegisterHelper;
+import fr.openent.presences.common.helper.WorkflowHelper;
 import fr.openent.presences.enums.EventType;
+import fr.openent.presences.enums.WorkflowActions;
 import fr.openent.presences.helper.CourseHelper;
 import fr.openent.presences.service.EventService;
 import fr.wseduc.webutils.Either;
@@ -527,12 +529,13 @@ public class DefaultEventService implements EventService {
 
     private JsonObject getCreationStatement(JsonObject event, UserInfos user) {
         String query = "INSERT INTO " + Presences.dbSchema + ".event (start_date, end_date, comment, counsellor_input, student_id, register_id, type_id, owner) " +
-                "VALUES (?, ?, ?, false, ?, ?, ?, ?) " +
+                "VALUES (?, ?, ?, ?, ?, ?, ?, ?) " +
                 "RETURNING id, start_date, end_date, comment, counsellor_input, student_id, register_id, type_id, reason_id;";
         JsonArray params = new JsonArray()
                 .add(event.getString("start_date"))
                 .add(event.getString("end_date"))
                 .add(event.containsKey("comment") ? event.getString("comment") : "")
+                .add(WorkflowHelper.hasRight(user, WorkflowActions.MANAGE.toString()))
                 .add(event.getString("student_id"))
                 .add(event.getInteger("register_id"))
                 .add(event.getInteger("type_id"))

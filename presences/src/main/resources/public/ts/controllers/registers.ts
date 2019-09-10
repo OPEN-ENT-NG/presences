@@ -77,6 +77,8 @@ interface ViewModel {
 
     isEmptyDayHistory(student): boolean;
 
+    isAbsenceDisabled(student): boolean;
+
     switchForgottenFilter(): void;
 
     formatDayDate(date: string): string;
@@ -405,7 +407,10 @@ export const registersController = ng.controller('RegistersController',
             };
 
             vm.toggleAbsence = async (student) => {
-                if ((student.absence && student.absence.counsellor_input) || (student.exempted && !student.exemption_attendance)) return;
+                if (vm.isAbsenceDisabled(student)) {
+                    return;
+                }
+                // if ((student.absence && student.absence.counsellor_input) || (student.exempted && !student.exemption_attendance)) return;
                 await toggleEvent(student, 'absence', vm.register.start_date, vm.register.end_date);
                 student.departure = undefined;
                 student.lateness = undefined;
@@ -539,6 +544,19 @@ export const registersController = ng.controller('RegistersController',
                     count += (events.length || 0)
                 }
                 return count === 0;
+            };
+
+            vm.isAbsenceDisabled = function (student ): boolean {
+                if (student.absence !== undefined && student.absence.counsellor_input) {
+                    return !model.me.hasWorkflow(rights.workflow.managePresences);
+                }
+
+                if (student.exempted_subjectId === vm.register.subject_id) {
+                    if (student.exempted && !student.exemption_attendance) {
+                        return true;
+                    }
+                }
+                return false;
             };
 
             vm.switchForgottenFilter = function () {

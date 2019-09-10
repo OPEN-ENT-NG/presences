@@ -62,4 +62,10 @@ public class FakeRight extends ControllerHelper {
     public void widgetDayPresences(HttpServerRequest request) {
         notImplemented(request);
     }
+
+    @Get("/rights/manage/event/absent")
+    @SecuredAction(Presences.MANAGE)
+    public void managePresences(HttpServerRequest request) {
+        notImplemented(request);
+    }
 }

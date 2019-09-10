@@ -9,7 +9,8 @@ public enum WorkflowActions {
     EXPORT(Presences.EXPORT),
     NOTIFY(Presences.NOTIFY),
     CREATE_EVENT(Presences.CREATE_EVENT),
-    MANAGE_EXEMPTION(Presences.MANAGE_EXEMPTION);
+    MANAGE_EXEMPTION(Presences.MANAGE_EXEMPTION),
+    MANAGE(Presences.MANAGE);
 
     private final String actionName;
 
