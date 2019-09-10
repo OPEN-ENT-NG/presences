@@ -1,4 +1,4 @@
-import {_, model, moment, ng, notify, template} from 'entcore';
+import {_, angular, model, moment, ng, notify, template} from 'entcore';
 import {Absence, Course, Courses, Departure, EventType, Lateness, Register, RegisterStatus, Remark} from '../models'
 import {GroupService, SearchService} from '../services';
 import {CourseUtils, DateUtils} from '@common/utils'
@@ -127,6 +127,9 @@ export const registersController = ng.controller('RegistersController',
                 },
                 getRegister: async ({id}) => {
                     template.open('registers', 'register/register');
+                    if ('filter' in window && window.filter) {
+                        vm.filter = { ...vm.filter, ...window.filter };
+                    }
                     if (vm.register !== undefined) {
                         template.open('register', 'register/list-view');
                         template.open('register-panel', 'register/panel');
@@ -327,6 +330,7 @@ export const registersController = ng.controller('RegistersController',
                 }
                 vm.filter.date = moment(course.startDate).toDate();
                 vm.filter.course = course;
+                window.filter = vm.filter;
                 if ($route.current.action !== 'getRegister') {
                     $scope.redirectTo(`/registers/${vm.register.id}`);
                     $scope.safeApply();
@@ -387,7 +391,6 @@ export const registersController = ng.controller('RegistersController',
                         }
                     }
                     student[event] = o;
-                    console.log("student: ", student);
                     try {
                         await student[event].create();
                     } catch (err) {
@@ -402,10 +405,8 @@ export const registersController = ng.controller('RegistersController',
             };
 
             vm.toggleAbsence = async (student) => {
-                console.log("studentAbs: ", student);
                 if ((student.absence && student.absence.counsellor_input) || (student.exempted && !student.exemption_attendance)) return;
                 await toggleEvent(student, 'absence', vm.register.start_date, vm.register.end_date);
-                console.log("studentAbsAfter: ", student);
                 student.departure = undefined;
                 student.lateness = undefined;
                 $scope.safeApply();
@@ -627,4 +628,11 @@ export const registersController = ng.controller('RegistersController',
             $scope.$watch(() => window.structure, startAction);
             $scope.$watch(() => $route.current.action, startAction);
             startAction();
+
+            /* Destroy */
+            $scope.$on("$destroy", () => {
+                if ($route.current.action === "dashboard") {
+                    window.filter = {};
+                }
+            });
         }]);
