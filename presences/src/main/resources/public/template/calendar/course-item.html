@@ -1,23 +1,20 @@
 <div class="course-item-container">
-    <div class="absence" ng-if="item.containsAbsence">
-        &nbsp;
-    </div>
-    <div class="exemption" ng-if="item.exempted" ng-class="{absent: item.containsAbsence}">
-        &nbsp;
-    </div>
-    <div class="absenceOnly" ng-if="isAbsenceOnly(item)">
-        &nbsp;
-    </div>
-    <div class="absenceReasonOnly" ng-if="isAbsenceJustifiedOnly(item)">
-        &nbsp;
-    </div>
+    <div class="absence" ng-if="item.containsAbsence && !item.containsReasonAbsence">&nbsp;</div>
+    <div class="exemption" ng-if="item.exempted" ng-class="{absent: item.containsAbsence}">&nbsp;</div>
+    <div class="absenceReason" ng-if="!item.containsAbsence && item.containsReasonAbsence">&nbsp;</div>
+
+    <div class="globalAbsence" ng-if="item._id === '0' && item.absence && item.absenceReason === 0">&nbsp;</div>
+    <div class="globalAbsenceReason" ng-if="item._id === '0' && item.absence && item.absenceReason > 0">&nbsp;</div>
+
     <div class="course-item"
          data-ng-attr-id="[[isAbsenceOnly(item) || isAbsenceJustifiedOnly(item) ? 'absent' + item.dayOfWeek + '-' + item.hash : null]]"
          ng-class="{
-         'contains-absenceOnly': isAbsenceOnly(item),
-         'contains-absenceReasonOnly': isAbsenceJustifiedOnly(item),
-         'contains-absence': item.containsAbsence,
+         'contains-absence': item.containsAbsence && !item.containsReasonAbsence,
+         'contains-absenceReason': !item.containsAbsence && item.containsReasonAbsence,
          'contains-events': item.events.length > 0 || item.exempted,
+
+         'contains-globalAbsence': item._id === '0' && item.absence && item.absenceReason === 0,
+         'contains-globalAbsenceReason': item._id === '0' && item.absence && item.absenceReason > 0,
          'is-absence': item.hasOwnProperty('hash')
          }">
         <div class="data">

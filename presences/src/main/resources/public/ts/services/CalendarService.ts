@@ -8,6 +8,7 @@ export interface CourseEvent {
     start_date: string;
     end_date: string;
     type_id: number;
+    reason_id?: number;
 }
 
 export interface Course {
@@ -39,7 +40,15 @@ export const CalendarService = ng.service('CalendarService', (): CalendarService
     getCourses: async (structureId: string, user: string, start: string, end: string) => {
         function containsAbsence(course: Course) {
             let contains = false;
-            course.events.map((event) => contains = contains || (event.type_id === EventType.ABSENCE));
+            course.events.map((event) => contains = contains ||
+                (event.type_id === EventType.ABSENCE && (event.reason_id === null || event.reason_id === 0)));
+            return contains;
+        }
+
+        function containsReasonAbsence(course: Course) {
+            let contains = false;
+            course.events.map((event) => contains = contains ||
+                (event.type_id === EventType.ABSENCE && (event.reason_id !== null || event.reason_id > 0)));
             return contains;
         }
 
@@ -49,6 +58,7 @@ export const CalendarService = ng.service('CalendarService', (): CalendarService
                 course.startMoment = moment(course.startDate);
                 course.endMoment = moment(course.endDate);
                 course.containsAbsence = containsAbsence(course);
+                course.containsReasonAbsence = containsReasonAbsence(course);
                 this.locked = true;
 
                 // create hash to fetch in html in order to recognize "absence" course

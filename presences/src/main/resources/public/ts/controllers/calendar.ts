@@ -117,23 +117,35 @@ export const calendarController = ng.controller('CalendarController', ['$scope',
                 const item = course.closest('.schedule-item');
                 items.push(item);
                 if (item === undefined || item === null) return;
-                if ((item.parentNode as Element).querySelector('.absenceOnly') ||
-                    (item.parentNode as Element).querySelector('.absenceReasonOnly')) {
-                    item.setAttribute("class", "schedule-item schedule-absenceOnly");
-                } else {
-                    item.setAttribute("class", "schedule-item schedule-course-absenceOnly");
+                if ((item.parentNode as Element).querySelector('.globalAbsence')) {
+                    item.setAttribute("class", "schedule-item schedule-globalAbsence");
+                } else if ((item.parentNode as Element).querySelector('.globalAbsenceReason'))  {
+                    item.setAttribute("class", "schedule-item schedule-globalAbsenceReason");
+                }
+                else {
+                    item.setAttribute("class", "schedule-item schedule-course");
                 }
             });
 
-            let absenceItems = items.filter(item => item.getAttribute("class") === "schedule-item schedule-absenceOnly");
-            let coursesItems = items.filter(item => item.getAttribute("class") !== "schedule-item schedule-absenceOnly");
+            let absenceItems = items.filter(item =>
+                item.getAttribute("class") === "schedule-item schedule-globalAbsence");
+            let absenceReasonItems = items.filter(item =>
+                item.getAttribute("class") === "schedule-item schedule-globalAbsenceReason");
+            let coursesItems = items.filter(item =>
+                item.getAttribute("class") !== "schedule-item schedule-globalAbsence" &&
+                item.getAttribute("class") !== "schedule-item schedule-globalAbsenceReason");
 
             coursesItems.forEach(course => {
                 absenceItems.forEach(absenceItem => {
                     if (isItemInside(course, absenceItem)) {
                         course.querySelectorAll(".course-item")[0].classList.add("isAbsent");
                     }
-                })
+                });
+                absenceReasonItems.forEach(absenceReasonItem => {
+                    if (isItemInside(course, absenceReasonItem)) {
+                        course.querySelectorAll(".course-item")[0].classList.add("isJustifiedAbsent");
+                    }
+                });
             });
         }
 
