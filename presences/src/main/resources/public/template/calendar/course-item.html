@@ -12,7 +12,6 @@
          'contains-absence': item.containsAbsence && !item.containsReasonAbsence,
          'contains-absenceReason': !item.containsAbsence && item.containsReasonAbsence,
          'contains-events': item.events.length > 0 || item.exempted,
-
          'contains-globalAbsence': item._id === '0' && item.absence && item.absenceReason === 0,
          'contains-globalAbsenceReason': item._id === '0' && item.absence && item.absenceReason > 0,
          'is-absence': item.hasOwnProperty('hash')

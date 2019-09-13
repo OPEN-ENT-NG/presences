@@ -3,8 +3,10 @@ package fr.openent.presences.service.impl;
 import fr.openent.presences.Presences;
 import fr.openent.presences.common.helper.FutureHelper;
 import fr.openent.presences.common.helper.RegisterHelper;
+import fr.openent.presences.common.helper.WorkflowHelper;
 import fr.openent.presences.enums.EventType;
 import fr.openent.presences.enums.GroupType;
+import fr.openent.presences.enums.WorkflowActions;
 import fr.openent.presences.service.AbsenceService;
 import fr.openent.presences.service.ExemptionService;
 import fr.openent.presences.service.GroupService;
@@ -163,13 +165,14 @@ public class DefaultRegisterService implements RegisterService {
                 " AND absence.start_date <= ?" +
                 " AND absence.end_date >= ?)" +
                 " INSERT INTO presences.event (start_date, end_date, comment, counsellor_input, student_id, register_id, type_id, reason_id, owner)" +
-                " (SELECT ?, ?, '', false, absence.student_id, ?, 1, absence.reason_id, ? FROM absence) ";
+                " (SELECT ?, ?, '', ?, absence.student_id, ?, 1, absence.reason_id, ? FROM absence) ";
 
         params.addAll(new JsonArray(users));
         params.add(finalResult.getString("start_date"));
         params.add(finalResult.getString("end_date"));
         params.add(finalResult.getString("start_date"));
         params.add(finalResult.getString("end_date"));
+        params.add(true);
         params.add(finalResult.getLong("id"));
         params.add(user.getUserId());
 

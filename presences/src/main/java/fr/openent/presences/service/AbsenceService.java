@@ -17,6 +17,14 @@ public interface AbsenceService {
      */
     void get(String startDate, String endDate, List<String> users, Handler<Either<String, JsonArray>> handler);
 
+
+    /**
+     * fetch absences between two dates chosen
+     *
+     * @param handler       Function handler returning data
+     */
+    void getAbsencesBetween(String startDate, String endDate, List<String> users, Handler<Either<String, JsonArray>> handler);
+
     /**
      * create absence
      *

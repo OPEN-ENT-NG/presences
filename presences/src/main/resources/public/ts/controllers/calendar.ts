@@ -111,7 +111,10 @@ export const calendarController = ng.controller('CalendarController', ['$scope',
         };
 
         function changeAbsenceView(item: Course) {
-            let courseItems = document.getElementById(`absent${item.dayOfWeek}-${item.hash}`).closest('.fiveDays').querySelectorAll('.course-item:not(.is-absence)');
+            let courseItems = document
+                .getElementById(`absent${item.dayOfWeek}-${item.hash}`)
+                .closest('.fiveDays')
+                .querySelectorAll('.course-item:not(.is-absence)');
             let items = [];
             Array.from(courseItems).forEach((course: HTMLElement) => {
                 const item = course.closest('.schedule-item');
@@ -129,18 +132,24 @@ export const calendarController = ng.controller('CalendarController', ['$scope',
 
             let absenceItems = items.filter(item =>
                 item.getAttribute("class") === "schedule-item schedule-globalAbsence");
+
             let absenceReasonItems = items.filter(item =>
                 item.getAttribute("class") === "schedule-item schedule-globalAbsenceReason");
+
             let coursesItems = items.filter(item =>
                 item.getAttribute("class") !== "schedule-item schedule-globalAbsence" &&
                 item.getAttribute("class") !== "schedule-item schedule-globalAbsenceReason");
 
             coursesItems.forEach(course => {
+
+                /* Coloring course in red if inside global justified absent bloc */
                 absenceItems.forEach(absenceItem => {
                     if (isItemInside(course, absenceItem)) {
                         course.querySelectorAll(".course-item")[0].classList.add("isAbsent");
                     }
                 });
+
+                /* Coloring course in pink if inside global justified absent bloc */
                 absenceReasonItems.forEach(absenceReasonItem => {
                     if (isItemInside(course, absenceReasonItem)) {
                         course.querySelectorAll(".course-item")[0].classList.add("isJustifiedAbsent");

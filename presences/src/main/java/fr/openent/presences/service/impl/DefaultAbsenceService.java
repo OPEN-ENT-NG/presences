@@ -47,6 +47,23 @@ public class DefaultAbsenceService implements AbsenceService {
     }
 
     @Override
+    public void getAbsencesBetween(String startDate, String endDate, List<String> users, Handler<Either<String, JsonArray>> handler) {
+        JsonArray params = new JsonArray();
+        String query = "SELECT * FROM " + Presences.dbSchema + ".absence" +
+                " WHERE student_id IN " + Sql.listPrepared(users.toArray()) +
+                " AND (? >= start_date OR ? < end_date)" +
+                " AND (end_date <= ? OR ? > start_date)";
+
+        params.addAll(new JsonArray(users));
+        params.add(startDate + " 00:00:00");
+        params.add(startDate + " 00:00:00");
+        params.add(endDate + " 23:59:59");
+        params.add(endDate + " 23:59:59");
+
+        Sql.getInstance().prepared(query, params, SqlResult.validResultHandler(handler));
+    }
+
+    @Override
     public void create(JsonObject absenceBody, UserInfos user, Handler<Either<String, JsonArray>> handler) {
         String query = "INSERT INTO " + Presences.dbSchema + ".absence(start_date, end_date, student_id, reason_id) " +
                 "VALUES (?, ?, ?, ?) RETURNING id;";
@@ -112,7 +129,7 @@ public class DefaultAbsenceService implements AbsenceService {
                 .add(absenceBody.getString("start_date"))
                 .add(absenceBody.getString("end_date"))
                 .add(absenceBody.getString("student_id"))
-                .add(WorkflowHelper.hasRight(user, WorkflowActions.MANAGE.toString()))
+                .add(true)
                 .add(absenceBody.getString("student_id"));
 
         if (absenceBody.getInteger("reason_id") != null) {

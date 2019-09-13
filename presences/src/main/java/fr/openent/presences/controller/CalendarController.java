@@ -193,9 +193,9 @@ public class CalendarController extends ControllerHelper {
 
             // Set calendar the current date if it is after or equal than our absent date
             calendar.setTime(new Date().after(startDate) || new Date().equals(startDate) ? new Date() : startDate);
-            int dayOfWeekFromStartDate = calendar.get(Calendar.DAY_OF_WEEK) - 1;
+            int dayOfWeekFromStartDate = calendar.get(Calendar.DAY_OF_MONTH) - 1;
             calendar.setTime(endDate);
-            int dayOfWeekFromEndDate = calendar.get(Calendar.DAY_OF_WEEK) - 1;
+            int dayOfWeekFromEndDate = calendar.get(Calendar.DAY_OF_MONTH) - 1;
 
             String startDateTime = DateHelper.getTimeString(absent.getString("start_date"), SQL_FORMAT);
             String endDateTime = DateHelper.getTimeString(absent.getString("end_date"), SQL_FORMAT);
@@ -361,7 +361,7 @@ public class CalendarController extends ControllerHelper {
     private void getAbsences(String start, String end, String userId, Future<JsonArray> future) {
         List<String> users = new ArrayList<>();
         users.add(userId);
-        absenceService.get(start, end, users, FutureHelper.handlerJsonArray(future));
+        absenceService.getAbsencesBetween(start, end, users, FutureHelper.handlerJsonArray(future));
     }
 
     @Get("/calendar/groups/:id/students")
