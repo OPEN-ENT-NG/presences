@@ -38,6 +38,7 @@ interface ViewModel {
     loadCourses(): Promise<void>;
 
     formatExemptionDate(date: any): string;
+    editAbsenceForm(item: Course): void;
 }
 
 interface CalendarScope extends Scope {
@@ -257,6 +258,13 @@ export const calendarController = ng.controller('CalendarController', ['$scope',
 
         $scope.isGlobalAbsenceReason = function(item): boolean {
             return item._id === '0' && item.absence && item.absenceReason > 0;
+        };
+
+        vm.editAbsenceForm = function(item): void {
+            if (item._id !== "0") {
+                return;
+            }
+            console.log("item: ", item);
         };
 
         vm.formatExemptionDate = function (date) {

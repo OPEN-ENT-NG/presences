@@ -19,6 +19,15 @@ public interface AbsenceService {
 
 
     /**
+     * get absence identifier
+     *
+     * @param absenceId     absence identifier to fetch
+     * @param handler       Function handler returning data
+     */
+    void getAbsenceId(Integer absenceId, Handler<Either<String, JsonObject>> handler);
+
+
+    /**
      * fetch absences between two dates chosen
      *
      * @param handler       Function handler returning data
@@ -32,7 +41,24 @@ public interface AbsenceService {
      * @param user          userInfo
      * @param handler       Function handler returning data
      */
-    void create(JsonObject absenceBody, UserInfos user, Handler<Either<String, JsonArray>> handler);
+    void create(JsonObject absenceBody, UserInfos user, Handler<Either<String, JsonObject>> handler);
+
+    /**
+     * update absence
+     *
+     * @param absenceId     absence identifier used to update absence
+     * @param absenceBody   absenceBody fetched
+     * @param handler       Function handler returning data
+     */
+    void update(Integer absenceId, JsonObject absenceBody, UserInfos user, Handler<Either<String, JsonObject>> handler);
+
+    /**
+     * delete absence
+     *
+     * @param absenceId     absence identifier used to delete absence
+     * @param handler       Function handler returning data
+     */
+    void delete(Integer absenceId, Handler<Either<String, JsonObject>> handler);
 
     /**
      * CRON task that automatically removes absence that have expired 3 days (72 hours) before date.now()
