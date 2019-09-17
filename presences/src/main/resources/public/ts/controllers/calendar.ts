@@ -46,6 +46,9 @@ interface CalendarScope extends Scope {
     hoverOutExemption(): void;
     isAbsenceOnly(item): boolean;
     isAbsenceJustifiedOnly(item): boolean;
+    isGlobalAbsence(item): boolean;
+    isGlobalAbsenceReason(item): boolean;
+    isPastItem(item): boolean;
 }
 
 export const calendarController = ng.controller('CalendarController', ['$scope', 'route', '$location', 'StructureService', 'CalendarService', 'GroupService', 'SearchService',
@@ -246,6 +249,14 @@ export const calendarController = ng.controller('CalendarController', ['$scope',
 
         $scope.isAbsenceJustifiedOnly = function(item): boolean {
             return item.absence && item.absenceReason > 0;
+        };
+
+        $scope.isGlobalAbsence = function(item): boolean {
+            return item._id === '0' && item.absence && item.absenceReason === 0;
+        };
+
+        $scope.isGlobalAbsenceReason = function(item): boolean {
+            return item._id === '0' && item.absence && item.absenceReason > 0;
         };
 
         vm.formatExemptionDate = function (date) {

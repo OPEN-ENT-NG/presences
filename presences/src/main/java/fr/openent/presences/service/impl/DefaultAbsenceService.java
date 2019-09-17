@@ -1,11 +1,12 @@
 package fr.openent.presences.service.impl;
 
 import fr.openent.presences.Presences;
-import fr.openent.presences.common.helper.WorkflowHelper;
-import fr.openent.presences.enums.WorkflowActions;
+import fr.openent.presences.common.helper.FutureHelper;
 import fr.openent.presences.service.AbsenceService;
 import fr.openent.presences.service.GroupService;
 import fr.wseduc.webutils.Either;
+import io.vertx.core.CompositeFuture;
+import io.vertx.core.Future;
 import io.vertx.core.Handler;
 import io.vertx.core.eventbus.EventBus;
 import io.vertx.core.json.JsonArray;
@@ -22,13 +23,10 @@ import java.util.List;
 public class DefaultAbsenceService implements AbsenceService {
     private static final Logger LOGGER = LoggerFactory.getLogger(DefaultAbsenceService.class);
 
-    private EventBus eb;
     private GroupService groupService;
 
     public DefaultAbsenceService(EventBus eb) {
-        this.eb = eb;
         this.groupService = new DefaultGroupService(eb);
-
     }
 
     @Override
@@ -91,9 +89,9 @@ public class DefaultAbsenceService implements AbsenceService {
                         LOGGER.error(message, groupEvent.left().getValue());
                         handler.handle(new Either.Left<>(message));
                     } else {
-                        matchEventsWithAbsents(absenceBody, user, groupEvent.right().getValue().getJsonObject(0).getString("id"), event -> {
+                        matchEventsWithAbsents(absenceBody, groupEvent.right().getValue().getJsonObject(0).getString("id"), event -> {
                             if (event.isLeft()) {
-                                String message = "[Presences@DefaultAbsenceService] failed to retrieve user info";
+                                String message = "[Presences@DefaultAbsenceService] failed to match event with absents";
                                 LOGGER.error(message, event.left().getValue());
                                 handler.handle(new Either.Left<>(message));
                             } else {
@@ -112,33 +110,85 @@ public class DefaultAbsenceService implements AbsenceService {
         Sql.getInstance().raw(query, SqlResult.validUniqueResultHandler(handler));
     }
 
-    private void matchEventsWithAbsents(JsonObject absenceBody, UserInfos user, String id, Handler<Either<String, JsonArray>> handler) {
-        String query = "WITH register as ( " +
-                " SELECT register.id, register.start_date, register.end_date FROM " + Presences.dbSchema + ".register " +
-                " INNER JOIN " + Presences.dbSchema + ".rel_group_register as rgr ON (rgr.register_id = register.id) " +
-                " WHERE rgr.group_id = ? " +
-                " AND register.start_date >= ? " +
-                " AND register.end_date <= ? " +
-                "AND register.id NOT IN (SELECT event.register_id FROM " + Presences.dbSchema + ".event " +
-                "WHERE event.type_id = 1 and event.register_id = register.id and event.student_id = ? ))" +
-                "INSERT INTO " + Presences.dbSchema + ".event (start_date, end_date, comment, counsellor_input, student_id, register_id, type_id, reason_id, owner)" +
-               "(SELECT  register.start_date, register.end_date, '', ?, ?, register.id, 1, ?, ? FROM register) returning register_id";
+    private void matchEventsWithAbsents(JsonObject absenceBody, String id, Handler<Either<String, JsonArray>> handler) {
+        Future<JsonArray> createEventsFuture = Future.future();
+        Future<JsonArray> updateEventsFuture = Future.future();
 
-        JsonArray params = new JsonArray()
+        createEventsWithAbsents(absenceBody, id, FutureHelper.handlerJsonArray(createEventsFuture));
+        updateEventsWithAbsents(absenceBody, id, FutureHelper.handlerJsonArray(updateEventsFuture));
+
+        CompositeFuture.all(createEventsFuture, updateEventsFuture).setHandler(event -> {
+            if (event.failed()) {
+                String message = "[Presences@DefaultAbsenceService] Failed to create or update events from absent";
+                LOGGER.error(message);
+                handler.handle(new Either.Left<>(message));
+            } else {
+                handler.handle(new Either.Right<>(createEventsFuture.result().addAll(updateEventsFuture.result())));
+            }
+        });
+    }
+
+    private void createEventsWithAbsents(JsonObject absenceBody, String id, Handler<Either<String, JsonArray>> handler) {
+        String query = "WITH register as " +
+                "(" +
+                    "SELECT register.id, register.start_date, register.end_date FROM " + Presences.dbSchema + ".register " +
+                    "INNER JOIN presences.rel_group_register as rgr ON (rgr.register_id = register.id) " +
+                    "WHERE rgr.group_id = ? " +
+                    "AND register.start_date >= ? " +
+                    "AND register.end_date <= ? " +
+                    "AND register.id NOT IN (" +
+                    "  SELECT event.register_id FROM " + Presences.dbSchema + ".event " +
+                    "  WHERE event.type_id = 1 and event.register_id = register.id and event.student_id = ?" +
+                    ")" +
+                ") " +
+                "INSERT INTO presences.event (start_date, end_date, comment, counsellor_input, student_id, register_id, type_id, reason_id, owner)" +
+                "(SELECT register.start_date, register.end_date, '', true, ?," +
+                "register.id, 1, ?, ? FROM register) " +
+                "returning register_id";
+
+        JsonArray values = new JsonArray()
                 .add(id)
                 .add(absenceBody.getString("start_date"))
                 .add(absenceBody.getString("end_date"))
-                .add(absenceBody.getString("student_id"))
-                .add(true)
+                .add(absenceBody.getString("student_id"));
+        values.add(absenceBody.getString("student_id"));
+
+        if (absenceBody.getInteger("reason_id") != null) {
+            values.add(absenceBody.getInteger("reason_id"));
+        } else {
+            values.addNull();
+        }
+        values.add(absenceBody.getString("owner"));
+        Sql.getInstance().prepared(query, values, SqlResult.validResultHandler(handler));
+    }
+
+    private void updateEventsWithAbsents(JsonObject absenceBody, String id, Handler<Either<String, JsonArray>> handler) {
+        String query = "WITH register as " +
+                "(" +
+                    "SELECT register.id, register.start_date, register.end_date FROM " + Presences.dbSchema + ".register " +
+                    "INNER JOIN presences.rel_group_register as rgr ON (rgr.register_id = register.id) " +
+                    "WHERE rgr.group_id = ? " +
+                    "AND register.start_date >= ? " +
+                    "AND register.end_date <= ? " +
+                    "AND register.id IN (" +
+                    "  SELECT event.register_id FROM " + Presences.dbSchema + ".event" +
+                    "  WHERE event.type_id = 1 and event.register_id = register.id and event.student_id = ?" +
+                    ") " +
+                ") " +
+                "UPDATE presences.event SET reason_id = ? WHERE register_id IN (SELECT id FROM register) " +
+                "returning register_id ";
+        JsonArray values = new JsonArray()
+                .add(id)
+                .add(absenceBody.getString("start_date"))
+                .add(absenceBody.getString("end_date"))
                 .add(absenceBody.getString("student_id"));
 
         if (absenceBody.getInteger("reason_id") != null) {
-            params.add(absenceBody.getInteger("reason_id"));
+            values.add(absenceBody.getInteger("reason_id"));
         } else {
-            params.addNull();
+            values.addNull();
         }
-        params.add(absenceBody.getString("owner"));
 
-       Sql.getInstance().prepared(query, params, SqlResult.validResultHandler(handler));
+        Sql.getInstance().prepared(query, values, SqlResult.validResultHandler(handler));
     }
 }
