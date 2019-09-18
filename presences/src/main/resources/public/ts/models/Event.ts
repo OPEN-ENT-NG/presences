@@ -53,7 +53,7 @@ export class Event {
         }
     }
 
-    async save(): Promise<void> {
+    async save(): Promise<AxiosResponse> {
         if (this.id) {
             return this.update();
         } else {
@@ -61,7 +61,7 @@ export class Event {
         }
     }
 
-    async update(): Promise<void> {
+    async update(): Promise<AxiosResponse> {
         try {
             if (this.type_id === EventType.DEPARTURE) {
                 this.start_date = moment(this.start_date_time).format(DateUtils.FORMAT["YEAR-MONTH-DAY-HOUR-MIN-SEC"]);
@@ -72,9 +72,10 @@ export class Event {
         } catch (err) {
             throw err;
         }
+        return;
     }
 
-    async create(): Promise<void> {
+    async create(): Promise<AxiosResponse> {
         try {
             const {data} = await http.post('/presences/events', this.toJson());
             this.id = data.id;
@@ -82,14 +83,16 @@ export class Event {
         } catch (err) {
             throw err;
         }
+        return;
     }
 
-    async delete(): Promise<void> {
+    async delete(): Promise<AxiosResponse> {
         try {
             await http.delete(`/presences/events/${this.id}`);
         } catch (err) {
             throw err;
         }
+        return;
     }
 }
 
@@ -237,9 +240,33 @@ export class Absence extends Event {
         }
     }
 
-    async createAbsence(structureId: string, reasonId: number, ownerId: string): Promise<AxiosResponse> {
+    async get(absenceId: number): Promise<AxiosResponse> {
+        try {
+            return await http.get(`/presences/absence/${absenceId}`);
+        } catch (err) {
+            throw err;
+        }
+    }
+
+    async create(structureId?: string, reasonId?: number, ownerId?: string): Promise<AxiosResponse> {
         try {
             return await http.post('/presences/absence', this.toAbsenceJson(structureId, reasonId, ownerId));
+        } catch (err) {
+            throw err;
+        }
+    }
+
+    async update(absenceId?: number, structureId?: string, reasonId?: number, ownerId?: string): Promise<AxiosResponse> {
+        try {
+            return await http.put(`/presences/absence/${absenceId}`, this.toAbsenceJson(structureId, reasonId, ownerId));
+        } catch (err) {
+            throw err;
+        }
+    }
+
+    async delete(absenceId?: number): Promise<AxiosResponse> {
+        try {
+            return await http.delete(`/presences/absence/${absenceId}`);
         } catch (err) {
             throw err;
         }

@@ -12,6 +12,7 @@ import {Scope} from './main';
 import {User} from '../models';
 import {DateUtils} from '@common/utils';
 import {SNIPLET_FORM_EMIT_EVENTS, SNIPLET_FORM_EVENTS} from "@common/model";
+import {ABSENCE_FORM_EVENTS} from "../sniplets";
 
 declare let window: any;
 
@@ -205,6 +206,9 @@ export const calendarController = ng.controller('CalendarController', ['$scope',
         });
 
         $scope.$on(SNIPLET_FORM_EMIT_EVENTS.FILTER, initCalendar);
+        $scope.$on(SNIPLET_FORM_EMIT_EVENTS.EDIT, initCalendar);
+        $scope.$on(SNIPLET_FORM_EMIT_EVENTS.DELETE, initCalendar);
+
 
         vm.selectItem = function (model, item) {
             const needsToLoadGroup = (window.item.groupId !== item.groupId) || item.type === 'GROUP';
@@ -264,7 +268,7 @@ export const calendarController = ng.controller('CalendarController', ['$scope',
             if (item._id !== "0") {
                 return;
             }
-            console.log("item: ", item);
+            $scope.$broadcast(ABSENCE_FORM_EVENTS.EDIT, item);
         };
 
         vm.formatExemptionDate = function (date) {

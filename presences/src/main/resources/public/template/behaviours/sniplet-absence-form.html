@@ -4,7 +4,10 @@
 </button>
 
 <lightbox class="absentLightbox" show="vm.createAbsenceLightBox" on-close="vm.closeAbsenceLightbox()">
-    <section class="absentLightbox-head head"><h3><i18n>presences.absence.create</i18n></h3></section>
+    <section class="absentLightbox-head head">
+        <h3 ng-if="!vm.form.id"><i18n>presences.absence.create</i18n></h3>
+        <h3 ng-if="vm.form.id"><i18n>presences.absence.edit</i18n></h3>
+    </section>
 
     <section class="absentLightbox-body body lightbox-form">
 
@@ -54,14 +57,30 @@
         <!-- Button/submit -->
         <div class="absentLightbox-footer-button row">
             <!-- Submit mode -->
-            <button class="right-magnet" data-ng-click="vm.createAbsence()"
+            <button class="right-magnet"
+                    ng-if="!vm.form.id"
+                    data-ng-click="vm.createAbsence()"
                     data-ng-disabled="!vm.isFormValid()">
                 <i18n>presences.absence.form.create</i18n>
             </button>
 
             <!-- Edit mode  -->
+            <button class="right-magnet"
+                    ng-if="vm.form.id"
+                    data-ng-click="vm.updateAbsence()"
+                    data-ng-disabled="!vm.isFormValid()">
+                <i18n>presences.absence.form.edit</i18n>
+            </button>
+
+            <!-- Cancel mode  -->
             <button class="right-magnet cancel" data-ng-click="vm.closeAbsenceLightbox()">
                 <i18n>presences.exemptions.form.cancel</i18n>
+            </button>
+
+            <!-- Delete mode  -->
+            <button ng-if="vm.form.id"
+                    data-ng-click="vm.deleteAbsence()">
+                <i18n>presences.exemptions.form.delete</i18n>
             </button>
         </div>
 
