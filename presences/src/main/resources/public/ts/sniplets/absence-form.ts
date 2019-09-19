@@ -76,7 +76,7 @@ const vm: ViewModel = {
     async editAbsenceForm(obj): Promise<void> {
         vm.createAbsenceLightBox = true;
         vm.form = new Absence(null, null, null, null);
-        let response = await vm.form.get(obj.absenceId);
+        let response = await vm.form.getAbsence(obj.absenceId);
         if (response.status == 200 || response.status == 201) {
             /* Assign response data to form edited */
             vm.form.id = response.data.id;
@@ -101,7 +101,7 @@ const vm: ViewModel = {
     async createAbsence(): Promise<void> {
         vm.form.start_date = getDateFormat(vm.form.startDate, vm.form.startDateTime);
         vm.form.end_date = getDateFormat(vm.form.endDate, vm.form.endDateTime);
-        let response = await vm.form.create(window.structure.id, vm.form.reason_id, model.me.userId);
+        let response = await vm.form.createAbsence(window.structure.id, vm.form.reason_id, model.me.userId);
         if (response.status == 200 || response.status == 201) {
             vm.closeAbsenceLightbox();
             toasts.confirm(lang.translate('presences.absence.form.create.succeed'));
@@ -115,7 +115,7 @@ const vm: ViewModel = {
     async updateAbsence(): Promise<void> {
         vm.form.start_date = getDateFormat(vm.form.startDate, vm.form.startDateTime);
         vm.form.end_date = getDateFormat(vm.form.endDate, vm.form.endDateTime);
-        let response = await vm.form.update(vm.form.id, window.structure.id, vm.form.reason_id, model.me.userId);
+        let response = await vm.form.updateAbsence(vm.form.id, window.structure.id, vm.form.reason_id, model.me.userId);
         if (response.status == 200 || response.status == 201) {
             vm.closeAbsenceLightbox();
             toasts.confirm(lang.translate('presences.absence.form.edit.succeed'));
@@ -127,7 +127,7 @@ const vm: ViewModel = {
     },
 
     async deleteAbsence(): Promise<void> {
-        let response = await vm.form.delete(vm.form.id);
+        let response = await vm.form.deleteAbsence(vm.form.id);
         if (response.status == 200 || response.status == 201) {
             vm.closeAbsenceLightbox();
             toasts.confirm(lang.translate('presences.absence.form.delete.succeed'));
