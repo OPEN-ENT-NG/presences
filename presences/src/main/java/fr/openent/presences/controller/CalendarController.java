@@ -248,17 +248,28 @@ public class CalendarController extends ControllerHelper {
     }
 
     private JsonObject exempted(JsonObject course, JsonArray exemptions) {
-        String courseStartDate = course.getString("startDate");
-        String courseEndDate = course.getString("endDate");
-        for (int i = 0; i < exemptions.size(); i++) {
-            JsonObject exemption = exemptions.getJsonObject(i);
-            try {
-                if (DateHelper.isAfterOrEquals(courseStartDate, exemption.getString("start_date")) && DateHelper.isBeforeOrEquals(courseEndDate, exemption.getString("end_date"))) {
+        String courseStartDate = DateHelper.getDateString(course.getString("startDate"), YEAR_MONTH_DAY);
+        String courseEndDate = DateHelper.getDateString(course.getString("endDate"), YEAR_MONTH_DAY);
+        SimpleDateFormat sdf = new SimpleDateFormat(YEAR_MONTH_DAY);
+
+        try {
+            Date dateCourseStartDate = sdf.parse(courseStartDate);
+            Date dateCourseEndDate = sdf.parse(courseEndDate);
+
+            for (int i = 0; i < exemptions.size(); i++) {
+                JsonObject exemption = exemptions.getJsonObject(i);
+
+                Date exemptionStartDate = sdf.parse(DateHelper.getDateString(exemption.getString("start_date"), YEAR_MONTH_DAY));
+                Date exemptionEndDate = sdf.parse(DateHelper.getDateString(exemption.getString("end_date"), YEAR_MONTH_DAY));
+
+                if ((dateCourseStartDate.after(exemptionStartDate) || dateCourseStartDate.equals(exemptionStartDate)) &&
+                        (dateCourseEndDate.before(exemptionEndDate) || dateCourseEndDate.equals(exemptionEndDate))) {
                     return exemption;
                 }
-            } catch (ParseException e) {
-                log.error("[CalendarController@exempted] Failed to parse date", e);
+
             }
+        } catch (ParseException e) {
+            log.error("[CalendarController@exempted] Failed to parse date", e);
         }
 
         return null;
