@@ -146,18 +146,21 @@ public class DefaultAbsenceService implements AbsenceService {
                 LOGGER.error(message, groupEvent.left().getValue());
                 handler.handle(new Either.Left<>(message));
             } else {
-                matchEventsWithAbsents(absenceBody,
-                        groupEvent.right().getValue().getJsonObject(0).getString("id"), handler);
+                List<String> groupIds = new ArrayList<>();
+                for (int i = 0; i < groupEvent.right().getValue().size(); i++) {
+                    groupIds.add(groupEvent.right().getValue().getJsonObject(i).getString("id"));
+                }
+                matchEventsWithAbsents(absenceBody, groupIds, handler);
             }
         });
     }
 
-    private void matchEventsWithAbsents(JsonObject absenceBody, String id, Handler<Either<String, JsonObject>> handler) {
+    private void matchEventsWithAbsents(JsonObject absenceBody, List<String> groupIds, Handler<Either<String, JsonObject>> handler) {
         Future<JsonArray> createEventsFuture = Future.future();
         Future<JsonArray> updateEventsFuture = Future.future();
 
-        createEventsWithAbsents(absenceBody, id, FutureHelper.handlerJsonArray(createEventsFuture));
-        updateEventsWithAbsents(absenceBody, id, FutureHelper.handlerJsonArray(updateEventsFuture));
+        createEventsWithAbsents(absenceBody, groupIds, FutureHelper.handlerJsonArray(createEventsFuture));
+        updateEventsWithAbsents(absenceBody, groupIds, FutureHelper.handlerJsonArray(updateEventsFuture));
 
         CompositeFuture.all(createEventsFuture, updateEventsFuture).setHandler(event -> {
             if (event.failed()) {
@@ -180,12 +183,12 @@ public class DefaultAbsenceService implements AbsenceService {
         });
     }
 
-    private void createEventsWithAbsents(JsonObject absenceBody, String id, Handler<Either<String, JsonArray>> handler) {
+    private void createEventsWithAbsents(JsonObject absenceBody, List<String> groupIds, Handler<Either<String, JsonArray>> handler) {
         String query = "WITH register as " +
                 "(" +
                     "SELECT register.id, register.start_date, register.end_date FROM " + Presences.dbSchema + ".register " +
                     "INNER JOIN presences.rel_group_register as rgr ON (rgr.register_id = register.id) " +
-                    "WHERE rgr.group_id = ? " +
+                    "WHERE rgr.group_id IN " + Sql.listPrepared(groupIds.toArray()) + " " +
                     "AND register.start_date >= ? " +
                     "AND register.end_date <= ? " +
                     "AND register.id NOT IN (" +
@@ -199,7 +202,7 @@ public class DefaultAbsenceService implements AbsenceService {
                 "returning register_id AS created_register_id";
 
         JsonArray values = new JsonArray()
-                .add(id)
+                .addAll(new JsonArray(groupIds))
                 .add(absenceBody.getString("start_date"))
                 .add(absenceBody.getString("end_date"))
                 .add(absenceBody.getString("student_id"));
@@ -214,12 +217,12 @@ public class DefaultAbsenceService implements AbsenceService {
         Sql.getInstance().prepared(query, values, SqlResult.validResultHandler(handler));
     }
 
-    private void updateEventsWithAbsents(JsonObject absenceBody, String id, Handler<Either<String, JsonArray>> handler) {
+    private void updateEventsWithAbsents(JsonObject absenceBody, List<String> groupIds, Handler<Either<String, JsonArray>> handler) {
         String query = "WITH register as " +
                 "(" +
                     "SELECT register.id, register.start_date, register.end_date FROM " + Presences.dbSchema + ".register " +
                     "INNER JOIN presences.rel_group_register as rgr ON (rgr.register_id = register.id) " +
-                    "WHERE rgr.group_id = ? " +
+                    "WHERE rgr.group_id IN " + Sql.listPrepared(groupIds.toArray()) + " " +
                     "AND register.start_date >= ? " +
                     "AND register.end_date <= ? " +
                     "AND register.id IN (" +
@@ -230,7 +233,7 @@ public class DefaultAbsenceService implements AbsenceService {
                 "UPDATE presences.event SET reason_id = ? WHERE register_id IN (SELECT id FROM register) " +
                 "returning register_id AS updated_register_id";
         JsonArray values = new JsonArray()
-                .add(id)
+                .addAll(new JsonArray(groupIds))
                 .add(absenceBody.getString("start_date"))
                 .add(absenceBody.getString("end_date"))
                 .add(absenceBody.getString("student_id"));
