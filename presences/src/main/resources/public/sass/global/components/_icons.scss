@@ -1,6 +1,7 @@
 i {
   &.home::before {
-    content: "\e82b";
+    font-family: 'material-icons';
+    content: "\F2DC";
   }
 
   &.register::before {

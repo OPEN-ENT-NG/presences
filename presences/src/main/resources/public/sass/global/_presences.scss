@@ -15,6 +15,18 @@ $portal-header-height: 64px;
 $responsive-portal-header-height: 50px;
 $navbar-width: $portal-header-height;
 
+@font-face {
+  font-family: 'material-icons';
+  src: url('/presences/public/font/material-design/fonts/materialdesignicons-webfont.eot');
+  src: url('/presences/public/font/material-design/fonts/materialdesignicons-webfont.eot') format('embedded-opentype'),
+  url('/presences/public/font/material-design/fonts/materialdesignicons-webfont.woff2') format('woff2'),
+  url('/presences/public/font/material-design/fonts/materialdesignicons-webfont.woff2') format('woff'),
+  url('/presences/public/font/material-design/fonts/materialdesignicons-webfont.ttf') format('truetype');
+  font-weight: normal;
+  font-style: normal;
+}
+
+
 body.presences, .sniplet.presences {
   @import "components/index";
   @import "../../../sass/global/common";
