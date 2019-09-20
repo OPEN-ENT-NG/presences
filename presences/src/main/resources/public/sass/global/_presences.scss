@@ -113,7 +113,8 @@ body.presences, .sniplet.presences {
     }
 
     &.half input[type="checkbox"] + span:before {
-      content: "\f374";
+      font-family: 'material-icons';
+      content: "\F374";
       transform: rotate(0deg);
       border-color: $presences-main;
       background-color: $presences-main;
@@ -142,7 +143,7 @@ body.presences, .sniplet.presences {
   }
 
   .search-input {
-    background: #fff;
+    background: $presences-white;
     padding: 15px;
     vertical-align: middle;
 

@@ -1,78 +1,111 @@
 i {
   &.home::before {
     font-family: 'material-icons';
-    content: "\F2DC";
+    content: "\F56E";
   }
 
   &.register::before {
-    content: "\f0e6";
+    font-family: 'material-icons';
+    content: "\F0E6";
   }
 
   &.absence::before {
-    content: "\f413";
+    font-family: 'material-icons';
+    content: "\F413";
   }
 
   &.presence:before {
-    content: "\f5c7";
+    font-family: 'material-icons';
+    content: "\F5C7";
   }
 
   &.events:before {
-    content: "\f005";
+    font-family: 'material-icons';
+    content: "\F005";
   }
 
   &.group-absence::before {
+    font-family: 'material-icons';
     content: "\e7fb";
   }
 
   &.permission::before {
+    font-family: 'material-icons';
     content: "\f02f";
   }
 
   &.incident::before {
-    content: "\e903";
+    font-family: 'material-icons';
+    content: "\F026";
   }
 
   &.punishment::before {
-    content: "\e862";
+    font-family: 'material-icons';
+    content: "\F6D4";
   }
 
   &.sanction::before {
+    font-family: 'material-icons';
     content: "\f29b";
   }
 
   &.mass-mailing::before {
+    font-family: 'material-icons';
     content: "\fab8";
   }
 
   &.testimony::before {
+    font-family: 'material-icons';
     content: "\f362";
   }
 
   &.group-absence::before {
+    font-family: 'material-icons';
     content: "\fb34";
   }
 
   &.split-view::before {
+    font-family: 'material-icons';
     content: "\f575";
   }
 
   &.show-list::before {
+    font-family: 'material-icons';
     content: "\e8ad";
   }
 
   &.notify-bell::before {
-    content: "\e7f4";
+    font-family: 'material-icons';
+    content: "\F09E";
   }
 
   &.notify-bell.active::before {
-    content: "\e7f7";
+    font-family: 'material-icons';
+    content: "\F09F";
   }
 
   &.attach:before {
-    content: '\e805';
+    font-family: 'material-icons';
+    content: '\F066';
   }
 
   &.add:before {
-    content: '\e8a1';
+    font-family: 'material-icons';
+    content: '\F416';
+  }
+
+  &.account:before {
+    font-family: 'material-icons';
+    content: "\F004";
+  }
+
+  &.account-outline:before {
+    font-family: 'material-icons';
+    content: "\F013";
+  }
+
+  &.table-edit:before {
+    font-family: 'material-icons';
+    content: "\F4F0";
   }
 }
