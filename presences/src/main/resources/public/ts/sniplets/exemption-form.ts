@@ -2,6 +2,7 @@ import {_, idiom as lang, model, moment, toasts} from 'entcore';
 import {Exemption, Student, Students, Subjects} from '../models';
 import rights from "../rights";
 import {SNIPLET_FORM_EMIT_EVENTS, SNIPLET_FORM_EVENTS} from '@common/model'
+import {DateUtils} from "@common/utils";
 
 console.log("ExemptionForm sniplet");
 
@@ -88,7 +89,9 @@ const vm: ViewModel = {
 
     isValidDate: (startDate, endDate): boolean => {
         if (startDate || endDate) {
-            return moment(startDate).toDate() <= moment(endDate).toDate();
+            let start = DateUtils.format(startDate, DateUtils.FORMAT["YEAR-MONTH-DAY"]);
+            let end = DateUtils.format(endDate, DateUtils.FORMAT["YEAR-MONTH-DAY"]);
+            return start <= end;
         }
         return false;
     },
