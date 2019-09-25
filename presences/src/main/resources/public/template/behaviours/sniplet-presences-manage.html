@@ -1,0 +1,78 @@
+<div class="sniplet presences presences-manage">
+
+    <!-- reason -->
+    <a class="presence-navigation-item" data-ng-click="vm.scrollToElement('reason')">
+        <div class="presence-icon"><i class="absence" aria-hidden="true"></i></div>
+        <span><i18n>presences.absence.reason.title</i18n></span>
+    </a>
+
+    <!-- absence actions -->
+    <a class="presence-navigation-item forbidden">
+        <div class="presence-icon"> <i class="add" aria-hidden="true"></i></div>
+        <span><i18n>presences.absence.actions</i18n></span>
+    </a>
+
+    <!-- alerts -->
+    <a class="presence-navigation-item forbidden">
+        <div class="presence-icon"><i class="alertes" aria-hidden="true"></i></div>
+        <span><i18n>presences.alerts.title</i18n></span>
+    </a>
+
+    <!-- presences -->
+    <a class="presence-navigation-item">
+        <div class="presence-icon"> <i class="presence" aria-hidden="true"></i></div>
+        <span><i18n>presences.title</i18n></span>
+    </a>
+
+    <!-- incidents -->
+    <a class="presence-navigation-item">
+        <div class="presence-icon"><i class="events" aria-hidden="true"></i></div>
+        <span><i18n>incidents.title</i18n></span>
+    </a>
+
+    <!-- punishment/sanctions -->
+    <a class="presence-navigation-item forbidden">
+        <div class="presence-icon"><i class="punishment-active" aria-hidden="true"></i></div>
+        <div class="presence-punishment">
+            <span><i18n>presences.punishments</i18n></span>
+            <span><i18n>presences.sanctions</i18n></span>
+        </div>
+    </a>
+
+    <!-- publipostage -->
+    <a class="presence-navigation-item forbidden">
+        <div class="presence-icon"> <i class="publipostage" aria-hidden="true"></i></div>
+        <span><i18n>presences.publipostage</i18n></span>
+    </a>
+
+    <!-- statistics -->
+    <a class="presence-navigation-item forbidden">
+        <div class="presence-icon"><i class="statistics" aria-hidden="true"></i></div>
+        <span><i18n>presences.statistics</i18n></span>
+    </a>
+</div>
+
+<!-- Absence reason-->
+<sniplet id="reason" template="presences-manage/sniplet-presences-reason-manage" application="presences"></sniplet>
+
+
+
+<!--INCIDENTS MODULES SNIPLETS -->
+
+<!-- Incidents Type -->
+<sniplet template="incidents-manage/sniplet-incidents-type-manage" application="incidents"></sniplet>
+
+<!-- Places -->
+<sniplet template="incidents-manage/sniplet-incidents-places-manage" application="incidents"></sniplet>
+
+<!-- Protagonists Type -->
+<sniplet template="incidents-manage/sniplet-incidents-protagonists-manage" application="incidents"></sniplet>
+
+<!-- Serioussness Type-->
+<sniplet template="incidents-manage/sniplet-incidents-seriousness-manage" application="incidents"></sniplet>
+
+<!-- Partners-->
+<sniplet template="incidents-manage/sniplet-incidents-partners-manage" application="incidents"></sniplet>
+
+
+

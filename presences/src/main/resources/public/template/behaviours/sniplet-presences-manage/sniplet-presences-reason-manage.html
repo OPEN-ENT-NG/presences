@@ -1,0 +1,56 @@
+<div class="ten sniplet presences sniplet-presence-form">
+    <div class="sniplet-form">
+
+        <!-- header -->
+        <div class="sniplet-header">
+            <span class="sniplet-header-icon"><i class="absence" aria-hidden="true"></i></span>
+            <h3 class="sniplet-header-title">
+                <i18n>presences.absence.reason.form.title</i18n>
+            </h3>
+        </div>
+
+        <!-- Input -->
+        <div class="sniplet-input">
+            <label class="sniplet-input-title">
+                <i18n>presences.absence.reason.form.input</i18n>
+            </label>
+            <div class="cell four search-input sniplet-input-form">
+                <input type="text" class="twelve cell" i18n-placeholder="maladie.placeholder">
+            </div>
+        </div>
+
+        <!-- Compliance form -->
+        <div class="sniplet-input">
+            <label class="sniplet-input-title">
+                <i18n>compliance.absence</i18n>
+            </label>
+            <div>
+                <div class="md-radio md-radio-inline">
+                    <input id="true" type="radio" name="radio" checked>
+                    <label for="true"><i18n>true.maj</i18n></label>
+                </div>
+                <div class="md-radio md-radio-inline">
+                    <input id="false" type="radio" name="radio">
+                    <label for="false"><i18n>false.maj</i18n></label>
+                </div>
+            </div>
+        </div>
+
+        <!-- Add reason / Lists -->
+        <div class="sniplet-addList">
+            <button data-ng-click="vm.addReason()">
+                <i18n>add</i18n>
+            </button>
+
+            <div class="sniplet-addList-content" ng-if="vm.reasons.length !== 0">
+                <i18n>presence.existed.reasons</i18n>
+                <ul class="sniplet-addList-content-list">
+                    <li class="sniplet-addList-content-list-item" ng-repeat="reason in vm.reasons">
+                        <label>[[reason]]</label>
+                    </li>
+                </ul>
+            </div>
+        </div>
+
+    </div>
+</div>

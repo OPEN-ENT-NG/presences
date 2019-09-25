@@ -1,0 +1,54 @@
+&.sniplet-presence-form {
+
+  .sniplet-form {
+
+    /* title */
+    .sniplet-header {
+      display: flex;
+      align-items: center;
+      padding: 32px 16px;
+      &-icon {
+        font-size: 40px;
+        padding-right: 24px;
+      }
+      &-title {
+        color: $presences-black;
+      }
+    }
+
+    /* input */
+    .sniplet-input {
+      padding: 0 16px 24px 16px;
+      display: flex;
+      flex-direction: column;
+      &-title {
+        padding-bottom: 16px;
+      }
+    }
+
+    /* add / lists */
+    .sniplet-addList {
+      padding: 0 16px 32px 16px;
+      display: flex;
+      flex-direction: column;
+      button {
+        width: 97px;
+        background-color: $presences-orange;
+        margin-bottom: 24px;
+      }
+      &-content {
+        &-list {
+          list-style-type: none;
+          padding: 0;
+          font-weight: bold;
+          column-count: 4;
+          &-item {
+            list-style: none;
+          }
+        }
+      }
+    }
+  }
+
+
+}

@@ -1,0 +1,34 @@
+&.presences-manage {
+  display: flex;
+  padding: 24px 0;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 8px 16px 0 rgba(0, 0, 0, 0.1);
+  .presence-navigation-item {
+    padding: 0 32px;
+    color: $presences-black;
+    &:hover {
+      color: $presences-orange;
+      transition: color 250ms ease;
+    }
+    .presence-icon {
+      font-size: 40px;
+      padding-bottom: 8px;
+      text-align: center;
+      .add:before {
+        font-size: 40px;
+      }
+      .statistics:before {
+        color: $presences-black;
+      }
+    }
+    .presence-punishment {
+      display: flex;
+      flex-direction: column;
+    }
+  }
+}
+
+&.sniplet-presence-form {
+  float: right;
+}

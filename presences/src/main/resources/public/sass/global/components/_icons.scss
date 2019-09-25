@@ -108,4 +108,24 @@ i {
     font-family: 'material-icons';
     content: "\F4F0";
   }
+
+  &.alertes:before {
+    font-family: 'material-icons';
+    content: "\F149";
+  }
+
+  &.punishment-active:before {
+    font-family: 'material-icons';
+    content: "\F241";
+  }
+
+  &.publipostage:before {
+    font-family: 'material-icons';
+    content: "\F214";
+  }
+
+  &.statistics:before {
+    font-family: 'material-icons';
+    content: "\F128";
+  }
 }
