@@ -49,6 +49,7 @@ public class Presences extends BaseServer {
         addController(new ExemptionController(eb));
         addController(new SearchController(eb));
         addController(new CalendarController(eb));
+        addController(new ReasonController());
 
         // Controller that create fake rights for widgets
         addController(new FakeRight());
