@@ -1,0 +1,107 @@
+<div class="ten sniplet presences sniplet-presence-form">
+    <div class="sniplet-form">
+
+        <!-- header -->
+        <div class="sniplet-header">
+            <span class="sniplet-header-icon"><i class="absence" aria-hidden="true"></i></span>
+            <h3 class="sniplet-header-title">
+                <i18n>presences.absence.reason.form.title</i18n>
+            </h3>
+        </div>
+
+        <!-- Input -->
+        <div class="sniplet-input">
+            <label class="sniplet-input-title">
+                <i18n>presences.absence.reason.form.input</i18n>
+            </label>
+            <div class="cell four search-input sniplet-input-form">
+                <input type="text" data-ng-model="vm.form.label" class="twelve cell" i18n-placeholder="maladie.placeholder">
+            </div>
+        </div>
+
+        <!-- Regularisable form -->
+        <div class="sniplet-input">
+            <label class="sniplet-input-title">
+                <i18n>regularisable</i18n>
+            </label>
+            <div>
+                <div class="md-radio md-radio-inline">
+                    <input id="regularisable_true"
+                           data-ng-model="vm.form.regularisable"
+                           type="radio"
+                           ng-init="vm.form.regularisable = true"
+                           ng-value="true"
+                           name="radio-regularisable"
+                           ng-checked="true">
+                    <label for="regularisable_true"><i18n>true.maj</i18n></label>
+                </div>
+                <div class="md-radio md-radio-inline">
+                    <input id="regularisable_false"
+                           data-ng-model="vm.form.regularisable"
+                           type="radio"
+                           ng-value="false"
+                           name="radio-regularisable">
+                    <label for="regularisable_false"><i18n>false.maj</i18n></label>
+                </div>
+            </div>
+        </div>
+
+        <!-- Compliance form -->
+        <div class="sniplet-input">
+            <label class="sniplet-input-title">
+                <i18n>compliance.absence</i18n>
+            </label>
+            <div>
+                <div class="md-radio md-radio-inline">
+                    <input id="compliance_true"
+                           data-ng-model="vm.form.absenceCompliance"
+                           type="radio"
+                           ng-value="true"
+                           name="radio-compliance"
+                           ng-checked="true">
+                    <label for="compliance_true"><i18n>true.maj</i18n></label>
+                </div>
+                <div class="md-radio md-radio-inline">
+                    <input id="compliance_false"
+                           data-ng-model="vm.form.absenceCompliance"
+                           type="radio"
+                           ng-value="false"
+                           name="radio-compliance">
+                    <label for="compliance_false"><i18n>false.maj</i18n></label>
+                </div>
+            </div>
+        </div>
+
+        <!-- Add reason / Lists -->
+        <div class="sniplet-addList">
+            <button data-ng-click="vm.createReason()" data-ng-disabled="!vm.isFormValid()">
+                <i18n>add</i18n>
+            </button>
+
+            <div class="sniplet-addList-content" ng-if="vm.hasReasons()">
+                <i18n>presence.existed.reasons</i18n>
+                <ul class="sniplet-addList-content-list">
+                    <li class="sniplet-addList-content-list-item"
+                        ng-repeat="reason in vm.reasons">
+
+                        <div class="sniplet-addList-content-list-item-title">
+                            <label class="sniplet-addList-content-list-item-title-label">[[reason.label]]</label>
+                            <i class="file-checked"></i>
+                            <i class="presence-edit" data-ng-click="vm.openReasonLightbox(reason)"></i>
+                        </div>
+
+                        <div class="sniplet-addList-content-list-item-icons">
+                            <!--<i class="visible"></i>-->
+                            <i class="delete" data-ng-click="vm.deleteReason(reason)"></i>
+                        </div>
+                    </li>
+                </ul>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+<!-- lightbox edit reason -->
+<div ng-include="'/presences/public/template/behaviours/sniplet-presences-manage
+/reason-manage/sniplet-presences-reason-manage-lightbox.html'"></div>

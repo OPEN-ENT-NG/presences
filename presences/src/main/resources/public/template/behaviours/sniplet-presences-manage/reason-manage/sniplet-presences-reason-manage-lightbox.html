@@ -1,0 +1,89 @@
+<lightbox class="sniplet presences sniplet-presence-form sniplet-form-lightbox" show="vm.editReasonLightbox" on-close="vm.closeReasonLightbox()">
+
+    <!-- Header -->
+    <section class="sniplet-form-lightbox-head head">
+        <h3>
+            <i18n>presences.absence.reason.edit</i18n>
+        </h3>
+    </section>
+
+    <!-- Body -->
+    <section class="sniplet-form-lightbox-body body lightbox-form">
+
+        <!-- Warning -->
+        <span class="sniplet-form-lightbox-body-warning">
+            <i18n>presences.absence.edit.warning</i18n>
+        </span>
+
+        <!-- Input -->
+        <div class="cell ten search-input sniplet-form-lightbox-body-input">
+            <input type="text" data-ng-model="vm.form.label" class="twelve cell">
+        </div>
+
+        <!-- Regularisable form -->
+        <label>
+            <i18n>regularisable</i18n>
+        </label>
+        <div class="sniplet-form-lightbox-body-regularisable">
+            <div class="md-radio md-radio-inline">
+                <input id="reasonLightBoxRegularisable-true"
+                       data-ng-model="vm.form.regularisable"
+                       type="radio"
+                       ng-value="true"
+                       name="reasonLightBoxRegularisable"
+                       ng-checked="true">
+                <label for="reasonLightBoxRegularisable-true"><i18n>true.maj</i18n></label>
+            </div>
+            <div class="md-radio md-radio-inline">
+                <input id="reasonLightBoxRegularisable-false"
+                       data-ng-model="vm.form.regularisable"
+                       type="radio"
+                       ng-value="false"
+                       name="reasonLightBoxRegularisable">
+                <label for="reasonLightBoxRegularisable-false"><i18n>false.maj</i18n></label>
+            </div>
+        </div>
+
+        <!-- Compliance -->
+        <label>
+            <i18n>compliance.absence</i18n>
+        </label>
+        <div class="sniplet-form-lightbox-body-compliance">
+            <div class="md-radio md-radio-inline">
+                <input id="reasonLightboxCompliance-true"
+                       data-ng-model="vm.form.absenceCompliance"
+                       type="radio"
+                       ng-value="true"
+                       name="reasonLightboxCompliance"
+                       ng-checked="true">
+                <label for="reasonLightboxCompliance-true"><i18n>true.maj</i18n></label>
+            </div>
+            <div class="md-radio md-radio-inline">
+                <input id="reasonLightboxCompliance-false"
+                       data-ng-model="vm.form.absenceCompliance"
+                       type="radio"
+                       ng-value="false"
+                       name="reasonLightboxCompliance">
+                <label for="reasonLightboxCompliance-false"><i18n>false.maj</i18n></label>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <section class="sniplet-form-lightbox-footer">
+        <!-- Button/submit -->
+        <div class="sniplet-form-lightbox-footer-button row">
+
+            <!-- Submit mode -->
+            <button class="right-magnet" data-ng-click="vm.updateReason(reason)" data-ng-disabled="!vm.isFormValid()">
+                <i18n>edit</i18n>
+            </button>
+
+            <!-- Cancel mode  -->
+            <button class="right-magnet cancel" data-ng-click="vm.closeReasonLightbox()">
+                <i18n>evaluations.devoir.annuler</i18n>
+            </button>
+        </div>
+    </section>
+
+</lightbox>

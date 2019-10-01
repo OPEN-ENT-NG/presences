@@ -59,7 +59,8 @@ public class ReasonController extends ControllerHelper {
     private boolean isReasonBodyInvalid(JsonObject reasonBody) {
         return !reasonBody.containsKey("structureId") &&
                 !reasonBody.containsKey("label") &&
-                !reasonBody.containsKey("absenceCompliance");
+                !reasonBody.containsKey("absenceCompliance") &&
+                !reasonBody.containsKey("regularisable");
     }
 
     @Put("/reason")

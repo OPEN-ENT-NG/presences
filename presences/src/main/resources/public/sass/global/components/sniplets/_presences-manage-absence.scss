@@ -1,5 +1,4 @@
 &.sniplet-presence-form {
-
   .sniplet-form {
 
     /* title */
@@ -33,22 +32,74 @@
       flex-direction: column;
       button {
         width: 97px;
-        background-color: $presences-orange;
         margin-bottom: 24px;
+        background-color: $presences-orange;
+       &:disabled{
+          background: $disabled-color;
+        }
       }
       &-content {
         &-list {
           list-style-type: none;
           padding: 0;
+          min-height: 150px;
           font-weight: bold;
-          column-count: 4;
+          display: flex;
+          flex-flow: wrap column;
+          max-height: 150px;
           &-item {
             list-style: none;
+            display: flex;
+            width: 50%;
+            line-height: 25px;
+            justify-content: space-between;
+            &-title {
+              align-self: center;
+              .presence-edit {
+                visibility: hidden;
+                opacity: 0;
+                transition: visibility 0.3s linear,opacity 0.3s linear;
+              }
+              &:hover .presence-edit {
+                visibility: visible;
+                opacity: 1;
+              }
+            }
+            &-icons {
+              text-align: center;
+              width: 50%;
+            }
           }
         }
       }
     }
   }
 
+  .sniplet-form-lightbox {
+
+    .content {
+      padding: 0;
+    }
+
+    &-head {
+      background: $presences-blue!important;
+      margin-bottom: 8px;
+    }
+
+    &-body {
+      display: flex;
+      flex-direction: column;
+      &-warning {
+        color: $presences-red;
+      }
+      &-input {
+        margin: 16px 0;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.12), 0 1px 2px rgba(0,0,0,0.24);
+      }
+      &-regularisable, &-compliance {
+        margin: 16px 0;
+      }
+    }
+  }
 
 }

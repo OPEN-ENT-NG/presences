@@ -11,6 +11,6 @@ Behaviours.register('presences', {
         'exemption-form': exemptionForm,
         'absence-form': absenceForm,
         'presences-manage': presencesManage,
-        'presences-manage/sniplet-presences-reason-manage': presencesReasonManage
+        'presences-manage/reason-manage/sniplet-presences-reason-manage': presencesReasonManage
     }
 });

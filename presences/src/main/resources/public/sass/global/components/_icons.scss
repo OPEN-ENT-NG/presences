@@ -128,4 +128,29 @@ i {
     font-family: 'material-icons';
     content: "\F128";
   }
+
+  &.file-checked:before  {
+    font-family: 'material-icons';
+    content:"\F216";
+  }
+
+  &.visible:before {
+    font-family: 'material-icons';
+    content:"\F208";
+  }
+
+  &.hidden:before {
+    font-family: 'material-icons';
+    content:"\F6D0";
+  }
+
+  &.delete:before {
+    font-family: 'material-icons';
+    content:"\F5AD";
+  }
+
+  &.presence-edit:before {
+    font-family: 'material-icons';
+    content: '\F3EB';
+  }
 }

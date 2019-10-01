@@ -20,23 +20,25 @@ public class DefaultReasonService implements ReasonService {
     @Override
     public void create(JsonObject reasonBody, Handler<Either<String, JsonObject>> handler) {
         String query = "INSERT INTO " + Presences.dbSchema + ".reason " +
-                "(structure_id, label, proving, comment, hidden, absence_compliance)" +
-                "VALUES (?, ?, true, '', false, ?) RETURNING id";
+                "(structure_id, label, proving, comment, hidden, absence_compliance, regularisable)" +
+                "VALUES (?, ?, true, '', false, ?, ?) RETURNING id";
         JsonArray params = new JsonArray()
                 .add(reasonBody.getString("structureId"))
                 .add(reasonBody.getString("label"))
-                .add(reasonBody.getBoolean("absenceCompliance"));
+                .add(reasonBody.getBoolean("absenceCompliance"))
+                .add(reasonBody.getBoolean("regularisable"));
         Sql.getInstance().prepared(query, params, SqlResult.validUniqueResultHandler(handler));
     }
 
     @Override
     public void put(Integer reasonId, JsonObject reasonBody, Handler<Either<String, JsonObject>> handler) {
         String query = "UPDATE presences.reason " +
-                "SET label = ?, absence_compliance = ?, hidden = ? WHERE id = ? RETURNING id";
+                "SET label = ?, absence_compliance = ?, hidden = ?, regularisable = ? WHERE id = ? RETURNING id";
         JsonArray params = new JsonArray()
                 .add(reasonBody.getString("label"))
                 .add(reasonBody.getBoolean("absenceCompliance"))
                 .add(reasonBody.getBoolean("hidden"))
+                .add(reasonBody.getBoolean("regularisable"))
                 .add(reasonId);
         Sql.getInstance().prepared(query, params, SqlResult.validUniqueResultHandler(handler));
     }
