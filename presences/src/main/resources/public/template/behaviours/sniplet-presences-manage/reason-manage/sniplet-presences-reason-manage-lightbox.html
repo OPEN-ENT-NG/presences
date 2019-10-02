@@ -17,7 +17,7 @@
 
         <!-- Input -->
         <div class="cell ten search-input sniplet-form-lightbox-body-input">
-            <input type="text" data-ng-model="vm.form.label" class="twelve cell">
+            <input type="text" data-ng-model="vm.formEdit.label" class="twelve cell">
         </div>
 
         <!-- Regularisable form -->
@@ -27,7 +27,7 @@
         <div class="sniplet-form-lightbox-body-regularisable">
             <div class="md-radio md-radio-inline">
                 <input id="reasonLightBoxRegularisable-true"
-                       data-ng-model="vm.form.regularisable"
+                       data-ng-model="vm.formEdit.regularisable"
                        type="radio"
                        ng-value="true"
                        name="reasonLightBoxRegularisable"
@@ -36,7 +36,7 @@
             </div>
             <div class="md-radio md-radio-inline">
                 <input id="reasonLightBoxRegularisable-false"
-                       data-ng-model="vm.form.regularisable"
+                       data-ng-model="vm.formEdit.regularisable"
                        type="radio"
                        ng-value="false"
                        name="reasonLightBoxRegularisable">
@@ -51,7 +51,7 @@
         <div class="sniplet-form-lightbox-body-compliance">
             <div class="md-radio md-radio-inline">
                 <input id="reasonLightboxCompliance-true"
-                       data-ng-model="vm.form.absenceCompliance"
+                       data-ng-model="vm.formEdit.absenceCompliance"
                        type="radio"
                        ng-value="true"
                        name="reasonLightboxCompliance"
@@ -60,7 +60,7 @@
             </div>
             <div class="md-radio md-radio-inline">
                 <input id="reasonLightboxCompliance-false"
-                       data-ng-model="vm.form.absenceCompliance"
+                       data-ng-model="vm.formEdit.absenceCompliance"
                        type="radio"
                        ng-value="false"
                        name="reasonLightboxCompliance">
@@ -75,7 +75,7 @@
         <div class="sniplet-form-lightbox-footer-button row">
 
             <!-- Submit mode -->
-            <button class="right-magnet" data-ng-click="vm.updateReason(reason)" data-ng-disabled="!vm.isFormValid()">
+            <button class="right-magnet" data-ng-click="vm.updateReason()" data-ng-disabled="!vm.isFormValid(vm.formEdit)">
                 <i18n>edit</i18n>
             </button>
 

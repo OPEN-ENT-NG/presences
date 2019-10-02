@@ -12,17 +12,18 @@ interface ViewModel {
     reasons: Reason[];
     editReasonLightbox: boolean;
     form: ReasonRequest;
+    formEdit: ReasonRequest;
     openReasonLightbox(reason: Reason): void;
     closeReasonLightbox(): void;
-    isFormValid(): boolean;
+    isFormValid(form: ReasonRequest): boolean;
     hasReasons(): boolean;
 
     // interaction
     getReasons(): void;
     createReason(): void;
     setFormEdit(reason: Reason): void;
-    updateReason(reasonId: number): void;
-    hideReason(reason: Reason): void;
+    updateReason(): void;
+    toggleVisibility(reason: Reason): Promise<void>;
     deleteReason(reason: Reason): void;
     proceedAfterAction(response: AxiosResponse): void;
 
@@ -46,6 +47,7 @@ const vm: ViewModel = {
     reasons: [],
     editReasonLightbox: false,
     form: {} as ReasonRequest,
+    formEdit: {} as ReasonRequest,
 
     openReasonLightbox(reason: Reason): void {
         vm.editReasonLightbox = true;
@@ -56,8 +58,8 @@ const vm: ViewModel = {
         vm.editReasonLightbox = false;
     },
 
-    isFormValid(): boolean {
-        return !!(vm.form.label);
+    isFormValid(form: ReasonRequest): boolean {
+        return !!(form.label);
     },
 
     hasReasons(): boolean {
@@ -76,6 +78,7 @@ const vm: ViewModel = {
         vm.form.structureId = window.model.vieScolaire.structure.id;
         let response = await reasonService.create(vm.form);
         vm.proceedAfterAction(response);
+        vm.form.label = '';
     },
 
     async deleteReason(reason: Reason): Promise<void> {
@@ -83,22 +86,31 @@ const vm: ViewModel = {
         vm.proceedAfterAction(response);
     },
 
-    async hideReason(reason: Reason): Promise<void> {
-
-    },
-
     setFormEdit(reason): void {
-        vm.form.id = reason.id;
-        vm.form.absenceCompliance = reason.absence_compliance;
-        vm.form.regularisable = reason.regularisable;
-        vm.form.label = reason.label;
+        let reasonCopy = JSON.parse(JSON.stringify(reason));
+        vm.formEdit.id = reasonCopy.id;
+        vm.formEdit.absenceCompliance = reasonCopy.absence_compliance;
+        vm.formEdit.hidden = reasonCopy.hidden;
+        vm.formEdit.regularisable = reasonCopy.regularisable;
+        vm.formEdit.label = reasonCopy.label;
     },
 
-    async updateReason(reason): Promise<void> {
-        console.log("reason:", reason);
-        vm.form = {} as ReasonRequest;
+    async updateReason(): Promise<void> {
+        let response = await reasonService.update(vm.formEdit);
+        vm.proceedAfterAction(response);
+        vm.closeReasonLightbox();
     },
 
+    async toggleVisibility(reason): Promise<void> {
+        reason.hidden = !reason.hidden;
+        let form = {} as ReasonRequest;
+        form.id = reason.id;
+        form.absenceCompliance = reason.absence_compliance;
+        form.hidden = reason.hidden;
+        form.regularisable = reason.regularisable;
+        form.label = reason.label;
+        await reasonService.update(form);
+    },
 
     proceedAfterAction(response: AxiosResponse): void {
         if (response.status === 200 || response.status === 201) {

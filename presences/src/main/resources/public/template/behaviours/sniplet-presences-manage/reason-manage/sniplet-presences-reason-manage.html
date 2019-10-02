@@ -74,7 +74,7 @@
 
         <!-- Add reason / Lists -->
         <div class="sniplet-addList">
-            <button data-ng-click="vm.createReason()" data-ng-disabled="!vm.isFormValid()">
+            <button data-ng-click="vm.createReason()" data-ng-disabled="!vm.isFormValid(vm.form)">
                 <i18n>add</i18n>
             </button>
 
@@ -82,7 +82,7 @@
                 <i18n>presence.existed.reasons</i18n>
                 <ul class="sniplet-addList-content-list">
                     <li class="sniplet-addList-content-list-item"
-                        ng-repeat="reason in vm.reasons">
+                        ng-repeat="reason in vm.reasons | orderBy:'id'">
 
                         <div class="sniplet-addList-content-list-item-title">
                             <label class="sniplet-addList-content-list-item-title-label">[[reason.label]]</label>
@@ -91,8 +91,12 @@
                         </div>
 
                         <div class="sniplet-addList-content-list-item-icons">
-                            <!--<i class="visible"></i>-->
-                            <i class="delete" data-ng-click="vm.deleteReason(reason)"></i>
+                            <i class="visible" data-ng-show="!reason.hidden"
+                               data-ng-click="vm.toggleVisibility(reason)"></i>
+                            <i class="hidden" data-ng-show="reason.hidden && reason.used"
+                               data-ng-click="vm.toggleVisibility(reason)"></i>
+                            <i class="delete" data-ng-show="reason.hidden && !reason.used"
+                               data-ng-click="vm.deleteReason(reason)"></i>
                         </div>
                     </li>
                 </ul>

@@ -68,17 +68,13 @@ public class ReasonController extends ControllerHelper {
     @ResourceFilter(Manage.class)
     @SecuredAction(value = "", type = ActionType.RESOURCE)
     public void put(final HttpServerRequest request) {
-        if (!request.params().contains("reasonId")) {
-            badRequest(request);
-            return;
-        }
-        Integer reasonId = Integer.parseInt(request.getParam("reasonId"));
         RequestUtils.bodyToJson(request, reasonBody -> {
-            if (isReasonBodyInvalid(reasonBody) && !reasonBody.containsKey("hidden")) {
+            if (isReasonBodyInvalid(reasonBody) && !reasonBody.containsKey("hidden") &&
+                    !reasonBody.containsKey("id")) {
                 badRequest(request);
                 return;
             }
-            reasonService.put(reasonId, reasonBody, either -> {
+            reasonService.put(reasonBody, either -> {
                 if (either.isLeft()) {
                     log.error("[Presences@ReasonController] failed to update reason", either.left().getValue());
                     renderError(request);

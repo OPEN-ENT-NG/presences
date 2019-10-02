@@ -42,11 +42,9 @@
         &-list {
           list-style-type: none;
           padding: 0;
-          min-height: 150px;
           font-weight: bold;
           display: flex;
-          flex-flow: wrap column;
-          max-height: 150px;
+          flex-flow: wrap;
           &-item {
             list-style: none;
             display: flex;
@@ -66,8 +64,7 @@
               }
             }
             &-icons {
-              text-align: center;
-              width: 50%;
+              width: 100px;
             }
           }
         }

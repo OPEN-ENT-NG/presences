@@ -29,6 +29,13 @@
   }
 }
 
-&.sniplet-presence-form {
+//&.sniplet-presence-form {
+//  float: right;
+//}
+
+&.absence, &.incidents {
+  width: calc(100% - 242px);
+  display: flex;
+  flex-direction: column;
   float: right;
 }

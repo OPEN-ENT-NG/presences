@@ -26,11 +26,10 @@ public interface ReasonService {
     /**
      * put reason
      *
-     * @param reasonId      Reason identifier
      * @param reasonBody    reasonBody fetched
      * @param handler       Function handler returning data
      */
-    void put(Integer reasonId, JsonObject reasonBody, Handler<Either<String, JsonObject>> handler);
+    void put(JsonObject reasonBody, Handler<Either<String, JsonObject>> handler);
 
     /**
      * get reasons

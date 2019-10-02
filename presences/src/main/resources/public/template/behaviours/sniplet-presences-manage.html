@@ -1,7 +1,7 @@
 <div class="sniplet presences presences-manage">
 
     <!-- reason -->
-    <a class="presence-navigation-item" data-ng-click="vm.scrollToElement('reason')">
+    <a class="presence-navigation-item" data-ng-click="vm.scrollToElement('absence')">
         <div class="presence-icon"><i class="absence" aria-hidden="true"></i></div>
         <span><i18n>presences.absence.reason.title</i18n></span>
     </a>
@@ -25,7 +25,7 @@
     </a>
 
     <!-- incidents -->
-    <a class="presence-navigation-item">
+    <a class="presence-navigation-item" data-ng-click="vm.scrollToElement('incidents')">
         <div class="presence-icon"><i class="events" aria-hidden="true"></i></div>
         <span><i18n>incidents.title</i18n></span>
     </a>
@@ -52,30 +52,32 @@
     </a>
 </div>
 
-<!-- Absence reason-->
-<sniplet id="reason"
-         template="presences-manage/reason-manage/sniplet-presences-reason-manage"
-         application="presences">
-</sniplet>
-
+<!-- Absence/reason-->
+<div class="sniplet presences absence" id="absence">
+    <sniplet
+             template="presences-manage/reason-manage/sniplet-presences-reason-manage"
+             application="presences">
+    </sniplet>
+</div>
 
 
 <!--INCIDENTS MODULES SNIPLETS -->
 
-<!-- Incidents Type -->
-<sniplet template="incidents-manage/sniplet-incidents-type-manage" application="incidents"></sniplet>
+<div class="sniplet presences incidents" id="incidents">
+    <!-- Incidents Type -->
+    <sniplet template="incidents-manage/sniplet-incidents-type-manage" application="incidents"></sniplet>
 
-<!-- Places -->
-<sniplet template="incidents-manage/sniplet-incidents-places-manage" application="incidents"></sniplet>
+    <!-- Places -->
+    <sniplet template="incidents-manage/sniplet-incidents-places-manage" application="incidents"></sniplet>
 
-<!-- Protagonists Type -->
-<sniplet template="incidents-manage/sniplet-incidents-protagonists-manage" application="incidents"></sniplet>
+    <!-- Protagonists Type -->
+    <sniplet template="incidents-manage/sniplet-incidents-protagonists-manage" application="incidents"></sniplet>
 
-<!-- Serioussness Type-->
-<sniplet template="incidents-manage/sniplet-incidents-seriousness-manage" application="incidents"></sniplet>
+    <!-- Serioussness Type-->
+    <sniplet template="incidents-manage/sniplet-incidents-seriousness-manage" application="incidents"></sniplet>
 
-<!-- Partners-->
-<sniplet template="incidents-manage/sniplet-incidents-partners-manage" application="incidents"></sniplet>
-
+    <!-- Partners-->
+    <sniplet template="incidents-manage/sniplet-incidents-partners-manage" application="incidents"></sniplet>
+</div>
 
 
