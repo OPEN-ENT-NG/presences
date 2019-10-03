@@ -90,11 +90,11 @@ public class ReasonController extends ControllerHelper {
     @ResourceFilter(Manage.class)
     @SecuredAction(value = "", type = ActionType.RESOURCE)
     public void delete(final HttpServerRequest request) {
-        if (!request.params().contains("reasonId")) {
+        if (!request.params().contains("id")) {
             badRequest(request);
             return;
         }
-        Integer reasonId = Integer.parseInt(request.getParam("reasonId"));
+        Integer reasonId = Integer.parseInt(request.getParam("id"));
         reasonService.delete(reasonId, either -> {
             if (either.isLeft()) {
                 log.error("[Presences@ReasonController] failed to delete reason", either.left().getValue());

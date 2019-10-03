@@ -55,8 +55,8 @@ public class DefaultReasonService implements ReasonService {
                 "WHERE structure_id = '" + structureId +
                 "') " +
                 "SELECT DISTINCT i.id, i.label FROM ids i " +
-                "INNER JOIN presences.event AS event ON (event.reason_id = i.id) " +
-                "INNER JOIN presences.absence AS absence ON (absence.reason_id = i.id)";
+                "INNER JOIN " + Presences.dbSchema + ".event AS event ON (event.reason_id = i.id) " +
+                "INNER JOIN " + Presences.dbSchema + ".absence AS absence ON (absence.reason_id = i.id)";
         Sql.getInstance().raw(query, SqlResult.validResultHandler(handler));
     }
 

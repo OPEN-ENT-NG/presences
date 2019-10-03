@@ -1,0 +1,15 @@
+&.incidents {
+ .incident-sniplet {
+    &-form {
+      display: flex;
+      align-items: center;
+      button {
+        background-color: $orange;
+        margin: 0 32px;
+        &:disabled{
+          background: $disabled-color;
+        }
+      }
+    }
+  }
+}
