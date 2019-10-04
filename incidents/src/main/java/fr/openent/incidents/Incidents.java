@@ -2,6 +2,7 @@ package fr.openent.incidents;
 
 import fr.openent.incidents.controller.IncidentsController;
 import fr.openent.incidents.controller.IncidentsTypeController;
+import fr.openent.incidents.controller.PartnerController;
 import io.vertx.core.eventbus.EventBus;
 import org.entcore.common.http.BaseServer;
 
@@ -24,6 +25,7 @@ public class Incidents extends BaseServer {
 		final EventBus eb = getEventBus(vertx);
 		addController(new IncidentsController(eb));
 		addController(new IncidentsTypeController());
+		addController(new PartnerController());
 	}
 
 }
