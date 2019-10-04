@@ -50,7 +50,7 @@ export const reasonService : ReasonService = {
     },
 
     delete: async (reasonId: number): Promise<AxiosResponse> => {
-        return await http.delete(`/presences/reason?reasonId=${reasonId}`);
+        return await http.delete(`/presences/reason?id=${reasonId}`);
     },
 };
 

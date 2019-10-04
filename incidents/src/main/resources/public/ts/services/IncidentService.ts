@@ -1,5 +1,6 @@
 import {ng} from 'entcore'
 import http from 'axios';
+import {IncidentType} from "@incidents/services/IncidentTypeService";
 
 export interface IncidentParameterType {
     place: Place[];
@@ -16,12 +17,6 @@ export interface Place {
 }
 
 export interface Partner {
-    id: number;
-    structureId: string;
-    label: string;
-}
-
-export interface IncidentType {
     id: number;
     structureId: string;
     label: string;

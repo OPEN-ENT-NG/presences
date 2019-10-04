@@ -41,17 +41,16 @@
 
                         <div class="sniplet-addList-content-list-item-title">
                             <label class="sniplet-addList-content-list-item-title-label">[[incidentType.label]]</label>
-                            <i class="file-checked"></i>
-                            <i class="presence-edit" data-ng-click="vm.openReasonLightbox(reason)"></i>
+                            <i class="presence-edit" data-ng-click="vm.openIncidentsManageLightbox(incidentType)"></i>
                         </div>
 
                         <div class="sniplet-addList-content-list-item-icons">
-                            <i class="visible" data-ng-show="!reason.hidden"
-                               data-ng-click="vm.toggleVisibility(reason)"></i>
-                            <i class="hidden" data-ng-show="reason.hidden && reason.used"
-                               data-ng-click="vm.toggleVisibility(reason)"></i>
-                            <i class="delete" data-ng-show="reason.hidden && !reason.used"
-                               data-ng-click="vm.deleteReason(reason)"></i>
+                            <i class="visible" data-ng-show="!incidentType.hidden"
+                               data-ng-click="vm.toggleVisibility(incidentType)"></i>
+                            <i class="hidden" data-ng-show="incidentType.hidden && incidentType.used"
+                               data-ng-click="vm.toggleVisibility(incidentType)"></i>
+                            <i class="delete" data-ng-show="incidentType.hidden && !incidentType.used"
+                               data-ng-click="vm.deleteIncidentType(incidentType)"></i>
                         </div>
                     </li>
                 </ul>
@@ -61,6 +60,6 @@
     </div>
 </div>
 
-<!-- lightbox edit reason -->
-<div ng-include="'/presences/public/template/behaviours/sniplet-presences-manage
-/reason-manage/sniplet-presences-reason-manage-lightbox.html'"></div>
+
+<!-- lightbox edit incident managing "type" -->
+<sniplet template="incidents-manage/sniplet-incidents-manage-lightbox" application="incidents"></sniplet>

@@ -1,0 +1,44 @@
+<lightbox class="sniplet presences sniplet-presence-form sniplet-form-lightbox"
+          show="vm.editIncidentsManageLightbox"
+          on-close="vm.closeIncidentsManageLightbox()">
+
+    <!-- Header -->
+    <section class="sniplet-form-lightbox-head head">
+        <h3>
+            <i18n>incident.type.form.input.edit</i18n>
+        </h3>
+    </section>
+
+    <!-- Body -->
+    <section class="sniplet-form-lightbox-body body lightbox-form">
+
+        <!-- Warning -->
+        <span class="sniplet-form-lightbox-body-warning">
+            <i18n>incident.type.form.input.edit.warning</i18n>
+        </span>
+
+        <!-- Input -->
+        <div class="cell ten search-input sniplet-form-lightbox-body-input">
+            <input type="text" data-ng-model="vm.form.label" class="twelve cell">
+        </div>
+
+    </section>
+
+    <!-- Footer -->
+    <section class="sniplet-form-lightbox-footer">
+        <!-- Button/submit -->
+        <div class="sniplet-form-lightbox-footer-button row">
+
+            <!-- Submit mode -->
+            <button class="right-magnet" data-ng-click="vm.updateIncidentsManageLightbox()" data-ng-disabled="!vm.form.label">
+                <i18n>edit</i18n>
+            </button>
+
+            <!-- Cancel mode  -->
+            <button class="right-magnet cancel" data-ng-click="vm.closeIncidentsManageLightbox()">
+                <i18n>evaluations.devoir.annuler</i18n>
+            </button>
+        </div>
+    </section>
+
+</lightbox>
