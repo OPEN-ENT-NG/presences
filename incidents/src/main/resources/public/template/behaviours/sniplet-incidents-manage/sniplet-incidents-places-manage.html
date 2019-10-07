@@ -5,7 +5,7 @@
         <div class="sniplet-header">
             <span class="sniplet-header-icon"><i class="events" aria-hidden="true"></i></span>
             <h3 class="sniplet-header-title">
-                <i18n>incident.type.title</i18n>
+                <i18n>incident.place.title</i18n>
             </h3>
         </div>
 
@@ -14,18 +14,18 @@
 
             <!-- Title -->
             <label class="sniplet-input-title">
-                <i18n>incident.type.form.input</i18n>
+                <i18n>incident.place.form.input</i18n>
             </label>
 
             <!-- Form -->
             <div class="incident-sniplet-form">
                 <!-- Input -->
                 <div class="cell four search-input sniplet-input-form">
-                    <input type="text" data-ng-model="vm.form.label" class="twelve cell" i18n-placeholder="incident.type.form.input.placeholder">
+                    <input type="text" data-ng-model="vm.form.label" class="twelve cell" i18n-placeholder="incident.place.form.input.placeholder">
                 </div>
 
                 <!-- Submit -->
-                <button data-ng-click="vm.createIncidentType()" data-ng-disabled="!vm.isFormValid(vm.form)">
+                <button data-ng-click="vm.create()" data-ng-disabled="!vm.form.label">
                     <i18n>add</i18n>
                 </button>
             </div>
@@ -33,25 +33,24 @@
 
         <!-- Lists -->
         <div class="sniplet-addList">
-            <div class="sniplet-addList-content" ng-if="vm.hasIncidentsType()">
-                <i18n>incident.type.lists</i18n>
+            <div class="sniplet-addList-content" ng-if="vm.hasPlaces()">
+                <i18n>incident.place.lists</i18n>
                 <ul class="sniplet-addList-content-list">
                     <li class="sniplet-addList-content-list-item"
-                        ng-repeat="incidentType in vm.incidentsType | orderBy:'id'">
+                        ng-repeat="place in vm.places | orderBy:'id'">
 
                         <div class="sniplet-addList-content-list-item-title">
-                            <label class="sniplet-addList-content-list-item-title-label">[[incidentType.label]]</label>
-                            <i class="file-checked"></i>
-                            <i class="presence-edit" data-ng-click="vm.openReasonLightbox(reason)"></i>
+                            <label class="sniplet-addList-content-list-item-title-label">[[place.label]]</label>
+                            <i class="presence-edit" data-ng-click="vm.openIncidentsManageLightbox(place)"></i>
                         </div>
 
                         <div class="sniplet-addList-content-list-item-icons">
-                            <i class="visible" data-ng-show="!reason.hidden"
-                               data-ng-click="vm.toggleVisibility(reason)"></i>
-                            <i class="hidden" data-ng-show="reason.hidden && reason.used"
-                               data-ng-click="vm.toggleVisibility(reason)"></i>
-                            <i class="delete" data-ng-show="reason.hidden && !reason.used"
-                               data-ng-click="vm.deleteReason(reason)"></i>
+                            <i class="visible" data-ng-show="!place.hidden"
+                               data-ng-click="vm.toggleVisibility(place)"></i>
+                            <i class="hidden" data-ng-show="place.hidden && place.used"
+                               data-ng-click="vm.toggleVisibility(place)"></i>
+                            <i class="delete" data-ng-show="place.hidden && !place.used"
+                               data-ng-click="vm.delete(place)"></i>
                         </div>
                     </li>
                 </ul>

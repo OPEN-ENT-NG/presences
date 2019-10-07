@@ -1,5 +1,5 @@
-import {incidentsTypeService, IncidentTypeRequest, partnerService} from "@incidents/services";
-import {INCIDENTS_PARTNER_EVENT, INCIDENTS_TYPE_EVENT} from "@common/enum/incidents-event";
+import {incidentsTypeService, IncidentTypeRequest, partnerService, placeService} from "@incidents/services";
+import {INCIDENTS_PARTNER_EVENT, INCIDENTS_PLACE_EVENT, INCIDENTS_TYPE_EVENT} from "@common/enum/incidents-event";
 import {AxiosResponse} from "axios";
 
 interface ViewModel {
@@ -25,7 +25,6 @@ const vm: ViewModel = {
 
     openIncidentsManageLightbox(event, args): void {
         vm.editIncidentsManageLightbox = true;
-
         switch (event.name) {
             case INCIDENTS_TYPE_EVENT.TRANSMIT:
                 vm.header = 'incident.type.form.input.edit';
@@ -34,6 +33,10 @@ const vm: ViewModel = {
             case INCIDENTS_PARTNER_EVENT.TRANSMIT:
                 vm.header = 'incident.partner.form.input.edit';
                 vm.description = 'incident.partner.form.input.edit.warning';
+                break;
+            case INCIDENTS_PLACE_EVENT.TRANSMIT:
+                vm.header = 'incident.place.form.input.edit';
+                vm.description = 'incident.place.form.input.edit.warning';
                 break;
         }
         /* Assign form to current data */
@@ -61,6 +64,12 @@ const vm: ViewModel = {
                 incidentsManageLightbox.that.$emit(INCIDENTS_PARTNER_EVENT.SEND_BACK);
                 break;
             }
+            case INCIDENTS_PLACE_EVENT.TRANSMIT: {
+                let response = await placeService.update(vm.form);
+                vm.proceedAfterAction(response);
+                incidentsManageLightbox.that.$emit(INCIDENTS_PLACE_EVENT.SEND_BACK);
+                break;
+            }
         }
     },
 
@@ -85,11 +94,8 @@ export const incidentsManageLightbox = {
         setHandler: function () {
             this.$on(INCIDENTS_TYPE_EVENT.TRANSMIT, (event, args) => vm.openIncidentsManageLightbox(event, args));
             this.$on(INCIDENTS_PARTNER_EVENT.TRANSMIT, (event, args) => vm.openIncidentsManageLightbox(event, args));
+            this.$on(INCIDENTS_PLACE_EVENT.TRANSMIT, (event, args) => vm.openIncidentsManageLightbox(event, args));
 
-            // this.$on(INCIDENT_FORM_EVENTS.EDIT_TYPE, (event, args) => vm.openIncidentsManageLightbox(event, args));
-            // this.$on(INCIDENT_FORM_EVENTS.EDIT_PARTNER, (event, args) => vm.openIncidentsManageLightbox(event, args));
-            // this.$on(INCIDENT_FORM_EVENTS.EDIT_TYPE, (event, args) => vm.openIncidentsManageLightbox(event, args));
-            // this.$on(INCIDENT_FORM_EVENTS.EDIT_TYPE, (event, args) => vm.openIncidentsManageLightbox(event, args));
         }
     }
 };
