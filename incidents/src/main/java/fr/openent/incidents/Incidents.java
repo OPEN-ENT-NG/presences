@@ -26,6 +26,7 @@ public class Incidents extends BaseServer {
 		addController(new PartnerController());
 		addController(new PlaceController());
 		addController(new ProtagonistTypeController());
+		addController(new SeriousnessController());
 	}
 
 }
