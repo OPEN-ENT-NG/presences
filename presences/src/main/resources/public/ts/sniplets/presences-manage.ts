@@ -1,9 +1,12 @@
+import {INCIDENTS_PARTNER_EVENT, INCIDENTS_TYPE_EVENT} from "@common/enum/incidents-event";
 
 console.log("presenceManage sniplet");
 
 interface ViewModel {
     safeApply(fn?: () => void): void;
     scrollToElement($element): void;
+    sendEvent(event, data): void;
+    respondEvent(event, data): void;
 }
 
 function safeApply() {
@@ -26,6 +29,31 @@ const vm: ViewModel = {
         element.scrollIntoView({behavior: "smooth", block: "start", inline: "nearest"});
         vm.safeApply();
     },
+
+    sendEvent(event, data): void {
+        console.log("event: ", event);
+        switch (event.name) {
+            case INCIDENTS_TYPE_EVENT.SEND:
+                presencesManage.that.$broadcast(INCIDENTS_TYPE_EVENT.TRANSMIT, data);
+                break;
+            case INCIDENTS_PARTNER_EVENT.SEND:
+                presencesManage.that.$broadcast(INCIDENTS_PARTNER_EVENT.TRANSMIT, data);
+                break;
+        }
+    },
+
+    respondEvent(event, args): void {
+        switch (event.name) {
+            case INCIDENTS_TYPE_EVENT.SEND_BACK:
+                presencesManage.that.$broadcast(INCIDENTS_TYPE_EVENT.RESPOND);
+                break;
+            case INCIDENTS_PARTNER_EVENT.SEND_BACK:
+                presencesManage.that.$broadcast(INCIDENTS_PARTNER_EVENT.RESPOND);
+                break;
+
+        }
+
+    }
 };
 
 export const presencesManage = {
@@ -35,8 +63,19 @@ export const presencesManage = {
     controller: {
         init: async function () {
             this.vm = vm;
+            this.setHandler();
             presencesManage.that = this;
             vm.safeApply = safeApply;
+        },
+        setHandler: function () {
+            /* incident type event */
+            this.$on(INCIDENTS_TYPE_EVENT.SEND, (event, args) => vm.sendEvent(event, args));
+            this.$on(INCIDENTS_TYPE_EVENT.SEND_BACK, (event, args) => vm.respondEvent(event, args));
+
+            /* partner event */
+            this.$on(INCIDENTS_PARTNER_EVENT.SEND, (event, args) => vm.sendEvent(event, args));
+            this.$on(INCIDENTS_PARTNER_EVENT.SEND_BACK, (event, args) => vm.respondEvent(event, args));
+
         }
     }
 };

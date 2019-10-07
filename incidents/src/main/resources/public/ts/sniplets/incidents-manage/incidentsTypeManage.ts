@@ -1,6 +1,6 @@
 import {incidentsTypeService, IncidentType, IncidentTypeRequest} from "@incidents/services";
 import {AxiosResponse} from "axios";
-import {INCIDENT_FORM_EVENTS} from "@incidents/sniplets";
+import {INCIDENTS_TYPE_EVENT} from "@common/enum/incidents-event";
 
 declare let window: any;
 
@@ -80,7 +80,7 @@ const vm: ViewModel = {
     },
 
     openIncidentsManageLightbox(incidentsType: IncidentType): void {
-        incidentsTypeManage.that.$broadcast(INCIDENT_FORM_EVENTS.EDIT_TYPE, incidentsType);
+        incidentsTypeManage.that.$emit(INCIDENTS_TYPE_EVENT.SEND, incidentsType);
     },
 };
 
@@ -98,8 +98,7 @@ export const incidentsTypeManage = {
         setHandler: function () {
             // using vieScolaire.structure to update current structure from viescolaire
             this.$watch(() =>  window.model.vieScolaire.structure, async () => vm.getIncidentsType());
-            this.$on(INCIDENT_FORM_EVENTS.UPDATE_EDIT_TYPE, () => vm.getIncidentsType());
-
+            this.$on(INCIDENTS_TYPE_EVENT.RESPOND, () => vm.getIncidentsType());
         }
     }
 };
