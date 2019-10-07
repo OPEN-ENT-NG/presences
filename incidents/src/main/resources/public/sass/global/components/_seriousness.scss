@@ -29,3 +29,53 @@
     background: $dark-red;
   }
 }
+
+.seriousness-form {
+  &-0 {
+    background-color: $level-one;
+    width: 24px;
+    border-radius: 50%;
+  }
+
+  &-1 {
+    background-color: $level-two;
+    width: 24px;
+    border-radius: 50%;
+  }
+
+  &-2 {
+    background-color: $level-three;
+    width: 24px;
+    border-radius: 50%;
+  }
+
+  &-3 {
+    background-color: $level-four;
+    width: 24px;
+    border-radius: 50%;
+  }
+
+  &-4{
+    background-color: $level-five;
+    width: 24px;
+    border-radius: 50%;
+  }
+
+  &-5 {
+    background-color: $level-six;
+    width: 24px;
+    border-radius: 50%;
+  }
+
+  &-6 {
+    background-color: $level-seven;
+    width: 24px;
+    border-radius: 50%;
+  }
+
+  &-7 {
+    background-color: $level-height;
+    width: 24px;
+    border-radius: 50%;
+  }
+}

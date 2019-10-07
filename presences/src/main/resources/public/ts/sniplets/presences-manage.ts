@@ -1,7 +1,7 @@
 import {
     INCIDENTS_PARTNER_EVENT,
     INCIDENTS_PLACE_EVENT,
-    INCIDENTS_PROTAGONIST_TYPE_EVENT,
+    INCIDENTS_PROTAGONIST_TYPE_EVENT, INCIDENTS_SERIOUSNESS_EVENT,
     INCIDENTS_TYPE_EVENT
 } from "@common/enum/incidents-event";
 
@@ -50,6 +50,9 @@ const vm: ViewModel = {
             case INCIDENTS_PROTAGONIST_TYPE_EVENT.SEND:
                 presencesManage.that.$broadcast(INCIDENTS_PROTAGONIST_TYPE_EVENT.TRANSMIT, data);
                 break;
+            case INCIDENTS_SERIOUSNESS_EVENT.SEND:
+                presencesManage.that.$broadcast(INCIDENTS_SERIOUSNESS_EVENT.TRANSMIT, data);
+                break;
         }
     },
 
@@ -67,8 +70,9 @@ const vm: ViewModel = {
             case INCIDENTS_PROTAGONIST_TYPE_EVENT.SEND_BACK:
                 presencesManage.that.$broadcast(INCIDENTS_PROTAGONIST_TYPE_EVENT.RESPOND);
                 break;
-
-
+            case INCIDENTS_SERIOUSNESS_EVENT.SEND_BACK:
+                presencesManage.that.$broadcast(INCIDENTS_SERIOUSNESS_EVENT.RESPOND);
+                break;
         }
 
     }
@@ -101,6 +105,10 @@ export const presencesManage = {
             /* protagonist type event */
             this.$on(INCIDENTS_PROTAGONIST_TYPE_EVENT.SEND, (event, args) => vm.sendEvent(event, args));
             this.$on(INCIDENTS_PROTAGONIST_TYPE_EVENT.SEND_BACK, (event, args) => vm.respondEvent(event, args));
+
+            /* seriousness type event */
+            this.$on(INCIDENTS_SERIOUSNESS_EVENT.SEND, (event, args) => vm.sendEvent(event, args));
+            this.$on(INCIDENTS_SERIOUSNESS_EVENT.SEND_BACK, (event, args) => vm.respondEvent(event, args));
 
         }
     }

@@ -37,3 +37,10 @@ export enum INCIDENTS_PROTAGONIST_TYPE_EVENT {
     SEND_BACK = 'incident-protagonistType:send-back-form',
     RESPOND = 'incident-protagonistType:respond-form'
 }
+
+export enum INCIDENTS_SERIOUSNESS_EVENT {
+    SEND = 'incident-seriousness:send-form',
+    TRANSMIT = 'incident-seriousness:transmit-form',
+    SEND_BACK = 'incident-seriousness:send-back-form',
+    RESPOND = 'incident-seriousness:respond-form'
+}

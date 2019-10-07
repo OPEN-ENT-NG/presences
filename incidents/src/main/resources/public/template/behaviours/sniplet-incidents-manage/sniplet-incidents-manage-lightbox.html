@@ -22,6 +22,21 @@
             <input type="text" data-ng-model="vm.form.label" class="twelve cell">
         </div>
 
+        <!-- Color mode if sniplet is on seriousness -->
+        <div ng-if="vm.seriousnessMode " class="sniplet-form-lightbox-body-color">
+            <label>
+                <i18n>incident.seriousness.form.input.color</i18n>
+            </label>
+
+            <!-- list color -->
+            <ul>
+                <li class="seriousness-form-[[i]]"
+                    ng-repeat="i in [0, 1, 2, 3, 4, 5, 6, 7]"
+                    ng-class="{active: vm.form.level === i}"
+                    data-ng-click="vm.chooseLevel(i)">&nbsp;</li>
+            </ul>
+        </div>
+
     </section>
 
     <!-- Footer -->

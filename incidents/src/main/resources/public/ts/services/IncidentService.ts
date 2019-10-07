@@ -1,20 +1,13 @@
 import {ng} from 'entcore'
 import http from 'axios';
-import {Place, Partner, IncidentType, ProtagonistType} from "@incidents/services";
+import {Place, Partner, IncidentType, ProtagonistType, Seriousness} from "@incidents/services";
 
 export interface IncidentParameterType {
     place: Place[];
     partner: Partner[];
     incidentType: IncidentType[];
-    seriousnessLevel: SeriousnessLevel[];
+    seriousnessLevel: Seriousness[];
     protagonistType: ProtagonistType[];
-}
-
-export interface SeriousnessLevel {
-    id: number;
-    structureId: string;
-    label: string;
-    level: number;
 }
 
 export interface IncidentService {

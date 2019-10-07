@@ -2,7 +2,7 @@ import http from 'axios';
 import {Mix} from 'entcore-toolkit';
 import {DateUtils} from '@common/utils'
 import {LoadingCollection} from '@common/model'
-import {IncidentType, Partner, Place, ProtagonistType, SeriousnessLevel} from "../services";
+import {IncidentType, Partner, Place, ProtagonistType, Seriousness} from "../services";
 import {model, moment} from "entcore";
 
 export interface Incident {
@@ -21,7 +21,7 @@ export interface Incident {
     place: Place;
     partner: Partner;
     incidentType: IncidentType;
-    seriousness: SeriousnessLevel;
+    seriousness: Seriousness;
 
     protagonists: ProtagonistForm[];
 }
@@ -50,7 +50,7 @@ export class Incident {
         this.place = {} as Place;
         this.partner = {} as Partner;
         this.incidentType = {} as IncidentType;
-        this.seriousness = {} as SeriousnessLevel;
+        this.seriousness = {} as Seriousness;
 
         this.protagonists = new Array<ProtagonistForm>();
     }
@@ -92,7 +92,7 @@ export class Incident {
         this.place = this.place == undefined ? {} as Place : this.place;
         this.partner = this.partner == undefined ? {} as Partner : this.partner;
         this.incidentType = this.incidentType == undefined ? {} as IncidentType : this.incidentType;
-        this.seriousness = this.seriousness == undefined ? {} as SeriousnessLevel : this.seriousness;
+        this.seriousness = this.seriousness == undefined ? {} as Seriousness : this.seriousness;
 
         return this.owner
             && this.description
