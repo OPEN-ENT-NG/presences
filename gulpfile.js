@@ -12,7 +12,7 @@ if (args.module) {
     apps = [args.module];
 }
 
-gulp.task('drop-cache', function(){
+gulp.task('drop-cache', function () {
     var streams = [];
     apps.forEach(function (app) {
         streams.push(gulp.src(['./' + app + '/src/main/resources/public/dist'], {read: false}).pipe(clean()))
@@ -31,7 +31,7 @@ gulp.task('copy-files', ['drop-cache'], function () {
     return merge(streams);
 });
 
-gulp.task('webpack', ['copy-files'], function () {
+gulp.task('webpack', ['copy-mdi-font'], function () {
     var streams = [];
     apps.forEach(function (app) {
         streams.push(gulp.src('./' + app + '/src/main/resources/public/**/*.ts')
@@ -42,6 +42,11 @@ gulp.task('webpack', ['copy-files'], function () {
             .pipe(gulp.dest('./' + app + '/src/main/resources/public/dist')))
     });
     return merge(streams);
+});
+
+gulp.task('copy-mdi-font', ['copy-files'], function () {
+    return gulp.src('./node_modules/@mdi/font/fonts/*')
+        .pipe(gulp.dest('./presences/src/main/resources/public/font/material-design/fonts'));
 });
 
 gulp.task('rev', ['webpack'], function () {
