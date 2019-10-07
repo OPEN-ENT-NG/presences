@@ -74,12 +74,17 @@ $absence-button-width: 20px;
           opacity: 1 !important;
           transition: all 0.25s ease;
 
-          &.split-view::before {
+          &.split-view::before, &.show-list::before {
             position: absolute;
-            top: -2px;
+            //top: -2px;
             left: 0;
-            height: 23px;
+            height: 40px;
             width: 100%;
+            line-height: 40px;
+          }
+
+          &.split-view::before {
+            font-size: 30px;
           }
 
           &.active {
