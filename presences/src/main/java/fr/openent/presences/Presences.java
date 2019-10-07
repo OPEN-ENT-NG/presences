@@ -1,12 +1,8 @@
 package fr.openent.presences;
 
 import fr.openent.presences.controller.*;
-import fr.openent.presences.cron.AbsenceRemovalTask;
-import fr.wseduc.cron.CronTrigger;
 import io.vertx.core.eventbus.EventBus;
 import org.entcore.common.http.BaseServer;
-
-import java.text.ParseException;
 
 public class Presences extends BaseServer {
 
@@ -57,11 +53,15 @@ public class Presences extends BaseServer {
         // Controller that create fake rights for widgets
         addController(new FakeRight());
 
+
+        /*
+        Remove the cron trigger. Currently Do not delete absences
         try {
             new CronTrigger(vertx, exportCron).schedule(new AbsenceRemovalTask(vertx.eventBus()));
         } catch (ParseException e) {
             log.fatal(e.getMessage(), e);
         }
+        */
 
     }
 
