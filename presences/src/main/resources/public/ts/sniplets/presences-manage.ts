@@ -1,4 +1,9 @@
-import {INCIDENTS_PARTNER_EVENT, INCIDENTS_PLACE_EVENT, INCIDENTS_TYPE_EVENT} from "@common/enum/incidents-event";
+import {
+    INCIDENTS_PARTNER_EVENT,
+    INCIDENTS_PLACE_EVENT,
+    INCIDENTS_PROTAGONIST_TYPE_EVENT,
+    INCIDENTS_TYPE_EVENT
+} from "@common/enum/incidents-event";
 
 console.log("presenceManage sniplet");
 
@@ -24,6 +29,7 @@ function safeApply() {
 
 const vm: ViewModel = {
     safeApply: null,
+
     scrollToElement(target): void {
         let element = document.getElementById(target);
         element.scrollIntoView({behavior: "smooth", block: "start", inline: "nearest"});
@@ -41,6 +47,9 @@ const vm: ViewModel = {
             case INCIDENTS_PLACE_EVENT.SEND:
                 presencesManage.that.$broadcast(INCIDENTS_PLACE_EVENT.TRANSMIT, data);
                 break;
+            case INCIDENTS_PROTAGONIST_TYPE_EVENT.SEND:
+                presencesManage.that.$broadcast(INCIDENTS_PROTAGONIST_TYPE_EVENT.TRANSMIT, data);
+                break;
         }
     },
 
@@ -55,6 +64,10 @@ const vm: ViewModel = {
             case INCIDENTS_PLACE_EVENT.SEND_BACK:
                 presencesManage.that.$broadcast(INCIDENTS_PLACE_EVENT.RESPOND);
                 break;
+            case INCIDENTS_PROTAGONIST_TYPE_EVENT.SEND_BACK:
+                presencesManage.that.$broadcast(INCIDENTS_PROTAGONIST_TYPE_EVENT.RESPOND);
+                break;
+
 
         }
 
@@ -84,6 +97,10 @@ export const presencesManage = {
             /* place event */
             this.$on(INCIDENTS_PLACE_EVENT.SEND, (event, args) => vm.sendEvent(event, args));
             this.$on(INCIDENTS_PLACE_EVENT.SEND_BACK, (event, args) => vm.respondEvent(event, args));
+
+            /* protagonist type event */
+            this.$on(INCIDENTS_PROTAGONIST_TYPE_EVENT.SEND, (event, args) => vm.sendEvent(event, args));
+            this.$on(INCIDENTS_PROTAGONIST_TYPE_EVENT.SEND_BACK, (event, args) => vm.respondEvent(event, args));
 
         }
     }
