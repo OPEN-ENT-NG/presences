@@ -1,5 +1,5 @@
 import http from 'axios';
-import {_, moment} from 'entcore'
+import {_, moment, toasts} from 'entcore'
 import {Mix} from 'entcore-toolkit'
 import {Event, EventType, Remark} from './index'
 import {LoadingCollection} from "@common/model"
@@ -137,9 +137,11 @@ export class Register extends LoadingCollection {
 
     async setStatus(state_id: number) {
         try {
-            await http.put(`/presences/registers/${this.id}/status`, {state_id})
+            await http.put(`/presences/registers/${this.id}/status`, {state_id});
             this.state_id = state_id;
+            toasts.confirm('presences.register.validation.success');
         } catch (err) {
+            toasts.warning('presences.register.validation.error');
             throw err;
         }
     }
