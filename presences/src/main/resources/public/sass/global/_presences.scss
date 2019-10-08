@@ -129,6 +129,10 @@ body.presences, .sniplet.presences {
     margin-top: 20px;
   }
 
+  .top5 {
+    margin-top: 5px;
+  }
+
   .paddingRight {
     padding-right: 15px;
   }
@@ -144,7 +148,7 @@ body.presences, .sniplet.presences {
 
   .search-input {
     background: $presences-white;
-    padding: 15px;
+    padding: 7px;
     vertical-align: middle;
 
     input {
