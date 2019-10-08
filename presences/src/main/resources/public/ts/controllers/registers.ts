@@ -1,4 +1,4 @@
-import {_, angular, model, moment, ng, notify, template} from 'entcore';
+import {_, model, moment, ng, notify, template, toasts} from 'entcore';
 import {Absence, Course, Courses, Departure, EventType, Lateness, Register, RegisterStatus, Remark} from '../models'
 import {GroupService, SearchService} from '../services';
 import {CourseUtils, DateUtils} from '@common/utils'
@@ -96,6 +96,8 @@ interface ViewModel {
     getGroups(classes: string[], groups: string[]): string[];
 
     export(): void;
+
+    validRegister(): Promise<void>;
 }
 
 export const registersController = ng.controller('RegistersController',
@@ -130,7 +132,7 @@ export const registersController = ng.controller('RegistersController',
                 getRegister: async ({id}) => {
                     template.open('registers', 'register/register');
                     if ('filter' in window && window.filter) {
-                        vm.filter = { ...vm.filter, ...window.filter };
+                        vm.filter = {...vm.filter, ...window.filter};
                     }
                     if (vm.register !== undefined) {
                         template.open('register', 'register/list-view');
@@ -501,7 +503,6 @@ export const registersController = ng.controller('RegistersController',
             };
 
 
-
             vm.closePanel = function () {
                 delete vm.filter.student;
             };
@@ -546,7 +547,7 @@ export const registersController = ng.controller('RegistersController',
                 return count === 0;
             };
 
-            vm.isAbsenceDisabled = function (student ): boolean {
+            vm.isAbsenceDisabled = function (student): boolean {
                 if (student.absence !== undefined && student.absence.counsellor_input) {
                     return !model.me.hasWorkflow(rights.workflow.managePresences);
                 }
@@ -621,6 +622,15 @@ export const registersController = ng.controller('RegistersController',
 
             vm.getGroups = function (classes, groups) {
                 return [...classes, ...groups];
+            };
+
+            vm.validRegister = async function () {
+                try {
+                    vm.register.setStatus(vm.RegisterStatus.DONE);
+                    toasts.confirm('presences.register.validation.success');
+                } catch (err) {
+                    toasts.warning('presences.register.validation.error');
+                }
             };
 
             function startAction() {
