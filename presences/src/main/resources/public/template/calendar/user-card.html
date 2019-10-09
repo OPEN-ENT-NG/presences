@@ -1,18 +1,20 @@
 <div class="calendar-user-card" ng-init="userCard = { 'show': false }" ng-class="{open: userCard.show}">
-    <div class="user-cards">
-        <div class="user-card">
-            <div class="avatar" ng-style="{'background-image': 'url(/userbook/avatar/' + vm.filter.student.id + ')'}">
-                &nbsp;
-            </div>
-            <div>
-                <h2 class="ng-binding" ng-bind="vm.filter.student.displayName"></h2>
+    <div class="calendar-user-card-container">
+        <div class="user-cards">
+            <div class="user-card">
+                <div class="avatar"
+                     ng-style="{'background-image': 'url(/userbook/avatar/' + vm.filter.student.id + ')'}">
+                    &nbsp;
+                </div>
+                <div>
+                    <h2 class="ng-binding" ng-bind="vm.filter.student.displayName"></h2>
+                </div>
             </div>
         </div>
-    </div>
-    <div class="user-cards-student-list">
-        <div class="user-cards-student-list-show-button" ng-click="userCard.show = !userCard.show">
-            <i18n>presences.calendar.students.group</i18n>
-            [[vm.filter.student.groupName]]
+        <div class="user-cards-student-list">
+            <div class="user-cards-student-list-show-button" ng-click="userCard.show = !userCard.show">
+                [[vm.filter.student.groupName]]
+            </div>
         </div>
         <div class="list">
             <div class="student" ng-click="vm.loadCourses(student); userCard.show = false;"

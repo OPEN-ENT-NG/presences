@@ -15,7 +15,7 @@ $calendar-user-card-height: 56px;
   }
 
   > h1 {
-    margin-bottom: 40px;
+    margin-bottom: 10px;
   }
 
   .search-toolbar {
@@ -140,9 +140,8 @@ $calendar-user-card-height: 56px;
       }
 
       .timeslot {
-
-        height: 52px;
-        line-height: 52px;
+        height: 47px;
+        line-height: 47px;
       }
 
       .schedule-item {
@@ -320,6 +319,10 @@ $calendar-user-card-height: 56px;
     right: 0;
     z-index: 1001;
 
+    &-container {
+      display: flex;
+    }
+
     .user-cards {
       position: relative;
       right: unset;
@@ -338,21 +341,18 @@ $calendar-user-card-height: 56px;
 
       + .user-cards-student-list {
         background-color: $white;
-        right: 0;
         box-shadow: 0 2px 4px rgba(0, 0, 0, 0.26);
-        z-index: -1;
-        position: absolute;
         top: $calendar-user-card-height;
-        height: 45px;
-        min-height: 45px;
         transition: all 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);
-        min-width: 180px;
 
         .user-cards-student-list-show-button {
-          height: 45px;
-          line-height: 35px;
+          height: 56px;
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          justify-content: center;
           text-align: right;
-          padding: 5px 10px;
+          padding: 0 10px;
           box-sizing: border-box;
           font-size: 14px;
 
@@ -361,13 +361,18 @@ $calendar-user-card-height: 56px;
             content: "\e87b";
             margin-left: 5px;
             font-size: 16px;
+            transform: rotate(-90deg);
           }
         }
 
-        .list {
-          overflow-y: scroll;
-          height: calc(100% - 45px);
+        + .list {
+          overflow-y: hidden;
+          height: 0;
           transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+          position: absolute;
+          top: 56px;
+          right: 0;
+          box-shadow: 0 2px 4px rgba(0, 0, 0, 0.26);
 
           .student {
             height: 50px;
@@ -412,10 +417,15 @@ $calendar-user-card-height: 56px;
 
       .user-cards-student-list {
         height: calc(100% - #{$calendar-user-card-height}) !important;
+
+        + .list {
+          overflow-y: scroll;
+          height: calc(100% - #{$calendar-user-card-height}) !important;
+        }
       }
 
       .user-cards-student-list-show-button::after {
-        transform: rotate(180deg);
+        transform: rotate(90deg) !important;
         display: inline-block;
       }
     }
