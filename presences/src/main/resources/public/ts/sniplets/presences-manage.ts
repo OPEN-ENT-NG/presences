@@ -5,6 +5,8 @@ import {
     INCIDENTS_TYPE_EVENT
 } from "@common/enum/incidents-event";
 
+declare let window: any;
+
 console.log("presenceManage sniplet");
 
 interface ViewModel {
@@ -90,6 +92,8 @@ export const presencesManage = {
             vm.safeApply = safeApply;
         },
         setHandler: function () {
+            this.$watch(() =>  window.model.vieScolaire.structure, async () => this.$apply());
+
             /* incident type event */
             this.$on(INCIDENTS_TYPE_EVENT.SEND, (event, args) => vm.sendEvent(event, args));
             this.$on(INCIDENTS_TYPE_EVENT.SEND_BACK, (event, args) => vm.respondEvent(event, args));

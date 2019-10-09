@@ -31,51 +31,76 @@
 }
 
 .seriousness-form {
+
   &-0 {
     background-color: $level-one;
     width: 24px;
     border-radius: 50%;
+    height: 24px;
+    box-sizing: border-box;
+    border: solid 2px $level-one;
   }
 
   &-1 {
     background-color: $level-two;
     width: 24px;
     border-radius: 50%;
+    height: 24px;
+    box-sizing: border-box;
+    border: solid 2px $level-two;
   }
 
   &-2 {
     background-color: $level-three;
     width: 24px;
     border-radius: 50%;
+    height: 24px;
+    box-sizing: border-box;
+    border: solid 2px $level-three;
   }
 
   &-3 {
     background-color: $level-four;
     width: 24px;
     border-radius: 50%;
+    height: 24px;
+    box-sizing: border-box;
+    border: solid 2px $level-four;
   }
 
-  &-4{
+  &-4 {
     background-color: $level-five;
     width: 24px;
     border-radius: 50%;
+    height: 24px;
+    box-sizing: border-box;
+    border: solid 2px $level-five;
   }
 
   &-5 {
     background-color: $level-six;
     width: 24px;
     border-radius: 50%;
+    height: 24px;
+    box-sizing: border-box;
+    border: solid 2px $level-six;
   }
 
   &-6 {
     background-color: $level-seven;
     width: 24px;
     border-radius: 50%;
+    height: 24px;
+    box-sizing: border-box;
+    border: solid 2px $level-seven;
   }
 
   &-7 {
     background-color: $level-height;
     width: 24px;
     border-radius: 50%;
+    height: 24px;
+    box-sizing: border-box;
+    border: solid 2px $level-height;
   }
 }
