@@ -1,45 +1,47 @@
-<h1>
-    <i18n>presences.register.list.title</i18n>
-</h1>
-<div class="row" workflow="presences.search">
-    <div class="cell six paddingRight">
-        <div class="cell twelve search-input">
-            <async-autocomplete ng-disabled="false"
-                                ng-model="vm.filter.teacher"
-                                ng-change="vm.selectTeacher"
-                                on-search="vm.searchTeacher"
-                                options="vm.filter.teachers"
-                                placeholder="presences.search.teacher"
-                                search="vm.filter.teacher"></async-autocomplete>
+<div class="row">
+    <h1 class="cell paddingRight">
+        <i18n>presences.register.list.title</i18n>
+    </h1>
+    <div class="cell eight" workflow="presences.search">
+        <div class="cell six paddingRight">
+            <div class="cell twelve search-input">
+                <async-autocomplete ng-disabled="false"
+                                    ng-model="vm.filter.teacher"
+                                    ng-change="vm.selectTeacher"
+                                    on-search="vm.searchTeacher"
+                                    options="vm.filter.teachers"
+                                    placeholder="presences.search.teacher"
+                                    search="vm.filter.teacher"></async-autocomplete>
+            </div>
+            <div class="cell twelve">
+                <ul class="cell twelve search-input-ul">
+                    <li ng-repeat="teacher in vm.filter.selected.teachers"
+                        ng-click="vm.dropFilter(teacher, 'teachers')">
+                        [[teacher.toString()]]
+                        <i class="close"></i>
+                    </li>
+                </ul>
+            </div>
         </div>
-        <div class="cell twelve">
-            <ul class="cell twelve search-input-ul">
-                <li ng-repeat="teacher in vm.filter.selected.teachers"
-                    ng-click="vm.dropFilter(teacher, 'teachers')">
-                    [[teacher.toString()]]
-                    <i class="close"></i>
-                </li>
-            </ul>
-        </div>
-    </div>
-    <div class="cell six paddingRight">
-        <div class="cell twelve search-input">
-            <async-autocomplete ng-disabled="false"
-                                ng-model="vm.filter.class"
-                                ng-change="vm.selectClass"
-                                on-search="vm.searchClass"
-                                options="vm.filter.classes"
-                                placeholder="presences.search.class"
-                                search="vm.filter.class"></async-autocomplete>
-        </div>
-        <div class="cell twelve">
-            <ul class="cell twelve search-input-ul">
-                <li ng-repeat="class in vm.filter.selected.classes"
-                    ng-click="vm.dropFilter(class, 'classes')">
-                    [[class.toString()]]
-                    <i class="close"></i>
-                </li>
-            </ul>
+        <div class="cell six paddingLeft">
+            <div class="cell twelve search-input">
+                <async-autocomplete ng-disabled="false"
+                                    ng-model="vm.filter.class"
+                                    ng-change="vm.selectClass"
+                                    on-search="vm.searchClass"
+                                    options="vm.filter.classes"
+                                    placeholder="presences.search.class"
+                                    search="vm.filter.class"></async-autocomplete>
+            </div>
+            <div class="cell twelve">
+                <ul class="cell twelve search-input-ul">
+                    <li ng-repeat="class in vm.filter.selected.classes"
+                        ng-click="vm.dropFilter(class, 'classes')">
+                        [[class.toString()]]
+                        <i class="close"></i>
+                    </li>
+                </ul>
+            </div>
         </div>
     </div>
 </div>

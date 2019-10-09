@@ -19,7 +19,7 @@ $calendar-user-card-height: 56px;
   }
 
   .search-toolbar {
-    margin-bottom: 30px;
+    margin-bottom: 7px;
 
     .cell.eight {
       height: 55px;
@@ -159,9 +159,9 @@ $calendar-user-card-height: 56px;
           z-index: 1 !important;
         }
 
-        &.schedule-course{
-          width: 99%!important;
-          left: 0!important;
+        &.schedule-course {
+          width: 99% !important;
+          left: 0 !important;
           z-index: 2 !important;
         }
 
