@@ -20,7 +20,7 @@ panel .content {
       color: $white;
 
       i.close {
-        @include fonticon();
+        font-family: 'material-icons';
         position: absolute;
         right: 5px;
         top: 5px;
