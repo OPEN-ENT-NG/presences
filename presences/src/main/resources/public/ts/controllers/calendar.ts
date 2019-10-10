@@ -36,9 +36,11 @@ interface ViewModel {
     searchItem(value: string): void;
 
     changeAbsence(item: Course): string;
+
     loadCourses(): Promise<void>;
 
     formatExemptionDate(date: any): string;
+
     editAbsenceForm(item: Course): void;
 }
 
@@ -46,10 +48,15 @@ interface CalendarScope extends Scope {
     hoverExemption($event, exemption: { start_date: string, end_date: string }): void;
 
     hoverOutExemption(): void;
+
     isAbsenceOnly(item): boolean;
+
     isAbsenceJustifiedOnly(item): boolean;
+
     isGlobalAbsence(item): boolean;
+
     isGlobalAbsenceReason(item): boolean;
+
     isPastItem(item): boolean;
 }
 
@@ -71,6 +78,13 @@ export const calendarController = ng.controller('CalendarController', ['$scope',
         vm.courses = {list: []};
         vm.slots = {list: []};
 
+        if ('date' in window.item) {
+            const date = moment(window.item.date);
+            model.calendar.setDate(date);
+        } else {
+            model.calendar.setDate(moment());
+        }
+
         // model.calendar.eventer.on('calendar.create-item', () => {
         //     console.info(model.calendar.newItem);
         //     console.info(model.calendar.newItem.beginning.format());
@@ -87,7 +101,6 @@ export const calendarController = ng.controller('CalendarController', ['$scope',
         });
 
         model.calendar.on('date-change', initCalendar);
-        model.calendar.setDate(moment());
 
         $scope.$on('$destroy', () => model.calendar.callbacks['date-change'] = []);
 
@@ -127,10 +140,9 @@ export const calendarController = ng.controller('CalendarController', ['$scope',
                 if (item === undefined || item === null) return;
                 if ((item.parentNode as Element).querySelector('.globalAbsence')) {
                     item.setAttribute("class", "schedule-item schedule-globalAbsence");
-                } else if ((item.parentNode as Element).querySelector('.globalAbsenceReason'))  {
+                } else if ((item.parentNode as Element).querySelector('.globalAbsenceReason')) {
                     item.setAttribute("class", "schedule-item schedule-globalAbsenceReason");
-                }
-                else {
+                } else {
                     item.setAttribute("class", "schedule-item schedule-course");
                 }
             });
@@ -248,23 +260,23 @@ export const calendarController = ng.controller('CalendarController', ['$scope',
             hover.style.display = 'none';
         };
 
-        $scope.isAbsenceOnly = function(item): boolean {
+        $scope.isAbsenceOnly = function (item): boolean {
             return item.absence && item.absenceReason === 0;
         };
 
-        $scope.isAbsenceJustifiedOnly = function(item): boolean {
+        $scope.isAbsenceJustifiedOnly = function (item): boolean {
             return item.absence && item.absenceReason > 0;
         };
 
-        $scope.isGlobalAbsence = function(item): boolean {
+        $scope.isGlobalAbsence = function (item): boolean {
             return item._id === '0' && item.absence && item.absenceReason === 0;
         };
 
-        $scope.isGlobalAbsenceReason = function(item): boolean {
+        $scope.isGlobalAbsenceReason = function (item): boolean {
             return item._id === '0' && item.absence && item.absenceReason > 0;
         };
 
-        vm.editAbsenceForm = function(item): void {
+        vm.editAbsenceForm = function (item): void {
             if (item._id !== "0") {
                 return;
             }

@@ -33,7 +33,7 @@ interface ViewModel {
 
     isDayHistoryEmpty(periods, event): boolean;
 
-    editPeriod($event): void;
+    editPeriod($event, event): void;
 
     /* dayHistory interaction */
     mouseIsDown: boolean;
@@ -130,9 +130,9 @@ interface ViewModel {
     exportCsv(): void;
 }
 
-export const eventsController = ng.controller('EventsController', ['$scope', '$route',
+export const eventsController = ng.controller('EventsController', ['$scope', '$route', '$location',
     'GroupService', 'ReasonService',
-    function ($scope, $route, GroupService: GroupService, ReasonService: ReasonService) {
+    function ($scope, $route, $location, GroupService: GroupService, ReasonService: ReasonService) {
         const isWidget = $route.current.action === 'dashboard';
         const vm: ViewModel = this;
         vm.filter = {
@@ -222,8 +222,15 @@ export const eventsController = ng.controller('EventsController', ['$scope', '$r
             $scope.safeApply();
         };
 
-        vm.editPeriod = ($event): void => {
+        vm.editPeriod = ($event, {studentId, date, displayName}): void => {
             $event.stopPropagation();
+            window.item = {
+                id: studentId,
+                date,
+                displayName
+            };
+            $location.path(`/calendar/${studentId}?date=${date}`);
+            $scope.safeApply();
         };
 
         vm.period = ($event): void => {
@@ -287,7 +294,7 @@ export const eventsController = ng.controller('EventsController', ['$scope', '$r
         vm.eventTypeState = (periods, event): string => {
             if (periods.events.length === 0) return '';
             const priority = [EventType.ABSENCE, EventType.LATENESS, EventType.DEPARTURE, EventType.REMARK];
-            const className = ['absent', 'late', 'departure', 'remark', 'justified','empty'];
+            const className = ['absent', 'late', 'departure', 'remark', 'justified', 'empty'];
             let index = 4;
             for (let i = 0; i < periods.events.length; i++) {
                 if (periods.events[i].type_id === 1) {
