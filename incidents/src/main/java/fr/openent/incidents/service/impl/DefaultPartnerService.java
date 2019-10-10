@@ -59,7 +59,7 @@ public class DefaultPartnerService implements PartnerService {
                 "WHERE structure_id = '" + structureId +
                 "') " +
                 "SELECT DISTINCT i.id, i.label FROM ids i " +
-                "INNER JOIN " + Incidents.dbSchema + ".incident AS incident ON (incident.partner_id = i.id) ";
+                "WHERE (i.id IN (SELECT partner_id FROM " + Incidents.dbSchema + ".incident))";
         Sql.getInstance().raw(query, SqlResult.validResultHandler(handler));
     }
 

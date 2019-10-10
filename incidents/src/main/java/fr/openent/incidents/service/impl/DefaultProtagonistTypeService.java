@@ -60,7 +60,7 @@ public class DefaultProtagonistTypeService implements ProtagonistTypeService {
                 "WHERE structure_id = '" + structureId +
                 "') " +
                 "SELECT DISTINCT i.id, i.label FROM ids i " +
-                "INNER JOIN " + Incidents.dbSchema + ".protagonist AS protagonist ON (protagonist.type_id = i.id) ";
+                "WHERE (i.id IN (SELECT type_id FROM " + Incidents.dbSchema + ".protagonist))";
         Sql.getInstance().raw(query, SqlResult.validResultHandler(handler));
     }
 

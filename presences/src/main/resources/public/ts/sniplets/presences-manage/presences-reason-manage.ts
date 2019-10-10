@@ -75,10 +75,17 @@ const vm: ViewModel = {
         if (!vm.form.hasOwnProperty("absenceCompliance") ) {
             vm.form.absenceCompliance = true;
         }
+        if (!vm.form.hasOwnProperty("regularisable") ) {
+            vm.form.regularisable = true;
+        }
         vm.form.structureId = window.model.vieScolaire.structure.id;
         let response = await reasonService.create(vm.form);
         vm.proceedAfterAction(response);
+
+        /* Reset form*/
         vm.form.label = '';
+        vm.form.regularisable = true;
+        vm.form.absenceCompliance = true;
     },
 
     async deleteReason(reason: Reason): Promise<void> {
