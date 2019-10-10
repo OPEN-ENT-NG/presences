@@ -1,7 +1,7 @@
 import {SNIPLET_FORM_EMIT_EVENTS, SNIPLET_FORM_EVENTS} from "@common/model";
 import {Absence} from "../models";
 import {idiom as lang, model, moment, toasts} from "entcore";
-import {eventService} from "../services";
+import {eventService, Reason} from "../services";
 
 export enum ABSENCE_FORM_EVENTS {
     EDIT = 'absence-form:edit',
@@ -18,6 +18,7 @@ interface ViewModel {
 
     setFormParams(obj): void;
     setFormDateParams(form, start_date, end_date): void;
+    filterSelect(reasons: Reason[]): Reason[];
 
     editAbsenceForm(obj): void;
 
@@ -71,6 +72,13 @@ const vm: ViewModel = {
 
         form.start_date = getDateFormat(form.startDate, form.startDateTime);
         form.end_date = getDateFormat(form.endDate, form.endDateTime);
+    },
+
+    filterSelect(reasons: Reason[]): Reason[] {
+        if (reasons && reasons.length > 0) {
+            return reasons.filter(option => option.id !== 0 && !option.hidden);
+        }
+        return [];
     },
 
     async editAbsenceForm(obj): Promise<void> {

@@ -9,6 +9,7 @@ export interface ReasonType {
     comment: string;
     default: boolean;
     group: boolean;
+    hidden?: false
 }
 
 export interface EventService {

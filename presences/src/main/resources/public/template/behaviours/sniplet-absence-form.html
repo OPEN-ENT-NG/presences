@@ -40,14 +40,16 @@
                     </span>
                 </div>
 
+                <!-- Reasons -->
                 <div class="absentLightbox-body-info-reason twelve cell table-reason">
                     <label>
                         <select data-ng-model="vm.form.reason_id"
-                                ng-options="reason.id as reason.label for reason in vm.reasonsType">
+                                ng-options="reason.id as reason.label for reason in vm.filterSelect(vm.reasonsType)">
                             <option value="">[[lang.translate('presences.absence.select.empty')]]</option>
                         </select>
                     </label>
                 </div>
+
         </div>
 
     </section>

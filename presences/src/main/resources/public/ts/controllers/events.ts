@@ -1,8 +1,8 @@
 import {_, angular, idiom as lang, moment, ng} from 'entcore';
-import {Event, EventResponse, Events, EventType, Student, Students} from "../models";
+import {EventResponse, Events, EventType, Student, Students} from "../models";
 import {DateUtils} from "@common/utils";
 import {GroupService} from "@common/services/GroupService";
-import {EventService, ReasonType} from "../services";
+import {Reason, ReasonService} from "../services";
 
 declare let window: any;
 
@@ -21,13 +21,13 @@ interface ViewModel {
     filter: Filter;
 
     /* Get reasons type */
-    eventReasonsType: ReasonType[];
-    eventReasonsTypeDescription: ReasonType[];
+    eventReasonsType: Reason[];
+    eventReasonsTypeDescription: Reason[];
 
     /* Events */
     eventType: number[];
     events: Events;
-    multipleSelect: ReasonType;
+    multipleSelect: Reason;
 
     eventTypeState(periods, event): string;
 
@@ -58,7 +58,7 @@ interface ViewModel {
 
     getRegularizedValue(event): boolean;
 
-    filterSelect(options: ReasonType[], event): ReasonType[];
+    filterSelect(options: Reason[], event): Reason[];
 
     changeReason(event): void;
 
@@ -131,8 +131,8 @@ interface ViewModel {
 }
 
 export const eventsController = ng.controller('EventsController', ['$scope', '$route',
-    'GroupService', 'EventService',
-    function ($scope, $route, GroupService: GroupService, EventService: EventService) {
+    'GroupService', 'ReasonService',
+    function ($scope, $route, GroupService: GroupService, ReasonService: ReasonService) {
         const isWidget = $route.current.action === 'dashboard';
         const vm: ViewModel = this;
         vm.filter = {
@@ -155,7 +155,7 @@ export const eventsController = ng.controller('EventsController', ['$scope', '$r
             default: false,
             proving: false,
             group: false
-        } as ReasonType;
+        } as Reason;
         vm.studentSearchInput = '';
         vm.classesSearchInput = '';
         vm.students = new Students();
@@ -210,7 +210,7 @@ export const eventsController = ng.controller('EventsController', ['$scope', '$r
             vm.events.eventType = vm.eventType.toString();
 
             if (!vm.eventReasonsType || vm.eventReasonsType.length <= 1) {
-                vm.eventReasonsType = await EventService.getReasonsType(window.structure.id);
+                vm.eventReasonsType = await ReasonService.getReasons(window.structure.id);
                 vm.eventReasonsTypeDescription = _.clone(vm.eventReasonsType);
                 if (!isWidget) vm.eventReasonsType.push(vm.multipleSelect);
             }
@@ -307,10 +307,10 @@ export const eventsController = ng.controller('EventsController', ['$scope', '$r
         };
 
         /* filtering by removing multiple choices if there is no reason_id */
-        vm.filterSelect = function (options: ReasonType[], event): ReasonType[] {
+        vm.filterSelect = function (options: Reason[], event): Reason[] {
             let reasonIds = getReasonIds(event.events);
             if (reasonIds.every((val, i, arr) => val === arr[0])) {
-                return options.filter(option => option.id !== 0);
+                return options.filter(option => option.id !== 0 && !option.hidden);
             }
             return options;
         };
