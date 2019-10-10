@@ -204,7 +204,7 @@ public class DefaultEventService implements EventService {
 
                 String query = "MATCH (s:Structure {id: {structureId} })<-[:ADMINISTRATIVE_ATTACHMENT]-" +
                         "(u:User {profiles:['Student']})-[:IN]->(:ProfileGroup)-[:DEPENDS]->(c:Class) WHERE u.id IN {idStudents} " +
-                        "RETURN distinct (u.lastName + ' ' + u.firstName) as displayName, u.id as id, c.name as classeName";
+                        "RETURN distinct (u.lastName + ' ' + u.firstName) as displayName, u.id as id, c.name as classeName, c.id as classId";
                 JsonObject params = new JsonObject().put("structureId", structureId).put("idStudents", idStudents);
                 courseHelper.getCourses(structureId, new ArrayList<>(), new ArrayList<>(), startDate, endDate, coursesResult -> {
                     if (coursesResult.isRight()) {
@@ -229,6 +229,7 @@ public class DefaultEventService implements EventService {
                                                                 .put("displayName", student.getString("displayName"))
                                                                 .put("id", student.getString("id"))
                                                                 .put("classeName", student.getString("classeName"))
+                                                                .put("classId", student.getString("classId"))
                                                                 .put("courses", getCourses(student, studentEvents.getJsonObject(k), coursesResult.right().getValue(),
                                                                         filterEvents(studentEvents.getJsonObject(k).getJsonArray("events"),
                                                                                 arrayEvents.getJsonObject(i).getString("start_date"))))

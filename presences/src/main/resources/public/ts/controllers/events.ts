@@ -222,12 +222,15 @@ export const eventsController = ng.controller('EventsController', ['$scope', '$r
             $scope.safeApply();
         };
 
-        vm.editPeriod = ($event, {studentId, date, displayName}): void => {
+        vm.editPeriod = ($event, {studentId, date, displayName, className, classId}): void => {
             $event.stopPropagation();
             window.item = {
                 id: studentId,
                 date,
-                displayName
+                displayName,
+                type: 'USER',
+                groupName: className,
+                groupId: classId
             };
             $location.path(`/calendar/${studentId}?date=${date}`);
             $scope.safeApply();

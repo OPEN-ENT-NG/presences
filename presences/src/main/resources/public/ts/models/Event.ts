@@ -156,6 +156,7 @@ export class Events extends LoadingCollection {
                     studentId: item.student_id,
                     displayName: item.student.displayName,
                     className: item.student.classeName,
+                    classId: item.student.classId,
                     date: moment(item.start_date).format(DateUtils.FORMAT["YEAR-MONTH-DAY"]),
                     dayHistory: item.student.day_history,
                     events: eventsResponse,
