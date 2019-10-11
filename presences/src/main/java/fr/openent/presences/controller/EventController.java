@@ -102,17 +102,6 @@ public class EventController extends ControllerHelper {
         Neo4j.getInstance().execute(query, params, Neo4jResult.validResultHandler(handler));
     }
 
-    @Get("/event/reason/types")
-    @ApiDoc("Retrieve event reason type")
-    public void getEventsReason(HttpServerRequest request) {
-        String structureId = request.getParam("structureId");
-        if (!request.params().contains("structureId")) {
-            badRequest(request);
-            return;
-        }
-        eventService.getEventsReasonType(structureId, DefaultResponseHandler.arrayResponseHandler(request));
-    }
-
     @Post("/events")
     @ApiDoc("Create event")
     @SecuredAction(Presences.CREATE_EVENT)

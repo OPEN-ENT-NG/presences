@@ -44,13 +44,6 @@ public interface EventService {
                        List<String> userId, Boolean regularized, JsonArray userIdFromClasses,
                        Handler<Either<String, JsonObject>> handler);
 
-    /**
-     * Get events reason type
-     *
-     * @param structureId structure identifier
-     * @param handler     function handler returning data
-     */
-    void getEventsReasonType(String structureId, Handler<Either<String, JsonArray>> handler);
 
     /**
      * Create event

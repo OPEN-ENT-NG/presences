@@ -1,11 +1,13 @@
 import {SNIPLET_FORM_EMIT_EVENTS, SNIPLET_FORM_EVENTS} from "@common/model";
 import {Absence} from "../models";
 import {idiom as lang, model, moment, toasts} from "entcore";
-import {eventService, Reason} from "../services";
+import {Reason, reasonService} from "../services";
 
 export enum ABSENCE_FORM_EVENTS {
     EDIT = 'absence-form:edit',
 }
+
+console.log("absenceFormSnipplets");
 
 declare let window: any;
 
@@ -76,7 +78,7 @@ const vm: ViewModel = {
 
     filterSelect(reasons: Reason[]): Reason[] {
         if (reasons && reasons.length > 0) {
-            return reasons.filter(option => option.id !== 0 && !option.hidden);
+            return reasons.filter(option => option.id !== 0);
         }
         return [];
     },
@@ -160,7 +162,7 @@ export const absenceForm = {
             this.vm = vm;
             this.setHandler();
             absenceForm.that = this;
-            vm.reasonsType = await eventService.getReasonsType(window.structure.id);
+            vm.reasonsType = await reasonService.getReasons(window.structure.id);
             vm.safeApply = this.safeApply;
         },
         setHandler: function () {

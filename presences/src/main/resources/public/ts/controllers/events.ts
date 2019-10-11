@@ -326,7 +326,7 @@ export const eventsController = ng.controller('EventsController', ['$scope', '$r
         vm.filterSelect = function (options: Reason[], event): Reason[] {
             let reasonIds = getReasonIds(event.events);
             if (reasonIds.every((val, i, arr) => val === arr[0])) {
-                return options.filter(option => option.id !== 0 && !option.hidden);
+                return options.filter(option => option.id !== 0);
             }
             return options;
         };

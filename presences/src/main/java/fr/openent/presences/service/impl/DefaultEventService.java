@@ -403,12 +403,6 @@ public class DefaultEventService implements EventService {
     }
 
     @Override
-    public void getEventsReasonType(String structureId, Handler<Either<String, JsonArray>> handler) {
-        String placeTypeQuery = "SELECT * FROM " + Presences.dbSchema + ".reason where structure_id = '" + structureId + "'";
-        Sql.getInstance().raw(placeTypeQuery, SqlResult.validResultHandler(handler));
-    }
-
-    @Override
     public void create(JsonObject event, UserInfos user, Handler<Either<String, JsonObject>> handler) {
         JsonArray statements = new JsonArray();
         statements.add(getCreationStatement(event, user));
