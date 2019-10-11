@@ -352,7 +352,9 @@ export const eventsController = ng.controller('EventsController', ['$scope', '$r
                 });
             }
             eventsArrayId = eventsArrayId.filter((item, index) => eventsArrayId.indexOf(item) === index);
-            vm.events.updateReason(eventsArrayId, event.globalReason);
+            vm.events.updateReason(eventsArrayId, event.globalReason).then(() => {
+                if (isWidget) vm.events.page = 0;
+            });
             event.globalCounsellorRegularisation = initGlobalCounsellorRegularisation(event);
         };
 
