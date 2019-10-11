@@ -28,6 +28,7 @@ interface ViewModel {
     eventType: number[];
     events: Events;
     multipleSelect: Reason;
+    provingReasonsMap: any;
 
     eventTypeState(periods, event): string;
 
@@ -75,6 +76,8 @@ interface ViewModel {
     toggleAbsenceRegularised(history, event): void;
 
     getNonRegularizedEvents(events): any[];
+
+    hideGlobalCheckbox(event): boolean;
 
     /* Events description */
     changeDescriptionReason(periods, event): void;
@@ -145,6 +148,7 @@ export const eventsController = ng.controller('EventsController', ['$scope', '$r
             late: $route.current.action !== 'dashboard',
             regularized: false,
         };
+        vm.provingReasonsMap = {};
         vm.mouseIsDown = false;
         vm.eventType = [];
         vm.multipleSelect = {
@@ -212,6 +216,7 @@ export const eventsController = ng.controller('EventsController', ['$scope', '$r
             if (!vm.eventReasonsType || vm.eventReasonsType.length <= 1) {
                 vm.eventReasonsType = await ReasonService.getReasons(window.structure.id);
                 vm.eventReasonsTypeDescription = _.clone(vm.eventReasonsType);
+                vm.eventReasonsType.map((reason: Reason) => vm.provingReasonsMap[reason.id] = reason.proving);
                 if (!isWidget) vm.eventReasonsType.push(vm.multipleSelect);
             }
 
@@ -343,10 +348,12 @@ export const eventsController = ng.controller('EventsController', ['$scope', '$r
                 });
                 event.events.forEach(item => {
                     item.reason_id = event.globalReason;
+                    item.counsellor_regularisation = vm.provingReasonsMap[item.reason_id];
                 });
             }
             eventsArrayId = eventsArrayId.filter((item, index) => eventsArrayId.indexOf(item) === index);
             vm.events.updateReason(eventsArrayId, event.globalReason);
+            event.globalCounsellorRegularisation = initGlobalCounsellorRegularisation(event);
         };
 
         vm.downloadFile = ($event): void => {
@@ -375,14 +382,18 @@ export const eventsController = ng.controller('EventsController', ['$scope', '$r
             let eventsId = [];
             event.dayHistory.forEach(history => {
                 history.events.forEach(e => {
-                    e.counsellor_regularisation = event.globalCounsellorRegularisation;
+                    if (e.reason_id === null || !vm.provingReasonsMap[e.reason_id]) {
+                        e.counsellor_regularisation = event.globalCounsellorRegularisation;
+                    }
                 });
             });
             event.events.forEach(item => {
-                item.counsellor_regularisation = event.globalCounsellorRegularisation;
-                eventsId.push(item.id);
+                if (item.reason_id === null || !vm.provingReasonsMap[item.reason_id]) {
+                    item.counsellor_regularisation = event.globalCounsellorRegularisation;
+                    eventsId.push(item.id);
+                }
             });
-            vm.events.updateRegularized(eventsId, event.globalCounsellorRegularisation);
+            if (eventsId.length > 0) vm.events.updateRegularized(eventsId, event.globalCounsellorRegularisation);
         };
 
         vm.toggleAbsenceRegularised = (history, event): void => {
@@ -433,6 +444,8 @@ export const eventsController = ng.controller('EventsController', ['$scope', '$r
                 });
             });
             vm.events.updateReason(eventsArrayId, history.reason_id);
+            history.counsellor_regularisation = vm.provingReasonsMap[history.reason_id];
+            event.globalCounsellorRegularisation = initGlobalCounsellorRegularisation(event);
             initGlobalReason(event);
         };
 
@@ -561,6 +574,13 @@ export const eventsController = ng.controller('EventsController', ['$scope', '$r
             vm.filter.regularized = !vm.filter.regularized;
             vm.events.regularized = vm.filter.regularized;
             vm.events.page = 0;
+        };
+
+        vm.hideGlobalCheckbox = function (event) {
+            const {events} = event;
+            const isProving = (evt) => evt.reason_id === null || vm.provingReasonsMap[evt.reason_id];
+
+            return events.every(isProving);
         };
 
         /* on switch (watch) */
