@@ -1,4 +1,5 @@
-<lightbox class="sniplet presences sniplet-presence-form sniplet-form-lightbox" show="vm.editReasonLightbox" on-close="vm.closeReasonLightbox()">
+<lightbox class="sniplet presences sniplet-presence-form sniplet-form-lightbox" show="vm.editReasonLightbox"
+          on-close="vm.closeReasonLightbox()">
 
     <!-- Header -->
     <section class="sniplet-form-lightbox-head head">
@@ -27,20 +28,24 @@
         <div class="sniplet-form-lightbox-body-regularisable">
             <div class="md-radio md-radio-inline">
                 <input id="reasonLightBoxRegularisable-true"
-                       data-ng-model="vm.formEdit.regularisable"
+                       data-ng-model="vm.formEdit.proving"
                        type="radio"
                        ng-value="true"
                        name="reasonLightBoxRegularisable"
                        ng-checked="true">
-                <label for="reasonLightBoxRegularisable-true"><i18n>true.maj</i18n></label>
+                <label for="reasonLightBoxRegularisable-true">
+                    <i18n>true.maj</i18n>
+                </label>
             </div>
             <div class="md-radio md-radio-inline">
                 <input id="reasonLightBoxRegularisable-false"
-                       data-ng-model="vm.formEdit.regularisable"
+                       data-ng-model="vm.formEdit.proving"
                        type="radio"
                        ng-value="false"
                        name="reasonLightBoxRegularisable">
-                <label for="reasonLightBoxRegularisable-false"><i18n>false.maj</i18n></label>
+                <label for="reasonLightBoxRegularisable-false">
+                    <i18n>false.maj</i18n>
+                </label>
             </div>
         </div>
 
@@ -56,7 +61,9 @@
                        ng-value="true"
                        name="reasonLightboxCompliance"
                        ng-checked="true">
-                <label for="reasonLightboxCompliance-true"><i18n>true.maj</i18n></label>
+                <label for="reasonLightboxCompliance-true">
+                    <i18n>true.maj</i18n>
+                </label>
             </div>
             <div class="md-radio md-radio-inline">
                 <input id="reasonLightboxCompliance-false"
@@ -64,7 +71,9 @@
                        type="radio"
                        ng-value="false"
                        name="reasonLightboxCompliance">
-                <label for="reasonLightboxCompliance-false"><i18n>false.maj</i18n></label>
+                <label for="reasonLightboxCompliance-false">
+                    <i18n>false.maj</i18n>
+                </label>
             </div>
         </div>
     </section>
@@ -75,7 +84,8 @@
         <div class="sniplet-form-lightbox-footer-button row">
 
             <!-- Submit mode -->
-            <button class="right-magnet" data-ng-click="vm.updateReason()" data-ng-disabled="!vm.isFormValid(vm.formEdit)">
+            <button class="right-magnet" data-ng-click="vm.updateReason()"
+                    data-ng-disabled="!vm.isFormValid(vm.formEdit)">
                 <i18n>edit</i18n>
             </button>
 

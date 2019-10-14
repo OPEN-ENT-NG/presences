@@ -95,7 +95,7 @@ const vm: ViewModel = {
 
         /* Reset form*/
         vm.form.label = '';
-        vm.form.proving = true;
+        vm.form.proving = false;
         vm.form.absenceCompliance = true;
     },
 
