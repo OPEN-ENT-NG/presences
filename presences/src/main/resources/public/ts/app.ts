@@ -51,7 +51,7 @@ routes.define(function ($routeProvider) {
 
     if (model.me.hasWorkflow(rights.workflow.search)) {
         $routeProvider
-            .when('/registry', {
+            .when('/registry/:groupId', {
                 action: 'registry'
             })
     }
