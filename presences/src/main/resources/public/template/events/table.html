@@ -66,7 +66,7 @@
             <label>
                 <select data-ng-model="event.globalReason"
                         data-ng-click="vm.reasonSelect($event)"
-                        data-ng-change="vm.changeReason(event)"
+                        data-ng-change="vm.changeReason(event, $index)"
                         ng-options="reason.id as reason.label for reason in vm.filterSelect(vm.eventReasonsType, event)">
                     <option value="">[[lang.translate('presences.absence.select.empty')]]</option>
                 </select>
@@ -89,7 +89,7 @@
                    ng-class="{half: vm.regularizedChecked(event)}"
                    data-ng-click="vm.stopAbsencePropagation($event)">
                 <input type="checkbox" data-ng-model="event.globalCounsellorRegularisation"
-                       data-ng-change="vm.toggleAllAbsenceRegularised(event)">
+                       data-ng-change="vm.toggleAllAbsenceRegularised(event, $index)">
                 <span></span>
             </label>
         </th>
@@ -111,7 +111,7 @@
                 <span class="events-table-body-description-content-select table-reason">
                      <label>
                         <select data-ng-model="history.reason_id"
-                                data-ng-change="vm.changeDescriptionReason(history, event)"
+                                data-ng-change="vm.changeDescriptionReason(history, event, $parent.$index)"
                                 ng-options="reason.id as reason.label for reason in vm.eventReasonsTypeDescription">
                             <option value="">[[lang.translate('presences.absence.select.empty')]]</option>
                         </select>
@@ -123,7 +123,7 @@
                        ng-style="{opacity: history.reason_id !== null && !vm.provingReasonsMap[history.reason_id] ? 1 : 0}">
                     <input type="checkbox" data-ng-model="history.counsellor_regularisation"
                            ng-disabled="!(history.reason_id !== null && !vm.provingReasonsMap[history.reason_id])"
-                           data-ng-change="vm.toggleAbsenceRegularised(history, event)">
+                           data-ng-change="vm.toggleAbsenceRegularised(history, event, $parent.$index)">
                     <span ng-style="{cursor: history.reason_id !== null && !vm.provingReasonsMap[history.reason_id] ? 'pointer' : 'default'}"></span>
                 </label>
             </div>

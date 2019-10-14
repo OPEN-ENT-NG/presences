@@ -61,7 +61,7 @@ interface ViewModel {
 
     filterSelect(options: Reason[], event): Reason[];
 
-    changeReason(event): void;
+    changeReason(event, index): void;
 
     downloadFile($event): void;
 
@@ -71,16 +71,16 @@ interface ViewModel {
 
     regularizedChecked(event: EventResponse): boolean;
 
-    toggleAllAbsenceRegularised(event: EventResponse): void;
+    toggleAllAbsenceRegularised(event: EventResponse, index: number): void;
 
-    toggleAbsenceRegularised(history, event): void;
+    toggleAbsenceRegularised(history, event, index: number): void;
 
     getNonRegularizedEvents(events): any[];
 
     hideGlobalCheckbox(event): boolean;
 
     /* Events description */
-    changeDescriptionReason(periods, event): void;
+    changeDescriptionReason(periods, event, index: number): void;
 
     /* Collapse event */
     eventId: number;
@@ -146,7 +146,7 @@ export const eventsController = ng.controller('EventsController', ['$scope', '$r
             absences: true,
             departure: true,
             late: $route.current.action !== 'dashboard',
-            regularized: false,
+            regularized: true,
         };
         vm.provingReasonsMap = {};
         vm.mouseIsDown = false;
@@ -195,6 +195,7 @@ export const eventsController = ng.controller('EventsController', ['$scope', '$r
             vm.events.structureId = window.structure.id;
             vm.events.startDate = vm.filter.startDate.toDateString();
             vm.events.endDate = vm.filter.endDate.toDateString();
+            vm.events.regularized = vm.filter.regularized;
 
             if (vm.filter.absences) {
                 if (!vm.eventType.some(e => e == EventType.ABSENCE)) {
@@ -331,7 +332,7 @@ export const eventsController = ng.controller('EventsController', ['$scope', '$r
         };
 
         /* Add global reason_id to all events that exist */
-        vm.changeReason = (event: EventResponse): void => {
+        vm.changeReason = (event: EventResponse, index: number): void => {
             /* Fetch all event id */
             let eventsArrayId = [];
             if (isWidget) {
@@ -356,6 +357,7 @@ export const eventsController = ng.controller('EventsController', ['$scope', '$r
                 if (isWidget) vm.events.page = 0;
             });
             event.globalCounsellorRegularisation = initGlobalCounsellorRegularisation(event);
+            if (vm.filter.regularized) vm.events.all = vm.events.all.filter((evt, i) => i !== index);
         };
 
         vm.downloadFile = ($event): void => {
@@ -380,7 +382,7 @@ export const eventsController = ng.controller('EventsController', ['$scope', '$r
             return !regularized.every((val, i, arr) => val === arr[0]) && !event.globalCounsellorRegularisation;
         };
 
-        vm.toggleAllAbsenceRegularised = (event: EventResponse): void => {
+        vm.toggleAllAbsenceRegularised = (event: EventResponse, index: number): void => {
             let eventsId = [];
             event.dayHistory.forEach(history => {
                 history.events.forEach(e => {
@@ -396,13 +398,20 @@ export const eventsController = ng.controller('EventsController', ['$scope', '$r
                 }
             });
             if (eventsId.length > 0) vm.events.updateRegularized(eventsId, event.globalCounsellorRegularisation);
+            if (vm.filter.regularized) event.events = event.events.filter((event) => eventsId.indexOf(event.id) === -1);
+            if (event.events.length === 0 && vm.filter.regularized) {
+                vm.events.all = vm.events.all.filter((evt, i) => i !== index);
+                vm.eventId = null;
+            }
         };
 
-        vm.toggleAbsenceRegularised = (history, event): void => {
+        vm.toggleAbsenceRegularised = (history, event, index): void => {
             let eventsId = [history.id];
             vm.events.updateRegularized(eventsId, history.counsellor_regularisation);
-            if (!isWidget) event.globalCounsellorRegularisation = initGlobalCounsellorRegularisation(event);
-            else vm.events.page = 0;
+            if (!isWidget) {
+                manageEventDrop(history, event, index);
+                if (event.events.length > 0) event.globalCounsellorRegularisation = initGlobalCounsellorRegularisation(event);
+            } else vm.events.page = 0;
         };
 
         vm.getNonRegularizedEvents = (events): any[] => {
@@ -431,7 +440,7 @@ export const eventsController = ng.controller('EventsController', ['$scope', '$r
         };
 
         /* Change its description reason id */
-        vm.changeDescriptionReason = (history, event: EventResponse): void => {
+        vm.changeDescriptionReason = (history, event: EventResponse, index): void => {
             let eventsArrayId = [history.id];
             event.dayHistory.forEach(e => {
                 e.events.forEach(item => {
@@ -447,9 +456,22 @@ export const eventsController = ng.controller('EventsController', ['$scope', '$r
             });
             vm.events.updateReason(eventsArrayId, history.reason_id);
             history.counsellor_regularisation = vm.provingReasonsMap[history.reason_id];
-            event.globalCounsellorRegularisation = initGlobalCounsellorRegularisation(event);
-            initGlobalReason(event);
+            manageEventDrop(history, event, index);
         };
+
+        function manageEventDrop(history, event, index) {
+            if (history.counsellor_regularisation && vm.filter.regularized) {
+                const {id} = history;
+                event.events = event.events.filter(evt => evt.id !== id);
+            }
+            if (event.events.length === 0 && vm.filter.regularized) {
+                vm.events.all = vm.events.all.filter((evt, i) => i !== index);
+                vm.eventId = null;
+            } else {
+                event.globalCounsellorRegularisation = initGlobalCounsellorRegularisation(event);
+                initGlobalReason(event);
+            }
+        }
 
         /* ----------------------------
           Student methods
@@ -546,6 +568,7 @@ export const eventsController = ng.controller('EventsController', ['$scope', '$r
                 vm.eventType = _.without(vm.eventType, EventType.ABSENCE);
             }
             vm.updateFilter();
+            resetEventId();
         };
 
         vm.switchLateFilter = function () {
@@ -558,6 +581,7 @@ export const eventsController = ng.controller('EventsController', ['$scope', '$r
                 vm.eventType = _.without(vm.eventType, EventType.LATENESS);
             }
             vm.updateFilter();
+            resetEventId();
         };
 
         vm.switchDepartureFilter = function () {
@@ -570,12 +594,18 @@ export const eventsController = ng.controller('EventsController', ['$scope', '$r
                 vm.eventType = _.without(vm.eventType, EventType.DEPARTURE);
             }
             vm.updateFilter();
+            resetEventId();
         };
+
+        function resetEventId() {
+            vm.eventId = null;
+        }
 
         vm.switchRegularizedFilter = async function () {
             vm.filter.regularized = !vm.filter.regularized;
             vm.events.regularized = vm.filter.regularized;
             vm.events.page = 0;
+            resetEventId();
         };
 
         vm.hideGlobalCheckbox = function (event) {
