@@ -1,32 +1,42 @@
 .seriousness {
+  &-0 {
+    color: $white;
+    background: $level-one;
+  }
+
   &-1 {
     color: $white;
-    background: $light-red;
+    background: $level-two;
   }
 
   &-2 {
     color: $white;
-    background: $medium-red;
+    background: $level-three;
   }
 
   &-3 {
     color: $white;
-    background: $red;
+    background: $level-four;
   }
 
   &-4 {
     color: $white;
-    background: $severe-red;
+    background: $level-five;
   }
 
   &-5 {
     color: $white;
-    background: $deep-red;
+    background: $level-six;
   }
 
   &-6 {
     color: $white;
-    background: $dark-red;
+    background: $level-seven;
+  }
+
+  &-7 {
+    color: $white;
+    background: $level-height;
   }
 }
 
