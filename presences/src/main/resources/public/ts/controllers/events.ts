@@ -357,7 +357,7 @@ export const eventsController = ng.controller('EventsController', ['$scope', '$r
                 if (isWidget) vm.events.page = 0;
             });
             event.globalCounsellorRegularisation = initGlobalCounsellorRegularisation(event);
-            if (vm.filter.regularized) vm.events.all = vm.events.all.filter((evt, i) => i !== index);
+            if (vm.filter.regularized && vm.provingReasonsMap[event.globalReason]) vm.events.all = vm.events.all.filter((evt, i) => i !== index);
         };
 
         vm.downloadFile = ($event): void => {
