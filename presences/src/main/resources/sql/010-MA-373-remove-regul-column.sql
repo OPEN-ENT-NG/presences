@@ -1,4 +1,3 @@
-UPDATE presences.reason SET proving = regularisable;
 ALTER TABLE presences.reason
 DROP COLUMN regularisable;
 
