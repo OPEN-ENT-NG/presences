@@ -99,11 +99,11 @@
                         </div>
 
                         <div class="sniplet-addList-content-list-item-icons">
-                            <i class="visible" data-ng-show="!reason.hidden"
+                            <i class="visible" data-ng-show="reason.used && !reason.hidden"
                                data-ng-click="vm.toggleVisibility(reason)"></i>
                             <i class="hidden" data-ng-show="reason.hidden && reason.used"
                                data-ng-click="vm.toggleVisibility(reason)"></i>
-                            <i class="delete" data-ng-show="reason.hidden && !reason.used"
+                            <i class="delete" data-ng-show="!reason.used"
                                data-ng-click="vm.deleteReason(reason)"></i>
                         </div>
                     </li>
