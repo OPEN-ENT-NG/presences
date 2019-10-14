@@ -19,7 +19,7 @@ CREATE OR REPLACE FUNCTION regularize_event() RETURNS TRIGGER AS
     $BODY$
 LANGUAGE plpgsql;
 
-CREATE OR REPLACE TRIGGER regularize_event BEFORE INSERT OR UPDATE OF reason_id ON presences.event
+CREATE TRIGGER regularize_event BEFORE INSERT OR UPDATE OF reason_id ON presences.event
 FOR EACH ROW EXECUTE PROCEDURE regularize_event();
 
 UPDATE presences.event
