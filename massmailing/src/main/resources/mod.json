@@ -1,0 +1,11 @@
+{
+  "main": "fr.openent.massmailing.Massmailing",
+  "port": 8065,
+  "app-name": "Massmailing",
+  "app-address": "/massmailing",
+  "app-icon": "massmailing-large",
+  "app-displayName": "Massmailing",
+  "mode": "dev",
+  "entcore.port": 8090,
+  "auto-redeploy": false
+}

@@ -5,5 +5,6 @@ export interface Idiom {
     addKeys: (keys: any) => void;
     removeAccents: (str: any) => any;
     addDirectives: (module: any) => void;
+    addBundlePromise: (path: string) => Promise<void>;
 }
 

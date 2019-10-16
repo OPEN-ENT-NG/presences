@@ -9,7 +9,7 @@ export interface Scope extends IRootScopeService {
     lang: Idiom;
     template: Template;
     structure: { id: string, name: string };
-    
+
     safeApply(fn?: () => void): void;
 
     hasSearchRight(): boolean;
@@ -26,7 +26,6 @@ export interface Scope extends IRootScopeService {
  **/
 export const mainController = ng.controller('MainController', ['$scope', 'route', '$rootScope', '$route', '$location',
     ($scope: Scope, route, $rootScope, $route, $location) => {
-        idiom.addBundle('/incidents/i18n');
         $scope.structure = {
             id: '',
             name: ''

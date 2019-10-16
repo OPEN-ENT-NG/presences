@@ -22,6 +22,9 @@
       ],
       "@incidents/*": [
         "incidents/src/main/resources/public/ts/*"
+      ],
+      "@massmailing/*": [
+        "massmailing/src/main/resources/public/ts/*"
       ]
     }
   },

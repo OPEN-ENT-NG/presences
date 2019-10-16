@@ -201,3 +201,13 @@ project(":incidents") {
         testCompile 'io.gatling.highcharts:gatling-charts-highcharts:2.2.2'
     }
 }
+
+project(":massmailing") {
+    dependencies {
+        compile project(':common')
+        compileOnly "io.vertx:vertx-core:$vertxVersion"
+        compile "org.entcore:common:$entCoreVersion"
+        testCompile "org.entcore:tests:$entCoreVersion"
+        testCompile 'io.gatling.highcharts:gatling-charts-highcharts:2.2.2'
+    }
+}

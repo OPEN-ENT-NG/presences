@@ -1,0 +1,19 @@
+{
+  "name": "fr.openent~massmailing~0.4-SNAPSHOT",
+  "config": {
+    "main" : "fr.openent.massmailing.Massmailing",
+    "port" : 8065,
+    "app-name" : "Massmailing",
+    "app-address" : "/massmailing",
+    "app-icon" : "Massmailer-large",
+    "host": "${host}",
+    "ssl" : $ssl,
+    "sql": true,
+    "auto-redeploy": false,
+    "userbook-host": "${host}",
+    "integration-mode" : "HTTP",
+    "app-registry.port" : 8012,
+    "mode" : "${mode}",
+    "entcore.port" : 8009
+  }
+}

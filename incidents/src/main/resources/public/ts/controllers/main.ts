@@ -1,5 +1,6 @@
-import {Behaviours, idiom, ng, template} from 'entcore';
+import {idiom, ng, template} from 'entcore';
 import {Idiom, Template} from '@common/interfaces'
+
 import {IRootScopeService} from "angular";
 
 export interface Scope extends IRootScopeService {
@@ -16,8 +17,6 @@ export interface Scope extends IRootScopeService {
  **/
 export const mainController = ng.controller('MainController', ['$scope', 'route', '$rootScope', '$route',
     ($scope: Scope, route, $rootScope, $route) => {
-        idiom.addBundle('/presences/i18n');
-        Behaviours.load('presences').then($scope.safeApply);
         const openContainer = () => template.open('main', `containers/${$route.current.action}`);
         $rootScope.$on("$routeChangeSuccess", openContainer);
 

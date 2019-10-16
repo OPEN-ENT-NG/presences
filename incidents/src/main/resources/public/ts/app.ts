@@ -2,6 +2,9 @@ import {ng, routes} from 'entcore';
 import * as controllers from './controllers';
 import * as directives from './directives';
 import * as services from './services';
+import {DependencyManager} from '@common/manager'
+
+new DependencyManager().load();
 
 for (let directive in directives) {
     ng.directives.push(directives[directive]);
