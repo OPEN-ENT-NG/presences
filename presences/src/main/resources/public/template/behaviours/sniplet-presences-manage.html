@@ -8,7 +8,7 @@
 
     <!-- absence actions -->
     <a class="presence-navigation-item forbidden">
-        <div class="presence-icon"> <i class="add" aria-hidden="true"></i></div>
+        <div class="presence-icon"><i class="add" aria-hidden="true"></i></div>
         <span><i18n>presences.absence.actions</i18n></span>
     </a>
 
@@ -20,7 +20,7 @@
 
     <!-- presences -->
     <a class="presence-navigation-item forbidden">
-        <div class="presence-icon"> <i class="presence" aria-hidden="true"></i></div>
+        <div class="presence-icon"><i class="presence" aria-hidden="true"></i></div>
         <span><i18n>presences.title</i18n></span>
     </a>
 
@@ -40,8 +40,8 @@
     </a>
 
     <!-- publipostage -->
-    <a class="presence-navigation-item forbidden">
-        <div class="presence-icon"> <i class="publipostage" aria-hidden="true"></i></div>
+    <a class="presence-navigation-item" data-ng-click="vm.scrollToElement('massmailing')">
+        <div class="presence-icon"><i class="publipostage" aria-hidden="true"></i></div>
         <span><i18n>presences.publipostage</i18n></span>
     </a>
 
@@ -55,8 +55,8 @@
 <!-- Absence/reason-->
 <div class="sniplet presences absence" id="absence">
     <sniplet
-             template="presences-manage/reason-manage/sniplet-presences-reason-manage"
-             application="presences">
+            template="presences-manage/reason-manage/sniplet-presences-reason-manage"
+            application="presences">
     </sniplet>
 </div>
 
@@ -81,6 +81,12 @@
 
     <!-- lightbox edit incident -->
     <sniplet template="incidents-manage/sniplet-incidents-manage-lightbox" application="incidents"></sniplet>
+</div>
+
+<!-- MASSMAILING MODULE SNIPLETS -->
+<div class="sniplet presences massmailing" id="massmailing">
+    <!-- Massmailing -->
+    <sniplet template="massmailing-manage/sniplet-template-form" application="massmailing"></sniplet>
 </div>
 
 

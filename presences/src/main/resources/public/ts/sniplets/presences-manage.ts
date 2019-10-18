@@ -1,7 +1,8 @@
 import {
     INCIDENTS_PARTNER_EVENT,
     INCIDENTS_PLACE_EVENT,
-    INCIDENTS_PROTAGONIST_TYPE_EVENT, INCIDENTS_SERIOUSNESS_EVENT,
+    INCIDENTS_PROTAGONIST_TYPE_EVENT,
+    INCIDENTS_SERIOUSNESS_EVENT,
     INCIDENTS_TYPE_EVENT
 } from "@common/enum/incidents-event";
 
@@ -11,8 +12,11 @@ console.log("presenceManage sniplet");
 
 interface ViewModel {
     safeApply(fn?: () => void): void;
+
     scrollToElement($element): void;
+
     sendEvent(event, data): void;
+
     respondEvent(event, data): void;
 }
 
@@ -20,10 +24,10 @@ function safeApply() {
     let that = presencesManage.that;
     return new Promise((resolve, reject) => {
         var phase = that.$root.$$phase;
-        if(phase === '$apply' || phase === '$digest') {
-            if(resolve && (typeof(resolve) === 'function')) resolve();
+        if (phase === '$apply' || phase === '$digest') {
+            if (resolve && (typeof (resolve) === 'function')) resolve();
         } else {
-            if (resolve && (typeof(resolve) === 'function')) that.$apply(resolve);
+            if (resolve && (typeof (resolve) === 'function')) that.$apply(resolve);
             else that.$apply();
         }
     });
@@ -92,7 +96,7 @@ export const presencesManage = {
             vm.safeApply = safeApply;
         },
         setHandler: function () {
-            this.$watch(() =>  window.model.vieScolaire.structure, async () => this.$apply());
+            this.$watch(() => window.model.vieScolaire.structure, async () => this.$apply());
 
             /* incident type event */
             this.$on(INCIDENTS_TYPE_EVENT.SEND, (event, args) => vm.sendEvent(event, args));

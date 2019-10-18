@@ -1,0 +1,107 @@
+<div class="sniplet presences sniplet-presence-form">
+    <div class="sniplet-form">
+        <div class="sniplet-header">
+            <span class="sniplet-header-icon"><i class="publipostage" aria-hidden="true"></i></span>
+            <h3 class="sniplet-header-title">
+                <i18n>massmailing.template.form</i18n>
+            </h3>
+        </div>
+        <div class="sniplet-input">
+            <div class="sniplet-input-title">
+                <i18n>massmailing.form.description</i18n>
+            </div>
+            <div class="sniplet-input-title">
+                <i18n>massmailing.template.form.mail.title</i18n>
+            </div>
+            <div class="sniplet-input-title">
+                <i18n>massmailing.template.form.mail.description</i18n>
+            </div>
+            <div class="sniplet-input-form">
+                <div class="cell search-input">
+                    <input type="text" data-ng-model="vm.mail.name" class="cell ng-pristine ng-touched ng-valid"
+                           i18n-placeholder="massmailing.template.form.mail.name.placeholder">
+                </div>
+            </div>
+            <div class="sniplet-input-form row vertical-spacing-twice">
+                <div class="cell eight">
+                    <editor ng-model="vm.mail.content" public="true"></editor>
+                    <div class="right-magnet">
+                        <button data-ng-click="vm.create('MAIL')" data-ng-if="!vm.mail.id">
+                            <i18n>massmailing.add</i18n>
+                        </button>
+                        <button data-ng-click="vm.update(vm.mail, 'MAIL')" data-ng-if="vm.mail.id">
+                            <i18n>massmailing.update</i18n>
+                        </button>
+                    </div>
+                </div>
+                <div class="cell four horizontal-spacing-twice">
+                    <div class="sniplet-input-title">
+                        <i18n>massmailing.available.code</i18n>
+                        :
+                    </div>
+                    <div>[NOM ENFANT]:
+                        <i18n>massmailing.codes.students.name</i18n>
+                    </div>
+                    <div>[CLASSE]:
+                        <i18n>massmailing.codes.class</i18n>
+                    </div>
+                    <div>[NOMBRE ABSENCE]:
+                        <i18n>massmailing.codes.absences.number</i18n>
+                    </div>
+                    <div>[NOMBRE RETARD]:
+                        <i18n>massmailing.codes.lateness.number</i18n>
+                    </div>
+                    <div>[NOMBRE INCIDENT]:
+                        <i18n>massmailing.codes.incident.number</i18n>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="sniplet-input-form row vertical-spacing-twice">
+            <div class="sniplet-addList">
+                <div class="sniplet-addList-content" ng-if="vm.mails.length > 0">
+                    <div class="sniplet-input-title">
+                        <i18n>massmailing.templates.created</i18n>
+                        :
+                    </div>
+                    <ul class="sniplet-addList-content-list">
+                        <li class="sniplet-addList-content-list-item"
+                            ng-repeat="mail in vm.mails | orderBy:'name'">
+
+                            <div class="sniplet-addList-content-list-item-title">
+                                <label class="sniplet-addList-content-list-item-title-label"
+                                       data-ng-click="vm.openTemplate(mail)">[[mail.name]]</label>
+                            </div>
+
+                            <div class="sniplet-addList-content-list-item-icons">
+                                <i class="delete" ng-click="vm.deletion.template = mail; vm.deletion.show = true;"></i>
+                            </div>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<lightbox show="vm.deletion.show">
+    <section class="absentLightbox-head head ng-scope">
+        <h3>
+            <i18n>massmailing.templates.deletion.title</i18n>
+        </h3>
+    </section>
+    <section class="absentLightbox-body body lightbox-form">
+        <p>
+            <i18n>massmailing.template.deletion.message.1</i18n>
+            [[vm.deletion.template.name]]
+            <i18n>massmailing.template.deletion.message.2</i18n>
+            .
+        </p>
+    </section>
+    <section class="absentLightbox-footer">
+        <div class="horizontal-spacing row vertical-spacing">
+            <button class="right-magnet" ng-click="vm.delete(vm.deletion.template)">
+                <i18n>massmailing.delete</i18n>
+            </button>
+        </div>
+    </section>
+</lightbox>

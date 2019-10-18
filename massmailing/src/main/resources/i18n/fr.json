@@ -1,3 +1,27 @@
 {
-  "massmailing.title": "Publipostage"
+  "massmailing.title": "Publipostage",
+  "massmailing.template.form": "Textes pour le publipostage",
+  "massmailing.form.description": "Saisissez ici les différents textes à envoyer lors du publipostage dans l'application Présences",
+  "massmailing.template.form.mail.title": "Publipostage Mail",
+  "massmailing.template.form.mail.description": "L'application Publipostage se charge automatiquement d'indiquer la liste des événements sélectionnés pour la publipostage sous forme de tableau à la fin de votre message. \n\nVous pouvez par ailleurs utiliser des codes qui seront remplacés automatiquement par le nom de l'élève ou sa classe par exemple. Vous trouverez la liste des codes disponibles sous l'éditeur de texte.",
+  "massmailing.template.form.mail.name.placeholder": "Modèle 1",
+  "massmailing.add": "Ajouter",
+  "massmailing.update": "Modifier",
+  "massmailing.delete": "Supprimer",
+  "massmailing.available.code": "Codes disponibles",
+  "massmailing.codes.students.name": "Nom et prénom de l'élève",
+  "massmailing.codes.class": "Nom de la classe",
+  "massmailing.codes.absences.number": "Nombre d'absence",
+  "massmailing.codes.lateness.number": "Nombre de retard",
+  "massmailing.codes.incident.number": "Nombre d'incident",
+  "massmailing.templates.created": "Liste des modèles déjà saisis",
+  "massmailing.templates.creation.success": "Modèle ajouté avec succès",
+  "massmailing.templates.creation.error": "Une erreur est survenue lors de la création du modèle. Merci de réessayer ultèrieurement.",
+  "massmailing.templates.update.success": "Modèle modifié avec succès",
+  "massmailing.templates.update.error": "Une erreur est survenue lors de la modification du modèle. Merci de réessayer ultèrieurement.",
+  "massmailing.templates.deletion.success": "Modèle supprimé avec succès",
+  "massmailing.templates.deletion.error": "Une erreur est survenue lors de la suppression du modèle. Merci de réessayer ultèrieurement.",
+  "massmailing.templates.deletion.title": "Supprimer le modèle",
+  "massmailing.template.deletion.message.1": "Le modèle",
+  "massmailing.template.deletion.message.2": "va être supprimé"
 }
