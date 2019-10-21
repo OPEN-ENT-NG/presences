@@ -1,0 +1,53 @@
+<!-- Empty state -->
+<div class="registry-table-empty" data-ng-show="vm.registries.length === 0">
+    <div class="registry-table-empty-description">
+        <span class="red-bar"></span>
+        <span class="registry-table-empty-description-title">[[lang.translate(vm.emptyState)]]</span>
+        <span class="yellow-bar"></span>
+    </div>
+    <img data-ng-src="/presences/public/img/absences_empty.svg" alt="empty registry">
+</div>
+
+<!-- Template -->
+<div class="registry-table" data-ng-show="vm.registries.length > 0">
+    <ul class="registry-table-title">
+        <li class="registry-table-title-student">
+            <i18n>presences.register.legend.students</i18n>
+        </li>
+        <li class="registry-table-title-days"
+            ng-repeat="dayNumber in vm.monthLength track by $index">
+            [[dayNumber + 1]]
+        </li>
+    </ul>
+    <div class="registry-table-event" ng-repeat="studentEvent in vm.registries track by $index">
+        <div class="registry-table-event-student"
+             ng-class="{
+                m28: studentEvent.days.length === 28,
+                m29: studentEvent.days.length === 29,
+                m30: studentEvent.days.length === 30,
+                m31: studentEvent.days.length === 31,
+              }">
+            <span class="registry-table-event-student-name">[[studentEvent.displayName]]</span>
+        </div>
+        <ul class="registry-table-event-period">
+            <li ng-repeat="day in studentEvent.days track by $index">
+                <div class="absent h[[day.events.length]]" data-ng-show="vm.hasEventType(day.events, vm.eventType[0])">
+                    &nbsp;
+                </div>
+                <div class="lateness h[[day.events.length]]"
+                     data-ng-show="vm.hasEventType(day.events, vm.eventType[1])">
+                    &nbsp;
+                </div>
+                <div class="incident h[[day.events.length]]"
+                     data-ng-show="vm.hasEventType(day.events, vm.eventType[2])">
+                    &nbsp;
+                </div>
+                <div class="departure h[[day.events.length]]"
+                     data-ng-show="vm.hasEventType(day.events, vm.eventType[3])">
+                    &nbsp;
+                </div>
+            </li>
+        </ul>
+    </div>
+
+</div>

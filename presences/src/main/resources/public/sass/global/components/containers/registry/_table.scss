@@ -1,0 +1,133 @@
+$registry-line-height: 40px;
+
+ul {
+  list-style-type: none;
+}
+
+/* Empty state design */
+.registry-table-empty {
+  text-align: center;
+
+  &-description {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding-bottom: 24px;
+
+    &-title {
+      color: $presences-middle-grey;
+      padding: 0 12px;
+    }
+  }
+
+  img {
+    width: 32%;
+  }
+}
+
+/* Table design */
+.registry-table {
+  &-title {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: center;
+    background-color: $presences-white;
+    color: $presences-grey;
+    position: relative;
+    box-shadow: 0 4px 10px -2px rgba(0, 0, 0, 0.3);
+    margin-bottom: 0;
+    padding: 0;
+    height: $registry-line-height;
+    border: 1px solid $presences-grey-clear;
+
+    &-student {
+      width: 100%;
+      text-align: center;
+    }
+
+    &-days {
+      width: 10%;
+      text-align: center;
+    }
+  }
+
+  &-event {
+    display: flex;
+    flex-direction: row;
+    color: $presences-black;
+    height: $registry-line-height;
+    padding: 0;
+    background-color: $presences-beige-light;
+
+    &:nth-child(even) {
+      background-color: $presences-white;
+    }
+
+    &-student {
+      display: flex;
+      align-items: center;
+      height: inherit;
+
+      &-name {
+        padding-left: 16px;
+      }
+
+      &.m28 {
+        width: 26.3%;
+      }
+
+      &.m29 {
+        width: 25.8%;
+      }
+
+      &.m30 {
+        width: 24.9%;
+      }
+
+      &.m31 {
+        width: 24.4%;
+      }
+    }
+
+    &-period {
+      flex: 1;
+      display: flex;
+      flex-direction: row;
+      padding: 0;
+      margin: 0;
+      height: inherit;
+
+      li {
+        display: flex;
+        flex-direction: column;
+        width: 10%;
+        height: inherit;
+        text-align: center;
+        border-left: 1px solid $presences-grey-light;
+
+        .absent {
+          background-color: $presences-red
+        }
+
+        .lateness {
+          background-color: $presences-purple
+        }
+
+        .departure {
+          background-color: $presences-green
+        }
+
+        .incident {
+          background-color: $presences-grey-incident
+        }
+
+        @for $i from 1 through 5 {
+          .h#{$i} {
+            height: $registry-line-height / $i;
+          }
+        }
+      }
+    }
+  }
+}

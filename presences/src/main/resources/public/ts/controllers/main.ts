@@ -42,6 +42,10 @@ export const mainController = ng.controller('MainController', ['$scope', 'route'
             getRegister: () => {
                 template.open('main', `containers/registers`);
             },
+            registry: () => {
+                if (!window.item) $location.path('/');
+                template.open('main', `containers/registry`);
+            },
             events: () => {
                 template.open('main', `containers/events`);
             },

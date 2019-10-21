@@ -48,6 +48,33 @@
   }
 
   .dashboard-search-row {
+
+    &-searchs {
+      display: flex;
+      justify-content: space-evenly;
+
+      .row {
+        width: 547px;
+      }
+
+      .search-registry {
+        .input-async-autocomplete {
+          &::before {
+            @include fonticon();
+            content: "\e812";
+          }
+
+          input[type="text"] {
+            border: solid 3px $presences-grey;
+
+            &:focus {
+              border-bottom: solid 3px $presences-grey !important;
+            }
+          }
+        }
+      }
+    }
+
     .input-async-autocomplete {
       line-height: 48px;
 

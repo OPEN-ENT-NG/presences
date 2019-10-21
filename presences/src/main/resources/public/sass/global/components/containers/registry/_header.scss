@@ -1,0 +1,25 @@
+.registry-header {
+  &-title {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 20px;
+    h1 {
+      margin-bottom: 0;
+    }
+    .search-input {
+      flex-shrink: 2;
+    }
+  }
+}
+
+.registry-eventTypeFilter {
+  display: flex;
+  justify-content: space-between;
+  padding-top: 8px;
+
+  ul {
+    padding-left: 10px !important;
+    padding-right: 10px !important;
+  }
+}

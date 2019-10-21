@@ -88,6 +88,24 @@ public class DefaultEventService implements EventService {
                 })));
     }
 
+    @Override
+    public void get(String startDate, String endDate, List<Number> eventType, List<String> users, Handler<Either<String, JsonArray>> handler) {
+        JsonArray params = new JsonArray()
+                .add(startDate)
+                .add(endDate)
+                .addAll(new JsonArray(eventType))
+                .addAll(new JsonArray(users));
+
+        String query = "SELECT start_date, end_date, student_id, type_id " +
+                "FROM presences.event " +
+                "WHERE start_date >= ? " +
+                "AND end_date <= ? " +
+                "AND type_id IN " + Sql.listPrepared(eventType) +
+                " AND student_id IN " + Sql.listPrepared(users);
+
+        Sql.getInstance().prepared(query, params, SqlResult.validResultHandler(handler));
+    }
+
     /**
      * GET query to fetch incidents
      *

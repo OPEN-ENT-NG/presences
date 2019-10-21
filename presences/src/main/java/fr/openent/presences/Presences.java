@@ -1,5 +1,6 @@
 package fr.openent.presences;
 
+import fr.openent.presences.common.incidents.Incidents;
 import fr.openent.presences.controller.*;
 import io.vertx.core.eventbus.EventBus;
 import org.entcore.common.http.BaseServer;
@@ -19,6 +20,7 @@ public class Presences extends BaseServer {
     public static final String READ_EXEMPTION = "presences.exemption.read";
     public static final String MANAGE_EXEMPTION = "presences.exemption.manage";
     public static final String MANAGE = "presences.manage";
+    public static final String REGISTRY = "presences.registry";
 
     // Widget rights
     public static final String ALERTS_WIDGET = "presences.widget.alerts";
@@ -38,7 +40,7 @@ public class Presences extends BaseServer {
         dbSchema = config.getString("db-schema");
         ebViescoAddress = "viescolaire";
         final EventBus eb = getEventBus(vertx);
-        final String exportCron = config.getString("export-cron");
+//        final String exportCron = config.getString("export-cron");
 
 
         addController(new PresencesController(eb));
@@ -50,9 +52,13 @@ public class Presences extends BaseServer {
         addController(new SearchController(eb));
         addController(new CalendarController(eb));
         addController(new ReasonController());
+        addController(new RegistryController(eb));
 
         // Controller that create fake rights for widgets
         addController(new FakeRight());
+
+        //Init incident
+        Incidents.getInstance().init(eb);
 
 
         /*

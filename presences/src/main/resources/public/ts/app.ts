@@ -42,6 +42,13 @@ routes.define(function ($routeProvider) {
             })
     }
 
+    if (model.me.hasWorkflow(rights.workflow.readRegistry)) {
+        $routeProvider
+            .when('/registry', {
+                action: 'registry'
+            })
+    }
+
     if (model.me.hasWorkflow(rights.workflow.search)) {
         $routeProvider
             .when('/calendar/:studentId', {

@@ -11,7 +11,8 @@
         </div>
     </div>
     <div class="dashboard-search-row" workflow="presences.search">
-        <div class="six centered">
+        <div class="dashboard-search-row-searchs">
+            <!-- Search to access calendar -->
             <async-autocomplete ng-disabled="false"
                                 ng-model="vm.filter.search.item"
                                 ng-change="vm.selectItem"
@@ -19,10 +20,22 @@
                                 options="vm.filter.search.items"
                                 placeholder="presences.dashboard.search.placeholder"
                                 search="vm.filter.search.item"></async-autocomplete>
+
+            <!-- Search to access registry -->
+            <async-autocomplete class="search-registry"
+                                ng-disabled="false"
+                                ng-model="vm.filter.searchClass.item"
+                                ng-change="vm.selectItemToRegistry"
+                                on-search="vm.searchItemToRegistry"
+                                options="vm.filter.searchClass.items"
+                                placeholder="presences.dashboard.search.registry.placeholder"
+                                search="vm.filter.searchClass.item"></async-autocomplete>
         </div>
     </div>
+
     <!--Date-->
     <h2 class="current-date" ng-bind="::vm.date"></h2>
+
     <div ng-include="'/presences/public/template/widgets/alerts.html'" class="vertical-spacing-six"
          workflow="presences.widget_alerts"></div>
     <div ng-include="'/presences/public/template/widgets/forgotten_registers.html'" class="vertical-spacing-six"

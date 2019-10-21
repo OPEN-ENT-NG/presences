@@ -45,4 +45,12 @@ public interface GroupService {
      * @param handler         Function handler returning data
      */
     void getGroupStudents(String groupIdentifier, Handler<Either<String, JsonArray>> handler);
+
+    /**
+     * get groups students
+     *
+     * @param groups  groups identifiers
+     * @param handler FUnction handler returning data
+     */
+    void getGroupStudents(List<String> groups, Handler<Either<String, JsonArray>> handler);
 }
