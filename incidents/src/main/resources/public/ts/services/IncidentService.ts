@@ -1,6 +1,6 @@
 import {ng} from 'entcore'
 import http from 'axios';
-import {Place, Partner, IncidentType, ProtagonistType, Seriousness} from "@incidents/services";
+import {IncidentType, Partner, Place, ProtagonistType, Seriousness} from "@incidents/services";
 
 export interface IncidentParameterType {
     place: Place[];
@@ -16,9 +16,22 @@ export interface IncidentService {
 
 export const incidentService: IncidentService = {
     getIncidentParameterType: async (structureId: string) => {
+        function builderIncidentParameterType(data) {
+            let dataModel = data;
+            for (let type in dataModel) {
+                if (dataModel.hasOwnProperty(type)) {
+                    dataModel[type].forEach(item => {
+                        item.structureId = item.structure_id;
+                        delete item.structure_id;
+                    });
+                }
+            }
+            return dataModel;
+        }
+
         try {
             const {data} = await http.get(`/incidents/incidents/parameter/types?structureId=${structureId}`);
-            return data;
+            return builderIncidentParameterType(data);
         } catch (err) {
             throw err;
         }

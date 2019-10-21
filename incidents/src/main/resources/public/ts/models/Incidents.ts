@@ -98,7 +98,6 @@ export class Incident {
             && this.description
             && this.date
             && Object.keys(this.place).length !== 0
-            && Object.keys(this.partner).length !== 0
             && Object.keys(this.incidentType).length !== 0
             && Object.keys(this.seriousness).length !== 0
             && this.protagonists.length > 0;

@@ -48,7 +48,7 @@
                         <div class="sniplet-addList-content-list-item-icons">
                             <i class="visible" data-ng-show="partner.used && !partner.hidden"
                                data-ng-click="vm.toggleVisibility(partner)"></i>
-                            <i class="hidden" data-ng-show="partner.hidden && partner.used"
+                            <i class="invisible" data-ng-show="partner.hidden && partner.used"
                                data-ng-click="vm.toggleVisibility(partner)"></i>
                             <i class="delete" data-ng-show="!partner.used"
                                data-ng-click="vm.delete(partner)"></i>

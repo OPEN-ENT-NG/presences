@@ -1,5 +1,5 @@
 import {Incident, ProtagonistForm, Student, Students} from "../models";
-import {IncidentParameterType, incidentService} from "../services";
+import {IncidentParameterType, incidentService, Partner} from "../services";
 import {_, idiom as lang, moment, notify, toasts} from "entcore";
 import {SNIPLET_FORM_EMIT_EVENTS, SNIPLET_FORM_EVENTS} from '@common/model'
 
@@ -18,6 +18,7 @@ interface ViewModel {
     incidentStudentsForm: Students;
     incidentParameterType: IncidentParameterType;
     isLightboxActive: boolean;
+    emptyParameter: Partner;
 
     safeApply(fn?: () => void): void;
 
@@ -59,12 +60,14 @@ const vm: ViewModel = {
     incidentForm: null,
     incidentParameterType: null,
     isLightboxActive: false,
+    emptyParameter: null,
 
     createIncidentLightbox: async function () {
         vm.isLightboxActive = true;
         vm.lightbox.createMode = true;
         if (!vm.incidentParameterType) {
             vm.incidentParameterType = await incidentService.getIncidentParameterType(window.structure.id);
+            vm.emptyParameter = vm.incidentParameterType.partner.find(item => item.structureId === '');
             vm.incidentParameterType.partner.pop();
         }
         // check if add empty state
@@ -129,6 +132,9 @@ const vm: ViewModel = {
 
     createIncident: async function () {
         try {
+            if (!vm.incidentForm.partner.hasOwnProperty('id')) {
+                vm.incidentForm.partner = vm.emptyParameter;
+            }
             let response = await vm.incidentForm.create();
             if (response.status == 200 || response.status == 201) {
                 toasts.confirm('incidents.form.succeed');
@@ -147,6 +153,9 @@ const vm: ViewModel = {
 
     saveIncident: async function () {
         try {
+            if (!vm.incidentForm.partner.hasOwnProperty('id')) {
+                vm.incidentForm.partner = vm.emptyParameter;
+            }
             let response = await vm.incidentForm.update();
             if (response.status == 200 || response.status == 201) {
 
@@ -219,6 +228,7 @@ const vm: ViewModel = {
         vm.lightbox.editMode = true;
         if (!vm.incidentParameterType) {
             vm.incidentParameterType = await incidentService.getIncidentParameterType(window.structure.id);
+            vm.emptyParameter = vm.incidentParameterType.partner.find(item => item.structureId === '');
             vm.incidentParameterType.partner.pop();
             vm.safeApply();
         }
