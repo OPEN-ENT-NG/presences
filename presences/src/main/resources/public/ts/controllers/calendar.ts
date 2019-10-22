@@ -41,7 +41,7 @@ interface ViewModel {
 
     formatExemptionDate(date: any): string;
 
-    editAbsenceForm(item: Course): void;
+    editAbsenceForm(item: Course, items): void;
 }
 
 interface CalendarScope extends Scope {
@@ -159,7 +159,7 @@ export const calendarController = ng.controller('CalendarController', ['$scope',
 
             coursesItems.forEach(course => {
 
-                /* Coloring course in red if inside global justified absent bloc */
+                /* Coloring course in red if inside global absent bloc */
                 absenceItems.forEach(absenceItem => {
                     if (isItemInside(course, absenceItem)) {
                         course.querySelectorAll(".course-item")[0].classList.add("isAbsent");
@@ -276,9 +276,24 @@ export const calendarController = ng.controller('CalendarController', ['$scope',
             return item._id === '0' && item.absence && item.absenceReason > 0;
         };
 
-        vm.editAbsenceForm = function (item): void {
+        vm.editAbsenceForm = function (item, items): void {
             if (item._id !== "0") {
-                return;
+                let absenceItem = items
+                    .find(absence =>
+                        absence._id === '0' &&
+                        DateUtils.format(absence.startDate, DateUtils.FORMAT["YEAR-MONTH-DAY"]) ===
+                        DateUtils.format(item.startDate, DateUtils.FORMAT["YEAR-MONTH-DAY"])
+                        &&
+                        DateUtils.format(absence.endDate, DateUtils.FORMAT["YEAR-MONTH-DAY"]) ===
+                        DateUtils.format(item.endDate, DateUtils.FORMAT["YEAR-MONTH-DAY"]));
+                if (absenceItem === undefined) {
+                    return;
+                }
+                if (item.startDate >= absenceItem.startDate && item.endDate <= absenceItem.endDate) {
+                    $scope.$broadcast(ABSENCE_FORM_EVENTS.EDIT, absenceItem);
+                } else {
+                    return;
+                }
             }
             $scope.$broadcast(ABSENCE_FORM_EVENTS.EDIT, item);
         };

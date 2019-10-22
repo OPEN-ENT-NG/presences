@@ -1,4 +1,4 @@
-<div class="course-item-container" data-ng-click="vm.editAbsenceForm(item)">
+<div class="course-item-container" data-ng-click="vm.editAbsenceForm(item, items)">
     <div class="absence" ng-if="item.containsAbsence && !item.containsReasonAbsence">&nbsp;</div>
     <div class="exemption" ng-if="item.exempted" ng-class="{absent: item.containsAbsence}">&nbsp;</div>
     <div class="absenceReason" ng-if="!item.containsAbsence && item.containsReasonAbsence">&nbsp;</div>

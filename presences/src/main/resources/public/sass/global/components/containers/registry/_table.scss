@@ -1,4 +1,4 @@
-$registry-line-height: 40px;
+$registry-line-height: 30px;
 
 ul {
   list-style-type: none;
@@ -60,6 +60,11 @@ ul {
     padding: 0;
     background-color: $presences-beige-light;
 
+    &:hover {
+      background: rgba(255, 182, 0, 0.5) !important;
+      color: $presences-grey;
+    }
+
     &:nth-child(even) {
       background-color: $presences-white;
     }
@@ -71,6 +76,7 @@ ul {
 
       &-name {
         padding-left: 16px;
+        font-size: 14px;
       }
 
       &.m28 {
@@ -104,7 +110,7 @@ ul {
         width: 10%;
         height: inherit;
         text-align: center;
-        border-left: 1px solid $presences-grey-light;
+        border-left: 1px solid $presences-grey-incident;
 
         .absent {
           background-color: $presences-red
