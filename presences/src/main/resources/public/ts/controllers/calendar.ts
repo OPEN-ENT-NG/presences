@@ -36,20 +36,27 @@ interface ViewModel {
     searchItem(value: string): void;
 
     changeAbsence(item: Course): string;
+
     loadCourses(): Promise<void>;
 
     formatExemptionDate(date: any): string;
-    editAbsenceForm(item: Course): void;
+
+    editAbsenceForm(item: Course, items): void;
 }
 
 interface CalendarScope extends Scope {
     hoverExemption($event, exemption: { start_date: string, end_date: string }): void;
 
     hoverOutExemption(): void;
+
     isAbsenceOnly(item): boolean;
+
     isAbsenceJustifiedOnly(item): boolean;
+
     isGlobalAbsence(item): boolean;
+
     isGlobalAbsenceReason(item): boolean;
+
     isPastItem(item): boolean;
 }
 
@@ -71,6 +78,13 @@ export const calendarController = ng.controller('CalendarController', ['$scope',
         vm.courses = {list: []};
         vm.slots = {list: []};
 
+        if ('date' in window.item) {
+            const date = moment(window.item.date);
+            model.calendar.setDate(date);
+        } else {
+            model.calendar.setDate(moment());
+        }
+
         // model.calendar.eventer.on('calendar.create-item', () => {
         //     console.info(model.calendar.newItem);
         //     console.info(model.calendar.newItem.beginning.format());
@@ -87,7 +101,6 @@ export const calendarController = ng.controller('CalendarController', ['$scope',
         });
 
         model.calendar.on('date-change', initCalendar);
-        model.calendar.setDate(moment());
 
         $scope.$on('$destroy', () => model.calendar.callbacks['date-change'] = []);
 
@@ -127,10 +140,9 @@ export const calendarController = ng.controller('CalendarController', ['$scope',
                 if (item === undefined || item === null) return;
                 if ((item.parentNode as Element).querySelector('.globalAbsence')) {
                     item.setAttribute("class", "schedule-item schedule-globalAbsence");
-                } else if ((item.parentNode as Element).querySelector('.globalAbsenceReason'))  {
+                } else if ((item.parentNode as Element).querySelector('.globalAbsenceReason')) {
                     item.setAttribute("class", "schedule-item schedule-globalAbsenceReason");
-                }
-                else {
+                } else {
                     item.setAttribute("class", "schedule-item schedule-course");
                 }
             });
@@ -147,7 +159,7 @@ export const calendarController = ng.controller('CalendarController', ['$scope',
 
             coursesItems.forEach(course => {
 
-                /* Coloring course in red if inside global justified absent bloc */
+                /* Coloring course in red if inside global absent bloc */
                 absenceItems.forEach(absenceItem => {
                     if (isItemInside(course, absenceItem)) {
                         course.querySelectorAll(".course-item")[0].classList.add("isAbsent");
@@ -248,25 +260,42 @@ export const calendarController = ng.controller('CalendarController', ['$scope',
             hover.style.display = 'none';
         };
 
-        $scope.isAbsenceOnly = function(item): boolean {
+        $scope.isAbsenceOnly = function (item): boolean {
             return item.absence && item.absenceReason === 0;
         };
 
-        $scope.isAbsenceJustifiedOnly = function(item): boolean {
+        $scope.isAbsenceJustifiedOnly = function (item): boolean {
             return item.absence && item.absenceReason > 0;
         };
 
-        $scope.isGlobalAbsence = function(item): boolean {
+        $scope.isGlobalAbsence = function (item): boolean {
             return item._id === '0' && item.absence && item.absenceReason === 0;
         };
 
-        $scope.isGlobalAbsenceReason = function(item): boolean {
+        $scope.isGlobalAbsenceReason = function (item): boolean {
             return item._id === '0' && item.absence && item.absenceReason > 0;
         };
 
-        vm.editAbsenceForm = function(item): void {
+        vm.editAbsenceForm = function (item, items): void {
             if (item._id !== "0") {
-                return;
+                let absenceItem = items
+                    .find(absence =>
+                        absence._id === '0' &&
+                        DateUtils.format(absence.startDate, DateUtils.FORMAT["YEAR-MONTH-DAY"]) ===
+                        DateUtils.format(item.startDate, DateUtils.FORMAT["YEAR-MONTH-DAY"])
+                        &&
+                        DateUtils.format(absence.endDate, DateUtils.FORMAT["YEAR-MONTH-DAY"]) ===
+                        DateUtils.format(item.endDate, DateUtils.FORMAT["YEAR-MONTH-DAY"]));
+                if (absenceItem === undefined) {
+                    return;
+                }
+                if ((item.startDate >= absenceItem.startDate) && ((item.endDate <= absenceItem.endDate) ||
+                    absenceItem.endDate > item.startDate)) {
+                    $scope.$broadcast(ABSENCE_FORM_EVENTS.EDIT, absenceItem);
+                    return;
+                } else {
+                    return;
+                }
             }
             $scope.$broadcast(ABSENCE_FORM_EVENTS.EDIT, item);
         };

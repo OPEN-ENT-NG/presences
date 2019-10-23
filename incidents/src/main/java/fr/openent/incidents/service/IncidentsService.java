@@ -33,6 +33,16 @@ public interface IncidentsService {
     void get(String structureId, String startDate, String endDate, String userId, Handler<Either<String, JsonArray>> handler);
 
     /**
+     * Retrieve incidents for given users in date range
+     *
+     * @param startDate start of range
+     * @param endDate   end of range
+     * @param users     user list
+     * @param handler   Function handler returning data
+     */
+    void get(String startDate, String endDate, List<String> users, Handler<Either<String, JsonArray>> handler);
+
+    /**
      * Get Incidents count
      *
      * @param structureId structure identifier

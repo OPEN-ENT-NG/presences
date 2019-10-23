@@ -55,8 +55,8 @@ public class DefaultReasonService implements ReasonService {
                 "WHERE structure_id = '" + structureId +
                 "') " +
                 "SELECT DISTINCT i.id, i.label FROM ids i " +
-                "INNER JOIN " + Presences.dbSchema + ".event AS event ON (event.reason_id = i.id) " +
-                "INNER JOIN " + Presences.dbSchema + ".absence AS absence ON (absence.reason_id = i.id)";
+                "WHERE (i.id IN (SELECT reason_id FROM " + Presences.dbSchema + ".event))" +
+                "OR (i.id IN (SELECT reason_id FROM " + Presences.dbSchema + ".absence))";
         Sql.getInstance().raw(query, SqlResult.validResultHandler(handler));
     }
 
@@ -68,25 +68,25 @@ public class DefaultReasonService implements ReasonService {
     @Override
     public void create(JsonObject reasonBody, Handler<Either<String, JsonObject>> handler) {
         String query = "INSERT INTO " + Presences.dbSchema + ".reason " +
-                "(structure_id, label, proving, comment, hidden, absence_compliance, regularisable)" +
-                "VALUES (?, ?, true, '', false, ?, ?) RETURNING id";
+                "(structure_id, label, proving, comment, hidden, absence_compliance)" +
+                "VALUES (?, ?, ?, '', false, ?) RETURNING id";
         JsonArray params = new JsonArray()
                 .add(reasonBody.getString("structureId"))
                 .add(reasonBody.getString("label"))
-                .add(reasonBody.getBoolean("absenceCompliance"))
-                .add(reasonBody.getBoolean("regularisable"));
+                .add(reasonBody.getBoolean("proving"))
+                .add(reasonBody.getBoolean("absenceCompliance"));
         Sql.getInstance().prepared(query, params, SqlResult.validUniqueResultHandler(handler));
     }
 
     @Override
     public void put(JsonObject reasonBody, Handler<Either<String, JsonObject>> handler) {
         String query = "UPDATE presences.reason " +
-                "SET label = ?, absence_compliance = ?, hidden = ?, regularisable = ? WHERE id = ? RETURNING id";
+                "SET label = ?, absence_compliance = ?, hidden = ?, proving = ? WHERE id = ? RETURNING id";
         JsonArray params = new JsonArray()
                 .add(reasonBody.getString("label"))
                 .add(reasonBody.getBoolean("absenceCompliance"))
                 .add(reasonBody.getBoolean("hidden"))
-                .add(reasonBody.getBoolean("regularisable"))
+                .add(reasonBody.getBoolean("proving"))
                 .add(reasonBody.getInteger("id"));
         Sql.getInstance().prepared(query, params, SqlResult.validUniqueResultHandler(handler));
     }

@@ -15,7 +15,8 @@
                 <i18n>presences.absence.reason.form.input</i18n>
             </label>
             <div class="cell four search-input sniplet-input-form">
-                <input type="text" data-ng-model="vm.form.label" class="twelve cell" i18n-placeholder="maladie.placeholder">
+                <input type="text" data-ng-model="vm.form.label" class="twelve cell"
+                       i18n-placeholder="maladie.placeholder">
             </div>
         </div>
 
@@ -27,21 +28,24 @@
             <div>
                 <div class="md-radio md-radio-inline">
                     <input id="regularisable_true"
-                           data-ng-model="vm.form.regularisable"
+                           data-ng-model="vm.form.proving"
                            type="radio"
-                           ng-init="vm.form.regularisable = true"
-                           ng-value="true"
+                           ng-value="false"
                            name="radio-regularisable"
                            ng-checked="true">
-                    <label for="regularisable_true"><i18n>true.maj</i18n></label>
+                    <label for="regularisable_true">
+                        <i18n>true.maj</i18n>
+                    </label>
                 </div>
                 <div class="md-radio md-radio-inline">
                     <input id="regularisable_false"
-                           data-ng-model="vm.form.regularisable"
+                           data-ng-model="vm.form.proving"
                            type="radio"
-                           ng-value="false"
+                           ng-value="true"
                            name="radio-regularisable">
-                    <label for="regularisable_false"><i18n>false.maj</i18n></label>
+                    <label for="regularisable_false">
+                        <i18n>false.maj</i18n>
+                    </label>
                 </div>
             </div>
         </div>
@@ -59,7 +63,9 @@
                            ng-value="true"
                            name="radio-compliance"
                            ng-checked="true">
-                    <label for="compliance_true"><i18n>true.maj</i18n></label>
+                    <label for="compliance_true">
+                        <i18n>true.maj</i18n>
+                    </label>
                 </div>
                 <div class="md-radio md-radio-inline">
                     <input id="compliance_false"
@@ -67,7 +73,9 @@
                            type="radio"
                            ng-value="false"
                            name="radio-compliance">
-                    <label for="compliance_false"><i18n>false.maj</i18n></label>
+                    <label for="compliance_false">
+                        <i18n>false.maj</i18n>
+                    </label>
                 </div>
             </div>
         </div>
@@ -91,11 +99,11 @@
                         </div>
 
                         <div class="sniplet-addList-content-list-item-icons">
-                            <i class="visible" data-ng-show="!reason.hidden"
+                            <i class="visible" data-ng-show="reason.used && !reason.hidden"
                                data-ng-click="vm.toggleVisibility(reason)"></i>
-                            <i class="hidden" data-ng-show="reason.hidden && reason.used"
+                            <i class="invisible" data-ng-show="reason.hidden && reason.used"
                                data-ng-click="vm.toggleVisibility(reason)"></i>
-                            <i class="delete" data-ng-show="reason.hidden && !reason.used"
+                            <i class="delete" data-ng-show="!reason.used"
                                data-ng-click="vm.deleteReason(reason)"></i>
                         </div>
                     </li>

@@ -70,6 +70,7 @@ const vm: ViewModel = {
         form.id = seriousness.id;
         form.hidden = seriousness.hidden;
         form.label = seriousness.label;
+        form.level = seriousness.level;
         await seriousnessService.update(form);
     },
 

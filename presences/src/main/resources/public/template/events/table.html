@@ -57,7 +57,7 @@
                     tooltip="[[periods.name]]">
                 </li>
 
-                <li><i class="tableEdit forbidden" data-ng-click="vm.editPeriod($event)"></i></li>
+                <li><i class="tableEdit" data-ng-click="vm.editPeriod($event, event)"></i></li>
             </ul>
         </th>
 
@@ -66,10 +66,12 @@
             <label>
                 <select data-ng-model="event.globalReason"
                         data-ng-click="vm.reasonSelect($event)"
-                        data-ng-change="vm.changeReason(event)"
-                        ng-options="reason.id as reason.label for reason in vm.filterSelect(vm.eventReasonsType, event)">
+                        data-ng-change="vm.changeReason(event, $index)"
+                        ng-options="reason.id as reason.label for reason in vm.filterSelect(vm.eventReasonsType, event)"
+                        options-disabled="reason.hidden for reason in vm.eventReasonsType">
                     <option value="">[[lang.translate('presences.absence.select.empty')]]</option>
                 </select>
+
 
             </label>
         </th>
@@ -84,10 +86,12 @@
 
         <!-- Absence regularised -->
         <th class="text-center">
-            <label class="checkbox" ng-class="{half: vm.regularizedChecked(event)}"
+            <label class="checkbox"
+                   ng-style="{ opacity: vm.hideGlobalCheckbox(event) ? 0 : 1 }"
+                   ng-class="{half: vm.regularizedChecked(event)}"
                    data-ng-click="vm.stopAbsencePropagation($event)">
                 <input type="checkbox" data-ng-model="event.globalCounsellorRegularisation"
-                       data-ng-change="vm.toggleAllAbsenceRegularised(event)">
+                       data-ng-change="vm.toggleAllAbsenceRegularised(event, $index)">
                 <span></span>
             </label>
         </th>
@@ -103,26 +107,28 @@
                 <span></span>
 
                 <!--Date-->
-                <span class="events-table-body-description-content-date">[[history.start_date | date:'HH:mm']]-[[history.end_date | date:'HH:mm']]</span>
+                <span class="events-table-body-description-content-date">[[history.start_date | date:'HH:mm']] - [[history.end_date | date:'HH:mm']]</span>
 
                 <!--Select-->
                 <span class="events-table-body-description-content-select table-reason">
                      <label>
                         <select data-ng-model="history.reason_id"
-                                data-ng-change="vm.changeDescriptionReason(history, event)"
-                                ng-options="reason.id as reason.label for reason in vm.eventReasonsTypeDescription">
+                                data-ng-change="vm.changeDescriptionReason(history, event, $parent.$index)"
+                                ng-options="reason.id as reason.label for reason in vm.eventReasonsTypeDescription"
+                                options-disabled="reason.hidden for reason in vm.eventReasonsType">
                             <option value="">[[lang.translate('presences.absence.select.empty')]]</option>
                         </select>
                     </label>
                 </span>
 
                 <!--Regularized-->
-                <label class="events-table-body-description-content-checkbox checkbox">
+                <label class="events-table-body-description-content-checkbox checkbox"
+                       ng-style="{opacity: history.reason_id !== null && !vm.provingReasonsMap[history.reason_id] ? 1 : 0}">
                     <input type="checkbox" data-ng-model="history.counsellor_regularisation"
-                           data-ng-change="vm.toggleAbsenceRegularised(history, event)">
-                    <span></span>
+                           ng-disabled="!(history.reason_id !== null && !vm.provingReasonsMap[history.reason_id])"
+                           data-ng-change="vm.toggleAbsenceRegularised(history, event, $parent.$index)">
+                    <span ng-style="{cursor: history.reason_id !== null && !vm.provingReasonsMap[history.reason_id] ? 'pointer' : 'default'}"></span>
                 </label>
-
             </div>
         </td>
     <tr>

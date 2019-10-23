@@ -230,7 +230,7 @@ public class DefaultAbsenceService implements AbsenceService {
                     "  WHERE event.type_id = 1 and event.register_id = register.id and event.student_id = ?" +
                     ") " +
                 ") " +
-                "UPDATE presences.event SET reason_id = ? WHERE register_id IN (SELECT id FROM register) " +
+                "UPDATE " + Presences.dbSchema + ".event SET reason_id = ? WHERE register_id IN (SELECT id FROM register) " +
                 "returning register_id AS updated_register_id";
         JsonArray values = new JsonArray()
                 .addAll(new JsonArray(groupIds))
@@ -248,16 +248,57 @@ public class DefaultAbsenceService implements AbsenceService {
 
     @Override
     public void delete(Integer absenceId, Handler<Either<String, JsonObject>> handler) {
-        String query = "DELETE FROM  " + Presences.dbSchema + ".absence WHERE id = " + absenceId;
+        String query = "SELECT * FROM " + Presences.dbSchema + ".absence WHERE id = " + absenceId;
         Sql.getInstance().raw(query, SqlResult.validUniqueResultHandler(absenceResult -> {
             if (absenceResult.isLeft()) {
-                String message = "[Presences@DefaultAbsenceService] failed to delete absence";
+                String message = "[Presences@DefaultAbsenceService] failed to fetch absence id before deletion";
                 LOGGER.error(message, absenceResult.left().getValue());
                 handler.handle(new Either.Left<>(message));
             } else {
-                handler.handle(new Either.Right<>(absenceResult.right().getValue()));
+                Future<JsonObject> deleteEventsFuture = Future.future();
+                Future<JsonObject> resetEventsFuture = Future.future();
+                Future<JsonObject> deleteAbsenceFuture = Future.future();
+
+                deleteEventsOnDelete(absenceResult.right().getValue(), FutureHelper.handlerJsonObject(deleteEventsFuture));
+                resetEventsOnDelete(absenceResult.right().getValue(), FutureHelper.handlerJsonObject(resetEventsFuture));
+                deleteAbsence(absenceId, FutureHelper.handlerJsonObject(deleteAbsenceFuture));
+
+                CompositeFuture.all(deleteEventsFuture, resetEventsFuture, deleteAbsenceFuture).setHandler(event -> {
+                    if (event.failed()) {
+                        String message = "[Presences@DefaultAbsenceService] Failed to delete events or absence";
+                        LOGGER.error(message);
+                        handler.handle(new Either.Left<>(message));
+                    } else {
+                        handler.handle(new Either.Right<>(absenceResult.right().getValue()));
+                    }
+                });
             }
         }));
+    }
+
+    private void deleteEventsOnDelete(JsonObject absenceResult, Handler<Either<String, JsonObject>> handler) {
+        String query = "DELETE FROM " + Presences.dbSchema + ".event" +
+                " WHERE student_id = ? AND start_date >= ? AND end_date <= ? AND counsellor_input = true";
+        JsonArray params = new JsonArray()
+                .add(absenceResult.getString("student_id"))
+                .add(absenceResult.getString("start_date"))
+                .add(absenceResult.getString("end_date"));
+        Sql.getInstance().prepared(query, params, SqlResult.validUniqueResultHandler(handler));
+    }
+
+    private void resetEventsOnDelete(JsonObject absenceResult, Handler<Either<String, JsonObject>> handler) {
+        String query = "UPDATE " + Presences.dbSchema + ".event SET reason_id = null " +
+                "WHERE student_id = ? AND start_date >= ? AND end_date <= ? AND counsellor_input = false";
+        JsonArray params = new JsonArray()
+                .add(absenceResult.getString("student_id"))
+                .add(absenceResult.getString("start_date"))
+                .add(absenceResult.getString("end_date"));
+        Sql.getInstance().prepared(query, params, SqlResult.validUniqueResultHandler(handler));
+    }
+
+    private void deleteAbsence(Integer absenceId, Handler<Either<String, JsonObject>> handler) {
+        String query = "DELETE FROM " + Presences.dbSchema + ".absence WHERE id = " + absenceId;
+        Sql.getInstance().raw(query, SqlResult.validUniqueResultHandler(handler));
     }
 
     @Override

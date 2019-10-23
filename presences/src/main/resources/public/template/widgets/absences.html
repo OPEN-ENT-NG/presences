@@ -61,12 +61,13 @@
                     [[event.start_date | date: 'dd/MM/yyyy']]
                     [[event.start_date | date:'HH:mm']]-[[event.end_date | date:'HH:mm']]
                 </em>
-                <div>
+                <div ng-style="{opacity: event.reason_id !== null && !vm.provingReasonsMap[event.reason_id] ? 1 : 0}">
                     <i18n>presences.widgets.absences.regularized</i18n>
                     <label class="checkbox">
                         <input type="checkbox" data-ng-model="event.counsellor_regularisation"
+                               ng-disabled="!(event.reason_id !== null && !vm.provingReasonsMap[event.reason_id])"
                                data-ng-change="vm.toggleAbsenceRegularised(event)">
-                        <span></span>
+                        <span ng-style="{cursor: event.reason_id !== null && !vm.provingReasonsMap[event.reason_id] ? 'pointer' : 'default'}"></span>
                     </label>
                 </div>
             </div>

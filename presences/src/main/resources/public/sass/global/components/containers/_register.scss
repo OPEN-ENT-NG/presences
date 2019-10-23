@@ -37,6 +37,10 @@ $absence-button-width: 20px;
           background-color: $presences-main;
         }
 
+        &.incident:before {
+          background-color: $presences-grey;
+        }
+
         &:before {
           content: ' ';
           width: 17px;
@@ -171,6 +175,10 @@ $absence-button-width: 20px;
         &.remark {
           background-color: $presences-main;
         }
+
+        &.incident {
+          background-color: $presences-grey;
+        }
       }
     }
 
@@ -237,6 +245,10 @@ $absence-button-width: 20px;
 
         &.remark {
           background-color: $presences-main;
+        }
+
+        &.incident {
+          background-color: $presences-grey;
         }
       }
     }

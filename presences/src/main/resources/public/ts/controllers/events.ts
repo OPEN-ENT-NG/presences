@@ -1,8 +1,8 @@
 import {_, angular, idiom as lang, moment, ng} from 'entcore';
-import {Event, EventResponse, Events, EventType, Student, Students} from "../models";
+import {EventResponse, Events, EventType, Student, Students} from "../models";
 import {DateUtils} from "@common/utils";
 import {GroupService} from "@common/services/GroupService";
-import {EventService, ReasonType} from "../services";
+import {Reason, ReasonService} from "../services";
 
 declare let window: any;
 
@@ -21,19 +21,20 @@ interface ViewModel {
     filter: Filter;
 
     /* Get reasons type */
-    eventReasonsType: ReasonType[];
-    eventReasonsTypeDescription: ReasonType[];
+    eventReasonsType: Reason[];
+    eventReasonsTypeDescription: Reason[];
 
     /* Events */
     eventType: number[];
     events: Events;
-    multipleSelect: ReasonType;
+    multipleSelect: Reason;
+    provingReasonsMap: any;
 
     eventTypeState(periods, event): string;
 
     isDayHistoryEmpty(periods, event): boolean;
 
-    editPeriod($event): void;
+    editPeriod($event, event): void;
 
     /* dayHistory interaction */
     mouseIsDown: boolean;
@@ -58,9 +59,9 @@ interface ViewModel {
 
     getRegularizedValue(event): boolean;
 
-    filterSelect(options: ReasonType[], event): ReasonType[];
+    filterSelect(options: Reason[], event): Reason[];
 
-    changeReason(event): void;
+    changeReason(event, index): void;
 
     downloadFile($event): void;
 
@@ -70,14 +71,16 @@ interface ViewModel {
 
     regularizedChecked(event: EventResponse): boolean;
 
-    toggleAllAbsenceRegularised(event: EventResponse): void;
+    toggleAllAbsenceRegularised(event: EventResponse, index: number): void;
 
-    toggleAbsenceRegularised(history, event): void;
+    toggleAbsenceRegularised(history, event, index: number): void;
 
     getNonRegularizedEvents(events): any[];
 
+    hideGlobalCheckbox(event): boolean;
+
     /* Events description */
-    changeDescriptionReason(periods, event): void;
+    changeDescriptionReason(periods, event, index: number): void;
 
     /* Collapse event */
     eventId: number;
@@ -130,9 +133,9 @@ interface ViewModel {
     exportCsv(): void;
 }
 
-export const eventsController = ng.controller('EventsController', ['$scope', '$route',
-    'GroupService', 'EventService',
-    function ($scope, $route, GroupService: GroupService, EventService: EventService) {
+export const eventsController = ng.controller('EventsController', ['$scope', '$route', '$location',
+    'GroupService', 'ReasonService',
+    function ($scope, $route, $location, GroupService: GroupService, ReasonService: ReasonService) {
         const isWidget = $route.current.action === 'dashboard';
         const vm: ViewModel = this;
         vm.filter = {
@@ -143,8 +146,9 @@ export const eventsController = ng.controller('EventsController', ['$scope', '$r
             absences: true,
             departure: true,
             late: $route.current.action !== 'dashboard',
-            regularized: false,
+            regularized: true,
         };
+        vm.provingReasonsMap = {};
         vm.mouseIsDown = false;
         vm.eventType = [];
         vm.multipleSelect = {
@@ -155,7 +159,7 @@ export const eventsController = ng.controller('EventsController', ['$scope', '$r
             default: false,
             proving: false,
             group: false
-        } as ReasonType;
+        } as Reason;
         vm.studentSearchInput = '';
         vm.classesSearchInput = '';
         vm.students = new Students();
@@ -191,6 +195,7 @@ export const eventsController = ng.controller('EventsController', ['$scope', '$r
             vm.events.structureId = window.structure.id;
             vm.events.startDate = vm.filter.startDate.toDateString();
             vm.events.endDate = vm.filter.endDate.toDateString();
+            vm.events.regularized = vm.filter.regularized;
 
             if (vm.filter.absences) {
                 if (!vm.eventType.some(e => e == EventType.ABSENCE)) {
@@ -210,8 +215,9 @@ export const eventsController = ng.controller('EventsController', ['$scope', '$r
             vm.events.eventType = vm.eventType.toString();
 
             if (!vm.eventReasonsType || vm.eventReasonsType.length <= 1) {
-                vm.eventReasonsType = await EventService.getReasonsType(window.structure.id);
+                vm.eventReasonsType = await ReasonService.getReasons(window.structure.id);
                 vm.eventReasonsTypeDescription = _.clone(vm.eventReasonsType);
+                vm.eventReasonsType.map((reason: Reason) => vm.provingReasonsMap[reason.id] = reason.proving);
                 if (!isWidget) vm.eventReasonsType.push(vm.multipleSelect);
             }
 
@@ -222,8 +228,18 @@ export const eventsController = ng.controller('EventsController', ['$scope', '$r
             $scope.safeApply();
         };
 
-        vm.editPeriod = ($event): void => {
+        vm.editPeriod = ($event, {studentId, date, displayName, className, classId}): void => {
             $event.stopPropagation();
+            window.item = {
+                id: studentId,
+                date,
+                displayName,
+                type: 'USER',
+                groupName: className,
+                groupId: classId
+            };
+            $location.path(`/calendar/${studentId}?date=${date}`);
+            $scope.safeApply();
         };
 
         vm.period = ($event): void => {
@@ -287,7 +303,7 @@ export const eventsController = ng.controller('EventsController', ['$scope', '$r
         vm.eventTypeState = (periods, event): string => {
             if (periods.events.length === 0) return '';
             const priority = [EventType.ABSENCE, EventType.LATENESS, EventType.DEPARTURE, EventType.REMARK];
-            const className = ['absent', 'late', 'departure', 'remark', 'justified','empty'];
+            const className = ['absent', 'late', 'departure', 'remark', 'justified', 'empty'];
             let index = 4;
             for (let i = 0; i < periods.events.length; i++) {
                 if (periods.events[i].type_id === 1) {
@@ -307,7 +323,7 @@ export const eventsController = ng.controller('EventsController', ['$scope', '$r
         };
 
         /* filtering by removing multiple choices if there is no reason_id */
-        vm.filterSelect = function (options: ReasonType[], event): ReasonType[] {
+        vm.filterSelect = function (options: Reason[], event): Reason[] {
             let reasonIds = getReasonIds(event.events);
             if (reasonIds.every((val, i, arr) => val === arr[0])) {
                 return options.filter(option => option.id !== 0);
@@ -316,7 +332,7 @@ export const eventsController = ng.controller('EventsController', ['$scope', '$r
         };
 
         /* Add global reason_id to all events that exist */
-        vm.changeReason = (event: EventResponse): void => {
+        vm.changeReason = (event: EventResponse, index: number): void => {
             /* Fetch all event id */
             let eventsArrayId = [];
             if (isWidget) {
@@ -333,10 +349,15 @@ export const eventsController = ng.controller('EventsController', ['$scope', '$r
                 });
                 event.events.forEach(item => {
                     item.reason_id = event.globalReason;
+                    item.counsellor_regularisation = vm.provingReasonsMap[item.reason_id];
                 });
             }
             eventsArrayId = eventsArrayId.filter((item, index) => eventsArrayId.indexOf(item) === index);
-            vm.events.updateReason(eventsArrayId, event.globalReason);
+            vm.events.updateReason(eventsArrayId, event.globalReason).then(() => {
+                if (isWidget) vm.events.page = 0;
+            });
+            event.globalCounsellorRegularisation = initGlobalCounsellorRegularisation(event);
+            if (vm.filter.regularized && vm.provingReasonsMap[event.globalReason]) vm.events.all = vm.events.all.filter((evt, i) => i !== index);
         };
 
         vm.downloadFile = ($event): void => {
@@ -361,25 +382,36 @@ export const eventsController = ng.controller('EventsController', ['$scope', '$r
             return !regularized.every((val, i, arr) => val === arr[0]) && !event.globalCounsellorRegularisation;
         };
 
-        vm.toggleAllAbsenceRegularised = (event: EventResponse): void => {
+        vm.toggleAllAbsenceRegularised = (event: EventResponse, index: number): void => {
             let eventsId = [];
             event.dayHistory.forEach(history => {
                 history.events.forEach(e => {
-                    e.counsellor_regularisation = event.globalCounsellorRegularisation;
+                    if (e.reason_id === null || !vm.provingReasonsMap[e.reason_id]) {
+                        e.counsellor_regularisation = event.globalCounsellorRegularisation;
+                    }
                 });
             });
             event.events.forEach(item => {
-                item.counsellor_regularisation = event.globalCounsellorRegularisation;
-                eventsId.push(item.id);
+                if (item.reason_id === null || !vm.provingReasonsMap[item.reason_id]) {
+                    item.counsellor_regularisation = event.globalCounsellorRegularisation;
+                    eventsId.push(item.id);
+                }
             });
-            vm.events.updateRegularized(eventsId, event.globalCounsellorRegularisation);
+            if (eventsId.length > 0) vm.events.updateRegularized(eventsId, event.globalCounsellorRegularisation);
+            if (vm.filter.regularized) event.events = event.events.filter((event) => eventsId.indexOf(event.id) === -1);
+            if (event.events.length === 0 && vm.filter.regularized) {
+                vm.events.all = vm.events.all.filter((evt, i) => i !== index);
+                vm.eventId = null;
+            }
         };
 
-        vm.toggleAbsenceRegularised = (history, event): void => {
+        vm.toggleAbsenceRegularised = (history, event, index): void => {
             let eventsId = [history.id];
             vm.events.updateRegularized(eventsId, history.counsellor_regularisation);
-            if (!isWidget) event.globalCounsellorRegularisation = initGlobalCounsellorRegularisation(event);
-            else vm.events.page = 0;
+            if (!isWidget) {
+                manageEventDrop(history, event, index);
+                if (event.events.length > 0) event.globalCounsellorRegularisation = initGlobalCounsellorRegularisation(event);
+            } else vm.events.page = 0;
         };
 
         vm.getNonRegularizedEvents = (events): any[] => {
@@ -408,7 +440,7 @@ export const eventsController = ng.controller('EventsController', ['$scope', '$r
         };
 
         /* Change its description reason id */
-        vm.changeDescriptionReason = (history, event: EventResponse): void => {
+        vm.changeDescriptionReason = (history, event: EventResponse, index): void => {
             let eventsArrayId = [history.id];
             event.dayHistory.forEach(e => {
                 e.events.forEach(item => {
@@ -423,8 +455,23 @@ export const eventsController = ng.controller('EventsController', ['$scope', '$r
                 });
             });
             vm.events.updateReason(eventsArrayId, history.reason_id);
-            initGlobalReason(event);
+            history.counsellor_regularisation = vm.provingReasonsMap[history.reason_id];
+            manageEventDrop(history, event, index);
         };
+
+        function manageEventDrop(history, event, index) {
+            if (history.counsellor_regularisation && vm.filter.regularized) {
+                const {id} = history;
+                event.events = event.events.filter(evt => evt.id !== id);
+            }
+            if (event.events.length === 0 && vm.filter.regularized) {
+                vm.events.all = vm.events.all.filter((evt, i) => i !== index);
+                vm.eventId = null;
+            } else {
+                event.globalCounsellorRegularisation = initGlobalCounsellorRegularisation(event);
+                initGlobalReason(event);
+            }
+        }
 
         /* ----------------------------
           Student methods
@@ -521,6 +568,7 @@ export const eventsController = ng.controller('EventsController', ['$scope', '$r
                 vm.eventType = _.without(vm.eventType, EventType.ABSENCE);
             }
             vm.updateFilter();
+            resetEventId();
         };
 
         vm.switchLateFilter = function () {
@@ -533,6 +581,7 @@ export const eventsController = ng.controller('EventsController', ['$scope', '$r
                 vm.eventType = _.without(vm.eventType, EventType.LATENESS);
             }
             vm.updateFilter();
+            resetEventId();
         };
 
         vm.switchDepartureFilter = function () {
@@ -545,12 +594,25 @@ export const eventsController = ng.controller('EventsController', ['$scope', '$r
                 vm.eventType = _.without(vm.eventType, EventType.DEPARTURE);
             }
             vm.updateFilter();
+            resetEventId();
         };
+
+        function resetEventId() {
+            vm.eventId = null;
+        }
 
         vm.switchRegularizedFilter = async function () {
             vm.filter.regularized = !vm.filter.regularized;
             vm.events.regularized = vm.filter.regularized;
             vm.events.page = 0;
+            resetEventId();
+        };
+
+        vm.hideGlobalCheckbox = function (event) {
+            const {events} = event;
+            const isProving = (evt) => evt.reason_id === null || vm.provingReasonsMap[evt.reason_id];
+
+            return events.every(isProving);
         };
 
         /* on switch (watch) */

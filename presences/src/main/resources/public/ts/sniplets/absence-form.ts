@@ -1,11 +1,13 @@
 import {SNIPLET_FORM_EMIT_EVENTS, SNIPLET_FORM_EVENTS} from "@common/model";
 import {Absence} from "../models";
 import {idiom as lang, model, moment, toasts} from "entcore";
-import {eventService} from "../services";
+import {Reason, reasonService} from "../services";
 
 export enum ABSENCE_FORM_EVENTS {
     EDIT = 'absence-form:edit',
 }
+
+console.log("absenceFormSnipplets");
 
 declare let window: any;
 
@@ -18,6 +20,7 @@ interface ViewModel {
 
     setFormParams(obj): void;
     setFormDateParams(form, start_date, end_date): void;
+    filterSelect(reasons: Reason[]): Reason[];
 
     editAbsenceForm(obj): void;
 
@@ -61,16 +64,24 @@ const vm: ViewModel = {
 
     setFormDateParams: (form, start_date, end_date) => {
         form.startDate = moment(start_date).toDate();
+        form.endDate = moment(end_date).toDate();
         if (form.id) {
             form.startDateTime = moment(form.startDate).set({second: 0, millisecond: 0}).toDate();
+            form.endDateTime = moment(form.endDate).set({second: 0, millisecond: 0}).toDate();
+            return;
         } else {
             form.startDateTime = moment(new Date()).set({second: 0, millisecond: 0}).toDate();
         }
-        form.endDate = moment(end_date).toDate();
         form.endDateTime = moment(new Date().setHours(17)).set({minute: 0, second: 0, millisecond: 0}).toDate();
-
         form.start_date = getDateFormat(form.startDate, form.startDateTime);
         form.end_date = getDateFormat(form.endDate, form.endDateTime);
+    },
+
+    filterSelect(reasons: Reason[]): Reason[] {
+        if (reasons && reasons.length > 0) {
+            return reasons.filter(option => option.id !== 0);
+        }
+        return [];
     },
 
     async editAbsenceForm(obj): Promise<void> {
@@ -152,7 +163,7 @@ export const absenceForm = {
             this.vm = vm;
             this.setHandler();
             absenceForm.that = this;
-            vm.reasonsType = await eventService.getReasonsType(window.structure.id);
+            vm.reasonsType = await reasonService.getReasons(window.structure.id);
             vm.safeApply = this.safeApply;
         },
         setHandler: function () {

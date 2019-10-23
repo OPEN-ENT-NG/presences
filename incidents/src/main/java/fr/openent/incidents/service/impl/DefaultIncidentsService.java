@@ -61,6 +61,22 @@ public class DefaultIncidentsService extends SqlCrudService implements Incidents
         Sql.getInstance().prepared(query, params, SqlResult.validResultHandler(handler));
     }
 
+    @Override
+    public void get(String startDate, String endDate, List<String> users, Handler<Either<String, JsonArray>> handler) {
+        String query = "SELECT incident.*, protagonist.user_id as student_id " +
+                "FROM " + Incidents.dbSchema + ".incident " +
+                "INNER JOIN " + Incidents.dbSchema + ".protagonist ON (incident.id = protagonist.incident_id) " +
+                "WHERE protagonist.user_id IN " + Sql.listPrepared(users) +
+                " AND incident.date >= to_date(?, 'YYYY-MM-DD') " +
+                "AND incident.date <= to_date(?, 'YYYY-MM-DD')";
+        JsonArray params = new JsonArray()
+                .addAll(new JsonArray(users))
+                .add(startDate)
+                .add(endDate);
+
+        Sql.getInstance().prepared(query, params, SqlResult.validResultHandler(handler));
+    }
+
     private void toFormatJson(JsonObject incidents) {
         incidents.put("place", new JsonObject(incidents.getString("place")));
         incidents.put("partner", new JsonObject(incidents.getString("partner")));
@@ -168,8 +184,8 @@ public class DefaultIncidentsService extends SqlCrudService implements Incidents
             }
 
             query += "GROUP BY i.id, i.date, i.description, i.processed, i.place_id, i.partner_id, " +
-            "i.type_id, i.seriousness_id, place.id, partner.id, incident_type.id, seriousness.id " +
-            "ORDER BY " + getSqlOrderValue(field) + " " + getSqlReverseString(reverse);
+                    "i.type_id, i.seriousness_id, place.id, partner.id, incident_type.id, seriousness.id " +
+                    "ORDER BY " + getSqlOrderValue(field) + " " + getSqlReverseString(reverse);
 
         } else {
             query += ") SELECT count(*) from ids";

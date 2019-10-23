@@ -5,6 +5,7 @@ export class DateUtils {
     static FORMAT = {
         'YEAR-MONTH-DAY-HOUR-MIN-SEC': 'YYYY-MM-DD HH:mm:ss',
         'YEAR-MONTH-DAY': 'YYYY-MM-DD',
+        'YEAR-MONTH': 'YYYY-MM',
         'DAY-MONTH-YEAR': 'DD/MM/YYYY',
         'HOUR-MINUTES': 'kk:mm',
         'BIRTHDATE': 'L',

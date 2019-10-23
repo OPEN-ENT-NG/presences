@@ -15,6 +15,7 @@ import io.vertx.core.logging.LoggerFactory;
 import org.entcore.common.neo4j.Neo4j;
 import org.entcore.common.neo4j.Neo4jResult;
 
+import java.util.Arrays;
 import java.util.List;
 
 public class DefaultGroupService implements GroupService {
@@ -85,17 +86,25 @@ public class DefaultGroupService implements GroupService {
 
     @Override
     public void getGroupStudents(String groupIdentifier, Handler<Either<String, JsonArray>> handler) {
-        String query = "MATCH (g:Group {id:{id}})<-[:IN]-(u:User)-[:IN]->(:ProfileGroup)-[:DEPENDS]->(c:Class) " +
+        List<String> groups = Arrays.asList(groupIdentifier);
+        getGroupStudents(groups, handler);
+    }
+
+    @Override
+    public void getGroupStudents(List<String> groups, Handler<Either<String, JsonArray>> handler) {
+        String query = "MATCH (g:Group)<-[:IN]-(u:User)-[:IN]->(:ProfileGroup)-[:DEPENDS]->(c:Class) " +
                 "WHERE u.profiles = ['Student'] " +
+                "AND g.id IN {ids} " +
                 "RETURN distinct u.id as id, (u.lastName + ' ' + u.firstName) as displayName, 'USER' as type, c.id as groupId, c.name as groupName " +
                 "ORDER BY displayName " +
                 "UNION  " +
-                "MATCH (u:User)-[:IN]->(:ProfileGroup)-[:DEPENDS]->(c:Class {id:{id}}) " +
+                "MATCH (u:User)-[:IN]->(:ProfileGroup)-[:DEPENDS]->(c:Class) " +
                 "WHERE u.profiles = ['Student'] " +
+                "AND c.id IN {ids} " +
                 "RETURN distinct u.id as id, (u.lastName + ' ' + u.firstName) as displayName, 'USER' as type, c.id as groupId, c.name as groupName " +
                 "ORDER BY displayName";
         JsonObject params = new JsonObject()
-                .put("id", groupIdentifier);
+                .put("ids", new JsonArray(groups));
 
         Neo4j.getInstance().execute(query, params, Neo4jResult.validResultHandler(handler));
     }

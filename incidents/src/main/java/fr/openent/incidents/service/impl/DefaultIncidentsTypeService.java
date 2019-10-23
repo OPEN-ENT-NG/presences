@@ -60,7 +60,7 @@ public class DefaultIncidentsTypeService implements IncidentsTypeService {
                 "WHERE structure_id = '" + structureId +
                 "') " +
                 "SELECT DISTINCT i.id, i.label FROM ids i " +
-                "INNER JOIN " + Incidents.dbSchema + ".incident AS incident ON (incident.type_id = i.id) ";
+                "WHERE (i.id IN (SELECT type_id FROM " + Incidents.dbSchema + ".incident))";
         Sql.getInstance().raw(query, SqlResult.validResultHandler(handler));
     }
 

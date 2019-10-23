@@ -9,22 +9,33 @@ export enum REASON_MANAGE_FORM_EVENTS {
 
 interface ViewModel {
     safeApply(fn?: () => void): void;
+
     reasons: Reason[];
     editReasonLightbox: boolean;
     form: ReasonRequest;
     formEdit: ReasonRequest;
+
     openReasonLightbox(reason: Reason): void;
+
     closeReasonLightbox(): void;
+
     isFormValid(form: ReasonRequest): boolean;
+
     hasReasons(): boolean;
 
     // interaction
     getReasons(): void;
+
     createReason(): void;
+
     setFormEdit(reason: Reason): void;
+
     updateReason(): void;
+
     toggleVisibility(reason: Reason): Promise<void>;
+
     deleteReason(reason: Reason): void;
+
     proceedAfterAction(response: AxiosResponse): void;
 
 }
@@ -33,10 +44,10 @@ function safeApply() {
     let that = presencesReasonManage.that;
     return new Promise((resolve, reject) => {
         var phase = that.$root.$$phase;
-        if(phase === '$apply' || phase === '$digest') {
-            if(resolve && (typeof(resolve) === 'function')) resolve();
+        if (phase === '$apply' || phase === '$digest') {
+            if (resolve && (typeof (resolve) === 'function')) resolve();
         } else {
-            if (resolve && (typeof(resolve) === 'function')) that.$apply(resolve);
+            if (resolve && (typeof (resolve) === 'function')) that.$apply(resolve);
             else that.$apply();
         }
     });
@@ -72,13 +83,20 @@ const vm: ViewModel = {
     },
 
     async createReason(): Promise<void> {
-        if (!vm.form.hasOwnProperty("absenceCompliance") ) {
+        if (!vm.form.hasOwnProperty("absenceCompliance")) {
             vm.form.absenceCompliance = true;
+        }
+        if (!vm.form.hasOwnProperty("proving")) {
+            vm.form.proving = true;
         }
         vm.form.structureId = window.model.vieScolaire.structure.id;
         let response = await reasonService.create(vm.form);
         vm.proceedAfterAction(response);
+
+        /* Reset form*/
         vm.form.label = '';
+        vm.form.proving = false;
+        vm.form.absenceCompliance = true;
     },
 
     async deleteReason(reason: Reason): Promise<void> {
@@ -91,7 +109,7 @@ const vm: ViewModel = {
         vm.formEdit.id = reasonCopy.id;
         vm.formEdit.absenceCompliance = reasonCopy.absence_compliance;
         vm.formEdit.hidden = reasonCopy.hidden;
-        vm.formEdit.regularisable = reasonCopy.regularisable;
+        vm.formEdit.proving = reasonCopy.proving;
         vm.formEdit.label = reasonCopy.label;
     },
 
@@ -107,7 +125,7 @@ const vm: ViewModel = {
         form.id = reason.id;
         form.absenceCompliance = reason.absence_compliance;
         form.hidden = reason.hidden;
-        form.regularisable = reason.regularisable;
+        form.proving = reason.proving;
         form.label = reason.label;
         await reasonService.update(form);
     },
@@ -132,7 +150,7 @@ export const presencesReasonManage = {
         },
         setHandler: function () {
             // using vieScolaire.structure to update current structure from viescolaire
-            this.$watch(() =>  window.model.vieScolaire.structure, async () => vm.getReasons());
+            this.$watch(() => window.model.vieScolaire.structure, async () => vm.getReasons());
         }
     }
 };

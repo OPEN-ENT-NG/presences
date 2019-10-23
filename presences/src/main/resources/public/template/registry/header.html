@@ -1,0 +1,86 @@
+<div class="row registry-header">
+
+    <div class="registry-header-title">
+        <!--Title-->
+        <h1 class="paddingRight">
+            <i18n>presences.registry.title</i18n>
+        </h1>
+        <!-- Classes/Groups search bar -->
+        <div class="twelve search-input">
+            <async-autocomplete
+                    ng-disabled="false"
+                    ng-model="vm.filter.searchGroup.item"
+                    ng-change="vm.selectGroup"
+                    on-search="vm.searchGroup"
+                    options="vm.filter.searchGroup.items"
+                    placeholder="presences.dashboard.search.registry.placeholder"
+                    search="vm.filter.searchGroup.item"></async-autocomplete>
+        </div>
+        <!-- List group -->
+        <div class="twelve">
+            <ul class="twelve search-input-ul">
+                <li ng-repeat="group in vm.filter.groups">
+                    [[group.name]] <i class="close" data-ng-click="vm.removeGroup(group)"></i>
+                </li>
+            </ul>
+        </div>
+    </div>
+</div>
+
+<!-- Date filter / export CSV -->
+<div class="row top5">
+    <div class="cell eight">
+        <i18n>presences.months</i18n>
+        :
+        <select class="card"
+                data-ng-model="vm.params.month"
+                data-ng-change="vm.updateMonth()"
+                ng-options="month.value as month.name for month in vm.months">
+        </select>
+    </div>
+
+    <div class="four cell">
+        <button class="right-magnet forbidden" disabled>
+            <i18n>presences.export.tocsv</i18n>
+        </button>
+    </div>
+</div>
+
+<!-- Event Type Filter -->
+<div class="register registry-eventTypeFilter">
+    <div class="chips">
+        <label class="chip" ng-class="{selected: vm.isFilterActive(vm.eventType[0])}"
+               data-ng-click="vm.toggleFilter(vm.eventType[0])">
+            <i18n>presences.register.event_type.absences</i18n>
+        </label>
+        <label class="chip" ng-class="{selected:vm.isFilterActive(vm.eventType[1])}"
+               data-ng-click="vm.toggleFilter(vm.eventType[1])">
+            <i18n>presences.register.event_type.lateness</i18n>
+        </label>
+        <label class="chip" ng-class="{selected: vm.isFilterActive(vm.eventType[2])}"
+               data-ng-click="vm.toggleFilter(vm.eventType[2])">
+            <i18n>incidents.incident</i18n>
+        </label>
+        <label class="chip" ng-class="{selected: vm.isFilterActive(vm.eventType[3])}"
+               data-ng-click="vm.toggleFilter(vm.eventType[3])">
+            <i18n>presences.register.event_type.departure</i18n>
+        </label>
+    </div>
+
+    <div class="card event-legend radius cell">
+        <ul class="history vertical-spacing-twice">
+            <li class="absence">
+                <i18n>presences.register.event_type.absences</i18n>
+            </li>
+            <li class="lateness">
+                <i18n>presences.register.event_type.lateness</i18n>
+            </li>
+            <li class="departure">
+                <i18n>presences.register.event_type.departure</i18n>
+            </li>
+            <li class="incident">
+                <i18n>presences.register.event_type.incident</i18n>
+            </li>
+        </ul>
+    </div>
+</div>

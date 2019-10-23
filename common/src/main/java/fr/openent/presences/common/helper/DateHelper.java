@@ -71,6 +71,11 @@ public class DateHelper {
         return date.contains("T") ? ssdf.parse(date) : msdf.parse(date);
     }
 
+    public static Date parse(String date, String format) throws ParseException {
+        SimpleDateFormat sdf = new SimpleDateFormat(format);
+        return sdf.parse(date);
+    }
+
     /**
      * Check if the first date is after the second date
      *
@@ -117,10 +122,10 @@ public class DateHelper {
     /**
      * Check if the date to compare is between start and end date
      *
-     * @param startDateEventToCompareParam  startDateEvent chosen to compare
-     * @param endDateEventToCompareParam    endDateEvent chosen to compare
-     * @param startDateParam                start date compared
-     * @param endDateParam                  end date compared
+     * @param startDateEventToCompareParam startDateEvent chosen to compare
+     * @param endDateEventToCompareParam   endDateEvent chosen to compare
+     * @param startDateParam               start date compared
+     * @param endDateParam                 end date compared
      * @return Boolean that match if the date to compare is between start and end date
      */
     public static boolean isBetween(String startDateEventToCompareParam, String endDateEventToCompareParam,
@@ -203,6 +208,43 @@ public class DateHelper {
         }
 
         return totalDates;
+    }
+
+    public static int getDayOfMonthNumber(String date) throws ParseException {
+        Calendar cal = Calendar.getInstance();
+        cal.setTime(getPsqlSimpleDateFormat().parse(date));
+        return cal.get(Calendar.DAY_OF_MONTH);
+    }
+
+    private static String getDayOfMonth(Date date, int dayOfMonth) {
+        Calendar cal = Calendar.getInstance();
+        cal.setTime(date);
+        cal.set(Calendar.DAY_OF_MONTH, dayOfMonth);
+        return new SimpleDateFormat("yyyy-MM-dd'T'").format(cal.getTime());
+    }
+
+    /**
+     * Get last day of month as a PostgreSQL format string
+     *
+     * @param date Month date
+     * @return Last day of month as a PostgreSQL format string
+     */
+    public static String getLastDayOfMonth(Date date) {
+        Calendar cal = Calendar.getInstance();
+        cal.setTime(date);
+        return getDayOfMonth(date, cal.getActualMaximum(Calendar.DAY_OF_MONTH)) + "23:59:59";
+    }
+
+    /**
+     * Get first day of month as a PostgreSQL format string
+     *
+     * @param date Month date
+     * @return First day of month as a PostgreSQL format string
+     */
+    public static String getFirstDayOfMonth(Date date) {
+        Calendar cal = Calendar.getInstance();
+        cal.setTime(date);
+        return getDayOfMonth(date, cal.getActualMinimum(Calendar.DAY_OF_MONTH)) + "00:00:00";
     }
 
 }

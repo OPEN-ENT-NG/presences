@@ -88,6 +88,24 @@ public class DefaultEventService implements EventService {
                 })));
     }
 
+    @Override
+    public void get(String startDate, String endDate, List<Number> eventType, List<String> users, Handler<Either<String, JsonArray>> handler) {
+        JsonArray params = new JsonArray()
+                .add(startDate)
+                .add(endDate)
+                .addAll(new JsonArray(eventType))
+                .addAll(new JsonArray(users));
+
+        String query = "SELECT start_date, end_date, student_id, type_id " +
+                "FROM presences.event " +
+                "WHERE start_date >= ? " +
+                "AND end_date <= ? " +
+                "AND type_id IN " + Sql.listPrepared(eventType) +
+                " AND student_id IN " + Sql.listPrepared(users);
+
+        Sql.getInstance().prepared(query, params, SqlResult.validResultHandler(handler));
+    }
+
     /**
      * GET query to fetch incidents
      *
@@ -204,7 +222,7 @@ public class DefaultEventService implements EventService {
 
                 String query = "MATCH (s:Structure {id: {structureId} })<-[:ADMINISTRATIVE_ATTACHMENT]-" +
                         "(u:User {profiles:['Student']})-[:IN]->(:ProfileGroup)-[:DEPENDS]->(c:Class) WHERE u.id IN {idStudents} " +
-                        "RETURN distinct (u.lastName + ' ' + u.firstName) as displayName, u.id as id, c.name as classeName";
+                        "RETURN distinct (u.lastName + ' ' + u.firstName) as displayName, u.id as id, c.name as classeName, c.id as classId";
                 JsonObject params = new JsonObject().put("structureId", structureId).put("idStudents", idStudents);
                 courseHelper.getCourses(structureId, new ArrayList<>(), new ArrayList<>(), startDate, endDate, coursesResult -> {
                     if (coursesResult.isRight()) {
@@ -229,6 +247,7 @@ public class DefaultEventService implements EventService {
                                                                 .put("displayName", student.getString("displayName"))
                                                                 .put("id", student.getString("id"))
                                                                 .put("classeName", student.getString("classeName"))
+                                                                .put("classId", student.getString("classId"))
                                                                 .put("courses", getCourses(student, studentEvents.getJsonObject(k), coursesResult.right().getValue(),
                                                                         filterEvents(studentEvents.getJsonObject(k).getJsonArray("events"),
                                                                                 arrayEvents.getJsonObject(i).getString("start_date"))))
@@ -399,12 +418,6 @@ public class DefaultEventService implements EventService {
             query += "AND e.counsellor_regularisation = " + regularized + " ";
         }
         return query;
-    }
-
-    @Override
-    public void getEventsReasonType(String structureId, Handler<Either<String, JsonArray>> handler) {
-        String placeTypeQuery = "SELECT * FROM " + Presences.dbSchema + ".reason where structure_id = '" + structureId + "'";
-        Sql.getInstance().raw(placeTypeQuery, SqlResult.validResultHandler(handler));
     }
 
     @Override

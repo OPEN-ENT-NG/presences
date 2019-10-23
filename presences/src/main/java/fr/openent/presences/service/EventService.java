@@ -29,6 +29,17 @@ public interface EventService {
              List<String> classes, Boolean regularized, Integer page, Handler<Either<String, JsonArray>> handler);
 
     /**
+     * Get events. Non paginated version. Used to display summary page
+     *
+     * @param startDate Start date
+     * @param endDate   End date
+     * @param eventType Event type list
+     * @param users     User list
+     * @param handler   Function handler returning data
+     */
+    void get(String startDate, String endDate, List<Number> eventType, List<String> users, Handler<Either<String, JsonArray>> handler);
+
+    /**
      * Get events page number
      *
      * @param structureId       structure identifier
@@ -44,13 +55,6 @@ public interface EventService {
                        List<String> userId, Boolean regularized, JsonArray userIdFromClasses,
                        Handler<Either<String, JsonObject>> handler);
 
-    /**
-     * Get events reason type
-     *
-     * @param structureId structure identifier
-     * @param handler     function handler returning data
-     */
-    void getEventsReasonType(String structureId, Handler<Either<String, JsonArray>> handler);
 
     /**
      * Create event

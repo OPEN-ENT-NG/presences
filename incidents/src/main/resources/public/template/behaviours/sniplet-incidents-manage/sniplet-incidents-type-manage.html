@@ -45,11 +45,11 @@
                         </div>
 
                         <div class="sniplet-addList-content-list-item-icons">
-                            <i class="visible" data-ng-show="!incidentType.hidden"
+                            <i class="visible" data-ng-show="incidentType.used && !incidentType.hidden"
                                data-ng-click="vm.toggleVisibility(incidentType)"></i>
-                            <i class="hidden" data-ng-show="incidentType.hidden && incidentType.used"
+                            <i class="invisible" data-ng-show="incidentType.hidden && incidentType.used"
                                data-ng-click="vm.toggleVisibility(incidentType)"></i>
-                            <i class="delete" data-ng-show="incidentType.hidden && !incidentType.used"
+                            <i class="delete" data-ng-show="!incidentType.used"
                                data-ng-click="vm.deleteIncidentType(incidentType)"></i>
                         </div>
                     </li>

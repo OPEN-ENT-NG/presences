@@ -42,8 +42,12 @@
                     <i18n>incidents.place</i18n>
                 </div>
                 <select class="card" required
+                        id="selectPlace"
+                        data-ng-change="vm.changeSelect(vm.incidentForm.place, 'selectPlace')"
                         data-ng-model="vm.incidentForm.place"
-                        ng-options="place.label for place in vm.incidentParameterType.place track by place.id">
+                        ng-options="place.label for place in vm.incidentParameterType.place track by place.id"
+                        options-disabled="place.hidden for place in vm.incidentParameterType.place">
+                    <option value=""></option>
                 </select>
             </label>
         </div>
@@ -55,8 +59,12 @@
                     <i18n>incidents.type</i18n>
                 </div>
                 <select class="card" required
+                        id="selectIncidentType"
                         data-ng-model="vm.incidentForm.incidentType"
-                        ng-options="incidentType.label for incidentType in vm.incidentParameterType.incidentType track by incidentType.id">
+                        data-ng-change="vm.changeSelect(vm.incidentForm.incidentType, 'selectIncidentType')"
+                        ng-options="incidentType.label for incidentType in vm.incidentParameterType.incidentType track by incidentType.id"
+                        options-disabled="incidentType.hidden for incidentType in vm.incidentParameterType.incidentType">
+                    <option value=""></option>
                 </select>
             </label>
 
@@ -65,8 +73,12 @@
                     <i18n>incidents.seriousness</i18n>
                 </div>
                 <select class="card" required
+                        id="selectSeriousness"
+                        data-ng-change="vm.changeSelect(vm.incidentForm.seriousness, 'selectSeriousness')"
                         data-ng-model="vm.incidentForm.seriousness"
-                        ng-options="seriousnessLevel.label for seriousnessLevel in vm.incidentParameterType.seriousnessLevel track by seriousnessLevel.id">
+                        ng-options="seriousnessLevel.label for seriousnessLevel in vm.incidentParameterType.seriousnessLevel track by seriousnessLevel.id"
+                        options-disabled="seriousnessLevel.hidden for seriousnessLevel in vm.incidentParameterType.seriousnessLevel">
+                    <option value=""></option>
                 </select>
             </label>
 
@@ -75,8 +87,12 @@
                     <i18n>incidents.partner</i18n>
                 </div>
                 <select class="card" required
+                        id="selectPartner"
+                        data-ng-change="vm.changeSelect(vm.incidentForm.partner, 'selectPartner')"
                         data-ng-model="vm.incidentForm.partner"
-                        ng-options="lang.translate(partner.label) for partner in vm.incidentParameterType.partner track by partner.id">
+                        ng-options="lang.translate(partner.label) for partner in vm.incidentParameterType.partner track by partner.id"
+                        options-disabled="partner.hidden for partner in vm.incidentParameterType.partner">
+                    <option value="">[[lang.translate('empty')]]</option>
                 </select>
             </label>
         </div>
