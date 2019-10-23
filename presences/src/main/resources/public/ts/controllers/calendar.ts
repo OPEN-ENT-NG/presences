@@ -289,8 +289,10 @@ export const calendarController = ng.controller('CalendarController', ['$scope',
                 if (absenceItem === undefined) {
                     return;
                 }
-                if (item.startDate >= absenceItem.startDate && item.endDate <= absenceItem.endDate) {
+                if ((item.startDate >= absenceItem.startDate) && ((item.endDate <= absenceItem.endDate) ||
+                    absenceItem.endDate > item.startDate)) {
                     $scope.$broadcast(ABSENCE_FORM_EVENTS.EDIT, absenceItem);
+                    return;
                 } else {
                     return;
                 }

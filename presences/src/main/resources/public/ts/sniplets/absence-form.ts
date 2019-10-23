@@ -64,14 +64,15 @@ const vm: ViewModel = {
 
     setFormDateParams: (form, start_date, end_date) => {
         form.startDate = moment(start_date).toDate();
+        form.endDate = moment(end_date).toDate();
         if (form.id) {
             form.startDateTime = moment(form.startDate).set({second: 0, millisecond: 0}).toDate();
+            form.endDateTime = moment(form.endDate).set({second: 0, millisecond: 0}).toDate();
+            return;
         } else {
             form.startDateTime = moment(new Date()).set({second: 0, millisecond: 0}).toDate();
         }
-        form.endDate = moment(end_date).toDate();
         form.endDateTime = moment(new Date().setHours(17)).set({minute: 0, second: 0, millisecond: 0}).toDate();
-
         form.start_date = getDateFormat(form.startDate, form.startDateTime);
         form.end_date = getDateFormat(form.endDate, form.endDateTime);
     },

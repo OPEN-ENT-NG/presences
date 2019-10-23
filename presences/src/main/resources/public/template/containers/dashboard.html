@@ -10,10 +10,11 @@
             [[structure.name]]
         </div>
     </div>
-    <div class="dashboard-search-row" workflow="presences.search">
+    <div class="dashboard-search-row">
         <div class="dashboard-search-row-searchs">
             <!-- Search to access calendar -->
-            <async-autocomplete ng-disabled="false"
+            <async-autocomplete workflow="presences.search"
+                                ng-disabled="false"
                                 ng-model="vm.filter.search.item"
                                 ng-change="vm.selectItem"
                                 on-search="vm.searchItem"
@@ -22,7 +23,8 @@
                                 search="vm.filter.search.item"></async-autocomplete>
 
             <!-- Search to access registry -->
-            <async-autocomplete class="search-registry"
+            <async-autocomplete workflow="presences.readRegistry"
+                                class="search-registry"
                                 ng-disabled="false"
                                 ng-model="vm.filter.searchClass.item"
                                 ng-change="vm.selectItemToRegistry"
