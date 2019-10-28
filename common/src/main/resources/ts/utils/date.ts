@@ -9,6 +9,7 @@ export class DateUtils {
         'DAY-MONTH-YEAR': 'DD/MM/YYYY',
         'HOUR-MINUTES': 'kk:mm',
         'BIRTHDATE': 'L',
+        'DAY-MONTH-YEAR-LETTER': 'LL',  // e.g "9 juin 2019"
         'DAY-DATE': 'dddd L',
         'DATE-FULL-LETTER': 'dddd LL'
     };

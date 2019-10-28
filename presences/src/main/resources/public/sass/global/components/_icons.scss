@@ -163,4 +163,9 @@ i {
     font-family: 'material-icons';
     content: '\F0C6';
   }
+
+  &.close-xs:before {
+    font-family: 'material-icons';
+    content: '\F156';
+  }
 }

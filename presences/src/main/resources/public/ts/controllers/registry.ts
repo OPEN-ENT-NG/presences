@@ -3,6 +3,7 @@ import {
     Group,
     GroupService,
     Registry,
+    RegistryDays,
     RegistryEvent,
     RegistryRequest,
     RegistryService,
@@ -27,6 +28,12 @@ const monthsData = [
     {name: "june", value: 6}, {name: "july", value: 7}, {name: "august", value: 8},
 ];
 
+interface EventRegistryCard {
+    events: RegistryEvent[];
+    date: string;
+    displayName: string;
+}
+
 interface Filter {
     searchGroup: {
         item: string;
@@ -43,6 +50,8 @@ interface ViewModel {
     months: { name: string, value: string }[];
     monthLength: number[];
     eventType: string[]; /* [0]:ABSENCE, [1]:LATENESS, [2]:INCIDENT, [3]:DEPARTURE */
+    eventCardId: number;
+    eventCardData: EventRegistryCard;
 
     removeGroup(group: Group): void;
 
@@ -56,6 +65,10 @@ interface ViewModel {
     searchGroup(value: string): Promise<void>;
 
     hasEventType(event: RegistryEvent[], eventTypeName: string): boolean;
+
+    openEventCard($event, student: string, day: RegistryDays, events: RegistryEvent[]): void;
+
+    closeEventCard(): void;
 }
 
 export const registryController = ng.controller('RegistryController', ['$scope', 'route', '$location',
@@ -71,6 +84,8 @@ export const registryController = ng.controller('RegistryController', ['$scope',
             EventType[EventType.INCIDENT],
             EventType[EventType.DEPARTURE]
         ];
+        vm.eventCardId = null;
+        vm.eventCardData = {} as EventRegistryCard;
         /* Setting url param default if param not fetched or empty */
         if (Object.getOwnPropertyNames(vm.params).length === 0) {
             $location.search({
@@ -118,19 +133,27 @@ export const registryController = ng.controller('RegistryController', ['$scope',
         };
         vm.months = getDynamicMonths();
 
-        const squashEvent = (): void => {
+        const createEventDisplay = (): void => {
             vm.registries.forEach(registry => {
                 registry.days.forEach(day => {
-                    day.events = _.uniq(day.events, 'type');
+                    day.eventsDisplay = JSON.parse(JSON.stringify(day.events));
+                    day.eventsDisplay = _.uniq(day.eventsDisplay, 'type');
                 })
             });
+        };
+
+        const offset = (el): { top: number, left: number, x: number, right: number } => {
+            let rect = el.getBoundingClientRect();
+            let scrollLeft = window.pageXOffset || document.documentElement.scrollLeft;
+            let scrollTop = window.pageYOffset || document.documentElement.scrollTop;
+            return {top: rect.top + scrollTop, left: rect.left + scrollLeft, x: rect.x, right: rect.right};
         };
 
         const getRegisterSummary = async (): Promise<void> => {
             vm.registries = await registryService.getRegisterSummary(vm.params);
             let monthLength = [];
             if (vm.registries.length > 1) {
-                squashEvent();
+                createEventDisplay();
                 vm.registries[0].days.forEach((value, index: number) => {
                     monthLength.push(index);
                 });
@@ -138,6 +161,7 @@ export const registryController = ng.controller('RegistryController', ['$scope',
             } else {
                 vm.monthLength = [];
             }
+            document.getElementById('event-card').style.display = 'none';
             $scope.safeApply();
         };
 
@@ -241,6 +265,38 @@ export const registryController = ng.controller('RegistryController', ['$scope',
                 return false;
             }
             return event.some(event => event.type === eventTypeName);
+        };
+
+        vm.openEventCard = ($event, student: string, day: RegistryDays, events: RegistryEvent[]): void => {
+            if (events.length === 0) {
+                return;
+            }
+
+            vm.eventCardData.events = events;
+            vm.eventCardData.date = DateUtils.format(day.date, DateUtils.FORMAT["DAY-MONTH-YEAR-LETTER"]);
+            vm.eventCardData.displayName = student;
+
+            const hover = document.getElementById('event-card');
+            const widthEventCard = hover.querySelector('.registry-event-card-header').clientWidth || 250;
+            const windowWidth = document.getElementsByTagName('html')[0].clientWidth;
+            const heightEventCard = 90;
+
+            let {top, left, x, right} = offset($event.target.closest('.registry-table-event-period-list'));
+
+            hover.style.top = `${top - heightEventCard}px`;
+            if (right + widthEventCard > windowWidth) {
+                hover.style.left = `${left - (widthEventCard + 35)}px`;
+            } else {
+                hover.style.left = `${x + (widthEventCard / 100)}px`;
+            }
+            hover.style.display = 'flex';
+            console.log('vm.studentEvent: ', vm.eventCardData);
+            $scope.safeApply();
+        };
+
+        vm.closeEventCard = (): void => {
+            document.getElementById('event-card').style.display = 'none';
+            vm.eventCardData = {} as EventRegistryCard;
         };
 
         /* on switch (watch) */

@@ -11,6 +11,7 @@ export interface Registry {
 export interface RegistryDays {
     date: string;
     events: RegistryEvent[];
+    eventsDisplay?: RegistryEvent[];
 }
 
 export interface RegistryEvent {

@@ -30,24 +30,31 @@
             <span class="registry-table-event-student-name">[[studentEvent.displayName]]</span>
         </div>
         <ul class="registry-table-event-period">
-            <li ng-repeat="day in studentEvent.days track by $index">
-                <div class="absent h[[day.events.length]]" data-ng-show="vm.hasEventType(day.events, vm.eventType[0])">
+            <li class="registry-table-event-period-list"
+                ng-repeat="day in studentEvent.days track by $index"
+                data-ng-click="vm.openEventCard($event, studentEvent.displayName, day, day.events)">
+                <div class="absent h[[day.eventsDisplay.length]]"
+                     data-ng-show="vm.hasEventType(day.eventsDisplay, vm.eventType[0])">
                     &nbsp;
                 </div>
-                <div class="lateness h[[day.events.length]]"
-                     data-ng-show="vm.hasEventType(day.events, vm.eventType[1])">
+                <div class="lateness h[[day.eventsDisplay.length]]"
+                     data-ng-show="vm.hasEventType(day.eventsDisplay, vm.eventType[1])">
                     &nbsp;
                 </div>
-                <div class="incident h[[day.events.length]]"
-                     data-ng-show="vm.hasEventType(day.events, vm.eventType[2])">
+                <div class="incident h[[day.eventsDisplay.length]]"
+                     data-ng-show="vm.hasEventType(day.eventsDisplay, vm.eventType[2])">
                     &nbsp;
                 </div>
-                <div class="departure h[[day.events.length]]"
-                     data-ng-show="vm.hasEventType(day.events, vm.eventType[3])">
+                <div class="departure h[[day.eventsDisplay.length]]"
+                     data-ng-show="vm.hasEventType(day.eventsDisplay, vm.eventType[3])">
                     &nbsp;
                 </div>
             </li>
         </ul>
     </div>
+    <!-- Event card clicked -->
+    <div id="event-card"
+         data-ng-show="vm.eventCardData.events && vm.eventCardData.events.length > 0"
+         ng-include="'/presences/public/template/registry/event-card.html'"></div>
 
 </div>
