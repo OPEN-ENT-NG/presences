@@ -34,11 +34,29 @@ $absence-button-width: 20px;
         }
 
         &.remark:before {
-          background-color: $presences-main;
+          background-color: $presences-remark;
         }
 
         &.incident:before {
           background-color: $presences-grey;
+        }
+
+        &.last-absent {
+          padding-left: 8px;
+
+          i:before {
+            font-size: 17px;
+            color: $presences-red;
+          }
+        }
+
+        &.forgotten-notebook {
+          padding-left: 8px;
+
+          i:before {
+            font-size: 17px;
+            color: $presences-water-green;
+          }
         }
 
         &:before {
@@ -173,7 +191,7 @@ $absence-button-width: 20px;
         }
 
         &.remark {
-          background-color: $presences-main;
+          background-color: $presences-remark;
         }
 
         &.incident {
@@ -217,6 +235,19 @@ $absence-button-width: 20px;
       }
     }
 
+    .absence-student {
+      display: flex;
+
+      .last-absent {
+        padding-left: 8px;
+
+        &:before {
+          font-size: 17px;
+          color: $presences-red;
+        }
+      }
+    }
+
     .register-event-status {
       display: flex;
       flex-direction: column;
@@ -244,7 +275,7 @@ $absence-button-width: 20px;
         }
 
         &.remark {
-          background-color: $presences-main;
+          background-color: $presences-remark;
         }
 
         &.incident {

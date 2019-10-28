@@ -153,4 +153,14 @@ i {
     font-family: 'material-icons';
     content: '\F3EB';
   }
+
+  &.last-absent:before {
+    font-family: 'material-icons';
+    content: '\F99A';
+  }
+
+  &.forgotten-notebook:before {
+    font-family: 'material-icons';
+    content: '\F0C6';
+  }
 }

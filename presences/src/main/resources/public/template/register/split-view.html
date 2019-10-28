@@ -22,11 +22,12 @@
                  ng-click="vm.toggleAbsence(student)">
                 &nbsp;
             </div>
-            <span ng-click="vm.openPanel(student)"
-                  class="student-name"
-                  ng-class="{'last-course-absent': student.last_course_absent}">
+            <div class="absence-student">
+                <span ng-click="vm.openPanel(student)" class="student-name">
                         [[student.name]]
-                    </span>
+                </span>
+                <i class="last-absent" data-ng-show="student.last_course_absent"></i>
+            </div>
         </div>
         <div class="register-event-status two">
             <div class="absence" ng-show="student.absence !== undefined">&nbsp;</div>
