@@ -3,17 +3,17 @@ package fr.openent.presences.controller;
 import fr.openent.presences.common.helper.DateHelper;
 import fr.openent.presences.common.helper.FutureHelper;
 import fr.openent.presences.common.security.SearchRight;
+import fr.openent.presences.common.service.GroupService;
+import fr.openent.presences.common.service.impl.DefaultGroupService;
 import fr.openent.presences.helper.CourseHelper;
 import fr.openent.presences.helper.MapHelper;
 import fr.openent.presences.helper.SubjectHelper;
 import fr.openent.presences.service.AbsenceService;
 import fr.openent.presences.service.EventService;
 import fr.openent.presences.service.ExemptionService;
-import fr.openent.presences.service.GroupService;
 import fr.openent.presences.service.impl.DefaultAbsenceService;
 import fr.openent.presences.service.impl.DefaultEventService;
 import fr.openent.presences.service.impl.DefaultExemptionService;
-import fr.openent.presences.service.impl.DefaultGroupService;
 import fr.wseduc.rs.ApiDoc;
 import fr.wseduc.rs.Get;
 import fr.wseduc.security.ActionType;
@@ -215,7 +215,7 @@ public class CalendarController extends ControllerHelper {
                                 .put("roomLabels", new JsonArray())
                                 .put("subjectId", "")
                                 .put("subject_name", "")
-                                .put("startMomentDate", totalDates.get(j).toString() + " " + (j == 0 ? startDateTime  : "00:00"))
+                                .put("startMomentDate", totalDates.get(j).toString() + " " + (j == 0 ? startDateTime : "00:00"))
                                 .put("startMomentTime", (j == 0 ? startDateTime : "00:00"))
                                 .put("endMomentDate", totalDates.get(j).toString() + " " + (j == (totalDates.size() - 1) ? endDateTime : "23:59"))
                                 .put("endMomentTime", j == (totalDates.size() - 1) ? endDateTime : "23:59")

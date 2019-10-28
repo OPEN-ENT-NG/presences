@@ -1,14 +1,13 @@
-var webpack = require('webpack');
 var path = require('path');
 
 module.exports = {
-    context: path.resolve(__dirname, './src/main/resources/public/'),
     entry: {
-        application: './ts/app.ts',
-        behaviours: './ts/behaviours.ts'
+        application: './massmailing/src/main/resources/public/ts/app.ts',
+        behaviours: './massmailing/src/main/resources/public/ts/behaviours.ts'
     },
     output: {
-        filename: './[name].js'
+        filename: '[name].js',
+        path: __dirname + 'dest'
     },
     externals: {
         "entcore/entcore": "entcore",
@@ -21,8 +20,10 @@ module.exports = {
     resolve: {
         modulesDirectories: ['node_modules'],
         extensions: ['', '.ts', '.js'],
+        root: path.resolve(__dirname),
         alias: {
-            "@common": path.resolve(__dirname, '../common/src/main/resources/ts')
+            "@common": path.resolve(__dirname, '../common/src/main/resources/ts'),
+            "@presences": path.resolve(__dirname, '../presences/src/main/resources/public/ts')
         }
     },
     devtool: "source-map",

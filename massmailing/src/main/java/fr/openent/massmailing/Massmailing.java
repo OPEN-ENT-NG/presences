@@ -4,6 +4,7 @@ import fr.openent.massmailing.controller.MassmailingController;
 import fr.openent.massmailing.controller.SettingsController;
 import fr.openent.massmailing.enums.MailingType;
 import fr.openent.massmailing.starter.DatabaseStarter;
+import fr.openent.presences.common.presences.Presences;
 import io.vertx.core.eventbus.EventBus;
 import io.vertx.core.json.JsonObject;
 import org.entcore.common.http.BaseServer;
@@ -16,6 +17,7 @@ public class Massmailing extends BaseServer {
     public static final String dbSchema = "massmailing";
 
     public static final String MANAGE = "massmailing.manage";
+    public static final String VIEW = "massmailing.view";
 
     static HashMap<MailingType, Boolean> types;
 
@@ -25,8 +27,10 @@ public class Massmailing extends BaseServer {
         EventBus eb = getEventBus(vertx);
         types = mailingsConfig();
 
-        addController(new MassmailingController());
+        addController(new MassmailingController(eb));
         addController(new SettingsController(eb));
+
+        Presences.getInstance().init(eb);
 
         vertx.setTimer(30000, handle -> new DatabaseStarter().init());
     }

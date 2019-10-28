@@ -1,0 +1,20 @@
+<div class="row">
+    <h1 class="title">
+        <i18n>massmailing.title</i18n>
+    </h1>
+</div>
+<div class="row menu">
+    <div class="cell menu-item">
+        <a href="#/" ng-class="{'current-state': vm.homeState()}">
+            <i18n>massmailing.home.title</i18n>
+        </a>
+    </div>
+    <div class="cell menu-item">
+        <a href="#/history" ng-class="{'current-state': vm.historyState()}">
+            <i18n>massmailing.history.title</i18n>
+        </a>
+    </div>
+</div>
+<div class="content row">
+    <container template="content"></container>
+</div>

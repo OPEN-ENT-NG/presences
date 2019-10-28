@@ -1,8 +1,8 @@
-package fr.openent.presences.service.impl;
+package fr.openent.presences.common.service.impl;
 
 import fr.openent.presences.common.helper.FutureHelper;
+import fr.openent.presences.common.service.GroupService;
 import fr.openent.presences.enums.GroupType;
-import fr.openent.presences.service.GroupService;
 import fr.wseduc.webutils.Either;
 import io.vertx.core.CompositeFuture;
 import io.vertx.core.Future;

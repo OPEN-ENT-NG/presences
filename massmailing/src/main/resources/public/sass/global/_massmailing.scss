@@ -1,0 +1,38 @@
+$massmailing-main: #ffb600;
+$massmailing-bgcolor: rgba(255, 255, 255, 0.6);
+
+body.massmailing {
+  @import "variables";
+  @import "components/index";
+
+  h1.title {
+    padding: 0 10px;
+    margin-left: 5px;
+  }
+
+  .content {
+    padding: 0 10px;
+    margin: 0 5px;
+    background-color: $massmailing-bgcolor;
+  }
+
+  .date-filters {
+    padding-top: 10px;
+  }
+
+  i.filter {
+    font-size: 26px;
+  }
+
+  .massmailing-filters {
+    h4 {
+      font-size: 20px;
+      font-weight: normal;
+
+      input[type="number"] {
+        width: 50px;
+        font-size: 20px;
+      }
+    }
+  }
+}

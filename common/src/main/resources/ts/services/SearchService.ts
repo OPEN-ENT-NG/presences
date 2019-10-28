@@ -1,6 +1,6 @@
 import {ng} from 'entcore'
 import http from 'axios';
-import {User} from '../models';
+import {User} from '@common/model/User';
 
 export interface SearchItem {
     id: string;

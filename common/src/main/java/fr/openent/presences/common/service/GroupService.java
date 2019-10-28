@@ -1,4 +1,4 @@
-package fr.openent.presences.service;
+package fr.openent.presences.common.service;
 
 import fr.openent.presences.enums.GroupType;
 import fr.wseduc.webutils.Either;

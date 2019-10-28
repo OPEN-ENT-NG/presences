@@ -529,6 +529,47 @@ public class DefaultEventService implements EventService {
         Sql.getInstance().prepared(query, params, SqlResult.validResultHandler(handler));
     }
 
+    @Override
+    public void getCountEventByStudent(Integer eventType, List<String> students, String structure, Boolean justified, Integer startAt, List<Integer> reasonsId,
+                                       Boolean massmailed, String startDate, String endDate, Handler<Either<String, JsonArray>> handler) {
+        startAt = startAt != null ? startAt : 1;
+        JsonArray params = new JsonArray()
+                .add(startDate)
+                .add(endDate)
+                .add(eventType)
+                .add(structure);
+        String query = "WITH count_by_user AS (" +
+                "SELECT count(event.id) as count, student_id " +
+                "FROM " + Presences.dbSchema + ".event " +
+                "INNER JOIN " + Presences.dbSchema + ".register ON (register.id = event.register_id) " +
+                "WHERE event.start_date > ? " +
+                "AND event.end_date < ? " +
+                "AND type_id = ? " +
+                "AND register.structure_id = ? ";
+        if (!students.isEmpty()) {
+            query += " AND student_id IN " + Sql.listPrepared(students);
+            params.addAll(new JsonArray(students));
+        }
+        if (justified != null) {
+            query += " AND (counsellor_regularisation = " + (justified ? "true) " : "false OR reason_id IS NULL) ");
+        }
+        if (!reasonsId.isEmpty()) {
+            query += " AND reason_id IN " + Sql.listPrepared(reasonsId);
+            params.addAll(new JsonArray(reasonsId));
+        }
+        if (massmailed != null) {
+            query += " AND massmailed = ? ";
+            params.add(massmailed);
+        }
+        query += " GROUP BY student_id) " +
+                "SELECT count_by_user.student_id as student_id, count_by_user.count as count " +
+                "FROM count_by_user " +
+                "WHERE count >= ?;";
+        params.add(startAt);
+
+        Sql.getInstance().prepared(query, params, SqlResult.validResultHandler(handler));
+    }
+
     private JsonObject getDeletionEventStatement(JsonObject event) {
         String query = "DELETE FROM " + Presences.dbSchema + ".event WHERE type_id IN (2, 3) AND register_id = ? AND student_id = ?";
         JsonArray params = new JsonArray()

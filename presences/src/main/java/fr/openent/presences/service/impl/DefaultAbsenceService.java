@@ -2,8 +2,9 @@ package fr.openent.presences.service.impl;
 
 import fr.openent.presences.Presences;
 import fr.openent.presences.common.helper.FutureHelper;
+import fr.openent.presences.common.service.GroupService;
+import fr.openent.presences.common.service.impl.DefaultGroupService;
 import fr.openent.presences.service.AbsenceService;
-import fr.openent.presences.service.GroupService;
 import fr.wseduc.webutils.Either;
 import io.vertx.core.CompositeFuture;
 import io.vertx.core.Future;
@@ -117,7 +118,7 @@ public class DefaultAbsenceService implements AbsenceService {
         }
         values.add(absenceId);
 
-        Sql.getInstance().prepared(query, values,  SqlResult.validUniqueResultHandler(absenceResult -> {
+        Sql.getInstance().prepared(query, values, SqlResult.validUniqueResultHandler(absenceResult -> {
             if (absenceResult.isLeft()) {
                 String message = "[Presences@DefaultAbsenceService] failed to update absence";
                 LOGGER.error(message, absenceResult.left().getValue());
@@ -186,15 +187,15 @@ public class DefaultAbsenceService implements AbsenceService {
     private void createEventsWithAbsents(JsonObject absenceBody, List<String> groupIds, Handler<Either<String, JsonArray>> handler) {
         String query = "WITH register as " +
                 "(" +
-                    "SELECT register.id, register.start_date, register.end_date FROM " + Presences.dbSchema + ".register " +
-                    "INNER JOIN presences.rel_group_register as rgr ON (rgr.register_id = register.id) " +
-                    "WHERE rgr.group_id IN " + Sql.listPrepared(groupIds.toArray()) + " " +
-                    "AND register.start_date >= ? " +
-                    "AND register.end_date <= ? " +
-                    "AND register.id NOT IN (" +
-                    "  SELECT event.register_id FROM " + Presences.dbSchema + ".event " +
-                    "  WHERE event.type_id = 1 and event.register_id = register.id and event.student_id = ?" +
-                    ")" +
+                "SELECT register.id, register.start_date, register.end_date FROM " + Presences.dbSchema + ".register " +
+                "INNER JOIN presences.rel_group_register as rgr ON (rgr.register_id = register.id) " +
+                "WHERE rgr.group_id IN " + Sql.listPrepared(groupIds.toArray()) + " " +
+                "AND register.start_date >= ? " +
+                "AND register.end_date <= ? " +
+                "AND register.id NOT IN (" +
+                "  SELECT event.register_id FROM " + Presences.dbSchema + ".event " +
+                "  WHERE event.type_id = 1 and event.register_id = register.id and event.student_id = ?" +
+                ")" +
                 ") " +
                 "INSERT INTO presences.event (start_date, end_date, comment, counsellor_input, student_id, register_id, type_id, reason_id, owner)" +
                 "(SELECT register.start_date, register.end_date, '', true, ?," +
@@ -220,15 +221,15 @@ public class DefaultAbsenceService implements AbsenceService {
     private void updateEventsWithAbsents(JsonObject absenceBody, List<String> groupIds, Handler<Either<String, JsonArray>> handler) {
         String query = "WITH register as " +
                 "(" +
-                    "SELECT register.id, register.start_date, register.end_date FROM " + Presences.dbSchema + ".register " +
-                    "INNER JOIN presences.rel_group_register as rgr ON (rgr.register_id = register.id) " +
-                    "WHERE rgr.group_id IN " + Sql.listPrepared(groupIds.toArray()) + " " +
-                    "AND register.start_date >= ? " +
-                    "AND register.end_date <= ? " +
-                    "AND register.id IN (" +
-                    "  SELECT event.register_id FROM " + Presences.dbSchema + ".event" +
-                    "  WHERE event.type_id = 1 and event.register_id = register.id and event.student_id = ?" +
-                    ") " +
+                "SELECT register.id, register.start_date, register.end_date FROM " + Presences.dbSchema + ".register " +
+                "INNER JOIN presences.rel_group_register as rgr ON (rgr.register_id = register.id) " +
+                "WHERE rgr.group_id IN " + Sql.listPrepared(groupIds.toArray()) + " " +
+                "AND register.start_date >= ? " +
+                "AND register.end_date <= ? " +
+                "AND register.id IN (" +
+                "  SELECT event.register_id FROM " + Presences.dbSchema + ".event" +
+                "  WHERE event.type_id = 1 and event.register_id = register.id and event.student_id = ?" +
+                ") " +
                 ") " +
                 "UPDATE " + Presences.dbSchema + ".event SET reason_id = ? WHERE register_id IN (SELECT id FROM register) " +
                 "returning register_id AS updated_register_id";

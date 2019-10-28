@@ -129,29 +129,34 @@ i {
     content: "\F128";
   }
 
-  &.file-checked:before  {
+  &.file-checked:before {
     font-family: 'material-icons';
-    content:"\F216";
+    content: "\F216";
   }
 
   &.visible:before {
     font-family: 'material-icons';
-    content:"\F208";
+    content: "\F208";
   }
 
   &.invisible:before {
     font-family: 'material-icons';
-    content:"\F6D0";
+    content: "\F6D0";
   }
 
   &.delete:before {
     font-family: 'material-icons';
-    content:"\F5AD";
+    content: "\F5AD";
   }
 
   &.presence-edit:before {
     font-family: 'material-icons';
     content: '\F3EB';
+  }
+
+  &.filter:before {
+    font-family: 'material-icons';
+    content: '\F236';
   }
 
   &.last-absent:before {

@@ -1,0 +1,120 @@
+<section class="head massmailing-lightbox-header">
+    <h3>
+        <i18n>massmailing.filters</i18n>
+    </h3>
+</section>
+<section class="massmailing-lightbox-body body lightbox-form">
+    <div class="row vertical-spacing">
+        <div class="cell six paddingRight">
+            <div class="cell twelve search-input">
+                <async-autocomplete ng-disabled="false"
+                                    ng-model="vm.formFilter.student"
+                                    ng-change="vm.selectStudent"
+                                    on-search="vm.searchStudent"
+                                    options="vm.formFilter.students"
+                                    placeholder="massmailing.search.student"
+                                    search="vm.formFilter.student"></async-autocomplete>
+            </div>
+            <div class="cell twelve">
+                <ul class="cell twelve search-input-ul">
+                    <li ng-repeat="student in vm.formFilter.selected.students"
+                        ng-click="vm.dropFilter(student, 'students')">
+                        [[student.toString()]]
+                        <i class="close"></i>
+                    </li>
+                </ul>
+            </div>
+        </div>
+        <div class="cell six paddingLeft">
+            <div class="cell twelve search-input">
+                <async-autocomplete ng-disabled="false"
+                                    ng-model="vm.formFilter.group"
+                                    ng-change="vm.selectGroup"
+                                    on-search="vm.searchGroup"
+                                    options="vm.formFilter.groups"
+                                    placeholder="massmailing.search.group"
+                                    search="vm.formFilter.group"></async-autocomplete>
+            </div>
+            <div class="cell twelve">
+                <ul class="cell twelve search-input-ul">
+                    <li ng-repeat="group in vm.formFilter.selected.groups"
+                        ng-click="vm.dropFilter(group, 'groups')">
+                        [[group.toString()]]
+                        <i class="close"></i>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </div>
+    <div class="row vertical-spacing">
+        <h4>
+            <i18n>massmailing.filters.type</i18n>
+        </h4>
+        <div class="chips">
+            <div class="chip" ng-class="{ selected: vm.formFilter.status.JUSTIFIED }"
+                 data-ng-click="vm.formFilter.status.JUSTIFIED = !vm.formFilter.status.JUSTIFIED">
+                <i18n>massmailing.types.JUSTIFIED</i18n>
+            </div>
+            <div class="chip" ng-class="{ selected: vm.formFilter.status.UNJUSTIFIED }"
+                 data-ng-click="vm.formFilter.status.UNJUSTIFIED = !vm.formFilter.status.UNJUSTIFIED">
+                <i18n>massmailing.types.UNJUSTIFIED</i18n>
+            </div>
+            <div class="chip" ng-class="{ selected: vm.formFilter.status.LATENESS }"
+                 data-ng-click="vm.formFilter.status.LATENESS = !vm.formFilter.status.LATENESS">
+                <i18n>massmailing.types.LATENESS</i18n>
+            </div>
+        </div>
+    </div>
+    <div class="row vertical-spacing">
+        <h4>
+            <i18n>massmailing.filters.massmailing</i18n>
+        </h4>
+        <div class="chips">
+            <div class="chip" ng-class="{ selected: vm.formFilter.massmailing_status.mailed }"
+                 data-ng-click="vm.formFilter.massmailing_status.mailed = !vm.formFilter.massmailing_status.mailed">
+                <i18n>massmailing.massmailed.mailed</i18n>
+            </div>
+            <div class="chip" ng-class="{ selected: vm.formFilter.massmailing_status.waiting }"
+                 data-ng-click="vm.formFilter.massmailing_status.waiting = !vm.formFilter.massmailing_status.waiting">
+                <i18n>massmailing.massmailed.waiting</i18n>
+            </div>
+        </div>
+    </div>
+    <div class="row vertical-spacing">
+        <h4 class="row">
+            <i18n class="cell">massmailing.filters.reasons</i18n>
+            <div class="horizontal-spacing card cell horizontal-margin">
+                [[vm.getActivatedReasonsCount()]]/[[vm.reasons.length]]
+            </div>
+        </h4>
+        <div class="chips">
+            <div class="chip" ng-class="{selected: vm.formFilter.allReasons}" data-ng-click="vm.switchAllReasons()">
+                <i18n>massmailing.all.none</i18n>
+            </div>
+            <div class="chip" ng-repeat="reason in vm.reasons track by $index|orderBy:'label'"
+                 ng-class="{ selected: vm.formFilter.reasons[reason.id]}"
+                 data-ng-click="vm.formFilter.reasons[reason.id] = !vm.formFilter.reasons[reason.id]">
+                <span class="no-style">[[reason.label]]</span>
+            </div>
+        </div>
+    </div>
+    <div class="row vertical-spacing">
+        <h4>
+            <i18n>massmailing.filters.display.from</i18n>
+            <input type="number" ng-model="vm.formFilter.start_at">
+            <i18n>massmailing.filter.display.absences.lateness</i18n>
+        </h4>
+    </div>
+</section>
+<section class="massmailing-lightbox-footer">
+    <div class="row horizontal-spacing">
+        <div class="massmailing-lightbox-footer-submit twelve cell">
+            <button class="right-magnet" ng-click="vm.validForm()">
+                <i18n>massmailing.validate</i18n>
+            </button>
+            <button class="right-magnet cancel" ng-click="vm.filter.show = false">
+                <i18n>massmailing.cancel</i18n>
+            </button>
+        </div>
+    </div>
+</section>

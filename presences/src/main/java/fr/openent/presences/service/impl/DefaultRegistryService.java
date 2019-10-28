@@ -7,7 +7,6 @@ import fr.openent.presences.common.viescolaire.Viescolaire;
 import fr.openent.presences.enums.EventType;
 import fr.openent.presences.enums.Events;
 import fr.openent.presences.service.EventService;
-import fr.openent.presences.service.GroupService;
 import fr.openent.presences.service.RegistryService;
 import fr.wseduc.mongodb.MongoDb;
 import fr.wseduc.webutils.Either;

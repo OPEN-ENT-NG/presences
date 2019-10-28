@@ -3,13 +3,12 @@ package fr.openent.presences.service.impl;
 import fr.openent.presences.Presences;
 import fr.openent.presences.common.helper.FutureHelper;
 import fr.openent.presences.common.helper.RegisterHelper;
-import fr.openent.presences.common.helper.WorkflowHelper;
+import fr.openent.presences.common.service.GroupService;
+import fr.openent.presences.common.service.impl.DefaultGroupService;
 import fr.openent.presences.enums.EventType;
 import fr.openent.presences.enums.GroupType;
-import fr.openent.presences.enums.WorkflowActions;
 import fr.openent.presences.service.AbsenceService;
 import fr.openent.presences.service.ExemptionService;
-import fr.openent.presences.service.GroupService;
 import fr.openent.presences.service.RegisterService;
 import fr.wseduc.mongodb.MongoDb;
 import fr.wseduc.webutils.Either;
@@ -19,7 +18,6 @@ import io.vertx.core.Future;
 import io.vertx.core.Handler;
 import io.vertx.core.eventbus.EventBus;
 import io.vertx.core.eventbus.Message;
-import io.vertx.core.json.Json;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import io.vertx.core.logging.Logger;
@@ -133,7 +131,7 @@ public class DefaultRegisterService implements RegisterService {
                         handler.handle(new Either.Left<>(message));
                     } else {
                         List<String> users = new ArrayList<>();
-                        for (int i = 0; i < studentsIdsResult.right().getValue().size() ; i++) {
+                        for (int i = 0; i < studentsIdsResult.right().getValue().size(); i++) {
                             users.add(studentsIdsResult.right().getValue().getJsonObject(i).getString("id"));
                         }
                         matchAbsenceToEvent(finalResult, users, user, matchingResult -> {

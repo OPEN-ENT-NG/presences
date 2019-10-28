@@ -29,11 +29,15 @@ $alert-height: 117px;
       bottom: 0;
     }
 
-    &.absences:after {
+    &.absences:after, &.UNJUSTIFIED:after {
       background-color: $presences-red;
     }
 
-    &.lateness:after {
+    &.JUSTIFIED:after {
+      background-color: $presences-pink;
+    }
+
+    &.lateness:after, &.LATENESS:after {
       background-color: $presences-purple;
     }
 

@@ -17,6 +17,9 @@
     ],
     "baseUrl": ".",
     "paths": {
+      "@presences/*": [
+        "presences/src/main/resources/public/ts/*"
+      ],
       "@common/*": [
         "common/src/main/resources/ts/*"
       ],
