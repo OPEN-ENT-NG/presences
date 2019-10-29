@@ -63,9 +63,14 @@ public class DefaultIncidentsService extends SqlCrudService implements Incidents
 
     @Override
     public void get(String startDate, String endDate, List<String> users, Handler<Either<String, JsonArray>> handler) {
-        String query = "SELECT incident.*, protagonist.user_id as student_id " +
+        String query = "SELECT incident.*, place.label as place, " +
+                "incident_type.label as incident_type, protagonist.user_id as student_id, " +
+                "protagonist_type.label as protagonist_type " +
                 "FROM " + Incidents.dbSchema + ".incident " +
+                "INNER JOIN " + Incidents.dbSchema + ".incident_type ON (incident.type_id = incident_type.id) " +
                 "INNER JOIN " + Incidents.dbSchema + ".protagonist ON (incident.id = protagonist.incident_id) " +
+                "INNER JOIN " + Incidents.dbSchema + ".place ON (incident.place_id = place.id) " +
+                "INNER JOIN " + Incidents.dbSchema + ".protagonist_type ON (protagonist.type_id = protagonist_type.id)" +
                 "WHERE protagonist.user_id IN " + Sql.listPrepared(users) +
                 " AND incident.date >= to_date(?, 'YYYY-MM-DD') " +
                 "AND incident.date <= to_date(?, 'YYYY-MM-DD')";

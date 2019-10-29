@@ -66,8 +66,11 @@ interface ViewModel {
 
     hasEventType(event: RegistryEvent[], eventTypeName: string): boolean;
 
+    isAbsenceReason(event: RegistryEvent[]): boolean;
+
     openEventCard($event, student: string, day: RegistryDays, events: RegistryEvent[]): void;
 
+    formatDate(date: string): string;
     closeEventCard(): void;
 }
 
@@ -137,7 +140,7 @@ export const registryController = ng.controller('RegistryController', ['$scope',
             vm.registries.forEach(registry => {
                 registry.days.forEach(day => {
                     day.eventsDisplay = JSON.parse(JSON.stringify(day.events));
-                    day.eventsDisplay = _.uniq(day.eventsDisplay, 'type');
+                    day.eventsDisplay = _.uniq(day.eventsDisplay, 'reason',);
                 })
             });
         };
@@ -264,7 +267,14 @@ export const registryController = ng.controller('RegistryController', ['$scope',
             if (event.length === 0) {
                 return false;
             }
-            return event.some(event => event.type === eventTypeName);
+            return event.some(event => event.type === eventTypeName && !event.hasOwnProperty('reason'));
+        };
+
+        vm.isAbsenceReason = (event: RegistryEvent[]): boolean => {
+            if (event.length === 0) {
+                return false;
+            }
+            return event.some(event => event.hasOwnProperty('reason'));
         };
 
         vm.openEventCard = ($event, student: string, day: RegistryDays, events: RegistryEvent[]): void => {
@@ -277,7 +287,7 @@ export const registryController = ng.controller('RegistryController', ['$scope',
             vm.eventCardData.displayName = student;
 
             const hover = document.getElementById('event-card');
-            const widthEventCard = hover.querySelector('.registry-event-card-header').clientWidth || 250;
+            const widthEventCard = hover.querySelector('.registry-event-card-header').clientWidth || 400;
             const windowWidth = document.getElementsByTagName('html')[0].clientWidth;
             const heightEventCard = 90;
 
@@ -290,8 +300,11 @@ export const registryController = ng.controller('RegistryController', ['$scope',
                 hover.style.left = `${x + (widthEventCard / 100)}px`;
             }
             hover.style.display = 'flex';
-            console.log('vm.studentEvent: ', vm.eventCardData);
             $scope.safeApply();
+        };
+
+        vm.formatDate = (date: string): string => {
+            return moment(date).format(DateUtils.FORMAT["HOUR-MINUTES"]).replace(':', 'h');
         };
 
         vm.closeEventCard = (): void => {

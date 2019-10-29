@@ -18,7 +18,16 @@ export interface RegistryEvent {
     type: string;
     startDate: string;
     endDate: string;
-    comment: string;
+    student_id: string;
+
+    /* incidents properties */
+    incident_type?: string;
+    place?: string;
+    protagonist_type?: string;
+
+    /* absence properties */
+    reason_id?: number;
+    reason?: string;
 }
 
 export interface RegistryRequest {

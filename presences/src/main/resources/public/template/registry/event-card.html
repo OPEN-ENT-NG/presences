@@ -7,6 +7,78 @@
         <span>[[vm.eventCardData.date]]</span>
     </div>
     <div class="registry-event-card-body">
-        <span>@todo events to finish & jours fériés + vacances display</span>
+        <ul>
+            <!-- list events -->
+            <li ng-repeat="event in vm.eventCardData.events track by $index">
+                <div class="registry-event-card-body-description">
+                    <div class="legends"
+                         ng-class="{
+                            absence: event.type === vm.eventType[0] && !event.reason,
+                           'absence-reason': event.type === vm.eventType[0] && event.reason,
+                            lateness: event.type === vm.eventType[1],
+                            incident: event.type === vm.eventType[2],
+                            departure: event.type === vm.eventType[3]
+                         }">
+                    </div>
+                    <!-- absence case-->
+                    <div data-ng-if="event.type === vm.eventType[0]">
+                        <span class="registry-event-card-body-description-title">
+                            <i18n>presences.register.event_type.absences</i18n>
+                        </span>
+                        <span class="registry-event-card-body-description-date">
+                             [[vm.formatDate(event.start_date)]]-[[vm.formatDate(event.end_date)]]
+                        </span>
+                    </div>
+
+                    <!-- lateness title case-->
+                    <div data-ng-if="event.type === vm.eventType[1]">
+                        <span class="registry-event-card-body-description-title">
+                            <i18n>presences.register.event_type.lateness</i18n>
+                        </span>
+                        <span class="registry-event-card-body-description-date">
+                            [[vm.formatDate(event.start_date)]]
+                        </span>
+                    </div>
+
+                    <!-- incident case-->
+                    <div data-ng-if="event.type === vm.eventType[2]">
+                        <span class="registry-event-card-body-description-title">[[event.incident_type]]</span>
+                        <span class="registry-event-card-body-description-date">
+                            [[vm.formatDate(event.start_date)]]
+                        </span>
+                        <span class="registry-event-card-body-description-title">[[event.place]]</span>
+                    </div>
+
+                    <!-- departure case-->
+                    <div data-ng-if="event.type === vm.eventType[3]">
+                        <span class="registry-event-card-body-description-title">
+                            <i18n>presences.register.event_type.departure</i18n>
+                        </span>
+                        <span class="registry-event-card-body-description-date">
+                            [[vm.formatDate(event.start_date)]]
+                        </span>
+                    </div>
+
+                </div>
+
+                <!-- incident case-->
+                <span class="registry-event-card-body-description-option" data-ng-if="event.type === vm.eventType[2]">
+                    [[event.protagonist_type]]
+                </span>
+
+                <!-- absence case-->
+                <span class="registry-event-card-body-description-option"
+                      data-ng-if="event.type === vm.eventType[0] && !event.reason">
+                    <i18n>presences.absence.no.reason</i18n>
+                </span>
+
+                <!-- absence w/ reason case-->
+                <span class="registry-event-card-body-description-option"
+                      data-ng-if="event.type === vm.eventType[0] && event.reason">
+                    <i18n>presences.absence.reason</i18n> : [[event.reason]]
+                </span>
+
+            </li>
+        </ul>
     </div>
 </div>

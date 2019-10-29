@@ -113,19 +113,23 @@ ul {
         border-left: 1px solid $presences-grey-incident;
 
         .absent {
-          background-color: $presences-red
+          background-color: $presences-red;
+        }
+
+        .absent-reason {
+          background-color: $presences-pink;
         }
 
         .lateness {
-          background-color: $presences-purple
+          background-color: $presences-purple;
         }
 
         .departure {
-          background-color: $presences-green
+          background-color: $presences-green;
         }
 
         .incident {
-          background-color: $presences-grey-incident
+          background-color: $presences-grey-incident;
         }
 
         @for $i from 1 through 5 {

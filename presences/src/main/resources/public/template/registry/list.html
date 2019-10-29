@@ -37,6 +37,10 @@
                      data-ng-show="vm.hasEventType(day.eventsDisplay, vm.eventType[0])">
                     &nbsp;
                 </div>
+                <div class="absent-reason h[[day.eventsDisplay.length]]"
+                     data-ng-show="vm.isAbsenceReason(day.eventsDisplay)">
+                    &nbsp;
+                </div>
                 <div class="lateness h[[day.eventsDisplay.length]]"
                      data-ng-show="vm.hasEventType(day.eventsDisplay, vm.eventType[1])">
                     &nbsp;

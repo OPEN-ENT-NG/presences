@@ -218,4 +218,35 @@ body.presences, .sniplet.presences {
     background: $presences-red;
     border-radius: 5px;
   }
+
+  .legends {
+    width: 17px;
+    height: 17px;
+    display: inline-block;
+    border-radius: 50%;
+
+    &.absence {
+      background-color: $presences-red;
+    }
+
+    &.absence-reason {
+      background-color: $presences-pink;
+    }
+
+    &.lateness {
+      background-color: $presences-purple;
+    }
+
+    &.departure {
+      background-color: $presences-green;
+    }
+
+    &.remark {
+      background-color: $presences-remark;
+    }
+
+    &.incident {
+      background-color: $presences-grey;
+    }
+  }
 }

@@ -226,13 +226,18 @@ public class DefaultRegistryService implements RegistryService {
         JsonArray evts = new JsonArray();
         for (int i = 0; i < events.size(); i++) {
             JsonObject e = events.getJsonObject(i);
-            evts.add(
-                    new JsonObject()
-                            .put("student_id", e.getString("student_id"))
-                            .put("start_date", e.getString("start_date", ""))
-                            .put("end_date", e.getString("end_date", ""))
-                            .put("type", getEventTypeName(e.getInteger("type_id")))
-            );
+            JsonObject eventObject = new JsonObject()
+                    .put("student_id", e.getString("student_id"))
+                    .put("start_date", e.getString("start_date", ""))
+                    .put("end_date", e.getString("end_date", ""))
+                    .put("type", getEventTypeName(e.getInteger("type_id")));
+            if (e.getLong("reason_id") != null) {
+                eventObject.put("reason_id", e.getLong("reason_id"));
+            }
+            if (e.getString("reason") != null) {
+                eventObject.put("reason", e.getString("reason"));
+            }
+            evts.add(eventObject);
         }
 
         return evts;
@@ -247,6 +252,9 @@ public class DefaultRegistryService implements RegistryService {
                             .put("student_id", idt.getString("student_id"))
                             .put("start_date", idt.getString("date"))
                             .put("end_date", idt.getString("date"))
+                            .put("incident_type", idt.getString("incident_type"))
+                            .put("place", idt.getString("place"))
+                            .put("protagonist_type", idt.getString("protagonist_type"))
                             .put("type", Events.INCIDENT)
             );
         }

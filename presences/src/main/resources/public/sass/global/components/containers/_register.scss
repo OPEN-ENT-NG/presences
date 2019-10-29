@@ -25,6 +25,10 @@ $absence-button-width: 20px;
           background-color: $presences-red;
         }
 
+        &.absence-reason:before {
+          background-color: $presences-pink;
+        }
+
         &.lateness:before {
           background-color: $presences-purple;
         }

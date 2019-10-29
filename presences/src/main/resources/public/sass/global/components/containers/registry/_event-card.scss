@@ -4,7 +4,7 @@
 }
 
 .registry-event-card {
-  max-width: 300px;
+  min-width: 400px;
   background-color: $presences-white;
   color: $presences-black;
   border-radius: 5px;
@@ -28,5 +28,36 @@
   &-body {
     display: flex;
     padding: 8px;
+
+    ul {
+      margin: 0;
+      padding: 0;
+
+      li {
+        padding-bottom: 16px;
+
+        &:last-child {
+          padding: 0;
+        }
+      }
+    }
+
+    &-description {
+      display: flex;
+      flex-direction: row;
+      align-items: center;
+
+      &-title {
+        padding: 0 16px;
+      }
+
+      &-date {
+        padding-right: 16px;
+      }
+
+      &-option {
+        padding-left: 32px;
+      }
+    }
   }
 }
