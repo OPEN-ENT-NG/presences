@@ -135,17 +135,17 @@ export const homeController = ng.controller('HomeController', ['$scope', 'route'
         };
 
         vm.switchAllReasons = function () {
-            vm.filter.allReasons = !vm.filter.allReasons;
-            for (let reason in vm.filter.reasons) {
-                vm.filter.reasons[reason] = vm.filter.allReasons;
+            vm.formFilter.allReasons = !vm.formFilter.allReasons;
+            for (let reason in vm.formFilter.reasons) {
+                vm.formFilter.reasons[reason] = vm.formFilter.allReasons;
             }
         };
 
 
         vm.getActivatedReasonsCount = function () {
             let count = 0;
-            for (let reason in vm.filter.reasons) {
-                count += vm.filter.reasons[reason];
+            for (let reason in vm.formFilter.reasons) {
+                count += vm.formFilter.reasons[reason];
             }
 
             return count;
