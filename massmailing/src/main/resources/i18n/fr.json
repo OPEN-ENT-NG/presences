@@ -47,5 +47,12 @@
   "massmailing.alerts.JUSTIFIED.text": "absences justifiées à publiposter",
   "massmailing.alerts.LATENESS.text": "retards à publiposter",
   "massmailing.search.student": "Rechercher un élève",
-  "massmailing.search.group": "Rechercher une classe ou un groupe"
+  "massmailing.search.group": "Rechercher une classe ou un groupe",
+  "massmailing.anomalies.title": "Anomalies détectées",
+  "massmailing.anomalies": "anomalies",
+  "massmailig.student": "Elève",
+  "massmailing.class": "Classe",
+  "massmailing.number": "Quantité",
+  "massmailing.anomalies.MAIL": "Anomalie mail responsables",
+  "massmailing.anomalies.student.MAIL": "Aucun mail"
 }

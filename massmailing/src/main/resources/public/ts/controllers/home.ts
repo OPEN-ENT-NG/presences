@@ -1,7 +1,7 @@
 import {_, ng} from 'entcore';
 import {Reason, ReasonService} from '@presences/services/ReasonService';
 import {GroupService, SearchService} from '../services';
-import {MassmailingStatusResponse} from "../model";
+import {MassmailingAnomaliesResponse, MassmailingStatusResponse} from "../model";
 
 interface Filter {
     show: boolean
@@ -26,6 +26,9 @@ interface Filter {
     selected: {
         students: any[],
         groups: any[]
+    },
+    anomalies: {
+        MAIL: boolean
     }
 }
 
@@ -34,14 +37,18 @@ interface ViewModel {
     formFilter: any;
     reasons: Array<Reason>
     massmailingStatus: MassmailingStatusResponse
+    massmailingAnomalies: MassmailingAnomaliesResponse[]
+    massmailingCount: {
+        MAIL?: number
+    }
+
+    fetchData(): void;
 
     loadData(): Promise<void>;
 
     switchAllReasons(): void;
 
     getActivatedReasonsCount(): number;
-
-    loadMassmailingStatus(): void;
 
     searchStudent(value: string): void;
 
@@ -56,6 +63,8 @@ interface ViewModel {
     openForm(): void;
 
     validForm(): void;
+
+    getKeys(object): string[]
 }
 
 declare let window: any;
@@ -89,25 +98,39 @@ export const homeController = ng.controller('HomeController', ['$scope', 'route'
             selected: {
                 students: [],
                 groups: []
+            },
+            anomalies: {
+                MAIL: true
             }
+        };
+
+        vm.massmailingCount = {
+            MAIL: 0
+        };
+
+        vm.fetchData = function () {
+            fetchMassmailingAnomalies();
+            fetchMassmailingStatus();
         };
 
         vm.openForm = function () {
             vm.filter.show = true;
             vm.formFilter = JSON.parse(JSON.stringify(vm.filter));
+            vm.formFilter.selected.students.forEach((item) => item.toString = () => item.displayName);
+            vm.formFilter.selected.groups.forEach((obj) => obj.toString = () => obj.name);
         };
 
         vm.validForm = function () {
             vm.filter = {...vm.formFilter, show: false};
             vm.formFilter = {};
-            vm.loadMassmailingStatus();
+            vm.fetchData();
         };
 
         vm.loadData = async function () {
             if (!window.structure) return;
             vm.reasons = await ReasonService.getReasons(window.structure.id);
             vm.reasons.map((reason: Reason) => vm.filter.reasons[reason.id] = false);
-            vm.massmailingStatus = await retrieveMassmailingStatus();
+            vm.fetchData();
             $scope.$apply();
         };
 
@@ -138,7 +161,7 @@ export const homeController = ng.controller('HomeController', ['$scope', 'route'
             return mailed;
         }
 
-        async function retrieveMassmailingStatus(): Promise<MassmailingStatusResponse> {
+        async function retrieveMassmailings(type: string): Promise<any> {
             const {waiting, mailed} = vm.filter.massmailing_status;
             if (!(mailed || waiting)) {
                 return {};
@@ -151,14 +174,35 @@ export const homeController = ng.controller('HomeController', ['$scope', 'route'
             const students = [], groups = [];
             vm.filter.selected.students.forEach(({id}) => students.push(id));
             vm.filter.selected.groups.forEach(({id}) => groups.push(id));
-            const data = await MassmailingService.getStatus(window.structure.id, massmailedParameter(), reasons, vm.filter.start_at, vm.filter.start_date, vm.filter.end_date, groups, students, types);
+            const data = await MassmailingService[`get${type}`](window.structure.id, massmailedParameter(), reasons, vm.filter.start_at, vm.filter.start_date, vm.filter.end_date, groups, students, types);
             return data;
         }
 
-        vm.loadMassmailingStatus = async function () {
-            vm.massmailingStatus = await retrieveMassmailingStatus();
-            $scope.safeApply();
-        };
+        function fetchMassmailingStatus() {
+            retrieveMassmailings('Status').then(data => {
+                vm.massmailingStatus = data;
+                $scope.safeApply();
+            });
+        }
+
+        function fetchMassmailingAnomalies() {
+            retrieveMassmailings('Anomalies').then(data => {
+                vm.massmailingAnomalies = data;
+                resetMassmailingCount();
+                data.forEach(({bug}) => {
+                    Object.keys(bug).forEach(key => {
+                        vm.massmailingCount[key]++
+                    });
+                });
+                $scope.safeApply();
+            });
+        }
+
+        function resetMassmailingCount() {
+            vm.massmailingCount = {
+                MAIL: 0
+            }
+        }
 
         vm.searchStudent = async function (value) {
             const structureId = window.structure.id;
@@ -208,6 +252,8 @@ export const homeController = ng.controller('HomeController', ['$scope', 'route'
             vm.formFilter.selected[list] = _.without(vm.formFilter.selected[list], object);
             $scope.safeApply();
         };
+
+        vm.getKeys = (object) => Object.keys(object);
 
         $scope.$watch(() => window.structure, vm.loadData);
     }]);

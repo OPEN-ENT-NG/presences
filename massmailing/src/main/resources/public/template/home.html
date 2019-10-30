@@ -4,12 +4,12 @@
             <span><i18n>massmailing.from</i18n></span>
             <span class="date-picker">
             <date-picker ng-model="vm.filter.start_date"
-                         ng-change="vm.loadMassmailingStatus()"></date-picker>
+                         ng-change="vm.fetchData()"></date-picker>
         </span>
             <span><i18n>massmailing.to</i18n></span>
             <span class="date-picker">
             <date-picker ng-model="vm.filter.end_date"
-                         ng-change="vm.loadMassmailingStatus()"></date-picker>
+                         ng-change="vm.fetchData()"></date-picker>
         </span>
         </div>
         <div class="right-magnet">
@@ -40,6 +40,60 @@
                     [[lang.translate('massmailing.alerts.' + status + '.text')]]
                 </p>
             </div>
+        </div>
+    </div>
+    <div class="horizontal-spacing-twice massmail-anomalies row vertical-spacing-six">
+        <div class="hr">&nbsp;</div>
+        <div class="row">
+            <h4 class="title">
+                <i18n>massmailing.anomalies.title</i18n>
+            </h4>
+        </div>
+        <div class="row chips">
+            <div class="chip" ng-repeat="type in vm.getKeys(vm.massmailingCount)"
+                 ng-class="{ selected: vm.filter.anomalies[type]}"
+                 data-ng-click="vm.filter.anomalies[type] = !vm.filter.anomalies[type]">
+                <span class="no-style">
+                    <i class="incidents">&nbsp;</i> [[ vm.massmailingCount[type] ]]
+                    <i18n>massmailing.anomalies</i18n>
+                    [[ type ]]
+                </span>
+            </div>
+        </div>
+        <div class="row vertical-spacing" ng-show="vm.filter.anomalies.MAIL">
+            <table>
+                <thead>
+                <th width="20%" class="text-align-left">
+                    <i18n>massmailig.student</i18n>
+                </th>
+                <th width="10%">
+                    <i18n>massmailing.class</i18n>
+                </th>
+                <th width="10%">
+                    <i18n>massmailing.number</i18n>
+                </th>
+                <th width="20%" ng-repeat="type in vm.getKeys(vm.massmailingCount)">
+                    [[lang.translate('massmailing.anomalies.' +
+                    type)]]
+                </th>
+                </thead>
+                <tbody>
+                <tr ng-repeat="anomaly in vm.massmailingAnomalies">
+                    <td>[[anomaly.displayName]]</td>
+                    <td class="text-center">[[anomaly.className]]</td>
+                    <td class="text-center counters-cell">
+                        <div class="counters">
+                            <div ng-repeat="countType in vm.getKeys(anomaly.count)" class="[[countType]] counter">
+                                [[anomaly.count[countType] ]]
+                            </div>
+                        </div>
+                    </td>
+                    <td class="text-center" ng-repeat="type in vm.getKeys(vm.massmailingCount)">
+                        [[lang.translate('massmailing.anomalies.student.' + type)]]
+                    </td>
+                </tr>
+                </tbody>
+            </table>
         </div>
     </div>
     <lightbox show="vm.filter.show" on-close="vm.filter.show = false" class="massmailing-filters">

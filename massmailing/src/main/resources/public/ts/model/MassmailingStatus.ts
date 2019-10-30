@@ -13,3 +13,14 @@ export interface MassmailingStatusResponse {
     PUNISHMENT?: number,
     SANCTION?: number
 }
+
+export interface MassmailingAnomaliesResponse {
+    id: string
+    displayName: string,
+    count: MassmailingStatusResponse,
+    bug: {
+        SMS?: boolean,
+        MAIL?: boolean,
+        PDF?: boolean
+    }
+}

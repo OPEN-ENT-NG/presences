@@ -1,5 +1,6 @@
 package fr.openent.massmailing.service.impl;
 
+import fr.openent.massmailing.enums.MailingType;
 import fr.openent.massmailing.enums.MassmailingType;
 import fr.openent.massmailing.service.MassmailingService;
 import fr.openent.presences.common.presences.Presences;
@@ -10,6 +11,8 @@ import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
+import org.entcore.common.neo4j.Neo4j;
+import org.entcore.common.neo4j.Neo4jResult;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -20,7 +23,7 @@ public class DefaultMassmailingService implements MassmailingService {
 
 
     @Override
-    public void getStatus(String structure, MassmailingType type, boolean massmailed, List<Integer> reasons, Integer startAt, String startDate, String endDate, List<String> students, Handler<Either<String, JsonObject>> handler) {
+    public void getStatus(String structure, MassmailingType type, Boolean massmailed, List<Integer> reasons, Integer startAt, String startDate, String endDate, List<String> students, Handler<Either<String, JsonObject>> handler) {
         Handler<Either<String, JsonArray>> callback = event -> {
             if (event.isLeft()) {
                 String message = "[Massmailing@DefaultMassmailingService] Failed to retrieve massmailing count events";
@@ -42,7 +45,8 @@ public class DefaultMassmailingService implements MassmailingService {
         getCountEventByStudent(structure, type, massmailed, reasons, startAt, startDate, endDate, students, callback);
     }
 
-    public void getCountEventByStudent(String structure, MassmailingType type, boolean massmailed, List<Integer> reasons, Integer startAt, String startDate, String endDate, List<String> students, Handler<Either<String, JsonArray>> handler) {
+    @Override
+    public void getCountEventByStudent(String structure, MassmailingType type, Boolean massmailed, List<Integer> reasons, Integer startAt, String startDate, String endDate, List<String> students, Handler<Either<String, JsonArray>> handler) {
         switch (type) {
             case JUSTIFIED:
                 Presences.getInstance().getCountEventByStudent(EventType.ABSENCE.getType(), students, structure, true, startAt,
@@ -58,6 +62,21 @@ public class DefaultMassmailingService implements MassmailingService {
                 break;
             default:
                 handler.handle(new Either.Left<>("[Massmailing@DefaultMassmailingService] Unknown Massmailing type"));
+        }
+    }
+
+    @Override
+    public void getAnomalies(MailingType type, List<String> students, Handler<Either<String, JsonArray>> handler) {
+        switch (type) {
+            case MAIL:
+                String query = "MATCH (c:Class)<-[:DEPENDS]-(:ProfileGroup)<-[:IN]-(u:User)-[:RELATED]->(r:User) " +
+                        "WHERE NOT(HAS(r.email)) AND u.id IN {users} RETURN u.id as id, (u.lastName + ' ' + u.firstName) as displayName, c.name as className";
+                JsonObject params = new JsonObject()
+                        .put("users", new JsonArray(students));
+                Neo4j.getInstance().execute(query, params, Neo4jResult.validResultHandler(handler));
+                break;
+            default:
+                handler.handle(new Either.Left<>("[Massmailing@DefaultMassmailingService] Unknown Mailing type"));
         }
     }
 
