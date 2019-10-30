@@ -542,8 +542,8 @@ public class DefaultEventService implements EventService {
                 "SELECT count(event.id) as count, student_id " +
                 "FROM " + Presences.dbSchema + ".event " +
                 "INNER JOIN " + Presences.dbSchema + ".register ON (register.id = event.register_id) " +
-                "WHERE event.start_date > ? " +
-                "AND event.end_date < ? " +
+                "WHERE event.start_date >= ? " +
+                "AND event.end_date <= ? " +
                 "AND type_id = ? " +
                 "AND register.structure_id = ? ";
         if (!students.isEmpty()) {

@@ -1,4 +1,4 @@
-import {ng} from 'entcore';
+import {moment, ng} from 'entcore';
 import http from 'axios';
 import {MassmailingAnomaliesResponse, MassmailingStatusResponse} from '../model';
 import {DateUtils} from "@common/utils";
@@ -12,7 +12,7 @@ export interface MassmailingService {
 function formatParameters(url: string, structure: string, massmailed: boolean, reasons: Array<number>, start_at: number,
                           start_date: Date, end_date: Date, groups: Array<string>, students: Array<string>, types: Array<String>): string {
     const startDate: string = DateUtils.format(start_date, DateUtils.FORMAT["YEAR-MONTH-DAY"]);
-    const endDate: string = DateUtils.format(end_date, DateUtils.FORMAT["YEAR-MONTH-DAY"]);
+    const endDate: string = DateUtils.format(moment(end_date).add(1, 'd'), DateUtils.FORMAT["YEAR-MONTH-DAY"]);
 
     let address = `${url}?structure=${structure}&start_at=${start_at}&start_date=${startDate}&end_date=${endDate}`;
     const mapFilters = function (objects: Array<any>, parameter: string): string {
