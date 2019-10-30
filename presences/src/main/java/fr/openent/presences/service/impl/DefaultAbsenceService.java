@@ -231,7 +231,7 @@ public class DefaultAbsenceService implements AbsenceService {
                 "  WHERE event.type_id = 1 and event.register_id = register.id and event.student_id = ?" +
                 ") " +
                 ") " +
-                "UPDATE " + Presences.dbSchema + ".event SET reason_id = ? WHERE register_id IN (SELECT id FROM register) " +
+                "UPDATE " + Presences.dbSchema + ".event SET reason_id = ? WHERE register_id IN (SELECT id FROM register) AND student_id = ? " +
                 "returning register_id AS updated_register_id";
         JsonArray values = new JsonArray()
                 .addAll(new JsonArray(groupIds))
@@ -244,6 +244,8 @@ public class DefaultAbsenceService implements AbsenceService {
         } else {
             values.addNull();
         }
+
+        values.add(absenceBody.getString("student_id"));
         Sql.getInstance().prepared(query, values, SqlResult.validResultHandler(handler));
     }
 
