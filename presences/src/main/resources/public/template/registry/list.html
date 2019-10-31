@@ -32,6 +32,7 @@
         <ul class="registry-table-event-period">
             <li class="registry-table-event-period-list"
                 ng-repeat="day in studentEvent.days track by $index"
+                ng-class="{'day-off': day.exclude }"
                 data-ng-click="vm.openEventCard($event, studentEvent.displayName, day, day.events)">
                 <div class="absent h[[day.eventsDisplay.length]]"
                      data-ng-show="vm.hasEventType(day.eventsDisplay, vm.eventType[0])">

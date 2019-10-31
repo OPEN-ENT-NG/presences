@@ -12,6 +12,7 @@ export interface RegistryDays {
     date: string;
     events: RegistryEvent[];
     eventsDisplay?: RegistryEvent[];
+    exclude: boolean;
 }
 
 export interface RegistryEvent {
@@ -31,6 +32,7 @@ export interface RegistryEvent {
 }
 
 export interface RegistryRequest {
+    structureId: string;
     month: string;
     group: string[];
     type: string[];
@@ -54,7 +56,7 @@ export const registryService: RegistryService = {
                 typeParams += `&type=${typeName}`;
             });
 
-            const urlParams = `?month=${registryParam.month}${groupParams}${typeParams}`;
+            const urlParams = `?structureId=${registryParam.structureId}&month=${registryParam.month}${groupParams}${typeParams}`;
             const {data} = await http.get(`/presences/registry${urlParams}`);
             return data;
         } catch (err) {

@@ -3,11 +3,13 @@ package fr.openent.presences.service.impl;
 import fr.openent.presences.common.helper.DateHelper;
 import fr.openent.presences.common.helper.FutureHelper;
 import fr.openent.presences.common.incidents.Incidents;
+import fr.openent.presences.common.viescolaire.Viescolaire;
 import fr.openent.presences.enums.EventType;
 import fr.openent.presences.enums.Events;
 import fr.openent.presences.service.EventService;
 import fr.openent.presences.service.GroupService;
 import fr.openent.presences.service.RegistryService;
+import fr.wseduc.mongodb.MongoDb;
 import fr.wseduc.webutils.Either;
 import io.vertx.core.CompositeFuture;
 import io.vertx.core.Future;
@@ -17,6 +19,7 @@ import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
+import org.entcore.common.mongodb.MongoDbResult;
 
 import java.text.ParseException;
 import java.util.*;
@@ -33,7 +36,8 @@ public class DefaultRegistryService implements RegistryService {
     }
 
     @Override
-    public void get(String month, List<String> groups, List<String> eventTypes, Handler<Either<String, JsonArray>> handler) {
+    public void get(String month, List<String> groups, List<String> eventTypes,
+                    String structureId, Handler<Either<String, JsonArray>> handler) {
         String startDate, endDate;
         Date monthDate;
         try {
@@ -51,7 +55,7 @@ public class DefaultRegistryService implements RegistryService {
         Future<JsonArray> studentFuture = Future.future();
 
         groupService.getGroupStudents(groups, FutureHelper.handlerJsonArray(studentFuture));
-        generateMonthDaysArray(monthDate, daysFuture);
+        generateMonthDaysArray(monthDate, structureId, daysFuture);
 
         CompositeFuture.all(daysFuture, studentFuture).setHandler(event -> {
             if (event.failed()) {
@@ -119,7 +123,9 @@ public class DefaultRegistryService implements RegistryService {
     private JsonArray copyDays(JsonArray daysResults) {
         JsonArray days = new JsonArray();
         for (int i = 0; i < daysResults.size(); i++) {
-            JsonObject date = new JsonObject().put("date", daysResults.getJsonObject(i).getString("date"));
+            JsonObject date = new JsonObject()
+                    .put("date", daysResults.getJsonObject(i).getString("date"))
+                    .put("exclude", daysResults.getJsonObject(i).getBoolean("exclude"));
             days.add(date.put("events", new JsonArray()));
         }
         return days;
@@ -272,24 +278,119 @@ public class DefaultRegistryService implements RegistryService {
     /**
      * Generate an array of object containing each month day
      *
-     * @param month  A date in the month we need to generate Array (We don't care of the day, we just want a
-     *               day in expected month)
+     * @param month         A date in the month we need to generate Array (We don't care of the day, we just want a
+     *                      day in expected month)
+     * @param structureId   structure identifier used to ask all exclusions days in order
+     *                      to position our day if it an exclusion day
      * @param future Future to complete the process
      */
-    private void generateMonthDaysArray(Date month, Future<JsonArray> future) {
-        JsonArray days = new JsonArray();
-        Calendar cal = resetDay(month);
-        int min = cal.getActualMinimum(Calendar.DAY_OF_MONTH);
-        int max = cal.getActualMaximum(Calendar.DAY_OF_MONTH);
-        for (int i = min; i <= max; i++) {
-            JsonObject day = new JsonObject();
-            day.put("date", DateHelper.getPsqlSimpleDateFormat().format(cal.getTime()));
-            day.put("events", new JsonArray());
-            days.add(day);
-            cal.add(Calendar.DAY_OF_MONTH, 1);
-        }
+    private void generateMonthDaysArray(Date month, String structureId, Future<JsonArray> future) {
 
-        future.complete(days);
+        Future<JsonArray> exclusionDays = Future.future();
+        Future<JsonObject> saturdayCoursesCount = Future.future();
+        Future<JsonObject> sundayCoursesCount = Future.future();
+        int saturdayOfWeek = 6;
+        int sundayOfWeek = 7;
+
+        Viescolaire.getInstance().getExclusionDays(structureId, FutureHelper.handlerJsonArray(exclusionDays));
+        getWeekEndCourses(structureId, saturdayOfWeek, FutureHelper.handlerJsonObject(saturdayCoursesCount));
+        getWeekEndCourses(structureId, sundayOfWeek, FutureHelper.handlerJsonObject(sundayCoursesCount));
+
+        CompositeFuture.all(exclusionDays, saturdayCoursesCount, sundayCoursesCount).setHandler(result -> {
+            if (result.failed()) {
+                String message = "[Presences@DefaultRegistryService] Failed to fetch exclusion days or week-end courses";
+                LOGGER.error(message);
+                future.fail(message);
+            } else {
+                JsonArray days = new JsonArray();
+                long saturdayCourses = saturdayCoursesCount.result().getLong("count");
+                long sundayCourses = sundayCoursesCount.result().getLong("count");
+                Calendar cal = resetDay(month);
+                int min = cal.getActualMinimum(Calendar.DAY_OF_MONTH);
+                int max = cal.getActualMaximum(Calendar.DAY_OF_MONTH);
+                for (int i = min; i <= max; i++) {
+                    JsonObject day = new JsonObject();
+                    String date = DateHelper.getPsqlSimpleDateFormat().format(cal.getTime());
+                    day.put("date", date);
+                    day.put("events", new JsonArray());
+                    excludeDay(day, date, exclusionDays.result(), saturdayOfWeek, saturdayCourses, sundayOfWeek, sundayCourses);
+                    days.add(day);
+                    cal.add(Calendar.DAY_OF_MONTH, 1);
+                }
+                future.complete(days);
+            }
+        });
+    }
+
+    private void getWeekEndCourses(String structureId, int dayOfWeek, Handler<Either<String, JsonObject>> handler) {
+        JsonObject query = new JsonObject().put("dayOfWeek", dayOfWeek).put("structureId", structureId);
+        MongoDb.getInstance().count("courses", query, message -> handler.handle(MongoDbResult.validActionResult(message)));
+    }
+
+    /**
+     * Action to define the new property "exclude" in "day" object whether or not he should be true of false.
+     *
+     * @param day            JsonObject to put new property
+     * @param date           current date
+     * @param exclusionDays  Array of several exclusions dates
+     * @param saturdayOfWeek day of week which correspond to 6
+     * @param saturdayCount  number of courses in saturday
+     * @param sundayOfWeek   day of week which correspond to 7
+     * @param sundayCount    number of courses in sunday
+     */
+    private void excludeDay(JsonObject day, String date, JsonArray exclusionDays, int saturdayOfWeek,
+                            long saturdayCount, int sundayOfWeek, long sundayCount) {
+        try {
+            int dayOfWeek = DateHelper.getDayOfWeek(DateHelper.parse(date));
+            boolean isExclude;
+            if (dayOfWeek == saturdayOfWeek || dayOfWeek == sundayOfWeek) {
+                if (dayOfWeek == saturdayOfWeek) {
+                    if (saturdayCount > 0) {
+                        isExclude = isDayExclude(exclusionDays, date);
+                    } else {
+                        isExclude = true;
+                    }
+                } else {
+                    if (sundayCount > 0) {
+                        isExclude = isDayExclude(exclusionDays, date);
+                    } else {
+                        isExclude = true;
+                    }
+                }
+            } else {
+                isExclude = isDayExclude(exclusionDays, date);
+            }
+            day.put("exclude", isExclude);
+        } catch (ParseException e) {
+            String message = "[Presences@DefaultRegistryService] Failed to parse date to get the day of the week ";
+            LOGGER.error(message, e);
+        }
+    }
+
+    /**
+     * Checking if the current date is between these exclusions date
+     *
+     * @param exclusionsDate Array of several exclusions dates
+     * @param date           current date
+     * @return true if the date is between these exclusions date
+     */
+    private boolean isDayExclude(JsonArray exclusionsDate, String date) {
+        try {
+            for (int i = 0; i < exclusionsDate.size(); i++) {
+                JsonObject exclusion = exclusionsDate.getJsonObject(i);
+                String startDate = exclusion.getString("start_date");
+                String endDate = exclusion.getString("end_date");
+                if (DateHelper.isAfterOrEquals(date, startDate) && DateHelper.isBeforeOrEquals(date, endDate)) {
+                    return true;
+                }
+            }
+        } catch (ParseException e) {
+            String message = "[Presences@DefaultRegistryService] " +
+                    "Failed to parse dates in order to compare if day is between exclusions's days ";
+            LOGGER.error(message, e);
+            return false;
+        }
+        return false;
     }
 
     /**

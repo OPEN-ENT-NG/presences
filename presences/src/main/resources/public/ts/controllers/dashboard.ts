@@ -74,8 +74,10 @@ export const dashboardController = ng.controller('DashboardController', ['$scope
 
         /* Registry interaction */
         vm.selectItemToRegistry = (model, item) => {
+            const structureId = window.structure.id;
             window.item = item;
             $location.path('/registry').search({
+                structureId: structureId,
                 month: moment(new Date()).format(DateUtils.FORMAT["YEAR-MONTH"]),
                 group: [item.id],
                 type: vm.eventType

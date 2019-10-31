@@ -314,6 +314,8 @@ export const registryController = ng.controller('RegistryController', ['$scope',
 
         /* on switch (watch) */
         $scope.$watch(() => window.structure, () => {
+            vm.params.structureId = window.structure.id;
+            $location.search(vm.params);
             getRegisterSummary();
         });
     }]);

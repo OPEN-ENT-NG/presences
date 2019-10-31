@@ -247,4 +247,19 @@ public class DateHelper {
         return getDayOfMonth(date, cal.getActualMinimum(Calendar.DAY_OF_MONTH)) + "00:00:00";
     }
 
+    /**
+     * Get Day of Week
+     *
+     * @param date date chosen to get the day of week
+     * @return day of week (e.g 2019-10-26 would return 6)
+     */
+    public static int getDayOfWeek(Date date) {
+        Calendar calendar = Calendar.getInstance();
+        calendar.setTime(date);
+        if ((calendar.get(Calendar.DAY_OF_WEEK) - 1) == 0) {
+            return 7;
+        }
+        return calendar.get(Calendar.DAY_OF_WEEK) - 1;
+    }
+
 }

@@ -1,6 +1,7 @@
 package fr.openent.presences;
 
 import fr.openent.presences.common.incidents.Incidents;
+import fr.openent.presences.common.viescolaire.Viescolaire;
 import fr.openent.presences.controller.*;
 import io.vertx.core.eventbus.EventBus;
 import org.entcore.common.http.BaseServer;
@@ -59,6 +60,7 @@ public class Presences extends BaseServer {
 
         //Init incident
         Incidents.getInstance().init(eb);
+        Viescolaire.getInstance().init(eb);
 
 
         /*

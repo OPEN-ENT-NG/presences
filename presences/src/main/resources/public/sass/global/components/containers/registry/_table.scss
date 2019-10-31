@@ -104,13 +104,18 @@ ul {
       margin: 0;
       height: inherit;
 
-      li {
+      &-list {
         display: flex;
         flex-direction: column;
         width: 10%;
         height: inherit;
         text-align: center;
         border-left: 1px solid $presences-grey-incident;
+
+        &.day-off {
+          background: $presences-body;
+          border: none;
+        }
 
         .absent {
           background-color: $presences-red;
