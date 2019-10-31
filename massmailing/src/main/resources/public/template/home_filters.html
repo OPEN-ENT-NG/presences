@@ -52,11 +52,11 @@
         </h4>
         <div class="chips">
             <div class="chip" ng-class="{ selected: vm.formFilter.status.JUSTIFIED }"
-                 data-ng-click="vm.formFilter.status.JUSTIFIED = !vm.formFilter.status.JUSTIFIED">
+                 data-ng-click="vm.switchToJustifiedAbsences()">
                 <i18n>massmailing.types.JUSTIFIED</i18n>
             </div>
             <div class="chip" ng-class="{ selected: vm.formFilter.status.UNJUSTIFIED }"
-                 data-ng-click="vm.formFilter.status.UNJUSTIFIED = !vm.formFilter.status.UNJUSTIFIED">
+                 data-ng-click="vm.switchToUnjustifiedAbsences()">
                 <i18n>massmailing.types.UNJUSTIFIED</i18n>
             </div>
             <div class="chip" ng-class="{ selected: vm.formFilter.status.LATENESS }"
@@ -90,6 +90,10 @@
         <div class="chips">
             <div class="chip" ng-class="{selected: vm.formFilter.allReasons}" data-ng-click="vm.switchAllReasons()">
                 <i18n>massmailing.all.none</i18n>
+            </div>
+            <div class="chip" ng-class="{selected: vm.formFilter.noReasons}"
+                 data-ng-click="vm.formFilter.noReasons = !vm.formFilter.noReasons">
+                <i18n>massmailing.no.reasons</i18n>
             </div>
             <div class="chip" ng-repeat="reason in vm.reasons track by $index|orderBy:'label'"
                  ng-class="{ selected: vm.formFilter.reasons[reason.id]}"

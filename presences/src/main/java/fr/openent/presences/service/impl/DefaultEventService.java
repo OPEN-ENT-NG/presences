@@ -531,7 +531,7 @@ public class DefaultEventService implements EventService {
 
     @Override
     public void getCountEventByStudent(Integer eventType, List<String> students, String structure, Boolean justified, Integer startAt, List<Integer> reasonsId,
-                                       Boolean massmailed, String startDate, String endDate, Handler<Either<String, JsonArray>> handler) {
+                                       Boolean massmailed, String startDate, String endDate, boolean noReasons, Handler<Either<String, JsonArray>> handler) {
         startAt = startAt != null ? startAt : 1;
         JsonArray params = new JsonArray()
                 .add(startDate)
@@ -554,7 +554,7 @@ public class DefaultEventService implements EventService {
             query += " AND (counsellor_regularisation = " + (justified ? "true) " : "false OR reason_id IS NULL) ");
         }
         if (!reasonsId.isEmpty()) {
-            query += " AND reason_id IN " + Sql.listPrepared(reasonsId);
+            query += " AND (reason_id IN " + Sql.listPrepared(reasonsId) + (noReasons ? " OR reason_id IS NULL" : "") + ") ";
             params.addAll(new JsonArray(reasonsId));
         }
         if (massmailed != null) {

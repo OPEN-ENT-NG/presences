@@ -23,7 +23,8 @@ public class DefaultMassmailingService implements MassmailingService {
 
 
     @Override
-    public void getStatus(String structure, MassmailingType type, Boolean massmailed, List<Integer> reasons, Integer startAt, String startDate, String endDate, List<String> students, Handler<Either<String, JsonObject>> handler) {
+    public void getStatus(String structure, MassmailingType type, Boolean massmailed, List<Integer> reasons, Integer startAt, String startDate,
+                          String endDate, List<String> students, boolean noReasons, Handler<Either<String, JsonObject>> handler) {
         Handler<Either<String, JsonArray>> callback = event -> {
             if (event.isLeft()) {
                 String message = "[Massmailing@DefaultMassmailingService] Failed to retrieve massmailing count events";
@@ -42,23 +43,24 @@ public class DefaultMassmailingService implements MassmailingService {
             handler.handle(new Either.Right<>(new JsonObject().put("status", count)));
         };
 
-        getCountEventByStudent(structure, type, massmailed, reasons, startAt, startDate, endDate, students, callback);
+        getCountEventByStudent(structure, type, massmailed, reasons, startAt, startDate, endDate, students, noReasons, callback);
     }
 
     @Override
-    public void getCountEventByStudent(String structure, MassmailingType type, Boolean massmailed, List<Integer> reasons, Integer startAt, String startDate, String endDate, List<String> students, Handler<Either<String, JsonArray>> handler) {
+    public void getCountEventByStudent(String structure, MassmailingType type, Boolean massmailed, List<Integer> reasons, Integer startAt, String startDate,
+                                       String endDate, List<String> students, boolean noReasons, Handler<Either<String, JsonArray>> handler) {
         switch (type) {
             case JUSTIFIED:
                 Presences.getInstance().getCountEventByStudent(EventType.ABSENCE.getType(), students, structure, true, startAt,
-                        reasons, massmailed, startDate, endDate, handler);
+                        reasons, massmailed, startDate, endDate, noReasons, handler);
                 break;
             case UNJUSTIFIED:
                 Presences.getInstance().getCountEventByStudent(EventType.ABSENCE.getType(), students, structure, false, startAt,
-                        reasons, massmailed, startDate, endDate, handler);
+                        reasons, massmailed, startDate, endDate, noReasons, handler);
                 break;
             case LATENESS:
                 Presences.getInstance().getCountEventByStudent(EventType.LATENESS.getType(), students, structure, false, startAt,
-                        reasons, massmailed, startDate, endDate, handler);
+                        reasons, massmailed, startDate, endDate, noReasons, handler);
                 break;
             default:
                 handler.handle(new Either.Left<>("[Massmailing@DefaultMassmailingService] Unknown Massmailing type"));
@@ -81,7 +83,7 @@ public class DefaultMassmailingService implements MassmailingService {
     }
 
     @Override
-    public void getStatus(String structure, MassmailingType type, boolean massmailed, List<Integer> reasons, Integer startAt, String startDate, String endDate, Handler<Either<String, JsonObject>> handler) {
-        getStatus(structure, type, massmailed, reasons, startAt, startDate, endDate, new ArrayList<>(), handler);
+    public void getStatus(String structure, MassmailingType type, boolean massmailed, List<Integer> reasons, Integer startAt, String startDate, String endDate, boolean noReasons, Handler<Either<String, JsonObject>> handler) {
+        getStatus(structure, type, massmailed, reasons, startAt, startDate, endDate, new ArrayList<>(), noReasons, handler);
     }
 }

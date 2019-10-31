@@ -31,14 +31,34 @@
                 [[lang.translate('massmailing.massmailed.' + massmailState)]]
             </div>
         </div>
+        <div class="cell">
+            <div class="card horizontal-margin-small horizontal-spacing">
+                ⩾ [[vm.filter.start_at]]
+                <i18n>massmailing.filter.display.absences.lateness</i18n>
+            </div>
+        </div>
     </div>
-    <div class="grid horizontal-spacing-twice massmail-status row vertical-spacing-six widget-alerts">
+    <div class="grid horizontal-spacing-twice massmail-status row vertical-spacing-six widget-alerts"
+         ng-show="!vm.filterInError()">
         <div ng-repeat="(status, val) in vm.massmailingStatus" class="massmailing-status-alert cell">
             <div class="card [[status]] widget-alert">
                 <span class="value">[[val]]</span>
                 <p class="subtitle">
                     [[lang.translate('massmailing.alerts.' + status + '.text')]]
                 </p>
+            </div>
+        </div>
+    </div>
+    <div class="empty horizontal-spacing-twice massmail-status row vertical-spacing-six" ng-show="vm.filterInError()">
+        <div class="twelve empty-content">
+            <div class="description">
+                <span class="red-bar bar"></span>
+                <div class="title">
+                    <i18n>massmailing.filter.empty.no.filter</i18n>
+                    <span class="red-text">[[vm.getErrorMessage()]]</span>
+                    <i18n>massmailing.filter.empty.selected</i18n>
+                </div>
+                <span class="purple-bar bar"></span>
             </div>
         </div>
     </div>

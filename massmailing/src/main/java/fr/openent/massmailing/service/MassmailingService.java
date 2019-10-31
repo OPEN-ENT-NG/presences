@@ -21,10 +21,11 @@ public interface MassmailingService {
      * @param startDate  Start date. Define the start date range
      * @param endDate    End date. Define the end date range.
      * @param students   Student list
+     * @param noReasons  Retrieve no reasons events
      * @param handler    Function handler returning data
      */
     void getStatus(String structure, MassmailingType type, Boolean massmailed, List<Integer> reasons, Integer startAt,
-                   String startDate, String endDate, List<String> students, Handler<Either<String, JsonObject>> handler);
+                   String startDate, String endDate, List<String> students, boolean noReasons, Handler<Either<String, JsonObject>> handler);
 
     /**
      * Get mass mailing status.
@@ -36,10 +37,11 @@ public interface MassmailingService {
      * @param startAt    "Start at" number. Define the "start at" number event mass mailing is retrieved.
      * @param startDate  Start date. Define the start date range
      * @param endDate    End date. Define the end date range.
+     * @param noReasons  Retrieve no reasons events
      * @param handler    Function handler returning data
      */
     void getStatus(String structure, MassmailingType type, boolean massmailed, List<Integer> reasons, Integer startAt,
-                   String startDate, String endDate, Handler<Either<String, JsonObject>> handler);
+                   String startDate, String endDate, boolean noReasons, Handler<Either<String, JsonObject>> handler);
 
     /**
      * Retrieve count event by students
@@ -52,9 +54,10 @@ public interface MassmailingService {
      * @param startDate  Start date. Define the start date range
      * @param endDate    End date. Define the end date range.
      * @param students   Student list
+     * @param noReasons  Retrieve no reasons events
      * @param handler    Function handler returning data
      */
-    void getCountEventByStudent(String structure, MassmailingType type, Boolean massmailed, List<Integer> reasons, Integer startAt, String startDate, String endDate, List<String> students, Handler<Either<String, JsonArray>> handler);
+    void getCountEventByStudent(String structure, MassmailingType type, Boolean massmailed, List<Integer> reasons, Integer startAt, String startDate, String endDate, List<String> students, boolean noReasons, Handler<Either<String, JsonArray>> handler);
 
     /**
      * Retrieve mass mailing anomalies based on given students list

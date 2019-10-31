@@ -3,6 +3,8 @@ package fr.openent.presences.service.impl;
 import fr.openent.presences.common.helper.DateHelper;
 import fr.openent.presences.common.helper.FutureHelper;
 import fr.openent.presences.common.incidents.Incidents;
+import fr.openent.presences.common.service.GroupService;
+import fr.openent.presences.common.service.impl.DefaultGroupService;
 import fr.openent.presences.common.viescolaire.Viescolaire;
 import fr.openent.presences.enums.EventType;
 import fr.openent.presences.enums.Events;
@@ -92,8 +94,8 @@ public class DefaultRegistryService implements RegistryService {
     /**
      * Format users as renderer list
      *
-     * @param users         User list
-     * @param daysResult    Month days list
+     * @param users      User list
+     * @param daysResult Month days list
      * @return User         list that contains formatted users
      */
     private JsonArray formatUsers(JsonArray users, JsonArray daysResult) {
@@ -277,11 +279,11 @@ public class DefaultRegistryService implements RegistryService {
     /**
      * Generate an array of object containing each month day
      *
-     * @param month         A date in the month we need to generate Array (We don't care of the day, we just want a
-     *                      day in expected month)
-     * @param structureId   structure identifier used to ask all exclusions days in order
-     *                      to position our day if it an exclusion day
-     * @param future Future to complete the process
+     * @param month       A date in the month we need to generate Array (We don't care of the day, we just want a
+     *                    day in expected month)
+     * @param structureId structure identifier used to ask all exclusions days in order
+     *                    to position our day if it an exclusion day
+     * @param future      Future to complete the process
      */
     private void generateMonthDaysArray(Date month, String structureId, Future<JsonArray> future) {
 

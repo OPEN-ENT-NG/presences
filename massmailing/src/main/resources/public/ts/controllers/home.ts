@@ -1,4 +1,4 @@
-import {_, ng} from 'entcore';
+import {_, idiom as lang, ng} from 'entcore';
 import {Reason, ReasonService} from '@presences/services/ReasonService';
 import {GroupService, SearchService} from '../services';
 import {MassmailingAnomaliesResponse, MassmailingStatusResponse} from "../model";
@@ -19,6 +19,7 @@ interface Filter {
     },
     allReasons: boolean,
     reasons: any,
+    noReasons: boolean,
     student: any,
     students: any[],
     group: any,
@@ -40,6 +41,11 @@ interface ViewModel {
     massmailingAnomalies: MassmailingAnomaliesResponse[]
     massmailingCount: {
         MAIL?: number
+    }
+    errors: {
+        TYPE: boolean,
+        REASONS: boolean,
+        STATUS: boolean
     }
 
     fetchData(): void;
@@ -65,6 +71,14 @@ interface ViewModel {
     validForm(): void;
 
     getKeys(object): string[]
+
+    switchToJustifiedAbsences(): void;
+
+    switchToUnjustifiedAbsences(): void;
+
+    filterInError(): boolean;
+
+    getErrorMessage(): string;
 }
 
 declare let window: any;
@@ -74,6 +88,11 @@ export const homeController = ng.controller('HomeController', ['$scope', 'route'
     function ($scope, route, MassmailingService, ReasonService: ReasonService, SearchService: SearchService, GroupService: GroupService) {
         const vm: ViewModel = this;
         vm.massmailingStatus = {};
+        vm.errors = {
+            TYPE: false,
+            STATUS: false,
+            REASONS: false
+        };
 
         vm.filter = {
             show: false,
@@ -89,7 +108,8 @@ export const homeController = ng.controller('HomeController', ['$scope', 'route'
                 mailed: false,
                 waiting: true
             },
-            allReasons: false,
+            allReasons: true,
+            noReasons: true,
             reasons: {},
             students: undefined,
             student: "",
@@ -121,7 +141,8 @@ export const homeController = ng.controller('HomeController', ['$scope', 'route'
         };
 
         vm.validForm = function () {
-            vm.filter = {...vm.formFilter, show: false};
+            const {start_date, end_date} = vm.filter;
+            vm.filter = {...vm.formFilter, show: false, start_date, end_date};
             vm.formFilter = {};
             vm.fetchData();
         };
@@ -129,13 +150,14 @@ export const homeController = ng.controller('HomeController', ['$scope', 'route'
         vm.loadData = async function () {
             if (!window.structure) return;
             vm.reasons = await ReasonService.getReasons(window.structure.id);
-            vm.reasons.map((reason: Reason) => vm.filter.reasons[reason.id] = false);
+            vm.reasons.map((reason: Reason) => vm.filter.reasons[reason.id] = !reason.proving);
             vm.fetchData();
             $scope.$apply();
         };
 
         vm.switchAllReasons = function () {
             vm.formFilter.allReasons = !vm.formFilter.allReasons;
+            vm.formFilter.noReasons = vm.formFilter.allReasons;
             for (let reason in vm.formFilter.reasons) {
                 vm.formFilter.reasons[reason] = vm.formFilter.allReasons;
             }
@@ -163,8 +185,8 @@ export const homeController = ng.controller('HomeController', ['$scope', 'route'
 
         async function retrieveMassmailings(type: string): Promise<any> {
             const {waiting, mailed} = vm.filter.massmailing_status;
-            if (!(mailed || waiting)) {
-                return {};
+            if (!checkFilter()) {
+                return type === 'Status' ? {} : [];
             }
 
             const reasons: Array<Number> = [];
@@ -174,7 +196,7 @@ export const homeController = ng.controller('HomeController', ['$scope', 'route'
             const students = [], groups = [];
             vm.filter.selected.students.forEach(({id}) => students.push(id));
             vm.filter.selected.groups.forEach(({id}) => groups.push(id));
-            const data = await MassmailingService[`get${type}`](window.structure.id, massmailedParameter(), reasons, vm.filter.start_at, vm.filter.start_date, vm.filter.end_date, groups, students, types);
+            const data = await MassmailingService[`get${type}`](window.structure.id, massmailedParameter(), reasons, vm.filter.start_at, vm.filter.start_date, vm.filter.end_date, groups, students, types, vm.filter.noReasons);
             return data;
         }
 
@@ -254,6 +276,63 @@ export const homeController = ng.controller('HomeController', ['$scope', 'route'
         };
 
         vm.getKeys = (object) => Object.keys(object);
+
+        vm.switchToJustifiedAbsences = function () {
+            vm.formFilter.status.JUSTIFIED = !vm.formFilter.status.JUSTIFIED;
+            vm.reasons.forEach(function (reason: Reason) {
+                if (reason.proving) vm.formFilter.reasons[reason.id] = vm.formFilter.status.JUSTIFIED;
+            });
+        };
+
+        vm.switchToUnjustifiedAbsences = function () {
+            vm.formFilter.status.UNJUSTIFIED = !vm.formFilter.status.UNJUSTIFIED;
+            vm.formFilter.noReasons = vm.formFilter.status.UNJUSTIFIED;
+            vm.reasons.forEach(function (reason: Reason) {
+                if (!reason.proving) vm.formFilter.reasons[reason.id] = vm.formFilter.status.UNJUSTIFIED;
+            });
+        };
+
+        function checkFilter() {
+            function allIsFalse(map): boolean {
+                let bool = false;
+                const keys = Object.keys(map);
+                keys.forEach((key) => bool = bool || map[key]);
+
+                return !bool;
+            }
+
+            const {noReasons, massmailing_status, status, reasons} = vm.filter;
+            const reasonCheck = allIsFalse(reasons) && !noReasons;
+            const massmailingStatusCheck = allIsFalse(massmailing_status);
+            const statusCheck = allIsFalse(status);
+
+            vm.errors = {
+                REASONS: reasonCheck,
+                STATUS: massmailingStatusCheck,
+                TYPE: statusCheck
+            };
+
+
+            return !(reasonCheck || massmailingStatusCheck || statusCheck);
+        }
+
+        vm.filterInError = function () {
+            let inError = false;
+            const errorTypes = Object.keys(vm.errors);
+            errorTypes.forEach((type) => inError = inError || vm.errors[type]);
+
+            return inError;
+        };
+
+        vm.getErrorMessage = function () {
+            let message = `[`;
+            const types = Object.keys(vm.errors);
+            types.forEach(type => {
+                if (vm.errors[type]) message += `${lang.translate(`massmailing.filter.${type}`)}/`;
+            });
+            message = `${message.substr(0, message.length - 1)}]`;
+            return message
+        };
 
         $scope.$watch(() => window.structure, vm.loadData);
     }]);

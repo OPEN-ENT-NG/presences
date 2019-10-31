@@ -24,4 +24,14 @@ $status-max-width: 250px;
       }
     }
   }
+
+  .empty-content {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    .description {
+      height: 120px;
+    }
+  }
 }

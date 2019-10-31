@@ -35,7 +35,8 @@ public class EventBusController extends ControllerHelper {
                 Boolean massmailed = body.getBoolean("massmailed");
                 String startDate = body.getString("startDate");
                 String endDate = body.getString("endDate");
-                this.eventService.getCountEventByStudent(eventType, students, structure, justified, startAt, reasonsId, massmailed, startDate, endDate, BusResponseHandler.busArrayHandler(message));
+                boolean noReasons = body.getBoolean("noReasons");
+                this.eventService.getCountEventByStudent(eventType, students, structure, justified, startAt, reasonsId, massmailed, startDate, endDate, noReasons, BusResponseHandler.busArrayHandler(message));
                 break;
             default:
                 message.reply(new JsonObject()

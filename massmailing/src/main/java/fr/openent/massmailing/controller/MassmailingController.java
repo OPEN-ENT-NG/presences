@@ -153,6 +153,7 @@ public class MassmailingController extends ControllerHelper {
         String structure = request.getParam("structure");
         Boolean massmailed = request.params().contains("massmailed") ? Boolean.parseBoolean(request.getParam("massmailed")) : null;
         List<Integer> reasons = parseReasons(request.params().getAll("reason"));
+        boolean noReasons = !request.params().contains("no_reason") || Boolean.parseBoolean(request.getParam("no_reasons"));
         Integer startAt;
         try {
             startAt = Integer.parseInt(request.getParam("start_at"));
@@ -165,7 +166,7 @@ public class MassmailingController extends ControllerHelper {
         for (MassmailingType type : types) {
             Future<JsonObject> future = Future.future();
             futures.add(future);
-            massmailingService.getStatus(structure, type, massmailed, reasons, startAt, startDate, endDate, students, FutureHelper.handlerJsonObject(future));
+            massmailingService.getStatus(structure, type, massmailed, reasons, startAt, startDate, endDate, students, noReasons, FutureHelper.handlerJsonObject(future));
         }
 
         CompositeFuture.all(futures).setHandler(event -> {
@@ -233,6 +234,7 @@ public class MassmailingController extends ControllerHelper {
             String structure = request.getParam("structure");
             Boolean massmailed = Boolean.parseBoolean(request.getParam("massmailed"));
             List<Integer> reasons = parseReasons(request.params().getAll("reason"));
+            boolean noReasons = !request.params().contains("no_reason") || Boolean.parseBoolean(request.getParam("no_reasons"));
             Integer startAt;
             try {
                 startAt = Integer.parseInt(request.getParam("start_at"));
@@ -245,7 +247,7 @@ public class MassmailingController extends ControllerHelper {
             for (MassmailingType type : types) {
                 Future<JsonArray> future = Future.future();
                 futures.add(future);
-                massmailingService.getCountEventByStudent(structure, type, massmailed, reasons, startAt, startDate, endDate, students, FutureHelper.handlerJsonArray(future));
+                massmailingService.getCountEventByStudent(structure, type, massmailed, reasons, startAt, startDate, endDate, students, noReasons, FutureHelper.handlerJsonArray(future));
             }
 
             CompositeFuture.all(futures).setHandler(compositeEvent -> {

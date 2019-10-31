@@ -124,8 +124,9 @@ public interface EventService {
      * @param startDate  Range start date
      * @param endDate    Range end date
      * @param reasonsId  Reasons identifiers. Can be sorted by reasons identifiers
+     * @param noReasons  Should retrieve no reasons event
      * @param handler    Function handler returning data
      */
     void getCountEventByStudent(Integer eventType, List<String> students, String structure, Boolean justified, Integer startAt, List<Integer> reasonsId, Boolean massmailed,
-                                String startDate, String endDate, Handler<Either<String, JsonArray>> handler);
+                                String startDate, String endDate, boolean noReasons, Handler<Either<String, JsonArray>> handler);
 }

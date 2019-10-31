@@ -41,6 +41,7 @@
   "massmailing.massmailed.mailed": "Publipostés",
   "massmailing.massmailed.waiting": "Non publipostés",
   "massmailing.all.none": "Tous/Aucun",
+  "massmailing.no.reasons": "Sans motif",
   "massmailing.filters.display.from": "Afficher à partir de",
   "massmailing.filter.display.absences.lateness": "absence(s) ou retard(s)",
   "massmailing.alerts.UNJUSTIFIED.text": "absences non justifiées à publiposter",
@@ -54,5 +55,10 @@
   "massmailing.class": "Classe",
   "massmailing.number": "Quantité",
   "massmailing.anomalies.MAIL": "Anomalie mail responsables",
-  "massmailing.anomalies.student.MAIL": "Aucun mail"
+  "massmailing.anomalies.student.MAIL": "Aucun mail",
+  "massmailing.filter.TYPE": "Type",
+  "massmailing.filter.STATUS": "Publipostage",
+  "massmailing.filter.REASONS": "Motif",
+  "massmailing.filter.empty.no.filter": "Aucun filtre",
+  "massmailing.filter.empty.selected": "n'est sélectionné. Activez en au moins un pour afficher des absences à publiposter."
 }
