@@ -184,12 +184,8 @@ public class CalendarController extends ControllerHelper {
             Date startDate = sdf.parse(absent.getString("start_date"));
             Date endDate = sdf.parse(absent.getString("end_date"));
 
-            Calendar calendar = Calendar.getInstance();
-
-            calendar.setTime(startDate);
-            int dayOfWeekFromStartDate = calendar.get(Calendar.DAY_OF_MONTH) - 1;
-            calendar.setTime(endDate);
-            int dayOfWeekFromEndDate = calendar.get(Calendar.DAY_OF_MONTH) - 1;
+            int dayOfWeekFromStartDate = DateHelper.getDayOfWeek(startDate);
+            int dayOfWeekFromEndDate = DateHelper.getDayOfWeek(endDate);
 
             String startDateTime = DateHelper.getTimeString(absent.getString("start_date"), SQL_FORMAT);
             String endDateTime = DateHelper.getTimeString(absent.getString("end_date"), SQL_FORMAT);
@@ -205,7 +201,7 @@ public class CalendarController extends ControllerHelper {
                 coursesAdded.add(
                         new JsonObject()
                                 .put("_id", "0")
-                                .put("dayOfWeek", i == 0 ? 7 : i)
+                                .put("dayOfWeek", i)
                                 .put("locked", true)
                                 .put("is_periodic", false)
                                 .put("is_recurrent", true)
