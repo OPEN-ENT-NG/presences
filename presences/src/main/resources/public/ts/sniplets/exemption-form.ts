@@ -157,7 +157,6 @@ export const exemptionForm = {
             this.setHandler();
             exemptionForm.that = this;
             vm.safeApply = this.safeApply;
-            vm.subjects.sync(window.structure.id);
         },
         setHandler: function () {
             this.$on(EXEMPTIONS_FORM_EVENTS.EDIT, (event, arg) => vm.editExemption(arg));
