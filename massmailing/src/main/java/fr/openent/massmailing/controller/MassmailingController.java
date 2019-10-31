@@ -328,13 +328,14 @@ public class MassmailingController extends ControllerHelper {
     }
 
     private JsonArray transformMapToArray(HashMap<String, JsonObject> map) {
-        JsonArray array = new JsonArray();
+        List<JsonObject> array = new ArrayList<>();
         List<String> keys = new ArrayList<>(map.keySet());
         for (String key : keys) {
             array.add(map.get(key));
         }
 
-        return array;
+        array.sort((o1, o2) -> o1.getString("displayName").compareToIgnoreCase(o2.getString("displayName")));
+        return new JsonArray(array);
     }
 
     private List<String> getStudentsList(List<Future> futures) {
