@@ -139,8 +139,12 @@ export const registryController = ng.controller('RegistryController', ['$scope',
         const createEventDisplay = (): void => {
             vm.registries.forEach(registry => {
                 registry.days.forEach(day => {
-                    day.eventsDisplay = JSON.parse(JSON.stringify(day.events));
-                    day.eventsDisplay = _.uniq(day.eventsDisplay, 'reason',);
+                    let absences = _.uniq(JSON.parse(JSON.stringify(day.events))
+                        .filter(item => item.type === vm.eventType[0]), 'reason');
+
+                    let events = _.uniq(JSON.parse(JSON.stringify(day.events))
+                        .filter(item => item.type !== vm.eventType[0]), 'type');
+                    day.eventsDisplay = events.concat(absences);
                 })
             });
         };
@@ -267,14 +271,14 @@ export const registryController = ng.controller('RegistryController', ['$scope',
             if (event.length === 0) {
                 return false;
             }
-            return event.some(event => event.type === eventTypeName && !event.hasOwnProperty('reason'));
+            return event.some(event => event.type === eventTypeName && !event.hasOwnProperty('reason_id'));
         };
 
         vm.isAbsenceReason = (event: RegistryEvent[]): boolean => {
             if (event.length === 0) {
                 return false;
             }
-            return event.some(event => event.hasOwnProperty('reason'));
+            return event.some(event => event.hasOwnProperty('reason_id'));
         };
 
         vm.openEventCard = ($event, student: string, day: RegistryDays, events: RegistryEvent[]): void => {
@@ -300,6 +304,7 @@ export const registryController = ng.controller('RegistryController', ['$scope',
                 hover.style.left = `${x + (widthEventCard / 100)}px`;
             }
             hover.style.display = 'flex';
+            console.log('eventCard: ', vm.eventCardData);
             $scope.safeApply();
         };
 

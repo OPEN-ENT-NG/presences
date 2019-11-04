@@ -238,10 +238,12 @@ public class DefaultRegistryService implements RegistryService {
                     .put("start_date", e.getString("start_date", ""))
                     .put("end_date", e.getString("end_date", ""))
                     .put("type", getEventTypeName(e.getInteger("type_id")));
-            if (e.getLong("reason_id") != null) {
+            if (getEventTypeName(e.getInteger("type_id")).equals(Events.ABSENCE.toString())
+                    && e.getLong("reason_id") != null) {
                 eventObject.put("reason_id", e.getLong("reason_id"));
             }
-            if (e.getString("reason") != null) {
+            if (getEventTypeName(e.getInteger("type_id")).equals(Events.ABSENCE.toString())
+                    && e.getString("reason") != null) {
                 eventObject.put("reason", e.getString("reason"));
             }
             evts.add(eventObject);

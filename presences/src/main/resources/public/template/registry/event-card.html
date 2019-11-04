@@ -9,7 +9,7 @@
     <div class="registry-event-card-body">
         <ul>
             <!-- list events -->
-            <li ng-repeat="event in vm.eventCardData.events track by $index">
+            <li ng-repeat="event in vm.eventCardData.events | orderBy:'start_date'">
                 <div class="registry-event-card-body-description">
                     <div class="legends"
                          ng-class="{
@@ -36,7 +36,7 @@
                             <i18n>presences.register.event_type.lateness</i18n>
                         </span>
                         <span class="registry-event-card-body-description-date">
-                            [[vm.formatDate(event.start_date)]]
+                            [[vm.formatDate(event.end_date)]]
                         </span>
                     </div>
 
