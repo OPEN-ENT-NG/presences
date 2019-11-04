@@ -430,7 +430,9 @@ export const registersController = ng.controller('RegistersController',
             vm.toggleDeparture = async (student) => {
                 const startDateTime = moment(moment(vm.register.start_date).format(DateUtils.FORMAT["YEAR-MONTH-DAY"]) + ' ' +
                     moment().millisecond(0).second(0).format(DateUtils.FORMAT["HOUR-MINUTES"]));
-                await toggleEvent(student, 'departure', startDateTime, vm.register.end_date);
+                await toggleEvent(student, 'departure',
+                    startDateTime.format(DateUtils.FORMAT["YEAR-MONTH-DAY-HOUR-MIN-SEC"]),
+                    vm.register.end_date);
                 student.departure.start_date_time = startDateTime.toDate();
                 $scope.safeApply();
             };
