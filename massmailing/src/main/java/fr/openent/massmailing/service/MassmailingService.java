@@ -67,4 +67,13 @@ public interface MassmailingService {
      * @param handler  Function handler returning data
      */
     void getAnomalies(MailingType type, List<String> students, Handler<Either<String, JsonArray>> handler);
+
+    /**
+     * Retrieve student relative
+     *
+     * @param type     Mailing type
+     * @param students Student list
+     * @param handler  Function handler returning data
+     */
+    void getRelatives(MailingType type, List<String> students, Handler<Either<String, JsonArray>> handler);
 }

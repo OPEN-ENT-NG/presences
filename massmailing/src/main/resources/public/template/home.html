@@ -13,7 +13,7 @@
         </span>
         </div>
         <div class="right-magnet">
-            <button disabled>
+            <button ng-disabled="!vm.canMassmail()" ng-click="vm.prefetch('MAIL')" class="vertical-spacing-twice">
                 <i18n>massmailing.massmail.mail</i18n>
             </button>
         </div>
@@ -74,7 +74,7 @@
                  ng-class="{ selected: vm.filter.anomalies[type]}"
                  data-ng-click="vm.filter.anomalies[type] = !vm.filter.anomalies[type]">
                 <span class="no-style">
-                    <i class="incidents">&nbsp;</i> [[ vm.massmailingCount[type] ]]
+                    <i class="incident">&nbsp;</i> [[ vm.massmailingCount[type] ]]
                     <i18n>massmailing.anomalies</i18n>
                     [[ type ]]
                 </span>
@@ -116,7 +116,10 @@
             </table>
         </div>
     </div>
-    <lightbox show="vm.filter.show" on-close="vm.filter.show = false" class="massmailing-filters">
+    <lightbox show="vm.lightbox.filter" on-close="vm.lightbox.filter = false" class="massmailing-filters">
         <div ng-include="'/massmailing/public/template/home_filters.html'"></div>
+    </lightbox>
+    <lightbox show="vm.lightbox.massmailing" on-close="vm.lightbox.massmailing = false" class="massmailing-prefetch">
+        <div ng-include="'/massmailing/public/template/home_prefetch.html'"></div>
     </lightbox>
 </div>

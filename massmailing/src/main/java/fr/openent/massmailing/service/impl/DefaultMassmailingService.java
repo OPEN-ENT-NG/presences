@@ -72,7 +72,7 @@ public class DefaultMassmailingService implements MassmailingService {
         switch (type) {
             case MAIL:
                 String query = "MATCH (u:User)-[:RELATED]->(r:User) WHERE NOT(HAS(r.email)) " +
-                        "AND u.id IN {users} RETURN u.id as id, (u.lastName + ' ' + u.firstName) as displayName, split(u.classes[0],'$')[1] as className";
+                        "AND u.id IN {users} RETURN DISTINCT u.id as id, (u.lastName + ' ' + u.firstName) as displayName, split(u.classes[0],'$')[1] as className";
                 JsonObject params = new JsonObject()
                         .put("users", new JsonArray(students));
                 Neo4j.getInstance().execute(query, params, Neo4jResult.validResultHandler(handler));
@@ -80,6 +80,30 @@ public class DefaultMassmailingService implements MassmailingService {
             default:
                 handler.handle(new Either.Left<>("[Massmailing@DefaultMassmailingService] Unknown Mailing type"));
         }
+    }
+
+    @Override
+    public void getRelatives(MailingType type, List<String> students, Handler<Either<String, JsonArray>> handler) {
+        String contactValue;
+        switch (type) {
+            case MAIL:
+                contactValue = "r.email";
+                break;
+            case SMS:
+                contactValue = "r.mobile";
+                break;
+            case PDF:
+            default:
+                contactValue = "";
+        }
+
+        String query = "MATCH (u:User)-[:RELATED]->(r:User) WHERE u.id IN {students} RETURN u.id as id, " +
+                "(u.lastName + ' ' + u.firstName) as displayName, split(u.classes[0],'$')[1] as className, " +
+                "collect({id: r.id, displayName: (r.lastName + ' ' + r.firstName), contact: " + contactValue + "}) as relative";
+        JsonObject params = new JsonObject()
+                .put("students", new JsonArray(students));
+        Neo4j.getInstance().execute(query, params, Neo4jResult.validResultHandler(handler));
+
     }
 
     @Override

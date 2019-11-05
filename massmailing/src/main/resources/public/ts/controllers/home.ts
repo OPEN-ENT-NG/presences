@@ -1,10 +1,9 @@
-import {_, idiom as lang, ng} from 'entcore';
+import {_, idiom as lang, ng, toasts} from 'entcore';
 import {Reason, ReasonService} from '@presences/services/ReasonService';
-import {GroupService, SearchService} from '../services';
-import {MassmailingAnomaliesResponse, MassmailingStatusResponse} from "../model";
+import {GroupService, SearchService, SettingsService, Template} from '../services';
+import {Massmailing, MassmailingAnomaliesResponse, MassmailingStatusResponse} from "../model";
 
 interface Filter {
-    show: boolean
     start_date: Date
     end_date: Date
     start_at: number
@@ -47,6 +46,12 @@ interface ViewModel {
         REASONS: boolean,
         STATUS: boolean
     }
+    massmailing: Massmailing;
+    lightbox: {
+        filter: boolean,
+        massmailing: boolean
+    }
+    templates: Template[]
 
     fetchData(): void;
 
@@ -79,15 +84,30 @@ interface ViewModel {
     filterInError(): boolean;
 
     getErrorMessage(): string;
+
+    canMassmail(): boolean;
+
+    prefetch(type: "MAIL" | "PDF" | "SMS"): Promise<void>;
+
+    massmail(): Promise<void>;
+
+    toggleStudent(student): void;
+
+    toggleRelative(relative, student): void;
 }
 
 declare let window: any;
 
 export const homeController = ng.controller('HomeController', ['$scope', 'route', 'MassmailingService', 'ReasonService',
-    'SearchService', 'GroupService',
-    function ($scope, route, MassmailingService, ReasonService: ReasonService, SearchService: SearchService, GroupService: GroupService) {
+    'SearchService', 'GroupService', 'SettingsService',
+    function ($scope, route, MassmailingService, ReasonService: ReasonService, SearchService: SearchService, GroupService: GroupService, SettingsService: SettingsService) {
         const vm: ViewModel = this;
         vm.massmailingStatus = {};
+        vm.templates = [];
+        vm.lightbox = {
+            massmailing: false,
+            filter: false
+        };
         vm.errors = {
             TYPE: false,
             STATUS: false,
@@ -95,7 +115,6 @@ export const homeController = ng.controller('HomeController', ['$scope', 'route'
         };
 
         vm.filter = {
-            show: false,
             start_date: new Date(),
             end_date: new Date(),
             start_at: 1,
@@ -134,7 +153,7 @@ export const homeController = ng.controller('HomeController', ['$scope', 'route'
         };
 
         vm.openForm = function () {
-            vm.filter.show = true;
+            vm.lightbox.filter = true;
             vm.formFilter = JSON.parse(JSON.stringify(vm.filter));
             vm.formFilter.selected.students.forEach((item) => item.toString = () => item.displayName);
             vm.formFilter.selected.groups.forEach((obj) => obj.toString = () => obj.name);
@@ -142,9 +161,10 @@ export const homeController = ng.controller('HomeController', ['$scope', 'route'
 
         vm.validForm = function () {
             const {start_date, end_date} = vm.filter;
-            vm.filter = {...vm.formFilter, show: false, start_date, end_date};
+            vm.filter = {...vm.formFilter, start_date, end_date};
             vm.formFilter = {};
             vm.fetchData();
+            vm.lightbox.filter = false;
         };
 
         vm.loadData = async function () {
@@ -332,6 +352,61 @@ export const homeController = ng.controller('HomeController', ['$scope', 'route'
             });
             message = `${message.substr(0, message.length - 1)}]`;
             return message
+        };
+
+        vm.canMassmail = function () {
+            for (let key in vm.massmailingStatus) {
+                if (vm.massmailingStatus[key]) return true;
+            }
+
+            return false;
+        };
+
+        vm.prefetch = async function (type: "MAIL" | "PDF" | "SMS"): Promise<void> {
+            try {
+                if (!checkFilter()) {
+                    throw 'Invalid filter';
+                }
+
+                const reasons: Array<Number> = [];
+                const types: Array<String> = [];
+                for (let i = 0; i < vm.reasons.length; i++) if (vm.filter.reasons[vm.reasons[i].id]) reasons.push(vm.reasons[i].id);
+                for (let status in vm.filter.status) if (vm.filter.status[status]) types.push(status);
+                const students = [], groups = [];
+                vm.filter.selected.students.forEach(({id}) => students.push(id));
+                vm.filter.selected.groups.forEach(({id}) => groups.push(id));
+                const settings = SettingsService.get(type, window.structure.id);
+                const prefetch = MassmailingService.prefetch(type, window.structure.id, massmailedParameter(), reasons, vm.filter.start_at, vm.filter.start_date, vm.filter.end_date, groups, students, types, vm.filter.noReasons);
+                vm.lightbox.massmailing = true;
+                const data = await Promise.all([settings, prefetch]);
+                vm.massmailing = data[1];
+                vm.templates = data[0];
+                vm.massmailing.filter = vm.filter;
+                if (vm.templates.length > 0) vm.massmailing.template = vm.templates[0];
+            } catch (e) {
+                vm.lightbox.massmailing = false;
+                toasts.warning('massmailing.prefetch.error');
+                throw e;
+            } finally {
+                $scope.safeApply();
+            }
+        };
+
+        vm.massmail = async function () {
+            vm.lightbox.massmailing = false;
+            alert('Ahah nop! ヽ༼ ಠ益ಠ ༽ﾉ');
+        };
+
+        vm.toggleStudent = function ({selected, relative}) {
+            relative.forEach(rel => rel.selected = selected);
+            $scope.safeApply();
+        };
+
+        vm.toggleRelative = function (relative, student) {
+            let bool = false;
+            student.relative.forEach(relative => (bool = bool || relative.selected));
+            student.selected = bool;
+            $scope.safeApply();
         };
 
         $scope.$watch(() => window.structure, vm.loadData);

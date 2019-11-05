@@ -1,0 +1,38 @@
+.massmailing-prefetch {
+  .sub-row {
+    background: rgba(235, 235, 235, 0.4);
+  }
+
+  .massmailing-counters {
+    .counter {
+      height: 53px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 16px;
+      margin-right: 25px;
+
+      i.incident {
+        color: $presences-red;
+        margin-right: 10px;
+        font-size: 20px;
+      }
+
+      .number {
+        font-size: 30px;
+        margin-right: 5px;
+        font-weight: bold;
+      }
+    }
+  }
+
+  .template-preview {
+    height: 75px;
+    overflow-y: auto;
+    padding: 5px;
+    color: rgba(0, 0, 0, 0.4);
+    border: solid 1px rgba(192, 192, 192, 0.25);
+    border-radius: 5px;
+    font-size: 14px;
+  }
+}

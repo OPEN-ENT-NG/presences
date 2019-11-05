@@ -31,6 +31,7 @@
   "massmailing.massmail.mail": "Envoyer mail",
   "massmailing.cancel": "Annuler",
   "massmailing.validate": "Valider",
+  "massmailing.send": " Envoyer",
   "massmailing.filters": "Filtres",
   "massmailing.filters.type": "Type",
   "massmailing.filters.massmailing": "Publipostage",
@@ -60,5 +61,10 @@
   "massmailing.filter.STATUS": "Publipostage",
   "massmailing.filter.REASONS": "Motif",
   "massmailing.filter.empty.no.filter": "Aucun filtre",
-  "massmailing.filter.empty.selected": "n'est sélectionné. Activez en au moins un pour afficher des absences à publiposter."
+  "massmailing.filter.empty.selected": "n'est sélectionné. Activez en au moins un pour afficher des absences à publiposter.",
+  "massmailing.prefetch.error": "Une erreur est survenue lors du calcul du publipostage",
+  "massmailing.prefetch.title.MAIL": "Envoyer un mail",
+  "massmailing.prefetch.mail.count": "mail(s) à envoyer",
+  "massmailing.prefetch.students.count": "élève(s) concernés",
+  "massmailing.prefetch.anomalies.count": "anomalie(s) SMS"
 }

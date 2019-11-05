@@ -40,6 +40,12 @@ body.presences, .sniplet.presences {
 
   color: $presences-black;
 
+  .close-lightbox .close-2x::before {
+    font-family: 'material-icons';
+    content: "\F156";
+    font-size: 24px;
+  }
+
   .toasts {
     z-index: 90001;
 

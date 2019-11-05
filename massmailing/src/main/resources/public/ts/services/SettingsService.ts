@@ -1,3 +1,4 @@
+import {ng} from 'entcore';
 import http from 'axios';
 
 export interface Template {
@@ -70,3 +71,5 @@ export const SettingsService: SettingsService = {
         }
     }
 };
+
+export const ngSettingsService = ng.service('SettingsService', (): SettingsService => SettingsService);

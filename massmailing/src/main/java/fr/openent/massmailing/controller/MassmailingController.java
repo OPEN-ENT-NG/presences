@@ -6,6 +6,7 @@ import fr.openent.massmailing.enums.MassmailingType;
 import fr.openent.massmailing.security.CanAccessMassMailing;
 import fr.openent.massmailing.service.MassmailingService;
 import fr.openent.massmailing.service.impl.DefaultMassmailingService;
+import fr.openent.presences.common.helper.ArrayHelper;
 import fr.openent.presences.common.helper.FutureHelper;
 import fr.openent.presences.common.service.GroupService;
 import fr.openent.presences.common.service.impl.DefaultGroupService;
@@ -266,11 +267,7 @@ public class MassmailingController extends ControllerHelper {
                     }
 
                     JsonArray anomalies = anomaliesEvent.right().getValue();
-                    HashMap<String, JsonObject> map = new HashMap<>();
-                    for (int i = 0; i < anomalies.size(); i++) {
-                        map.put(anomalies.getJsonObject(i).getString("id"), anomalies.getJsonObject(i));
-                    }
-
+                    HashMap<String, JsonObject> map = mapById(anomalies);
                     for (int i = 0; i < types.size(); i++) {
                         JsonArray res = (JsonArray) futures.get(i).result();
                         for (int j = 0; j < res.size(); j++) {
@@ -351,5 +348,179 @@ public class MassmailingController extends ControllerHelper {
         }
 
         return students;
+    }
+
+    @Get("/massmailings/prefetch/:mailingType")
+    //TODO Add security filter
+    @ApiDoc("Prefetch massmailing")
+    public void prefetch(HttpServerRequest request) {
+        if (!validParams(request) || !validMassmailingType(request) || !validMailingType(request)) {
+            badRequest(request);
+            return;
+        }
+
+        processStudents(request, studentEvent -> {
+            if (studentEvent.isLeft()) {
+                log.error("[Massmailing@MassmailingController]");
+                renderError(request);
+                return;
+            }
+
+            List<String> students = studentEvent.right().getValue();
+            List<MassmailingType> types = getMassMailingTypes(request);
+            MailingType mailingType = getMailingType(request);
+            List<Future> futures = new ArrayList<>();
+            String structure = request.getParam("structure");
+            Boolean massmailed = Boolean.parseBoolean(request.getParam("massmailed"));
+            List<Integer> reasons = parseReasons(request.params().getAll("reason"));
+            boolean noReasons = !request.params().contains("no_reason") || Boolean.parseBoolean(request.getParam("no_reasons"));
+            Integer startAt;
+            try {
+                startAt = Integer.parseInt(request.getParam("start_at"));
+            } catch (NumberFormatException e) {
+                startAt = 1;
+            }
+            String startDate = request.getParam("start_date");
+            String endDate = request.getParam("end_date");
+
+            for (MassmailingType type : types) {
+                Future<JsonArray> future = Future.future();
+                futures.add(future);
+                massmailingService.getCountEventByStudent(structure, type, massmailed, reasons, startAt, startDate, endDate, students, noReasons, FutureHelper.handlerJsonArray(future));
+            }
+
+            CompositeFuture.all(futures).setHandler(compositeEvent -> {
+                if (compositeEvent.failed()) {
+                    log.error("[Massmailing@MassmailingController] Failed to retrieve count event for anomalies request", compositeEvent.cause());
+                    renderError(request);
+                    return;
+                }
+
+                processRelatives(mailingType, getStudentsList(futures), relativesEvent -> {
+                    if (relativesEvent.isLeft()) {
+                        log.error("[Massmailing@prefetch] Failed to retrieve relatives");
+                        renderError(request);
+                        return;
+                    }
+
+                    HashMap<String, JsonObject> relativesMap = mapById(relativesEvent.right().getValue().getJsonArray("values", new JsonArray()));
+                    for (int i = 0; i < futures.size(); i++) {
+                        JsonArray result = (JsonArray) futures.get(i).result();
+                        for (int j = 0; j < result.size(); j++) {
+                            JsonObject count = result.getJsonObject(j);
+                            if (!relativesMap.containsKey(count.getString("student_id"))) continue;
+                            JsonObject student = relativesMap.get(count.getString("student_id"));
+                            if (!student.containsKey("events")) student.put("events", new JsonObject());
+                            student.getJsonObject("events").put(types.get(i).name(), count.getInteger("count"));
+                        }
+                    }
+
+                    JsonArray studentsObject = transformMapToArray(relativesMap);
+
+                    JsonObject response = new JsonObject()
+                            .put("type", mailingType.name());
+
+                    JsonObject countObject = new JsonObject()
+                            .put("anomalies", relativesEvent.right().getValue().getInteger("anomalies_count"))
+                            .put("students", studentsObject.size())
+                            .put("massmailing", countMassmailing(studentsObject));
+
+                    response.put("counts", countObject);
+                    response.put("students", ArrayHelper.sort(studentsObject, "displayName"));
+
+                    renderJson(request, response);
+                });
+            });
+        });
+    }
+
+    private Integer countMassmailing(JsonArray students) {
+        Integer count = 0;
+        for (int i = 0; i < students.size(); i++) {
+            JsonObject student = students.getJsonObject(i);
+            JsonArray relative = student.getJsonArray("relative");
+            for (int j = 0; j < relative.size(); j++) {
+                JsonObject rel = relative.getJsonObject(j);
+                if (rel.getValue("contact") != null) count++;
+            }
+        }
+
+        return count;
+    }
+
+    private HashMap<String, JsonObject> mapById(JsonArray arr) {
+        HashMap<String, JsonObject> map = new HashMap<>();
+        for (int i = 0; i < arr.size(); i++) {
+            JsonObject o = arr.getJsonObject(i);
+            map.put(o.getString("id", ""), o);
+        }
+
+        return map;
+    }
+
+    private void processRelatives(MailingType mailingType, List<String> students, Handler<Either<String, JsonObject>> handler) {
+        Future anomaliesFuture = Future.future();
+        Future relativesFuture = Future.future();
+        massmailingService.getAnomalies(mailingType, students, FutureHelper.handlerJsonArray(anomaliesFuture));
+        massmailingService.getRelatives(mailingType, students, FutureHelper.handlerJsonArray(relativesFuture));
+        CompositeFuture.all(anomaliesFuture, relativesFuture).setHandler(futureEvent -> {
+            if (futureEvent.failed()) {
+                String message = "[Massmailing@processRelatives] Failed to retrieve data";
+                log.error(message, futureEvent.cause());
+                handler.handle(new Either.Left<>(message));
+                return;
+            }
+
+            List<String> anomalies = getIdsList((JsonArray) anomaliesFuture.result());
+            JsonObject result = new JsonObject()
+                    .put("values", filterRelatives((JsonArray) relativesFuture.result(), anomalies))
+                    .put("anomalies_count", anomalies.size());
+            handler.handle(new Either.Right<>(result));
+        });
+    }
+
+    private JsonArray filterRelatives(JsonArray relatives, List<String> anomalies) {
+        JsonArray res = new JsonArray();
+        for (int i = 0; i < relatives.size(); i++) {
+            String id = relatives.getJsonObject(i).getString("id");
+            if (!anomalies.contains(id)) res.add(relatives.getJsonObject(i));
+        }
+        return res;
+    }
+
+    private List<String> getIdsList(JsonArray arr) {
+        List<String> identifiers = new ArrayList<>();
+        for (int i = 0; i < arr.size(); i++) {
+            JsonObject o = arr.getJsonObject(i);
+            identifiers.add(o.getString("id", ""));
+        }
+
+        return identifiers;
+    }
+
+    private boolean validMailingType(HttpServerRequest request) {
+        boolean state = false;
+        List<String> types = request.params().getAll("mailingType");
+        for (String type : types) {
+            try {
+                MailingType.valueOf(type);
+                state = true;
+            } catch (IllegalArgumentException e) {
+                state = false;
+                break;
+            }
+        }
+
+        return state;
+    }
+
+    private MailingType getMailingType(HttpServerRequest request) {
+        try {
+            String mailingType = request.getParam("mailingType").toUpperCase();
+            return MailingType.valueOf(mailingType.toUpperCase());
+        } catch (IllegalArgumentException e) {
+            log.error("[Massmailing@MassmailingController] Failed to parse mailing type", e);
+            return MailingType.MAIL;
+        }
     }
 }

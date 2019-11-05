@@ -1,12 +1,14 @@
 import {moment, ng} from 'entcore';
 import http from 'axios';
-import {MassmailingAnomaliesResponse, MassmailingStatusResponse} from '../model';
+import {Massmailing, MassmailingAnomaliesResponse, MassmailingStatusResponse} from '../model';
 import {DateUtils} from "@common/utils";
 
 export interface MassmailingService {
     getStatus(structure: string, massmailed: boolean, reasons: Array<number>, start_at: number, start_date: Date, end_date: Date, groups: Array<string>, students: Array<string>, types: Array<String>, noReasons: boolean): Promise<MassmailingStatusResponse>;
 
     getAnomalies(structure: string, massmailed: boolean, reasons: Array<number>, start_at: number, start_date: Date, end_date: Date, groups: Array<string>, students: Array<string>, types: Array<String>, noReasons: boolean): Promise<MassmailingAnomaliesResponse>;
+
+    prefetch(mailType: string, structure: string, massmailed: boolean, reasons: Array<number>, start_at: number, start_date: Date, end_date: Date, groups: Array<string>, studentList: Array<string>, types: Array<String>, noReasons: boolean): Promise<Massmailing>;
 }
 
 function formatParameters(url: string, structure: string, massmailed: boolean, reasons: Array<number>, start_at: number,
@@ -46,6 +48,16 @@ export const MassmailingService = ng.service('MassmailingService', (): Massmaili
                 const url = formatParameters('/massmailing/massmailings/anomalies', structure, massmailed, reasons, start_at, start_date, end_date, groups, students, types, noReasons);
                 const {data} = await http.get(url);
                 return data;
+            } catch (e) {
+                throw e;
+            }
+        },
+        prefetch: async function (mailType, structure, massmailed, reasons, start_at = 1, start_date, end_date, groups, studentList, types, noReasons) {
+            try {
+                const url = formatParameters(`/massmailing/massmailings/prefetch/${mailType}`, structure, massmailed, reasons, start_at, start_date, end_date, groups, studentList, types, noReasons);
+                const {data} = await http.get(url);
+                const {type, students, counts} = data;
+                return new Massmailing(type, counts, students);
             } catch (e) {
                 throw e;
             }

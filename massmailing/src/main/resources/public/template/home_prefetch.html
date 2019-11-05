@@ -1,0 +1,104 @@
+<section class="head massmailing-lightbox-header">
+    <h3>
+        <i18n>massmailing.prefetch.title.MAIL</i18n>
+    </h3>
+</section>
+<section class="massmailing-lightbox-body body lightbox-form">
+    <div class="row vertical-spacing massmailing-counters">
+        <div class="card cell horizontal-spacing counter">
+            <span class="number">[[vm.massmailing.counts.massmailing]]</span>
+            <i18n>massmailing.prefetch.mail.count</i18n>
+        </div>
+        <div class="card cell horizontal-spacing counter">
+            <span class="number">[[vm.massmailing.counts.students]]</span>
+            <i18n>massmailing.prefetch.students.count</i18n>
+        </div>
+        <div class="card cell horizontal-spacing counter">
+            <i class="incident">&nbsp;</i>
+            <span class="number">[[vm.massmailing.counts.anomalies]]</span>
+            <i18n>massmailing.prefetch.anomalies.count</i18n>
+        </div>
+    </div>
+    <div class="row vertical-spacing">
+        <div class="row">
+            <div class="cell">
+                <select ng-model="vm.massmailing.template"
+                        ng-options="template.name for template in vm.templates"></select>
+            </div>
+        </div>
+        <div ng-bind-html="vm.massmailing.template.content" class="row template-preview"></div>
+    </div>
+    <div class="massmail-anomalies row vertical-spacing-six">
+        <div class="row vertical-spacing">
+            <table>
+                <thead>
+                <th width="5%">&nbsp;</th>
+                <th width="20%" class="text-align-left">
+                    <i18n>massmailig.student</i18n>
+                </th>
+                <th width="10%">
+                    <i18n>massmailing.class</i18n>
+                </th>
+                <th width="25%">
+                    <i18n>massmailing.number</i18n>
+                </th>
+                <th width="40%">
+                    Responsables alertés
+                </th>
+                </thead>
+                <tbody ng-repeat="student in vm.massmailing.students">
+                <tr>
+                    <td>
+                        <label class="checkbox">
+                            <input type="checkbox" data-ng-model="student.selected"
+                                   data-ng-change="vm.toggleStudent(student)">
+                            <span></span>
+                        </label>
+                    </td>
+                    <td data-ng-click="student.opened = !student.opened">[[student.displayName]]</td>
+                    <td data-ng-click="student.opened = !student.opened" class="text-center">[[student.className]]</td>
+                    <td data-ng-click="student.opened = !student.opened" class="text-center counters-cell">
+                        <div class="counters">
+                            <div ng-repeat="countType in vm.getKeys(student.events)" class="[[countType]] counter">
+                                [[student.events[countType] ]]
+                            </div>
+                        </div>
+                    </td>
+                    <td data-ng-click="student.opened = !student.opened" class="text-center">
+                        [[vm.massmailing.getRelativeCheckedCount(student)]]/[[student.relative.length]]
+                    </td>
+                </tr>
+                <tr ng-repeat="relative in student.relative" ng-show="student.opened" class="sub-row">
+                    <td colspan="4">
+                        <div class="eleven centered">
+                            <label class="checkbox horizontal-margin-twice">
+                                <input type="checkbox" data-ng-model="relative.selected"
+                                       data-ng-change="vm.toggleRelative(relative, student)">
+                                <span></span>
+                            </label>
+                            <span data-ng-click="relative.selected = !relative.selected">[[relative.displayName]]</span>
+                        </div>
+                    </td>
+                    <td>
+                        <div class="right-magnet">
+                            <i class="[[vm.massmailing.type.toLowerCase()]] horizontal-spacing">&nbsp;</i><span>[[relative.contact]]</span>
+                        </div>
+                    </td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</section>
+<section class="massmailing-lightbox-footer">
+    <div class="row horizontal-spacing">
+        <div class="massmailing-lightbox-footer-submit twelve cell">
+            <button class="right-magnet" ng-click="vm.massmail()">
+                <i18n>massmailing.send</i18n>
+            </button>
+            <button class="right-magnet cancel" ng-click="vm.lightbox.massmailing = false">
+                <i18n>massmailing.cancel</i18n>
+            </button>
+        </div>
+    </div>
+</section>

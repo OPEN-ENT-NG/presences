@@ -1,13 +1,18 @@
+@import "variables";
+
 $massmailing-main: #ffb600;
 $massmailing-bgcolor: rgba(255, 255, 255, 0.6);
 $massmailing-grey: #c0c0c0;
 
 body.massmailing {
-  @import "variables";
   @import "components/index";
 
   .text-align-left {
     text-align: left;
+  }
+
+  .text-align-right {
+    text-align: right;
   }
 
   .red-text {
@@ -49,6 +54,43 @@ body.massmailing {
       input[type="number"] {
         width: 50px;
         font-size: 20px;
+      }
+    }
+  }
+
+  .counters-cell {
+    padding: 0;
+    position: relative;
+
+    .counters {
+      height: 100%;
+      display: flex;
+      position: absolute;
+      top: 0;
+      left: 0;
+      align-items: center;
+      justify-content: center;
+      width: 100%;
+
+      .counter {
+        width: 40px;
+        height: 100%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: $white;
+
+        &.JUSTIFIED {
+          background: $presences-pink;
+        }
+
+        &.UNJUSTIFIED {
+          background: $presences-red;
+        }
+
+        &.LATENESS {
+          background: $presences-purple;
+        }
       }
     }
   }
