@@ -36,23 +36,8 @@ interface ViewModel {
 
     editPeriod($event, event): void;
 
-    /* dayHistory interaction */
-    mouseIsDown: boolean;
-    indexDayHistory: number;
-    indexDayHistoryArray: number[];
 
-    period($event): void;
-
-    setAbsent(): void;
-
-    treatAbsentAfterMouseLeave(event: EventResponse): Promise<void>;
-
-    drawAbsent($event): void;
-
-    interactAbsent(period, event: EventResponse, $event, parentIndex): void;
-
-    /* setAbsent(periods, event, $event, $index): void;
-*/
+    /* setAbsent(periods, event, $event, $index): void;*/
     reasonSelect($event): void;
 
     getSelectValue(event): number;
@@ -149,7 +134,6 @@ export const eventsController = ng.controller('EventsController', ['$scope', '$r
             regularized: true,
         };
         vm.provingReasonsMap = {};
-        vm.mouseIsDown = false;
         vm.eventType = [];
         vm.multipleSelect = {
             id: 0,
@@ -242,22 +226,6 @@ export const eventsController = ng.controller('EventsController', ['$scope', '$r
             $scope.safeApply();
         };
 
-        vm.period = ($event): void => {
-            $event.stopPropagation();
-        };
-
-        vm.setAbsent = (): void => {
-            vm.mouseIsDown = true;
-            vm.indexDayHistoryArray = [];
-        };
-
-        vm.treatAbsentAfterMouseLeave = async (event: EventResponse) => {
-            vm.mouseIsDown = false;
-            /* @TODO !!feature not available yet!! While sliding on node, create absence
-                  that fit on register_id date and time to create event */
-            return;
-        };
-
         const initGlobalCounsellorRegularisation = function (event: EventResponse): boolean {
             let regularizedArray = [];
             event.events.forEach(e => {
@@ -285,20 +253,7 @@ export const eventsController = ng.controller('EventsController', ['$scope', '$r
             });
             return reasonIds;
         };
-
-        vm.drawAbsent = ($event): void => {
-            /* @TODO !!feature not available yet!! When clicking on node, create absence that
-                 should match with register_id date/time to create event */
-            return;
-        };
-
-        vm.interactAbsent = (period, event: EventResponse, $event, parentIndex): void => {
-            $event.stopPropagation();
-            /* @TODO !!feature not available yet!! When click on node,
-                        add absent/justified class to fill node and create absence OR DELETE if absent or justified absent */
-            return;
-        };
-
+        
         /* Change CSS class depending on their event_type id */
         vm.eventTypeState = (periods, event): string => {
             if (periods.events.length === 0) return '';
@@ -386,13 +341,13 @@ export const eventsController = ng.controller('EventsController', ['$scope', '$r
             let eventsId = [];
             event.dayHistory.forEach(history => {
                 history.events.forEach(e => {
-                    if (e.reason_id === null || !vm.provingReasonsMap[e.reason_id]) {
+                    if (e.reason_id !== null || !vm.provingReasonsMap[e.reason_id]) {
                         e.counsellor_regularisation = event.globalCounsellorRegularisation;
                     }
                 });
             });
             event.events.forEach(item => {
-                if (item.reason_id === null || !vm.provingReasonsMap[item.reason_id]) {
+                if (item.reason_id !== null || !vm.provingReasonsMap[item.reason_id]) {
                     item.counsellor_regularisation = event.globalCounsellorRegularisation;
                     eventsId.push(item.id);
                 }
