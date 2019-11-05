@@ -66,5 +66,6 @@
   "massmailing.prefetch.title.MAIL": "Envoyer un mail",
   "massmailing.prefetch.mail.count": "mail(s) à envoyer",
   "massmailing.prefetch.students.count": "élève(s) concernés",
-  "massmailing.prefetch.anomalies.count": "anomalie(s) SMS"
+  "massmailing.prefetch.anomalies.mail.count": "anomalie(s) MAIL",
+  "massmailing.relative.alert": "Responsables alertés"
 }

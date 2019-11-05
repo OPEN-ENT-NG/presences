@@ -1,6 +1,33 @@
 .massmailing-prefetch {
+  table {
+    margin-bottom: 0;
+  }
+
+  .head-table {
+    z-index: 1;
+    position: relative;
+  }
+
+  .list-table {
+    z-index: 0;
+    position: relative;
+  }
+
+  .students {
+    max-height: 200px;
+    overflow-y: auto;
+  }
+
   .sub-row {
     background: rgba(235, 235, 235, 0.4);
+  }
+
+  i {
+    &.mail::before {
+      font-family: 'material-icons';
+      content: "\F1EE";
+      color: $presences-black;
+    }
   }
 
   .massmailing-counters {

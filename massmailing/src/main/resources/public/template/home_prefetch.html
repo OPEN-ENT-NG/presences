@@ -16,7 +16,7 @@
         <div class="card cell horizontal-spacing counter">
             <i class="incident">&nbsp;</i>
             <span class="number">[[vm.massmailing.counts.anomalies]]</span>
-            <i18n>massmailing.prefetch.anomalies.count</i18n>
+            <i18n>massmailing.prefetch.anomalies.mail.count</i18n>
         </div>
     </div>
     <div class="row vertical-spacing">
@@ -30,7 +30,7 @@
     </div>
     <div class="massmail-anomalies row vertical-spacing-six">
         <div class="row vertical-spacing">
-            <table>
+            <table class="head-table">
                 <thead>
                 <th width="5%">&nbsp;</th>
                 <th width="20%" class="text-align-left">
@@ -43,50 +43,57 @@
                     <i18n>massmailing.number</i18n>
                 </th>
                 <th width="40%">
-                    Responsables alertés
+                    <i18n>massmailing.relative.alert</i18n>
                 </th>
                 </thead>
-                <tbody ng-repeat="student in vm.massmailing.students">
-                <tr>
-                    <td>
-                        <label class="checkbox">
-                            <input type="checkbox" data-ng-model="student.selected"
-                                   data-ng-change="vm.toggleStudent(student)">
-                            <span></span>
-                        </label>
-                    </td>
-                    <td data-ng-click="student.opened = !student.opened">[[student.displayName]]</td>
-                    <td data-ng-click="student.opened = !student.opened" class="text-center">[[student.className]]</td>
-                    <td data-ng-click="student.opened = !student.opened" class="text-center counters-cell">
-                        <div class="counters">
-                            <div ng-repeat="countType in vm.getKeys(student.events)" class="[[countType]] counter">
-                                [[student.events[countType] ]]
-                            </div>
-                        </div>
-                    </td>
-                    <td data-ng-click="student.opened = !student.opened" class="text-center">
-                        [[vm.massmailing.getRelativeCheckedCount(student)]]/[[student.relative.length]]
-                    </td>
-                </tr>
-                <tr ng-repeat="relative in student.relative" ng-show="student.opened" class="sub-row">
-                    <td colspan="4">
-                        <div class="eleven centered">
-                            <label class="checkbox horizontal-margin-twice">
-                                <input type="checkbox" data-ng-model="relative.selected"
-                                       data-ng-change="vm.toggleRelative(relative, student)">
+            </table>
+            <div class="students">
+                <table class="list-table">
+                    <tbody ng-repeat="student in vm.massmailing.students">
+                    <tr>
+                        <td width="5%">
+                            <label class="checkbox">
+                                <input type="checkbox" data-ng-model="student.selected"
+                                       data-ng-change="vm.toggleStudent(student)">
                                 <span></span>
                             </label>
-                            <span data-ng-click="relative.selected = !relative.selected">[[relative.displayName]]</span>
-                        </div>
-                    </td>
-                    <td>
-                        <div class="right-magnet">
-                            <i class="[[vm.massmailing.type.toLowerCase()]] horizontal-spacing">&nbsp;</i><span>[[relative.contact]]</span>
-                        </div>
-                    </td>
-                </tr>
-                </tbody>
-            </table>
+                        </td>
+                        <td width="20%" data-ng-click="student.opened = !student.opened">[[student.displayName]]</td>
+                        <td width="10%" data-ng-click="student.opened = !student.opened" class="text-center">
+                            [[student.className]]
+                        </td>
+                        <td width="25%" data-ng-click="student.opened = !student.opened"
+                            class="text-center counters-cell">
+                            <div class="counters">
+                                <div ng-repeat="countType in vm.getKeys(student.events)" class="[[countType]] counter">
+                                    [[student.events[countType] ]]
+                                </div>
+                            </div>
+                        </td>
+                        <td width="40%" data-ng-click="student.opened = !student.opened" class="text-center">
+                            [[vm.massmailing.getRelativeCheckedCount(student)]]/[[student.relative.length]]
+                        </td>
+                    </tr>
+                    <tr ng-repeat="relative in student.relative" ng-show="student.opened" class="sub-row">
+                        <td colspan="4">
+                            <div class="eleven centered">
+                                <label class="checkbox horizontal-margin-twice">
+                                    <input type="checkbox" data-ng-model="relative.selected"
+                                           data-ng-change="vm.toggleRelative(relative, student)">
+                                    <span></span>
+                                </label>
+                                <span data-ng-click="relative.selected = !relative.selected">[[relative.displayName]]</span>
+                            </div>
+                        </td>
+                        <td>
+                            <div class="right-magnet">
+                                <i class="[[vm.massmailing.type.toLowerCase()]] horizontal-spacing">&nbsp;</i><span>[[relative.contact]]</span>
+                            </div>
+                        </td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
         </div>
     </div>
 </section>
