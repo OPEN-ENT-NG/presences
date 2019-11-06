@@ -55,6 +55,7 @@ public class Presences extends BaseServer {
         addController(new ReasonController());
         addController(new RegistryController(eb));
         addController(new EventBusController(eb));
+        addController(new NotebookController());
 
         // Controller that create fake rights for widgets
         addController(new FakeRight());
