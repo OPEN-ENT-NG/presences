@@ -394,7 +394,8 @@ export const homeController = ng.controller('HomeController', ['$scope', 'route'
 
         vm.massmail = async function () {
             vm.lightbox.massmailing = false;
-            alert('Ahah nop! ヽ༼ ಠ益ಠ ༽ﾉ');
+            await vm.massmailing.process();
+            toasts.info('massmailing.in-progress');
         };
 
         vm.toggleStudent = function ({selected, relative}) {

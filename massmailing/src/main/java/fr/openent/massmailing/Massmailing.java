@@ -5,8 +5,10 @@ import fr.openent.massmailing.controller.SettingsController;
 import fr.openent.massmailing.enums.MailingType;
 import fr.openent.massmailing.starter.DatabaseStarter;
 import fr.openent.presences.common.presences.Presences;
+import fr.wseduc.webutils.email.EmailSender;
 import io.vertx.core.eventbus.EventBus;
 import io.vertx.core.json.JsonObject;
+import org.entcore.common.email.EmailFactory;
 import org.entcore.common.http.BaseServer;
 
 import java.util.HashMap;
@@ -20,12 +22,14 @@ public class Massmailing extends BaseServer {
     public static final String VIEW = "massmailing.view";
 
     static HashMap<MailingType, Boolean> types;
+    public static EmailSender emailSender;
 
     @Override
     public void start() throws Exception {
         super.start();
         EventBus eb = getEventBus(vertx);
         types = mailingsConfig();
+        emailSender = new EmailFactory(vertx, config).getSender();
 
         addController(new MassmailingController(eb));
         addController(new SettingsController(eb));

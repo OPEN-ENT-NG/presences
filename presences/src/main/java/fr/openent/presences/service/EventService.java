@@ -129,4 +129,21 @@ public interface EventService {
      */
     void getCountEventByStudent(Integer eventType, List<String> students, String structure, Boolean justified, Integer startAt, List<Integer> reasonsId, Boolean massmailed,
                                 String startDate, String endDate, boolean noReasons, Handler<Either<String, JsonArray>> handler);
+
+    /**
+     * Retrieve events by student
+     *
+     * @param eventType  Event Type list
+     * @param students   Student list. Contains every students identifiers
+     * @param structure  Structure identifier
+     * @param justified  Justified events or not ? Can be null if justified event needs to be excluded
+     * @param massmailed Massmailed ? Use by massmailing module. When null, column is excluded
+     * @param startDate  Range start date
+     * @param endDate    Range end date
+     * @param reasonsId  Reasons identifiers. Can be sorted by reasons identifiers
+     * @param noReasons  Should retrieve no reasons event
+     * @param handler    Function handler returning data
+     */
+    void getEventsByStudent(List<Integer> eventType, List<String> students, String structure, Boolean justified, List<Integer> reasonsId, Boolean massmailed,
+                            String startDate, String endDate, boolean noReasons, Handler<Either<String, JsonArray>> handler);
 }

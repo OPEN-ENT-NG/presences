@@ -570,6 +570,41 @@ public class DefaultEventService implements EventService {
         Sql.getInstance().prepared(query, params, SqlResult.validResultHandler(handler));
     }
 
+    @Override
+    public void getEventsByStudent(List<Integer> eventTypes, List<String> students, String structure, Boolean justified, List<Integer> reasonsId, Boolean massmailed, String startDate, String endDate, boolean noReasons, Handler<Either<String, JsonArray>> handler) {
+        JsonArray params = new JsonArray()
+                .add(startDate)
+                .add(endDate)
+                .addAll(new JsonArray(eventTypes))
+                .add(structure);
+        String query = "SELECT event.id, student_id, event.start_date, event.end_date, counsellor_regularisation, reason_id, type_id " +
+                "FROM " + Presences.dbSchema + ".event " +
+                "INNER JOIN " + Presences.dbSchema + ".register ON (register.id = event.register_id) " +
+                "WHERE event.start_date >= ? " +
+                "AND event.end_date <= ? " +
+                "AND type_id IN " + Sql.listPrepared(eventTypes) +
+                " AND register.structure_id = ? ";
+        if (!students.isEmpty()) {
+            query += " AND student_id IN " + Sql.listPrepared(students);
+            params.addAll(new JsonArray(students));
+        }
+        if (justified != null) {
+            query += " AND (counsellor_regularisation = " + (justified ? "true) " : "false OR reason_id IS NULL) ");
+        }
+        if (!reasonsId.isEmpty()) {
+            query += " AND (reason_id IN " + Sql.listPrepared(reasonsId) + (noReasons ? " OR reason_id IS NULL" : "") + ") ";
+            params.addAll(new JsonArray(reasonsId));
+        }
+        if (massmailed != null) {
+            query += " AND massmailed = ? ";
+            params.add(massmailed);
+        }
+
+        query += " ORDER BY event.start_date";
+
+        Sql.getInstance().prepared(query, params, SqlResult.validResultHandler(handler));
+    }
+
     private JsonObject getDeletionEventStatement(JsonObject event) {
         String query = "DELETE FROM " + Presences.dbSchema + ".event WHERE type_id IN (2, 3) AND register_id = ? AND student_id = ?";
         JsonArray params = new JsonArray()

@@ -1,7 +1,9 @@
 package fr.openent.presences.controller;
 
 import fr.openent.presences.service.EventService;
+import fr.openent.presences.service.ReasonService;
 import fr.openent.presences.service.impl.DefaultEventService;
+import fr.openent.presences.service.impl.DefaultReasonService;
 import fr.wseduc.bus.BusAddress;
 import io.vertx.core.eventbus.EventBus;
 import io.vertx.core.eventbus.Message;
@@ -15,6 +17,7 @@ import java.util.List;
 public class EventBusController extends ControllerHelper {
 
     private EventService eventService;
+    private ReasonService reasonService = new DefaultReasonService();
 
     public EventBusController(EventBus eb) {
         this.eventService = new DefaultEventService(eb);
@@ -24,19 +27,45 @@ public class EventBusController extends ControllerHelper {
     public void bus(final Message<JsonObject> message) {
         JsonObject body = message.body();
         String action = body.getString("action");
+        Integer eventType;
+        Boolean justified;
+        List<String> students;
+        String structure;
+        Integer startAt;
+        List<Integer> reasonsId;
+        Boolean massmailed;
+        String startDate;
+        String endDate;
+        boolean noReasons;
         switch (action) {
             case "get-count-event-by-student":
-                Integer eventType = body.getInteger("eventType");
-                Boolean justified = body.getBoolean("justified");
-                List<String> students = body.getJsonArray("students", new JsonArray()).getList();
-                String structure = body.getString("structure");
-                Integer startAt = body.getInteger("startAt", 1);
-                List<Integer> reasonsId = body.getJsonArray("reasonsId", new JsonArray()).getList();
-                Boolean massmailed = body.getBoolean("massmailed");
-                String startDate = body.getString("startDate");
-                String endDate = body.getString("endDate");
-                boolean noReasons = body.getBoolean("noReasons");
+                eventType = body.getInteger("eventType");
+                justified = body.getBoolean("justified");
+                students = body.getJsonArray("students", new JsonArray()).getList();
+                structure = body.getString("structure");
+                startAt = body.getInteger("startAt", 1);
+                reasonsId = body.getJsonArray("reasonsId", new JsonArray()).getList();
+                massmailed = body.getBoolean("massmailed");
+                startDate = body.getString("startDate");
+                endDate = body.getString("endDate");
+                noReasons = body.getBoolean("noReasons");
                 this.eventService.getCountEventByStudent(eventType, students, structure, justified, startAt, reasonsId, massmailed, startDate, endDate, noReasons, BusResponseHandler.busArrayHandler(message));
+                break;
+            case "get-events-by-student":
+                List<Integer> eventTypes = body.getJsonArray("eventType").getList();
+                justified = body.getBoolean("justified");
+                students = body.getJsonArray("students", new JsonArray()).getList();
+                structure = body.getString("structure");
+                reasonsId = body.getJsonArray("reasonsId", new JsonArray()).getList();
+                massmailed = body.getBoolean("massmailed");
+                startDate = body.getString("startDate");
+                endDate = body.getString("endDate");
+                noReasons = body.getBoolean("noReasons");
+                this.eventService.getEventsByStudent(eventTypes, students, structure, justified, reasonsId, massmailed, startDate, endDate, noReasons, BusResponseHandler.busArrayHandler(message));
+                break;
+            case "get-reasons":
+                structure = body.getString("structure");
+                this.reasonService.fetchReason(structure, BusResponseHandler.busArrayHandler(message));
                 break;
             default:
                 message.reply(new JsonObject()

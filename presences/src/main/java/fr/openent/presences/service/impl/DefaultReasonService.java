@@ -60,7 +60,7 @@ public class DefaultReasonService implements ReasonService {
         Sql.getInstance().raw(query, SqlResult.validResultHandler(handler));
     }
 
-    private void fetchReason(String structureId, Handler<Either<String, JsonArray>> handler) {
+    public void fetchReason(String structureId, Handler<Either<String, JsonArray>> handler) {
         String query = "SELECT * FROM " + Presences.dbSchema + ".reason where structure_id = '" + structureId + "'";
         Sql.getInstance().raw(query, SqlResult.validResultHandler(handler));
     }

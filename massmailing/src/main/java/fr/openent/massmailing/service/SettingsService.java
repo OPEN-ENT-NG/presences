@@ -42,4 +42,13 @@ public interface SettingsService {
      * @param handler Function handler returning data
      */
     void deleteTemplate(Integer id, Handler<Either<String, JsonObject>> handler);
+
+    /**
+     * Retrieve template based on template identifier and structure identifier
+     *
+     * @param id        Template identifier
+     * @param structure Structure identifier
+     * @param handler   Function handler returning data
+     */
+    void get(MailingType type, Integer id, String structure, Handler<Either<String, JsonObject>> handler);
 }

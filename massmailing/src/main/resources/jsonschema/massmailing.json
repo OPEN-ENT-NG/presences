@@ -1,0 +1,50 @@
+{
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "event_types": {
+      "type": "array"
+    },
+    "template": {
+      "type": "number"
+    },
+    "structure": {
+      "type": "string"
+    },
+    "massmailed": {
+      "type": [
+        "boolean",
+        "null"
+      ]
+    },
+    "reasons": {
+      "type": "array"
+    },
+    "start_at": {
+      "type": "number"
+    },
+    "start": {
+      "type": "string"
+    },
+    "end": {
+      "type": "string"
+    },
+    "no_reason": {
+      "type": "boolean"
+    },
+    "students": {
+      "type": "object"
+    }
+  },
+  "required": [
+    "event_types",
+    "template",
+    "reasons",
+    "start_at",
+    "start",
+    "end",
+    "no_reason",
+    "students"
+  ]
+}

@@ -63,4 +63,12 @@ public class DefaultSettingsService implements SettingsService {
 
         Sql.getInstance().prepared(query, params, SqlResult.validUniqueResultHandler(handler));
     }
+
+    @Override
+    public void get(MailingType type, Integer id, String structure, Handler<Either<String, JsonObject>> handler) {
+        String query = "SELECT name, content FROM " + Massmailing.dbSchema + ".template WHERE id = ? AND structure_id = ? AND type = ?;";
+        JsonArray params = new JsonArray().add(id).add(structure).add(type.name());
+
+        Sql.getInstance().prepared(query, params, SqlResult.validUniqueResultHandler(handler));
+    }
 }

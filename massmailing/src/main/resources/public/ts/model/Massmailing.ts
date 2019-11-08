@@ -1,4 +1,6 @@
-import {Template} from '../services/SettingsService'
+import {Template} from '../services/SettingsService';
+import http from 'axios';
+import {DateUtils} from "@common/utils";
 
 interface MassmailingStudent {
     id: string,
@@ -20,6 +22,8 @@ interface MassmailingStudent {
         selected: boolean
     }[]
 }
+
+declare const window: any;
 
 export class Massmailing {
     type: string;
@@ -48,6 +52,52 @@ export class Massmailing {
             }
             student.opened = false;
         });
+    }
+
+    private getStudents() {
+        const students = {};
+        this.students.forEach(function ({id, relative}) {
+            students[id] = [];
+            relative.forEach(function (relative) {
+                if (relative.selected) students[id].push(relative.id);
+            });
+        });
+        return students;
+    }
+
+    private massmailed() {
+        const {waiting, mailed} = this.filter.massmailing_status;
+        if (mailed && waiting) {
+            return null;
+        }
+
+        return mailed;
+    }
+
+    toJson() {
+        const event_types = Object.keys(this.filter.status);
+        const reasons = [];
+        Object.keys(this.filter.reasons).forEach((reason) => {
+            if (this.filter.reasons[reason]) reasons.push(reason)
+        });
+
+
+        return {
+            event_types,
+            template: this.template.id,
+            structure: window.structure.id,
+            no_reason: this.filter.noReasons,
+            start_at: this.filter.start_at,
+            reasons,
+            start: DateUtils.format(this.filter.start_date, DateUtils.FORMAT["YEAR-MONTH-DAY"]),
+            end: DateUtils.format(this.filter.end_date, DateUtils.FORMAT["YEAR-MONTH-DAY"]),
+            students: this.getStudents(),
+            massmailed: this.massmailed()
+        }
+    }
+
+    async process(): Promise<void> {
+        await http.post(`/massmailing/massmailings/${this.type}`, this.toJson());
     }
 
     getRelativeCheckedCount(student: MassmailingStudent): number {

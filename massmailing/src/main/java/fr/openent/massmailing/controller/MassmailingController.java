@@ -3,6 +3,9 @@ package fr.openent.massmailing.controller;
 import fr.openent.massmailing.Massmailing;
 import fr.openent.massmailing.enums.MailingType;
 import fr.openent.massmailing.enums.MassmailingType;
+import fr.openent.massmailing.mailing.Mail;
+import fr.openent.massmailing.mailing.MassMailingProcessor;
+import fr.openent.massmailing.mailing.Template;
 import fr.openent.massmailing.security.CanAccessMassMailing;
 import fr.openent.massmailing.service.MassmailingService;
 import fr.openent.massmailing.service.impl.DefaultMassmailingService;
@@ -12,9 +15,12 @@ import fr.openent.presences.common.service.GroupService;
 import fr.openent.presences.common.service.impl.DefaultGroupService;
 import fr.wseduc.rs.ApiDoc;
 import fr.wseduc.rs.Get;
+import fr.wseduc.rs.Post;
 import fr.wseduc.security.ActionType;
 import fr.wseduc.security.SecuredAction;
 import fr.wseduc.webutils.Either;
+import fr.wseduc.webutils.I18n;
+import fr.wseduc.webutils.request.RequestUtils;
 import io.vertx.core.CompositeFuture;
 import io.vertx.core.Future;
 import io.vertx.core.Handler;
@@ -85,12 +91,15 @@ public class MassmailingController extends ControllerHelper {
     }
 
     private List<MassmailingType> getMassMailingTypes(HttpServerRequest request) {
-        List<MassmailingType> types = new ArrayList<>();
         if (!request.params().contains("type")) {
-            return types;
+            return new ArrayList<>();
         }
 
-        List<String> params = request.params().getAll("type");
+        return getMassMailingTypes(request.params().getAll("type"));
+    }
+
+    private List<MassmailingType> getMassMailingTypes(List<String> params) {
+        List<MassmailingType> types = new ArrayList<>();
         for (String type : params) {
             try {
                 types.add(MassmailingType.valueOf(type));
@@ -233,7 +242,7 @@ public class MassmailingController extends ControllerHelper {
             List<MassmailingType> types = getMassMailingTypes(request);
             List<Future> futures = new ArrayList<>();
             String structure = request.getParam("structure");
-            Boolean massmailed = Boolean.parseBoolean(request.getParam("massmailed"));
+            Boolean massmailed = request.params().contains("massmailed") ? Boolean.parseBoolean(request.getParam("massmailed")) : null;
             List<Integer> reasons = parseReasons(request.params().getAll("reason"));
             boolean noReasons = !request.params().contains("no_reason") || Boolean.parseBoolean(request.getParam("no_reasons"));
             Integer startAt;
@@ -351,7 +360,8 @@ public class MassmailingController extends ControllerHelper {
     }
 
     @Get("/massmailings/prefetch/:mailingType")
-    //TODO Add security filter
+    @SecuredAction(value = "", type = ActionType.RESOURCE)
+    @ResourceFilter(CanAccessMassMailing.class)
     @ApiDoc("Prefetch massmailing")
     public void prefetch(HttpServerRequest request) {
         if (!validParams(request) || !validMassmailingType(request) || !validMailingType(request)) {
@@ -371,7 +381,7 @@ public class MassmailingController extends ControllerHelper {
             MailingType mailingType = getMailingType(request);
             List<Future> futures = new ArrayList<>();
             String structure = request.getParam("structure");
-            Boolean massmailed = Boolean.parseBoolean(request.getParam("massmailed"));
+            Boolean massmailed = request.params().contains("massmailed") ? Boolean.parseBoolean(request.getParam("massmailed")) : null;
             List<Integer> reasons = parseReasons(request.params().getAll("reason"));
             boolean noReasons = !request.params().contains("no_reason") || Boolean.parseBoolean(request.getParam("no_reasons"));
             Integer startAt;
@@ -522,5 +532,49 @@ public class MassmailingController extends ControllerHelper {
             log.error("[Massmailing@MassmailingController] Failed to parse mailing type", e);
             return MailingType.MAIL;
         }
+    }
+
+    @Post("/massmailings/:mailingType")
+    @ApiDoc("Post massmailing. In case of MAIL or SMS type, send mails or SMS. In case of PDF, generate PDF and download it")
+    public void postMassmailing(HttpServerRequest request) {
+        if (!validMailingType(request)) {
+            badRequest(request);
+            return;
+        }
+
+        MailingType mailingType = getMailingType(request);
+
+        RequestUtils.bodyToJson(request, pathPrefix + "massmailing", body -> {
+            String structure = body.getString("structure");
+            Template template = new Template(mailingType, body.getInteger("template"), structure);
+            Boolean massmailed = body.containsKey("massmailed") ? body.getBoolean("massmailed") : null;
+            List<MassmailingType> massmailingTypeList = getMassMailingTypes(body.getJsonArray("event_types").getList());
+            List<Integer> reasons = body.getJsonArray("reasons").getList();
+            String start = body.getString("start");
+            String end = body.getString("end");
+            Boolean noReason = body.getBoolean("no_reason", true);
+            JsonObject students = body.getJsonObject("students");
+            template.setLocale(I18n.acceptLanguage(request));
+            template.setDomain(getHost(request));
+
+            MassMailingProcessor mailing;
+            switch (mailingType) {
+                case MAIL:
+                    mailing = new Mail(structure, template, massmailed, massmailingTypeList, reasons, start, end, noReason, students);
+                    break;
+                case PDF:
+                case SMS:
+                default:
+                    badRequest(request);
+                    return;
+            }
+
+            mailing.massmail(event -> {
+                if (event.isLeft())
+                    log.error("[Massmailing@MassmailingController] An error occurred with massmailing", event.left().getValue());
+                else log.info("[Massmailing@MassmailingController] Massmailing completed with success");
+            });
+            request.response().setStatusCode(202).end();
+        });
     }
 }
