@@ -1,0 +1,64 @@
+.forgotten-notebook-form {
+  .content {
+    width: 600px;
+  }
+
+  &-body {
+    &.lightbox-form {
+      padding: 0 20px !important;
+
+      h3 {
+        color: $presences-black;
+        text-align: end;
+        font-weight: bold;
+        margin-bottom: 0;
+      }
+    }
+
+    &-dateTitle {
+      padding-bottom: 8px;
+    }
+
+    &-date {
+      padding-bottom: 8px;
+
+      .date-picker {
+        margin-left: 8px;
+      }
+    }
+
+    &-forgottenNotebook {
+      padding: 16px 0;
+
+      ul {
+        display: flex;
+        align-content: center;
+        justify-content: center;
+      }
+    }
+  }
+
+  &-footer {
+    padding: 0 20px 8px 18px;
+
+    button {
+      margin-right: 8px;
+      padding: 8px 12px;
+      text-transform: uppercase !important;
+    }
+  }
+}
+
+.forgotten-notebook-node {
+  width: 28px;
+  height: 28px;
+  display: inline-block;
+  border-radius: 50%;
+  background: $presences-grey;
+  margin: 0 8px;
+
+  &.active {
+    background: $presences-water-green;
+    box-shadow: 0 3px 3px rgba(0, 0, 0, 0.1);
+  }
+}

@@ -162,7 +162,9 @@ public class CalendarController extends ControllerHelper {
 
                             if (absents != null) {
                                 for (int i = 0; i < absents.size(); i++) {
-                                    courses.addAll(addNewCourse(absents.getJsonObject(i), params.get("structure")));
+                                    if (calendarMatchDate(absents.getJsonObject(i), params.get("start"), params.get("end"))) {
+                                        courses.addAll(addNewCourse(absents.getJsonObject(i), params));
+                                    }
                                 }
                             }
                             renderJson(request, courses);
@@ -177,16 +179,22 @@ public class CalendarController extends ControllerHelper {
         });
     }
 
-    private JsonArray addNewCourse(JsonObject absent, String structure) {
+    private boolean calendarMatchDate(JsonObject events, String startDate, String endDate) {
         try {
-            SimpleDateFormat sdf = new SimpleDateFormat(YEAR_MONTH_DAY);
+            return DateHelper.isBetween(
+                    events.getString("start_date"),
+                    events.getString("end_date"),
+                    startDate + "T00:00:00.000",
+                    endDate + "T00:00:00.000"
+            );
+        } catch (ParseException e) {
+            log.error("[CalendarController@calendarMatchDate] Failed to parse date", e);
+            return false;
+        }
+    }
 
-            Date startDate = sdf.parse(absent.getString("start_date"));
-            Date endDate = sdf.parse(absent.getString("end_date"));
-
-            int dayOfWeekFromStartDate = DateHelper.getDayOfWeek(startDate);
-            int dayOfWeekFromEndDate = DateHelper.getDayOfWeek(endDate);
-
+    private JsonArray addNewCourse(JsonObject absent, MultiMap params) {
+        try {
             String startDateTime = DateHelper.getTimeString(absent.getString("start_date"), SQL_FORMAT);
             String endDateTime = DateHelper.getTimeString(absent.getString("end_date"), SQL_FORMAT);
 
@@ -197,29 +205,32 @@ public class CalendarController extends ControllerHelper {
                     DateHelper.getDateString(absent.getString("end_date"), YEAR_MONTH_DAY)
             );
 
-            for (int i = dayOfWeekFromStartDate, j = 0; i <= dayOfWeekFromEndDate; j++, i++) {
-                coursesAdded.add(
-                        new JsonObject()
-                                .put("_id", "0")
-                                .put("dayOfWeek", i)
-                                .put("locked", true)
-                                .put("is_periodic", false)
-                                .put("is_recurrent", true)
-                                .put("absence", true)
-                                .put("absenceId", absent.getLong("id"))
-                                .put("absenceReason", absent.getInteger("reason_id") != null ? absent.getInteger("reason_id") : 0)
-                                .put("structureId", structure)
-                                .put("events", new JsonArray())
-                                .put("startDate", totalDates.get(j).toString() + " " + (j == 0 ? startDateTime : "00:00"))
-                                .put("endDate", totalDates.get(j).toString() + " " + (j == (totalDates.size() - 1) ? endDateTime : "23:59"))
-                                .put("roomLabels", new JsonArray())
-                                .put("subjectId", "")
-                                .put("subject_name", "")
-                                .put("startMomentDate", totalDates.get(j).toString() + " " + (j == 0 ? startDateTime : "00:00"))
-                                .put("startMomentTime", (j == 0 ? startDateTime : "00:00"))
-                                .put("endMomentDate", totalDates.get(j).toString() + " " + (j == (totalDates.size() - 1) ? endDateTime : "23:59"))
-                                .put("endMomentTime", j == (totalDates.size() - 1) ? endDateTime : "23:59")
-                );
+            int currentIndexFromTotalDates = totalDates.indexOf(LocalDate.parse(params.get("start")));
+            int dayOfWeekFromStartDate = DateHelper.getDayOfWeek(java.sql.Date.valueOf(totalDates.get(currentIndexFromTotalDates)));
+
+            for (int i = dayOfWeekFromStartDate, j = currentIndexFromTotalDates; i <= 6; j++, i++) {
+                try {
+                    coursesAdded.add(
+                            new JsonObject()
+                                    .put("_id", "0")
+                                    .put("dayOfWeek", i)
+                                    .put("is_periodic", false)
+                                    .put("absence", true)
+                                    .put("absenceId", absent.getLong("id"))
+                                    .put("absenceReason", absent.getInteger("reason_id") != null ? absent.getInteger("reason_id") : 0)
+                                    .put("structureId", params.get("structure"))
+                                    .put("events", new JsonArray())
+                                    .put("startDate", totalDates.get(j).toString() + " " + (j == 0 ? startDateTime : "00:00"))
+                                    .put("endDate", totalDates.get(j).toString() + " " + (j == (totalDates.size() - 1) ? endDateTime : "23:59"))
+                                    .put("startMomentDate", totalDates.get(j).toString() + " " + (j == 0 ? startDateTime : "00:00"))
+                                    .put("startMomentTime", (j == 0 ? startDateTime : "00:00"))
+                                    .put("endMomentDate", totalDates.get(j).toString() + " " + (j == (totalDates.size() - 1) ? endDateTime : "23:59"))
+                                    .put("endMomentTime", j == (totalDates.size() - 1) ? endDateTime : "23:59")
+                    );
+                } catch (IndexOutOfBoundsException e) {
+                    /* break for loop if there is no more absent date to add in totalDates */
+                    break;
+                }
             }
             return coursesAdded;
         } catch (ParseException e) {

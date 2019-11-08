@@ -4,3 +4,4 @@ export * from './StructureService';
 export * from './CalendarService';
 export * from './ReasonService';
 export * from './RegistryService';
+export * from './ForgottenNotebookService';
