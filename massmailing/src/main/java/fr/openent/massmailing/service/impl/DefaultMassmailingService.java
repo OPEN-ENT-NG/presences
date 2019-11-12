@@ -71,8 +71,11 @@ public class DefaultMassmailingService implements MassmailingService {
     public void getAnomalies(MailingType type, List<String> students, Handler<Either<String, JsonArray>> handler) {
         switch (type) {
             case MAIL:
-                String query = "MATCH (u:User)-[:RELATED]->(r:User) WHERE NOT(HAS(r.email)) " +
-                        "AND u.id IN {users} RETURN DISTINCT u.id as id, (u.lastName + ' ' + u.firstName) as displayName, split(u.classes[0],'$')[1] as className";
+                String query = "MATCH (u:User)-[:RELATED]->(r:User) " +
+                        "WHERE u.id IN {users} " +
+                        "WITH u, collect(r.email) as emails " +
+                        "WHERE size(coalesce(emails)) = 0 " +
+                        "RETURN DISTINCT u.id as id, (u.lastName + ' ' + u.firstName) as displayName, split(u.classes[0],'$')[1] as className";
                 JsonObject params = new JsonObject()
                         .put("users", new JsonArray(students));
                 Neo4j.getInstance().execute(query, params, Neo4jResult.validResultHandler(handler));
