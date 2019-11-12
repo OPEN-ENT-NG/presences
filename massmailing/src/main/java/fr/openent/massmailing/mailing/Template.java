@@ -173,7 +173,7 @@ public class Template {
                             LOGGER.error("[Massmailing@Template] Failed to generate table line", e, event.toString());
                         }
                     }
-                    summary += "/tbody>";
+                    summary += "</tbody>";
                     summary += "</table>";
                 }
                 summary += "</div>";
