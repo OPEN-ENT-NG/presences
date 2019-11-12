@@ -8,8 +8,10 @@ import fr.openent.presences.common.presences.Presences;
 import fr.wseduc.webutils.email.EmailSender;
 import io.vertx.core.eventbus.EventBus;
 import io.vertx.core.json.JsonObject;
+import org.entcore.common.bus.WorkspaceHelper;
 import org.entcore.common.email.EmailFactory;
 import org.entcore.common.http.BaseServer;
+import org.entcore.common.storage.StorageFactory;
 
 import java.util.HashMap;
 import java.util.Iterator;
@@ -23,6 +25,7 @@ public class Massmailing extends BaseServer {
 
     static HashMap<MailingType, Boolean> types;
     public static EmailSender emailSender;
+    public static WorkspaceHelper workspaceHelper;
 
     @Override
     public void start() throws Exception {
@@ -30,7 +33,7 @@ public class Massmailing extends BaseServer {
         EventBus eb = getEventBus(vertx);
         types = mailingsConfig();
         emailSender = new EmailFactory(vertx, config).getSender();
-
+        workspaceHelper = new WorkspaceHelper(eb, new StorageFactory(vertx, config).getStorage());
         addController(new MassmailingController(eb));
         addController(new SettingsController(eb));
 

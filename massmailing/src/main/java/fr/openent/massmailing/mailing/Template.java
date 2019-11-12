@@ -1,5 +1,6 @@
 package fr.openent.massmailing.mailing;
 
+import fr.openent.massmailing.Massmailing;
 import fr.openent.massmailing.enums.MailingType;
 import fr.openent.massmailing.enums.TemplateCode;
 import fr.openent.massmailing.service.SettingsService;
@@ -7,22 +8,29 @@ import fr.openent.massmailing.service.impl.DefaultSettingsService;
 import fr.openent.presences.common.helper.DateHelper;
 import fr.wseduc.webutils.Either;
 import fr.wseduc.webutils.I18n;
+import io.vertx.core.CompositeFuture;
+import io.vertx.core.Future;
 import io.vertx.core.Handler;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
+import org.entcore.common.bus.WorkspaceHelper;
 
 import java.text.ParseException;
 import java.util.ArrayList;
+import java.util.Base64;
 import java.util.HashMap;
 import java.util.List;
+import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public class Template {
     private Logger LOGGER = LoggerFactory.getLogger(Template.class);
     private SettingsService settingsService = new DefaultSettingsService();
+    private WorkspaceHelper workspaceHelper;
     private HashMap<TemplateCode, String> systemCodes = new HashMap<>();
+    private HashMap<String, String> imageMap = new HashMap<>();
     private MailingType mailingType;
     private Integer id;
     private String structure;
@@ -31,6 +39,7 @@ public class Template {
     private String domain;
 
     public Template(MailingType mailingType, Integer templateIdentifier, String structureId) {
+        this.workspaceHelper = Massmailing.workspaceHelper;
         this.mailingType = mailingType;
         this.id = templateIdentifier;
         this.structure = structureId;
@@ -51,7 +60,52 @@ public class Template {
                 systemCodes.put(code, i18nValue);
             }
 
-            handler.handle(event.right());
+            replaceImages(handler);
+        });
+    }
+
+    private void replaceImages(Handler<Either<String, JsonObject>> handler) {
+        Pattern globalPattern = Pattern.compile("<img src=\\\"\\/workspace\\/document\\/[0-9a-fA-F]{8}\\-[0-9a-fA-F]{4}\\-[0-9a-fA-F]{4}\\-[0-9a-fA-F]{4}\\-[0-9a-fA-F]{12}.*>");
+        Pattern idPattern = Pattern.compile("[0-9a-fA-F]{8}\\-[0-9a-fA-F]{4}\\-[0-9a-fA-F]{4}\\-[0-9a-fA-F]{4}\\-[0-9a-fA-F]{12}");
+        Matcher matcher = globalPattern.matcher(this.content);
+        List<Future> futures = new ArrayList<>();
+        while (matcher.find()) {
+            String img = matcher.group();
+            Matcher idMatch = idPattern.matcher(img);
+            if (!idMatch.find()) continue;
+            Future<String> future = Future.future();
+            getBase64File(idMatch.group(), future);
+            futures.add(future);
+        }
+
+        if (futures.isEmpty()) {
+            handler.handle(new Either.Right<>(new JsonObject()));
+            return;
+        }
+
+        CompositeFuture.all(futures).setHandler(asyncHandler -> {
+            if (asyncHandler.failed()) {
+                handler.handle(new Either.Left<>(asyncHandler.cause().toString()));
+                return;
+            }
+
+            List<String> images = new ArrayList<>(imageMap.keySet());
+            for (String image : images) {
+                this.content = this.content.replaceAll("\\/workspace\\/document\\/" + image + "[^\"]*\"", this.imageMap.get(image) + "\"");
+            }
+
+            handler.handle(new Either.Right<>(new JsonObject()));
+        });
+    }
+
+    private void getBase64File(String id, Future<String> future) {
+        workspaceHelper.readDocument(id, document -> {
+            if (document == null) future.fail("Document not found");
+            else {
+                String base64 = Base64.getEncoder().encodeToString(document.getData().getBytes());
+                imageMap.put(id, "data:" + document.getDocument().getJsonObject("metadata").getString("content-type") + ";base64," + base64);
+                future.complete(base64);
+            }
         });
     }
 
