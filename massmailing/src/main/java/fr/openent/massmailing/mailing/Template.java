@@ -102,9 +102,11 @@ public class Template {
                 for (String key : keys) {
                     JsonArray eventsKey = events.getJsonArray(key);
                     if (eventsKey.isEmpty()) continue;
+                    summary += getCSSStyle();
                     summary += "<div>" + I18n.getInstance().translate("massmailing.summary." + key, domain, locale) + ":</div>";
                     summary += "<table>";
                     summary += getHTMLHeader();
+                    summary += "<tbody>";
                     for (int i = 0; i < eventsKey.size(); i++) {
                         JsonObject event = eventsKey.getJsonObject(i);
                         try {
@@ -117,6 +119,7 @@ public class Template {
                             LOGGER.error("[Massmailing@Template] Failed to generate table line", e, event.toString());
                         }
                     }
+                    summary += "/tbody>";
                     summary += "</table>";
                 }
                 summary += "</div>";
@@ -138,12 +141,16 @@ public class Template {
         return "";
     }
 
+    private String getCSSStyle() {
+        return "<style>table{border-collapse:collapse}table thead tr{background:#fff;box-shadow:0 4px 6px rgba(0,0,0,.12);border-bottom:none}td{padding:5px 15px}tr{border-bottom:1px solid #ccc;background:0 0}</style>";
+    }
+
     private String getHTMLHeader() {
         String dateLabel = I18n.getInstance().translate("massmailing.date", domain, locale);
         String hoursLabel = I18n.getInstance().translate("massmailing.hours", domain, locale);
         String reasonLabel = I18n.getInstance().translate("massmailing.reason", domain, locale);
         String regularizedLabel = I18n.getInstance().translate("massmailing.regularized", domain, locale);
-        String header = "<tr><td>" + dateLabel + "</td><td>" + hoursLabel + "</td><td>" + reasonLabel + "</td><td>" + regularizedLabel + "</td></tr>";
+        String header = "<thead><tr><td>" + dateLabel + "</td><td>" + hoursLabel + "</td><td>" + reasonLabel + "</td><td>" + regularizedLabel + "</td></tr></thead>";
         return header;
     }
 }
