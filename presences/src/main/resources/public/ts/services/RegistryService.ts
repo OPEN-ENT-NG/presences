@@ -13,6 +13,7 @@ export interface RegistryDays {
     events: RegistryEvent[];
     eventsDisplay?: RegistryEvent[];
     exclude: boolean;
+    forgottenNotebook: boolean;
 }
 
 export interface RegistryEvent {
@@ -36,6 +37,7 @@ export interface RegistryRequest {
     month: string;
     group: string[];
     type: string[];
+    forgottenNotebook: boolean;
 }
 
 export interface RegistryService {
@@ -57,7 +59,9 @@ export const registryService: RegistryService = {
             });
 
             const urlParams = `?structureId=${registryParam.structureId}&month=${registryParam.month}${groupParams}${typeParams}`;
-            const {data} = await http.get(`/presences/registry${urlParams}`);
+            const forgottenNotebookParam = `&forgottenNotebook=${registryParam.forgottenNotebook}`;
+            const {data} = await http.get(`/presences/registry${urlParams}${forgottenNotebookParam}`);
+
             return data;
         } catch (err) {
             throw err;

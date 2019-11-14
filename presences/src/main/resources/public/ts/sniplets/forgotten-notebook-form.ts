@@ -5,6 +5,10 @@ import {DateUtils} from "@common/utils";
 
 console.log("forgottenNotebookFormSnipplets");
 
+export enum NOTEBOOK_FORM_EVENTS {
+    EDIT = 'notebook-form:edit',
+}
+
 declare let window: any;
 
 interface ViewModel {
@@ -13,6 +17,8 @@ interface ViewModel {
     form: NotebookRequest;
 
     openForgottenNotebook(): void;
+
+    editNotebookForm({student, notebook}): void;
 
     closeForgottenNotebook(): void;
 
@@ -38,8 +44,11 @@ const vm: ViewModel = {
         forgottenNotebookForm.that.$emit(SNIPLET_FORM_EMIT_EVENTS.CREATION);
         vm.safeApply();
     },
+
     closeForgottenNotebook(): void {
         vm.openForgottenNotebookLightBox = false;
+        vm.form = {} as NotebookRequest;
+        vm.safeApply();
     },
 
     setFormParams: ({student}) => {
@@ -50,6 +59,16 @@ const vm: ViewModel = {
             vm.form.date = moment(new Date()).set({second: 0, millisecond: 0}).toDate();
             vm.safeApply();
         }
+    },
+
+    async editNotebookForm(obj: { student, notebook }): Promise<void> {
+        vm.openForgottenNotebookLightBox = true;
+        vm.student = obj.student.displayName;
+        vm.form.id = obj.notebook.id;
+        vm.form.studentId = obj.notebook.student_id;
+        vm.form.structureId = obj.notebook.structure_id;
+        vm.form.date = obj.notebook.date;
+        vm.safeApply();
     },
 
     async createForbiddenNotebook(): Promise<void> {
@@ -66,7 +85,8 @@ const vm: ViewModel = {
     },
 
     async updateForbiddenNotebook(): Promise<void> {
-        let response = await forgottenNotebookService.update(window.structure.id, vm.form);
+        vm.form.date = moment(vm.form.date).format(DateUtils.FORMAT["YEAR-MONTH-DAY"]);
+        let response = await forgottenNotebookService.update(vm.form.id, vm.form);
         if (response.status == 200 || response.status == 201) {
             vm.closeForgottenNotebook();
             toasts.confirm(lang.translate('presences.forgotten.form.edit.succeed'));
@@ -78,7 +98,7 @@ const vm: ViewModel = {
     },
 
     async deleteForbiddenNotebook(): Promise<void> {
-        let response = await forgottenNotebookService.delete(window.structure.id);
+        let response = await forgottenNotebookService.delete(vm.form.id);
         if (response.status == 200 || response.status == 201) {
             vm.closeForgottenNotebook();
             toasts.confirm(lang.translate('presences.forgotten.form.delete.succeed'));
@@ -101,6 +121,7 @@ export const forgottenNotebookForm = {
             vm.safeApply = this.safeApply;
         },
         setHandler: function () {
+            this.$on(NOTEBOOK_FORM_EVENTS.EDIT, (event, args) => vm.editNotebookForm(args));
             this.$on(SNIPLET_FORM_EVENTS.SET_PARAMS, (event, arg) => vm.setFormParams(arg));
         }
     }

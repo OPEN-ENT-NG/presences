@@ -9,6 +9,7 @@ import fr.openent.presences.common.viescolaire.Viescolaire;
 import fr.openent.presences.enums.EventType;
 import fr.openent.presences.enums.Events;
 import fr.openent.presences.service.EventService;
+import fr.openent.presences.service.NotebookService;
 import fr.openent.presences.service.RegistryService;
 import fr.wseduc.mongodb.MongoDb;
 import fr.wseduc.webutils.Either;
@@ -30,15 +31,17 @@ public class DefaultRegistryService implements RegistryService {
     private static final Logger LOGGER = LoggerFactory.getLogger(DefaultRegistryService.class);
     private EventService eventService;
     private GroupService groupService;
+    private NotebookService notebookService;
 
     public DefaultRegistryService(EventBus eb) {
         this.eventService = new DefaultEventService(eb);
         this.groupService = new DefaultGroupService(eb);
+        this.notebookService = new DefaultNotebookService();
     }
 
     @Override
     public void get(String month, List<String> groups, List<String> eventTypes,
-                    String structureId, Handler<Either<String, JsonArray>> handler) {
+                    String structureId, boolean forgottenBooleanFilter, Handler<Either<String, JsonArray>> handler) {
         String startDate, endDate;
         Date monthDate;
         try {
@@ -68,42 +71,55 @@ public class DefaultRegistryService implements RegistryService {
 
             JsonArray users = studentFuture.result();
             JsonArray days = daysFuture.result();
+
+            //Todo : Process events
             List<String> userIds = new ArrayList<>();
             for (int i = 0; i < users.size(); i++) {
                 userIds.add(users.getJsonObject(i).getString("id"));
             }
 
-            //Todo : Process events
-            JsonArray finalUserList = formatUsers(users, days);
-            processEvents(startDate, endDate, users, eventTypes, eventsEvent -> {
-                if (eventsEvent.isLeft()) {
-                    String message = "[Presences@DefaultRegistryService] Failed to retrieve events";
-                    LOGGER.error(message, eventsEvent.left().getValue());
-                    handler.handle(new Either.Left<>(message));
-                    return;
-                }
+            notebookService.get(userIds, DateHelper.getDateString(startDate, DateHelper.YEAR_MONTH_DAY),
+                    DateHelper.getDateString(endDate, DateHelper.YEAR_MONTH_DAY), resultNotebook -> {
+                        if (resultNotebook.isLeft()) {
+                            String message = "[Presences@DefaultRegistryService] Failed to retrieve forgotten notebook for all students";
+                            LOGGER.error(message, resultNotebook.left().getValue());
+                            handler.handle(new Either.Left<>(message));
+                            return;
+                        }
+                        JsonArray studentsForgottenNotebook = resultNotebook.right().getValue();
+                        JsonArray finalUserList = formatUsers(users, days, studentsForgottenNotebook, forgottenBooleanFilter);
+                        processEvents(startDate, endDate, users, eventTypes, eventsEvent -> {
+                            if (eventsEvent.isLeft()) {
+                                String message = "[Presences@DefaultRegistryService] Failed to retrieve events";
+                                LOGGER.error(message, eventsEvent.left().getValue());
+                                handler.handle(new Either.Left<>(message));
+                                return;
+                            }
 
-                // Events contains presences events and incidents
-                JsonArray events = eventsEvent.right().getValue();
-                HashMap<String, List<JsonObject>> eventsMap = mapEventsByUserIdentifier(events);
-                handler.handle(new Either.Right<>(mergeUsersEvents(finalUserList, eventsMap)));
-            });
+                            // Events contains presences events and incidents
+                            JsonArray events = eventsEvent.right().getValue();
+                            HashMap<String, List<JsonObject>> eventsMap = mapEventsByUserIdentifier(events);
+                            handler.handle(new Either.Right<>(mergeUsersEvents(finalUserList, eventsMap)));
+                        });
+                    });
         });
     }
 
     /**
      * Format users as renderer list
      *
-     * @param users      User list
-     * @param daysResult Month days list
-     * @return User         list that contains formatted users
+     * @param users                         User list
+     * @param daysResult                    Month days list
+     * @param forgottenNotebookFilter       forgotten notebook filter
+     * @return User                         list that contains formatted users
      */
-    private JsonArray formatUsers(JsonArray users, JsonArray daysResult) {
+    private JsonArray formatUsers(JsonArray users, JsonArray daysResult, JsonArray studentsForgottenNotebook,
+                                  boolean forgottenNotebookFilter) {
         JsonArray userList = new JsonArray();
         for (int i = 0; i < users.size(); i++) {
-            JsonArray days = copyDays(daysResult);
-            JsonObject user = new JsonObject();
             JsonObject u = users.getJsonObject(i);
+            JsonArray days = copyDays(daysResult, u, studentsForgottenNotebook, forgottenNotebookFilter);
+            JsonObject user = new JsonObject();
             user.put("id", u.getString("id", ""))
                     .put("displayName", u.getString("displayName", ""))
                     .put("className", u.getString("groupName", ""))
@@ -118,18 +134,42 @@ public class DefaultRegistryService implements RegistryService {
     /**
      * Copy new days object
      *
-     * @param daysResults Month days list
-     * @return days         New List with specific value for each day
+     * @param daysResults                   Month days list
+     * @param user                          user info
+     * @param studentsForgottenNotebook     list of all student forgotten notebook
+     * @param forgottenNotebookFilter       forgotten notebook filter
+     * @return days                         New List with specific value for each day
+     *                                      and add forgottenNotebook if current student has forgotten its notebook
      */
-    private JsonArray copyDays(JsonArray daysResults) {
+    private JsonArray copyDays(JsonArray daysResults, JsonObject user, JsonArray studentsForgottenNotebook,
+                               boolean forgottenNotebookFilter) {
         JsonArray days = new JsonArray();
         for (int i = 0; i < daysResults.size(); i++) {
             JsonObject date = new JsonObject()
                     .put("date", daysResults.getJsonObject(i).getString("date"))
-                    .put("exclude", daysResults.getJsonObject(i).getBoolean("exclude"));
+                    .put("exclude", daysResults.getJsonObject(i).getBoolean("exclude"))
+                    .put("forgottenNotebook", addForgottenNotebook(
+                            daysResults.getJsonObject(i).getString("date"),
+                            user, studentsForgottenNotebook, forgottenNotebookFilter));
             days.add(date.put("events", new JsonArray()));
         }
         return days;
+    }
+
+    private boolean addForgottenNotebook(String date, JsonObject user, JsonArray studentsForgottenNotebook,
+                                         boolean forgottenNotebookFilter) {
+        boolean hasForgottenNotebook = false;
+        if (forgottenNotebookFilter) {
+            for (int i = 0; i < studentsForgottenNotebook.size(); i++) {
+                JsonObject studentForgottenNotebook = studentsForgottenNotebook.getJsonObject(i);
+                if (studentForgottenNotebook.getString("student_id").contains(user.getString("id")) &&
+                        studentForgottenNotebook.getString("date")
+                                .equals(DateHelper.getDateString(date, DateHelper.YEAR_MONTH_DAY))) {
+                    hasForgottenNotebook = true;
+                }
+            }
+        }
+        return hasForgottenNotebook;
     }
 
     /**

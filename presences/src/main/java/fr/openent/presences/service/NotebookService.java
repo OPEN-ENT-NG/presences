@@ -5,6 +5,8 @@ import io.vertx.core.Handler;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 
+import java.util.List;
+
 public interface NotebookService {
 
     /**
@@ -17,6 +19,16 @@ public interface NotebookService {
      */
     void get(String studentId, String startDate, String endDate, Handler<Either<String, JsonArray>> handler);
 
+
+    /**
+     * Retrieve forgotten notebook based on a list of student_id and date
+     *
+     * @param studentIds student identifier
+     * @param startDate  beginning date to filter. Format is : YYYY-DD-MM
+     * @param endDate    end date to filter. Format is : YYYY-DD-MM
+     * @param handler    Function handler returning data. Returns a JsonArray
+     */
+    void get(List<String> studentIds, String startDate, String endDate, Handler<Either<String, JsonArray>> handler);
 
     /**
      * create a forgotten notebook based on the body containing student_id, structure_id and

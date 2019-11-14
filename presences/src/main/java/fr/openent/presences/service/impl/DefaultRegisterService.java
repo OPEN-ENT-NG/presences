@@ -9,6 +9,7 @@ import fr.openent.presences.enums.EventType;
 import fr.openent.presences.enums.GroupType;
 import fr.openent.presences.service.AbsenceService;
 import fr.openent.presences.service.ExemptionService;
+import fr.openent.presences.service.NotebookService;
 import fr.openent.presences.service.RegisterService;
 import fr.wseduc.mongodb.MongoDb;
 import fr.wseduc.webutils.Either;
@@ -42,6 +43,7 @@ public class DefaultRegisterService implements RegisterService {
     private EventBus eb;
     private RegisterHelper registerHelper;
     private AbsenceService absenceService;
+    private NotebookService notebookService;
 
     public DefaultRegisterService(EventBus eb) {
         this.eb = eb;
@@ -49,6 +51,7 @@ public class DefaultRegisterService implements RegisterService {
         this.exemptionService = new DefaultExemptionService(eb);
         this.registerHelper = new RegisterHelper(eb, Presences.dbSchema);
         this.absenceService = new DefaultAbsenceService(eb);
+        this.notebookService = new DefaultNotebookService();
     }
 
     @Override
@@ -235,8 +238,9 @@ public class DefaultRegisterService implements RegisterService {
                 Future<JsonArray> groupsNameFuture = Future.future();
                 Future<JsonArray> teachersFuture = Future.future();
                 Future<JsonArray> exemptionFuture = Future.future();
+                Future<JsonArray> forgottenNotebookFuture = Future.future();
 
-                CompositeFuture.all(lastAbsentsFuture, groupsNameFuture, teachersFuture, exemptionFuture).setHandler(asyncEvent -> {
+                CompositeFuture.all(lastAbsentsFuture, groupsNameFuture, teachersFuture, exemptionFuture, forgottenNotebookFuture).setHandler(asyncEvent -> {
                     if (asyncEvent.failed()) {
                         String message = "[Presences@DefaultRegisterService] Failed to retrieve groups users or last absents students";
                         LOGGER.error(message);
@@ -246,6 +250,7 @@ public class DefaultRegisterService implements RegisterService {
 
                     JsonObject exemptionsMap = mapExemptions(exemptionFuture.result());
                     JsonArray lastAbsentUsers = reduce(lastAbsentsFuture.result(), "student_id");
+                    JsonArray forgottenNotebooks = forgottenNotebookFuture.result();
                     JsonObject groupsNameMap = mapGroupsName(groupsNameFuture.result());
 
                     registerHelper.getRegisterEventHistory(day, null, new JsonArray(userIds), historyEvent -> {
@@ -266,7 +271,7 @@ public class DefaultRegisterService implements RegisterService {
                             boolean exemption_attendance = exemptionsMap.containsKey(user.getString("id")) ? exemptionsMap.getJsonObject(user.getString("id")).getBoolean("attendance") : false;
                             formattedUsers.add(formatStudent(id, user, historyMap.getJsonArray(user.getString("id"), new JsonArray()),
                                     lastAbsentUsers.contains(user.getString("id")), groupsNameMap.getString(user.getString("groupId")),
-                                    exempted, exemption_attendance, exempted_subjectId));
+                                    exempted, exemption_attendance, exempted_subjectId, forgottenNotebooks));
                         }
                         register.put("students", formattedUsers);
                         register.put("groups", groups);
@@ -285,6 +290,7 @@ public class DefaultRegisterService implements RegisterService {
                 });
                 exemptionService.getRegisterExemptions(userIds, register.getString("structure_id"), register.getString("start_date"), register.getString("end_date"), FutureHelper.handlerJsonArray(exemptionFuture));
                 getLastAbsentsStudent(register.getString("personnel_id"), id, FutureHelper.handlerJsonArray(lastAbsentsFuture));
+                notebookService.get(userIds, day, day, FutureHelper.handlerJsonArray(forgottenNotebookFuture));
                 getGroupsName(groups, FutureHelper.handlerJsonArray(groupsNameFuture));
                 getCourseTeachers(register.getString("course_id"), FutureHelper.handlerJsonArray(teachersFuture));
             });
@@ -427,7 +433,8 @@ public class DefaultRegisterService implements RegisterService {
      * @return Formatted student
      */
     private JsonObject formatStudent(Integer registerId, JsonObject student, JsonArray events, boolean lastCourseAbsent,
-                                     String groupName, Boolean exempted, Boolean exemption_attendance, String exempted_subjectId) {
+                                     String groupName, Boolean exempted, Boolean exemption_attendance,
+                                     String exempted_subjectId, JsonArray forgottenNotebooks) {
         JsonArray registerEvents = new JsonArray();
         for (int i = 0; i < events.size(); i++) {
             JsonObject event = events.getJsonObject(i);
@@ -443,6 +450,7 @@ public class DefaultRegisterService implements RegisterService {
                 .put("group_name", groupName)
                 .put("events", registerEvents)
                 .put("last_course_absent", lastCourseAbsent)
+                .put("forgotten_notebook", hasForgottenNotebook(student, forgottenNotebooks))
                 .put("day_history", events)
                 .put("exempted", exempted);
 
@@ -453,6 +461,16 @@ public class DefaultRegisterService implements RegisterService {
         }
 
         return user;
+    }
+
+    private boolean hasForgottenNotebook(JsonObject student, JsonArray forgottenNotebooks) {
+        boolean hasForgottenNotebook = false;
+        for (int i = 0; i < forgottenNotebooks.size(); i++) {
+            if (forgottenNotebooks.getJsonObject(i).getString("student_id").equals(student.getString("id"))) {
+                hasForgottenNotebook = true;
+            }
+        }
+        return hasForgottenNotebook;
     }
 
     /**

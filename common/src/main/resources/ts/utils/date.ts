@@ -7,6 +7,7 @@ export class DateUtils {
         'YEAR-MONTH-DAY': 'YYYY-MM-DD',
         'YEAR-MONTH': 'YYYY-MM',
         'DAY-MONTH-YEAR': 'DD/MM/YYYY',
+        'DAY-MONTH': 'DD/MM', // e.g "04/11"
         'HOUR-MINUTES': 'kk:mm',
         'BIRTHDATE': 'L',
         'DAY-MONTH-YEAR-LETTER': 'LL',  // e.g "9 juin 2019"

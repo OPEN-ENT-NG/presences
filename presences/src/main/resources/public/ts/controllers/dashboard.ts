@@ -80,7 +80,8 @@ export const dashboardController = ng.controller('DashboardController', ['$scope
                 structureId: structureId,
                 month: moment(new Date()).format(DateUtils.FORMAT["YEAR-MONTH"]),
                 group: [item.id],
-                type: vm.eventType
+                type: vm.eventType,
+                forgottenNotebook: true
             });
         };
 

@@ -9,13 +9,31 @@ import io.vertx.core.json.JsonObject;
 import org.entcore.common.sql.Sql;
 import org.entcore.common.sql.SqlResult;
 
+import java.util.List;
+
 public class DefaultNotebookService implements NotebookService {
 
     @Override
     public void get(String studentId, String startDate, String endDate, Handler<Either<String, JsonArray>> handler) {
         JsonArray params = new JsonArray();
-        String query = "SELECT * FROM " + Presences.dbSchema + ".forgotten_notebook WHERE student_id = ?";
+        String query = "SELECT id, student_id, structure_id, to_char(date, 'YYYY-MM-DD') as date" +
+                " FROM " + Presences.dbSchema + ".forgotten_notebook WHERE student_id = ?";
         params.add(studentId);
+        if (!startDate.contentEquals("null") && !endDate.contentEquals("null")) {
+            query += " AND date >= ? AND date <= ? ";
+            params.add(startDate);
+            params.add(endDate);
+        }
+        Sql.getInstance().prepared(query, params, SqlResult.validResultHandler(handler));
+    }
+
+    @Override
+    public void get(List<String> studentId, String startDate, String endDate, Handler<Either<String, JsonArray>> handler) {
+        JsonArray params = new JsonArray();
+        String query = "SELECT id, student_id, structure_id, to_char(date, 'YYYY-MM-DD') as date" +
+                " FROM " + Presences.dbSchema + ".forgotten_notebook WHERE student_id IN "
+                + Sql.listPrepared(studentId.toArray()) + " ";
+        params.addAll(new JsonArray(studentId));
         if (!startDate.contentEquals("null") && !endDate.contentEquals("null")) {
             query += " AND date >= ? AND date <= ? ";
             params.add(startDate);

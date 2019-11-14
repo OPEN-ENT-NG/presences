@@ -255,5 +255,9 @@ body.presences, .sniplet.presences {
     &.incident {
       background-color: $presences-grey;
     }
+
+    &.forgotten-notebook {
+      background-color: $presences-water-green;
+    }
   }
 }

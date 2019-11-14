@@ -8,6 +8,15 @@
     </div>
     <div class="registry-event-card-body">
         <ul>
+            <!-- forgotten-notebook case -->
+            <li data-ng-if="vm.eventCardData.forgottenNotebook" class="registry-event-card-body-description">
+                <div class="legends forgotten-notebook"></div>
+                <div>
+                    <span class="registry-event-card-body-description-title">
+                        <i18n>presences.register.event_type.forgotten.notebook</i18n>
+                    </span>
+                </div>
+            </li>
             <!-- list events -->
             <li ng-repeat="event in vm.eventCardData.events | orderBy:'start_date'">
                 <div class="registry-event-card-body-description">
@@ -20,7 +29,8 @@
                             departure: event.type === vm.eventType[3]
                          }">
                     </div>
-                    <!-- absence case-->
+
+                    <!-- absence case -->
                     <div data-ng-if="event.type === vm.eventType[0]">
                         <span class="registry-event-card-body-description-title">
                             <i18n>presences.register.event_type.absences</i18n>
@@ -30,7 +40,7 @@
                         </span>
                     </div>
 
-                    <!-- lateness title case-->
+                    <!-- lateness title case -->
                     <div data-ng-if="event.type === vm.eventType[1]">
                         <span class="registry-event-card-body-description-title">
                             <i18n>presences.register.event_type.lateness</i18n>
@@ -40,7 +50,7 @@
                         </span>
                     </div>
 
-                    <!-- incident case-->
+                    <!-- incident case -->
                     <div data-ng-if="event.type === vm.eventType[2]">
                         <span class="registry-event-card-body-description-title">[[event.incident_type]]</span>
                         <span class="registry-event-card-body-description-date">
@@ -49,7 +59,7 @@
                         <span class="registry-event-card-body-description-title">[[event.place]]</span>
                     </div>
 
-                    <!-- departure case-->
+                    <!-- departure case -->
                     <div data-ng-if="event.type === vm.eventType[3]">
                         <span class="registry-event-card-body-description-title">
                             <i18n>presences.register.event_type.departure</i18n>
@@ -61,18 +71,18 @@
 
                 </div>
 
-                <!-- incident case-->
+                <!-- incident case -->
                 <span class="registry-event-card-body-description-option" data-ng-if="event.type === vm.eventType[2]">
                     [[event.protagonist_type]]
                 </span>
 
-                <!-- absence case-->
+                <!-- absence case -->
                 <span class="registry-event-card-body-description-option"
                       data-ng-if="event.type === vm.eventType[0] && !event.reason">
                     <i18n>presences.absence.no.reason</i18n>
                 </span>
 
-                <!-- absence w/ reason case-->
+                <!-- absence w/ reason case -->
                 <span class="registry-event-card-body-description-option"
                       data-ng-if="event.type === vm.eventType[0] && event.reason">
                     <i18n>presences.absence.reason</i18n> : [[event.reason]]

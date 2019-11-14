@@ -42,7 +42,8 @@ public class RegistryController extends ControllerHelper {
         List<String> types = params.getAll("type");
         String month = params.get("month");
         String structureId = params.get("structureId");
+        boolean forgottenNotebook = Boolean.parseBoolean(params.get("forgottenNotebook"));
 
-        registryService.get(month, groups, types, structureId, arrayResponseHandler(request));
+        registryService.get(month, groups, types, structureId, forgottenNotebook, arrayResponseHandler(request));
     }
 }

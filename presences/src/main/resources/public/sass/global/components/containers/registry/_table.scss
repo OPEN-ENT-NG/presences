@@ -12,7 +12,7 @@ ul {
     display: flex;
     align-items: center;
     justify-content: center;
-    padding-bottom: 24px;
+    padding: 24px;
 
     &-title {
       color: $presences-middle-grey;
@@ -133,11 +133,15 @@ ul {
           background-color: $presences-green;
         }
 
+        .forgotten-notebook {
+          background-color: $presences-water-green;
+        }
+
         .incident {
           background-color: $presences-grey-incident;
         }
 
-        @for $i from 1 through 5 {
+        @for $i from 1 through 6 {
           .h#{$i} {
             height: $registry-line-height / $i;
           }

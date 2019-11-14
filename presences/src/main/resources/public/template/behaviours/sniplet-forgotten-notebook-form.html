@@ -32,7 +32,8 @@
             <i18n>presences.forgotten.notebook.form.recap</i18n>
             <ul>
                 <li ng-repeat="i in [1, 2, 3, 4]" class="forgotten-notebook-node"></li>
-                <li>+4</li>
+                <!-- Todo handling '+' with alerts parameter for next ticket -->
+                <!-- <li>+4</li>-->
             </ul>
         </div>
 
@@ -45,15 +46,21 @@
             <i18n>presences.reset</i18n>
         </button>
 
+        <!-- delete mode -->
+        <button ng-if="vm.form.id" data-ng-click="vm.deleteForbiddenNotebook()">
+            <i18n>presences.absence.form.delete</i18n>
+        </button>
+
         <!-- submit mode -->
         <button class="right-magnet" ng-if="!vm.form.id" data-ng-click="vm.createForbiddenNotebook()"
                 data-ng-disabled="!vm.form.date">
             <i18n>presences.exemptions.form.submit</i18n>
         </button>
 
-        <!-- cancel mode  -->
-        <button class="right-magnet cancel" data-ng-click="vm.closeForgottenNotebook()">
-            <i18n>presences.exemptions.form.cancel</i18n>
+        <!-- edit mode -->
+        <button class="right-magnet" ng-if="vm.form.id" data-ng-click="vm.updateForbiddenNotebook()"
+                data-ng-disabled="!vm.form.date">
+            <i18n>presences.absence.form.edit</i18n>
         </button>
 
         <!-- punishment & sanction mode  -->

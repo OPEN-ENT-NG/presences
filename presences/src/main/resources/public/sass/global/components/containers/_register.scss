@@ -14,6 +14,7 @@ $absence-button-width: 20px;
   .event-legend {
     ul {
       list-style-type: none;
+      display: flex;
       padding: 0;
 
       > li {
@@ -37,6 +38,10 @@ $absence-button-width: 20px;
           background-color: $presences-green;
         }
 
+        //&.forgotten-notebook:before {
+        //  background-color: $presences-water-green;
+        //}
+
         &.remark:before {
           background-color: $presences-remark;
         }
@@ -46,20 +51,30 @@ $absence-button-width: 20px;
         }
 
         &.last-absent {
+          display: inline-flex;
           padding-left: 8px;
 
-          i:before {
-            font-size: 17px;
-            color: $presences-red;
+          i {
+            font-size: 20px;
+            padding-right: 4px;
+
+            &:before {
+              color: $presences-red;
+            }
           }
         }
 
         &.forgotten-notebook {
+          display: inline-flex;
           padding-left: 8px;
 
-          i:before {
-            font-size: 17px;
-            color: $presences-water-green;
+          i {
+            font-size: 20px;
+            padding-right: 4px;
+
+            &:before {
+              color: $presences-water-green;
+            }
           }
         }
 
@@ -248,6 +263,15 @@ $absence-button-width: 20px;
         &:before {
           font-size: 17px;
           color: $presences-red;
+        }
+      }
+
+      .forgotten-notebook {
+        padding-left: 8px;
+
+        &:before {
+          font-size: 17px;
+          color: $presences-water-green;
         }
       }
     }

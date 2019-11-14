@@ -34,24 +34,29 @@
                 ng-repeat="day in studentEvent.days track by $index"
                 ng-class="{'day-off': day.exclude }"
                 data-ng-click="vm.openEventCard($event, studentEvent.displayName, day, day.events)">
-                <div class="absent h[[day.eventsDisplay.length]]"
+                <div class="absent h[[day.eventsDisplay.length + (day.forgottenNotebook ? 1 : 0)]]"
                      data-ng-show="vm.hasEventType(day.eventsDisplay, vm.eventType[0])">
                     &nbsp;
                 </div>
-                <div class="absent-reason h[[day.eventsDisplay.length]]"
+                <div class="absent-reason h[[day.eventsDisplay.length + (day.forgottenNotebook ? 1 : 0)]]"
                      data-ng-show="vm.isAbsenceReason(day.eventsDisplay)">
                     &nbsp;
                 </div>
-                <div class="lateness h[[day.eventsDisplay.length]]"
+                <div class="lateness h[[day.eventsDisplay.length + (day.forgottenNotebook ? 1 : 0)]]"
                      data-ng-show="vm.hasEventType(day.eventsDisplay, vm.eventType[1])">
                     &nbsp;
                 </div>
-                <div class="incident h[[day.eventsDisplay.length]]"
+                <div class="incident h[[day.eventsDisplay.length + (day.forgottenNotebook ? 1 : 0)]]"
                      data-ng-show="vm.hasEventType(day.eventsDisplay, vm.eventType[2])">
                     &nbsp;
                 </div>
-                <div class="departure h[[day.eventsDisplay.length]]"
+                <div class="departure h[[day.eventsDisplay.length + (day.forgottenNotebook ? 1 : 0)]]"
                      data-ng-show="vm.hasEventType(day.eventsDisplay, vm.eventType[3])">
+                    &nbsp;
+                </div>
+
+                <div class="forgotten-notebook h[[day.eventsDisplay.length + (day.forgottenNotebook ? 1 : 0)]]"
+                     data-ng-show="day.forgottenNotebook">
                     &nbsp;
                 </div>
             </li>
@@ -59,7 +64,7 @@
     </div>
     <!-- Event card clicked -->
     <div id="event-card"
-         data-ng-show="vm.eventCardData.events && vm.eventCardData.events.length > 0"
+         data-ng-show="vm.eventCardData.events && vm.eventCardData.events.length > 0 || vm.eventCardData.forgottenNotebook"
          ng-include="'/presences/public/template/registry/event-card.html'"></div>
 
 </div>

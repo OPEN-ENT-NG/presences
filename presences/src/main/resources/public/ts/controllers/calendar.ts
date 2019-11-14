@@ -2,7 +2,10 @@ import {model, moment, ng} from 'entcore';
 import {
     CalendarService,
     Course,
+    ForgottenNotebookService,
     GroupService,
+    Notebook,
+    NotebookRequest,
     SearchItem,
     SearchService,
     StructureService,
@@ -12,7 +15,8 @@ import {Scope} from './main';
 import {User} from '../models';
 import {DateUtils} from '@common/utils';
 import {SNIPLET_FORM_EMIT_EVENTS, SNIPLET_FORM_EVENTS} from "@common/model";
-import {ABSENCE_FORM_EVENTS} from "../sniplets";
+import {ABSENCE_FORM_EVENTS, NOTEBOOK_FORM_EVENTS} from "../sniplets";
+import {CalendarUtils} from "../utilities";
 
 declare let window: any;
 
@@ -39,9 +43,13 @@ interface ViewModel {
 
     loadCourses(): Promise<void>;
 
+    loadForgottenNotebook(): Promise<void>;
+
     formatExemptionDate(date: any): string;
 
     editAbsenceForm(item: Course, items): void;
+
+    editForgottenNotebook($item): void;
 }
 
 interface CalendarScope extends Scope {
@@ -60,8 +68,14 @@ interface CalendarScope extends Scope {
     isPastItem(item): boolean;
 }
 
-export const calendarController = ng.controller('CalendarController', ['$scope', 'route', '$location', 'StructureService', 'CalendarService', 'GroupService', 'SearchService',
-    function ($scope: CalendarScope, route, $location, StructureService: StructureService, CalendarService: CalendarService, GroupService: GroupService, SearchService: SearchService) {
+export const calendarController = ng.controller('CalendarController',
+    ['$scope', 'route', '$location', 'StructureService', 'CalendarService',
+        'GroupService', 'SearchService', 'ForgottenNotebookService',
+        function ($scope: CalendarScope, route, $location, StructureService: StructureService,
+                  CalendarService: CalendarService,
+                  GroupService: GroupService,
+                  SearchService: SearchService,
+                  ForgottenNotebookService: ForgottenNotebookService) {
         const vm: ViewModel = this;
         vm.show = {
             loader: true,
@@ -84,14 +98,6 @@ export const calendarController = ng.controller('CalendarController', ['$scope',
         } else {
             model.calendar.setDate(moment());
         }
-
-        // model.calendar.eventer.on('calendar.create-item', () => {
-        //     console.info(model.calendar.newItem);
-        //     console.info(model.calendar.newItem.beginning.format());
-        //     console.info(model.calendar.newItem.beginning.toString());
-        //     console.info(model.calendar.newItem.beginning.isValid());
-        //     console.info(model.calendar.newItem.beginning.toLocaleString());
-        // });
 
         $scope.$watch(() => window.structure, async () => {
             const structure_slots = await StructureService.getSlotProfile(window.structure.id);
@@ -124,89 +130,52 @@ export const calendarController = ng.controller('CalendarController', ['$scope',
         }
 
         vm.changeAbsence = function (item): string {
-            if ('hash' in item) changeAbsenceView(item);
+            if ('hash' in item) CalendarUtils.changeAbsenceView(item);
             return "";
         };
 
-        function changeAbsenceView(item: Course) {
-            let courseItems = document
-                .getElementById(`absent${item.dayOfWeek}-${item.hash}`)
-                .closest('.fiveDays')
-                .querySelectorAll('.course-item:not(.is-absence)');
-            let items = [];
-            Array.from(courseItems).forEach((course: HTMLElement) => {
-                const item = course.closest('.schedule-item');
-                items.push(item);
-                if (item === undefined || item === null) return;
-                if ((item.parentNode as Element).querySelector('.globalAbsence')) {
-                    item.setAttribute("class", "schedule-item schedule-globalAbsence");
-                } else if ((item.parentNode as Element).querySelector('.globalAbsenceReason')) {
-                    item.setAttribute("class", "schedule-item schedule-globalAbsenceReason");
-                } else {
-                    item.setAttribute("class", "schedule-item schedule-course");
-                }
-            });
+            vm.loadForgottenNotebook = async function () {
+                let diff = 7;
+                if (!model.calendar.display.saturday) diff--;
+                if (!model.calendar.display.synday) diff--;
 
-            let absenceItems = items.filter(item =>
-                item.getAttribute("class") === "schedule-item schedule-globalAbsence");
-
-            let absenceReasonItems = items.filter(item =>
-                item.getAttribute("class") === "schedule-item schedule-globalAbsenceReason");
-
-            let coursesItems = items.filter(item =>
-                item.getAttribute("class") !== "schedule-item schedule-globalAbsence" &&
-                item.getAttribute("class") !== "schedule-item schedule-globalAbsenceReason");
-
-            coursesItems.forEach(course => {
-
-                /* Coloring course in red if inside global absent bloc */
-                absenceItems.forEach(absenceItem => {
-                    if (isItemInside(course, absenceItem)) {
-                        course.querySelectorAll(".course-item")[0].classList.add("isAbsent");
-                    }
+                const notebookRequest = {} as NotebookRequest;
+                notebookRequest.startDate = moment(model.calendar.firstDay).format(DateUtils.FORMAT["YEAR-MONTH-DAY"]);
+                notebookRequest.endDate = moment(DateUtils.add(model.calendar.firstDay, diff)).format(DateUtils.FORMAT["YEAR-MONTH-DAY"]);
+                notebookRequest.studentId = window.item.id;
+                const notebooks = await ForgottenNotebookService.get(notebookRequest);
+                let legends = document.querySelectorAll('legend:not(.timeslots)');
+                CalendarUtils.renderLegends(legends, notebooks);
+                onClickLegend(legends, notebooks);
+            };
+            
+            function onClickLegend(legends: NodeList, notebooks: Notebook[]) {
+                Array.from(legends).forEach((legend: HTMLElement) => {
+                    legend.addEventListener('click', () => {
+                        let notebook = notebooks.find(item => item.id === parseInt(legend.getAttribute("forgotten-id")));
+                        if (notebook === undefined) return;
+                        $scope.$broadcast(NOTEBOOK_FORM_EVENTS.EDIT, {student: window.item, notebook: notebook});
+                        $scope.safeApply();
+                    });
                 });
-
-                /* Coloring course in pink if inside global justified absent bloc */
-                absenceReasonItems.forEach(absenceReasonItem => {
-                    if (isItemInside(course, absenceReasonItem)) {
-                        course.querySelectorAll(".course-item")[0].classList.add("isJustifiedAbsent");
-                    }
-                });
-            });
-        }
-
-        function isItemInside(item, itemAbsence): boolean {
-            let itemPosX = item.offsetLeft;
-            let itemPosY = item.offsetTop;
-            let itemHeight = item.clientHeight;
-            let itemWidth = item.clientWidth;
-            let itemBottom = itemPosY + itemHeight - 2;
-            let itemRight = itemPosX + itemWidth;
-
-            let itemAbsenceX = itemAbsence.offsetLeft;
-            let itemAbsenceY = itemAbsence.offsetTop;
-            let itemAbsenceHeight = itemAbsence.clientHeight;
-            let itemAbsenceWidth = itemAbsence.clientWidth;
-            let itemAbsenceBottom = itemAbsenceY + itemAbsenceHeight - 2;
-            let itemAbsenceRight = itemAbsenceX + itemAbsenceWidth;
-            return !(itemBottom < itemAbsenceY || itemPosY > itemAbsenceBottom || itemRight < itemAbsenceX || itemPosX > itemAbsenceRight);
-        }
-
-        vm.loadCourses = async function (student = vm.filter.student) {
-            vm.show.loader = true;
-            if (vm.filter.student.id !== student.id) {
-                vm.filter.student = student;
-                window.item = student;
             }
-            const {structure} = window;
-            const start = DateUtils.format(model.calendar.firstDay, DateUtils.FORMAT["YEAR-MONTH-DAY"]);
-            const end = DateUtils.format(DateUtils.add(model.calendar.firstDay, 1, 'w'), DateUtils.FORMAT["YEAR-MONTH-DAY"]);
-            vm.courses.list = await CalendarService.getCourses(structure.id, student.id, start, end);
-            vm.show.loader = false;
-            $scope.safeApply();
-        };
 
-        $scope.$on(SNIPLET_FORM_EMIT_EVENTS.CREATION, () => {
+            vm.loadCourses = async function (student = vm.filter.student) {
+                vm.show.loader = true;
+                if (vm.filter.student.id !== student.id) {
+                    vm.filter.student = student;
+                    window.item = student;
+                }
+                const {structure} = window;
+                const start = DateUtils.format(model.calendar.firstDay, DateUtils.FORMAT["YEAR-MONTH-DAY"]);
+                const end = DateUtils.format(DateUtils.add(model.calendar.firstDay, 1, 'w'), DateUtils.FORMAT["YEAR-MONTH-DAY"]);
+                vm.courses.list = await CalendarService.getCourses(structure.id, student.id, start, end);
+                await vm.loadForgottenNotebook();
+                vm.show.loader = false;
+                $scope.safeApply();
+            };
+
+            $scope.$on(SNIPLET_FORM_EMIT_EVENTS.CREATION, () => {
             let diff = 7;
             if (!model.calendar.display.saturday) diff--;
             if (!model.calendar.display.synday) diff--;

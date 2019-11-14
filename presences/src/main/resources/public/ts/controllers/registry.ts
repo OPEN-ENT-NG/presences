@@ -32,6 +32,7 @@ interface EventRegistryCard {
     events: RegistryEvent[];
     date: string;
     displayName: string;
+    forgottenNotebook: boolean;
 }
 
 interface Filter {
@@ -60,6 +61,8 @@ interface ViewModel {
     isFilterActive(typeName: string): boolean;
 
     toggleFilter(typeName: string): void
+
+    toggleForgottenNotebookFilter(): void;
 
     selectGroup(model: any, student: any): void;
     searchGroup(value: string): Promise<void>;
@@ -241,6 +244,19 @@ export const registryController = ng.controller('RegistryController', ['$scope',
             getRegisterSummary();
         };
 
+        vm.toggleForgottenNotebookFilter = () => {
+            vm.params.forgottenNotebook = !vm.params.forgottenNotebook;
+            $location.search(vm.params);
+            if (vm.params.type.length === 0 || vm.params.group.length === 0) {
+                vm.registries = [];
+                vm.monthLength = [];
+                vm.emptyState = setEmptyState();
+                $scope.safeApply();
+                return;
+            }
+            getRegisterSummary();
+        };
+
         /* Groups interaction */
         vm.selectGroup = (model, item: Group) => {
             vm.filter.groups.push(item);
@@ -282,13 +298,14 @@ export const registryController = ng.controller('RegistryController', ['$scope',
         };
 
         vm.openEventCard = ($event, student: string, day: RegistryDays, events: RegistryEvent[]): void => {
-            if (events.length === 0) {
+            if (events.length === 0 && !day.forgottenNotebook) {
                 return;
             }
 
             vm.eventCardData.events = events;
             vm.eventCardData.date = DateUtils.format(day.date, DateUtils.FORMAT["DAY-MONTH-YEAR-LETTER"]);
             vm.eventCardData.displayName = student;
+            vm.eventCardData.forgottenNotebook = day.forgottenNotebook;
 
             const hover = document.getElementById('event-card');
             const widthEventCard = hover.querySelector('.registry-event-card-header').clientWidth || 400;
