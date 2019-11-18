@@ -200,36 +200,33 @@ public class CalendarController extends ControllerHelper {
 
             JsonArray coursesAdded = new JsonArray();
 
-            List<LocalDate> totalDates = DateHelper.getDatesBetweenTwoDates(
-                    DateHelper.getDateString(absent.getString("start_date"), YEAR_MONTH_DAY),
-                    DateHelper.getDateString(absent.getString("end_date"), YEAR_MONTH_DAY)
-            );
+            List<LocalDate> totalDates = DateHelper.getDatesBetweenTwoDates(params.get("start"), params.get("end"));
 
-            int currentIndexFromTotalDates = totalDates.indexOf(LocalDate.parse(params.get("start")));
-            int dayOfWeekFromStartDate = DateHelper.getDayOfWeek(java.sql.Date.valueOf(totalDates.get(currentIndexFromTotalDates)));
+            LocalDate absentsStart = LocalDate.parse(DateHelper.getDateString(absent.getString("start_date"), YEAR_MONTH_DAY));
+            LocalDate absentsEnd = LocalDate.parse(DateHelper.getDateString(absent.getString("end_date"), YEAR_MONTH_DAY));
+            for (LocalDate totalDate : totalDates) {
+                if ((totalDate.isAfter(absentsStart) || totalDate.isEqual(absentsStart)) && (totalDate.isBefore(absentsEnd) || totalDate.isEqual(absentsEnd))) {
+                    String startDate = totalDate.isEqual(absentsStart) ? totalDate.toString() : totalDate.toString();
+                    String startTime = (totalDate.isEqual(absentsStart) ? startDateTime : "00:00");
+                    String endDate = (totalDate.isEqual(absentsEnd) ? totalDate.toString() : totalDate.toString());
+                    String endTime = (totalDate.isEqual(absentsEnd) ? endDateTime : "23:59");
 
-            for (int i = dayOfWeekFromStartDate, j = currentIndexFromTotalDates; i <= 6; j++, i++) {
-                try {
-                    coursesAdded.add(
-                            new JsonObject()
-                                    .put("_id", "0")
-                                    .put("dayOfWeek", i)
-                                    .put("is_periodic", false)
-                                    .put("absence", true)
-                                    .put("absenceId", absent.getLong("id"))
-                                    .put("absenceReason", absent.getInteger("reason_id") != null ? absent.getInteger("reason_id") : 0)
-                                    .put("structureId", params.get("structure"))
-                                    .put("events", new JsonArray())
-                                    .put("startDate", totalDates.get(j).toString() + " " + (j == 0 ? startDateTime : "00:00"))
-                                    .put("endDate", totalDates.get(j).toString() + " " + (j == (totalDates.size() - 1) ? endDateTime : "23:59"))
-                                    .put("startMomentDate", totalDates.get(j).toString() + " " + (j == 0 ? startDateTime : "00:00"))
-                                    .put("startMomentTime", (j == 0 ? startDateTime : "00:00"))
-                                    .put("endMomentDate", totalDates.get(j).toString() + " " + (j == (totalDates.size() - 1) ? endDateTime : "23:59"))
-                                    .put("endMomentTime", j == (totalDates.size() - 1) ? endDateTime : "23:59")
+                    coursesAdded.add(new JsonObject()
+                            .put("_id", "0")
+                            .put("dayOfWeek", DateHelper.getDayOfWeek(DateHelper.parse(totalDate.toString(), YEAR_MONTH_DAY)))
+                            .put("is_periodic", false)
+                            .put("absence", true)
+                            .put("absenceId", absent.getLong("id"))
+                            .put("absenceReason", absent.getInteger("reason_id") != null ? absent.getInteger("reason_id") : 0)
+                            .put("structureId", params.get("structure"))
+                            .put("events", new JsonArray())
+                            .put("startDate", startDate + " " + startTime)
+                            .put("startMomentDate", startDate + " " + startTime)
+                            .put("startMomentTime", startTime)
+                            .put("endDate", endDate + " " + endTime)
+                            .put("endMomentDate", endDate + " " + endTime)
+                            .put("endMomentTime", startTime)
                     );
-                } catch (IndexOutOfBoundsException e) {
-                    /* break for loop if there is no more absent date to add in totalDates */
-                    break;
                 }
             }
             return coursesAdded;
