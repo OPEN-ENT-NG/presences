@@ -85,7 +85,7 @@
         <h2 class="capitalized">[[::vm.formatDayDate(date)]]</h2>
         <div class="card cell" ng-repeat="course in vm.courses.map[date]|orderBy:'timestamp'"
              data-ng-click="vm.openRegister(course, $event)"
-             ng-class="{active: course._id === vm.register.course_id, disabled: vm.isFuturCourse(course)}">
+             ng-class="{active: vm.isCurrentRegister(course), disabled: vm.isFuturCourse(course)}">
             <div ng-if="hasSearchRight()" class="row has-search-right">
                 <div class="row hour">
                     <span>[[::vm.formatHour(course.startDate)]] - [[::vm.formatHour(course.endDate)]]</span>

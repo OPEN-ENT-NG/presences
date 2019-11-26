@@ -22,6 +22,7 @@ public class DateHelper {
     public static final String YEAR_MONTH_DAY = "yyyy-MM-dd";
     public static final String DAY_MONTH_YEAR = "dd/MM/yyyy";
     public static final String HOUR_MINUTES = "HH:mm";
+    public static final String HOUR_MINUTES_SECONDS = "HH:mm:ss";
 
     private DateHelper() {
     }
@@ -185,15 +186,17 @@ public class DateHelper {
     /**
      * Get Simple Time as string
      *
-     * @param date   date to format into time
-     * @param format the format wished
+     * @param date      date to format into time
+     * @param format    the format wished
      * @return Simple Time format as string
+     *                  (e.g "2019-11-05 11:00:00" (do not forget to mention the GOOD FORMAT in parameter)
+     *                  would be "11:00:00"
      */
     public static String getTimeString(String date, String format) throws ParseException {
         Calendar cal = Calendar.getInstance();
 
         SimpleDateFormat sdf = new SimpleDateFormat(format);
-        SimpleDateFormat sdft = new SimpleDateFormat(HOUR_MINUTES);
+        SimpleDateFormat sdft = new SimpleDateFormat(HOUR_MINUTES_SECONDS);
 
         cal.setTime(sdf.parse(date));
         return sdft.format(cal.getTime());

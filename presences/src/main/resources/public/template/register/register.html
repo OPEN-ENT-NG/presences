@@ -32,7 +32,7 @@
     <div class="row card-slider">
         <div class="card cell" ng-repeat="course in vm.courses.all|orderBy:'timestamp'"
              data-ng-click="vm.openRegister(course)"
-             ng-class="{active: course._id === vm.register.course_id, disabled: vm.isFuturCourse(course)}">
+             ng-class="{active: vm.isCurrentRegister(course), disabled: vm.isFuturCourse(course)}">
             <div class="row hour">[[::vm.formatHour(course.startDate)]] -
                 [[::vm.formatHour(course.endDate)]]
             </div>

@@ -173,4 +173,9 @@ i {
     font-family: 'material-icons';
     content: '\F156';
   }
+
+  &.help:before {
+    font-family: 'material-icons';
+    content: '\F2D7';
+  }
 }

@@ -1,10 +1,11 @@
-import {_, model, moment, ng, notify, template, toasts} from 'entcore';
+import {_, Me, model, moment, ng, notify, template, toasts} from 'entcore';
 import {Absence, Course, Courses, Departure, EventType, Lateness, Register, RegisterStatus, Remark} from '../models'
 import {GroupService, SearchService} from '../services';
 import {CourseUtils, DateUtils} from '@common/utils'
 import rights from '../rights'
 import {Scope} from './main'
 import http from 'axios'
+import {RegisterUtils} from "../utilities";
 
 declare let window: any;
 
@@ -20,6 +21,7 @@ interface Filter {
     course: Course;
     selected: { teachers: any[], classes: any[], registerTeacher: any };
     forgotten: boolean;
+    multipleSlot: boolean;
 }
 
 interface ViewModel {
@@ -28,8 +30,11 @@ interface ViewModel {
     courses: Courses;
     filter: Filter;
     RegisterStatus: any;
+    preferences: any;
 
     openRegister(course: Course, $event: Event): Promise<void>;
+
+    isCurrentRegister(course: Course): boolean;
 
     nextDate(): void;
 
@@ -61,7 +66,8 @@ interface ViewModel {
 
     closePanel(): void;
 
-    loadCourses(users?: string[], groups?: string[], structure?: string, start_date?: string, end_date?: string, forgotten_registers?: boolean): Promise<void>;
+    loadCourses(users?: string[], groups?: string[], structure?: string, start_date?: string,
+                end_date?: string, forgotten_registers?: boolean, multipleSlot?: boolean): Promise<void>;
 
     isFuturCourse(course: Course): boolean;
 
@@ -80,6 +86,8 @@ interface ViewModel {
     isAbsenceDisabled(student): boolean;
 
     switchForgottenFilter(): void;
+
+    switchMultipleSlot(): Promise<void>;
 
     formatDayDate(date: string): string;
 
@@ -102,7 +110,7 @@ interface ViewModel {
 
 export const registersController = ng.controller('RegistersController',
     ['$scope', '$route', '$rootScope', 'SearchService', 'GroupService',
-        function ($scope: Scope, $route, $rootScope, SearchService: SearchService, GroupService: GroupService) {
+        async function ($scope: Scope, $route, $rootScope, SearchService: SearchService, GroupService: GroupService) {
             const vm: ViewModel = this;
             vm.widget = {
                 forgottenRegisters: false,
@@ -169,6 +177,10 @@ export const registersController = ng.controller('RegistersController',
             vm.courses.eventer.on('loading::true', () => $scope.safeApply());
             vm.courses.eventer.on('loading::false', () => $scope.safeApply());
             vm.RegisterStatus = RegisterStatus;
+
+            RegisterUtils.initPreference();
+            let registerTimeSlot = await Me.preference('register');
+
             vm.filter = {
                 date: new Date(),
                 start_date: new Date(),
@@ -184,7 +196,8 @@ export const registersController = ng.controller('RegistersController',
                     teachers: [],
                     classes: [],
                     registerTeacher: undefined
-                }
+                },
+                multipleSlot: registerTimeSlot.multipleSlot,
             };
 
             vm.changeFiltersDate = async function () {
@@ -285,23 +298,25 @@ export const registersController = ng.controller('RegistersController',
 
             vm.formatHour = (date: string) => DateUtils.format(date, DateUtils.FORMAT["HOUR-MINUTES"]);
 
-            const createRegisterFromCourse = function (course: Course): Register {
-                const register = new Register();
-                if (course.register_id) {
-                    register.id = course.register_id;
-                    register.course_id = course._id;
-                } else {
-                    register.course_id = course._id;
-                    register.structure_id = course.structureId;
-                    register.start_date = course.startDate;
-                    register.end_date = course.endDate;
-                    register.subject_id = course.subjectId;
-                    register.groups = course.groups;
-                    register.classes = course.classes;
-                }
-
-                return register;
-            };
+            // const createRegisterFromCourse = function (course: Course): Register {
+            //     const register = new Register();
+            //     if (course.register_id) {
+            //         register.id = course.register_id;
+            //         register.course_id = course._id;
+            //         register.split_slot = course.split_slot;
+            //     } else {
+            //         register.course_id = course._id;
+            //         register.structure_id = course.structureId;
+            //         register.start_date = course.startDate;
+            //         register.end_date = course.endDate;
+            //         register.subject_id = course.subjectId;
+            //         register.groups = course.groups;
+            //         register.classes = course.classes;
+            //         register.split_slot = course.split_slot;
+            //     }
+            //
+            //     return register;
+            // };
 
 
             const setCurrentRegister = async function (): Promise<void> {
@@ -320,7 +335,7 @@ export const registersController = ng.controller('RegistersController',
                     return;
                 }
                 if (vm.isFuturCourse(course)) return;
-                vm.register = createRegisterFromCourse(course);
+                vm.register = RegisterUtils.createRegisterFromCourse(course);
                 if (!course.register_id) {
                     try {
                         await vm.register.create();
@@ -345,6 +360,22 @@ export const registersController = ng.controller('RegistersController',
                     if (vm.register.teachers.length > 0 && _.countBy(vm.register.teachers, (teacher) => teacher.id === vm.filter.selected.registerTeacher.id) === 0)
                         vm.filter.selected.registerTeacher = vm.register.teachers[0];
                 }
+            };
+
+            vm.isCurrentRegister = function (course: Course): boolean {
+                if (course && vm.register) {
+                    const courseStartDate = moment(course.startDate)
+                        .format(DateUtils.FORMAT["YEAR-MONTH-DAY-HOUR-MIN-SEC"]);
+                    const courseEndDate = moment(course.endDate)
+                        .format(DateUtils.FORMAT["YEAR-MONTH-DAY-HOUR-MIN-SEC"]);
+                    const registerStartDate = moment(vm.register.start_date)
+                        .format(DateUtils.FORMAT["YEAR-MONTH-DAY-HOUR-MIN-SEC"]);
+                    const registerEndDate = moment(vm.register.end_date)
+                        .format(DateUtils.FORMAT["YEAR-MONTH-DAY-HOUR-MIN-SEC"]);
+                    const matchDate: boolean = courseStartDate === registerStartDate && courseEndDate === registerEndDate;
+                    return course._id === vm.register.course_id && matchDate;
+                }
+                return false;
             };
 
 
@@ -530,9 +561,10 @@ export const registersController = ng.controller('RegistersController',
             vm.loadCourses = async function (users: string[] = [model.me.userId], groups: string[] = [], structure: string = window.structure.id,
                                              start_date: string = DateUtils.format(vm.filter.start_date, DateUtils.FORMAT["YEAR-MONTH-DAY"]),
                                              end_date: string = DateUtils.format(vm.filter.end_date, DateUtils.FORMAT["YEAR-MONTH-DAY"]),
-                                             forgotten_registers: boolean = vm.filter.forgotten): Promise<void> {
+                                             forgotten_registers: boolean = vm.filter.forgotten,
+                                             multipleSlot: boolean = vm.filter.multipleSlot): Promise<void> {
                 vm.courses.clear();
-                await vm.courses.sync(users, groups, structure, start_date, end_date, forgotten_registers);
+                await vm.courses.sync(users, groups, structure, start_date, end_date, forgotten_registers, multipleSlot);
             };
 
             vm.isFuturCourse = function (course) {
@@ -567,14 +599,20 @@ export const registersController = ng.controller('RegistersController',
                 vm.loadCourses(extractSelectedTeacherIds(), extractSelectedGroupsName());
             };
 
-            vm.formatDayDate = function (date) {
-                return DateUtils.format(parseInt(date), DateUtils.FORMAT["DAY-DATE"]);
+            vm.switchMultipleSlot = async function (): Promise<void> {
+                RegisterUtils.initPreference(vm.filter.multipleSlot);
+                vm.loadCourses(extractSelectedTeacherIds(), extractSelectedGroupsName(),
+                    undefined, undefined, undefined, false)
             };
 
             vm.switchRegisterTeacher = function (teacher) {
                 vm.filter.selected.registerTeacher = teacher;
                 vm.courses.sync([teacher.id], [], window.structure.id, DateUtils.format(vm.filter.date, DateUtils.FORMAT["YEAR-MONTH-DAY"]),
-                    DateUtils.format(vm.filter.date, DateUtils.FORMAT["YEAR-MONTH-DAY"]), false);
+                    DateUtils.format(vm.filter.date, DateUtils.FORMAT["YEAR-MONTH-DAY"]), false, false);
+            };
+
+            vm.formatDayDate = function (date) {
+                return DateUtils.format(parseInt(date), DateUtils.FORMAT["DAY-DATE"]);
             };
 
             const notifyCourse = async function (course: Course) {

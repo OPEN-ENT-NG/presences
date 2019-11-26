@@ -23,6 +23,9 @@
     },
     "classes": {
       "type": "array"
+    },
+    "split_slot": {
+      "type": "boolean"
     }
   },
   "required": [
@@ -32,6 +35,7 @@
     "end_date",
     "subject_id",
     "groups",
-    "classes"
+    "classes",
+    "split_slot"
   ]
 }

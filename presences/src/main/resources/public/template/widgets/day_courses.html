@@ -1,12 +1,16 @@
 <div class="forgotten-registers-widget registers" ng-controller="RegistersController as vm"
      ng-init="vm.widget.dayCourses = true;">
-    <h2>
-        <i18n>presences.widgets.day.courses</i18n>
-    </h2>
+    <div class="forgotten-registers-widget-tooltip">
+        <i class="help" tooltip="[[lang.translate('presences.widgets.day.set.multiple.slot.toolip')]]"></i>
+        <i18n class="forgotten-registers-widget-tooltip-text">presences.widgets.day.set.multiple.slot</i18n>
+        <switch ng-model="vm.filter.multipleSlot" ng-change="vm.switchMultipleSlot()">
+            <label class="switch"> </label>
+        </switch>
+    </div>
     <div class="row card-slider" ng-show="vm.courses.all.length > 0">
         <div class="card cell" ng-repeat="course in vm.courses.all|orderBy:'timestamp'"
              data-ng-click="vm.openRegister(course, $event)"
-             ng-class="{active: course._id === vm.register.course_id, disabled: vm.isFuturCourse(course)}">
+             ng-class="{active: vm.isCurrentRegister(course), disabled: vm.isFuturCourse(course)}">
             <div ng-if="hasSearchRight()" class="row has-search-right">
                 <div class="row hour">
                     <span>[[::vm.formatHour(course.startDate)]] - [[::vm.formatHour(course.endDate)]]</span>
@@ -32,7 +36,7 @@
             </div>
         </div>
     </div>
-    <div class="card-slider empty" ng-show="vm.courses.all.length === 0">
+    <div class="card-slider empty" ng-show="!vm.courses.loading && vm.courses.all.length === 0">
         <div class="tick-color yellow">&nbsp;</div>
         <div class="empty-title">
             <i18n>presences.widgets.day.courses.empty</i18n>

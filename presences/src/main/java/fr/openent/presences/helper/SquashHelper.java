@@ -51,14 +51,17 @@ public class SquashHelper {
                 while (!found && j < courseRegisters.size()) {
                     JsonObject register = courseRegisters.getJsonObject(j);
                     try {
-                        if (DateHelper.getAbsTimeDiff(course.getString("startDate"), register.getString("start_date")) < DateHelper.TOLERANCE
-                                && DateHelper.getAbsTimeDiff(course.getString("endDate"), register.getString("end_date")) < DateHelper.TOLERANCE) {
+                        if ((DateHelper.getAbsTimeDiff(course.getString("startDate"), register.getString("start_date")) < DateHelper.TOLERANCE
+                                && DateHelper.getAbsTimeDiff(course.getString("endDate"), register.getString("end_date")) < DateHelper.TOLERANCE)
+                                || course.getString("_id").equals(register.getString("course_id"))) {
                             course.put("register_id", register.getInteger("id"));
                             course.put("register_state_id", register.getInteger("state_id"));
                             course.put("notified", register.getBoolean("notified"));
+                            course.put("split_slot", register.getBoolean("split_slot"));
                             found = true;
                         } else {
                             course.put("notified", false);
+                            course.put("split_slot", register.getBoolean("split_slot"));
                         }
                     } catch (ParseException err) {
                         LOGGER.error("[Presences@SquashHelper] Failed to parse date for register " + register.getInteger("id"), err);
@@ -90,9 +93,11 @@ public class SquashHelper {
             o = new JsonObject()
                     .put("id", register.getInteger("id"))
                     .put("start_date", register.getString("start_date"))
+                    .put("course_id", register.getString("course_id"))
                     .put("end_date", register.getString("end_date"))
                     .put("state_id", register.getInteger("state_id"))
-                    .put("notified", register.getBoolean("notified"));
+                    .put("notified", register.getBoolean("notified"))
+                    .put("split_slot", register.getBoolean("split_slot"));
             values.getJsonArray(register.getString("course_id")).add(o);
         }
 

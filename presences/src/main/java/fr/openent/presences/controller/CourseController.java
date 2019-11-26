@@ -5,13 +5,13 @@ import fr.openent.presences.common.helper.DateHelper;
 import fr.openent.presences.common.helper.FutureHelper;
 import fr.openent.presences.common.service.GroupService;
 import fr.openent.presences.common.service.impl.DefaultGroupService;
+import fr.openent.presences.common.viescolaire.Viescolaire;
 import fr.openent.presences.constants.Actions;
 import fr.openent.presences.enums.RegisterStatus;
 import fr.openent.presences.export.RegisterCSVExport;
-import fr.openent.presences.helper.CourseHelper;
-import fr.openent.presences.helper.MapHelper;
-import fr.openent.presences.helper.SquashHelper;
-import fr.openent.presences.helper.SubjectHelper;
+import fr.openent.presences.helper.*;
+import fr.openent.presences.model.Course;
+import fr.openent.presences.model.Slot;
 import fr.openent.presences.service.CourseService;
 import fr.openent.presences.service.RegisterService;
 import fr.openent.presences.service.impl.DefaultCourseService;
@@ -43,6 +43,7 @@ import org.entcore.common.user.UserUtils;
 import java.text.ParseException;
 import java.time.Instant;
 import java.time.ZoneId;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
@@ -79,8 +80,9 @@ public class CourseController extends ControllerHelper {
             return;
         }
         boolean forgottenFilter = params.contains("forgotten_registers") && Boolean.parseBoolean(request.getParam("forgotten_registers"));
+        boolean multipleSlot = params.contains("multiple_slot") && Boolean.parseBoolean(request.getParam("multiple_slot"));
         listCourses(params.get("structure"), params.getAll("teacher"), params.getAll("group"),
-                params.get("start"), params.get("end"), forgottenFilter, arrayResponseHandler(request));
+                params.get("start"), params.get("end"), forgottenFilter, multipleSlot, arrayResponseHandler(request));
     }
 
     @Get("/courses/export")
@@ -94,7 +96,9 @@ public class CourseController extends ControllerHelper {
         }
 
         boolean forgottenFilter = params.contains("forgotten_registers") && Boolean.parseBoolean(request.getParam("forgotten_registers"));
-        listCourses(params.get("structure"), params.getAll("teacher"), params.getAll("group"), params.get("start"), params.get("end"), forgottenFilter, event -> {
+        boolean multipleSlot = params.contains("multiple_slot") && Boolean.parseBoolean(request.getParam("multiple_slot"));
+        listCourses(params.get("structure"), params.getAll("teacher"), params.getAll("group"),
+                params.get("start"), params.get("end"), forgottenFilter, multipleSlot, event -> {
             if (event.isLeft()) {
                 log.error("[Presences@CourseController] Failed to list courses", event.left().getValue());
                 renderError(request);
@@ -256,14 +260,18 @@ public class CourseController extends ControllerHelper {
     /**
      * List courses
      *
-     * @param structureId  Structure identifier
-     * @param teachersList Teachers list identifiers
-     * @param groupsList   Groups list identifiers
-     * @param start        Start date
-     * @param end          End date
+     * @param structureId       Structure identifier
+     * @param teachersList      Teachers list identifiers
+     * @param groupsList        Groups list identifiers
+     * @param start             Start date
+     * @param end               End date
+     * @param forgottenFilter   forgottenFilter
+     * @param multipleSlot      allow split courses
      * @param handler      Function handler returning data
      */
-    private void listCourses(String structureId, List<String> teachersList, List<String> groupsList, String start, String end, boolean forgottenFilter, Handler<Either<String, JsonArray>> handler) {
+    private void listCourses(String structureId, List<String> teachersList, List<String> groupsList,
+                             String start, String end, boolean forgottenFilter, boolean multipleSlot,
+                             Handler<Either<String, JsonArray>> handler) {
         courseHelper.getCourses(structureId, teachersList, groupsList, start, end, event -> {
             if (event.isLeft()) {
                 handler.handle(new Either.Left<>(event.left().getValue()));
@@ -319,7 +327,20 @@ public class CourseController extends ControllerHelper {
 
                 SquashHelper squashHelper = new SquashHelper(eb);
                 squashHelper.squash(structureId, start + " 00:00:00", end + " 23:59:59", courses, squashEvent -> {
-                    handler.handle(new Either.Right<>(forgottenFilter ? filterForgottenCourses(squashEvent.right().getValue()) : squashEvent.right().getValue()));
+                    Viescolaire.getInstance().getDefaultSlots(structureId, slotsResult -> {
+                        List<Course> coursesEvent = CourseHelper.getCourseListFromJsonArray(squashEvent.right().getValue(), Course.MANDATORY_ATTRIBUTE);
+                        List<Slot> slots = SlotHelper.getSlotListFromJsonArray(slotsResult.right().getValue(), Slot.MANDATORY_ATTRIBUTE);
+                        List<Course> splitCoursesEvent = CourseHelper.splitCoursesFromSlot(coursesEvent, slots);
+                        if (multipleSlot) {
+                            handler.handle(new Either.Right<>(forgottenFilter
+                                    ? CourseHelper.toJsonArray(filterForgottenCourses(splitCoursesEvent))
+                                    : CourseHelper.toJsonArray(splitCoursesEvent)));
+                        } else {
+                            handler.handle(new Either.Right<>(forgottenFilter
+                                    ? CourseHelper.toJsonArray(filterForgottenCourses(CourseHelper.checkSplitableSlot(coursesEvent, slots)))
+                                    : CourseHelper.toJsonArray(CourseHelper.checkSplitableSlot(coursesEvent, slots))));
+                        }
+                    });
                 });
             });
 
@@ -333,22 +354,22 @@ public class CourseController extends ControllerHelper {
         Neo4j.getInstance().execute(teacherQuery, new JsonObject().put("teacherIds", teachers), Neo4jResult.validResultHandler(handler));
     }
 
-    private JsonArray filterForgottenCourses(JsonArray courses) {
-        JsonArray forgottenRegisters = new JsonArray();
-        for (int i = 0; i < courses.size(); i++) {
+    private List<Course> filterForgottenCourses(List<Course> courses) {
+        List<Course> forgottenRegisters = new ArrayList<>();
+        for (Course course : courses) {
             try {
                 //FIXME Fix timezone trick
                 long timeDifference = ZoneId.of("Europe/Paris").getRules().getOffset(Instant.now()).getTotalSeconds();
                 Date currentDate = new Date(System.currentTimeMillis() + (timeDifference * 1000));
 
-                JsonObject course = courses.getJsonObject(i);
-                Date forgottenStartDateCourse = new Date(DateHelper.parse(course.getString("startDate")).getTime() + (15 * 60000));
+                Course newCourse = course.clone();
+                Date forgottenStartDateCourse = new Date(DateHelper.parse(newCourse.getStartDate()).getTime() + (15 * 60000));
                 if (currentDate.after(forgottenStartDateCourse)) {
-                    if (!course.containsKey("register_id")) {
+                    if (newCourse.getRegisterId() == null) {
                         forgottenRegisters.add(course);
                         continue;
                     }
-                    Integer registerState = course.getInteger("register_state_id");
+                    Integer registerState = newCourse.getRegisterStateId();
 
                     if (!registerState.equals(RegisterStatus.DONE.getStatus())) {
                         forgottenRegisters.add(course);

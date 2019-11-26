@@ -1,4 +1,21 @@
 .forgotten-registers-widget {
+  &-tooltip {
+    display: flex;
+    align-items: center;
+    padding: 8px 0;
+
+    &-text {
+      padding: 0 8px;
+    }
+
+    .switch input[type=checkbox]:checked + .tick {
+      background: $presences-light-green;
+
+      &:before {
+        background: $presences-dark-green;
+      }
+    }
+  }
   .card-slider.empty {
     display: flex;
     align-items: center;

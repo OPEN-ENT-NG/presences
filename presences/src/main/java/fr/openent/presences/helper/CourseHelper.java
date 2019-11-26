@@ -1,5 +1,8 @@
 package fr.openent.presences.helper;
 
+import fr.openent.presences.common.helper.DateHelper;
+import fr.openent.presences.model.Course;
+import fr.openent.presences.model.Slot;
 import fr.wseduc.webutils.Either;
 import io.vertx.core.Handler;
 import io.vertx.core.MultiMap;
@@ -9,6 +12,10 @@ import io.vertx.core.json.JsonObject;
 import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
 
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 
 public class CourseHelper {
@@ -56,5 +63,133 @@ public class CourseHelper {
                 handler.handle(new Either.Right<>(body.getJsonArray("results")));
             }
         });
+    }
+
+    /**
+     * Convert courses list into JsonArray
+     *
+     * @param courses List of courses
+     * @return new JsonArray of courses
+     */
+    public static JsonArray toJsonArray(List<Course> courses) {
+        JsonArray coursesJsonArray = new JsonArray();
+        for (Course course : courses) {
+            coursesJsonArray.add(course.toJSON());
+        }
+        return coursesJsonArray;
+    }
+
+    /**
+     * Convert JsonArray into courses list
+     *
+     * @param array               JsonArray response
+     * @param mandatoryAttributes List of mandatory attributes
+     * @return new list of courses
+     */
+    public static List<Course> getCourseListFromJsonArray(JsonArray array, List<String> mandatoryAttributes) {
+        List<Course> courseList = new ArrayList<>();
+        for (Object o : array) {
+            if (!(o instanceof JsonObject)) continue;
+            Course course = new Course((JsonObject) o, mandatoryAttributes);
+            courseList.add(course);
+        }
+        return courseList;
+    }
+
+    /**
+     * Split the courses in x slots if multiple register is set true
+     * (e.g Courses[09:00 - 12:00] would be split in [09:00-10:00], [09:00-11:00], [09:00-12:00])
+     * based on slots set as parameter
+     *
+     * @param courses List of courses fetched
+     * @param slots   list of slot fetched from default time slots
+     * @return new split courses
+     */
+    public static List<Course> splitCoursesFromSlot(List<Course> courses, List<Slot> slots) {
+        List<Course> splitCoursesEvent = new ArrayList<>();
+        try {
+            for (Course course : courses) {
+                SimpleDateFormat parser = new SimpleDateFormat(DateHelper.HOUR_MINUTES_SECONDS);
+                Date startTime = parser.parse(DateHelper.getTimeString(course.getStartDate(), DateHelper.MONGO_FORMAT));
+                Date endTime = parser.parse(DateHelper.getTimeString(course.getEndDate(), DateHelper.MONGO_FORMAT));
+
+                for (Slot slot : slots) {
+                    Date slotStartHour = parser.parse(slot.getStartHour());
+                    Date slotEndHour = parser.parse(slot.getEndHour());
+                    if ((startTime.before(slotStartHour) || startTime.equals(slotStartHour))
+                            && (endTime.after(slotEndHour) || endTime.equals(slotEndHour))
+                            && !(course.getRegisterId() != null && !course.getSplitSlot())) {
+                        Course newCourse = treatingSplitSlot(course, slot);
+                        newCourse.setSplitSlot(true);
+                        splitCoursesEvent.add(newCourse);
+                    }
+                }
+
+                if (course.getRegisterId() != null && !course.getSplitSlot()) {
+                    splitCoursesEvent.add(course.clone());
+                }
+            }
+        } catch (ParseException e) {
+            LOGGER.error("[Presences@CourseModel] Failed to parse date", e);
+        }
+        return splitCoursesEvent;
+    }
+
+    /**
+     * Check if each course has a split mode
+     * If it is true, we then split its courses in x slots
+     * (e.g Courses[09:00 - 12:00] would be split in [09:00-10:00], [09:00-11:00], [09:00-12:00])
+     * based on slots set as parameter
+     * If it is false, we kept its course element just as how it was created
+     *
+     * @param courses List of courses fetched
+     * @param slots   list of slot fetched from default time slots
+     * @return new courses (read above)
+     */
+    public static List<Course> checkSplitableSlot(List<Course> courses, List<Slot> slots) {
+        List<Course> checkedCourses = new ArrayList<>();
+        SimpleDateFormat parser = new SimpleDateFormat(DateHelper.HOUR_MINUTES_SECONDS);
+
+        for (Course course : courses) {
+            if (course.getSplitSlot()) {
+                try {
+                    Date startTime = parser.parse(DateHelper.getTimeString(course.getStartDate(), DateHelper.MONGO_FORMAT));
+                    Date endTime = parser.parse(DateHelper.getTimeString(course.getEndDate(), DateHelper.MONGO_FORMAT));
+                    for (Slot slot : slots) {
+                        Date slotStartHour = parser.parse(slot.getStartHour());
+                        Date slotEndHour = parser.parse(slot.getEndHour());
+                        if ((startTime.before(slotStartHour) || startTime.equals(slotStartHour))
+                                && (endTime.after(slotEndHour) || endTime.equals(slotEndHour))) {
+                            Course newCourse = treatingSplitSlot(course, slot);
+                            checkedCourses.add(newCourse);
+                        }
+                    }
+                } catch (ParseException e) {
+                    LOGGER.error("[Presences@CourseModel] Failed to parse date for checking splitable slot", e);
+                }
+            } else {
+                checkedCourses.add(course.clone());
+            }
+        }
+        return checkedCourses;
+    }
+
+    /**
+     * Util function that compares the current course element and the current slot time
+     * for treating split slot
+     *
+     * @param course course element
+     * @param slot   slot element
+     * @return new course with new start and end time defined from the slot
+     */
+    private static Course treatingSplitSlot(Course course, Slot slot) throws ParseException {
+        String newStartDate = DateHelper.getDateString(course.getStartDate(), DateHelper.YEAR_MONTH_DAY);
+        String newStartTime = DateHelper.getTimeString(slot.getStartHour(), DateHelper.HOUR_MINUTES_SECONDS);
+        String newEndDate = DateHelper.getDateString(course.getEndDate(), DateHelper.YEAR_MONTH_DAY);
+        String newEndTime = DateHelper.getTimeString(slot.getEndHour(), DateHelper.HOUR_MINUTES_SECONDS);
+        Course newCourse = course.clone();
+        newCourse.setStartDate(newStartDate + " " + newStartTime);
+        newCourse.setEndDate(newEndDate + " " + newEndTime);
+        return newCourse;
     }
 }

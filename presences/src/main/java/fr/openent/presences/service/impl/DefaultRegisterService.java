@@ -56,7 +56,7 @@ public class DefaultRegisterService implements RegisterService {
 
     @Override
     public void list(String structureId, String start, String end, Handler<Either<String, JsonArray>> handler) {
-        String query = "SELECT id, start_date, end_date, course_id, state_id, notified " +
+        String query = "SELECT id, start_date, end_date, course_id, state_id, notified, split_slot " +
                 "FROM " + Presences.dbSchema + ".register " +
                 "WHERE register.structure_id = ? " +
                 "AND register.start_date > ? " +
@@ -611,8 +611,10 @@ public class DefaultRegisterService implements RegisterService {
      * @return Statement
      */
     private JsonObject getRegisterCreationStatement(Number id, JsonObject register, UserInfos user) {
-        String query = "INSERT INTO " + Presences.dbSchema + ".register (id, structure_id, personnel_id, course_id, state_id, owner, start_date, end_date, subject_id) " +
-                "VALUES (?, ?, ?, ?, 1, ?, ?, ?, ?) RETURNING id, structure_id, course_id, subject_id, start_date, end_date, counsellor_input, state_id;";
+        String query = "INSERT INTO " + Presences.dbSchema +
+                ".register (id, structure_id, personnel_id, course_id, state_id, owner, start_date, end_date, subject_id, split_slot) " +
+                "VALUES (?, ?, ?, ?, 1, ?, ?, ?, ?, ?) " +
+                "RETURNING id, structure_id, course_id, subject_id, start_date, end_date, counsellor_input, state_id;";
 
         JsonArray params = new JsonArray()
                 .add(id)
@@ -622,7 +624,8 @@ public class DefaultRegisterService implements RegisterService {
                 .add(user.getUserId())
                 .add(register.getString("start_date"))
                 .add(register.getString("end_date"))
-                .add(register.getString("subject_id"));
+                .add(register.getString("subject_id"))
+                .add(register.getBoolean("split_slot"));
 
         return new JsonObject()
                 .put("statement", query)
