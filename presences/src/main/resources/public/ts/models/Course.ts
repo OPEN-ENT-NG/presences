@@ -4,7 +4,7 @@ import {Mix} from 'entcore-toolkit';
 import {LoadingCollection} from '@common/model/LoadingCollection'
 
 export interface Course {
-    _id: string;
+    id: string;
     structureId: string;
     subjectId: string;
     subjectName: string;
@@ -14,11 +14,11 @@ export interface Course {
     dayOfWeek: number;
     startDate: string;
     endDate: string;
-    register_id?: number;
+    registerId?: number;
     timestamp?: number;
     teachers: { id: string, displayName: string }[];
     notified: boolean;
-    split_slot: boolean;
+    splitSlot: boolean;
 }
 
 export class Course {

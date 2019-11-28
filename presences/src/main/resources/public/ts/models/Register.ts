@@ -40,7 +40,7 @@ export interface Register {
     absenceCounter: number;
     groupMap?: any;
     notified: boolean;
-    split_slot: boolean;
+    splitSlot: boolean;
     students: Student[];
     teachers: Teacher[];
 }
@@ -58,7 +58,7 @@ export class Register extends LoadingCollection {
             end_date: this.end_date,
             subject_id: this.subject_id,
             groups: this.groups,
-            split_slot: this.split_slot,
+            split_slot: this.splitSlot,
             classes: this.classes
         }
     }

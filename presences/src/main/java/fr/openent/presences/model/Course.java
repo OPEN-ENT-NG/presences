@@ -148,7 +148,7 @@ public class Course implements Cloneable {
         this.dayOfWeek = dayOfWeek;
     }
 
-    public Boolean getManual() {
+    public Boolean isManual() {
         return manual;
     }
 
@@ -228,7 +228,7 @@ public class Course implements Cloneable {
         this.registerStateId = registerStateId;
     }
 
-    public Boolean getNotified() {
+    public Boolean isNotified() {
         return notified;
     }
 
@@ -236,7 +236,7 @@ public class Course implements Cloneable {
         this.notified = notified;
     }
 
-    public Boolean getSplitSlot() {
+    public Boolean isSplitSlot() {
         return splitSlot;
     }
 

@@ -298,27 +298,6 @@ export const registersController = ng.controller('RegistersController',
 
             vm.formatHour = (date: string) => DateUtils.format(date, DateUtils.FORMAT["HOUR-MINUTES"]);
 
-            // const createRegisterFromCourse = function (course: Course): Register {
-            //     const register = new Register();
-            //     if (course.register_id) {
-            //         register.id = course.register_id;
-            //         register.course_id = course._id;
-            //         register.split_slot = course.split_slot;
-            //     } else {
-            //         register.course_id = course._id;
-            //         register.structure_id = course.structureId;
-            //         register.start_date = course.startDate;
-            //         register.end_date = course.endDate;
-            //         register.subject_id = course.subjectId;
-            //         register.groups = course.groups;
-            //         register.classes = course.classes;
-            //         register.split_slot = course.split_slot;
-            //     }
-            //
-            //     return register;
-            // };
-
-
             const setCurrentRegister = async function (): Promise<void> {
                 let i: number = 0;
                 let course: Course;
@@ -336,10 +315,10 @@ export const registersController = ng.controller('RegistersController',
                 }
                 if (vm.isFuturCourse(course)) return;
                 vm.register = RegisterUtils.createRegisterFromCourse(course);
-                if (!course.register_id) {
+                if (!course.registerId) {
                     try {
                         await vm.register.create();
-                        course.register_id = vm.register.id;
+                        course.registerId = vm.register.id;
                     } catch (err) {
                         notify.error('presences.register.creation.err');
                         vm.register.loading = false;
@@ -373,7 +352,7 @@ export const registersController = ng.controller('RegistersController',
                     const registerEndDate = moment(vm.register.end_date)
                         .format(DateUtils.FORMAT["YEAR-MONTH-DAY-HOUR-MIN-SEC"]);
                     const matchDate: boolean = courseStartDate === registerStartDate && courseEndDate === registerEndDate;
-                    return course._id === vm.register.course_id && matchDate;
+                    return course.id === vm.register.course_id && matchDate;
                 }
                 return false;
             };
@@ -617,9 +596,9 @@ export const registersController = ng.controller('RegistersController',
 
             const notifyCourse = async function (course: Course) {
                 try {
-                    const {data} = await notifyTeachers(course._id, course.startDate, course.endDate);
+                    const {data} = await notifyTeachers(course.id, course.startDate, course.endDate);
                     if ('register_id' in data) {
-                        course.register_id = data.register_id;
+                        course.registerId = data.register_id;
                     }
                     course.notified = true;
                     $scope.safeApply();

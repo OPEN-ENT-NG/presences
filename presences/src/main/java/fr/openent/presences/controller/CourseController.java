@@ -325,22 +325,18 @@ public class CourseController extends ControllerHelper {
                     object.remove("teacherIds");
                 }
 
-                SquashHelper squashHelper = new SquashHelper(eb);
-                squashHelper.squash(structureId, start + " 00:00:00", end + " 23:59:59", courses, squashEvent -> {
-                    Viescolaire.getInstance().getDefaultSlots(structureId, slotsResult -> {
-                        List<Course> coursesEvent = CourseHelper.getCourseListFromJsonArray(squashEvent.right().getValue(), Course.MANDATORY_ATTRIBUTE);
-                        List<Slot> slots = SlotHelper.getSlotListFromJsonArray(slotsResult.right().getValue(), Slot.MANDATORY_ATTRIBUTE);
-                        List<Course> splitCoursesEvent = CourseHelper.splitCoursesFromSlot(coursesEvent, slots);
-                        if (multipleSlot) {
-                            handler.handle(new Either.Right<>(forgottenFilter
-                                    ? CourseHelper.toJsonArray(filterForgottenCourses(splitCoursesEvent))
-                                    : CourseHelper.toJsonArray(splitCoursesEvent)));
-                        } else {
-                            handler.handle(new Either.Right<>(forgottenFilter
-                                    ? CourseHelper.toJsonArray(filterForgottenCourses(CourseHelper.checkSplitableSlot(coursesEvent, slots)))
-                                    : CourseHelper.toJsonArray(CourseHelper.checkSplitableSlot(coursesEvent, slots))));
-                        }
-                    });
+                Viescolaire.getInstance().getDefaultSlots(structureId, slotsResult -> {
+                    List<Slot> slots = SlotHelper.getSlotListFromJsonArray(slotsResult.right().getValue(), Slot.MANDATORY_ATTRIBUTE);
+                    List<Course> coursesEvent = CourseHelper.getCourseListFromJsonArray(courses, Course.MANDATORY_ATTRIBUTE);
+                    List<Course> splitCoursesEvent = CourseHelper.splitCoursesFromSlot(coursesEvent, slots);
+
+                    SquashHelper squashHelper = new SquashHelper(eb);
+                    squashHelper.squash(structureId, start + " 00:00:00", end + " 23:59:59",
+                            coursesEvent, splitCoursesEvent, squashEvent ->
+                                    handler.handle(new Either.Right<>(forgottenFilter ? new JsonArray(filterForgottenCourses(
+                                            CourseHelper.formatCourses(squashEvent.right().getValue(), multipleSlot)
+                                    )) : new JsonArray(CourseHelper.formatCourses(squashEvent.right().getValue(), multipleSlot))))
+                    );
                 });
             });
 

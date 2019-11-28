@@ -9,9 +9,9 @@ import java.util.List;
 
 public class SlotHelper {
 
-    public static List<Slot> getSlotListFromJsonArray(JsonArray array, List<String> mandatoryAttributes) {
+    public static List<Slot> getSlotListFromJsonArray(JsonArray slotsJsonArray, List<String> mandatoryAttributes) {
         List<Slot> slots = new ArrayList<>();
-        for (Object o : array) {
+        for (Object o : slotsJsonArray) {
             if (!(o instanceof JsonObject)) continue;
             Slot slot = new Slot((JsonObject) o, mandatoryAttributes);
             slots.add(slot);

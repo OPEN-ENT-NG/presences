@@ -17,6 +17,7 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import java.util.stream.Collectors;
 
 public class CourseHelper {
 
@@ -66,20 +67,6 @@ public class CourseHelper {
     }
 
     /**
-     * Convert courses list into JsonArray
-     *
-     * @param courses List of courses
-     * @return new JsonArray of courses
-     */
-    public static JsonArray toJsonArray(List<Course> courses) {
-        JsonArray coursesJsonArray = new JsonArray();
-        for (Course course : courses) {
-            coursesJsonArray.add(course.toJSON());
-        }
-        return coursesJsonArray;
-    }
-
-    /**
      * Convert JsonArray into courses list
      *
      * @param array               JsonArray response
@@ -94,6 +81,33 @@ public class CourseHelper {
             courseList.add(course);
         }
         return courseList;
+    }
+
+    public static List<Course> formatCourses(List<Course> courses, boolean multipleSlot) {
+        List<Course> formatCourses = new ArrayList<>();
+
+        courses.stream()
+                .collect(Collectors.groupingBy(Course::getId))
+                .forEach((courseId, listCourses) -> {
+
+                    if (listCourses.stream().anyMatch(listCourse -> listCourse.getRegisterId() != null)) {
+                        boolean isSplit = listCourses.stream()
+                                .filter(listCourse -> listCourse.getRegisterId() != null)
+                                .findAny().get().isSplitSlot();
+                        for (Course course : listCourses) {
+                            if (course.isSplitSlot().equals(isSplit)) {
+                                formatCourses.add(course);
+                            }
+                        }
+                    } else {
+                        for (Course course : listCourses) {
+                            if (course.isSplitSlot().equals(multipleSlot)) {
+                                formatCourses.add(course);
+                            }
+                        }
+                    }
+                });
+        return formatCourses;
     }
 
     /**
@@ -118,14 +132,13 @@ public class CourseHelper {
                     Date slotEndHour = parser.parse(slot.getEndHour());
                     if ((startTime.before(slotStartHour) || startTime.equals(slotStartHour))
                             && (endTime.after(slotEndHour) || endTime.equals(slotEndHour))
-                            && !(course.getRegisterId() != null && !course.getSplitSlot())) {
+                            && !(course.getRegisterId() != null && !course.isSplitSlot())) {
                         Course newCourse = treatingSplitSlot(course, slot);
-                        newCourse.setSplitSlot(true);
                         splitCoursesEvent.add(newCourse);
                     }
                 }
 
-                if (course.getRegisterId() != null && !course.getSplitSlot()) {
+                if (course.getRegisterId() != null && !course.isSplitSlot()) {
                     splitCoursesEvent.add(course.clone());
                 }
             }
@@ -151,7 +164,7 @@ public class CourseHelper {
         SimpleDateFormat parser = new SimpleDateFormat(DateHelper.HOUR_MINUTES_SECONDS);
 
         for (Course course : courses) {
-            if (course.getSplitSlot()) {
+            if (course.isSplitSlot()) {
                 try {
                     Date startTime = parser.parse(DateHelper.getTimeString(course.getStartDate(), DateHelper.MONGO_FORMAT));
                     Date endTime = parser.parse(DateHelper.getTimeString(course.getEndDate(), DateHelper.MONGO_FORMAT));
