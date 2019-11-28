@@ -388,6 +388,12 @@ export const registersController = ng.controller('RegistersController',
                     }
                     removeEventFromSlot(student, student[event]);
                     delete student[event];
+                    vm.register.students.map(registerStudent => {
+                        if (registerStudent.id === student.id) {
+                            delete registerStudent[event];
+                            registerStudent.day_history = student.day_history;
+                        }
+                    });
                     if (event === 'absence') vm.register.absenceCounter--;
                 } else {
                     let o;
@@ -412,6 +418,12 @@ export const registersController = ng.controller('RegistersController',
                         throw err;
                     }
                     addEventToSlot(student, student[event]);
+                    vm.register.students.map(registerStudent => {
+                        if (registerStudent.id === student.id) {
+                            registerStudent[event] = student[event];
+                            registerStudent.day_history = student.day_history;
+                        }
+                    });
                     if (event === 'absence') vm.register.absenceCounter++;
                 }
                 vm.register.setStatus(RegisterStatus.IN_PROGRESS);
