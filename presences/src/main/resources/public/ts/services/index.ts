@@ -5,3 +5,4 @@ export * from './CalendarService';
 export * from './ReasonService';
 export * from './RegistryService';
 export * from './ForgottenNotebookService';
+export * from './SettingsService';

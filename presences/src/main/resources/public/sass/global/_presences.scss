@@ -33,6 +33,9 @@ $navbar-width: $portal-header-height;
   font-style: normal;
 }
 
+.toasts .warning {
+  text-align: left !important;
+}
 
 body.presences, .sniplet.presences {
   @import "components/index";
@@ -259,5 +262,9 @@ body.presences, .sniplet.presences {
     &.forgotten-notebook {
       background-color: $presences-water-green;
     }
+  }
+
+  .flex-row {
+    flex-direction: row !important;
   }
 }

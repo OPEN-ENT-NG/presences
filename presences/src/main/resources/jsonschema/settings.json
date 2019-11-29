@@ -1,0 +1,22 @@
+{
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "id": "http://jsonschema.net",
+  "type": "object",
+  "properties": {
+    "alert_absence_thresholder": {
+      "type": "number"
+    },
+    "alert_lateness_thresholder": {
+      "type": "number"
+    },
+    "alert_incident_thresholder": {
+      "type": "number"
+    },
+    "alert_forgotten_notebook_thresholder": {
+      "type": "number"
+    },
+    "event_recovery_method": {
+      "type": "string"
+    }
+  }
+}

@@ -46,7 +46,7 @@
     </a>
 
     <!-- statistics -->
-    <a class="presence-navigation-item forbidden">
+    <a class="presence-navigation-item" data-ng-click="vm.scrollToElement('statistics')">
         <div class="presence-icon"><i class="statistics" aria-hidden="true"></i></div>
         <span><i18n>presences.statistics</i18n></span>
     </a>
@@ -90,3 +90,9 @@
 </div>
 
 
+<div class="sniplet presences statistics" id="statistics">
+    <sniplet
+            template="presences-manage/statistics-manage/sniplet-statistics-manage"
+            application="presences">
+    </sniplet>
+</div>

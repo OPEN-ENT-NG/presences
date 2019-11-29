@@ -1,0 +1,49 @@
+<div class="ten sniplet presences sniplet-presence-form">
+    <div class="sniplet-form">
+        <div class="sniplet-header">
+            <span class="sniplet-header-icon"><i class="statistics" aria-hidden="true"></i></span>
+            <h3 class="sniplet-header-title">
+                <i18n>presences.statistics.manage.title</i18n>
+            </h3>
+        </div>
+
+        <div class="sniplet-input">
+            <div class="sniplet-input-title">
+                <i18n>presences.statistics.manage.description</i18n>
+            </div>
+        </div>
+
+        <div class="sniplet-input row flex-row">
+            <div class="four">
+                <i18n>presences.statistics.manage.events.inventory.method</i18n>
+                :
+            </div>
+            <div class="eight flex-row">
+                <div class="md-radio mr-radio-inline">
+                    <input type="radio" ng-model="vm.setting.event_recovery_method" ng-change="vm.save()"
+                           ng-value="'DAY'"
+                           id="inventory_method_day">
+                    <label for="inventory_method_day">
+                        <i18n>presences.statistics.manage.events.inventory.method.day</i18n>
+                    </label>
+                </div>
+                <div class="md-radio mr-radio-inline">
+                    <input type="radio" ng-model="vm.setting.event_recovery_method" ng-change="vm.save()"
+                           ng-value="'HALF_DAY'"
+                           id="inventory_method_half_day">
+                    <label for="inventory_method_half_day">
+                        <i18n>presences.statistics.manage.events.inventory.method.half_day</i18n>
+                    </label>
+                </div>
+                <div class="md-radio mr-radio-inline">
+                    <input type="radio" ng-model="vm.setting.event_recovery_method" ng-change="vm.save()"
+                           ng-value="'HOUR'"
+                           id="inventory_method_hour">
+                    <label for="inventory_method_hour">
+                        <i18n>presences.statistics.manage.events.inventory.method.hour</i18n>
+                    </label>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

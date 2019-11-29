@@ -167,5 +167,14 @@
   "presences.widgets.absences.empty": "Aucune absence à régulariser sur cette période",
   "presences.widgets.absences.regularized": "Régularisé",
   "presences.widgets.register": "Appel en cours",
-  "presences.widgets.day_presences": "Présences du jour"
+  "presences.widgets.day_presences": "Présences du jour",
+  "presences.statistics.manage.title": "Comptage des événements",
+  "presences.statistics.manage.description": "Sélectionnez ici la façon de recencer les absences, retards et autres événements dans Présences. Ce comptage intervient dans Alerts, Statistiques, Publipostage, Bulletin",
+  "presences.statistics.manage.events.inventory.method": "Recenser les absences",
+  "presences.statistics.manage.events.inventory.method.day": "par jour",
+  "presences.statistics.manage.events.inventory.method.half_day": "par demi-journée",
+  "presences.statistics.manage.events.inventory.method.hour": "par heure",
+  "presences.statistics.manage.event.inventory.method.load.error": "Comptage des événements: une erreur est survenue lors de la récupération du paramètrage",
+  "presences.statistics.manage.event.inventory.method.save.error": "Comptage des événements: une erreur est survenue lors de la sauvegarde du paramètrage",
+  "presences.statistics.manage.event.inventory.method.save.confirm": "Comptage des événements: modification enregistrée avec succés"
 }
