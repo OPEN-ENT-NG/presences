@@ -169,7 +169,7 @@
   "presences.widgets.register": "Appel en cours",
   "presences.widgets.day_presences": "Présences du jour",
   "presences.statistics.manage.title": "Comptage des événements",
-  "presences.statistics.manage.description": "Sélectionnez ici la façon de recencer les absences, retards et autres événements dans Présences. Ce comptage intervient dans Alerts, Statistiques, Publipostage, Bulletin",
+  "presences.statistics.manage.description": "Sélectionnez ici la façon de recencer les absences, retards et autres événements dans Présences. Ce comptage intervient dans Alertes, Statistiques, Publipostage, Bulletin",
   "presences.statistics.manage.events.inventory.method": "Recenser les absences",
   "presences.statistics.manage.events.inventory.method.day": "par jour",
   "presences.statistics.manage.events.inventory.method.half_day": "par demi-journée",

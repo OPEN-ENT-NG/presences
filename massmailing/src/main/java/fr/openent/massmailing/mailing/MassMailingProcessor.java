@@ -4,8 +4,10 @@ import fr.openent.massmailing.Massmailing;
 import fr.openent.massmailing.enums.MailingType;
 import fr.openent.massmailing.enums.MassmailingType;
 import fr.openent.massmailing.enums.TemplateCode;
+import fr.openent.presences.common.helper.DateHelper;
 import fr.openent.presences.common.helper.FutureHelper;
 import fr.openent.presences.common.presences.Presences;
+import fr.openent.presences.common.viescolaire.Viescolaire;
 import fr.openent.presences.enums.EventType;
 import fr.wseduc.webutils.Either;
 import io.vertx.core.CompositeFuture;
@@ -20,10 +22,8 @@ import org.entcore.common.neo4j.Neo4jResult;
 import org.entcore.common.sql.Sql;
 import org.entcore.common.sql.SqlResult;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.List;
+import java.text.ParseException;
+import java.util.*;
 
 public abstract class MassMailingProcessor implements Mailing {
     Logger LOGGER = LoggerFactory.getLogger(MassMailingProcessor.class);
@@ -62,7 +62,10 @@ public abstract class MassMailingProcessor implements Mailing {
         Future<JsonObject> relativeFuture = Future.future();
         Future<JsonObject> eventsFuture = Future.future();
         Future<JsonObject> reasonsFuture = Future.future();
-        CompositeFuture.all(templateFuture, relativeFuture, eventsFuture, reasonsFuture).setHandler(asyncResult -> {
+        Future<JsonArray> slotsFutures = Future.future();
+        Future<JsonObject> settingFutures = Future.future();
+        Future<JsonObject> recoveryFuture = Future.future();
+        CompositeFuture.all(Arrays.asList(templateFuture, relativeFuture, eventsFuture, reasonsFuture, slotsFutures, settingFutures, recoveryFuture)).setHandler(asyncResult -> {
             if (asyncResult.failed()) {
                 LOGGER.error("[Massmailing@MassMailingProcessor] Failed to process", asyncResult.cause());
                 handler.handle(new Either.Left<>(asyncResult.cause().toString()));
@@ -72,9 +75,12 @@ public abstract class MassMailingProcessor implements Mailing {
             JsonObject events = eventsFuture.result();
             JsonObject relatives = relativeFuture.result();
             JsonArray massmailings = formatData(events, relatives, reasons);
+            JsonArray slots = slotsFutures.result();
+            JsonObject settings = settingFutures.result();
+            String recoveryMethod = recoveryFuture.result().containsKey("event_recovery_method") ? recoveryFuture.result().getString("event_recovery_method") : "HALF_DAY";
 
             for (int i = 0; i < massmailings.size(); i++) {
-                JsonObject massmailing = massmailings.getJsonObject(i);
+                JsonObject massmailing = formatMassmailingBasedOnRecoveryMethod(massmailings.getJsonObject(i), slots, recoveryMethod, settings.getString("end_of_half_day"));
                 HashMap<TemplateCode, Object> codeValues = new HashMap<>();
                 codeValues.put(TemplateCode.CHILD_NAME, massmailing.getString("studentDisplayName", ""));
                 codeValues.put(TemplateCode.CLASS_NAME, massmailing.getString("className", ""));
@@ -90,6 +96,77 @@ public abstract class MassMailingProcessor implements Mailing {
         retrieveRelatives(FutureHelper.handlerJsonObject(relativeFuture));
         template.init(FutureHelper.handlerJsonObject(templateFuture));
         fetchReasons(FutureHelper.handlerJsonObject(reasonsFuture));
+        Viescolaire.getInstance().getDefaultSlots(this.structure, FutureHelper.handlerJsonArray(slotsFutures));
+        Viescolaire.getInstance().getSlotProfileSetting(this.structure, FutureHelper.handlerJsonObject(settingFutures));
+        Presences.getInstance().getSettings(this.structure, FutureHelper.handlerJsonObject(recoveryFuture));
+    }
+
+
+    private String transformDate(String date, String slotHour) {
+        try {
+            Calendar slotCal = Calendar.getInstance();
+            slotCal.setTime(DateHelper.parse(slotHour, "HH:mm:ss"));
+
+            Calendar dateCal = Calendar.getInstance();
+            dateCal.setTime(DateHelper.parse(date, DateHelper.SQL_DATE_FORMAT));
+            dateCal.set(Calendar.HOUR_OF_DAY, slotCal.get(Calendar.HOUR_OF_DAY));
+            dateCal.set(Calendar.MINUTE, slotCal.get(Calendar.MINUTE));
+            dateCal.set(Calendar.SECOND, slotCal.get(Calendar.SECOND));
+            return DateHelper.getPsqlSimpleDateFormat().format(dateCal.getTime());
+        } catch (ParseException e) {
+            LOGGER.error("[Massmailing@MassMailingProcessor] Failed to transform date", e);
+            return "";
+        }
+    }
+
+    private JsonObject formatMassmailingBasedOnRecoveryMethod(JsonObject massmailing, JsonArray slots, String recoveryMethod, String midHour) {
+        if ("HOUR".equals(recoveryMethod) || slots.isEmpty() || !massmailing.getJsonObject("events", new JsonObject()).containsKey("ABSENCE")) {
+            return massmailing;
+        }
+
+        if (massmailing.getJsonObject("events").containsKey("ABSENCE")) {
+            String startMorningHour = slots.getJsonObject(0).getString("start_hour");
+            String endAfternoonHour = slots.getJsonObject(slots.size() - 1).getString("end_hour");
+            String startAfternoonHour = startAfternoonHour(midHour, slots);
+            JsonArray absences = massmailing.getJsonObject("events").getJsonArray("ABSENCE");
+            for (int i = 0; i < absences.size(); i++) {
+                JsonObject absence = absences.getJsonObject(i);
+                switch (recoveryMethod) {
+                    case "DAY":
+                        absence.put("start_date", transformDate(absence.getString("start_date"), startMorningHour));
+                        absence.put("end_date", transformDate(absence.getString("end_date"), endAfternoonHour));
+                        break;
+                    case "HALF_DAY":
+                    default:
+                        String period = absence.getString("period");
+                        absence.put("start_date", transformDate(absence.getString("start_date"), "MORNING".equals(period) ? startMorningHour : startAfternoonHour));
+                        absence.put("end_date", transformDate(absence.getString("end_date"), "MORNING".equals(period) ? midHour : endAfternoonHour));
+
+                }
+            }
+        }
+
+        if (massmailing.getJsonObject("events").containsKey("LATENESS")) {
+            JsonArray latenesses = new JsonArray();
+            JsonArray values = massmailing.getJsonObject("events").getJsonArray("LATENESS");
+            for (int i = 0; i < values.size(); i++) {
+                JsonObject lateness = values.getJsonObject(i);
+                latenesses.addAll(lateness.getJsonArray("events"));
+            }
+            massmailing.getJsonObject("events").put("LATENESS", latenesses);
+        }
+        return massmailing;
+    }
+
+    private String startAfternoonHour(String midHour, JsonArray slots) {
+        for (int i = 0; i < slots.size(); i++) {
+            if (midHour.equals(slots.getJsonObject(i).getString("end_hour"))) {
+                int index = i < slots.size() ? i + 1 : i;
+                return slots.getJsonObject(index).getString("start_hour");
+            }
+        }
+
+        return "12:00:00";
     }
 
     private void fetchReasons(Handler<Either<String, JsonObject>> handler) {

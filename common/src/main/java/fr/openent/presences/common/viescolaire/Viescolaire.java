@@ -1,5 +1,6 @@
 package fr.openent.presences.common.viescolaire;
 
+import fr.openent.presences.common.message.MessageResponseHandler;
 import fr.wseduc.webutils.Either;
 import io.vertx.core.Handler;
 import io.vertx.core.eventbus.EventBus;
@@ -40,6 +41,31 @@ public class Viescolaire {
             JsonObject body = (JsonObject) result.result().body();
             if (result.failed() || "error".equals(body.getString("status"))) {
                 String err = "[Common@ViescolaireHelper] Failed to retrieve exclusion days";
+                LOGGER.error(err);
+                handler.handle(new Either.Left<>(err));
+            } else {
+                handler.handle(new Either.Right<>(body.getJsonArray("results")));
+            }
+        });
+    }
+
+    public void getSlotProfileSetting(String structureId, Handler<Either<String, JsonObject>> handler) {
+        JsonObject action = new JsonObject()
+                .put("action", "timeslot.getSlotProfileSettings")
+                .put("structureId", structureId);
+
+        eb.send(address, action, MessageResponseHandler.messageJsonObjectHandler(handler));
+    }
+
+    public void getDefaultSlots(String structureId, Handler<Either<String, JsonArray>> handler) {
+        JsonObject action = new JsonObject()
+                .put("action", "timeslot.getDefaultSlots")
+                .put("structureId", structureId);
+
+        eb.send(address, action, result -> {
+            JsonObject body = (JsonObject) result.result().body();
+            if (result.failed() || "error".equals(body.getString("status"))) {
+                String err = "[Common@ViescolaireHelper] Failed to retrieve default slots";
                 LOGGER.error(err);
                 handler.handle(new Either.Left<>(err));
             } else {

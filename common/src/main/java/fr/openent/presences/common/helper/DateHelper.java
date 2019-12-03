@@ -16,6 +16,7 @@ public class DateHelper {
     private static final Logger LOGGER = LoggerFactory.getLogger(DateHelper.class);
     public static final Integer TOLERANCE = 3000;
     public static final String SQL_FORMAT = "yyyy-MM-dd'T'HH:mm:ss";
+    public static final String SQL_DATE_FORMAT = "yyyy-MM-dd HH:mm:ss.SSSSSSZ";
     public static final String MONGO_FORMAT = "yyyy-MM-dd HH:mm:ss";
 
     public static final String YEAR_MONTH_DAY = "yyyy-MM-dd";
@@ -59,6 +60,15 @@ public class DateHelper {
      */
     public static SimpleDateFormat getPsqlSimpleDateFormat() {
         return new SimpleDateFormat(SQL_FORMAT);
+    }
+
+    /**
+     * Get Simple format date as PostgreSQL date format
+     *
+     * @return Simple date format
+     */
+    public static SimpleDateFormat getPsqlDateSimpleDateFormat() {
+        return new SimpleDateFormat(SQL_DATE_FORMAT);
     }
 
     public static SimpleDateFormat getMongoSimpleDateFormat() {

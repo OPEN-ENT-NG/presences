@@ -64,6 +64,13 @@ public class Presences {
         eb.send(address, action, MessageResponseHandler.messageJsonArrayHandler(handler));
     }
 
+    public void getSettings(String structure, Handler<Either<String, JsonObject>> handler) {
+        JsonObject action = new JsonObject()
+                .put("structure", structure)
+                .put("action", "get-settings");
+        eb.send(address, action, MessageResponseHandler.messageJsonObjectHandler(handler));
+    }
+
     private static class PresencesHolder {
         private static final Presences instance = new Presences();
 

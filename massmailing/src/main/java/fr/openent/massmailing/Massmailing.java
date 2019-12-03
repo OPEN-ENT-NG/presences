@@ -5,6 +5,7 @@ import fr.openent.massmailing.controller.SettingsController;
 import fr.openent.massmailing.enums.MailingType;
 import fr.openent.massmailing.starter.DatabaseStarter;
 import fr.openent.presences.common.presences.Presences;
+import fr.openent.presences.common.viescolaire.Viescolaire;
 import fr.wseduc.webutils.email.EmailSender;
 import io.vertx.core.eventbus.EventBus;
 import io.vertx.core.json.JsonObject;
@@ -38,6 +39,7 @@ public class Massmailing extends BaseServer {
         addController(new SettingsController(eb));
 
         Presences.getInstance().init(eb);
+        Viescolaire.getInstance().init(eb);
 
         vertx.setTimer(30000, handle -> new DatabaseStarter().init());
     }

@@ -2,8 +2,10 @@ package fr.openent.presences.controller;
 
 import fr.openent.presences.service.EventService;
 import fr.openent.presences.service.ReasonService;
+import fr.openent.presences.service.SettingsService;
 import fr.openent.presences.service.impl.DefaultEventService;
 import fr.openent.presences.service.impl.DefaultReasonService;
+import fr.openent.presences.service.impl.DefaultSettingsService;
 import fr.wseduc.bus.BusAddress;
 import io.vertx.core.eventbus.EventBus;
 import io.vertx.core.eventbus.Message;
@@ -18,6 +20,7 @@ public class EventBusController extends ControllerHelper {
 
     private EventService eventService;
     private ReasonService reasonService = new DefaultReasonService();
+    private SettingsService settingsService = new DefaultSettingsService();
 
     public EventBusController(EventBus eb) {
         this.eventService = new DefaultEventService(eb);
@@ -66,6 +69,10 @@ public class EventBusController extends ControllerHelper {
             case "get-reasons":
                 structure = body.getString("structure");
                 this.reasonService.fetchReason(structure, BusResponseHandler.busArrayHandler(message));
+                break;
+            case "get-settings":
+                structure = body.getString("structure");
+                this.settingsService.retrieve(structure, BusResponseHandler.busResponseHandler(message));
                 break;
             default:
                 message.reply(new JsonObject()
