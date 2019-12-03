@@ -29,4 +29,6 @@ public class Actions {
     public static final String EXEMPTION_UPDATE = "EXEMPTION_UPDATE";
     // A user deletes an exemption
     public static final String EXEMPTION_DELETION = "EXEMPTION_DELETION";
+    // A user update structure settings
+    public static final String SETTING_UPDATE = "SETTING_UPDATE";
 }

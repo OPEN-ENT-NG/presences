@@ -1,5 +1,6 @@
 package fr.openent.presences.controller;
 
+import fr.openent.presences.constants.Actions;
 import fr.openent.presences.security.Manage;
 import fr.openent.presences.security.SettingFilter;
 import fr.openent.presences.service.SettingsService;
@@ -13,6 +14,7 @@ import fr.wseduc.webutils.request.RequestUtils;
 import io.vertx.core.http.HttpServerRequest;
 import org.entcore.common.controller.ControllerHelper;
 import org.entcore.common.http.filter.ResourceFilter;
+import org.entcore.common.http.filter.Trace;
 
 import static org.entcore.common.http.response.DefaultResponseHandler.defaultResponseHandler;
 
@@ -30,6 +32,7 @@ public class SettingsController extends ControllerHelper {
     @Put("/structures/:id/settings")
     @SecuredAction(value = "", type = ActionType.RESOURCE)
     @ResourceFilter(SettingFilter.class)
+    @Trace(Actions.SETTING_UPDATE)
     @ApiDoc("Update settings for given structure identifier")
     public void put(HttpServerRequest request) {
         RequestUtils.bodyToJson(request, pathPrefix + "settings", settings -> settingsService.put(request.getParam("id"), settings, defaultResponseHandler(request)));
