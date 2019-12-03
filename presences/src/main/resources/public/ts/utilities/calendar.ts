@@ -52,8 +52,14 @@ export class CalendarUtils {
             if (item === undefined || item === null) return;
             if ((item.parentNode as Element).querySelector('.globalAbsence')) {
                 item.setAttribute("class", "schedule-item schedule-globalAbsence");
+                item.removeAttribute("resizable");
+                item.removeAttribute("draggable");
+                item.removeAttribute("horizontal-resize-lock");
             } else if ((item.parentNode as Element).querySelector('.globalAbsenceReason')) {
                 item.setAttribute("class", "schedule-item schedule-globalAbsenceReason");
+                item.removeAttribute("resizable");
+                item.removeAttribute("draggable");
+                item.removeAttribute("horizontal-resize-lock");
             } else {
                 item.setAttribute("class", "schedule-item schedule-course");
             }
@@ -61,7 +67,6 @@ export class CalendarUtils {
 
         let absenceItems = items.filter(item =>
             item.getAttribute("class") === "schedule-item schedule-globalAbsence");
-
         let absenceReasonItems = items.filter(item =>
             item.getAttribute("class") === "schedule-item schedule-globalAbsenceReason");
 

@@ -57,6 +57,14 @@ public class Viescolaire {
         eb.send(address, action, MessageResponseHandler.messageJsonObjectHandler(handler));
     }
 
+    public void getSlotProfiles(String structureId, Handler<Either<String, JsonObject>> handler) {
+        JsonObject action = new JsonObject()
+                .put("action", "timeslot.getSlotProfiles")
+                .put("structureId", structureId);
+
+        eb.send(address, action, MessageResponseHandler.messageJsonObjectHandler(handler));
+    }
+
     public void getDefaultSlots(String structureId, Handler<Either<String, JsonArray>> handler) {
         JsonObject action = new JsonObject()
                 .put("action", "timeslot.getDefaultSlots")

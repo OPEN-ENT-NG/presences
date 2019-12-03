@@ -37,19 +37,34 @@ export interface CalendarService {
 }
 
 export const CalendarService = ng.service('CalendarService', (): CalendarService => ({
-    getCourses: async (structureId: string, user: string, start: string, end: string) => {
-        function containsAbsence(course: Course) {
+    getCourses: async (structureId: string, user: string, start: string, end: string): Promise<Array<Course>> => {
+        function containsAbsence(course: Course): boolean {
             let contains = false;
             course.events.map((event) => contains = contains ||
                 (event.type_id === EventType.ABSENCE && (event.reason_id === null || event.reason_id === 0)));
             return contains;
         }
 
-        function containsReasonAbsence(course: Course) {
+        function containsReasonAbsence(course: Course): boolean {
             let contains = false;
             course.events.map((event) => contains = contains ||
                 (event.type_id === EventType.ABSENCE && (event.reason_id !== null || event.reason_id > 0)));
             return contains;
+        }
+
+        function buildCalendarCourses(data): Array<Course> {
+            let dataModel = data;
+            dataModel.forEach(itemData => {
+                for (const k in itemData) {
+                    if (itemData.hasOwnProperty(k) && !itemData.hasOwnProperty("_id")) {
+                        itemData._id = itemData.id;
+                        itemData.is_periodic = itemData.periodic;
+                        itemData.is_recurrent = itemData.recurrent;
+                        itemData.subject_name = itemData.subjectName;
+                    }
+                }
+            });
+            return dataModel;
         }
 
         try {
@@ -64,7 +79,8 @@ export const CalendarService = ng.service('CalendarService', (): CalendarService
                 // create hash to fetch in html in order to recognize "absence" course
                 if (course.absence) course.hash = Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
             });
-            return data;
+            console.log("eventCOurse: ", buildCalendarCourses(data));
+            return buildCalendarCourses(data);
         } catch (err) {
             throw err;
         }

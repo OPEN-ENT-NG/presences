@@ -4,6 +4,7 @@ import fr.openent.presences.common.helper.DateHelper;
 import fr.openent.presences.model.Course;
 import fr.openent.presences.model.Slot;
 import fr.wseduc.webutils.Either;
+import io.vertx.core.Future;
 import io.vertx.core.Handler;
 import io.vertx.core.MultiMap;
 import io.vertx.core.eventbus.EventBus;
@@ -17,6 +18,7 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 public class CourseHelper {
@@ -43,6 +45,31 @@ public class CourseHelper {
         }
 
         return true;
+    }
+
+    public void getCoursesList(String structure, List<String> teachers, List<String> groups,
+                               String start, String end, Future<List<Course>> handler) {
+        getCoursesList(structure, teachers, groups, start, end, either -> {
+            if (either.isLeft()) {
+                String err = "[CourseHelper@getCourses] Failed to retrieve list courses";
+                LOGGER.error(err);
+                handler.fail(either.left().getValue());
+            } else {
+                handler.complete(either.right().getValue());
+            }
+        });
+    }
+
+    public void getCoursesList(String structure, List<String> teachers, List<String> groups,
+                               String start, String end, Handler<Either<String, List<Course>>> handler) {
+        getCourses(structure, teachers, groups, start, end, either -> {
+            if (either.isLeft()) {
+                String err = "[CourseHelper@getCourses] Failed to retrieve list courses";
+                LOGGER.error(err);
+                handler.handle(new Either.Left<>(err));
+            }
+            handler.handle(new Either.Right<>(CourseHelper.getCourseListFromJsonArray(either.right().getValue(), Course.MANDATORY_ATTRIBUTE)));
+        });
     }
 
     public void getCourses(String structure, List<String> teachers, List<String> groups, String start, String end, Handler<Either<String, JsonArray>> handler) {
@@ -89,11 +116,10 @@ public class CourseHelper {
         courses.stream()
                 .collect(Collectors.groupingBy(Course::getId))
                 .forEach((courseId, listCourses) -> {
-
                     if (listCourses.stream().anyMatch(listCourse -> listCourse.getRegisterId() != null)) {
-                        boolean isSplit = listCourses.stream()
+                        boolean isSplit = Objects.requireNonNull(listCourses.stream()
                                 .filter(listCourse -> listCourse.getRegisterId() != null)
-                                .findAny().get().isSplitSlot();
+                                .findAny().orElse(null)).isSplitSlot();
                         for (Course course : listCourses) {
                             if (course.isSplitSlot().equals(isSplit)) {
                                 formatCourses.add(course);
@@ -130,10 +156,10 @@ public class CourseHelper {
                 for (Slot slot : slots) {
                     Date slotStartHour = parser.parse(slot.getStartHour());
                     Date slotEndHour = parser.parse(slot.getEndHour());
-                    if ((startTime.before(slotStartHour) || startTime.equals(slotStartHour))
-                            && (endTime.after(slotEndHour) || endTime.equals(slotEndHour))
+                    if (((slotStartHour.after(startTime) || slotStartHour.equals(startTime)) || (startTime.before(slotEndHour)))
+                            && ((slotEndHour.before(endTime) || slotEndHour.equals(endTime)) || (endTime.after(slotStartHour)))
                             && !(course.getRegisterId() != null && !course.isSplitSlot())) {
-                        Course newCourse = treatingSplitSlot(course, slot);
+                        Course newCourse = treatingSplitSlot(course, slot, parser);
                         splitCoursesEvent.add(newCourse);
                     }
                 }
@@ -143,66 +169,54 @@ public class CourseHelper {
                 }
             }
         } catch (ParseException e) {
-            LOGGER.error("[Presences@CourseModel] Failed to parse date", e);
+            LOGGER.error("[Presences@CourseHelper] Failed to parse date [see DateHelper", e);
         }
         return splitCoursesEvent;
-    }
-
-    /**
-     * Check if each course has a split mode
-     * If it is true, we then split its courses in x slots
-     * (e.g Courses[09:00 - 12:00] would be split in [09:00-10:00], [09:00-11:00], [09:00-12:00])
-     * based on slots set as parameter
-     * If it is false, we kept its course element just as how it was created
-     *
-     * @param courses List of courses fetched
-     * @param slots   list of slot fetched from default time slots
-     * @return new courses (read above)
-     */
-    public static List<Course> checkSplitableSlot(List<Course> courses, List<Slot> slots) {
-        List<Course> checkedCourses = new ArrayList<>();
-        SimpleDateFormat parser = new SimpleDateFormat(DateHelper.HOUR_MINUTES_SECONDS);
-
-        for (Course course : courses) {
-            if (course.isSplitSlot()) {
-                try {
-                    Date startTime = parser.parse(DateHelper.getTimeString(course.getStartDate(), DateHelper.MONGO_FORMAT));
-                    Date endTime = parser.parse(DateHelper.getTimeString(course.getEndDate(), DateHelper.MONGO_FORMAT));
-                    for (Slot slot : slots) {
-                        Date slotStartHour = parser.parse(slot.getStartHour());
-                        Date slotEndHour = parser.parse(slot.getEndHour());
-                        if ((startTime.before(slotStartHour) || startTime.equals(slotStartHour))
-                                && (endTime.after(slotEndHour) || endTime.equals(slotEndHour))) {
-                            Course newCourse = treatingSplitSlot(course, slot);
-                            checkedCourses.add(newCourse);
-                        }
-                    }
-                } catch (ParseException e) {
-                    LOGGER.error("[Presences@CourseModel] Failed to parse date for checking splitable slot", e);
-                }
-            } else {
-                checkedCourses.add(course.clone());
-            }
-        }
-        return checkedCourses;
     }
 
     /**
      * Util function that compares the current course element and the current slot time
      * for treating split slot
      *
-     * @param course course element
-     * @param slot   slot element
+     * @param course    course element
+     * @param slot      slot element
+     * @param parser    Parse format
      * @return new course with new start and end time defined from the slot
      */
-    private static Course treatingSplitSlot(Course course, Slot slot) throws ParseException {
+    public static Course treatingSplitSlot(Course course, Slot slot, SimpleDateFormat parser) throws ParseException {
         String newStartDate = DateHelper.getDateString(course.getStartDate(), DateHelper.YEAR_MONTH_DAY);
-        String newStartTime = DateHelper.getTimeString(slot.getStartHour(), DateHelper.HOUR_MINUTES_SECONDS);
+        String newStartTime;
+        if (isCourseStartTimeAfterSlotStartTime(course, slot, parser)) {
+            newStartTime = DateHelper.getTimeString(course.getStartDate(), DateHelper.MONGO_FORMAT);
+        } else {
+            newStartTime = DateHelper.getTimeString(slot.getStartHour(), DateHelper.HOUR_MINUTES_SECONDS);
+        }
         String newEndDate = DateHelper.getDateString(course.getEndDate(), DateHelper.YEAR_MONTH_DAY);
-        String newEndTime = DateHelper.getTimeString(slot.getEndHour(), DateHelper.HOUR_MINUTES_SECONDS);
+        String newEndTime;
+        if (isCourseEndTimeBeforeSlotEndTime(course, slot, parser)) {
+            newEndTime = DateHelper.getTimeString(course.getEndDate(), DateHelper.MONGO_FORMAT);
+        } else {
+            newEndTime = DateHelper.getTimeString(slot.getEndHour(), DateHelper.HOUR_MINUTES_SECONDS);
+        }
         Course newCourse = course.clone();
         newCourse.setStartDate(newStartDate + " " + newStartTime);
         newCourse.setEndDate(newEndDate + " " + newEndTime);
         return newCourse;
+    }
+
+    private static boolean isCourseStartTimeAfterSlotStartTime(Course course, Slot slot, SimpleDateFormat parser) throws ParseException {
+        return parser.parse(DateHelper.getTimeString(course.getStartDate(), DateHelper.MONGO_FORMAT))
+                .after(parser.parse(DateHelper.getTimeString(slot.getStartHour(), DateHelper.HOUR_MINUTES_SECONDS)))
+                ||
+                parser.parse(DateHelper.getTimeString(course.getStartDate(), DateHelper.MONGO_FORMAT))
+                        .equals(parser.parse(DateHelper.getTimeString(slot.getStartHour(), DateHelper.HOUR_MINUTES_SECONDS)));
+    }
+
+    private static boolean isCourseEndTimeBeforeSlotEndTime(Course course, Slot slot, SimpleDateFormat parser) throws ParseException {
+        return parser.parse(DateHelper.getTimeString(course.getEndDate(), DateHelper.MONGO_FORMAT))
+                .before(parser.parse(DateHelper.getTimeString(slot.getEndHour(), DateHelper.HOUR_MINUTES_SECONDS)))
+                ||
+                parser.parse(DateHelper.getTimeString(course.getEndDate(), DateHelper.MONGO_FORMAT))
+                        .equals(parser.parse(DateHelper.getTimeString(slot.getEndHour(), DateHelper.HOUR_MINUTES_SECONDS)));
     }
 }
