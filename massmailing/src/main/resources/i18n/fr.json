@@ -83,5 +83,6 @@
   "massmailing.false": "Non",
   "massmailing.unnecessary": "Non nécessaire",
   "massmailing.mail.subject": "{0} - Vie scolaire",
-  "massmailing.in-progress": "Publipostage en cours. L'opération peut prendre quelques minutes..."
+  "massmailing.in-progress": "Publipostage en cours. L'opération peut prendre quelques minutes...",
+  "massmailing.reasons.multiple": "Motifs multiples"
 }

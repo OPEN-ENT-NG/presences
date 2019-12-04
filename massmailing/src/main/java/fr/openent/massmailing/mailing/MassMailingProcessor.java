@@ -213,11 +213,16 @@ public abstract class MassMailingProcessor implements Mailing {
         List<EventType> EventTypeDescriptor = Arrays.asList(EventType.ABSENCE, EventType.LATENESS);
         for (int i = 0; i < events.size(); i++) {
             JsonObject event = events.getJsonObject(i);
-            Integer reasonId = event.getInteger("reason_id");
-            if (reasonId != null) {
-                event.put("reason", reasons.getJsonObject(reasonId.toString()).getString("label"));
-                event.put("proving", reasons.getJsonObject(reasonId.toString()).getBoolean("proving"));
+            JsonArray eventEvts = event.getJsonArray("events");
+            for (int j = 0; j < eventEvts.size(); j++) {
+                JsonObject evt = eventEvts.getJsonObject(j);
+                Integer reasonId = evt.getInteger("reason_id");
+                if (reasonId != null) {
+                    evt.put("reason", reasons.getJsonObject(reasonId.toString()).getString("label"));
+                    evt.put("proving", reasons.getJsonObject(reasonId.toString()).getBoolean("proving"));
+                }
             }
+
             EventType evtType = EventTypeDescriptor.get(event.getInteger("type_id") - 1);
             res.getJsonArray(evtType.name()).add(event);
         }

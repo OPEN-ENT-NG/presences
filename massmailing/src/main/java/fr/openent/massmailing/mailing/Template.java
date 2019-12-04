@@ -18,10 +18,7 @@ import io.vertx.core.logging.LoggerFactory;
 import org.entcore.common.bus.WorkspaceHelper;
 
 import java.text.ParseException;
-import java.util.ArrayList;
-import java.util.Base64;
-import java.util.HashMap;
-import java.util.List;
+import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -166,7 +163,7 @@ public class Template {
                         try {
                             String line = "<tr><td>" + DateHelper.getDateString(event.getString("start_date"), DateHelper.DAY_MONTH_YEAR) + "</td>";
                             line += "<td>" + DateHelper.getTimeString(event.getString("start_date"), DateHelper.SQL_FORMAT) + " - " + DateHelper.getTimeString(event.getString("end_date"), DateHelper.SQL_FORMAT) + "</td>";
-                            line += "<td>" + event.getString("reason", "") + "</td>";
+                            line += "<td>" + getReasonLabel(event) + "</td>";
                             line += "<td>" + getRegularisedLabel(event) + "</td></tr>";
                             summary += line;
                         } catch (ParseException | NullPointerException e) {
@@ -181,6 +178,19 @@ public class Template {
         }
 
         return summary;
+    }
+
+    private String getReasonLabel(JsonObject event) {
+        String multipleValues = I18n.getInstance().translate("massmailing.reasons.multiple", domain, locale);
+        JsonArray events = event.getJsonArray("events");
+        if (events.isEmpty()) return "";
+        List<String> reasons = new ArrayList<>();
+        for (int i = 0; i < events.size(); i++) {
+            reasons.add(events.getJsonObject(i).getString("reason"));
+        }
+
+        Set<String> values = new HashSet<>(reasons);
+        return values.size() == 1 ? events.getJsonObject(0).getString("reason", "") : multipleValues;
     }
 
     private String getRegularisedLabel(JsonObject event) {
