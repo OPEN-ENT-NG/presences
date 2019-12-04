@@ -386,7 +386,7 @@ public abstract class MassMailingProcessor implements Mailing {
             JsonArray list = events.getJsonArray(key);
             for (int i = 0; i < list.size(); i++) {
                 JsonObject item = list.getJsonObject(i);
-                JsonArray embedEvts = item.getJsonArray("events");
+                JsonArray embedEvts = item.getJsonArray("events", new JsonArray().add(item));
                 for (int j = 0; j < embedEvts.size(); j++) {
                     JsonObject evt = embedEvts.getJsonObject(j);
                     evts.add(new JsonObject().put("id", evt.getInteger("id")).put("type", key));
