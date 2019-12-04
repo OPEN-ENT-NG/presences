@@ -156,14 +156,16 @@ public class Template {
                     summary += getCSSStyle();
                     summary += "<div>" + I18n.getInstance().translate("massmailing.summary." + key, domain, locale) + ":</div>";
                     summary += "<table>";
-                    summary += getHTMLHeader();
+                    summary += getHTMLHeader(key);
                     summary += "<tbody>";
                     for (int i = 0; i < eventsKey.size(); i++) {
                         JsonObject event = eventsKey.getJsonObject(i);
                         try {
                             String line = "<tr><td>" + DateHelper.getDateString(event.getString("start_date"), DateHelper.DAY_MONTH_YEAR) + "</td>";
                             line += "<td>" + DateHelper.getTimeString(event.getString("start_date"), DateHelper.SQL_FORMAT) + " - " + DateHelper.getTimeString(event.getString("end_date"), DateHelper.SQL_FORMAT) + "</td>";
-                            line += "<td>" + getReasonLabel(event) + "</td>";
+                            if (!"LATENESS".equals(key)) {
+                                line += "<td>" + getReasonLabel(event) + "</td>";
+                            }
                             line += "<td>" + getRegularisedLabel(event) + "</td></tr>";
                             summary += line;
                         } catch (ParseException | NullPointerException e) {
@@ -182,6 +184,7 @@ public class Template {
 
     private String getReasonLabel(JsonObject event) {
         String multipleValues = I18n.getInstance().translate("massmailing.reasons.multiple", domain, locale);
+        String noneValue = I18n.getInstance().translate("massmailing.reasons.none", domain, locale);
         JsonArray events = event.getJsonArray("events", new JsonArray());
         // Trick. In case of lateness event, event does not contains events array. In this case, we use event as an array of itself.
         if (events.isEmpty()) events = new JsonArray().add(event);
@@ -191,31 +194,69 @@ public class Template {
         }
 
         Set<String> values = new HashSet<>(reasons);
-        return values.size() == 1 ? events.getJsonObject(0).getString("reason", "") : multipleValues;
+        return values.size() == 1 ? events.getJsonObject(0).getString("reason", noneValue) : multipleValues;
     }
 
     private String getRegularisedLabel(JsonObject event) {
         String yesLabel = I18n.getInstance().translate("massmailing.true", domain, locale);
         String noLabel = I18n.getInstance().translate("massmailing.false", domain, locale);
         String unnecessaryLabel = I18n.getInstance().translate("massmailing.unnecessary", domain, locale);
-        if (!event.containsKey("reason")) return noLabel;
-        if (event.containsKey("counsellor_regularisation") && event.getBoolean("counsellor_regularisation"))
-            return yesLabel;
-        if (event.containsKey("reason") && !event.getBoolean("counsellor_regularisation")) return noLabel;
-        if (event.containsKey("reason") && event.getBoolean("proving")) return unnecessaryLabel;
+        JsonArray events = event.getJsonArray("events", new JsonArray().add(event));
+        if (!allContainsReasons(events)) return noLabel;
+        if (allRegularized(events)) return yesLabel;
+        if (allProving(events)) return unnecessaryLabel;
+        if (allContainsReasons(events) && !allRegularized(events)) return noLabel;
         return "";
+    }
+
+    private boolean allRegularized(JsonArray events) {
+        boolean allRegularised = true;
+        for (int i = 0; i < events.size(); i++) {
+            allRegularised = allRegularised && (events.getJsonObject(i).getBoolean("counsellor_regularisation", false));
+        }
+
+        return allRegularised;
+    }
+
+    private boolean allContainsReasons(JsonArray events) {
+        boolean hasReason = true;
+        for (int i = 0; i < events.size(); i++) {
+            hasReason = hasReason && events.getJsonObject(i).containsKey("reason");
+        }
+
+        return hasReason;
+    }
+
+    private boolean allProving(JsonArray events) {
+        if (events.isEmpty()) return true;
+        List<Boolean> provings = new ArrayList<>();
+        for (int i = 0; i < events.size(); i++) {
+            JsonObject event = events.getJsonObject(i);
+            provings.add(event.getBoolean("proving"));
+        }
+
+        return (
+                // All events contains a reason
+                allContainsReasons(events)
+        ) && (
+                // All events are proving
+                new HashSet<>(provings).size() == 1 && events.getJsonObject(0).getBoolean("proving")
+        );
     }
 
     private String getCSSStyle() {
         return "<style>table{border-collapse:collapse}table thead tr{background:#fff;box-shadow:0 4px 6px rgba(0,0,0,.12);border-bottom:none}td{padding:5px 15px}tr{border-bottom:1px solid #ccc;background:0 0}</style>";
     }
 
-    private String getHTMLHeader() {
+    private String getHTMLHeader(String type) {
         String dateLabel = I18n.getInstance().translate("massmailing.date", domain, locale);
         String hoursLabel = I18n.getInstance().translate("massmailing.hours", domain, locale);
-        String reasonLabel = I18n.getInstance().translate("massmailing.reason", domain, locale);
+        String reasonHeader = "";
+        if (!"LATENESS".equals(type)) {
+            String reasonLabel = I18n.getInstance().translate("massmailing.reason", domain, locale);
+            reasonHeader = "<td>" + reasonLabel + "</td>";
+        }
         String regularizedLabel = I18n.getInstance().translate("massmailing.regularized", domain, locale);
-        String header = "<thead><tr><td>" + dateLabel + "</td><td>" + hoursLabel + "</td><td>" + reasonLabel + "</td><td>" + regularizedLabel + "</td></tr></thead>";
-        return header;
+        return "<thead><tr><td>" + dateLabel + "</td><td>" + hoursLabel + "</td>" + reasonHeader + "<td>" + regularizedLabel + "</td></tr></thead>";
     }
 }
