@@ -544,9 +544,17 @@ export const registersController = ng.controller('RegistersController',
                 return className[index] || '';
             };
 
-            vm.isCurrentSlot = function (slot) {
+            vm.isCurrentSlot = function (slot: { start: string, end: string }) {
                 // return Math.abs(moment(slot.start).diff(vm.register.start_date)) < 3000 && Math.abs(moment(slot.end).diff(vm.register.end_date)) < 3000;
-                return ((slot.start >= vm.register.start_date) || (vm.register.start_date < slot.end)) && (slot.end <= vm.register.end_date);
+                let registerStartDate = DateUtils.format(vm.register.start_date, DateUtils.FORMAT["YEAR-MONTH-DAY-HOUR-MIN-SEC"]);
+                let registerEndDate = DateUtils.format(vm.register.end_date, DateUtils.FORMAT["YEAR-MONTH-DAY-HOUR-MIN-SEC"]);
+                let slotStart = DateUtils.format(slot.start, DateUtils.FORMAT["YEAR-MONTH-DAY-HOUR-MIN-SEC"]);
+                let slotEnd = DateUtils.format(slot.end, DateUtils.FORMAT["YEAR-MONTH-DAY-HOUR-MIN-SEC"]);
+
+                return ((slotStart >= registerStartDate) && (registerStartDate < slotEnd))
+                    &&
+                    ((slotEnd <= registerEndDate) || (registerEndDate > slotStart));
+
             };
 
             vm.loadCourses = async function (users: string[] = [model.me.userId], groups: string[] = [], structure: string = window.structure.id,
@@ -558,7 +566,7 @@ export const registersController = ng.controller('RegistersController',
                 await vm.courses.sync(users, groups, structure, start_date, end_date, forgotten_registers, multipleSlot);
             };
 
-            vm.isFuturCourse = function (course) {
+            vm.isFuturCourse = function (course: Course) {
                 if (!course) return true;
                 return moment().isSameOrBefore(course.startDate);
             };
