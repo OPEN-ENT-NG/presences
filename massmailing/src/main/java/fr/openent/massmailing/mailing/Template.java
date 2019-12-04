@@ -182,7 +182,7 @@ public class Template {
 
     private String getReasonLabel(JsonObject event) {
         String multipleValues = I18n.getInstance().translate("massmailing.reasons.multiple", domain, locale);
-        JsonArray events = event.getJsonArray("events");
+        JsonArray events = event.getJsonArray("events", new JsonArray());
         if (events.isEmpty()) return "";
         List<String> reasons = new ArrayList<>();
         for (int i = 0; i < events.size(); i++) {
