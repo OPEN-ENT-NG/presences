@@ -183,7 +183,8 @@ public class Template {
     private String getReasonLabel(JsonObject event) {
         String multipleValues = I18n.getInstance().translate("massmailing.reasons.multiple", domain, locale);
         JsonArray events = event.getJsonArray("events", new JsonArray());
-        if (events.isEmpty()) return "";
+        // Trick. In case of lateness event, event does not contains events array. In this case, we use event as an array of itself.
+        if (events.isEmpty()) events = new JsonArray().add(event);
         List<String> reasons = new ArrayList<>();
         for (int i = 0; i < events.size(); i++) {
             reasons.add(events.getJsonObject(i).getString("reason"));
