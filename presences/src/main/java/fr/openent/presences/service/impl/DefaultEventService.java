@@ -601,7 +601,7 @@ public class DefaultEventService implements EventService {
                 .addAll(new JsonArray(eventTypes));
 
         if ("HALF_DAY".equals(recoveryMethod)) {
-            query += " AND event.start_date::time between time '" + startTime + "' and time '" + endTime + "'";
+            query += " AND event.start_date::time >= '" + startTime + "' AND event.start_date::time <= '" + endTime + "'";
         }
 
         if (!students.isEmpty()) {
