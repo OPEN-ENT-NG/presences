@@ -173,7 +173,7 @@
   "presences.statistics.manage.events.inventory.method": "Recenser les absences",
   "presences.statistics.manage.events.inventory.method.day": "par jour",
   "presences.statistics.manage.events.inventory.method.half_day": "par demi-journée",
-  "presences.statistics.manage.events.inventory.method.hour": "par heure",
+  "presences.statistics.manage.events.inventory.method.hour": "par créneau",
   "presences.statistics.manage.event.inventory.method.load.error": "Comptage des événements: une erreur est survenue lors de la récupération du paramètrage",
   "presences.statistics.manage.event.inventory.method.save.error": "Comptage des événements: une erreur est survenue lors de la sauvegarde du paramètrage",
   "presences.statistics.manage.event.inventory.method.save.confirm": "Comptage des événements: modification enregistrée avec succés"
