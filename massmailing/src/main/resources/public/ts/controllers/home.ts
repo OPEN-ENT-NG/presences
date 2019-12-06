@@ -170,7 +170,7 @@ export const homeController = ng.controller('HomeController', ['$scope', 'route'
         vm.loadData = async function () {
             if (!window.structure) return;
             vm.reasons = await ReasonService.getReasons(window.structure.id);
-            vm.reasons.map((reason: Reason) => vm.filter.reasons[reason.id] = !reason.proving);
+            vm.reasons.map((reason: Reason) => vm.filter.reasons[reason.id] = vm.filter.status.JUSTIFIED);
             vm.fetchData();
             $scope.$apply();
         };
@@ -300,16 +300,13 @@ export const homeController = ng.controller('HomeController', ['$scope', 'route'
         vm.switchToJustifiedAbsences = function () {
             vm.formFilter.status.JUSTIFIED = !vm.formFilter.status.JUSTIFIED;
             vm.reasons.forEach(function (reason: Reason) {
-                if (reason.proving) vm.formFilter.reasons[reason.id] = vm.formFilter.status.JUSTIFIED;
+                vm.formFilter.reasons[reason.id] = vm.formFilter.status.JUSTIFIED;
             });
         };
 
         vm.switchToUnjustifiedAbsences = function () {
             vm.formFilter.status.UNJUSTIFIED = !vm.formFilter.status.UNJUSTIFIED;
             vm.formFilter.noReasons = vm.formFilter.status.UNJUSTIFIED;
-            vm.reasons.forEach(function (reason: Reason) {
-                if (!reason.proving) vm.formFilter.reasons[reason.id] = vm.formFilter.status.UNJUSTIFIED;
-            });
         };
 
         function checkFilter() {
@@ -322,7 +319,7 @@ export const homeController = ng.controller('HomeController', ['$scope', 'route'
             }
 
             const {noReasons, massmailing_status, status, reasons} = vm.filter;
-            const reasonCheck = allIsFalse(reasons) && !noReasons;
+            const reasonCheck = (!status.UNJUSTIFIED && !status.JUSTIFIED && status.LATENESS) ? false : (allIsFalse(reasons) && !noReasons);
             const massmailingStatusCheck = allIsFalse(massmailing_status);
             const statusCheck = allIsFalse(status);
 

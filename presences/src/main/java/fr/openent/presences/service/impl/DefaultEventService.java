@@ -609,7 +609,8 @@ public class DefaultEventService implements EventService {
             params.addAll(new JsonArray(students));
         }
         if (justified != null) {
-            query += " AND (counsellor_regularisation = " + (justified ? "true) " : "false OR reason_id IS NULL) ");
+//            query += " AND (counsellor_regularisation = " + (justified ? "true) " : "false OR reason_id IS NULL) ");
+            query += " AND reason_id IS " + (justified ? "NOT" : "") + " NULL ";
         }
         if (!reasonsId.isEmpty()) {
             query += " AND (reason_id IN " + Sql.listPrepared(reasonsId) + (noReasons ? " OR reason_id IS NULL" : "") + ") ";
