@@ -75,8 +75,8 @@
 </div>
 
 <!-- Event Type Filter -->
-<div class="row">
-    <div class="chips">
+<div class="row register">
+    <div class="chips cell">
         <label class="chip" ng-class="{selected: vm.filter.absences}"
                data-ng-click="vm.switchAbsencesFilter()">
             <i18n>presences.absence.absences</i18n>
@@ -93,5 +93,22 @@
                data-ng-click="vm.switchRegularizedFilter()">
             <i18n>presences.absence.regularized</i18n>
         </label>
+    </div>
+
+    <div class="card event-legend radius cell horizontal-margin">
+        <ul class="vertical-spacing-twice horizontal-margin">
+            <li class="absence">
+                <i18n>presences.register.event_type.absences</i18n>
+            </li>
+            <li class="absence-reason">
+                <i18n>presences.register.event_type.absences.reasons</i18n>
+            </li>
+            <li class="lateness">
+                <i18n>presences.register.event_type.lateness</i18n>
+            </li>
+            <li class="departure">
+                <i18n>presences.register.event_type.departure.early</i18n>
+            </li>
+        </ul>
     </div>
 </div>
