@@ -62,14 +62,12 @@ nav {
       .item {
         display: block;
         color: $grey;
-        padding: 10px;
+        padding-top: 5px;
         text-align: center;
         font-size: 24px;
         position: relative;
         width: 100%;
         box-sizing: border-box;
-        height: 52px;
-        line-height: 32px;
 
         &:hover {
           color: $presences-main !important;
@@ -136,6 +134,9 @@ nav {
 
     .label-navbar {
       font-size: 12px;
+      padding: 5px 0;
+      display: block;
+      line-height: 16px;
     }
   }
 
