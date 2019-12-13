@@ -1,5 +1,5 @@
-import {Course, Notebook} from "../services";
-import {moment} from "entcore";
+import {Course, CourseEvent, Notebook, TimeSlot} from "../services";
+import {_, moment} from "entcore";
 import {DateUtils} from "@common/utils";
 
 export class CalendarUtils {
@@ -38,7 +38,130 @@ export class CalendarUtils {
     }
 
     /**
+     * Rendering event containing absences in course
+     */
+    static renderAbsenceFromCourse(item: Course, event: CourseEvent, slots: Array<TimeSlot>) {
+        let absenceElement = document.getElementById(event.id.toString());
+        if (absenceElement && event.reason_id != null) {
+            absenceElement.style.backgroundColor = "#ff8a84"; // $presences-pink;
+        }
+        if (this.eventAbsenceHasSameTime(item, event)) {
+            return;
+        }
+        const daySlotHeight = document.querySelector(".day").clientHeight;
+        const oneTimeSlotHeight = daySlotHeight / slots.length;
+        let slotsIndexFetched = [];
+        slots.forEach(slot => {
+            let slotStart = DateUtils.getTimeFormat(slot.startHour);
+            let slotEnd = DateUtils.getTimeFormat(slot.endHour);
+            if (DateUtils.isBetween(event.start_date, event.end_date, slotStart, slotEnd,
+                DateUtils.FORMAT["HOUR-MINUTES"], DateUtils.FORMAT["HOUR-MINUTES"])) {
+                slotsIndexFetched.push(slots.findIndex(slotsItem => slotsItem._id === slot._id));
+            }
+        });
+        if (absenceElement) {
+            if (this.hasHalfTime(event, slots[slotsIndexFetched[0]])) {
+                absenceElement.style.height = `${((this.getMinuteInEventTime(event.start_date, event.end_date)) * oneTimeSlotHeight) / 60}px`;
+            } else {
+                absenceElement.style.height = `${oneTimeSlotHeight * slotsIndexFetched.length}px`;
+            }
+            absenceElement.style.position = 'relative';
+        }
+    }
+
+    private static hasHalfTime(event: CourseEvent, slot: TimeSlot): boolean {
+        let eventStartTime = DateUtils.format(event.start_date, DateUtils.FORMAT["HOUR-MINUTES"]);
+        let eventEndTime = DateUtils.format(event.end_date, DateUtils.FORMAT["HOUR-MINUTES"]);
+        let slotStartTime = DateUtils.format(DateUtils.getTimeFormat(slot.startHour), DateUtils.FORMAT["HOUR-MINUTES"]);
+        let slotEndTime = DateUtils.format(DateUtils.getTimeFormat(slot.endHour), DateUtils.FORMAT["HOUR-MINUTES"]);
+        return eventStartTime > slotStartTime || eventEndTime < slotEndTime;
+    }
+
+
+    private static getMinuteInEventTime(startDate: string, endDate: string): number {
+        return Math.abs(DateUtils.format(startDate, DateUtils.FORMAT["HOUR-MINUTES"]).split(":")[1] -
+            DateUtils.format(endDate, DateUtils.FORMAT["HOUR-MINUTES"]).split(":")[1]);
+    }
+
+    private static eventAbsenceHasSameTime(item: Course, event: CourseEvent): boolean {
+        let eventStartTime = DateUtils.format(event.start_date, DateUtils.FORMAT["HOUR-MINUTES"]);
+        let eventEndTime = DateUtils.format(event.end_date, DateUtils.FORMAT["HOUR-MINUTES"]);
+        return ((eventStartTime === item.startMomentTime) && (eventEndTime === item.endMomentTime));
+    }
+
+    static positionAbsence(event: CourseEvent, item, slots: Array<TimeSlot>) {
+
+        function getSplitCourseEventsIds(itemSplitCourse: Course[]): number[] {
+            let splitCourseEventsId = [];
+            itemSplitCourse.map(item => {
+                if (item.eventId) {
+                    splitCourseEventsId.push(item.eventId);
+                }
+            });
+            return splitCourseEventsId
+        }
+
+        const daySlotHeight = document.querySelector(".day").clientHeight;
+        const oneTimeSlotHeight = daySlotHeight / slots.length;
+        const eventStartDate = DateUtils.format(event.start_date, DateUtils.FORMAT["YEAR-MONTH-DAY-HOUR-MIN-SEC"]);
+        const eventEndDate = DateUtils.format(event.end_date, DateUtils.FORMAT["YEAR-MONTH-DAY-HOUR-MIN-SEC"]);
+
+        let splitCourseEventsId = getSplitCourseEventsIds(item.splitCourses);
+
+        let eventsPositionFetched = [];
+        item.splitCourses.forEach((itemCourse: Course) => {
+            const courseStartDate = DateUtils.format(itemCourse.startDate, DateUtils.FORMAT["YEAR-MONTH-DAY-HOUR-MIN-SEC"]);
+            const courseEndDate = DateUtils.format(itemCourse.endDate, DateUtils.FORMAT["YEAR-MONTH-DAY-HOUR-MIN-SEC"]);
+            if (eventStartDate === courseStartDate && eventEndDate === courseEndDate) {
+                let absenceElement = document.getElementById(event.id.toString());
+                if (absenceElement) {
+
+                    let newEventsPosition = JSON.parse(JSON.stringify(eventsPositionFetched));
+                    eventsPositionFetched.forEach((eventPosition: { minuteEvent: number, eventId: number }) => {
+                        splitCourseEventsId.forEach(splitCourseEventId => {
+                            if (splitCourseEventId === eventPosition.eventId) {
+                                newEventsPosition = newEventsPosition.filter(item => item.eventId !== 0);
+                                let newEventsPositionIndex = newEventsPosition
+                                    .findIndex(newEventPosition => newEventPosition.eventId === eventPosition.eventId);
+                                if (newEventsPositionIndex !== -1)
+                                    newEventsPosition.splice(newEventsPositionIndex, 1);
+                            }
+                        })
+                    });
+                    let marginTop = newEventsPosition.length > 0 ?
+                        _.pluck(newEventsPosition, 'minuteEvent')
+                            .reduce((accumulator, currentValue) => accumulator.minuteEvent + currentValue.minuteEvent) : 0;
+
+                    absenceElement.style.marginTop = `${(marginTop * oneTimeSlotHeight) / 60}px`;
+                    return;
+                }
+            }
+            let getMinuteEventTime = this.getMinuteInEventTime(itemCourse.startDate, itemCourse.endDate) === 0 ?
+                60 : this.getMinuteInEventTime(itemCourse.startDate, itemCourse.endDate);
+            eventsPositionFetched.push({
+                minuteEvent: getMinuteEventTime,
+                eventId: itemCourse.eventId ? itemCourse.eventId : 0,
+            });
+        });
+    }
+
+    static addEventIdInSplitCourse(item: Course, events: CourseEvent[]) {
+        item.splitCourses.forEach((course: Course) => {
+            const courseStartDate = DateUtils.format(course.startDate, DateUtils.FORMAT["YEAR-MONTH-DAY-HOUR-MIN-SEC"]);
+            const courseEndDate = DateUtils.format(course.endDate, DateUtils.FORMAT["YEAR-MONTH-DAY-HOUR-MIN-SEC"]);
+            events.forEach(event => {
+                const eventStartDate = DateUtils.format(event.start_date, DateUtils.FORMAT["YEAR-MONTH-DAY-HOUR-MIN-SEC"]);
+                const eventEndDate = DateUtils.format(event.end_date, DateUtils.FORMAT["YEAR-MONTH-DAY-HOUR-MIN-SEC"]);
+                if (courseStartDate === eventStartDate && courseEndDate === eventEndDate) {
+                    course.eventId = event.id;
+                }
+            })
+        })
+    }
+
+    /**
      * Rendering absence's state (red or pink)
+     * @param {Course} item the current course
      */
     static changeAbsenceView(item: Course) {
         let courseItems = document
@@ -52,14 +175,8 @@ export class CalendarUtils {
             if (item === undefined || item === null) return;
             if ((item.parentNode as Element).querySelector('.globalAbsence')) {
                 item.setAttribute("class", "schedule-item schedule-globalAbsence");
-                item.removeAttribute("resizable");
-                item.removeAttribute("draggable");
-                item.removeAttribute("horizontal-resize-lock");
             } else if ((item.parentNode as Element).querySelector('.globalAbsenceReason')) {
                 item.setAttribute("class", "schedule-item schedule-globalAbsenceReason");
-                item.removeAttribute("resizable");
-                item.removeAttribute("draggable");
-                item.removeAttribute("horizontal-resize-lock");
             } else {
                 item.setAttribute("class", "schedule-item schedule-course");
             }

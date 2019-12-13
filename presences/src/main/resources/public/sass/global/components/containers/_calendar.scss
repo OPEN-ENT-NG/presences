@@ -216,6 +216,15 @@ $calendar-user-card-height: 56px;
           flex-direction: row;
           width: 100%;
           height: 100%;
+
+          &-event {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+          }
         }
 
         .right-side {

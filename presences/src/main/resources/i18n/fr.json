@@ -170,8 +170,6 @@
   "presences.widgets.alerts.lateness": "alertes retards",
   "presences.widgets.alerts.textbooks": "alertes carnet oublié",
   "presences.widgets.day.courses": "Appels du jour",
-  "presences.widgets.day.set.multiple.slot": "Appels multiples pour mes cours dépassant 1h",
-  "presences.widgets.day.set.multiple.slot.toolip": "Désactivez cette option si vous souhaitez ne générer qu'un appel pour vos cours de plus d'1h. ",
   "presences.widgets.day.courses.empty": "Pas d'appel aujourd'hui",
   "presences.widgets.day.forgotten.registers": "Appels oubliés du jour",
   "presences.widgets.day.forgotten.registers.empty": "Pas d'appel oublié aujourd'hui",

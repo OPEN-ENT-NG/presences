@@ -2,6 +2,7 @@ import {model, moment, ng} from 'entcore';
 import {
     CalendarService,
     Course,
+    CourseEvent,
     ForgottenNotebookService,
     GroupService,
     Notebook,
@@ -12,7 +13,7 @@ import {
     TimeSlot
 } from '../services';
 import {Scope} from './main';
-import {User} from '../models';
+import {EventType, User} from '../models';
 import {DateUtils} from '@common/utils';
 import {SNIPLET_FORM_EMIT_EVENTS, SNIPLET_FORM_EVENTS} from "@common/model";
 import {ABSENCE_FORM_EVENTS, NOTEBOOK_FORM_EVENTS} from "../sniplets";
@@ -64,6 +65,8 @@ interface CalendarScope extends Scope {
     isGlobalAbsence(item): boolean;
 
     isGlobalAbsenceReason(item): boolean;
+
+    eventContainsAbsence(event: CourseEvent, item): boolean;
 
     isPastItem(item): boolean;
 }
@@ -215,63 +218,73 @@ export const calendarController = ng.controller('CalendarController',
             }
         };
 
-        $scope.hoverExemption = function ($event, exemption) {
-            const {width, height} = getComputedStyle(hover);
-            let {x, y} = $event.target.closest('.exemption-label').getBoundingClientRect();
-            hover.style.top = `${y - parseInt(height)}px`;
-            hover.style.left = `${x - (parseInt(width) / 4)}px`;
-            hover.style.display = 'flex';
-            vm.show.exemption = exemption;
-            $scope.safeApply();
-        };
+            $scope.hoverExemption = function ($event, exemption) {
+                const {width, height} = getComputedStyle(hover);
+                let {x, y} = $event.target.closest('.exemption-label').getBoundingClientRect();
+                hover.style.top = `${y - parseInt(height)}px`;
+                hover.style.left = `${x - (parseInt(width) / 4)}px`;
+                hover.style.display = 'flex';
+                vm.show.exemption = exemption;
+                $scope.safeApply();
+            };
 
-        $scope.hoverOutExemption = function () {
-            hover.style.display = 'none';
-        };
+            $scope.hoverOutExemption = function () {
+                hover.style.display = 'none';
+            };
 
-        $scope.isAbsenceOnly = function (item): boolean {
-            return item.absence && item.absenceReason === 0;
-        };
+            $scope.isAbsenceOnly = function (item): boolean {
+                return item.absence && item.absenceReason === 0;
+            };
 
-        $scope.isAbsenceJustifiedOnly = function (item): boolean {
-            return item.absence && item.absenceReason > 0;
-        };
+            $scope.isAbsenceJustifiedOnly = function (item): boolean {
+                return item.absence && item.absenceReason > 0;
+            };
 
-        $scope.isGlobalAbsence = function (item): boolean {
-            return item._id === '0' && item.absence && item.absenceReason === 0;
-        };
+            $scope.isGlobalAbsence = function (item): boolean {
+                return item._id === '0' && item.absence && item.absenceReason === 0;
+            };
 
-        $scope.isGlobalAbsenceReason = function (item): boolean {
-            return item._id === '0' && item.absence && item.absenceReason > 0;
-        };
+            $scope.isGlobalAbsenceReason = function (item): boolean {
+                return item._id === '0' && item.absence && item.absenceReason > 0;
+            };
 
-        vm.editAbsenceForm = function (item, items): void {
-            if (item._id !== "0") {
-                let absenceItem = items
-                    .find(absence =>
-                        absence._id === '0' &&
-                        DateUtils.format(absence.startDate, DateUtils.FORMAT["YEAR-MONTH-DAY"]) ===
-                        DateUtils.format(item.startDate, DateUtils.FORMAT["YEAR-MONTH-DAY"])
-                        &&
-                        DateUtils.format(absence.endDate, DateUtils.FORMAT["YEAR-MONTH-DAY"]) ===
-                        DateUtils.format(item.endDate, DateUtils.FORMAT["YEAR-MONTH-DAY"]));
-                if (absenceItem === undefined) {
-                    return;
+            $scope.eventContainsAbsence = function (event: CourseEvent, item: Course): boolean {
+                if (event.type_id === EventType.ABSENCE) {
+                    CalendarUtils.renderAbsenceFromCourse(item, event, vm.slots.list);
+                    CalendarUtils.addEventIdInSplitCourse(item, item.events);
+                    CalendarUtils.positionAbsence(event, item, vm.slots.list);
+                    return true;
                 }
-                if ((item.startDate >= absenceItem.startDate) && ((item.endDate <= absenceItem.endDate) ||
-                    absenceItem.endDate > item.startDate)) {
-                    $scope.$broadcast(ABSENCE_FORM_EVENTS.EDIT, absenceItem);
-                    return;
-                } else {
-                    return;
+                return false;
+            };
+
+            vm.editAbsenceForm = function (item: Course, items): void {
+                if (item._id !== "0") {
+                    let absenceItem = items
+                        .find(absence =>
+                            absence._id === '0' &&
+                            DateUtils.format(absence.startDate, DateUtils.FORMAT["YEAR-MONTH-DAY"]) ===
+                            DateUtils.format(item.startDate, DateUtils.FORMAT["YEAR-MONTH-DAY"])
+                            &&
+                            DateUtils.format(absence.endDate, DateUtils.FORMAT["YEAR-MONTH-DAY"]) ===
+                            DateUtils.format(item.endDate, DateUtils.FORMAT["YEAR-MONTH-DAY"]));
+                    if (absenceItem === undefined) {
+                        return;
+                    }
+                    if ((item.startDate >= absenceItem.startDate) && ((item.endDate <= absenceItem.endDate) ||
+                        absenceItem.endDate > item.startDate)) {
+                        $scope.$broadcast(ABSENCE_FORM_EVENTS.EDIT, absenceItem);
+                        return;
+                    } else {
+                        return;
+                    }
                 }
-            }
-            $scope.$broadcast(ABSENCE_FORM_EVENTS.EDIT, item);
-        };
+                $scope.$broadcast(ABSENCE_FORM_EVENTS.EDIT, item);
+            };
 
-        vm.formatExemptionDate = function (date) {
-            return DateUtils.format(date, DateUtils.FORMAT["DAY-MONTH-YEAR"]);
-        };
+            vm.formatExemptionDate = function (date) {
+                return DateUtils.format(date, DateUtils.FORMAT["DAY-MONTH-YEAR"]);
+            };
 
-        const hover = document.getElementById('exemption-hover');
-    }]);
+            const hover = document.getElementById('exemption-hover');
+        }]);

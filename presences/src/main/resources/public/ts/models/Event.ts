@@ -13,6 +13,7 @@ export interface Event {
     comment?: string;
     counsellor_input: boolean;
     counsellor_regularisation: boolean;
+    reason_id?: number;
     student_id: string;
     register_id: number;
     type_id: number;

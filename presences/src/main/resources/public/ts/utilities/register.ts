@@ -1,23 +1,7 @@
-import {Me} from "entcore";
 import {Course, Register} from "../models";
 
 export class RegisterUtils {
-
-    static async initPreference(isActive?: boolean): Promise<void> {
-        if (Me && Me.preferences) {
-            let registerPreference = await Me.preference('register');
-            if (!registerPreference) {
-                Me.preferences.register = {};
-            }
-            if (isActive != undefined) {
-                Me.preferences.register.multipleSlot = isActive;
-            } else {
-                Me.preferences.register.multipleSlot = registerPreference ? registerPreference.multipleSlot : true
-            }
-            await Me.savePreference('register');
-        }
-    }
-
+    
     static createRegisterFromCourse = function (course: Course): Register {
         const register = new Register();
         if (course.registerId) {

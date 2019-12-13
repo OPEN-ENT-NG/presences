@@ -17,6 +17,7 @@ public class Course implements Cloneable {
     private JsonArray groups;
     private JsonArray roomLabels;
     private JsonArray events;
+    private List<Course> splitCourses;
     private Boolean exempted;
     private JsonObject exemption;
     private JsonObject incident;
@@ -395,5 +396,13 @@ public class Course implements Cloneable {
 
     public void setIncident(JsonObject incident) {
         this.incident = incident;
+    }
+
+    public List<Course> getSplitCourses() {
+        return splitCourses;
+    }
+
+    public void setSplitCourses(List<Course> splitCourses) {
+        this.splitCourses = splitCourses;
     }
 }

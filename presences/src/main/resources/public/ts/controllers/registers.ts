@@ -1,11 +1,11 @@
-import {_, Me, model, moment, ng, notify, template, toasts} from 'entcore';
+import {_, idiom as lang, Me, model, moment, ng, notify, template, toasts} from 'entcore';
 import {Absence, Course, Courses, Departure, EventType, Lateness, Register, RegisterStatus, Remark} from '../models'
 import {GroupService, SearchService} from '../services';
 import {CourseUtils, DateUtils} from '@common/utils'
 import rights from '../rights'
 import {Scope} from './main'
 import http from 'axios'
-import {RegisterUtils} from "../utilities";
+import {PreferencesUtils, RegisterUtils} from "../utilities";
 
 declare let window: any;
 
@@ -30,9 +30,10 @@ interface ViewModel {
     courses: Courses;
     filter: Filter;
     RegisterStatus: any;
-    preferences: any;
 
     openRegister(course: Course, $event: Event): Promise<void>;
+
+    tooltipMultipleSlot(): string;
 
     isCurrentRegister(course: Course): boolean;
 
@@ -178,8 +179,7 @@ export const registersController = ng.controller('RegistersController',
             vm.courses.eventer.on('loading::false', () => $scope.safeApply());
             vm.RegisterStatus = RegisterStatus;
 
-            RegisterUtils.initPreference();
-            let registerTimeSlot = await Me.preference('register');
+            let registerTimeSlot = Me.preferences['presences.register'];
 
             vm.filter = {
                 date: new Date(),
@@ -339,6 +339,13 @@ export const registersController = ng.controller('RegistersController',
                     if (vm.register.teachers.length > 0 && _.countBy(vm.register.teachers, (teacher) => teacher.id === vm.filter.selected.registerTeacher.id) === 0)
                         vm.filter.selected.registerTeacher = vm.register.teachers[0];
                 }
+            };
+
+            vm.tooltipMultipleSlot = function (): string {
+                let tooltipText;
+                tooltipText = vm.filter.multipleSlot ? 'presences.widgets.day.set.multiple.slot.toolip.disable'
+                    : 'presences.widgets.day.set.multiple.slot.toolip.activate';
+                return lang.translate(tooltipText);
             };
 
             vm.isCurrentRegister = function (course: Course): boolean {
@@ -546,14 +553,7 @@ export const registersController = ng.controller('RegistersController',
 
             vm.isCurrentSlot = function (slot: { start: string, end: string }) {
                 // return Math.abs(moment(slot.start).diff(vm.register.start_date)) < 3000 && Math.abs(moment(slot.end).diff(vm.register.end_date)) < 3000;
-                let registerStartDate = DateUtils.format(vm.register.start_date, DateUtils.FORMAT["YEAR-MONTH-DAY-HOUR-MIN-SEC"]);
-                let registerEndDate = DateUtils.format(vm.register.end_date, DateUtils.FORMAT["YEAR-MONTH-DAY-HOUR-MIN-SEC"]);
-                let slotStart = DateUtils.format(slot.start, DateUtils.FORMAT["YEAR-MONTH-DAY-HOUR-MIN-SEC"]);
-                let slotEnd = DateUtils.format(slot.end, DateUtils.FORMAT["YEAR-MONTH-DAY-HOUR-MIN-SEC"]);
-
-                return ((slotStart >= registerStartDate) && (registerStartDate < slotEnd))
-                    &&
-                    ((slotEnd <= registerEndDate) || (registerEndDate > slotStart));
+                return (DateUtils.isBetween(vm.register.start_date, vm.register.end_date, slot.start, slot.end));
 
             };
 
@@ -562,6 +562,9 @@ export const registersController = ng.controller('RegistersController',
                                              end_date: string = DateUtils.format(vm.filter.end_date, DateUtils.FORMAT["YEAR-MONTH-DAY"]),
                                              forgotten_registers: boolean = vm.filter.forgotten,
                                              multipleSlot: boolean = vm.filter.multipleSlot): Promise<void> {
+                if (model.me.profiles.some(profile => profile === "Personnel")) {
+                    multipleSlot = true;
+                }
                 vm.courses.clear();
                 await vm.courses.sync(users, groups, structure, start_date, end_date, forgotten_registers, multipleSlot);
             };
@@ -599,7 +602,7 @@ export const registersController = ng.controller('RegistersController',
             };
 
             vm.switchMultipleSlot = async function (): Promise<void> {
-                RegisterUtils.initPreference(vm.filter.multipleSlot);
+                await PreferencesUtils.updatePresencesRegisterPreference(vm.filter.multipleSlot);
                 vm.loadCourses(extractSelectedTeacherIds(), extractSelectedGroupsName(),
                     undefined, undefined, undefined, false)
             };

@@ -1,7 +1,12 @@
 <div class="forgotten-registers-widget registers" ng-controller="RegistersController as vm"
      ng-init="vm.widget.dayCourses = true;">
+    <h2>
+        <i18n>presences.widgets.day.courses</i18n>
+    </h2>
     <div class="forgotten-registers-widget-tooltip">
-        <i class="help" tooltip="[[lang.translate('presences.widgets.day.set.multiple.slot.toolip')]]"></i>
+        <i class="help">
+            <span class="tooltip-top">[[vm.tooltipMultipleSlot()]]</span>
+        </i>
         <i18n class="forgotten-registers-widget-tooltip-text">presences.widgets.day.set.multiple.slot</i18n>
         <switch ng-model="vm.filter.multipleSlot" ng-change="vm.switchMultipleSlot()">
             <label class="switch"> </label>

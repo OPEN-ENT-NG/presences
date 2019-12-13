@@ -20,14 +20,18 @@ export interface Course {
     roomLabels: string[];
     dayOfWeek: number;
     startDate: string;
+    startMomentTime?: string;
     endDate: string;
+    endMomentTime?: string;
     is_recurrent: boolean;
     subject_name: string;
     events: CourseEvent[];
+    splitCourses: Course[];
     hash?: string;
     absence?: boolean;
     absenceId?: string;
     absenceReason?: number;
+    eventId?: number;
 }
 
 export interface CalendarService {
@@ -74,12 +78,14 @@ export const CalendarService = ng.service('CalendarService', (): CalendarService
                 course.endMoment = moment(course.endDate);
                 course.containsAbsence = containsAbsence(course);
                 course.containsReasonAbsence = containsReasonAbsence(course);
+                course.events = course.events.sort((a, b) => {
+                    return moment(a.start_date) - moment(b.start_date);
+                });
                 this.locked = true;
 
                 // create hash to fetch in html in order to recognize "absence" course
                 if (course.absence) course.hash = Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
             });
-            console.log("eventCOurse: ", buildCalendarCourses(data));
             return buildCalendarCourses(data);
         } catch (err) {
             throw err;

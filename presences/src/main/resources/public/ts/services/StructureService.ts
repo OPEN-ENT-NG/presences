@@ -12,6 +12,7 @@ export interface TimeSlot {
     startHour: string;
     endHour: string;
     id: string;
+    _id?: string;
 }
 
 export interface StructureService {

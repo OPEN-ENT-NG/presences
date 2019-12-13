@@ -136,6 +136,28 @@ public class CourseHelper {
         return formatCourses;
     }
 
+    public static List<Course> splitCoursesWithOneCourse(Course course, List<Slot> slots) {
+        List<Course> splitCourses = new ArrayList<>();
+        try {
+            SimpleDateFormat parser = new SimpleDateFormat(DateHelper.HOUR_MINUTES_SECONDS);
+            Date startTime = parser.parse(DateHelper.getTimeString(course.getStartDate(), DateHelper.MONGO_FORMAT));
+            Date endTime = parser.parse(DateHelper.getTimeString(course.getEndDate(), DateHelper.MONGO_FORMAT));
+            for (Slot slot : slots) {
+                Date slotStartHour = parser.parse(slot.getStartHour());
+                Date slotEndHour = parser.parse(slot.getEndHour());
+                if (((slotStartHour.after(startTime) || slotStartHour.equals(startTime)) || (startTime.before(slotEndHour)))
+                        && ((slotEndHour.before(endTime) || slotEndHour.equals(endTime)) || (endTime.after(slotStartHour)))
+                        && !(course.getRegisterId() != null && !course.isSplitSlot())) {
+                    Course newCourse = treatingSplitSlot(course, slot, parser);
+                    splitCourses.add(newCourse);
+                }
+            }
+        } catch (ParseException e) {
+            LOGGER.error("[Presences@CourseHelper] Failed to parse date [see DateHelper", e);
+        }
+        return splitCourses;
+    }
+
     /**
      * Split the courses in x slots if multiple register is set true
      * (e.g Courses[09:00 - 12:00] would be split in [09:00-10:00], [09:00-11:00], [09:00-12:00])

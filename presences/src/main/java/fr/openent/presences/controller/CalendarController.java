@@ -138,6 +138,7 @@ public class CalendarController extends ControllerHelper {
                                         course.setEvents(map.get(courseHash).getEvents());
                                     }
                                 });
+                                course.setSplitCourses(CourseHelper.splitCoursesWithOneCourse(course, slots));
                                 if (exemptionsMap.containsKey(subjectId)) {
                                     JsonObject exemption = CalendarHelper.exempted(course, exemptionsMap.getJsonArray(subjectId));
                                     if (exemption != null) {

@@ -4,6 +4,26 @@
     align-items: center;
     padding: 8px 0;
 
+    i {
+      position: relative;
+
+      &:hover .tooltip-top {
+        @include tooltipVisible();
+      }
+
+      .tooltip-top {
+        @include tooltipTemplate();
+        bottom: 30px;
+        margin-left: -43px;
+
+        &:after {
+          @include tooltipBottomArrow();
+          top: 100%;
+          left: 15%;
+        }
+      }
+    }
+
     &-text {
       padding: 0 8px;
     }
