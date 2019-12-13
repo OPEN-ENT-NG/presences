@@ -13,12 +13,14 @@
                    ng-class="{active: getCurrentState() === 'dashboard'}">
                     <i class="presence-home" aria-hidden="true"></i>
                 </a>
+                <span class="label-navbar"><i18n>presences.home</i18n></span>
                 <a role="menuitem" class="item"
                    ng-if="::hasRight('readRegister')"
                    ng-class="{active: getCurrentState() === 'registers'}"
                    href="/presences#/registers">
                     <i class="register" aria-hidden="true"></i>
                 </a>
+                <span class="label-navbar"><i18n>presences.register</i18n></span>
                 <div role="menuitem" class="item"
                      ng-class="{active: getCurrentState() === 'exemptions'}"
                      data-ng-click="hoverIn('ABSENCES')"
@@ -26,9 +28,11 @@
                      data-ng-mouseleave="hoverOut()">
                     <i class="absence" aria-hidden="true"></i>
                 </div>
+                <span class="label-navbar"><i18n>presences.absence.absences</i18n></span>
                 <a role="menuitem" class="item forbidden">
                     <i class="presence" aria-hidden="true"></i>
                 </a>
+                <span class="label-navbar"><i18n>presences.title</i18n></span>
                 <div role="menuitem" class="item"
                      ng-class="{active: getCurrentState() === 'incidents'}"
                      data-ng-click="hoverIn('INCIDENTS')"
@@ -36,9 +40,11 @@
                      data-ng-mouseleave="hoverOut()">
                     <i class="events" aria-hidden="true"></i>
                 </div>
+                <span class="label-navbar"><i18n>presences.incidents</i18n></span>
                 <a role="menuitem" ng-if="::hasMassmailingRight('access')" class="item" href="/massmailing#/">
                     <i class="mass-mailing" aria-hidden="true"></i>
                 </a>
+                <span class="label-navbar"><i18n>presences.publipostage</i18n></span>
             </div>
         </div>
         <div class="sub-nav" role="navigation" aria-label="sub navigation">
