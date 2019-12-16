@@ -30,12 +30,13 @@ public class DefaultExemptionService extends SqlCrudService implements Exemption
     }
 
     @Override
-    public void get(String structure_id, String start_date, String end_date, List<String> student_ids, String page, Handler<Either<String, JsonArray>> handler) {
+    public void get(String structure_id, String start_date, String end_date, List<String> student_ids, String page,
+                    String order, boolean reverse, Handler<Either<String, JsonArray>> handler) {
         String query = "SELECT * " + this.getterFROMBuilder(structure_id, start_date, end_date, student_ids);
         JsonArray values = new JsonArray();
 
         if (page != null) {
-            query += " ORDER BY end_date DESC";
+            query += " ORDER BY " + getSqlOrderValue(order) + " " + getSqlReverseString(reverse);
             query += " OFFSET ? LIMIT ?";
             values.add(Presences.PAGE_SIZE * Integer.parseInt(page));
             values.add(Presences.PAGE_SIZE);
@@ -88,7 +89,8 @@ public class DefaultExemptionService extends SqlCrudService implements Exemption
     }
 
     @Override
-    public void getPageNumber(String structure_id, String start_date, String end_date, List<String> student_ids, Handler<Either<String, JsonObject>> handler) {
+    public void getPageNumber(String structure_id, String start_date, String end_date, List<String> student_ids,
+                              String order, boolean reverse, Handler<Either<String, JsonObject>> handler) {
         String query =
                 "SELECT count(" + Presences.dbSchema + "." + this.DATABASE_TABLE + ".id)" +
                         this.getterFROMBuilder(structure_id, start_date, end_date, student_ids);
@@ -115,7 +117,24 @@ public class DefaultExemptionService extends SqlCrudService implements Exemption
         return query;
     }
 
-    ;
+    private String getSqlOrderValue(String field) {
+        String typeField;
+        switch (field) {
+            case "date":
+                typeField = "exemption.start_date";
+                break;
+            case "attendance":
+                typeField = "exemption.attendance";
+                break;
+            default:
+                typeField = "exemption.start_date";
+        }
+        return typeField;
+    }
+
+    private String getSqlReverseString(Boolean reverse) {
+        return reverse ? "ASC" : "DESC";
+    }
 
     @Override
     public void create(String structure_id, JsonArray student_ids, String subject_id, String start_date, String end_date, Boolean attendance, String comment, Handler<Either<String, JsonArray>> handler) {

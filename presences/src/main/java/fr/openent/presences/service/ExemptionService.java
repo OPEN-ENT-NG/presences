@@ -18,7 +18,8 @@ public interface ExemptionService {
      * @param student_ids  student identifier (optionnal can be null)
      * @param handler      function handler returning da
      */
-    void get(String structure_id, String start_date, String end_date, List<String> student_ids, String page, Handler<Either<String, JsonArray>> handler);
+    void get(String structure_id, String start_date, String end_date, List<String> student_ids, String page,
+             String field, boolean reverse, Handler<Either<String, JsonArray>> handler);
 
     /**
      * Retrieve user exemptions
@@ -41,7 +42,8 @@ public interface ExemptionService {
      * @param student_ids
      * @param handler
      */
-    void getPageNumber(String structure_id, String start_date, String end_date, List<String> student_ids, Handler<Either<String, JsonObject>> handler);
+    void getPageNumber(String structure_id, String start_date, String end_date, List<String> student_ids, String order,
+                       boolean reverse, Handler<Either<String, JsonObject>> handler);
 
     /**
      * Create exemptions for a list of students

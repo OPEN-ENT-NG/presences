@@ -22,21 +22,40 @@
             <tr>
                 <th width="1%" data-ng-click="vm.sortField('date')">
                     <i18n>incidents.date</i18n>
+                    <span ng-class="{'arrow-up' : (vm.incidents.order === 'date' && vm.incidents.reverse == true),
+                                    'arrow-down' : ((vm.incidents.order === 'date' && vm.incidents.reverse == false) ||
+                                                    vm.incidents.order === undefined)}">
+                    </span>
                 </th>
-                <th width="1%" data-ng-click="vm.sortField('date')">
+                <th width="1%" data-ng-click="vm.sortField('time')">
                     <i18n>incidents.time</i18n>
+                    <span ng-class="{'arrow-up' : (vm.incidents.order === 'time' && vm.incidents.reverse == true),
+                                    'arrow-down' : (vm.incidents.order === 'time' && vm.incidents.reverse == false)}">
+                    </span>
                 </th>
                 <th width="2%" data-ng-click="vm.sortField('place')">
                     <i18n>incidents.place</i18n>
+                    <span ng-class="{'arrow-up' : (vm.incidents.order === 'place' && vm.incidents.reverse == true),
+                                    'arrow-down' : (vm.incidents.order === 'place' && vm.incidents.reverse == false)}">
+                    </span>
                 </th>
                 <th width="4%" data-ng-click="vm.sortField('type')">
                     <i18n>incidents.type</i18n>
+                    <span ng-class="{'arrow-up' : (vm.incidents.order === 'type' && vm.incidents.reverse == true),
+                                    'arrow-down' : (vm.incidents.order === 'type' && vm.incidents.reverse == false)}">
+                    </span>
                 </th>
                 <th width="4%" data-ng-click="vm.sortField('seriousness')">
                     <i18n>incidents.seriousness</i18n>
+                    <span ng-class="{'arrow-up' : (vm.incidents.order === 'seriousness' && vm.incidents.reverse == true),
+                                    'arrow-down' : (vm.incidents.order === 'seriousness' && vm.incidents.reverse == false)}">
+                    </span>
                 </th>
                 <th width="1%" data-ng-click="vm.sortField('treated')">
                     <i18n>incidents.treated</i18n>
+                    <span ng-class="{'arrow-up' : (vm.incidents.order === 'treated' && vm.incidents.reverse == true),
+                                    'arrow-down' : (vm.incidents.order === 'treated' && vm.incidents.reverse == false)}">
+                    </span>
                 </th>
             </tr>
             </thead>

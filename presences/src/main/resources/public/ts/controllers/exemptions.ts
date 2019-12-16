@@ -62,6 +62,8 @@ interface ViewModel {
     excludeStudentFromForm(student): void;
 
     export(): void;
+
+    sortField(field: string);
 }
 
 export const exemptionsController = ng.controller('ExemptionsController',
@@ -189,6 +191,22 @@ export const exemptionsController = ng.controller('ExemptionsController',
 
 
             vm.editExemption = (obj) => $scope.$broadcast(EXEMPTIONS_FORM_EVENTS.EDIT, obj);
+
+            vm.sortField = async (field) => {
+                switch (field) {
+                    case 'date':
+                        vm.exemptions.order = field;
+                        break;
+                    case 'attendance':
+                        vm.exemptions.order = field;
+                        break;
+                    default:
+                        vm.exemptions.order = 'date';
+                }
+                vm.exemptions.reverse = !vm.exemptions.reverse;
+                await vm.exemptions.syncPagination();
+                $scope.safeApply();
+            };
 
 
             $scope.$watch(() => window.structure, () => {

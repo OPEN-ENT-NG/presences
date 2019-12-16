@@ -107,6 +107,8 @@ export class Exemptions extends LoadingCollection {
     end_date: string;
     students?: string[];
     audiences?: string[];
+    order: string;
+    reverse: boolean;
 
     constructor() {
         super();
@@ -145,10 +147,15 @@ export class Exemptions extends LoadingCollection {
         try {
             let url = `/presences/exemptions` + this.prepareUrl();
             url += `&page=${this.page ? this.page : 0}`;
+            if (this.order) {
+                url += `&order=${this.order}`;
+            }
+            if (this.reverse) {
+                url += `&reverse=${this.reverse}`;
+            }
             const {data} = await http.get(url);
             this.all = Mix.castArrayAs(Exemption, Exemption.loadData(data.values));
             this.pageCount = data.page_count;
-
         } catch (err) {
             throw err;
         }

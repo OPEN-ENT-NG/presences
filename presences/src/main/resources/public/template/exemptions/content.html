@@ -21,14 +21,24 @@
                 <th width="10%">
                     <i18n>presences.exemptions.subject</i18n>
                 </th>
-                <th width="15%">
+                <th width="15%" data-ng-click="vm.sortField('date')">
                     <i18n>presences.exemptions.dates</i18n>
+                    <span ng-class="{'arrow-up' : (vm.exemptions.order === 'date' && vm.exemptions.reverse == true),
+                                    'arrow-down' : ((vm.exemptions.order === 'date' && vm.exemptions.reverse == false) ||
+                                                    vm.exemptions.order === undefined)}">
+                    </span>
                 </th>
-                <th width="35%">
+                <th width="30%">
                     <i18n>presences.exemptions.comment</i18n>
                 </th>
-                <th width="5%">
+                <th width="10%" data-ng-click="vm.sortField('attendance')">
                     <i18n>presences.exemptions.attendance</i18n>
+                    <span>
+                        <i ng-show="vm.exemptions.order === 'attendance' && vm.exemptions.reverse == false"
+                           class="account-little"></i>
+                        <i ng-show="vm.exemptions.order === 'attendance' && vm.exemptions.reverse == true"
+                           class="account-outline-little"></i>
+                    </span>
                 </th>
             </tr>
             </thead>

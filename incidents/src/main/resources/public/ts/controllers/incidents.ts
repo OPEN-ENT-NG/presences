@@ -115,6 +115,9 @@ export const incidentsController = ng.controller('IncidentsController', ['$scope
                 case 'date':
                     vm.incidents.order = field;
                     break;
+                case 'time':
+                    vm.incidents.order = field;
+                    break;
                 case 'place':
                     vm.incidents.order = field;
                     break;

@@ -15,6 +15,22 @@
       //  content: "\e946";
       //}
     }
+
+     &.account-little {
+       font-size: 17px !important;
+       &:before {
+         font-family: 'material-icons';
+         content: "\F004";
+       }
+     }
+
+     &.account-outline-little {
+       font-size: 17px !important;
+       &:before {
+         font-family: 'material-icons';
+         content: "\F013";
+       }
+    }
   }
 
   .flex-th {

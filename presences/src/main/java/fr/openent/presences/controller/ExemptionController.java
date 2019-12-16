@@ -113,7 +113,10 @@ public class ExemptionController extends ControllerHelper {
     }
 
     private void csvResponse(HttpServerRequest request, String structure_id, String start_date, String end_date, List<String> student_ids) {
-        exemptionService.get(structure_id, start_date, end_date, student_ids, null, new Handler<Either<String, JsonArray>>() {
+        String field = request.params().contains("order") ? request.getParam("order") : "date";
+        boolean reverse = request.params().contains("reverse") && Boolean.parseBoolean(request.getParam("reverse"));
+
+        exemptionService.get(structure_id, start_date, end_date, student_ids, null, field, reverse, new Handler<Either<String, JsonArray>>() {
             @Override
             public void handle(Either<String, JsonArray> event) {
                 JsonArray exemptions = event.right().getValue();
@@ -136,6 +139,9 @@ public class ExemptionController extends ControllerHelper {
 
 
     private void paginateResponse(final HttpServerRequest request, String page, String structure_id, String start_date, String end_date, List<String> student_ids) {
+        String field = request.params().contains("order") ? request.getParam("order") : "date";
+        boolean reverse = request.params().contains("reverse") && Boolean.parseBoolean(request.getParam("reverse"));
+
         Future<JsonArray> exemptionsFuture = Future.future();
         Future<JsonObject> pageNumberFuture = Future.future();
 
@@ -152,8 +158,8 @@ public class ExemptionController extends ControllerHelper {
             }
         });
 
-        exemptionService.get(structure_id, start_date, end_date, student_ids, page, FutureHelper.handlerJsonArray(exemptionsFuture));
-        exemptionService.getPageNumber(structure_id, start_date, end_date, student_ids, FutureHelper.handlerJsonObject(pageNumberFuture));
+        exemptionService.get(structure_id, start_date, end_date, student_ids, page, field, reverse, FutureHelper.handlerJsonArray(exemptionsFuture));
+        exemptionService.getPageNumber(structure_id, start_date, end_date, student_ids, field, reverse, FutureHelper.handlerJsonObject(pageNumberFuture));
     }
 
     @Post("/exemptions")
