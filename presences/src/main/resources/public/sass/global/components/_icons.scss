@@ -178,4 +178,14 @@ i {
     font-family: 'material-icons';
     content: '\F2D7';
   }
+
+  &.plus-sign:before {
+    font-family: 'material-icons';
+    content: '\F415';
+  }
+
+  &.minus-sign:before {
+    font-family: 'material-icons';
+    content: '\F374';
+  }
 }

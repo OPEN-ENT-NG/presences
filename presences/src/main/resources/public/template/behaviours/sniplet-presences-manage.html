@@ -13,7 +13,7 @@
     </a>
 
     <!-- alerts -->
-    <a class="presence-navigation-item forbidden">
+    <a class="presence-navigation-item" data-ng-click="vm.scrollToElement('alert')">
         <div class="presence-icon"><i class="alertes" aria-hidden="true"></i></div>
         <span><i18n>presences.alerts.title</i18n></span>
     </a>
@@ -56,6 +56,14 @@
 <div class="sniplet presences absence" id="absence">
     <sniplet
             template="presences-manage/reason-manage/sniplet-presences-reason-manage"
+            application="presences">
+    </sniplet>
+</div>
+
+<!-- Alerts-->
+<div class="sniplet presences" id="alert">
+    <sniplet
+            template="presences-manage/alert-manage/sniplet-presences-alert-manage"
             application="presences">
     </sniplet>
 </div>

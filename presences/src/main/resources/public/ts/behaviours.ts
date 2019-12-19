@@ -6,7 +6,8 @@ import {
     navigation,
     presencesManage,
     presencesReasonManage,
-    statisticsManage
+    statisticsManage,
+    presencesAlertManage
 } from './sniplets'
 import rights from './rights';
 import incidentsRights from '@incidents/rights';
@@ -21,6 +22,7 @@ Behaviours.register('presences', {
         'forgotten-notebook-form': forgottenNotebookForm,
         'presences-manage': presencesManage,
         'presences-manage/reason-manage/sniplet-presences-reason-manage': presencesReasonManage,
-        'presences-manage/statistics-manage/sniplet-statistics-manage': statisticsManage
+        'presences-manage/statistics-manage/sniplet-statistics-manage': statisticsManage,
+        'presences-manage/alert-manage/sniplet-presences-alert-manage': presencesAlertManage
     }
 });

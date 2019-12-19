@@ -1,0 +1,70 @@
+<div class="ten sniplet presences sniplet-presence-form presences-manage-alert">
+    <div class="sniplet-form">
+
+        <!-- header -->
+        <div class="sniplet-header">
+            <span class="sniplet-header-icon"><i class="alertes" aria-hidden="true"></i></span>
+            <h3 class="sniplet-header-title">
+                <i18n>presences.alerts.title</i18n>
+            </h3>
+        </div>
+
+        <!-- Input -->
+        <div class="sniplet-input">
+            <label class="sniplet-input-title">
+                <i18n>presences.alerts.form.input</i18n>
+            </label>
+            <div class="flex-column">
+                <div class="flex-center-text-input">
+                    <label class="cell one flex-center-input">
+                        <i18n>presences.navigation.absence</i18n>
+                    </label>
+                    <div class="flex-center-input">
+                        <i class="minus-sign"
+                           data-ng-click="removeEvent()"></i>
+                            <input type="number" class="format-input">
+                        <i class="plus-sign"
+                           data-ng-click="addEvent()"></i>
+                    </div>
+                </div>
+                <div class="top20 flex-center-text-input">
+                    <label class="cell one flex-center-input">
+                        <i18n>presences.absence.retards</i18n>
+                    </label>
+                    <div class="flex-center-input">
+                        <i class="minus-sign"
+                           data-ng-click="removeEvent()"></i>
+                        <input type="number" class="format-input">
+                        <i class="plus-sign"
+                           data-ng-click="addEvent()"></i>
+                    </div>
+                </div>
+                <div class="top20 flex-center-text-input">
+                    <label class="cell one flex-center-input">
+                        <i18n>presences.incidents</i18n>
+                    </label>
+                    <div class="flex-center-input">
+                        <i class="minus-sign"
+                           data-ng-click="removeEvent()"></i>
+                        <input type="number" class="format-input">
+                        <i class="plus-sign"
+                           data-ng-click="addEvent()"></i>
+                    </div>
+                </div>
+                <div class="top20 flex-center-text-input">
+                    <label class="cell one flex-center-input">
+                        <i18n>presences.register.event_type.forgotten.notebooks</i18n>
+                    </label>
+                    <div class="flex-center-input">
+                        <i class="minus-sign"
+                           data-ng-click="removeEvent()"></i>
+                        <input type="number" class="format-input">
+                        <i class="plus-sign"
+                           data-ng-click="addEvent()"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+</div>
