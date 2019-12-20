@@ -14,6 +14,8 @@ import io.vertx.core.logging.LoggerFactory;
 import org.entcore.common.sql.Sql;
 import org.entcore.common.sql.SqlResult;
 
+import java.util.List;
+
 public class DefaultReasonService implements ReasonService {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(DefaultReasonService.class);
@@ -63,6 +65,13 @@ public class DefaultReasonService implements ReasonService {
     public void fetchReason(String structureId, Handler<Either<String, JsonArray>> handler) {
         String query = "SELECT * FROM " + Presences.dbSchema + ".reason where structure_id = '" + structureId + "'";
         Sql.getInstance().raw(query, SqlResult.validResultHandler(handler));
+    }
+
+    public void getReasons(List<Integer> reasonIds, Handler<Either<String, JsonArray>> handler) {
+        String query = "SELECT r.id, to_json(r.*) as reason FROM " + Presences.dbSchema +
+                ".reason r WHERE r.id IN " + Sql.listPrepared(reasonIds);
+        JsonArray params = new JsonArray(reasonIds);
+        Sql.getInstance().prepared(query, params, SqlResult.validResultHandler(handler));
     }
 
     @Override

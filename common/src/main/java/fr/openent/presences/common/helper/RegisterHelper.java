@@ -2,11 +2,9 @@ package fr.openent.presences.common.helper;
 
 import fr.openent.presences.enums.EventType;
 import fr.wseduc.webutils.Either;
-import io.vertx.core.AsyncResult;
 import io.vertx.core.Future;
 import io.vertx.core.Handler;
 import io.vertx.core.eventbus.EventBus;
-import io.vertx.core.eventbus.Message;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import io.vertx.core.logging.Logger;
@@ -115,52 +113,6 @@ public class RegisterHelper {
      */
     public void getAbsence(String startDate, String endDate, JsonArray idStudents, Future<JsonArray> future) {
         getAbsence(startDate, endDate, idStudents, FutureHelper.handlerJsonArray(future));
-    }
-
-    /**
-     * Squash register student event history and structure slot profile.
-     *
-     * @param register    Current register
-     * @param structureId Structure identifier
-     * @param handler     Function handler returning data
-     */
-    public void matchSlots(JsonObject register, String structureId, Handler<Either<String, JsonObject>> handler) {
-        JsonObject action = new JsonObject()
-                .put("action", "timeslot.getSlotProfiles")
-                .put("structureId", structureId);
-
-        eb.send("viescolaire", action, (Handler<AsyncResult<Message<JsonObject>>>) event -> {
-            String status = event.result().body().getString("status");
-            JsonObject body = event.result().body();
-            JsonArray slots = new JsonArray();
-            if ("error".equals(status)) {
-                LOGGER.error("[Presences@DefaultRegistrerService] Failed to retrieve slot profile");
-            } else if (body.getJsonObject("result").containsKey("slots") && !body.getJsonObject("result").getJsonArray("slots").isEmpty()) {
-                slots = body.getJsonObject("result").getJsonArray("slots");
-            }
-            JsonArray students = register.getJsonArray("students");
-
-            try {
-                JsonArray clone = cloneSlots(slots, register.getString("start_date"));
-                for (int i = 0; i < students.size(); i++) {
-                    JsonObject student = students.getJsonObject(i);
-                    JsonArray history = student.getJsonArray("day_history");
-
-                    JsonArray userSlots = clone.copy();
-                    if (history.size() == 0) {
-                        student.put("day_history", userSlots);
-                    } else {
-                        student.put("day_history", mergeEventsSlots(student.getJsonArray("day_history"), userSlots));
-                    }
-                }
-                handler.handle(new Either.Right<>(register));
-            } catch (Exception e) {
-                String message = "[Presences@DefaultRegisterService] Failed to parse slots";
-                LOGGER.error(message, e);
-                handler.handle(new Either.Left<>(message));
-                return;
-            }
-        });
     }
 
     /**

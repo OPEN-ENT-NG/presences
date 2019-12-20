@@ -47,4 +47,52 @@ public class Absence implements Cloneable {
                 .put("start_date", this.startDate)
                 .put("end_date", this.endDate);
     }
+
+    public Integer getId() {
+        return id;
+    }
+
+    public void setId(Integer id) {
+        this.id = id;
+    }
+
+    public Boolean isAbsence() {
+        return absence;
+    }
+
+    public void setAbsence(Boolean absence) {
+        this.absence = absence;
+    }
+
+    public String getStudentId() {
+        return studentId;
+    }
+
+    public void setStudentId(String studentId) {
+        this.studentId = studentId;
+    }
+
+    public Integer getReasonId() {
+        return reasonId;
+    }
+
+    public void setReasonId(Integer reasonId) {
+        this.reasonId = reasonId;
+    }
+
+    public String getStartDate() {
+        return startDate;
+    }
+
+    public void setStartDate(String startDate) {
+        this.startDate = startDate;
+    }
+
+    public String getEndDate() {
+        return endDate;
+    }
+
+    public void setEndDate(String endDate) {
+        this.endDate = endDate;
+    }
 }

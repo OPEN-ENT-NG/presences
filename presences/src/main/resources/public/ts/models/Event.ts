@@ -119,12 +119,12 @@ export class Events extends LoadingCollection {
     static buildEventResponse(data: any[]): EventResponse[] {
         let dataModel = [];
         data.forEach(item => {
-            if (!dataModel.some(e => (JSON.stringify(e.dayHistory) == JSON.stringify(item.student.day_history)))) {
+            if (!dataModel.some(e => (JSON.stringify(e.dayHistory) == JSON.stringify(item.student.dayHistory)))) {
                 let eventsResponse = [];
                 let reasonIds = [];
                 let regularizedEvents = [];
 
-                item.student.day_history.forEach(eventsHistory => {
+                item.student.dayHistory.forEach(eventsHistory => {
                     eventsHistory.events.forEach(event => {
                         if (!eventsResponse.some(element => element.id == event.id)) {
                             eventsResponse.push(event);
@@ -132,7 +132,9 @@ export class Events extends LoadingCollection {
                         if ("reason_id" in event) {
                             reasonIds.push(event.reason_id);
                         }
-                        regularizedEvents.push(event.counsellor_regularisation);
+                        if ("counsellor_regularisation" in event) {
+                            regularizedEvents.push(event.counsellor_regularisation);
+                        }
                     });
                 });
 
@@ -154,14 +156,14 @@ export class Events extends LoadingCollection {
                     : regularizedEvents.reduce((accumulator, currentValue) => accumulator && currentValue);
 
                 dataModel.push({
-                    studentId: item.student_id,
-                    displayName: item.student.displayName,
-                    className: item.student.classeName,
+                    studentId: item.student.id,
+                    displayName: item.student.name,
+                    className: item.student.className,
                     classId: item.student.classId,
-                    date: moment(item.start_date).format(DateUtils.FORMAT["YEAR-MONTH-DAY"]),
-                    dayHistory: item.student.day_history,
+                    date: moment(item.startDate).format(DateUtils.FORMAT["YEAR-MONTH-DAY"]),
+                    dayHistory: item.student.dayHistory,
                     events: eventsResponse,
-                    courses: _.uniq(item.student.courses, "_id"),
+                    // courses: _.uniq(item.student.courses, "_id"),
                     globalReason: globalReason,
                     globalCounsellorRegularisation: globalCounsellorRegularisation,
 
@@ -261,6 +263,22 @@ export class Absence extends Event {
     async updateAbsence(absenceId?: number, structureId?: string, reasonId?: number, ownerId?: string): Promise<AxiosResponse> {
         try {
             return await http.put(`/presences/absence/${absenceId}`, this.toAbsenceJson(structureId, reasonId, ownerId));
+        } catch (err) {
+            throw err;
+        }
+    }
+
+    async updateAbsenceReason(arrayAbsencesId, reasonId): Promise<void> {
+        try {
+            await http.put(`/presences/absence/reason`, {ids: arrayAbsencesId, reasonId: reasonId});
+        } catch (err) {
+            throw err;
+        }
+    }
+
+    async updateAbsenceRegularized(arrayAbsencesId, regularized): Promise<void> {
+        try {
+            await http.put(`/presences/absence/regularized`, {ids: arrayAbsencesId, regularized: regularized});
         } catch (err) {
             throw err;
         }

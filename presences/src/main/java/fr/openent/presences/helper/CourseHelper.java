@@ -72,7 +72,8 @@ public class CourseHelper {
         });
     }
 
-    public void getCourses(String structure, List<String> teachers, List<String> groups, String start, String end, Handler<Either<String, JsonArray>> handler) {
+    public void getCourses(String structure, List<String> teachers, List<String> groups, String start,
+                           String end, Handler<Either<String, JsonArray>> handler) {
         JsonObject action = new JsonObject()
                 .put("action", "course.getCoursesOccurences")
                 .put("structureId", structure)

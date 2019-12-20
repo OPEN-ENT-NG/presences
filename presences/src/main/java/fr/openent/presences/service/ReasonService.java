@@ -5,6 +5,8 @@ import io.vertx.core.Handler;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 
+import java.util.List;
+
 public interface ReasonService {
 
     /**
@@ -31,14 +33,15 @@ public interface ReasonService {
      */
     void put(JsonObject reasonBody, Handler<Either<String, JsonObject>> handler);
 
-    /**
-     * get reasons
-     *
-     * @param reasonId Reason Identifier
-     * @param handler  Function handler returning data
-     */
     void delete(Integer reasonId, Handler<Either<String, JsonObject>> handler);
 
     void fetchReason(String structureId, Handler<Either<String, JsonArray>> handler);
 
+    /**
+     * get reasons
+     *
+     * @param reasonIds Reason Identifier
+     * @param handler   Function handler returning data
+     */
+    void getReasons(List<Integer> reasonIds, Handler<Either<String, JsonArray>> handler);
 }

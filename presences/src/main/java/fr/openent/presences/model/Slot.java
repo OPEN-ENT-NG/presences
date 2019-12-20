@@ -3,14 +3,11 @@ package fr.openent.presences.model;
 import io.vertx.core.json.JsonObject;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 
 public class Slot {
 
-    public static List<String> MANDATORY_ATTRIBUTE = new ArrayList<>(
-            Arrays.asList("id", "structure_id", "name", "start_hour", "end_hour")
-    );
+    public static List<String> MANDATORY_ATTRIBUTE = new ArrayList<>();
 
     private String id;
     private String structureId;
@@ -29,6 +26,13 @@ public class Slot {
         this.name = slot.getString("subjectId", "");
         this.startHour = slot.getString("start_hour", "");
         this.endHour = slot.getString("end_hour", "");
+    }
+
+    public Slot(JsonObject slot) {
+        this.id = slot.getString("id", "");
+        this.name = slot.getString("name", "");
+        this.startHour = slot.getString("startHour", "");
+        this.endHour = slot.getString("endHour", "");
     }
 
     public String getId() {

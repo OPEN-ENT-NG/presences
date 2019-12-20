@@ -1,5 +1,5 @@
 import {_, angular, idiom as lang, moment, ng} from 'entcore';
-import {EventResponse, Events, EventType, Student, Students} from "../models";
+import {Absence, EventResponse, Events, EventType, Student, Students} from "../models";
 import {DateUtils} from "@common/utils";
 import {GroupService} from "@common/services/GroupService";
 import {Reason, ReasonService} from "../services";
@@ -261,13 +261,17 @@ export const eventsController = ng.controller('EventsController', ['$scope', '$r
             const className = ['absent', 'late', 'departure', 'remark', 'justified', 'empty'];
             let index = 4;
             for (let i = 0; i < periods.events.length; i++) {
-                if (periods.events[i].type_id === 1) {
-                    index = periods.events[i].reason_id !== null ? 4 : 0;
-                } else if (periods.events[i].type_id === 2) {
-                    index = 1;
+                if ("type_id" in periods.events[i]) {
+                    if (periods.events[i].type_id === 1) {
+                        index = periods.events[i].reason_id !== null ? 4 : 0;
+                    } else if (periods.events[i].type_id === 2) {
+                        index = 1;
+                    } else {
+                        let arrayIndex = priority.indexOf(periods.events[i].type_id);
+                        index = arrayIndex < index ? arrayIndex : index;
+                    }
                 } else {
-                    let arrayIndex = priority.indexOf(periods.events[i].type_id);
-                    index = arrayIndex < index ? arrayIndex : index;
+                    index = periods.events[i].reason_id != null ? 4 : 0;
                 }
             }
             return className[index] || '';
@@ -360,9 +364,16 @@ export const eventsController = ng.controller('EventsController', ['$scope', '$r
             }
         };
 
-        vm.toggleAbsenceRegularised = (history, event, index): void => {
-            let eventsId = [history.id];
-            vm.events.updateRegularized(eventsId, history.counsellor_regularisation);
+        vm.toggleAbsenceRegularised = (history, event, index: number): void => {
+            if ("type_id" in history) {
+                let eventsId = [history.id];
+                vm.events.updateRegularized(eventsId, history.counsellor_regularisation);
+            } else {
+                let absencesId = [history.id];
+                new Absence(null, null, null, null)
+                    .updateAbsenceRegularized(absencesId, history.counsellor_regularisation);
+            }
+
             if (!isWidget) {
                 manageEventDrop(history, event, index);
                 if (event.events.length > 0) event.globalCounsellorRegularisation = initGlobalCounsellorRegularisation(event);
@@ -396,20 +407,34 @@ export const eventsController = ng.controller('EventsController', ['$scope', '$r
 
         /* Change its description reason id */
         vm.changeDescriptionReason = (history, event: EventResponse, index): void => {
-            let eventsArrayId = [history.id];
+            let eventsArrayId = [];
+            let absencesArrayId = [];
             event.dayHistory.forEach(e => {
                 e.events.forEach(item => {
                     if (item.id === history.id) {
                         item.reason_id = history.reason_id;
 
-                        // check if id already exist in array
-                        if (eventsArrayId.indexOf(item.id) === -1) {
-                            eventsArrayId.push(item.id);
+                        // check if id already exist in event array
+                        if ("type_id" in item) {
+                            if (eventsArrayId.indexOf(item.id) === -1) {
+                                eventsArrayId.push(item.id);
+                            }
+                        } else {
+                            // check if id already exist in absence array
+                            if (absencesArrayId.indexOf(item.id) === -1) {
+                                absencesArrayId.push(item.id);
+                            }
                         }
+
                     }
                 });
             });
-            vm.events.updateReason(eventsArrayId, history.reason_id);
+            if ("type_id" in history) {
+                vm.events.updateReason(eventsArrayId, history.reason_id);
+            } else {
+                new Absence(null, null, null, null)
+                    .updateAbsenceReason(absencesArrayId, history.reason_id);
+            }
             history.counsellor_regularisation = vm.provingReasonsMap[history.reason_id];
             manageEventDrop(history, event, index);
         };

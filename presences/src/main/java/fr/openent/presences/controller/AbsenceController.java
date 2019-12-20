@@ -92,6 +92,27 @@ public class AbsenceController extends ControllerHelper {
         });
     }
 
+    @Put("/absence/reason")
+    @ApiDoc("Update reason in absence")
+    @ResourceFilter(Manage.class)
+    @SecuredAction(value = "", type = ActionType.RESOURCE)
+    public void changeReasonAbsence(HttpServerRequest request) {
+        RequestUtils.bodyToJson(request, absence -> {
+            absenceService.changeReasonAbsences(absence, DefaultResponseHandler.defaultResponseHandler(request));
+        });
+    }
+
+    @Put("/absence/regularized")
+    @ApiDoc("Update regularized absence")
+    @ResourceFilter(Manage.class)
+    @SecuredAction(value = "", type = ActionType.RESOURCE)
+    public void regularizedAbsences(HttpServerRequest request) {
+        RequestUtils.bodyToJson(request, absence -> {
+            absenceService.changeRegularizedAbsences(absence, DefaultResponseHandler.defaultResponseHandler(request));
+        });
+    }
+
+
     private Boolean isAbsenceBodyValid(JsonObject absence) {
         return absence.containsKey("start_date") && absence.containsKey("end_date") && absence.containsKey("student_id");
     }

@@ -33,14 +33,15 @@ public class DefaultAbsenceService implements AbsenceService {
     @Override
     public void get(String startDate, String endDate, List<String> users, Handler<Either<String, JsonArray>> handler) {
         JsonArray params = new JsonArray();
-        String query = "SELECT * FROM " + Presences.dbSchema + ".absence" +
-                " WHERE student_id IN " + Sql.listPrepared(users.toArray()) +
-                " AND start_date > ?" +
-                " AND end_date < ?";
+        String query = "SELECT * FROM " + Presences.dbSchema + ".absence";
 
-        params.addAll(new JsonArray(users));
-        params.add(startDate + " 00:00:00");
-        params.add(endDate + " 23:59:59");
+        if (users.isEmpty()) {
+            query += " WHERE start_date > ? AND end_date < ?";
+            params.add(startDate + " 00:00:00").add(endDate + " 23:59:59");
+        } else {
+            query += " WHERE student_id IN " + Sql.listPrepared(users.toArray()) + " AND start_date > ? AND end_date < ?";
+            params.addAll(new JsonArray(users)).add(startDate + " 00:00:00").add(endDate + " 23:59:59");
+        }
 
         Sql.getInstance().prepared(query, params, SqlResult.validResultHandler(handler));
     }
@@ -182,6 +183,31 @@ public class DefaultAbsenceService implements AbsenceService {
                         .put("createdRegisterId", createdRegisterId)));
             }
         });
+    }
+
+    @Override
+    public void changeReasonAbsences(JsonObject absenceBody, Handler<Either<String, JsonObject>> handler) {
+        JsonArray params = new JsonArray();
+        String query = "UPDATE " + Presences.dbSchema + ".absence SET reason_id = ? ";
+        if (absenceBody.getInteger("reasonId") != null) {
+            params.add(absenceBody.getInteger("reasonId"));
+        } else {
+            params.addNull();
+        }
+        query += " WHERE id IN " + Sql.listPrepared(absenceBody.getJsonArray("ids").getList());
+        params.addAll(absenceBody.getJsonArray("ids"));
+        Sql.getInstance().prepared(query, params, SqlResult.validUniqueResultHandler(handler));
+    }
+
+    @Override
+    public void changeRegularizedAbsences(JsonObject absenceBody, Handler<Either<String, JsonObject>> handler) {
+        JsonArray params = new JsonArray();
+        String query = "UPDATE " + Presences.dbSchema + ".absence SET counsellor_regularisation = ? ";
+        params.add(absenceBody.getBoolean("regularized"));
+
+        query += " WHERE id IN " + Sql.listPrepared(absenceBody.getJsonArray("ids").getList());
+        params.addAll(absenceBody.getJsonArray("ids"));
+        Sql.getInstance().prepared(query, params, SqlResult.validUniqueResultHandler(handler));
     }
 
     private void createEventsWithAbsents(JsonObject absenceBody, List<String> groupIds, Handler<Either<String, JsonArray>> handler) {
