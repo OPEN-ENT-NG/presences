@@ -21,10 +21,11 @@
                     </label>
                     <div class="flex-center-input">
                         <i class="minus-sign"
-                           data-ng-click="removeEvent()"></i>
-                            <input type="number" class="format-input">
+                           data-ng-click="vm.decrementThreshold()"></i>
+                            <input type="number" class="format-input"
+                                   ng-model="vm.setting.alert_absence_threshold" ng-change="vm.save()">
                         <i class="plus-sign"
-                           data-ng-click="addEvent()"></i>
+                           data-ng-click="vm.incrementThreshold()"></i>
                     </div>
                 </div>
                 <div class="top20 flex-center-text-input">
@@ -33,10 +34,11 @@
                     </label>
                     <div class="flex-center-input">
                         <i class="minus-sign"
-                           data-ng-click="removeEvent()"></i>
-                        <input type="number" class="format-input">
+                           data-ng-click="vm.decrementThreshold()"></i>
+                        <input type="number" class="format-input"
+                               ng-model="vm.setting.alert_lateness_threshold" ng-change="vm.save()">
                         <i class="plus-sign"
-                           data-ng-click="addEvent()"></i>
+                           data-ng-click="vm.incrementThreshold()"></i>
                     </div>
                 </div>
                 <div class="top20 flex-center-text-input">
@@ -45,10 +47,11 @@
                     </label>
                     <div class="flex-center-input">
                         <i class="minus-sign"
-                           data-ng-click="removeEvent()"></i>
-                        <input type="number" class="format-input">
+                           data-ng-click="vm.decrementThreshold()"></i>
+                        <input type="number" class="format-input"
+                               ng-model="vm.setting.alert_incident_threshold" ng-change="vm.save()">
                         <i class="plus-sign"
-                           data-ng-click="addEvent()"></i>
+                           data-ng-click="vm.incrementThreshold()"></i>
                     </div>
                 </div>
                 <div class="top20 flex-center-text-input">
@@ -57,10 +60,11 @@
                     </label>
                     <div class="flex-center-input">
                         <i class="minus-sign"
-                           data-ng-click="removeEvent()"></i>
-                        <input type="number" class="format-input">
+                           data-ng-click="vm.decrementThreshold()"></i>
+                        <input type="number" class="format-input"
+                               ng-model="vm.setting.alert_forgotten_notebook_threshold" ng-change="vm.save()">
                         <i class="plus-sign"
-                           data-ng-click="addEvent()"></i>
+                           data-ng-click="vm.incrementThreshold()"></i>
                     </div>
                 </div>
             </div>
