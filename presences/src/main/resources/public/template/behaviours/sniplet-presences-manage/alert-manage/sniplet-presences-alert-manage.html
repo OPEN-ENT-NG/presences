@@ -11,63 +11,26 @@
 
         <!-- Input -->
         <div class="sniplet-input">
-            <label class="sniplet-input-title">
+            <label>
                 <i18n>presences.alerts.form.input</i18n>
             </label>
-            <div class="flex-column">
-                <div class="flex-center-text-input">
-                    <label class="cell one flex-center-input">
-                        <i18n>presences.navigation.absence</i18n>
-                    </label>
-                    <div class="flex-center-input">
-                        <i class="minus-sign"
-                           data-ng-click="vm.decrementThreshold()"></i>
-                            <input type="number" class="format-input"
-                                   ng-model="vm.setting.alert_absence_threshold" ng-change="vm.save()">
-                        <i class="plus-sign"
-                           data-ng-click="vm.incrementThreshold()"></i>
-                    </div>
-                </div>
+
+            <div class="flex-column" ng-repeat="threshold in vm.inputThreshold">
                 <div class="top20 flex-center-text-input">
                     <label class="cell one flex-center-input">
-                        <i18n>presences.absence.retards</i18n>
+                        [[threshold.label]]
                     </label>
                     <div class="flex-center-input">
                         <i class="minus-sign"
-                           data-ng-click="vm.decrementThreshold()"></i>
+                           data-ng-click="vm.decrementThreshold(threshold.label)"></i>
                         <input type="number" class="format-input"
-                               ng-model="vm.setting.alert_lateness_threshold" ng-change="vm.save()">
+                               ng-model="threshold.threshold" ng-change="vm.save()">
                         <i class="plus-sign"
-                           data-ng-click="vm.incrementThreshold()"></i>
-                    </div>
-                </div>
-                <div class="top20 flex-center-text-input">
-                    <label class="cell one flex-center-input">
-                        <i18n>presences.incidents</i18n>
-                    </label>
-                    <div class="flex-center-input">
-                        <i class="minus-sign"
-                           data-ng-click="vm.decrementThreshold()"></i>
-                        <input type="number" class="format-input"
-                               ng-model="vm.setting.alert_incident_threshold" ng-change="vm.save()">
-                        <i class="plus-sign"
-                           data-ng-click="vm.incrementThreshold()"></i>
-                    </div>
-                </div>
-                <div class="top20 flex-center-text-input">
-                    <label class="cell one flex-center-input">
-                        <i18n>presences.register.event_type.forgotten.notebooks</i18n>
-                    </label>
-                    <div class="flex-center-input">
-                        <i class="minus-sign"
-                           data-ng-click="vm.decrementThreshold()"></i>
-                        <input type="number" class="format-input"
-                               ng-model="vm.setting.alert_forgotten_notebook_threshold" ng-change="vm.save()">
-                        <i class="plus-sign"
-                           data-ng-click="vm.incrementThreshold()"></i>
+                           data-ng-click="vm.incrementThreshold(threshold.label)"></i>
                     </div>
                 </div>
             </div>
+
         </div>
 
     </div>
