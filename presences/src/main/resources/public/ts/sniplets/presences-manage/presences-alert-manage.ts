@@ -5,6 +5,7 @@ declare const window;
 
 interface InputObject {
     label: String,
+    settingRef: string,
     threshold: number,
 }
 
@@ -13,12 +14,14 @@ interface ViewModel {
 
     inputThreshold: Array<InputObject>;
 
+    timer: any;
+
     // interaction
     getThreshold(): void;
 
-    incrementThreshold(label): void;
+    updateThreshold(input: InputObject, isIncr: Boolean): void;
 
-    decrementThreshold(label): void;
+    manualUpdateThreshold(input: InputObject): void;
 
     save(): void;
 }
@@ -26,14 +29,15 @@ interface ViewModel {
 const vm: ViewModel = {
     setting: {},
     inputThreshold: [],
+    timer: null,
 
     async getThreshold() {
         try {
             let defaultSettings = {
                 alert_absence_threshold: 0,
-                alert_lateness_threshold : 0,
-                alert_incident_threshold : 0,
-                alert_forgotten_notebook_threshold : 0
+                alert_lateness_threshold: 0,
+                alert_incident_threshold: 0,
+                alert_forgotten_notebook_threshold: 0
             };
             let structureSettings: any = await settingService.retrieve(window.model.vieScolaire.structure.id);
 
@@ -42,22 +46,25 @@ const vm: ViewModel = {
             vm.inputThreshold = [
                 {
                     label: lang.translate("presences.navigation.absence"),
+                    settingRef: "alert_absence_threshold",
                     threshold: vm.setting.alert_absence_threshold
                 },
                 {
                     label: lang.translate("presences.absence.retards"),
+                    settingRef: "alert_lateness_threshold",
                     threshold: vm.setting.alert_lateness_threshold
                 },
                 {
                     label: lang.translate("presences.incidents"),
+                    settingRef: "alert_incident_threshold",
                     threshold: vm.setting.alert_incident_threshold
                 },
                 {
-                    label: lang.translate("presences.navigation.notebook"),
+                    label: lang.translate("presences.register.event_type.forgotten.notebooks"),
+                    settingRef: "alert_forgotten_notebook_threshold",
                     threshold: vm.setting.alert_forgotten_notebook_threshold
                 },
             ];
-
             presencesAlertManage.that.$apply();
         } catch (e) {
             toasts.warning('error');
@@ -65,74 +72,20 @@ const vm: ViewModel = {
         }
     },
 
-    decrementThreshold: async function (label) {
-        if (label == lang.translate("presences.navigation.absence")) {
-            if(vm.setting.alert_absence_threshold > 0) {
-                vm.setting.alert_absence_threshold--;
-            }
-            vm.save();
-        }
-        if (label == lang.translate("presences.absence.retards")) {
-            if(vm.setting.alert_lateness_threshold > 0) {
-                vm.setting.alert_lateness_threshold--;
-            }
-            vm.save();
-        }
-        if (label == lang.translate("presences.incidents")) {
-            if(vm.setting.alert_incident_threshold > 0) {
-                vm.setting.alert_incident_threshold--;
-            }
-            vm.save();
-        }
-        if (label == lang.translate("presences.register.event_type.forgotten.notebooks")) {
-            if(vm.setting.alert_forgotten_notebook_threshold > 0) {
-                vm.setting.alert_forgotten_notebook_threshold--;
-            }
-            vm.save();
-        }
+    updateThreshold: async function (input, isIncr) {
+        let threshold = input.threshold;
+        vm.setting[input.settingRef] = isIncr ? (threshold + 1) : (threshold > 0 ? threshold - 1 : 0);
+        await vm.save();
     },
 
-    incrementThreshold: async function (label) {
-        if(label == lang.translate("presences.navigation.absence")) {
-            if(!vm.setting.alert_absence_threshold) {
-                vm.setting.alert_absence_threshold = 1;
-            }
-            else {
-                vm.setting.alert_absence_threshold ++;
-            }
-            vm.save();
-            await vm.getThreshold();
-        }
-        if(label == lang.translate("presences.absence.retards")) {
-            if(!vm.setting.alert_lateness_threshold) {
-                vm.setting.alert_lateness_threshold = 1;
-            }
-            else {
-                vm.setting.alert_lateness_threshold ++;
-            }
-            vm.save();
-            await vm.getThreshold();
-        }
-        if(label == lang.translate("presences.incidents")) {
-            if(!vm.setting.alert_incident_threshold) {
-                vm.setting.alert_incident_threshold = 1;
-            }
-            else {
-                vm.setting.alert_incident_threshold ++;
-            }
-            vm.save();
-            await vm.getThreshold();
-        }
-        if(label == lang.translate("presences.register.event_type.forgotten.notebooks")) {
-            if(!vm.setting.alert_forgotten_notebook_threshold) {
-                vm.setting.alert_forgotten_notebook_threshold = 1;
-            }
-            else {
-                vm.setting.alert_forgotten_notebook_threshold ++;
-            }
-            vm.save();
-            await vm.getThreshold();
-        }
+    manualUpdateThreshold: async function(input) {
+        let threshold = input.threshold;
+
+        if(vm.timer != null) clearTimeout(vm.timer);
+        vm.timer = setTimeout(async () => {
+            vm.setting[input.settingRef] = threshold < 0 ?  0 : threshold;
+            await vm.save();
+        }, 200);
     },
 
     async save() {
@@ -143,6 +96,7 @@ const vm: ViewModel = {
             toasts.confirm('presences.alert.manage.event.method.save.error');
             throw e;
         }
+        await vm.getThreshold();
     }
 };
 

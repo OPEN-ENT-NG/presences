@@ -22,11 +22,11 @@
                     </label>
                     <div class="flex-center-input">
                         <i class="minus-sign"
-                           data-ng-click="vm.decrementThreshold(threshold.label)"></i>
+                           data-ng-click="vm.updateThreshold(threshold, false)"></i>
                         <input type="number" class="format-input"
-                               ng-model="threshold.threshold" ng-change="vm.save()">
+                               data-ng-model="threshold.threshold" ng-change="vm.manualUpdateThreshold(threshold)">
                         <i class="plus-sign"
-                           data-ng-click="vm.incrementThreshold(threshold.label)"></i>
+                           data-ng-click="vm.updateThreshold(threshold, true)"></i>
                     </div>
                 </div>
             </div>
