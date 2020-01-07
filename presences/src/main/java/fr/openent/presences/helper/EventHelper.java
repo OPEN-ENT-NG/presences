@@ -6,6 +6,7 @@ import fr.openent.presences.common.helper.FutureHelper;
 import fr.openent.presences.common.helper.RegisterHelper;
 import fr.openent.presences.model.Absence;
 import fr.openent.presences.model.Event.Event;
+import fr.openent.presences.model.Event.EventType;
 import fr.openent.presences.model.Event.RegisterEvent;
 import fr.openent.presences.model.Person.Student;
 import fr.openent.presences.model.Reason;
@@ -14,12 +15,9 @@ import fr.openent.presences.service.AbsenceService;
 import fr.openent.presences.service.ReasonService;
 import fr.openent.presences.service.impl.DefaultAbsenceService;
 import fr.openent.presences.service.impl.DefaultReasonService;
-import io.vertx.core.AsyncResult;
 import io.vertx.core.CompositeFuture;
 import io.vertx.core.Future;
-import io.vertx.core.Handler;
 import io.vertx.core.eventbus.EventBus;
-import io.vertx.core.eventbus.Message;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import io.vertx.core.logging.Logger;
@@ -37,6 +35,7 @@ public class EventHelper {
     private final EventBus eb;
     private AbsenceService absenceService;
     private CourseHelper courseHelper;
+    private EventTypeHelper eventTypeHelper;
     private ReasonService reasonService;
     private RegisterHelper registerHelper;
     private PersonHelper personHelper;
@@ -45,10 +44,10 @@ public class EventHelper {
         this.eb = eb;
         this.absenceService = new DefaultAbsenceService(eb);
         this.courseHelper = new CourseHelper(eb);
+        this.eventTypeHelper = new EventTypeHelper();
         this.personHelper = new PersonHelper();
         this.reasonService = new DefaultReasonService();
         this.registerHelper = new RegisterHelper(eb, Presences.dbSchema);
-
     }
 
     public JsonArray mergeAbsencesSlots(JsonArray slots, List<Absence> absences) {
@@ -103,8 +102,6 @@ public class EventHelper {
                     formatReasonsResult.add(new JsonObject(reasonsResult.right().getValue().getJsonObject(i).getString("reason")));
                 }
                 List<Reason> reasons = ReasonHelper.getReasonListFromJsonArray(formatReasonsResult, Reason.MANDATORY_ATTRIBUTE);
-
-                // Adding reason object to event who possesses reason id (ignore if reason_id is null)
                 for (Event event : events) {
                     for (Reason reason : reasons) {
                         if (event.getReason().getId() != null) {
@@ -121,53 +118,66 @@ public class EventHelper {
         });
     }
 
-    public void addStudentsToEvents(List<Event> events, List<String> studentIds, String startDate,
-                                    String endDate, String structureId, Future<JsonObject> studentFuture) {
-        registerHelper.getRegisterEventHistory(startDate, endDate, new JsonArray(studentIds), registerEvent -> {
-            if (registerEvent.isLeft()) {
-                String message = "[Presences@EventHelper] Failed to retrieve register info";
+    public void addEventTypeToEvents(List<Event> events, List<Integer> eventTypeIds, Future<JsonObject> eventTypeFuture) {
+        if (eventTypeIds.size() == 0) {
+            eventTypeFuture.complete();
+            return;
+        }
+        eventTypeHelper.getEventType(eventTypeIds, eventTypeResult -> {
+            if (eventTypeResult.isRight()) {
+                List<EventType> eventTypes = EventTypeHelper
+                        .getEventTypeListFromJsonArray(eventTypeResult.right().getValue(), Reason.MANDATORY_ATTRIBUTE);
+                for (Event event : events) {
+                    for (EventType eventType : eventTypes) {
+                        if (event.getEventType().getId() != null) {
+                            if (event.getEventType().getId().equals(eventType.getId())) {
+                                event.setEventType(eventType);
+                            }
+                        }
+                    }
+                }
+                eventTypeFuture.complete();
+            } else {
+                eventTypeFuture.fail("Failed to query event type info");
+            }
+        });
+    }
+
+    public void addStudentsToEvents(List<Event> events, List<String> studentIds, String startDate, String endDate,
+                                    String structureId, JsonArray absences, JsonObject slots, Future<JsonObject> studentFuture) {
+
+        Future<JsonArray> registerEventFuture = Future.future();
+        Future<JsonArray> studentsInfosFuture = Future.future();
+
+        registerHelper.getRegisterEventHistory(startDate, endDate, new JsonArray(studentIds),
+                FutureHelper.handlerJsonArray(registerEventFuture));
+        personHelper.getStudentsInfo(structureId, studentIds, FutureHelper.handlerJsonArray(studentsInfosFuture));
+
+        CompositeFuture.all(registerEventFuture, studentsInfosFuture).setHandler(eventResult -> {
+            if (eventResult.failed()) {
+                String message = "[Presences@EventHelper] Failed to retrieve registerEvent or student info";
                 LOGGER.error(message);
                 studentFuture.fail(message);
             } else {
                 List<RegisterEvent> registerEvents = fr.openent.presences.helper.RegisterHelper
-                        .getRegisterEventListFromJsonArray(registerEvent.right().getValue());
-
-                Future<JsonArray> coursesFuture = Future.future();
-                Future<JsonArray> absencesFuture = Future.future();
-
-                CompositeFuture.all(coursesFuture, absencesFuture).setHandler(eventsResult -> {
-                    if (eventsResult.succeeded()) {
-                        personHelper.getStudentsInfo(structureId, studentIds, studentResult -> {
-                            if (studentResult.isRight()) {
-                                List<Student> students = personHelper.getStudentListFromJsonArray(
-                                        studentResult.right().getValue(), Student.MANDATORY_ATTRIBUTE
-                                );
-                                // Adding student object to event who possesses student_id
-                                for (Event event : events) {
-                                    for (Student student : students) {
-                                        if (event.getStudent().getId().equals(student.getId())) {
-                                            event.setStudent(student.clone());
-                                        }
-                                    }
-                                    for (RegisterEvent register : registerEvents) {
-                                        if (register.getStudentId().equals(event.getStudent().getId())) {
-                                            event.getStudent().getDayHistory()
-                                                    .addAll(filterEvents(register.getEvents(), event.getStartDate()));
-                                        }
-                                    }
-                                }
-                                matchSlots(events, absencesFuture.result(), structureId, studentFuture);
-                            } else {
-                                studentFuture.fail("Failed to query student info");
-                            }
-                        });
-                    } else {
-                        studentFuture.fail("Failed to query courses info");
+                        .getRegisterEventListFromJsonArray(registerEventFuture.result());
+                List<Student> students = personHelper.getStudentListFromJsonArray(
+                        studentsInfosFuture.result(), Student.MANDATORY_ATTRIBUTE
+                );
+                for (Event event : events) {
+                    for (Student student : students) {
+                        if (event.getStudent().getId().equals(student.getId())) {
+                            event.setStudent(student.clone());
+                        }
                     }
-                });
-                courseHelper.getCourses(structureId, new ArrayList<>(), new ArrayList<>(), startDate, endDate,
-                        FutureHelper.handlerJsonArray(coursesFuture));
-                absenceService.get(startDate, endDate, studentIds, FutureHelper.handlerJsonArray(absencesFuture));
+                    for (RegisterEvent register : registerEvents) {
+                        if (register.getStudentId().equals(event.getStudent().getId())) {
+                            event.getStudent().getDayHistory()
+                                    .addAll(filterEvents(register.getEvents(), event.getStartDate()));
+                        }
+                    }
+                }
+                matchSlots(slots, events, absences, studentFuture);
             }
         });
     }
@@ -196,59 +206,72 @@ public class EventHelper {
     /**
      * Squash events student event history and structure slot profile.
      *
-     * @param events      Events list
-     * @param absences    Absences list
-     * @param structureId Structure identifier
-     * @param future      Function handler returning data
+     * @param slotsBody Time slots object
+     * @param events    Events list
+     * @param absences  Absences list
+     * @param future    Function handler returning data
      */
-    private void matchSlots(List<Event> events, JsonArray absences, String structureId, Future<JsonObject> future) {
-        JsonObject action = new JsonObject()
-                .put("action", "timeslot.getSlotProfiles")
-                .put("structureId", structureId);
+    private void matchSlots(JsonObject slotsBody, List<Event> events, JsonArray absences, Future<JsonObject> future) {
+        List<Slot> slots = SlotHelper.getSlotListFromJsonArray(slotsBody.getJsonArray("slots"));
+        List<Absence> absencesList = AbsenceHelper.getAbsenceListFromJsonArray(absences, Absence.MANDATORY_ATTRIBUTE);
+        for (Event event : events) {
+            try {
+                JsonArray clone = registerHelper.cloneSlots(SlotHelper.getSlotJsonArrayFromList(slots), event.getStartDate());
+                Student student = event.getStudent();
+                JsonArray history = student.getDayHistory();
+                JsonArray userSlots = clone.copy();
 
-
-        eb.send("viescolaire", action, (Handler<AsyncResult<Message<JsonObject>>>) result -> {
-            String status = result.result().body().getString("status");
-            JsonObject body = result.result().body();
-            List<Slot> slots = new ArrayList<>();
-            if ("error".equals(status)) {
-                LOGGER.error("[Presences@DefaultEventService] Failed to retrieve slot profile");
-            } else if (body.getJsonObject("result").containsKey("slots") && !body.getJsonObject("result").getJsonArray("slots").isEmpty()) {
-                slots = SlotHelper.getSlotListFromJsonArray(
-                        body.getJsonObject("result").getJsonArray("slots")
-                );
-            }
-
-            List<Absence> absencesList = AbsenceHelper.getAbsenceListFromJsonArray(absences, Absence.MANDATORY_ATTRIBUTE);
-            for (Event event : events) {
-                try {
-                    JsonArray clone = registerHelper.cloneSlots(SlotHelper.getSlotJsonArrayFromList(slots), event.getStartDate());
-                    Student student = event.getStudent();
-                    JsonArray history = student.getDayHistory();
-                    JsonArray userSlots = clone.copy();
-
-                    if (history.size() == 0) {
-                        student.setDayHistory(userSlots);
-                    } else {
-                        if (student.getDayHistory().size() != 9) {
-                            List<Absence> filteredAbsenceList = absencesList.stream()
-                                    .filter(absence -> absence.getStudentId().equals(student.getId()))
-                                    .collect(Collectors.toList());
-                            student.setDayHistory(
-                                    mergeAbsencesSlots(
-                                            registerHelper.mergeEventsSlots(student.getDayHistory(), userSlots), filteredAbsenceList
-                                    )
-                            );
-                        }
+                if (history.size() == 0) {
+                    student.setDayHistory(userSlots);
+                } else {
+                    if (student.getDayHistory().size() != 9) {
+                        List<Absence> filteredAbsenceList = absencesList.stream()
+                                .filter(absence -> absence.getStudentId().equals(student.getId()))
+                                .collect(Collectors.toList());
+                        student.setDayHistory(
+                                mergeAbsencesSlots(
+                                        registerHelper.mergeEventsSlots(student.getDayHistory(), userSlots), filteredAbsenceList
+                                )
+                        );
                     }
-                } catch (Exception e) {
-                    String message = "[Presences@EventHelper] Failed to parse slots";
-                    LOGGER.error(message, e);
-                    future.fail(message);
-                    return;
+                }
+                matchAbsencesSlot(events);
+            } catch (Exception e) {
+                String message = "[Presences@EventHelper] Failed to parse slots";
+                LOGGER.error(message, e);
+                future.fail(message);
+                return;
+            }
+        }
+        future.complete();
+    }
+
+    /**
+     * Squash events (absence only) into student event history
+     *
+     * @param events Events list
+     */
+    private void matchAbsencesSlot(List<Event> events) throws ParseException {
+        for (Event event : events) {
+            if (event.getType().equals("absence")) {
+                for (int i = 0; i < event.getStudent().getDayHistory().size(); i++) {
+                    JsonObject history = event.getStudent().getDayHistory().getJsonObject(i);
+                    if (DateHelper.isBetween(
+                            event.getStartDate(),
+                            event.getEndDate(),
+                            history.getString("start"),
+                            history.getString("end"))) {
+                        JsonObject absenceEvent = new JsonObject()
+                                .put("id", event.getId())
+                                .put("start_date", event.getStartDate())
+                                .put("end_date", event.getEndDate())
+                                .put("reason_id", event.getReason().getId())
+                                .put("counsellor_regularisation", event.isCounsellorRegularisation())
+                                .put("type", event.getType());
+                        history.getJsonArray("events").add(absenceEvent);
+                    }
                 }
             }
-            future.complete();
-        });
+        }
     }
 }

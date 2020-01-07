@@ -40,6 +40,10 @@ public class Reason {
         this.id = reasonId;
     }
 
+    public Reason() {
+
+    }
+
     public Integer getId() {
         return id;
     }

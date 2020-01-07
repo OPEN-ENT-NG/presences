@@ -128,7 +128,7 @@ public class RegisterHelper {
             JsonArray slotEvents = slot.getJsonArray("events");
             try {
                 for (int j = 0; j < events.size(); j++) {
-                    JsonObject event = events.getJsonObject(j);
+                    JsonObject event = events.getJsonObject(j).put("type", "event");
                     Integer type = event.getInteger("type_id");
                     if (matchSlot(type, event, slot)) {
                         slotEvents.add(event);

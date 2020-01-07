@@ -1,12 +1,15 @@
 package fr.openent.presences.service.impl;
 
 import fr.openent.presences.Presences;
+import fr.openent.presences.common.helper.FutureHelper;
 import fr.openent.presences.common.helper.WorkflowHelper;
 import fr.openent.presences.common.viescolaire.Viescolaire;
 import fr.openent.presences.enums.EventType;
 import fr.openent.presences.enums.WorkflowActions;
 import fr.openent.presences.helper.EventHelper;
+import fr.openent.presences.helper.SlotHelper;
 import fr.openent.presences.model.Event.Event;
+import fr.openent.presences.service.AbsenceService;
 import fr.openent.presences.service.EventService;
 import fr.openent.presences.service.SettingsService;
 import fr.wseduc.webutils.Either;
@@ -30,54 +33,85 @@ import java.util.List;
 public class DefaultEventService implements EventService {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(DefaultEventService.class);
-    private SettingsService settingsService = new DefaultSettingsService();
-    private EventHelper eventHelper;
     private static String defaultStartTime = "00:00:00";
     private static String defaultEndTime = "23:59:59";
+    private SettingsService settingsService = new DefaultSettingsService();
+    private AbsenceService absenceService;
+    private EventHelper eventHelper;
+    private SlotHelper slotHelper;
 
     public DefaultEventService(EventBus eb) {
         this.eventHelper = new EventHelper(eb);
+        this.slotHelper = new SlotHelper(eb);
+        this.absenceService = new DefaultAbsenceService(eb);
     }
 
     @Override
     public void get(String structureId, String startDate, String endDate,
                     List<String> eventType, List<String> userId, JsonArray userIdFromClasses, List<String> classes,
                     Boolean regularized, Integer page, Handler<Either<String, JsonArray>> handler) {
-        JsonArray params = new JsonArray();
 
+        Future<JsonObject> slotsFuture = Future.future();
+        Future<JsonArray> eventsFuture = Future.future();
+        Future<JsonArray> absencesFuture = Future.future();
+
+        getEvents(structureId, startDate, endDate, eventType, userId, userIdFromClasses, regularized, page,
+                FutureHelper.handlerJsonArray(eventsFuture));
+        slotHelper.getTimeSlots(structureId, FutureHelper.handlerJsonObject(slotsFuture));
+        absenceService.get(structureId, startDate, endDate, new ArrayList<>(),
+                FutureHelper.handlerJsonArray(absencesFuture));
+
+        CompositeFuture.all(slotsFuture, eventsFuture, absencesFuture).setHandler(asyncResult -> {
+            if (asyncResult.failed()) {
+                String message = "[Presences@DefaultEventService] Failed to retrieve slotProfile, absences or events info";
+                LOGGER.error(message);
+                handler.handle(new Either.Left<>(message));
+            } else {
+                List<Event> events = EventHelper.getEventListFromJsonArray(eventsFuture.result(), Event.MANDATORY_ATTRIBUTE);
+
+                List<Integer> reasonIds = new ArrayList<>();
+                List<String> studentIds = new ArrayList<>();
+                List<Integer> eventTypeIds = new ArrayList<>();
+                for (Event event : events) {
+                    reasonIds.add(event.getReason().getId());
+                    studentIds.add(event.getStudent().getId());
+                    eventTypeIds.add(event.getEventType().getId());
+                }
+
+                // remove null value for each list
+                reasonIds.removeAll(Collections.singletonList(null));
+                studentIds.removeAll(Collections.singletonList(null));
+                eventTypeIds.removeAll(Collections.singletonList(null));
+
+                Future<JsonObject> reasonFuture = Future.future();
+                Future<JsonObject> eventTypeFuture = Future.future();
+                Future<JsonObject> studentFuture = Future.future();
+
+                eventHelper.addReasonsToEvents(events, reasonIds, reasonFuture);
+                eventHelper.addEventTypeToEvents(events, eventTypeIds, eventTypeFuture);
+                eventHelper.addStudentsToEvents(events, studentIds, startDate, endDate, structureId,
+                        absencesFuture.result(), slotsFuture.result(), studentFuture);
+
+                CompositeFuture.all(reasonFuture, eventTypeFuture, studentFuture).setHandler(eventResult -> {
+                    if (eventResult.failed()) {
+                        String message = "[Presences@DefaultEventService] Failed to retrieve reason, event type or student info";
+                        LOGGER.error(message);
+                        handler.handle(new Either.Left<>(message));
+                    } else {
+                        handler.handle(new Either.Right<>(new JsonArray(events)));
+                    }
+                });
+            }
+        });
+    }
+
+    private void getEvents(String structureId, String startDate, String endDate,
+                           List<String> eventType, List<String> userId, JsonArray userIdFromClasses,
+                           Boolean regularized, Integer page, Handler<Either<String, JsonArray>> handler) {
+        JsonArray params = new JsonArray();
         Sql.getInstance().prepared(this.getEventsQuery(structureId, startDate, endDate,
                 eventType, regularized, userId, userIdFromClasses, page, params),
-                params, SqlResult.validResultHandler((result -> {
-                    if (result.isRight()) {
-                        List<Event> events = EventHelper.getEventListFromJsonArray(result.right().getValue(), Event.MANDATORY_ATTRIBUTE);
-                        List<Integer> reasonIds = new ArrayList<>();
-                        List<String> studentIds = new ArrayList<>();
-
-                        for (Event event : events) {
-                            reasonIds.add(event.getReason().getId());
-                            studentIds.add(event.getStudent().getId());
-                        }
-                        reasonIds.removeAll(Collections.singletonList(null));
-                        studentIds.removeAll(Collections.singletonList(null));
-                        Future<JsonObject> reasonFuture = Future.future();
-                        Future<JsonObject> studentFuture = Future.future();
-
-                        eventHelper.addReasonsToEvents(events, reasonIds, reasonFuture);
-                        eventHelper.addStudentsToEvents(events, studentIds, startDate, endDate, structureId, studentFuture);
-
-                        CompositeFuture.all(reasonFuture, studentFuture).setHandler(eventResult -> {
-                            if (eventResult.failed()) {
-                                String message = "[Presences@DefaultEventService] Failed to retrieve reason or student info";
-                                LOGGER.error(message);
-                                handler.handle(new Either.Left<>(message));
-                            } else {
-                                handler.handle(new Either.Right<>(new JsonArray(events)));
-                            }
-                        });
-                    } else {
-                        handler.handle(new Either.Left<>(result.left().getValue()));
-                    }
-                })));
+                params, SqlResult.validResultHandler(handler));
     }
 
 
@@ -115,42 +149,55 @@ public class DefaultEventService implements EventService {
                                   Boolean regularized, List<String> userId, JsonArray userIdFromClasses,
                                   Integer page, JsonArray params) {
 
-        String query = "WITH ids AS (SELECT e.id FROM presences.event e ";
-
-        query += "INNER JOIN presences.register AS r ON (r.id = e.register_id AND r.structure_id = ?) ";
+        String query = "WITH allevents AS (" +
+                "  SELECT e.id AS id, e.start_date AS start_date, e.end_date AS end_date, " +
+                "  e.created AS created, e.comment AS comment, e.student_id AS student_id," +
+                "  e.reason_id AS reason_id, e.register_id AS register_id, " +
+                "  e.counsellor_regularisation AS counsellor_regularisation," +
+                "  e.type_id AS type_id, 'event' AS type" +
+                "  FROM " + Presences.dbSchema + ".event e" +
+                "  INNER JOIN presences.register AS r " +
+                "  ON (r.id = e.register_id AND r.structure_id = ?)";
         params.add(structureId);
-
-        if (startDate != null && endDate != null) {
-            query += "WHERE e.start_date > ? ";
-            query += "AND e.end_date < ? ";
-            params.add(startDate + " 00:00:00");
-            params.add(endDate + " 23:59:59");
-        }
-
-        query += setParamsForQueryEvents(userId, regularized, userIdFromClasses, params);
-
-        if (page != null) {
-            query += "ORDER BY e.start_date DESC OFFSET ? LIMIT ? ";
-            params.add(Presences.PAGE_SIZE * page);
-            params.add(Presences.PAGE_SIZE);
-        }
-
-        query += ") SELECT e.id, e.start_date, e.end_date, e.created, e.comment, e.student_id," +
-                " e.reason_id, e.register_id, e.counsellor_regularisation, e.type_id, " +
-                "to_json(event_type) as event_type, " +
-                "to_json(e.reason_id) as reason " +
-                "FROM presences.event e " +
-                "INNER JOIN ids ON (ids.id = e.id) ";
         if (eventType != null && !eventType.isEmpty()) {
-            query += "INNER JOIN presences.event_type AS event_type ON (event_type.id =" +
-                    " e.type_id AND e.type_id IN " + Sql.listPrepared(eventType.toArray()) + " ) ";
+            query += "INNER JOIN presences.event_type AS event_type ON (event_type.id = e.type_id " +
+                    "AND e.type_id IN " + Sql.listPrepared(eventType.toArray()) + " ) ";
             params.addAll(new JsonArray(eventType));
         } else {
             query += "INNER JOIN presences.event_type AS event_type ON event_type.id = e.type_id ";
         }
-
-        query += "GROUP BY e.id, e.start_date, event_type.id ORDER BY e.start_date DESC";
-
+        query += "WHERE e.start_date > ? AND e.end_date < ?";
+        params.add(startDate + " " + defaultStartTime);
+        params.add(endDate + " " + defaultEndTime);
+        query += setParamsForQueryEvents(userId, regularized, userIdFromClasses, params);
+        query += " UNION" +
+                "  SELECT absence.id AS id, absence.start_date AS start_date, absence.end_date AS end_date, " +
+                "  NULL AS created, NULL AS comment, absence.student_id AS student_id," +
+                "  absence.reason_id AS reason_id, NULL AS register_id," +
+                "  absence.counsellor_regularisation AS counsellor_regularisation, 1 AS type_id, 'absence' AS type" +
+                "  FROM " + Presences.dbSchema + ".absence absence ";
+        if (eventType != null && !eventType.isEmpty()) {
+            query += "INNER JOIN presences.event_type AS event_type ON (event_type.id = 1 " +
+                    "AND 1 IN " + Sql.listPrepared(eventType.toArray()) + " ) ";
+            params.addAll(new JsonArray(eventType));
+        } else {
+            query += "INNER JOIN presences.event_type AS event_type ON event_type.id = 1 ";
+        }
+        query += "WHERE absence.start_date > ? AND absence.end_date < ?";
+        params.add(startDate + " " + defaultStartTime);
+        params.add(endDate + " " + defaultEndTime);
+        query += " AND absence.student_id NOT IN (" +
+                "  SELECT distinct event.student_id FROM presences.event" +
+                " ) ";
+        query += setParamsForQueryEvents(userId, regularized, userIdFromClasses, params);
+        query += ") SELECT * FROM allevents " +
+                "GROUP BY id, start_date, end_date, created, comment, student_id, reason_id," +
+                "type_id, register_id, counsellor_regularisation, type, register_id ";
+        if (page != null) {
+            query += "ORDER BY start_date DESC OFFSET ? LIMIT ? ";
+            params.add(Presences.PAGE_SIZE * page);
+            params.add(Presences.PAGE_SIZE);
+        }
         return query;
     }
 
@@ -168,21 +215,32 @@ public class DefaultEventService implements EventService {
                                             List<String> userId, Boolean regularized,
                                             JsonArray userIdFromClasses, JsonArray params) {
 
-        String query = "SELECT count(*) FROM presences.event e " +
-                "INNER JOIN presences.register AS register ON (e.register_id = register.id AND register.structure_id = ?) ";
+        String query = "SELECT (" +
+                " SELECT COUNT(e.id) FROM " + Presences.dbSchema + ".event e " +
+                " INNER JOIN presences.register AS r ON (r.id = e.register_id AND r.structure_id = ?)";
         params.add(structureId);
-
         if (eventType != null && !eventType.isEmpty()) {
             query += "INNER JOIN presences.event_type AS event_type ON (event_type.id = e.type_id  AND e.type_id IN "
                     + Sql.listPrepared(eventType.toArray()) + ") ";
             params.addAll(new JsonArray(eventType));
         }
-        query += "WHERE register.start_date >= to_date(?, 'YYYY-MM-DD') ";
-        params.add(startDate);
-        query += "AND register.end_date <= to_date(?, 'YYYY-MM-DD') ";
-        params.add(endDate);
-
+        query += "WHERE e.start_date > ? AND e.end_date < ? ";
+        params.add(startDate + " " + defaultStartTime);
+        params.add(endDate + " " + defaultEndTime);
         query += setParamsForQueryEvents(userId, regularized, userIdFromClasses, params);
+        if (eventType != null && eventType.contains("1")) {
+            query += " ) AS events, ( SELECT COUNT(absence.id) FROM " + Presences.dbSchema + ".absence absence " +
+                    "WHERE absence.start_date > ? AND absence.end_date < ?";
+            params.add(startDate + " " + defaultStartTime);
+            params.add(endDate + " " + defaultEndTime);
+            query += " AND absence.student_id NOT IN (" +
+                    "  SELECT event.student_id FROM presences.event" +
+                    " ) ";
+            query += setParamsForQueryEvents(userId, regularized, userIdFromClasses, params);
+            query += ") AS absences";
+        } else {
+            query += " ) AS events, (SELECT COUNT (0)) AS absences";
+        }
         return query;
     }
 
@@ -200,7 +258,7 @@ public class DefaultEventService implements EventService {
         }
 
         if (regularized != null) {
-            query += "AND e.counsellor_regularisation = " + regularized + " ";
+            query += "AND counsellor_regularisation = " + regularized + " ";
         }
         return query;
     }

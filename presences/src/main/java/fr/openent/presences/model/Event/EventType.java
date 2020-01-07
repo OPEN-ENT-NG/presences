@@ -22,6 +22,10 @@ public class EventType {
         this.label = slot.getString("label", null);
     }
 
+    public EventType(Integer id) {
+        this.id = id;
+    }
+
     public Integer getId() {
         return id;
     }

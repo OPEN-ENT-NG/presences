@@ -33,6 +33,15 @@ public class Student extends Person implements Cloneable {
         this.id = studentId;
     }
 
+    public JsonObject toJSON() {
+        return new JsonObject()
+                .put("id", this.id)
+                .put("displayName", this.displayName)
+                .put("classId", this.classId)
+                .put("classeName", this.className)
+                .put("day_history", this.dayHistory);
+    }
+
     @Override
     public Student clone() {
         try {

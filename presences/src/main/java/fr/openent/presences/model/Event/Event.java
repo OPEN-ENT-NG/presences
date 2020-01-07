@@ -25,6 +25,7 @@ public class Event {
     private String created;
     private Boolean counsellorRegularisation;
     private Boolean massmailed;
+    private String type;
 
     public Event(JsonObject event, List<String> mandatoryAttributes) {
         for (String attribute : mandatoryAttributes) {
@@ -39,8 +40,8 @@ public class Event {
         this.counsellorInput = event.getBoolean("counsellor_input", false);
         this.student = new Student(event.getString("student_id", null));
         this.registerId = event.getInteger("register_id", null);
-        if (event.getString("event_type") != null) {
-            this.eventType = new EventType(new JsonObject(event.getString("event_type", null)), EventType.MANDATORY_ATTRIBUTE);
+        if (event.getLong("type_id") != null) {
+            this.eventType = new EventType(event.getInteger("type_id", null));
         } else {
             this.eventType = new EventType(event.getJsonObject("event_type", new JsonObject()), EventType.MANDATORY_ATTRIBUTE);
         }
@@ -49,6 +50,10 @@ public class Event {
         this.created = event.getString("created", null);
         this.counsellorRegularisation = event.getBoolean("counsellor_regularisation", false);
         this.massmailed = event.getBoolean("massmailed", false);
+        this.type = event.getString("type", null);
+    }
+
+    public Event() {
 
     }
 
@@ -156,4 +161,11 @@ public class Event {
         this.massmailed = massmailed;
     }
 
+    public String getType() {
+        return type;
+    }
+
+    public void setType(String type) {
+        this.type = type;
+    }
 }

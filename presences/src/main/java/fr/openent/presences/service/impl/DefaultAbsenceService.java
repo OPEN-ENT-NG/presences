@@ -31,7 +31,8 @@ public class DefaultAbsenceService implements AbsenceService {
     }
 
     @Override
-    public void get(String startDate, String endDate, List<String> users, Handler<Either<String, JsonArray>> handler) {
+    public void get(String structureId, String startDate, String endDate,
+                    List<String> users, Handler<Either<String, JsonArray>> handler) {
         JsonArray params = new JsonArray();
         String query = "SELECT * FROM " + Presences.dbSchema + ".absence";
 
@@ -42,7 +43,10 @@ public class DefaultAbsenceService implements AbsenceService {
             query += " WHERE student_id IN " + Sql.listPrepared(users.toArray()) + " AND start_date > ? AND end_date < ?";
             params.addAll(new JsonArray(users)).add(startDate + " 00:00:00").add(endDate + " 23:59:59");
         }
-
+        if (!structureId.isEmpty()) {
+            query += " AND structure_id = ? ";
+            params.add(structureId);
+        }
         Sql.getInstance().prepared(query, params, SqlResult.validResultHandler(handler));
     }
 
@@ -71,9 +75,10 @@ public class DefaultAbsenceService implements AbsenceService {
 
     @Override
     public void create(JsonObject absenceBody, UserInfos user, Handler<Either<String, JsonObject>> handler) {
-        String query = "INSERT INTO " + Presences.dbSchema + ".absence(start_date, end_date, student_id, reason_id) " +
-                "VALUES (?, ?, ?, ?) RETURNING id;";
+        String query = "INSERT INTO " + Presences.dbSchema + ".absence(structure_id, start_date, end_date, student_id, reason_id) " +
+                "VALUES (?, ?, ?, ?, ?) RETURNING id;";
         JsonArray params = new JsonArray()
+                .add(absenceBody.getString("structure_id"))
                 .add(absenceBody.getString("start_date"))
                 .add(absenceBody.getString("end_date"))
                 .add(absenceBody.getString("student_id"));
@@ -106,9 +111,10 @@ public class DefaultAbsenceService implements AbsenceService {
     @Override
     public void update(Integer absenceId, JsonObject absenceBody, UserInfos user, Handler<Either<String, JsonObject>> handler) {
         String query = "UPDATE " + Presences.dbSchema + ".absence " +
-                "SET start_date = ?, end_date = ?, student_id = ?, reason_id = ? WHERE id = ?";
+                "SET structure_id = ?, start_date = ?, end_date = ?, student_id = ?, reason_id = ? WHERE id = ?";
 
         JsonArray values = new JsonArray()
+                .add(absenceBody.getString("structure_id"))
                 .add(absenceBody.getString("start_date"))
                 .add(absenceBody.getString("end_date"))
                 .add(absenceBody.getString("student_id"));

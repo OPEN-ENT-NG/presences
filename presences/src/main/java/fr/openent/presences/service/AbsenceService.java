@@ -13,9 +13,9 @@ public interface AbsenceService {
     /**
      * get absences
      *
-     * @param handler       Function handler returning data
+     * @param handler Function handler returning data
      */
-    void get(String startDate, String endDate, List<String> users, Handler<Either<String, JsonArray>> handler);
+    void get(String structureId, String startDate, String endDate, List<String> users, Handler<Either<String, JsonArray>> handler);
 
 
     /**

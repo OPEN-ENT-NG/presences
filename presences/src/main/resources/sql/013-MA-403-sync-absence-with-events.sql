@@ -1,4 +1,5 @@
 ALTER TABLE presences.absence
+    ADD COLUMN structure_id character varying (36),
     ADD COLUMN counsellor_regularisation boolean NOT NULL DEFAULT false;
 
 CREATE OR REPLACE FUNCTION presences.regularize_absences() RETURNS TRIGGER AS

@@ -76,8 +76,8 @@ public class EventController extends ControllerHelper {
                 } else {
                     JsonObject res = new JsonObject()
                             .put("page", page)
-                            .put("page_count", pageNumberFuture.result().getLong("count")
-                                    != null ? pageNumberFuture.result().getLong("count") / Presences.PAGE_SIZE : 0)
+                            .put("page_count", (pageNumberFuture.result().getInteger("events") +
+                                    pageNumberFuture.result().getInteger("absences")) / Presences.PAGE_SIZE)
                             .put("all", eventsFuture.result());
 
                     renderJson(request, res);
