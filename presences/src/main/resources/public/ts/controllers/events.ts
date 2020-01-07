@@ -46,7 +46,7 @@ interface ViewModel {
 
     filterSelect(options: Reason[], event): Reason[];
 
-    changeReason(event, index): void;
+    changeReason(event, index): Promise<void>;
 
     downloadFile($event): void;
 
@@ -123,6 +123,10 @@ export const eventsController = ng.controller('EventsController', ['$scope', '$r
     function ($scope, $route, $location, GroupService: GroupService, ReasonService: ReasonService) {
         const isWidget = $route.current.action === 'dashboard';
         const vm: ViewModel = this;
+        const allEvents = {
+            event: 'event',
+            absence: 'absence'
+        };
         vm.filter = {
             startDate: isWidget ? DateUtils.add(new Date(), -5, "d") : DateUtils.add(new Date(), -30, "d"),
             endDate: isWidget ? DateUtils.add(new Date(), -1, "d") : moment().endOf('day').toDate(),
@@ -234,6 +238,19 @@ export const eventsController = ng.controller('EventsController', ['$scope', '$r
             return regularizedArray.reduce((current, initial) => initial && current)
         };
 
+        const addEventsAndAbsencesArray = function (item: any, eventsId: number[], absencesId: number[]): void {
+            if (item.type === allEvents.event) {
+                if (eventsId.indexOf(item.id) === -1) {
+                    eventsId.push(item.id);
+                }
+            }
+            if (item.type === allEvents.absence) {
+                if (absencesId.indexOf(item.id) === -1) {
+                    absencesId.push(item.id);
+                }
+            }
+        };
+
         const initGlobalReason = function (event: EventResponse) {
             let reasonIds = getReasonIds(event.events);
             if (!reasonIds.every((val, i, arr) => val === arr[0])) {
@@ -291,9 +308,10 @@ export const eventsController = ng.controller('EventsController', ['$scope', '$r
         };
 
         /* Add global reason_id to all events that exist */
-        vm.changeReason = (event: EventResponse, index: number): void => {
+        vm.changeReason = async (event: EventResponse, index: number): Promise<void> => {
             /* Fetch all event id */
             let eventsArrayId = [];
+            let absencesArrayId = [];
             if (isWidget) {
                 eventsArrayId.push(event.id);
                 event.globalReason = event.reason_id;
@@ -302,7 +320,7 @@ export const eventsController = ng.controller('EventsController', ['$scope', '$r
                     periods.events.forEach(period => {
                         if ("reason_id" in period) {
                             period.reason_id = event.globalReason;
-                            eventsArrayId.push(period.id);
+                            addEventsAndAbsencesArray(period, eventsArrayId, absencesArrayId);
                         }
                     })
                 });
@@ -311,12 +329,16 @@ export const eventsController = ng.controller('EventsController', ['$scope', '$r
                     item.counsellor_regularisation = vm.provingReasonsMap[item.reason_id];
                 });
             }
-            eventsArrayId = eventsArrayId.filter((item, index) => eventsArrayId.indexOf(item) === index);
-            vm.events.updateReason(eventsArrayId, event.globalReason).then(() => {
+            await Promise.all([
+                vm.events.updateReason(eventsArrayId, event.globalReason),
+                new Absence(null, null, null, null)
+                    .updateAbsenceReason(absencesArrayId, event.globalReason)
+            ]).then(() => {
                 if (isWidget) vm.events.page = 0;
             });
             event.globalCounsellorRegularisation = initGlobalCounsellorRegularisation(event);
             if (vm.filter.regularized && vm.provingReasonsMap[event.globalReason]) vm.events.all = vm.events.all.filter((evt, i) => i !== index);
+            $scope.safeApply();
         };
 
         vm.downloadFile = ($event): void => {
@@ -343,6 +365,7 @@ export const eventsController = ng.controller('EventsController', ['$scope', '$r
 
         vm.toggleAllAbsenceRegularised = (event: EventResponse, index: number): void => {
             let eventsId = [];
+            let absencesId = [];
             event.dayHistory.forEach(history => {
                 history.events.forEach(e => {
                     if (e.reason_id !== null || !vm.provingReasonsMap[e.reason_id]) {
@@ -353,10 +376,12 @@ export const eventsController = ng.controller('EventsController', ['$scope', '$r
             event.events.forEach(item => {
                 if (item.reason_id !== null || !vm.provingReasonsMap[item.reason_id]) {
                     item.counsellor_regularisation = event.globalCounsellorRegularisation;
-                    eventsId.push(item.id);
+                    addEventsAndAbsencesArray(item, eventsId, absencesId);
                 }
             });
             if (eventsId.length > 0) vm.events.updateRegularized(eventsId, event.globalCounsellorRegularisation);
+            if (absencesId.length > 0) new Absence(null, null, null, null)
+                .updateAbsenceRegularized(absencesId, event.globalCounsellorRegularisation);
             if (vm.filter.regularized) event.events = event.events.filter((event) => eventsId.indexOf(event.id) === -1);
             if (event.events.length === 0 && vm.filter.regularized) {
                 vm.events.all = vm.events.all.filter((evt, i) => i !== index);
@@ -365,7 +390,7 @@ export const eventsController = ng.controller('EventsController', ['$scope', '$r
         };
 
         vm.toggleAbsenceRegularised = (history, event, index: number): void => {
-            if ("type_id" in history) {
+            if (history.type === allEvents.event) {
                 let eventsId = [history.id];
                 vm.events.updateRegularized(eventsId, history.counsellor_regularisation);
             } else {

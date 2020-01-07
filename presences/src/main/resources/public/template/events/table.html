@@ -87,7 +87,10 @@
         <!-- Absence regularised -->
         <th class="text-center">
             <label class="checkbox"
-                   ng-style="{ opacity: !event.globalReason || (vm.hideGlobalCheckbox(event) && event.globalCounsellorRegularisation) ? 0 : 1 }"
+                   ng-style="{
+                        opacity: !event.globalReason || (vm.hideGlobalCheckbox(event) && event.globalCounsellorRegularisation) ? 0 : 1,
+                        'pointer-events': !event.globalReason || (vm.hideGlobalCheckbox(event) && event.globalCounsellorRegularisation) ? 'none' : 'all'
+                    }"
                    ng-class="{half: vm.regularizedChecked(event)}"
                    data-ng-click="vm.stopAbsencePropagation($event)">
                 <input type="checkbox" data-ng-model="event.globalCounsellorRegularisation"
@@ -124,7 +127,8 @@
                 <!--Regularized-->
                 <label class="events-table-body-description-content-checkbox checkbox"
                        ng-style="{
-                           opacity: history.reason_id !== null && !history.counsellor_regularisation ? 1 : 0
+                           opacity: history.reason_id !== null && !history.counsellor_regularisation ? 1 : 0,
+                           'pointer-events': history.reason_id !== null && !history.counsellor_regularisation ? 'all' : 'none'
                        }">
                     <input type="checkbox" data-ng-model="history.counsellor_regularisation"
                            ng-disabled="!(history.reason_id !== null && !vm.provingReasonsMap[history.reason_id]) && history.counsellor_regularisation"
