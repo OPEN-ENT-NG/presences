@@ -1,8 +1,9 @@
-import {model, moment, ng} from 'entcore';
+import {model, moment, ng, toasts} from 'entcore';
 import {Group, GroupService, SearchItem, SearchService} from "../services";
 import {DateUtils} from "@common/utils";
 import rights from '../rights';
 import {EventType} from "../models";
+import {Alert, alertService} from "../services/AlertService";
 
 declare let window: any;
 
@@ -21,6 +22,7 @@ interface ViewModel {
     filter: Filter;
     date: string;
     eventType: string[]; /* [0]:ABSENCE, [1]:LATENESS, [2]:INCIDENT, [3]:DEPARTURE */
+    alert: Alert;
 
     selectItem(model: any, student: any): void;
 
@@ -30,14 +32,20 @@ interface ViewModel {
 
     searchItemToRegistry(value: string): void;
 
-
     getSubSize(): string;
+
+    getAlert(): void;
 }
 
-export const dashboardController = ng.controller('DashboardController', ['$scope', 'route', '$location',
+export const dashboardController = ng.controller('DashboardController', ['$scope', '$route', '$location',
     'SearchService', 'GroupService',
-    function ($scope, route, $location, SearchService: SearchService, GroupService: GroupService) {
+    function ($scope, $route, $location, SearchService: SearchService, GroupService: GroupService) {
         const vm: ViewModel = this;
+
+        const initData = async () => {
+           await vm.getAlert();
+        };
+
         vm.date = DateUtils.format(moment(), DateUtils.FORMAT["DATE-FULL-LETTER"]);
         vm.filter = {
             search: {
@@ -103,5 +111,31 @@ export const dashboardController = ng.controller('DashboardController', ['$scope
             return `calc(100% - ${0
             + (hasRegisterWidget ? SIDE_HEIGHT : 0)
             + (hasAbsencesWidget ? SIDE_HEIGHT : 0)}px)`;
-        }
+        };
+
+        vm.getAlert = async () => {
+            try {
+                let defaultAlert = {
+                    ABSENCE: 0,
+                    LATENESS: 0,
+                    INCIDENT: 0,
+                    FORGOTTEN_NOTEBOOK: 0
+                };
+                let structureAlert: any = await alertService.get(window.structure.id);
+
+                vm.alert = {...defaultAlert, ...structureAlert};
+            } catch (e) {
+                toasts.warning('error');
+                throw e;
+            }
+        };
+
+        $scope.$watch(() => window.structure, () => {
+            if ($route.current.action === "dashboard") {
+                initData();
+            } else {
+                $scope.redirectTo('/dashboard');
+            }
+        });
+
     }]);

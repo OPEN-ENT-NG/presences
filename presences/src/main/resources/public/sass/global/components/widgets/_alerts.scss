@@ -46,17 +46,18 @@ $alert-height: 117px;
     }
 
     &.textbooks:after {
-      background-color: $presences-main;
+      background-color: $presences-water-green;
     }
 
     .value {
-      font-size: 37px;
+      font-size: 50px;
       font-weight: bold;
-      color: $presences-grey;
+      margin-top: 25px;
     }
 
     .subtitle {
       font-size: 14px;
+      margin-bottom: 10px;
     }
   }
 }
