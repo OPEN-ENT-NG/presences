@@ -1,0 +1,87 @@
+<div class="row">
+    <!--Title-->
+    <h1 class="cell paddingRight">
+        <i18n>presences.alerts.title</i18n>
+    </h1>
+
+    <!-- Student search bar -->
+    <div class="cell four paddingRight">
+        <div class="cell twelve search-input">
+            <async-autocomplete data-ng-disabled="false"
+                                data-ng-model="vm.studentSearchInput"
+                                data-ng-change="vm.selectStudent"
+                                data-on-search="vm.searchByStudent"
+                                data-options="vm.students.all"
+                                data-placeholder="presences.exemptions.search.student"
+                                data-search="vm.studentSearchInput">
+            </async-autocomplete>
+        </div>
+
+        <div class="cell twelve">
+            <ul class="cell twelve search-input-ul">
+                <li ng-repeat="student in vm.filter.students">
+                    [[student.toString()]] <i class="close"
+                                              data-ng-click="vm.excludeStudentFromFilter(student)"></i>
+                </li>
+            </ul>
+        </div>
+    </div>
+
+    <!-- Classes/Groups search bar -->
+    <div class="cell four paddingLeft">
+        <div class="cell twelve search-input">
+            <async-autocomplete data-ng-disabled="false"
+                                data-ng-model="vm.classesSearchInput"
+                                data-ng-change="vm.selectClass"
+                                data-on-search="vm.searchByClass"
+                                data-options="vm.classesFiltered"
+                                data-placeholder="presences.exemptions.search.audience"
+                                data-search="vm.classesSearchInput">
+            </async-autocomplete>
+        </div>
+        <div class="cell twelve">
+            <ul class="cell twelve search-input-ul">
+                <li ng-repeat="class in vm.filter.classes">
+                    [[class.name]] <i class="close" data-ng-click="vm.excludeClassFromFilter(class)"></i>
+                </li>
+            </ul>
+        </div>
+    </div>
+</div>
+
+<!-- Reset / Switch -->
+<div class="row top5">
+    <div class="twelve cell">
+        <button class="right-magnet forbidden" disabled data-ng-click="vm.exportCsv()">
+            <i18n>presences.export.tocsv</i18n>
+        </button>
+        <button class="right-magnet forbidden" disabled data-ng-click="vm.goToPunishmentSanction()">
+            <i18n>presences.punishments.sanction</i18n>
+        </button>
+        <button class="right-magnet" data-ng-click="vm.reset()">
+            <i18n>presences.reset</i18n>
+        </button>
+    </div>
+</div>
+
+<!-- Alert Type Filter -->
+<div class="row register">
+    <div class="chips cell">
+        <label class="chip" ng-class="{selected: vm.filter.absences}"
+               data-ng-click="vm.switchAbsencesFilter()">
+            <i18n>presences.absence.absences</i18n>
+        </label>
+        <label class="chip" ng-class="{selected: vm.filter.late}"
+               data-ng-click="vm.switchLateFilter()">
+            <i18n>presences.absence.retards</i18n>
+        </label>
+        <label class="chip" ng-class="{selected: vm.filter.notebook}"
+               data-ng-click="vm.switchNotebookFilter()">
+            <i18n>presences.forgotten.notebook.2</i18n>
+        </label>
+        <label class="chip" ng-class="{selected: vm.filter.incidents}"
+               data-ng-click="vm.switchIncidentsFilter()">
+            <i18n>presences.incidents</i18n>
+        </label>
+    </div>
+</div>

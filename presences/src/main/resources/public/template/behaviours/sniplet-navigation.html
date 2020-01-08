@@ -32,7 +32,7 @@
                      data-ng-mouseleave="hoverOut()">
                     <i class="absence" aria-hidden="true"></i>
                     <span class="label-navbar">
-                        <i18n>presences.absence.absences</i18n>
+                        <i18n>presences.events.title</i18n>
                     </span>
                 </div>
                 <a role="menuitem" class="item forbidden">
@@ -82,12 +82,16 @@
                          data-ng-mouseover="hoverIn('ABSENCES')"
                          data-ng-mouseleave="hoverOut()">
                         <h2>
-                            <i18n>presences.navigation.absence</i18n>
+                            <i18n>presences.events.title</i18n>
                         </h2>
                         <a href="/presences#/events" class="sub-item"
                            ng-if="::hasRight('readEvent')">
                             <i class="absence" aria-hidden="true"></i>
                             <span><i18n>presences.navigation.event.list</i18n></span>
+                        </a>
+                        <a href="/presences#/alerts" class="sub-item">
+                            <i class="alertes" aria-hidden="true"></i>
+                            <span><i18n>presences.alerts.title</i18n></span>
                         </a>
                         <a href="#" class="sub-item forbidden">
                             <i class="testimony" aria-hidden="true"></i>

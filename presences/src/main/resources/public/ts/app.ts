@@ -27,6 +27,9 @@ routes.define(function ($routeProvider) {
         .when('/events', {
             action: 'events'
         })
+        .when('/alerts', {
+            action: 'alerts'
+        })
         // .when('/group-absences', {
         //     action: 'group-absences'
         // })

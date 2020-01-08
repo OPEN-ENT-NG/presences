@@ -35,6 +35,8 @@ interface ViewModel {
     getSubSize(): string;
 
     getAlert(): void;
+
+    goToAlerts(): void;
 }
 
 export const dashboardController = ng.controller('DashboardController', ['$scope', '$route', '$location',
@@ -128,6 +130,12 @@ export const dashboardController = ng.controller('DashboardController', ['$scope
                 toasts.warning('error');
                 throw e;
             }
+        };
+
+        vm.goToAlerts = function() {
+            $location.path('/alerts').events({
+                absence: true
+            });
         };
 
         $scope.$watch(() => window.structure, () => {

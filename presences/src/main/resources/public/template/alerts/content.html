@@ -1,0 +1,19 @@
+<div class="events-content row top20">
+
+    <loader data-ng-show="vm.events.loading" min-height="'250px'"/>
+
+    <div class="twelve" data-ng-show="!vm.events.loading">
+
+        <!-- Empty state -->
+        <div class="events-content-empty" data-ng-show="vm.alerts.all.length === 0">
+            <div class="events-content-empty-description">
+                <span class="red-bar"></span>
+                <i18n class="events-content-empty-description-title">presences.alert.empty</i18n>
+                <span class="purple-bar"></span>
+            </div>
+            <img data-ng-src="/presences/public/img/alerts_empty.svg" alt="empty alert">
+        </div>
+
+    </div>
+
+</div>
