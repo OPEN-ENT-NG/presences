@@ -2,6 +2,7 @@ import {moment} from 'entcore';
 import {DurationInputArg1, DurationInputArg2} from 'moment';
 
 export class DateUtils {
+
     static FORMAT = {
         'YEAR-MONTH-DAY-HOUR-MIN-SEC': 'YYYY-MM-DD HH:mm:ss',
         'YEAR-MONTH-DAY': 'YYYY-MM-DD',
@@ -100,5 +101,41 @@ export class DateUtils {
      */
     static getTimeFormat(time: string): string {
         return moment().set('HOUR', time.split(":")[0]).set('MINUTE', time.split(":")[1]);
+    }
+
+
+    /**
+     * ⚠ MUST use "Sort" method. Array based of startTime & endTime ⚠
+     * example : Array.sort(compareTime)
+     *
+     * E.G timeArray: [
+     *      {"id": 1, "start": "18:00","end": "20:00"},
+     *      {"id": 2, "start": "19:00","end": "21:00"},
+     *      {"id": 3, "start": "17:00","end": "19:00"}
+     *   ]
+     *
+     * timeArray.sort(compareTime('start', 'end'));
+     *
+     * Will sort in order [3..., 1..., 2...] then :
+     *   timeArray: [
+     *      {"id": 3, "start": "17:00","end": "19:00"},
+     *      {"id": 1, "start": "18:00","end": "20:00"},
+     *      {"id": 2, "start": "19:00","end": "21:00"}
+     *   ]
+     *
+     * @param startTimeKey  key startDate (could be startDate or start_date)
+     * @param endTimeKey    key endDate (could be endDate or end_date)
+     * param 'a' and 'b' are two elements to compare on function sort
+     */
+    static compareTime(startTimeKey: string, endTimeKey: string) {
+        let startTime = startTimeKey;
+        let endTime = endTimeKey;
+        return function (a, b) {
+            if (a[endTime] < b[endTime] || (a[endTime] == b[endTime] && a[startTime] > b[startTime]))
+                return -1;
+            if (a[endTime] > b[endTime] || (a[endTime] == b[endTime] && a[startTime] < b[startTime]))
+                return 1;
+            return 0;
+        }
     }
 }

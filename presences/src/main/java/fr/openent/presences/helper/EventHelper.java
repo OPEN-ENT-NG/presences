@@ -4,6 +4,7 @@ import fr.openent.presences.Presences;
 import fr.openent.presences.common.helper.DateHelper;
 import fr.openent.presences.common.helper.FutureHelper;
 import fr.openent.presences.common.helper.RegisterHelper;
+import fr.openent.presences.enums.Events;
 import fr.openent.presences.model.Absence;
 import fr.openent.presences.model.Event.Event;
 import fr.openent.presences.model.Event.EventType;
@@ -11,9 +12,7 @@ import fr.openent.presences.model.Event.RegisterEvent;
 import fr.openent.presences.model.Person.Student;
 import fr.openent.presences.model.Reason;
 import fr.openent.presences.model.Slot;
-import fr.openent.presences.service.AbsenceService;
 import fr.openent.presences.service.ReasonService;
-import fr.openent.presences.service.impl.DefaultAbsenceService;
 import fr.openent.presences.service.impl.DefaultReasonService;
 import io.vertx.core.CompositeFuture;
 import io.vertx.core.Future;
@@ -22,6 +21,7 @@ import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
+import org.joda.time.LocalDate;
 
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
@@ -32,22 +32,100 @@ import java.util.stream.Collectors;
 
 public class EventHelper {
     private static final Logger LOGGER = LoggerFactory.getLogger(EventHelper.class);
-    private final EventBus eb;
-    private AbsenceService absenceService;
-    private CourseHelper courseHelper;
+    private static String defaultStartTime = "00:00:00";
+    private static String defaultEndTime = "23:59:59";
     private EventTypeHelper eventTypeHelper;
     private ReasonService reasonService;
     private RegisterHelper registerHelper;
     private PersonHelper personHelper;
 
     public EventHelper(EventBus eb) {
-        this.eb = eb;
-        this.absenceService = new DefaultAbsenceService(eb);
-        this.courseHelper = new CourseHelper(eb);
         this.eventTypeHelper = new EventTypeHelper();
         this.personHelper = new PersonHelper();
         this.reasonService = new DefaultReasonService();
         this.registerHelper = new RegisterHelper(eb, Presences.dbSchema);
+    }
+
+    /**
+     * duplicate absences and edit its start and end date  if it has multiple date in one line
+     * <p>
+     * JsonObject absence (startDate: 2019-12-16 endDate: 2019-12-26) will split 10 times with:
+     * <p>
+     * JsonObject absence (startDate: 2019-12-16 endDate: 2019-12-16)
+     * JsonObject absence (startDate: 2019-12-17 endDate: 2019-12-17)
+     * ~
+     * JsonObject absence (startDate: 2019-12-26 endDate: 2019-12-26)
+     *
+     * @param eventsResult events result JsonArray
+     */
+    public JsonArray duplicateAbsences(JsonArray eventsResult) {
+        JsonArray filteredEvents = new JsonArray();
+        for (int i = 0; i < eventsResult.size(); i++) {
+            JsonObject event = eventsResult.getJsonObject(i).copy();
+            String startDate = DateHelper.getDateString(event.getString("start_date"), DateHelper.YEAR_MONTH_DAY);
+            String endDate = DateHelper.getDateString(event.getString("end_date"), DateHelper.YEAR_MONTH_DAY);
+
+            if (startDate.equals(endDate)) {
+                filteredEvents.add(event);
+            } else {
+                JsonArray duplicate = new JsonArray();
+                int start = Integer.parseInt(DateHelper.getDateString(event.getString("start_date"), "dd"));
+                int end = Integer.parseInt(DateHelper.getDateString(event.getString("end_date"), "dd"));
+                int total = end - start;
+
+                for (int j = 0; j <= total; j++) {
+                    LocalDate date = LocalDate
+                            .parse(DateHelper.getDateString(event.getString("start_date"), DateHelper.YEAR_MONTH_DAY))
+                            .plusDays(j);
+                    String finalStartDate = date.toString() + "T" +
+                            DateHelper.getDateString(event.getString("start_date"), DateHelper.HOUR_MINUTES_SECONDS);
+                    String finalEndDate = date.toString() + "T" +
+                            DateHelper.getDateString(event.getString("end_date"), DateHelper.HOUR_MINUTES_SECONDS);
+                    duplicate.add(event.copy().put("start_date", finalStartDate).put("end_date", finalEndDate));
+                }
+                filteredEvents.addAll(duplicate);
+            }
+        }
+        return filteredEvents;
+    }
+
+    /**
+     * remove potential absences if it has the exact match with any events
+     *
+     * @param events    events result JsonArray
+     * @param startDate startDate from get events
+     * @param endDate   endDate from get events
+     */
+    public List<Event> removeDuplicateAbsences(List<Event> events, String startDate, String endDate) {
+        List<Event> noDuplicatedEvents = new ArrayList<>();
+
+        for (Event event : events) {
+            boolean isFound = false;
+            // check if the event name exists in noRepeat
+            for (Event e : noDuplicatedEvents) {
+                String outLoopStart = DateHelper.getDateString(event.getStartDate(), DateHelper.YEAR_MONTH_DAY);
+                String inLoopStart = DateHelper.getDateString(e.getStartDate(), DateHelper.YEAR_MONTH_DAY);
+                if (event.getStudent().getId().equals(e.getStudent().getId()) && outLoopStart.equals(inLoopStart)) {
+                    isFound = true;
+                    break;
+                }
+            }
+            if (!isFound) noDuplicatedEvents.add(event);
+        }
+
+        // Filter List of events with start end end date param
+        return noDuplicatedEvents.stream().filter(e -> {
+            try {
+                return DateHelper.isBetween(
+                        e.getStartDate(),
+                        e.getEndDate(),
+                        startDate + "T" + defaultStartTime,
+                        endDate + "T" + defaultEndTime);
+            } catch (ParseException ex) {
+                ex.printStackTrace();
+                return false;
+            }
+        }).collect(Collectors.toList());
     }
 
     public JsonArray mergeAbsencesSlots(JsonArray slots, List<Absence> absences) {
@@ -224,18 +302,18 @@ public class EventHelper {
                 if (history.size() == 0) {
                     student.setDayHistory(userSlots);
                 } else {
-                    if (student.getDayHistory().size() != 9) {
-                        List<Absence> filteredAbsenceList = absencesList.stream()
-                                .filter(absence -> absence.getStudentId().equals(student.getId()))
-                                .collect(Collectors.toList());
-                        student.setDayHistory(
-                                mergeAbsencesSlots(
-                                        registerHelper.mergeEventsSlots(student.getDayHistory(), userSlots), filteredAbsenceList
-                                )
-                        );
-                    }
+                    List<Absence> filteredAbsenceList = absencesList.stream()
+                            .filter(absence -> absence.getStudentId().equals(student.getId()))
+                            .collect(Collectors.toList());
+                    student.setDayHistory(
+                            mergeAbsencesSlots(
+                                    registerHelper.mergeEventsSlots(student.getDayHistory(), userSlots), filteredAbsenceList
+                            )
+                    );
                 }
-                matchAbsencesSlot(events);
+                if (event.getType().toUpperCase().equals(Events.ABSENCE.toString())) {
+                    matchAbsencesSlot(event);
+                }
             } catch (Exception e) {
                 String message = "[Presences@EventHelper] Failed to parse slots";
                 LOGGER.error(message, e);
@@ -247,30 +325,26 @@ public class EventHelper {
     }
 
     /**
-     * Squash events (absence only) into student event history
+     * Squash event (absence only) into student event history
      *
-     * @param events Events list
+     * @param event Event element
      */
-    private void matchAbsencesSlot(List<Event> events) throws ParseException {
-        for (Event event : events) {
-            if (event.getType().equals("absence")) {
-                for (int i = 0; i < event.getStudent().getDayHistory().size(); i++) {
-                    JsonObject history = event.getStudent().getDayHistory().getJsonObject(i);
-                    if (DateHelper.isBetween(
-                            event.getStartDate(),
-                            event.getEndDate(),
-                            history.getString("start"),
-                            history.getString("end"))) {
-                        JsonObject absenceEvent = new JsonObject()
-                                .put("id", event.getId())
-                                .put("start_date", event.getStartDate())
-                                .put("end_date", event.getEndDate())
-                                .put("reason_id", event.getReason().getId())
-                                .put("counsellor_regularisation", event.isCounsellorRegularisation())
-                                .put("type", event.getType());
-                        history.getJsonArray("events").add(absenceEvent);
-                    }
-                }
+    private void matchAbsencesSlot(Event event) throws ParseException {
+        for (int i = 0; i < event.getStudent().getDayHistory().size(); i++) {
+            JsonObject history = event.getStudent().getDayHistory().getJsonObject(i);
+            if (DateHelper.isBetween(
+                    event.getStartDate(),
+                    event.getEndDate(),
+                    history.getString("start"),
+                    history.getString("end"))) {
+                JsonObject absenceEvent = new JsonObject()
+                        .put("id", event.getId())
+                        .put("start_date", event.getStartDate())
+                        .put("end_date", event.getEndDate())
+                        .put("reason_id", event.getReason().getId())
+                        .put("counsellor_regularisation", event.isCounsellorRegularisation())
+                        .put("type", event.getType());
+                history.getJsonArray("events").add(absenceEvent);
             }
         }
     }

@@ -23,6 +23,8 @@ import java.util.List;
 
 public class DefaultAbsenceService implements AbsenceService {
     private static final Logger LOGGER = LoggerFactory.getLogger(DefaultAbsenceService.class);
+    private static String defaultStartTime = "00:00:00";
+    private static String defaultEndTime = "23:59:59";
 
     private GroupService groupService;
 
@@ -36,16 +38,14 @@ public class DefaultAbsenceService implements AbsenceService {
         JsonArray params = new JsonArray();
         String query = "SELECT * FROM " + Presences.dbSchema + ".absence";
 
-        if (users.isEmpty()) {
-            query += " WHERE start_date > ? AND end_date < ?";
-            params.add(startDate + " 00:00:00").add(endDate + " 23:59:59");
-        } else {
-            query += " WHERE student_id IN " + Sql.listPrepared(users.toArray()) + " AND start_date > ? AND end_date < ?";
-            params.addAll(new JsonArray(users)).add(startDate + " 00:00:00").add(endDate + " 23:59:59");
-        }
-        if (!structureId.isEmpty()) {
-            query += " AND structure_id = ? ";
-            params.add(structureId);
+        query += " WHERE structure_id = ? AND start_date > ? AND end_date < ? OR ? > start_date ";
+        params.add(structureId)
+                .add(startDate + " " + defaultStartTime)
+                .add(endDate + " " + defaultEndTime)
+                .add(endDate + " " + defaultEndTime);
+        if (!users.isEmpty()) {
+            query += " AND student_id IN " + Sql.listPrepared(users.toArray());
+            params.addAll(new JsonArray(users));
         }
         Sql.getInstance().prepared(query, params, SqlResult.validResultHandler(handler));
     }
@@ -65,10 +65,10 @@ public class DefaultAbsenceService implements AbsenceService {
                 " AND (end_date <= ? OR ? > start_date)";
 
         params.addAll(new JsonArray(users));
-        params.add(startDate + " 00:00:00");
-        params.add(startDate + " 00:00:00");
-        params.add(endDate + " 23:59:59");
-        params.add(endDate + " 23:59:59");
+        params.add(startDate + " " + defaultStartTime);
+        params.add(startDate + " " + defaultStartTime);
+        params.add(endDate + " " + defaultEndTime);
+        params.add(endDate + " " + defaultEndTime);
 
         Sql.getInstance().prepared(query, params, SqlResult.validResultHandler(handler));
     }

@@ -18,6 +18,8 @@ export interface Event {
     register_id: number;
     type_id: number;
     event_type?: { id: number, label: string };
+    type?: string;
+    events?: any[];
 }
 
 export interface EventResponse {

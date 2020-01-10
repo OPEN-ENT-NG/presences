@@ -67,8 +67,11 @@ public class DefaultEventService implements EventService {
                 LOGGER.error(message);
                 handler.handle(new Either.Left<>(message));
             } else {
-                List<Event> events = EventHelper.getEventListFromJsonArray(eventsFuture.result(), Event.MANDATORY_ATTRIBUTE);
-
+                JsonArray addAbsencesIntoEventsResults = eventHelper.duplicateAbsences(eventsFuture.result());
+                List<Event> events = eventHelper.removeDuplicateAbsences(
+                        EventHelper.getEventListFromJsonArray(addAbsencesIntoEventsResults, Event.MANDATORY_ATTRIBUTE),
+                        startDate, endDate
+                );
                 List<Integer> reasonIds = new ArrayList<>();
                 List<String> studentIds = new ArrayList<>();
                 List<Integer> eventTypeIds = new ArrayList<>();
@@ -160,7 +163,7 @@ public class DefaultEventService implements EventService {
                 "  ON (r.id = e.register_id AND r.structure_id = ?)";
         params.add(structureId);
         if (eventType != null && !eventType.isEmpty()) {
-            query += "INNER JOIN presences.event_type AS event_type ON (event_type.id = e.type_id " +
+            query += " INNER JOIN presences.event_type AS event_type ON (event_type.id = e.type_id " +
                     "AND e.type_id IN " + Sql.listPrepared(eventType.toArray()) + " ) ";
             params.addAll(new JsonArray(eventType));
         } else {
@@ -183,11 +186,15 @@ public class DefaultEventService implements EventService {
         } else {
             query += "INNER JOIN presences.event_type AS event_type ON event_type.id = 1 ";
         }
-        query += "WHERE absence.start_date > ? AND absence.end_date < ?";
+        query += "WHERE absence.structure_id = ? AND (absence.start_date > ? AND absence.end_date < ? OR ? > absence.start_date)";
+        params.add(structureId);
         params.add(startDate + " " + defaultStartTime);
+        params.add(endDate + " " + defaultEndTime);
         params.add(endDate + " " + defaultEndTime);
         query += " AND absence.student_id NOT IN (" +
                 "  SELECT distinct event.student_id FROM presences.event" +
+                "  WHERE absence.start_date::date = event.start_date::date" +
+                "  AND absence.end_date::date = event.end_date::date" +
                 " ) ";
         query += setParamsForQueryEvents(userId, regularized, userIdFromClasses, params);
         query += ") SELECT * FROM allevents " +
@@ -235,6 +242,8 @@ public class DefaultEventService implements EventService {
             params.add(endDate + " " + defaultEndTime);
             query += " AND absence.student_id NOT IN (" +
                     "  SELECT event.student_id FROM presences.event" +
+                    "  WHERE absence.start_date::date = event.start_date::date" +
+                    "  AND absence.end_date::date = event.end_date::date" +
                     " ) ";
             query += setParamsForQueryEvents(userId, regularized, userIdFromClasses, params);
             query += ") AS absences";
@@ -247,18 +256,18 @@ public class DefaultEventService implements EventService {
     private String setParamsForQueryEvents(List<String> userId, Boolean regularized, JsonArray userIdFromClasses, JsonArray params) {
         String query = "";
         if (userIdFromClasses != null && !userIdFromClasses.isEmpty()) {
-            query += "AND student_id IN " + Sql.listPrepared(userIdFromClasses.getList());
+            query += " AND student_id IN " + Sql.listPrepared(userIdFromClasses.getList());
             for (int i = 0; i < userIdFromClasses.size(); i++) {
                 params.add(userIdFromClasses.getJsonObject(i).getString("studentId"));
             }
         }
         if (userId != null && !userId.isEmpty()) {
-            query += "AND student_id IN " + Sql.listPrepared(userId.toArray());
+            query += " AND student_id IN " + Sql.listPrepared(userId.toArray());
             params.addAll(new JsonArray(userId));
         }
 
         if (regularized != null) {
-            query += "AND counsellor_regularisation = " + regularized + " ";
+            query += " AND counsellor_regularisation = " + regularized + " ";
         }
         return query;
     }
