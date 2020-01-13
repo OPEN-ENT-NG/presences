@@ -20,6 +20,7 @@ export interface Event {
     event_type?: { id: number, label: string };
     type?: string;
     events?: any[];
+    exclude?: boolean;
 }
 
 export interface EventResponse {
@@ -33,6 +34,7 @@ export interface EventResponse {
     events: any[];
     globalReason?: number;
     globalCounsellorRegularisation?: boolean;
+    exclude?: boolean;
 }
 
 export class Event {
@@ -166,6 +168,7 @@ export class Events extends LoadingCollection {
                     dayHistory: item.student.dayHistory,
                     events: eventsResponse,
                     // courses: _.uniq(item.student.courses, "_id"),
+                    exclude: item.exclude ? item.exclude : false,
                     globalReason: globalReason,
                     globalCounsellorRegularisation: globalCounsellorRegularisation,
 

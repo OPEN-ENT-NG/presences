@@ -2,13 +2,18 @@ package fr.openent.presences.helper;
 
 import fr.openent.presences.common.helper.DateHelper;
 import fr.openent.presences.model.Course;
+import fr.openent.presences.model.Event.Event;
 import fr.openent.presences.model.Slot;
+import fr.wseduc.mongodb.MongoDb;
+import fr.wseduc.webutils.Either;
 import fr.wseduc.webutils.security.Md5;
+import io.vertx.core.Handler;
 import io.vertx.core.MultiMap;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
+import org.entcore.common.mongodb.MongoDbResult;
 
 import java.security.NoSuchAlgorithmException;
 import java.text.ParseException;
@@ -20,6 +25,8 @@ import static fr.openent.presences.common.helper.DateHelper.*;
 
 public class CalendarHelper {
     private static final Logger LOGGER = LoggerFactory.getLogger(CalendarHelper.class);
+    public static final int SATURDAY_OF_WEEK = 6;
+    public static final int SUNDAY_OF_WEEK = 7;
 
     public static HashMap<String, Map<String, Course>> hashCourses(List<Course> courses, List<Slot> slots,
                                                                    List<String> subjects) {
@@ -191,5 +198,127 @@ public class CalendarHelper {
         }
 
         return names;
+    }
+
+    public static void getWeekEndCourses(String structureId, int dayOfWeek, Handler<Either<String, JsonObject>> handler) {
+        JsonObject query = new JsonObject().put("dayOfWeek", dayOfWeek).put("structureId", structureId);
+        MongoDb.getInstance().count("courses", query, message -> handler.handle(MongoDbResult.validActionResult(message)));
+    }
+
+    /**
+     * Action to define the new property "exclude" in "day" object whether or not he should be true of false.
+     *
+     * @param day            Day from Event model
+     * @param date           current date
+     * @param exclusionDays  Array of several exclusions dates
+     * @param saturdayOfWeek day of week which correspond to 6
+     * @param saturdayCount  number of courses in saturday
+     * @param sundayOfWeek   day of week which correspond to 7
+     * @param sundayCount    number of courses in sunday
+     */
+    public static void setExcludeDay(Event day, String date, JsonArray exclusionDays, int saturdayOfWeek,
+                                     long saturdayCount, int sundayOfWeek, long sundayCount) {
+        try {
+            int dayOfWeek = DateHelper.getDayOfWeek(DateHelper.parse(date));
+            boolean isExclude = isDateExclude(date, exclusionDays, dayOfWeek,
+                    saturdayOfWeek, sundayOfWeek, saturdayCount, sundayCount);
+            day.setExclude(isExclude);
+        } catch (ParseException e) {
+            String message = "[Presences@CalendarHelper] Failed to parse date to get the day of the week ";
+            LOGGER.error(message, e);
+        }
+    }
+
+    /**
+     * Action to define the new property "exclude" in "day" object whether or not he should be true of false.
+     *
+     * @param day            JsonObject to put new property
+     * @param date           current date
+     * @param exclusionDays  Array of several exclusions dates
+     * @param saturdayOfWeek day of week which correspond to 6
+     * @param saturdayCount  number of courses in saturday
+     * @param sundayOfWeek   day of week which correspond to 7
+     * @param sundayCount    number of courses in sunday
+     */
+    public static void setExcludeDay(JsonObject day, String date, JsonArray exclusionDays, int saturdayOfWeek,
+                                     long saturdayCount, int sundayOfWeek, long sundayCount) {
+        try {
+            int dayOfWeek = DateHelper.getDayOfWeek(DateHelper.parse(date));
+            boolean isExclude = isDateExclude(date, exclusionDays, dayOfWeek,
+                    saturdayOfWeek, sundayOfWeek, saturdayCount, sundayCount);
+            day.put("exclude", isExclude);
+        } catch (ParseException e) {
+            String message = "[Presences@CalendarHelper] Failed to parse date to get the day of the week ";
+            LOGGER.error(message, e);
+        }
+    }
+
+    /**
+     * Algorithm to define the new property "exclude" in "day" object whether or not he should be true of false.
+     */
+    private static boolean isDateExclude(String date, JsonArray exclusionDays, int dayOfWeek,
+                                         int saturdayOfWeek, int sundayOfWeek, long saturdayCount, long sundayCount) {
+        boolean isExclude;
+        if (dayOfWeek == saturdayOfWeek || dayOfWeek == sundayOfWeek) {
+            if (dayOfWeek == saturdayOfWeek) {
+                if (saturdayCount > 0) {
+                    isExclude = isMatchWithExclusionsDate(exclusionDays, date);
+                } else {
+                    isExclude = true;
+                }
+            } else {
+                if (sundayCount > 0) {
+                    isExclude = isMatchWithExclusionsDate(exclusionDays, date);
+                } else {
+                    isExclude = true;
+                }
+            }
+        } else {
+            isExclude = isMatchWithExclusionsDate(exclusionDays, date);
+        }
+        return isExclude;
+    }
+
+    /**
+     * Checking if the current date is between these exclusions date
+     *
+     * @param exclusionsDate Array of several exclusions dates
+     * @param date           current date
+     * @return true if the date is between these exclusions date
+     */
+    private static boolean isMatchWithExclusionsDate(JsonArray exclusionsDate, String date) {
+        try {
+            for (int i = 0; i < exclusionsDate.size(); i++) {
+                JsonObject exclusion = exclusionsDate.getJsonObject(i);
+                String startDate = exclusion.getString("start_date");
+                String endDate = exclusion.getString("end_date");
+                if (DateHelper.isAfterOrEquals(date, startDate) && DateHelper.isBeforeOrEquals(date, endDate)) {
+                    return true;
+                }
+            }
+        } catch (ParseException e) {
+            String message = "[Presences@CalendarHelper] " +
+                    "Failed to parse dates in order to compare if day is between exclusions's days ";
+            LOGGER.error(message, e);
+            return false;
+        }
+        return false;
+    }
+
+    /**
+     * Reset given day. Set hours, minutes, seconds and milliseconds to 0
+     *
+     * @param day day to reset
+     * @return a reset calendar
+     */
+    public static Calendar resetDay(Date day) {
+        Calendar cal = Calendar.getInstance();
+        cal.setTime(day);
+        cal.set(Calendar.HOUR, 0);
+        cal.set(Calendar.MINUTE, 0);
+        cal.set(Calendar.SECOND, 0);
+        cal.set(Calendar.MILLISECOND, 0);
+
+        return cal;
     }
 }

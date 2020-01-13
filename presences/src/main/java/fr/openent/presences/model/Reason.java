@@ -44,6 +44,19 @@ public class Reason {
 
     }
 
+    public JsonObject toJSON() {
+        return new JsonObject()
+                .put("id", this.id)
+                .put("structure_id", this.structureId)
+                .put("label", this.label)
+                .put("proving", this.isProving)
+                .put("comment", this.comment)
+                .put("default", this.isDefault)
+                .put("group", this.isGroup)
+                .put("hidden", this.isHidden)
+                .put("absence_compliance", this.isAbsenceCompliance);
+    }
+
     public Integer getId() {
         return id;
     }

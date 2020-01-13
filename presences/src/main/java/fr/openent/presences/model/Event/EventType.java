@@ -26,6 +26,12 @@ public class EventType {
         this.id = id;
     }
 
+    public JsonObject toJSON() {
+        return new JsonObject()
+                .put("id", this.id)
+                .put("label", this.label);
+    }
+
     public Integer getId() {
         return id;
     }

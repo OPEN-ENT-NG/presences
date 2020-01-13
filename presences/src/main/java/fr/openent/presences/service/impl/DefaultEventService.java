@@ -5,7 +5,9 @@ import fr.openent.presences.common.helper.FutureHelper;
 import fr.openent.presences.common.helper.WorkflowHelper;
 import fr.openent.presences.common.viescolaire.Viescolaire;
 import fr.openent.presences.enums.EventType;
+import fr.openent.presences.enums.Events;
 import fr.openent.presences.enums.WorkflowActions;
+import fr.openent.presences.helper.CalendarHelper;
 import fr.openent.presences.helper.EventHelper;
 import fr.openent.presences.helper.SlotHelper;
 import fr.openent.presences.model.Event.Event;
@@ -29,6 +31,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import java.util.stream.Collectors;
 
 public class DefaultEventService implements EventService {
 
@@ -54,16 +57,24 @@ public class DefaultEventService implements EventService {
         Future<JsonObject> slotsFuture = Future.future();
         Future<JsonArray> eventsFuture = Future.future();
         Future<JsonArray> absencesFuture = Future.future();
+        Future<JsonArray> exclusionDays = Future.future();
+        Future<JsonObject> saturdayCoursesCount = Future.future();
+        Future<JsonObject> sundayCoursesCount = Future.future();
 
         getEvents(structureId, startDate, endDate, eventType, userId, userIdFromClasses, regularized, page,
                 FutureHelper.handlerJsonArray(eventsFuture));
         slotHelper.getTimeSlots(structureId, FutureHelper.handlerJsonObject(slotsFuture));
+        CalendarHelper.getWeekEndCourses(structureId, CalendarHelper.SATURDAY_OF_WEEK, FutureHelper.handlerJsonObject(saturdayCoursesCount));
+        CalendarHelper.getWeekEndCourses(structureId, CalendarHelper.SUNDAY_OF_WEEK, FutureHelper.handlerJsonObject(sundayCoursesCount));
+        Viescolaire.getInstance().getExclusionDays(structureId, FutureHelper.handlerJsonArray(exclusionDays));
         absenceService.get(structureId, startDate, endDate, new ArrayList<>(),
                 FutureHelper.handlerJsonArray(absencesFuture));
 
-        CompositeFuture.all(slotsFuture, eventsFuture, absencesFuture).setHandler(asyncResult -> {
+        CompositeFuture.all(slotsFuture, eventsFuture, absencesFuture, exclusionDays,
+                saturdayCoursesCount, sundayCoursesCount).setHandler(asyncResult -> {
             if (asyncResult.failed()) {
-                String message = "[Presences@DefaultEventService] Failed to retrieve slotProfile, absences or events info";
+                String message = "[Presences@DefaultEventService] Failed to retrieve slotProfile, " +
+                        "absences, exclusions days or events info";
                 LOGGER.error(message);
                 handler.handle(new Either.Left<>(message));
             } else {
@@ -101,11 +112,24 @@ public class DefaultEventService implements EventService {
                         LOGGER.error(message);
                         handler.handle(new Either.Left<>(message));
                     } else {
+                        interactExclude(exclusionDays, saturdayCoursesCount, sundayCoursesCount, events);
                         handler.handle(new Either.Right<>(new JsonArray(events)));
                     }
                 });
             }
         });
+    }
+
+    private void interactExclude(Future<JsonArray> exclusionDays, Future<JsonObject> saturdayCoursesCount, Future<JsonObject> sundayCoursesCount, List<Event> events) {
+        long saturdayCourses = saturdayCoursesCount.result().getLong("count");
+        long sundayCourses = sundayCoursesCount.result().getLong("count");
+        List<Event> absenceExcludeDay = events.stream()
+                .filter(e -> e.getType().toUpperCase().equals(Events.ABSENCE.toString()))
+                .collect(Collectors.toList());
+        for (Event absenceDay : absenceExcludeDay) {
+            CalendarHelper.setExcludeDay(absenceDay, absenceDay.getStartDate(), exclusionDays.result(),
+                    CalendarHelper.SATURDAY_OF_WEEK, saturdayCourses, CalendarHelper.SUNDAY_OF_WEEK, sundayCourses);
+        }
     }
 
     private void getEvents(String structureId, String startDate, String endDate,

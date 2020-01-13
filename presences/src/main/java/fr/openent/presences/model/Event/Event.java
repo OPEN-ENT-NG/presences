@@ -26,6 +26,7 @@ public class Event {
     private Boolean counsellorRegularisation;
     private Boolean massmailed;
     private String type;
+    private Boolean isExclude;
 
     public Event(JsonObject event, List<String> mandatoryAttributes) {
         for (String attribute : mandatoryAttributes) {
@@ -51,11 +52,32 @@ public class Event {
         this.counsellorRegularisation = event.getBoolean("counsellor_regularisation", false);
         this.massmailed = event.getBoolean("massmailed", false);
         this.type = event.getString("type", null);
+        this.isExclude = event.getBoolean("exclude", null);
     }
 
     public Event() {
 
     }
+
+    public JsonObject toJSON() {
+        return new JsonObject()
+                .put("id", this.id)
+                .put("start_date", this.startDate)
+                .put("end_date", this.endDate)
+                .put("comment", this.comment)
+                .put("counsellor_input", this.counsellorInput)
+                .put("student", this.student.toJSON())
+                .put("register_id", this.registerId)
+                .put("event_type", this.eventType.toJSON())
+                .put("reason", this.reason.toJSON())
+                .put("owner", this.owner)
+                .put("created", this.created)
+                .put("counsellor_regularisation", this.counsellorRegularisation)
+                .put("massmailed", this.massmailed)
+                .put("type", this.type)
+                .put("exclude", this.isExclude);
+    }
+
 
     public Integer getId() {
         return id;
@@ -167,5 +189,13 @@ public class Event {
 
     public void setType(String type) {
         this.type = type;
+    }
+
+    public Boolean isExclude() {
+        return isExclude;
+    }
+
+    public void setExclude(Boolean exclude) {
+        isExclude = exclude;
     }
 }

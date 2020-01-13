@@ -178,6 +178,7 @@ export const eventsController = ng.controller('EventsController', ['$scope', '$r
         };
 
         const filterHistory = (): void => {
+            vm.events.all = vm.events.all.filter(e => e.exclude !== true);
             vm.events.all.forEach(event => {
                 event.events = EventsUtils.filterHistory(event.events);
                 $scope.safeApply();
