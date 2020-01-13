@@ -52,13 +52,13 @@
 <!-- Reset / Switch -->
 <div class="row top5">
     <div class="twelve cell">
-        <button class="right-magnet forbidden" disabled data-ng-click="vm.exportCsv()">
+        <button class="right-magnet forbidden uppercase" disabled data-ng-click="vm.exportCsv()">
             <i18n>presences.export.tocsv</i18n>
         </button>
-        <button class="right-magnet forbidden" disabled data-ng-click="vm.goToPunishmentSanction()">
+        <button class="right-magnet forbidden uppercase" disabled data-ng-click="vm.goToPunishmentSanction()">
             <i18n>presences.punishments.sanction</i18n>
         </button>
-        <button class="right-magnet" data-ng-click="vm.reset()">
+        <button class="right-magnet uppercase" data-ng-click="vm.reset()">
             <i18n>presences.reset</i18n>
         </button>
     </div>
@@ -71,16 +71,16 @@
                data-ng-click="vm.switchAbsencesFilter()">
             <i18n>presences.absence.absences</i18n>
         </label>
-        <label class="chip" ng-class="{selected: vm.filter.late}"
-               data-ng-click="vm.switchLateFilter()">
+        <label class="chip" ng-class="{selected: vm.filter.lateness}"
+               data-ng-click="vm.switchLatenessFilter()">
             <i18n>presences.absence.retards</i18n>
         </label>
-        <label class="chip" ng-class="{selected: vm.filter.notebook}"
-               data-ng-click="vm.switchNotebookFilter()">
+        <label class="chip" ng-class="{selected: vm.filter.forgottenNotebook}"
+               data-ng-click="vm.switchforgottenNotebookFilter()">
             <i18n>presences.forgotten.notebook.2</i18n>
         </label>
         <label class="chip" ng-class="{selected: vm.filter.incidents}"
-               data-ng-click="vm.switchIncidentsFilter()">
+               data-ng-click="vm.switchIncidentFilter()">
             <i18n>presences.incidents</i18n>
         </label>
     </div>

@@ -222,26 +222,26 @@ public class DefaultIncidentsService extends SqlCrudService implements Incidents
         JsonObject params = new JsonObject().put("idStudents", protagonists);
 
         Neo4j.getInstance().execute(query, params, Neo4jResult.validResultHandler(result -> {
-            if (result.isRight()) {
-                JsonArray protagonistResult = result.right().getValue();
+        if (result.isRight()) {
+            JsonArray protagonistResult = result.right().getValue();
 
-                for (int i = 0; i < arrayIncidents.size(); i++) {
-                    JsonArray protagonist = arrayIncidents.getJsonObject(i).getJsonArray("protagonists");
-                    for (int j = 0; j < protagonist.size(); j++) {
-                        for (int k = 0; k < protagonistResult.size(); k++) {
-                            if (protagonist.getJsonObject(j).getString("user_id").
-                                    equals(protagonistResult.getJsonObject(k).getString("idEleve"))) {
-                                protagonist.getJsonObject(j).put("student", protagonistResult.getJsonObject(k));
-                            }
+            for (int i = 0; i < arrayIncidents.size(); i++) {
+                JsonArray protagonist = arrayIncidents.getJsonObject(i).getJsonArray("protagonists");
+                for (int j = 0; j < protagonist.size(); j++) {
+                    for (int k = 0; k < protagonistResult.size(); k++) {
+                        if (protagonist.getJsonObject(j).getString("user_id").
+                                equals(protagonistResult.getJsonObject(k).getString("idEleve"))) {
+                            protagonist.getJsonObject(j).put("student", protagonistResult.getJsonObject(k));
                         }
                     }
                 }
-                handler.handle(new Either.Right<>(arrayIncidents));
-            } else {
-                handler.handle(new Either.Left<>("Failed to query protagonist info"));
             }
-        }));
-    }
+            handler.handle(new Either.Right<>(arrayIncidents));
+        } else {
+            handler.handle(new Either.Left<>("Failed to query protagonist info"));
+        }
+    }));
+}
 
     @Override
     public void getIncidentParameter(String structureId, Handler<Either<String, JsonObject>> handler) {

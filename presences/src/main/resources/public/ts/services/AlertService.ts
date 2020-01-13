@@ -6,16 +6,48 @@ export interface Alert {
     lateness?: number
     incident?: number
     forgotten_notebook?: number
+    alertType?: string
 }
 
 export interface AlertService {
-    get(structureId: string): Promise<Alert>;
+    getAlerts(structureId: string): Promise<Alert>;
+
+    getStudentsAlerts(structureId: string, type: string[]): Promise<Alert>;
 }
 
 export const alertService: AlertService = {
-    async get(structureId: string): Promise<Alert> {
+    async getAlerts(structureId: string): Promise<Alert> {
         try {
-            const {data} = await http.get(`/presences/structures/${structureId}/alerts`);
+            const {data} = await http.get(`/presences/structures/${structureId}/alerts/summary`);
+            return data;
+        } catch (e) {
+            throw e;
+        }
+    },
+
+    async getStudentsAlerts(structureId: string, types: string[]): Promise<Alert> {
+        try {
+            let url = `/presences/structures/${structureId}/alerts?`;
+
+            // let selectedTypes = {
+            //     ABSENCE: true,
+            //     LATENESS: true,
+            //     INCIDENT: true,
+            //     FORGOTTEN_NOTEBOOK: true
+            // };
+            //
+            // let types = Object.keys(selectedTypes);
+            // types.forEach(type => {
+            //     if (selectedTypes[type]) {
+            //         url += `type=${type}&`
+            //     }
+            // });
+
+            types.forEach(type => {
+                url += `&type=${type}`;
+            });
+
+            const {data} = await http.get(url);
             return data;
         } catch (e) {
             throw e;

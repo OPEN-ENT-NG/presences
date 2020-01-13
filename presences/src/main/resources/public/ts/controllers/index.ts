@@ -6,3 +6,4 @@ export * from './group-absences';
 export * from './exemptions';
 export * from './calendar';
 export * from './registry';
+export * from './alerts';

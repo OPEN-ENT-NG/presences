@@ -60,6 +60,10 @@ body.presences, .sniplet.presences {
     }
   }
 
+  .uppercase {
+    text-transform: uppercase !important;
+  }
+
   .lowercase {
     text-transform: lowercase;
   }

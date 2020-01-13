@@ -1,24 +1,24 @@
 <div class="widget-alerts">
     <div class="ten centered grid">
-        <div class="widget-alert absences" ng-click="vm.goToAlerts()">
+        <div class="widget-alert absences" ng-click="vm.goToAlerts('ABSENCE')">
             <div class="value">[[vm.alert.ABSENCE]]</div>
             <div class="subtitle">
                 <i18n>presences.widgets.alerts.absences</i18n>
             </div>
         </div>
-        <div class="widget-alert lateness" ng-click="vm.goToAlerts()">
+        <div class="widget-alert lateness" ng-click="vm.goToAlerts('LATENESS')">
             <div class="value">[[vm.alert.LATENESS]]</div>
             <div class="subtitle">
                 <i18n>presences.widgets.alerts.lateness</i18n>
             </div>
         </div>
-        <div class="widget-alert incidents" ng-click="vm.goToAlerts()">
+        <div class="widget-alert incidents" ng-click="vm.goToAlerts('INCIDENT')">
             <div class="value">[[vm.alert.INCIDENT]]</div>
             <div class="subtitle">
                 <i18n>presences.widgets.alerts.incidents</i18n>
             </div>
         </div>
-        <div class="widget-alert textbooks" ng-click="vm.goToAlerts()">
+        <div class="widget-alert textbooks" ng-click="vm.goToAlerts('FORGOTTEN_NOTEBOOK')">
             <div class="value">[[vm.alert.FORGOTTEN_NOTEBOOK]]</div>
             <div class="subtitle">
                 <i18n>presences.widgets.alerts.textbooks</i18n>

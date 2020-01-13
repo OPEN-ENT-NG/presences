@@ -8,3 +8,4 @@ export * from './Exemption';
 export * from './Subject';
 export * from '@common/model/Student';
 export * from '@common/model/User';
+export * from './AlertType';

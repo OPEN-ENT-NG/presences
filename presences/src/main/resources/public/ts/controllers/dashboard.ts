@@ -36,7 +36,7 @@ interface ViewModel {
 
     getAlert(): void;
 
-    goToAlerts(): void;
+    goToAlerts(type: string): void;
 }
 
 export const dashboardController = ng.controller('DashboardController', ['$scope', '$route', '$location',
@@ -123,7 +123,7 @@ export const dashboardController = ng.controller('DashboardController', ['$scope
                     INCIDENT: 0,
                     FORGOTTEN_NOTEBOOK: 0
                 };
-                let structureAlert: any = await alertService.get(window.structure.id);
+                let structureAlert: any = await alertService.getAlerts(window.structure.id);
 
                 vm.alert = {...defaultAlert, ...structureAlert};
             } catch (e) {
@@ -132,9 +132,10 @@ export const dashboardController = ng.controller('DashboardController', ['$scope
             }
         };
 
-        vm.goToAlerts = function() {
-            $location.path('/alerts').events({
-                absence: true
+        vm.goToAlerts = function(type) {
+            // $location.path(`/alerts?type=${type}`);
+            $location.path('/alerts').search({
+                type: type
             });
         };
 
