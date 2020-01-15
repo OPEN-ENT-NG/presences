@@ -183,6 +183,10 @@ export const eventsController = ng.controller('EventsController', ['$scope', '$r
                 event.events = EventsUtils.filterHistory(event.events);
                 $scope.safeApply();
             });
+            vm.events.all = vm.events.all.sort((a, b) =>
+                moment(b.date).format(DateUtils.FORMAT["YEARMONTHDAY"]) -
+                moment(a.date).format(DateUtils.FORMAT["YEARMONTHDAY"])
+            )
         };
 
         vm.editPeriod = ($event, {studentId, date, displayName, className, classId}): void => {

@@ -7,6 +7,7 @@ import fr.openent.presences.common.viescolaire.Viescolaire;
 import fr.openent.presences.enums.EventType;
 import fr.openent.presences.enums.Events;
 import fr.openent.presences.enums.WorkflowActions;
+import fr.openent.presences.helper.AbsenceHelper;
 import fr.openent.presences.helper.CalendarHelper;
 import fr.openent.presences.helper.EventHelper;
 import fr.openent.presences.helper.SlotHelper;
@@ -83,6 +84,7 @@ public class DefaultEventService implements EventService {
                         EventHelper.getEventListFromJsonArray(addAbsencesIntoEventsResults, Event.MANDATORY_ATTRIBUTE),
                         startDate, endDate
                 );
+                JsonArray absences = AbsenceHelper.removeDuplicates(events, absencesFuture.result());
                 List<Integer> reasonIds = new ArrayList<>();
                 List<String> studentIds = new ArrayList<>();
                 List<Integer> eventTypeIds = new ArrayList<>();
@@ -104,7 +106,7 @@ public class DefaultEventService implements EventService {
                 eventHelper.addReasonsToEvents(events, reasonIds, reasonFuture);
                 eventHelper.addEventTypeToEvents(events, eventTypeIds, eventTypeFuture);
                 eventHelper.addStudentsToEvents(events, studentIds, startDate, endDate, structureId,
-                        absencesFuture.result(), slotsFuture.result(), studentFuture);
+                        absences, slotsFuture.result(), studentFuture);
 
                 CompositeFuture.all(reasonFuture, eventTypeFuture, studentFuture).setHandler(eventResult -> {
                     if (eventResult.failed()) {

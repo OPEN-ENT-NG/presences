@@ -20,7 +20,7 @@ export class EventsUtils {
         absence: 'absence'
     };
 
-    public static addEventsAndAbsencesArray = function (item: any, eventsId: number[], absencesId: number[]): void {
+    public static addEventsAndAbsencesArray = function (item: Event, eventsId: number[], absencesId: number[]): void {
         if (item.type === EventsUtils.ALL_EVENTS.event) {
             if (eventsId.indexOf(item.id) === -1) {
                 eventsId.push(item.id);

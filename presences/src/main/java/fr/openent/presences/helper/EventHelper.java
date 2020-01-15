@@ -140,7 +140,11 @@ public class EventHelper {
                             absence.getEndDate(),
                             slot.getString("start"),
                             slot.getString("end"))) {
-                        slotEvents.add(absence.toJSON());
+                        if (!slotEvents.contains(absence.toJSON().getInteger("id"))) {
+                            if (!containsId(slotEvents, absence.toJSON())) {
+                                slotEvents.add(absence.toJSON());
+                            }
+                        }
                     }
                 }
             } catch (ParseException e) {
@@ -344,8 +348,20 @@ public class EventHelper {
                         .put("reason_id", event.getReason().getId())
                         .put("counsellor_regularisation", event.isCounsellorRegularisation())
                         .put("type", event.getType());
-                history.getJsonArray("events").add(absenceEvent);
+                if (!containsId(history.getJsonArray("events"), absenceEvent)) {
+                    history.getJsonArray("events").add(absenceEvent);
+                }
             }
         }
+    }
+
+    private boolean containsId(JsonArray slotEvents, JsonObject absence) {
+        for (int i = 0; i < slotEvents.size(); i++) {
+            JsonObject slotEvent = slotEvents.getJsonObject(i);
+            if (slotEvent.getInteger("id").equals(absence.getInteger("id"))) {
+                return true;
+            }
+        }
+        return false;
     }
 }

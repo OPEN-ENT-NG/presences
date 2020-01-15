@@ -35,6 +35,7 @@ export interface EventResponse {
     globalReason?: number;
     globalCounsellorRegularisation?: boolean;
     exclude?: boolean;
+    type?: { event: string, id: number };
 }
 
 export class Event {
@@ -158,6 +159,7 @@ export class Events extends LoadingCollection {
                 /* check all events regularized in this event to display the global regularized value */
                 let globalCounsellorRegularisation = regularizedEvents.length === 0 ? false
                     : regularizedEvents.reduce((accumulator, currentValue) => accumulator && currentValue);
+                let type = {event: item.type, id: item.id};
 
                 dataModel.push({
                     studentId: item.student.id,
@@ -171,6 +173,7 @@ export class Events extends LoadingCollection {
                     exclude: item.exclude ? item.exclude : false,
                     globalReason: globalReason,
                     globalCounsellorRegularisation: globalCounsellorRegularisation,
+                    type: type,
 
                 });
             }
@@ -216,6 +219,7 @@ export class Events extends LoadingCollection {
     }
 
     async updateReason(arrayEventsId, reasonId): Promise<void> {
+        if (arrayEventsId.length === 0) return;
         try {
             await http.put(`/presences/events/reason`, {ids: arrayEventsId, reasonId: reasonId});
         } catch (err) {
@@ -224,6 +228,7 @@ export class Events extends LoadingCollection {
     }
 
     async updateRegularized(eventsId, regularized): Promise<void> {
+        if (eventsId.length === 0) return;
         try {
             await http.put(`/presences/events/regularized`, {ids: eventsId, regularized: regularized});
         } catch (err) {
@@ -274,6 +279,7 @@ export class Absence extends Event {
     }
 
     async updateAbsenceReason(arrayAbsencesId, reasonId): Promise<void> {
+        if (arrayAbsencesId.length === 0) return;
         try {
             await http.put(`/presences/absence/reason`, {ids: arrayAbsencesId, reasonId: reasonId});
         } catch (err) {
@@ -282,6 +288,7 @@ export class Absence extends Event {
     }
 
     async updateAbsenceRegularized(arrayAbsencesId, regularized): Promise<void> {
+        if (arrayAbsencesId.length === 0) return;
         try {
             await http.put(`/presences/absence/regularized`, {ids: arrayAbsencesId, regularized: regularized});
         } catch (err) {

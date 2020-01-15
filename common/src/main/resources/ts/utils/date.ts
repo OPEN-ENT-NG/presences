@@ -6,6 +6,7 @@ export class DateUtils {
     static FORMAT = {
         'YEAR-MONTH-DAY-HOUR-MIN-SEC': 'YYYY-MM-DD HH:mm:ss',
         'YEAR-MONTH-DAY': 'YYYY-MM-DD',
+        'YEARMONTHDAY': 'YYYYMMDD',
         'YEAR-MONTH': 'YYYY-MM',
         'DAY-MONTH-YEAR': 'DD/MM/YYYY',
         'DAY-MONTH': 'DD/MM', // e.g "04/11"

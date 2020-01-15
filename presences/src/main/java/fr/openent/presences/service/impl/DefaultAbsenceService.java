@@ -51,6 +51,30 @@ public class DefaultAbsenceService implements AbsenceService {
     }
 
     @Override
+    public void getAbsenceInEvents(String structureId, String startDate, String endDate,
+                                   List<String> users, Handler<Either<String, JsonArray>> handler) {
+        JsonArray params = new JsonArray();
+        String query = "SELECT * FROM " + Presences.dbSchema + ".absence";
+
+        query += " WHERE absence.structure_id = ? " +
+                " AND (start_date > ? AND end_date < ? OR ? > start_date)";
+        params.add(structureId)
+                .add(startDate + " " + defaultStartTime)
+                .add(endDate + " " + defaultEndTime)
+                .add(endDate + " " + defaultEndTime);
+        if (!users.isEmpty()) {
+            query += " AND student_id IN " + Sql.listPrepared(users.toArray());
+            params.addAll(new JsonArray(users));
+        }
+        query += " AND absence.student_id IN (" +
+                " SELECT distinct event.student_id FROM presences.event" +
+                " WHERE absence.start_date::date = event.start_date::date" +
+                " AND absence.end_date::date = event.end_date::date" +
+                " ) ";
+        Sql.getInstance().prepared(query, params, SqlResult.validResultHandler(handler));
+    }
+
+    @Override
     public void getAbsenceId(Integer absenceId, Handler<Either<String, JsonObject>> handler) {
         String query = "SELECT * FROM " + Presences.dbSchema + ".absence WHERE id = " + absenceId;
         Sql.getInstance().raw(query, SqlResult.validUniqueResultHandler(handler));

@@ -13,16 +13,31 @@ public interface AbsenceService {
     /**
      * get absences
      *
-     * @param handler Function handler returning data
+     * @param structureId Structure identifier
+     * @param startDate   startDate
+     * @param endDate     endDate
+     * @param users       List of users
+     * @param handler     Function handler returning data
      */
     void get(String structureId, String startDate, String endDate, List<String> users, Handler<Either<String, JsonArray>> handler);
 
 
     /**
+     * get absences in events
+     *
+     * @param structureId Structure identifier
+     * @param startDate   startDate
+     * @param endDate     endDate
+     * @param users       List of users
+     * @param handler     Function handler returning data
+     */
+    void getAbsenceInEvents(String structureId, String startDate, String endDate, List<String> users, Handler<Either<String, JsonArray>> handler);
+
+    /**
      * get absence identifier
      *
-     * @param absenceId     absence identifier to fetch
-     * @param handler       Function handler returning data
+     * @param absenceId absence identifier to fetch
+     * @param handler   Function handler returning data
      */
     void getAbsenceId(Integer absenceId, Handler<Either<String, JsonObject>> handler);
 

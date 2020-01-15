@@ -40,4 +40,17 @@ public class AbsenceHelper {
         convertedAbsence.setMassmailed(false);
         return convertedAbsence;
     }
+
+    public static JsonArray removeDuplicates(List<Event> events, JsonArray absences) {
+        JsonArray newAbsences = new JsonArray();
+        for (int i = 0; i < absences.size(); i++) {
+            JsonObject absence = absences.getJsonObject(i);
+            for (Event event : events) {
+                if (!event.getId().equals(absence.getInteger("id"))) {
+                    newAbsences.add(absence);
+                }
+            }
+        }
+        return newAbsences;
+    }
 }

@@ -25,7 +25,7 @@
         </th>
     </tr>
     </thead>
-    <tbody class="events-table-body" data-ng-repeat="event in vm.events.all | orderBy:'-date' track by $index">
+    <tbody class="events-table-body" data-ng-repeat="event in vm.events.all track by $index">
     <tr data-id="[[$index]]" data-ng-click="vm.toggleCollapse($event)">
 
         <!-- Profile -->
