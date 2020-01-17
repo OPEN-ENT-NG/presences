@@ -9,10 +9,19 @@ import java.util.List;
 
 public interface AlertService {
     /**
+     * Delete alerts based on given identifiers.
+     * Alert deletion trigger plsql trigger that create a new row in history table.
+     *
+     * @param alerts  alert identifiers
+     * @param handler function handler returning data
+     */
+    void delete(List<String> alerts, Handler<Either<String, JsonObject>> handler);
+
+    /**
      * Get alerts count
      *
      * @param structureId structure identifier
-     * @param handler function handler returning data
+     * @param handler     function handler returning data
      */
     void getSummary(String structureId, Handler<Either<String, JsonObject>> handler);
 

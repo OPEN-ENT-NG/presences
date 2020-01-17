@@ -10,7 +10,8 @@ public enum WorkflowActions {
     NOTIFY(Presences.NOTIFY),
     CREATE_EVENT(Presences.CREATE_EVENT),
     MANAGE_EXEMPTION(Presences.MANAGE_EXEMPTION),
-    MANAGE(Presences.MANAGE);
+    MANAGE(Presences.MANAGE),
+    ALERT(Presences.ALERTS_WIDGET);
 
     private final String actionName;
 

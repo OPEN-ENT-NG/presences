@@ -1,4 +1,4 @@
-CREATE OR REPLACE FUNCTION presences.exists_absence_in_day(date date, student_id character varying, structure_id character varying) RETURNS boolean AS
+CREATE OR REPLACE FUNCTION presences.exists_absence_in_day(date date, student_id character varying, structure_identifier character varying) RETURNS boolean AS
     $BODY$
     DECLARE
         count_event bigint;
@@ -7,11 +7,12 @@ CREATE OR REPLACE FUNCTION presences.exists_absence_in_day(date date, student_id
         FROM presences.event
         INNER JOIN presences.register ON (register.id = event.register_id)
         WHERE event.start_date::date = date
-        AND register.structure_id = structure_id
+        AND register.structure_id = structure_identifier
         AND type_id = 1
         INTO count_event;
 
-        RETURN count_event > 0;
+        -- Because our trigger is an AFTER trigger, start count is 1
+        RETURN count_event > 1;
     END
     $BODY$
 LANGUAGE plpgsql;
@@ -26,11 +27,12 @@ CREATE OR REPLACE FUNCTION presences.exists_absence_in_half_day(date date, start
         INNER JOIN presences.register ON (register.id = event.register_id)
         WHERE event.start_date::date = date
         AND event.start_date::time >= start_time
-        AND event.start_date::time <= end_date
+        AND event.start_date::time <= end_time
         AND type_id = 1
         INTO count_event;
 
-        RETURN count_event > 0;
+        -- Because our trigger is an AFTER trigger, start count is 1
+        RETURN count_event > 1;
     END
     $BODY$
 LANGUAGE plpgsql;
@@ -57,15 +59,15 @@ CREATE OR REPLACE FUNCTION presences.increment_event_alert() RETURNS TRIGGER AS
             CASE recovery_method
             WHEN 'HALF_DAY' THEN
                 -- First retrieve half day hour
-                SELECT end_of_half_day FROM viesco.time_slots WHERE id_structure = structure_identifier INTO end_of_half_day;
+                SELECT time_slots.end_of_half_day FROM viesco.time_slots WHERE id_structure = structure_identifier INTO end_of_half_day;
                 if NEW.start_date::time < end_of_half_day THEN
-                    SELECT !presences.exists_absence_in_half_day(NEW.start_date::date, '00:00:00'::time, end_of_half_day, NEW.student_id, structure_identifier) INTO should_increment;
+                    SELECT NOT presences.exists_absence_in_half_day(NEW.start_date::date, '00:00:00'::time, end_of_half_day, NEW.student_id, structure_identifier) INTO should_increment;
                 ELSE
-                    SELECT !presences.exists_absence_in_half_day(NEW.start_date::date, end_of_half_day,'23:59:59'::time, NEW.student_id, structure_identifier) INTO should_increment;
+                    SELECT NOT presences.exists_absence_in_half_day(NEW.start_date::date, end_of_half_day,'23:59:59'::time, NEW.student_id, structure_identifier) INTO should_increment;
                 END IF;
             WHEN 'DAY' THEN
                 -- Check if student already have absence for the day based on provided structure identifier
-                SELECT !presences.exists_absence_in_day(NEW.start_date::date, NEW.student_id, structure_identifier) INTO should_increment;
+                SELECT NOT presences.exists_absence_in_day(NEW.start_date::date, NEW.student_id, structure_identifier) INTO should_increment;
             ELSE
                 -- 'HOUR' is a classic case. Just increment count.
                 should_increment = true;
@@ -110,15 +112,15 @@ CREATE OR REPLACE FUNCTION presences.decrement_event_alert() RETURNS TRIGGER AS
             CASE recovery_method
             WHEN 'HALF_DAY' THEN
                 -- First retrieve half day hour
-                SELECT end_of_half_day FROM viesco.time_slots WHERE id_structure = structure_identifier INTO end_of_half_day;
+                SELECT time_slots.end_of_half_day FROM viesco.time_slots WHERE id_structure = structure_identifier INTO end_of_half_day;
                 if OLD.start_date::time < end_of_half_day THEN
-                    SELECT !presences.exists_absence_in_half_day(OLD.start_date::date, '00:00:00'::time, end_of_half_day, OLD.student_id, structure_identifier) INTO should_decrement;
+                    SELECT NOT presences.exists_absence_in_half_day(OLD.start_date::date, '00:00:00'::time, end_of_half_day, OLD.student_id, structure_identifier) INTO should_decrement;
                 ELSE
-                    SELECT !presences.exists_absence_in_half_day(OLD.start_date::date, end_of_half_day,'23:59:59'::time, OLD.student_id, structure_identifier) INTO should_decrement;
+                    SELECT NOT presences.exists_absence_in_half_day(OLD.start_date::date, end_of_half_day,'23:59:59'::time, OLD.student_id, structure_identifier) INTO should_decrement;
                 END IF;
             WHEN 'DAY' THEN
                 -- Check if student already have absence for the day based on provided structure identifier
-                SELECT !presences.exists_absence_in_day(OLD.start_date::date, OLD.student_id, structure_identifier) INTO should_decrement;
+                SELECT NOT presences.exists_absence_in_day(OLD.start_date::date, OLD.student_id, structure_identifier) INTO should_decrement;
             ELSE
                 -- 'HOUR' is a classic case. Just increment count.
                 should_decrement = true;

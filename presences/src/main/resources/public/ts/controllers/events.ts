@@ -116,9 +116,6 @@ export const eventsController = ng.controller('EventsController', ['$scope', '$r
             late: $route.current.action !== 'dashboard',
             regularized: true,
         };
-        // recupere url param
-        // if param w/ absence = true => vm.filter.late = false
-        //
         vm.provingReasonsMap = {};
         vm.eventType = [];
         vm.multipleSelect = {

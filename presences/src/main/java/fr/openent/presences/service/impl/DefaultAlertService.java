@@ -18,8 +18,17 @@ import java.util.Map;
 
 public class DefaultAlertService implements AlertService {
 
+    @Override
+    public void delete(List<String> alerts, Handler<Either<String, JsonObject>> handler) {
+        String query = "DELETE FROM " + Presences.dbSchema +
+                ".alerts WHERE id IN " + Sql.listPrepared(alerts);
+
+        JsonArray params = new JsonArray(alerts);
+        Sql.getInstance().prepared(query, params, SqlResult.validUniqueResultHandler(handler));
+    }
+
     public void getSummary(String structureId, Handler<Either<String, JsonObject>> handler) {
-        String query = "SELECT type, SUM(count) " + "FROM " + Presences.dbSchema +
+        String query = "SELECT type, SUM(count) FROM " + Presences.dbSchema +
                 ".alerts WHERE structure_id = ? AND exceed_date is NOT NULL GROUP BY type;";
         JsonArray params = new JsonArray(Arrays.asList(structureId));
         Sql.getInstance().prepared(query, params, SqlResult.validResultHandler(response -> {

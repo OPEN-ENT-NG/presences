@@ -52,10 +52,10 @@
 <!-- Reset / Switch -->
 <div class="row top5">
     <div class="twelve cell">
-        <button class="right-magnet forbidden uppercase" disabled data-ng-click="vm.exportCsv()">
+        <button class="right-magnet forbidden uppercase" disabled>
             <i18n>presences.export.tocsv</i18n>
         </button>
-        <button class="right-magnet forbidden uppercase" disabled data-ng-click="vm.goToPunishmentSanction()">
+        <button class="right-magnet forbidden uppercase" disabled>
             <i18n>presences.punishments.sanction</i18n>
         </button>
         <button class="right-magnet uppercase" data-ng-click="vm.reset()">
@@ -65,23 +65,21 @@
 </div>
 
 <!-- Alert Type Filter -->
-<div class="row register">
+<div class="row">
     <div class="chips cell">
-        <label class="chip" ng-class="{selected: vm.filter.absences}"
-               data-ng-click="vm.switchAbsencesFilter()">
-            <i18n>presences.absence.absences</i18n>
-        </label>
-        <label class="chip" ng-class="{selected: vm.filter.lateness}"
-               data-ng-click="vm.switchLatenessFilter()">
-            <i18n>presences.absence.retards</i18n>
-        </label>
-        <label class="chip" ng-class="{selected: vm.filter.forgottenNotebook}"
-               data-ng-click="vm.switchforgottenNotebookFilter()">
-            <i18n>presences.forgotten.notebook.2</i18n>
-        </label>
-        <label class="chip" ng-class="{selected: vm.filter.incidents}"
-               data-ng-click="vm.switchIncidentFilter()">
-            <i18n>presences.incidents</i18n>
+        <label class="chip" ng-repeat="filter in vm.filters"
+               ng-class="{selected: vm.filter[filter]}"
+               ng-click="vm.switchFilter(filter)"
+        >
+            <span class="no-style">[[lang.translate('presences.alerts.filter.' + filter)]]</span>
         </label>
     </div>
+</div>
+
+<!-- Checkbox selectAll -->
+<div class="row vertical-spacing">
+    <label class="checkbox">
+        <input type="checkbox" ng-change="vm.selectAll()" ng-model="vm.selection.all">
+        <span><i18n>presences.select.all</i18n></span>
+    </label>
 </div>

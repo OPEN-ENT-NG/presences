@@ -29,7 +29,7 @@ $alert-height: 117px;
       bottom: 0;
     }
 
-    &.absences:after, &.UNJUSTIFIED:after {
+    &.absences:after, &.UNJUSTIFIED:after, &.ABSENCE:after {
       background-color: $presences-red;
     }
 
@@ -41,12 +41,16 @@ $alert-height: 117px;
       background-color: $presences-purple;
     }
 
-    &.incidents:after {
+    &.incidents:after, &.INCIDENT:after {
       background-color: $presences-grey;
     }
 
-    &.textbooks:after {
+    &.textbooks:after, &.FORGOTTEN_NOTEBOOK:after {
       background-color: $presences-water-green;
+    }
+
+    &.bold {
+      font-weight: bold;
     }
 
     .value {
@@ -60,4 +64,92 @@ $alert-height: 117px;
       margin-bottom: 10px;
     }
   }
+
+  .position-alert-color:after {
+    width: calc(100% + 6px);
+    bottom: -3px;
+    left: -3px;
+  }
+
+  .grid-block {
+    display: block;
+  }
+
+  .flex {
+    display: flex;
+  }
+
+  .padding-10 {
+    padding: 10px;
+  }
+
+  .margin-top-5 {
+    margin-top: 5px;
+  }
+
+  .margin-right-5 {
+    margin-right: 5px;
+  }
+
+  .card-alert {
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12), 0 1px 2px rgba(0, 0, 0, 0.24);
+    width: 245px;
+    height: 90px;
+    display: inline-block;
+    margin: 10px;
+    border: solid 3px transparent;
+
+    &:hover {
+      box-shadow: 0 14px 28px rgba(0, 0, 0, 0.25), 0 10px 10px rgba(0, 0, 0, 0.22);
+    }
+  }
+
+  .space-between {
+    justify-content: space-between;
+  }
+
+  .selected {
+    box-shadow: 0 14px 28px rgba(0, 0, 0, 0.25), 0 10px 10px rgba(0, 0, 0, 0.22);
+
+    &.ABSENCE {
+      border: solid 3px $presences-red;
+
+      &:after {
+        width: calc(100% + 6px);
+        bottom: -3px;
+        left: -3px;
+      }
+    }
+
+    &.LATENESS {
+      border: solid 3px $presences-purple;
+
+      &:after {
+        width: calc(100% + 6px);
+        bottom: -3px;
+        left: -3px;
+      }
+    }
+
+    &.INCIDENT {
+      border: solid 3px $presences-grey;
+
+      &:after {
+        width: calc(100% + 6px);
+        bottom: -3px;
+        left: -3px;
+      }
+    }
+
+    &.FORGOTTEN_NOTEBOOK {
+      border: solid 3px $presences-water-green;
+
+      &:after {
+        width: calc(100% + 6px);
+        bottom: -3px;
+        left: -3px;
+      }
+    }
+  }
+
 }

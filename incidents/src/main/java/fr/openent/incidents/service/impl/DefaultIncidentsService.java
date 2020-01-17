@@ -464,8 +464,7 @@ public class DefaultIncidentsService extends SqlCrudService implements Incidents
 
     @Override
     public void delete(String incident_id, Handler<Either<String, JsonObject>> handler) {
-        String query = "DELETE FROM " + Incidents.dbSchema + "." + DATABASE_TABLE + " WHERE id = "
-                + Integer.parseInt(incident_id);
+        String query = "SELECT " + Incidents.dbSchema + ".delete_incident(" + Integer.parseInt(incident_id) + ");";
         Sql.getInstance().raw(query, SqlResult.validUniqueResultHandler(handler));
     }
 

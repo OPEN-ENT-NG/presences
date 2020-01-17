@@ -7,15 +7,34 @@ export interface Alert {
     incident?: number
     forgotten_notebook?: number
     alertType?: string
+    students: any;
+    classes: any;
+    userId: string;
 }
 
 export interface AlertService {
     getAlerts(structureId: string): Promise<Alert>;
 
-    getStudentsAlerts(structureId: string, type: string[]): Promise<Alert>;
+    getStudentsAlerts(structureId: string, type: string[]): Promise<Array<Alert>>;
+
+    reset(alerts: Array<number>): Promise<void>;
 }
 
 export const alertService: AlertService = {
+    async reset(alerts: Array<number>): Promise<void> {
+        try {
+            let url = `/presences/alerts?`;
+            alerts.forEach(alert => {
+                url += `&id=${alert}`;
+            });
+
+            const {data} = await http.delete(url);
+            return data;
+        } catch (e) {
+            throw e;
+        }
+    },
+
     async getAlerts(structureId: string): Promise<Alert> {
         try {
             const {data} = await http.get(`/presences/structures/${structureId}/alerts/summary`);
@@ -25,24 +44,9 @@ export const alertService: AlertService = {
         }
     },
 
-    async getStudentsAlerts(structureId: string, types: string[]): Promise<Alert> {
+    async getStudentsAlerts(structureId: string, types: string[]): Promise<Array<Alert>> {
         try {
             let url = `/presences/structures/${structureId}/alerts?`;
-
-            // let selectedTypes = {
-            //     ABSENCE: true,
-            //     LATENESS: true,
-            //     INCIDENT: true,
-            //     FORGOTTEN_NOTEBOOK: true
-            // };
-            //
-            // let types = Object.keys(selectedTypes);
-            // types.forEach(type => {
-            //     if (selectedTypes[type]) {
-            //         url += `type=${type}&`
-            //     }
-            // });
-
             types.forEach(type => {
                 url += `&type=${type}`;
             });
@@ -53,6 +57,8 @@ export const alertService: AlertService = {
             throw e;
         }
     }
+
+
 };
 
 export const AlertService = ng.service('SettingService', (): AlertService => alertService);

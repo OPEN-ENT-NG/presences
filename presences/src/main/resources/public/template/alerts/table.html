@@ -1,139 +1,18 @@
-<table class="events-table table table-hover"
-       data-ng-show="vm.events.all && vm.events.all.length > 0">
-    <thead>
-    <tr>
-        <th width="15%">
-            <i18n>presences.exemptions.student</i18n>
-        </th>
-        <th width="6%">
-            <i18n>presences.exemptions.dates</i18n>
-        </th>
-        <th width="1%">
-            <i18n>presences.absence.period</i18n>
-        </th>
-        <th width="2%">
-            <i18n>presences.absence.reason</i18n>
-        </th>
-        <th width="1%">
-            <i18n>presences.absence.file</i18n>
-        </th>
-        <th width="1%">
-            <i18n>presences.absence.action</i18n>
-        </th>
-        <th width="1%">
-            <i18n>presences.absence.regularise</i18n>
-        </th>
-    </tr>
-    </thead>
-    <tbody class="events-table-body" data-ng-repeat="event in vm.events.all track by $index">
-    <tr data-id="[[$index]]" data-ng-click="vm.toggleCollapse($event)">
-
-        <!-- Profile -->
-        <th class="events-table-body-student">
-            <img src="/userbook/avatar/[[event.studentId]]" height="43" width="43">
-
-            <div class="events-table-body-student-content">
-                <span>[[event.displayName]]</span>
-                <span>[[event.className]]</span>
+<div class="widget-alerts">
+    <div class="twelve grid-block">
+        <div class="widget-alert padding-10 card-alert position-alert-color [[alert.type]]"
+             ng-repeat="alert in vm.listAlert"
+             ng-init="alert.selected = false"
+             ng-class="{selected: alert.selected}"
+             ng-click="alert.selected = !alert.selected">
+            <div class="twelve flex space-between">
+                <div class="bold">[[alert.name]]</div>
+                <div>[[alert.audience]]</div>
             </div>
-        </th>
-
-        <!-- Date -->
-        <th class="events-table-body-date uppercase text-center">[[event.date | date: 'dd/MM/yyyy']]</th>
-
-        <!-- Period -->
-        <th class="events-table-body-period text-center">
-            <ul class="period"
-                data-ng-click="vm.period($event)"
-                data-ng-mousedown="vm.setAbsent($event)"
-                data-ng-mouseup="vm.treatAbsentAfterMouseLeave(event)"
-                data-ng-mouseover="vm.drawAbsent($event)">
-
-                <!-- planning  -->
-                <li ng-repeat="periods in event.dayHistory track by $index"
-                    data-ng-mousemove="vm.indexDayHistory = $index;"
-                    data-ng-click="vm.interactAbsent(periods, event, $event, $parent.$index)"
-                    class="[[vm.eventTypeState(periods, event)]]"
-                    tooltip="[[periods.name]]">
-                </li>
-
-                <li><i class="tableEdit" data-ng-click="vm.editPeriod($event, event)"></i></li>
-            </ul>
-        </th>
-
-        <!-- Select reason-->
-        <th class="table-reason text-center">
-            <label>
-                <select data-ng-model="event.globalReason"
-                        data-ng-click="vm.reasonSelect($event)"
-                        data-ng-change="vm.changeReason(event, $index)"
-                        ng-options="reason.id as reason.label for reason in vm.filterSelect(vm.eventReasonsType, event)"
-                        options-disabled="reason.hidden for reason in vm.eventReasonsType">
-                    <option value="">[[lang.translate('presences.absence.select.empty')]]</option>
-                </select>
-
-
-            </label>
-        </th>
-
-        <!-- Download file-->
-        <th class="events-table-body-file text-center">
-            <i class="attach forbidden" data-ng-click="vm.downloadFile($event)"></i>
-        </th>
-
-        <!-- Action -->
-        <th class="text-center"><i class="add forbidden" data-ng-click="vm.doAction($event)"></i></th>
-
-        <!-- Absence regularised -->
-        <th class="text-center">
-            <label class="checkbox"
-                   ng-style="{ opacity: !event.globalReason || (vm.hideGlobalCheckbox(event) && event.globalCounsellorRegularisation) ? 0 : 1 }"
-                   ng-class="{half: vm.regularizedChecked(event)}"
-                   data-ng-click="vm.stopAbsencePropagation($event)">
-                <input type="checkbox" data-ng-model="event.globalCounsellorRegularisation"
-                       data-ng-change="vm.toggleAllAbsenceRegularised(event, $index)">
-                <span></span>
-            </label>
-        </th>
-
-        <!-- description content -->
-    <tr ng-class="{open: vm.isCollapsibleOpen($index)}" class="events-table-body-description">
-        <td colspan="7" data-ng-show="event.events.length !== 0">
-            <div class="events-table-body-description-content"
-                 data-ng-repeat="history in event.events |  orderBy:'+end_date'">
-
-                <!--Add space-->
-                <span></span>
-                <span></span>
-
-                <!--Date-->
-                <span class="events-table-body-description-content-date">[[history.start_date | date:'HH:mm']] - [[history.end_date | date:'HH:mm']]</span>
-
-                <!--Select-->
-                <span class="events-table-body-description-content-select table-reason">
-                     <label>
-                        <select data-ng-model="history.reason_id"
-                                data-ng-change="vm.changeDescriptionReason(history, event, $parent.$index)"
-                                ng-options="reason.id as reason.label for reason in vm.eventReasonsTypeDescription"
-                                options-disabled="reason.hidden for reason in vm.eventReasonsType">
-                            <option value="">[[lang.translate('presences.absence.select.empty')]]</option>
-                        </select>
-                    </label>
-                </span>
-
-                <!--Regularized-->
-                <label class="events-table-body-description-content-checkbox checkbox"
-                       ng-style="{
-                           opacity: history.reason_id !== null && !history.counsellor_regularisation ? 1 : 0
-                       }">
-                    <input type="checkbox" data-ng-model="history.counsellor_regularisation"
-                           ng-disabled="!(history.reason_id !== null && !vm.provingReasonsMap[history.reason_id]) && history.counsellor_regularisation"
-                           data-ng-change="vm.toggleAbsenceRegularised(history, event, $parent.$index)">
-                    <span ng-style="{cursor: history.reason_id !== null && !vm.provingReasonsMap[history.reason_id] ? 'pointer' : 'default'}"></span>
-                </label>
+            <div class="twelve flex margin-top-5 subtitle">
+                <div class="margin-right-5">[[alert.count]]</div>
+                <div>[[lang.translate('presences.alerts.type.' + alert.type)]]</div>
             </div>
-        </td>
-    <tr>
-    </tr>
-    </tbody>
-</table>
+        </div>
+    </div>
+</div>
