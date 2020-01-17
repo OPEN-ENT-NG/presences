@@ -1,8 +1,8 @@
 import {_, angular, idiom as lang, moment, ng} from 'entcore';
-import {Absence, EventResponse, Events, EventType, Student, Students} from "../models";
+import {Absence, Event, EventResponse, Events, EventType, Student, Students} from "../models";
 import {DateUtils} from "@common/utils";
 import {GroupService} from "@common/services/GroupService";
-import {Reason, ReasonService} from "../services";
+import {EventService, Reason, ReasonService} from "../services";
 import {EventsFilter, EventsUtils} from "../utilities";
 
 declare let window: any;
@@ -30,8 +30,6 @@ interface ViewModel {
 
     filterSelect(options: Reason[], event): Reason[];
 
-    changeReason(event, index): Promise<void>;
-
     downloadFile($event): void;
 
     doAction($event): void;
@@ -40,16 +38,17 @@ interface ViewModel {
 
     regularizedChecked(event: EventResponse): boolean;
 
-    toggleAllAbsenceRegularised(event: EventResponse, index: number): void;
+    changeAllReason(event: EventResponse): Promise<void>;
 
-    toggleAbsenceRegularised(history, event, index: number): void;
+    changeReason(history: Event, event: EventResponse): Promise<void>;
+
+    toggleAllAbsenceRegularised(event: EventResponse): Promise<void>;
+
+    toggleAbsenceRegularised(history: Event, event: EventResponse): Promise<void>;
 
     getNonRegularizedEvents(events): any[];
 
     hideGlobalCheckbox(event): boolean;
-
-    /* Events description */
-    changeDescriptionReason(periods, event, index: number): void;
 
     /* Collapse event */
     eventId: number;
@@ -103,8 +102,8 @@ interface ViewModel {
 }
 
 export const eventsController = ng.controller('EventsController', ['$scope', '$route', '$location',
-    'GroupService', 'ReasonService',
-    function ($scope, $route, $location, GroupService: GroupService, ReasonService: ReasonService) {
+    'GroupService', 'ReasonService', 'EventService',
+    function ($scope, $route, $location, GroupService: GroupService, ReasonService: ReasonService, eventService: EventService) {
         const isWidget = $route.current.action === 'dashboard';
         const vm: ViewModel = this;
         vm.filter = {
@@ -138,9 +137,10 @@ export const eventsController = ng.controller('EventsController', ['$scope', '$r
         vm.events.eventer.on('loading::true', () => $scope.safeApply());
         vm.events.eventer.on('loading::false', () => {
             filterHistory();
+            vm.eventId = null;
             $scope.safeApply();
         });
-        const getEvents = async (): Promise<void> => {
+        const getEvents = async (actionMode?: boolean): Promise<void> => {
             vm.events.structureId = window.structure.id;
             vm.events.startDate = vm.filter.startDate.toDateString();
             vm.events.endDate = vm.filter.endDate.toDateString();
@@ -172,8 +172,14 @@ export const eventsController = ng.controller('EventsController', ['$scope', '$r
 
             EventsUtils.setStudentToSync(vm.events, vm.filter);
             EventsUtils.setClassToSync(vm.events, vm.filter);
-            // "page" uses sync() method at the same time it sets 0 (See LoadingCollection Class)
-            vm.events.page = 0;
+            // actionMode to define if we display the loading icon mode while changing filter, date etc...
+            if (!actionMode) {
+                // "page" uses sync() method at the same time it sets 0 (See LoadingCollection Class)
+                vm.events.page = 0;
+            } else {
+                // case if we only interact with action, reason, counsellor regularized...
+                refreshGetEventWhileAction();
+            }
             $scope.safeApply();
         };
 
@@ -187,6 +193,26 @@ export const eventsController = ng.controller('EventsController', ['$scope', '$r
                 moment(b.date).format(DateUtils.FORMAT["YEARMONTHDAY"]) -
                 moment(a.date).format(DateUtils.FORMAT["YEARMONTHDAY"])
             )
+        };
+
+        const refreshGetEventWhileAction = async (): Promise<void> => {
+            let filter = {
+                structureId: vm.events.structureId,
+                startDate: vm.events.startDate,
+                endDate: vm.events.endDate,
+                eventType: vm.events.eventType,
+                regularized: vm.events.regularized,
+                userId: vm.events.userId,
+                classes: vm.events.classes,
+                page: vm.events.page
+            };
+            let events = await eventService.get(filter);
+
+            vm.events.pageCount = events.pageCount;
+            vm.events.events = events.events;
+            vm.events.all = events.all;
+            filterHistory();
+            $scope.safeApply();
         };
 
         vm.editPeriod = ($event, {studentId, date, displayName, className, classId}): void => {
@@ -239,45 +265,6 @@ export const eventsController = ng.controller('EventsController', ['$scope', '$r
             return options;
         };
 
-        /* Add global reason_id to all events that exist */
-        vm.changeReason = async (event: EventResponse, index: number): Promise<void> => {
-            /* Fetch all event id */
-            let eventsArrayId = [];
-            let absencesArrayId = [];
-            if (isWidget) {
-                eventsArrayId.push(event.id);
-                event.globalReason = event.reason_id;
-            } else {
-                event.dayHistory.forEach(periods => {
-                    periods.events.forEach(period => {
-                        if ("reason_id" in period) {
-                            period.reason_id = event.globalReason;
-                            EventsUtils.addEventsAndAbsencesArray(period, eventsArrayId, absencesArrayId);
-                        }
-                    })
-                });
-                event.events.forEach(item => {
-                    item.reason_id = event.globalReason;
-                    item.counsellor_regularisation = vm.provingReasonsMap[item.reason_id];
-                    if ('events' in item && item.events.length > 0) {
-                        item.events.forEach(itemEvent => {
-                            eventsArrayId.push(itemEvent.id);
-                        })
-                    }
-                });
-            }
-            await Promise.all([
-                vm.events.updateReason(eventsArrayId, event.globalReason),
-                new Absence(null, null, null, null)
-                    .updateAbsenceReason(absencesArrayId, event.globalReason)
-            ]).then(() => {
-                if (isWidget) vm.events.page = 0;
-            });
-            event.globalCounsellorRegularisation = EventsUtils.initGlobalCounsellorRegularisation(event);
-            if (vm.filter.regularized && vm.provingReasonsMap[event.globalReason]) vm.events.all = vm.events.all.filter((evt, i) => i !== index);
-            $scope.safeApply();
-        };
-
         vm.downloadFile = ($event): void => {
             $event.stopPropagation();
             console.log("downloading File");
@@ -305,66 +292,116 @@ export const eventsController = ng.controller('EventsController', ['$scope', '$r
             return !regularized.every((val, i, arr) => val === arr[0]) && !event.globalCounsellorRegularisation;
         };
 
-        vm.toggleAllAbsenceRegularised = (event: EventResponse, index: number): void => {
-            let eventsId = [];
-            let absencesId = [];
-            event.dayHistory.forEach(history => {
-                history.events.forEach(e => {
-                    if (e.reason_id !== null || !vm.provingReasonsMap[e.reason_id]) {
-                        e.counsellor_regularisation = event.globalCounsellorRegularisation;
-                    }
-                });
-            });
-            event.events.forEach(item => {
-                if (item.reason_id !== null || !vm.provingReasonsMap[item.reason_id]) {
-                    item.counsellor_regularisation = event.globalCounsellorRegularisation;
-                    EventsUtils.addEventsAndAbsencesArray(item, eventsId, absencesId);
-                    if ('events' in item && item.events.length > 0) {
-                        item.events.forEach(itemEvent => {
-                            itemEvent.counsellor_regularisation = event.globalCounsellorRegularisation;
-                            eventsId.push(itemEvent.id);
-                        })
-                    }
-                }
-            });
-            if (eventsId.length > 0) vm.events.updateRegularized(eventsId, event.globalCounsellorRegularisation);
-            if (absencesId.length > 0) new Absence(null, null, null, null)
-                .updateAbsenceRegularized(absencesId, event.globalCounsellorRegularisation);
-            if (vm.filter.regularized) {
-                event.events = event.events.filter((event) =>
-                    eventsId.indexOf(event.id) === -1 && absencesId.indexOf(event.id) === -1
-                );
+        /* Add global reason_id to all events that exist */
+        vm.changeAllReason = async (event: EventResponse): Promise<void> => {
+            let initialReasonId = event.globalReason;
+            let fetchedEventIds: number[] = [];
+            let fetchedAbsenceIds: number[] = [];
+            if (isWidget) {
+                fetchedEventIds.push(event.id);
+            } else {
+                EventsUtils.fetchEventsAbsencesId(event, fetchedEventIds, fetchedAbsenceIds);
             }
-            if (event.events.length === 0 && vm.filter.regularized) {
-                vm.events.all = vm.events.all.filter((evt, i) => i !== index);
+            vm.events.all.forEach(e => {
+                e.events.every(ee => {
+                    if (fetchedAbsenceIds.indexOf(ee.id) === -1) {
+                        return false;
+                    }
+                    EventsUtils.fetchEventsAbsencesId(e, fetchedEventIds, fetchedAbsenceIds);
+                })
+            });
+            await Promise.all([
+                vm.events.updateReason(fetchedEventIds, initialReasonId),
+                new Absence(null, null, null, null)
+                    .updateAbsenceReason(fetchedAbsenceIds, initialReasonId)
+            ]).then(() => {
+                if (isWidget) vm.events.page = 0;
+                getEvents(true);
                 vm.eventId = null;
-            }
+            });
+            $scope.safeApply();
         };
 
-        vm.toggleAbsenceRegularised = (history, event, index: number): void => {
+        /* Change its description reason id */
+        vm.changeReason = async (history: Event, event: EventResponse): Promise<void> => {
+            let initialReasonId = history.reason_id;
+            let fetchedEventIds: number[] = [];
+            let fetchedAbsenceIds: number[] = [];
             if (history.type === EventsUtils.ALL_EVENTS.event) {
-                let eventsId = [history.id];
-                vm.events.updateRegularized(eventsId, history.counsellor_regularisation);
+                fetchedEventIds.push(history.id);
             } else {
-                let absencesId = [history.id];
-                new Absence(null, null, null, null)
-                    .updateAbsenceRegularized(absencesId, history.counsellor_regularisation);
-                if ('events' in history && history.events.length > 0) {
-                    let eventsId = [];
-                    history.events.forEach(itemEvent => {
-                        itemEvent.counsellor_regularisation = history.counsellor_regularisation;
-                        eventsId.push(itemEvent.id);
+                fetchedAbsenceIds.push(history.id);
+                if ('events' in history) {
+                    history.events.forEach(he => {
+                        EventsUtils.addEventsAndAbsencesArray(he, fetchedEventIds, fetchedAbsenceIds);
                     });
-                    vm.events.updateRegularized(eventsId, history.counsellor_regularisation);
                 }
             }
+            await Promise.all([
+                vm.events.updateReason(fetchedEventIds, initialReasonId),
+                new Absence(null, null, null, null)
+                    .updateAbsenceReason(fetchedAbsenceIds, initialReasonId)
+            ]).then(() => {
+                getEvents(true);
+                if (event.events.filter(e => !e.counsellor_regularisation).length === 0) {
+                    vm.eventId = null;
+                }
+            });
+            $scope.safeApply();
+        };
 
-            if (!isWidget) {
-                EventsUtils.manageEventDrop(vm.events, vm.filter, vm.eventId, history, event, index);
-                if (event.events.length > 0) event.globalCounsellorRegularisation = EventsUtils.initGlobalCounsellorRegularisation(event);
+        vm.toggleAllAbsenceRegularised = async (event: EventResponse): Promise<void> => {
+            let initialCounsellorRegularisation = event.globalCounsellorRegularisation;
+            let fetchedEventIds: number[] = [];
+            let fetchedAbsenceIds: number[] = [];
+            EventsUtils.fetchEventsAbsencesId(event, fetchedEventIds, fetchedAbsenceIds);
+            vm.events.all.forEach(e => {
+                e.events.every(ee => {
+                    if (fetchedAbsenceIds.indexOf(ee.id) === -1) {
+                        return false;
+                    }
+                    EventsUtils.fetchEventsAbsencesId(e, fetchedEventIds, fetchedAbsenceIds);
+                })
+            });
+            await Promise.all([
+                vm.events.updateRegularized(fetchedEventIds, initialCounsellorRegularisation),
+                new Absence(null, null, null, null)
+                    .updateAbsenceRegularized(fetchedAbsenceIds, initialCounsellorRegularisation)
+            ]).then(() => {
+                getEvents(true);
+                vm.eventId = null;
+            });
+            $scope.safeApply();
+        };
+
+        vm.toggleAbsenceRegularised = async (history: Event, event: EventResponse): Promise<void> => {
+            let initialCounsellorRegularisation = history.counsellor_regularisation;
+            let fetchedEventIds: number[] = [];
+            let fetchedAbsenceIds: number[] = [];
+            if (history.type === EventsUtils.ALL_EVENTS.event) {
+                fetchedEventIds.push(history.id);
             } else {
-                vm.events.page = 0;
+                fetchedAbsenceIds.push(history.id);
+                if ('events' in history) {
+                    history.events.forEach(ee => {
+                        EventsUtils.addEventsAndAbsencesArray(ee, fetchedEventIds, fetchedAbsenceIds);
+                    });
+                }
             }
+            await Promise.all([
+                vm.events.updateRegularized(fetchedEventIds, initialCounsellorRegularisation),
+                new Absence(null, null, null, null)
+                    .updateAbsenceRegularized(fetchedAbsenceIds, initialCounsellorRegularisation)
+            ]).then(() => {
+                if (!isWidget) {
+                    getEvents(true);
+                    if (event.events.filter(e => !e.counsellor_regularisation).length === 0) {
+                        vm.eventId = null;
+                    }
+                } else {
+                    vm.events.page = 0;
+                }
+            });
         };
 
         vm.getNonRegularizedEvents = (events): any[] => {
@@ -390,46 +427,6 @@ export const eventsController = ng.controller('EventsController', ['$scope', '$r
         /* Open the concerned event */
         vm.isCollapsibleOpen = ($index): boolean => {
             return $index == vm.eventId
-        };
-
-        /* Change its description reason id */
-        vm.changeDescriptionReason = (history, event: EventResponse, index): void => {
-            let eventsArrayId = [];
-            let absencesArrayId = [];
-            event.dayHistory.forEach(e => {
-                e.events.forEach(item => {
-                    if (item.id === history.id) {
-                        item.reason_id = history.reason_id;
-
-                        // check if id already exist in event array
-                        if ("type_id" in item) {
-                            if (eventsArrayId.indexOf(item.id) === -1) {
-                                eventsArrayId.push(item.id);
-                            }
-                        } else {
-                            // check if id already exist in absence array
-                            if (absencesArrayId.indexOf(item.id) === -1) {
-                                absencesArrayId.push(item.id);
-                            }
-                        }
-                        if ('events' in item && item.events.length > 0) {
-                            item.events.forEach(itemEvent => {
-                                eventsArrayId.push(itemEvent.id);
-                            })
-                        }
-
-                    }
-                });
-            });
-            if ("type_id" in history) {
-                vm.events.updateReason(eventsArrayId, history.reason_id);
-            } else {
-                if (absencesArrayId.length > 0)
-                    new Absence(null, null, null, null)
-                        .updateAbsenceReason(absencesArrayId, history.reason_id);
-            }
-            history.counsellor_regularisation = vm.provingReasonsMap[history.reason_id];
-            EventsUtils.manageEventDrop(vm.events, vm.filter, vm.eventId, history, event, index);
         };
 
         /* ----------------------------

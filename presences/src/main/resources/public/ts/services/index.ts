@@ -6,3 +6,4 @@ export * from './ReasonService';
 export * from './RegistryService';
 export * from './ForgottenNotebookService';
 export * from './SettingsService';
+export * from './EventService';

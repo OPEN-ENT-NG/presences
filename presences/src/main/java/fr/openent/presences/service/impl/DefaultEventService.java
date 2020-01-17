@@ -220,8 +220,13 @@ public class DefaultEventService implements EventService {
         query += " AND absence.student_id NOT IN (" +
                 "  SELECT distinct event.student_id FROM presences.event" +
                 "  WHERE absence.start_date::date = event.start_date::date" +
-                "  AND absence.end_date::date = event.end_date::date" +
-                " ) ";
+                "  AND absence.end_date::date = event.end_date::date";
+        if (regularized != null) {
+            query += " AND counsellor_regularisation = ? )";
+            params.add(regularized);
+        } else {
+            query += " ) ";
+        }
         query += setParamsForQueryEvents(userId, regularized, userIdFromClasses, params);
         query += ") SELECT * FROM allevents " +
                 "GROUP BY id, start_date, end_date, created, comment, student_id, reason_id," +
@@ -269,8 +274,13 @@ public class DefaultEventService implements EventService {
             query += " AND absence.student_id NOT IN (" +
                     "  SELECT event.student_id FROM presences.event" +
                     "  WHERE absence.start_date::date = event.start_date::date" +
-                    "  AND absence.end_date::date = event.end_date::date" +
-                    " ) ";
+                    "  AND absence.end_date::date = event.end_date::date";
+            if (regularized != null) {
+                query += " AND counsellor_regularisation = ? )";
+                params.add(regularized);
+            } else {
+                query += " ) ";
+            }
             query += setParamsForQueryEvents(userId, regularized, userIdFromClasses, params);
             query += ") AS absences";
         } else {

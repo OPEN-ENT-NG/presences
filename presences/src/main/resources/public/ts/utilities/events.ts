@@ -1,5 +1,4 @@
 import {Event, EventResponse, Events} from "../models";
-import {_} from "entcore";
 import {DateUtils} from "@common/utils";
 
 export interface EventsFilter {
@@ -58,47 +57,33 @@ export class EventsUtils {
         let reasonIds = [];
         events.forEach(item => {
             reasonIds.push(item.reason_id);
+            if ('events' in item) {
+                item.events.forEach(itemEvent => {
+                    reasonIds.push(itemEvent.reason_id);
+                });
+            }
         });
         return reasonIds;
     };
 
-    public static initGlobalCounsellorRegularisation = function (event: EventResponse): boolean {
-        let regularizedArray = [];
-        event.events.forEach(e => {
-            regularizedArray.push(e.counsellor_regularisation);
-            if ('events' in e && e.events.length > 0) {
-                e.events.forEach(itemEvent => {
-                    regularizedArray.push(itemEvent.counsellor_regularisation);
+    /**
+     * Method to fetch all ids in the concerned dayHistory and events
+     * from one student's event.all
+     */
+    public static fetchEventsAbsencesId(event: EventResponse, fetchedEventIds: number[], fetchedAbsenceIds: number[]) {
+        event.dayHistory.forEach(dayHistoryElement => {
+            dayHistoryElement.events.forEach(event => {
+                EventsUtils.addEventsAndAbsencesArray(event, fetchedEventIds, fetchedAbsenceIds);
+            })
+        });
+        event.events.forEach(event => {
+            EventsUtils.addEventsAndAbsencesArray(event, fetchedEventIds, fetchedAbsenceIds);
+            if ('events' in event) {
+                event.events.forEach(ee => {
+                    EventsUtils.addEventsAndAbsencesArray(ee, fetchedEventIds, fetchedAbsenceIds);
                 });
             }
         });
-        return regularizedArray.reduce((current, initial) => initial && current)
-    };
-
-    public static initGlobalReason = function (event: EventResponse) {
-        let reasonIds = EventsUtils.getReasonIds(event.events);
-        if (!reasonIds.every((val, i, arr) => val === arr[0])) {
-            event.globalReason = 0;
-        } else {
-            event.globalReason = parseInt(_.uniq(reasonIds));
-            if (isNaN(event.globalReason)) {
-                event.globalReason = null;
-            }
-        }
-    };
-
-    public static manageEventDrop(events: Events, eventsFilter: EventsFilter, eventId: number, history, event, index) {
-        if (history.counsellor_regularisation && eventsFilter.regularized) {
-            const {id} = history;
-            event.events = event.events.filter(evt => evt.id !== id);
-        }
-        if (event.events.length === 0 && eventsFilter.regularized) {
-            events.all = events.all.filter((evt, i) => i !== index);
-            eventId = null;
-        } else {
-            event.globalCounsellorRegularisation = EventsUtils.initGlobalCounsellorRegularisation(event);
-            EventsUtils.initGlobalReason(event);
-        }
     }
 
     public static resetEventId(eventId: number) {
