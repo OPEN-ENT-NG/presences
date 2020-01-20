@@ -8,41 +8,45 @@
     <div class="cell four paddingRight">
         <div class="cell twelve search-input">
             <async-autocomplete data-ng-disabled="false"
-                                data-ng-model="vm.studentSearchInput"
+                                data-ng-model="vm.filter.student"
                                 data-ng-change="vm.selectStudent"
-                                data-on-search="vm.searchByStudent"
-                                data-options="vm.students.all"
+                                data-on-search="vm.searchStudent"
+                                data-options="vm.filter.students"
                                 data-placeholder="presences.exemptions.search.student"
-                                data-search="vm.studentSearchInput">
+                                data-search="vm.filter.student">
             </async-autocomplete>
         </div>
 
         <div class="cell twelve">
             <ul class="cell twelve search-input-ul">
-                <li ng-repeat="student in vm.filter.students">
-                    [[student.toString()]] <i class="close"
-                                              data-ng-click="vm.excludeStudentFromFilter(student)"></i>
+                <li ng-repeat="student in vm.filter.selected.students"
+                    ng-click="vm.dropFilter(student, 'students')">
+                    [[student.toString()]]
+                    <i class="close"></i>
                 </li>
             </ul>
         </div>
+
     </div>
 
     <!-- Classes/Groups search bar -->
     <div class="cell four paddingLeft">
         <div class="cell twelve search-input">
             <async-autocomplete data-ng-disabled="false"
-                                data-ng-model="vm.classesSearchInput"
+                                data-ng-model="vm.filter.class"
                                 data-ng-change="vm.selectClass"
-                                data-on-search="vm.searchByClass"
-                                data-options="vm.classesFiltered"
+                                data-on-search="vm.searchClass"
+                                data-options="vm.filter.classes"
                                 data-placeholder="presences.exemptions.search.audience"
-                                data-search="vm.classesSearchInput">
+                                data-search="vm.filter.class">
             </async-autocomplete>
+
         </div>
         <div class="cell twelve">
             <ul class="cell twelve search-input-ul">
-                <li ng-repeat="class in vm.filter.classes">
-                    [[class.name]] <i class="close" data-ng-click="vm.excludeClassFromFilter(class)"></i>
+                <li ng-repeat="class in vm.filter.selected.classes">
+                    [[class.name]]
+                    <i class="close" ng-click="vm.dropFilter(class, 'classes')"></i>
                 </li>
             </ul>
         </div>
@@ -68,7 +72,7 @@
 <div class="row">
     <div class="chips cell">
         <label class="chip" ng-repeat="filter in vm.filters"
-               ng-class="{selected: vm.filter[filter]}"
+               ng-class="{selected: vm.filter.types[filter]}"
                ng-click="vm.switchFilter(filter)"
         >
             <span class="no-style">[[lang.translate('presences.alerts.filter.' + filter)]]</span>

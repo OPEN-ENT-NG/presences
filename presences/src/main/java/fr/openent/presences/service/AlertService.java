@@ -29,8 +29,8 @@ public interface AlertService {
      * Get alerts for all students
      *
      * @param structureId structure identifier
-     * @param types alert types
-     * @param handler function handler returning data
+     * @param types       alert types
+     * @param handler     function handler returning data
      */
-    void getAlertsStudents(String structureId, List<String> types, Handler<Either<String, JsonArray>> handler);
+    void getAlertsStudents(String structureId, List<String> types, List<String> students, Handler<Either<String, JsonArray>> handler);
 }

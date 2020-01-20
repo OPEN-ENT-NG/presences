@@ -44,24 +44,29 @@ public class DefaultAlertService implements AlertService {
     }
 
     @Override
-    public void getAlertsStudents(String structureId, List<String> types, Handler<Either<String, JsonArray>> handler) {
+    public void getAlertsStudents(String structureId, List<String> types, List<String> students, Handler<Either<String, JsonArray>> handler) {
         String query = "SELECT id, student_id, type, count, exceed_date " +
                 "FROM " + Presences.dbSchema + ".alerts " +
                 "WHERE structure_id = ? " +
                 "AND exceed_date is NOT NULL " +
-                "AND type IN " + Sql.listPrepared(types) +
-                " ORDER BY exceed_date DESC;";
+                "AND type IN " + Sql.listPrepared(types);
+        if (!students.isEmpty()) {
+            query += " AND student_id IN " + Sql.listPrepared(students);
+        }
+
+        query += " ORDER BY exceed_date DESC;";
         JsonArray params = new JsonArray()
                 .add(structureId)
                 .addAll(new JsonArray(types));
+        if (!students.isEmpty()) params.addAll(new JsonArray(students));
 
         Sql.getInstance().prepared(query, params, SqlResult.validResultHandler(response -> {
             if (response.isLeft()) {
                 handler.handle(new Either.Left<>(response.left().getValue()));
                 return;
             }
-            JsonArray alerts = response.right().getValue();
 
+            JsonArray alerts = response.right().getValue();
             // Récupérer les identifiants des élèves présents dans les alertes
             JsonArray studentsAlerts = new JsonArray();
             for (int i = 0; i < alerts.size(); i++) {
@@ -81,12 +86,14 @@ public class DefaultAlertService implements AlertService {
                     handler.handle(new Either.Left<>(response.left().getValue()));
                     return;
                 }
-                JsonArray students = studentResult.right().getValue();
+
+                JsonArray studentList = studentResult.right().getValue();
                 Map<String, JsonObject> studentMap = new HashMap<>();
-                for (int i = 0; i < students.size(); i++) {
-                    JsonObject student = students.getJsonObject(i);
+                for (int i = 0; i < studentList.size(); i++) {
+                    JsonObject student = studentList.getJsonObject(i);
                     studentMap.put(student.getString("student_id"), student);
                 }
+
                 for (int i = 0; i < alerts.size(); i++) {
                     JsonObject alert = alerts.getJsonObject(i);
                     String studentId = alert.getString("student_id");
@@ -94,6 +101,7 @@ public class DefaultAlertService implements AlertService {
                     alert.put("name", studentMap.get(studentId).getString("lastName") + " " + studentMap.get(studentId).getString("firstName"));
                     alert.put("audience", studentMap.get(studentId).getString("audience"));
                 }
+
                 handler.handle(new Either.Right<>(alerts));
             }));
         }));

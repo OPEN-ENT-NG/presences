@@ -15,7 +15,7 @@ export interface Alert {
 export interface AlertService {
     getAlerts(structureId: string): Promise<Alert>;
 
-    getStudentsAlerts(structureId: string, type: string[]): Promise<Array<Alert>>;
+    getStudentsAlerts(structureId: string, type: string[], students, classes): Promise<Array<Alert>>;
 
     reset(alerts: Array<number>): Promise<void>;
 }
@@ -44,9 +44,20 @@ export const alertService: AlertService = {
         }
     },
 
-    async getStudentsAlerts(structureId: string, types: string[]): Promise<Array<Alert>> {
+    async getStudentsAlerts(structureId: string, types: string[], students: string[] = null, groups: string[]): Promise<Array<Alert>> {
         try {
-            let url = `/presences/structures/${structureId}/alerts?`;
+            let studentsFilter = '';
+            let groupsFilter = '';
+            if (students && students.length > 0) {
+                students.map((student) => studentsFilter += `student=${student}&`);
+            }
+
+            if (groups && groups.length > 0) {
+                groups.map((group) => groupsFilter += `class=${group}&`);
+            }
+
+
+            let url = `/presences/structures/${structureId}/alerts?${studentsFilter}${groupsFilter}`;
             types.forEach(type => {
                 url += `&type=${type}`;
             });
