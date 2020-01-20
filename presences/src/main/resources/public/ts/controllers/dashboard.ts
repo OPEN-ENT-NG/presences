@@ -116,6 +116,7 @@ export const dashboardController = ng.controller('DashboardController', ['$scope
         };
 
         vm.getAlert = async () => {
+            const hasAlertWidget = model.me.hasWorkflow(rights.workflow.widget_alerts);
             try {
                 let defaultAlert = {
                     ABSENCE: 0,
@@ -123,17 +124,17 @@ export const dashboardController = ng.controller('DashboardController', ['$scope
                     INCIDENT: 0,
                     FORGOTTEN_NOTEBOOK: 0
                 };
-                let structureAlert: any = await alertService.getAlerts(window.structure.id);
-
-                vm.alert = {...defaultAlert, ...structureAlert};
+                if (hasAlertWidget) {
+                    let structureAlert: any = await alertService.getAlerts(window.structure.id);
+                    vm.alert = {...defaultAlert, ...structureAlert};
+                }
             } catch (e) {
-                toasts.warning('error');
+                toasts.warning("presences.error.get.alert");
                 throw e;
             }
         };
 
         vm.goToAlerts = function(type) {
-            // $location.path(`/alerts?type=${type}`);
             $location.path('/alerts').search({
                 type: type
             });

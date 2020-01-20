@@ -28,7 +28,7 @@ public class DefaultAlertService implements AlertService {
     }
 
     public void getSummary(String structureId, Handler<Either<String, JsonObject>> handler) {
-        String query = "SELECT type, SUM(count) FROM " + Presences.dbSchema +
+        String query = "SELECT type, COUNT(student_id) AS count FROM " + Presences.dbSchema +
                 ".alerts WHERE structure_id = ? AND exceed_date is NOT NULL GROUP BY type;";
         JsonArray params = new JsonArray(Arrays.asList(structureId));
         Sql.getInstance().prepared(query, params, SqlResult.validResultHandler(response -> {
@@ -37,7 +37,7 @@ public class DefaultAlertService implements AlertService {
             } else {
                 JsonArray values = response.right().getValue();
                 JsonObject summary = new JsonObject();
-                values.forEach(value -> summary.put(((JsonObject) value).getString("type"), ((JsonObject) value).getString("sum")));
+                values.forEach(value -> summary.put(((JsonObject) value).getString("type"), ((JsonObject) value).getLong("count")));
                 handler.handle(new Either.Right<>(summary));
             }
         }));
