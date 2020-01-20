@@ -1,6 +1,7 @@
 import {Course, CourseEvent, Notebook, TimeSlot} from "../services";
-import {_, moment} from "entcore";
+import {_, angular, moment} from "entcore";
 import {DateUtils} from "@common/utils";
+import {ABSENCE_FORM_EVENTS} from "../sniplets";
 
 export class CalendarUtils {
 
@@ -37,6 +38,26 @@ export class CalendarUtils {
         });
     }
 
+    private static hasHalfTime(event: CourseEvent, slot: TimeSlot): boolean {
+        let eventStartTime = DateUtils.format(event.start_date, DateUtils.FORMAT["HOUR-MINUTES"]);
+        let eventEndTime = DateUtils.format(event.end_date, DateUtils.FORMAT["HOUR-MINUTES"]);
+        let slotStartTime = DateUtils.format(DateUtils.getTimeFormat(slot.startHour), DateUtils.FORMAT["HOUR-MINUTES"]);
+        let slotEndTime = DateUtils.format(DateUtils.getTimeFormat(slot.endHour), DateUtils.FORMAT["HOUR-MINUTES"]);
+        return eventStartTime > slotStartTime || eventEndTime < slotEndTime;
+    }
+
+
+    private static getMinuteInEventTime(startDate: string, endDate: string): number {
+        return Math.abs(DateUtils.format(startDate, DateUtils.FORMAT["HOUR-MINUTES"]).split(":")[1] -
+            DateUtils.format(endDate, DateUtils.FORMAT["HOUR-MINUTES"]).split(":")[1]);
+    }
+
+    private static eventAbsenceHasSameTime(item: Course, event: CourseEvent): boolean {
+        let eventStartTime = DateUtils.format(event.start_date, DateUtils.FORMAT["HOUR-MINUTES"]);
+        let eventEndTime = DateUtils.format(event.end_date, DateUtils.FORMAT["HOUR-MINUTES"]);
+        return ((eventStartTime === item.startMomentTime) && (eventEndTime === item.endMomentTime));
+    }
+
     /**
      * Rendering event containing absences in course
      */
@@ -69,24 +90,29 @@ export class CalendarUtils {
         }
     }
 
-    private static hasHalfTime(event: CourseEvent, slot: TimeSlot): boolean {
-        let eventStartTime = DateUtils.format(event.start_date, DateUtils.FORMAT["HOUR-MINUTES"]);
-        let eventEndTime = DateUtils.format(event.end_date, DateUtils.FORMAT["HOUR-MINUTES"]);
-        let slotStartTime = DateUtils.format(DateUtils.getTimeFormat(slot.startHour), DateUtils.FORMAT["HOUR-MINUTES"]);
-        let slotEndTime = DateUtils.format(DateUtils.getTimeFormat(slot.endHour), DateUtils.FORMAT["HOUR-MINUTES"]);
-        return eventStartTime > slotStartTime || eventEndTime < slotEndTime;
-    }
-
-
-    private static getMinuteInEventTime(startDate: string, endDate: string): number {
-        return Math.abs(DateUtils.format(startDate, DateUtils.FORMAT["HOUR-MINUTES"]).split(":")[1] -
-            DateUtils.format(endDate, DateUtils.FORMAT["HOUR-MINUTES"]).split(":")[1]);
-    }
-
-    private static eventAbsenceHasSameTime(item: Course, event: CourseEvent): boolean {
-        let eventStartTime = DateUtils.format(event.start_date, DateUtils.FORMAT["HOUR-MINUTES"]);
-        let eventEndTime = DateUtils.format(event.end_date, DateUtils.FORMAT["HOUR-MINUTES"]);
-        return ((eventStartTime === item.startMomentTime) && (eventEndTime === item.endMomentTime));
+    public static actionAbsenceTimeSlot($scope) {
+        $('.timeslots .timeslot').click(function () {
+            let _scope = angular.element(arguments[0].target).scope();
+            let absenceDate = moment(_scope['day'].date).toDate();
+            let startTime = moment(new Date).set({
+                hours: _scope['timeslot'].start,
+                minute: 0,
+                second: 0,
+                millisecond: 0
+            }).toDate();
+            let endTime = moment(new Date).set({
+                hours: _scope['timeslot'].end,
+                minute: 0,
+                second: 0,
+                millisecond: 0
+            }).toDate();
+            let form = {
+                date: absenceDate,
+                startTime: startTime,
+                endTime: endTime
+            };
+            $scope.$broadcast(ABSENCE_FORM_EVENTS.OPEN, form);
+        })
     }
 
     static positionAbsence(event: CourseEvent, item, slots: Array<TimeSlot>) {

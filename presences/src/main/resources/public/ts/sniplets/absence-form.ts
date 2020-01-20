@@ -2,9 +2,12 @@ import {SNIPLET_FORM_EMIT_EVENTS, SNIPLET_FORM_EVENTS} from "@common/model";
 import {Absence} from "../models";
 import {idiom as lang, model, moment, toasts} from "entcore";
 import {Reason, reasonService} from "../services";
+import {IAngularEvent} from "angular";
+import {DateUtils} from "@common/utils";
 
 export enum ABSENCE_FORM_EVENTS {
     EDIT = 'absence-form:edit',
+    OPEN = 'absence-form:open',
 }
 
 console.log("absenceFormSnipplets");
@@ -16,16 +19,21 @@ interface ViewModel {
 
     form: any;
     reasonsType: any;
-    openAbsenceLightbox(): void;
+
+    openAbsenceLightbox(event: IAngularEvent, args: any): void;
 
     setFormParams(obj): void;
+
     setFormDateParams(form, start_date, end_date): void;
+
     filterSelect(reasons: Reason[]): Reason[];
 
     editAbsenceForm(obj): void;
 
     isFormValid(): void;
+
     createAbsence(): Promise<void>;
+
     updateAbsence(): Promise<void>;
     deleteAbsence(): Promise<void>;
 
@@ -34,23 +42,22 @@ interface ViewModel {
     safeApply(fn?: () => void): void;
 }
 
-function getDateFormat(date: Date, dateTime: Date): string {
-    return moment(moment(date)
-        .format('YYYY-MM-DD') + ' ' + moment(dateTime)
-        .format('HH:mm'), 'YYYY-MM-DD HH:mm')
-        .format('YYYY-MM-DD HH:mm');
-}
-
 const vm: ViewModel = {
     safeApply: null,
     createAbsenceLightBox: false,
     reasonsType: null,
     form: Absence,
 
-    openAbsenceLightbox(): void {
+    openAbsenceLightbox(event: IAngularEvent, args: any): void {
         vm.createAbsenceLightBox = true;
         vm.form = new Absence(null, null, null, null);
         absenceForm.that.$emit(SNIPLET_FORM_EMIT_EVENTS.CREATION);
+        if (event) {
+            vm.form.startDate = args.date;
+            vm.form.endDate = args.date;
+            vm.form.startDateTime = args.startTime;
+            vm.form.endDateTime = args.endTime;
+        }
         vm.safeApply();
     },
 
@@ -73,8 +80,8 @@ const vm: ViewModel = {
             form.startDateTime = moment(new Date()).set({second: 0, millisecond: 0}).toDate();
         }
         form.endDateTime = moment(new Date().setHours(17)).set({minute: 0, second: 0, millisecond: 0}).toDate();
-        form.start_date = getDateFormat(form.startDate, form.startDateTime);
-        form.end_date = getDateFormat(form.endDate, form.endDateTime);
+        form.start_date = DateUtils.getDateFormat(form.startDate, form.startDateTime);
+        form.end_date = DateUtils.getDateFormat(form.endDate, form.endDateTime);
     },
 
     filterSelect(reasons: Reason[]): Reason[] {
@@ -104,14 +111,14 @@ const vm: ViewModel = {
 
     isFormValid(): boolean {
         if (vm.form) {
-            return getDateFormat(vm.form.startDate, vm.form.startDateTime) <= getDateFormat(vm.form.endDate, vm.form.startDateTime);
+            return DateUtils.getDateFormat(vm.form.startDate, vm.form.startDateTime) <= DateUtils.getDateFormat(vm.form.endDate, vm.form.startDateTime);
         }
         return false;
     },
 
     async createAbsence(): Promise<void> {
-        vm.form.start_date = getDateFormat(vm.form.startDate, vm.form.startDateTime);
-        vm.form.end_date = getDateFormat(vm.form.endDate, vm.form.endDateTime);
+        vm.form.start_date = DateUtils.getDateFormat(vm.form.startDate, vm.form.startDateTime);
+        vm.form.end_date = DateUtils.getDateFormat(vm.form.endDate, vm.form.endDateTime);
         let response = await vm.form.createAbsence(window.structure.id, vm.form.reason_id, model.me.userId);
         if (response.status == 200 || response.status == 201) {
             vm.closeAbsenceLightbox();
@@ -124,8 +131,8 @@ const vm: ViewModel = {
     },
 
     async updateAbsence(): Promise<void> {
-        vm.form.start_date = getDateFormat(vm.form.startDate, vm.form.startDateTime);
-        vm.form.end_date = getDateFormat(vm.form.endDate, vm.form.endDateTime);
+        vm.form.start_date = DateUtils.getDateFormat(vm.form.startDate, vm.form.startDateTime);
+        vm.form.end_date = DateUtils.getDateFormat(vm.form.endDate, vm.form.endDateTime);
         let response = await vm.form.updateAbsence(vm.form.id, window.structure.id, vm.form.reason_id, model.me.userId);
         if (response.status == 200 || response.status == 201) {
             vm.closeAbsenceLightbox();
@@ -168,6 +175,7 @@ export const absenceForm = {
         },
         setHandler: function () {
             this.$on(ABSENCE_FORM_EVENTS.EDIT, (event, args) => vm.editAbsenceForm(args));
+            this.$on(ABSENCE_FORM_EVENTS.OPEN, (event, args) => vm.openAbsenceLightbox(event, args));
             this.$on(SNIPLET_FORM_EVENTS.SET_PARAMS, (event, arg) => vm.setFormParams(arg));
         }
     }

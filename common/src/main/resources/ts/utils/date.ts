@@ -39,6 +39,18 @@ export class DateUtils {
 
     /**
      * Add step to given date.
+     * @param date      Date format
+     * @param dateTime  Time format
+     */
+    static getDateFormat(date: Date, dateTime: Date): string {
+        return moment(moment(date)
+            .format('YYYY-MM-DD') + ' ' + moment(dateTime)
+            .format('HH:mm'), 'YYYY-MM-DD HH:mm')
+            .format('YYYY-MM-DD HH:mm');
+    }
+
+    /**
+     * Add step to given date.
      * @param date Date to update
      * @param step Step size
      * @param stepType Optional. Step type.

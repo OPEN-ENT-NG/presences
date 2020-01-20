@@ -48,6 +48,10 @@ interface ViewModel {
 
     formatExemptionDate(date: any): string;
 
+    openAbsenceForm(item: any): void;
+
+    closeAbsenceForm(): void;
+
     editAbsenceForm(item: Course, items): void;
 
     editForgottenNotebook($item): void;
@@ -130,6 +134,7 @@ export const calendarController = ng.controller('CalendarController',
                 $location.path(`/calendar/${vm.filter.student.id}`);
             }
             await vm.loadCourses();
+            CalendarUtils.actionAbsenceTimeSlot($scope);
         }
 
         vm.changeAbsence = function (item): string {
@@ -256,6 +261,14 @@ export const calendarController = ng.controller('CalendarController',
                     return true;
                 }
                 return false;
+            };
+
+            vm.openAbsenceForm = function (item: any): void {
+                console.log("testOpen: ", item);
+            };
+
+            vm.closeAbsenceForm = function (): void {
+                console.log("closed");
             };
 
             vm.editAbsenceForm = function (item: Course, items): void {
