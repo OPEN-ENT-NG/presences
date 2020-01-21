@@ -24,6 +24,7 @@
   "presences.absence.select.empty": "Sans motif",
   "presences.absence.select.multiple": "Motifs multiples",
   "presences.alert.empty": "Aucune alerte",
+  "presences.alert.reset.success": "La réinitalisation des alertes a été effectuée avec succès",
   "presences.alerts.title": "Alertes",
   "presences.alerts.form.input": "Saisissez ici le nombre d'événements à atteindre par élève avant de déclencher une alerte",
   "presences.alert.manage.event.method.save.confirm": "Enregistrement du seuil d'alerte: modification enregistrée avec succès",

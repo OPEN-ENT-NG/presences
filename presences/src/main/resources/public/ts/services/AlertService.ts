@@ -56,7 +56,6 @@ export const alertService: AlertService = {
                 groups.map((group) => groupsFilter += `class=${group}&`);
             }
 
-
             let url = `/presences/structures/${structureId}/alerts?${studentsFilter}${groupsFilter}`;
             types.forEach(type => {
                 url += `&type=${type}`;

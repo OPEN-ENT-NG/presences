@@ -53,35 +53,37 @@
     </div>
 </div>
 
-<!-- Reset / Switch -->
 <div class="row top5">
-    <div class="twelve cell">
+    <!-- Reset / Switch -->
+    <div>
         <button class="right-magnet forbidden uppercase" disabled>
             <i18n>presences.export.tocsv</i18n>
         </button>
         <button class="right-magnet forbidden uppercase" disabled>
             <i18n>presences.punishments.sanction</i18n>
         </button>
-        <button class="right-magnet uppercase" data-ng-click="vm.reset()">
+        <button class="right-magnet uppercase" data-ng-click="vm.reset()"
+                ng-disabled="!vm.someSelectedAlert()">
             <i18n>presences.reset</i18n>
         </button>
     </div>
-</div>
 
-<!-- Alert Type Filter -->
-<div class="row">
-    <div class="chips cell">
-        <label class="chip" ng-repeat="filter in vm.filters"
-               ng-class="{selected: vm.filter.types[filter]}"
-               ng-click="vm.switchFilter(filter)"
-        >
-            <span class="no-style">[[lang.translate('presences.alerts.filter.' + filter)]]</span>
-        </label>
+    <!-- Alert Type Filter -->
+    <div>
+        <div class="chips cell">
+            <label class="chip" ng-repeat="filter in vm.filters"
+                   ng-class="{selected: vm.filter.types[filter]}"
+                   ng-click="vm.switchFilter(filter)"
+            >
+                <span class="no-style">[[lang.translate('presences.alerts.filter.' + filter)]]</span>
+            </label>
+        </div>
     </div>
 </div>
 
+
 <!-- Checkbox selectAll -->
-<div class="row vertical-spacing">
+<div class="row">
     <label class="checkbox">
         <input type="checkbox" ng-change="vm.selectAll()" ng-model="vm.selection.all">
         <span><i18n>presences.select.all</i18n></span>

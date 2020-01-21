@@ -61,6 +61,8 @@ interface ViewModel {
     /*  switch alert type */
     switchFilter(filter: string): void;
 
+    someSelectedAlert(): boolean;
+
     updateFilter(student?, audience?): void;
 
     selectAll(): void;
@@ -114,8 +116,10 @@ export const alertsController = ng.controller('AlertsController', ['$scope', '$r
             });
 
             try {
-                let studentsAlerts: any = await alertService.getStudentsAlerts(window.structure.id, vm.alertType, student, classes);
-                vm.listAlert = studentsAlerts;
+                if (vm.alertType.length > 0) {
+                    let studentsAlerts: any = await alertService.getStudentsAlerts(window.structure.id, vm.alertType, student, classes);
+                    vm.listAlert = studentsAlerts;
+                }
             } catch (e) {
                 toasts.warning('presences.error.get.alert');
                 throw e;
@@ -132,6 +136,10 @@ export const alertsController = ng.controller('AlertsController', ['$scope', '$r
                 vm.filter.students = [];
                 throw err;
             }
+        };
+
+        vm.someSelectedAlert = function () {
+            return vm.listAlert.filter(alert => alert.selected).length > 0;
         };
 
         vm.selectStudent = async function (model, student) {
@@ -208,6 +216,7 @@ export const alertsController = ng.controller('AlertsController', ['$scope', '$r
                 });
                 await alertService.reset(alertsId);
                 await vm.getStudentAlert();
+                toasts.confirm('presences.alert.reset.success');
             } catch (e) {
                 toasts.warning('presences.error.reset.alert');
                 throw e;
