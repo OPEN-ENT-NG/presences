@@ -26,7 +26,7 @@ export const eventService: EventService = {
             const startDate = `&startDate=${DateUtils.format(eventRequest.startDate, dateFormat)}`;
             const endDate = `&endDate=${DateUtils.format(eventRequest.endDate, dateFormat)}`;
             const eventType = `&eventType=${eventRequest.eventType}`;
-            const userId = eventRequest.userId.length === 0 ? "" : `&eventType=${eventRequest.userId}`;
+            const userId = eventRequest.userId.length === 0 ? "" : `&userId=${eventRequest.userId}`;
             const classes = eventRequest.classes.length === 0 ? "" : `&eventType=${eventRequest.classes}`;
             const regularized = eventRequest.regularized ? `&regularized=${!eventRequest.regularized}` : "";
             const page = `&page=${eventRequest.page}`;
