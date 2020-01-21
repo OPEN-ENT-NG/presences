@@ -160,9 +160,13 @@ CREATE OR REPLACE FUNCTION presences.decrement_event_alert() RETURNS TRIGGER AS
     $BODY$
 LANGUAGE plpgsql;
 
-DROP TRIGGER increment_event_alert_after_unjustifying ON presences.event;
+CREATE TRIGGER decrement_event_alert_after_justifying AFTER UPDATE OF reason_id ON presences.event
+FOR EACH ROW WHEN (NEW.reason_id IS NOT NULL) EXECUTE PROCEDURE presences.decrement_event_alert();
 
 CREATE TRIGGER increment_event_alert_after_unjustifying BEFORE UPDATE OF reason_id ON presences.event
 FOR EACH ROW WHEN (NEW.reason_id IS NULL) EXECUTE PROCEDURE presences.increment_event_alert();
 
+DROP TRIGGER increment_event_alert ON presences.event;
 
+CREATE TRIGGER increment_event_alert BEFORE INSERT ON presences.event
+FOR EACH ROW EXECUTE PROCEDURE presences.increment_event_alert();
