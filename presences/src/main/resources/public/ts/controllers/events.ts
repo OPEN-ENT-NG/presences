@@ -405,7 +405,7 @@ export const eventsController = ng.controller('EventsController', ['$scope', '$r
         };
 
         vm.getNonRegularizedEvents = (events): any[] => {
-            return events.filter(item => item.counsellor_regularisation === false);
+            return events.filter(item => item.counsellorRegularisation === false);
         };
 
         /* Toggle Collapse */
