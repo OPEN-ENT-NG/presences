@@ -31,4 +31,6 @@ public class Actions {
     public static final String EXEMPTION_DELETION = "EXEMPTION_DELETION";
     // A user update structure settings
     public static final String SETTING_UPDATE = "SETTING_UPDATE";
+    // A user deletes an alert
+    public static final String ALERT_DELETION = "ALERT_DELETION";
 }

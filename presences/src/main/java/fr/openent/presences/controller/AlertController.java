@@ -2,6 +2,7 @@ package fr.openent.presences.controller;
 
 import fr.openent.presences.common.service.GroupService;
 import fr.openent.presences.common.service.impl.DefaultGroupService;
+import fr.openent.presences.constants.Actions;
 import fr.openent.presences.security.AlertFilter;
 import fr.openent.presences.security.DeleteAlertFilter;
 import fr.openent.presences.service.AlertService;
@@ -16,6 +17,7 @@ import io.vertx.core.http.HttpServerRequest;
 import io.vertx.core.json.JsonArray;
 import org.entcore.common.controller.ControllerHelper;
 import org.entcore.common.http.filter.ResourceFilter;
+import org.entcore.common.http.filter.Trace;
 
 import java.util.List;
 
@@ -33,6 +35,7 @@ public class AlertController extends ControllerHelper {
     @Delete("/alerts")
     @SecuredAction(value = "", type = ActionType.RESOURCE)
     @ResourceFilter(DeleteAlertFilter.class)
+    @Trace(Actions.ALERT_DELETION)
     @ApiDoc("Get given structure")
     public void delete(HttpServerRequest request) {
         List<String> alerts = request.params().getAll("id");
