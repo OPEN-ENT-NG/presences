@@ -99,7 +99,9 @@
                 </thead>
                 <tbody>
                 <tr ng-repeat="anomaly in vm.massmailingAnomalies">
-                    <td>[[anomaly.displayName]]</td>
+                    <td>
+                        <student-name name="anomaly.displayName" id="anomaly.id"/>
+                    </td>
                     <td class="text-center">[[anomaly.className]]</td>
                     <td class="text-center counters-cell">
                         <div class="counters">

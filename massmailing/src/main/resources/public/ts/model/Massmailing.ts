@@ -62,6 +62,11 @@ export class Massmailing {
                 if (relative.selected) students[id].push(relative.id);
             });
         });
+        
+        Object.keys(students).forEach(id => {
+            if (students[id].length === 0) delete students[id];
+        });
+
         return students;
     }
 

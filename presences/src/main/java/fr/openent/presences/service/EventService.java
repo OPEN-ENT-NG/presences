@@ -148,6 +148,17 @@ public interface EventService {
      * @param noReasons  Should retrieve no reasons event
      * @param handler    Function handler returning data
      */
-    void getEventsByStudent(List<Integer> eventType, List<String> students, String structure, Boolean justified, List<Integer> reasonsId, Boolean massmailed,
+    void getEventsByStudent(Integer eventType, List<String> students, String structure, Boolean justified, List<Integer> reasonsId, Boolean massmailed,
                             String startDate, String endDate, boolean noReasons, Handler<Either<String, JsonArray>> handler);
+
+    /**
+     * Retrieve student absence rate for given period
+     *
+     * @param student   student identifier
+     * @param structure structure identifier
+     * @param start     start date
+     * @param end       end date
+     * @param handler   function handler returning data
+     */
+    void getAbsenceRate(String student, String structure, String start, String end, Handler<Either<String, JsonObject>> handler);
 }

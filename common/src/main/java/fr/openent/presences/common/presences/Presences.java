@@ -41,10 +41,10 @@ public class Presences {
         eb.send(address, action, MessageResponseHandler.messageJsonArrayHandler(handler));
     }
 
-    public void getEventsByStudent(List<Integer> eventTypes, List<String> students, String structure, Boolean justified, List<Integer> reasonsId, Boolean massmailed,
+    public void getEventsByStudent(Integer eventType, List<String> students, String structure, Boolean justified, List<Integer> reasonsId, Boolean massmailed,
                                    String startDate, String endDate, Boolean noReasons, Handler<Either<String, JsonArray>> handler) {
         JsonObject action = new JsonObject()
-                .put("eventType", new JsonArray(eventTypes))
+                .put("eventType", eventType)
                 .put("justified", justified)
                 .put("students", new JsonArray(students))
                 .put("structure", structure)

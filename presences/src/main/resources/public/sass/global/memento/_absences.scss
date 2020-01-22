@@ -1,0 +1,79 @@
+#memento-absence-sniplet {
+  position: relative;
+
+  .disabled {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: rgba(255, 255, 255, 0.8);
+    z-index: 1;
+  }
+
+  .content {
+    display: flex;
+
+    .absence-rate {
+      font-size: 15px;
+    }
+
+    > div {
+      flex: 1;
+    }
+
+    .summary {
+      display: flex;
+      justify-content: space-between;
+
+      > div {
+        flex: 1;
+        max-width: 24%;
+        height: 96px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 7px;
+        box-shadow: 0 5px 5px rgba(0, 0, 0, 0.21);
+        position: relative;
+        font-size: 12px;
+
+        &:after {
+          content: ' ';
+          width: 100%;
+          height: 10px;
+          position: absolute;
+          border-bottom-left-radius: 7px;
+          border-bottom-right-radius: 7px;
+          display: block;
+          bottom: 0;
+        }
+
+        &.UNJUSTIFIED:after {
+          background-color: $presences-red;
+        }
+
+        &.JUSTIFIED:after {
+          background-color: $presences-pink;
+        }
+
+        &.LATENESS:after {
+          background-color: $presences-purple;
+        }
+
+        &.DEPARTURE:after {
+          background-color: $presences-green;
+        }
+
+        .number {
+          font-size: 40px;
+          margin-bottom: 5px;
+          font-weight: bold;
+        }
+      }
+    }
+  }
+}

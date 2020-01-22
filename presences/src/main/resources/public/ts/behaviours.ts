@@ -2,6 +2,7 @@ import {Behaviours} from 'entcore';
 import {
     absenceForm,
     disciplineManage,
+    absenceMementoWidget,
     exemptionForm,
     forgottenNotebookForm,
     navigation,
@@ -30,5 +31,6 @@ Behaviours.register('presences', {
         'presences-manage/sniplet-presences-manage-lightbox': presencesManageLightbox,
         'presences-manage/action-manage/sniplet-presences-action-manage': presencesActionManage,
         'presences-manage/discipline-manage/sniplet-presences-disciplines-manage': disciplineManage,
+        'memento/absences': absenceMementoWidget
     }
 });

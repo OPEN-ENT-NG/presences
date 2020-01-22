@@ -6,7 +6,9 @@
             </div>
             <div class="cell nine">
                 <i class="close" data-ng-click="vm.closePanel()"></i>
-                <h4>[[vm.filter.student.name]]</h4>
+                <h4>
+                    <student-name name="vm.filter.student.name" id="vm.filter.student.id"/>
+                </h4>
                 <div>
                     <i class="mail"></i>
                     <i class="bar-chart"></i>

@@ -81,6 +81,14 @@ public class Viescolaire {
             }
         });
     }
+//
+//    public void getGroupsPeriods(String structureId, List<String> groups, Handler<Either<String, JsonArray>> handler) {
+//        JsonObject action = new JsonObject()
+//                .put("action", "periode.getPeriodes")
+//                .put("idGroupes", new JsonArray(groups))
+//                .put("idEtablissement", structureId);
+//        eb.send(address, action, MessageResponseHandler.messageJsonArrayHandler(handler));
+//    }
 
     private static class ViescolaireHolder {
         private static final Viescolaire instance = new Viescolaire();

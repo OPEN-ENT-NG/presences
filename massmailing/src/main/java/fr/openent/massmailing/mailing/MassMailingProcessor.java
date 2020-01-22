@@ -261,6 +261,21 @@ public abstract class MassMailingProcessor implements Mailing {
         return res;
     }
 
+    private Integer getEventTypeCode(MassmailingType mailingType) {
+        Integer code = null;
+        switch (mailingType) {
+            case JUSTIFIED:
+            case UNJUSTIFIED:
+                code = EventType.ABSENCE.getType();
+                break;
+            case LATENESS:
+                code = EventType.LATENESS.getType();
+                break;
+        }
+
+        return code;
+    }
+
     /**
      * Check if massmailing is justified or not.
      * If massmailingTypeList contains JUSTIFIED then the massmailing is justified
@@ -269,21 +284,19 @@ public abstract class MassMailingProcessor implements Mailing {
      *
      * @return justified status
      */
-    private Boolean isJustified() {
-        Boolean bool = null;
-        if (massmailingTypeList.contains(MassmailingType.UNJUSTIFIED) && massmailingTypeList.contains(MassmailingType.JUSTIFIED)) {
-            return bool;
+    private Boolean isJustified(MassmailingType type) {
+        Boolean justified = null;
+        switch (type) {
+            case JUSTIFIED:
+                justified = true;
+                break;
+            case LATENESS:
+            case UNJUSTIFIED:
+                justified = false;
+                break;
         }
 
-        if (massmailingTypeList.contains(MassmailingType.JUSTIFIED)) {
-            bool = true;
-        }
-
-        if (massmailingTypeList.contains(MassmailingType.UNJUSTIFIED)) {
-            bool = false;
-        }
-
-        return bool;
+        return justified;
     }
 
     /**
@@ -340,20 +353,29 @@ public abstract class MassMailingProcessor implements Mailing {
      * @param handler Function handler returning data
      */
     void retrieveEvents(Handler<Either<String, JsonObject>> handler) {
-        Presences.getInstance().getEventsByStudent(getEventTypeCodeList(), getStudentsList(), structure, isJustified(), reasons, massmailed, start, end, noReason, event -> {
-            if (event.isLeft()) {
-                LOGGER.error("[Presences@MassMailingProcessor] Failed to retrieve events", event.left().getValue());
-                handler.handle(new Either.Left<>(event.left().getValue()));
+        List<Future> futures = new ArrayList<>();
+        for (MassmailingType type : massmailingTypeList) {
+            Future<JsonArray> future = Future.future();
+            Presences.getInstance().getEventsByStudent(getEventTypeCode(type), getStudentsList(), structure, isJustified(type), reasons, massmailed, start, end, noReason, FutureHelper.handlerJsonArray(future));
+            futures.add(future);
+        }
+
+        CompositeFuture.all(futures).setHandler(result -> {
+            if (result.failed()) {
+                LOGGER.error("[Presences@MassMailingProcessor] Failed to retrieve events", result.cause());
+                handler.handle(new Either.Left<>(result.cause().toString()));
                 return;
             }
 
-            JsonArray events = event.right().getValue();
             JsonObject res = new JsonObject();
-            for (int i = 0; i < events.size(); i++) {
-                JsonObject evt = events.getJsonObject(i);
-                if (!res.containsKey(evt.getString("student_id")))
-                    res.put(evt.getString("student_id"), new JsonArray());
-                res.getJsonArray(evt.getString("student_id")).add(evt);
+            for (Future<JsonArray> future : futures) {
+                JsonArray events = future.result();
+                for (int i = 0; i < events.size(); i++) {
+                    JsonObject evt = events.getJsonObject(i);
+                    if (!res.containsKey(evt.getString("student_id")))
+                        res.put(evt.getString("student_id"), new JsonArray());
+                    res.getJsonArray(evt.getString("student_id")).add(evt);
+                }
             }
 
             handler.handle(new Either.Right<>(res));

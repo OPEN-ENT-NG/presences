@@ -79,19 +79,21 @@
                         <label class="switch"></label>
                     </switch>
                 </th>
-            <tr ng-class="{open: vm.isCollapsibleOpen(incident.id)}"
-                data-ng-click="vm.editIncidentLightbox(incident)" class="incident-content-table-body-row">
+            <tr ng-class="{open: vm.isCollapsibleOpen(incident.id)}" class="incident-content-table-body-row">
                 <td colspan="6">
                     <div class="incident-content-table-body-row-collapsible">
 
-                        <div class="incident-content-table-body-row-collapsible-edit">
+                        <div class="incident-content-table-body-row-collapsible-edit"
+                             data-ng-click="vm.editIncidentLightbox(incident)">
                             <i class="edit" data-ng-click="vm.editIncidentLightbox(incident)"></i>
                         </div>
 
                         <ul class="incident-content-table-body-row-collapsible-protagonist">
                             <li data-ng-repeat="protagonist in incident.protagonists">
                                 [[protagonist.protagonistType.label]] :
-                                <span class="incident-content-bold">[[protagonist.label]]</span>
+                                <span class="incident-content-bold">
+                                    <student-name name="protagonist.label" id="protagonist.userId"/>
+                                </span>
                             </li>
                             <li>
                                 <i18n>incidents.partner</i18n>

@@ -6,6 +6,7 @@ import io.vertx.core.logging.LoggerFactory;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.time.LocalDate;
+import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
@@ -186,11 +187,11 @@ public class DateHelper {
     /**
      * Get Simple Time as string
      *
-     * @param date      date to format into time
-     * @param format    the format wished
+     * @param date   date to format into time
+     * @param format the format wished
      * @return Simple Time format as string
-     *                  (e.g "2019-11-05 11:00:00" (do not forget to mention the GOOD FORMAT in parameter)
-     *                  would be "11:00:00"
+     * (e.g "2019-11-05 11:00:00" (do not forget to mention the GOOD FORMAT in parameter)
+     * would be "11:00:00"
      */
     public static String getTimeString(String date, String format) throws ParseException {
         Calendar cal = Calendar.getInstance();
@@ -221,6 +222,54 @@ public class DateHelper {
         }
 
         return totalDates;
+    }
+
+    /**
+     * Return given date month number
+     *
+     * @param date date
+     * @return Month number
+     */
+    public static int getMonthNumber(Date date) {
+        return date.toInstant().atZone(ZoneId.systemDefault()).toLocalDate().getMonthValue();
+    }
+
+    /**
+     * Return given date year value
+     *
+     * @param date date
+     * @return Year value
+     */
+    public static int getYear(Date date) {
+        return date.toInstant().atZone(ZoneId.systemDefault()).toLocalDate().getYear();
+    }
+
+    /**
+     * Return date given value
+     *
+     * @param date  date
+     * @param value Value you want. Use Calendar types to get value
+     * @return value
+     */
+    public static int getValue(Date date, int value) {
+        Calendar cal = Calendar.getInstance();
+        cal.setTime(date);
+        return cal.get(value);
+    }
+
+    /**
+     * Add to the date the number of specified value
+     *
+     * @param date   date you want to update
+     * @param value  value. Use Calendar types
+     * @param number number you want to "add"
+     * @return new date updated with the new value
+     */
+    public static Date add(Date date, int value, int number) {
+        Calendar cal = Calendar.getInstance();
+        cal.setTime(date);
+        cal.add(value, number);
+        return cal.getTime();
     }
 
     public static int getDayOfMonthNumber(String date) throws ParseException {

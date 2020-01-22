@@ -3,6 +3,8 @@ package fr.openent.presences.service.impl;
 import fr.openent.presences.Presences;
 import fr.openent.presences.common.helper.FutureHelper;
 import fr.openent.presences.common.helper.WorkflowHelper;
+import fr.openent.presences.common.service.GroupService;
+import fr.openent.presences.common.service.impl.DefaultGroupService;
 import fr.openent.presences.common.viescolaire.Viescolaire;
 import fr.openent.presences.enums.EventType;
 import fr.openent.presences.enums.Events;
@@ -29,7 +31,6 @@ import org.entcore.common.sql.SqlResult;
 import org.entcore.common.user.UserInfos;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -41,6 +42,7 @@ public class DefaultEventService implements EventService {
     private static String defaultEndTime = "23:59:59";
     private SettingsService settingsService = new DefaultSettingsService();
     private AbsenceService absenceService;
+    private GroupService groupService;
     private EventHelper eventHelper;
     private SlotHelper slotHelper;
 
@@ -48,6 +50,7 @@ public class DefaultEventService implements EventService {
         this.eventHelper = new EventHelper(eb);
         this.slotHelper = new SlotHelper(eb);
         this.absenceService = new DefaultAbsenceService(eb);
+        this.groupService = new DefaultGroupService(eb);
     }
 
     @Override
@@ -455,13 +458,12 @@ public class DefaultEventService implements EventService {
                 handler.handle(new Either.Left<>(event.left().getValue()));
                 return;
             }
-            List<Integer> eventTypes = Arrays.asList(eventType);
             JsonObject settings = event.right().getValue();
             String recoveryMethod = settings.getString("event_recovery_method");
             switch (recoveryMethod) {
                 case "DAY":
                 case "HOUR": {
-                    JsonObject eventsQuery = getEventQuery(eventTypes, students, structure, justified, reasonsId,
+                    JsonObject eventsQuery = getEventQuery(eventType, students, structure, justified, reasonsId,
                             massmailed, startDate, endDate, noReasons, recoveryMethod, null, null);
                     String query = "WITH count_by_user AS (WITH events as (" + eventsQuery.getString("query") + ") " +
                             "SELECT count(*), student_id FROM events GROUP BY student_id) SELECT * FROM count_by_user WHERE count >= " + startAt;
@@ -480,9 +482,9 @@ public class DefaultEventService implements EventService {
                         JsonObject slotSetting = evt.right().getValue();
                         if (slotSetting.containsKey("end_of_half_day")) {
                             String halfOfDay = slotSetting.getString("end_of_half_day");
-                            JsonObject morningQuery = getEventQuery(eventTypes, students, structure, justified,
+                            JsonObject morningQuery = getEventQuery(eventType, students, structure, justified,
                                     reasonsId, massmailed, startDate, endDate, noReasons, recoveryMethod, defaultStartTime, halfOfDay);
-                            JsonObject afternoonQuery = getEventQuery(eventTypes, students, structure, justified,
+                            JsonObject afternoonQuery = getEventQuery(eventType, students, structure, justified,
                                     reasonsId, massmailed, startDate, endDate, noReasons, recoveryMethod, halfOfDay, defaultEndTime);
                             String query = "WITH count_by_user AS (WITH events as (" + morningQuery.getString("query") + " UNION ALL " + afternoonQuery.getString("query") + ") " +
                                     "SELECT count(*), student_id FROM events GROUP BY student_id) SELECT * FROM count_by_user WHERE count >= " + startAt;
@@ -498,7 +500,7 @@ public class DefaultEventService implements EventService {
         });
     }
 
-    private JsonObject getEventQuery(List<Integer> eventTypes, List<String> students, String structure, Boolean justified,
+    private JsonObject getEventQuery(Integer eventTypes, List<String> students, String structure, Boolean justified,
                                      List<Integer> reasonsId, Boolean massmailed, String startDate, String endDate,
                                      boolean noReasons, String recoveryMethod, String startTime, String endTime) {
         String dateCast = !"HOUR".equals(recoveryMethod) ? "::date" : "";
@@ -512,12 +514,12 @@ public class DefaultEventService implements EventService {
                 "WHERE event.start_date" + dateCast + " >= ? " +
                 "AND event.end_date" + dateCast + "<= ? " +
                 "AND register.structure_id = ? " +
-                "AND type_id IN " + Sql.listPrepared(eventTypes);
+                "AND type_id = ?";
         JsonArray params = new JsonArray()
                 .add(startDate)
                 .add(endDate)
                 .add(structure)
-                .addAll(new JsonArray(eventTypes));
+                .add(eventTypes);
 
         if ("HALF_DAY".equals(recoveryMethod)) {
             query += " AND event.start_date::time >= '" + startTime + "' AND event.start_date::time <= '" + endTime + "'";
@@ -550,33 +552,39 @@ public class DefaultEventService implements EventService {
     }
 
     @Override
-    public void getEventsByStudent(List<Integer> eventTypes, List<String> students, String structure, Boolean justified,
+    public void getEventsByStudent(Integer eventType, List<String> students, String structure, Boolean justified,
                                    List<Integer> reasonsId, Boolean massmailed, String startDate, String endDate,
                                    boolean noReasons, Handler<Either<String, JsonArray>> handler) {
+        Handler<Either<String, JsonArray>> queryHandler = eventsEvt -> {
+            if (eventsEvt.isLeft()) {
+                handler.handle(eventsEvt);
+            } else {
+                JsonArray events = eventsEvt.right().getValue();
+                for (int i = 0; i < events.size(); i++) {
+                    events.getJsonObject(i).put("events", new JsonArray(events.getJsonObject(i).getString("events")));
+                }
+                handler.handle(new Either.Right<>(events));
+            }
+        };
+
+        if (eventType != 1) {
+            JsonObject eventsQuery = getEventQuery(eventType, students, structure, justified, reasonsId, massmailed, startDate, endDate, noReasons, "HOUR", null, null);
+            Sql.getInstance().prepared(eventsQuery.getString("query"), eventsQuery.getJsonArray("params"), SqlResult.validResultHandler(queryHandler));
+            return;
+        }
+
         settingsService.retrieve(structure, event -> {
             if (event.isLeft()) {
                 handler.handle(new Either.Left<>(event.left().getValue()));
                 return;
             }
 
-            Handler<Either<String, JsonArray>> queryHandler = eventsEvt -> {
-                if (eventsEvt.isLeft()) {
-                    handler.handle(eventsEvt);
-                } else {
-                    JsonArray events = eventsEvt.right().getValue();
-                    for (int i = 0; i < events.size(); i++) {
-                        events.getJsonObject(i).put("events", new JsonArray(events.getJsonObject(i).getString("events")));
-                    }
-                    handler.handle(new Either.Right<>(events));
-                }
-            };
-
             JsonObject settings = event.right().getValue();
             String recoveryMethod = settings.getString("event_recovery_method");
             switch (recoveryMethod) {
                 case "DAY":
                 case "HOUR": {
-                    JsonObject eventsQuery = getEventQuery(eventTypes, students, structure, justified, reasonsId, massmailed, startDate, endDate, noReasons, recoveryMethod, null, null);
+                    JsonObject eventsQuery = getEventQuery(eventType, students, structure, justified, reasonsId, massmailed, startDate, endDate, noReasons, recoveryMethod, null, null);
                     Sql.getInstance().prepared(eventsQuery.getString("query"), eventsQuery.getJsonArray("params"), SqlResult.validResultHandler(queryHandler));
                     break;
                 }
@@ -592,8 +600,8 @@ public class DefaultEventService implements EventService {
                         JsonObject slotSetting = evt.right().getValue();
                         if (slotSetting.containsKey("end_of_half_day")) {
                             String halfOfDay = slotSetting.getString("end_of_half_day");
-                            JsonObject morningQuery = getEventQuery(eventTypes, students, structure, justified, reasonsId, massmailed, startDate, endDate, noReasons, recoveryMethod, defaultStartTime, halfOfDay);
-                            JsonObject afternoonQuery = getEventQuery(eventTypes, students, structure, justified, reasonsId, massmailed, startDate, endDate, noReasons, recoveryMethod, halfOfDay, defaultEndTime);
+                            JsonObject morningQuery = getEventQuery(eventType, students, structure, justified, reasonsId, massmailed, startDate, endDate, noReasons, recoveryMethod, defaultStartTime, halfOfDay);
+                            JsonObject afternoonQuery = getEventQuery(eventType, students, structure, justified, reasonsId, massmailed, startDate, endDate, noReasons, recoveryMethod, halfOfDay, defaultEndTime);
                             String query = "WITH events as (" + morningQuery.getString("query") + " UNION ALL " + afternoonQuery.getString("query") + ") SELECT * FROM events ORDER BY start_date";
                             JsonArray params = new JsonArray()
                                     .addAll(morningQuery.getJsonArray("params"))
@@ -604,6 +612,40 @@ public class DefaultEventService implements EventService {
                         }
                     });
             }
+        });
+    }
+
+    @Override
+    public void getAbsenceRate(String student, String structure, String start, String end, Handler<Either<String, JsonObject>> handler) {
+        groupService.getUserGroups(Collections.singletonList(student), structure, evt -> {
+            if (evt.isLeft()) {
+                handler.handle(new Either.Left<>(evt.left().getValue()));
+                return;
+            }
+
+            List<JsonObject> groups = (List<JsonObject>) evt.right().getValue().getList();
+            List<String> groupIds = groups.stream().map(group -> group.getString("id")).collect(Collectors.toList());
+
+            String query = "WITH register_count AS (" +
+                    "SELECT COUNT(id) FROM " + Presences.dbSchema + ".register " +
+                    "INNER JOIN " + Presences.dbSchema + ".rel_group_register ON (register.id = rel_group_register.register_id) " +
+                    "WHERE rel_group_register.group_id IN " + Sql.listPrepared(groupIds) +
+                    "AND register.structure_id = ?" +
+                    "AND register.start_date >= ?" +
+                    "AND register.end_date <= ?), " +
+                    "event_count AS (SELECT COUNT(id) FROM " + Presences.dbSchema + ".event WHERE student_id = ? AND type_id = 1 AND start_date >= ? AND end_date <= ?) " +
+                    "SELECT CASE WHEN register_count.count > 0 AND event_count.count > 0 THEN round(((event_count.count::numeric) / (register_count.count::numeric))*100, 2) ELSE 0 END AS absence_rate " +
+                    "FROM register_count, event_count";
+            JsonArray params = new JsonArray()
+                    .addAll(new JsonArray(groupIds))
+                    .add(structure)
+                    .add(start)
+                    .add(end)
+                    .add(student)
+                    .add(start)
+                    .add(end);
+
+            Sql.getInstance().prepared(query, params, SqlResult.validUniqueResultHandler(handler));
         });
     }
 

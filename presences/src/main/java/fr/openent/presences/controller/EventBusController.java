@@ -55,7 +55,7 @@ public class EventBusController extends ControllerHelper {
                 this.eventService.getCountEventByStudent(eventType, students, structure, justified, startAt, reasonsId, massmailed, startDate, endDate, noReasons, BusResponseHandler.busArrayHandler(message));
                 break;
             case "get-events-by-student":
-                List<Integer> eventTypes = body.getJsonArray("eventType").getList();
+                eventType = body.getInteger("eventType");
                 justified = body.getBoolean("justified");
                 students = body.getJsonArray("students", new JsonArray()).getList();
                 structure = body.getString("structure");
@@ -64,7 +64,7 @@ public class EventBusController extends ControllerHelper {
                 startDate = body.getString("startDate");
                 endDate = body.getString("endDate");
                 noReasons = body.getBoolean("noReasons");
-                this.eventService.getEventsByStudent(eventTypes, students, structure, justified, reasonsId, massmailed, startDate, endDate, noReasons, BusResponseHandler.busArrayHandler(message));
+                this.eventService.getEventsByStudent(eventType, students, structure, justified, reasonsId, massmailed, startDate, endDate, noReasons, BusResponseHandler.busArrayHandler(message));
                 break;
             case "get-reasons":
                 structure = body.getString("structure");

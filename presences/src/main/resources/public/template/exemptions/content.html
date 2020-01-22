@@ -44,21 +44,23 @@
             </thead>
             <tbody>
             <tr ng-disabled="hasRight('manageExemption') != true"
-                ng-click="vm.editExemption(exemption)"
                 data-ng-repeat="exemption in vm.exemptions.all">
                 <th class="uppercase flex-th">
-                    <span class="avatar"
+                    <span class="avatar" ng-click="vm.editExemption(exemption)"
                           ng-style="{'background-image': 'url(/userbook/avatar/' + exemption.studentId + ')'}">&nbsp;</span>
-                    <span>[[exemption.student.lastName]] [[exemption.student.firstName]]</span>
+                    <span><student-name name="exemption.student.lastName + ' ' + exemption.student.firstName"
+                                        id="exemption.student.idEleve"/></span>
                 </th>
-                <th class="uppercase playdown text-center">[[exemption.student.classeName]]</th>
-                <th class="uppercase playdown">[[exemption.subject.name]]</th>
-                <th class="highlight text-center">
+                <th class="uppercase playdown text-center" ng-click="vm.editExemption(exemption)">
+                    [[exemption.student.classeName]]
+                </th>
+                <th class="uppercase playdown" ng-click="vm.editExemption(exemption)">[[exemption.subject.name]]</th>
+                <th class="highlight text-center" ng-click="vm.editExemption(exemption)">
                     <span class="half"><i18n>presences.from</i18n> [[vm.dateFormater(exemption.startDate)]]</span>
                     <span class="half"><i18n>presences.to</i18n> [[vm.dateFormater(exemption.endDate)]]</span>
                 </th>
-                <th>[[exemption.comment]]</th>
-                <th class="text-center">
+                <th ng-click="vm.editExemption(exemption)">[[exemption.comment]]</th>
+                <th class="text-center" ng-click="vm.editExemption(exemption)">
                     <i ng-show="!exemption.attendance" class="account-outline"></i>
                     <i ng-show="exemption.attendance" class="account"></i>
                 </th>
