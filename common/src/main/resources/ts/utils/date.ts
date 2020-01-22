@@ -1,5 +1,6 @@
 import {moment} from 'entcore';
 import {DurationInputArg1, DurationInputArg2} from 'moment';
+import http from "axios";
 
 export class DateUtils {
 
@@ -138,5 +139,12 @@ export class DateUtils {
                 return 1;
             return 0;
         }
+    }
+
+    static async getSchoolYearDates(structureId) {
+        console.log('test');
+        let {data} = await http.get(`viescolaire/settings/periode/schoolyear?structureId=` + structureId);
+        console.log('test2', data);
+        return data;
     }
 }
