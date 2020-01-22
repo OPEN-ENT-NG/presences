@@ -17,7 +17,7 @@ import {EventType, User} from '../models';
 import {DateUtils} from '@common/utils';
 import {SNIPLET_FORM_EMIT_EVENTS, SNIPLET_FORM_EVENTS} from "@common/model";
 import {ABSENCE_FORM_EVENTS, NOTEBOOK_FORM_EVENTS} from "../sniplets";
-import {CalendarUtils} from "../utilities";
+import {CalendarAbsenceUtils, CalendarUtils} from "../utilities";
 
 declare let window: any;
 
@@ -133,8 +133,12 @@ export const calendarController = ng.controller('CalendarController',
                 window.item = vm.filter.student;
                 $location.path(`/calendar/${vm.filter.student.id}`);
             }
-            await vm.loadCourses();
-            CalendarUtils.actionAbsenceTimeSlot($scope);
+            await vm.loadCourses().then(async () => {
+                await Promise.all([
+                    CalendarAbsenceUtils.actionAbsenceTimeSlot($scope),
+                    CalendarAbsenceUtils.actionDragAbsence($scope)
+                ]);
+            });
         }
 
         vm.changeAbsence = function (item): string {

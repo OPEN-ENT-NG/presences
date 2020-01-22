@@ -1,7 +1,6 @@
-import {Course, CourseEvent, Notebook, TimeSlot} from "../services";
-import {_, angular, moment} from "entcore";
+import {Course, CourseEvent, Notebook, TimeSlot} from "../../services";
+import {_, moment} from "entcore";
 import {DateUtils} from "@common/utils";
-import {ABSENCE_FORM_EVENTS} from "../sniplets";
 
 export class CalendarUtils {
 
@@ -88,31 +87,6 @@ export class CalendarUtils {
             }
             absenceElement.style.position = 'relative';
         }
-    }
-
-    public static actionAbsenceTimeSlot($scope) {
-        $('.timeslots .timeslot').click(function () {
-            let _scope = angular.element(arguments[0].target).scope();
-            let absenceDate = moment(_scope['day'].date).toDate();
-            let startTime = moment(new Date).set({
-                hours: _scope['timeslot'].start,
-                minute: 0,
-                second: 0,
-                millisecond: 0
-            }).toDate();
-            let endTime = moment(new Date).set({
-                hours: _scope['timeslot'].end,
-                minute: 0,
-                second: 0,
-                millisecond: 0
-            }).toDate();
-            let form = {
-                date: absenceDate,
-                startTime: startTime,
-                endTime: endTime
-            };
-            $scope.$broadcast(ABSENCE_FORM_EVENTS.OPEN, form);
-        })
     }
 
     static positionAbsence(event: CourseEvent, item, slots: Array<TimeSlot>) {

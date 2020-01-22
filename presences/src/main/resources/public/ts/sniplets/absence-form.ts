@@ -53,8 +53,8 @@ const vm: ViewModel = {
         vm.form = new Absence(null, null, null, null);
         absenceForm.that.$emit(SNIPLET_FORM_EMIT_EVENTS.CREATION);
         if (event) {
-            vm.form.startDate = args.date;
-            vm.form.endDate = args.date;
+            vm.form.startDate = args.startDate;
+            vm.form.endDate = args.endDate;
             vm.form.startDateTime = args.startTime;
             vm.form.endDateTime = args.endTime;
         }
@@ -158,6 +158,7 @@ const vm: ViewModel = {
 
     closeAbsenceLightbox(): void {
         vm.createAbsenceLightBox = false;
+        absenceForm.that.$emit(SNIPLET_FORM_EMIT_EVENTS.CANCEL);
     }
 };
 

@@ -154,6 +154,12 @@ $calendar-user-card-height: 56px;
               display: flex;
               flex-direction: column;
               justify-content: space-around;
+
+              &.action-drag-absence {
+                background: $presences-red !important;
+                z-index: 999;
+                opacity: 60%;
+              }
             }
           }
         }
