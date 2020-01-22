@@ -2,12 +2,14 @@ package fr.openent.presences.export;
 
 import fr.openent.presences.common.helper.CSVExport;
 import fr.openent.presences.common.helper.DateHelper;
+import fr.openent.presences.model.Course;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.List;
 
 public class RegisterCSVExport extends CSVExport {
     private JsonArray registers;
@@ -21,21 +23,21 @@ public class RegisterCSVExport extends CSVExport {
 
     @Override
     public void generate() {
-        for (int i = 0; i < this.registers.size(); i++) {
+        List<Course> courses = this.registers.getList();
+        for (Course course : courses) {
             try {
-                JsonObject register = this.registers.getJsonObject(i);
-                this.value.append(getLine(register));
+                this.value.append(getLine(course));
             } catch (ParseException e) {
                 LOGGER.error("[Presences@RegisterCSVExport] Failed to parse line. Skipped", e);
             }
         }
     }
 
-    private String getLine(JsonObject register) throws ParseException {
-        String line = getRegisterDate(register.getString("startDate"), register.getString("endDate")) + SEPARATOR;
-        line += getTeachersNames(register.getJsonArray("teachers")) + SEPARATOR;
-        line += getGroupsNames(register.getJsonArray("classes"), register.getJsonArray("groups")) + SEPARATOR;
-        line += register.getString("subjectName", "");
+    private String getLine(Course register) throws ParseException {
+        String line = getRegisterDate(register.getStartDate(), register.getEndDate()) + SEPARATOR;
+        line += getTeachersNames(register.getTeachers()) + SEPARATOR;
+        line += getGroupsNames(register.getClasses(), register.getGroups()) + SEPARATOR;
+        line += register.getSubjectName();
         return line + EOL;
     }
 

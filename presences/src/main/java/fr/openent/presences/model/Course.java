@@ -239,7 +239,7 @@ public class Course implements Cloneable {
     }
 
     public String getSubjectName() {
-        return subjectName;
+        return subjectName != null ? subjectName : "";
     }
 
     public void setSubjectName(String subjectName) {
