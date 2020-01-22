@@ -77,8 +77,8 @@ export const incidentsController = ng.controller('IncidentsController', ['$scope
 
     const getIncidents = async (): Promise<void> => {
         vm.incidents.structureId = window.structure.id;
-        vm.incidents.startDate = vm.filter.startDate.toDateString();
-        vm.incidents.endDate = vm.filter.endDate.toDateString();
+        vm.incidents.startDate = moment(vm.filter.startDate).format(DateUtils.FORMAT["YEAR-MONTH-DAY"]);
+        vm.incidents.endDate = moment(vm.filter.endDate).format(DateUtils.FORMAT["YEAR-MONTH-DAY"]);
 
         setStudentToSync();
 
@@ -197,23 +197,23 @@ export const incidentsController = ng.controller('IncidentsController', ['$scope
             $scope.safeApply();
         } catch (err) {
             notify.error('incidents.edit.form.err');
-                $scope.safeApply();
-                throw err;
-            }
-        };
+            $scope.safeApply();
+            throw err;
+        }
+    };
 
-        vm.editIncidentLightbox = async function (incident: Incident) {
-            $scope.$broadcast(INCIDENTS_FORM_EVENTS.EDIT, incident);
-            $scope.safeApply()
-        };
+    vm.editIncidentLightbox = async function (incident: Incident) {
+        $scope.$broadcast(INCIDENTS_FORM_EVENTS.EDIT, incident);
+        $scope.safeApply()
+    };
 
-        /* on switch (watch) */
-        $scope.$watch(() => window.structure, () => {
-            getIncidents();
-        });
+    /* on switch (watch) */
+    $scope.$watch(() => window.structure, () => {
+        getIncidents();
+    });
 
-        /* Destroy directive and scope */
-        $scope.$on('$destroy', function() {
-            angular.element(document.querySelectorAll(".datepicker")).remove();
-        })
-    }]);
+    /* Destroy directive and scope */
+    $scope.$on('$destroy', function () {
+        angular.element(document.querySelectorAll(".datepicker")).remove();
+    })
+}]);
