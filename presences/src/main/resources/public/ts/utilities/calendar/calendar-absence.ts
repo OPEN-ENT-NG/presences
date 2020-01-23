@@ -72,7 +72,9 @@ export class CalendarAbsenceUtils {
             .mouseup(() => {
                 isClickHold = false;
                 let form = CalendarAbsenceUtils.formatForm(timeSlotsFetched);
-                $scope.$broadcast(ABSENCE_FORM_EVENTS.OPEN, form);
+                if (form) {
+                    $scope.$broadcast(ABSENCE_FORM_EVENTS.OPEN, form);
+                }
             });
         $scope.$on(SNIPLET_FORM_EMIT_EVENTS.CANCEL, () => CalendarAbsenceUtils.resetTimeSlotsFetched(timeSlots, timeSlotsFetched));
     }
@@ -114,6 +116,7 @@ export class CalendarAbsenceUtils {
      * Format form object (startDate, endDate, startTime, endTime)
      */
     private static formatForm(timeSlotsFetched: any[]) {
+        if (timeSlotsFetched.length === 0) return;
         let start = timeSlotsFetched[0].startDate;
         let end = timeSlotsFetched[timeSlotsFetched.length - 1].endDate;
         let startTime = timeSlotsFetched[0].start;
