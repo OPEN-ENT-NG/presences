@@ -7,4 +7,5 @@ export interface TimeSlotData {
     endDate: string;
     end: number;
     check?: boolean;
+    type?: { event: string, id: number };
 }

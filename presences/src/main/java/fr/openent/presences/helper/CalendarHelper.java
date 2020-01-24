@@ -122,7 +122,7 @@ public class CalendarHelper {
                             .put("startMomentTime", startTime)
                             .put("endDate", endDate + " " + endTime)
                             .put("endMomentDate", endDate + " " + endTime)
-                            .put("endMomentTime", startTime)
+                            .put("endMomentTime", endTime)
                     );
                 }
             }

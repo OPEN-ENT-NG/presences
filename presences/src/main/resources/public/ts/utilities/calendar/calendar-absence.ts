@@ -2,6 +2,8 @@ import {angular, moment} from "entcore";
 import {ABSENCE_FORM_EVENTS} from "../../sniplets";
 import {SNIPLET_FORM_EMIT_EVENTS} from "@common/model";
 import {TimeSlotData} from "../../models/";
+import {EventsUtils} from "../../utilities/";
+import {DateUtils} from "@common/utils";
 
 /**
  * ⚠ This class is used for calendar while doing ACTION such as
@@ -45,13 +47,27 @@ export class CalendarAbsenceUtils {
      */
     public static async actionDragAbsence($scope): Promise<void> {
         let isClickHold = false;
-        let slots = $('.days .timeslot');
+        let slots = $('.days .timeslot, .course-item-container');
         let timeSlots: TimeSlotData[] = [];
         slots.each((i: number, e: Element) => {
             let _scope = angular.element(e).scope();
-            let timeslot: TimeSlotData = CalendarAbsenceUtils.getTimeSlotData(i, e, _scope);
-            timeSlots.push(timeslot);
+            if (e.className.startsWith("timeslot")) {
+                let timeSlot: TimeSlotData = CalendarAbsenceUtils.getTimeSlotData(i, e, _scope);
+                timeSlots.push(timeSlot);
+            } else {
+                let timeSlot: TimeSlotData = CalendarAbsenceUtils.getCourseSlotData(i, e, _scope);
+                timeSlots.push(timeSlot);
+            }
         });
+        timeSlots.forEach(ts => {
+            if (ts.div.className.startsWith("course")) {
+                let timeslotIndex = timeSlots.findIndex(t =>
+                    DateUtils.isMatchDate(t.startDate, t.endDate, ts.startDate, ts.endDate) &&
+                    t.div.className.startsWith("timeslot"));
+                ts.index = timeSlots[timeslotIndex].index;
+            }
+        });
+        timeSlots.sort((a, b) => a.index - b.index);
         let timeSlotsFetched: TimeSlotData[] = [];
         let mdIndex;
         slots /* click on timeslot first time */
@@ -108,8 +124,8 @@ export class CalendarAbsenceUtils {
         });
     }
 
-    private static findElement(timeslots: TimeSlotData[], e) {
-        return timeslots.findIndex(t => t.div === e.target);
+    private static findElement(timeSlots: TimeSlotData[], e) {
+        return timeSlots.find(t => t.div === e.currentTarget).index;
     }
 
     /**
@@ -121,7 +137,15 @@ export class CalendarAbsenceUtils {
         let end = timeSlotsFetched[timeSlotsFetched.length - 1].endDate;
         let startTime = timeSlotsFetched[0].start;
         let endTime = timeSlotsFetched[timeSlotsFetched.length - 1].end;
+
+        let absence = timeSlotsFetched
+            .filter(t => t.index === timeSlotsFetched[0].index)
+            .find(t => "type" in t && t.type.event === EventsUtils.ALL_EVENTS.absence);
+        let type: { event: string, id: number } = absence !== undefined ? absence.type : {event: "", id: null};
+
         return {
+            absenceId: type.id,
+            type: type,
             startDate: moment(start).toDate(),
             endDate: moment(end).toDate(),
             startTime: moment(new Date).set({
@@ -165,6 +189,31 @@ export class CalendarAbsenceUtils {
             millisecond: 0
         }).format('HH:mm');
         timeSlot.end = timeSlotScope.end;
+
+        return timeSlot;
+    }
+
+    /**
+     * get timeslots object (div, startDate, start, endDate, end)
+     */
+    private static getCourseSlotData(index: number, target: Element, _scope: any): TimeSlotData {
+        let timeSlot: TimeSlotData = {} as TimeSlotData;
+        let type: { event: string, id: number } = {event: "", id: null};
+        if ('absenceId' in _scope.item) {
+            type = {
+                event: EventsUtils.ALL_EVENTS.absence,
+                id: _scope.item.absenceId
+            }
+        }
+        timeSlot.index = index;
+        timeSlot.div = target;
+        timeSlot.check = false;
+        timeSlot.timeslot = {};
+        timeSlot.startDate = _scope.item.startDate;
+        timeSlot.start = parseInt(_scope.item.startMomentTime.split(':')[0]);
+        timeSlot.endDate = _scope.item.endDate;
+        timeSlot.end = parseInt(_scope.item.endMomentTime.split(':')[0]);
+        timeSlot.type = type;
 
         return timeSlot;
     }

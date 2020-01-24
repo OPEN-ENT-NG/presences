@@ -91,6 +91,34 @@ export class DateUtils {
      * @param dateValueFormat       date value format (optional)
      * @param dateToCompareFormat   date to compare format (optional)
      */
+    static isMatchDate(startDateValue: string, endDateValue: string,
+                       startDateToCompare: string, endDateToCompare: string,
+                       dateValueFormat?: string, dateToCompareFormat?: string): boolean {
+
+        let startDate = DateUtils
+            .format(startDateValue, dateValueFormat ? dateValueFormat : DateUtils.FORMAT["YEAR-MONTH-DAY-HOUR-MIN-SEC"]);
+        let endDate = DateUtils
+            .format(endDateValue, dateValueFormat ? dateValueFormat : DateUtils.FORMAT["YEAR-MONTH-DAY-HOUR-MIN-SEC"]);
+        let comparedStartDate = DateUtils
+            .format(startDateToCompare, dateToCompareFormat ? dateToCompareFormat : DateUtils.FORMAT["YEAR-MONTH-DAY-HOUR-MIN-SEC"]);
+        let comparedEndDate = DateUtils
+            .format(endDateToCompare, dateToCompareFormat ? dateToCompareFormat : DateUtils.FORMAT["YEAR-MONTH-DAY-HOUR-MIN-SEC"]);
+
+        return startDate === comparedStartDate && endDate === comparedEndDate;
+    }
+
+    /**
+     * Check if your start and end date is between constant date
+     *
+     * (e.g in register view when we compare our current date with the slots)
+     *
+     * @param startDateValue        StartDate value
+     * @param endDateValue          EndDate value
+     * @param startDateToCompare    StartDate to compare
+     * @param endDateToCompare      EndDate to compare
+     * @param dateValueFormat       date value format (optional)
+     * @param dateToCompareFormat   date to compare format (optional)
+     */
     static isBetween(startDateValue: string, endDateValue: string,
                      startDateToCompare: string, endDateToCompare: string,
                      dateValueFormat?: string, dateToCompareFormat?: string): boolean {

@@ -24,7 +24,8 @@ declare let window: any;
 interface ViewModel {
     show: { loader: boolean, exemption: { start_date: string, end_date: string } };
     courses: {
-        list: Array<Course>
+        list: Array<Course>,
+        hasLoaded: boolean
     };
     slots: { list: Array<TimeSlot> };
     filter: {
@@ -77,68 +78,56 @@ export const calendarController = ng.controller('CalendarController',
                   GroupService: GroupService,
                   SearchService: SearchService,
                   ForgottenNotebookService: ForgottenNotebookService) {
-        const vm: ViewModel = this;
-        vm.show = {
-            loader: true,
-            exemption: null
-        };
-        vm.filter = {
-            search: {
-                item: '',
-                items: null
-            },
-            student: null,
-            students: null
-        };
-        vm.courses = {list: []};
-        vm.slots = {list: []};
+            const vm: ViewModel = this;
+            vm.show = {
+                loader: true,
+                exemption: null
+            };
+            vm.filter = {
+                search: {
+                    item: '',
+                    items: null
+                },
+                student: null,
+                students: null
+            };
+            vm.courses = {list: [], hasLoaded: false};
+            vm.slots = {list: []};
 
-        if ('date' in window.item) {
-            const date = moment(window.item.date);
-            model.calendar.setDate(date);
-        } else {
-            model.calendar.setDate(moment());
-        }
+            if ('date' in window.item) {
+                const date = moment(window.item.date);
+                model.calendar.setDate(date);
+            } else {
+                model.calendar.setDate(moment());
+            }
+            const hover = document.getElementById('exemption-hover');
 
-        $scope.$watch(() => window.structure, async () => {
-            const structure_slots = await StructureService.getSlotProfile(window.structure.id);
-            if (Object.keys(structure_slots).length > 0) vm.slots.list = structure_slots.slots;
-            else vm.slots.list = null;
-            $scope.safeApply();
-        });
+            async function initCalendar() {
+                vm.show.loader = true;
+                $scope.safeApply();
+                const {item, structure} = window;
+                if (item === null || structure === null) {
+                    $location.path('/');
+                    return;
+                }
 
-        model.calendar.on('date-change', initCalendar);
-
-        $scope.$on('$destroy', () => model.calendar.callbacks['date-change'] = []);
-
-        async function initCalendar() {
-            vm.show.loader = true;
-            $scope.safeApply();
-            const {item, structure} = window;
-            if (item === null || structure === null) {
-                $location.path('/');
-                return;
+                vm.filter.student = item;
+                vm.filter.students = await CalendarService.getStudentsGroup(item.groupId);
+                if (item.type === 'GROUP' && vm.filter.students.length > 0) {
+                    vm.filter.student = vm.filter.students[0];
+                    window.item = vm.filter.student;
+                    $location.path(`/calendar/${vm.filter.student.id}`);
+                }
+                await vm.loadCourses().then(async () => {
+                    initActionAbsence();
+                });
             }
 
-            vm.filter.student = item;
-            vm.filter.students = await CalendarService.getStudentsGroup(item.groupId);
-            if (item.type === 'GROUP' && vm.filter.students.length > 0) {
-                vm.filter.student = vm.filter.students[0];
-                window.item = vm.filter.student;
-                $location.path(`/calendar/${vm.filter.student.id}`);
-            }
-            await vm.loadCourses().then(async () => {
-                await Promise.all([
-                    CalendarAbsenceUtils.actionAbsenceTimeSlot($scope),
-                    CalendarAbsenceUtils.actionDragAbsence($scope)
-                ]);
-            });
-        }
-
-        vm.changeAbsence = function (item): string {
-            if ('hash' in item) CalendarUtils.changeAbsenceView(item);
-            return "";
-        };
+            vm.changeAbsence = function (item: Course): string {
+                vm.courses.hasLoaded = true;
+                if ('hash' in item) CalendarUtils.changeAbsenceView(item);
+                return "";
+            };
 
             vm.loadForgottenNotebook = async function () {
                 let diff = 7;
@@ -154,20 +143,10 @@ export const calendarController = ng.controller('CalendarController',
                 CalendarUtils.renderLegends(legends, notebooks);
                 onClickLegend(legends, notebooks);
             };
-            
-            function onClickLegend(legends: NodeList, notebooks: Notebook[]) {
-                Array.from(legends).forEach((legend: HTMLElement) => {
-                    legend.addEventListener('click', () => {
-                        let notebook = notebooks.find(item => item.id === parseInt(legend.getAttribute("forgotten-id")));
-                        if (notebook === undefined) return;
-                        $scope.$broadcast(NOTEBOOK_FORM_EVENTS.EDIT, {student: window.item, notebook: notebook});
-                        $scope.safeApply();
-                    });
-                });
-            }
 
             vm.loadCourses = async function (student = vm.filter.student) {
                 vm.show.loader = true;
+                vm.courses.hasLoaded = false;
                 if (vm.filter.student.id !== student.id) {
                     vm.filter.student = student;
                     window.item = student;
@@ -182,57 +161,38 @@ export const calendarController = ng.controller('CalendarController',
             };
 
             $scope.$on(SNIPLET_FORM_EMIT_EVENTS.CREATION, () => {
-            let diff = 7;
-            if (!model.calendar.display.saturday) diff--;
-            if (!model.calendar.display.synday) diff--;
-            $scope.$broadcast(SNIPLET_FORM_EVENTS.SET_PARAMS, {
-                student: window.item,
-                start_date: model.calendar.firstDay,
-                end_date: DateUtils.add(model.calendar.firstDay, diff)
+                let diff = 7;
+                if (!model.calendar.display.saturday) diff--;
+                if (!model.calendar.display.synday) diff--;
+                $scope.$broadcast(SNIPLET_FORM_EVENTS.SET_PARAMS, {
+                    student: window.item,
+                    start_date: model.calendar.firstDay,
+                    end_date: DateUtils.add(model.calendar.firstDay, diff)
+                });
             });
-        });
 
-        $scope.$on(SNIPLET_FORM_EMIT_EVENTS.FILTER, initCalendar);
-        $scope.$on(SNIPLET_FORM_EMIT_EVENTS.EDIT, initCalendar);
-        $scope.$on(SNIPLET_FORM_EMIT_EVENTS.DELETE, initCalendar);
-
-
-        vm.selectItem = function (model, item) {
-            const needsToLoadGroup = (window.item.groupId !== item.groupId) || item.type === 'GROUP';
-            window.item = item;
-            vm.filter.search.items = undefined;
-            vm.filter.search.item = '';
-            if (needsToLoadGroup) {
-                initCalendar();
-            } else {
-                vm.filter.student = item;
-                vm.loadCourses();
-            }
-        };
-
-        vm.searchItem = async function (value) {
-            const structureId = window.structure.id;
-            try {
-                vm.filter.search.items = await SearchService.search(structureId, value);
-            } catch (err) {
-                vm.filter.search.items = [];
-            } finally {
-                $scope.safeApply();
-            }
-        };
-
-            $scope.hoverExemption = function ($event, exemption) {
-                const {width, height} = getComputedStyle(hover);
-                let {x, y} = $event.target.closest('.exemption-label').getBoundingClientRect();
-                hover.style.top = `${y - parseInt(height)}px`;
-                hover.style.left = `${x - (parseInt(width) / 4)}px`;
-                hover.style.display = 'flex';
-                vm.show.exemption = exemption;
-                $scope.safeApply();
+            vm.selectItem = function (model, item) {
+                const needsToLoadGroup = (window.item.groupId !== item.groupId) || item.type === 'GROUP';
+                window.item = item;
+                vm.filter.search.items = undefined;
+                vm.filter.search.item = '';
+                if (needsToLoadGroup) {
+                    initCalendar();
+                } else {
+                    vm.filter.student = item;
+                    vm.loadCourses();
+                }
             };
 
-            $scope.hoverOutExemption = function () {
-                hover.style.display = 'none';
+            vm.searchItem = async function (value: string) {
+                const structureId = window.structure.id;
+                try {
+                    vm.filter.search.items = await SearchService.search(structureId, value);
+                } catch (err) {
+                    vm.filter.search.items = [];
+                } finally {
+                    $scope.safeApply();
+                }
             };
 
             vm.isAbsenceOnly = function (item): boolean {
@@ -274,6 +234,10 @@ export const calendarController = ng.controller('CalendarController',
                 }
             };
 
+            vm.formatExemptionDate = function (date) {
+                return DateUtils.format(date, DateUtils.FORMAT["DAY-MONTH-YEAR"]);
+            };
+
             function isMatchOrBetweenDate(item): (absence: Course) => boolean {
                 /* callback find method */
                 return function (absence: Course) {
@@ -281,10 +245,6 @@ export const calendarController = ng.controller('CalendarController',
                         DateUtils.isBetween(absence.startDate, absence.endDate, item.startDate, item.endDate));
                 }
             }
-
-            vm.formatExemptionDate = function (date) {
-                return DateUtils.format(date, DateUtils.FORMAT["DAY-MONTH-YEAR"]);
-            };
 
             function formatAbsenceForm(itemCourse) {
                 return {
@@ -295,5 +255,55 @@ export const calendarController = ng.controller('CalendarController',
                 };
             }
 
-            const hover = document.getElementById('exemption-hover');
+            function onClickLegend(legends: NodeList, notebooks: Notebook[]) {
+                Array.from(legends).forEach((legend: HTMLElement) => {
+                    legend.addEventListener('click', () => {
+                        let notebook = notebooks.find(item => item.id === parseInt(legend.getAttribute("forgotten-id")));
+                        if (notebook === undefined) return;
+                        $scope.$broadcast(NOTEBOOK_FORM_EVENTS.EDIT, {student: window.item, notebook: notebook});
+                        $scope.safeApply();
+                    });
+                });
+            }
+
+            function initActionAbsence() {
+                CalendarAbsenceUtils.actionAbsenceTimeSlot($scope);
+                CalendarAbsenceUtils.actionDragAbsence($scope);
+                $scope.safeApply();
+            }
+
+            $scope.hoverExemption = function ($event, exemption) {
+                const {width, height} = getComputedStyle(hover);
+                let {x, y} = $event.target.closest('.exemption-label').getBoundingClientRect();
+                hover.style.top = `${y - parseInt(height)}px`;
+                hover.style.left = `${x - (parseInt(width) / 4)}px`;
+                hover.style.display = 'flex';
+                vm.show.exemption = exemption;
+                $scope.safeApply();
+            };
+
+            $scope.hoverOutExemption = function () {
+                hover.style.display = 'none';
+            };
+
+            model.calendar.on('date-change', initCalendar);
+
+            $scope.$on('$destroy', () => model.calendar.callbacks['date-change'] = []);
+
+            $scope.$on(SNIPLET_FORM_EMIT_EVENTS.FILTER, initCalendar);
+            $scope.$on(SNIPLET_FORM_EMIT_EVENTS.EDIT, initCalendar);
+            $scope.$on(SNIPLET_FORM_EMIT_EVENTS.DELETE, initCalendar);
+
+            $scope.$watch(() => vm.courses.hasLoaded, () => {
+                if (vm.courses.hasLoaded) {
+                    initActionAbsence();
+                }
+            });
+
+            $scope.$watch(() => window.structure, async () => {
+                const structure_slots = await StructureService.getSlotProfile(window.structure.id);
+                if (Object.keys(structure_slots).length > 0) vm.slots.list = structure_slots.slots;
+                else vm.slots.list = null;
+                $scope.safeApply();
+            });
         }]);
