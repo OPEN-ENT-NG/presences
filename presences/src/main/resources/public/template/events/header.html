@@ -75,27 +75,28 @@
 </div>
 
 <!-- Event Type Filter -->
-<div class="row register">
-    <div class="chips cell">
-        <label class="chip" ng-class="{selected: vm.filter.absences}"
-               data-ng-click="vm.switchAbsencesFilter()">
-            <i18n>presences.absence.absences</i18n>
-        </label>
-        <label class="chip" ng-class="{selected: vm.filter.late}"
-               data-ng-click="vm.switchLateFilter()">
-            <i18n>presences.absence.retards</i18n>
-        </label>
-        <label class="chip" ng-class="{selected: vm.filter.departure}"
-               data-ng-click="vm.switchDepartureFilter()">
-            <i18n>presences.register.event_type.departure</i18n>
-        </label>
-        <label class="chip" ng-class="{selected: vm.filter.regularized}"
-               data-ng-click="vm.switchRegularizedFilter()">
-            <i18n>presences.absence.regularized</i18n>
-        </label>
+<div class="register registry-eventTypeFilter">
+
+    <div class="cell eight vertical-spacing-twice">
+        <i class="filter cell" ng-click="vm.openForm()">&nbsp;</i>
+        <div class="cell">
+            <div class="card horizontal-margin-small horizontal-spacing">
+                <i18n ng-show="vm.filter.absences">presences.absence.absences</i18n>
+            </div>
+        </div>
+        <div class="cell">
+            <div class="card horizontal-margin-small horizontal-spacing">
+                <i18n ng-show="vm.filter.late">presences.absence.lateness</i18n>
+            </div>
+        </div>
+        <div class="cell">
+            <div class="card horizontal-margin-small horizontal-spacing">
+                <i18n ng-show="vm.filter.departure">presences.register.event_type.departure</i18n>
+            </div>
+        </div>
     </div>
 
-    <div class="card event-legend radius cell horizontal-margin">
+    <div class="card event-legend radius cell">
         <ul class="vertical-spacing-twice horizontal-margin">
             <li class="absence">
                 <i18n>presences.register.event_type.absences</i18n>
@@ -112,3 +113,7 @@
         </ul>
     </div>
 </div>
+
+<lightbox show="vm.lightbox.filter" on-close="vm.lightbox.filter = false">
+    <div ng-include="'/presences/public/template/events/header_filters.html'"></div>
+</lightbox>

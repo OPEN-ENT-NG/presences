@@ -9,6 +9,7 @@ declare let window: any;
 
 interface ViewModel {
     filter: EventsFilter;
+    formFilter: any;
 
     /* Get reasons type */
     eventReasonsType: Reason[];
@@ -19,6 +20,10 @@ interface ViewModel {
     events: Events;
     multipleSelect: Reason;
     provingReasonsMap: any;
+
+    lightbox: {
+        filter: boolean;
+    }
 
     eventTypeState(periods, event): string;
 
@@ -49,6 +54,10 @@ interface ViewModel {
     getNonRegularizedEvents(events): any[];
 
     hideGlobalCheckbox(event): boolean;
+
+    openForm(): void;
+
+    validForm(): void;
 
     /* Collapse event */
     eventId: number;
@@ -133,13 +142,16 @@ export const eventsController = ng.controller('EventsController', ['$scope', '$r
         vm.classesFiltered = undefined;
 
         vm.events = new Events();
-        vm.events.regularized = isWidget ? vm.filter.regularized : null;
+        // vm.events.regularized = isWidget ? vm.filter.regularized : null;
         vm.events.eventer.on('loading::true', () => $scope.safeApply());
         vm.events.eventer.on('loading::false', () => {
             filterHistory();
             vm.eventId = null;
             $scope.safeApply();
         });
+        vm.lightbox = {
+            filter: false
+        };
         const getEvents = async (actionMode?: boolean): Promise<void> => {
             vm.events.structureId = window.structure.id;
             vm.events.startDate = vm.filter.startDate.toDateString();
@@ -515,50 +527,44 @@ export const eventsController = ng.controller('EventsController', ['$scope', '$r
          Switch type methods
         ---------------------------- */
         vm.switchAbsencesFilter = function () {
-            vm.filter.absences = !vm.filter.absences;
-            if (vm.filter.absences) {
+            vm.formFilter.absences = !vm.formFilter.absences;
+            if (vm.formFilter.absences) {
                 if (!vm.eventType.some(e => e == EventType.ABSENCE)) {
                     vm.eventType.push(EventType.ABSENCE);
                 }
             } else {
                 vm.eventType = _.without(vm.eventType, EventType.ABSENCE);
             }
-            vm.updateFilter();
-            EventsUtils.resetEventId(vm.eventId);
         };
 
         vm.switchLateFilter = function () {
-            vm.filter.late = !vm.filter.late;
-            if (vm.filter.late) {
+            vm.formFilter.late = !vm.formFilter.late;
+            if (vm.formFilter.late) {
                 if (!vm.eventType.some(e => e == EventType.LATENESS)) {
                     vm.eventType.push(EventType.LATENESS);
                 }
             } else {
                 vm.eventType = _.without(vm.eventType, EventType.LATENESS);
             }
-            vm.updateFilter();
-            EventsUtils.resetEventId(vm.eventId);
         };
 
         vm.switchDepartureFilter = function () {
-            vm.filter.departure = !vm.filter.departure;
-            if (vm.filter.departure) {
+            vm.formFilter.departure = !vm.formFilter.departure;
+            if (vm.formFilter.departure) {
                 if (!vm.eventType.some(e => e == EventType.DEPARTURE)) {
                     vm.eventType.push(EventType.DEPARTURE);
                 }
             } else {
                 vm.eventType = _.without(vm.eventType, EventType.DEPARTURE);
             }
-            vm.updateFilter();
-            EventsUtils.resetEventId(vm.eventId);
         };
 
-        vm.switchRegularizedFilter = async function () {
-            vm.filter.regularized = !vm.filter.regularized;
-            vm.events.regularized = vm.filter.regularized;
-            vm.events.page = 0;
-            EventsUtils.resetEventId(vm.eventId);
-        };
+        // vm.switchRegularizedFilter = async function () {
+        //     vm.filter.regularized = !vm.filter.regularized;
+        //     vm.events.regularized = vm.filter.regularized;
+        //     vm.events.page = 0;
+        //     EventsUtils.resetEventId(vm.eventId);
+        // };
 
         vm.hideGlobalCheckbox = function (event) {
             const {events} = event;
@@ -567,7 +573,20 @@ export const eventsController = ng.controller('EventsController', ['$scope', '$r
             return events.every(isProving);
         };
 
-        /* on switch (watch) */
+        vm.openForm = function () {
+            vm.lightbox.filter = true;
+            vm.formFilter = JSON.parse(JSON.stringify(vm.filter));
+        };
+
+        vm.validForm = function () {
+            const {startDate, endDate} = vm.filter;
+            vm.filter = {...vm.formFilter, startDate, endDate};
+            vm.formFilter = {};
+            vm.updateFilter();
+            vm.lightbox.filter = false;
+        };
+
+        /* on  (watch) */
         $scope.$watch(() => window.structure, () => {
             getEvents();
         });

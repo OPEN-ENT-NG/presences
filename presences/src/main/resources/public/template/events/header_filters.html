@@ -1,0 +1,102 @@
+<section class="head">
+    <h3>
+        <i18n>presences.filters</i18n>
+    </h3>
+</section>
+<section class="body lightbox-form">
+    <div class="row vertical-spacing">
+        <div class="cell six paddingRight">
+            <div class="cell twelve search-input">
+                <async-autocomplete data-ng-disabled="false"
+                                    data-ng-model="vm.studentSearchInput"
+                                    data-ng-change="vm.selectStudent"
+                                    data-on-search="vm.searchByStudent"
+                                    data-options="vm.students.all"
+                                    data-placeholder="presences.exemptions.search.student"
+                                    data-search="vm.studentSearchInput">
+                </async-autocomplete>
+            </div>
+            <div class="cell twelve">
+                <ul class="cell twelve search-input-ul">
+                    <li ng-repeat="student in vm.filter.students">
+                        [[student.toString()]]
+                        <i class="close" data-ng-click="vm.excludeStudentFromFilter(student)"></i>
+                    </li>
+                </ul>
+            </div>
+        </div>
+        <div class="cell six paddingLeft">
+            <div class="cell twelve search-input">
+                <async-autocomplete data-ng-disabled="false"
+                                    data-ng-model="vm.classesSearchInput"
+                                    data-ng-change="vm.selectClass"
+                                    data-on-search="vm.searchByClass"
+                                    data-options="vm.classesFiltered"
+                                    data-placeholder="presences.exemptions.search.audience"
+                                    data-search="vm.classesSearchInput">
+                </async-autocomplete>
+            </div>
+            <div class="cell twelve">
+                <ul class="cell twelve search-input-ul">
+                    <li ng-repeat="class in vm.filter.classes">
+                        [[class.name]]
+                        <i class="close" data-ng-click="vm.excludeClassFromFilter(class)"></i>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </div>
+    <div class="row vertical-spacing">
+        <h4>
+            <i18n>presences.events.title</i18n>
+        </h4>
+        <div class="chips cell">
+            <label class="chip" ng-class="{selected: vm.formFilter.absences}"
+                   data-ng-click="vm.switchAbsencesFilter()">
+                <i18n>presences.absence.absences</i18n>
+            </label>
+            <label class="chip" ng-class="{selected: vm.formFilter.late}"
+                   data-ng-click="vm.switchLateFilter()">
+                <i18n>presences.absence.lateness</i18n>
+            </label>
+            <label class="chip" ng-class="{selected: vm.formFilter.departure}"
+                   data-ng-click="vm.switchDepartureFilter()">
+                <i18n>presences.register.event_type.departure</i18n>
+            </label>
+
+            <!--  move to state absence -->
+            <!--  <label class="chip" ng-class="{selected: vm.filter.regularized}"-->
+            <!--     data-ng-click="vm.switchRegularizedFilter()">-->
+            <!--     <i18n>presences.absence.regularized</i18n>-->
+            <!--   </label>-->
+        </div>
+    </div>
+    <div class="row vertical-spacing">
+        <h4>
+            <i18n>presences.absence.reason.absence</i18n>
+        </h4>
+        <div class="chips">
+            A FAIRE
+        </div>
+    </div>
+    <div class="row vertical-spacing">
+        <h4 class="row">
+            <i18n class="cell">presences.absence.state.absence</i18n>
+        </h4>
+        <div class="chips">
+            A FAIRE
+        </div>
+    </div>
+</section>
+<section>
+    <div class="row horizontal-spacing">
+        <div class="twelve cell">
+            <button class="right-magnet" ng-click="vm.validForm()">
+                <i18n>presences.exemptions.form.submit</i18n>
+            </button>
+            <button class="right-magnet cancel" ng-click="vm.lightbox.filter = false">
+                <i18n>presences.exemptions.form.cancel</i18n>
+            </button>
+        </div>
+    </div>
+</section>
