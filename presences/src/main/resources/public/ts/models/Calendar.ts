@@ -9,5 +9,4 @@ export interface TimeSlotData {
     end: number;
     check?: boolean;
     type?: { event: string, id: number };
-    sameId?: number;
 }

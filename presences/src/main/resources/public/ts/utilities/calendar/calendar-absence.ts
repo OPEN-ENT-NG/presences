@@ -299,6 +299,7 @@ export class CalendarAbsenceUtils {
                     let end = parseInt(DateUtils.format(newAbsenceTimeSlot.endDate, dateTimeFormat).split(':')[0]);
                     newAbsenceTimeSlot.start = start;
                     newAbsenceTimeSlot.end = start === end ? end + 1 : end;
+                    if (newAbsenceTimeSlot.endDate > ts.endDate) break;
                     duplicate.push(newAbsenceTimeSlot);
                 }
                 absencesTimeSlots = absencesTimeSlots.concat(duplicate);
