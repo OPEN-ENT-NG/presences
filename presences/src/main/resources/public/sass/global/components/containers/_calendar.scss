@@ -50,6 +50,7 @@ $calendar-user-card-height: 56px;
     box-shadow: 0 2px 5px rgba(0, 0, 0, 0.26);
     background-color: $white;
     position: relative;
+    user-select: none;
 
     loader {
       position: absolute;

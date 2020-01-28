@@ -12,6 +12,9 @@ import {DateUtils} from "@common/utils";
 
 export class CalendarAbsenceUtils {
 
+    public static readonly TIMESLOT_HEIGHT = document.querySelector('.timeslot') ?
+        document.querySelector('.timeslot').clientHeight : 47;
+
     /**
      * Click on any timeslot to declare an absence
      */
@@ -47,24 +50,32 @@ export class CalendarAbsenceUtils {
      */
     public static async actionDragAbsence($scope): Promise<void> {
         let isClickHold = false;
-        let slots = $('.days .timeslot, .course-item-container');
+        let slots = $('.days .timeslot');
+        let slotsCourses = $('.course-item-container');
         let timeSlots: TimeSlotData[] = [];
         slots.each((i: number, e: Element) => {
             let _scope = angular.element(e).scope();
             if (e.className.startsWith("timeslot")) {
                 let timeSlot: TimeSlotData = CalendarAbsenceUtils.getTimeSlotData(i, e, _scope);
                 timeSlots.push(timeSlot);
-            } else {
-                let timeSlot: TimeSlotData = CalendarAbsenceUtils.getCourseSlotData(i, e, _scope);
-                timeSlots.push(timeSlot);
             }
         });
+        slotsCourses.each((i: number, e: Element) => {
+            let _scope = angular.element(e).scope();
+            let timeSlot: TimeSlotData = CalendarAbsenceUtils.getCourseSlotData(i, e, _scope);
+            timeSlots.push(timeSlot);
+        });
+        let absenceTimeSlots = CalendarAbsenceUtils.duplicateAbsence(timeSlots.filter(t => t.div.className.startsWith("course")));
+        timeSlots = timeSlots.filter(t => t.div.className.startsWith("timeslot")).concat(absenceTimeSlots);
         timeSlots.forEach(ts => {
             if (ts.div.className.startsWith("course")) {
                 let timeslotIndex = timeSlots.findIndex(t =>
-                    DateUtils.isMatchDate(t.startDate, t.endDate, ts.startDate, ts.endDate) &&
+                    DateUtils.isBetween(t.startDate, t.endDate, ts.startDate, ts.endDate) &&
                     t.div.className.startsWith("timeslot"));
-                ts.index = timeSlots[timeslotIndex].index;
+                if (timeslotIndex !== -1) {
+                    ts.index = timeSlots[timeslotIndex].index;
+                    ts.divTimeSlots = timeSlots[timeslotIndex].div
+                }
             }
         });
         timeSlots.sort((a, b) => a.index - b.index);
@@ -81,7 +92,31 @@ export class CalendarAbsenceUtils {
             }) /* moving current timeslot on timeslots */
             .mouseenter((e: JQueryMouseEventObject) => {
                 if (isClickHold) {
+                    if (e.currentTarget.className.startsWith("course")) {
+
+                    }
                     CalendarAbsenceUtils.resetTimeSlotsFetched(timeSlots, timeSlotsFetched);
+                    CalendarAbsenceUtils.colorTimeSlots(mdIndex, e, timeSlotsFetched, timeSlots);
+                }
+            })
+            .mouseup(() => {
+                isClickHold = false;
+                let form = CalendarAbsenceUtils.formatForm(timeSlotsFetched);
+                if (form) {
+                    $scope.$broadcast(ABSENCE_FORM_EVENTS.OPEN, form);
+                }
+            });
+        slotsCourses
+            .mousedown((e: JQueryMouseEventObject) => {
+                isClickHold = true;
+                CalendarAbsenceUtils.resetTimeSlotsFetched(timeSlots, timeSlotsFetched);
+                if (isClickHold) {
+                    /* store position mouse event down initial */
+                    mdIndex = CalendarAbsenceUtils.findElement(timeSlots, e);
+                }
+            }) /* moving current timeslot on timeslots */
+            .mousemove((e: JQueryMouseEventObject) => {
+                if (isClickHold) {
                     CalendarAbsenceUtils.colorTimeSlots(mdIndex, e, timeSlotsFetched, timeSlots);
                 }
             })
@@ -125,6 +160,12 @@ export class CalendarAbsenceUtils {
     }
 
     private static findElement(timeSlots: TimeSlotData[], e) {
+        let arrayTimeSlotsFound = timeSlots.filter(t => t.div === e.currentTarget);
+        if (arrayTimeSlotsFound.length > 1) {
+            // index res
+            let resIndex = Math.floor(e.offsetY / this.TIMESLOT_HEIGHT);
+            return arrayTimeSlotsFound[resIndex].index;
+        }
         return timeSlots.find(t => t.div === e.currentTarget).index;
     }
 
@@ -175,19 +216,19 @@ export class CalendarAbsenceUtils {
         timeSlot.div = target;
         timeSlot.check = false;
         timeSlot.timeslot = timeSlotScope;
-        timeSlot.startDate = moment(dayScope.date).format('YYYY-MM-DD') + ' ' + moment(new Date).set({
+        timeSlot.startDate = moment(dayScope.date).format(DateUtils.FORMAT['YEAR-MONTH-DAY']) + ' ' + moment(new Date).set({
             hours: timeSlotScope.start,
             minute: 0,
             second: 0,
             millisecond: 0
-        }).format('HH:mm');
+        }).format(DateUtils.FORMAT['HOUR-MINUTES']);
         timeSlot.start = timeSlotScope.start;
-        timeSlot.endDate = moment(dayScope.date).format('YYYY-MM-DD') + ' ' + moment(new Date).set({
+        timeSlot.endDate = moment(dayScope.date).format(DateUtils.FORMAT['YEAR-MONTH-DAY']) + ' ' + moment(new Date).set({
             hours: timeSlotScope.end,
             minute: 0,
             second: 0,
             millisecond: 0
-        }).format('HH:mm');
+        }).format(DateUtils.FORMAT['HOUR-MINUTES']);
         timeSlot.end = timeSlotScope.end;
 
         return timeSlot;
@@ -228,5 +269,43 @@ export class CalendarAbsenceUtils {
         });
         // emptying array
         timeSlotsFetched.length = 0;
+    }
+
+    // split absences hours (use moments duration.asHours)*/
+    private static duplicateAbsence(timeSlots: TimeSlotData[]) {
+        let absencesTimeSlots: TimeSlotData[] = [];
+        let dateFormat = DateUtils.FORMAT['YEAR-MONTH-DAY-HOUR-MIN-SEC'];
+        let dateTimeFormat = DateUtils.FORMAT['HOUR-MINUTES'];
+        timeSlots.forEach((ts: TimeSlotData, index: number) => {
+            const startDate = moment(ts.startDate);
+            const endDate = moment(ts.endDate);
+            const diffHours = moment.duration(endDate.diff(startDate)).asHours();
+            /* Check if there is only 1h diff */
+            if (diffHours <= 1) {
+                absencesTimeSlots.push(ts);
+            } else {
+                /* Case if there are more than 1h diff */
+                let duplicate: TimeSlotData[] = [];
+                for (let i = 0; i <= diffHours; i++) {
+                    /* clone object */
+                    let newAbsenceTimeSlot = {...ts};
+                    newAbsenceTimeSlot.startDate = moment(ts.startDate).add(i, 'hours').format(dateFormat);
+                    if (Math.floor(diffHours) === i && Math.floor(diffHours) < diffHours) {
+                        newAbsenceTimeSlot.endDate = moment(ts.startDate).add(i + (diffHours - i), 'hours').format(dateFormat)
+                    } else {
+                        newAbsenceTimeSlot.endDate = moment(ts.startDate).add(i + 1, 'hours').format(dateFormat);
+                    }
+                    let start = parseInt(DateUtils.format(newAbsenceTimeSlot.startDate, dateTimeFormat).split(':')[0]);
+                    let end = parseInt(DateUtils.format(newAbsenceTimeSlot.endDate, dateTimeFormat).split(':')[0]);
+                    newAbsenceTimeSlot.start = start;
+                    newAbsenceTimeSlot.end = start === end ? end + 1 : end;
+                    duplicate.push(newAbsenceTimeSlot);
+                }
+                absencesTimeSlots = absencesTimeSlots.concat(duplicate);
+            }
+
+        });
+        return absencesTimeSlots;
+
     }
 }

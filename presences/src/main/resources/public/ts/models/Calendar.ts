@@ -1,6 +1,7 @@
 export interface TimeSlotData {
     index: number;
     div: Element;
+    divTimeSlots?: Element;
     timeslot: any;
     startDate: string;
     start: number;

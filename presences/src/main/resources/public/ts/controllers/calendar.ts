@@ -122,6 +122,7 @@ export const calendarController = ng.controller('CalendarController',
                     initActionAbsence();
                 });
             }
+            
 
             vm.changeAbsence = function (item: Course): string {
                 vm.courses.hasLoaded = true;
