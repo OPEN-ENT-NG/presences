@@ -1,4 +1,5 @@
 import {idiom as lang, ng} from 'entcore';
+import {COURSE_EVENTS} from "@common/model";
 
 export const SideWidget = ng.directive('sideWidget', () => {
     return {
@@ -6,6 +7,7 @@ export const SideWidget = ng.directive('sideWidget', () => {
         transclude: true,
         scope: {
             title: '=',
+            course: '=',
             opened: '=?'
         },
         template: `
@@ -14,6 +16,11 @@ export const SideWidget = ng.directive('sideWidget', () => {
                 <h2 title="[[::translatedTitle]]">
                     <span class="triangle open-button" ng-click="opened = !opened" role="button">&nbsp;</span>
                     [[::translatedTitle]]
+                    
+                    <!-- see current register -->
+                    <span class="course" ngModel="course" ng-show="opened && hasCourse()" ng-click="openRegister()">
+                         [[::seeMoreText]]
+                    </span>
                 </h2>
             </div>
             <div class="content">
@@ -23,7 +30,16 @@ export const SideWidget = ng.directive('sideWidget', () => {
         `,
         controller: function ($scope) {
             $scope.translatedTitle = lang.translate($scope.title);
+            $scope.seeMoreText = lang.translate('presences.see.more');
             $scope.opened = $scope.opened || false;
+
+            $scope.hasCourse = (): boolean => {
+                return $scope.course != undefined && Object.keys($scope.course).length !== 0
+            };
+
+            $scope.openRegister = (): void => {
+                $scope.$broadcast(COURSE_EVENTS.OPEN_REGISTER, $scope.course);
+            };
         }
     };
 });

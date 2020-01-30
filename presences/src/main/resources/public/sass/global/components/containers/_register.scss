@@ -319,3 +319,65 @@ $absence-button-width: 20px;
     color: $presences-black;
   }
 }
+
+/* Button declare absence */
+.register-absence-button {
+  width: 26px;
+  height: 40px;
+  display: block;
+  float: left;
+  margin-right: 10px;
+  position: relative;
+  cursor: pointer;
+
+  &::before {
+    content: " ";
+    width: $absence-button-width;
+    height: $absence-button-width;
+    display: block;
+    position: absolute;
+    top: 50%;
+    margin-top: -(($absence-button-width + 1)/2);
+    border-radius: ($absence-button-width/2)+1;
+    border: solid 1px #929292;
+    transition: all 0.3s ease;
+    background-color: $white;
+  }
+
+  &.active::before {
+    background-color: $presences-red;
+    border-color: $presences-red;
+  }
+
+  &.disabled::before {
+    background-color: $presences-grey !important;
+    border-color: $presences-grey !important;
+  }
+}
+
+/* State color */
+.state {
+  width: 44px;
+  height: $student-height / 3;
+  border-radius: $student-height / 5;
+
+  &.absence {
+    background-color: $presences-red;
+  }
+
+  &.lateness {
+    background-color: $presences-purple;
+  }
+
+  &.departure {
+    background-color: $presences-green;
+  }
+
+  &.remark {
+    background-color: $presences-remark;
+  }
+
+  &.incident {
+    background-color: $presences-grey;
+  }
+}

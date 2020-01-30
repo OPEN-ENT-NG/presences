@@ -15,7 +15,10 @@
     <div class="row card-slider" ng-show="vm.courses.all.length > 0">
         <div class="card cell" ng-repeat="course in vm.courses.all|orderBy:'timestamp'"
              data-ng-click="vm.openRegister(course, $event)"
-             ng-class="{active: vm.isCurrentRegister(course), disabled: vm.isFuturCourse(course)}">
+             ng-class="{
+                 active: vm.isCurrentRegister(course) || vm.isCurrentCourse(course),
+                 disabled: vm.isFuturCourse(course)
+             }">
             <div ng-if="hasSearchRight()" class="row has-search-right">
                 <div class="row hour">
                     <span>[[::vm.formatHour(course.startDate)]] - [[::vm.formatHour(course.endDate)]]</span>

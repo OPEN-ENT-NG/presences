@@ -1,19 +1,65 @@
-<div class="registers register-widget height-100">
-    <div class="search-field">
-        <div class="eleven centered search-input">
-            <async-autocomplete ng-disabled="false"
-                                ng-model=""
-                                ng-change=""
-                                on-search=""
-                                options=""
-                                placeholder="presences.exemptions.search.student"
-                                search=""></async-autocomplete>
+<div class="registers register-widget height-100" ng-controller="RegistersController as vm"
+     ng-init="vm.widget.onGoingRegister = true;">
+
+    <div class="height-100" ng-if="vm.register !== undefined">
+
+        <!-- Search bar -->
+        <div class="search-field">
+            <div class="eleven centered search-input">
+                <async-autocomplete ng-disabled="false"
+                                    ng-model="vm.autocomplete.teacher"
+                                    ng-change="vm.selectStudent"
+                                    on-search="vm.getStudents"
+                                    options="vm.autocomplete.teacherOptions"
+                                    placeholder="presences.exemptions.search.student"
+                                    search="vm.autocomplete.teacher">
+                </async-autocomplete>
+
+                <div class="cell twelve">
+                    <ul class="cell twelve search-input-ul">
+                        <li ng-repeat="student in vm.autocomplete.teachersSelected">
+                            [[student.toString()]]
+                            <i class="close" data-ng-click="vm.removeStudent(student)"></i>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- List of students -->
+        <div class="students">
+            <div class="student" ng-repeat="student in vm.register.students|orderBy:'name'" role="row">
+                <!-- button -->
+                <div class="register-absence-button" role="button"
+                     ng-class="{ active: student.absence !== undefined, disabled: vm.isAbsenceDisabled(student)}"
+                     ng-click="vm.toggleAbsence(student)">&nbsp;
+                </div>
+
+                <!-- student name -->
+                <div class="student-info">
+                    <span class="student-info-name">[[student.name]]</span>
+                    <i class="last-absent" data-ng-show="student.last_course_absent"></i>
+                    <i class="forgotten-notebook" data-ng-show="student.forgotten_notebook"></i>
+                </div>
+
+                <!-- student state -->
+                <div class="student-state">
+                    <div class="state absence" ng-show="student.absence !== undefined">&nbsp;</div>
+                    <div class="state lateness" ng-show="student.lateness !== undefined">&nbsp;</div>
+                    <div class="state departure" ng-show="student.departure !== undefined">&nbsp;</div>
+                    <div class="state remark" ng-show="student.remark.id !== undefined">&nbsp;</div>
+                </div>
+            </div>
         </div>
     </div>
-    <div class="students eleven centered ">
-        <div class="student" ng-repeat="x in [].constructor(30) track by $index">
-            <span ng-if="$index !== 5">&nbsp;</span>
-            <span ng-if="$index === 5">En cours de développement</span>
+
+    <!-- empty state -->
+    <div class="empty-state" ng-if="vm.register === undefined">
+        <div class="tick-color red">&nbsp;</div>
+        <div class="empty-title">
+            <i18n>presences.register.empty.state</i18n>
         </div>
+        <div class="tick-color purple">&nbsp;</div>
     </div>
+
 </div>

@@ -5,7 +5,9 @@ import {CourseUtils, DateUtils} from '@common/utils'
 import rights from '../rights'
 import {Scope} from './main'
 import http from 'axios'
-import {PreferencesUtils, RegisterUtils} from "../utilities";
+import {AutoCompleteUtils, PreferencesUtils, RegisterUtils} from "../utilities";
+import {COURSE_EVENTS} from "@common/model";
+import {IAngularEvent} from "angular";
 
 declare let window: any;
 
@@ -24,18 +26,28 @@ interface Filter {
     multipleSlot: boolean;
 }
 
-interface ViewModel {
-    widget: { forgottenRegisters: boolean, dayCourses: boolean };
+export interface ViewModel {
+    widget: { forgottenRegisters: boolean, dayCourses: boolean, onGoingRegister: boolean };
     register: Register;
     courses: Courses;
     filter: Filter;
     RegisterStatus: any;
+    autocomplete: AutoCompleteUtils;
+
+    /* search bar auto complete */
+    getStudents(value): Promise<void>;
+
+    selectStudent(value, item): Promise<void>;
+
+    removeStudent(value): void;
 
     openRegister(course: Course, $event: Event): Promise<void>;
 
     tooltipMultipleSlot(): string;
 
     isCurrentRegister(course: Course): boolean;
+
+    isCurrentCourse(course: Course): boolean;
 
     nextDate(): void;
 
@@ -50,8 +62,6 @@ interface ViewModel {
     toggleDeparture(student): Promise<void>;
 
     handleRemark(student): Promise<void>;
-
-    selectStudent(student): void;
 
     getBirthDate(student): string;
 
@@ -115,7 +125,8 @@ export const registersController = ng.controller('RegistersController',
             const vm: ViewModel = this;
             vm.widget = {
                 forgottenRegisters: false,
-                dayCourses: false
+                dayCourses: false,
+                onGoingRegister: false
             };
             const actions = {
                 registers: () => {
@@ -170,7 +181,8 @@ export const registersController = ng.controller('RegistersController',
                     }
                 },
                 forgottenRegisterWidget: () => vm.loadCourses(extractSelectedTeacherIds(), extractSelectedGroupsName()),
-                dayCoursesWidget: () => vm.loadCourses(extractSelectedTeacherIds(), extractSelectedGroupsName(), undefined, undefined, undefined, false)
+                dayCoursesWidget: () => vm.loadCourses(extractSelectedTeacherIds(), extractSelectedGroupsName(), undefined, undefined, undefined, false),
+                onGoingRegisterWidget: () => getCurrentCourse()
             };
 
             vm.register = undefined;
@@ -278,6 +290,55 @@ export const registersController = ng.controller('RegistersController',
                 return names;
             };
 
+            function initAutocomplete() {
+                vm.autocomplete = new AutoCompleteUtils(window.structure.id, SearchService);
+                console.log("autocompleteInfo: ", vm.autocomplete);
+            }
+
+            vm.getStudents = async (value): Promise<void> => {
+                await vm.autocomplete.searchStudents(value);
+                console.log("filterAutoComplete: ", value);
+            };
+
+            vm.selectStudent = async (value, item): Promise<void> => {
+                vm.autocomplete.selectStudent(model, item);
+                console.log("selecting : ", value, item);
+            };
+
+            vm.removeStudent = (value): void => {
+                vm.autocomplete.removeSelectedStudent(value);
+                console.log("removing: , ", value);
+            };
+
+            const getCurrentCourse = async function (): Promise<void> {
+                initAutocomplete();
+                await vm.loadCourses(extractSelectedTeacherIds(), extractSelectedGroupsName(), undefined, undefined, undefined, false);
+                if (vm.courses.all.length > 0) {
+                    let currentCourse = vm.courses.all.find(course => CourseUtils.isCurrentCourse(course));
+                    if (currentCourse) {
+                        vm.register = RegisterUtils.createRegisterFromCourse(currentCourse);
+                        /* create or sync register on current course*/
+                        if (!currentCourse.registerId) {
+                            await vm.register.create().then(() => {
+                                vm.register.sync();
+                                currentCourse.registerId = vm.register.id;
+                                $scope.safeApply();
+                            });
+                        } else {
+                            await vm.register.sync();
+                        }
+                        $scope.$emit(COURSE_EVENTS.SEND_COURSE, currentCourse);
+                    } else {
+                        //@ TODO remove, is only test
+                        vm.register = new Register();
+                        vm.register.id = 111307;
+                        await vm.register.sync();
+                        $scope.safeApply();
+                    }
+                }
+                $scope.safeApply();
+            };
+
             vm.selectTeacher = function (model, teacher) {
                 if (_.findWhere(vm.filter.selected.teachers, {id: teacher.id})) {
                     return;
@@ -364,6 +425,9 @@ export const registersController = ng.controller('RegistersController',
                 return false;
             };
 
+            vm.isCurrentCourse = function (course: Course): boolean {
+                return CourseUtils.isCurrentCourse(course);
+            };
 
             const removeEventFromSlot = function (student, event) {
                 for (let i = 0; i < student.day_history.length; i++) {
@@ -687,6 +751,8 @@ export const registersController = ng.controller('RegistersController',
                             actions.forgottenRegisterWidget();
                         } else if (vm.widget.dayCourses) {
                             actions.dayCoursesWidget();
+                        } else if (vm.widget.onGoingRegister) {
+                            actions.onGoingRegisterWidget();
                         }
                         break;
                     }
@@ -698,6 +764,8 @@ export const registersController = ng.controller('RegistersController',
             $scope.$watch(() => window.structure, startAction);
             $scope.$watch(() => $route.current.action, startAction);
             startAction();
+
+            $scope.$on(COURSE_EVENTS.OPEN_REGISTER, (event: IAngularEvent, args) => vm.openRegister(args, null));
 
             /* Destroy */
             $scope.$on("$destroy", () => {

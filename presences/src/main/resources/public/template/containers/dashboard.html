@@ -53,10 +53,11 @@
 
     <!-- Side bar widgets -->
     <div class="sidebar-widgets">
-        <side-widget title="'presences.widgets.absences'" workflow="presences.widget_absences">
+        <side-widget title="'presences.widgets.absences'" opened="true" workflow="presences.widget_absences">
             <div ng-include="'/presences/public/template/widgets/absences.html'" class="height-100"></div>
         </side-widget>
-        <side-widget title="'presences.widgets.register'" opened="true" workflow="presences.widget_current_course">
+        <side-widget title="'presences.widgets.register'" course="vm.course" opened="true"
+                     ng-if="::hasRight('widget_current_course')">
             <div ng-include="'/presences/public/template/widgets/register.html'" class="height-100"></div>
         </side-widget>
     </div>

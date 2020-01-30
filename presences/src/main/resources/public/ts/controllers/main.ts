@@ -87,7 +87,7 @@ export const mainController = ng.controller('MainController', ['$scope', 'route'
             return model.me.hasWorkflow(rights.workflow.search);
         };
 
-        $scope.hasRight = function (right) {
+        $scope.hasRight = function (right: string) {
             return model.me.hasWorkflow(rights.workflow[right]);
         };
 

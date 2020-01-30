@@ -2,8 +2,10 @@ import {model, moment, ng, toasts} from 'entcore';
 import {Group, GroupService, SearchItem, SearchService} from "../services";
 import {DateUtils} from "@common/utils";
 import rights from '../rights';
-import {EventType} from "../models";
+import {Course, EventType} from "../models";
 import {Alert, alertService} from "../services/AlertService";
+import {IAngularEvent} from "angular";
+import {COURSE_EVENTS} from "@common/model";
 
 declare let window: any;
 
@@ -23,6 +25,7 @@ interface ViewModel {
     date: string;
     eventType: string[]; /* [0]:ABSENCE, [1]:LATENESS, [2]:INCIDENT, [3]:DEPARTURE */
     alert: Alert;
+    course: Course;
 
     selectItem(model: any, student: any): void;
 
@@ -59,6 +62,7 @@ export const dashboardController = ng.controller('DashboardController', ['$scope
                 items: null
             }
         };
+        vm.course = {} as Course;
         vm.eventType = [
             EventType[EventType.ABSENCE],
             EventType[EventType.LATENESS],
@@ -134,12 +138,14 @@ export const dashboardController = ng.controller('DashboardController', ['$scope
             }
         };
 
-        vm.goToAlerts = function(type) {
+        vm.goToAlerts = function (type) {
             $location.path('/alerts').search({
                 type: type
             });
         };
 
+        /* Event SEND_COURSE sent from register widget */
+        $scope.$on(COURSE_EVENTS.SEND_COURSE, (event: IAngularEvent, args) => vm.course = args);
         $scope.$watch(() => window.structure, () => {
             if ($route.current.action === "dashboard") {
                 initData();
