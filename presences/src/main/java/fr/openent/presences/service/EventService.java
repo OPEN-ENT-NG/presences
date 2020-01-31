@@ -17,6 +17,8 @@ public interface EventService {
      * @param startDate         startDate start date
      * @param endDate           endDate end date
      * @param eventType         event type
+     * @param listReasonIds     reasonId reason_id
+     * @param noReason          noReason filter
      * @param userId            userId userId neo4j
      * @param userIdFromClasses userId fetched from classes neo4j
      * @param classes           classes list
@@ -25,7 +27,7 @@ public interface EventService {
      * @param handler           function handler returning data
      */
     void get(String structureId, String startDate, String endDate,
-             List<String> eventType, List<String> userId, JsonArray userIdFromClasses,
+             List<String> eventType, List<String> listReasonIds, Boolean noReason, List<String> userId, JsonArray userIdFromClasses,
              List<String> classes, Boolean regularized, Integer page, Handler<Either<String, JsonArray>> handler);
 
     /**
@@ -46,13 +48,15 @@ public interface EventService {
      * @param startDate         startDate start date
      * @param endDate           endDate end date
      * @param eventType         event type
+     * @param listReasonIds     reasonId reason_id
+     * @param noReason          noReason filter
      * @param userId            userId userId neo4j
      * @param regularized       filter regularized absence
      * @param userIdFromClasses userId fetched from classes neo4j
      * @param handler           function handler returning data
      */
     void getPageNumber(String structureId, String startDate, String endDate, List<String> eventType,
-                       List<String> userId, Boolean regularized, JsonArray userIdFromClasses,
+                       List<String> listReasonIds, Boolean noReason, List<String> userId, Boolean regularized, JsonArray userIdFromClasses,
                        Handler<Either<String, JsonObject>> handler);
 
 

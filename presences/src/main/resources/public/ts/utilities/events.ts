@@ -1,5 +1,6 @@
 import {Event, EventResponse, Events} from "../models";
 import {DateUtils} from "@common/utils";
+import {Reason} from "@presences/services";
 
 export interface EventsFilter {
     startDate: Date;
@@ -10,6 +11,12 @@ export interface EventsFilter {
     late: boolean;
     departure: boolean;
     regularized: boolean;
+    allReasons: boolean,
+    noReasons: boolean,
+    reasons: Reason,
+    unjustified: boolean,
+    justifiedNotRegularized: boolean,
+    justifiedRegularized: boolean
 }
 
 export class EventsUtils {

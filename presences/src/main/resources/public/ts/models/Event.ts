@@ -21,6 +21,7 @@ export interface Event {
     type?: string;
     events?: any[];
     exclude?: boolean;
+    reasonId: number;
 }
 
 export interface EventResponse {
@@ -114,7 +115,9 @@ export class Events extends LoadingCollection {
     classes: string;
 
     eventType: string;
+    listReasonIds: string;
     regularized: boolean;
+    noReason: boolean;
 
     constructor() {
         super();
@@ -190,6 +193,22 @@ export class Events extends LoadingCollection {
                 `&startDate=${DateUtils.format(this.startDate, dateFormat)}` +
                 `&endDate=${DateUtils.format(this.endDate, dateFormat)}`;
 
+            if ((this.listReasonIds != "" && !this.noReason && !this.regularized)) {
+                if (this.listReasonIds && this.noReason != true) {
+                    url += `&reasonIds=${this.listReasonIds}`;
+                }
+
+                if (this.noReason) {
+                    url += `&noReason=${this.noReason}`;
+                }
+
+                if (this.regularized) {
+                    url += `&regularized=${!this.regularized}`;
+                } else if (!this.regularized) {
+                    url += `&regularized=${!this.regularized}`;
+                }
+            }
+
             if (this.eventType) {
                 url += `&eventType=${this.eventType}`;
             }
@@ -200,10 +219,6 @@ export class Events extends LoadingCollection {
 
             if (this.classes) {
                 url += `&classes=${this.classes}`;
-            }
-
-            if (this.regularized) {
-                url += `&regularized=${!this.regularized}`;
             }
 
             url += `&page=${this.page}`;

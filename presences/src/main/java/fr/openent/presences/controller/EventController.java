@@ -50,6 +50,8 @@ public class EventController extends ControllerHelper {
         String endDate = request.getParam("endDate");
 
         List<String> eventType = request.getParam("eventType") != null ? Arrays.asList(request.getParam("eventType").split("\\s*,\\s*")) : null;
+        List<String> reasonIds = request.getParam("reasonIds") != null ? Arrays.asList(request.getParam("reasonIds").split("\\s*,\\s*")) : null;
+        Boolean noReason = request.params().contains("noReason") ? Boolean.parseBoolean(request.getParam("noReason")) : null;
         List<String> userId = request.getParam("userId") != null ? Arrays.asList(request.getParam("userId").split("\\s*,\\s*")) : null;
         List<String> classes = request.getParam("classes") != null ? Arrays.asList(request.getParam("classes").split("\\s*,\\s*")) : null;
         Boolean regularized = request.params().contains("regularized") ? Boolean.parseBoolean(request.getParam("regularized")) : null;
@@ -83,9 +85,9 @@ public class EventController extends ControllerHelper {
                     renderJson(request, res);
                 }
             });
-            eventService.get(structureId, startDate, endDate, eventType, userId, userIdFromClasses,
+            eventService.get(structureId, startDate, endDate, eventType, reasonIds, noReason, userId, userIdFromClasses,
                     classes, regularized, page, FutureHelper.handlerJsonArray(eventsFuture));
-            eventService.getPageNumber(structureId, startDate, endDate, eventType, userId,
+            eventService.getPageNumber(structureId, startDate, endDate, eventType, reasonIds, true, userId,
                     regularized, userIdFromClasses, FutureHelper.handlerJsonObject(pageNumberFuture));
         });
     }

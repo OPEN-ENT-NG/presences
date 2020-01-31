@@ -14,6 +14,7 @@ interface ViewModel {
     /* Get reasons type */
     eventReasonsType: Reason[];
     eventReasonsTypeDescription: Reason[];
+    eventReasonsId: number[];
 
     /* Events */
     eventType: number[];
@@ -21,6 +22,7 @@ interface ViewModel {
     multipleSelect: Reason;
     provingReasonsMap: any;
 
+    /* Filters lightbox */
     lightbox: {
         filter: boolean;
     }
@@ -102,7 +104,17 @@ interface ViewModel {
 
     switchDepartureFilter(): void;
 
-    switchRegularizedFilter(): Promise<void>;
+    /*  switch reasons */
+    switchReason(reason: Reason): void;
+
+    switchAllReasons(): void;
+
+    /*  switch state */
+    switchUnjustifiedFilter(): void;
+
+    switchjustifiedNotRegularizedFilter(): void;
+
+    switchjustifiedRegularizedFilter(): void;
 
     /* Export*/
     exportPdf(): void;
@@ -124,6 +136,12 @@ export const eventsController = ng.controller('EventsController', ['$scope', '$r
             departure: true,
             late: $route.current.action !== 'dashboard',
             regularized: true,
+            allReasons: true,
+            noReasons: true,
+            reasons: {} as Reason,
+            unjustified: true,
+            justifiedNotRegularized: false,
+            justifiedRegularized: false
         };
         vm.provingReasonsMap = {};
         vm.eventType = [];
@@ -142,7 +160,7 @@ export const eventsController = ng.controller('EventsController', ['$scope', '$r
         vm.classesFiltered = undefined;
 
         vm.events = new Events();
-        // vm.events.regularized = isWidget ? vm.filter.regularized : null;
+        vm.events.regularized = isWidget ? vm.filter.regularized : null;
         vm.events.eventer.on('loading::true', () => $scope.safeApply());
         vm.events.eventer.on('loading::false', () => {
             filterHistory();
@@ -152,6 +170,7 @@ export const eventsController = ng.controller('EventsController', ['$scope', '$r
         vm.lightbox = {
             filter: false
         };
+        vm.eventReasonsId = [];
         const getEvents = async (actionMode?: boolean): Promise<void> => {
             vm.events.structureId = window.structure.id;
             vm.events.startDate = vm.filter.startDate.toDateString();
@@ -176,10 +195,21 @@ export const eventsController = ng.controller('EventsController', ['$scope', '$r
             vm.events.eventType = vm.eventType.toString();
 
             if (!vm.eventReasonsType || vm.eventReasonsType.length <= 1) {
+                /* fetch all reasons */
                 vm.eventReasonsType = await ReasonService.getReasons(window.structure.id);
                 vm.eventReasonsTypeDescription = _.clone(vm.eventReasonsType);
-                vm.eventReasonsType.map((reason: Reason) => vm.provingReasonsMap[reason.id] = reason.proving);
-                if (!isWidget) vm.eventReasonsType.push(vm.multipleSelect);
+                vm.eventReasonsType.map((reason: Reason) => {
+                    reason.isSelected = true;
+                    vm.provingReasonsMap[reason.id] = reason.proving;
+                });
+            }
+
+            if (!isWidget) vm.eventReasonsType.push(vm.multipleSelect);
+
+            if (vm.filter.unjustified) {
+                vm.eventReasonsId = [];
+                vm.filter.noReasons = true;
+                vm.events.noReason = vm.filter.noReasons;
             }
 
             EventsUtils.setStudentToSync(vm.events, vm.filter);
@@ -500,7 +530,31 @@ export const eventsController = ng.controller('EventsController', ['$scope', '$r
             if (student && !_.find(vm.filter.students, student)) {
                 vm.filter.students.push(student);
             }
+
+            /* Fetch reason Id */
+            vm.eventReasonsId = [];
+            vm.eventReasonsType.forEach(r => {
+                if (r.isSelected) {
+                    vm.eventReasonsId.push(r.id);
+                }
+            });
+
+            if (vm.filter.unjustified && vm.filter.justifiedNotRegularized && vm.filter.justifiedRegularized) {
+                vm.eventReasonsId = [];
+            }
+
+            /* Manage state unjustified */
+            vm.filter.noReasons = vm.filter.unjustified &&
+            (!vm.filter.justifiedNotRegularized && !vm.filter.justifiedRegularized) ? true : false;
+
+            /* Manage state regularized */
+            vm.filter.regularized = vm.filter.justifiedRegularized ? false : true;
+
             vm.events.eventType = vm.eventType.toString();
+            vm.events.listReasonIds = vm.eventReasonsId.toString();
+            vm.events.noReason = vm.filter.noReasons;
+            vm.events.regularized = vm.filter.regularized;
+
             EventsUtils.setStudentToSync(vm.events, vm.filter);
             EventsUtils.setClassToSync(vm.events, vm.filter);
             vm.events.page = 0;
@@ -526,6 +580,14 @@ export const eventsController = ng.controller('EventsController', ['$scope', '$r
         /* ----------------------------
          Switch type methods
         ---------------------------- */
+        function adaptReason() {
+            // vm.eventReasonsType // reasons fetched
+            vm.eventReasonsType.forEach(r => {
+                // example
+                r.isSelected = true;
+            });
+        }
+
         vm.switchAbsencesFilter = function () {
             vm.formFilter.absences = !vm.formFilter.absences;
             if (vm.formFilter.absences) {
@@ -535,6 +597,7 @@ export const eventsController = ng.controller('EventsController', ['$scope', '$r
             } else {
                 vm.eventType = _.without(vm.eventType, EventType.ABSENCE);
             }
+            adaptReason();
         };
 
         vm.switchLateFilter = function () {
@@ -559,12 +622,27 @@ export const eventsController = ng.controller('EventsController', ['$scope', '$r
             }
         };
 
-        // vm.switchRegularizedFilter = async function () {
-        //     vm.filter.regularized = !vm.filter.regularized;
-        //     vm.events.regularized = vm.filter.regularized;
-        //     vm.events.page = 0;
-        //     EventsUtils.resetEventId(vm.eventId);
-        // };
+        vm.switchUnjustifiedFilter = function () {
+            vm.formFilter.unjustified = !vm.formFilter.unjustified;
+        };
+
+        vm.switchjustifiedNotRegularizedFilter = function () {
+            vm.formFilter.justifiedNotRegularized = !vm.formFilter.justifiedNotRegularized;
+        };
+
+        vm.switchjustifiedRegularizedFilter = function () {
+            vm.formFilter.justifiedRegularized = !vm.formFilter.justifiedRegularized;
+        };
+
+        vm.switchReason = async function (reason: Reason) {
+            reason.isSelected = !reason.isSelected;
+        };
+
+        vm.switchAllReasons = function () {
+            vm.formFilter.allReasons = !vm.formFilter.allReasons;
+            vm.formFilter.noReasons = vm.formFilter.allReasons;
+            vm.eventReasonsType.forEach(reason => reason.isSelected = vm.formFilter.allReasons);
+        };
 
         vm.hideGlobalCheckbox = function (event) {
             const {events} = event;

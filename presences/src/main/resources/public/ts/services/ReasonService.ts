@@ -11,7 +11,7 @@ export interface Reason {
     group: boolean;
     hidden: boolean;
     absence_compliance: boolean;
-    used?: boolean;
+    isSelected: boolean;
 }
 
 export interface ReasonRequest {

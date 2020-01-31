@@ -52,8 +52,9 @@ public class DefaultEventService implements EventService {
 
     @Override
     public void get(String structureId, String startDate, String endDate,
-                    List<String> eventType, List<String> userId, JsonArray userIdFromClasses, List<String> classes,
-                    Boolean regularized, Integer page, Handler<Either<String, JsonArray>> handler) {
+                    List<String> eventType, List<String> listReasonIds, Boolean noReason, List<String> userId,
+                    JsonArray userIdFromClasses, List<String> classes, Boolean regularized, Integer page,
+                    Handler<Either<String, JsonArray>> handler) {
 
         Future<JsonObject> slotsFuture = Future.future();
         Future<JsonArray> eventsFuture = Future.future();
@@ -62,7 +63,7 @@ public class DefaultEventService implements EventService {
         Future<JsonObject> saturdayCoursesCount = Future.future();
         Future<JsonObject> sundayCoursesCount = Future.future();
 
-        getEvents(structureId, startDate, endDate, eventType, userId, userIdFromClasses, regularized, page,
+        getEvents(structureId, startDate, endDate, eventType, listReasonIds, noReason, userId, userIdFromClasses, regularized, page,
                 FutureHelper.handlerJsonArray(eventsFuture));
         slotHelper.getTimeSlots(structureId, FutureHelper.handlerJsonObject(slotsFuture));
         CalendarHelper.getWeekEndCourses(structureId, CalendarHelper.SATURDAY_OF_WEEK, FutureHelper.handlerJsonObject(saturdayCoursesCount));
@@ -135,11 +136,11 @@ public class DefaultEventService implements EventService {
     }
 
     private void getEvents(String structureId, String startDate, String endDate,
-                           List<String> eventType, List<String> userId, JsonArray userIdFromClasses,
+                           List<String> eventType, List<String> listReasonIds, Boolean noReason, List<String> userId, JsonArray userIdFromClasses,
                            Boolean regularized, Integer page, Handler<Either<String, JsonArray>> handler) {
         JsonArray params = new JsonArray();
         Sql.getInstance().prepared(this.getEventsQuery(structureId, startDate, endDate,
-                eventType, regularized, userId, userIdFromClasses, page, params),
+                eventType, listReasonIds, noReason, regularized, userId, userIdFromClasses, page, params),
                 params, SqlResult.validResultHandler(handler));
     }
 
@@ -175,8 +176,8 @@ public class DefaultEventService implements EventService {
      * @param params            Json params
      */
     private String getEventsQuery(String structureId, String startDate, String endDate, List<String> eventType,
-                                  Boolean regularized, List<String> userId, JsonArray userIdFromClasses,
-                                  Integer page, JsonArray params) {
+                                  List<String> listReasonIds, Boolean noReason, Boolean regularized, List<String> userId,
+                                  JsonArray userIdFromClasses, Integer page, JsonArray params) {
 
         String query = "WITH allevents AS (" +
                 "  SELECT e.id AS id, e.start_date AS start_date, e.end_date AS end_date, " +
@@ -195,9 +196,16 @@ public class DefaultEventService implements EventService {
         } else {
             query += "INNER JOIN presences.event_type AS event_type ON event_type.id = e.type_id ";
         }
-        query += "WHERE e.start_date > ? AND e.end_date < ?";
+        query += "WHERE e.start_date > ? AND e.end_date < ? ";
         params.add(startDate + " " + defaultStartTime);
         params.add(endDate + " " + defaultEndTime);
+        if (listReasonIds != null && !listReasonIds.isEmpty() && noReason == null) {
+            query += " AND e.reason_id IN " + Sql.listPrepared(listReasonIds.toArray());
+            params.addAll(new JsonArray(listReasonIds));
+        }
+        if (noReason != null && noReason) {
+            query += " AND e.reason_id is NULL ";
+        }
         query += setParamsForQueryEvents(userId, regularized, userIdFromClasses, params);
         query += " UNION" +
                 "  SELECT absence.id AS id, absence.start_date AS start_date, absence.end_date AS end_date, " +
@@ -217,6 +225,13 @@ public class DefaultEventService implements EventService {
         params.add(startDate + " " + defaultStartTime);
         params.add(endDate + " " + defaultEndTime);
         params.add(endDate + " " + defaultEndTime);
+        if (listReasonIds != null && !listReasonIds.isEmpty() && noReason == null) {
+            query += " AND absence.reason_id IN " + Sql.listPrepared(listReasonIds.toArray());
+            params.addAll(new JsonArray(listReasonIds));
+        }
+        if (noReason != null && noReason) {
+            query += " AND absence.reason_id is NULL ";
+        }
         query += " AND absence.student_id NOT IN (" +
                 "  SELECT distinct event.student_id FROM presences.event" +
                 "  WHERE absence.start_date::date = event.start_date::date" +
@@ -241,16 +256,17 @@ public class DefaultEventService implements EventService {
 
     @Override
     public void getPageNumber(String structureId, String startDate, String endDate, List<String> eventType,
-                              List<String> userId, Boolean regularized,
+                              List<String> listReasonIds, Boolean noReason, List<String> userId, Boolean regularized,
                               JsonArray userIdFromClasses, Handler<Either<String, JsonObject>> handler) {
         JsonArray params = new JsonArray();
         Sql.getInstance().prepared(this.getEventsQueryPagination(structureId, startDate, endDate, eventType,
-                userId, regularized, userIdFromClasses, params),
+                userId, listReasonIds, noReason, regularized, userIdFromClasses, params),
                 params, SqlResult.validUniqueResultHandler(handler));
+
     }
 
     private String getEventsQueryPagination(String structureId, String startDate, String endDate, List<String> eventType,
-                                            List<String> userId, Boolean regularized,
+                                            List<String> userId, List<String> listReasonIds, Boolean noReason, Boolean regularized,
                                             JsonArray userIdFromClasses, JsonArray params) {
 
         String query = "SELECT (" +
@@ -265,12 +281,25 @@ public class DefaultEventService implements EventService {
         query += "WHERE e.start_date > ? AND e.end_date < ? ";
         params.add(startDate + " " + defaultStartTime);
         params.add(endDate + " " + defaultEndTime);
+        // add condition : no_reason is false
+        if (listReasonIds != null && !listReasonIds.isEmpty() && noReason == null) {
+            query += " AND e.reason_id IN " + Sql.listPrepared(listReasonIds.toArray());
+            params.addAll(new JsonArray(listReasonIds));
+        }
+        // add no reason true (AND reason_id is null)
+        if (noReason != null && noReason) {
+            query += " AND e.reason_id is NULL ";
+        }
         query += setParamsForQueryEvents(userId, regularized, userIdFromClasses, params);
         if (eventType != null && eventType.contains("1")) {
             query += " ) AS events, ( SELECT COUNT(absence.id) FROM " + Presences.dbSchema + ".absence absence " +
                     "WHERE absence.start_date > ? AND absence.end_date < ?";
             params.add(startDate + " " + defaultStartTime);
             params.add(endDate + " " + defaultEndTime);
+            if (listReasonIds != null && !listReasonIds.isEmpty()) {
+                query += " AND absence.reason_id IN " + Sql.listPrepared(listReasonIds.toArray());
+                params.addAll(new JsonArray(listReasonIds));
+            }
             query += " AND absence.student_id NOT IN (" +
                     "  SELECT event.student_id FROM presences.event" +
                     "  WHERE absence.start_date::date = event.start_date::date" +

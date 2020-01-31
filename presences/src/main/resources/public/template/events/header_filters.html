@@ -47,6 +47,7 @@
         </div>
     </div>
     <div class="row vertical-spacing">
+        <!-- Event Type Filter -->
         <h4>
             <i18n>presences.events.title</i18n>
         </h4>
@@ -63,20 +64,6 @@
                    data-ng-click="vm.switchDepartureFilter()">
                 <i18n>presences.register.event_type.departure</i18n>
             </label>
-
-            <!--  move to state absence -->
-            <!--  <label class="chip" ng-class="{selected: vm.filter.regularized}"-->
-            <!--     data-ng-click="vm.switchRegularizedFilter()">-->
-            <!--     <i18n>presences.absence.regularized</i18n>-->
-            <!--   </label>-->
-        </div>
-    </div>
-    <div class="row vertical-spacing">
-        <h4>
-            <i18n>presences.absence.reason.absence</i18n>
-        </h4>
-        <div class="chips">
-            A FAIRE
         </div>
     </div>
     <div class="row vertical-spacing">
@@ -84,7 +71,41 @@
             <i18n class="cell">presences.absence.state.absence</i18n>
         </h4>
         <div class="chips">
-            A FAIRE
+            <label class="chip" ng-class="{selected: vm.formFilter.unjustified}"
+                   data-ng-click="vm.switchUnjustifiedFilter()">
+                <i18n>massmailing.types.UNJUSTIFIED</i18n>
+            </label>
+            <label class="chip" ng-class="{selected: vm.formFilter.justifiedNotRegularized}"
+                   data-ng-click="vm.switchjustifiedNotRegularizedFilter()">
+                <i18n>presences.absence.types.justified.not.regularized</i18n>
+            </label>
+            <label class="chip" ng-class="{selected: vm.formFilter.justifiedRegularized}"
+                   data-ng-click="vm.switchjustifiedRegularizedFilter()">
+                <i18n>presences.absence.types.justified.regularized</i18n>
+            </label>
+        </div>
+    </div>
+    <div class="row vertical-spacing">
+        <!-- Reason Type Filter -->
+        <h4>
+            <i18n>presences.absence.reason.absence</i18n>
+        </h4>
+        <div class="chips cell">
+            <label class="chip" ng-class="{selected: vm.formFilter.allReasons &&
+                    !vm.formFilter.unjustified ||
+                   (vm.formFilter.unjustified &&
+                   (vm.formFilter.justifiedNotRegularized || vm.formFilter.justifiedRegularized))}"
+                   data-ng-click="vm.switchAllReasons()">
+                <i18n>presences.all.none</i18n>
+            </label>
+            <label class="chip"
+                   ng-repeat="reason in vm.eventReasonsType track by $index|orderBy: 'label'"
+                   ng-class="{ selected: reason.isSelected &&
+                   !vm.formFilter.unjustified ||
+                   (vm.formFilter.unjustified && (vm.formFilter.justifiedNotRegularized || vm.formFilter.justifiedRegularized))}"
+                   ng-click="vm.switchReason(reason)">
+                <span ng-show="[[reason.id]] !== 0" ng-disabled="vm.formFilter.unjustified">[[reason.label]]</span>
+            </label>
         </div>
     </div>
 </section>

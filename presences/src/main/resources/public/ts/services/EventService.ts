@@ -12,6 +12,7 @@ export interface EventRequest {
     startDate: string;
     endDate: string;
     eventType: string;
+    listReasonIds: string;
     regularized: boolean;
     userId: string;
     classes: string;
@@ -26,11 +27,12 @@ export const eventService: EventService = {
             const startDate = `&startDate=${DateUtils.format(eventRequest.startDate, dateFormat)}`;
             const endDate = `&endDate=${DateUtils.format(eventRequest.endDate, dateFormat)}`;
             const eventType = `&eventType=${eventRequest.eventType}`;
+            const listReasonIds = `&reasonIds=${eventRequest.listReasonIds}`;
             const userId = eventRequest.userId.length === 0 ? "" : `&userId=${eventRequest.userId}`;
             const classes = eventRequest.classes.length === 0 ? "" : `&eventType=${eventRequest.classes}`;
             const regularized = eventRequest.regularized ? `&regularized=${!eventRequest.regularized}` : "";
             const page = `&page=${eventRequest.page}`;
-            const urlParams = `${structureId}${startDate}${endDate}${eventType}${userId}${classes}${regularized}${page}`;
+            const urlParams = `${structureId}${startDate}${endDate}${eventType}${listReasonIds}${userId}${classes}${regularized}${page}`;
 
             const {data} = await http.get(`/presences/events${urlParams}`);
 
