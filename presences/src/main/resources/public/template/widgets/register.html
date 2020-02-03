@@ -7,29 +7,14 @@
         <div class="search-field">
             <!-- form -->
             <div class="search-input">
-                <async-autocomplete ng-disabled="false"
-                                    ng-model="vm.studentsSearch.student"
-                                    ng-change="vm.selectStudent"
-                                    on-search="vm.searchStudents"
-                                    options="vm.studentsSearch.students"
-                                    placeholder="presences.exemptions.search.student"
-                                    search="vm.studentsSearch.student">
-                </async-autocomplete>
+                <input ng-model="vm.studentsSearch.student" i18n-placeholder="presences.exemptions.search.student">
             </div>
-            <!-- student fetched -->
-            <ul ng-if="vm.studentsSearch.getSelectedStudents().length > 0"
-                class="search-input-ul">
-                <li ng-repeat="student in vm.studentsSearch.getSelectedStudents()">
-                    [[student.toString()]]
-                    <i class="close" data-ng-click="vm.studentsSearch.removeSelectedStudents(student)"></i>
-                </li>
-            </ul>
         </div>
 
         <!-- List of students -->
         <div class="students">
             <div class="student"
-                 ng-repeat="student in vm.register.students | orderBy:'name' | filter:vm.studentsSearch.getSelectedStudents()[0].id"
+                 ng-repeat="student in vm.register.students | orderBy:'name' | filter:vm.studentsSearch.student"
                  role="row">
                 <!-- button -->
                 <div class="register-absence-button" role="button"
@@ -53,6 +38,9 @@
                 </div>
             </div>
         </div>
+        <button class="student-submit" data-ng-click="vm.validRegister()">
+            <i18n>presences.register.validation</i18n>
+        </button>
     </div>
 
     <!-- empty state -->
