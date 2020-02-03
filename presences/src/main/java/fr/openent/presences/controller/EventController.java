@@ -87,7 +87,7 @@ public class EventController extends ControllerHelper {
             });
             eventService.get(structureId, startDate, endDate, eventType, reasonIds, noReason, userId, userIdFromClasses,
                     classes, regularized, page, FutureHelper.handlerJsonArray(eventsFuture));
-            eventService.getPageNumber(structureId, startDate, endDate, eventType, reasonIds, true, userId,
+            eventService.getPageNumber(structureId, startDate, endDate, eventType, reasonIds, noReason, userId,
                     regularized, userIdFromClasses, FutureHelper.handlerJsonObject(pageNumberFuture));
         });
     }

@@ -66,31 +66,32 @@
             </label>
         </div>
     </div>
-    <div class="row vertical-spacing">
+    <div class="row vertical-spacing" ng-if="vm.formFilter.absences">
+        <!-- State Filter -->
         <h4 class="row">
             <i18n class="cell">presences.absence.state.absence</i18n>
         </h4>
         <div class="chips">
             <label class="chip" ng-class="{selected: vm.formFilter.unjustified}"
-                   data-ng-click="vm.switchUnjustifiedFilter()">
+                   data-ng-click="vm.switchUnjustifiedFilter(); vm.adaptEvent();">
                 <i18n>massmailing.types.UNJUSTIFIED</i18n>
             </label>
             <label class="chip" ng-class="{selected: vm.formFilter.justifiedNotRegularized}"
-                   data-ng-click="vm.switchjustifiedNotRegularizedFilter()">
+                   data-ng-click="vm.switchjustifiedNotRegularizedFilter(); vm.adaptEvent();">
                 <i18n>presences.absence.types.justified.not.regularized</i18n>
             </label>
             <label class="chip" ng-class="{selected: vm.formFilter.justifiedRegularized}"
-                   data-ng-click="vm.switchjustifiedRegularizedFilter()">
+                   data-ng-click="vm.switchjustifiedRegularizedFilter(); vm.adaptEvent();">
                 <i18n>presences.absence.types.justified.regularized</i18n>
             </label>
         </div>
     </div>
-    <div class="row vertical-spacing">
+    <div class="row vertical-spacing" ng-if="vm.formFilter.absences">
         <!-- Reason Type Filter -->
         <h4>
             <i18n>presences.absence.reason.absence</i18n>
         </h4>
-        <div class="chips cell">
+        <div class="chips cell overflow-y">
             <label class="chip" ng-class="{selected: vm.formFilter.allReasons &&
                     !vm.formFilter.unjustified ||
                    (vm.formFilter.unjustified &&

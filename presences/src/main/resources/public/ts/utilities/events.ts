@@ -16,7 +16,8 @@ export interface EventsFilter {
     reasons: Reason,
     unjustified: boolean,
     justifiedNotRegularized: boolean,
-    justifiedRegularized: boolean
+    justifiedRegularized: boolean,
+    noFilter: boolean
 }
 
 export class EventsUtils {

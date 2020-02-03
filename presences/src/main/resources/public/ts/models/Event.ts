@@ -118,6 +118,7 @@ export class Events extends LoadingCollection {
     listReasonIds: string;
     regularized: boolean;
     noReason: boolean;
+    noFilter: boolean;
 
     constructor() {
         super();
@@ -193,7 +194,7 @@ export class Events extends LoadingCollection {
                 `&startDate=${DateUtils.format(this.startDate, dateFormat)}` +
                 `&endDate=${DateUtils.format(this.endDate, dateFormat)}`;
 
-            if ((this.listReasonIds != "" && !this.noReason && !this.regularized)) {
+            if (this.noFilter) {
                 if (this.listReasonIds && this.noReason != true) {
                     url += `&reasonIds=${this.listReasonIds}`;
                 }
