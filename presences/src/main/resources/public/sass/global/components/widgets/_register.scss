@@ -1,15 +1,24 @@
 .register-widget {
-  .search-field {
-    margin-top: 5px;
-  }
+  margin: 16px;
 
-  .search-input {
-    box-shadow: 0 2px 2px rgba(0, 0, 0, 0.21);
-    box-sizing: border-box;
+  .search-field {
+    display: flex;
+    flex-direction: column;
+
+    .search-input {
+      box-shadow: 0 2px 2px rgba(0, 0, 0, 0.21);
+      box-sizing: border-box;
+      margin-bottom: 8px;
+    }
+
+    .search-input-ul {
+      padding: 0;
+      margin: 0;
+      font-weight: bold;
+    }
   }
 
   .students {
-    margin: 15px;
     box-sizing: border-box;
     height: calc(100% - 130px);
     overflow-x: hidden;

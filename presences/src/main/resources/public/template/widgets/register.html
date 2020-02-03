@@ -5,30 +5,32 @@
 
         <!-- Search bar -->
         <div class="search-field">
-            <div class="eleven centered search-input">
+            <!-- form -->
+            <div class="search-input">
                 <async-autocomplete ng-disabled="false"
-                                    ng-model="vm.autocomplete.teacher"
+                                    ng-model="vm.studentsSearch.student"
                                     ng-change="vm.selectStudent"
-                                    on-search="vm.getStudents"
-                                    options="vm.autocomplete.teacherOptions"
+                                    on-search="vm.searchStudents"
+                                    options="vm.studentsSearch.students"
                                     placeholder="presences.exemptions.search.student"
-                                    search="vm.autocomplete.teacher">
+                                    search="vm.studentsSearch.student">
                 </async-autocomplete>
-
-                <div class="cell twelve">
-                    <ul class="cell twelve search-input-ul">
-                        <li ng-repeat="student in vm.autocomplete.teachersSelected">
-                            [[student.toString()]]
-                            <i class="close" data-ng-click="vm.removeStudent(student)"></i>
-                        </li>
-                    </ul>
-                </div>
             </div>
+            <!-- student fetched -->
+            <ul ng-if="vm.studentsSearch.getSelectedStudents().length > 0"
+                class="search-input-ul">
+                <li ng-repeat="student in vm.studentsSearch.getSelectedStudents()">
+                    [[student.toString()]]
+                    <i class="close" data-ng-click="vm.studentsSearch.removeSelectedStudents(student)"></i>
+                </li>
+            </ul>
         </div>
 
         <!-- List of students -->
         <div class="students">
-            <div class="student" ng-repeat="student in vm.register.students|orderBy:'name'" role="row">
+            <div class="student"
+                 ng-repeat="student in vm.register.students | orderBy:'name' | filter:vm.studentsSearch.getSelectedStudents()[0].id"
+                 role="row">
                 <!-- button -->
                 <div class="register-absence-button" role="button"
                      ng-class="{ active: student.absence !== undefined, disabled: vm.isAbsenceDisabled(student)}"
@@ -61,5 +63,4 @@
         </div>
         <div class="tick-color purple">&nbsp;</div>
     </div>
-
 </div>

@@ -1,11 +1,11 @@
 import {_, idiom as lang, Me, model, moment, ng, notify, template, toasts} from 'entcore';
-import {Absence, Course, Courses, Departure, EventType, Lateness, Register, RegisterStatus, Remark} from '../models'
+import {Absence, Course, Courses, Departure, EventType, Lateness, Register, RegisterStatus, Remark} from '../models';
 import {GroupService, SearchService} from '../services';
 import {CourseUtils, DateUtils} from '@common/utils'
-import rights from '../rights'
-import {Scope} from './main'
-import http from 'axios'
-import {AutoCompleteUtils, PreferencesUtils, RegisterUtils} from "../utilities";
+import rights from '../rights';
+import {Scope} from './main';
+import http from 'axios';
+import {PreferencesUtils, RegisterUtils, StudentsSearch} from "../utilities";
 import {COURSE_EVENTS} from "@common/model";
 import {IAngularEvent} from "angular";
 
@@ -32,14 +32,14 @@ export interface ViewModel {
     courses: Courses;
     filter: Filter;
     RegisterStatus: any;
-    autocomplete: AutoCompleteUtils;
+    studentsSearch: StudentsSearch;
 
     /* search bar auto complete */
-    getStudents(value): Promise<void>;
+    searchStudents(value): Promise<void>;
 
     selectStudent(value, item): Promise<void>;
 
-    removeStudent(value): void;
+    // removeStudent(value): void;
 
     openRegister(course: Course, $event: Event): Promise<void>;
 
@@ -291,26 +291,21 @@ export const registersController = ng.controller('RegistersController',
             };
 
             function initAutocomplete() {
-                vm.autocomplete = new AutoCompleteUtils(window.structure.id, SearchService);
-                console.log("autocompleteInfo: ", vm.autocomplete);
+                vm.studentsSearch = new StudentsSearch(window.structure.id, SearchService);
             }
 
-            vm.getStudents = async (value): Promise<void> => {
-                await vm.autocomplete.searchStudents(value);
-                console.log("filterAutoComplete: ", value);
+            vm.searchStudents = async (value): Promise<void> => {
+                await vm.studentsSearch.searchStudentsFromArray(value, vm.register.students);
+                $scope.safeApply();
             };
 
             vm.selectStudent = async (value, item): Promise<void> => {
-                vm.autocomplete.selectStudent(model, item);
-                console.log("selecting : ", value, item);
+                vm.studentsSearch.selectStudent(model, item);
+                vm.studentsSearch.student = "";
+                vm.studentsSearch.resetStudents();
             };
 
-            vm.removeStudent = (value): void => {
-                vm.autocomplete.removeSelectedStudent(value);
-                console.log("removing: , ", value);
-            };
-
-            const getCurrentCourse = async function (): Promise<void> {
+            const getCurrentCourse = async (): Promise<void> => {
                 initAutocomplete();
                 await vm.loadCourses(extractSelectedTeacherIds(), extractSelectedGroupsName(), undefined, undefined, undefined, false);
                 if (vm.courses.all.length > 0) {
@@ -319,8 +314,8 @@ export const registersController = ng.controller('RegistersController',
                         vm.register = RegisterUtils.createRegisterFromCourse(currentCourse);
                         /* create or sync register on current course*/
                         if (!currentCourse.registerId) {
-                            await vm.register.create().then(() => {
-                                vm.register.sync();
+                            await vm.register.create().then(async () => {
+                                await vm.register.sync();
                                 currentCourse.registerId = vm.register.id;
                                 $scope.safeApply();
                             });
@@ -328,12 +323,6 @@ export const registersController = ng.controller('RegistersController',
                             await vm.register.sync();
                         }
                         $scope.$emit(COURSE_EVENTS.SEND_COURSE, currentCourse);
-                    } else {
-                        //@ TODO remove, is only test
-                        vm.register = new Register();
-                        vm.register.id = 111307;
-                        await vm.register.sync();
-                        $scope.safeApply();
                     }
                 }
                 $scope.safeApply();
