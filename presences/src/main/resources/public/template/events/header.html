@@ -77,26 +77,44 @@
 <!-- Event Type Filter -->
 <div class="register registry-eventTypeFilter">
 
-    <div class="cell eight vertical-spacing-twice">
+    <div class="cell six vertical-spacing-twice">
         <i class="filter cell" ng-click="vm.openForm()">&nbsp;</i>
+        <!-- Display selected events -->
         <div class="cell">
-            <div class="card horizontal-margin-small horizontal-spacing">
+            <div class="card horizontal-margin-small horizontal-spacing margin-bottom-md">
                 <i18n ng-show="vm.filter.absences">presences.absence.absences</i18n>
             </div>
         </div>
         <div class="cell">
-            <div class="card horizontal-margin-small horizontal-spacing">
+            <div class="card horizontal-margin-small horizontal-spacing margin-bottom-md">
                 <i18n ng-show="vm.filter.late">presences.absence.lateness</i18n>
             </div>
         </div>
         <div class="cell">
-            <div class="card horizontal-margin-small horizontal-spacing">
+            <div class="card horizontal-margin-small horizontal-spacing margin-bottom-md">
                 <i18n ng-show="vm.filter.departure">presences.register.event_type.departure</i18n>
+            </div>
+        </div>
+        <!-- Display selected states -->
+        <div class="cell">
+            <div class="card horizontal-margin-small horizontal-spacing margin-bottom-md">
+                <i18n ng-show="vm.filter.unjustified">massmailing.types.UNJUSTIFIED</i18n>
+            </div>
+        </div>
+        <div class="cell">
+            <div class="card horizontal-margin-small horizontal-spacing margin-bottom-md">
+                <i18n ng-show="vm.filter.justifiedNotRegularized">presences.absence.types.justified.not.regularized
+                </i18n>
+            </div>
+        </div>
+        <div class="cell">
+            <div class="card horizontal-margin-small horizontal-spacing margin-bottom-md">
+                <i18n ng-show="vm.filter.justifiedRegularized">presences.absence.types.justified.regularized</i18n>
             </div>
         </div>
     </div>
 
-    <div class="card event-legend radius cell">
+    <div class="card event-legend radius cell max-height-40">
         <ul class="vertical-spacing-twice horizontal-margin">
             <li class="absence">
                 <i18n>presences.register.event_type.absences</i18n>

@@ -608,8 +608,16 @@ export const eventsController = ng.controller('EventsController', ['$scope', '$r
                 vm.filter.students.push(student);
             }
 
+            /* Fetch reason Id */
+            vm.eventReasonsId = [];
+            vm.eventReasonsType.forEach(r => {
+                if (r.isSelected) {
+                    vm.eventReasonsId.push(r.id);
+                }
+            });
+
             /* Delete eventReasonId */
-            if (vm.filter.unjustified ||
+            if (vm.filter.unjustified && (!vm.filter.justifiedNotRegularized && !vm.filter.justifiedRegularized) ||
                 (!vm.filter.unjustified && !vm.filter.justifiedNotRegularized && !vm.filter.justifiedRegularized)) {
                 vm.eventReasonsId = [];
             }

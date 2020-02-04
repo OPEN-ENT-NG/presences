@@ -92,20 +92,25 @@
             <i18n>presences.absence.reason.absence</i18n>
         </h4>
         <div class="chips cell overflow-y">
-            <label class="chip" ng-class="{selected: vm.formFilter.allReasons &&
-                    !vm.formFilter.unjustified ||
+            <label class="chip" ng-class="{ selected: vm.formFilter.allReasons &&
+                   (!vm.formFilter.unjustified ||
                    (vm.formFilter.unjustified &&
-                   (vm.formFilter.justifiedNotRegularized || vm.formFilter.justifiedRegularized))}"
+                   (vm.formFilter.justifiedNotRegularized || vm.formFilter.justifiedRegularized)))}"
                    data-ng-click="vm.switchAllReasons()">
                 <i18n>presences.all.none</i18n>
             </label>
             <label class="chip"
                    ng-repeat="reason in vm.eventReasonsType track by $index|orderBy: 'label'"
                    ng-class="{ selected: reason.isSelected &&
-                   !vm.formFilter.unjustified ||
-                   (vm.formFilter.unjustified && (vm.formFilter.justifiedNotRegularized || vm.formFilter.justifiedRegularized))}"
+                   (!vm.formFilter.unjustified ||
+                   (vm.formFilter.unjustified &&
+                   (vm.formFilter.justifiedNotRegularized || vm.formFilter.justifiedRegularized)))}"
                    ng-click="vm.switchReason(reason)">
-                <span ng-show="[[reason.id]] !== 0" ng-disabled="vm.formFilter.unjustified">[[reason.label]]</span>
+                <span ng-show="[[reason.id]] !== 0"
+                      ng-disabled="vm.formFilter.unjustified &&
+                      (!vm.formFilter.justifiedNotRegularized && !vm.formFilter.justifiedRegularized)">
+                    [[reason.label]]
+                </span>
             </label>
         </div>
     </div>
