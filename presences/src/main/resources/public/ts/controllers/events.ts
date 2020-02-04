@@ -73,24 +73,44 @@ interface ViewModel {
     studentSearchInput: string;
     students: Students;
 
-    searchByStudent(string): void;
+    /* Students lightbox */
+    studentSearchInputLightbox: string;
+    studentsLightbox: Students;
+
+    searchByStudent(string: string): void;
+
+    searchByStudentFromLightbox(string: string): void;
 
     selectStudent(model: Student, option: Student): void;
+
+    selectStudentFromLightbox(value: string, student: Student): void;
 
     selectStudentFromDashboard(model: Student, option: Student): void;
 
     excludeStudentFromFilter(audience): void;
+
+    excludeStudentFromFilterLightbox(audience): void;
 
     /* Classes */
     classesSearchInput: string;
     classes: any;
     classesFiltered: any[];
 
+    /* Classes Lightbox */
+    classesSearchInputLightbox: string;
+    classesFilteredLightbox: any[];
+
     searchByClass(value: string): Promise<void>;
+
+    searchByClassFromLightbox(value: string): Promise<void>;
 
     selectClass(model: any, option: any): void;
 
+    selectClassFromLightbox(value: string, classes: any): void;
+
     excludeClassFromFilter(audience): void;
+
+    excludeClassFromFilterLightbox(audience): void;
 
     /* update filter */
     updateFilter(student?, audience?): void;
@@ -162,7 +182,9 @@ export const eventsController = ng.controller('EventsController', ['$scope', '$r
         vm.studentSearchInput = '';
         vm.classesSearchInput = '';
         vm.students = new Students();
+        vm.studentsLightbox = new Students();
         vm.classesFiltered = undefined;
+        vm.classesFilteredLightbox = undefined;
 
         vm.events = new Events();
         vm.events.regularized = isWidget ? vm.filter.regularized : null;
@@ -501,6 +523,27 @@ export const eventsController = ng.controller('EventsController', ['$scope', '$r
         };
 
         /* ----------------------------
+            Student lightbox methods
+        ---------------------------- */
+
+        vm.searchByStudentFromLightbox = async (searchText: string) => {
+            await vm.studentsLightbox.search(window.structure.id, searchText);
+            $scope.safeApply();
+        };
+
+        vm.selectStudentFromLightbox = function (value: string, student: Student) {
+            if (!_.find(vm.formFilter.students, student)) {
+                vm.formFilter.students.push(student);
+            }
+            vm.studentSearchInputLightbox = '';
+            vm.studentsLightbox.all = [];
+        };
+
+        vm.excludeStudentFromFilterLightbox = (student) => {
+            vm.formFilter.students = _.without(vm.formFilter.students, _.findWhere(vm.formFilter.students, student));
+        };
+
+        /* ----------------------------
           Classes methods
         ---------------------------- */
         vm.searchByClass = async function (value) {
@@ -524,6 +567,34 @@ export const eventsController = ng.controller('EventsController', ['$scope', '$r
         vm.excludeClassFromFilter = (audience) => {
             vm.filter.classes = _.without(vm.filter.classes, _.findWhere(vm.filter.classes, audience));
             vm.updateFilter();
+        };
+
+        /* ----------------------------
+         Classes lightbox methods
+       ---------------------------- */
+        vm.searchByClassFromLightbox = async function (value) {
+            const structureId = window.structure.id;
+            try {
+                vm.classesFilteredLightbox = await GroupService.search(structureId, value);
+                vm.classesFilteredLightbox.map((obj) => obj.toString = () => obj.name);
+                $scope.safeApply();
+            } catch (err) {
+                vm.classesFilteredLightbox = [];
+                throw err;
+            }
+            return;
+        };
+
+        vm.selectClassFromLightbox = (value: string, classe: any): void => {
+            if (!_.find(vm.formFilter.classes, classe)) {
+                vm.formFilter.classes.push(classe);
+            }
+            vm.classesSearchInputLightbox = '';
+            vm.classesFilteredLightbox = [];
+        };
+
+        vm.excludeClassFromFilterLightbox = (audience) => {
+            vm.formFilter.classes = _.without(vm.formFilter.classes, _.findWhere(vm.formFilter.classes, audience));
         };
 
         /* ----------------------------
@@ -644,7 +715,6 @@ export const eventsController = ng.controller('EventsController', ['$scope', '$r
             if (!vm.formFilter.unjustified && !vm.formFilter.justifiedNotRegularized && !vm.formFilter.justifiedRegularized) {
                 vm.switchAbsencesFilter();
             }
-            vm.updateFilter();
         };
 
         vm.adaptReason = function () {
@@ -656,7 +726,6 @@ export const eventsController = ng.controller('EventsController', ['$scope', '$r
                 vm.formFilter.justifiedNotRegularized = true;
                 vm.formFilter.justifiedRegularized = true;
             }
-            vm.updateFilter();
         };
 
         vm.hideGlobalCheckbox = function (event) {

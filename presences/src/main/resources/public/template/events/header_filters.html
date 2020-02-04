@@ -8,19 +8,19 @@
         <div class="cell six paddingRight">
             <div class="cell twelve search-input">
                 <async-autocomplete data-ng-disabled="false"
-                                    data-ng-model="vm.studentSearchInput"
-                                    data-ng-change="vm.selectStudent"
-                                    data-on-search="vm.searchByStudent"
-                                    data-options="vm.students.all"
+                                    data-ng-model="vm.studentSearchInputLightbox"
+                                    data-ng-change="vm.selectStudentFromLightbox"
+                                    data-on-search="vm.searchByStudentFromLightbox"
+                                    data-options="vm.studentsLightbox.all"
                                     data-placeholder="presences.exemptions.search.student"
-                                    data-search="vm.studentSearchInput">
+                                    data-search="vm.studentSearchInputLightbox">
                 </async-autocomplete>
             </div>
             <div class="cell twelve">
                 <ul class="cell twelve search-input-ul">
-                    <li ng-repeat="student in vm.filter.students">
-                        [[student.toString()]]
-                        <i class="close" data-ng-click="vm.excludeStudentFromFilter(student)"></i>
+                    <li ng-repeat="student in vm.formFilter.students">
+                        [[student.displayName]]
+                        <i class="close" data-ng-click="vm.excludeStudentFromFilterLightbox(student)"></i>
                     </li>
                 </ul>
             </div>
@@ -28,19 +28,19 @@
         <div class="cell six paddingLeft">
             <div class="cell twelve search-input">
                 <async-autocomplete data-ng-disabled="false"
-                                    data-ng-model="vm.classesSearchInput"
-                                    data-ng-change="vm.selectClass"
-                                    data-on-search="vm.searchByClass"
-                                    data-options="vm.classesFiltered"
+                                    data-ng-model="vm.classesSearchInputLightbox"
+                                    data-ng-change="vm.selectClassFromLightbox"
+                                    data-on-search="vm.searchByClassFromLightbox"
+                                    data-options="vm.classesFilteredLightbox"
                                     data-placeholder="presences.exemptions.search.audience"
-                                    data-search="vm.classesSearchInput">
+                                    data-search="vm.classesSearchInputLightbox">
                 </async-autocomplete>
             </div>
             <div class="cell twelve">
                 <ul class="cell twelve search-input-ul">
-                    <li ng-repeat="class in vm.filter.classes">
+                    <li ng-repeat="class in vm.formFilter.classes">
                         [[class.name]]
-                        <i class="close" data-ng-click="vm.excludeClassFromFilter(class)"></i>
+                        <i class="close" data-ng-click="vm.excludeClassFromFilterLightbox(class)"></i>
                     </li>
                 </ul>
             </div>
