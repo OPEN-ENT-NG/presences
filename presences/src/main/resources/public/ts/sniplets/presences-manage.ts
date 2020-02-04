@@ -5,6 +5,8 @@ import {
     INCIDENTS_SERIOUSNESS_EVENT,
     INCIDENTS_TYPE_EVENT
 } from "@common/enum/incidents-event";
+import {PRESENCES_ACTION, PRESENCES_DISCIPLINE} from "@common/enum/presences-event";
+import {IAngularEvent} from "angular";
 
 declare let window: any;
 
@@ -44,6 +46,12 @@ const vm: ViewModel = {
 
     sendEvent(event, data): void {
         switch (event.name) {
+            case PRESENCES_DISCIPLINE.SEND:
+                presencesManage.that.$broadcast(PRESENCES_DISCIPLINE.TRANSMIT, data);
+                break;
+            case PRESENCES_ACTION.SEND:
+                presencesManage.that.$broadcast(PRESENCES_ACTION.TRANSMIT, data);
+                break;
             case INCIDENTS_TYPE_EVENT.SEND:
                 presencesManage.that.$broadcast(INCIDENTS_TYPE_EVENT.TRANSMIT, data);
                 break;
@@ -64,6 +72,12 @@ const vm: ViewModel = {
 
     respondEvent(event, args): void {
         switch (event.name) {
+            case PRESENCES_DISCIPLINE.SEND_BACK:
+                presencesManage.that.$broadcast(PRESENCES_DISCIPLINE.RESPOND);
+                break;
+            case PRESENCES_ACTION.SEND_BACK:
+                presencesManage.that.$broadcast(PRESENCES_ACTION.RESPOND);
+                break;
             case INCIDENTS_TYPE_EVENT.SEND_BACK:
                 presencesManage.that.$broadcast(INCIDENTS_TYPE_EVENT.RESPOND);
                 break;
@@ -98,25 +112,33 @@ export const presencesManage = {
         setHandler: function () {
             this.$watch(() => window.model.vieScolaire.structure, async () => this.$apply());
 
+            /* presence discipline event */
+            this.$on(PRESENCES_DISCIPLINE.SEND, (event: IAngularEvent, args) => vm.sendEvent(event, args));
+            this.$on(PRESENCES_DISCIPLINE.SEND_BACK, (event: IAngularEvent, args) => vm.respondEvent(event, args));
+
+            /* presence discipline event */
+            this.$on(PRESENCES_ACTION.SEND, (event: IAngularEvent, args) => vm.sendEvent(event, args));
+            this.$on(PRESENCES_ACTION.SEND_BACK, (event: IAngularEvent, args) => vm.respondEvent(event, args));
+
             /* incident type event */
-            this.$on(INCIDENTS_TYPE_EVENT.SEND, (event, args) => vm.sendEvent(event, args));
-            this.$on(INCIDENTS_TYPE_EVENT.SEND_BACK, (event, args) => vm.respondEvent(event, args));
+            this.$on(INCIDENTS_TYPE_EVENT.SEND, (event: IAngularEvent, args) => vm.sendEvent(event, args));
+            this.$on(INCIDENTS_TYPE_EVENT.SEND_BACK, (event: IAngularEvent, args) => vm.respondEvent(event, args));
 
             /* partner event */
-            this.$on(INCIDENTS_PARTNER_EVENT.SEND, (event, args) => vm.sendEvent(event, args));
-            this.$on(INCIDENTS_PARTNER_EVENT.SEND_BACK, (event, args) => vm.respondEvent(event, args));
+            this.$on(INCIDENTS_PARTNER_EVENT.SEND, (event: IAngularEvent, args) => vm.sendEvent(event, args));
+            this.$on(INCIDENTS_PARTNER_EVENT.SEND_BACK, (event: IAngularEvent, args) => vm.respondEvent(event, args));
 
             /* place event */
-            this.$on(INCIDENTS_PLACE_EVENT.SEND, (event, args) => vm.sendEvent(event, args));
-            this.$on(INCIDENTS_PLACE_EVENT.SEND_BACK, (event, args) => vm.respondEvent(event, args));
+            this.$on(INCIDENTS_PLACE_EVENT.SEND, (event: IAngularEvent, args) => vm.sendEvent(event, args));
+            this.$on(INCIDENTS_PLACE_EVENT.SEND_BACK, (event: IAngularEvent, args) => vm.respondEvent(event, args));
 
             /* protagonist type event */
-            this.$on(INCIDENTS_PROTAGONIST_TYPE_EVENT.SEND, (event, args) => vm.sendEvent(event, args));
-            this.$on(INCIDENTS_PROTAGONIST_TYPE_EVENT.SEND_BACK, (event, args) => vm.respondEvent(event, args));
+            this.$on(INCIDENTS_PROTAGONIST_TYPE_EVENT.SEND, (event: IAngularEvent, args) => vm.sendEvent(event, args));
+            this.$on(INCIDENTS_PROTAGONIST_TYPE_EVENT.SEND_BACK, (event: IAngularEvent, args) => vm.respondEvent(event, args));
 
             /* seriousness type event */
-            this.$on(INCIDENTS_SERIOUSNESS_EVENT.SEND, (event, args) => vm.sendEvent(event, args));
-            this.$on(INCIDENTS_SERIOUSNESS_EVENT.SEND_BACK, (event, args) => vm.respondEvent(event, args));
+            this.$on(INCIDENTS_SERIOUSNESS_EVENT.SEND, (event: IAngularEvent, args) => vm.sendEvent(event, args));
+            this.$on(INCIDENTS_SERIOUSNESS_EVENT.SEND_BACK, (event: IAngularEvent, args) => vm.respondEvent(event, args));
 
         }
     }

@@ -50,7 +50,7 @@ const vm: ViewModel = {
                     threshold: vm.setting.alert_absence_threshold
                 },
                 {
-                    label: lang.translate("presences.absence.retards"),
+                    label: lang.translate("presences.absence.lateness"),
                     settingRef: "alert_lateness_threshold",
                     threshold: vm.setting.alert_lateness_threshold
                 },
@@ -93,7 +93,7 @@ const vm: ViewModel = {
             await settingService.put(window.model.vieScolaire.structure.id, vm.setting);
             toasts.confirm('presences.alert.manage.event.method.save.confirm');
         } catch (e) {
-            toasts.confirm('presences.alert.manage.event.method.save.error');
+            toasts.warning('presences.alert.manage.event.method.save.error');
             throw e;
         }
         await vm.getThreshold();

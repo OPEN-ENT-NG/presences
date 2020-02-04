@@ -22,9 +22,10 @@ interface ViewModel {
     multipleSelect: Reason;
     provingReasonsMap: any;
 
-    /* Filters lightbox */
+    /* Filters and actipns lightbox*/
     lightbox: {
         filter: boolean;
+        action: boolean;
     }
 
     eventTypeState(periods, event): string;
@@ -57,9 +58,15 @@ interface ViewModel {
 
     hideGlobalCheckbox(event): boolean;
 
+    /* Open filter lightbox */
     openForm(): void;
 
     validForm(): void;
+
+    /* Open action lightbox */
+    openActionForm(): void;
+
+    validActionForm(): void;
 
     /* Collapse event */
     eventId: number;
@@ -195,7 +202,8 @@ export const eventsController = ng.controller('EventsController', ['$scope', '$r
             $scope.safeApply();
         });
         vm.lightbox = {
-            filter: false
+            filter: false,
+            action: false
         };
         vm.eventReasonsId = [];
         const getEvents = async (actionMode?: boolean): Promise<void> => {
@@ -342,6 +350,7 @@ export const eventsController = ng.controller('EventsController', ['$scope', '$r
 
         vm.doAction = ($event): void => {
             $event.stopPropagation();
+            vm.openActionForm();
             console.log("do action");
         };
 
@@ -743,6 +752,7 @@ export const eventsController = ng.controller('EventsController', ['$scope', '$r
             return events.every(isProving);
         };
 
+        /* Form filter */
         vm.openForm = function () {
             vm.lightbox.filter = true;
             vm.formFilter = JSON.parse(JSON.stringify(vm.filter));
@@ -754,6 +764,15 @@ export const eventsController = ng.controller('EventsController', ['$scope', '$r
             vm.formFilter = {};
             vm.updateFilter();
             vm.lightbox.filter = false;
+        };
+
+        /* Form action */
+        vm.openActionForm = function () {
+            vm.lightbox.action = true;
+        };
+
+        vm.validActionForm = function () {
+            vm.lightbox.action = false;
         };
 
         /* on  (watch) */

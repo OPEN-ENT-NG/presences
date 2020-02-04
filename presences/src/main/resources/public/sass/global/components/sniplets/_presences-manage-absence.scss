@@ -47,6 +47,10 @@
           border-style: solid;
         }
       }
+
+      &-flex {
+        display: flex;
+      }
     }
 
     /* add / lists */
@@ -152,6 +156,7 @@
       }
 
       &-regularisable, &-compliance {
+        display: flex;
         margin: 16px 0;
       }
     }

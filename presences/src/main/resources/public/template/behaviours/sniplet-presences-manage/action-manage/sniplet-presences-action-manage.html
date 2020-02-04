@@ -1,0 +1,78 @@
+<div class="ten sniplet presences sniplet-presence-form sniplet-manage-action">
+    <div class="sniplet-form">
+
+        <!-- header -->
+        <div class="sniplet-header">
+            <span class="sniplet-header-icon"><i class="add" aria-hidden="true"></i></span>
+            <h3 class="sniplet-header-title">
+                <i18n>presences.absence.actions.progress.absences</i18n>
+            </h3>
+        </div>
+
+        <!-- Form input -->
+        <div class="sniplet-input">
+            <!-- Title -->
+            <label class="sniplet-input-title">
+                <i18n>presences.absence.actions.form.input</i18n>
+            </label>
+
+            <!-- Form -->
+            <div class="incident-sniplet-form">
+                <!-- Input -->
+                <div class="cell four search-input sniplet-input-form">
+                    <input type="text" data-ng-model="vm.form.label" class="twelve cell"
+                           i18n-placeholder="presences.absence.actions.placeholder">
+                </div>
+            </div>
+        </div>
+
+        <div class="sniplet-input">
+            <!-- Title -->
+            <label class="sniplet-input-title">
+                <i18n>presences.absence.actions.form.abbreviation.input</i18n>
+            </label>
+
+            <!-- Form -->
+            <div class="incident-sniplet-form">
+                <!-- Input -->
+                <div class="cell four search-input sniplet-input-form">
+                    <input type="text" data-ng-model="vm.form.abbreviation" class="twelve cell"
+                           i18n-placeholder="presences.absence.actions.abbreviation.placeholder">
+                </div>
+            </div>
+        </div>
+
+        <!-- Add actions / abbrevations -->
+        <div class="sniplet-addList">
+            <button data-ng-click="vm.createAction()">
+                <i18n>add</i18n>
+            </button>
+
+            <div class="sniplet-addList-content" ng-if="!vm.hasActions()">
+                <i18n>presence.absence.actions.existed</i18n>
+                <ul class="sniplet-addList-content-list">
+                    <li class="sniplet-addList-content-list-item"
+                        ng-repeat="action in vm.actions | orderBy:'id'">
+
+                        <div class="sniplet-addList-content-list-item-title">
+                            <label class="sniplet-addList-content-list-item-title-label">
+                                [[action.label]] ([[action.abbreviation]])
+                            </label>
+                            <i class="presence-edit" data-ng-click="vm.openActionLightbox(action)"></i>
+                        </div>
+
+                        <div class="sniplet-addList-content-list-item-icons">
+                            <i class="visible" data-ng-show="action.used && !reason.hidden"
+                               data-ng-click="vm.toggleVisibility(action)"></i>
+                            <i class="invisible" data-ng-show="!action.used && reason.hidden"
+                               data-ng-click="vm.toggleVisibility(action)"></i>
+                            <i class="delete" data-ng-show="!action.used"
+                               data-ng-click="vm.deleteAction(action)"></i>
+                        </div>
+                    </li>
+                </ul>
+            </div>
+        </div>
+
+    </div>
+</div>

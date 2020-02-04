@@ -8,3 +8,4 @@ export * from './ForgottenNotebookService';
 export * from './SettingsService';
 export * from './AlertService';
 export * from './EventService';
+export * from './ActionService';

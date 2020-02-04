@@ -7,7 +7,7 @@
     </a>
 
     <!-- absence actions -->
-    <a class="presence-navigation-item forbidden">
+    <a class="presence-navigation-item" data-ng-click="vm.scrollToElement('action')">
         <div class="presence-icon"><i class="add" aria-hidden="true"></i></div>
         <span><i18n>presences.absence.actions</i18n></span>
     </a>
@@ -68,6 +68,14 @@
     </sniplet>
 </div>
 
+<!-- Action-->
+<div class="sniplet presences" id="action">
+    <sniplet
+            template="presences-manage/action-manage/sniplet-presences-action-manage"
+            application="presences">
+    </sniplet>
+</div>
+
 
 <!--INCIDENTS MODULES SNIPLETS -->
 
@@ -104,3 +112,6 @@
             application="presences">
     </sniplet>
 </div>
+
+<!-- lightbox edit presence -->
+<sniplet template="presences-manage/sniplet-presences-manage-lightbox" application="presences"></sniplet>

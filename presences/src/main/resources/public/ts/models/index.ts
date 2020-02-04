@@ -10,3 +10,4 @@ export * from '@common/model/Student';
 export * from '@common/model/User';
 export * from './AlertType';
 export * from './Calendar';
+export * from './Action';
