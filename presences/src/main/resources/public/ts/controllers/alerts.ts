@@ -139,7 +139,7 @@ export const alertsController = ng.controller('AlertsController', ['$scope', '$r
         };
 
         vm.someSelectedAlert = function () {
-            return vm.listAlert.filter(alert => alert.selected).length > 0;
+            return vm.listAlert && vm.listAlert.filter(alert => alert.selected).length > 0;
         };
 
         vm.selectStudent = async function (model, student) {
