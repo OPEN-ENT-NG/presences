@@ -33,4 +33,14 @@ public interface AlertService {
      * @param handler     function handler returning data
      */
     void getAlertsStudents(String structureId, List<String> types, List<String> students, Handler<Either<String, JsonArray>> handler);
+
+    /**
+     * Get student alert number by given type with the corresponding threshold
+     *
+     * @param structureId structure identifier
+     * @param studentId   student identifier
+     * @param type        alert type
+     * @param handler     function handler returning data
+     */
+    void getStudentAlertNumberWithThreshold(String structureId, String studentId, String type, Handler<Either<String, JsonObject>> handler);
 }

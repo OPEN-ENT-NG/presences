@@ -1,9 +1,10 @@
 import {_, model, ng, toasts} from 'entcore';
-import {Alert, alertService} from "../services";
+import {alertService} from "../services";
 import {AlertType} from "../models";
 import {SearchService} from "@common/services/SearchService";
 import {GroupService} from "@common/services/GroupService";
 import rights from "../rights";
+import {Alert} from "@presences/models/Alert";
 
 declare let window: any;
 

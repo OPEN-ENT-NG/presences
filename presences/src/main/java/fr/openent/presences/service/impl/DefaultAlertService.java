@@ -106,4 +106,26 @@ public class DefaultAlertService implements AlertService {
             }));
         }));
     }
+
+    @Override
+    public void getStudentAlertNumberWithThreshold(String structureId, String studentId, String type, Handler<Either<String, JsonObject>> handler) {
+        String query = "WITH structure_threshold AS (SELECT alert_forgotten_notebook_threshold " +
+                " FROM " + Presences.dbSchema + ".settings " +
+                " WHERE structure_id = ?), " +
+                " student_alert_count AS (SELECT count " +
+                " FROM " + Presences.dbSchema + ".alerts " +
+                " WHERE student_id = ? " +
+                " AND structure_id = ? " +
+                " AND type = ?) " +
+                " SELECT student_alert_count.count as count, structure_threshold.alert_forgotten_notebook_threshold as threshold " +
+                " FROM structure_threshold, student_alert_count; ";
+
+        JsonArray params = new JsonArray();
+        params.add(structureId);
+        params.add(studentId);
+        params.add(structureId);
+        params.add(type);
+
+        Sql.getInstance().prepared(query, params, SqlResult.validUniqueResultHandler(handler));
+    }
 }
