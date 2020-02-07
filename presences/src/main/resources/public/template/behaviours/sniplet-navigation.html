@@ -35,7 +35,8 @@
                         <i18n>presences.events.title</i18n>
                     </span>
                 </div>
-                <a role="menuitem" class="item forbidden">
+                <!-- Présences -->
+                <a role="menuitem" class="item" ng-if="::hasRight('readPresences')">
                     <i class="presence" aria-hidden="true"></i>
                     <span class="label-navbar">
                         <i18n>presences.title</i18n>

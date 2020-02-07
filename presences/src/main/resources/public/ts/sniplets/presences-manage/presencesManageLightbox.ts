@@ -4,6 +4,7 @@ import {IAngularEvent} from "angular";
 import {actionService} from "../../services";
 import {ActionRequest} from "@presences/models";
 import {toasts} from "entcore";
+import {disciplineService} from "../../services";
 
 interface ViewModel {
     safeApply(fn?: () => void): void;
@@ -37,8 +38,8 @@ const vm: ViewModel = {
         vm.form = {};
         switch (event.name) {
             case PRESENCES_DISCIPLINE.TRANSMIT:
-                // vm.header = 'ton.text.i18n';
-                // vm.description = 'ton.text.i18n';
+                vm.header = 'presences.discipline.edit.title';
+                vm.description = 'presences.discipline.edit.warning';
                 break;
             case PRESENCES_ACTION.TRANSMIT:
                 vm.header = 'presence.absence.actions.update';
@@ -61,8 +62,8 @@ const vm: ViewModel = {
     async updatePresencesManageLightbox(): Promise<void> {
         switch (vm.event.name) {
             case PRESENCES_DISCIPLINE.TRANSMIT: {
-                // let response = await TON_SERVICE.update(vm.form);
-                // vm.proceedAfterAction(response);
+                let response = await disciplineService.update(vm.form);
+                vm.proceedAfterAction(response);
                 presencesManageLightbox.that.$emit(PRESENCES_DISCIPLINE.SEND_BACK);
                 break;
             }

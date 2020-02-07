@@ -11,3 +11,4 @@ export * from '@common/model/User';
 export * from './AlertType';
 export * from './Calendar';
 export * from './Action';
+export * from './Discipline';

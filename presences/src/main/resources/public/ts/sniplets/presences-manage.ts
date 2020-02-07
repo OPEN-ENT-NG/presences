@@ -40,7 +40,7 @@ const vm: ViewModel = {
 
     scrollToElement(target): void {
         let element = document.getElementById(target);
-        element.scrollIntoView({behavior: "smooth", block: "start", inline: "nearest"});
+        element.scrollIntoView({behavior: "smooth", block: "center", inline: "nearest"});
         vm.safeApply();
     },
 
@@ -116,7 +116,7 @@ export const presencesManage = {
             this.$on(PRESENCES_DISCIPLINE.SEND, (event: IAngularEvent, args) => vm.sendEvent(event, args));
             this.$on(PRESENCES_DISCIPLINE.SEND_BACK, (event: IAngularEvent, args) => vm.respondEvent(event, args));
 
-            /* presence discipline event */
+            /* presence action event */
             this.$on(PRESENCES_ACTION.SEND, (event: IAngularEvent, args) => vm.sendEvent(event, args));
             this.$on(PRESENCES_ACTION.SEND_BACK, (event: IAngularEvent, args) => vm.respondEvent(event, args));
 

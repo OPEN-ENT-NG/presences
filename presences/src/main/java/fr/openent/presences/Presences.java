@@ -11,6 +11,9 @@ public class Presences extends BaseServer {
     public static String dbSchema;
     public static String ebViescoAddress = "viescolaire";
 
+    public static final String READ_PRESENCE = "presences.presence.read";
+    public static final String CREATE_PRESENCE = "presences.presence.create";
+    public static final String MANAGE_PRESENCE = "presences.presence.manage";
     public static final String READ_REGISTER = "presences.register.read";
     public static final String CREATE_REGISTER = "presences.register.create";
     public static final String SEARCH = "presences.search";
@@ -59,6 +62,7 @@ public class Presences extends BaseServer {
         addController(new SettingsController());
         addController(new AlertController(eb));
         addController(new ActionController());
+        addController(new DisciplineController());
 
         // Controller that create fake rights for widgets
         addController(new FakeRight());

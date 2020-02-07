@@ -1,6 +1,7 @@
 package fr.openent.presences.helper;
 
 import fr.openent.presences.model.Person.Student;
+import fr.openent.presences.model.Person.User;
 import fr.wseduc.webutils.Either;
 import io.vertx.core.Handler;
 import io.vertx.core.json.JsonArray;
@@ -28,6 +29,22 @@ public class PersonHelper {
             studentList.add(student);
         }
         return studentList;
+    }
+
+    /**
+     * Convert JsonArray into student list
+     *
+     * @param userArray JsonArray User
+     * @return new list of users
+     */
+    public List<User> getUserListFromJsonArray(JsonArray userArray) {
+        List<User> userList = new ArrayList<>();
+        for (Object o : userArray) {
+            if (!(o instanceof JsonObject)) continue;
+            User user = new User((JsonObject) o);
+            userList.add(user);
+        }
+        return userList;
     }
 
     /**

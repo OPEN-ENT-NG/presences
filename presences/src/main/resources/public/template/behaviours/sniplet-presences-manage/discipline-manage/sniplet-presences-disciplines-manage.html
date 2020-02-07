@@ -1,0 +1,56 @@
+<div class="ten sniplet presences sniplet-presence-form">
+    <div class="sniplet-form">
+
+        <!-- header -->
+        <div class="sniplet-header">
+            <span class="sniplet-header-icon"><i class="disciplines" aria-hidden="true"></i></span>
+            <h3 class="sniplet-header-title">
+                <i18n>presences.discipline.form.title</i18n>
+            </h3>
+        </div>
+
+        <!-- Input -->
+        <div class="sniplet-input">
+            <label class="sniplet-input-title">
+                <i18n>presences.discipline.form.input</i18n>
+            </label>
+            <div class="cell four search-input sniplet-input-form">
+                <input type="text" data-ng-model="vm.form.label" class="twelve cell"
+                       i18n-placeholder="presences.discipline.form.input.threshold">
+            </div>
+        </div>
+
+        <!-- Add discipline / Lists -->
+        <div class="sniplet-addList">
+            <button data-ng-click="vm.createDiscipline()" data-ng-disabled="!vm.isFormValid(vm.form)">
+                <i18n>add</i18n>
+            </button>
+
+            <div class="sniplet-addList-content" ng-if="vm.hasDisciplines()">
+                <i18n>presence.existed.disciplines</i18n>
+
+                <ul class="sniplet-addList-content-list">
+                    <li class="sniplet-addList-content-list-item"
+                        ng-repeat="discipline in vm.disciplines | orderBy:'id'">
+
+                        <div class="sniplet-addList-content-list-item-title">
+                            <label class="sniplet-addList-content-list-item-title-label">[[discipline.label]]</label>
+                            <i class="presence-edit" data-ng-click="vm.openDisciplinesManageLightbox(discipline)"></i>
+                        </div>
+
+                        <div class="sniplet-addList-content-list-item-icons">
+                            <i class="visible" data-ng-show="discipline.used && !discipline.hidden"
+                               data-ng-click="vm.toggleVisibility(discipline)"></i>
+                            <i class="invisible" data-ng-show="discipline.hidden && discipline.used"
+                               data-ng-click="vm.toggleVisibility(discipline)"></i>
+                            <i class="delete" data-ng-show="!discipline.used"
+                               data-ng-click="vm.deleteDiscipline(discipline)"></i>
+                        </div>
+                    </li>
+                </ul>
+            </div>
+
+        </div>
+
+    </div>
+</div>
