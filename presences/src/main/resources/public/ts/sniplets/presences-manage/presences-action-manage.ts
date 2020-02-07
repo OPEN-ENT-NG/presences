@@ -25,6 +25,8 @@ interface ViewModel {
     proceedAfterAction(response: AxiosResponse): void;
 
     openActionLightbox(action: Action): void;
+
+    toggleVisibility(action: Action): Promise<void>;
 }
 
 function safeApply() {
@@ -57,7 +59,7 @@ const vm: ViewModel = {
         let response = await actionService.create(vm.form);
         vm.proceedAfterAction(response);
         if (response) {
-            toasts.confirm('presences.absence.action.setting.method.create.confirm')
+            toasts.confirm('presences.absence.action.setting.method.create.confirm');
         } else {
             toasts.warning('presences.absence.action.setting.method.create.error');
         }
@@ -70,7 +72,7 @@ const vm: ViewModel = {
         let response = await actionService.delete(action.id);
         vm.proceedAfterAction(response);
         if (response) {
-            toasts.confirm('presences.absence.action.setting.method.delete.confirm')
+            toasts.confirm('presences.absence.action.setting.method.delete.confirm');
         } else {
             toasts.warning('presences.absence.action.setting.method.delete.error');
         }
@@ -89,6 +91,16 @@ const vm: ViewModel = {
 
     hasActions(): boolean {
         return vm.actions && vm.actions.length !== 0;
+    },
+
+    async toggleVisibility(action: Action): Promise<void> {
+        action.hidden = !action.hidden;
+        let form = {} as ActionRequest;
+        form.id = action.id;
+        form.hidden = action.hidden;
+        form.label = action.label;
+        form.abbreviation = action.abbreviation;
+        await actionService.update(form);
     },
 };
 

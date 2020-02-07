@@ -78,10 +78,11 @@ public class DefaultActionService implements ActionService {
     @Override
     public void put(JsonObject actionBody, Handler<Either<String, JsonObject>> handler) {
         String query = "UPDATE presences.actions " +
-                "SET label = ?, abbreviation = ? WHERE id = ? RETURNING id";
+                "SET label = ?, abbreviation = ?, hidden = ?, WHERE id = ? RETURNING id";
         JsonArray params = new JsonArray()
                 .add(actionBody.getString("label"))
                 .add(actionBody.getString("abbreviation"))
+                .add(actionBody.getBoolean("hidden"))
                 .add(actionBody.getInteger("id"));
         Sql.getInstance().prepared(query, params, SqlResult.validUniqueResultHandler(handler));
     }

@@ -4,6 +4,7 @@ export interface Action {
     label: string;
     abbreviation: string;
     used?: boolean;
+    hidden: boolean;
 }
 
 export interface ActionRequest {
@@ -11,4 +12,5 @@ export interface ActionRequest {
     structureId?: string;
     label: string;
     abbreviation: string;
+    hidden?: boolean;
 }
