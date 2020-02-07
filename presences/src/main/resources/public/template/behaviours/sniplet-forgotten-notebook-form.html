@@ -30,10 +30,13 @@
         <!-- forgotten notebook recap -->
         <div class="forgotten-notebook-form-body-forgottenNotebook twelve cell table-reason">
             <i18n>presences.forgotten.notebook.form.recap</i18n>
-            <ul>
-                <li ng-repeat="i in [1, 2, 3, 4]" class="forgotten-notebook-node"></li>
-                <!-- Todo handling '+' with alerts parameter for next ticket -->
-                <!-- <li>+4</li>-->
+            <ul ng-if="vm.after_threshold > 0" class="forgotten-notebook-list">
+                <li ng-repeat="i in [].constructor(vm.threshold_forgotten_notebook) track by $index" class="forgotten-notebook-node active"></li>
+                <li> + [[ vm.after_threshold ]]</li>
+            </ul>
+            <ul ng-if="vm.after_threshold === 0">
+                <li ng-repeat="i in [].constructor(vm.count_forgotten_notebook) track by $index" class="forgotten-notebook-node active"></li>
+                <li ng-repeat="i in [].constructor(vm.threshold_forgotten_notebook - vm.count_forgotten_notebook) track by $index" class="forgotten-notebook-node"></li>
             </ul>
         </div>
 

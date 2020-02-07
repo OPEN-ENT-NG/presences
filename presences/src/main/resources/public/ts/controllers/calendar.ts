@@ -1,5 +1,6 @@
 import {model, moment, ng} from 'entcore';
 import {
+    AlertService,
     CalendarService,
     Course,
     CourseEvent,
@@ -13,11 +14,13 @@ import {
     TimeSlot
 } from '../services';
 import {Scope} from './main';
-import {EventType, User} from '../models';
+import {AlertType, EventType, User} from '../models';
 import {DateUtils} from '@common/utils';
 import {SNIPLET_FORM_EMIT_EVENTS, SNIPLET_FORM_EVENTS} from "@common/model";
 import {ABSENCE_FORM_EVENTS, NOTEBOOK_FORM_EVENTS} from "../sniplets";
 import {CalendarAbsenceUtils, CalendarUtils} from "../utilities";
+import {SettingsService} from "../services";
+import {Setting} from "../services";
 
 declare let window: any;
 
@@ -36,6 +39,10 @@ interface ViewModel {
         student: User,
         students: Array<User>
     };
+    settings: Setting,
+    student: {
+        alerts: any
+    }
 
     selectItem(model: any, student: any): void;
 
@@ -122,7 +129,7 @@ export const calendarController = ng.controller('CalendarController',
                     initActionAbsence();
                 });
             }
-            
+
 
             vm.changeAbsence = function (item: Course): string {
                 vm.courses.hasLoaded = true;
@@ -164,7 +171,7 @@ export const calendarController = ng.controller('CalendarController',
             $scope.$on(SNIPLET_FORM_EMIT_EVENTS.CREATION, () => {
                 let diff = 7;
                 if (!model.calendar.display.saturday) diff--;
-                if (!model.calendar.display.synday) diff--;
+                if (!model.calendar.display.sunday) diff--;
                 $scope.$broadcast(SNIPLET_FORM_EVENTS.SET_PARAMS, {
                     student: window.item,
                     start_date: model.calendar.firstDay,

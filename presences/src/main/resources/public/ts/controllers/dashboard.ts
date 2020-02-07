@@ -3,9 +3,10 @@ import {Group, GroupService, SearchItem, SearchService} from "../services";
 import {DateUtils} from "@common/utils";
 import rights from '../rights';
 import {Course, EventType} from "../models";
-import {Alert, alertService} from "../services/AlertService";
+import {alertService} from "../services/AlertService";
 import {IAngularEvent} from "angular";
 import {COURSE_EVENTS} from "@common/model";
+import {Alert} from "@presences/models/Alert";
 
 declare let window: any;
 

@@ -1,7 +1,8 @@
 import {SNIPLET_FORM_EMIT_EVENTS, SNIPLET_FORM_EVENTS} from "@common/model";
-import {forgottenNotebookService, NotebookRequest} from "../services";
+import {alertService, forgottenNotebookService, NotebookRequest} from "../services";
 import {idiom as lang, moment, toasts} from "entcore";
 import {DateUtils} from "@common/utils";
+import {AlertType} from "../models";
 
 console.log("forgottenNotebookFormSnipplets");
 
@@ -15,6 +16,9 @@ interface ViewModel {
     openForgottenNotebookLightBox: boolean;
     student: string;
     form: NotebookRequest;
+    count_forgotten_notebook: number;
+    threshold_forgotten_notebook: number;
+    after_threshold: number;
 
     openForgottenNotebook(): void;
 
@@ -30,6 +34,8 @@ interface ViewModel {
 
     deleteForbiddenNotebook(): Promise<void>;
 
+    getStudentForgottenNoteBookNumberWithThreshold(): void
+
     safeApply(fn?: () => void): void;
 }
 
@@ -38,10 +44,14 @@ const vm: ViewModel = {
     openForgottenNotebookLightBox: false,
     student: '',
     form: {} as NotebookRequest,
+    count_forgotten_notebook: null,
+    threshold_forgotten_notebook: null,
+    after_threshold: null,
 
     openForgottenNotebook(): void {
         vm.openForgottenNotebookLightBox = true;
         forgottenNotebookForm.that.$emit(SNIPLET_FORM_EMIT_EVENTS.CREATION);
+        this.getStudentForgottenNoteBookNumberWithThreshold();
         vm.safeApply();
     },
 
@@ -62,6 +72,7 @@ const vm: ViewModel = {
     },
 
     async editNotebookForm(obj: { student, notebook }): Promise<void> {
+        this.getStudentForgottenNoteBookNumberWithThreshold();
         vm.openForgottenNotebookLightBox = true;
         vm.student = obj.student.displayName;
         vm.form.id = obj.notebook.id;
@@ -107,6 +118,14 @@ const vm: ViewModel = {
         }
         forgottenNotebookForm.that.$emit(SNIPLET_FORM_EMIT_EVENTS.DELETE);
         vm.safeApply();
+    },
+
+    getStudentForgottenNoteBookNumberWithThreshold: async () => {
+        let {count, threshold} = await alertService.getStudentAlerts(window.structure.id, window.item.id, AlertType[AlertType.FORGOTTEN_NOTEBOOK]);
+        vm.count_forgotten_notebook = count ? count : 0;
+        vm.threshold_forgotten_notebook = threshold ? threshold : 0;
+        vm.after_threshold = count - threshold > 0 ? count - threshold : 0;
+        vm.safeApply();
     }
 };
 
@@ -120,9 +139,10 @@ export const forgottenNotebookForm = {
             forgottenNotebookForm.that = this;
             vm.safeApply = this.safeApply;
         },
+
         setHandler: function () {
             this.$on(NOTEBOOK_FORM_EVENTS.EDIT, (event, args) => vm.editNotebookForm(args));
             this.$on(SNIPLET_FORM_EVENTS.SET_PARAMS, (event, arg) => vm.setFormParams(arg));
-        }
+        },
     }
 };

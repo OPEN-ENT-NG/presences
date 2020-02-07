@@ -3,6 +3,7 @@ package fr.openent.presences.controller;
 import fr.openent.presences.common.service.GroupService;
 import fr.openent.presences.common.service.impl.DefaultGroupService;
 import fr.openent.presences.constants.Actions;
+import fr.openent.presences.constants.Alerts;
 import fr.openent.presences.security.AlertFilter;
 import fr.openent.presences.security.DeleteAlertFilter;
 import fr.openent.presences.service.AlertService;
@@ -58,7 +59,7 @@ public class AlertController extends ControllerHelper {
     @SecuredAction(value = "", type = ActionType.RESOURCE)
     @ResourceFilter(AlertFilter.class)
     @ApiDoc("Get given structure")
-    public void getStudentAlert(HttpServerRequest request) {
+    public void getStudentsAlerts(HttpServerRequest request) {
         List<String> types = request.params().getAll("type");
         List<String> students = request.params().getAll("student");
         List<String> classes = request.params().getAll("class");
@@ -81,6 +82,25 @@ public class AlertController extends ControllerHelper {
                 alertService.getAlertsStudents(request.getParam("id"), types, students, arrayResponseHandler(request));
             });
         }
+    }
+
+    @Get("/structures/:id/students/:studentId/alerts")
+    @SecuredAction(value = "", type = ActionType.RESOURCE)
+    @ResourceFilter(AlertFilter.class)
+    @ApiDoc("Get student alert number by given type with the corresponding threshold")
+    public void getStudentAlertNumberWithThreshold(HttpServerRequest request) {
+        String type = request.params().get("type");
+        if (type == null || !Alerts.ALERT_LIST.contains(type)) {
+            badRequest(request);
+            return;
+        }
+
+        alertService.getStudentAlertNumberWithThreshold(
+                request.getParam("id"),
+                request.getParam("studentId"),
+                type,
+                defaultResponseHandler(request)
+        );
     }
 }
 
