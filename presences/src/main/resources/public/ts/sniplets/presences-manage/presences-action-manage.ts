@@ -13,6 +13,8 @@ interface ViewModel {
     form: ActionRequest;
     editActionLightbox: boolean;
 
+    hasActions(): boolean;
+
     // interaction
     getAction(): void;
 
@@ -83,7 +85,11 @@ const vm: ViewModel = {
     openActionLightbox(action: Action): void {
         vm.editActionLightbox = true;
         presencesActionManage.that.$emit(PRESENCES_ACTION.SEND, action);
-    }
+    },
+
+    hasActions(): boolean {
+        return vm.actions && vm.actions.length !== 0;
+    },
 };
 
 
