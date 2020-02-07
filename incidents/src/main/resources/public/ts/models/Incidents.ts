@@ -171,7 +171,7 @@ export class Incidents extends LoadingCollection {
 
     async syncPagination() {
         this.loading = true;
-        let dateFormat = DateUtils.FORMAT['YEAR-MONTH-DAY'];
+        let dateFormat = DateUtils.FORMAT['YEAR-MONTH-DAY-HOUR-MIN-SEC'];
         try {
             let url =
                 `/incidents/incidents?structureId=${this.structureId}` +

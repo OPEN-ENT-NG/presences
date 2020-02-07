@@ -150,8 +150,7 @@ public class DefaultIncidentsService extends SqlCrudService implements Incidents
         params.add(structureId);
 
         if (startDate != null && endDate != null) {
-            query += "AND i.date >= to_date(?, 'YYYY-MM-DD') ";
-            query += "AND i.date <= to_date(?, 'YYYY-MM-DD') ";
+            query += "AND i.date BETWEEN ? AND ? ";
             params.add(startDate);
             params.add(endDate);
         }
