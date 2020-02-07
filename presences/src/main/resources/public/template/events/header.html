@@ -20,8 +20,8 @@
         <div class="cell twelve">
             <ul class="cell twelve search-input-ul">
                 <li ng-repeat="student in vm.filter.students">
-                    [[student.toString()]] <i class="close"
-                                              data-ng-click="vm.excludeStudentFromFilter(student)"></i>
+                    [[student.displayName]] <i class="close"
+                                               data-ng-click="vm.excludeStudentFromFilter(student)"></i>
                 </li>
             </ul>
         </div>

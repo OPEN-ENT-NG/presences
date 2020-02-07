@@ -3,6 +3,7 @@ CREATE TABLE presences.actions (
     structure_id character varying (36) NOT NULL,
     label text NOT NULL,
     abbreviation text NOT NULL,
+    hidden boolean NOT NULL DEFAULT FALSE,
     CONSTRAINT actions_pkey PRIMARY KEY (id)
 );
 
