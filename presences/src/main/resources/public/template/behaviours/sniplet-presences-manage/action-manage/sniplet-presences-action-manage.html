@@ -36,7 +36,9 @@
             <div class="incident-sniplet-form">
                 <!-- Input -->
                 <div class="cell four search-input sniplet-input-form">
-                    <input type="text" data-ng-model="vm.form.abbreviation" class="twelve cell"
+                    <input type="text" class="twelve cell"
+                           data-ng-model="vm.form.abbreviation"
+                           maxlength="10"
                            i18n-placeholder="presences.absence.actions.abbreviation.placeholder">
                 </div>
             </div>

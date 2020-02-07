@@ -1,10 +1,9 @@
 import {AxiosResponse} from "axios";
 import {PRESENCES_ACTION, PRESENCES_DISCIPLINE} from "@common/enum/presences-event";
 import {IAngularEvent} from "angular";
-import {actionService} from "../../services";
+import {actionService, disciplineService} from "../../services";
 import {ActionRequest} from "@presences/models";
 import {toasts} from "entcore";
-import {disciplineService} from "../../services";
 
 interface ViewModel {
     safeApply(fn?: () => void): void;
@@ -12,9 +11,10 @@ interface ViewModel {
     header: string;
     description: string;
     event: any;
-    form: any
+    form: any;
 
     editPresencesManageLightbox: boolean;
+    actionMode: boolean;
 
     openPresencesManageLightbox(event, args): void;
 
@@ -32,10 +32,12 @@ const vm: ViewModel = {
     event: null,
     editPresencesManageLightbox: null,
     form: {} as ActionRequest,
+    actionMode: false,
 
     openPresencesManageLightbox(event, args): void {
         vm.editPresencesManageLightbox = true;
         vm.form = {};
+        vm.actionMode = false;
         switch (event.name) {
             case PRESENCES_DISCIPLINE.TRANSMIT:
                 vm.header = 'presences.discipline.edit.title';
@@ -44,13 +46,13 @@ const vm: ViewModel = {
             case PRESENCES_ACTION.TRANSMIT:
                 vm.header = 'presence.absence.actions.update';
                 vm.description = 'presences.absence.actions.warning.update';
+                vm.actionMode = true;
                 break;
         }
         /* Assign form to current data */
         vm.form.id = ('id' in args) ? args.id : null;
         vm.form.label = ('label' in args) ? args.label : null;
         vm.form.abbreviation = ('abbreviation' in args) ? args.abbreviation : null;
-
         vm.form.hidden = ('hidden' in args) ? args.hidden : null;
         vm.event = event;
     },

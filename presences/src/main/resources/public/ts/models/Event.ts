@@ -195,7 +195,7 @@ export class Events extends LoadingCollection {
                 `&endDate=${DateUtils.format(this.endDate, dateFormat)}`;
 
             if (this.noFilter) {
-                if (this.listReasonIds && this.noReason != true) {
+                if (this.listReasonIds) {
                     url += `&reasonIds=${this.listReasonIds}`;
                 }
 

@@ -83,6 +83,7 @@ public class ActionController extends ControllerHelper {
     private boolean isActionBodyInvalid(JsonObject actionBody) {
         return !actionBody.containsKey("structureId") &&
                 !actionBody.containsKey("label") &&
-                !actionBody.containsKey("abbreviation");
+                !actionBody.containsKey("abbreviation") &&
+                !(actionBody.getString("abbreviation").length() <= 10);
     }
 }

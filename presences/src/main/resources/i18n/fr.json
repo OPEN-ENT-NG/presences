@@ -17,7 +17,7 @@
   "presences.absence.action.setting.method.create.error": "Une erreur est survenue lors de la création de l'action",
   "presences.absence.action.setting.method.delete.error": "Une erreur est survenue lors de la suppression de l'action",
   "presences.absence.action.setting.method.update.error": "Une erreur est survenue lors de la modification de l'action",
-  "presences.absence.actions.warning.update": "Attention, la modification de l'action entraînera une modification sur tous les événements déjà saisies avec cette action.",
+  "presences.absence.actions.warning.update": "Attention, la modification de l'action entraînera une modification sur tous les événements déjà saisis avec cette action.",
   "presences.absence.create": "Créer une absence",
   "presences.absence.edit": "Modifier une absence",
   "presences.absence.file": "Doc",

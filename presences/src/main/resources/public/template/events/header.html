@@ -80,31 +80,30 @@
     <div class="cell six vertical-spacing-twice">
         <i class="filter cell" ng-click="vm.openForm()">&nbsp;</i>
         <!-- Display selected events -->
-        <div class="cell">
+        <div class="cell" ng-show="vm.filter.absences">
             <div class="card horizontal-margin-small horizontal-spacing margin-bottom-md">
-                <i18n ng-show="vm.filter.absences">presences.absence.absences</i18n>
+                <i18n>presences.absence.absences</i18n>
             </div>
         </div>
-        <div class="cell">
+        <div class="cell" ng-show="vm.filter.late">
             <div class="card horizontal-margin-small horizontal-spacing margin-bottom-md">
-                <i18n ng-show="vm.filter.late">presences.absence.lateness</i18n>
+                <i18n>presences.absence.lateness</i18n>
             </div>
         </div>
-        <div class="cell">
+        <div class="cell" ng-show="vm.filter.departure">
             <div class="card horizontal-margin-small horizontal-spacing margin-bottom-md">
-                <i18n ng-show="vm.filter.departure">presences.register.event_type.departure</i18n>
+                <i18n>presences.register.event_type.departure</i18n>
             </div>
         </div>
         <!-- Display selected states -->
-        <div class="cell">
+        <div class="cell" ng-show="vm.filter.unjustified">
             <div class="card horizontal-margin-small horizontal-spacing margin-bottom-md">
-                <i18n ng-show="vm.filter.unjustified">massmailing.types.UNJUSTIFIED</i18n>
+                <i18n>massmailing.types.UNJUSTIFIED</i18n>
             </div>
         </div>
-        <div class="cell">
+        <div class="cell" ng-show="vm.filter.justifiedNotRegularized">
             <div class="card horizontal-margin-small horizontal-spacing margin-bottom-md">
-                <i18n ng-show="vm.filter.justifiedNotRegularized">presences.absence.types.justified.not.regularized
-                </i18n>
+                <i18n>presences.absence.types.justified.not.regularized</i18n>
             </div>
         </div>
         <div class="cell">

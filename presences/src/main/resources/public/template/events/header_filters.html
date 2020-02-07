@@ -106,7 +106,7 @@
                    (vm.formFilter.unjustified &&
                    (vm.formFilter.justifiedNotRegularized || vm.formFilter.justifiedRegularized)))}"
                    ng-click="vm.switchReason(reason)">
-                <span ng-show="[[reason.id]] !== 0"
+                <span ng-show="[[reason.id]] !== 0 && !reason.hidden"
                       ng-disabled="vm.formFilter.unjustified &&
                       (!vm.formFilter.justifiedNotRegularized && !vm.formFilter.justifiedRegularized)">
                     [[reason.label]]
