@@ -3,6 +3,8 @@ package fr.openent.presences.service.impl;
 import fr.openent.presences.Presences;
 import fr.openent.presences.service.AlertService;
 import fr.wseduc.webutils.Either;
+import io.vertx.core.CompositeFuture;
+import io.vertx.core.Future;
 import io.vertx.core.Handler;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
@@ -76,8 +78,8 @@ public class DefaultAlertService implements AlertService {
             // Récupérer leurs noms, prénoms et nom de la classe :
             String studentQuery =
                     "MATCH (u:User)-[:IN]->(:ProfileGroup)-[:DEPENDS]->(c:Class) " +
-                    "WHERE u.id IN {studentsId} " +
-                    "RETURN u.firstName as firstName, u.lastName as lastName, c.name as audience, u.id as student_id;";
+                            "WHERE u.id IN {studentsId} " +
+                            "RETURN u.firstName as firstName, u.lastName as lastName, c.name as audience, u.id as student_id;";
 
             JsonObject studentParam = new JsonObject().put("studentsId", studentsAlerts);
 
@@ -109,23 +111,52 @@ public class DefaultAlertService implements AlertService {
 
     @Override
     public void getStudentAlertNumberWithThreshold(String structureId, String studentId, String type, Handler<Either<String, JsonObject>> handler) {
-        String query = "WITH structure_threshold AS (SELECT alert_forgotten_notebook_threshold " +
-                " FROM " + Presences.dbSchema + ".settings " +
-                " WHERE structure_id = ?), " +
-                " student_alert_count AS (SELECT count " +
+        Future<JsonObject> futureThreshold = Future.future();
+        Future<JsonObject> futureCount = Future.future();
+
+        String queryThreshold = "SELECT alert_forgotten_notebook_threshold as threshold" +
+                " FROM "  + Presences.dbSchema + ".settings " +
+                " WHERE structure_id = ?";
+        JsonArray paramsThreshold = new JsonArray();
+        paramsThreshold.add(structureId);
+
+        Sql.getInstance().prepared(queryThreshold, paramsThreshold, SqlResult.validUniqueResultHandler(result -> {
+            if (result.isRight()) {
+                futureThreshold.complete(result.right().getValue());
+            } else {
+                futureThreshold.fail((result.left().getValue()));
+            }
+        }));
+
+        String queryCount = "SELECT count " +
                 " FROM " + Presences.dbSchema + ".alerts " +
                 " WHERE student_id = ? " +
                 " AND structure_id = ? " +
-                " AND type = ?) " +
-                " SELECT student_alert_count.count as count, structure_threshold.alert_forgotten_notebook_threshold as threshold " +
-                " FROM structure_threshold, student_alert_count; ";
+                " AND type = ? ";
+        JsonArray paramsCount = new JsonArray();
+        paramsCount.add(studentId);
+        paramsCount.add(structureId);
+        paramsCount.add(type);
 
-        JsonArray params = new JsonArray();
-        params.add(structureId);
-        params.add(studentId);
-        params.add(structureId);
-        params.add(type);
 
-        Sql.getInstance().prepared(query, params, SqlResult.validUniqueResultHandler(handler));
+        Sql.getInstance().prepared(queryCount, paramsCount, SqlResult.validUniqueResultHandler(result -> {
+            if (result.isRight()) {
+                futureCount.complete(result.right().getValue());
+            } else {
+                futureCount.fail((result.left().getValue()));
+            }
+        }));
+
+
+        CompositeFuture.all(futureThreshold, futureCount).setHandler(event -> {
+            if (event.succeeded()) {
+                JsonObject result = new JsonObject();
+                result.put("threshold", futureThreshold.result().getValue("threshold"));
+                result.put("count" ,futureCount.result().getValue("count"));
+                handler.handle(new Either.Right<>(result));
+            } else {
+                handler.handle(new Either.Left<>(event.cause().getMessage()));
+            }
+        });
     }
 }
