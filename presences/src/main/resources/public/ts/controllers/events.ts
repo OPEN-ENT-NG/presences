@@ -167,6 +167,7 @@ export const eventsController = ng.controller('EventsController', ['$scope', '$r
             departure: true,
             late: $route.current.action !== 'dashboard',
             regularized: true,
+            regularizedNotregularized: false,
             allReasons: true,
             noReasons: true,
             reasons: {} as Reason,
@@ -252,12 +253,11 @@ export const eventsController = ng.controller('EventsController', ['$scope', '$r
             // actionMode to define if we display the loading icon mode while changing filter, date etc...
             if (!actionMode) {
                 // "page" uses sync() method at the same time it sets 0 (See LoadingCollection Class)
-                vm.events.page = 0;
+                vm.updateFilter();
             } else {
                 // case if we only interact with action, reason, counsellor regularized...
                 refreshGetEventWhileAction();
             }
-            vm.updateFilter();
             $scope.safeApply();
         };
 
@@ -632,10 +632,11 @@ export const eventsController = ng.controller('EventsController', ['$scope', '$r
             }
 
             /* Manage state unjustified */
-            vm.filter.noReasons = vm.filter.unjustified && (!vm.filter.justifiedNotRegularized && !vm.filter.justifiedRegularized);
+            vm.filter.noReasons = vm.filter.unjustified;
 
             /* Manage state regularized */
             vm.filter.regularized = !vm.filter.justifiedRegularized;
+            vm.filter.regularizedNotregularized = vm.filter.justifiedRegularized && vm.filter.justifiedNotRegularized;
 
             /* Manage no filter */
             vm.filter.noFilter = !(vm.filter.unjustified && vm.filter.justifiedNotRegularized && vm.filter.justifiedRegularized);
@@ -645,6 +646,7 @@ export const eventsController = ng.controller('EventsController', ['$scope', '$r
             vm.events.noReason = vm.filter.noReasons;
             vm.events.regularized = vm.filter.regularized;
             vm.events.noFilter = vm.filter.noFilter;
+            vm.events.regularizedNotregularized = vm.filter.regularizedNotregularized;
 
             EventsUtils.setStudentToSync(vm.events, vm.filter);
             EventsUtils.setClassToSync(vm.events, vm.filter);
@@ -680,6 +682,9 @@ export const eventsController = ng.controller('EventsController', ['$scope', '$r
                 }
             } else {
                 vm.eventType = _.without(vm.eventType, EventType.ABSENCE);
+                vm.formFilter.unjustified = false;
+                vm.formFilter.justifiedNotRegularized = false;
+                vm.formFilter.justifiedRegularized = false;
             }
             vm.adaptReason();
         };

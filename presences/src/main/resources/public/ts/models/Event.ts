@@ -117,6 +117,7 @@ export class Events extends LoadingCollection {
     eventType: string;
     listReasonIds: string;
     regularized: boolean;
+    regularizedNotregularized: boolean;
     noReason: boolean;
     noFilter: boolean;
 
@@ -203,10 +204,12 @@ export class Events extends LoadingCollection {
                     url += `&noReason=${this.noReason}`;
                 }
 
-                if (this.regularized) {
-                    url += `&regularized=${!this.regularized}`;
-                } else if (!this.regularized) {
-                    url += `&regularized=${!this.regularized}`;
+                if (!this.regularizedNotregularized) {
+                    if (this.regularized) {
+                        url += `&regularized=${!this.regularized}`;
+                    } else if (!this.regularized) {
+                        url += `&regularized=${!this.regularized}`;
+                    }
                 }
             }
 

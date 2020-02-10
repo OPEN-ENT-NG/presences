@@ -11,6 +11,7 @@ export interface EventsFilter {
     late: boolean;
     departure: boolean;
     regularized: boolean;
+    regularizedNotregularized: boolean;
     allReasons: boolean,
     noReasons: boolean,
     reasons: Reason,
@@ -43,7 +44,7 @@ export class EventsUtils {
     public static filterHistory(events: Array<Event>): Array<Event> {
         let tmpEvent: Array<Event> = JSON.parse(JSON.stringify(events));
         let longestTimeEvent: Event = tmpEvent.sort(DateUtils.compareTime('start_date', 'end_time'))[tmpEvent.length - 1];
-        if (longestTimeEvent.type === this.ALL_EVENTS.absence) {
+        if (longestTimeEvent && longestTimeEvent.type === this.ALL_EVENTS.absence) {
             let newEvents: Array<Event> = [];
             longestTimeEvent.events = [];
             events.filter(e => e.type === this.ALL_EVENTS.event).forEach(event => {

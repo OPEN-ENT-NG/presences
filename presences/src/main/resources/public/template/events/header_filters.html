@@ -118,7 +118,8 @@
 <section>
     <div class="row horizontal-spacing">
         <div class="twelve cell">
-            <button class="right-magnet" ng-click="vm.validForm()">
+            <button class="right-magnet" ng-click="vm.validForm()"
+                    ng-disabled="!vm.formFilter.absences && !vm.formFilter.departure && !vm.formFilter.late">
                 <i18n>presences.exemptions.form.submit</i18n>
             </button>
             <button class="right-magnet cancel" ng-click="vm.lightbox.filter = false">

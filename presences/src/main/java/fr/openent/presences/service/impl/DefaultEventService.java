@@ -199,12 +199,11 @@ public class DefaultEventService implements EventService {
         query += "WHERE e.start_date > ? AND e.end_date < ? ";
         params.add(startDate + " " + defaultStartTime);
         params.add(endDate + " " + defaultEndTime);
-        if (listReasonIds != null && !listReasonIds.isEmpty() && noReason == null) {
-            query += " AND e.reason_id IN " + Sql.listPrepared(listReasonIds.toArray());
+        if (listReasonIds != null && !listReasonIds.isEmpty() && noReason != null) {
+            query += " AND (reason_id IN " + Sql.listPrepared(listReasonIds) + (noReason ? " OR reason_id IS NULL" : "") + ") ";
             params.addAll(new JsonArray(listReasonIds));
-        }
-        if (noReason != null && noReason) {
-            query += " AND e.reason_id is NULL ";
+        } else if (noReason != null) {
+            query += (noReason ? " AND reason_id IS NULL" : "");
         }
         query += setParamsForQueryEvents(userId, regularized, userIdFromClasses, params);
         query += " UNION" +
@@ -225,12 +224,11 @@ public class DefaultEventService implements EventService {
         params.add(startDate + " " + defaultStartTime);
         params.add(endDate + " " + defaultEndTime);
         params.add(endDate + " " + defaultEndTime);
-        if (listReasonIds != null && !listReasonIds.isEmpty() && noReason == null) {
-            query += " AND absence.reason_id IN " + Sql.listPrepared(listReasonIds.toArray());
+        if (listReasonIds != null && !listReasonIds.isEmpty() && noReason != null) {
+            query += " AND (reason_id IN " + Sql.listPrepared(listReasonIds) + (noReason ? " OR reason_id IS NULL" : "") + ") ";
             params.addAll(new JsonArray(listReasonIds));
-        }
-        if (noReason != null && noReason) {
-            query += " AND absence.reason_id is NULL ";
+        } else if (noReason != null) {
+            query += (noReason ? " AND reason_id IS NULL" : "");
         }
         query += " AND absence.student_id NOT IN (" +
                 "  SELECT distinct event.student_id FROM presences.event" +
@@ -281,14 +279,12 @@ public class DefaultEventService implements EventService {
         query += "WHERE e.start_date > ? AND e.end_date < ? ";
         params.add(startDate + " " + defaultStartTime);
         params.add(endDate + " " + defaultEndTime);
-        // add condition : no_reason is false
-        if (listReasonIds != null && !listReasonIds.isEmpty() && noReason == null) {
-            query += " AND e.reason_id IN " + Sql.listPrepared(listReasonIds.toArray());
+
+        if (listReasonIds != null && !listReasonIds.isEmpty() && noReason != null) {
+            query += " AND (reason_id IN " + Sql.listPrepared(listReasonIds) + (noReason ? " OR reason_id IS NULL" : "") + ") ";
             params.addAll(new JsonArray(listReasonIds));
-        }
-        // add no reason true (AND reason_id is null)
-        if (noReason != null && noReason) {
-            query += " AND e.reason_id is NULL ";
+        } else if (noReason != null) {
+            query += (noReason ? " AND reason_id IS NULL" : "");
         }
         query += setParamsForQueryEvents(userId, regularized, userIdFromClasses, params);
         if (eventType != null && eventType.contains("1")) {
@@ -296,9 +292,11 @@ public class DefaultEventService implements EventService {
                     "WHERE absence.start_date > ? AND absence.end_date < ?";
             params.add(startDate + " " + defaultStartTime);
             params.add(endDate + " " + defaultEndTime);
-            if (listReasonIds != null && !listReasonIds.isEmpty()) {
-                query += " AND absence.reason_id IN " + Sql.listPrepared(listReasonIds.toArray());
+            if (listReasonIds != null && !listReasonIds.isEmpty() && noReason != null) {
+                query += " AND (reason_id IN " + Sql.listPrepared(listReasonIds) + (noReason ? " OR reason_id IS NULL" : "") + ") ";
                 params.addAll(new JsonArray(listReasonIds));
+            } else if (noReason != null) {
+                query += (noReason ? " AND reason_id IS NULL" : "");
             }
             query += " AND absence.student_id NOT IN (" +
                     "  SELECT event.student_id FROM presences.event" +

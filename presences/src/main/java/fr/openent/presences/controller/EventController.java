@@ -51,7 +51,7 @@ public class EventController extends ControllerHelper {
 
         List<String> eventType = request.getParam("eventType") != null ? Arrays.asList(request.getParam("eventType").split("\\s*,\\s*")) : null;
         List<String> reasonIds = request.getParam("reasonIds") != null ? Arrays.asList(request.getParam("reasonIds").split("\\s*,\\s*")) : null;
-        Boolean noReason = request.params().contains("noReason") ? Boolean.parseBoolean(request.getParam("noReason")) : null;
+        Boolean noReason = request.params().contains("noReason") ? Boolean.parseBoolean(request.getParam("noReason")) : false;
         List<String> userId = request.getParam("userId") != null ? Arrays.asList(request.getParam("userId").split("\\s*,\\s*")) : null;
         List<String> classes = request.getParam("classes") != null ? Arrays.asList(request.getParam("classes").split("\\s*,\\s*")) : null;
         Boolean regularized = request.params().contains("regularized") ? Boolean.parseBoolean(request.getParam("regularized")) : null;
