@@ -6,14 +6,14 @@ export const SideWidget = ng.directive('sideWidget', () => {
         restrict: 'E',
         transclude: true,
         scope: {
-            title: '=',
+            name: '=',
             course: '=',
             opened: '=?'
         },
         template: `
         <aside class="side-widget" ng-class="{opened: opened}">
             <div class="title">
-                <h2 title="[[::translatedTitle]]">
+                <h2 title="[[::translatedTitle]]" >
                     <span class="triangle open-button" ng-click="opened = !opened" role="button">&nbsp;</span>
                     [[::translatedTitle]]
                     
@@ -29,7 +29,7 @@ export const SideWidget = ng.directive('sideWidget', () => {
         </aside>
         `,
         controller: function ($scope) {
-            $scope.translatedTitle = lang.translate($scope.title);
+            $scope.translatedTitle = lang.translate($scope.name);
             $scope.seeMoreText = lang.translate('presences.see.more');
             $scope.opened = $scope.opened || false;
 
