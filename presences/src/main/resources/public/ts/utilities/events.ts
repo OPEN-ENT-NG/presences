@@ -1,6 +1,6 @@
 import {Event, EventResponse, Events} from "../models";
 import {DateUtils} from "@common/utils";
-import {Reason} from "@presences/services";
+import {Reason} from "@presences/models/Reason";
 
 export interface EventsFilter {
     startDate: Date;

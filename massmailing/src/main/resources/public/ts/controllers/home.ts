@@ -1,7 +1,8 @@
 import {_, idiom as lang, ng, toasts} from 'entcore';
-import {Reason, ReasonService} from '@presences/services/ReasonService';
+import {ReasonService} from '@presences/services/ReasonService';
 import {GroupService, SearchService, SettingsService, Template} from '../services';
 import {Massmailing, MassmailingAnomaliesResponse, MassmailingStatusResponse} from "../model";
+import {Reason} from "@presences/models/Reason";
 
 interface Filter {
     start_date: Date

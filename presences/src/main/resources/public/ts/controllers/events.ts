@@ -2,8 +2,9 @@ import {_, angular, idiom as lang, moment, ng} from 'entcore';
 import {Absence, Event, EventResponse, Events, EventType, Student, Students} from "../models";
 import {DateUtils} from "@common/utils";
 import {GroupService} from "@common/services/GroupService";
-import {EventService, Reason, ReasonService} from "../services";
+import {EventService, ReasonService} from "../services";
 import {EventsFilter, EventsUtils} from "../utilities";
+import {Reason} from "@presences/models/Reason";
 
 declare let window: any;
 
@@ -279,6 +280,7 @@ export const eventsController = ng.controller('EventsController', ['$scope', '$r
                 startDate: vm.events.startDate,
                 endDate: vm.events.endDate,
                 eventType: vm.events.eventType,
+                listReasonIds: vm.events.listReasonIds,
                 regularized: vm.events.regularized,
                 userId: vm.events.userId,
                 classes: vm.events.classes,
@@ -403,7 +405,7 @@ export const eventsController = ng.controller('EventsController', ['$scope', '$r
 
         /* Change its description reason id */
         vm.changeReason = async (history: Event, event: EventResponse): Promise<void> => {
-            let initialReasonId = history.reason_id;
+            let initialReasonId = history.reason.id;
             let fetchedEventIds: number[] = [];
             let fetchedAbsenceIds: number[] = [];
             if (history.type === EventsUtils.ALL_EVENTS.event) {
@@ -655,8 +657,10 @@ export const eventsController = ng.controller('EventsController', ['$scope', '$r
         };
 
         vm.updateDate = async () => {
-            getEvents();
-            $scope.safeApply();
+            if (vm.filter.startDate && vm.filter.endDate) {
+                getEvents();
+                $scope.safeApply();
+            }
         };
 
         /* ----------------------------

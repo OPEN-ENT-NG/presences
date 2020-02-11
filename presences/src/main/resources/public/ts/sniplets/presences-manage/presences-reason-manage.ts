@@ -1,5 +1,6 @@
-import {Reason, ReasonRequest, reasonService} from "../../services/ReasonService";
+import {reasonService} from "../../services/ReasonService";
 import {AxiosResponse} from "axios";
+import {Reason, ReasonRequest} from "@presences/models/Reason";
 
 declare let window: any;
 

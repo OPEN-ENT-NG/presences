@@ -3,6 +3,7 @@ import {_, moment} from 'entcore';
 import {DateUtils} from '@common/utils'
 import {EventType} from "./EventType";
 import {LoadingCollection} from "@common/model";
+import {Reason} from "@presences/models/Reason";
 
 export interface Event {
     id: number;
@@ -13,7 +14,7 @@ export interface Event {
     comment?: string;
     counsellor_input: boolean;
     counsellor_regularisation: boolean;
-    reason_id?: number;
+    reason?: Reason;
     student_id: string;
     register_id: number;
     type_id: number;

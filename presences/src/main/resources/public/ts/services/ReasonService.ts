@@ -1,27 +1,6 @@
 import {ng} from 'entcore'
 import http, {AxiosResponse} from 'axios';
-
-export interface Reason {
-    id: number;
-    label: string;
-    structure_id: string;
-    proving: boolean;
-    comment: string;
-    default: boolean;
-    group: boolean;
-    hidden: boolean;
-    absence_compliance: boolean;
-    isSelected: boolean;
-}
-
-export interface ReasonRequest {
-    id?: number;
-    label: string;
-    absenceCompliance: boolean;
-    hidden?: boolean;
-    structureId?: string;
-    proving: boolean
-}
+import {Reason, ReasonRequest} from "@presences/models/Reason";
 
 export interface ReasonService {
     getReasons(structureId: string): Promise<Reason[]>;

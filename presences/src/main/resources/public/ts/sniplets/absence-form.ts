@@ -1,9 +1,10 @@
 import {SNIPLET_FORM_EMIT_EVENTS, SNIPLET_FORM_EVENTS} from "@common/model";
 import {Absence} from "../models";
 import {idiom as lang, model, moment, toasts} from "entcore";
-import {Reason, reasonService} from "../services";
+import {reasonService} from "../services";
 import {IAngularEvent} from "angular";
 import {DateUtils} from "@common/utils";
+import {Reason} from "@presences/models/Reason";
 
 export enum ABSENCE_FORM_EVENTS {
     EDIT = 'absence-form:edit',
