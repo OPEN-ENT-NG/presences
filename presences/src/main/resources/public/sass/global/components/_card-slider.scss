@@ -2,6 +2,11 @@ $card-width: 150px;
 $card-height: 85px;
 
 .card-slider {
+
+  .black {
+    color: $presences-black;
+  }
+
   .card {
     width: $card-width;
     height: $card-height;
@@ -70,6 +75,12 @@ $card-height: 85px;
           content: ''
         }
       }
+    }
+
+    .markedStudents {
+      margin-top: auto;
+      text-align: end;
+      font-size: 12px;
     }
 
     .has-search-right {

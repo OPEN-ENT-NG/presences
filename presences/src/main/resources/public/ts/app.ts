@@ -74,4 +74,11 @@ routes.define(function ($routeProvider) {
             action: 'exemptions'
         });
     }
+
+    if (model.me.hasWorkflow(rights.workflow.readPresences)) {
+        $routeProvider
+            .when('/presences', {
+                action: 'presences'
+            })
+    }
 });

@@ -1,0 +1,175 @@
+<!-- Button to access lightbox -->
+<button class="right-magnet" ng-if="vm.isButtonAllowed" data-ng-click="vm.openPresenceLightbox()">
+    <i18n>presences.presences.form.button.title</i18n>
+</button>
+
+<lightbox class="presenceLightbox" show="vm.createPresenceLightBox" on-close="vm.closePresenceLightbox()">
+
+    <!-- Title -->
+    <section class="presenceLightbox-head head">
+        <h3>
+            <i18n>presences.presences.form.title.recap</i18n>
+        </h3>
+    </section>
+
+    <!-- All content -->
+    <section class="presenceLightbox-body body lightbox-form">
+
+        <h3 class="presenceLightbox-body-title row spacing">
+            <i18n>presences.context</i18n>
+        </h3>
+
+        <!-- Info Date/reason -->
+        <div class="presenceLightbox-body-info row spacing">
+            <!-- Date -->
+            <div class="presenceLightbox-body-info-date">
+
+                <!-- Initial Date -->
+                <i18n>presences.the</i18n>
+                <span class="presenceLightbox-body-info-date-datepicker card date-picker">
+                    <date-picker required ng-model="vm.date.date"></date-picker>
+                </span>
+
+                <div class="presenceLightbox-body-info-time">
+                    <!-- start time -->
+                    <span class="presenceLightbox-body-info-time-start">
+                        <i18n>presences.by</i18n> &#58;
+                        <span class="card card-timepicker">
+                            <time-picker required ng-model="vm.date.startTime"></time-picker>
+                        </span>
+                    </span>
+
+                    <!-- end time -->
+                    <span class="presenceLightbox-body-info-time-end">
+                        <i18n>presences.at</i18n> &#58;
+                        <span class="card card-timepicker">
+                            <time-picker required ng-model="vm.date.endTime"></time-picker>
+                        </span>
+                    </span>
+                </div>
+            </div>
+
+            <div class="presenceLightbox-body-info-discipline">
+
+                <!-- Disciplines -->
+                <label class="presenceLightbox-body-info-discipline-select">
+                    <i18n>presences.discipline.form.input.threshold.second</i18n>
+                    <select data-ng-model="vm.presence.discipline.id"
+                            ng-options="discipline.id as discipline.label for discipline in vm.disciplines">
+                    </select>
+                </label>
+
+                <!-- Responsible -->
+                <span class="presenceLightbox-body-info-discipline-owner">
+                     <i18n>presences.responsible</i18n>
+                     <span class="presenceLightbox-body-info-discipline-owner-info">[[vm.presence.owner.displayName]]</span>
+                </span>
+            </div>
+        </div>
+    </section>
+
+
+    <section class="presenceLightbox-footer">
+
+        <!-- markedStudents board -->
+        <div class="presenceLightbox-footer-body">
+
+            <!-- search students/groups -->
+            <div class="presenceLightbox-footer-body-search">
+                <h3 class="presenceLightbox-footer-body-search-title">
+                    <i18n>presences.registers.attenders</i18n>
+                </h3>
+                <async-autocomplete class="presenceLightbox-footer-body-search-global"
+                                    data-ng-disabled="false"
+                                    data-ng-model="vm.studentsSearch.student"
+                                    data-ng-change="vm.selectStudent"
+                                    data-on-search="vm.searchStudent"
+                                    data-options="vm.studentsSearch.students"
+                                    data-placeholder="presences.exemptions.search.student"
+                                    data-search="vm.studentsSearch.student">
+                </async-autocomplete>
+                <span class="presenceLightbox-footer-body-search-space"></span>
+            </div>
+
+            <!-- board -->
+            <div class="flex-table">
+                <div class="flex-row flex-head row__15">
+                    <div class="flex-col col__6 text-center">
+                        <i18n>presences.exemptions.student</i18n>
+                    </div>
+                    <div class="flex-col col__3 text-center">
+                        <i18n>presences.exemptions.audience</i18n>
+                    </div>
+                    <div class="flex-col col__5 text-center">
+                        <i18n>presences.exemptions.comment</i18n>
+                    </div>
+                </div>
+
+                <!-- list student -->
+                <div class="flex-body" ng-repeat="markedStudent in vm.presence.markedStudents">
+                    <div class="flex-content">
+                        <div class="flex-row row__15">
+                            <!-- student picture -->
+                            <div class="flex-col col__1">
+                                <img src="/userbook/avatar/[[markedStudent.student.id]]" height="30" width="30">
+                            </div>
+                            <!-- student info -->
+                            <div class="markedStudents-displayName flex-col col__5">
+                                <span>[[markedStudent.student.displayName]]</span>
+                            </div>
+                            <!-- student className -->
+                            <div class="flex-col col__3">[[markedStudent.student.classeName]]</div>
+                            <!-- student's comment -->
+                            <div class="flex-col col__5">[[markedStudent.comment]]</div>
+                            <!-- remove student -->
+                            <div class="flex-col col__1">
+                                <i class="close-2x" data-ng-click="vm.removeMarkedStudent(markedStudent)"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+
+        <!-- Button/submit -->
+        <div class="presenceLightbox-footer-submit row" ng-class="{create: !vm.presence.id}">
+
+            <!-- Delete mode  -->
+            <button ng-if="vm.presence.id" data-ng-click="vm.deletePresence()">
+                <i18n>presences.exemptions.form.delete</i18n>
+            </button>
+
+            <div class="presenceLightbox-footer-submit-right">
+                <span class="presenceLightbox-footer-submit-right-students"
+                      data-ng-show="vm.presence.markedStudents.length > 0">
+                    <!-- several students -->
+                    <span data-ng-show="vm.presence.markedStudents.length > 1">
+                        [[vm.presence.markedStudents.length]]  <i18n>presences.students</i18n>
+                    </span>
+
+                    <!-- only one student -->
+                    <span data-ng-show="vm.presence.markedStudents.length === 1">
+                        [[vm.presence.markedStudents.length]]  <i18n>presences.student</i18n>
+                    </span>
+                </span>
+
+                <!-- Submit mode -->
+                <button ng-if="!vm.presence.id"
+                        data-ng-click="vm.createPresence()"
+                        data-ng-disabled="!vm.isFormValid()">
+                    <i18n>presences.exemptions.form.submit</i18n>
+                </button>
+
+                <!-- Edit mode  -->
+                <button ng-if="vm.presence.id"
+                        data-ng-click="vm.updatePresence()"
+                        data-ng-disabled="!vm.isFormValid()">
+                    <i18n>presences.absence.form.edit</i18n>
+                </button>
+            </div>
+        </div>
+
+    </section>
+
+</lightbox>

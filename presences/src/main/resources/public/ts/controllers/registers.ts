@@ -1,5 +1,16 @@
 import {_, idiom as lang, Me, model, moment, ng, notify, template, toasts} from 'entcore';
-import {Absence, Course, Courses, Departure, EventType, Lateness, Register, RegisterStatus, Remark} from '../models';
+import {
+    Absence,
+    Course,
+    Courses,
+    Departure,
+    EventType,
+    Lateness,
+    Presences,
+    Register,
+    RegisterStatus,
+    Remark
+} from '../models';
 import {GroupService, SearchService} from '../services';
 import {CourseUtils, DateUtils} from '@common/utils'
 import rights from '../rights';
@@ -33,11 +44,12 @@ export interface ViewModel {
     filter: Filter;
     RegisterStatus: any;
     studentsSearch: StudentsSearch;
+    presences: Presences;
 
     /* search bar auto complete */
     searchStudents(value): Promise<void>;
 
-    selectStudent(value, item): Promise<void>;
+    selectStudent(valueInput, studentItem): Promise<void>;
 
     // removeStudent(value): void;
 
@@ -126,7 +138,7 @@ export const registersController = ng.controller('RegistersController',
             vm.widget = {
                 forgottenRegisters: false,
                 dayCourses: false,
-                onGoingRegister: false
+                onGoingRegister: false,
             };
             const actions = {
                 registers: () => {
@@ -182,7 +194,7 @@ export const registersController = ng.controller('RegistersController',
                 },
                 forgottenRegisterWidget: () => vm.loadCourses(extractSelectedTeacherIds(), extractSelectedGroupsName()),
                 dayCoursesWidget: () => vm.loadCourses(extractSelectedTeacherIds(), extractSelectedGroupsName(), undefined, undefined, undefined, false),
-                onGoingRegisterWidget: () => getCurrentCourse()
+                onGoingRegisterWidget: () => getCurrentCourse(),
             };
 
             vm.register = undefined;
@@ -299,8 +311,8 @@ export const registersController = ng.controller('RegistersController',
                 $scope.safeApply();
             };
 
-            vm.selectStudent = async (value, item): Promise<void> => {
-                vm.studentsSearch.selectStudent(model, item);
+            vm.selectStudent = async (valueInput, studentItem): Promise<void> => {
+                vm.studentsSearch.selectStudent(valueInput, studentItem);
                 vm.studentsSearch.student = "";
                 vm.studentsSearch.resetStudents();
             };

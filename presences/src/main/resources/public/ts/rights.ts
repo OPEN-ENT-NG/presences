@@ -20,7 +20,8 @@ const rights = {
         widget_day_courses: 'fr.openent.presences.controller.FakeRight|widgetDayCourses',
         widget_current_course: 'fr.openent.presences.controller.FakeRight|widgetCurrentCourse',
         widget_day_presences: 'fr.openent.presences.controller.FakeRight|widgetDayPresences',
-        readPresences: 'fr.openent.presences.controller.PresencesController|getPresences'
+        readPresences: 'fr.openent.presences.controller.PresencesController|getPresences',
+        createPresences: 'fr.openent.presences.controller.PresencesController|createPresence',
     }
 };
 

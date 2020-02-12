@@ -1,0 +1,21 @@
+<div class="presences">
+
+    <loader data-ng-show="vm.presences.loading" min-height="'250px'"/>
+
+    <div data-ng-show="!vm.presences.loading">
+
+        <!-- Empty state -->
+        <div class="nine empty-content-vertical" data-ng-show="vm.presences.all.length === 0">
+            <div class="five description">
+                <span class="red-bar bar"></span>
+                <i18n>presences.presences.empty.state</i18n>
+                <span class="yellow-bar bar"></span>
+            </div>
+            <img data-ng-src="/presences/public/img/registers_empty.svg" class="four" alt="">
+        </div>
+
+        <!-- List Card -->
+        <div static-include="/presences/public/template/presences/card-list.html"></div>
+    </div>
+
+</div>

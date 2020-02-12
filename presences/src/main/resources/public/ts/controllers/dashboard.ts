@@ -1,8 +1,8 @@
 import {model, moment, ng, toasts} from 'entcore';
-import {Group, GroupService, SearchItem, SearchService} from "../services";
+import {Group, GroupService, presenceService, SearchItem, SearchService} from "../services";
 import {DateUtils} from "@common/utils";
 import rights from '../rights';
-import {Course, EventType} from "../models";
+import {Course, EventType, Presence, PresenceRequest, Presences} from "../models";
 import {alertService} from "../services/AlertService";
 import {IAngularEvent} from "angular";
 import {COURSE_EVENTS} from "@common/model";
@@ -28,6 +28,7 @@ interface ViewModel {
     alert: Alert;
     course: Course;
 
+
     selectItem(model: any, student: any): void;
 
     searchItem(value: string): void;
@@ -49,7 +50,7 @@ export const dashboardController = ng.controller('DashboardController', ['$scope
         const vm: ViewModel = this;
 
         const initData = async () => {
-           await vm.getAlert();
+            await vm.getAlert();
         };
 
         vm.date = DateUtils.format(moment(), DateUtils.FORMAT["DATE-FULL-LETTER"]);

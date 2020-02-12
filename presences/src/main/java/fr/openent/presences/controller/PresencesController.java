@@ -2,6 +2,7 @@ package fr.openent.presences.controller;
 
 import fr.openent.presences.Presences;
 import fr.openent.presences.common.helper.WorkflowHelper;
+import fr.openent.presences.constants.Actions;
 import fr.openent.presences.enums.WorkflowActions;
 import fr.openent.presences.security.presence.ManagePresenceRight;
 import fr.openent.presences.service.PresenceService;
@@ -19,6 +20,7 @@ import org.entcore.common.controller.ControllerHelper;
 import org.entcore.common.events.EventStore;
 import org.entcore.common.events.EventStoreFactory;
 import org.entcore.common.http.filter.ResourceFilter;
+import org.entcore.common.http.filter.Trace;
 import org.entcore.common.http.response.DefaultResponseHandler;
 import org.entcore.common.user.UserUtils;
 
@@ -85,25 +87,45 @@ public class PresencesController extends ControllerHelper {
     @Post("/presence")
     @ApiDoc("Create presence")
     @SecuredAction(Presences.CREATE_PRESENCE)
+    @Trace(Actions.PRESENCE_CREATION)
     public void createPresence(final HttpServerRequest request) {
-        RequestUtils.bodyToJson(request, presences ->
-                UserUtils.getUserInfos(eb, request, user ->
-                        presencesService.create(user, presences, DefaultResponseHandler.defaultResponseHandler(request))));
+        RequestUtils.bodyToJson(request, presences -> {
+            if (!isValidBody(presences)) {
+                badRequest(request);
+                return;
+            }
+            UserUtils.getUserInfos(eb, request, user ->
+                    presencesService.create(user, presences, DefaultResponseHandler.defaultResponseHandler(request)));
+        });
     }
 
     @Put("/presence")
     @ApiDoc("Update presence")
     @SecuredAction(Presences.MANAGE_PRESENCE)
+    @Trace(Actions.PRESENCE_UPDATE)
     public void updatePresence(final HttpServerRequest request) {
         RequestUtils.bodyToJson(request, presences -> {
+            if (!isValidBody(presences)) {
+                badRequest(request);
+                return;
+            }
             presencesService.update(presences, DefaultResponseHandler.defaultResponseHandler(request));
         });
+    }
+
+    private Boolean isValidBody(JsonObject presence) {
+        return presence.containsKey("structureId") &&
+                presence.containsKey("startDate") &&
+                presence.containsKey("endDate") &&
+                presence.containsKey("markedStudents") &&
+                !presence.getJsonArray("markedStudents").isEmpty();
     }
 
     @Delete("/presence")
     @ApiDoc("Delete presence")
     @ResourceFilter(ManagePresenceRight.class)
     @SecuredAction(value = "", type = ActionType.RESOURCE)
+    @Trace(Actions.PRESENCE_DELETE)
     public void deletePresence(final HttpServerRequest request) {
         if (!request.params().contains("id")) {
             badRequest(request);

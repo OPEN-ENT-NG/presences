@@ -36,7 +36,9 @@
                     </span>
                 </div>
                 <!-- Présences -->
-                <a role="menuitem" class="item" ng-if="::hasRight('readPresences')">
+                <a role="menuitem" href="/presences#/presences" class="item"
+                   ng-if="::hasRight('readPresences')"
+                   ng-class="{active: getCurrentState() === 'presences'}">
                     <i class="presence" aria-hidden="true"></i>
                     <span class="label-navbar">
                         <i18n>presences.title</i18n>

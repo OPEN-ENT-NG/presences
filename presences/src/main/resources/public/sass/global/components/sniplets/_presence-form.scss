@@ -1,0 +1,121 @@
+.presenceLightbox {
+
+  /* Body part */
+  &-body {
+    background: $presences-grey-smoke;
+
+    &-title {
+      color: $black;
+    }
+
+    &-info {
+      &-date {
+        display: flex;
+        align-items: center;
+        margin: 16px 0 32px 0;
+
+        &-datepicker {
+          margin: 0 40px 0 8px;
+        }
+      }
+
+      &-time {
+        margin-left: 40px;
+
+        &-start {
+          margin-right: 16px;
+        }
+
+        &-end {
+          margin-left: 16px;
+        }
+      }
+
+      &-discipline {
+        display: flex;
+        align-items: center;
+
+        &-select {
+          width: 172px;
+          margin-right: 40px;
+
+          select {
+            margin: 16px 0;
+            border: unset !important;
+          }
+        }
+
+        &-owner {
+          display: flex;
+          flex-direction: column;
+
+          &-info {
+            margin: 24px 0;
+            font-weight: bolder;
+          }
+        }
+      }
+    }
+  }
+
+  /* Footer part */
+  &-footer {
+    padding: 8px;
+
+    &-body {
+      &-search {
+        display: flex;
+        align-items: center;
+
+        &-title {
+          color: $presences-black;
+          flex: 1;
+        }
+
+        &-global {
+          flex: 3;
+
+          input {
+            margin: auto;
+          }
+        }
+
+        &-space {
+          flex: 2;
+          visibility: collapse;
+        }
+      }
+    }
+
+    &-submit {
+      display: flex;
+      align-items: center;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      padding-top: 16px;
+
+      &-right {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+
+        &-students {
+          font-weight: bold;
+          padding-right: 16px;
+        }
+      }
+
+      &.create {
+        justify-content: flex-end;
+      }
+
+      .button {
+        padding: 8px;
+      }
+    }
+  }
+}
+
+.markedStudents-displayName {
+  justify-content: start !important;
+}

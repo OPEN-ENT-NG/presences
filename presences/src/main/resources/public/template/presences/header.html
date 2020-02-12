@@ -1,48 +1,48 @@
 <div class="row">
     <!--Title-->
     <h1 class="cell paddingRight">
-        <i18n>presences.event.title</i18n>
+        <i18n>presences.presences.title</i18n>
     </h1>
 
-    <!-- Student search bar -->
-    <div class="cell four paddingRight">
+    <!-- Personnal search bar -->
+    <div class="cell four paddingLeft" workflow="presences.search">
         <div class="cell twelve search-input">
             <async-autocomplete data-ng-disabled="false"
-                                data-ng-model="vm.studentSearchInput"
-                                data-ng-change="vm.selectStudent"
-                                data-on-search="vm.searchByStudent"
-                                data-options="vm.students.all"
-                                data-placeholder="presences.exemptions.search.student"
-                                data-search="vm.studentSearchInput">
+                                data-ng-model="vm.usersSearch.user"
+                                data-ng-change="vm.selectUser"
+                                data-on-search="vm.searchUser"
+                                data-options="vm.usersSearch.users"
+                                data-placeholder="presences.search.personnal"
+                                data-search="vm.usersSearch.user">
             </async-autocomplete>
         </div>
-
         <div class="cell twelve">
             <ul class="cell twelve search-input-ul">
-                <li ng-repeat="student in vm.filter.students">
-                    [[student.displayName]] <i class="close"
-                                               data-ng-click="vm.excludeStudentFromFilter(student)"></i>
+                <li ng-repeat="user in vm.usersSearch.selectedUsers">
+                    [[user.toString()]] <i class="close"
+                                           data-ng-click="vm.removeSelectedUsers(user)"></i>
                 </li>
             </ul>
         </div>
     </div>
 
-    <!-- Classes/Groups search bar -->
-    <div class="cell four paddingLeft">
+    <!-- Students search bar -->
+    <div class="cell four paddingLeft" workflow="presences.search">
         <div class="cell twelve search-input">
             <async-autocomplete data-ng-disabled="false"
-                                data-ng-model="vm.classesSearchInput"
-                                data-ng-change="vm.selectClass"
-                                data-on-search="vm.searchByClass"
-                                data-options="vm.classesFiltered"
-                                data-placeholder="presences.exemptions.search.audience"
-                                data-search="vm.classesSearchInput">
+                                data-ng-model="vm.studentsSearch.student"
+                                data-ng-change="vm.selectStudent"
+                                data-on-search="vm.searchStudent"
+                                data-options="vm.studentsSearch.students"
+                                data-placeholder="presences.exemptions.search.student"
+                                data-search="vm.studentsSearch.student">
             </async-autocomplete>
         </div>
         <div class="cell twelve">
             <ul class="cell twelve search-input-ul">
-                <li ng-repeat="class in vm.filter.classes">
-                    [[class.name]] <i class="close" data-ng-click="vm.excludeClassFromFilter(class)"></i>
+                <li ng-repeat="student in vm.studentsSearch.selectedStudents">
+                    [[student.toString()]] <i class="close"
+                                              data-ng-click="vm.removeSelectedStudents(student)"></i>
                 </li>
             </ul>
         </div>
@@ -55,21 +55,31 @@
         <i18n>presences.from</i18n>
         :
         <span class="card date-picker">
-             <date-picker ng-change="vm.updateDate();" ng-model="vm.filter.startDate"></date-picker>
+             <date-picker ng-change="vm.updateFilter();" ng-model="vm.filter.startDate"></date-picker>
         </span>
         <i18n>presences.to</i18n>
         :
         <span class="card date-picker">
-            <date-picker ng-change="vm.updateDate();" ng-model="vm.filter.endDate"></date-picker>
+            <date-picker ng-change="vm.updateFilter();" ng-model="vm.filter.endDate"></date-picker>
         </span>
     </div>
 
+    <!-- Button menu -->
     <div class="four cell">
-        <button class="right-magnet forbidden" disabled data-ng-click="vm.exportPdf()">
-            <i18n>presences.export.topdf</i18n>
-        </button>
-        <button class="right-magnet forbidden" disabled data-ng-click="vm.exportCsv()">
+        <sniplet workflow="presences.createPresences" template="presence-form" application="presences"></sniplet>
+        <button class="right-magnet forbidden" disabled>
             <i18n>presences.export.tocsv</i18n>
         </button>
+    </div>
+</div>
+
+<!-- Presences Filter -->
+<div class="register registry-eventTypeFilter" ng-if="vm.presences.all.length > 0" workflow="presences.search">
+    <div class="chips">
+        <!-- key for presence filter "mine" is vm.presencesFilter[0] -->
+        <label class="chip" ng-class="{selected: vm.filter.presencesFilter.mine}"
+               data-ng-click="vm.togglePresencesFilter(vm.presencesFilter[0])">
+            <i18n>presences.presences.mine</i18n>
+        </label>
     </div>
 </div>

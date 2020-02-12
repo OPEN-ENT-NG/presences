@@ -6,6 +6,7 @@ import {
     exemptionForm,
     forgottenNotebookForm,
     navigation,
+    presenceForm,
     presencesActionManage,
     presencesAlertManage,
     presencesManage,
@@ -31,6 +32,7 @@ Behaviours.register('presences', {
         'presences-manage/sniplet-presences-manage-lightbox': presencesManageLightbox,
         'presences-manage/action-manage/sniplet-presences-action-manage': presencesActionManage,
         'presences-manage/discipline-manage/sniplet-presences-disciplines-manage': disciplineManage,
-        'memento/absences': absenceMementoWidget
+        'memento/absences': absenceMementoWidget,
+        'presence-form': presenceForm
     }
 });

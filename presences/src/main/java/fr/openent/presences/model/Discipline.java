@@ -12,7 +12,7 @@ public class Discipline implements Cloneable {
 
     public Discipline(JsonObject discipline) {
         this.id = discipline.getInteger("id", null);
-        this.structureId = discipline.getString("structure_id", null);
+        this.structureId = discipline.getString("structure_id", discipline.getString("structureId", null));
         this.label = discipline.getString("label", null);
         this.isUsed = discipline.getBoolean("used", null);
         this.isHidden = discipline.getBoolean("hidden", null);

@@ -95,6 +95,10 @@ public class DefaultPresenceService implements PresenceService {
     private void interactUserInfo(String structureId, List<Presence> presences, List<String> usersId,
                                   List<Integer> presenceIds, Future<JsonObject> future) {
 
+        if (presenceIds.isEmpty()) {
+            future.complete();
+            return;
+        }
         Future<List<MarkedStudent>> markedStudentsFuture = Future.future();
         Future<JsonArray> ownerFuture = Future.future();
 
@@ -138,7 +142,8 @@ public class DefaultPresenceService implements PresenceService {
 
         /* filtering owner ids fetched */
         if (!ownerIds.isEmpty()) {
-            query += " AND owner IN " + Sql.listPrepared(userId) + " ";
+            query += " AND owner IN " + Sql.listPrepared(ownerIds) + " ";
+            params.addAll(new JsonArray(ownerIds));
         }
 
         /* filtering user ids fetched */

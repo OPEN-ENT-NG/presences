@@ -1,6 +1,7 @@
 package fr.openent.presences.controller;
 
 import fr.openent.presences.security.Manage;
+import fr.openent.presences.security.presence.CreatePresenceRight;
 import fr.openent.presences.service.DisciplineService;
 import fr.openent.presences.service.impl.DefaultDisciplineService;
 import fr.wseduc.rs.*;
@@ -23,7 +24,7 @@ public class DisciplineController extends ControllerHelper {
 
     @Get("/disciplines")
     @ApiDoc("Get disciplines")
-    @ResourceFilter(Manage.class)
+    @ResourceFilter(CreatePresenceRight.class)
     @SecuredAction(value = "", type = ActionType.RESOURCE)
     public void get(final HttpServerRequest request) {
         String structureId = request.getParam("structureId");

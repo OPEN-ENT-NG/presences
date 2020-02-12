@@ -1,0 +1,37 @@
+<!-- display presences -->
+<div class="row card-slider" ng-repeat="date in vm.presences.keysOrder"
+     data-ng-show="vm.presences.all && vm.presences.all.length > 0">
+
+    <!-- date area -->
+    <h2 class="black capitalized">[[::vm.formatDayDate(date)]]</h2>
+
+    <!-- presence card -->
+    <div class="card cell" ng-repeat="presence in vm.presences.map[date] | orderBy:'timestamp'"
+         data-ng-click="vm.openPresence(presence)">
+        <div class="row has-search-right">
+            <!-- Date -->
+            <div class="row hour">
+                <span>[[vm.formatHour(presence.startDate)]] - [[vm.formatHour(presence.endDate)]]</span>
+            </div>
+            <!-- Owner info -->
+            <div class="row teachers"><span>[[presence.owner.displayName]]</span></div>
+
+            <!-- discipline info -->
+            <em class="row metadata">[[presence.discipline.label]]</em>
+
+            <!-- students length -->
+            <div class="markedStudents row ellipsis">
+
+                <!-- several students -->
+                <span data-ng-show="presence.markedStudents.length > 1">
+                        [[presence.markedStudents.length]] <i18n>presences.students</i18n>
+                </span>
+
+                <!-- only one student -->
+                <span data-ng-show="presence.markedStudents.length === 1">
+                        [[presence.markedStudents.length]] <i18n>presences.student</i18n>
+                </span>
+            </div>
+        </div>
+    </div>
+</div>

@@ -49,7 +49,7 @@
     <div ng-include="'/presences/public/template/widgets/day_courses.html'" class="vertical-spacing-six"
          workflow="presences.widget_day_courses"></div>
     <div ng-include="'/presences/public/template/widgets/day_presences.html'" class="vertical-spacing-six"
-         workflow="presences.widget_day_presences"></div>
+         ng-if="::hasRight('widget_day_presences')"></div>
 
     <!-- Side bar widgets -->
     <div class="sidebar-widgets">

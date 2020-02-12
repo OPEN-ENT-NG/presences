@@ -1,6 +1,12 @@
 package fr.openent.presences.constants;
 
 public class Actions {
+    // A user creates a presence
+    public static final String PRESENCE_CREATION = "PRESENCE_CREATION";
+    // A user update a presence
+    public static final String PRESENCE_UPDATE = "PRESENCE_UPDATE";
+    // A user deletes a presence
+    public static final String PRESENCE_DELETE = "PRESENCE_DELETE";
     // A user creates a register
     public static final String REGISTER_CREATION = "REGISTER_CREATION";
     // A user validates a register

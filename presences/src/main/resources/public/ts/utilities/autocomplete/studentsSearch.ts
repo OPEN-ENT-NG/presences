@@ -2,6 +2,11 @@ import {User} from "@common/model/User";
 import {SearchService} from "@common/services/SearchService";
 import {AutoCompleteUtils} from "../autocomplete";
 
+/**
+ * ⚠ This class is used for the directive async-autocomplete
+ * use it only for students's info purpose
+ */
+
 export class StudentsSearch extends AutoCompleteUtils {
 
     private students: Array<User>;
@@ -23,8 +28,8 @@ export class StudentsSearch extends AutoCompleteUtils {
         return this.selectedStudents;
     }
 
-    public removeSelectedStudents(value) {
-        this.selectedStudents.splice(this.selectedStudents.indexOf(value), 1);
+    public removeSelectedStudents(studentItem) {
+        this.selectedStudents.splice(this.selectedStudents.indexOf(studentItem), 1);
     }
 
     public resetStudents() {
@@ -35,25 +40,27 @@ export class StudentsSearch extends AutoCompleteUtils {
         this.selectedStudents = [];
     }
 
-    public selectStudents(model, item) {
-        this.selectedStudents.push(item);
+    public selectStudents(valueInput, studentItem) {
+        if (this.selectedStudents.find(student => student["id"] === studentItem.id) === undefined) {
+            this.selectedStudents.push(studentItem);
+        }
     };
 
-    public selectStudent(model, item) {
+    public selectStudent(valueInput, studentItem) {
         this.selectedStudents = [];
-        this.selectedStudents.push(item);
+        this.selectedStudents.push(studentItem);
     }
 
-    public async searchStudents(value) {
+    public async searchStudents(valueInput: string) {
         try {
-            this.students = await this.searchService.searchUser(this.structureId, value, 'Student');
+            this.students = await this.searchService.searchUser(this.structureId, valueInput, 'Student');
         } catch (err) {
             this.students = [];
             throw err;
         }
     };
 
-    public searchStudentsFromArray(value, studentsArray) {
+    public searchStudentsFromArray(valueInput: string, studentsArray) {
         this.students = [];
         try {
             studentsArray.forEach(student => {
@@ -65,12 +72,25 @@ export class StudentsSearch extends AutoCompleteUtils {
             });
             this.students = this.students.filter(
                 student =>
-                    student.displayName.toUpperCase().indexOf(value) > -1 ||
-                    student.displayName.toLowerCase().indexOf(value) > -1
+                    student.displayName.toUpperCase().indexOf(valueInput) > -1 ||
+                    student.displayName.toLowerCase().indexOf(valueInput) > -1
             );
         } catch (err) {
             this.students = [];
             throw err;
         }
     }
+
+    public async searchStudentsOrGroups(valueInput: string) {
+        try {
+            this.searchService
+                .search(this.structureId, valueInput)
+                .then(response => {
+                    console.log("response: ", response);
+                });
+        } catch (err) {
+            this.students = [];
+            throw err;
+        }
+    };
 }
