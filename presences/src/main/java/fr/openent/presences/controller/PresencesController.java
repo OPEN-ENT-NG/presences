@@ -16,6 +16,8 @@ import io.vertx.core.http.HttpServerRequest;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import org.entcore.common.controller.ControllerHelper;
+import org.entcore.common.events.EventStore;
+import org.entcore.common.events.EventStoreFactory;
 import org.entcore.common.http.filter.ResourceFilter;
 import org.entcore.common.http.response.DefaultResponseHandler;
 import org.entcore.common.user.UserUtils;
@@ -27,11 +29,12 @@ public class PresencesController extends ControllerHelper {
 
     private EventBus eb;
     private PresenceService presencesService;
-
+    private EventStore eventStore;
 
     public PresencesController(EventBus eb) {
         this.eb = eb;
         this.presencesService = new DefaultPresenceService();
+        this.eventStore = EventStoreFactory.getFactory().getEventStore(Presences.class.getSimpleName());
     }
 
     @Get("")
@@ -53,6 +56,7 @@ public class PresencesController extends ControllerHelper {
                 }
             });
         });
+        eventStore.createAndStoreEvent("ACCESS", request);
     }
 
     @Get("/presences")
