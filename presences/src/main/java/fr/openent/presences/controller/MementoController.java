@@ -151,11 +151,12 @@ public class MementoController extends ControllerHelper {
             int monthNumber = DateHelper.getMonthNumber(startDate);
             int yearValue = DateHelper.getYear(startDate);
             Date newDate = startDate;
+            range.add(monthNumber);
             while (!(monthNumber == DateHelper.getMonthNumber(endDate) && yearValue == DateHelper.getYear(endDate))) {
-                range.add(monthNumber);
                 newDate = DateHelper.add(newDate, Calendar.MONTH, 1);
                 monthNumber = DateHelper.getMonthNumber(newDate);
                 yearValue = DateHelper.getYear(newDate);
+                range.add(monthNumber);
             }
         } catch (ParseException e) {
             log.error("[Presences@MementoController] Failed to parse date value", e);
