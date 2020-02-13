@@ -305,7 +305,10 @@ export const eventsController = ng.controller('EventsController', ['$scope', '$r
                 displayName,
                 type: 'USER',
                 groupName: className,
-                groupId: classId
+                groupId: classId,
+                toString: function () {
+                    return this.displayName;
+                }
             };
             $location.path(`/calendar/${studentId}?date=${date}`);
             $scope.safeApply();
@@ -426,7 +429,7 @@ export const eventsController = ng.controller('EventsController', ['$scope', '$r
                 new Absence(null, null, null, null)
                     .updateAbsenceReason(fetchedAbsenceIds, initialReasonId)
             ]).then(() => {
-                if(initialReasonId) history.reason.proving = vm.eventReasonsType.find((r) => r.id === initialReasonId).proving;
+                if (initialReasonId) history.reason.proving = vm.eventReasonsType.find((r) => r.id === initialReasonId).proving;
                 vm.events.events = vm.eventManageRemove(vm.events.events, history);
                 if (event && event.events.filter(e => !e.counsellor_regularisation).length === 0) {
                     vm.eventId = null;
@@ -754,7 +757,8 @@ export const eventsController = ng.controller('EventsController', ['$scope', '$r
             }
         };
 
-        vm.adaptReason = function () {if (!vm.formFilter.absences) {
+        vm.adaptReason = function () {
+            if (!vm.formFilter.absences) {
                 vm.eventReasonsId = [];
                 vm.eventType = _.without(vm.eventType, EventType.ABSENCE);
             } else {
