@@ -65,8 +65,8 @@ export class Students {
     async search(structureId: String, text: String) {
         try {
             if ((text.trim() === '' || !text)) return;
-            text = text.replace("\\s", "").toLowerCase()
-            const {data} = await http.get(`/viescolaire/user/search?structureId=${structureId}&profile=Student&q=${text}&field=displayNameSearchField`);
+            text = text.replace("\\s", "").toLowerCase();
+            const {data} = await http.get(`/viescolaire/user/search?structureId=${structureId}&profile=Student&q=${text}&field=lastName&field=firstName&field=displayName`);
             this.all = data.map((item) => {
                 return new Student(item);
             });
