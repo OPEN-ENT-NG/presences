@@ -19,7 +19,7 @@ interface ViewModel {
     disciplines: Array<Discipline>;
     isButtonAllowed: boolean;
 
-    openPresenceLightbox(event: IAngularEvent, args: any): void;
+    openPresenceLightbox(): void;
 
     initPresence(): void;
 

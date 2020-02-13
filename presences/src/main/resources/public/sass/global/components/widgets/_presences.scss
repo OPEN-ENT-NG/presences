@@ -8,4 +8,16 @@
     text-align: center;
     color: $presences-grey;
   }
+
+  .empty-state {
+    display: flex;
+    justify-content: center;
+    text-align: center;
+    align-items: center;
+
+    .empty-title {
+      width: auto;
+      margin: 0 50px;
+    }
+  }
 }

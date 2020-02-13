@@ -250,6 +250,7 @@
   "presences.widgets.day.set.multiple.slot.toolip.activate": "Activez cette option pour générer plusieurs appels pour les cours dépassant 1h. Valable à partir du prochain cours.",
   "presences.widgets.day.set.multiple.slot.toolip.disable": "Désactivez cette option pour générer un appel unique pour les cours dépassant 1h. Valable à partir du prochain cours.",
   "presences.widgets.day_presences": "Présences du jour",
+  "presences.widgets.day.presences.empty": "Pas de présences déclarées aujourd'hui",
   "presences.widgets.register": "Appel en cours",
   "presences.widgets.remarks": "Observations",
   "presences.widgets.statements": "Déclarations des parents à traiter",
