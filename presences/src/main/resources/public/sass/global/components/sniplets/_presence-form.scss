@@ -2,6 +2,7 @@
 
   /* Body part */
   &-body {
+    padding: 1px 20px;
     background: $presences-grey-smoke;
 
     &-title {
@@ -60,7 +61,7 @@
 
   /* Footer part */
   &-footer {
-    padding: 8px;
+    padding: 8px 8px 0 8px;
 
     &-body {
       &-search {
@@ -83,6 +84,20 @@
         &-space {
           flex: 2;
           visibility: collapse;
+        }
+      }
+
+      .list-students {
+        max-height: 252px;
+        overflow-y: auto;
+
+        .markedStudent-comment {
+          background: $presences-grey-smoke;
+          border: 1px solid $presences-grey-smoke;
+
+          &:focus {
+            background-color: rgba(170, 170, 170, 0.2)
+          }
         }
       }
     }

@@ -6,6 +6,8 @@ export interface SearchItem {
     id: string;
     displayName: string;
     type: string;
+    groupName?: string;
+    className?: string;
 }
 
 export interface SearchService {

@@ -2,6 +2,9 @@ package fr.openent.presences.controller;
 
 import fr.openent.presences.Presences;
 import fr.openent.presences.common.security.SearchRight;
+import fr.openent.presences.common.service.GroupService;
+import fr.openent.presences.common.service.impl.DefaultGroupService;
+import fr.openent.presences.enums.GroupType;
 import fr.openent.presences.service.SearchService;
 import fr.openent.presences.service.impl.DefaultSearchService;
 import fr.wseduc.rs.ApiDoc;
@@ -23,11 +26,14 @@ import static org.entcore.common.http.response.DefaultResponseHandler.arrayRespo
 public class SearchController extends ControllerHelper {
 
     private EventBus eb;
+    private GroupService groupService;
     private SearchService searchService;
+
 
     public SearchController(EventBus eb) {
         super();
         this.eb = eb;
+        this.groupService = new DefaultGroupService(eb);
         this.searchService = new DefaultSearchService();
     }
 
@@ -89,6 +95,15 @@ public class SearchController extends ControllerHelper {
         if (request.params().contains("q") && !"".equals(request.params().get("q").trim())
                 && request.params().contains("structureId")) {
             searchService.search(request.getParam("q"), request.getParam("structureId"), arrayResponseHandler(request));
+        }
+    }
+
+    @Get("/users")
+    @ApiDoc("get students based on group id fetched")
+    public void getStudentsFromGroupId(HttpServerRequest request) {
+        if (request.params().contains("groupId") && request.params().contains("type")) {
+            GroupType type = "CLASS".equals(request.getParam("type")) ? GroupType.CLASS : GroupType.GROUP;
+            groupService.getGroupUsers(request.getParam("groupId"), type, arrayResponseHandler(request));
         }
     }
 

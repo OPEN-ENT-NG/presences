@@ -190,7 +190,8 @@ export const presencesController = ng.controller('PresencesController',
             vm.presences.eventer.on('loading::true', () => $scope.safeApply());
             vm.presences.eventer.on('loading::false', () => $scope.safeApply());
 
-            $scope.$on(SNIPLET_FORM_EMIT_EVENTS.EDIT, startAction);
+            $scope.$on(SNIPLET_FORM_EMIT_EVENTS.CREATION, startAction);
+            $scope.$on(SNIPLET_FORM_EMIT_EVENTS.DELETE, startAction);
             $scope.$on(SNIPLET_FORM_EMIT_EVENTS.DELETE, startAction);
 
             /* on  (watch) */

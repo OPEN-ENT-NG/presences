@@ -80,17 +80,4 @@ export class StudentsSearch extends AutoCompleteUtils {
             throw err;
         }
     }
-
-    public async searchStudentsOrGroups(valueInput: string) {
-        try {
-            this.searchService
-                .search(this.structureId, valueInput)
-                .then(response => {
-                    console.log("response: ", response);
-                });
-        } catch (err) {
-            this.students = [];
-            throw err;
-        }
-    };
 }

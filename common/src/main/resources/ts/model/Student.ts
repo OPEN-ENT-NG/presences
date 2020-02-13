@@ -7,6 +7,7 @@ export class Student {
     lastName: string;
     idClasse: string;
     displayName: string;
+    classeName?: string;
 
     constructor(o?: any) {
         if (o && typeof o === 'object') {

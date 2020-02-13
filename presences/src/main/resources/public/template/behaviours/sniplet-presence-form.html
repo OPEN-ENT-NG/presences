@@ -81,12 +81,12 @@
                 </h3>
                 <async-autocomplete class="presenceLightbox-footer-body-search-global"
                                     data-ng-disabled="false"
-                                    data-ng-model="vm.studentsSearch.student"
-                                    data-ng-change="vm.selectStudent"
-                                    data-on-search="vm.searchStudent"
-                                    data-options="vm.studentsSearch.students"
-                                    data-placeholder="presences.exemptions.search.student"
-                                    data-search="vm.studentsSearch.student">
+                                    data-ng-model="vm.globalSearch.search"
+                                    data-ng-change="vm.selectItem"
+                                    data-on-search="vm.searchGlobal"
+                                    data-options="vm.globalSearch.searchItems"
+                                    data-placeholder="presences.add.students.groups"
+                                    data-search="vm.globalSearch.search">
                 </async-autocomplete>
                 <span class="presenceLightbox-footer-body-search-space"></span>
             </div>
@@ -106,24 +106,28 @@
                 </div>
 
                 <!-- list student -->
-                <div class="flex-body" ng-repeat="markedStudent in vm.presence.markedStudents">
-                    <div class="flex-content">
-                        <div class="flex-row row__15">
-                            <!-- student picture -->
-                            <div class="flex-col col__1">
-                                <img src="/userbook/avatar/[[markedStudent.student.id]]" height="30" width="30">
-                            </div>
-                            <!-- student info -->
-                            <div class="markedStudents-displayName flex-col col__5">
-                                <span>[[markedStudent.student.displayName]]</span>
-                            </div>
-                            <!-- student className -->
-                            <div class="flex-col col__3">[[markedStudent.student.classeName]]</div>
-                            <!-- student's comment -->
-                            <div class="flex-col col__5">[[markedStudent.comment]]</div>
-                            <!-- remove student -->
-                            <div class="flex-col col__1">
-                                <i class="close-2x" data-ng-click="vm.removeMarkedStudent(markedStudent)"></i>
+                <div class="flex-row list-students" ng-show="vm.presence.markedStudents.length > 0">
+                    <div class="flex-body" ng-repeat="markedStudent in vm.presence.markedStudents">
+                        <div class="flex-content">
+                            <div class="flex-row row__15">
+                                <!-- student picture -->
+                                <div class="flex-col col__1">
+                                    <img src="/userbook/avatar/[[markedStudent.student.id]]" height="30" width="30">
+                                </div>
+                                <!-- student info -->
+                                <div class="markedStudents-displayName flex-col col__5">
+                                    <span>[[markedStudent.student.displayName]]</span>
+                                </div>
+                                <!-- student className -->
+                                <div class="flex-col col__3">[[markedStudent.student.classeName]]</div>
+                                <!-- student's comment -->
+                                <div class="flex-col col__5">
+                                    <input data-ng-model="markedStudent.comment" class="markedStudent-comment">
+                                </div>
+                                <!-- remove student -->
+                                <div class="flex-col col__1">
+                                    <i class="delete" data-ng-click="vm.removeMarkedStudent(markedStudent)"></i>
+                                </div>
                             </div>
                         </div>
                     </div>

@@ -1,10 +1,10 @@
 import {IAngularEvent} from "angular";
-import {disciplineService, presenceService, SearchService} from "../services";
-import {Discipline, MarkedStudent, MarkedStudentRequest, Presence, PresenceBody, User} from "../models";
+import {disciplineService, GroupService, presenceService, SearchItem, SearchService} from "../services";
+import {Discipline, MarkedStudent, MarkedStudentRequest, Presence, PresenceBody, Student, User} from "../models";
 import {SNIPLET_FORM_EMIT_EVENTS, SNIPLET_FORM_EVENTS} from "@common/model";
 import {_, idiom as lang, model, moment, toasts} from "entcore";
 import {DateUtils} from "@common/utils";
-import {StudentsSearch} from "../utilities";
+import {GlobalSearch} from "../utilities";
 
 console.log("presenceFormSnipplets");
 
@@ -14,10 +14,11 @@ interface ViewModel {
     createPresenceLightBox: boolean;
     presence: Presence;
     form: PresenceBody;
-    studentsSearch: StudentsSearch;
+    globalSearch: GlobalSearch;
     date: { date: string, startTime: Date, endTime: Date };
     disciplines: Array<Discipline>;
     isButtonAllowed: boolean;
+    isCommentEditable: boolean;
 
     openPresenceLightbox(): void;
 
@@ -39,11 +40,13 @@ interface ViewModel {
 
     closePresenceLightbox(): void;
 
-    searchStudent(studentForm: string): Promise<void>;
+    searchGlobal(searchForm: string): Promise<void>;
 
-    selectStudent(valueInput, studentItem): void;
+    selectItem(valueInput: string, item: SearchItem): Promise<void>;
 
     removeMarkedStudent(markedStudent: MarkedStudent): void;
+
+    editMarkedStudentComment($event): void;
 
     safeApply(fn?: () => void): void;
 }
@@ -59,11 +62,12 @@ const vm: ViewModel = {
     },
     presence: {owner: {} as User, discipline: {} as Discipline, markedStudents: []} as Presence,
     form: {} as PresenceBody,
-    studentsSearch: null,
+    globalSearch: null,
     isButtonAllowed: true,
+    isCommentEditable: false,
 
     openPresenceLightbox(): void {
-        vm.studentsSearch = new StudentsSearch(window.structure.id, SearchService);
+        vm.globalSearch = new GlobalSearch(window.structure.id, SearchService, GroupService);
         vm.createPresenceLightBox = true;
         vm.initPresence();
         vm.safeApply();
@@ -74,11 +78,11 @@ const vm: ViewModel = {
         let response = await presenceService.create(vm.form);
         if (response.status == 200 || response.status == 201) {
             vm.closePresenceLightbox();
-            toasts.confirm(lang.translate('presences.presence.form.create.succeed'));
+            toasts.confirm(lang.translate('presences.presences.form.create.succeed'));
         } else {
             toasts.warning(response.data.toString());
         }
-        presenceForm.that.$emit(SNIPLET_FORM_EMIT_EVENTS.FILTER);
+        presenceForm.that.$emit(SNIPLET_FORM_EMIT_EVENTS.CREATION);
         vm.safeApply();
     },
 
@@ -87,7 +91,7 @@ const vm: ViewModel = {
         let response = await presenceService.update(vm.form);
         if (response.status == 200 || response.status == 201) {
             vm.closePresenceLightbox();
-            toasts.confirm(lang.translate('presences.presence.form.edit.succeed'));
+            toasts.confirm(lang.translate('presences.presences.form.edit.succeed'));
         } else {
             toasts.warning(response.data.toString());
         }
@@ -100,7 +104,7 @@ const vm: ViewModel = {
         let response = await presenceService.delete(vm.form.id);
         if (response.status == 200 || response.status == 201) {
             vm.closePresenceLightbox();
-            toasts.confirm(lang.translate('presences.presence.form.delete.succeed'));
+            toasts.confirm(lang.translate('presences.presences.form.delete.succeed'));
         } else {
             toasts.warning(response.data.toString());
         }
@@ -110,7 +114,7 @@ const vm: ViewModel = {
 
 
     openEditPresence: (presence: Presence): void => {
-        vm.studentsSearch = new StudentsSearch(presence.structureId, SearchService);
+        vm.globalSearch = new GlobalSearch(presence.structureId, SearchService, GroupService);
         vm.createPresenceLightBox = true;
         vm.initPresenceEdit(presence);
     },
@@ -165,19 +169,53 @@ const vm: ViewModel = {
 
     /* search bar interaction */
 
-    async searchStudent(studentForm: string): Promise<void> {
-        await vm.studentsSearch.searchStudentsOrGroups(studentForm);
+    async searchGlobal(searchForm: string): Promise<void> {
+        await vm.globalSearch.searchStudentsOrGroups(searchForm);
         vm.safeApply();
     },
 
-    selectStudent(valueInput, studentItem): void {
-        console.log("valueInput: ", valueInput);
-        console.log("studentItem: ", studentItem);
+    async selectItem(valueInput: string, item: SearchItem): Promise<void> {
+        console.log("item: ", item);
+        /* if search item result is USER */
+        if (item.type === GlobalSearch.TYPE.user) {
+            if (vm.presence.markedStudents.find(student => student.student.id === item.id) === undefined) {
+                let markedStudent: MarkedStudent = {
+                    student: {id: item.id, displayName: item.displayName, classeName: item.groupName} as Student,
+                    comment: ''
+                } as MarkedStudent;
+                vm.presence.markedStudents.push(markedStudent);
+            }
+        }
+        /* case if it is a class */
+        if (item.type === GlobalSearch.TYPE.group) {
+            await vm.globalSearch.getStudentsFromGroup(item.id, item.type);
+            vm.globalSearch.getStudents().forEach((item: SearchItem) => {
+                if (vm.presence.markedStudents.find(student => student.student.id === item.id) === undefined) {
+                    let markedStudent: MarkedStudent = {
+                        student: {id: item.id, displayName: item.displayName, classeName: item.className} as Student,
+                        comment: ''
+                    } as MarkedStudent;
+                    vm.presence.markedStudents.push(markedStudent);
+                }
+            });
+        }
+        vm.globalSearch.search = '';
+        vm.safeApply();
     },
 
     removeMarkedStudent(markedStudent: MarkedStudent): void {
         vm.presence.markedStudents = _.without(vm.presence.markedStudents, markedStudent);
         vm.safeApply();
+    },
+
+    editMarkedStudentComment($event): void {
+        vm.isCommentEditable = !vm.isCommentEditable;
+        console.log("$event: ", $event);
+        if (vm.isCommentEditable) {
+            document.querySelector('.markedStudent-comment').setAttribute("contenteditable", 'true');
+
+            // span contenteditable= true
+        }
     },
 
     closePresenceLightbox(): void {
