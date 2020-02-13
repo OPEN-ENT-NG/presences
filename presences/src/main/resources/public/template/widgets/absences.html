@@ -52,7 +52,7 @@
                     <select data-ng-model="event.reason.id"
                             data-ng-change="vm.changeReason(event)"
                             ng-options="reason.id as reason.label for reason in vm.eventReasonsType">
-                        <option value="">[[lang.translate('presences.absence.select.empty')]]</option>
+                        <option value="" label="[[lang.translate('presences.absence.select.empty')]]" ></option>
                     </select>
                 </div>
             </div>

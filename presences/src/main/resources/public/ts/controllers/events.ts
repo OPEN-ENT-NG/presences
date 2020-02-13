@@ -57,6 +57,8 @@ interface ViewModel {
 
     getNonRegularizedEvents(events): any[];
 
+    eventManageRemove(events: EventResponse[], event: Event): EventResponse[];
+
     hideGlobalCheckbox(event): boolean;
 
     /* Open filter lightbox */
@@ -418,13 +420,15 @@ export const eventsController = ng.controller('EventsController', ['$scope', '$r
                     });
                 }
             }
+
             await Promise.all([
                 vm.events.updateReason(fetchedEventIds, initialReasonId),
                 new Absence(null, null, null, null)
                     .updateAbsenceReason(fetchedAbsenceIds, initialReasonId)
             ]).then(() => {
-                getEvents(true);
-                if (event.events.filter(e => !e.counsellor_regularisation).length === 0) {
+                if(initialReasonId) history.reason.proving = vm.eventReasonsType.find((r) => r.id === initialReasonId).proving;
+                vm.events.events = vm.eventManageRemove(vm.events.events, history);
+                if (event && event.events.filter(e => !e.counsellor_regularisation).length === 0) {
                     vm.eventId = null;
                 }
             });
@@ -475,11 +479,11 @@ export const eventsController = ng.controller('EventsController', ['$scope', '$r
                     .updateAbsenceRegularized(fetchedAbsenceIds, initialCounsellorRegularisation)
             ]).then(() => {
                 if (!isWidget) {
-                    getEvents(true);
-                    if (event.events.filter(e => !e.counsellor_regularisation).length === 0) {
+                    if (event && event.events.filter(e => !e.counsellor_regularisation).length === 0) {
                         vm.eventId = null;
                     }
                 } else {
+                    vm.events.events = vm.eventManageRemove(vm.events.events, history);
                     vm.events.page = 0;
                 }
             });
@@ -487,6 +491,13 @@ export const eventsController = ng.controller('EventsController', ['$scope', '$r
 
         vm.getNonRegularizedEvents = (events): any[] => {
             return events.filter(item => item.counsellorRegularisation === false);
+        };
+
+        vm.eventManageRemove = (events, event) => {
+            if (event.reason && event.reason.id && (event.reason.proving || event.counsellor_regularisation)) {
+                events = events.filter((e) => e.id !== event.id);
+            }
+            return events
         };
 
         /* Toggle Collapse */
@@ -743,8 +754,7 @@ export const eventsController = ng.controller('EventsController', ['$scope', '$r
             }
         };
 
-        vm.adaptReason = function () {
-            if (!vm.formFilter.absences) {
+        vm.adaptReason = function () {if (!vm.formFilter.absences) {
                 vm.eventReasonsId = [];
                 vm.eventType = _.without(vm.eventType, EventType.ABSENCE);
             } else {
