@@ -1,5 +1,6 @@
 package fr.openent.incidents.controller;
 
+import fr.openent.incidents.constants.Actions;
 import fr.openent.incidents.security.ManageIncidentRight;
 import fr.openent.incidents.service.PartnerService;
 import fr.openent.incidents.service.impl.DefaultPartnerService;
@@ -11,6 +12,7 @@ import io.vertx.core.http.HttpServerRequest;
 import io.vertx.core.json.JsonObject;
 import org.entcore.common.controller.ControllerHelper;
 import org.entcore.common.http.filter.ResourceFilter;
+import org.entcore.common.http.filter.Trace;
 import org.entcore.common.http.response.DefaultResponseHandler;
 
 public class PartnerController extends ControllerHelper {
@@ -38,6 +40,7 @@ public class PartnerController extends ControllerHelper {
     @Post("/partner")
     @ApiDoc("Create incidents partner")
     @ResourceFilter(ManageIncidentRight.class)
+    @Trace(Actions.INCIDENT_PARTNER_CREATION)
     @SecuredAction(value = "", type = ActionType.RESOURCE)
     public void post(final HttpServerRequest request) {
         RequestUtils.bodyToJson(request, partnerBody -> {
@@ -65,6 +68,7 @@ public class PartnerController extends ControllerHelper {
     @ApiDoc("Update incidents partner")
     @ResourceFilter(ManageIncidentRight.class)
     @SecuredAction(value = "", type = ActionType.RESOURCE)
+    @Trace(Actions.INCIDENT_PARTNER_UPDATE)
     public void put(final HttpServerRequest request) {
         RequestUtils.bodyToJson(request, partnerBody -> {
             if (isPartnerBodyInvalid(partnerBody) && !partnerBody.containsKey("hidden") &&
@@ -87,6 +91,7 @@ public class PartnerController extends ControllerHelper {
     @ApiDoc("Delete incidents partner")
     @ResourceFilter(ManageIncidentRight.class)
     @SecuredAction(value = "", type = ActionType.RESOURCE)
+    @Trace(Actions.INCIDENT_PARTNER_DELETION)
     public void delete(final HttpServerRequest request) {
         if (!request.params().contains("id")) {
             badRequest(request);

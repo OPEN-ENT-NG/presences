@@ -33,4 +33,26 @@ public class Actions {
     public static final String SETTING_UPDATE = "SETTING_UPDATE";
     // A user deletes an alert
     public static final String ALERT_DELETION = "ALERT_DELETION";
+    // A user creates a forgotten notebook
+    public static final String FORGOTTEN_NOTEBOOK_CREATION = "FORGOTTEN_NOTEBOOK_CREATION";
+    // A user update a forgotten notebook
+    public static final String FORGOTTEN_NOTEBOOK_UPDATE = "FORGOTTEN_NOTEBOOK_UPDATE";
+    // A user deletes a forgotten notebook
+    public static final String FORGOTTEN_NOTEBOOK_DELETION = "FORGOTTEN_NOTEBOOK_DELETION";
+    // A user creates a reason
+    public static final String REASON_CREATION = "REASON_CREATION";
+    // A user updates a reason
+    public static final String REASON_UPDATE = "REASON_UPDATE";
+    // A user deletes a reason
+    public static final String REASON_DELETION = "REASON_DELETION";
+    // A user creates an absence
+    public static final String ABSENCE_CREATION = "ABSENCE_CREATION";
+    // A user updates an absence
+    public static final String ABSENCE_UPDATE = "ABSENCE_UPDATE";
+    // A user deletes an absence
+    public static final String ABSENCE_DELETION = "ABSENCE_DELETION";
+    // A user update the absence reason
+    public static final String ABSENCE_UPDATE_SET_REASON = "ABSENCE_UPDATE_SET_REASON";
+    // A user regularized an absence
+    public static final String ABSENCE_REGULARISATION = "ABSENCE_REGULARISATION";
 }

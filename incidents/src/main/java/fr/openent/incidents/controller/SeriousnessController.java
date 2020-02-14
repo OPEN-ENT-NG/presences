@@ -1,5 +1,6 @@
 package fr.openent.incidents.controller;
 
+import fr.openent.incidents.constants.Actions;
 import fr.openent.incidents.security.ManageIncidentRight;
 import fr.openent.incidents.service.SeriousnessService;
 import fr.openent.incidents.service.impl.DefaultSeriousnessService;
@@ -11,6 +12,7 @@ import io.vertx.core.http.HttpServerRequest;
 import io.vertx.core.json.JsonObject;
 import org.entcore.common.controller.ControllerHelper;
 import org.entcore.common.http.filter.ResourceFilter;
+import org.entcore.common.http.filter.Trace;
 import org.entcore.common.http.response.DefaultResponseHandler;
 
 public class SeriousnessController extends ControllerHelper {
@@ -38,6 +40,7 @@ public class SeriousnessController extends ControllerHelper {
     @Post("/seriousness")
     @ApiDoc("Create incidents seriousness")
     @ResourceFilter(ManageIncidentRight.class)
+    @Trace(Actions.INCIDENT_SERIOUSNESS_CREATION)
     @SecuredAction(value = "", type = ActionType.RESOURCE)
     public void post(final HttpServerRequest request) {
         RequestUtils.bodyToJson(request, seriousnessBody -> {
@@ -66,6 +69,7 @@ public class SeriousnessController extends ControllerHelper {
     @ApiDoc("Update incidents seriousness")
     @ResourceFilter(ManageIncidentRight.class)
     @SecuredAction(value = "", type = ActionType.RESOURCE)
+    @Trace(Actions.INCIDENT_SERIOUSNESS_UPDATE)
     public void put(final HttpServerRequest request) {
         RequestUtils.bodyToJson(request, seriousnessBody -> {
             if (isPartnerBodyInvalid(seriousnessBody) && !seriousnessBody.containsKey("hidden") &&
@@ -88,6 +92,7 @@ public class SeriousnessController extends ControllerHelper {
     @ApiDoc("Delete incidents seriousness")
     @ResourceFilter(ManageIncidentRight.class)
     @SecuredAction(value = "", type = ActionType.RESOURCE)
+    @Trace(Actions.INCIDENT_SERIOUSNESS_DELETION)
     public void delete(final HttpServerRequest request) {
         if (!request.params().contains("id")) {
             badRequest(request);

@@ -1,6 +1,7 @@
 package fr.openent.massmailing.controller;
 
 import fr.openent.massmailing.Massmailing;
+import fr.openent.massmailing.actions.Action;
 import fr.openent.massmailing.enums.MailingType;
 import fr.openent.massmailing.enums.MassmailingType;
 import fr.openent.massmailing.mailing.Mail;
@@ -31,6 +32,7 @@ import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import org.entcore.common.controller.ControllerHelper;
 import org.entcore.common.http.filter.ResourceFilter;
+import org.entcore.common.http.filter.Trace;
 import org.entcore.common.user.UserUtils;
 
 import java.util.ArrayList;
@@ -535,6 +537,8 @@ public class MassmailingController extends ControllerHelper {
     }
 
     @Post("/massmailings/:mailingType")
+    //TODO Some security?
+    @Trace(Action.MASSMAILING_DELIVERY)
     @ApiDoc("Post massmailing. In case of MAIL or SMS type, send mails or SMS. In case of PDF, generate PDF and download it")
     public void postMassmailing(HttpServerRequest request) {
         if (!validMailingType(request)) {

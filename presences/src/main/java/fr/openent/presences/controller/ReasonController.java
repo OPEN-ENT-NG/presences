@@ -1,5 +1,6 @@
 package fr.openent.presences.controller;
 
+import fr.openent.presences.constants.Actions;
 import fr.openent.presences.security.Manage;
 import fr.openent.presences.service.ReasonService;
 import fr.openent.presences.service.impl.DefaultReasonService;
@@ -11,6 +12,7 @@ import io.vertx.core.http.HttpServerRequest;
 import io.vertx.core.json.JsonObject;
 import org.entcore.common.controller.ControllerHelper;
 import org.entcore.common.http.filter.ResourceFilter;
+import org.entcore.common.http.filter.Trace;
 import org.entcore.common.http.response.DefaultResponseHandler;
 
 public class ReasonController extends ControllerHelper {
@@ -39,6 +41,7 @@ public class ReasonController extends ControllerHelper {
     @ApiDoc("Create reason")
     @ResourceFilter(Manage.class)
     @SecuredAction(value = "", type = ActionType.RESOURCE)
+    @Trace(Actions.REASON_CREATION)
     public void post(final HttpServerRequest request) {
         RequestUtils.bodyToJson(request, reasonBody -> {
             if (isReasonBodyInvalid(reasonBody)) {
@@ -67,6 +70,7 @@ public class ReasonController extends ControllerHelper {
     @ApiDoc("Update reason")
     @ResourceFilter(Manage.class)
     @SecuredAction(value = "", type = ActionType.RESOURCE)
+    @Trace(Actions.REASON_UPDATE)
     public void put(final HttpServerRequest request) {
         RequestUtils.bodyToJson(request, reasonBody -> {
             if (isReasonBodyInvalid(reasonBody) && !reasonBody.containsKey("hidden") &&
@@ -89,6 +93,7 @@ public class ReasonController extends ControllerHelper {
     @ApiDoc("Delete reason")
     @ResourceFilter(Manage.class)
     @SecuredAction(value = "", type = ActionType.RESOURCE)
+    @Trace(Actions.REASON_DELETION)
     public void delete(final HttpServerRequest request) {
         if (!request.params().contains("id")) {
             badRequest(request);

@@ -1,5 +1,6 @@
 package fr.openent.incidents.controller;
 
+import fr.openent.incidents.constants.Actions;
 import fr.openent.incidents.security.ManageIncidentRight;
 import fr.openent.incidents.service.IncidentsTypeService;
 import fr.openent.incidents.service.impl.DefaultIncidentsTypeService;
@@ -11,6 +12,7 @@ import io.vertx.core.http.HttpServerRequest;
 import io.vertx.core.json.JsonObject;
 import org.entcore.common.controller.ControllerHelper;
 import org.entcore.common.http.filter.ResourceFilter;
+import org.entcore.common.http.filter.Trace;
 import org.entcore.common.http.response.DefaultResponseHandler;
 
 public class IncidentsTypeController extends ControllerHelper {
@@ -38,6 +40,7 @@ public class IncidentsTypeController extends ControllerHelper {
     @Post("/type")
     @ApiDoc("Create incidents type")
     @ResourceFilter(ManageIncidentRight.class)
+    @Trace(Actions.INCIDENT_TYPE_CREATION)
     @SecuredAction(value = "", type = ActionType.RESOURCE)
     public void post(final HttpServerRequest request) {
         RequestUtils.bodyToJson(request, incidentTypeBody -> {
@@ -65,6 +68,7 @@ public class IncidentsTypeController extends ControllerHelper {
     @ApiDoc("Update incidents type")
     @ResourceFilter(ManageIncidentRight.class)
     @SecuredAction(value = "", type = ActionType.RESOURCE)
+    @Trace(Actions.INCIDENT_TYPE_UPDATE)
     public void put(final HttpServerRequest request) {
         RequestUtils.bodyToJson(request, incidentTypeBody -> {
             if (isIncidentBodyInvalid(incidentTypeBody) && !incidentTypeBody.containsKey("hidden") &&
@@ -87,6 +91,7 @@ public class IncidentsTypeController extends ControllerHelper {
     @ApiDoc("Delete incidents type")
     @ResourceFilter(ManageIncidentRight.class)
     @SecuredAction(value = "", type = ActionType.RESOURCE)
+    @Trace(Actions.INCIDENT_TYPE_DELETION)
     public void delete(final HttpServerRequest request) {
         if (!request.params().contains("id")) {
             badRequest(request);

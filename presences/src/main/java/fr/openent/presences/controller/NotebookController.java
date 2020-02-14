@@ -1,5 +1,6 @@
 package fr.openent.presences.controller;
 
+import fr.openent.presences.constants.Actions;
 import fr.openent.presences.security.Manage;
 import fr.openent.presences.service.NotebookService;
 import fr.openent.presences.service.impl.DefaultNotebookService;
@@ -10,6 +11,7 @@ import fr.wseduc.webutils.request.RequestUtils;
 import io.vertx.core.http.HttpServerRequest;
 import org.entcore.common.controller.ControllerHelper;
 import org.entcore.common.http.filter.ResourceFilter;
+import org.entcore.common.http.filter.Trace;
 import org.entcore.common.http.response.DefaultResponseHandler;
 
 public class NotebookController extends ControllerHelper {
@@ -40,6 +42,7 @@ public class NotebookController extends ControllerHelper {
     @ApiDoc("Create forgotten notebook")
     @ResourceFilter(Manage.class)
     @SecuredAction(value = "", type = ActionType.RESOURCE)
+    @Trace(Actions.FORGOTTEN_NOTEBOOK_CREATION)
     public void post(HttpServerRequest request) {
         RequestUtils.bodyToJson(request, notebookBody -> {
             if (!(notebookBody.containsKey("studentId")
@@ -56,6 +59,7 @@ public class NotebookController extends ControllerHelper {
     @ApiDoc("Update forgotten notebook")
     @ResourceFilter(Manage.class)
     @SecuredAction(value = "", type = ActionType.RESOURCE)
+    @Trace(Actions.FORGOTTEN_NOTEBOOK_UPDATE)
     public void update(final HttpServerRequest request) {
         if (!request.params().contains("id")) {
             badRequest(request);
@@ -75,6 +79,7 @@ public class NotebookController extends ControllerHelper {
     @ApiDoc("Delete absence")
     @ResourceFilter(Manage.class)
     @SecuredAction(value = "", type = ActionType.RESOURCE)
+    @Trace(Actions.FORGOTTEN_NOTEBOOK_DELETION)
     public void delete(final HttpServerRequest request) {
         if (!request.params().contains("id")) {
             badRequest(request);

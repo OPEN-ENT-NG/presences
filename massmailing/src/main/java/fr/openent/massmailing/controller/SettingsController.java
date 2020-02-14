@@ -48,7 +48,7 @@ public class SettingsController extends ControllerHelper {
     @Post("/settings/templates")
     @SecuredAction(value = "", type = ActionType.RESOURCE)
     @ResourceFilter(Manage.class)
-    @Trace(Action.TEMPLATE_CREATION)
+    @Trace(Action.MASSMAILING_TEMPLATE_CREATION)
     @ApiDoc("Create given template")
     public void createTemplate(HttpServerRequest request) {
         RequestUtils.bodyToJson(request, pathPrefix + "template", body -> {
@@ -60,7 +60,7 @@ public class SettingsController extends ControllerHelper {
     @ApiDoc("Update given template")
     @SecuredAction(value = "", type = ActionType.RESOURCE)
     @ResourceFilter(Manage.class)
-    @Trace(Action.TEMPLATE_UPDATE)
+    @Trace(Action.MASSMAILING_TEMPLATE_UPDATE)
     public void updateTemplate(HttpServerRequest request) {
         try {
             Integer id = Integer.parseInt(request.getParam("id"));
@@ -75,7 +75,7 @@ public class SettingsController extends ControllerHelper {
     @ApiDoc("Delete given template")
     @SecuredAction(value = "", type = ActionType.RESOURCE)
     @ResourceFilter(Manage.class)
-    @Trace(Action.TEMPLATE_DELETION)
+    @Trace(Action.MASSMAILING_TEMPLATE_DELETION)
     public void deleteTemplate(HttpServerRequest request) {
         try {
             Integer id = Integer.parseInt(request.getParam("id"));

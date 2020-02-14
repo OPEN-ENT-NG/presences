@@ -46,7 +46,7 @@ public class AbsenceController extends ControllerHelper {
     @Post("/absence")
     @ApiDoc("Create absence")
     @ResourceFilter(CreateEventRight.class)
-    @Trace(Actions.ABSENCE_ACTION_CREATION)
+    @Trace(Actions.ABSENCE_CREATION)
     public void postEvent(HttpServerRequest request) {
         RequestUtils.bodyToJson(request, event -> {
             if (!isAbsenceBodyValid(event)) {
@@ -68,8 +68,10 @@ public class AbsenceController extends ControllerHelper {
 
     @Put("/absence/:id")
     @ApiDoc("Update absence")
+    // TODO Change this right
     @ResourceFilter(Manage.class)
     @SecuredAction(value = "", type = ActionType.RESOURCE)
+    @Trace(Actions.ABSENCE_UPDATE)
     public void update(final HttpServerRequest request) {
         if (!request.params().contains("id")) {
             badRequest(request);
@@ -96,6 +98,7 @@ public class AbsenceController extends ControllerHelper {
     @ApiDoc("Update reason in absence")
     @ResourceFilter(Manage.class)
     @SecuredAction(value = "", type = ActionType.RESOURCE)
+    @Trace(Actions.ABSENCE_UPDATE_SET_REASON)
     public void changeReasonAbsence(HttpServerRequest request) {
         RequestUtils.bodyToJson(request, absence -> {
             absenceService.changeReasonAbsences(absence, DefaultResponseHandler.defaultResponseHandler(request));
@@ -106,6 +109,7 @@ public class AbsenceController extends ControllerHelper {
     @ApiDoc("Update regularized absence")
     @ResourceFilter(Manage.class)
     @SecuredAction(value = "", type = ActionType.RESOURCE)
+    @Trace(Actions.ABSENCE_REGULARISATION)
     public void regularizedAbsences(HttpServerRequest request) {
         RequestUtils.bodyToJson(request, absence -> {
             absenceService.changeRegularizedAbsences(absence, DefaultResponseHandler.defaultResponseHandler(request));
@@ -121,6 +125,7 @@ public class AbsenceController extends ControllerHelper {
     @ApiDoc("Delete absence")
     @ResourceFilter(Manage.class)
     @SecuredAction(value = "", type = ActionType.RESOURCE)
+    @Trace(Actions.ABSENCE_DELETION)
     public void delete(final HttpServerRequest request) {
         if (!request.params().contains("id")) {
             badRequest(request);

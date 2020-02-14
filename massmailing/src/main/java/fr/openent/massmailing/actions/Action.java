@@ -2,9 +2,11 @@ package fr.openent.massmailing.actions;
 
 public class Action {
     // A user creates a template
-    public static final String TEMPLATE_CREATION = "TEMPLATE_CREATION";
+    public static final String MASSMAILING_TEMPLATE_CREATION = "MASSMAILING_TEMPLATE_CREATION";
     // A user delete a template
-    public static final String TEMPLATE_DELETION = "TEMPLATE_DELETION";
+    public static final String MASSMAILING_TEMPLATE_DELETION = "MASSMAILING_TEMPLATE_DELETION";
     // A user update a template
-    public static final String TEMPLATE_UPDATE = "TEMPLATE_UPDATE";
+    public static final String MASSMAILING_TEMPLATE_UPDATE = "MASSMAILING_TEMPLATE_UPDATE";
+    // A user send some massmailing
+    public static final String MASSMAILING_DELIVERY = "MASSMAILING_DELIVERY";
 }

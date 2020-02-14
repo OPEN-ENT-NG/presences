@@ -1,5 +1,6 @@
 package fr.openent.incidents.controller;
 
+import fr.openent.incidents.constants.Actions;
 import fr.openent.incidents.security.ManageIncidentRight;
 import fr.openent.incidents.service.PlaceService;
 import fr.openent.incidents.service.impl.DefaultPlaceService;
@@ -11,6 +12,7 @@ import io.vertx.core.http.HttpServerRequest;
 import io.vertx.core.json.JsonObject;
 import org.entcore.common.controller.ControllerHelper;
 import org.entcore.common.http.filter.ResourceFilter;
+import org.entcore.common.http.filter.Trace;
 import org.entcore.common.http.response.DefaultResponseHandler;
 
 public class PlaceController extends ControllerHelper {
@@ -38,6 +40,7 @@ public class PlaceController extends ControllerHelper {
     @Post("/place")
     @ApiDoc("Create incidents place")
     @ResourceFilter(ManageIncidentRight.class)
+    @Trace(Actions.INCIDENT_PLACE_CREATION)
     @SecuredAction(value = "", type = ActionType.RESOURCE)
     public void post(final HttpServerRequest request) {
         RequestUtils.bodyToJson(request, placeBody -> {
@@ -65,6 +68,7 @@ public class PlaceController extends ControllerHelper {
     @ApiDoc("Update incidents place")
     @ResourceFilter(ManageIncidentRight.class)
     @SecuredAction(value = "", type = ActionType.RESOURCE)
+    @Trace(Actions.INCIDENT_PLACE_UPDATE)
     public void put(final HttpServerRequest request) {
         RequestUtils.bodyToJson(request, placeBody -> {
             if (isPartnerBodyInvalid(placeBody) && !placeBody.containsKey("hidden") &&
@@ -87,6 +91,7 @@ public class PlaceController extends ControllerHelper {
     @ApiDoc("Delete incidents place")
     @ResourceFilter(ManageIncidentRight.class)
     @SecuredAction(value = "", type = ActionType.RESOURCE)
+    @Trace(Actions.INCIDENT_PLACE_DELETION)
     public void delete(final HttpServerRequest request) {
         if (!request.params().contains("id")) {
             badRequest(request);
