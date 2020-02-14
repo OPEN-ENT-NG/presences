@@ -8,6 +8,7 @@ export interface MarkedStudent {
     presenceId: number;
     comment: string;
     student: Student;
+    isCommentEditable?: boolean;
 }
 
 export interface MarkedStudentRequest {

@@ -91,12 +91,22 @@
         max-height: 252px;
         overflow-y: auto;
 
-        .markedStudent-comment {
-          background: $presences-grey-smoke;
-          border: 1px solid $presences-grey-smoke;
+        /* Comment */
 
-          &:focus {
-            background-color: rgba(170, 170, 170, 0.2)
+        &-comment {
+          position: relative;
+
+          &-markedStudentComment {
+            background: none;
+            border: 0 solid rgba(170, 170, 170, 0.2);
+
+            &:focus {
+              outline: none;
+            }
+          }
+
+          &-icon {
+            position: absolute;
           }
         }
       }

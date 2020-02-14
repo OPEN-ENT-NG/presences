@@ -18,7 +18,6 @@ interface ViewModel {
     date: { date: string, startTime: Date, endTime: Date };
     disciplines: Array<Discipline>;
     isButtonAllowed: boolean;
-    isCommentEditable: boolean;
 
     openPresenceLightbox(): void;
 
@@ -44,9 +43,13 @@ interface ViewModel {
 
     selectItem(valueInput: string, item: SearchItem): Promise<void>;
 
+    showIcon(markedStudent: MarkedStudent): void;
+
+    hideIcon(markedStudent: MarkedStudent): void;
+
     removeMarkedStudent(markedStudent: MarkedStudent): void;
 
-    editMarkedStudentComment($event): void;
+    editMarkedStudentComment($event, $index: number, markedStudent: MarkedStudent): void;
 
     safeApply(fn?: () => void): void;
 }
@@ -64,7 +67,6 @@ const vm: ViewModel = {
     form: {} as PresenceBody,
     globalSearch: null,
     isButtonAllowed: true,
-    isCommentEditable: false,
 
     openPresenceLightbox(): void {
         vm.globalSearch = new GlobalSearch(window.structure.id, SearchService, GroupService);
@@ -175,7 +177,6 @@ const vm: ViewModel = {
     },
 
     async selectItem(valueInput: string, item: SearchItem): Promise<void> {
-        console.log("item: ", item);
         /* if search item result is USER */
         if (item.type === GlobalSearch.TYPE.user) {
             if (vm.presence.markedStudents.find(student => student.student.id === item.id) === undefined) {
@@ -208,14 +209,22 @@ const vm: ViewModel = {
         vm.safeApply();
     },
 
-    editMarkedStudentComment($event): void {
-        vm.isCommentEditable = !vm.isCommentEditable;
-        console.log("$event: ", $event);
-        if (vm.isCommentEditable) {
-            document.querySelector('.markedStudent-comment').setAttribute("contenteditable", 'true');
-
-            // span contenteditable= true
+    editMarkedStudentComment($event, $index: number, markedStudent: MarkedStudent): void {
+        markedStudent.isCommentEditable = !markedStudent.isCommentEditable;
+        if (markedStudent.isCommentEditable) {
+            document.getElementById($index.toString()).focus();
         }
+        vm.safeApply();
+    },
+
+    showIcon(markedStudent: MarkedStudent): void {
+        if (markedStudent.comment.length === 0) {
+            markedStudent.isCommentEditable = false;
+        }
+    },
+
+    hideIcon(markedStudent: MarkedStudent): void {
+        markedStudent.isCommentEditable = true;
     },
 
     closePresenceLightbox(): void {

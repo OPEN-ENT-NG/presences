@@ -107,7 +107,7 @@
 
                 <!-- list student -->
                 <div class="flex-row list-students" ng-show="vm.presence.markedStudents.length > 0">
-                    <div class="flex-body" ng-repeat="markedStudent in vm.presence.markedStudents">
+                    <div class="flex-body" ng-repeat="markedStudent in vm.presence.markedStudents track by $index">
                         <div class="flex-content">
                             <div class="flex-row row__15">
                                 <!-- student picture -->
@@ -121,8 +121,17 @@
                                 <!-- student className -->
                                 <div class="flex-col col__3">[[markedStudent.student.classeName]]</div>
                                 <!-- student's comment -->
-                                <div class="flex-col col__5">
-                                    <input data-ng-model="markedStudent.comment" class="markedStudent-comment">
+                                <div class="flex-col col__5 list-students-comment">
+                                    <input id="[[$index]]"
+                                           class="list-students-comment-markedStudentComment"
+                                           data-ng-blur="vm.showIcon(markedStudent)"
+                                           data-ng-focus="vm.hideIcon(markedStudent)"
+                                           data-ng-model="markedStudent.comment">
+
+                                    <i data-ng-show="markedStudent.comment.length === 0 && !markedStudent.isCommentEditable"
+                                       class="list-students-comment-icon presence-edit"
+                                       data-ng-click="vm.editMarkedStudentComment($event, $index, markedStudent)">
+                                    </i>
                                 </div>
                                 <!-- remove student -->
                                 <div class="flex-col col__1">
