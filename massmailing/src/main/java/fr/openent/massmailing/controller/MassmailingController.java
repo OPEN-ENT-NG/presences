@@ -7,6 +7,7 @@ import fr.openent.massmailing.enums.MassmailingType;
 import fr.openent.massmailing.mailing.Mail;
 import fr.openent.massmailing.mailing.MassMailingProcessor;
 import fr.openent.massmailing.mailing.Template;
+import fr.openent.massmailing.security.BodyCanAccessMassMailing;
 import fr.openent.massmailing.security.CanAccessMassMailing;
 import fr.openent.massmailing.service.MassmailingService;
 import fr.openent.massmailing.service.impl.DefaultMassmailingService;
@@ -537,7 +538,8 @@ public class MassmailingController extends ControllerHelper {
     }
 
     @Post("/massmailings/:mailingType")
-    //TODO Some security?
+    @SecuredAction(value = "", type = ActionType.RESOURCE)
+    @ResourceFilter(BodyCanAccessMassMailing.class)
     @Trace(Action.MASSMAILING_DELIVERY)
     @ApiDoc("Post massmailing. In case of MAIL or SMS type, send mails or SMS. In case of PDF, generate PDF and download it")
     public void postMassmailing(HttpServerRequest request) {
