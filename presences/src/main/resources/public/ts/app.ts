@@ -27,9 +27,6 @@ routes.define(function ($routeProvider) {
         .when('/events', {
             action: 'events'
         })
-        .when('/alerts', {
-            action: 'alerts'
-        })
         // .when('/group-absences', {
         //     action: 'group-absences'
         // })
@@ -37,6 +34,11 @@ routes.define(function ($routeProvider) {
             redirectTo: '/dashboard'
         });
 
+    if (model.me.hasWorkflow(rights.workflow.widget_alerts)) {
+        $routeProvider.when('/alerts', {
+            action: 'alerts'
+        })
+    }
 
     if (model.me.hasWorkflow(rights.workflow.readRegister)) {
         $routeProvider

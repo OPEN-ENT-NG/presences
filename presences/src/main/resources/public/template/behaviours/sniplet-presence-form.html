@@ -55,7 +55,9 @@
                 <label class="presenceLightbox-body-info-discipline-select">
                     <i18n>presences.discipline.form.input.threshold.second</i18n>
                     <select data-ng-model="vm.presence.discipline.id"
-                            ng-options="discipline.id as discipline.label for discipline in vm.disciplines">
+                            ng-options="discipline.id as discipline.label for discipline in vm.disciplinesDescription"
+                            options-disabled="discipline.hidden for discipline in vm.disciplines">
+                        <option ng-if="!vm.presence.id" value=""></option>
                     </select>
                 </label>
 
@@ -122,11 +124,11 @@
                                 <div class="flex-col col__3">[[markedStudent.student.classeName]]</div>
                                 <!-- student's comment -->
                                 <div class="flex-col col__5 list-students-comment">
-                                    <input id="[[$index]]"
-                                           class="list-students-comment-markedStudentComment"
-                                           data-ng-blur="vm.showIcon(markedStudent)"
-                                           data-ng-focus="vm.hideIcon(markedStudent)"
-                                           data-ng-model="markedStudent.comment">
+                                    <textarea id="[[$index]]"
+                                              class="list-students-comment-markedStudentComment"
+                                              data-ng-blur="vm.showIcon(markedStudent)"
+                                              data-ng-focus="vm.hideIcon(markedStudent)"
+                                              data-ng-model="markedStudent.comment"></textarea>
 
                                     <i data-ng-show="markedStudent.comment.length === 0 && !markedStudent.isCommentEditable"
                                        class="list-students-comment-icon presence-edit"
@@ -134,7 +136,7 @@
                                     </i>
                                 </div>
                                 <!-- remove student -->
-                                <div class="flex-col col__1">
+                                <div class="flex-col col__1" data-ng-click="vm.removeMarkedStudent(markedStudent)">
                                     <i class="delete" data-ng-click="vm.removeMarkedStudent(markedStudent)"></i>
                                 </div>
                             </div>

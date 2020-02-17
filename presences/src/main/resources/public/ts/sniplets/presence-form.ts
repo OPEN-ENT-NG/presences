@@ -17,6 +17,7 @@ interface ViewModel {
     globalSearch: GlobalSearch;
     date: { date: string, startTime: Date, endTime: Date };
     disciplines: Array<Discipline>;
+    disciplinesDescription: Array<Discipline>;
     isButtonAllowed: boolean;
 
     openPresenceLightbox(): void;
@@ -58,6 +59,7 @@ const vm: ViewModel = {
     safeApply: null,
     createPresenceLightBox: false,
     disciplines: [],
+    disciplinesDescription: [],
     date: {
         date: moment(),
         startTime: moment().set({second: 0, millisecond: 0}).toDate(),
@@ -114,7 +116,6 @@ const vm: ViewModel = {
         vm.safeApply();
     },
 
-
     openEditPresence: (presence: Presence): void => {
         vm.globalSearch = new GlobalSearch(presence.structureId, SearchService, GroupService);
         vm.createPresenceLightBox = true;
@@ -143,7 +144,7 @@ const vm: ViewModel = {
         vm.presence.owner.displayName = model.me.username;
         vm.presence.owner.id = model.me.userId;
         vm.presence.structureId = window.structure.id;
-        vm.presence.discipline = {} as Discipline;
+        vm.presence.discipline = {id: 0} as Discipline;
         vm.presence.markedStudents = [];
     },
 
@@ -163,11 +164,11 @@ const vm: ViewModel = {
     },
 
     isFormValid(): boolean {
-        return vm.presence.discipline.id != null && vm.presence.markedStudents.length > 0 &&
+        return (vm.presence.discipline.id != null && vm.presence.discipline.id != 0) &&
+            vm.presence.markedStudents.length > 0 &&
             DateUtils.getDateFormat(moment(vm.date.date), vm.date.startTime) <=
             DateUtils.getDateFormat(moment(vm.date.date), vm.date.endTime);
     },
-
 
     /* search bar interaction */
 
@@ -239,11 +240,17 @@ export const presenceForm = {
     controller: {
         init: async function () {
             this.vm = vm;
+            this.getDisciplines();
             this.setHandler();
             presenceForm.that = this;
-            vm.disciplines = await disciplineService.get(window.structure.id);
             this.setButton();
             vm.safeApply = this.safeApply;
+        },
+        async getDisciplines(): Promise<void> {
+            if (!vm.disciplines || vm.disciplines.length <= 1) {
+                vm.disciplines = await disciplineService.get(window.structure.id);
+                vm.disciplinesDescription = _.clone(vm.disciplines);
+            }
         },
         setHandler: function () {
             this.$on(SNIPLET_FORM_EVENTS.SET_PARAMS, (event: IAngularEvent, presence: Presence) => vm.openEditPresence(presence));
@@ -252,6 +259,10 @@ export const presenceForm = {
             switch (window.location.hash) {
                 case '#/dashboard': {
                     vm.isButtonAllowed = false;
+                    break;
+                }
+                case '#/presences': {
+                    vm.isButtonAllowed = true;
                     break;
                 }
             }

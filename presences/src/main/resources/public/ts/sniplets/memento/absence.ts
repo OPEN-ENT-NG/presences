@@ -122,6 +122,14 @@ const DEFAULT_CHART_OPTIONS: ApexOptions = {
     }]
 };
 
+function getCurrentPeriod(periods: Array<IPeriod> ): IPeriod {
+    for (let i = 0; i < periods.length; i++) {
+        if (moment().isBetween(periods[i].timestamp_dt, periods[i].timestamp_fn)) return periods[i];
+    }
+
+    return periods[0];
+}
+
 function transformGraphSummaryToChartData(): void {
     const colors = {
         JUSTIFIED: '#ff8a84',
@@ -204,7 +212,7 @@ const vm: IViewModel = {
 
             vm.disabled = false;
             translatePeriods(vm.periods);
-            vm.selected.period = vm.periods[0];
+            vm.selected.period = getCurrentPeriod(vm.periods);
             const promises = [loadYearEvents(), loadPeriodEvents()];
             const results = await Promise.all(promises);
             vm.graphSummary = results[0];

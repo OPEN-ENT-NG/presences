@@ -2,6 +2,8 @@ package fr.openent.presences.controller;
 
 import fr.openent.presences.Presences;
 import fr.openent.presences.common.helper.FutureHelper;
+import fr.openent.presences.common.service.GroupService;
+import fr.openent.presences.common.service.impl.DefaultGroupService;
 import fr.openent.presences.constants.Actions;
 import fr.openent.presences.export.ExemptionCSVExport;
 import fr.openent.presences.security.ExportRight;
@@ -35,11 +37,13 @@ import static fr.wseduc.webutils.Utils.handlerToAsyncHandler;
 
 public class ExemptionController extends ControllerHelper {
     private ExemptionService exemptionService;
+    private GroupService groupService;
     private EventBus eb;
 
     public ExemptionController(EventBus eb) {
         super();
         this.exemptionService = new DefaultExemptionService(eb);
+        this.groupService = new DefaultGroupService(eb);
         this.eb = eb;
     }
 
@@ -79,30 +83,22 @@ public class ExemptionController extends ControllerHelper {
 
         //get class's users
         if (audience_ids != null && !audience_ids.isEmpty() && audience_ids.size() > 0) {
-            JsonObject action = new JsonObject()
-                    .put("action", "user.getElevesRelatives")
-                    .put("idsClass", audience_ids);
-
-            eb.send(Presences.ebViescoAddress, action, handlerToAsyncHandler(message -> {
-                JsonObject body = message.body();
-                if ("ok".equals(body.getString("status"))) {
-                    JsonArray student_ids_fromClasses = body.getJsonArray("results");
-                    for (int i = 0; i < student_ids_fromClasses.size(); i++) {
-                        JsonObject student = student_ids_fromClasses.getJsonObject(i);
-                        student_ids.add(student.getString("idNeo4j"));
-                    }
-                    if (wantCSV) {
-                        csvResponse(request, structure_id, start_date, end_date, student_ids);
-                    } else {
-                        paginateResponse(request, page, structure_id, start_date, end_date, student_ids);
-
-                    }
-                } else {
-                    JsonObject error = new JsonObject()
-                            .put("error", body.getString("message"));
-                    Renders.renderJson(request, error, 400);
+            groupService.getGroupStudents(audience_ids, audiences -> {
+                if (audiences.isLeft()) {
+                    log.error("[Presences@ExemptionController] Failed to retrieve student identifiers based on audiences identifiers", audiences.left().getValue());
+                    renderError(request);
+                    return;
                 }
-            }));
+
+                JsonArray students = audiences.right().getValue();
+                ((List<JsonObject>) students.getList()).forEach(student -> student_ids.add(student.getString("id")));
+                if (wantCSV) {
+                    csvResponse(request, structure_id, start_date, end_date, student_ids);
+                } else {
+                    paginateResponse(request, page, structure_id, start_date, end_date, student_ids);
+
+                }
+            });
         } else {
             if (wantCSV) {
                 csvResponse(request, structure_id, start_date, end_date, student_ids);
