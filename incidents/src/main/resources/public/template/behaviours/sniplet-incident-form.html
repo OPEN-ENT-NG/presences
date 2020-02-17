@@ -155,6 +155,7 @@
                     <div class="incident-lightbox-footer-protagonist-list-item-content">
                         <span>[[protagonist.label]]</span>
                         <select required
+                                options-disabled="protagonistType.hidden for protagonistType in vm.incidentParameterType.protagonistType"
                                 data-ng-model="protagonist.protagonistType"
                                 ng-options="protagonistType.label for protagonistType in vm.incidentParameterType.protagonistType track by protagonistType.id">
                         </select>
