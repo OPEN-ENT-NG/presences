@@ -169,13 +169,10 @@ export const calendarController = ng.controller('CalendarController',
             };
 
             $scope.$on(SNIPLET_FORM_EMIT_EVENTS.CREATION, () => {
-                let diff = 7;
-                if (!model.calendar.display.saturday) diff--;
-                if (!model.calendar.display.sunday) diff--;
                 $scope.$broadcast(SNIPLET_FORM_EVENTS.SET_PARAMS, {
                     student: window.item,
-                    start_date: model.calendar.firstDay,
-                    end_date: DateUtils.add(model.calendar.firstDay, diff)
+                    start_date: moment(),
+                    end_date: moment()
                 });
             });
 
