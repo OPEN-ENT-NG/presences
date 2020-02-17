@@ -7,6 +7,12 @@ public class Actions {
     public static final String PRESENCE_UPDATE = "PRESENCE_UPDATE";
     // A user deletes a presence
     public static final String PRESENCE_DELETE = "PRESENCE_DELETE";
+    // A user creates a presence discipline
+    public static final String PRESENCE_DISCIPLINE_CREATION = "PRESENCE_DISCIPLINE_CREATION";
+    // A user update a presence discipline
+    public static final String PRESENCE_DISCIPLINE_UPDATE = "PRESENCE_DISCIPLINE_UPDATE";
+    // A user deletes a presence discipline
+    public static final String PRESENCE_DISCIPLINE_DELETE = "PRESENCE_DISCIPLINE_DELETE";
     // A user creates a register
     public static final String REGISTER_CREATION = "REGISTER_CREATION";
     // A user validates a register

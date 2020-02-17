@@ -89,8 +89,7 @@ public class SearchController extends ControllerHelper {
 
     @Get("/search")
     @ApiDoc("Search for a student or a group")
-    @SecuredAction(value = "", type = ActionType.RESOURCE)
-    @ResourceFilter(SearchRight.class)
+    @SecuredAction(Presences.SEARCH_STUDENTS)
     public void search(HttpServerRequest request) {
         if (request.params().contains("q") && !"".equals(request.params().get("q").trim())
                 && request.params().contains("structureId")) {

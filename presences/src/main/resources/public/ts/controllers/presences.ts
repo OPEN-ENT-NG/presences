@@ -145,7 +145,7 @@ export const presencesController = ng.controller('PresencesController',
             };
 
             vm.openPresence = (presence: Presence): void => {
-                $scope.$broadcast(SNIPLET_FORM_EVENTS.SET_PARAMS, presence);
+                $scope.$broadcast(SNIPLET_FORM_EVENTS.SET_PARAMS, JSON.parse(JSON.stringify(presence)));
             };
 
             vm.formatHour = (date: string): string => DateUtils.format(date, DateUtils.FORMAT["HOUR-MINUTES"]);
@@ -191,7 +191,7 @@ export const presencesController = ng.controller('PresencesController',
             vm.presences.eventer.on('loading::false', () => $scope.safeApply());
 
             $scope.$on(SNIPLET_FORM_EMIT_EVENTS.CREATION, startAction);
-            $scope.$on(SNIPLET_FORM_EMIT_EVENTS.DELETE, startAction);
+            $scope.$on(SNIPLET_FORM_EMIT_EVENTS.EDIT, startAction);
             $scope.$on(SNIPLET_FORM_EMIT_EVENTS.DELETE, startAction);
 
             /* on  (watch) */

@@ -55,7 +55,9 @@
                 <label class="presenceLightbox-body-info-discipline-select">
                     <i18n>presences.discipline.form.input.threshold.second</i18n>
                     <select data-ng-model="vm.presence.discipline.id"
-                            ng-options="discipline.id as discipline.label for discipline in vm.disciplines">
+                            ng-options="discipline.id as discipline.label for discipline in vm.disciplinesDescription"
+                            options-disabled="discipline.hidden for discipline in vm.disciplines">
+                        <option ng-if="!vm.presence.id" value=""></option>
                     </select>
                 </label>
 
