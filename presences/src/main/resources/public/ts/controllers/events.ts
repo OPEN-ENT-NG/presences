@@ -488,6 +488,7 @@ export const eventsController = ng.controller('EventsController', ['$scope', '$r
                     }
                 } else {
                     vm.events.events = vm.eventManageRemove(vm.events.events, history);
+                    $scope.safeApply();
                 }
             });
         };
