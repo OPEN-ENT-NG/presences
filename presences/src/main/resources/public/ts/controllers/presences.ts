@@ -65,7 +65,7 @@ export const presencesController = ng.controller('PresencesController',
                 personalIds: [],
                 studentsIds: [],
                 presencesFilter: {
-                    mine: true
+                    mine: false
                 }
             };
 
