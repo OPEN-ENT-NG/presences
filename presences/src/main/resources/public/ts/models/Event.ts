@@ -15,6 +15,7 @@ export interface Event {
     counsellor_input: boolean;
     counsellor_regularisation: boolean;
     reason?: Reason;
+    reason_id?: number;
     student_id: string;
     register_id: number;
     type_id: number;

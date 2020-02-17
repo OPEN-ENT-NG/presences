@@ -410,7 +410,7 @@ export const eventsController = ng.controller('EventsController', ['$scope', '$r
 
         /* Change its description reason id */
         vm.changeReason = async (history: Event, event: EventResponse): Promise<void> => {
-            let initialReasonId = history.reason.id;
+            let initialReasonId = history.reason ? history.reason.id : history.reason_id;
             let fetchedEventIds: number[] = [];
             let fetchedAbsenceIds: number[] = [];
             if (history.type === EventsUtils.ALL_EVENTS.event) {
@@ -429,7 +429,7 @@ export const eventsController = ng.controller('EventsController', ['$scope', '$r
                 new Absence(null, null, null, null)
                     .updateAbsenceReason(fetchedAbsenceIds, initialReasonId)
             ]).then(() => {
-                if (initialReasonId) history.reason.proving = vm.eventReasonsType.find((r) => r.id === initialReasonId).proving;
+                if (initialReasonId && history.reason) history.reason.proving = vm.eventReasonsType.find((r) => r.id === initialReasonId).proving;
                 vm.events.events = vm.eventManageRemove(vm.events.events, history);
                 if (event && event.events.filter(e => !e.counsellor_regularisation).length === 0) {
                     vm.eventId = null;
@@ -636,7 +636,7 @@ export const eventsController = ng.controller('EventsController', ['$scope', '$r
             /* Fetch reason Id */
             vm.eventReasonsId = [];
             vm.eventReasonsType.forEach(r => {
-                if (r.isSelected) {
+                if (r.isSelected && r.id) {
                     vm.eventReasonsId.push(r.id);
                 }
             });

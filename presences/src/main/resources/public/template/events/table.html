@@ -115,7 +115,7 @@
                 <!--Select-->
                 <span class="events-table-body-description-content-select table-reason">
                      <label>
-                        <select data-ng-model="history.reason.id"
+                        <select data-ng-model="history.reason_id"
                                 data-ng-change="vm.changeReason(history, event)"
                                 ng-options="reason.id as reason.label for reason in vm.eventReasonsTypeDescription"
                                 options-disabled="reason.hidden for reason in vm.eventReasonsType">
@@ -127,13 +127,13 @@
                 <!--Regularized-->
                 <label class="events-table-body-description-content-checkbox checkbox"
                        ng-style="{
-                           opacity: history.reason.id !== null && !history.counsellor_regularisation ? 1 : 0,
-                           'pointer-events': history.reason.id !== null && !history.counsellor_regularisation ? 'all' : 'none'
+                           opacity: history.reason_id !== null && !history.counsellor_regularisation ? 1 : 0,
+                           'pointer-events': history.reason_id !== null && !history.counsellor_regularisation ? 'all' : 'none'
                        }">
                     <input type="checkbox" data-ng-model="history.counsellor_regularisation"
-                           ng-disabled="!(history.reason.id !== null && !vm.provingReasonsMap[history.reason.id]) && history.counsellor_regularisation"
+                           ng-disabled="!(history.reason_id !== null && !vm.provingReasonsMap[history.reason_id]) && history.counsellor_regularisation"
                            data-ng-change="vm.toggleAbsenceRegularised(history, event)">
-                    <span ng-style="{cursor: history.reason.id !== null && !vm.provingReasonsMap[history.reason.id] ? 'pointer' : 'default'}"></span>
+                    <span ng-style="{cursor: history.reason_id !== null && !vm.provingReasonsMap[history.reason_id] ? 'pointer' : 'default'}"></span>
                 </label>
             </div>
         </td>
