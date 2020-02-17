@@ -92,7 +92,7 @@
                             <i class="absence" aria-hidden="true"></i>
                             <span><i18n>presences.navigation.event.list</i18n></span>
                         </a>
-                        <a href="/presences#/alerts" class="sub-item">
+                        <a href="/presences#/alerts" class="sub-item" ng-if="::hasRight('widget_alerts')">
                             <i class="alertes" aria-hidden="true"></i>
                             <span><i18n>presences.alerts.title</i18n></span>
                         </a>
