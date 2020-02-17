@@ -368,14 +368,14 @@ export const eventsController = ng.controller('EventsController', ['$scope', '$r
         vm.regularizedChecked = (event: EventResponse): boolean => {
             let regularized = [];
             event.events.forEach((elem) => {
-                regularized.push(elem.counsellor_regularisation);
+                regularized.push(elem.reason_id && elem.counsellor_regularisation);
                 if ('events' in elem && elem.events.length > 0) {
                     elem.events.forEach(itemEvent => {
                         regularized.push(itemEvent.counsellor_regularisation);
                     });
                 }
             });
-            return !regularized.every((val, i, arr) => val === arr[0]) && !event.globalCounsellorRegularisation;
+            return !event.globalCounsellorRegularisation && regularized.filter((r) => r === true).length > 0;
         };
 
         /* Add global reason_id to all events that exist */
@@ -482,12 +482,12 @@ export const eventsController = ng.controller('EventsController', ['$scope', '$r
                     .updateAbsenceRegularized(fetchedAbsenceIds, initialCounsellorRegularisation)
             ]).then(() => {
                 if (!isWidget) {
+                    getEvents();
                     if (event && event.events.filter(e => !e.counsellor_regularisation).length === 0) {
                         vm.eventId = null;
                     }
                 } else {
                     vm.events.events = vm.eventManageRemove(vm.events.events, history);
-                    vm.events.page = 0;
                 }
             });
         };
