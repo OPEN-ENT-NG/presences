@@ -42,6 +42,7 @@ interface ViewModel {
     selection: { all: boolean };
 
     params: {
+        loading: boolean,
         type: string
     };
 
@@ -100,7 +101,7 @@ export const alertsController = ng.controller('AlertsController', ['$scope', '$r
         vm.selection = {all: false};
 
         /* Fetching information from URL Param and cloning new object RegistryRequest */
-        vm.params = Object.assign({}, $location.search());
+        vm.params = Object.assign({loading: false}, $location.search());
 
         const initData = async () => {
             if (vm.params.type) {
@@ -111,6 +112,8 @@ export const alertsController = ng.controller('AlertsController', ['$scope', '$r
         };
 
         vm.getStudentAlert = async (student, classes) => {
+            vm.params.loading = true;
+            $scope.safeApply();
             vm.alertType = [];
             Object.keys(vm.filter.types).forEach(key => {
                 if (vm.filter.types[key]) vm.alertType.push(key);
@@ -120,11 +123,14 @@ export const alertsController = ng.controller('AlertsController', ['$scope', '$r
                 if (vm.alertType.length > 0) {
                     let studentsAlerts: any = await alertService.getStudentsAlerts(window.structure.id, vm.alertType, student, classes);
                     vm.listAlert = studentsAlerts;
+                } else {
+                    vm.listAlert = [];
                 }
             } catch (e) {
                 toasts.warning('presences.error.get.alert');
                 throw e;
             }
+            vm.params.loading = false;
             $scope.safeApply();
         };
 

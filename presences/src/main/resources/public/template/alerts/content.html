@@ -1,11 +1,11 @@
 <div class="events-content row top20">
 
-    <loader data-ng-show="vm.events.loading" min-height="'250px'"/>
+    <loader data-ng-show="vm.params.loading" min-height="'250px'" title="lang.translate('presences.alerts.loading')"/>
 
-    <div class="twelve" data-ng-show="!vm.events.loading">
+    <div class="twelve" data-ng-show="!vm.params.loading">
 
         <!-- Empty state -->
-        <div class="events-content-empty" data-ng-show="vm.alerts.all.length === 0">
+        <div class="events-content-empty" data-ng-show="vm.listAlert.length === 0">
             <div class="events-content-empty-description">
                 <span class="red-bar"></span>
                 <i18n class="events-content-empty-description-title">presences.alert.empty</i18n>
