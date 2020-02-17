@@ -1,4 +1,4 @@
-<div class="widget-alerts">
+<div class="widget-alerts" ng-show="!vm.params.loading">
     <div class="twelve grid-block">
         <div class="widget-alert padding-10 card-alert position-alert-color [[alert.type]]"
              ng-repeat="alert in vm.listAlert"
