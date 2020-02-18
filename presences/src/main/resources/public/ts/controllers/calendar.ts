@@ -1,6 +1,5 @@
 import {model, moment, ng} from 'entcore';
 import {
-    AlertService,
     CalendarService,
     Course,
     CourseEvent,
@@ -10,17 +9,17 @@ import {
     NotebookRequest,
     SearchItem,
     SearchService,
+    Setting,
     StructureService,
     TimeSlot
 } from '../services';
 import {Scope} from './main';
-import {AlertType, EventType, User} from '../models';
+import {EventType, User} from '../models';
 import {DateUtils} from '@common/utils';
 import {SNIPLET_FORM_EMIT_EVENTS, SNIPLET_FORM_EVENTS} from "@common/model";
-import {ABSENCE_FORM_EVENTS, NOTEBOOK_FORM_EVENTS} from "../sniplets";
-import {CalendarAbsenceUtils, CalendarUtils} from "../utilities";
-import {SettingsService} from "../services";
-import {Setting} from "../services";
+import {NOTEBOOK_FORM_EVENTS} from "../sniplets";
+import {CalendarAbsenceUtils, CalendarUtils, EventsUtils} from "../utilities";
+import {ABSENCE_FORM_EVENTS} from "@common/enum/presences-event";
 
 declare let window: any;
 
@@ -232,7 +231,11 @@ export const calendarController = ng.controller('CalendarController',
                 } else {
                     let absenceItem = items.find(isMatchOrBetweenDate(item));
                     if (absenceItem === undefined) {
-                        $scope.$broadcast(ABSENCE_FORM_EVENTS.OPEN, formatAbsenceForm(item));
+                        if ('subjectId' in item && ('events' in item && item.events.length > 0)) {
+                            $scope.$broadcast(ABSENCE_FORM_EVENTS.EDIT_EVENT, formatAbsenceForm(item));
+                        } else {
+                            $scope.$broadcast(ABSENCE_FORM_EVENTS.OPEN, formatAbsenceForm(item));
+                        }
                     } else {
                         $scope.$broadcast(ABSENCE_FORM_EVENTS.EDIT, absenceItem);
                     }
@@ -253,10 +256,14 @@ export const calendarController = ng.controller('CalendarController',
 
             function formatAbsenceForm(itemCourse) {
                 return {
-                    startDate: moment(itemCourse.startMoment).toDate(),
-                    endDate: moment(itemCourse.endMoment).toDate(),
-                    startTime: moment(itemCourse.startMoment).toDate(),
-                    endTime: moment(itemCourse.endMoment).toDate()
+                    startDate: moment(itemCourse.startDate).toDate(),
+                    endDate: moment(itemCourse.endDate).toDate(),
+                    startTime: moment(itemCourse.startDate).toDate(),
+                    endTime: moment(itemCourse.endDate).toDate(),
+                    studentId: window.item,
+                    eventType: ('subjectId' in itemCourse) ? EventsUtils.ALL_EVENTS.event : EventsUtils.ALL_EVENTS.absence,
+                    id: ('subjectId' in itemCourse && ('events' in itemCourse && itemCourse.events.length > 0))
+                        ? 1 : undefined
                 };
             }
 

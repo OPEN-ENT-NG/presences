@@ -23,3 +23,9 @@ export enum PRESENCES_ACTION {
     SEND_BACK = 'presence-action:send-back-form',
     RESPOND = 'presence-action:respond-form'
 }
+
+export enum ABSENCE_FORM_EVENTS {
+    EDIT = 'absence-form:edit',
+    OPEN = 'absence-form:open',
+    EDIT_EVENT = 'event-form:edit'
+}
