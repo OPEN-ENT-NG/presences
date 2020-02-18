@@ -239,15 +239,13 @@ export const eventsController = ng.controller('EventsController', ['$scope', '$r
                 vm.events.noReason = vm.filter.noReasons;
             }
 
-            if (!vm.eventReasonsType || vm.eventReasonsType.length <= 1) {
-                /* fetch all reasons */
-                vm.eventReasonsType = await ReasonService.getReasons(window.structure.id);
-                vm.eventReasonsTypeDescription = _.clone(vm.eventReasonsType);
-                vm.eventReasonsType.map((reason: Reason) => {
-                    reason.isSelected = true;
-                    vm.provingReasonsMap[reason.id] = reason.proving;
-                });
-            }
+            /* fetch all reasons */
+            vm.eventReasonsType = await ReasonService.getReasons(window.structure.id);
+            vm.eventReasonsTypeDescription = _.clone(vm.eventReasonsType);
+            vm.eventReasonsType.map((reason: Reason) => {
+                reason.isSelected = true;
+                vm.provingReasonsMap[reason.id] = reason.proving;
+            });
 
             if (!isWidget) vm.eventReasonsType.push(vm.multipleSelect);
 
@@ -369,7 +367,8 @@ export const eventsController = ng.controller('EventsController', ['$scope', '$r
         vm.regularizedChecked = (event: EventResponse): boolean => {
             let regularized = [];
             event.events.forEach((elem) => {
-                regularized.push(elem.reason_id && elem.counsellor_regularisation && elem.type === "absence");
+                regularized.push(elem.reason_id && elem.counsellor_regularisation &&
+                    (elem.type === EventsUtils.ALL_EVENTS.absence || elem.type_id === 1));
                 if ('events' in elem && elem.events.length > 0) {
                     elem.events.forEach(itemEvent => {
                         regularized.push(itemEvent.counsellor_regularisation);
