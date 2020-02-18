@@ -51,7 +51,7 @@
         <div class="row">
             <label class="checkbox">
                 <input type="checkbox"
-                       ng-disabled="vm.filter.student.absence !== undefined || (vm.filter.student.exempted && !vm.filter.student.exemption_attendance)"
+                       ng-disabled="vm.filter.student.absence !== undefined || (vm.filter.student.exempted_subjectId === vm.register.subject_id && vm.filter.student.exempted && !vm.filter.student.exemption_attendance)"
                        ng-checked="vm.filter.student.departure !== undefined"
                        ng-click="vm.toggleDeparture(vm.filter.student)"/>
                 <span><i18n>presences.register.event_type.departure</i18n></span>
