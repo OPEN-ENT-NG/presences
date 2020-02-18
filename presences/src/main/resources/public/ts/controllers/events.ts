@@ -281,6 +281,7 @@ export const eventsController = ng.controller('EventsController', ['$scope', '$r
                 structureId: vm.events.structureId,
                 startDate: vm.events.startDate,
                 endDate: vm.events.endDate,
+                noReason: vm.events.noReason,
                 eventType: vm.events.eventType,
                 listReasonIds: vm.events.listReasonIds,
                 regularized: vm.events.regularized,
@@ -368,7 +369,7 @@ export const eventsController = ng.controller('EventsController', ['$scope', '$r
         vm.regularizedChecked = (event: EventResponse): boolean => {
             let regularized = [];
             event.events.forEach((elem) => {
-                regularized.push(elem.reason_id && elem.counsellor_regularisation);
+                regularized.push(elem.reason_id && elem.counsellor_regularisation && elem.type === "absence");
                 if ('events' in elem && elem.events.length > 0) {
                     elem.events.forEach(itemEvent => {
                         regularized.push(itemEvent.counsellor_regularisation);
@@ -482,7 +483,7 @@ export const eventsController = ng.controller('EventsController', ['$scope', '$r
                     .updateAbsenceRegularized(fetchedAbsenceIds, initialCounsellorRegularisation)
             ]).then(() => {
                 if (!isWidget) {
-                    getEvents();
+                    getEvents(true);
                     if (event && event.events.filter(e => !e.counsellor_regularisation).length === 0) {
                         vm.eventId = null;
                     }
@@ -500,6 +501,8 @@ export const eventsController = ng.controller('EventsController', ['$scope', '$r
         vm.eventManageRemove = (events, event) => {
             if (event.reason && event.reason.id && (event.reason.proving || event.counsellor_regularisation)) {
                 events = events.filter((e) => e.id !== event.id);
+            } else if (event.events) {
+                event.events.filter((e) => e.type === EventType[EventType.ABSENCE])
             }
             return events
         };
