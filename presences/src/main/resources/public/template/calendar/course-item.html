@@ -29,10 +29,18 @@
         </div>
     </div>
     <div class="right-side">
-        <div ng-mouseenter="hoverExemption($event, item.exemption)" ng-mouseleave="hoverOutExemption()"
+        <!-- hovering exemption -->
+        <div data-ng-mouseenter="hoverExemption($event, item.exemption)" data-ng-mouseleave="hoverOutExemption()"
              class="exemption-label"
              ng-if="item.exempted">
             <i18n>presences.calendar.exemption.code</i18n>
+        </div>
+
+        <!-- hovering presence -->
+        <div data-ng-mouseenter="hoverPresence($event, item, vm.presences.all)" data-ng-mouseleave="hoverOutPresence()"
+             class="exemption-label"
+             ng-if="vm.canDisplayPresence(item)">
+            <i18n>presences.calendar.presences.code</i18n>
         </div>
     </div>
     <span ng-bind="::vm.changeAbsence(item)"></span>

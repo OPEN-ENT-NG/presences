@@ -26,9 +26,6 @@
                 <button class="forbidden" disabled>
                     <i18n>incidents.punishment.sanction</i18n>
                 </button>
-                <!--                <button class="forbidden" disabled>-->
-                <!--                    <i18n>presences.forgotten.notebook</i18n>-->
-                <!--                </button>-->
                 <sniplet template="forgotten-notebook-form" application="presences"></sniplet>
             </div>
         </div>
@@ -45,6 +42,8 @@
                   show-next-previous-button="true"/>
         <loader ng-show="vm.show.loader" title="lang.translate('presences.register.loading.text')"/>
     </div>
+
+    <!-- exemption hovered card -->
     <div id="exemption-hover">
         <div>
             <div>
@@ -62,6 +61,20 @@
         <div style="padding: 0 5px 0 10px;" class="exemptions">
             <i ng-show="!vm.show.exemption.attendance" class="account-outline"></i>
             <i ng-show="vm.show.exemption.attendance" class="account"></i>
+        </div>
+    </div>
+
+    <!-- presence hovered card -->
+    <div id="presences-hover">
+        <div>
+            <div>
+                <i18n>presence.title</i18n>
+            </div>
+            <span class="font-bold">[[vm.show.presences.displayName]]</span>
+            <span class="lowercase">
+                [[vm.formatPresenceDate(vm.show.presences.startDate)]] -
+                [[vm.formatPresenceDate(vm.show.presences.endDate)]]
+            </span>
         </div>
     </div>
 </div>

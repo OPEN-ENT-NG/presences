@@ -467,7 +467,7 @@ $calendar-user-card-height: 56px;
     }
   }
 
-  #exemption-hover {
+  #exemption-hover, #presences-hover {
     width: 180px;
     position: fixed;
     display: none;
@@ -490,7 +490,7 @@ $calendar-user-card-height: 56px;
       border-top: 10px solid $white;
       position: absolute;
       top: 100%;
-      left: calc(50% - 5px);
+      left: calc(50% - 10px);
     }
   }
 
@@ -519,5 +519,4 @@ $calendar-user-card-height: 56px;
       }
     }
   }
-
 }
