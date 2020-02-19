@@ -15,7 +15,8 @@ export class DateUtils {
         'BIRTHDATE': 'L',
         'DAY-MONTH-YEAR-LETTER': 'LL',  // e.g "9 juin 2019"
         'DAY-DATE': 'dddd L',
-        'DATE-FULL-LETTER': 'dddd LL'
+        'DATE-FULL-LETTER': 'dddd LL',
+        'DAY-MONTH-HALFYEAR': 'DD/MM/YY'
     };
 
     /**

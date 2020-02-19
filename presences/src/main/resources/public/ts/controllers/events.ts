@@ -1,8 +1,8 @@
-import {_, angular, idiom as lang, moment, ng} from 'entcore';
-import {Absence, Event, EventResponse, Events, EventType, Student, Students} from "../models";
+import {_, angular, idiom as lang, model, moment, ng} from 'entcore';
+import {Absence, Action, ActionBody, Event, EventResponse, Events, EventType, Student, Students} from "../models";
 import {DateUtils} from "@common/utils";
 import {GroupService} from "@common/services/GroupService";
-import {EventService, ReasonService} from "../services";
+import {actionService, EventService, ReasonService} from "../services";
 import {EventsFilter, EventsUtils} from "../utilities";
 import {Reason} from "@presences/models/Reason";
 
@@ -19,15 +19,26 @@ interface ViewModel {
 
     /* Events */
     eventType: number[];
+    event: Event;
     events: Events;
     multipleSelect: Reason;
     provingReasonsMap: any;
 
-    /* Filters and actipns lightbox*/
+    /* Filters and actions lightbox*/
     lightbox: {
         filter: boolean;
         action: boolean;
     }
+
+    /* Get actions type */
+    actionType: Action[];
+    actionAbbreviation: string;
+    actionEvent: ActionBody[];
+    actionForm: ActionBody;
+    action_typeId: string;
+    action: {
+        seeAll: boolean;
+    };
 
     eventTypeState(periods, event): string;
 
@@ -40,8 +51,6 @@ interface ViewModel {
     filterSelect(options: Reason[], event): Reason[];
 
     downloadFile($event): void;
-
-    doAction($event): void;
 
     stopAbsencePropagation($event): void;
 
@@ -61,13 +70,26 @@ interface ViewModel {
 
     hideGlobalCheckbox(event): boolean;
 
+    formatDate(date: string): string;
+
+    /* Action */
+    doAction($event, event): void;
+
+    getAction(): void;
+
+    getLastAction(): void;
+
+    createAction(): void;
+
+    showHistory(): void;
+
     /* Open filter lightbox */
     openForm(): void;
 
     validForm(): void;
 
     /* Open action lightbox */
-    openActionForm(): void;
+    openActionForm(event): void;
 
     validActionForm(): void;
 
@@ -197,6 +219,7 @@ export const eventsController = ng.controller('EventsController', ['$scope', '$r
         vm.classesFiltered = undefined;
         vm.classesFilteredLightbox = undefined;
 
+        vm.event = new Event(0, "", "", "");
         vm.events = new Events();
         vm.events.regularized = isWidget ? vm.filter.regularized : null;
         vm.events.eventer.on('loading::true', () => $scope.safeApply());
@@ -210,6 +233,10 @@ export const eventsController = ng.controller('EventsController', ['$scope', '$r
             action: false
         };
         vm.eventReasonsId = [];
+        vm.actionForm = {} as ActionBody;
+        vm.action = {
+            seeAll: false
+        };
         const getEvents = async (actionMode?: boolean): Promise<void> => {
             vm.events.structureId = window.structure.id;
             vm.events.startDate = vm.filter.startDate.toDateString();
@@ -262,6 +289,16 @@ export const eventsController = ng.controller('EventsController', ['$scope', '$r
             $scope.safeApply();
         };
 
+        // Events actions
+        const getActions = async (): Promise<void> => {
+            vm.actionType = await actionService.getActions(window.structure.id);
+        };
+
+        const getEventActions = async (): Promise<void> => {
+            vm.actionEvent = await eventService.getEventActions(vm.actionForm.eventId);
+            $scope.safeApply();
+        };
+
         const filterHistory = (): void => {
             vm.events.all = vm.events.all.filter(e => e.exclude !== true);
             vm.events.all.forEach(event => {
@@ -294,6 +331,14 @@ export const eventsController = ng.controller('EventsController', ['$scope', '$r
             vm.events.all = events.all;
             filterHistory();
             $scope.safeApply();
+        };
+
+        vm.formatDate = function (date) {
+            return DateUtils.format(date, DateUtils.FORMAT["DAY-MONTH-HALFYEAR"]);
+        };
+
+        vm.createAction = function () {
+            eventService.createAction(vm.actionForm);
         };
 
         vm.editPeriod = ($event, {studentId, date, displayName, className, classId}): void => {
@@ -354,10 +399,35 @@ export const eventsController = ng.controller('EventsController', ['$scope', '$r
             console.log("downloading File");
         };
 
-        vm.doAction = ($event): void => {
+        vm.doAction = ($event, event): void => {
             $event.stopPropagation();
-            vm.openActionForm();
-            console.log("do action");
+            vm.openActionForm(event);
+
+            vm.actionForm.owner = model.me.userId;
+            vm.actionForm.eventId = event.type.id;
+            vm.actionForm.actionId = "";
+            vm.actionForm.comment = "";
+
+            getEventActions();
+        };
+
+        vm.switchAbsencesFilter = function () {
+            vm.formFilter.absences = !vm.formFilter.absences;
+            if (vm.formFilter.absences) {
+                if (!vm.eventType.some(e => e == EventType.ABSENCE)) {
+                    vm.eventType.push(EventType.ABSENCE);
+                }
+            } else {
+                vm.eventType = _.without(vm.eventType, EventType.ABSENCE);
+                vm.formFilter.unjustified = false;
+                vm.formFilter.justifiedNotRegularized = false;
+                vm.formFilter.justifiedRegularized = false;
+            }
+            vm.adaptReason();
+        };
+
+        vm.showHistory = function () {
+            vm.action.seeAll = !vm.action.seeAll;
         };
 
         vm.stopAbsencePropagation = ($event): void => {
@@ -793,17 +863,20 @@ export const eventsController = ng.controller('EventsController', ['$scope', '$r
         };
 
         /* Form action */
-        vm.openActionForm = function () {
+        vm.openActionForm = function (event) {
             vm.lightbox.action = true;
+            vm.event = event;
         };
 
         vm.validActionForm = function () {
             vm.lightbox.action = false;
+            vm.createAction();
         };
 
         /* on  (watch) */
         $scope.$watch(() => window.structure, () => {
             getEvents();
+            getActions();
         });
 
         /* Destroy directive and scope */

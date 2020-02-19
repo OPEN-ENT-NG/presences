@@ -27,6 +27,7 @@ public class Event {
     private Boolean massmailed;
     private String type;
     private Boolean isExclude;
+    private String actionAbbreviation;
 
     public Event(JsonObject event, List<String> mandatoryAttributes) {
         for (String attribute : mandatoryAttributes) {
@@ -53,6 +54,7 @@ public class Event {
         this.massmailed = event.getBoolean("massmailed", false);
         this.type = event.getString("type", null);
         this.isExclude = event.getBoolean("exclude", null);
+        this.actionAbbreviation = event.getString("action_abbreviation", null);
     }
 
     public Event() {
@@ -75,6 +77,7 @@ public class Event {
                 .put("counsellor_regularisation", this.counsellorRegularisation)
                 .put("massmailed", this.massmailed)
                 .put("type", this.type)
+                .put("action_abbreviation", this.actionAbbreviation)
                 .put("exclude", this.isExclude);
     }
 
@@ -197,5 +200,13 @@ public class Event {
 
     public void setExclude(Boolean exclude) {
         isExclude = exclude;
+    }
+
+    public void setActionAbbreviation(String abbreviation) {
+        this.actionAbbreviation = abbreviation;
+    }
+
+    public String getActionAbbreviation() {
+        return this.actionAbbreviation;
     }
 }

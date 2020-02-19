@@ -4,7 +4,9 @@ import fr.openent.presences.Presences;
 import fr.openent.presences.common.helper.FutureHelper;
 import fr.openent.presences.common.helper.WorkflowHelper;
 import fr.openent.presences.common.service.GroupService;
+import fr.openent.presences.common.service.UserService;
 import fr.openent.presences.common.service.impl.DefaultGroupService;
+import fr.openent.presences.common.service.impl.DefaultUserService;
 import fr.openent.presences.common.viescolaire.Viescolaire;
 import fr.openent.presences.enums.EventType;
 import fr.openent.presences.enums.Events;
@@ -30,9 +32,7 @@ import org.entcore.common.sql.Sql;
 import org.entcore.common.sql.SqlResult;
 import org.entcore.common.user.UserInfos;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
+import java.util.*;
 import java.util.stream.Collectors;
 
 public class DefaultEventService implements EventService {
@@ -45,12 +45,14 @@ public class DefaultEventService implements EventService {
     private GroupService groupService;
     private EventHelper eventHelper;
     private SlotHelper slotHelper;
+    private UserService userService;
 
     public DefaultEventService(EventBus eb) {
         this.eventHelper = new EventHelper(eb);
         this.slotHelper = new SlotHelper(eb);
         this.absenceService = new DefaultAbsenceService(eb);
         this.groupService = new DefaultGroupService(eb);
+        this.userService = new DefaultUserService();
     }
 
     @Override
@@ -92,6 +94,7 @@ public class DefaultEventService implements EventService {
                 List<Integer> reasonIds = new ArrayList<>();
                 List<String> studentIds = new ArrayList<>();
                 List<Integer> eventTypeIds = new ArrayList<>();
+
                 for (Event event : events) {
                     reasonIds.add(event.getReason().getId());
                     studentIds.add(event.getStudent().getId());
@@ -112,21 +115,35 @@ public class DefaultEventService implements EventService {
                 eventHelper.addStudentsToEvents(events, studentIds, startDate, endDate, structureId,
                         absences, slotsFuture.result(), studentFuture);
 
-                CompositeFuture.all(reasonFuture, eventTypeFuture, studentFuture).setHandler(eventResult -> {
-                    if (eventResult.failed()) {
+                CompositeFuture.all(reasonFuture, eventTypeFuture, studentFuture).setHandler(addInfoResult -> {
+                    if (addInfoResult.failed()) {
                         String message = "[Presences@DefaultEventService] Failed to retrieve reason, event type or student info";
                         LOGGER.error(message);
                         handler.handle(new Either.Left<>(message));
                     } else {
-                        interactExclude(exclusionDays, saturdayCoursesCount, sundayCoursesCount, events);
-                        handler.handle(new Either.Right<>(new JsonArray(events)));
+                        Future<JsonObject> actionFuture = Future.future();
+                        Future<JsonObject> excludeFuture = Future.future();
+
+                        eventHelper.addLastActionAbbreviation(events, actionFuture);
+                        interactExclude(exclusionDays, saturdayCoursesCount, sundayCoursesCount, events, excludeFuture);
+
+                        CompositeFuture.all(actionFuture, excludeFuture).setHandler(eventResult -> {
+                            if (eventResult.failed()) {
+                                String message = "[Presences@DefaultEventService] Failed to retrieve exclude days or add last action abbreviation";
+                                LOGGER.error(message);
+                                handler.handle(new Either.Left<>(message));
+                            } else {
+                                handler.handle(new Either.Right<>(new JsonArray(events)));
+                            }
+                        });
                     }
                 });
             }
         });
     }
 
-    private void interactExclude(Future<JsonArray> exclusionDays, Future<JsonObject> saturdayCoursesCount, Future<JsonObject> sundayCoursesCount, List<Event> events) {
+    private void interactExclude(Future<JsonArray> exclusionDays, Future<JsonObject> saturdayCoursesCount,
+                                 Future<JsonObject> sundayCoursesCount, List<Event> events, Future<JsonObject> future) {
         long saturdayCourses = saturdayCoursesCount.result().getLong("count");
         long sundayCourses = sundayCoursesCount.result().getLong("count");
         List<Event> absenceExcludeDay = events.stream()
@@ -136,6 +153,7 @@ public class DefaultEventService implements EventService {
             CalendarHelper.setExcludeDay(absenceDay, absenceDay.getStartDate(), exclusionDays.result(),
                     CalendarHelper.SATURDAY_OF_WEEK, saturdayCourses, CalendarHelper.SUNDAY_OF_WEEK, sundayCourses);
         }
+        future.complete();
     }
 
     private void getEvents(String structureId, String startDate, String endDate,
@@ -679,5 +697,61 @@ public class DefaultEventService implements EventService {
                 .put("action", "prepared")
                 .put("statement", query)
                 .put("values", params);
+    }
+
+    @Override
+    public void getActions(String event_id, Handler<Either<String, JsonArray>> handler) {
+        String query = "SELECT ea.*, a.label as label FROM " + Presences.dbSchema + ".event_actions as ea" +
+                " INNER JOIN " + Presences.dbSchema + ".actions as a" +
+                " ON (a.id = ea.action_id)" + " WHERE event_id = ?";
+        JsonArray params = new JsonArray().add(event_id);
+        Sql.getInstance().prepared(query, params, SqlResult.validResultHandler(res -> {
+            if (res.isLeft()) {
+                LOGGER.error("[Presences@DefaultEventService] Failed to retrieve actions");
+                handler.handle(new Either.Left(res.left().getValue()));
+                return;
+            }
+            JsonArray actions = res.right().getValue();
+            List<String> userIds = new ArrayList<>();
+            for (int i = 0; i < actions.size(); i++) {
+                userIds.add(actions.getJsonObject(i).getString("owner"));
+            }
+            userService.getUsers(userIds, resUsers -> {
+                if (resUsers.isLeft()) {
+                    LOGGER.error("[Presences@DefaultEventService] Failed to match ownerId");
+                    handler.handle(new Either.Left(resUsers.left().getValue()));
+                    return;
+                }
+
+                JsonArray owners = resUsers.right().getValue();
+                Map<String, JsonObject> mappedUsers = new HashMap<>();
+                for (Object o : owners) {
+                    if (!(o instanceof JsonObject)) continue;
+                    JsonObject jsonObject = ((JsonObject) o);
+                    mappedUsers.put(jsonObject.getString("id"), jsonObject);
+                }
+
+                for (int i = 0; i < actions.size(); i++) {
+                    JsonObject currentsActions = actions.getJsonObject(i);
+                    JsonObject user = mappedUsers.get(currentsActions.getString("owner"));
+                    if (user != null) {
+                        currentsActions.put("displayName", user.getString("displayName"));
+                    }
+                }
+                handler.handle(new Either.Right<>(actions));
+            });
+        }));
+    }
+
+    @Override
+    public void createAction(JsonObject actionBody, Handler<Either<String, JsonObject>> handler) {
+        String query = "INSERT INTO " + Presences.dbSchema + ".event_actions " +
+                "(owner, event_id, action_id, comment)" + "VALUES (?, ?, ?, ?) RETURNING id";
+        JsonArray params = new JsonArray()
+                .add(actionBody.getString("owner"))
+                .add(actionBody.getInteger("eventId"))
+                .add(actionBody.getInteger("actionId"))
+                .add(actionBody.getString("comment"));
+        Sql.getInstance().prepared(query, params, SqlResult.validUniqueResultHandler(handler));
     }
 }

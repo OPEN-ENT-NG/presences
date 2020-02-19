@@ -14,3 +14,10 @@ export interface ActionRequest {
     abbreviation: string;
     hidden?: boolean;
 }
+
+export interface ActionBody {
+    eventId: number;
+    actionId: any;
+    owner: string;
+    comment?: string;
+}

@@ -1,0 +1,67 @@
+.actionLightbox {
+  i {
+    position: relative;
+
+    &:hover .tooltip-top {
+      @include tooltipVisible();
+    }
+
+    .tooltip-top {
+      @include tooltipTemplate();
+      bottom: 30px;
+      margin-left: -43px;
+
+      &:after {
+        @include tooltipBottomArrow();
+        top: 100%;
+        left: 15%;
+      }
+    }
+  }
+
+  .select-action {
+    label {
+      position: relative;
+    }
+
+    label::after {
+      content: '';
+      border-color: $presences-main transparent transparent;
+      background: $presences-white;
+      border-width: 11px;
+      border-style: solid;
+
+      pointer-events: none;
+      position: absolute;
+      right: 10px;
+      top: 3px;
+    }
+
+    select {
+      /* Remove default arrow */
+      -webkit-appearance: none;
+      -moz-appearance: none;
+
+      width: 208px;
+      padding: 0 14px;
+      font-size: 16px;
+      border: solid 1px $presences-grey-light;
+    }
+  }
+
+  .margin-top-sm {
+    margin-top: 5px;
+  }
+
+  .margin-top-md {
+    margin-top: 10px;
+  }
+
+  .margin-top-xlg {
+    margin-top: 50px;
+  }
+
+  .text-underline {
+    text-decoration: underline;
+  }
+}

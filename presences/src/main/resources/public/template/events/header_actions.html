@@ -1,15 +1,57 @@
-<section class="head">
-    <h3>
-        <i18n>presences.absence.actions.concern.absence</i18n>
-    </h3>
-</section>
-<section class="body lightbox-form">
+<div class="actionLightbox">
+    <section class="head">
+        <h3>
+            <i18n>presences.absence.actions.concern.absence</i18n>
+        </h3>
+    </section>
 
-</section>
-<section>
+    <section class="body lightbox-form">
+        <h4 class="row spacing">
+            [[vm.formatDate(vm.event.date)]] - [[vm.event.displayName]]
+        </h4>
+
+        <div class="row spacing">
+            <div class="twelve margin-bottom-md">
+                <i18n>presences.absence.actions.progress</i18n>
+            </div>
+            <div class="select-action margin-bottom-md">
+                <label>
+                    <select ng-model="vm.actionForm.actionId"
+                            ng-options="action.id as action.label for action in vm.actionType">
+                        <option value="">
+                            [[lang.translate('presences.absence.action.types')]]
+                        </option>
+                    </select>
+                </label>
+            </div>
+        </div>
+
+        <div>
+            <input type="text" data-ng-model="vm.actionForm.comment" class="seven cell"
+                   i18n-placeholder="presences.absence.actions.comment">
+        </div>
+
+        <div class="cell ten margin-top-sm spacing" ng-repeat="action in vm.actionEvent"
+             ng-show="$index === 0 || vm.action.seeAll">
+            <i class="circle"></i> [[action.displayName]] : [[action.label]] - [[vm.formatDate(action.created_date)]]
+            <i class="comments horizontal-spacing" ng-show="action.comment.length > 0">
+                <span class="tooltip-top">[[action.comment]]</span>
+            </i>
+        </div>
+
+        <div class="right-magnet margin-top-sm" ng-show="vm.actionEvent.length > 0">
+              <span ng-click="vm.showHistory()">
+                  <i18n ng-show="!vm.action.seeAll" class="text-underline">presences.see.all</i18n>
+                  <i18n ng-show="vm.action.seeAll" class="text-underline">presences.see.less</i18n>
+              </span>
+        </div>
+
+    </section>
+
     <div class="row horizontal-spacing">
-        <div class="twelve cell">
-            <button class="right-magnet" ng-click="vm.validActionForm()">
+        <div class="twelve cell margin-top-xlg">
+            <button class="right-magnet" ng-disabled="vm.actionForm.actionId == '' || vm.actionForm.actionId == null"
+                    ng-click="vm.validActionForm()">
                 <i18n>presences.exemptions.form.submit</i18n>
             </button>
             <button class="right-magnet cancel" ng-click="vm.lightbox.action = false">
@@ -17,4 +59,4 @@
             </button>
         </div>
     </div>
-</section>
+</div>

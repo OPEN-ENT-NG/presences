@@ -1,18 +1,26 @@
 package fr.openent.presences.controller;
 
+import fr.openent.presences.constants.Actions;
+import fr.openent.presences.security.Manage;
 import fr.openent.presences.service.ActionService;
 import fr.openent.presences.service.impl.DefaultActionService;
 import fr.wseduc.rs.*;
+import fr.wseduc.security.ActionType;
+import fr.wseduc.security.SecuredAction;
 import fr.wseduc.webutils.request.RequestUtils;
 import io.vertx.core.http.HttpServerRequest;
 import io.vertx.core.json.JsonObject;
 import org.entcore.common.controller.ControllerHelper;
+import org.entcore.common.http.filter.ResourceFilter;
+import org.entcore.common.http.filter.Trace;
 import org.entcore.common.http.response.DefaultResponseHandler;
 
 public class ActionController extends ControllerHelper {
     private ActionService actionService = new DefaultActionService();
 
     @Get("/actions")
+    @SecuredAction(value = "", type = ActionType.RESOURCE)
+    @ResourceFilter(Manage.class)
     @ApiDoc("Get given structure")
     public void get(final HttpServerRequest request) {
         String structureId = request.getParam("structureId");
@@ -24,7 +32,10 @@ public class ActionController extends ControllerHelper {
     }
 
     @Post("/action")
+    @SecuredAction(value = "", type = ActionType.RESOURCE)
+    @ResourceFilter(Manage.class)
     @ApiDoc("Create action")
+    @Trace(Actions.SETTING_ACTION_TYPE_CREATION)
     public void post(final HttpServerRequest request) {
         RequestUtils.bodyToJson(request, actionBody -> {
             if (isActionBodyInvalid(actionBody)) {
@@ -43,7 +54,10 @@ public class ActionController extends ControllerHelper {
     }
 
     @Put("/action")
+    @SecuredAction(value = "", type = ActionType.RESOURCE)
+    @ResourceFilter(Manage.class)
     @ApiDoc("Update action")
+    @Trace(Actions.SETTING_ACTION_TYPE_UPDATE)
     public void put(final HttpServerRequest request) {
         RequestUtils.bodyToJson(request, actionBody -> {
             if (isActionBodyInvalid(actionBody) && !actionBody.containsKey("hidden") &&
@@ -63,7 +77,10 @@ public class ActionController extends ControllerHelper {
     }
 
     @Delete("/action")
+    @SecuredAction(value = "", type = ActionType.RESOURCE)
+    @ResourceFilter(Manage.class)
     @ApiDoc("Delete action")
+    @Trace(Actions.SETTING_ACTION_TYPE_DELETE)
     public void delete(final HttpServerRequest request) {
         if (!request.params().contains("id")) {
             badRequest(request);

@@ -2,25 +2,25 @@
        data-ng-show="vm.events.all && vm.events.all.length > 0">
     <thead>
     <tr>
-        <th width="15%">
+        <th width="54%">
             <i18n>presences.exemptions.student</i18n>
         </th>
-        <th width="6%">
+        <th width="22%">
             <i18n>presences.exemptions.dates</i18n>
         </th>
-        <th width="1%">
+        <th width="4%">
             <i18n>presences.absence.period</i18n>
         </th>
-        <th width="2%">
+        <th width="8%">
             <i18n>presences.absence.reason</i18n>
         </th>
-        <th width="1%">
+        <th width="4%">
             <i18n>presences.absence.file</i18n>
         </th>
-        <th width="1%">
+        <th width="4%">
             <i18n>presences.absence.action</i18n>
         </th>
-        <th width="1%">
+        <th width="4%">
             <i18n>presences.absence.regularise</i18n>
         </th>
     </tr>
@@ -71,8 +71,6 @@
                         options-disabled="reason.hidden for reason in vm.eventReasonsType">
                     <option value="">[[lang.translate('presences.absence.select.empty')]]</option>
                 </select>
-
-
             </label>
         </th>
 
@@ -82,7 +80,15 @@
         </th>
 
         <!-- Action -->
-        <th class="text-center"><i class="add forbidden" data-ng-click="vm.doAction($event)"></i></th>
+        <th class="text-center">
+            <i ng-show="event.actionAbbreviation == null && event.events.length <= 1" class="add"
+               data-ng-click="vm.doAction($event, event)">
+            </i>
+            <i ng-show="event.events.length > 1" class="addMultiple"></i>
+            <span class="events-table-body-color" ng-click="vm.doAction($event, event)">
+                [[event.actionAbbreviation]]
+            </span>
+        </th>
 
         <!-- Absence regularised -->
         <th class="text-center">
@@ -101,41 +107,55 @@
 
         <!-- description content -->
     <tr ng-class="{open: vm.isCollapsibleOpen($index)}" class="events-table-body-description">
-        <td colspan="7" data-ng-show="event.events.length !== 0">
-            <div class="events-table-body-description-content"
-                 data-ng-repeat="history in event.events |  orderBy:'+end_date'">
-
-                <!--Add space-->
-                <span></span>
-                <span></span>
-
-                <!--Date-->
-                <span class="events-table-body-description-content-date">[[history.start_date | date:'HH:mm']] - [[history.end_date | date:'HH:mm']]</span>
-
-                <!--Select-->
-                <span class="events-table-body-description-content-select table-reason">
-                     <label>
-                        <select data-ng-model="history.reason_id"
-                                data-ng-change="vm.changeReason(history, event)"
-                                ng-options="reason.id as reason.label for reason in vm.eventReasonsTypeDescription"
-                                options-disabled="reason.hidden for reason in vm.eventReasonsType">
-                            <option value="">[[lang.translate('presences.absence.select.empty')]]</option>
-                        </select>
-                    </label>
-                </span>
-
-                <!--Regularized-->
-                <label class="events-table-body-description-content-checkbox checkbox"
-                       ng-style="{
-                           opacity: !vm.provingReasonsMap[history.reason_id] && history.reason_id !== null ? 1 : 0,
-                           'pointer-events': history.reason_id !== null && !vm.provingReasonsMap[history.reason_id] ? 'all' : 'none'
-                       }">
-                    <input type="checkbox" data-ng-model="history.counsellor_regularisation"
-                           ng-disabled="!(history.reason_id !== null && !vm.provingReasonsMap[history.reason_id]) && history.counsellor_regularisation"
-                           data-ng-change="vm.toggleAbsenceRegularised(history, event)">
-                    <span ng-style="{cursor: history.reason_id !== null && !vm.provingReasonsMap[history.reason_id] ? 'pointer' : 'default'}"></span>
-                </label>
-            </div>
+        <td colspan="7" data-ng-show="event.events.length !== 0" class="events-table-body-td">
+            <table class="events-table-body-colspan">
+                <tr ng-repeat="history in event.events | orderBy:'+end_date'">
+                    <th width="54%">
+                        &nbsp;
+                    </th>
+                    <th width="22%">
+                        [[history.start_date | date:'HH:mm']] - [[history.end_date | date:'HH:mm']]
+                    </th>
+                    <th width="4%">
+                        &nbsp;
+                    </th>
+                    <th width="8%">
+                        <span class="events-table-body-description-content-select table-reason">
+                             <label>
+                                <select data-ng-model="history.reason_id"
+                                        data-ng-change="vm.changeReason(history, event)"
+                                        ng-options="reason.id as reason.label for reason in vm.eventReasonsTypeDescription"
+                                        options-disabled="reason.hidden for reason in vm.eventReasonsType">
+                                    <option value="">[[lang.translate('presences.absence.select.empty')]]</option>
+                                </select>
+                            </label>
+                        </span>
+                    </th>
+                    <th width="4%">
+                        &nbsp;
+                    </th>
+                    <th width="4%">
+                        <i ng-class="{add : history.actionAbbreviation == null}"
+                           data-ng-click="vm.doAction($event, event)">
+                        </i>
+                        <span class="events-table-body-color" ng-click="vm.doAction($event, event)">
+                            [[history.actionAbbreviation]]
+                        </span>
+                    </th>
+                    <th width="4%">
+                        <label class="events-table-body-description-content-checkbox checkbox"
+                               ng-style="{
+                                    opacity: !vm.provingReasonsMap[history.reason_id] && history.reason_id !== null ? 1 : 0,
+                                    'pointer-events': history.reason_id !== null && !vm.provingReasonsMap[history.reason_id] ? 'all' : 'none'
+                                }">
+                            <input type="checkbox" data-ng-model="history.counsellor_regularisation"
+                                   ng-disabled="!(history.reason_id !== null && !vm.provingReasonsMap[history.reason_id]) && history.counsellor_regularisation"
+                                   data-ng-change="vm.toggleAbsenceRegularised(history, event)">
+                            <span ng-style="{cursor: history.reason_id !== null && !vm.provingReasonsMap[history.reason_id] ? 'pointer' : 'default'}"></span>
+                        </label>
+                    </th>
+                </tr>
+            </table>
         </td>
     <tr>
     </tr>

@@ -12,7 +12,9 @@ import fr.openent.presences.model.Event.RegisterEvent;
 import fr.openent.presences.model.Person.Student;
 import fr.openent.presences.model.Reason;
 import fr.openent.presences.model.Slot;
+import fr.openent.presences.service.ActionService;
 import fr.openent.presences.service.ReasonService;
+import fr.openent.presences.service.impl.DefaultActionService;
 import fr.openent.presences.service.impl.DefaultReasonService;
 import io.vertx.core.CompositeFuture;
 import io.vertx.core.Future;
@@ -25,9 +27,7 @@ import org.joda.time.LocalDate;
 
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.List;
+import java.util.*;
 import java.util.stream.Collectors;
 
 public class EventHelper {
@@ -38,12 +38,39 @@ public class EventHelper {
     private ReasonService reasonService;
     private RegisterHelper registerHelper;
     private PersonHelper personHelper;
+    private ActionService actionService;
 
     public EventHelper(EventBus eb) {
         this.eventTypeHelper = new EventTypeHelper();
         this.personHelper = new PersonHelper();
         this.reasonService = new DefaultReasonService();
         this.registerHelper = new RegisterHelper(eb, Presences.dbSchema);
+        this.actionService = new DefaultActionService();
+    }
+
+    public void addLastActionAbbreviation(List<Event> events, Future<JsonObject> future) {
+        List<Integer> ids = events.stream().map(event -> event.getId()).collect(Collectors.toList());
+        actionService.getLastAbbreviations(ids, res -> {
+            if (res.isLeft()) {
+                future.fail(res.left().getValue());
+                return;
+            }
+
+            JsonArray result = res.right().getValue();
+            Map<Integer, String> map = new HashMap<>();
+            ((List<JsonObject>) result.getList()).forEach(abbr -> map.put(abbr.getInteger("event_id"), abbr.getString("abbreviation")));
+            events.forEach(event -> {
+                if (map.containsKey(event.getId())) {
+                    event.setActionAbbreviation(map.get(event.getId()));
+                }
+                ((List<JsonObject>) event.getStudent().getDayHistory().getList()).forEach(dayHistory ->
+                        ((List<JsonObject>) dayHistory.getJsonArray("events").getList()).forEach(eventHistory ->
+                                eventHistory.put("actionAbbreviation", map.getOrDefault(eventHistory.getInteger("id"), null))
+                        )
+                );
+            });
+            future.complete();
+        });
     }
 
     /**

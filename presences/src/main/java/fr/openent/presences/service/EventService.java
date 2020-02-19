@@ -152,6 +152,23 @@ public interface EventService {
                             String startDate, String endDate, boolean noReasons, Handler<Either<String, JsonArray>> handler);
 
     /**
+     * get event action
+     *
+     * @param eventId event identifier
+     * @param handler Function handler returning data
+     */
+    void getActions(String eventId, Handler<Either<String, JsonArray>> handler);
+
+    /**
+     * create event action
+     *
+     * @param actionBody actionBody fetched
+     * @param handler    Function handler returning data
+     */
+    void createAction(JsonObject actionBody, Handler<Either<String, JsonObject>> handler);
+
+
+    /**
      * Retrieve student absence rate for given period
      *
      * @param student   student identifier

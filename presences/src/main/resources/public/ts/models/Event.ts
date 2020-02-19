@@ -39,6 +39,7 @@ export interface EventResponse {
     globalCounsellorRegularisation?: boolean;
     exclude?: boolean;
     type?: { event: string, id: number };
+    actionAbbreviation?: string;
 }
 
 export class Event {
@@ -130,12 +131,18 @@ export class Events extends LoadingCollection {
 
     static buildEventResponse(data: any[]): EventResponse[] {
         let dataModel = [];
+
         data.forEach(item => {
+            /* check if not duplicate dataModel */
             if (!dataModel.some(e => (JSON.stringify(e.dayHistory) == JSON.stringify(item.student.dayHistory)))) {
+                /* new dataModel */
                 let eventsResponse = [];
+
+                /* array declared and used for managing global Reasons and CounsellorRegularization */
                 let reasonIds = [];
                 let regularizedEvents = [];
 
+                /* build our eventsResponse array to affect our attribute "events" (see below dataModel.push) */
                 item.student.dayHistory.forEach(eventsHistory => {
                     eventsHistory.events.forEach(event => {
                         if (!eventsResponse.some(element => element.id == event.id)) {
@@ -168,6 +175,7 @@ export class Events extends LoadingCollection {
                     : regularizedEvents.reduce((accumulator, currentValue) => accumulator && currentValue);
                 let type = {event: item.type, id: item.id};
 
+                /* We build our event based on information stored above */
                 dataModel.push({
                     studentId: item.student.id,
                     displayName: item.student.name,
@@ -181,7 +189,7 @@ export class Events extends LoadingCollection {
                     globalReason: globalReason,
                     globalCounsellorRegularisation: globalCounsellorRegularisation,
                     type: type,
-
+                    actionAbbreviation: item.actionAbbreviation
                 });
             }
         });

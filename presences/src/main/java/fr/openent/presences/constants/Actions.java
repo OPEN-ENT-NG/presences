@@ -33,6 +33,12 @@ public class Actions {
     public static final String ABSENCE_ACTION_UPDATE = "ABSENCE_ACTION_UPDATE";
     // A user deletes an action on absence
     public static final String ABSENCE_ACTION_DELETION = "ABSENCE_ACTION_DELETION";
+    // A user create an action type in setting
+    public static final String SETTING_ACTION_TYPE_CREATION = "SETTING_ACTION_TYPE_CREATION";
+    // A user update an action type in setting
+    public static final String SETTING_ACTION_TYPE_UPDATE = "SETTING_ACTION_TYPE_UPDATE";
+    // A user delete an action type in setting
+    public static final String SETTING_ACTION_TYPE_DELETE = "SETTING_ACTION_TYPE_DELETE";
     // A user regularize an absence
     public static final String ABSENCE_REGULARIZATION = "ABSENCE_REGULARIZATION";
     // A user creates an exemption

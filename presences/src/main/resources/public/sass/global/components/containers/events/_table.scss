@@ -71,6 +71,19 @@
         }
       }
     }
+
+    &-color {
+      color: $presences-main;
+    }
+
+    &-colspan {
+      margin-bottom: 0;
+      background: $presences-grey-light;
+    }
+
+    &-td {
+      padding: 0;
+    }
   }
 }
 
@@ -109,6 +122,10 @@ i.attach:before {
 }
 
 i.add:before {
+  font-size: 24px;
+}
+
+i.addMultiple:before {
   font-size: 24px;
 }
 

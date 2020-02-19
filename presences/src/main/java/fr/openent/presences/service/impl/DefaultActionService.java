@@ -14,6 +14,8 @@ import io.vertx.core.logging.LoggerFactory;
 import org.entcore.common.sql.Sql;
 import org.entcore.common.sql.SqlResult;
 
+import java.util.List;
+
 public class DefaultActionService implements ActionService {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(DefaultActionService.class);
@@ -92,5 +94,29 @@ public class DefaultActionService implements ActionService {
         String query = "DELETE FROM  " + Presences.dbSchema + ".actions WHERE id = " + actionId +
                 " RETURNING id as id_deleted";
         Sql.getInstance().raw(query, SqlResult.validUniqueResultHandler(handler));
+    }
+
+    @Override
+    public void getLastAbbreviations(List<Integer> events, Handler<Either<String, JsonArray>> handler) {
+        if (events.isEmpty()) {
+            handler.handle(new Either.Right<>(new JsonArray()));
+            return;
+        }
+
+        String query = "WITH last_actions AS ( " +
+                " SELECT MAX(event_actions.id) as id, event_id" +
+                " FROM " + Presences.dbSchema + ".event_actions" +
+                " INNER JOIN " + Presences.dbSchema + ".actions" +
+                " ON (event_actions.action_id = actions.id)" +
+                " WHERE event_id IN " + Sql.listPrepared(events)
+                + " GROUP BY event_id)" +
+                " SELECT actions.abbreviation as abbreviation, last_actions.event_id as event_id" +
+                " FROM " + Presences.dbSchema + ".event_actions" +
+                " INNER JOIN " + Presences.dbSchema + ".actions ON (actions.id = event_actions.action_id)" +
+                " INNER JOIN last_actions ON (last_actions.id = event_actions.id)" +
+                " WHERE last_actions.id = event_actions.id";
+
+        JsonArray params = new JsonArray(events);
+        Sql.getInstance().prepared(query, params, SqlResult.validResultHandler(handler));
     }
 }

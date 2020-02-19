@@ -5,6 +5,7 @@ import {Action, ActionRequest} from "../models/Action";
 export interface ActionService {
     getActions(structureId: string): Promise<Action[]>;
 
+    // Settings
     create(actionBody: ActionRequest): Promise<AxiosResponse>;
 
     update(actionBody: ActionRequest): Promise<AxiosResponse>;
@@ -22,6 +23,7 @@ export const actionService: ActionService = {
         }
     },
 
+    // Settings
     create: (actionBody: ActionRequest): Promise<AxiosResponse> => {
         return http.post(`/presences/action`, actionBody);
     },
@@ -31,9 +33,7 @@ export const actionService: ActionService = {
     },
 
     delete: (actionId: number): Promise<AxiosResponse> => {
-        console.log("action --->" + actionId);
         return http.delete(`/presences/action?id=${actionId}`);
-    },
+    }
 };
-console.log("getAction");
 export const ActionService = ng.service('ActionService', (): ActionService => actionService);

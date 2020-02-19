@@ -94,6 +94,11 @@ i {
     content: '\F416';
   }
 
+  &.addMultiple:before {
+    font-family: 'material-icons';
+    content: '\F334';
+  }
+
   &.account:before {
     font-family: 'material-icons';
     content: "\F004";
@@ -192,5 +197,15 @@ i {
   &.disciplines:before {
     font-family: 'material-icons';
     content: '\F5C7';
+  }
+
+  &.circle:before {
+    font-family: 'material-icons';
+    content: '\F9DD';
+  }
+
+  &.comments:before {
+    font-family: 'material-icons';
+    content: '\F188';
   }
 }

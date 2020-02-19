@@ -4,6 +4,7 @@ import fr.openent.presences.Presences;
 import fr.openent.presences.common.helper.FutureHelper;
 import fr.openent.presences.constants.Actions;
 import fr.openent.presences.enums.EventType;
+import fr.openent.presences.security.ActionRight;
 import fr.openent.presences.security.CreateEventRight;
 import fr.openent.presences.service.EventService;
 import fr.openent.presences.service.impl.DefaultEventService;
@@ -195,5 +196,43 @@ public class EventController extends ControllerHelper {
             log.error("[Presences@EventController] Failed to cast event identifier");
             badRequest(request);
         }
+    }
+
+    @Get("/events/:id/actions")
+    @ApiDoc("Get given structure")
+    @ResourceFilter(ActionRight.class)
+    @SecuredAction(Presences.CREATE_ACTION)
+    public void get(final HttpServerRequest request) {
+        String eventId = request.getParam("id");
+        eventService.getActions(eventId, DefaultResponseHandler.arrayResponseHandler(request));
+    }
+
+    @Post("/events/actions")
+    @ApiDoc("Create event action")
+    @ResourceFilter(ActionRight.class)
+    @SecuredAction(value = "", type = ActionType.RESOURCE)
+    @Trace(Actions.ABSENCE_ACTION_CREATION)
+    public void postAction(final HttpServerRequest request) {
+        RequestUtils.bodyToJson(request, actionBody -> {
+            if (isActionBodyInvalid(actionBody)) {
+                badRequest(request);
+                return;
+            }
+            eventService.createAction(actionBody, either -> {
+                if (either.isLeft()) {
+                    log.error("[Presences@ActionController] failed to create action", either.left().getValue());
+                    renderError(request);
+                } else {
+                    renderJson(request, either.right().getValue());
+                }
+            });
+        });
+    }
+
+    private boolean isActionBodyInvalid(JsonObject actionBody) {
+        return !actionBody.containsKey("event_id") &&
+                !actionBody.containsKey("action_id") &&
+                !actionBody.containsKey("owner") &&
+                !actionBody.containsKey("comment");
     }
 }

@@ -1,10 +1,17 @@
 import {ng} from 'entcore'
-import http from 'axios';
-import {EventResponse, Events} from "../models";
+import http, {AxiosResponse} from 'axios';
+import {ActionBody, EventResponse, Events} from "../models";
 import {DateUtils} from "@common/utils";
 
 export interface EventService {
     get(notebook): Promise<{ pageCount: number, events: EventResponse[], all: EventResponse[] }>;
+
+    // Actions
+    getEventActions(event_id: number): Promise<ActionBody[]>;
+
+    createAction(actionBody: ActionBody): Promise<AxiosResponse>;
+
+    // updateAction(actionBody: ActionBody): Promise<AxiosResponse>;
 }
 
 export interface EventRequest {
@@ -47,6 +54,20 @@ export const eventService: EventService = {
             throw err;
         }
     },
+
+    // Actions
+    getEventActions: async (eventId: number): Promise<ActionBody[]> => {
+        try {
+            const {data} = await http.get(`/presences/events/${eventId}/actions`);
+            return data;
+        } catch (err) {
+            throw err;
+        }
+    },
+
+    createAction: (actionBody: ActionBody): Promise<AxiosResponse> => {
+        return http.post(`/presences/events/actions`, actionBody);
+    }
 };
 
 export const EventService = ng.service('EventService',
