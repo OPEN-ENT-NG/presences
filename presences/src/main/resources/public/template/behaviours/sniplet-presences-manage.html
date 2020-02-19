@@ -1,55 +1,53 @@
-<div class="sniplet presences presences-manage">
+<div class="sniplet presences presences-manage ">
+    <div class="flex-row row__8">
+        <!-- reason -->
+        <a class="flex-col col__1 presence-navigation-item" data-ng-click="vm.scrollToElement('absence')">
+            <div class="presence-icon flex-row"><i class="absence" aria-hidden="true"></i></div>
+            <span class="flex-row"><i18n>presences.absence.reason.title</i18n></span>
+        </a>
 
-    <!-- reason -->
-    <a class="presence-navigation-item" data-ng-click="vm.scrollToElement('absence')">
-        <div class="presence-icon"><i class="absence" aria-hidden="true"></i></div>
-        <span><i18n>presences.absence.reason.title</i18n></span>
-    </a>
+        <!-- absence actions -->
+        <a class="flex-col col__1 presence-navigation-item" data-ng-click="vm.scrollToElement('action')">
+            <div class="presence-icon flex-row"><i class="add" aria-hidden="true"></i></div>
+            <span class="flex-row"><i18n>presences.absence.actions</i18n></span>
+        </a>
 
-    <!-- absence actions -->
-    <a class="presence-navigation-item" data-ng-click="vm.scrollToElement('action')">
-        <div class="presence-icon"><i class="add" aria-hidden="true"></i></div>
-        <span><i18n>presences.absence.actions</i18n></span>
-    </a>
+        <!-- alerts -->
+        <a class="flex-col col__1 presence-navigation-item" data-ng-click="vm.scrollToElement('alert')">
+            <div class="presence-icon flex-row"><i class="alertes" aria-hidden="true"></i></div>
+            <span class="flex-row"><i18n>presences.alerts.title</i18n></span>
+        </a>
 
-    <!-- alerts -->
-    <a class="presence-navigation-item" data-ng-click="vm.scrollToElement('alert')">
-        <div class="presence-icon"><i class="alertes" aria-hidden="true"></i></div>
-        <span><i18n>presences.alerts.title</i18n></span>
-    </a>
+        <!-- presences // discipline -->
+        <a class="flex-col col__1 presence-navigation-item" data-ng-click="vm.scrollToElement('discipline')">
+            <div class="presence-icon flex-row"><i class="presence" aria-hidden="true"></i></div>
+            <span class="flex-row"><i18n>presences.title</i18n></span>
+        </a>
 
-    <!-- presences // discipline -->
-    <a class="presence-navigation-item" data-ng-click="vm.scrollToElement('discipline')">
-        <div class="presence-icon"><i class="presence" aria-hidden="true"></i></div>
-        <span><i18n>presences.title</i18n></span>
-    </a>
+        <!-- incidents -->
+        <a class="flex-col col__1 presence-navigation-item" data-ng-click="vm.scrollToElement('incidents')">
+            <div class="presence-icon flex-row"><i class="events" aria-hidden="true"></i></div>
+            <span class="flex-row"><i18n>incidents.title</i18n></span>
+        </a>
 
-    <!-- incidents -->
-    <a class="presence-navigation-item" data-ng-click="vm.scrollToElement('incidents')">
-        <div class="presence-icon"><i class="events" aria-hidden="true"></i></div>
-        <span><i18n>incidents.title</i18n></span>
-    </a>
+        <!-- punishment/sanctions -->
+        <a class="flex-col col__1 presence-navigation-item forbidden">
+            <div class="presence-icon flex-row"><i class="punishment-active" aria-hidden="true"></i></div>
+            <span class="flex-row"><i18n>presences.punishments</i18n>&nbsp<i18n>presences.sanctions</i18n></span>
+        </a>
 
-    <!-- punishment/sanctions -->
-    <a class="presence-navigation-item forbidden">
-        <div class="presence-icon"><i class="punishment-active" aria-hidden="true"></i></div>
-        <div class="presence-punishment">
-            <span><i18n>presences.punishments</i18n></span>
-            <span><i18n>presences.sanctions</i18n></span>
-        </div>
-    </a>
+        <!-- publipostage -->
+        <a class="flex-col col__1 presence-navigation-item" data-ng-click="vm.scrollToElement('massmailing')">
+            <div class="presence-icon flex-row"><i class="publipostage" aria-hidden="true"></i></div>
+            <span class="flex-row"><i18n>presences.publipostage</i18n></span>
+        </a>
 
-    <!-- publipostage -->
-    <a class="presence-navigation-item" data-ng-click="vm.scrollToElement('massmailing')">
-        <div class="presence-icon"><i class="publipostage" aria-hidden="true"></i></div>
-        <span><i18n>presences.publipostage</i18n></span>
-    </a>
-
-    <!-- statistics -->
-    <a class="presence-navigation-item" data-ng-click="vm.scrollToElement('statistics')">
-        <div class="presence-icon"><i class="statistics" aria-hidden="true"></i></div>
-        <span><i18n>presences.statistics</i18n></span>
-    </a>
+        <!-- statistics -->
+        <a class="flex-col col__1 presence-navigation-item" data-ng-click="vm.scrollToElement('statistics')">
+            <div class="presence-icon flex-row"><i class="presences-statistics" aria-hidden="true"></i></div>
+            <span class="flex-row"><i18n>presences.statistics</i18n></span>
+        </a>
+    </div>
 </div>
 
 <!-- Absence/reason-->
