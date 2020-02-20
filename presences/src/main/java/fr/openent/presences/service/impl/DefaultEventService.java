@@ -745,13 +745,39 @@ public class DefaultEventService implements EventService {
 
     @Override
     public void createAction(JsonObject actionBody, Handler<Either<String, JsonObject>> handler) {
+        JsonArray statements = new JsonArray();
+        for (int i = 0; i < actionBody.getJsonArray("eventId").size(); i++) {
+            Integer eventId = actionBody.getJsonArray("eventId").getInteger(i);
+            JsonObject event = new JsonObject()
+                    .put("owner", actionBody.getString("owner"))
+                    .put("eventId", eventId)
+                    .put("actionId", actionBody.getInteger("actionId"))
+                    .put("comment", actionBody.getString("comment"));
+            statements.add(addActionStatement(event));
+        }
+        Sql.getInstance().transaction(statements, createActionAsync -> {
+            Either<String, JsonObject> result = SqlResult.validUniqueResult(0, createActionAsync);
+            if (result.isLeft()) {
+                String message = "[Presences@DefaultEventeService] Failed to execute action creation statements";
+                LOGGER.error(message);
+                handler.handle(new Either.Left<>(message));
+            }
+            handler.handle(new Either.Right<>(result.right().getValue()));
+        });
+    }
+
+    private JsonObject addActionStatement(JsonObject event) {
         String query = "INSERT INTO " + Presences.dbSchema + ".event_actions " +
                 "(owner, event_id, action_id, comment)" + "VALUES (?, ?, ?, ?) RETURNING id";
-        JsonArray params = new JsonArray()
-                .add(actionBody.getString("owner"))
-                .add(actionBody.getInteger("eventId"))
-                .add(actionBody.getInteger("actionId"))
-                .add(actionBody.getString("comment"));
-        Sql.getInstance().prepared(query, params, SqlResult.validUniqueResultHandler(handler));
+        JsonArray values = new JsonArray()
+                .add(event.getString("owner"))
+                .add(event.getInteger("eventId"))
+                .add(event.getInteger("actionId"))
+                .add(event.getString("comment"));
+
+        return new JsonObject()
+                .put("statement", query)
+                .put("values", values)
+                .put("action", "prepared");
     }
 }

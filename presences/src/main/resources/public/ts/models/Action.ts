@@ -16,8 +16,8 @@ export interface ActionRequest {
 }
 
 export interface ActionBody {
-    eventId: number;
-    actionId: any;
+    eventId: Array<number>;
+    actionId: number;
     owner: string;
     comment?: string;
 }

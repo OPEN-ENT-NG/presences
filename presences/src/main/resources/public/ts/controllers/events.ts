@@ -73,7 +73,7 @@ interface ViewModel {
     formatDate(date: string): string;
 
     /* Action */
-    doAction($event, event): void;
+    doAction($event, event, eventParent?): void;
 
     getLastAction(): void;
 
@@ -293,7 +293,7 @@ export const eventsController = ng.controller('EventsController', ['$scope', '$r
         };
 
         const getEventActions = async (): Promise<void> => {
-            vm.actionEvent = await eventService.getEventActions(vm.actionForm.eventId);
+            vm.actionEvent = await eventService.getEventActions(vm.actionForm.eventId[0]);
             $scope.safeApply();
         };
 
@@ -394,18 +394,25 @@ export const eventsController = ng.controller('EventsController', ['$scope', '$r
             console.log("downloading File");
         };
 
-        vm.doAction = ($event, event): void => {
-            $event.stopPropagation();
-            vm.lightbox.action = true;
-            vm.actionForm.owner = model.me.userId;
-            if ('id' in event) {
-                vm.actionForm.eventId = event.id;
-            } else {
-                vm.actionForm.eventId = event.type.id;
+        vm.doAction = ($event, event, eventParent?): void => {
+            if (eventParent || event.isGlobalAction) {
+                $event.stopPropagation();
+                vm.lightbox.action = true;
+                vm.event = eventParent ? eventParent : event;
+                vm.actionForm.owner = model.me.userId;
+                if ('id' in event) {
+                    vm.actionForm.eventId = [event.id];
+                } else {
+                    /* global action case */
+                    vm.actionForm.eventId = [event.type.id];
+                    event.events.forEach(event => {
+                        vm.actionForm.eventId.push(event.id)
+                    });
+                }
+                vm.actionForm.actionId = null;
+                vm.actionForm.comment = "";
+                getEventActions();
             }
-            vm.actionForm.actionId = "";
-            vm.actionForm.comment = "";
-            getEventActions();
         };
 
         vm.switchAbsencesFilter = function () {

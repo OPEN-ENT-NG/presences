@@ -38,6 +38,7 @@ export interface EventResponse {
     events: any[];
     globalReason?: number;
     globalCounsellorRegularisation?: boolean;
+    isGlobalAction?: boolean;
     exclude?: boolean;
     type?: { event: string, id: number };
     actionAbbreviation?: string;
@@ -142,6 +143,7 @@ export class Events extends LoadingCollection {
                 /* array declared and used for managing global Reasons and CounsellorRegularization */
                 let reasonIds = [];
                 let regularizedEvents = [];
+                let actions = [];
 
                 /* build our eventsResponse array to affect our attribute "events" (see below dataModel.push) */
                 item.student.dayHistory.forEach(eventsHistory => {
@@ -156,6 +158,9 @@ export class Events extends LoadingCollection {
                             if ("counsellor_regularisation" in event) {
                                 regularizedEvents.push(event.counsellor_regularisation);
                             }
+                            if ("actionAbbreviation" in event) {
+                                actions.push(event.actionAbbreviation);
+                            }
                         }
                     });
                 });
@@ -163,7 +168,7 @@ export class Events extends LoadingCollection {
                 /* store all reason id in an array and check if they are all
                 the same to display multiple select or unique */
                 let globalReason: number;
-                if (!reasonIds.every((val, i, arr) => val === arr[0])) {
+                if (!reasonIds.every((val, i: number, arr: any[]) => val === arr[0])) {
                     /* all events will have different reason id */
                     globalReason = 0;
                 } else {
@@ -176,6 +181,9 @@ export class Events extends LoadingCollection {
                 let globalCounsellorRegularisation = regularizedEvents.length === 0 ? false
                     : regularizedEvents.reduce((accumulator, currentValue) => accumulator && currentValue);
                 let type = {event: item.type, id: item.id};
+
+                /* check if there are differents actions */
+                let isGlobalAction = new Set(actions).size === 1;
 
                 /* We build our event based on information stored above */
                 if (item.type === EventsUtils.ALL_EVENTS.event) {
@@ -190,6 +198,7 @@ export class Events extends LoadingCollection {
                         exclude: item.exclude ? item.exclude : false,
                         globalReason: globalReason,
                         globalCounsellorRegularisation: globalCounsellorRegularisation,
+                        isGlobalAction: isGlobalAction,
                         type: type,
                         actionAbbreviation: item.actionAbbreviation
                     });
