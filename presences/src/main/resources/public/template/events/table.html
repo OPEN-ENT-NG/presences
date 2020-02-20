@@ -1,5 +1,6 @@
 <table class="events-table table table-hover"
        data-ng-show="vm.events.all && vm.events.all.length > 0">
+    <!-- main title -->
     <thead>
     <tr>
         <th width="54%">
@@ -25,6 +26,8 @@
         </th>
     </tr>
     </thead>
+
+    <!-- event list -->
     <tbody class="events-table-body" data-ng-repeat="event in vm.events.all track by $index">
     <tr data-id="[[$index]]" data-ng-click="vm.toggleCollapse($event)">
 
@@ -43,20 +46,12 @@
 
         <!-- Period -->
         <th class="events-table-body-period text-center">
-            <ul class="period"
-                data-ng-click="vm.period($event)"
-                data-ng-mousedown="vm.setAbsent($event)"
-                data-ng-mouseup="vm.treatAbsentAfterMouseLeave(event)"
-                data-ng-mouseover="vm.drawAbsent($event)">
-
+            <ul class="period">
                 <!-- planning  -->
                 <li ng-repeat="periods in event.dayHistory track by $index"
-                    data-ng-mousemove="vm.indexDayHistory = $index;"
-                    data-ng-click="vm.interactAbsent(periods, event, $event, $parent.$index)"
                     class="[[vm.eventTypeState(periods, event)]]"
                     tooltip="[[periods.name]]">
                 </li>
-
                 <li><i class="tableEdit" data-ng-click="vm.editPeriod($event, event)"></i></li>
             </ul>
         </th>
@@ -104,60 +99,52 @@
                 <span></span>
             </label>
         </th>
+    </tr>
 
-        <!-- description content -->
-    <tr ng-class="{open: vm.isCollapsibleOpen($index)}" class="events-table-body-description">
-        <td colspan="7" data-ng-show="event.events.length !== 0" class="events-table-body-td">
-            <table class="events-table-body-colspan">
-                <tr ng-repeat="history in event.events | orderBy:'+end_date'">
-                    <th width="54%">
-                        &nbsp;
-                    </th>
-                    <th width="22%">
-                        [[history.start_date | date:'HH:mm']] - [[history.end_date | date:'HH:mm']]
-                    </th>
-                    <th width="4%">
-                        &nbsp;
-                    </th>
-                    <th width="8%">
-                        <span class="events-table-body-description-content-select table-reason">
-                             <label>
-                                <select data-ng-model="history.reason_id"
-                                        data-ng-change="vm.changeReason(history, event)"
-                                        ng-options="reason.id as reason.label for reason in vm.eventReasonsTypeDescription"
-                                        options-disabled="reason.hidden for reason in vm.eventReasonsType">
-                                    <option value="">[[lang.translate('presences.absence.select.empty')]]</option>
-                                </select>
-                            </label>
-                        </span>
-                    </th>
-                    <th width="4%">
-                        &nbsp;
-                    </th>
-                    <th width="4%">
-                        <i ng-class="{add : history.actionAbbreviation == null}"
-                           data-ng-click="vm.doAction($event, history)">
-                        </i>
-                        <span class="events-table-body-color" ng-click="vm.doAction($event, history)">
-                            [[history.actionAbbreviation]]
-                        </span>
-                    </th>
-                    <th width="4%">
-                        <label class="events-table-body-description-content-checkbox checkbox"
-                               ng-style="{
-                                    opacity: !vm.provingReasonsMap[history.reason_id] && history.reason_id !== null ? 1 : 0,
-                                    'pointer-events': history.reason_id !== null && !vm.provingReasonsMap[history.reason_id] ? 'all' : 'none'
-                                }">
-                            <input type="checkbox" data-ng-model="history.counsellor_regularisation"
-                                   ng-disabled="!(history.reason_id !== null && !vm.provingReasonsMap[history.reason_id]) && history.counsellor_regularisation"
-                                   data-ng-change="vm.toggleEventRegularised(history)">
-                            <span ng-style="{cursor: history.reason_id !== null && !vm.provingReasonsMap[history.reason_id] ? 'pointer' : 'default'}"></span>
-                        </label>
-                    </th>
-                </tr>
-            </table>
+
+    <!-- description content -->
+    <tr data-ng-show="event.events.length !== 0" ng-class="{open: vm.isCollapsibleOpen($parent.$index)}"
+        class="events-table-body-description" ng-repeat="history in event.events | orderBy:'+end_date'">
+        <td class="text-center" width="54%">&nbsp;</td>
+        <td class="events-table-body-date uppercase text-center" width="22%">
+            [[history.start_date | date:'HH:mm']] - [[history.end_date | date:'HH:mm']]
         </td>
-    <tr>
+        <td class="text-center" width="4%">&nbsp;</td>
+        <td class="text-center" width="8%">
+            <span class="events-table-body-description-content-select table-reason">
+                 <label>
+                    <select data-ng-model="history.reason_id"
+                            data-ng-change="vm.changeReason(history, event)"
+                            ng-options="reason.id as reason.label for reason in vm.eventReasonsTypeDescription"
+                            options-disabled="reason.hidden for reason in vm.eventReasonsType">
+                        <option value="">[[lang.translate('presences.absence.select.empty')]]</option>
+                    </select>
+                </label>
+            </span>
+        </td>
+        <td class="text-center" width="4%">
+            &nbsp;
+        </td>
+        <td class="text-center" width="4%">
+            <i ng-class="{add : history.actionAbbreviation == null}"
+               data-ng-click="vm.doAction($event, history)">
+            </i>
+            <span class="events-table-body-color" ng-click="vm.doAction($event, history)">
+                    [[history.actionAbbreviation]]
+                </span>
+        </td>
+        <td class="text-center" width="4%">
+            <label class="events-table-body-description-content-checkbox checkbox"
+                   ng-style="{
+                      opacity: !vm.provingReasonsMap[history.reason_id] && history.reason_id !== null ? 1 : 0,
+                      'pointer-events': history.reason_id !== null && !vm.provingReasonsMap[history.reason_id] ? 'all' : 'none'
+                   }">
+                <input type="checkbox" data-ng-model="history.counsellor_regularisation"
+                       ng-disabled="!(history.reason_id !== null && !vm.provingReasonsMap[history.reason_id]) && history.counsellor_regularisation"
+                       data-ng-change="vm.toggleEventRegularised(history)">
+                <span ng-style="{cursor: history.reason_id !== null && !vm.provingReasonsMap[history.reason_id] ? 'pointer' : 'default'}"></span>
+            </label>
+        </td>
     </tr>
     </tbody>
 </table>
