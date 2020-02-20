@@ -85,7 +85,7 @@
                data-ng-click="vm.doAction($event, event)">
             </i>
             <i ng-show="event.events.length > 1" class="addMultiple"></i>
-            <span class="events-table-body-color" ng-click="vm.doAction($event, event)">
+            <span ng-show="event.events.length <= 1" class="events-table-body-color">
                 [[event.actionAbbreviation]]
             </span>
         </th>
@@ -136,9 +136,9 @@
                     </th>
                     <th width="4%">
                         <i ng-class="{add : history.actionAbbreviation == null}"
-                           data-ng-click="vm.doAction($event, event)">
+                           data-ng-click="vm.doAction($event, history)">
                         </i>
-                        <span class="events-table-body-color" ng-click="vm.doAction($event, event)">
+                        <span class="events-table-body-color" ng-click="vm.doAction($event, history)">
                             [[history.actionAbbreviation]]
                         </span>
                     </th>

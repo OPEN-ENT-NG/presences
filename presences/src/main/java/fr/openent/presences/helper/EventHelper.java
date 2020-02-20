@@ -49,7 +49,7 @@ public class EventHelper {
     }
 
     public void addLastActionAbbreviation(List<Event> events, Future<JsonObject> future) {
-        List<Integer> ids = events.stream().map(event -> event.getId()).collect(Collectors.toList());
+        List<Integer> ids = this.getAllEventsIds(events);
         actionService.getLastAbbreviations(ids, res -> {
             if (res.isLeft()) {
                 future.fail(res.left().getValue());
@@ -71,6 +71,24 @@ public class EventHelper {
             });
             future.complete();
         });
+    }
+
+    private List<Integer> getAllEventsIds(List<Event> events) {
+        List<Integer> ids = new ArrayList<>();
+        events.forEach(event -> {
+            if (!event.getType().toUpperCase().equals(Events.ABSENCE.toString())) {
+                ids.add(event.getId());
+            }
+            ((List<JsonObject>) event.getStudent().getDayHistory().getList()).forEach(dayHistory ->
+                    ((List<JsonObject>) dayHistory.getJsonArray("events").getList()).forEach(eventHistory -> {
+                        if (!eventHistory.getString("type").toUpperCase().equals(Events.ABSENCE.toString())) {
+                            ids.add(eventHistory.getInteger("id"));
+                        }
+                    })
+            );
+        });
+        ids.removeAll(Collections.singletonList(null));
+        return ids;
     }
 
     /**

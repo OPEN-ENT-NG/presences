@@ -75,8 +75,6 @@ interface ViewModel {
     /* Action */
     doAction($event, event): void;
 
-    getAction(): void;
-
     getLastAction(): void;
 
     createAction(): void;
@@ -339,6 +337,7 @@ export const eventsController = ng.controller('EventsController', ['$scope', '$r
 
         vm.createAction = function () {
             eventService.createAction(vm.actionForm);
+            getEvents(true);
         };
 
         vm.editPeriod = ($event, {studentId, date, displayName, className, classId}): void => {
@@ -401,13 +400,15 @@ export const eventsController = ng.controller('EventsController', ['$scope', '$r
 
         vm.doAction = ($event, event): void => {
             $event.stopPropagation();
-            vm.openActionForm(event);
-
+            vm.lightbox.action = true;
             vm.actionForm.owner = model.me.userId;
-            vm.actionForm.eventId = event.type.id;
+            if ('id' in event) {
+                vm.actionForm.eventId = event.id;
+            } else {
+                vm.actionForm.eventId = event.type.id;
+            }
             vm.actionForm.actionId = "";
             vm.actionForm.comment = "";
-
             getEventActions();
         };
 
@@ -864,8 +865,8 @@ export const eventsController = ng.controller('EventsController', ['$scope', '$r
 
         /* Form action */
         vm.openActionForm = function (event) {
-            vm.lightbox.action = true;
-            vm.event = event;
+            // vm.lightbox.action = true;
+            // vm.event = event;
         };
 
         vm.validActionForm = function () {
