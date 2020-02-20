@@ -1,5 +1,4 @@
 import {Event, EventResponse, Events} from "../models";
-import {DateUtils} from "@common/utils";
 import {Reason} from "@presences/models/Reason";
 
 export interface EventsFilter {
@@ -28,39 +27,13 @@ export class EventsUtils {
         absence: 'absence'
     };
 
-    public static addEventsAndAbsencesArray = function (item: Event, eventsId: number[], absencesId: number[]): void {
+    public static addEventsArray = function (item: Event, eventsId: number[]): void {
         if (item.type === EventsUtils.ALL_EVENTS.event) {
             if (eventsId.indexOf(item.id) === -1) {
                 eventsId.push(item.id);
             }
         }
-        if (item.type === EventsUtils.ALL_EVENTS.absence) {
-            if (absencesId.indexOf(item.id) === -1) {
-                absencesId.push(item.id);
-            }
-        }
     };
-
-    public static filterHistory(events: Array<Event>): Array<Event> {
-        let tmpEvent: Array<Event> = JSON.parse(JSON.stringify(events));
-        let longestTimeEvent: Event = tmpEvent.sort(DateUtils.compareTime('start_date', 'end_time'))[tmpEvent.length - 1];
-        if (longestTimeEvent && longestTimeEvent.type === this.ALL_EVENTS.absence) {
-            let newEvents: Array<Event> = [];
-            longestTimeEvent.events = [];
-            events.filter(e => e.type === this.ALL_EVENTS.event).forEach(event => {
-                if (!DateUtils.isBetween(event.start_date, event.end_date,
-                    longestTimeEvent.start_date, longestTimeEvent.end_date)) {
-                    newEvents.push(event);
-                } else {
-                    longestTimeEvent.events.push(event);
-                }
-            });
-            newEvents.push(longestTimeEvent);
-            return newEvents;
-        } else {
-            return events;
-        }
-    }
 
     public static getReasonIds = function (events): number[] {
         let reasonIds = [];
@@ -79,17 +52,12 @@ export class EventsUtils {
      * Method to fetch all ids in the concerned dayHistory and events
      * from one student's event.all
      */
-    public static fetchEventsAbsencesId(event: EventResponse, fetchedEventIds: number[], fetchedAbsenceIds: number[]) {
-        event.dayHistory.forEach(dayHistoryElement => {
-            dayHistoryElement.events.forEach(event => {
-                EventsUtils.addEventsAndAbsencesArray(event, fetchedEventIds, fetchedAbsenceIds);
-            })
-        });
+    public static fetchEvents(event: EventResponse, fetchedEventIds: number[]) {
         event.events.forEach(event => {
-            EventsUtils.addEventsAndAbsencesArray(event, fetchedEventIds, fetchedAbsenceIds);
+            EventsUtils.addEventsArray(event, fetchedEventIds);
             if ('events' in event) {
                 event.events.forEach(ee => {
-                    EventsUtils.addEventsAndAbsencesArray(ee, fetchedEventIds, fetchedAbsenceIds);
+                    EventsUtils.addEventsArray(ee, fetchedEventIds);
                 });
             }
         });

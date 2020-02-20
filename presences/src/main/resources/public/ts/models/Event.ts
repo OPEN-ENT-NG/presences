@@ -4,6 +4,7 @@ import {DateUtils} from '@common/utils'
 import {EventType} from "./EventType";
 import {LoadingCollection} from "@common/model";
 import {Reason} from "@presences/models/Reason";
+import {EventsUtils} from "../utilities";
 
 export interface Event {
     id: number;
@@ -130,13 +131,13 @@ export class Events extends LoadingCollection {
     }
 
     static buildEventResponse(data: any[]): EventResponse[] {
-        let dataModel = [];
+        let builtEvents = [];
 
         data.forEach(item => {
             /* check if not duplicate dataModel */
-            if (!dataModel.some(e => (JSON.stringify(e.dayHistory) == JSON.stringify(item.student.dayHistory)))) {
+            if (!builtEvents.some(e => (JSON.stringify(e.dayHistory) == JSON.stringify(item.student.dayHistory)))) {
                 /* new dataModel */
-                let eventsResponse = [];
+                let eventsFetchedFromHistory = [];
 
                 /* array declared and used for managing global Reasons and CounsellorRegularization */
                 let reasonIds = [];
@@ -145,14 +146,16 @@ export class Events extends LoadingCollection {
                 /* build our eventsResponse array to affect our attribute "events" (see below dataModel.push) */
                 item.student.dayHistory.forEach(eventsHistory => {
                     eventsHistory.events.forEach(event => {
-                        if (!eventsResponse.some(element => element.id == event.id)) {
-                            eventsResponse.push(event);
-                        }
-                        if ("reason_id" in event) {
-                            reasonIds.push(event.reason_id);
-                        }
-                        if ("counsellor_regularisation" in event) {
-                            regularizedEvents.push(event.counsellor_regularisation);
+                        if (event.type === EventsUtils.ALL_EVENTS.event) {
+                            if (!eventsFetchedFromHistory.some(element => element.id == event.id)) {
+                                eventsFetchedFromHistory.push(event);
+                            }
+                            if ("reason_id" in event) {
+                                reasonIds.push(event.reason_id);
+                            }
+                            if ("counsellor_regularisation" in event) {
+                                regularizedEvents.push(event.counsellor_regularisation);
+                            }
                         }
                     });
                 });
@@ -161,7 +164,7 @@ export class Events extends LoadingCollection {
                 the same to display multiple select or unique */
                 let globalReason: number;
                 if (!reasonIds.every((val, i, arr) => val === arr[0])) {
-                    // all events will have different reason id
+                    /* all events will have different reason id */
                     globalReason = 0;
                 } else {
                     globalReason = parseInt(_.uniq(reasonIds));
@@ -169,31 +172,31 @@ export class Events extends LoadingCollection {
                         globalReason = null;
                     }
                 }
-
                 /* check all events regularized in this event to display the global regularized value */
                 let globalCounsellorRegularisation = regularizedEvents.length === 0 ? false
                     : regularizedEvents.reduce((accumulator, currentValue) => accumulator && currentValue);
                 let type = {event: item.type, id: item.id};
 
                 /* We build our event based on information stored above */
-                dataModel.push({
-                    studentId: item.student.id,
-                    displayName: item.student.name,
-                    className: item.student.className,
-                    classId: item.student.classId,
-                    date: moment(item.startDate).format(DateUtils.FORMAT["YEAR-MONTH-DAY"]),
-                    dayHistory: item.student.dayHistory,
-                    events: eventsResponse,
-                    // courses: _.uniq(item.student.courses, "_id"),
-                    exclude: item.exclude ? item.exclude : false,
-                    globalReason: globalReason,
-                    globalCounsellorRegularisation: globalCounsellorRegularisation,
-                    type: type,
-                    actionAbbreviation: item.actionAbbreviation
-                });
+                if (item.type === EventsUtils.ALL_EVENTS.event) {
+                    builtEvents.push({
+                        studentId: item.student.id,
+                        displayName: item.student.name,
+                        className: item.student.className,
+                        classId: item.student.classId,
+                        date: moment(item.startDate).format(DateUtils.FORMAT["YEAR-MONTH-DAY"]),
+                        dayHistory: item.student.dayHistory,
+                        events: eventsFetchedFromHistory,
+                        exclude: item.exclude ? item.exclude : false,
+                        globalReason: globalReason,
+                        globalCounsellorRegularisation: globalCounsellorRegularisation,
+                        type: type,
+                        actionAbbreviation: item.actionAbbreviation
+                    });
+                }
             }
         });
-        return dataModel;
+        return builtEvents;
     };
 
     async syncPagination() {

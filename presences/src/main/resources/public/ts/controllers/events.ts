@@ -1,5 +1,5 @@
 import {_, angular, idiom as lang, model, moment, ng} from 'entcore';
-import {Absence, Action, ActionBody, Event, EventResponse, Events, EventType, Student, Students} from "../models";
+import {Action, ActionBody, Event, EventResponse, Events, EventType, Student, Students} from "../models";
 import {DateUtils} from "@common/utils";
 import {GroupService} from "@common/services/GroupService";
 import {actionService, EventService, ReasonService} from "../services";
@@ -60,9 +60,9 @@ interface ViewModel {
 
     changeReason(history: Event, event: EventResponse): Promise<void>;
 
-    toggleAllAbsenceRegularised(event: EventResponse): Promise<void>;
+    toggleAllEventsRegularised(event: EventResponse): Promise<void>;
 
-    toggleAbsenceRegularised(history: Event, event: EventResponse): Promise<void>;
+    toggleEventRegularised(history: Event): Promise<void>;
 
     getNonRegularizedEvents(events): any[];
 
@@ -281,8 +281,8 @@ export const eventsController = ng.controller('EventsController', ['$scope', '$r
                 // "page" uses sync() method at the same time it sets 0 (See LoadingCollection Class)
                 vm.updateFilter();
             } else {
-                // case if we only interact with action, reason, counsellor regularized...
-                refreshGetEventWhileAction();
+                // dynamic mode : case if we only interact with action, reason, counsellor regularized...
+                await refreshGetEventWhileAction();
             }
             $scope.safeApply();
         };
@@ -299,11 +299,7 @@ export const eventsController = ng.controller('EventsController', ['$scope', '$r
 
         const filterHistory = (): void => {
             vm.events.all = vm.events.all.filter(e => e.exclude !== true);
-            vm.events.all.forEach(event => {
-                event.events = EventsUtils.filterHistory(event.events);
-                $scope.safeApply();
-            });
-            vm.events.all = vm.events.all.sort((a, b) =>
+            vm.events.all = vm.events.all.sort((a: EventResponse, b: EventResponse) =>
                 moment(b.date).format(DateUtils.FORMAT["YEARMONTHDAY"]) -
                 moment(a.date).format(DateUtils.FORMAT["YEARMONTHDAY"])
             )
@@ -387,7 +383,7 @@ export const eventsController = ng.controller('EventsController', ['$scope', '$r
         /* filtering by removing multiple choices if there is no reason_id */
         vm.filterSelect = function (options: Reason[], event): Reason[] {
             let reasonIds = EventsUtils.getReasonIds(event.events);
-            if (reasonIds.every((val, i, arr) => val === arr[0])) {
+            if (reasonIds.every((val: number, i: number, arr: number[]) => val === arr[0])) {
                 return options.filter(option => option.id !== 0);
             }
             return options;
@@ -453,29 +449,17 @@ export const eventsController = ng.controller('EventsController', ['$scope', '$r
         vm.changeAllReason = async (event: EventResponse): Promise<void> => {
             let initialReasonId = event.globalReason;
             let fetchedEventIds: number[] = [];
-            let fetchedAbsenceIds: number[] = [];
             if (isWidget) {
                 fetchedEventIds.push(event.id);
             } else {
-                EventsUtils.fetchEventsAbsencesId(event, fetchedEventIds, fetchedAbsenceIds);
+                EventsUtils.fetchEvents(event, fetchedEventIds);
             }
-            vm.events.all.forEach(e => {
-                e.events.every(ee => {
-                    if (fetchedAbsenceIds.indexOf(ee.id) === -1) {
-                        return false;
-                    }
-                    EventsUtils.fetchEventsAbsencesId(e, fetchedEventIds, fetchedAbsenceIds);
-                })
-            });
-            await Promise.all([
-                vm.events.updateReason(fetchedEventIds, initialReasonId),
-                new Absence(null, null, null, null)
-                    .updateAbsenceReason(fetchedAbsenceIds, initialReasonId)
-            ]).then(() => {
-                if (isWidget) vm.events.page = 0;
-                getEvents(true);
-                vm.eventId = null;
-            });
+            await vm.events.updateReason(fetchedEventIds, initialReasonId)
+                .then(() => {
+                    if (isWidget) vm.events.page = 0;
+                    getEvents(true);
+                    vm.eventId = null;
+                });
             $scope.safeApply();
         };
 
@@ -483,94 +467,61 @@ export const eventsController = ng.controller('EventsController', ['$scope', '$r
         vm.changeReason = async (history: Event, event: EventResponse): Promise<void> => {
             let initialReasonId = history.reason ? history.reason.id : history.reason_id;
             let fetchedEventIds: number[] = [];
-            let fetchedAbsenceIds: number[] = [];
             if (history.type === EventsUtils.ALL_EVENTS.event) {
                 fetchedEventIds.push(history.id);
             } else {
-                fetchedAbsenceIds.push(history.id);
                 if ('events' in history) {
                     history.events.forEach(he => {
-                        EventsUtils.addEventsAndAbsencesArray(he, fetchedEventIds, fetchedAbsenceIds);
+                        EventsUtils.fetchEvents(he, fetchedEventIds);
                     });
                 }
             }
-
-            await Promise.all([
-                vm.events.updateReason(fetchedEventIds, initialReasonId),
-                new Absence(null, null, null, null)
-                    .updateAbsenceReason(fetchedAbsenceIds, initialReasonId)
-            ]).then(() => {
-                if (initialReasonId && history.reason) history.reason.proving = vm.eventReasonsType.find((r) => r.id === initialReasonId).proving;
-                vm.events.events = vm.eventManageRemove(vm.events.events, history);
-                if (event && event.events.filter(e => !e.counsellor_regularisation).length === 0) {
-                    vm.eventId = null;
-                }
-            });
+            await vm.events.updateReason(fetchedEventIds, initialReasonId)
+                .then(() => {
+                    getEvents(true);
+                });
             $scope.safeApply();
         };
 
-        vm.toggleAllAbsenceRegularised = async (event: EventResponse): Promise<void> => {
+        vm.toggleAllEventsRegularised = async (event: EventResponse): Promise<void> => {
             let initialCounsellorRegularisation = event.globalCounsellorRegularisation;
             let fetchedEventIds: number[] = [];
-            let fetchedAbsenceIds: number[] = [];
-            EventsUtils.fetchEventsAbsencesId(event, fetchedEventIds, fetchedAbsenceIds);
+            EventsUtils.fetchEvents(event, fetchedEventIds);
             vm.events.all.forEach(e => {
-                e.events.every(ee => {
-                    if (fetchedAbsenceIds.indexOf(ee.id) === -1) {
-                        return false;
-                    }
-                    EventsUtils.fetchEventsAbsencesId(e, fetchedEventIds, fetchedAbsenceIds);
-                })
+                EventsUtils.fetchEvents(e, fetchedEventIds);
             });
-            await Promise.all([
-                vm.events.updateRegularized(fetchedEventIds, initialCounsellorRegularisation),
-                new Absence(null, null, null, null)
-                    .updateAbsenceRegularized(fetchedAbsenceIds, initialCounsellorRegularisation)
-            ]).then(() => {
-                getEvents(true);
-                vm.eventId = null;
-            });
+            await vm.events.updateRegularized(fetchedEventIds, initialCounsellorRegularisation)
+                .then(() => {
+                    getEvents(true);
+                    vm.eventId = null;
+                });
             $scope.safeApply();
         };
 
-        vm.toggleAbsenceRegularised = async (history: Event, event: EventResponse): Promise<void> => {
+        vm.toggleEventRegularised = async (history: Event): Promise<void> => {
             let initialCounsellorRegularisation = history.counsellor_regularisation;
             let fetchedEventIds: number[] = [];
-            let fetchedAbsenceIds: number[] = [];
             if (history.type === EventsUtils.ALL_EVENTS.event) {
                 fetchedEventIds.push(history.id);
-            } else {
-                fetchedAbsenceIds.push(history.id);
-                if ('events' in history) {
-                    history.events.forEach(ee => {
-                        EventsUtils.addEventsAndAbsencesArray(ee, fetchedEventIds, fetchedAbsenceIds);
-                    });
-                }
             }
-            await Promise.all([
-                vm.events.updateRegularized(fetchedEventIds, initialCounsellorRegularisation),
-                new Absence(null, null, null, null)
-                    .updateAbsenceRegularized(fetchedAbsenceIds, initialCounsellorRegularisation)
-            ]).then(() => {
-                if (!isWidget) {
-                    getEvents(true);
-                    if (event && event.events.filter(e => !e.counsellor_regularisation).length === 0) {
-                        vm.eventId = null;
+            await vm.events.updateRegularized(fetchedEventIds, initialCounsellorRegularisation)
+                .then(() => {
+                    if (!isWidget) {
+                        getEvents(true);
+                    } else {
+                        vm.events.events = vm.eventManageRemove(vm.events.events, history);
+                        $scope.safeApply();
                     }
-                } else {
-                    vm.events.events = vm.eventManageRemove(vm.events.events, history);
-                    $scope.safeApply();
-                }
-            });
+                });
         };
 
         vm.getNonRegularizedEvents = (events): any[] => {
             return events.filter(item => item.counsellorRegularisation === false);
         };
 
-        vm.eventManageRemove = (events, event) => {
+        vm.eventManageRemove = (events: EventResponse[], event: Event): EventResponse[] => {
             if (event.reason && event.reason.id && (event.reason.proving || event.counsellor_regularisation)) {
-                events = events.filter((e) => e.id !== event.id);
+                events = events.filter((e: EventResponse) => e.id !== event.id);
             } else if (event.events) {
                 event.events.filter((e) => e.type === EventType[EventType.ABSENCE])
             }

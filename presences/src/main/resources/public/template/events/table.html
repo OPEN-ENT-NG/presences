@@ -100,7 +100,7 @@
                    ng-class="{half: vm.regularizedChecked(event)}"
                    data-ng-click="vm.stopAbsencePropagation($event)">
                 <input type="checkbox" data-ng-model="event.globalCounsellorRegularisation"
-                       data-ng-change="vm.toggleAllAbsenceRegularised(event)">
+                       data-ng-change="vm.toggleAllEventsRegularised(event)">
                 <span></span>
             </label>
         </th>
@@ -150,7 +150,7 @@
                                 }">
                             <input type="checkbox" data-ng-model="history.counsellor_regularisation"
                                    ng-disabled="!(history.reason_id !== null && !vm.provingReasonsMap[history.reason_id]) && history.counsellor_regularisation"
-                                   data-ng-change="vm.toggleAbsenceRegularised(history, event)">
+                                   data-ng-change="vm.toggleEventRegularised(history)">
                             <span ng-style="{cursor: history.reason_id !== null && !vm.provingReasonsMap[history.reason_id] ? 'pointer' : 'default'}"></span>
                         </label>
                     </th>

@@ -9,22 +9,6 @@
   position: relative;
 }
 
-.period li:nth-child(5):before {
-  display: none;
-}
-
-.period li:nth-child(5):after {
-  width: 34px;
-}
-
-.period li:nth-child(5) {
-  padding-left: 10px;
-}
-
-.period li:nth-child(6) {
-  padding-left: 0;
-}
-
 .period li:before {
   content: '';
   width: 12px;
