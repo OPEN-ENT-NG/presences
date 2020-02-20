@@ -20,6 +20,17 @@ export interface EventsFilter {
     noFilter: boolean
 }
 
+export interface EventsFormFilter {
+    absences: boolean,
+    late: boolean,
+    departure: boolean,
+    unjustified: boolean,
+    justifiedNotRegularized: boolean,
+    justifiedRegularized: boolean,
+    allReasons: boolean,
+    reasonIds: number[]
+}
+
 export class EventsUtils {
 
     public static readonly ALL_EVENTS = {

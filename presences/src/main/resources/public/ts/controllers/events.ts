@@ -1,9 +1,9 @@
-import {_, angular, idiom as lang, model, moment, ng} from 'entcore';
+import {_, angular, idiom as lang, Me, model, moment, ng} from 'entcore';
 import {Action, ActionBody, Event, EventResponse, Events, EventType, Student, Students} from "../models";
 import {DateUtils} from "@common/utils";
 import {GroupService} from "@common/services/GroupService";
 import {actionService, EventService, ReasonService} from "../services";
-import {EventsFilter, EventsUtils} from "../utilities";
+import {EventsFilter, EventsUtils, PreferencesUtils} from "../utilities";
 import {Reason} from "@presences/models/Reason";
 
 declare let window: any;
@@ -232,6 +232,28 @@ export const eventsController = ng.controller('EventsController', ['$scope', '$r
         vm.action = {
             seeAll: false
         };
+
+        const loadFormFilter = (): void => {
+            let formFilters = Me.preferences['presences.eventList.filters'];
+            formFilters = formFilters ? formFilters[window.structure.id] : null;
+            if(formFilters) {
+                let {reasonIds, ...toMergeFilters} = formFilters;
+                vm.filter = {...vm.filter, ...toMergeFilters};
+                vm.eventReasonsType.forEach((r) => {r.isSelected = reasonIds.includes(r.id)});
+            }
+        };
+
+        const loadReasonTypes = async (): Promise<void> => {
+            vm.eventReasonsType = await ReasonService.getReasons(window.structure.id);
+            vm.eventReasonsTypeDescription = _.clone(vm.eventReasonsType);
+            vm.eventReasonsType.map((reason: Reason) => {
+                reason.isSelected = true;
+                vm.provingReasonsMap[reason.id] = reason.proving;
+            });
+
+            if (!isWidget) vm.eventReasonsType.push(vm.multipleSelect);
+        };
+
         const getEvents = async (actionMode?: boolean): Promise<void> => {
             vm.events.structureId = window.structure.id;
             vm.events.startDate = vm.filter.startDate.toDateString();
@@ -261,15 +283,6 @@ export const eventsController = ng.controller('EventsController', ['$scope', '$r
                 vm.events.noReason = vm.filter.noReasons;
             }
 
-            /* fetch all reasons */
-            vm.eventReasonsType = await ReasonService.getReasons(window.structure.id);
-            vm.eventReasonsTypeDescription = _.clone(vm.eventReasonsType);
-            vm.eventReasonsType.map((reason: Reason) => {
-                reason.isSelected = true;
-                vm.provingReasonsMap[reason.id] = reason.proving;
-            });
-
-            if (!isWidget) vm.eventReasonsType.push(vm.multipleSelect);
 
             EventsUtils.setStudentToSync(vm.events, vm.filter);
             EventsUtils.setClassToSync(vm.events, vm.filter);
@@ -295,8 +308,8 @@ export const eventsController = ng.controller('EventsController', ['$scope', '$r
         };
 
         const filterHistory = (): void => {
-            vm.events.all = vm.events.all.filter(e => e.exclude !== true);
-            vm.events.all = vm.events.all.sort((a: EventResponse, b: EventResponse) =>
+            vm.events.all = vm.events.all.filter(e => e.exclude !== true)
+                .sort((a: EventResponse, b: EventResponse) =>
                 moment(b.date).format(DateUtils.FORMAT["YEARMONTHDAY"]) -
                 moment(a.date).format(DateUtils.FORMAT["YEARMONTHDAY"])
             )
@@ -801,7 +814,20 @@ export const eventsController = ng.controller('EventsController', ['$scope', '$r
             vm.formFilter = JSON.parse(JSON.stringify(vm.filter));
         };
 
-        vm.validForm = function () {
+        vm.validForm = async function () {
+            let formFilter = {
+                absences: vm.formFilter.absences,
+                late: vm.formFilter.late,
+                departure: vm.formFilter.departure,
+                unjustified: vm.formFilter.unjustified,
+                justifiedNotRegularized: vm.formFilter.justifiedNotRegularized,
+                justifiedRegularized: vm.formFilter.justifiedRegularized,
+                allReasons: vm.formFilter.allReasons,
+                reasonIds: []
+            };
+            let selectedReasons = vm.eventReasonsType.filter((r) => r.isSelected);
+            formFilter.reasonIds = selectedReasons.map((r) => r.id);
+            await PreferencesUtils.updatePresencesEventListFilter(formFilter, window.structure.id);
             const {startDate, endDate} = vm.filter;
             vm.filter = {...vm.formFilter, startDate, endDate};
             vm.formFilter = {};
@@ -816,9 +842,11 @@ export const eventsController = ng.controller('EventsController', ['$scope', '$r
         };
 
         /* on  (watch) */
-        $scope.$watch(() => window.structure, () => {
-            getEvents();
-            getActions();
+        $scope.$watch(() => window.structure, async () => {
+            await loadReasonTypes();
+            loadFormFilter();
+            await getEvents();
+            await getActions();
         });
 
         /* Destroy directive and scope */
