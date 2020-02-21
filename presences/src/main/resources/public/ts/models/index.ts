@@ -13,3 +13,5 @@ export * from './Calendar';
 export * from './Action';
 export * from './Discipline';
 export * from './Presences';
+export * from './CounsellorAbsence';
+export * from './Reason';

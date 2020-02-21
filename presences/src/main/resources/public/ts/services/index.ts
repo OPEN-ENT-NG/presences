@@ -11,3 +11,4 @@ export * from './EventService';
 export * from './ActionService';
 export * from './DisciplineService';
 export * from './PresenceService';
+export * from './AbsenceService';

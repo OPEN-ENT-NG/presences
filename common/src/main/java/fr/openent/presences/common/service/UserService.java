@@ -15,4 +15,6 @@ public interface UserService {
      * @param handler Function handler returning data
      */
     void getUsers(List<String> userIds, Handler<Either<String, JsonArray>> handler);
+    
+    void getStudents(List<String> students, Handler<Either<String, JsonArray>> handler);
 }

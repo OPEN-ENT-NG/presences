@@ -1,6 +1,7 @@
 package fr.openent.presences.controller;
 
 import fr.openent.presences.constants.Actions;
+import fr.openent.presences.security.AbsenceWidgetRight;
 import fr.openent.presences.security.CreateEventRight;
 import fr.openent.presences.security.Manage;
 import fr.openent.presences.service.AbsenceService;
@@ -17,6 +18,9 @@ import org.entcore.common.http.filter.ResourceFilter;
 import org.entcore.common.http.filter.Trace;
 import org.entcore.common.http.response.DefaultResponseHandler;
 import org.entcore.common.user.UserUtils;
+
+import java.util.ArrayList;
+import java.util.List;
 
 public class AbsenceController extends ControllerHelper {
 
@@ -133,5 +137,24 @@ public class AbsenceController extends ControllerHelper {
         }
         Integer absenceId = Integer.parseInt(request.getParam("id"));
         absenceService.delete(absenceId, DefaultResponseHandler.defaultResponseHandler(request));
+    }
+
+    @Get("/absences")
+    @ApiDoc("Retrieve all absences matching parameters")
+    @SecuredAction(value = "", type = ActionType.RESOURCE)
+    @ResourceFilter(AbsenceWidgetRight.class)
+    public void getAbsences(HttpServerRequest request) {
+        String stucture = request.getParam("structure");
+        String start = request.getParam("start");
+        String end = request.getParam("end");
+        List<String> students = request.params().getAll("student");
+        Boolean justified = request.params().contains("justified") ? Boolean.parseBoolean(request.getParam("justified")) : null;
+        Boolean regularized = request.params().contains("regularized") ? Boolean.parseBoolean(request.getParam("regularized")) : null;
+        List<Integer> reasons = request.params().getAll("reason")
+                .stream()
+                .mapToInt(Integer::parseInt)
+                .collect(ArrayList::new, ArrayList::add, ArrayList::addAll);
+
+        absenceService.retrieve(stucture, students, start, end, justified, regularized, reasons, DefaultResponseHandler.arrayResponseHandler(request));
     }
 }

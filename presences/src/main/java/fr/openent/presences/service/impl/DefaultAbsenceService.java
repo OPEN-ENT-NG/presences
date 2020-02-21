@@ -3,7 +3,9 @@ package fr.openent.presences.service.impl;
 import fr.openent.presences.Presences;
 import fr.openent.presences.common.helper.FutureHelper;
 import fr.openent.presences.common.service.GroupService;
+import fr.openent.presences.common.service.UserService;
 import fr.openent.presences.common.service.impl.DefaultGroupService;
+import fr.openent.presences.common.service.impl.DefaultUserService;
 import fr.openent.presences.service.AbsenceService;
 import fr.wseduc.webutils.Either;
 import io.vertx.core.CompositeFuture;
@@ -20,6 +22,9 @@ import org.entcore.common.user.UserInfos;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 public class DefaultAbsenceService implements AbsenceService {
     private static final Logger LOGGER = LoggerFactory.getLogger(DefaultAbsenceService.class);
@@ -27,9 +32,11 @@ public class DefaultAbsenceService implements AbsenceService {
     private static String defaultEndTime = "23:59:59";
 
     private GroupService groupService;
+    private UserService userService;
 
     public DefaultAbsenceService(EventBus eb) {
         this.groupService = new DefaultGroupService(eb);
+        this.userService = new DefaultUserService();
     }
 
     @Override
@@ -364,5 +371,71 @@ public class DefaultAbsenceService implements AbsenceService {
     public void absenceRemovalTask(Handler<Either<String, JsonObject>> handler) {
         String query = "DELETE FROM  " + Presences.dbSchema + ".absence WHERE start_date <= NOW() - interval '72 hour'";
         Sql.getInstance().raw(query, SqlResult.validUniqueResultHandler(handler));
+    }
+
+    @Override
+    public void retrieve(String structure, List<String> students, String start, String end, Boolean justified, Boolean regularized, List<Integer> reasons, Handler<Either<String, JsonArray>> handler) {
+        JsonArray params = new JsonArray().add(structure);
+        String query = "SELECT id, start_date, end_date, student_id, reason_id, counsellor_regularisation " +
+                "FROM " + Presences.dbSchema + ".absence " +
+                "WHERE structure_id = ? ";
+        if (!students.isEmpty()) {
+            query += "AND student_id IN " + Sql.listPrepared(students);
+            params.addAll(new JsonArray(students));
+        }
+
+        if (justified != null && justified && !reasons.isEmpty()) {
+            query += " AND reason_id IN " + Sql.listPrepared(reasons);
+            params.addAll(new JsonArray(reasons));
+        } else if (justified != null && !justified) {
+            query += " AND reason_id IS NULL";
+        }
+
+        if (regularized != null) {
+            query += " AND counsellor_regularisation = ? ";
+            params.add(regularized);
+        }
+
+        if (start != null) {
+            query += " AND start_date >= ? ";
+            params.add(start + " " + defaultStartTime);
+        }
+
+        if (end != null) {
+            query += " AND start_date <= ? ";
+            params.add(end + " " + defaultEndTime);
+        }
+
+        Sql.getInstance().prepared(query, params, SqlResult.validResultHandler(res -> {
+            if (res.isLeft()) {
+                LOGGER.error("[Presences@DefaultAbsenceService] Failed to retrieve absences", res.left().getValue());
+                handler.handle(res.left());
+                return;
+            }
+
+            JsonArray absences = res.right().getValue();
+            if (absences.isEmpty()) {
+                handler.handle(res.right());
+                return;
+            }
+
+            List<String> studentIds = ((List<JsonObject>) absences.getList()).stream().map(absence -> absence.getString("student_id")).collect(Collectors.toList());
+            userService.getStudents(studentIds, users -> {
+                if (users.isLeft()) {
+                    LOGGER.error("[Presences@DefaultAbsenceService] Failed to retrieve absences users", users.left().getValue());
+                    handler.handle(users.left());
+                    return;
+                }
+
+                JsonArray result = users.right().getValue();
+                Map<String, JsonObject> studentMap = ((List<JsonObject>) result.getList())
+                        .stream()
+                        .collect(Collectors.toMap(user -> user.getString("id"), Function.identity()));
+
+                ((List<JsonObject>) absences.getList())
+                        .forEach(absence -> absence.put("student", studentMap.get(absence.getString("student_id"))));
+                handler.handle(new Either.Right<>(absences));
+            });
+        }));
     }
 }

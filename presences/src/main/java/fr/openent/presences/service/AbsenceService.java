@@ -45,16 +45,16 @@ public interface AbsenceService {
     /**
      * fetch absences between two dates chosen
      *
-     * @param handler       Function handler returning data
+     * @param handler Function handler returning data
      */
     void getAbsencesBetween(String startDate, String endDate, List<String> users, Handler<Either<String, JsonArray>> handler);
 
     /**
      * create absence
      *
-     * @param absenceBody   absenceBody fetched
-     * @param user          userInfo
-     * @param handler       Function handler returning data
+     * @param absenceBody absenceBody fetched
+     * @param user        userInfo
+     * @param handler     Function handler returning data
      */
     void create(JsonObject absenceBody, UserInfos user, Handler<Either<String, JsonObject>> handler);
 
@@ -96,7 +96,27 @@ public interface AbsenceService {
     /**
      * CRON task that automatically removes absence that have expired 3 days (72 hours) before date.now()
      *
-     * @param handler       Function handler returning data
+     * @param handler Function handler returning data
      */
     void absenceRemovalTask(Handler<Either<String, JsonObject>> handler);
+
+    /**
+     * Retrieve absences based on parameters.
+     * It returns:
+     * - identifier
+     * - start date, end date
+     * - student object containing student identifier and student name
+     * - reason identifier
+     * - counsellor regularisation
+     *
+     * @param structure
+     * @param students
+     * @param start
+     * @param end
+     * @param justified
+     * @param regularized
+     * @param reasons
+     * @param handler
+     */
+    void retrieve(String structure, List<String> students, String start, String end, Boolean justified, Boolean regularized, List<Integer> reasons, Handler<Either<String, JsonArray>> handler);
 }

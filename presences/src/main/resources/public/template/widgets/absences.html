@@ -1,4 +1,4 @@
-<div class="absences absences-widget height-100" ng-controller="EventsController as vm">
+<div class="absences absences-widget height-100" ng-controller="AbsenceController as vm">
     <div class="widget-filters">
         <div class="row">
             <div class="cell six">
@@ -11,12 +11,12 @@
         <div class="row">
             <div class="cell six">
                 <span class="date-picker">
-                    <date-picker ng-change="vm.updateDate();" ng-model="vm.filter.startDate"></date-picker>
+                    <date-picker ng-change="vm.load();" ng-model="vm.params.start"></date-picker>
                 </span>
             </div>
             <div class="cell six">
                 <span class="date-picker">
-                    <date-picker ng-change="vm.updateDate();" ng-model="vm.filter.endDate"></date-picker>
+                    <date-picker ng-change="vm.load();" ng-model="vm.params.end"></date-picker>
                 </span>
             </div>
         </div>
@@ -24,34 +24,34 @@
     <div class="search-field">
         <div class="twelve search-input">
             <async-autocomplete data-ng-disabled="false"
-                                data-ng-model="vm.studentSearchInput"
-                                data-ng-change="vm.selectStudentFromDashboard"
-                                data-on-search="vm.searchByStudent"
+                                data-ng-model="vm.params.student.search"
+                                data-ng-change="vm.selectStudent"
+                                data-on-search="vm.searchStudent"
                                 data-options="vm.students.all"
                                 data-placeholder="presences.exemptions.search.student"
-                                data-search="vm.studentSearchInput">
+                                data-search="vm.params.student.search">
             </async-autocomplete>
         </div>
-        <div class="cell twelve">
+        <div class="cell twelve absence-widget-student-list">
             <ul class="cell twelve search-input-ul">
-                <li ng-repeat="student in vm.filter.students">
+                <li ng-repeat="student in vm.params.student.selection">
                     [[student.toString()]] <i class="close"
-                                              data-ng-click="vm.excludeStudentFromFilter(student)"></i>
+                                              data-ng-click="vm.removeStudent(student)"></i>
                 </li>
             </ul>
         </div>
     </div>
-    <div class="absence-list" ng-show="vm.events.events.length > 0">
-        <div ng-repeat="event in vm.getNonRegularizedEvents(vm.events.events)" class="event">
+    <div class="absence-list" ng-show="vm.absences.length > 0">
+        <div ng-repeat="absence in vm.absences" class="event">
             <div>
                 <div>
-                    <div>[[event.student.name]]</div>
-                    <div><em class="metadata">[[event.student.className]]</em></div>
+                    <div>[[absence.student.name]]</div>
+                    <div><em class="metadata">[[absence.student.className]]</em></div>
                 </div>
                 <div>
-                    <select data-ng-model="event.reason.id"
-                            data-ng-change="vm.changeReason(event)"
-                            ng-options="reason.id as reason.label for reason in vm.eventReasonsType">
+                    <select data-ng-model="absence.reason_id"
+                            data-ng-change="absence.updateReason(); vm.setAbsenceRegularisation(absence)"
+                            ng-options="reason.id as reason.label for reason in vm.reasons">
                         <option value="" label="[[lang.translate('presences.absence.select.empty')]]">
                             [[lang.translate('presences.absence.select.empty')]]
                         </option>
@@ -60,22 +60,22 @@
             </div>
             <div>
                 <em class="metadata">
-                    [[event.startDate | date: 'dd/MM/yyyy']]
-                    [[event.startDate | date:'HH:mm']]-[[event.endDate | date:'HH:mm']]
+                    [[absence.start_date | date: 'dd/MM/yyyy']]
+                    [[absence.start_date | date:'HH:mm']]-[[absence.end_date | date:'HH:mm']]
                 </em>
                 <div ng-style="{opacity: event.reason.id !== null && !vm.provingReasonsMap[event.reason.id] ? 1 : 0}">
                     <i18n>presences.widgets.absences.regularized</i18n>
                     <label class="checkbox">
-                        <input type="checkbox" data-ng-model="event.counsellor_regularisation"
-                               ng-disabled="!(event.reason.id !== null && !vm.provingReasonsMap[event.reason.id])"
-                               data-ng-change="vm.toggleAbsenceRegularised(event)">
-                        <span ng-style="{cursor: event.reason.id !== null && !vm.provingReasonsMap[event.reason.id] ? 'pointer' : 'default'}"></span>
+                        <input type="checkbox" data-ng-model="absence.counsellor_regularisation"
+                               ng-disabled="!(absence.reason_id !== null && !vm.provingReasonsMap[absence.reason_id])"
+                               data-ng-change="absence.updateRegularisation(); vm.regularizeAbsence(absence)">
+                        <span ng-style="{cursor: absence.reason_id !== null && !vm.provingReasonsMap[absence.reason_id] ? 'pointer' : 'default'}"></span>
                     </label>
                 </div>
             </div>
         </div>
     </div>
-    <div class="absence-list empty" ng-show="vm.events.events.length === 0">
+    <div class="absence-list empty" ng-show="vm.absences.length === 0">
         <div class="tick-color red">&nbsp;</div>
         <div class="empty-title">
             <i18n>presences.widgets.absences.empty</i18n>

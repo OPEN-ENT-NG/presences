@@ -15,7 +15,8 @@ public enum WorkflowActions {
     ALERT(Presences.ALERTS_WIDGET),
     CREATE_PRESENCE(Presences.CREATE_PRESENCE),
     MANAGE_PRESENCE(Presences.MANAGE_PRESENCE),
-    CREATE_ACTION(Presences.CREATE_ACTION);
+    CREATE_ACTION(Presences.CREATE_ACTION),
+    ABSENCES_WIDGET(Presences.ABSENCES_WIDGET);
 
     private final String actionName;
 

@@ -1,4 +1,9 @@
 .absences-widget {
+  .absence-widget-student-list {
+    height: 51px;
+    overflow-y: auto;
+  }
+
   .widget-filters {
     background: $presences-main;
     color: $white;
