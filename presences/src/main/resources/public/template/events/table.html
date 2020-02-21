@@ -110,12 +110,12 @@
     <!-- description content -->
     <tr data-ng-show="event.events.length !== 0" ng-class="{open: vm.isCollapsibleOpen($parent.$index)}"
         class="events-table-body-description" ng-repeat="history in event.events | orderBy:'+end_date'">
-        <td class="text-center" width="54%">&nbsp;</td>
+        <td class="text-center padding-sm" width="54%">&nbsp;</td>
         <td class="events-table-body-date uppercase text-center" width="22%">
             [[history.start_date | date:'HH:mm']] - [[history.end_date | date:'HH:mm']]
         </td>
-        <td class="text-center" width="4%">&nbsp;</td>
-        <td class="text-center" width="8%">
+        <td class="text-center padding-sm" width="4%">&nbsp;</td>
+        <td class="text-center padding-sm" width="8%">
             <span class="events-table-body-description-content-select table-reason">
                  <label>
                     <select data-ng-model="history.reason_id"
@@ -127,10 +127,10 @@
                 </label>
             </span>
         </td>
-        <td class="text-center" width="4%">
+        <td class="text-center padding-sm" width="4%">
             &nbsp;
         </td>
-        <td class="text-center" width="4%">
+        <td class="text-center padding-sm" width="4%">
             <i ng-class="{add : history.actionAbbreviation == null}"
                data-ng-click="vm.doAction($event, history)">
             </i>
@@ -138,7 +138,7 @@
                     [[history.actionAbbreviation]]
                 </span>
         </td>
-        <td class="text-center" width="4%">
+        <td class="text-center padding-sm" width="4%">
             <label class="events-table-body-description-content-checkbox checkbox"
                    ng-style="{
                       opacity: !vm.provingReasonsMap[history.reason_id] && history.reason_id !== null ? 1 : 0,
