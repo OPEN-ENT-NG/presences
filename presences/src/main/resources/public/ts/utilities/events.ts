@@ -97,6 +97,11 @@ export class EventsUtils {
         return events.every(event => event.counsellor_regularisation);
     };
 
+    public static initGlobalCounsellor = (event: EventResponse): boolean => {
+        let counsellorArray: Array<boolean> = event.events.map(event => event.counsellor_regularisation);
+        return new Set(counsellorArray).size === 1;
+    };
+
     /* ----------------------------
     reasons methods
     ---------------------------- */

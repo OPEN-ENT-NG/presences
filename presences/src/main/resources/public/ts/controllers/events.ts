@@ -505,6 +505,7 @@ export const eventsController = ng.controller('EventsController', ['$scope', '$r
             if (history.type === EventsUtils.ALL_EVENTS.event) {
                 fetchedEventIds.push(history.id);
             }
+            event.globalCounsellorRegularisation = EventsUtils.initGlobalCounsellor(event);
             await vm.events.updateRegularized(fetchedEventIds, initialCounsellorRegularisation)
                 .then(() => {
                     if (!isWidget) {
