@@ -84,4 +84,30 @@ export class EventsUtils {
             })
             .toString() : '';
     };
+
+    /* ----------------------------
+    counsellor regularisation methods
+    ---------------------------- */
+    public static hasSameEventsCounsellor = (events: Event[]): boolean => {
+        let counsellorArray: Array<boolean> = events.map(event => event.counsellor_regularisation);
+        return new Set(counsellorArray).size === 1;
+    };
+
+    public static isEachEventsCounsellorRegularized = (events: Event[]): boolean => {
+        return events.every(event => event.counsellor_regularisation);
+    };
+
+    /* ----------------------------
+    reasons methods
+    ---------------------------- */
+    public static hasSameEventsReason = (events: Event[]): boolean => {
+        let reasonArray: Array<number> = events.map(event => event.reason_id);
+        return new Set(reasonArray).size === 1;
+    };
+
+    public static initGlobalReason = (event: EventResponse): number => {
+        let reasonArray: Array<number> = event.events.map(event => event.reason_id);
+        /* reasonArray[0] corresponds all same reasonId, 0 if they are differents */
+        return new Set(reasonArray).size === 1 ? reasonArray[0] : 0;
+    };
 }

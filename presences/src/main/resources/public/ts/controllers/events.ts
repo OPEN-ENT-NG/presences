@@ -62,11 +62,9 @@ interface ViewModel {
 
     toggleAllEventsRegularised(event: EventResponse): Promise<void>;
 
-    toggleEventRegularised(history: Event): Promise<void>;
+    toggleEventRegularised(history: Event, event: EventResponse): Promise<void>;
 
-    getNonRegularizedEvents(events): any[];
-
-    eventManageRemove(events: EventResponse[], event: Event): EventResponse[];
+    hasEventsAllRegularized(event: Event[]): boolean;
 
     hideGlobalCheckbox(event): boolean;
 
@@ -87,7 +85,6 @@ interface ViewModel {
     validForm(): void;
 
     /* Open action lightbox */
-    openActionForm(event): void;
 
     validActionForm(): void;
 
@@ -327,7 +324,7 @@ export const eventsController = ng.controller('EventsController', ['$scope', '$r
             $scope.safeApply();
         };
 
-        vm.formatDate = function (date) {
+        vm.formatDate = function (date: string) {
             return DateUtils.format(date, DateUtils.FORMAT["DAY-MONTH-HALFYEAR"]);
         };
 
@@ -472,18 +469,18 @@ export const eventsController = ng.controller('EventsController', ['$scope', '$r
         vm.changeReason = async (history: Event, event: EventResponse): Promise<void> => {
             let initialReasonId = history.reason ? history.reason.id : history.reason_id;
             let fetchedEventIds: number[] = [];
-            if (history.type === EventsUtils.ALL_EVENTS.event) {
-                fetchedEventIds.push(history.id);
-            } else {
-                if ('events' in history) {
-                    history.events.forEach(he => {
-                        EventsUtils.fetchEvents(he, fetchedEventIds);
-                    });
-                }
-            }
+            history.counsellor_regularisation = vm.provingReasonsMap[history.reason_id];
+            fetchedEventIds.push(history.id);
+            event.globalReason = EventsUtils.initGlobalReason(event);
             await vm.events.updateReason(fetchedEventIds, initialReasonId)
                 .then(() => {
-                    getEvents(true);
+                    if (EventsUtils.isEachEventsCounsellorRegularized(event.events) &&
+                        EventsUtils.hasSameEventsReason(event.events)) {
+                        if (!vm.filter.justifiedRegularized) {
+                            getEvents(true);
+                            vm.eventId = null;
+                        }
+                    }
                 });
             $scope.safeApply();
         };
@@ -492,9 +489,6 @@ export const eventsController = ng.controller('EventsController', ['$scope', '$r
             let initialCounsellorRegularisation = event.globalCounsellorRegularisation;
             let fetchedEventIds: number[] = [];
             EventsUtils.fetchEvents(event, fetchedEventIds);
-            vm.events.all.forEach(e => {
-                EventsUtils.fetchEvents(e, fetchedEventIds);
-            });
             await vm.events.updateRegularized(fetchedEventIds, initialCounsellorRegularisation)
                 .then(() => {
                     getEvents(true);
@@ -503,7 +497,7 @@ export const eventsController = ng.controller('EventsController', ['$scope', '$r
             $scope.safeApply();
         };
 
-        vm.toggleEventRegularised = async (history: Event): Promise<void> => {
+        vm.toggleEventRegularised = async (history: Event, event: EventResponse): Promise<void> => {
             let initialCounsellorRegularisation = history.counsellor_regularisation;
             let fetchedEventIds: number[] = [];
             if (history.type === EventsUtils.ALL_EVENTS.event) {
@@ -512,25 +506,18 @@ export const eventsController = ng.controller('EventsController', ['$scope', '$r
             await vm.events.updateRegularized(fetchedEventIds, initialCounsellorRegularisation)
                 .then(() => {
                     if (!isWidget) {
-                        getEvents(true);
+                        if (EventsUtils.hasSameEventsCounsellor(event.events)) {
+                            getEvents(true);
+                            if (!vm.filter.justifiedRegularized) {
+                                vm.eventId = null;
+                            }
+                        }
                     } else {
-                        vm.events.events = vm.eventManageRemove(vm.events.events, history);
+                        getEvents(true);
                         $scope.safeApply();
                     }
                 });
-        };
-
-        vm.getNonRegularizedEvents = (events): any[] => {
-            return events.filter(item => item.counsellorRegularisation === false);
-        };
-
-        vm.eventManageRemove = (events: EventResponse[], event: Event): EventResponse[] => {
-            if (event.reason && event.reason.id && (event.reason.proving || event.counsellor_regularisation)) {
-                events = events.filter((e: EventResponse) => e.id !== event.id);
-            } else if (event.events) {
-                event.events.filter((e) => e.type === EventType[EventType.ABSENCE])
-            }
-            return events
+            $scope.safeApply();
         };
 
         /* Toggle Collapse */
@@ -601,7 +588,7 @@ export const eventsController = ng.controller('EventsController', ['$scope', '$r
         /* ----------------------------
           Classes methods
         ---------------------------- */
-        vm.searchByClass = async function (value) {
+        vm.searchByClass = async function (value: string) {
             const structureId = window.structure.id;
             try {
                 vm.classesFiltered = await GroupService.search(structureId, value);
@@ -627,7 +614,7 @@ export const eventsController = ng.controller('EventsController', ['$scope', '$r
         /* ----------------------------
          Classes lightbox methods
        ---------------------------- */
-        vm.searchByClassFromLightbox = async function (value) {
+        vm.searchByClassFromLightbox = async function (value: string) {
             const structureId = window.structure.id;
             try {
                 vm.classesFilteredLightbox = await GroupService.search(structureId, value);
@@ -820,11 +807,6 @@ export const eventsController = ng.controller('EventsController', ['$scope', '$r
         };
 
         /* Form action */
-        vm.openActionForm = function (event) {
-            // vm.lightbox.action = true;
-            // vm.event = event;
-        };
-
         vm.validActionForm = function () {
             vm.lightbox.action = false;
             vm.createAction();
