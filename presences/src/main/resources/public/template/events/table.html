@@ -111,10 +111,21 @@
     <tr data-ng-show="event.events.length !== 0" ng-class="{open: vm.isCollapsibleOpen($parent.$index)}"
         class="events-table-body-description" ng-repeat="history in event.events | orderBy:'+end_date'">
         <td class="text-center padding-sm" width="54%">&nbsp;</td>
+
+        <!-- description under events time report -->
         <td class="events-table-body-date uppercase text-center" width="22%">
             [[history.start_date | date:'HH:mm']] - [[history.end_date | date:'HH:mm']]
         </td>
-        <td class="text-center padding-sm" width="4%">&nbsp;</td>
+
+        <!-- description under events owner -->
+        <td class="text-center padding-sm" width="4%">
+            <span>
+                <i class="account"></i>
+                <span>[[lang.translate('presences.created.by')]] [[history.owner.displayName]]</span>
+            </span>
+        </td>
+
+        <!-- description under events select reason -->
         <td class="text-center padding-sm" width="8%">
             <span class="events-table-body-description-content-select table-reason">
                  <label>
@@ -127,9 +138,8 @@
                 </label>
             </span>
         </td>
-        <td class="text-center padding-sm" width="4%">
-            &nbsp;
-        </td>
+        <td class="text-center padding-sm" width="4%">&nbsp</td>
+        <!-- description under events action abbreviation -->
         <td class="text-center padding-sm" width="4%">
             <i ng-class="{add : history.actionAbbreviation == null}"
                data-ng-click="vm.doAction($event, history)">
@@ -138,6 +148,8 @@
                     [[history.actionAbbreviation]]
                 </span>
         </td>
+
+        <!-- description under events regularized -->
         <td class="text-center padding-sm" width="4%">
             <label class="events-table-body-description-content-checkbox checkbox"
                    ng-style="{

@@ -5,6 +5,7 @@ import {EventType} from "./EventType";
 import {LoadingCollection} from "@common/model";
 import {Reason} from "@presences/models/Reason";
 import {EventsUtils} from "../utilities";
+import {User} from "@common/model/User";
 
 export interface Event {
     id: number;
@@ -20,6 +21,7 @@ export interface Event {
     student_id: string;
     register_id: number;
     type_id: number;
+    owner?: User;
     event_type?: { id: number, label: string };
     type?: string;
     events?: any[];
