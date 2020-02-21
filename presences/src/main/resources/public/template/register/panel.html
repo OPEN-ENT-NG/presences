@@ -16,13 +16,6 @@
             </div>
         </div>
     </div>
-    <div class="remark eleven centered vertical-spacing">
-        <label>
-            <i18n>presences.register.event_type.remark</i18n>
-            <textarea ng-model="vm.filter.student.remark.comment"
-                      end-user-typing="vm.handleRemark(vm.filter.student)"></textarea>
-        </label>
-    </div>
     <div class="lateness eleven centered vertical-spacing">
         <div class="row">
             <label class="checkbox">
@@ -70,5 +63,12 @@
                         end-user-typing="vm.filter.student.departure.update()"></textarea>
             </label>
         </div>
+    </div>
+    <div class="remark eleven centered vertical-spacing">
+        <label>
+            <i18n>presences.register.event_type.remark</i18n>
+            <textarea ng-model="vm.filter.student.remark.comment"
+                      end-user-typing="vm.handleRemark(vm.filter.student)"></textarea>
+        </label>
     </div>
 </div>
