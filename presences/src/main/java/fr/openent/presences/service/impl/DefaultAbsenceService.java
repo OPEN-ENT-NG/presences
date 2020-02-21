@@ -406,6 +406,8 @@ public class DefaultAbsenceService implements AbsenceService {
             params.add(end + " " + defaultEndTime);
         }
 
+        query += " ORDER BY start_date DESC";
+
         Sql.getInstance().prepared(query, params, SqlResult.validResultHandler(res -> {
             if (res.isLeft()) {
                 LOGGER.error("[Presences@DefaultAbsenceService] Failed to retrieve absences", res.left().getValue());
