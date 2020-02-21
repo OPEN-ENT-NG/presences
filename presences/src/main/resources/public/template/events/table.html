@@ -77,12 +77,12 @@
         <!-- Action -->
         <th class="text-center">
             <!-- Display simple add and doAction open lightbox if only one event -->
-            <i ng-show="event.actionAbbreviation == null && event.events.length <= 1" class="add"
+            <i ng-show="event.actionAbbreviation == null && event.isGlobalAction" class="add"
                data-ng-click="vm.doAction($event, event)">
             </i>
-            <!-- Display multiple add if has multiple events and they have differents actions (doAction do not open lightbox, only show details)  -->
+            <!-- Display multiple add if has different actions (doAction do not open lightbox, only show details)  -->
             <i ng-show="!event.isGlobalAction && event.events.length > 0"
-               class="addMultiple" data-ng-click="vm.doAction($event, event)"></i>
+               class="addMultiple"></i>
             <!-- Display last action abbreviation if only one event or has multiple events and they all have same actions (doAction open lightbox)  -->
             <span ng-show="event.isGlobalAction" class="events-table-body-color"
                   data-ng-click="vm.doAction($event, event)">

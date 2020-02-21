@@ -395,24 +395,22 @@ export const eventsController = ng.controller('EventsController', ['$scope', '$r
         };
 
         vm.doAction = ($event, event, eventParent?): void => {
-            if (eventParent || event.isGlobalAction) {
-                $event.stopPropagation();
-                vm.lightbox.action = true;
-                vm.event = eventParent ? eventParent : event;
-                vm.actionForm.owner = model.me.userId;
-                if ('id' in event) {
-                    vm.actionForm.eventId = [event.id];
-                } else {
-                    /* global action case */
-                    vm.actionForm.eventId = [event.type.id];
-                    event.events.forEach(event => {
-                        vm.actionForm.eventId.push(event.id)
-                    });
-                }
-                vm.actionForm.actionId = null;
-                vm.actionForm.comment = "";
-                getEventActions();
+            $event.stopPropagation();
+            vm.lightbox.action = true;
+            vm.event = eventParent ? eventParent : event;
+            vm.actionForm.owner = model.me.userId;
+            if ('id' in event) {
+                vm.actionForm.eventId = [event.id];
+            } else {
+                /* global action case */
+                vm.actionForm.eventId = [event.type.id];
+                event.events.forEach(event => {
+                    vm.actionForm.eventId.push(event.id)
+                });
             }
+            vm.actionForm.actionId = null;
+            vm.actionForm.comment = "";
+            getEventActions();
         };
 
         vm.switchAbsencesFilter = function () {
