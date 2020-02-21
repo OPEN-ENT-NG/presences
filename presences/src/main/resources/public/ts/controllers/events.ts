@@ -460,7 +460,9 @@ export const eventsController = ng.controller('EventsController', ['$scope', '$r
                 .then(() => {
                     if (isWidget) vm.events.page = 0;
                     getEvents(true);
-                    vm.eventId = null;
+                    if (vm.filter.justifiedRegularized) {
+                        vm.eventId = null;
+                    }
                 });
             $scope.safeApply();
         };
