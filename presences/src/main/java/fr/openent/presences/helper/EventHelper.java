@@ -4,12 +4,15 @@ import fr.openent.presences.Presences;
 import fr.openent.presences.common.helper.DateHelper;
 import fr.openent.presences.common.helper.FutureHelper;
 import fr.openent.presences.common.helper.RegisterHelper;
+import fr.openent.presences.common.service.UserService;
+import fr.openent.presences.common.service.impl.DefaultUserService;
 import fr.openent.presences.enums.Events;
 import fr.openent.presences.model.Absence;
 import fr.openent.presences.model.Event.Event;
 import fr.openent.presences.model.Event.EventType;
 import fr.openent.presences.model.Event.RegisterEvent;
 import fr.openent.presences.model.Person.Student;
+import fr.openent.presences.model.Person.User;
 import fr.openent.presences.model.Reason;
 import fr.openent.presences.model.Slot;
 import fr.openent.presences.service.ActionService;
@@ -39,6 +42,7 @@ public class EventHelper {
     private RegisterHelper registerHelper;
     private PersonHelper personHelper;
     private ActionService actionService;
+    private UserService userService;
 
     public EventHelper(EventBus eb) {
         this.eventTypeHelper = new EventTypeHelper();
@@ -46,6 +50,8 @@ public class EventHelper {
         this.reasonService = new DefaultReasonService();
         this.registerHelper = new RegisterHelper(eb, Presences.dbSchema);
         this.actionService = new DefaultActionService();
+        this.userService = new DefaultUserService();
+
     }
 
     public void addLastActionAbbreviation(List<Event> events, Future<JsonObject> future) {
@@ -307,6 +313,48 @@ public class EventHelper {
                 matchSlots(slots, events, absences, studentFuture);
             }
         });
+    }
+
+    @SuppressWarnings("unchecked")
+    public void addOwnerToEvents(List<Event> events, Future<JsonObject> future) {
+        List<String> userIds = this.getAllOwnerIds(events);
+        userService.getUsers(userIds, result -> {
+            if (result.isLeft()) {
+                String message = "[Presences@EventHelper] Failed to retrieve users info";
+                LOGGER.error(message);
+                future.fail(message);
+            }
+            List<User> owners = personHelper.getUserListFromJsonArray(result.right().getValue());
+            Map<String, User> userMap = new HashMap<>();
+            owners.forEach(owner -> userMap.put(owner.getId(), owner));
+            events.forEach(event -> {
+                if (!event.getType().toUpperCase().equals(Events.ABSENCE.toString())) {
+                    event.setOwner(userMap.getOrDefault(event.getOwner().getId(), null));
+                }
+                ((List<JsonObject>) event.getStudent().getDayHistory().getList()).forEach(dayHistory ->
+                        ((List<JsonObject>) dayHistory.getJsonArray("events").getList()).forEach(eventHistory -> {
+                            if (!eventHistory.getString("type").toUpperCase().equals(Events.ABSENCE.toString())) {
+                                eventHistory.put("owner", userMap.getOrDefault(eventHistory.getString("owner"), null).toJSON());
+                            }
+                        }));
+            });
+            future.complete();
+        });
+    }
+
+    @SuppressWarnings("unchecked")
+    private List<String> getAllOwnerIds(List<Event> events) {
+        List<String> userIds = new ArrayList<>();
+        events.forEach(event -> {
+            userIds.add(event.getOwner().getId());
+            ((List<JsonObject>) event.getStudent().getDayHistory().getList()).forEach(dayHistory ->
+                    ((List<JsonObject>) dayHistory.getJsonArray("events").getList()).forEach(eventHistory ->
+                            userIds.add(eventHistory.getString("owner"))
+                    )
+            );
+        });
+        userIds.removeAll(Collections.singletonList(null));
+        return userIds;
     }
 
     private JsonArray filterEvents(JsonArray events, String eventStartDate) {

@@ -1,6 +1,7 @@
 package fr.openent.presences.model.Event;
 
 import fr.openent.presences.model.Person.Student;
+import fr.openent.presences.model.Person.User;
 import fr.openent.presences.model.Reason;
 import io.vertx.core.json.JsonObject;
 
@@ -21,7 +22,7 @@ public class Event {
     private Integer registerId;
     private EventType eventType;
     private Reason reason;
-    private String owner;
+    private User owner;
     private String created;
     private Boolean counsellorRegularisation;
     private Boolean massmailed;
@@ -48,7 +49,7 @@ public class Event {
             this.eventType = new EventType(event.getJsonObject("event_type", new JsonObject()), EventType.MANDATORY_ATTRIBUTE);
         }
         this.reason = new Reason(event.getInteger("reason_id", null));
-        this.owner = event.getString("owner", null);
+        this.owner = new User(event.getString("owner", null));
         this.created = event.getString("created", null);
         this.counsellorRegularisation = event.getBoolean("counsellor_regularisation", false);
         this.massmailed = event.getBoolean("massmailed", false);
@@ -72,7 +73,7 @@ public class Event {
                 .put("register_id", this.registerId)
                 .put("event_type", this.eventType.toJSON())
                 .put("reason", this.reason.toJSON())
-                .put("owner", this.owner)
+                .put("owner", this.owner.toJSON())
                 .put("created", this.created)
                 .put("counsellor_regularisation", this.counsellorRegularisation)
                 .put("massmailed", this.massmailed)
@@ -154,11 +155,11 @@ public class Event {
         this.reason = reason;
     }
 
-    public String getOwner() {
+    public User getOwner() {
         return owner;
     }
 
-    public void setOwner(String owner) {
+    public void setOwner(User owner) {
         this.owner = owner;
     }
 

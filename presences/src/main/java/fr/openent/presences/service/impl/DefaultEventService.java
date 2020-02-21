@@ -123,11 +123,13 @@ public class DefaultEventService implements EventService {
                     } else {
                         Future<JsonObject> actionFuture = Future.future();
                         Future<JsonObject> excludeFuture = Future.future();
+                        Future<JsonObject> ownerFuture = Future.future();
 
                         eventHelper.addLastActionAbbreviation(events, actionFuture);
+                        eventHelper.addOwnerToEvents(events, ownerFuture);
                         interactExclude(exclusionDays, saturdayCoursesCount, sundayCoursesCount, events, excludeFuture);
 
-                        CompositeFuture.all(actionFuture, excludeFuture).setHandler(eventResult -> {
+                        CompositeFuture.all(actionFuture, excludeFuture, ownerFuture).setHandler(eventResult -> {
                             if (eventResult.failed()) {
                                 String message = "[Presences@DefaultEventService] Failed to retrieve exclude days or add last action abbreviation";
                                 LOGGER.error(message);
@@ -203,7 +205,7 @@ public class DefaultEventService implements EventService {
         String query = "WITH allevents AS (" +
                 "  SELECT e.id AS id, e.start_date AS start_date, e.end_date AS end_date, " +
                 "  e.created AS created, e.comment AS comment, e.student_id AS student_id," +
-                "  e.reason_id AS reason_id, e.register_id AS register_id, " +
+                "  e.reason_id AS reason_id, e.owner AS owner, e.register_id AS register_id, " +
                 "  e.counsellor_regularisation AS counsellor_regularisation," +
                 "  e.type_id AS type_id, 'event' AS type" +
                 "  FROM " + Presences.dbSchema + ".event e" +
@@ -230,7 +232,7 @@ public class DefaultEventService implements EventService {
         query += " UNION" +
                 "  SELECT absence.id AS id, absence.start_date AS start_date, absence.end_date AS end_date, " +
                 "  NULL AS created, NULL AS comment, absence.student_id AS student_id," +
-                "  absence.reason_id AS reason_id, NULL AS register_id," +
+                "  absence.reason_id AS reason_id, NULL AS owner, NULL AS register_id," +
                 "  absence.counsellor_regularisation AS counsellor_regularisation, 1 AS type_id, 'absence' AS type" +
                 "  FROM " + Presences.dbSchema + ".absence absence ";
         if (eventType != null && !eventType.isEmpty()) {
@@ -263,7 +265,7 @@ public class DefaultEventService implements EventService {
         }
         query += setParamsForQueryEvents(userId, regularized, userIdFromClasses, params);
         query += ") SELECT * FROM allevents " +
-                "GROUP BY id, start_date, end_date, created, comment, student_id, reason_id," +
+                "GROUP BY id, start_date, end_date, created, comment, student_id, reason_id, owner," +
                 "type_id, register_id, counsellor_regularisation, type, register_id ";
         if (page != null) {
             query += "ORDER BY start_date DESC OFFSET ? LIMIT ? ";

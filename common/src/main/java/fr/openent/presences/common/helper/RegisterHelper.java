@@ -45,7 +45,7 @@ public class RegisterHelper {
         String query = "SELECT student_id, json_agg(jsonb_build_object" +
                 "('id', event.id, 'counsellor_input', event.counsellor_input, 'counsellor_regularisation', event.counsellor_regularisation, 'type_id'," +
                 " event.type_id, 'start_date', event.start_date, 'end_date', event.end_date," +
-                " 'comment', event.comment, 'register_id', register.id, 'reason_id', reason_id)) as events " +
+                " 'comment', event.comment, 'owner', event.owner, 'register_id', register.id, 'reason_id', reason_id)) as events " +
                 "FROM " + presenceDbSchema + ".event " +
                 "INNER JOIN " + presenceDbSchema + ".register ON (register.id = event.register_id) " +
                 "WHERE student_id IN " + Sql.listPrepared(registerUsers.getList()) +
