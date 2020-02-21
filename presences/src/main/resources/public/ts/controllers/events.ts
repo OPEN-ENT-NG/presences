@@ -402,7 +402,7 @@ export const eventsController = ng.controller('EventsController', ['$scope', '$r
                 /* global action case */
                 vm.actionForm.eventId = [event.type.id];
                 event.events.forEach(event => {
-                    vm.actionForm.eventId.push(event.id)
+                    if (vm.actionForm.eventId.indexOf(event.id) === -1) vm.actionForm.eventId.push(event.id)
                 });
             }
             vm.actionForm.actionId = null;
