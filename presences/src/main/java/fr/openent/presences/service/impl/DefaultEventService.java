@@ -703,7 +703,8 @@ public class DefaultEventService implements EventService {
     public void getActions(String event_id, Handler<Either<String, JsonArray>> handler) {
         String query = "SELECT ea.*, a.label as label FROM " + Presences.dbSchema + ".event_actions as ea" +
                 " INNER JOIN " + Presences.dbSchema + ".actions as a" +
-                " ON (a.id = ea.action_id)" + " WHERE event_id = ?";
+                " ON (a.id = ea.action_id)" + " WHERE event_id = ?" +
+                " ORDER BY created_date DESC;";
         JsonArray params = new JsonArray().add(event_id);
         Sql.getInstance().prepared(query, params, SqlResult.validResultHandler(res -> {
             if (res.isLeft()) {
