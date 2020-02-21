@@ -236,10 +236,12 @@ export const eventsController = ng.controller('EventsController', ['$scope', '$r
         const loadFormFilter = (): void => {
             let formFilters = Me.preferences['presences.eventList.filters'];
             formFilters = formFilters ? formFilters[window.structure.id] : null;
-            if(formFilters) {
+            if (formFilters) {
                 let {reasonIds, ...toMergeFilters} = formFilters;
                 vm.filter = {...vm.filter, ...toMergeFilters};
-                vm.eventReasonsType.forEach((r) => {r.isSelected = reasonIds.includes(r.id)});
+                vm.eventReasonsType.forEach((r) => {
+                    r.isSelected = reasonIds.includes(r.id)
+                });
             }
         };
 
@@ -310,9 +312,9 @@ export const eventsController = ng.controller('EventsController', ['$scope', '$r
         const filterHistory = (): void => {
             vm.events.all = vm.events.all.filter(e => e.exclude !== true)
                 .sort((a: EventResponse, b: EventResponse) =>
-                moment(b.date).format(DateUtils.FORMAT["YEARMONTHDAY"]) -
-                moment(a.date).format(DateUtils.FORMAT["YEARMONTHDAY"])
-            )
+                    moment(b.date).format(DateUtils.FORMAT["YEARMONTHDAY"]) -
+                    moment(a.date).format(DateUtils.FORMAT["YEARMONTHDAY"])
+                )
         };
 
         const refreshGetEventWhileAction = async (): Promise<void> => {
@@ -845,8 +847,11 @@ export const eventsController = ng.controller('EventsController', ['$scope', '$r
         $scope.$watch(() => window.structure, async () => {
             await loadReasonTypes();
             loadFormFilter();
-            await getEvents();
-            await getActions();
+            await Promise.all([
+                await getEvents(),
+                await getActions()
+            ]);
+
         });
 
         /* Destroy directive and scope */
