@@ -48,5 +48,7 @@ CREATE OR REPLACE FUNCTION incidents.delete_incident(incidentId bigint) RETURNS 
     $BODY$
 LANGUAGE plpgsql;
 
+DROP TRIGGER IF EXISTS increment_incident_alert ON incidents.protagonist;
+
 -- Because an incident may be in relationship with many protagonists, we trigger alert on protagonist insert
 CREATE TRIGGER increment_incident_alert AFTER INSERT ON incidents.protagonist FOR EACH ROW EXECUTE PROCEDURE incidents.increment_incident_alert();
