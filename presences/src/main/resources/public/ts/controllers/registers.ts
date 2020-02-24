@@ -4,6 +4,7 @@ import {
     Course,
     Courses,
     Departure,
+    Events,
     EventType,
     Lateness,
     Presences,
@@ -11,7 +12,7 @@ import {
     RegisterStatus,
     Remark
 } from '../models';
-import {GroupService, SearchService} from '../services';
+import {GroupService, ReasonService, SearchService} from '../services';
 import {CourseUtils, DateUtils, PreferencesUtils} from '@common/utils'
 import rights from '../rights';
 import {Scope} from './main';
@@ -19,6 +20,7 @@ import http from 'axios';
 import {RegisterUtils, StudentsSearch} from "../utilities";
 import {COURSE_EVENTS} from "@common/model";
 import {IAngularEvent} from "angular";
+import {Reason} from "@presences/models/Reason";
 
 declare let window: any;
 
@@ -45,6 +47,7 @@ export interface ViewModel {
     RegisterStatus: any;
     studentsSearch: StudentsSearch;
     presences: Presences;
+    reasons: Reason[];
 
     /* search bar auto complete */
     searchStudents(value): Promise<void>;
@@ -82,6 +85,8 @@ export interface ViewModel {
     updateLateness(): void;
 
     updateDeparture(): void;
+
+    updateAbsence(events, reason): void;
 
     getHistoryEventClassName(events, slot): string;
 
@@ -132,8 +137,9 @@ export interface ViewModel {
 }
 
 export const registersController = ng.controller('RegistersController',
-    ['$scope', '$route', '$rootScope', 'SearchService', 'GroupService',
-        async function ($scope: Scope, $route, $rootScope, SearchService: SearchService, GroupService: GroupService) {
+    ['$scope', '$route', '$rootScope', 'SearchService', 'GroupService', 'ReasonService',
+        async function ($scope: Scope, $route, $rootScope,
+                        SearchService: SearchService, GroupService: GroupService, ReasonService: ReasonService) {
             const vm: ViewModel = this;
             vm.widget = {
                 forgottenRegisters: false,
@@ -599,6 +605,10 @@ export const registersController = ng.controller('RegistersController',
                 });
             };
 
+            vm.updateAbsence = function (events) {
+                new Events().updateReason([events.id], events.reason_id);
+            };
+
 
             vm.closePanel = function () {
                 delete vm.filter.student;
@@ -739,6 +749,11 @@ export const registersController = ng.controller('RegistersController',
                 } catch (err) {
                     toasts.warning('presences.register.validation.error');
                 }
+            };
+
+            // Get absences reasons
+            const getReasons = async (): Promise<void> => {
+                vm.reasons = await ReasonService.getReasons(window.structure.id);
             };
 
             function startAction() {

@@ -73,6 +73,36 @@ panel .content {
       height: 75px;
     }
   }
+
+  .select-reason-absences {
+    label {
+      position: relative;
+    }
+
+    label::after {
+      content: '';
+      border-color: $presences-main transparent transparent;
+      background: $presences-white;
+      border-width: 11px;
+      border-style: solid;
+
+      pointer-events: none;
+      position: absolute;
+      right: 10px;
+      top: 3px;
+    }
+
+    select {
+      /* Remove default arrow */
+      -webkit-appearance: none;
+      -moz-appearance: none;
+
+      width: 208px;
+      padding: 0 14px;
+      font-size: 16px;
+      border: solid 1px $presences-grey-light;
+    }
+  }
 }
 
 
