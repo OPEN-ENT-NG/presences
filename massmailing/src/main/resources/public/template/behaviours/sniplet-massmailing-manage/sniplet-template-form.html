@@ -6,88 +6,179 @@
                 <i18n>massmailing.template.form</i18n>
             </h3>
         </div>
-        <div class="sniplet-input">
-            <div class="sniplet-input-title">
-                <i18n>massmailing.form.description</i18n>
-            </div>
-            <div class="sniplet-input-title">
-                <i18n>massmailing.template.form.mail.title</i18n>
-            </div>
-            <div class="sniplet-input-title">
-                <i18n>massmailing.template.form.mail.description</i18n>
-            </div>
-            <div class="sniplet-input-form">
-                <div class="cell search-input">
-                    <input type="text" data-ng-model="vm.mail.name" class="cell ng-pristine ng-touched ng-valid"
-                           i18n-placeholder="massmailing.template.form.mail.name.placeholder">
+        <!-- MAIL -->
+        <div>
+            <div class="sniplet-input">
+                <div class="sniplet-input-title">
+                    <i18n>massmailing.form.description</i18n>
+                </div>
+                <div class="sniplet-input-title">
+                    <i18n>massmailing.template.form.mail.title</i18n>
+                </div>
+                <div class="sniplet-input-title">
+                    <i18n>massmailing.template.form.mail.description</i18n>
+                </div>
+                <div class="sniplet-input-form">
+                    <div class="cell search-input">
+                        <input type="text" data-ng-model="vm.mail.name" class="cell ng-pristine ng-touched ng-valid"
+                               i18n-placeholder="massmailing.template.form.mail.name.placeholder">
+                    </div>
+                </div>
+                <div class="sniplet-input-form row vertical-spacing-twice">
+                    <div class="cell eight">
+                        <editor ng-model="vm.mail.content" public="true"></editor>
+                        <div class="right-magnet">
+                            <button data-ng-click="vm.create('MAIL')"
+                                    data-ng-disabled="vm.mail.name.trim() === '' && vm.mail.content.trim() === ''"
+                                    data-ng-if="!vm.mail.id">
+                                <i18n>massmailing.add</i18n>
+                            </button>
+                            <button data-ng-click="vm.update(vm.mail, 'MAIL')" data-ng-if="vm.mail.id">
+                                <i18n>massmailing.update</i18n>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="cell four horizontal-spacing-twice">
+                        <div class="sniplet-input-title">
+                            <i18n>massmailing.available.code</i18n>
+                            :
+                        </div>
+                        <div>
+                            <i18n>massmailing.codes.child.name</i18n>
+                            :
+                            <i18n>massmailing.codes.students.name.label</i18n>
+                        </div>
+                        <div>
+                            <i18n>massmailing.codes.class.name</i18n>
+                            :
+                            <i18n>massmailing.codes.class.label</i18n>
+                        </div>
+                        <div>
+                            <i18n>massmailing.codes.absence.number</i18n>
+                            :
+                            <i18n>massmailing.codes.absences.number.label</i18n>
+                        </div>
+                        <div>
+                            <i18n>massmailing.codes.lateness.number</i18n>
+                            :
+                            <i18n>massmailing.codes.lateness.number.label</i18n>
+                        </div>
+                        <div>
+                            <i18n>massmailing.codes.summary</i18n>
+                            :
+                            <i18n>massmailing.codes.summary.label</i18n>
+                        </div>
+                    </div>
                 </div>
             </div>
             <div class="sniplet-input-form row vertical-spacing-twice">
-                <div class="cell eight">
-                    <editor ng-model="vm.mail.content" public="true"></editor>
-                    <div class="right-magnet">
-                        <button data-ng-click="vm.create('MAIL')" data-ng-if="!vm.mail.id">
-                            <i18n>massmailing.add</i18n>
-                        </button>
-                        <button data-ng-click="vm.update(vm.mail, 'MAIL')" data-ng-if="vm.mail.id">
-                            <i18n>massmailing.update</i18n>
-                        </button>
-                    </div>
-                </div>
-                <div class="cell four horizontal-spacing-twice">
-                    <div class="sniplet-input-title">
-                        <i18n>massmailing.available.code</i18n>
-                        :
-                    </div>
-                    <div>
-                        <i18n>massmailing.codes.child.name</i18n>
-                        :
-                        <i18n>massmailing.codes.students.name.label</i18n>
-                    </div>
-                    <div>
-                        <i18n>massmailing.codes.class.name</i18n>
-                        :
-                        <i18n>massmailing.codes.class.label</i18n>
-                    </div>
-                    <div>
-                        <i18n>massmailing.codes.absence.number</i18n>
-                        :
-                        <i18n>massmailing.codes.absences.number.label</i18n>
-                    </div>
-                    <div>
-                        <i18n>massmailing.codes.lateness.number</i18n>
-                        :
-                        <i18n>massmailing.codes.lateness.number.label</i18n>
-                    </div>
-                    <div>
-                        <i18n>massmailing.codes.summary</i18n>
-                        :
-                        <i18n>massmailing.codes.summary.label</i18n>
+                <div class="sniplet-addList">
+                    <div class="sniplet-addList-content" ng-if="vm.mails.length > 0">
+                        <div class="sniplet-input-title">
+                            <i18n>massmailing.templates.created</i18n>
+                            :
+                        </div>
+                        <ul class="sniplet-addList-content-list">
+                            <li class="sniplet-addList-content-list-item"
+                                ng-repeat="mail in vm.mails | orderBy:'name'">
+
+                                <div class="sniplet-addList-content-list-item-title">
+                                    <label class="sniplet-addList-content-list-item-title-label"
+                                           data-ng-click="vm.openTemplate(mail)">[[mail.name]]</label>
+                                </div>
+
+                                <div class="sniplet-addList-content-list-item-icons">
+                                    <i class="delete"
+                                       ng-click="vm.deletion.template = mail; vm.deletion.show = true;"></i>
+                                </div>
+                            </li>
+                        </ul>
                     </div>
                 </div>
             </div>
         </div>
-        <div class="sniplet-input-form row vertical-spacing-twice">
-            <div class="sniplet-addList">
-                <div class="sniplet-addList-content" ng-if="vm.mails.length > 0">
-                    <div class="sniplet-input-title">
-                        <i18n>massmailing.templates.created</i18n>
-                        :
+        <!-- SMS -->
+        <div>
+            <div class="sniplet-input">
+                <div class="sniplet-input-title">
+                    <i18n>massmailing.template.form.sms.title</i18n>
+                </div>
+                <div class="sniplet-input-form">
+                    <div class="cell search-input">
+                        <input type="text" data-ng-model="vm.sms.name" class="cell ng-pristine ng-touched ng-valid"
+                               i18n-placeholder="massmailing.template.form.sms.name.placeholder">
                     </div>
-                    <ul class="sniplet-addList-content-list">
-                        <li class="sniplet-addList-content-list-item"
-                            ng-repeat="mail in vm.mails | orderBy:'name'">
+                </div>
+                <div class="sniplet-input-form row vertical-spacing-twice">
+                    <div class="cell eight">
+                        <textarea ng-model="vm.sms.content" cols="30" rows="10"></textarea>
+                        <div class="right-magnet">
+                            <button data-ng-click="vm.create('SMS')"
+                                    data-ng-disabled="vm.sms.name.trim() === '' && vm.sms.content.trim() === ''"
+                                    data-ng-if="!vm.sms.id">
+                                <i18n>massmailing.add</i18n>
+                            </button>
+                            <button data-ng-click="vm.update(vm.sms, 'SMS')" data-ng-if="vm.sms.id">
+                                <i18n>massmailing.update</i18n>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="cell four horizontal-spacing-twice">
+                        <div class="sniplet-input-title">
+                            <i18n>massmailing.available.code</i18n>
+                            :
+                        </div>
+                        <div>
+                            <i18n>massmailing.codes.child.name</i18n>
+                            :
+                            <i18n>massmailing.codes.students.name.label</i18n>
+                        </div>
+                        <div>
+                            <i18n>massmailing.codes.class.name</i18n>
+                            :
+                            <i18n>massmailing.codes.class.label</i18n>
+                        </div>
+                        <div>
+                            <i18n>massmailing.codes.absence.number</i18n>
+                            :
+                            <i18n>massmailing.codes.absences.number.label</i18n>
+                        </div>
+                        <div>
+                            <i18n>massmailing.codes.lateness.number</i18n>
+                            :
+                            <i18n>massmailing.codes.lateness.number.label</i18n>
+                        </div>
+                        <div>
+                            <i18n>massmailing.codes.summary</i18n>
+                            :
+                            <i18n>massmailing.codes.summary.label</i18n>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="sniplet-input-form row vertical-spacing-twice">
+                <div class="sniplet-addList">
+                    <div class="sniplet-addList-content" ng-if="vm.smss.length > 0">
+                        <div class="sniplet-input-title">
+                            <i18n>massmailing.templates.created</i18n>
+                            :
+                        </div>
+                        <ul class="sniplet-addList-content-list">
+                            <li class="sniplet-addList-content-list-item"
+                                ng-repeat="sms in vm.smss | orderBy:'name'">
 
-                            <div class="sniplet-addList-content-list-item-title">
-                                <label class="sniplet-addList-content-list-item-title-label"
-                                       data-ng-click="vm.openTemplate(mail)">[[mail.name]]</label>
-                            </div>
+                                <div class="sniplet-addList-content-list-item-title">
+                                    <label class="sniplet-addList-content-list-item-title-label"
+                                           data-ng-click="vm.openTemplate(sms)">[[sms.name]]</label>
+                                </div>
 
-                            <div class="sniplet-addList-content-list-item-icons">
-                                <i class="delete" ng-click="vm.deletion.template = mail; vm.deletion.show = true;"></i>
-                            </div>
-                        </li>
-                    </ul>
+                                <div class="sniplet-addList-content-list-item-icons">
+                                    <i class="delete"
+                                       ng-click="vm.deletion.template = sms; vm.deletion.show = true;"></i>
+                                </div>
+                            </li>
+                        </ul>
+                    </div>
                 </div>
             </div>
         </div>

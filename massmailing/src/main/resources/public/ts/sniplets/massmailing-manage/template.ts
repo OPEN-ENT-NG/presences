@@ -1,5 +1,5 @@
 import {toasts} from 'entcore';
-import {SettingsService, Template} from '../../services/';
+import {settingsService, Template} from '../../services/';
 
 console.log('massmailing');
 
@@ -8,6 +8,8 @@ declare let window: any;
 interface ViewModel {
     mail: Template,
     mails: Template[],
+    sms: Template,
+    smss: Template[]
     deletion: {
         show: boolean,
         template: Template
@@ -39,6 +41,11 @@ const vm: ViewModel = {
         content: ''
     },
     mails: [],
+    sms: {
+        name: '',
+        content: ''
+    },
+    smss: [],
     deletion: {
         show: false,
         template: {
@@ -48,7 +55,7 @@ const vm: ViewModel = {
     },
     syncTemplates: async function (type: 'MAIL' | 'SMS' | 'PDF'): Promise<void> {
         try {
-            const data = await SettingsService.get(type, window.model.vieScolaire.structure.id);
+            const data = await settingsService.get(type, window.model.vieScolaire.structure.id);
             vm[`${type.toLowerCase()}s`] = data;
             mailTemplateForm.that.$apply();
         } catch (e) {
@@ -57,12 +64,12 @@ const vm: ViewModel = {
     },
     update: async function (template: Template): Promise<void> {
         try {
-            await SettingsService.update(template);
+            await settingsService.update(template);
             toasts.confirm('massmailing.templates.update.success');
-            vm[`${template.type.toLowerCase()}s`].map(mail => {
-                if (template.id === mail.id) {
-                    mail.name = template.name;
-                    mail.content = template.content;
+            vm[`${template.type.toLowerCase()}s`].map(_template => {
+                if (template.id === _template.id) {
+                    _template.name = template.name;
+                    _template.content = template.content;
                 }
             });
         } catch (e) {
@@ -74,7 +81,7 @@ const vm: ViewModel = {
     },
     delete: async function (template: Template): Promise<void> {
         try {
-            await SettingsService.delete(template);
+            await settingsService.delete(template);
             vm[`${template.type.toLowerCase()}s`] = vm[`${template.type.toLowerCase()}s`].filter(t => t.id !== template.id);
             vm.deletion.show = false;
             toasts.confirm('massmailing.templates.deletion.success');
@@ -86,10 +93,15 @@ const vm: ViewModel = {
     },
     create: async function (type) {
         try {
-            vm.mail = {...vm.mail, structure_id: window.model.vieScolaire.structure.id, type};
-            const data = await SettingsService.create(vm.mail);
+            if (vm[type.toLowerCase()].name.trim() === '' && vm[type.toLowerCase()].content.trim() === '') return;
+            vm[type.toLowerCase()] = {
+                ...vm[type.toLowerCase()],
+                structure_id: window.model.vieScolaire.structure.id,
+                type
+            };
+            const data = await settingsService.create(vm[type.toLowerCase()]);
             toasts.confirm('massmailing.templates.creation.success');
-            vm.mails.push(data);
+            vm[`${type.toLowerCase()}s`].push(data);
         } catch (e) {
             toasts.warning('massmailing.templates.creation.error');
             throw e;
@@ -111,6 +123,7 @@ export const mailTemplateForm = {
             this.vm = vm;
             mailTemplateForm.that = this;
             this.vm.syncTemplates('MAIL');
+            this.vm.syncTemplates('SMS');
         }
     }
 };

@@ -36,7 +36,7 @@ export interface SettingsService {
     delete(template: Template): Promise<any>;
 }
 
-export const SettingsService: SettingsService = {
+export const settingsService: SettingsService = {
     get: async function (type: "MAIL" | "PDF" | "SMS", structure: string): Promise<any> {
         try {
             const {data} = await http.get(`/massmailing/settings/templates/${type}?structure=${structure}`);
@@ -72,4 +72,4 @@ export const SettingsService: SettingsService = {
     }
 };
 
-export const ngSettingsService = ng.service('SettingsService', (): SettingsService => SettingsService);
+export const ngSettingsService = ng.service('SettingsService', (): SettingsService => settingsService);

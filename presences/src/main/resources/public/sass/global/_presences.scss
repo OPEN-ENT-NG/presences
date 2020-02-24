@@ -40,6 +40,10 @@ body.presences, .sniplet.presences {
 
   color: $presences-black;
 
+  textarea {
+    font-family: "Roboto", sans-serif;
+  }
+
   .close-lightbox .close-2x::before {
     font-family: 'material-icons';
     content: "\F156";
