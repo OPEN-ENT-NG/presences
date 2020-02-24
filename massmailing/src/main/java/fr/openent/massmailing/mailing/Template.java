@@ -143,13 +143,13 @@ public class Template {
 
     public String processSummary(HashMap<TemplateCode, Object> codeValues) {
         JsonObject events = (JsonObject) codeValues.get(TemplateCode.SUMMARY);
-
+        List<String> keys;
         String summary = "";
         switch (mailingType) {
             case MAIL:
             case PDF:
                 summary += "<div>";
-                List<String> keys = new ArrayList<>(events.fieldNames());
+                keys = new ArrayList<>(events.fieldNames());
                 for (String key : keys) {
                     JsonArray eventsKey = events.getJsonArray(key);
                     if (eventsKey.isEmpty()) continue;
@@ -165,8 +165,8 @@ public class Template {
                             line += "<td>" + DateHelper.getTimeString(event.getString("start_date"), DateHelper.SQL_FORMAT) + " - " + DateHelper.getTimeString(event.getString("end_date"), DateHelper.SQL_FORMAT) + "</td>";
                             if (!"LATENESS".equals(key)) {
                                 line += "<td>" + getReasonLabel(event) + "</td>";
+                                line += "<td>" + getRegularisedLabel(event) + "</td></tr>";
                             }
-                            line += "<td>" + getRegularisedLabel(event) + "</td></tr>";
                             summary += line;
                         } catch (ParseException | NullPointerException e) {
                             LOGGER.error("[Massmailing@Template] Failed to generate table line", e, event.toString());
@@ -176,6 +176,28 @@ public class Template {
                     summary += "</table>";
                 }
                 summary += "</div>";
+                break;
+            case SMS:
+                keys = new ArrayList<>(events.fieldNames());
+                for (String key : keys) {
+                    JsonArray eventsKey = events.getJsonArray(key);
+                    summary += "\n";
+                    summary += I18n.getInstance().translate("massmailing.summary." + key, domain, locale) + ": ";
+                    for (int i = 0; i < eventsKey.size(); i++) {
+                        JsonObject event = eventsKey.getJsonObject(i);
+                        try {
+                            String line = DateHelper.getDateString(event.getString("start_date"), DateHelper.DAY_MONTH_YEAR) + ": ";
+                            line += DateHelper.getTimeString(event.getString("start_date"), DateHelper.SQL_FORMAT) + " - " + DateHelper.getTimeString(event.getString("end_date"), DateHelper.SQL_FORMAT) + "; ";
+                            if (!"LATENESS".equals(key)) {
+                                line += " - " + getReasonLabel(event);
+                                line += " - " + getRegularisedLabel(event) + "; ";
+                            }
+                            summary += line;
+                        } catch (ParseException | NullPointerException e) {
+                            LOGGER.error("[Massmailing@Template] Failed to generate table line", e, event.toString());
+                        }
+                    }
+                }
                 break;
         }
 

@@ -7,7 +7,7 @@
     <div class="row vertical-spacing massmailing-counters">
         <div class="card cell horizontal-spacing counter">
             <span class="number">[[vm.massmailing.counts.massmailing]]</span>
-            <i18n>massmailing.prefetch.mail.count</i18n>
+            <span>[[lang.translate('massmailing.prefetch.' + vm.massmailing.type + '.count')]]</span>
         </div>
         <div class="card cell horizontal-spacing counter">
             <span class="number">[[vm.massmailing.counts.students]]</span>
@@ -16,7 +16,7 @@
         <div class="card cell horizontal-spacing counter">
             <i class="incident">&nbsp;</i>
             <span class="number">[[vm.massmailing.counts.anomalies]]</span>
-            <i18n>massmailing.prefetch.anomalies.mail.count</i18n>
+            <span>[[lang.translate('massmailing.prefetch.anomalies.' + vm.massmailing.type + '.count')]]</span>
         </div>
     </div>
     <div class="row vertical-spacing">

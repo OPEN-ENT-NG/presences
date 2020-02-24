@@ -29,7 +29,8 @@ interface Filter {
         groups: any[]
     },
     anomalies: {
-        MAIL: boolean
+        MAIL: boolean,
+        SMS: boolean
     }
 }
 
@@ -40,7 +41,8 @@ interface ViewModel {
     massmailingStatus: MassmailingStatusResponse
     massmailingAnomalies: MassmailingAnomaliesResponse[]
     massmailingCount: {
-        MAIL?: number
+        MAIL?: number,
+        SMS?: number
     }
     errors: {
         TYPE: boolean,
@@ -95,6 +97,8 @@ interface ViewModel {
     toggleStudent(student): void;
 
     toggleRelative(relative, student): void;
+
+    filterAnomalies(item: any): boolean;
 }
 
 declare let window: any;
@@ -140,7 +144,8 @@ export const homeController = ng.controller('HomeController', ['$scope', 'route'
                 groups: []
             },
             anomalies: {
-                MAIL: true
+                MAIL: true,
+                SMS: true
             }
         };
 
@@ -237,13 +242,21 @@ export const homeController = ng.controller('HomeController', ['$scope', 'route'
                         vm.massmailingCount[key]++
                     });
                 });
+                vm.filter.anomalies = {
+                    MAIL: true,
+                    SMS: true
+                };
+                Object.keys(vm.massmailingCount).forEach(key => {
+                    if (vm.massmailingCount[key] === 0) vm.filter.anomalies[key] = false;
+                });
                 $scope.safeApply();
             });
         }
 
         function resetMassmailingCount() {
             vm.massmailingCount = {
-                MAIL: 0
+                MAIL: 0,
+                SMS: 0
             }
         }
 
@@ -406,6 +419,16 @@ export const homeController = ng.controller('HomeController', ['$scope', 'route'
             student.relative.forEach(relative => (bool = bool || relative.selected));
             student.selected = bool;
             $scope.safeApply();
+        };
+
+        vm.filterAnomalies = item => {
+            let keys = Object.keys(vm.filter.anomalies);
+            for (let i = 0; i < keys.length; i++) {
+                let key = keys[i];
+                if (vm.filter.anomalies[key] && key in item.bug && item.bug[key]) return true;
+            }
+
+            return false;
         };
 
         $scope.$watch(() => window.structure, vm.loadData);

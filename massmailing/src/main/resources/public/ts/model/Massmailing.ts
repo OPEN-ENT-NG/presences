@@ -42,7 +42,7 @@ export class Massmailing {
         this.students = students;
         this.students.forEach((student) => {
             student.relative.forEach(relative => {
-                relative.selected = (relative.contact !== null);
+                relative.selected = (relative.contact !== null && relative.contact.trim() !== '');
                 if (!relative.selected) this.counts.massmailing--;
             });
             let shouldSelect = false;
@@ -62,7 +62,7 @@ export class Massmailing {
                 if (relative.selected) students[id].push(relative.id);
             });
         });
-        
+
         Object.keys(students).forEach(id => {
             if (students[id].length === 0) delete students[id];
         });
@@ -80,7 +80,7 @@ export class Massmailing {
     }
 
     toJson() {
-        const event_types = Object.keys(this.filter.status);
+        const event_types = Object.keys(this.filter.status).filter(type => this.filter.status[type]);
         const reasons = [];
         Object.keys(this.filter.reasons).forEach((reason) => {
             if (this.filter.reasons[reason]) reasons.push(reason)

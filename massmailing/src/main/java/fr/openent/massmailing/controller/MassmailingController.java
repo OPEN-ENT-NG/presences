@@ -6,6 +6,7 @@ import fr.openent.massmailing.enums.MailingType;
 import fr.openent.massmailing.enums.MassmailingType;
 import fr.openent.massmailing.mailing.Mail;
 import fr.openent.massmailing.mailing.MassMailingProcessor;
+import fr.openent.massmailing.mailing.Sms;
 import fr.openent.massmailing.mailing.Template;
 import fr.openent.massmailing.security.BodyCanAccessMassMailing;
 import fr.openent.massmailing.security.CanAccessMassMailing;
@@ -44,7 +45,7 @@ import java.util.List;
 public class MassmailingController extends ControllerHelper {
     private GroupService groupService;
     private MassmailingService massmailingService = new DefaultMassmailingService();
-    private List<MailingType> typesToCheck = Arrays.asList(MailingType.MAIL);
+    private List<MailingType> typesToCheck = Arrays.asList(MailingType.MAIL, MailingType.SMS);
 
     public MassmailingController(EventBus eb) {
         this.groupService = new DefaultGroupService(eb);
@@ -570,6 +571,8 @@ public class MassmailingController extends ControllerHelper {
                     break;
                 case PDF:
                 case SMS:
+                    mailing = new Sms(eb, structure, template, massmailed, massmailingTypeList, reasons, start, end, noReason, students);
+                    break;
                 default:
                     badRequest(request);
                     return;

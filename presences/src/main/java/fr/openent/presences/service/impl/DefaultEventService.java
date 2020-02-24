@@ -536,8 +536,8 @@ public class DefaultEventService implements EventService {
                 "AND register.structure_id = ? " +
                 "AND type_id = ?";
         JsonArray params = new JsonArray()
-                .add(startDate)
-                .add(endDate)
+                .add(startDate + " " + defaultStartTime)
+                .add(endDate + " " + defaultEndTime)
                 .add(structure)
                 .add(eventTypes);
 

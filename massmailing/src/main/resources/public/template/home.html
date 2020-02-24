@@ -13,6 +13,9 @@
         </span>
         </div>
         <div class="right-magnet">
+            <button ng-disabled="!vm.canMassmail()" ng-click="vm.prefetch('SMS')" class="vertical-spacing-twice">
+                <i18n>massmailing.massmail.sms</i18n>
+            </button>
             <button ng-disabled="!vm.canMassmail()" ng-click="vm.prefetch('MAIL')" class="vertical-spacing-twice">
                 <i18n>massmailing.massmail.mail</i18n>
             </button>
@@ -80,7 +83,7 @@
                 </span>
             </div>
         </div>
-        <div class="row vertical-spacing" ng-show="vm.filter.anomalies.MAIL">
+        <div class="row vertical-spacing">
             <table>
                 <thead>
                 <th width="20%" class="text-align-left">
@@ -98,7 +101,7 @@
                 </th>
                 </thead>
                 <tbody>
-                <tr ng-repeat="anomaly in vm.massmailingAnomalies">
+                <tr ng-repeat="anomaly in vm.massmailingAnomalies|filter:vm.filterAnomalies">
                     <td>
                         <student-name name="anomaly.displayName" id="anomaly.id"/>
                     </td>

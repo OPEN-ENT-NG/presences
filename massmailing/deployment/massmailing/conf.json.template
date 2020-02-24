@@ -18,7 +18,7 @@
     "mailings": {
         "MAIL": true,
         "PDF": false,
-        "SMS": false
+        "SMS": true
     }
   }
 }
