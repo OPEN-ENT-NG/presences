@@ -1,9 +1,9 @@
 import {_, angular, idiom as lang, Me, model, moment, ng} from 'entcore';
 import {Action, ActionBody, Event, EventResponse, Events, EventType, Student, Students} from "../models";
-import {DateUtils} from "@common/utils";
+import {DateUtils, PreferencesUtils} from "@common/utils";
 import {GroupService} from "@common/services/GroupService";
 import {actionService, EventService, ReasonService} from "../services";
-import {EventsFilter, EventsUtils, PreferencesUtils} from "../utilities";
+import {EventsFilter, EventsUtils} from "../utilities";
 import {Reason} from "@presences/models/Reason";
 
 declare let window: any;

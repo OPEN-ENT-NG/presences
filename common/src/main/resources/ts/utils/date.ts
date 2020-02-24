@@ -183,9 +183,7 @@ export class DateUtils {
     }
 
     static async getSchoolYearDates(structureId) {
-        console.log('test');
         let {data} = await http.get(`viescolaire/settings/periode/schoolyear?structureId=` + structureId);
-        console.log('test2', data);
         return data;
     }
 }

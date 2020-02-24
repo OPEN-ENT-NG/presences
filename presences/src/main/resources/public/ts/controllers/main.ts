@@ -2,7 +2,7 @@ import {idiom, model, ng, template} from 'entcore';
 import rights from '../rights'
 import {Idiom, Template} from '@common/interfaces'
 import {IRootScopeService} from "angular";
-import {PreferencesUtils} from "../utilities";
+import {PreferencesUtils} from "@common/utils";
 
 declare let window: any;
 

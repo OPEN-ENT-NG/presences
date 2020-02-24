@@ -1,8 +1,8 @@
-import {Me, model} from 'entcore';
+import {model} from 'entcore';
 import rights from '../rights';
 import incidentsRights from '@incidents/rights'
 import massmailingRights from '@massmailing/rights';
-import {PreferencesUtils} from "../utilities";
+import {PreferencesUtils} from "@common/utils";
 
 declare let window: any;
 
@@ -48,7 +48,6 @@ export const navigation = {
             this.menu.structure = structure;
             await PreferencesUtils.updateStructure(structure.id);
             this.$apply();
-            console.log("Stop");
         },
         hoverIn: function (menuItem) {
             this.menu.hovered = menuItem;

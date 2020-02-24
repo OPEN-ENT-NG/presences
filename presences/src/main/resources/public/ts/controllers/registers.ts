@@ -12,11 +12,11 @@ import {
     Remark
 } from '../models';
 import {GroupService, SearchService} from '../services';
-import {CourseUtils, DateUtils} from '@common/utils'
+import {CourseUtils, DateUtils, PreferencesUtils} from '@common/utils'
 import rights from '../rights';
 import {Scope} from './main';
 import http from 'axios';
-import {PreferencesUtils, RegisterUtils, StudentsSearch} from "../utilities";
+import {RegisterUtils, StudentsSearch} from "../utilities";
 import {COURSE_EVENTS} from "@common/model";
 import {IAngularEvent} from "angular";
 

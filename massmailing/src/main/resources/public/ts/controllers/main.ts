@@ -1,4 +1,7 @@
 import {idiom, ng, template} from 'entcore';
+import {PreferencesUtils} from "@common/utils";
+
+declare let window: any;
 
 interface ViewModel {
     homeState(): boolean
@@ -7,7 +10,7 @@ interface ViewModel {
 }
 
 export const mainController = ng.controller('MainController', ['$scope', 'route', '$location',
-    function ($scope, route, $location) {
+    async function ($scope, route, $location) {
         $scope.lang = idiom;
         template.open('main', 'main');
 
@@ -36,4 +39,11 @@ export const mainController = ng.controller('MainController', ['$scope', 'route'
             home: () => template.open('content', 'home'),
             history: () => template.open('content', 'history')
         });
+
+        /**
+         * Init user's preference by default
+         */
+        await PreferencesUtils.initPreference();
+
+        $scope.$watch(() => window.structure, () => $scope.structure = window.structure);
     }]);

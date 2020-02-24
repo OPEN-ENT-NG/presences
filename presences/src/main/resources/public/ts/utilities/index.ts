@@ -1,4 +1,4 @@
-export * from "./preferences";
+export * from "@common/utils/preferences";
 export * from "./toast";
 export * from "./calendar/index";
 export * from "./register";
