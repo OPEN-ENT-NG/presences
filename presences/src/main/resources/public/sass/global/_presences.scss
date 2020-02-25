@@ -33,6 +33,10 @@ $navbar-width: 80px;
   @import "memento/index";
 }
 
+.sniplet.presences.presences-manage.navigation {
+  background-color: $white;
+}
+
 body.presences, .sniplet.presences {
   @import "generic/index";
   @import "components/index";
