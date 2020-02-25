@@ -4,8 +4,17 @@ import fr.openent.presences.common.incidents.Incidents;
 import fr.openent.presences.common.massmailing.Massmailing;
 import fr.openent.presences.common.viescolaire.Viescolaire;
 import fr.openent.presences.controller.*;
+import fr.openent.presences.cron.CreateDailyRegistersTask;
+import fr.openent.presences.worker.CreateDailyPresenceWorker;
+import fr.wseduc.cron.CronTrigger;
+import fr.wseduc.webutils.Utils;
+import io.vertx.core.DeploymentOptions;
+import io.vertx.core.eventbus.DeliveryOptions;
 import io.vertx.core.eventbus.EventBus;
+import io.vertx.core.json.JsonObject;
 import org.entcore.common.http.BaseServer;
+
+import java.text.ParseException;
 
 public class Presences extends BaseServer {
 
@@ -77,16 +86,13 @@ public class Presences extends BaseServer {
         Viescolaire.getInstance().init(eb);
         Massmailing.getInstance().init(eb);
 
+        vertx.deployVerticle(CreateDailyPresenceWorker.class, new DeploymentOptions().setConfig(config).setWorker(true));
 
-        /*
-        Remove the cron trigger. Currently Do not delete absences
         try {
-            new CronTrigger(vertx, exportCron).schedule(new AbsenceRemovalTask(vertx.eventBus()));
+            new CronTrigger(vertx, config.getString("registers-cron", "0 1 * * * ? *")).schedule(new CreateDailyRegistersTask(vertx.eventBus()));
         } catch (ParseException e) {
             log.fatal(e.getMessage(), e);
         }
-        */
-
     }
 
 }

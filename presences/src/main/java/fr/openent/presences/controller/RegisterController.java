@@ -6,15 +6,19 @@ import fr.openent.presences.enums.RegisterStatus;
 import fr.openent.presences.security.CreateRegisterRight;
 import fr.openent.presences.service.RegisterService;
 import fr.openent.presences.service.impl.DefaultRegisterService;
+import fr.openent.presences.worker.CreateDailyPresenceWorker;
 import fr.wseduc.rs.ApiDoc;
 import fr.wseduc.rs.Get;
 import fr.wseduc.rs.Post;
 import fr.wseduc.rs.Put;
 import fr.wseduc.security.ActionType;
 import fr.wseduc.security.SecuredAction;
+import fr.wseduc.webutils.Utils;
 import fr.wseduc.webutils.request.RequestUtils;
+import io.vertx.core.eventbus.DeliveryOptions;
 import io.vertx.core.eventbus.EventBus;
 import io.vertx.core.http.HttpServerRequest;
+import io.vertx.core.json.JsonObject;
 import org.entcore.common.controller.ControllerHelper;
 import org.entcore.common.http.filter.ResourceFilter;
 import org.entcore.common.http.filter.Trace;
@@ -23,10 +27,12 @@ import org.entcore.common.user.UserUtils;
 public class RegisterController extends ControllerHelper {
 
     private RegisterService registerService;
+    private EventBus eb;
 
     public RegisterController(EventBus eb) {
         super();
         this.registerService = new DefaultRegisterService(eb);
+        this.eb = eb;
     }
 
     @Get("/registers/:id")

@@ -11,6 +11,8 @@
         "auto-redeploy": false,
         "userbook-host": "${host}",
         "export-cron": "0 0 0 1/3 * ? *",
+        "registers-cron": "0 1 * * * ? *",
+        "mails-list-cron": ["support.ent.fr@cgi.com"],
         "integration-mode" : "HTTP",
         "app-registry.port" : 8012,
         "mode" : "${mode}",

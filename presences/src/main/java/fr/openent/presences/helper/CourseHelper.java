@@ -83,13 +83,12 @@ public class CourseHelper {
                 .put("end", end);
 
         eb.send("viescolaire", action, event -> {
-            JsonObject body = (JsonObject) event.result().body();
-            if (event.failed() || "error".equals(body.getString("status"))) {
+            if (event.failed() || event.result() == null || "error".equals(((JsonObject) event.result().body()).getString("status"))) {
                 String err = "[CourseHelper@getCourses] Failed to retrieve courses";
                 LOGGER.error(err);
                 handler.handle(new Either.Left<>(err));
             } else {
-                handler.handle(new Either.Right<>(body.getJsonArray("results")));
+                handler.handle(new Either.Right<>(((JsonObject) event.result().body()).getJsonArray("results")));
             }
         });
     }
@@ -111,9 +110,13 @@ public class CourseHelper {
         return courseList;
     }
 
-    public static List<Course> formatCourses(List<Course> courses, boolean multipleSlot) {
-        List<Course> formatCourses = new ArrayList<>();
+    public static List<Course> formatCourses(List<Course> courses, boolean multipleSlot, List<Slot> slots) {
+        // Case when slots are not defined from viesco.
+        if (slots.isEmpty()) {
+            return courses;
+        }
 
+        List<Course> formatCourses = new ArrayList<>();
         courses.stream()
                 .collect(Collectors.groupingBy(Course::getId))
                 .forEach((courseId, listCourses) -> {
