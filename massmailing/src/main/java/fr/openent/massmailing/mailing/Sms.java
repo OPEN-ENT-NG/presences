@@ -53,7 +53,7 @@ public class Sms extends MassMailingProcessor {
 
     private void send(JsonObject sms, Handler<Either<String, JsonObject>> handler) {
         JsonObject parameters = new JsonObject()
-                .put("receivers", new JsonArray(sms.getString("contact")))
+                .put("receivers", new JsonArray().add(sms.getString("contact")))
                 .put("message", sms.getString("message"))
                 .put("senderForResponse", true)
                 .put("noStopClause", true);
