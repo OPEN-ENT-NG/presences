@@ -333,7 +333,7 @@ public class EventHelper {
                 }
                 ((List<JsonObject>) event.getStudent().getDayHistory().getList()).forEach(dayHistory ->
                         ((List<JsonObject>) dayHistory.getJsonArray("events").getList()).forEach(eventHistory -> {
-                            if (!eventHistory.getString("type").toUpperCase().equals(Events.ABSENCE.toString())) {
+                            if (!eventHistory.getString("type").toUpperCase().equals(Events.ABSENCE.toString()) && eventHistory.getValue("owner") instanceof String) {
                                 eventHistory.put("owner", userMap.getOrDefault(eventHistory.getString("owner"), null).toJSON());
                             }
                         }));
