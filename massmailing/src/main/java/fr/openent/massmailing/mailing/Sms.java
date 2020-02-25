@@ -58,7 +58,7 @@ public class Sms extends MassMailingProcessor {
                 .put("senderForResponse", true)
                 .put("noStopClause", true);
         JsonObject smsObject = new JsonObject()
-                .put("provider", "entcore.sms")
+                .put("provider", "OVH")
                 .put("action", "send-sms")
                 .put("parameters", parameters);
 
