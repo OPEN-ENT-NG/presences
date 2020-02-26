@@ -58,7 +58,7 @@
 
         <!-- Select reason-->
         <th class="table-reason text-center">
-            <label>
+            <label ng-if="event.isAbsence || vm.isEachEventAbsence(event)">
                 <select data-ng-model="event.globalReason"
                         data-ng-click="vm.reasonSelect($event)"
                         data-ng-change="vm.changeAllReason(event)"
@@ -128,7 +128,7 @@
         <!-- description under events select reason -->
         <td class="text-center padding-sm" width="8%">
             <span class="events-table-body-description-content-select table-reason">
-                 <label>
+                 <label ng-if="history.type_id == 1">
                     <select data-ng-model="history.reason_id"
                             data-ng-change="vm.changeReason(history, event)"
                             ng-options="reason.id as reason.label for reason in vm.eventReasonsTypeDescription"

@@ -23,6 +23,7 @@ interface ViewModel {
     events: Events;
     multipleSelect: Reason;
     provingReasonsMap: any;
+    isToto: boolean;
 
     /* Filters and actions lightbox*/
     lightbox: {
@@ -69,6 +70,8 @@ interface ViewModel {
     hideGlobalCheckbox(event): boolean;
 
     formatDate(date: string): string;
+
+    isEachEventAbsence(event: EventResponse): boolean;
 
     /* Action */
     doAction($event, event, eventParent?): void;
@@ -296,6 +299,7 @@ export const eventsController = ng.controller('EventsController', ['$scope', '$r
                 // dynamic mode : case if we only interact with action, reason, counsellor regularized...
                 await refreshGetEventWhileAction();
             }
+
             $scope.safeApply();
         };
 
@@ -462,11 +466,17 @@ export const eventsController = ng.controller('EventsController', ['$scope', '$r
             return !event.globalCounsellorRegularisation && regularized.filter((r) => r === true).length > 0;
         };
 
+        vm.isEachEventAbsence = (event: EventResponse): boolean => {
+            if (EventsUtils.hasTypeEventAbsence(event.events)) {
+                return true;
+            }
+        };
+
         /* Add global reason_id to all events that exist */
         vm.changeAllReason = async (event: EventResponse): Promise<void> => {
             let initialReasonId = event.globalReason;
             let fetchedEventIds: number[] = [];
-            if (isWidget) {
+            if (isWidget && event.type.id === 1) {
                 fetchedEventIds.push(event.id);
             } else {
                 EventsUtils.fetchEvents(event, fetchedEventIds);
@@ -849,7 +859,7 @@ export const eventsController = ng.controller('EventsController', ['$scope', '$r
             loadFormFilter();
             await Promise.all([
                 await getEvents(),
-                await getActions()
+                await getActions(),
             ]);
 
         });

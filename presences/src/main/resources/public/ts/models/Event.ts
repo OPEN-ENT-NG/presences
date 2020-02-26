@@ -42,8 +42,10 @@ export interface EventResponse {
     globalCounsellorRegularisation?: boolean;
     isGlobalAction?: boolean;
     exclude?: boolean;
-    type?: { event: string, id: number };
+    type?: { event: string, event_type: string, id: number };
     actionAbbreviation?: string;
+    isAbsence?: boolean;
+    isEventAbsence?: any;
 }
 
 export class Event {
@@ -154,10 +156,10 @@ export class Events extends LoadingCollection {
                             if (!eventsFetchedFromHistory.some(element => element.id == event.id)) {
                                 eventsFetchedFromHistory.push(event);
                             }
-                            if ("reason_id" in event) {
+                            if ("reason_id" in event && event.type_id === 1) {
                                 reasonIds.push(event.reason_id);
                             }
-                            if ("counsellor_regularisation" in event) {
+                            if ("counsellor_regularisation" in event && event.type_id === 1) {
                                 regularizedEvents.push(event.counsellor_regularisation);
                             }
                             if ("actionAbbreviation" in event) {
@@ -182,10 +184,12 @@ export class Events extends LoadingCollection {
                 /* check all events regularized in this event to display the global regularized value */
                 let globalCounsellorRegularisation = regularizedEvents.length === 0 ? false
                     : regularizedEvents.reduce((accumulator, currentValue) => accumulator && currentValue);
-                let type = {event: item.type, id: item.id};
+                let type = {event: item.type, event_type: item.eventType.label, id: item.id};
 
                 /* check if there are differents actions */
                 let isGlobalAction = new Set(actions).size === 1;
+
+                let isAbsence = item.eventType.id === 1;
 
                 /* We build our event based on information stored above */
                 if (item.type === EventsUtils.ALL_EVENTS.event) {
@@ -202,7 +206,8 @@ export class Events extends LoadingCollection {
                         globalCounsellorRegularisation: globalCounsellorRegularisation,
                         isGlobalAction: isGlobalAction,
                         type: type,
-                        actionAbbreviation: item.actionAbbreviation
+                        actionAbbreviation: item.actionAbbreviation,
+                        isAbsence: isAbsence
                     });
                 }
             }

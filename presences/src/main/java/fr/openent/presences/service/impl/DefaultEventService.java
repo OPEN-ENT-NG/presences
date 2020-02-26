@@ -421,7 +421,7 @@ public class DefaultEventService implements EventService {
         } else {
             params.addNull();
         }
-        query += " WHERE id IN " + Sql.listPrepared(eventBody.getJsonArray("ids").getList());
+        query += " WHERE id IN " + Sql.listPrepared(eventBody.getJsonArray("ids").getList()) + " AND type_id = 1";
         params.addAll(eventBody.getJsonArray("ids"));
         Sql.getInstance().prepared(query, params, SqlResult.validUniqueResultHandler(handler));
     }
@@ -432,7 +432,7 @@ public class DefaultEventService implements EventService {
         String query = "UPDATE " + Presences.dbSchema + ".event SET counsellor_regularisation = ? ";
         params.add(eventBody.getBoolean("regularized"));
 
-        query += " WHERE id IN " + Sql.listPrepared(eventBody.getJsonArray("ids").getList());
+        query += " WHERE id IN " + Sql.listPrepared(eventBody.getJsonArray("ids").getList()) + " AND type_id = 1";
         params.addAll(eventBody.getJsonArray("ids"));
         Sql.getInstance().prepared(query, params, SqlResult.validUniqueResultHandler(handler));
     }

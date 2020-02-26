@@ -126,4 +126,20 @@ export class EventsUtils {
         /* reasonArray[0] corresponds all same reasonId, 0 if they are differents */
         return new Set(reasonArray).size === 1 ? reasonArray[0] : 0;
     };
+
+    /* ----------------------------
+    event type methods
+    ---------------------------- */
+
+    /* As at least a event where type is absence*/
+    public static hasTypeEventAbsence = (events: Event[]): boolean => {
+        let hasEventTypeAbsence: boolean = false;
+        events.forEach(elem => {
+            if (elem.type_id === 1) {
+                hasEventTypeAbsence = true;
+            }
+        });
+        return hasEventTypeAbsence;
+    }
+
 }
