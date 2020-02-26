@@ -476,7 +476,7 @@ export const eventsController = ng.controller('EventsController', ['$scope', '$r
         vm.changeAllReason = async (event: EventResponse): Promise<void> => {
             let initialReasonId = event.globalReason;
             let fetchedEventIds: number[] = [];
-            if (isWidget && event.type.id === 1) {
+            if (isWidget) {
                 fetchedEventIds.push(event.id);
             } else {
                 EventsUtils.fetchEvents(event, fetchedEventIds);

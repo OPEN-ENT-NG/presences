@@ -39,7 +39,7 @@ export class EventsUtils {
     };
 
     public static addEventsArray = function (item: Event, eventsId: number[]): void {
-        if (item.type === EventsUtils.ALL_EVENTS.event) {
+        if (item.type === EventsUtils.ALL_EVENTS.event && item.type_id === 1) {
             if (eventsId.indexOf(item.id) === -1) {
                 eventsId.push(item.id);
             }
