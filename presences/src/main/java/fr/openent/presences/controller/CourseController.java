@@ -99,20 +99,20 @@ public class CourseController extends ControllerHelper {
         boolean multipleSlot = params.contains("multiple_slot") && Boolean.parseBoolean(request.getParam("multiple_slot"));
         listCourses(params.get("structure"), params.getAll("teacher"), params.getAll("group"),
                 params.get("start"), params.get("end"), forgottenFilter, multipleSlot, event -> {
-            if (event.isLeft()) {
-                log.error("[Presences@CourseController] Failed to list courses", event.left().getValue());
-                renderError(request);
-                return;
-            }
+                    if (event.isLeft()) {
+                        log.error("[Presences@CourseController] Failed to list courses", event.left().getValue());
+                        renderError(request);
+                        return;
+                    }
 
-            JsonArray courses = event.right().getValue();
-            List<String> csvHeaders = Arrays.asList("presences.register.csv.header.date", "presences.register.csv.header.teacher",
-                    "presences.register.csv.header.groups", "presences.register.csv.header.subject");
-            RegisterCSVExport rce = new RegisterCSVExport(courses);
-            rce.setRequest(request);
-            rce.setHeader(csvHeaders);
-            rce.export();
-        });
+                    JsonArray courses = event.right().getValue();
+                    List<String> csvHeaders = Arrays.asList("presences.register.csv.header.date", "presences.register.csv.header.teacher",
+                            "presences.register.csv.header.groups", "presences.register.csv.header.subject");
+                    RegisterCSVExport rce = new RegisterCSVExport(courses);
+                    rce.setRequest(request);
+                    rce.setHeader(csvHeaders);
+                    rce.export();
+                });
     }
 
     @Post("/courses/:id/notify")
@@ -260,14 +260,14 @@ public class CourseController extends ControllerHelper {
     /**
      * List courses
      *
-     * @param structureId       Structure identifier
-     * @param teachersList      Teachers list identifiers
-     * @param groupsList        Groups list identifiers
-     * @param start             Start date
-     * @param end               End date
-     * @param forgottenFilter   forgottenFilter
-     * @param multipleSlot      allow split courses
-     * @param handler      Function handler returning data
+     * @param structureId     Structure identifier
+     * @param teachersList    Teachers list identifiers
+     * @param groupsList      Groups list identifiers
+     * @param start           Start date
+     * @param end             End date
+     * @param forgottenFilter forgottenFilter
+     * @param multipleSlot    allow split courses
+     * @param handler         Function handler returning data
      */
     private void listCourses(String structureId, List<String> teachersList, List<String> groupsList,
                              String start, String end, boolean forgottenFilter, boolean multipleSlot,
@@ -315,7 +315,7 @@ public class CourseController extends ControllerHelper {
                     object.remove("endCourse");
                     object.remove("is_periodic");
                     object.remove("is_recurrent");
-                    object.put("subjectName", subjectMap.getJsonObject(object.getString("subjectId"), new JsonObject()).getString("externalId", object.getString("exceptionnal", "")));
+                    object.put("subjectName", subjectMap.getJsonObject(object.getString("subjectId"), new JsonObject()).getString("name", object.getString("exceptionnal", "")));
                     JsonArray courseTeachers = new JsonArray();
                     JsonArray teacherIds = object.getJsonArray("teacherIds");
                     for (int j = 0; j < teacherIds.size(); j++) {
