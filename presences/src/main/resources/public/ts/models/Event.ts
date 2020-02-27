@@ -224,21 +224,19 @@ export class Events extends LoadingCollection {
                 `&startDate=${DateUtils.format(this.startDate, dateFormat)}` +
                 `&endDate=${DateUtils.format(this.endDate, dateFormat)}`;
 
-            if (this.noFilter) {
-                if (this.listReasonIds) {
-                    url += `&reasonIds=${this.listReasonIds}`;
-                }
+            if (this.listReasonIds) {
+                url += `&reasonIds=${this.listReasonIds}`;
+            }
 
-                if (this.noReason) {
-                    url += `&noReason=${this.noReason}`;
-                }
+            if (this.noReason) {
+                url += `&noReason=${this.noReason}`;
+            }
 
-                if (!this.regularizedNotregularized) {
-                    if (this.regularized) {
-                        url += `&regularized=${!this.regularized}`;
-                    } else if (!this.regularized) {
-                        url += `&regularized=${!this.regularized}`;
-                    }
+            if (!this.regularizedNotregularized) {
+                if (this.regularized) {
+                    url += `&regularized=${!this.regularized}`;
+                } else if (!this.regularized) {
+                    url += `&regularized=${!this.regularized}`;
                 }
             }
 
