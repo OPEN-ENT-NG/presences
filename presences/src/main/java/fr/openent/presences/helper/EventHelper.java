@@ -387,7 +387,7 @@ public class EventHelper {
      * @param future    Function handler returning data
      */
     private void matchSlots(JsonObject slotsBody, List<Event> events, JsonArray absences, Future<JsonObject> future) {
-        List<Slot> slots = SlotHelper.getSlotListFromJsonArray(slotsBody.getJsonArray("slots"));
+        List<Slot> slots = SlotHelper.getSlotListFromJsonArray(slotsBody.getJsonArray("slots", new JsonArray()));
         List<Absence> absencesList = AbsenceHelper.getAbsenceListFromJsonArray(absences, Absence.MANDATORY_ATTRIBUTE);
         for (Event event : events) {
             try {
