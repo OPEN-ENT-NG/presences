@@ -17,5 +17,5 @@ export interface ReasonRequest {
     absenceCompliance: boolean;
     hidden?: boolean;
     structureId?: string;
-    proving: boolean
+    proving: boolean;
 }

@@ -16,6 +16,8 @@ interface ViewModel {
     form: ReasonRequest;
     formEdit: ReasonRequest;
 
+    initForm(): void;
+
     openReasonLightbox(reason: Reason): void;
 
     closeReasonLightbox(): void;
@@ -60,6 +62,14 @@ const vm: ViewModel = {
     editReasonLightbox: false,
     form: {} as ReasonRequest,
     formEdit: {} as ReasonRequest,
+
+    initForm(): void {
+        vm.form = {
+            label: "",
+            absenceCompliance: true,
+            proving: false
+        }
+    },
 
     openReasonLightbox(reason: Reason): void {
         vm.editReasonLightbox = true;
@@ -146,6 +156,7 @@ export const presencesReasonManage = {
         init: async function () {
             this.vm = vm;
             this.setHandler();
+            vm.initForm();
             presencesReasonManage.that = this;
             vm.safeApply = safeApply;
         },
