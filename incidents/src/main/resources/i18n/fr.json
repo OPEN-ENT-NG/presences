@@ -1,7 +1,7 @@
 {
   "incidents.title": "Incidents",
   "incidents.empty.title": "Aucun incident sur cette période",
-  "incidents.export.tocsv": "Exporter csv",
+  "incidents.export.tocsv": "Exporter CSV",
   "incidents.csv.full": "Vous ne pouvez pas exporter plus de 1 000 incidents, filter votre recherche.",
   "incidents.csv.empty": "Aucun incident à exporter",
   "incidents.csv.filename": "incidents.csv",
@@ -20,7 +20,7 @@
   "incidents.navigation.sanction": "Sanction",
   "incidents.search.student": "Rechercher un élève",
   "incidents.create": "Saisir un incident",
-  "incidents.calendar.create": "incident",
+  "incidents.calendar.create": "Incident",
   "incidents.form.title": "Contexte et caractéristiques",
   "incidents.edit": "Modifier un incident",
   "incidents.create.punishment": "Saisir une punition",
