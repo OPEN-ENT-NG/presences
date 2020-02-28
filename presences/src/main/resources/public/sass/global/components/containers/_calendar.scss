@@ -263,6 +263,12 @@ $calendar-user-card-height: 56px;
           flex-direction: column;
           justify-content: space-between;
 
+          .data {
+            .subject {
+              max-width: 80%;
+            }
+          }
+
           &.isAbsent {
             background-color: $calendar-item-red-colored;
             color: $presences-white;

@@ -128,7 +128,7 @@ public class CalendarController extends ControllerHelper {
                                     course.setSubjectName(course.getExceptionnal());
                                 } else {
                                     course.setSubjectName(subjectMap.containsKey(subjectId)
-                                            ? subjectMap.getJsonObject(subjectId).getString("externalId")
+                                            ? subjectMap.getJsonObject(subjectId).getString("name")
                                             : "");
                                 }
                                 CalendarHelper.formatCourse(course);
