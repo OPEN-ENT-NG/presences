@@ -236,8 +236,8 @@ export const eventsController = ng.controller('EventsController', ['$scope', '$r
             seeAll: false
         };
 
-        const loadFormFilter = (): void => {
-            let formFilters = Me.preferences['presences.eventList.filters'];
+        const loadFormFilter = async (): Promise<void> => {
+            let formFilters = await Me.preference('presences.eventList.filters');
             formFilters = formFilters ? formFilters[window.structure.id] : null;
             if (formFilters) {
                 let {reasonIds, ...toMergeFilters} = formFilters;
@@ -245,6 +245,18 @@ export const eventsController = ng.controller('EventsController', ['$scope', '$r
                 vm.eventReasonsType.forEach((r) => {
                     r.isSelected = reasonIds.includes(r.id)
                 });
+            } else {
+                vm.filter = {
+                    ...vm.filter, ...{
+                        absences: true,
+                        departure: true,
+                        late: $route.current.action !== 'dashboard',
+                        allReasons: true,
+                        unjustified: true,
+                        justifiedNotRegularized: true,
+                        justifiedRegularized: false
+                    }
+                };
             }
         };
 
@@ -856,7 +868,7 @@ export const eventsController = ng.controller('EventsController', ['$scope', '$r
         /* on  (watch) */
         $scope.$watch(() => window.structure, async () => {
             await loadReasonTypes();
-            loadFormFilter();
+            await loadFormFilter();
             await Promise.all([
                 await getEvents(),
                 await getActions(),

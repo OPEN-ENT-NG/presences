@@ -1,8 +1,8 @@
-import {model, moment, ng, toasts} from 'entcore';
-import {Group, GroupService, presenceService, SearchItem, SearchService} from "../services";
+import {Me, model, moment, ng, toasts} from 'entcore';
+import {Group, GroupService, SearchItem, SearchService} from "../services";
 import {DateUtils} from "@common/utils";
 import rights from '../rights';
-import {Course, EventType, Presence, PresenceRequest, Presences} from "../models";
+import {Course, EventType} from "../models";
 import {alertService} from "../services/AlertService";
 import {IAngularEvent} from "angular";
 import {COURSE_EVENTS} from "@common/model";
@@ -50,7 +50,11 @@ export const dashboardController = ng.controller('DashboardController', ['$scope
         const vm: ViewModel = this;
 
         const initData = async () => {
-            await vm.getAlert();
+            if (!window.structure) {
+                window.structure = await Me.preference("presences.structure");
+            } else {
+                await vm.getAlert();
+            }
         };
 
         vm.date = DateUtils.format(moment(), DateUtils.FORMAT["DATE-FULL-LETTER"]);
@@ -148,9 +152,9 @@ export const dashboardController = ng.controller('DashboardController', ['$scope
 
         /* Event SEND_COURSE sent from register widget */
         $scope.$on(COURSE_EVENTS.SEND_COURSE, (event: IAngularEvent, args) => vm.course = args);
-        $scope.$watch(() => window.structure, () => {
+        $scope.$watch(() => window.structure, async () => {
             if ($route.current.action === "dashboard") {
-                initData();
+                await initData();
             } else {
                 $scope.redirectTo('/dashboard');
             }

@@ -1,4 +1,4 @@
-import {_, angular, moment, ng, notify} from 'entcore';
+import {_, angular, Me, moment, ng, notify} from 'entcore';
 import {Incident, Incidents, Student, Students} from "../models";
 import {IncidentService} from "../services";
 import {Toast} from "@common/utils/toast";
@@ -48,10 +48,9 @@ interface ViewModel {
 
 export const incidentsController = ng.controller('IncidentsController', ['$scope', 'IncidentService', async function ($scope: Scope, IncidentService: IncidentService) {
     const vm: ViewModel = this;
-    const schoolYears = await DateUtils.getSchoolYearDates(window.structure.id);
     vm.notifications = [];
     vm.filter = {
-        startDate: moment(schoolYears.start_date),
+        startDate: null,
         endDate: new Date(),
         students: [],
         student: {
@@ -76,7 +75,18 @@ export const incidentsController = ng.controller('IncidentsController', ['$scope
     };
 
     const getIncidents = async (): Promise<void> => {
-        vm.incidents.structureId = window.structure.id;
+        if (window.structure) {
+            vm.incidents.structureId = window.structure.id;
+        } else {
+            let preferenceStructure = await Me.preference('presences.structure');
+            vm.incidents.structureId = preferenceStructure ? preferenceStructure['id'] : null;
+        }
+
+        if (vm.filter.startDate === null) {
+            const schoolYears = await DateUtils.getSchoolYearDates(window.structure.id);
+            vm.filter.startDate = moment(schoolYears.start_date);
+        }
+
         vm.incidents.startDate = moment(vm.filter.startDate).format(DateUtils.FORMAT["YEAR-MONTH-DAY"]);
         vm.incidents.endDate = moment(vm.filter.endDate).format(DateUtils.FORMAT["YEAR-MONTH-DAY"]);
 

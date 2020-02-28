@@ -210,7 +210,7 @@ export const registersController = ng.controller('RegistersController',
             vm.courses.eventer.on('loading::false', () => $scope.safeApply());
             vm.RegisterStatus = RegisterStatus;
 
-            let registerTimeSlot = Me.preferences['presences.register'];
+            let registerTimeSlot = await Me.preference('presences.register');
 
             vm.filter = {
                 date: new Date(),

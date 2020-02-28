@@ -2,7 +2,6 @@ import {idiom, model, ng, template} from 'entcore';
 import rights from '../rights'
 import {Idiom, Template} from '@common/interfaces'
 import {IRootScopeService} from "angular";
-import {PreferencesUtils} from "@common/utils";
 
 declare let window: any;
 
@@ -26,7 +25,7 @@ export interface Scope extends IRootScopeService {
  Main controller.
  **/
 export const mainController = ng.controller('MainController', ['$scope', 'route', '$rootScope', '$route', '$location',
-    async ($scope: Scope, route, $rootScope, $route, $location) => {
+    ($scope: Scope, route, $rootScope, $route, $location) => {
         $scope.structure = {
             id: '',
             name: ''
@@ -67,10 +66,6 @@ export const mainController = ng.controller('MainController', ['$scope', 'route'
             }
         });
 
-        /**
-         * Init user's preference by default
-         */
-        await PreferencesUtils.initPreference();
 
         $scope.lang = idiom;
         $scope.template = template;

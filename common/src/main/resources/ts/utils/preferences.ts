@@ -61,6 +61,10 @@ export class PreferencesUtils {
      * @param structureId   Id conrresponding to the current filter.
      */
     static async updatePresencesEventListFilter(filter: EventsFormFilter, structureId: string): Promise<void> {
+        if (!Me.preferences['presences.eventList.filters']) {
+            await Me.savePreference('presences.eventList.filters');
+            await Me.preference('presences.eventList.filters')
+        }
         Me.preferences['presences.eventList.filters'][structureId] = filter;
         await Me.savePreference('presences.eventList.filters');
     }
@@ -68,10 +72,14 @@ export class PreferencesUtils {
     /**
      * Updated default structure selected
      *
-     * @param structureId Id corresponding to de default selected one.
+     * @param structure selected.
      */
-    static async updateStructure(structureId: string): Promise<void> {
-        Me.preferences['presences.structure'] = {defaultId: structureId};
+    static async updateStructure(structure): Promise<void> {
+        if (!Me.preferences['presences.structure']) {
+            await Me.savePreference('presences.structure');
+            await Me.preference('presences.structure')
+        }
+        Me.preferences['presences.structure'] = structure;
         await Me.savePreference('presences.structure');
     }
 }

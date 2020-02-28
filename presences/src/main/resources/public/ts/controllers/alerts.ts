@@ -1,4 +1,4 @@
-import {_, model, ng, toasts} from 'entcore';
+import {_, Me, model, ng, toasts} from 'entcore';
 import {alertService} from "../services";
 import {AlertType} from "../models";
 import {SearchService} from "@common/services/SearchService";
@@ -104,11 +104,15 @@ export const alertsController = ng.controller('AlertsController', ['$scope', '$r
         vm.params = Object.assign({loading: false}, $location.search());
 
         const initData = async () => {
-            if (vm.params.type) {
-                initFilter(false);
-                vm.filter.types[vm.params.type] = true;
+            if (!window.structure) {
+                window.structure = await Me.preference("presences.structure");
+            } else {
+                if (vm.params.type) {
+                    initFilter(false);
+                    vm.filter.types[vm.params.type] = true;
+                }
+                await vm.getStudentAlert();
             }
-            await vm.getStudentAlert();
         };
 
         vm.getStudentAlert = async (student, classes) => {

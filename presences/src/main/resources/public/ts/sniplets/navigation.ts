@@ -1,4 +1,4 @@
-import {model} from 'entcore';
+import {Me, model} from 'entcore';
 import rights from '../rights';
 import incidentsRights from '@incidents/rights'
 import massmailingRights from '@massmailing/rights';
@@ -31,8 +31,8 @@ export const navigation = {
     controller: {
         init: async function () {
             this.structures = initStructures();
-            let preferenceStructure = PreferencesUtils.getPreference("presences.structure");
-            let preferenceStructureId =  preferenceStructure ? preferenceStructure['defaultId'] : null;
+            let preferenceStructure = await Me.preference('presences.structure');
+            let preferenceStructureId =  preferenceStructure ? preferenceStructure['id'] : null;
             let structure = this.structures.length > 1 && preferenceStructureId ? this.structures.find((s) => s.id === preferenceStructureId) : this.structures[0];
             this.menu = {
                 structure: structure,
@@ -46,7 +46,7 @@ export const navigation = {
         setStructure: async function (structure: Structure) {
             window.structure = structure;
             this.menu.structure = structure;
-            await PreferencesUtils.updateStructure(structure.id);
+            await PreferencesUtils.updateStructure(structure);
             this.$apply();
         },
         hoverIn: function (menuItem) {
