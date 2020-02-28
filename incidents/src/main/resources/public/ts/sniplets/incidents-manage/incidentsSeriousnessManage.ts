@@ -6,17 +6,23 @@ declare let window: any;
 
 interface ViewModel {
     safeApply(fn?: () => void): void;
+
     form: SeriousnessRequest;
     seriousnessLevel: number
     seriousnesses: Seriousness[];
 
     chooseLevel(form): void;
+
     hasSeriousnesses(): boolean;
+
     proceedAfterAction(response: AxiosResponse): void;
 
     get(): Promise<void>;
+
     create(): Promise<void>;
+
     toggleVisibility(seriousness: Seriousness): Promise<void>;
+
     delete(seriousness: Seriousness): Promise<void>
 
     openIncidentsManageLightbox(seriousness: Seriousness): void;
@@ -26,10 +32,10 @@ function safeApply() {
     let that = incidentsSeriousnessManage.that;
     return new Promise((resolve, reject) => {
         var phase = that.$root.$$phase;
-        if(phase === '$apply' || phase === '$digest') {
-            if(resolve && (typeof(resolve) === 'function')) resolve();
+        if (phase === '$apply' || phase === '$digest') {
+            if (resolve && (typeof (resolve) === 'function')) resolve();
         } else {
-            if (resolve && (typeof(resolve) === 'function')) that.$apply(resolve);
+            if (resolve && (typeof (resolve) === 'function')) that.$apply(resolve);
             else that.$apply();
         }
     });
@@ -103,8 +109,9 @@ export const incidentsSeriousnessManage = {
         },
         setHandler: function () {
             // using vieScolaire.structure to update current structure from viescolaire
-            this.$watch(() =>  window.model.vieScolaire.structure, async () => vm.get());
+            this.$watch(() => window.model.vieScolaire.structure, async () => vm.get());
             this.$on(INCIDENTS_SERIOUSNESS_EVENT.RESPOND, () => vm.get());
+            this.$on('reload', vm.get);
         }
     }
 };

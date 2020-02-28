@@ -42,6 +42,46 @@ public class Incidents {
         eb.send(address, action, MessageResponseHandler.messageJsonArrayHandler(handler));
     }
 
+    public void getInitIncidentTypesStatement(String structure, Handler<Either<String, JsonObject>> handler) {
+        JsonObject action = new JsonObject()
+                .put("action", "init-get-incident-type-statement")
+                .put("structure", structure);
+
+        eb.send(address, action, MessageResponseHandler.messageJsonObjectHandler(handler));
+    }
+
+    public void getInitIncidentPlacesStatement(String structure, Handler<Either<String, JsonObject>> handler) {
+        JsonObject action = new JsonObject()
+                .put("action", "init-get-incident-places-statement")
+                .put("structure", structure);
+
+        eb.send(address, action, MessageResponseHandler.messageJsonObjectHandler(handler));
+    }
+
+    public void getInitIncidentProtagonistTypeStatement(String structure, Handler<Either<String, JsonObject>> handler) {
+        JsonObject action = new JsonObject()
+                .put("action", "init-get-incident-protagonist-type-statement")
+                .put("structure", structure);
+
+        eb.send(address, action, MessageResponseHandler.messageJsonObjectHandler(handler));
+    }
+
+    public void getInitIncidentSeriousnessStatement(String structure, Handler<Either<String, JsonObject>> handler) {
+        JsonObject action = new JsonObject()
+                .put("action", "init-get-incident-seriousness-statement")
+                .put("structure", structure);
+
+        eb.send(address, action, MessageResponseHandler.messageJsonObjectHandler(handler));
+    }
+
+    public void getInitIncidentPartnerStatement(String structure, Handler<Either<String, JsonObject>> handler) {
+        JsonObject action = new JsonObject()
+                .put("action", "init-get-incident-partner-statement")
+                .put("structure", structure);
+
+        eb.send(address, action, MessageResponseHandler.messageJsonObjectHandler(handler));
+    }
+
     private static class IncidentsHolder {
         private static final Incidents instance = new Incidents();
 

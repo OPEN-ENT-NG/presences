@@ -1,6 +1,7 @@
 package fr.openent.presences;
 
 import fr.openent.presences.common.incidents.Incidents;
+import fr.openent.presences.common.massmailing.Massmailing;
 import fr.openent.presences.common.viescolaire.Viescolaire;
 import fr.openent.presences.controller.*;
 import io.vertx.core.eventbus.EventBus;
@@ -66,6 +67,7 @@ public class Presences extends BaseServer {
         addController(new MementoController(eb));
         addController(new ActionController());
         addController(new DisciplineController());
+        addController(new InitController(eb));
 
         // Controller that create fake rights for widgets
         addController(new FakeRight());
@@ -73,6 +75,7 @@ public class Presences extends BaseServer {
         //Init incident
         Incidents.getInstance().init(eb);
         Viescolaire.getInstance().init(eb);
+        Massmailing.getInstance().init(eb);
 
 
         /*

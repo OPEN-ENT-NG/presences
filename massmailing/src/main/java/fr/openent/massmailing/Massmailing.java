@@ -1,5 +1,6 @@
 package fr.openent.massmailing;
 
+import fr.openent.massmailing.controller.EventBusController;
 import fr.openent.massmailing.controller.MassmailingController;
 import fr.openent.massmailing.controller.SettingsController;
 import fr.openent.massmailing.enums.MailingType;
@@ -37,6 +38,7 @@ public class Massmailing extends BaseServer {
         workspaceHelper = new WorkspaceHelper(eb, new StorageFactory(vertx, config).getStorage());
         addController(new MassmailingController(eb));
         addController(new SettingsController(eb));
+        addController(new EventBusController());
 
         Presences.getInstance().init(eb);
         Viescolaire.getInstance().init(eb);

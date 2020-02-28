@@ -121,6 +121,7 @@ export const presencesActionManage = {
             // using vieScolaire.structure to update current structure from viescolaire
             this.$watch(() => window.model.vieScolaire.structure, async () => vm.getAction());
             this.$on(PRESENCES_ACTION.RESPOND, () => vm.getAction());
+            this.$on('reload', vm.getAction);
         }
     }
 };

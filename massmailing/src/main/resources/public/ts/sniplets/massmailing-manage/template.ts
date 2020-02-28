@@ -124,6 +124,10 @@ export const mailTemplateForm = {
             mailTemplateForm.that = this;
             this.vm.syncTemplates('MAIL');
             this.vm.syncTemplates('SMS');
+            this.$on('reload', () => {
+                this.vm.syncTemplates('MAIL');
+                this.vm.syncTemplates('SMS');
+            });
         }
     }
 };

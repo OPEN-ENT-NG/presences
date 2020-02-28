@@ -55,6 +55,7 @@ export const statisticsManage = {
         },
         setHandler: function () {
             this.$watch(() => window.model.vieScolaire.structure, vm.load);
+            this.$on('reload', vm.load);
         }
     }
 };

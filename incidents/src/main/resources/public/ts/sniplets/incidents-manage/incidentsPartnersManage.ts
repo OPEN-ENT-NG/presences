@@ -6,15 +6,20 @@ declare let window: any;
 
 interface ViewModel {
     safeApply(fn?: () => void): void;
+
     form: PartnerRequest;
     partners: Partner[];
 
     hasPartners(): boolean;
+
     proceedAfterAction(response: AxiosResponse): void;
 
     get(): Promise<void>;
+
     create(): Promise<void>;
+
     toggleVisibility(partner: Partner): Promise<void>;
+
     delete(partner: Partner): Promise<void>
 
     openIncidentsManageLightbox(partner: Partner): void;
@@ -24,10 +29,10 @@ function safeApply() {
     let that = incidentsPartnersManage.that;
     return new Promise((resolve, reject) => {
         var phase = that.$root.$$phase;
-        if(phase === '$apply' || phase === '$digest') {
-            if(resolve && (typeof(resolve) === 'function')) resolve();
+        if (phase === '$apply' || phase === '$digest') {
+            if (resolve && (typeof (resolve) === 'function')) resolve();
         } else {
-            if (resolve && (typeof(resolve) === 'function')) that.$apply(resolve);
+            if (resolve && (typeof (resolve) === 'function')) that.$apply(resolve);
             else that.$apply();
         }
     });
@@ -92,8 +97,9 @@ export const incidentsPartnersManage = {
         },
         setHandler: function () {
             // using vieScolaire.structure to update current structure from viescolaire
-            this.$watch(() =>  window.model.vieScolaire.structure, async () => vm.get());
+            this.$watch(() => window.model.vieScolaire.structure, async () => vm.get());
             this.$on(INCIDENTS_PARTNER_EVENT.RESPOND, () => vm.get());
+            this.$on('reload', vm.get);
         }
     }
 };

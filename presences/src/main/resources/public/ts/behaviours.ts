@@ -1,8 +1,8 @@
 import {Behaviours} from 'entcore';
 import {
     absenceForm,
-    disciplineManage,
     absenceMementoWidget,
+    disciplineManage,
     exemptionForm,
     forgottenNotebookForm,
     navigation,
@@ -33,6 +33,6 @@ Behaviours.register('presences', {
         'presences-manage/action-manage/sniplet-presences-action-manage': presencesActionManage,
         'presences-manage/discipline-manage/sniplet-presences-disciplines-manage': disciplineManage,
         'memento/absences': absenceMementoWidget,
-        'presence-form': presenceForm
+        'presence-form': presenceForm,
     }
 });

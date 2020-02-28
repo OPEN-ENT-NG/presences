@@ -7,6 +7,8 @@ import {
 } from "@common/enum/incidents-event";
 import {PRESENCES_ACTION, PRESENCES_DISCIPLINE} from "@common/enum/presences-event";
 import {IAngularEvent} from "angular";
+import {toasts} from "entcore";
+import http from 'axios';
 
 declare let window: any;
 
@@ -20,6 +22,8 @@ interface ViewModel {
     sendEvent(event, data): void;
 
     respondEvent(event, data): void;
+
+    init(): Promise<void>;
 }
 
 function safeApply() {
@@ -37,7 +41,15 @@ function safeApply() {
 
 const vm: ViewModel = {
     safeApply: null,
-
+    async init(): Promise<void> {
+        try {
+            await http.post(`/presences/initialization/structures/${window.model.vieScolaire.structure.id}`);
+            presencesManage.that.$broadcast('reload');
+        } catch (err) {
+            toasts.warning('presences.init.error');
+            throw err;
+        }
+    },
     scrollToElement(target): void {
         let element = document.getElementById(target);
         element.scrollIntoView({behavior: "smooth", block: "center", inline: "nearest"});

@@ -1,4 +1,4 @@
-import {INCIDENTS_PLACE_EVENT, INCIDENTS_TYPE_EVENT} from "@common/enum/incidents-event";
+import {INCIDENTS_PLACE_EVENT} from "@common/enum/incidents-event";
 import {Place, PlaceRequest, placeService} from "@incidents/services";
 import {AxiosResponse} from "axios";
 
@@ -6,15 +6,20 @@ declare let window: any;
 
 interface ViewModel {
     safeApply(fn?: () => void): void;
+
     form: PlaceRequest;
     places: Place[];
-    
+
     hasPlaces(): boolean;
+
     proceedAfterAction(response: AxiosResponse): void;
 
     get(): Promise<void>;
+
     create(): Promise<void>;
+
     toggleVisibility(place: Place): Promise<void>;
+
     delete(place: Place): Promise<void>
 
     openIncidentsManageLightbox(place: Place): void;
@@ -24,10 +29,10 @@ function safeApply() {
     let that = incidentsPlaceManage.that;
     return new Promise((resolve, reject) => {
         var phase = that.$root.$$phase;
-        if(phase === '$apply' || phase === '$digest') {
-            if(resolve && (typeof(resolve) === 'function')) resolve();
+        if (phase === '$apply' || phase === '$digest') {
+            if (resolve && (typeof (resolve) === 'function')) resolve();
         } else {
-            if (resolve && (typeof(resolve) === 'function')) that.$apply(resolve);
+            if (resolve && (typeof (resolve) === 'function')) that.$apply(resolve);
             else that.$apply();
         }
     });
@@ -93,8 +98,9 @@ export const incidentsPlaceManage = {
         },
         setHandler: function () {
             // using vieScolaire.structure to update current structure from viescolaire
-            this.$watch(() =>  window.model.vieScolaire.structure, async () => vm.get());
+            this.$watch(() => window.model.vieScolaire.structure, async () => vm.get());
             this.$on(INCIDENTS_PLACE_EVENT.RESPOND, () => vm.get());
+            this.$on('reload', vm.get);
         }
     }
 };

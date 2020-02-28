@@ -78,12 +78,12 @@ const vm: ViewModel = {
         await vm.save();
     },
 
-    manualUpdateThreshold: async function(input) {
+    manualUpdateThreshold: async function (input) {
         let threshold = input.threshold;
 
-        if(vm.timer != null) clearTimeout(vm.timer);
+        if (vm.timer != null) clearTimeout(vm.timer);
         vm.timer = setTimeout(async () => {
-            vm.setting[input.settingRef] = threshold < 0 ?  0 : threshold;
+            vm.setting[input.settingRef] = threshold < 0 ? 0 : threshold;
             await vm.save();
         }, 200);
     },
@@ -114,6 +114,7 @@ export const presencesAlertManage = {
         },
         setHandler: function () {
             this.$watch(() => window.model.vieScolaire.structure, vm.getThreshold);
+            this.$on('reload', vm.getThreshold);
         }
     }
 };

@@ -163,6 +163,7 @@ export const presencesReasonManage = {
         setHandler: function () {
             // using vieScolaire.structure to update current structure from viescolaire
             this.$watch(() => window.model.vieScolaire.structure, async () => vm.getReasons());
+            this.$on('reload', vm.getReasons);
         }
     }
 };

@@ -6,15 +6,20 @@ declare let window: any;
 
 interface ViewModel {
     safeApply(fn?: () => void): void;
+
     form: ProtagonistTypeRequest;
     protagonistsType: ProtagonistType[];
 
     hasProtagonistTypes(): boolean;
+
     proceedAfterAction(response: AxiosResponse): void;
 
     get(): Promise<void>;
+
     create(): Promise<void>;
+
     toggleVisibility(protagonistType: ProtagonistType): Promise<void>;
+
     delete(protagonistType: ProtagonistType): Promise<void>
 
     openIncidentsManageLightbox(protagonistType: ProtagonistType): void;
@@ -24,10 +29,10 @@ function safeApply() {
     let that = incidentsProtagonistsManage.that;
     return new Promise((resolve, reject) => {
         var phase = that.$root.$$phase;
-        if(phase === '$apply' || phase === '$digest') {
-            if(resolve && (typeof(resolve) === 'function')) resolve();
+        if (phase === '$apply' || phase === '$digest') {
+            if (resolve && (typeof (resolve) === 'function')) resolve();
         } else {
-            if (resolve && (typeof(resolve) === 'function')) that.$apply(resolve);
+            if (resolve && (typeof (resolve) === 'function')) that.$apply(resolve);
             else that.$apply();
         }
     });
@@ -92,8 +97,9 @@ export const incidentsProtagonistsManage = {
         },
         setHandler: function () {
             // using vieScolaire.structure to update current structure from viescolaire
-            this.$watch(() =>  window.model.vieScolaire.structure, async () => vm.get());
+            this.$watch(() => window.model.vieScolaire.structure, async () => vm.get());
             this.$on(INCIDENTS_PROTAGONIST_TYPE_EVENT.RESPOND, () => vm.get());
+            this.$on('reload', vm.get);
         }
     }
 };

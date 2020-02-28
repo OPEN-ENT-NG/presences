@@ -109,6 +109,7 @@ export const disciplineManage = {
             // using vieScolaire.structure to update current structure from viescolaire
             this.$watch(() => window.model.vieScolaire.structure, async () => vm.getDisciplines());
             this.$on(PRESENCES_DISCIPLINE.RESPOND, () => vm.getDisciplines());
+            this.$on('reload', vm.getDisciplines);
         }
     }
 };
