@@ -120,14 +120,16 @@ export const mailTemplateForm = {
     that: null,
     controller: {
         init: function () {
+            function load() {
+                vm.syncTemplates('MAIL');
+                vm.syncTemplates('SMS');
+            }
+
             this.vm = vm;
             mailTemplateForm.that = this;
-            this.vm.syncTemplates('MAIL');
-            this.vm.syncTemplates('SMS');
-            this.$on('reload', () => {
-                this.vm.syncTemplates('MAIL');
-                this.vm.syncTemplates('SMS');
-            });
+            load();
+            this.$on('reload', load);
+            this.$watch(() => window.model.vieScolaire.structure, load);
         }
     }
 };
