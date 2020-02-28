@@ -32,6 +32,7 @@ import org.entcore.common.user.UserInfos;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.*;
+import java.util.stream.Collectors;
 
 
 public class DefaultRegisterService implements RegisterService {
@@ -126,7 +127,9 @@ public class DefaultRegisterService implements RegisterService {
                 LOGGER.error(message, registerIdGroupResult.left().getValue());
                 handler.handle(new Either.Left<>(message));
             } else {
-                groupService.getGroupStudents(registerIdGroupResult.right().getValue().getString("group_id"), studentsIdsResult -> {
+                List<JsonObject> groups = registerIdGroupResult.right().getValue().getList();
+                List<String> ids = groups.stream().map(group -> group.getString("group_id")).collect(Collectors.toList());
+                groupService.getGroupStudents(ids, studentsIdsResult -> {
                     if (studentsIdsResult.isLeft()) {
                         String message = "[Presences@DefaultRegisterService] Failed to retrieve students info";
                         LOGGER.error(message, studentsIdsResult.left().getValue());
@@ -152,10 +155,10 @@ public class DefaultRegisterService implements RegisterService {
         });
     }
 
-    private void getRegisterIdGroup(Long id, Handler<Either<String, JsonObject>> handler) {
+    private void getRegisterIdGroup(Long id, Handler<Either<String, JsonArray>> handler) {
         String query = "SELECT * FROM presences.rel_group_register where register_id = ?";
         JsonArray params = new JsonArray().add(id);
-        Sql.getInstance().prepared(query, params, SqlResult.validUniqueResultHandler(handler));
+        Sql.getInstance().prepared(query, params, SqlResult.validResultHandler(handler));
     }
 
     private void matchAbsenceToEvent(JsonObject finalResult, List<String> users, UserInfos user, Handler<Either<String, JsonArray>> handler) {
