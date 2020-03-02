@@ -72,6 +72,7 @@ const vm: ViewModel = {
 
     openPresenceLightbox(): void {
         vm.globalSearch = new GlobalSearch(window.structure.id, SearchService, GroupService);
+        vm.globalSearch.search = '';
         vm.createPresenceLightBox = true;
         vm.initPresence();
         vm.safeApply();

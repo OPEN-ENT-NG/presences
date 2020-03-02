@@ -48,9 +48,12 @@ export const asyncAutocomplete = ng.directive('asyncAutocomplete', ['$timeout', 
         $scope.translate = lang.translate;
         $scope.search = $scope.search || "";
 
+        /**
+         * using $timeout instead of safe.$apply() for avoiding "digest already apply" from post :
+         * https://stackoverflow.com/questions/12729122/angularjs-prevent-error-digest-already-in-progress-when-calling-scope-apply
+         */
         const setLoadingStatus = (status: boolean = true) => {
-            $scope.loading = status;
-            $scope.$apply();
+            $timeout(() => $scope.loading = status);
         };
 
         const endUserTyping = () => {
@@ -60,10 +63,11 @@ export const asyncAutocomplete = ng.directive('asyncAutocomplete', ['$timeout', 
         };
 
         $scope.$watch('options', (newVal) => {
-            $scope.match = newVal;
-            cancelAnimationFrame(token);
-            setLoadingStatus(false);
-            $scope.$apply();
+            $timeout(() => {
+                $scope.match = newVal;
+                cancelAnimationFrame(token);
+                setLoadingStatus(false);
+            });
         });
 
         $scope.select = (option) => $scope.$eval($scope.ngChange)($scope.ngModel, option);
@@ -122,8 +126,7 @@ export const asyncAutocomplete = ng.directive('asyncAutocomplete', ['$timeout', 
                 setLoadingStatus(false);
                 return;
             } else {
-                $scope.search = newVal;
-                $scope.$apply();
+                $timeout(() => $scope.search = newVal);
             }
         });
     }
