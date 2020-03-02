@@ -136,6 +136,7 @@
   "presences.from": "Du",
   "presences.home": "Accueil",
   "presences.incidents": "Incidents",
+  "presences.incident.place.form.input.placeholder": "Cour de récréation, classe...",
   "presences.input": "Saisir",
   "presences.lateness.reason": "Motif du retard",
   "presences.months": "Mois",
