@@ -1,6 +1,7 @@
 package fr.openent.massmailing;
 
 import fr.openent.massmailing.controller.EventBusController;
+import fr.openent.massmailing.controller.MailingController;
 import fr.openent.massmailing.controller.MassmailingController;
 import fr.openent.massmailing.controller.SettingsController;
 import fr.openent.massmailing.enums.MailingType;
@@ -25,6 +26,8 @@ public class Massmailing extends BaseServer {
     public static final String MANAGE = "massmailing.manage";
     public static final String VIEW = "massmailing.view";
 
+    public static Integer PAGE_SIZE = 20;
+
     static HashMap<MailingType, Boolean> types;
     public static EmailSender emailSender;
     public static WorkspaceHelper workspaceHelper;
@@ -39,6 +42,7 @@ public class Massmailing extends BaseServer {
         addController(new MassmailingController(eb));
         addController(new SettingsController(eb));
         addController(new EventBusController());
+        addController(new MailingController(eb));
 
         Presences.getInstance().init(eb);
         Viescolaire.getInstance().init(eb);

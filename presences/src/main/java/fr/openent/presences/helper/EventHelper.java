@@ -295,7 +295,7 @@ public class EventHelper {
                 List<RegisterEvent> registerEvents = fr.openent.presences.helper.RegisterHelper
                         .getRegisterEventListFromJsonArray(registerEventFuture.result());
                 List<Student> students = personHelper.getStudentListFromJsonArray(
-                        studentsInfosFuture.result(), Student.MANDATORY_ATTRIBUTE
+                        studentsInfosFuture.result()
                 );
                 for (Event event : events) {
                     for (Student student : students) {

@@ -34,6 +34,6 @@ export const mainController = ng.controller('MainController', ['$scope', 'route'
 
         route({
             home: () => template.open('content', 'home'),
-            history: () => template.open('content', 'history')
+            history: () => template.open('content', `history/history`)
         });
     }]);

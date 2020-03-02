@@ -3,24 +3,14 @@ package fr.openent.presences.model.Person;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 
-import java.util.ArrayList;
-import java.util.List;
-
 public class Student extends Person implements Cloneable {
-
-    public static List<String> MANDATORY_ATTRIBUTE = new ArrayList<>();
 
     private String classId;
     private String className;
     private JsonArray dayHistory;
 
-    public Student(JsonObject student, List<String> mandatoryAttributes) {
+    public Student(JsonObject student) {
         super();
-        for (String attribute : mandatoryAttributes) {
-            if (!student.containsKey(attribute) || student.getValue(attribute) == null) {
-                throw new IllegalArgumentException("[Presences@StudentModel] mandatory attribute not present " + attribute);
-            }
-        }
         this.id = student.getString("id", null);
         this.displayName = student.getString("displayName", null);
         this.classId = student.getString("classId", null);

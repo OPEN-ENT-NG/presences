@@ -190,7 +190,7 @@ public class DefaultPresenceService implements PresenceService {
                     handler.handle(Future.failedFuture(message + studentAsync.left().getValue()));
                 }
                 List<Student> students = personHelper.getStudentListFromJsonArray(
-                        studentAsync.right().getValue(), Student.MANDATORY_ATTRIBUTE
+                        studentAsync.right().getValue()
                 );
                 for (MarkedStudent markedStudent : markedStudents) {
                     for (Student student : students) {

@@ -4,16 +4,18 @@
     </h1>
 </div>
 <div class="row menu">
+    <!-- massmailing -->
     <div class="cell menu-item">
         <a href="#/" ng-class="{'current-state': vm.homeState()}">
             <i18n>massmailing.home.title</i18n>
         </a>
     </div>
-    <!--    <div class="cell menu-item">-->
-    <!--        <a href="#/history" ng-class="{'current-state': vm.historyState()}">-->
-    <!--            <i18n>massmailing.history.title</i18n>-->
-    <!--        </a>-->
-    <!--    </div>-->
+    <!-- massmailing history -->
+    <div class="cell menu-item">
+        <a href="#/history" ng-class="{'current-state': vm.historyState()}">
+            <i18n>massmailing.history.title</i18n>
+        </a>
+    </div>
 </div>
 <div class="massmailing-content row">
     <container template="content"></container>

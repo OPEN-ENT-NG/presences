@@ -1,4 +1,4 @@
-package fr.openent.presences.helper;
+package fr.openent.presences.common.helper;
 
 import fr.openent.presences.model.Person.Student;
 import fr.openent.presences.model.Person.User;

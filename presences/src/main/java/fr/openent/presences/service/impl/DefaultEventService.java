@@ -500,7 +500,7 @@ public class DefaultEventService implements EventService {
                         }
 
                         JsonObject slotSetting = evt.right().getValue();
-                        if (slotSetting.containsKey("end_of_half_day")) {
+                        if (slotSetting.containsKey("end_of_half_day") && slotSetting.getString("end_of_half_day") != null) {
                             String halfOfDay = slotSetting.getString("end_of_half_day");
                             JsonObject morningQuery = getEventQuery(eventType, students, structure, justified,
                                     reasonsId, massmailed, startDate, endDate, noReasons, recoveryMethod, defaultStartTime, halfOfDay);
@@ -513,7 +513,9 @@ public class DefaultEventService implements EventService {
                                     .addAll(afternoonQuery.getJsonArray("params"));
                             Sql.getInstance().prepared(query, params, SqlResult.validResultHandler(handler));
                         } else {
-                            handler.handle(new Either.Left<>("Structure does not initialize end of half day"));
+                            String message = "[Presences@DefaultEventService] Structure does not initialize end of half day";
+                            LOGGER.error(message);
+                            handler.handle(new Either.Left<>(message));
                         }
                     });
             }
