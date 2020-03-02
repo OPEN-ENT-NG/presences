@@ -1,8 +1,7 @@
 import http, {AxiosResponse} from 'axios';
 import {_, moment} from 'entcore';
 import {DateUtils} from '@common/utils'
-import {EventType} from "./EventType";
-import {LoadingCollection} from "@common/model";
+import {EventType, LoadingCollection} from "@common/model";
 import {Reason} from "@presences/models/Reason";
 import {EventsUtils} from "../utilities";
 import {User} from "@common/model/User";

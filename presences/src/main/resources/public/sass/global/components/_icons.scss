@@ -208,4 +208,19 @@ i {
     font-family: 'material-icons';
     content: '\F188';
   }
+
+  &.phone-android:before {
+    font-family: 'material-icons';
+    content: '\F11D';
+  }
+
+  &.email:before {
+    font-family: 'material-icons';
+    content: '\F1EE';
+  }
+
+  &.pdf:before {
+    font-family: 'material-icons';
+    content: '\F225';
+  }
 }

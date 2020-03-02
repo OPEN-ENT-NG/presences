@@ -34,4 +34,14 @@ $status-max-width: 250px;
       height: 120px;
     }
   }
+
+  .empty-content-evenly {
+    display: flex;
+    align-items: center;
+    justify-content: space-evenly;
+
+    .empty-content {
+      margin: 0;
+    }
+  }
 }

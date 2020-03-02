@@ -1,6 +1,6 @@
 export * from './Course';
 export * from './Register';
-export * from './EventType';
+export * from '@common/model/EventType';
 export * from './Event';
 export * from './Preferences';
 export * from './RegisterStatus';

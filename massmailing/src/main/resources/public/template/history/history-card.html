@@ -1,0 +1,13 @@
+<div class="massmailing-card">
+    <!-- title section -->
+    <section class="massmailing-card-header">
+       <span class="massmailing-card-header-title">
+           <i18n>massmailing.message.sent</i18n>&nbsp;[[vm.selectedMailing.student.displayName]]
+       </span>
+    </section>
+
+    <!-- body section -->
+    <section class="massmailing-card-body">
+        <span class="massmailing-card-body-descriptionHTML" ng-bind-html="vm.selectedMailing.content"></span>
+    </section>
+</div>

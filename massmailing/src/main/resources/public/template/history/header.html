@@ -1,0 +1,88 @@
+<section class="history-header">
+
+    <!-- search bar section -->
+    <div class="history-header-search">
+
+        <!-- Students search bar -->
+        <div class="history-header-search-bar">
+            <div class="search-input">
+                <async-autocomplete data-ng-disabled="false"
+                                    data-ng-model="vm.studentsSearch.student"
+                                    data-ng-change="vm.selectStudent"
+                                    data-on-search="vm.searchStudent"
+                                    data-options="vm.studentsSearch.students"
+                                    data-placeholder="presences.exemptions.search.student"
+                                    data-search="vm.studentsSearch.student">
+                </async-autocomplete>
+            </div>
+            <div class="cell twelve">
+                <ul class="cell twelve search-input-ul" data-ng-show="vm.studentsSearch.selectedStudents.length > 0">
+                    <li ng-repeat="student in vm.studentsSearch.selectedStudents">
+                        [[student.toString()]] <i class="close"
+                                                  data-ng-click="vm.removeSelectedStudents(student)"></i>
+                    </li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- Groups search bar -->
+        <div class="history-header-search-bar">
+            <div class="search-input">
+                <async-autocomplete data-ng-disabled="false"
+                                    data-ng-model="vm.groupsSearch.group"
+                                    data-ng-change="vm.selectGroup"
+                                    data-on-search="vm.searchGroup"
+                                    data-options="vm.groupsSearch.groups"
+                                    data-placeholder="presences.search.class"
+                                    data-search="vm.groupsSearch.group">
+                </async-autocomplete>
+            </div>
+            <div class="cell twelve">
+                <ul class="cell twelve search-input-ul" data-ng-show="vm.groupsSearch.selectedGroups.length > 0">
+                    <li ng-repeat="group in vm.groupsSearch.selectedGroups">
+                        [[group.toString()]] <i class="close"
+                                                data-ng-click="vm.removeSelectedGroups(group)"></i>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <!-- Date filter -->
+    <div class="row">
+        <div class="date-filters cell">
+            <span><i18n>massmailing.from</i18n> &#58;</span>
+            <span class="date-picker">
+            <date-picker ng-model="vm.filter.start_date" ng-change="vm.updateFilter()"></date-picker></span>
+            <span><i18n>massmailing.to</i18n> &#58;</span>
+            <span class="date-picker">
+                <date-picker ng-model="vm.filter.end_date" ng-change="vm.updateFilter()"></date-picker>
+            </span>
+        </div>
+    </div>
+
+    <!-- Filter -->
+    <div class="row vertical-spacing-twice">
+        <!-- Form lightbox icon-->
+        <i class="filter cell" data-ng-click="vm.openMailingLightbox()">&nbsp;</i>
+
+        <!-- Mailing Types filter -->
+        <div class="cell" ng-repeat="mailType in vm.filter.mailTypes">
+            <div class="card horizontal-margin-small horizontal-spacing" ng-if="mailType.isSelected">
+                <span>[[mailType.label]]</span>
+            </div>
+        </div>
+
+        <!-- Event Types filter -->
+        <div class="cell" ng-repeat="eventType in vm.filter.event_types">
+            <div class="card horizontal-margin-small horizontal-spacing" ng-if="eventType.isSelected">
+                <span>[[lang.translate(eventType.label)]]</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- filter lightbox form -->
+    <lightbox show="vm.mailingLightbox.isOpen" on-close="vm.mailingLightbox.isOpen = false" class="history-lightbox">
+        <div ng-include="'/massmailing/public/template/history/history-lightbox.html'"></div>
+    </lightbox>
+</section>

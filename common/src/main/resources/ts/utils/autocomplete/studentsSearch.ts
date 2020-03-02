@@ -1,6 +1,6 @@
 import {User} from "@common/model/User";
 import {SearchService} from "@common/services/SearchService";
-import {AutoCompleteUtils} from "../autocomplete";
+import {AutoCompleteUtils} from "./auto-complete";
 
 /**
  * ⚠ This class is used for the directive async-autocomplete
@@ -26,6 +26,10 @@ export class StudentsSearch extends AutoCompleteUtils {
 
     public getSelectedStudents() {
         return this.selectedStudents;
+    }
+
+    public setSelectedStudents(selectedStudents: Array<{}>) {
+        this.selectedStudents = selectedStudents;
     }
 
     public removeSelectedStudents(studentItem) {

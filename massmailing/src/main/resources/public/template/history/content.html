@@ -1,0 +1,35 @@
+<section class="history-body">
+
+    <loader data-ng-show="vm.mailings.loading" min-height="'250px'"/>
+
+    <div data-ng-show="!vm.mailings.loading">
+        <!-- Content -->
+        <div class="horizontal-spacing-twice massmail-anomalies row vertical-spacing-six"
+             data-ng-show="vm.mailings.mailingResponse.all.length > 0">
+            <!-- Access list of history inside content -->
+            <div ng-include="'/massmailing/public/template/history/history-list.html'"></div>
+        </div>
+
+        <!-- Empty state -->
+        <div class="empty horizontal-spacing-twice massmail-status row vertical-spacing-six"
+             data-ng-show="vm.mailings.mailingResponse.all.length === 0">
+            <div class="empty-content-evenly">
+                <img data-ng-src="/presences/public/img/absences_empty.svg" class="four" alt="">
+                <span class="empty-content">
+                    <span class="red-bar bar"></span>
+                    <span class="title">
+                        <i18n>massmailing.empty</i18n>
+                    </span>
+                    <span class="yellow-bar bar"></span>
+                </span>
+            </div>
+        </div>
+
+        <!-- pagination history list -->
+        <pagination data-page-count="vm.mailings.mailingResponse.page_count"
+                    data-page-number="vm.mailings.mailingResponse.page"
+                    data-ng-click="vm.changePagination()"
+                    class="pagination">
+        </pagination>
+    </div>
+</section>

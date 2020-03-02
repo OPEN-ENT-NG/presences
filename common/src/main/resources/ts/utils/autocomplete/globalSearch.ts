@@ -1,6 +1,6 @@
 import {SearchItem, SearchService} from "@common/services/SearchService";
-import {AutoCompleteUtils} from "../autocomplete";
 import {GroupService} from "@common/services";
+import {AutoCompleteUtils} from "./auto-complete";
 
 /**
  * ⚠ This class is used for the directive async-autocomplete

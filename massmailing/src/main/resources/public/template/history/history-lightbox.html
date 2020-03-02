@@ -1,0 +1,103 @@
+<!-- Title -->
+<section class="head massmailing-lightbox-header">
+    <h3>
+        <i18n>massmailing.filters</i18n>
+    </h3>
+</section>
+
+<!-- Body -->
+<section class="massmailing-lightbox-body body lightbox-form">
+    <!-- search bar section -->
+
+    <div class="row vertical-spacing">
+        <!-- Students search bar -->
+        <div class="cell six paddingRight">
+            <div class="cell twelve">
+                <async-autocomplete data-ng-disabled="false"
+                                    data-ng-model="vm.studentsSearchLightbox.student"
+                                    data-ng-change="vm.selectStudentLightbox"
+                                    data-on-search="vm.searchStudentLightbox"
+                                    data-options="vm.studentsSearchLightbox.students"
+                                    data-placeholder="presences.exemptions.search.student"
+                                    data-search="vm.studentsSearchLightbox.student">
+                </async-autocomplete>
+            </div>
+            <div class="cell twelve">
+                <ul class="cell twelve search-input-ul"
+                    data-ng-show="vm.studentsSearchLightbox.selectedStudents.length > 0">
+                    <li ng-repeat="student in vm.studentsSearchLightbox.selectedStudents">
+                        [[student.toString()]] <i class="close"
+                                                  data-ng-click="vm.removeSelectedStudentsLightbox(student)"></i>
+                    </li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- Groups search bar -->
+        <div class="cell six paddingLeft">
+            <div class="cell twelve">
+                <async-autocomplete data-ng-disabled="false"
+                                    data-ng-model="vm.groupsSearchLightbox.group"
+                                    data-ng-change="vm.selectGroupLightbox"
+                                    data-on-search="vm.searchGroupLightbox"
+                                    data-options="vm.groupsSearchLightbox.groups"
+                                    data-placeholder="presences.search.class"
+                                    data-search="vm.groupsSearchLightbox.group">
+                </async-autocomplete>
+            </div>
+            <div class="cell twelve">
+                <ul class="cell twelve search-input-ul"
+                    data-ng-show="vm.groupsSearchLightbox.selectedGroups.length > 0">
+                    <li ng-repeat="group in vm.groupsSearchLightbox.selectedGroups">
+                        [[group.toString()]] <i class="close"
+                                                data-ng-click="vm.removeSelectedGroupsLightbox(group)"></i>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <!-- Mailing Types filter -->
+    <div class="row vertical-spacing">
+        <h4 class="header-lightbox">
+            <i18n>massmailing.filters.type</i18n>
+        </h4>
+        <div class="chips">
+            <div class="chip"
+                 ng-repeat="mailType in vm.mailingLightbox.mailTypes"
+                 ng-class="{ selected: mailType.isSelected }"
+                 data-ng-click="mailType.isSelected = !mailType.isSelected">
+                <span>[[mailType.label]]</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Event Types filter -->
+    <div class="row vertical-spacing">
+        <h4 class="header-lightbox">
+            <i18n>massmailing.filters.massmailing</i18n>
+        </h4>
+        <div class="chips">
+            <div class="chip"
+                 ng-repeat="eventType in vm.mailingLightbox.event_types"
+                 ng-class="{ selected: eventType.isSelected }"
+                 data-ng-click="eventType.isSelected = !eventType.isSelected">
+                <span>[[lang.translate(eventType.label)]]</span>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Footer -->
+<section class="massmailing-lightbox-footer">
+    <div class="row horizontal-spacing">
+        <div class="massmailing-lightbox-footer-submit twelve cell">
+            <button class="right-magnet" data-ng-click="vm.validMailingLightboxForm()">
+                <i18n>massmailing.validate</i18n>
+            </button>
+            <button class="right-magnet cancel" data-ng-click="vm.mailingLightbox.isOpen = false">
+                <i18n>massmailing.cancel</i18n>
+            </button>
+        </div>
+    </div>
+</section>

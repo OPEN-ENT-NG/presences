@@ -1,0 +1,58 @@
+<section class="history-body-content">
+    <!-- list -->
+    <div id="history" class="history-body-content-history flex-table">
+        <!-- titles -->
+        <div class="flex-row flex-head row__15">
+            <span class="flex-col col__1 text-center"><i18n>massmailing.filters.type</i18n></span>
+            <span class="flex-col col__4 text-center"><i18n>massmailig.student</i18n></span>
+            <span class="flex-col col__5 text-center"><i18n>massmailing.class</i18n></span>
+            <span class="flex-col col__5 text-center"><i18n>massmailing.relative</i18n></span>
+        </div>
+        <!-- history lists -->
+        <div class="history-body-content-history-list flex-row" ng-repeat="date in vm.mailings.keysOrder">
+            <!-- Date area -->
+            <div class="history-body-content-history-list-date flex-row row__15">
+                <div class="history-body-content-history-list-date-info flex-col col__6">
+                    <i18n>massmailing.date.from</i18n>
+                    <span>[[::vm.formatDayDate(date)]]</span>
+                </div>
+            </div>
+
+            <!-- List of history from this date -->
+            <div class="history-body-content-history-list-student flex-body"
+                 ng-repeat="mailing in vm.mailings.map[date] | orderBy:'timestamp' track by $index"
+                 ng-class="{'active': mailing.isSelected}">
+                <div class="flex-content">
+                    <div class="flex-row row__15">
+
+                        <!-- type-->
+                        <div class="flex-col col__1">
+                            <label class="checkbox">
+                                <input type="checkbox"
+                                       data-ng-model="mailing.isSelected"
+                                       data-ng-change="vm.switchMailingHistory(mailing)">
+                                <span></span>
+                            </label>
+                        </div>
+
+                        <!-- student info -->
+                        <div class="history-body-content-history-list-student-info flex-col col__4">
+                            <i class="[[vm.getIcons(mailing.type)]]"></i>
+                            <span>[[mailing.student.displayName]]</span>
+                        </div>
+
+                        <!-- student className -->
+                        <span class="flex-col col__5">[[mailing.student.classeName]]</span>
+
+                        <!-- student's relative -->
+                        <span class="flex-col col__5">[[mailing.recipient.displayName]]</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- side card -->
+    <div class="history-body-content-card" id="sidebar" ng-style="{opacity: vm.selectedMailing != undefined ? 1 : 0}">
+        <div ng-include="'/massmailing/public/template/history/history-card.html'"></div>
+    </div>
+</section>

@@ -1,0 +1,51 @@
+/* body */
+.history-body {
+  .pagination {
+    margin: 0 8px 8px;
+  }
+}
+
+/* history-list */
+.history-body-content {
+  display: flex;
+  justify-content: center;
+  align-items: start;
+
+  &-history {
+    padding-right: 16px;
+
+    &.flex-table {
+      background-color: $presences-white;
+    }
+
+    // student list section
+    &-list {
+      &-date {
+        background-color: $presences-grey-clear;
+        border-bottom: 1px solid $presences-white;
+
+        &-info {
+          justify-content: space-evenly !important;
+        }
+      }
+
+      &-student {
+        border-bottom: solid 1px $presences-grey-clear;
+
+        &.active {
+          background-color: $presences-grey-clear;
+          border-bottom: solid 1px $presences-white;
+        }
+
+        &-info {
+          justify-content: space-around !important;
+        }
+      }
+    }
+  }
+
+  // side card
+  &-card {
+    padding-left: 16px;
+  }
+}
