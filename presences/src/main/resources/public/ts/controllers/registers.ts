@@ -166,9 +166,9 @@ export const registersController = ng.controller('RegistersController',
                     if ('filter' in window && window.filter) {
                         vm.filter = {...vm.filter, ...window.filter};
                     }
+                    template.open('register', 'register/list-view');
+                    template.open('register-panel', 'register/panel');
                     if (vm.register !== undefined) {
-                        template.open('register', 'register/list-view');
-                        template.open('register-panel', 'register/panel');
                         let promises = [vm.register.sync()];
                         if (vm.filter.course) {
                             if (vm.filter.course.teachers.length > 0) {
@@ -190,6 +190,7 @@ export const registersController = ng.controller('RegistersController',
                             if (vm.register.teachers.length > 0 && _.countBy(vm.register.teachers, (teacher) => teacher.id === vm.filter.selected.registerTeacher.id) === 0)
                                 vm.filter.selected.registerTeacher = vm.register.teachers[0];
                         }
+                        // vm.openRegister(null, null);
                     }
                 },
                 forgottenRegisterWidget: () => vm.loadCourses(extractSelectedTeacherIds(), extractSelectedGroupsName()),
@@ -741,6 +742,7 @@ export const registersController = ng.controller('RegistersController',
             };
 
             function startAction() {
+                console.warn('startAction');
                 switch ($route.current.action) {
                     case 'getRegister':
                     case 'registers': {
@@ -762,10 +764,22 @@ export const registersController = ng.controller('RegistersController',
                 }
             }
 
-            $scope.$watch(() => window.structure, startAction);
-            $scope.$watch(() => $route.current.action, startAction);
-            startAction();
+            $scope.$watch(() => window.structure, (newVal, oldVal) => {
+                if (newVal.id === oldVal.id) return;
+                console.warn(`$scope.$watch window.structure: ${newVal.id}, ${oldVal.id}`);
+                startAction();
+            });
+            $scope.$watch(() => $route.current.action, (newVal, oldVal) => {
+                if (
+                    (newVal === oldVal && !(newVal === 'dashboard' && oldVal === 'dashboard'))
+                    || (newVal === 'registers' && oldVal === 'dashboard')
+                    || (newVal === 'getRegister' && oldVal === 'dashboard')
+                ) return;
+                console.warn(`$scope.$watch $route.current.action: ${newVal}, ${oldVal}`);
+                startAction();
+            });
 
+            startAction();
             $scope.$on(COURSE_EVENTS.OPEN_REGISTER, (event: IAngularEvent, args) => vm.openRegister(args, null));
 
             /* Destroy */
