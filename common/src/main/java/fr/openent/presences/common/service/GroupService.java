@@ -53,4 +53,9 @@ public interface GroupService {
      * @param handler FUnction handler returning data
      */
     void getGroupStudents(List<String> groups, Handler<Either<String, JsonArray>> handler);
+
+    // Define this new service to fix some performance issues. Maybe refactor later ?
+    void getFunctionalAndManualGroupsStudents(List<String> groups, Handler<Either<String, JsonArray>> handler);
+
+    void getClassesStudents(List<String> classes, Handler<Either<String, JsonArray>> handler);
 }

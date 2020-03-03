@@ -32,6 +32,7 @@ import org.entcore.common.user.UserInfos;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.*;
+import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
 
@@ -498,13 +499,33 @@ public class DefaultRegisterService implements RegisterService {
      */
     private void getUsers(JsonArray groups, Handler<Either<String, JsonArray>> handler) {
         List<Future> futures = new ArrayList<>();
-
+        List<Future> groupsFutures = new ArrayList<>();
+        List<Future> classesFutures = new ArrayList<>();
+        List<String> groupIdentifiers = new ArrayList<>();
+        List<String> classIdentifiers = new ArrayList<>();
         for (int i = 0; i < groups.size(); i++) {
-            Future future = Future.future();
             JsonObject group = groups.getJsonObject(i);
-            GroupType type = "CLASS".equals(group.getString("type")) ? GroupType.CLASS : GroupType.GROUP;
-            groupService.getGroupUsers(group.getString("id"), type, FutureHelper.handlerJsonArray(future));
+            if ("CLASS".equals(group.getString("type"))) classIdentifiers.add(group.getString("id"));
+            else groupIdentifiers.add(group.getString("id"));
+        }
+
+        if (!groupIdentifiers.isEmpty()) {
+            Future future = Future.future();
             futures.add(future);
+            groupsFutures.add(future);
+            groupService.getFunctionalAndManualGroupsStudents(groupIdentifiers, FutureHelper.handlerJsonArray(future));
+        }
+
+        if (!classIdentifiers.isEmpty()) {
+            Future future = Future.future();
+            futures.add(future);
+            classesFutures.add(future);
+            groupService.getClassesStudents(classIdentifiers, FutureHelper.handlerJsonArray(future));
+        }
+
+        if (futures.isEmpty()) {
+            handler.handle(new Either.Right<>(new JsonArray()));
+            return;
         }
 
         CompositeFuture.all(futures).setHandler(event -> {
@@ -514,18 +535,22 @@ public class DefaultRegisterService implements RegisterService {
             } else {
                 JsonArray res = new JsonArray();
                 HashMap<String, Boolean> map = new HashMap<>();
-                for (int i = 0; i < futures.size(); i++) {
-                    JsonArray users = (JsonArray) futures.get(i).result();
+
+                Consumer<Future> mapFunction = future -> {
+                    JsonArray users = (JsonArray) future.result();
                     JsonObject user;
                     for (int j = 0; j < users.size(); j++) {
                         user = users.getJsonObject(j);
-                        user.put("groupId", groups.getJsonObject(i).getString("id"));
                         if (!map.containsKey(user.getString("id"))) {
                             map.put(user.getString("id"), true);
                             res.add(user);
                         }
                     }
-                }
+                };
+
+                if (!groupsFutures.isEmpty()) groupsFutures.forEach(mapFunction);
+                if (!classesFutures.isEmpty()) classesFutures.forEach(mapFunction);
+
                 handler.handle(new Either.Right<>(res));
             }
         });

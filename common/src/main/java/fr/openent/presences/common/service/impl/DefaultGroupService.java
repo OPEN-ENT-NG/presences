@@ -109,6 +109,28 @@ public class DefaultGroupService implements GroupService {
         Neo4j.getInstance().execute(query, params, Neo4jResult.validResultHandler(handler));
     }
 
+    @Override
+    public void getFunctionalAndManualGroupsStudents(List<String> groups, Handler<Either<String, JsonArray>> handler) {
+        String query = "MATCH (fg:FunctionalGroup)<-[:IN]-(u:User {profiles:['Student']}) " +
+                "WHERE fg.id IN {identifiers} " +
+                "RETURN u.id as id, u.birthDate as birthDate, u.lastName as lastName, u.firstName as firstName, fg.id as groupId " +
+                "UNION " +
+                "MATCH (mg:ManualGroup)<-[:IN]-(u:User {profiles:['Student']}) " +
+                "WHERE mg.id IN {identifiers} " +
+                "RETURN u.id as id, u.birthDate as birthDate, u.lastName as lastName, u.firstName as firstName, mg.id as groupId";
+        JsonObject params = new JsonObject().put("identifiers", new JsonArray(groups));
+        Neo4j.getInstance().execute(query, params, Neo4jResult.validResultHandler(handler));
+    }
+
+    @Override
+    public void getClassesStudents(List<String> classes, Handler<Either<String, JsonArray>> handler) {
+        String query = "MATCH (c:Class)<-[:DEPENDS]-(:ProfileGroup)<-[:IN]-(u:User {profiles: ['Student']}) " +
+                "WHERE c.id IN {identifiers} " +
+                "RETURN u.id as id, u.birthDate as birthDate, u.lastName as lastName, u.firstName as firstName, c.id as groupId";
+        JsonObject params = new JsonObject().put("identifiers", new JsonArray(classes));
+        Neo4j.getInstance().execute(query, params, Neo4jResult.validResultHandler(handler));
+    }
+
     /**
      * Retrieves identifiers based on name
      *
