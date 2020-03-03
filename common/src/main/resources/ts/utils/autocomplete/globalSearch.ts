@@ -26,8 +26,6 @@ export class GlobalSearch extends AutoCompleteUtils {
     constructor(structureId: string, searchService: SearchService, groupService: GroupService) {
         super(structureId, searchService);
         this.groupService = groupService;
-        this.searchItems = [];
-        this.selectedItems = [];
     }
 
     public getItems() {
@@ -66,6 +64,7 @@ export class GlobalSearch extends AutoCompleteUtils {
     };
 
     public async searchStudentsOrGroups(valueInput: string) {
+        this.searchItems = [];
         try {
             this.searchItems = await this.searchService.search(this.structureId, valueInput);
         } catch (err) {
@@ -75,6 +74,7 @@ export class GlobalSearch extends AutoCompleteUtils {
     };
 
     public async getStudentsFromGroup(id: string, type: string) {
+        this.students = [];
         try {
             this.students = await this.groupService.getStudentsFromGroupId(id, type);
         } catch (err) {

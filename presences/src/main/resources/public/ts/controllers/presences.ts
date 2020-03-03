@@ -69,17 +69,24 @@ export const presencesController = ng.controller('PresencesController',
                 }
             };
 
-            vm.presences = new Presences(window.structure.id);
+            vm.presences = undefined;
             vm.presencesRequest = {} as PresenceRequest;
 
             /* Init search bar */
-            vm.studentsSearch = new StudentsSearch(window.structure.id, searchService);
-            vm.usersSearch = new UsersSearch(window.structure.id, searchService);
+            vm.studentsSearch = undefined;
+            vm.usersSearch = undefined;
 
             /* presenceFilter keys dynamically : [mine] */
             vm.presencesFilter = Object.keys(vm.filter.presencesFilter);
 
             const startAction = () => {
+                vm.presences = new Presences(window.structure.id);
+                vm.studentsSearch = new StudentsSearch(window.structure.id, searchService);
+                vm.usersSearch = new UsersSearch(window.structure.id, searchService);
+
+                /* event */
+                vm.presences.eventer.on('loading::true', () => $scope.safeApply());
+                vm.presences.eventer.on('loading::false', () => $scope.safeApply());
                 switch ($route.current.action) {
                     case 'dashboard': {
                         actions.dayPresencesWidget();
@@ -185,16 +192,15 @@ export const presencesController = ng.controller('PresencesController',
                 vm.updateFilter();
             };
 
-
-            /* event */
-            vm.presences.eventer.on('loading::true', () => $scope.safeApply());
-            vm.presences.eventer.on('loading::false', () => $scope.safeApply());
-
             $scope.$on(SNIPLET_FORM_EMIT_EVENTS.CREATION, startAction);
             $scope.$on(SNIPLET_FORM_EMIT_EVENTS.EDIT, startAction);
             $scope.$on(SNIPLET_FORM_EMIT_EVENTS.DELETE, startAction);
 
             /* on  (watch) */
-            $scope.$watch(() => window.structure, startAction);
+            $scope.$watch(() => window.structure, () => {
+                if ('structure' in window) {
+                    startAction();
+                }
+            });
 
         }]);

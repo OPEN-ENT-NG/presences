@@ -867,13 +867,14 @@ export const eventsController = ng.controller('EventsController', ['$scope', '$r
 
         /* on  (watch) */
         $scope.$watch(() => window.structure, async () => {
-            await loadReasonTypes();
-            await loadFormFilter();
-            await Promise.all([
-                await getEvents(),
-                await getActions(),
-            ]);
-
+            if ('structure' in window) {
+                await loadReasonTypes();
+                await loadFormFilter();
+                await Promise.all([
+                    getEvents(),
+                    getActions(),
+                ]);
+            }
         });
 
         /* Destroy directive and scope */
