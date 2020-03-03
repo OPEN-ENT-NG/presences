@@ -1,6 +1,8 @@
 import {Course, CourseEvent, Notebook, TimeSlot} from "../../services";
-import {_, moment} from "entcore";
+import {moment} from "entcore";
 import {DateUtils} from "@common/utils";
+
+declare const window: any;
 
 export class CalendarUtils {
 
@@ -85,64 +87,22 @@ export class CalendarUtils {
             } else {
                 absenceElement.style.height = `${oneTimeSlotHeight * slotsIndexFetched.length}px`;
             }
-            absenceElement.style.position = 'relative';
+            absenceElement.style.position = 'absolute';
         }
     }
 
     static positionAbsence(event: CourseEvent, item, slots: Array<TimeSlot>) {
-
-        function getSplitCourseEventsIds(itemSplitCourse: Course[]): number[] {
-            let splitCourseEventsId = [];
-            itemSplitCourse.map(item => {
-                if (item.eventId) {
-                    splitCourseEventsId.push(item.eventId);
-                }
-            });
-            return splitCourseEventsId
+        const {id} = item;
+        const courseSlotsIndexes = window.model.calendar.getSlotsIndex(item.startDate, item.endDate);
+        const eventSlotsIndexes = window.model.calendar.getSlotsIndex(event.start_date, event.end_date);
+        if (courseSlotsIndexes.length === 0 || eventSlotsIndexes.length === 0) return;
+        const topDifference = courseSlotsIndexes.indexOf(eventSlotsIndexes[0]);
+        if (topDifference === -1) return;
+        const topMargin = topDifference * window.entcore.calendar.dayHeight;
+        const el = document.getElementById(event.id.toString());
+        if (el) {
+            el.style.top = `${topMargin}px`;
         }
-
-        const daySlotHeight = document.querySelector(".day").clientHeight;
-        const oneTimeSlotHeight = daySlotHeight / slots.length;
-        const eventStartDate = DateUtils.format(event.start_date, DateUtils.FORMAT["YEAR-MONTH-DAY-HOUR-MIN-SEC"]);
-        const eventEndDate = DateUtils.format(event.end_date, DateUtils.FORMAT["YEAR-MONTH-DAY-HOUR-MIN-SEC"]);
-
-        let splitCourseEventsId = getSplitCourseEventsIds(item.splitCourses);
-
-        let eventsPositionFetched = [];
-        item.splitCourses.forEach((itemCourse: Course) => {
-            const courseStartDate = DateUtils.format(itemCourse.startDate, DateUtils.FORMAT["YEAR-MONTH-DAY-HOUR-MIN-SEC"]);
-            const courseEndDate = DateUtils.format(itemCourse.endDate, DateUtils.FORMAT["YEAR-MONTH-DAY-HOUR-MIN-SEC"]);
-            if (eventStartDate === courseStartDate && eventEndDate === courseEndDate) {
-                let absenceElement = document.getElementById(event.id.toString());
-                if (absenceElement) {
-
-                    let newEventsPosition = JSON.parse(JSON.stringify(eventsPositionFetched));
-                    eventsPositionFetched.forEach((eventPosition: { minuteEvent: number, eventId: number }) => {
-                        splitCourseEventsId.forEach(splitCourseEventId => {
-                            if (splitCourseEventId === eventPosition.eventId) {
-                                newEventsPosition = newEventsPosition.filter(item => item.eventId !== 0);
-                                let newEventsPositionIndex = newEventsPosition
-                                    .findIndex(newEventPosition => newEventPosition.eventId === eventPosition.eventId);
-                                if (newEventsPositionIndex !== -1)
-                                    newEventsPosition.splice(newEventsPositionIndex, 1);
-                            }
-                        })
-                    });
-                    let marginTop = newEventsPosition.length > 0 ?
-                        _.pluck(newEventsPosition, 'minuteEvent')
-                            .reduce((accumulator, currentValue) => accumulator.minuteEvent + currentValue.minuteEvent) : 0;
-
-                    absenceElement.style.marginTop = `${(marginTop * oneTimeSlotHeight) / 60}px`;
-                    return;
-                }
-            }
-            let getMinuteEventTime = this.getMinuteInEventTime(itemCourse.startDate, itemCourse.endDate) === 0 ?
-                60 : this.getMinuteInEventTime(itemCourse.startDate, itemCourse.endDate);
-            eventsPositionFetched.push({
-                minuteEvent: getMinuteEventTime,
-                eventId: itemCourse.eventId ? itemCourse.eventId : 0,
-            });
-        });
     }
 
     static addEventIdInSplitCourse(item: Course, events: CourseEvent[]) {
