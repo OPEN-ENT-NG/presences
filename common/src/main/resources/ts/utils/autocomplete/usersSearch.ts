@@ -16,8 +16,6 @@ export class UsersSearch extends AutoCompleteUtils {
 
     constructor(structureId: string, searchService: SearchService) {
         super(structureId, searchService);
-        this.users = [];
-        this.selectedUsers = [];
     }
 
     public getUsers() {
@@ -52,6 +50,7 @@ export class UsersSearch extends AutoCompleteUtils {
     }
 
     public async searchUsers(valueInput: string) {
+        this.users = [];
         try {
             await Promise.all([
                 this.searchService.searchUser(this.structureId, valueInput, 'Personnel'),

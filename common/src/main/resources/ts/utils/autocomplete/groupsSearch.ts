@@ -19,8 +19,6 @@ export class GroupsSearch extends AutoCompleteUtils {
     constructor(structureId: string, searchService: SearchService, groupService: GroupService) {
         super(structureId, searchService);
         this.groupService = groupService;
-        this.groups = [];
-        this.selectedGroups = [];
     }
 
     public getGroups() {
@@ -59,6 +57,7 @@ export class GroupsSearch extends AutoCompleteUtils {
     }
 
     public async searchGroups(valueInput: string) {
+        this.groups = [];
         try {
             this.groups = await this.groupService.search(this.structureId, valueInput);
             this.groups.map((group: Group) => group.toString = () => group.name);

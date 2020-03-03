@@ -16,8 +16,6 @@ export class StudentsSearch extends AutoCompleteUtils {
 
     constructor(structureId: string, searchService: SearchService) {
         super(structureId, searchService);
-        this.students = [];
-        this.selectedStudents = [];
     }
 
     public getStudents() {
@@ -56,6 +54,7 @@ export class StudentsSearch extends AutoCompleteUtils {
     }
 
     public async searchStudents(valueInput: string) {
+        this.students = [];
         try {
             this.students = await this.searchService.searchUser(this.structureId, valueInput, 'Student');
         } catch (err) {
