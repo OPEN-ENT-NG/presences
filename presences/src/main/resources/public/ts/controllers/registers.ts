@@ -13,7 +13,7 @@ import {
     Remark
 } from '../models';
 import {GroupService, ReasonService, SearchService} from '../services';
-import {CourseUtils, DateUtils, PreferencesUtils} from '@common/utils'
+import {CourseUtils, DateUtils, PresencesPreferenceUtils} from '@common/utils'
 import rights from '../rights';
 import {Scope} from './main';
 import http from 'axios';
@@ -678,7 +678,7 @@ export const registersController = ng.controller('RegistersController',
             };
 
             vm.switchMultipleSlot = async function (): Promise<void> {
-                await PreferencesUtils.updatePresencesRegisterPreference(vm.filter.multipleSlot);
+                await PresencesPreferenceUtils.updatePresencesRegisterPreference(vm.filter.multipleSlot);
                 vm.loadCourses(extractSelectedTeacherIds(), extractSelectedGroupsName(),
                     undefined, undefined, undefined, false)
             };

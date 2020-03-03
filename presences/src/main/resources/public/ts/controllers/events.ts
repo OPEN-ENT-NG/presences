@@ -1,6 +1,6 @@
 import {_, angular, idiom as lang, Me, model, moment, ng} from 'entcore';
 import {Action, ActionBody, Event, EventResponse, Events, EventType, Student, Students} from "../models";
-import {DateUtils, PreferencesUtils} from "@common/utils";
+import {DateUtils, PresencesPreferenceUtils} from "@common/utils";
 import {GroupService} from "@common/services/GroupService";
 import {actionService, EventService, ReasonService} from "../services";
 import {EventsFilter, EventsUtils} from "../utilities";
@@ -851,7 +851,7 @@ export const eventsController = ng.controller('EventsController', ['$scope', '$r
             };
             let selectedReasons = vm.eventReasonsType.filter((r) => r.isSelected);
             formFilter.reasonIds = selectedReasons.map((r) => r.id);
-            await PreferencesUtils.updatePresencesEventListFilter(formFilter, window.structure.id);
+            await PresencesPreferenceUtils.updatePresencesEventListFilter(formFilter, window.structure.id);
             const {startDate, endDate} = vm.filter;
             vm.filter = {...vm.formFilter, startDate, endDate};
             vm.formFilter = {};
@@ -867,9 +867,10 @@ export const eventsController = ng.controller('EventsController', ['$scope', '$r
 
         /* on  (watch) */
         $scope.$watch(() => window.structure, async () => {
-            if ('structure' in window) {
-                await loadReasonTypes();
-                await loadFormFilter();
+            if (window.structure) {
+                await loadReasonTypes().then(async () => {
+                    await loadFormFilter();
+                });
                 await Promise.all([
                     getEvents(),
                     getActions(),

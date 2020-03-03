@@ -2,6 +2,26 @@ import {Template} from '../services/SettingsService';
 import http from 'axios';
 import {DateUtils} from "@common/utils";
 
+export interface IMassmailingFilterPreferences {
+    start_at: number;
+    status: {
+        JUSTIFIED: boolean
+        UNJUSTIFIED: boolean
+        LATENESS: boolean
+    },
+    massmailing_status: {
+        mailed: boolean,
+        waiting: boolean
+    },
+    allReasons: boolean,
+    noReasons: boolean,
+    reasons: any,
+    anomalies: {
+        MAIL: boolean,
+        SMS: boolean
+    }
+}
+
 interface MassmailingStudent {
     id: string,
     selected: boolean,

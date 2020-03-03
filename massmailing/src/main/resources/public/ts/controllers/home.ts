@@ -1,8 +1,10 @@
-import {_, idiom as lang, ng, toasts} from 'entcore';
+import {_, idiom as lang, Me, ng, toasts} from 'entcore';
 import {ReasonService} from '@presences/services/ReasonService';
 import {GroupService, SearchService, SettingsService, Template} from '../services';
 import {Massmailing, MassmailingAnomaliesResponse, MassmailingStatusResponse} from "../model";
 import {Reason} from "@presences/models/Reason";
+import {MassmailingPreferenceUtils} from "@common/utils";
+import {HomeUtils} from "../utilities";
 
 interface Filter {
     start_date: Date
@@ -165,9 +167,13 @@ export const homeController = ng.controller('HomeController', ['$scope', 'route'
             vm.formFilter.selected.groups.forEach((obj) => obj.toString = () => obj.name);
         };
 
-        vm.validForm = function () {
+        vm.validForm = async function () {
             const {start_date, end_date} = vm.filter;
             vm.filter = {...vm.formFilter, start_date, end_date};
+            await MassmailingPreferenceUtils.updatePresencesMassmailingFilter(
+                HomeUtils.buildFilteredMassmailingPreference(vm.formFilter),
+                window.structure.id
+            );
             vm.formFilter = {};
             vm.fetchData();
             vm.lightbox.filter = false;
@@ -175,6 +181,7 @@ export const homeController = ng.controller('HomeController', ['$scope', 'route'
 
         vm.loadData = async function () {
             if (!window.structure) return;
+            await loadFormFilter();
             vm.reasons = await ReasonService.getReasons(window.structure.id);
             vm.reasons.map((reason: Reason) => vm.filter.reasons[reason.id] = vm.filter.status.JUSTIFIED);
             vm.fetchData();
@@ -346,6 +353,27 @@ export const homeController = ng.controller('HomeController', ['$scope', 'route'
 
             return !(reasonCheck || massmailingStatusCheck || statusCheck);
         }
+
+        const loadFormFilter = async (): Promise<void> => {
+            let formFilters = await Me.preference('presences.massmailing.filters');
+            formFilters = formFilters ? formFilters[window.structure.id] : null;
+            if (formFilters) {
+                let {...toMergeFilters} = formFilters;
+                vm.filter = {...vm.filter, ...toMergeFilters};
+            } else {
+                vm.filter = {
+                    ...vm.filter, ...{
+                        start_at: 1,
+                        status: {JUSTIFIED: false, UNJUSTIFIED: true, LATENESS: false},
+                        massmailing_status: {mailed: false, waiting: true},
+                        allReasons: true,
+                        noReasons: true,
+                        reasons: {},
+                        anomalies: {MAIL: true, SMS: true}
+                    }
+                };
+            }
+        };
 
         vm.filterInError = function () {
             let inError = false;
