@@ -79,10 +79,11 @@ public class CourseController extends ControllerHelper {
             badRequest(request);
             return;
         }
+        String userDate = request.getParam("_t");
         boolean forgottenFilter = params.contains("forgotten_registers") && Boolean.parseBoolean(request.getParam("forgotten_registers"));
         boolean multipleSlot = params.contains("multiple_slot") && Boolean.parseBoolean(request.getParam("multiple_slot"));
         listCourses(params.get("structure"), params.getAll("teacher"), params.getAll("group"),
-                params.get("start"), params.get("end"), forgottenFilter, multipleSlot, arrayResponseHandler(request));
+                params.get("start"), params.get("end"), forgottenFilter, multipleSlot, userDate, arrayResponseHandler(request));
     }
 
     @Get("/courses/export")
@@ -95,10 +96,11 @@ public class CourseController extends ControllerHelper {
             return;
         }
 
+        String userDate = request.getParam("_t");
         boolean forgottenFilter = params.contains("forgotten_registers") && Boolean.parseBoolean(request.getParam("forgotten_registers"));
         boolean multipleSlot = params.contains("multiple_slot") && Boolean.parseBoolean(request.getParam("multiple_slot"));
         listCourses(params.get("structure"), params.getAll("teacher"), params.getAll("group"),
-                params.get("start"), params.get("end"), forgottenFilter, multipleSlot, event -> {
+                params.get("start"), params.get("end"), forgottenFilter, multipleSlot, userDate, event -> {
                     if (event.isLeft()) {
                         log.error("[Presences@CourseController] Failed to list courses", event.left().getValue());
                         renderError(request);
@@ -270,7 +272,7 @@ public class CourseController extends ControllerHelper {
      * @param handler         Function handler returning data
      */
     private void listCourses(String structureId, List<String> teachersList, List<String> groupsList,
-                             String start, String end, boolean forgottenFilter, boolean multipleSlot,
+                             String start, String end, boolean forgottenFilter, boolean multipleSlot, String userDate,
                              Handler<Either<String, JsonArray>> handler) {
         courseHelper.getCourses(structureId, teachersList, groupsList, start, end, event -> {
             if (event.isLeft()) {
@@ -334,7 +336,8 @@ public class CourseController extends ControllerHelper {
                     squashHelper.squash(structureId, start + " 00:00:00", end + " 23:59:59",
                             coursesEvent, splitCoursesEvent, squashEvent ->
                                     handler.handle(new Either.Right<>(forgottenFilter ? new JsonArray(filterForgottenCourses(
-                                            CourseHelper.formatCourses(squashEvent.right().getValue(), multipleSlot)
+                                            CourseHelper.formatCourses(squashEvent.right().getValue(), multipleSlot),
+                                            userDate
                                     )) : new JsonArray(CourseHelper.formatCourses(squashEvent.right().getValue(), multipleSlot))))
                     );
                 });
@@ -350,14 +353,23 @@ public class CourseController extends ControllerHelper {
         Neo4j.getInstance().execute(teacherQuery, new JsonObject().put("teacherIds", teachers), Neo4jResult.validResultHandler(handler));
     }
 
-    private List<Course> filterForgottenCourses(List<Course> courses) {
+    private List<Course> filterForgottenCourses(List<Course> courses, String userDate) {
         List<Course> forgottenRegisters = new ArrayList<>();
+        //FIXME Fix timezone trick
+        Date currentDate;
+        try {
+            if (userDate != null) {
+                currentDate = DateHelper.parse(userDate);
+            } else {
+                long timeDifference = ZoneId.of("Europe/Paris").getRules().getOffset(Instant.now()).getTotalSeconds();
+                currentDate = new Date(System.currentTimeMillis() + (timeDifference * 1000));
+            }
+        } catch (ParseException e) {
+            long timeDifference = ZoneId.of("Europe/Paris").getRules().getOffset(Instant.now()).getTotalSeconds();
+            currentDate = new Date(System.currentTimeMillis() + (timeDifference * 1000));
+        }
         for (Course course : courses) {
             try {
-                //FIXME Fix timezone trick
-                long timeDifference = ZoneId.of("Europe/Paris").getRules().getOffset(Instant.now()).getTotalSeconds();
-                Date currentDate = new Date(System.currentTimeMillis() + (timeDifference * 1000));
-
                 Course newCourse = course.clone();
                 Date forgottenStartDateCourse = new Date(DateHelper.parse(newCourse.getStartDate()).getTime() + (15 * 60000));
                 if (currentDate.after(forgottenStartDateCourse)) {

@@ -2,6 +2,7 @@ import {moment, ng} from 'entcore'
 import http from 'axios';
 import {EventType} from '../models';
 import {User} from '@common/model/User'
+import {DateUtils} from "@common/utils";
 
 export interface CourseEvent {
     id: number;
@@ -72,7 +73,7 @@ export const CalendarService = ng.service('CalendarService', (): CalendarService
         }
 
         try {
-            const {data} = await http.get(`/presences/calendar/courses?structure=${structureId}&start=${start}&end=${end}&user=${user}`);
+            const {data} = await http.get(`/presences/calendar/courses?structure=${structureId}&start=${start}&end=${end}&user=${user}&_t=${moment().format(DateUtils.FORMAT["YEAR-MONTH-DAY-HOUR-MIN-SEC"])}`);
             data.map((course) => {
                 course.startMoment = moment(course.startDate);
                 course.endMoment = moment(course.endDate);

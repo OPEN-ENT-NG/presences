@@ -2,6 +2,7 @@ import http from 'axios';
 import {_, moment} from 'entcore';
 import {Mix} from 'entcore-toolkit';
 import {LoadingCollection} from '@common/model/LoadingCollection'
+import {DateUtils} from '@common/utils'
 
 export interface Course {
     id: string;
@@ -53,7 +54,7 @@ export class Courses extends LoadingCollection {
 
             const forgottenRegisterParam = `&forgotten_registers=${forgottenRegisters}`;
             const multipleSlotParam = `&multiple_slot=${multipleSlot}`;
-            const {data} = await http.get(`/presences/courses?${teacherFilter}${groupFilter}structure=${structure}&start=${start}&end=${end}${forgottenRegisterParam}${multipleSlotParam}`);
+            const {data} = await http.get(`/presences/courses?${teacherFilter}${groupFilter}structure=${structure}&start=${start}&end=${end}${forgottenRegisterParam}${multipleSlotParam}&_t=${moment().format(DateUtils.FORMAT["YEAR-MONTH-DAY-HOUR-MIN-SEC"])}`);
             this.all = Mix.castArrayAs(Course, data);
             this.all.map((course: Course) => course.timestamp = moment(course.startDate).valueOf());
             this.all = _.sortBy(this.all, 'timestamp');
@@ -75,7 +76,7 @@ export class Courses extends LoadingCollection {
             groups.map((group) => groupFilter += `group=${group}&`);
         }
 
-        window.open(`/presences/courses/export?${teacherFilter}${groupFilter}structure=${structure}&start=${start}&end=${end}&forgotten_registers=${forgottenRegisters}`);
+        window.open(`/presences/courses/export?${teacherFilter}${groupFilter}structure=${structure}&start=${start}&end=${end}&forgotten_registers=${forgottenRegisters}&_t=${moment().format(DateUtils.FORMAT["YEAR-MONTH-DAY-HOUR-MIN-SEC"])}`);
     }
 
     groupByDate() {
