@@ -52,6 +52,7 @@ public class RegisterCSVExport extends CSVExport {
 
     private String getTeachersNames(JsonArray teachers) {
         StringBuilder names = new StringBuilder();
+        if (teachers.isEmpty()) return names.toString();
         for (int i = 0; i < teachers.size(); i++) {
             JsonObject teacher = teachers.getJsonObject(i);
             names.append(teacher.getString("displayName"))
