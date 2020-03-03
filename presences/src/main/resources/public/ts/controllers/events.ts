@@ -237,7 +237,7 @@ export const eventsController = ng.controller('EventsController', ['$scope', '$r
         };
 
         const loadFormFilter = async (): Promise<void> => {
-            let formFilters = await Me.preference('presences.eventList.filters');
+            let formFilters = await Me.preference(PresencesPreferenceUtils.PREFERENCE_KEYS.PRESENCE_EVENT_LIST_FILTER);
             formFilters = formFilters ? formFilters[window.structure.id] : null;
             if (formFilters) {
                 let {reasonIds, ...toMergeFilters} = formFilters;

@@ -5,6 +5,7 @@ import {SearchService} from "@common/services/SearchService";
 import {GroupService} from "@common/services/GroupService";
 import rights from "../rights";
 import {Alert} from "@presences/models/Alert";
+import {PreferencesUtils} from "@common/utils";
 
 declare let window: any;
 
@@ -105,7 +106,7 @@ export const alertsController = ng.controller('AlertsController', ['$scope', '$r
 
         const initData = async () => {
             if (!window.structure) {
-                window.structure = await Me.preference("presences.structure");
+                window.structure = await Me.preference(PreferencesUtils.PREFERENCE_KEYS.PRESENCE_STRUCTURE);
             } else {
                 if (vm.params.type) {
                     initFilter(false);

@@ -13,7 +13,7 @@ import {
     Remark
 } from '../models';
 import {GroupService, ReasonService, SearchService} from '../services';
-import {CourseUtils, DateUtils, PresencesPreferenceUtils} from '@common/utils'
+import {CourseUtils, DateUtils, PreferencesUtils, PresencesPreferenceUtils} from '@common/utils'
 import rights from '../rights';
 import {Scope} from './main';
 import http from 'axios';
@@ -210,7 +210,7 @@ export const registersController = ng.controller('RegistersController',
             vm.courses.eventer.on('loading::false', () => $scope.safeApply());
             vm.RegisterStatus = RegisterStatus;
 
-            let registerTimeSlot = await Me.preference('presences.register');
+            let registerTimeSlot = await Me.preference(PreferencesUtils.PREFERENCE_KEYS.PRESENCE_REGISTER);
 
             vm.filter = {
                 date: new Date(),

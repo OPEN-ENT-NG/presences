@@ -15,13 +15,13 @@ export class MassmailingPreferenceUtils extends PreferencesUtils {
      * @param structureId   structure identifier corresponding to the current filter.
      */
     static async updatePresencesMassmailingFilter(filter: IMassmailingFilterPreferences, structureId: string): Promise<void> {
-        if (!Me.preferences['presences.massmailing.filters']) {
-            Me.savePreference('presences.massmailing.filters').then(async () => {
-                await Me.preference('presences.massmailing.filters');
+        if (!Me.preferences[this.PREFERENCE_KEYS.MASSMAILING_FILTER]) {
+            Me.savePreference(this.PREFERENCE_KEYS.MASSMAILING_FILTER).then(async () => {
+                await Me.preference(this.PREFERENCE_KEYS.MASSMAILING_FILTER);
             });
         }
-        Me.preferences['presences.massmailing.filters'][structureId] = filter;
-        await Me.savePreference('presences.massmailing.filters');
+        Me.preferences[this.PREFERENCE_KEYS.MASSMAILING_FILTER][structureId] = filter;
+        await Me.savePreference(this.PREFERENCE_KEYS.MASSMAILING_FILTER);
     }
 
 }

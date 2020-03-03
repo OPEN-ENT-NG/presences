@@ -1,4 +1,4 @@
-import {_, angular, Me, moment, ng, notify} from 'entcore';
+import {_, angular, moment, ng, notify} from 'entcore';
 import {Incident, Incidents, Student, Students} from "../models";
 import {IncidentService} from "../services";
 import {Toast} from "@common/utils/toast";
@@ -75,12 +75,9 @@ export const incidentsController = ng.controller('IncidentsController', ['$scope
     };
 
     const getIncidents = async (): Promise<void> => {
-        if (window.structure) {
-            vm.incidents.structureId = window.structure.id;
-        } else {
-            let preferenceStructure = await Me.preference('presences.structure');
-            vm.incidents.structureId = preferenceStructure ? preferenceStructure['id'] : null;
-        }
+        if (!window.structure) return;
+
+        vm.incidents.structureId = window.structure.id;
 
         if (vm.filter.startDate === null) {
             const schoolYears = await DateUtils.getSchoolYearDates(window.structure.id);

@@ -3,7 +3,7 @@ import {ReasonService} from '@presences/services/ReasonService';
 import {GroupService, SearchService, SettingsService, Template} from '../services';
 import {Massmailing, MassmailingAnomaliesResponse, MassmailingStatusResponse} from "../model";
 import {Reason} from "@presences/models/Reason";
-import {MassmailingPreferenceUtils} from "@common/utils";
+import {MassmailingPreferenceUtils, PresencesPreferenceUtils} from "@common/utils";
 import {HomeUtils} from "../utilities";
 
 interface Filter {
@@ -355,7 +355,7 @@ export const homeController = ng.controller('HomeController', ['$scope', 'route'
         }
 
         const loadFormFilter = async (): Promise<void> => {
-            let formFilters = await Me.preference('presences.massmailing.filters');
+            let formFilters = await Me.preference(PresencesPreferenceUtils.PREFERENCE_KEYS.MASSMAILING_FILTER);
             formFilters = formFilters ? formFilters[window.structure.id] : null;
             if (formFilters) {
                 let {...toMergeFilters} = formFilters;

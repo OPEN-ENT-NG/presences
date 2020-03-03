@@ -2,63 +2,14 @@ import {Me} from "entcore";
 
 export class PreferencesUtils {
 
-    static async initPreference(): Promise<void> {
-        /**
-         * Fetching all existing preferences
-         */
-        await Promise.all([
-            // structure
-            Me.preference('presences.structure'),
-            // presences module
-            Me.preference('presences.register'),
-            Me.preference('presences.eventList.filters'),
-            // massmailing module
-            Me.preference('presences.massmailing.filters')
-        ]);
-
-        /* STRUCTURE  */
-        if (Object.keys(PreferencesUtils.getPreference('presences.structure')).length === 0 &&
-            Me.preferences['presences.structure'].constructor === Object) {
-            await Me.savePreference('presences.structure');
-        }
-
-        /* ----------------------------
-            Presences preferences
-        ---------------------------- */
-
-        /* REGISTER */
-        if (Object.keys(PreferencesUtils.getPreference('presences.register')).length === 0 &&
-            Me.preferences['presences.register'].constructor === Object) {
-            Me.preferences['presences.register'] = {multipleSlot: true};
-            await Me.savePreference('presences.register');
-        }
-
-        /* EVENT LIST FILTER  */
-        if (Object.keys(PreferencesUtils.getPreference('presences.eventList.filters')).length === 0 &&
-            Me.preferences['presences.eventList.filters'].constructor === Object) {
-            await Me.savePreference('presences.eventList.filters');
-        }
-
-        /* ----------------------------
-            Massmailing preferences
-        ---------------------------- */
-
-        /* MASSMAILING FILTER  */
-        if (Object.keys(PreferencesUtils.getPreference('presences.massmailing.filters')).length === 0 &&
-            Me.preferences['presences.massmailing.filters'].constructor === Object) {
-            await Me.savePreference('presences.massmailing.filters');
-        }
-
+    public static readonly PREFERENCE_KEYS = {
+        PRESENCE_STRUCTURE: 'presences.structure',
+        // presence module's preferences
+        PRESENCE_REGISTER: 'presences.register',
+        PRESENCE_EVENT_LIST_FILTER: 'presences.eventList.filters',
+        // Massmailing module's preferences
+        MASSMAILING_FILTER: 'presences.massmailing.filters'
     };
-
-    /**
-     * Get preference of corresponding key
-     *
-     * @param key index of the wanting preference.
-     */
-    static getPreference(key: string): Object {
-        return Me.preferences[key] ? Me.preferences[key] : {};
-    }
 
     /**
      * Updated default structure selected
@@ -66,11 +17,11 @@ export class PreferencesUtils {
      * @param structure selected.
      */
     static async updateStructure(structure): Promise<void> {
-        if (!Me.preferences['presences.structure']) {
-            await Me.savePreference('presences.structure');
-            await Me.preference('presences.structure')
+        if (!Me.preferences[this.PREFERENCE_KEYS.PRESENCE_STRUCTURE]) {
+            await Me.savePreference(this.PREFERENCE_KEYS.PRESENCE_STRUCTURE);
+            await Me.preference(this.PREFERENCE_KEYS.PRESENCE_STRUCTURE)
         }
-        Me.preferences['presences.structure'] = structure;
-        await Me.savePreference('presences.structure');
+        Me.preferences[this.PREFERENCE_KEYS.PRESENCE_STRUCTURE] = structure;
+        await Me.savePreference(this.PREFERENCE_KEYS.PRESENCE_STRUCTURE);
     }
 }

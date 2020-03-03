@@ -13,8 +13,8 @@ export class PresencesPreferenceUtils extends PreferencesUtils {
      * @param isActive Register is active or not
      */
     static async updatePresencesRegisterPreference(isActive: boolean): Promise<void> {
-        Me.preferences['presences.register'] = {multipleSlot: isActive};
-        await Me.savePreference('presences.register');
+        Me.preferences[this.PREFERENCE_KEYS.PRESENCE_REGISTER] = {multipleSlot: isActive};
+        await Me.savePreference(this.PREFERENCE_KEYS.PRESENCE_REGISTER);
     }
 
     /**
@@ -24,12 +24,12 @@ export class PresencesPreferenceUtils extends PreferencesUtils {
      * @param structureId   structure identifier corresponding to the current filter.
      */
     static async updatePresencesEventListFilter(filter: EventsFormFilter, structureId: string): Promise<void> {
-        if (!Me.preferences['presences.eventList.filters']) {
-            await Me.savePreference('presences.eventList.filters');
-            await Me.preference('presences.eventList.filters')
+        if (!Me.preferences[this.PREFERENCE_KEYS.PRESENCE_EVENT_LIST_FILTER]) {
+            await Me.savePreference(this.PREFERENCE_KEYS.PRESENCE_EVENT_LIST_FILTER);
+            await Me.preference(this.PREFERENCE_KEYS.PRESENCE_EVENT_LIST_FILTER)
         }
-        Me.preferences['presences.eventList.filters'][structureId] = filter;
-        await Me.savePreference('presences.eventList.filters');
+        Me.preferences[this.PREFERENCE_KEYS.PRESENCE_EVENT_LIST_FILTER][structureId] = filter;
+        await Me.savePreference(this.PREFERENCE_KEYS.PRESENCE_EVENT_LIST_FILTER);
     }
 
 }

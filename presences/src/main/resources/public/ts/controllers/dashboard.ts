@@ -1,6 +1,6 @@
 import {Me, model, moment, ng, toasts} from 'entcore';
 import {Group, GroupService, SearchItem, SearchService} from "../services";
-import {DateUtils} from "@common/utils";
+import {DateUtils, PreferencesUtils} from "@common/utils";
 import rights from '../rights';
 import {Course, EventType} from "../models";
 import {alertService} from "../services/AlertService";
@@ -51,7 +51,7 @@ export const dashboardController = ng.controller('DashboardController', ['$scope
 
         const initData = async () => {
             if (!window.structure) {
-                window.structure = await Me.preference("presences.structure");
+                window.structure = await Me.preference(PreferencesUtils.PREFERENCE_KEYS.PRESENCE_STRUCTURE);
             } else {
                 await vm.getAlert();
             }

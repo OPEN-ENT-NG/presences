@@ -31,8 +31,8 @@ export const navigation = {
     controller: {
         init: async function () {
             this.structures = initStructures();
-            let preferenceStructure = await Me.preference('presences.structure');
-            let preferenceStructureId =  preferenceStructure ? preferenceStructure['id'] : null;
+            let preferenceStructure = await Me.preference(PreferencesUtils.PREFERENCE_KEYS.PRESENCE_STRUCTURE);
+            let preferenceStructureId = preferenceStructure ? preferenceStructure['id'] : null;
             let structure = this.structures.length > 1 && preferenceStructureId ? this.structures.find((s) => s.id === preferenceStructureId) : this.structures[0];
             this.menu = {
                 structure: structure,
