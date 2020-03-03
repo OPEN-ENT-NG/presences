@@ -175,9 +175,12 @@ export class CalendarAbsenceUtils {
     private static formatForm(timeSlotsFetched: any[]) {
         if (timeSlotsFetched.length === 0) return;
         let start = timeSlotsFetched[0].startDate;
-        let end = timeSlotsFetched[timeSlotsFetched.length - 1].endDate;
         let startTime = timeSlotsFetched[0].start;
+        let startMinutes = timeSlotsFetched[0].timeslot.startMinutes;
+
+        let end = timeSlotsFetched[timeSlotsFetched.length - 1].endDate;
         let endTime = timeSlotsFetched[timeSlotsFetched.length - 1].end;
+        let endMinutes = timeSlotsFetched[timeSlotsFetched.length - 1].timeslot.endMinutes;
 
         let absence = timeSlotsFetched
             .filter(t => t.index === timeSlotsFetched[0].index)
@@ -191,13 +194,13 @@ export class CalendarAbsenceUtils {
             endDate: moment(end).toDate(),
             startTime: moment(new Date).set({
                 hours: startTime,
-                minute: 0,
+                minute: startMinutes,
                 second: 0,
                 millisecond: 0
             }).toDate(),
             endTime: moment(new Date).set({
                 hours: endTime,
-                minute: 0,
+                minute: endMinutes,
                 second: 0,
                 millisecond: 0
             }).toDate()
