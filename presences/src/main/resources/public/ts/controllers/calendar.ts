@@ -198,7 +198,6 @@ export const calendarController = ng.controller('CalendarController',
                     studentIds: [vm.filter.student.id]
                 } as PresenceRequest;
                 await vm.presences.build(await presenceService.get(presencesRequest));
-                console.log("presences: ", vm.presences);
                 $scope.safeApply();
             };
 
