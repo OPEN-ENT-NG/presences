@@ -26,7 +26,7 @@ export class GroupsSearch extends AutoCompleteUtils {
     }
 
     public getSelectedGroups() {
-        return this.selectedGroups;
+        return this.selectedGroups ? this.selectedGroups : [];
     }
 
     public setSelectedGroups(selectedGroups: Array<{}>) {
@@ -46,6 +46,7 @@ export class GroupsSearch extends AutoCompleteUtils {
     }
 
     public selectGroups(valueInput, groupItem) {
+        if (!this.selectedGroups) this.selectedGroups = [];
         if (this.selectedGroups.find(group => group["id"] === groupItem.id) === undefined) {
             this.selectedGroups.push(groupItem);
         }
@@ -57,7 +58,6 @@ export class GroupsSearch extends AutoCompleteUtils {
     }
 
     public async searchGroups(valueInput: string) {
-        this.groups = [];
         try {
             this.groups = await this.groupService.search(this.structureId, valueInput);
             this.groups.map((group: Group) => group.toString = () => group.name);

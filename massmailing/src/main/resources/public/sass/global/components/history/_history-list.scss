@@ -23,10 +23,6 @@
       &-date {
         background-color: $presences-grey-clear;
         border-bottom: 1px solid $presences-white;
-
-        &-info {
-          justify-content: space-evenly !important;
-        }
       }
 
       &-student {
@@ -38,6 +34,7 @@
         }
 
         &-info {
+          text-align: center !important;
           justify-content: space-around !important;
         }
       }

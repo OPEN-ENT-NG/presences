@@ -37,7 +37,7 @@ export class GlobalSearch extends AutoCompleteUtils {
     }
 
     public getSelectedItems() {
-        return this.selectedItems;
+        return this.selectedItems ? this.selectedItems : [];
     }
 
     public removeSelectedItems(item) {
@@ -58,13 +58,13 @@ export class GlobalSearch extends AutoCompleteUtils {
     }
 
     public selectItems(valueInput, item) {
+        if (!this.selectedItems) this.selectedItems = [];
         if (this.selectedItems.find(i => i["id"] === item.id) === undefined) {
             this.selectedItems.push(item);
         }
     };
 
     public async searchStudentsOrGroups(valueInput: string) {
-        this.searchItems = [];
         try {
             this.searchItems = await this.searchService.search(this.structureId, valueInput);
         } catch (err) {
@@ -74,7 +74,6 @@ export class GlobalSearch extends AutoCompleteUtils {
     };
 
     public async getStudentsFromGroup(id: string, type: string) {
-        this.students = [];
         try {
             this.students = await this.groupService.getStudentsFromGroupId(id, type);
         } catch (err) {

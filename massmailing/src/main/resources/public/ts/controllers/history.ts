@@ -90,17 +90,8 @@ export const historyController = ng.controller('HistoryController',
             const vm: ViewModel = this;
 
             /* Init mailings */
-            vm.mailings = new Mailings(window.structure.id);
             vm.mailingsRequest = {} as MailingRequest;
             vm.selectedMailing = undefined;
-
-            /* Init search bar */
-            vm.studentsSearch = new StudentsSearch(window.structure.id, searchService);
-            vm.groupsSearch = new GroupsSearch(window.structure.id, searchService, groupService);
-
-            /* Init search bar lightbox */
-            vm.studentsSearchLightbox = new StudentsSearch(window.structure.id, searchService);
-            vm.groupsSearchLightbox = new GroupsSearch(window.structure.id, searchService, groupService);
 
             /* init mailing type lightbox to interact */
             const initMailingTypes = (): Array<{ label: string, isSelected: boolean }> => {
@@ -163,6 +154,17 @@ export const historyController = ng.controller('HistoryController',
                 vm.mailingLightbox.event_types = JSON.parse(JSON.stringify(vm.filter.event_types));
             };
 
+            const load = (): void => {
+                /* Init mailings */
+                vm.mailings = new Mailings(window.structure.id);
+                /* Init search bar */
+                vm.studentsSearch = new StudentsSearch(window.structure.id, searchService);
+                vm.groupsSearch = new GroupsSearch(window.structure.id, searchService, groupService);
+                /* Init search bar lightbox */
+                vm.studentsSearchLightbox = new StudentsSearch(window.structure.id, searchService);
+                vm.groupsSearchLightbox = new GroupsSearch(window.structure.id, searchService, groupService);
+            };
+
             const getMailingsHistory = async (): Promise<void> => {
                 vm.mailings.loading = true;
                 prepareRequest();
@@ -217,6 +219,10 @@ export const historyController = ng.controller('HistoryController',
             };
 
             vm.updateFilter = async (): Promise<void> => {
+                /* Retrieving our search bar info */
+                vm.filter.students = vm.studentsSearch.getSelectedStudents().map(student => student["id"]);
+                vm.filter.groups = vm.groupsSearch.getSelectedGroups().map(group => group["id"]);
+
                 await getMailingsHistory();
             };
 
@@ -330,6 +336,9 @@ export const historyController = ng.controller('HistoryController',
 
 
             /* on  (watch) */
-            $scope.$watch(() => window.structure, getMailingsHistory);
+            $scope.$watch(() => window.structure, () => {
+                load();
+                getMailingsHistory();
+            });
 
         }]);

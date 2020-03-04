@@ -23,7 +23,7 @@ export class UsersSearch extends AutoCompleteUtils {
     }
 
     public getSelectedUsers() {
-        return this.selectedUsers;
+        return this.selectedUsers ? this.selectedUsers : [];
     }
 
     public removeSelectedUsers(studentItem) {
@@ -39,6 +39,7 @@ export class UsersSearch extends AutoCompleteUtils {
     }
 
     public selectUsers(valueInput, studentItem) {
+        if (!this.selectedUsers) this.selectedUsers = [];
         if (this.selectedUsers.find(student => student["id"] === studentItem.id) === undefined) {
             this.selectedUsers.push(studentItem);
         }
@@ -50,7 +51,6 @@ export class UsersSearch extends AutoCompleteUtils {
     }
 
     public async searchUsers(valueInput: string) {
-        this.users = [];
         try {
             await Promise.all([
                 this.searchService.searchUser(this.structureId, valueInput, 'Personnel'),

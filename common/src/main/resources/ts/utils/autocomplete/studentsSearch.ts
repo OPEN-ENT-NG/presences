@@ -23,7 +23,7 @@ export class StudentsSearch extends AutoCompleteUtils {
     }
 
     public getSelectedStudents() {
-        return this.selectedStudents;
+        return this.selectedStudents ? this.selectedStudents : [];
     }
 
     public setSelectedStudents(selectedStudents: Array<{}>) {
@@ -43,6 +43,7 @@ export class StudentsSearch extends AutoCompleteUtils {
     }
 
     public selectStudents(valueInput, studentItem) {
+        if (!this.selectedStudents) this.selectedStudents = [];
         if (this.selectedStudents.find(student => student["id"] === studentItem.id) === undefined) {
             this.selectedStudents.push(studentItem);
         }
@@ -54,7 +55,6 @@ export class StudentsSearch extends AutoCompleteUtils {
     }
 
     public async searchStudents(valueInput: string) {
-        this.students = [];
         try {
             this.students = await this.searchService.searchUser(this.structureId, valueInput, 'Student');
         } catch (err) {
@@ -64,7 +64,6 @@ export class StudentsSearch extends AutoCompleteUtils {
     };
 
     public searchStudentsFromArray(valueInput: string, studentsArray) {
-        this.students = [];
         try {
             studentsArray.forEach(student => {
                 let user: User = {} as User;

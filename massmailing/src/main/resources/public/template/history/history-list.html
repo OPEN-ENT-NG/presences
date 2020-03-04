@@ -14,7 +14,7 @@
             <div class="history-body-content-history-list-date flex-row row__15">
                 <div class="history-body-content-history-list-date-info flex-col col__6">
                     <i18n>massmailing.date.from</i18n>
-                    <span>[[::vm.formatDayDate(date)]]</span>
+                    <span>&nbsp;[[::vm.formatDayDate(date)]]</span>
                 </div>
             </div>
 
@@ -35,9 +35,12 @@
                             </label>
                         </div>
 
-                        <!-- student info -->
-                        <div class="history-body-content-history-list-student-info flex-col col__4">
+                        <div class="flex-col col__1">
                             <i class="[[vm.getIcons(mailing.type)]]"></i>
+                        </div>
+
+                        <!-- student info -->
+                        <div class="history-body-content-history-list-student-info flex-col col__3">
                             <span>[[mailing.student.displayName]]</span>
                         </div>
 
