@@ -21,26 +21,18 @@
             <!-- List of history from this date -->
             <div class="history-body-content-history-list-student flex-body"
                  ng-repeat="mailing in vm.mailings.map[date] | orderBy:'timestamp' track by $index"
-                 ng-class="{'active': mailing.isSelected}">
+                 ng-class="{'active': mailing.isSelected}"
+                 data-ng-click="vm.switchMailingHistory(mailing)">
                 <div class="flex-content">
                     <div class="flex-row row__15">
 
                         <!-- type-->
                         <div class="flex-col col__1">
-                            <label class="checkbox">
-                                <input type="checkbox"
-                                       data-ng-model="mailing.isSelected"
-                                       data-ng-change="vm.switchMailingHistory(mailing)">
-                                <span></span>
-                            </label>
-                        </div>
-
-                        <div class="flex-col col__1">
                             <i class="[[vm.getIcons(mailing.type)]]"></i>
                         </div>
 
                         <!-- student info -->
-                        <div class="history-body-content-history-list-student-info flex-col col__3">
+                        <div class="history-body-content-history-list-student-info flex-col col__4">
                             <span>[[mailing.student.displayName]]</span>
                         </div>
 

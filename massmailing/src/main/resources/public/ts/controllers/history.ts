@@ -189,6 +189,7 @@ export const historyController = ng.controller('HistoryController',
             vm.formatDayDate = (date: string): string => DateUtils.format(parseInt(date), DateUtils.FORMAT["DAY-MONTH-YEAR"]);
 
             vm.switchMailingHistory = (mailing: Mailing): void => {
+                mailing.isSelected = !mailing.isSelected;
                 let selectedMailing = mailing;
                 vm.mailings.mailingResponse.all.forEach(mailing => {
                     if (mailing != selectedMailing) {
