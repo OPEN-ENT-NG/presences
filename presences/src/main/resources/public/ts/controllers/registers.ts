@@ -174,6 +174,7 @@ export const registersController = ng.controller('RegistersController',
                     }
                     template.open('register', 'register/list-view');
                     template.open('register-panel', 'register/panel');
+                    getReasons();
                     if (vm.register !== undefined) {
                         let promises = [vm.register.sync()];
                         if (vm.filter.course) {
