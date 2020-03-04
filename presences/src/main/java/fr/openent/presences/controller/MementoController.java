@@ -71,16 +71,16 @@ public class MementoController extends ControllerHelper {
             Future<JsonArray> future = Future.future();
             switch (type) {
                 case UNJUSTIFIED:
-                    eventService.getEventsByStudent(1, Collections.singletonList(student), structure, false, new ArrayList<>(), null, start, end, true, FutureHelper.handlerJsonArray(future));
+                    eventService.getEventsByStudent(1, Collections.singletonList(student), structure, false, new ArrayList<>(), null, start, end, true, null, FutureHelper.handlerJsonArray(future));
                     break;
                 case JUSTIFIED:
-                    eventService.getEventsByStudent(1, Collections.singletonList(student), structure, true, new ArrayList<>(), null, start, end, true, FutureHelper.handlerJsonArray(future));
+                    eventService.getEventsByStudent(1, Collections.singletonList(student), structure, true, new ArrayList<>(), null, start, end, true, null, FutureHelper.handlerJsonArray(future));
                     break;
                 case LATENESS:
-                    eventService.getEventsByStudent(2, Collections.singletonList(student), structure, null, new ArrayList<>(), null, start, end, true, FutureHelper.handlerJsonArray(future));
+                    eventService.getEventsByStudent(2, Collections.singletonList(student), structure, null, new ArrayList<>(), null, start, end, true, null, FutureHelper.handlerJsonArray(future));
                     break;
                 case DEPARTURE:
-                    eventService.getEventsByStudent(3, Collections.singletonList(student), structure, null, new ArrayList<>(), null, start, end, true, FutureHelper.handlerJsonArray(future));
+                    eventService.getEventsByStudent(3, Collections.singletonList(student), structure, null, new ArrayList<>(), null, start, end, true, null, FutureHelper.handlerJsonArray(future));
                     break;
                 default:
                     //There is no default case

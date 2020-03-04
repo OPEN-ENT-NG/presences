@@ -26,13 +26,20 @@ public class DefaultSettingsService implements SettingsService {
 
     @Override
     public void createTemplate(JsonObject template, String userId, Handler<Either<String, JsonObject>> handler) {
+        String type = template.getString("type");
+        String content = template.getString("content");
+
+        if(!isRespectedSmsLengthContent(type, content, handler)) {
+            return;
+        }
+
         String query = "INSERT INTO " + Massmailing.dbSchema + ".template (structure_id, name, content, type, owner) " +
                 "VALUES (?, ?, ?, ?, ?) RETURNING " + returningValues;
         JsonArray params = new JsonArray()
                 .add(template.getString("structure_id"))
                 .add(template.getString("name"))
-                .add(template.getString("content"))
-                .add(template.getString("type"))
+                .add(content)
+                .add(type)
                 .add(userId);
 
         Sql.getInstance().prepared(query, params, SqlResult.validUniqueResultHandler(handler));
@@ -40,6 +47,13 @@ public class DefaultSettingsService implements SettingsService {
 
     @Override
     public void updateTemplate(Integer id, JsonObject template, Handler<Either<String, JsonObject>> handler) {
+        String type = template.getString("type");
+        String content = template.getString("content");
+
+        if(!isRespectedSmsLengthContent(type, content, handler)) {
+            return;
+        }
+
         String query = "UPDATE " + Massmailing.dbSchema + ".template " +
                 "SET structure_id = ?, name = ?, content = ?, type = ? " +
                 "WHERE id = ? " +
@@ -48,8 +62,8 @@ public class DefaultSettingsService implements SettingsService {
         JsonArray params = new JsonArray()
                 .add(template.getString("structure_id"))
                 .add(template.getString("name"))
-                .add(template.getString("content"))
-                .add(template.getString("type"))
+                .add(content)
+                .add(type)
                 .add(id);
 
         Sql.getInstance().prepared(query, params, SqlResult.validUniqueResultHandler(handler));
@@ -70,5 +84,15 @@ public class DefaultSettingsService implements SettingsService {
         JsonArray params = new JsonArray().add(id).add(structure).add(type.name());
 
         Sql.getInstance().prepared(query, params, SqlResult.validUniqueResultHandler(handler));
+    }
+
+    private boolean isRespectedSmsLengthContent(String type, String content, Handler<Either<String, JsonObject>> handler) {
+        if (MailingType.SMS.toString().equals(type)) {
+            if (content.length() > 160) {
+                handler.handle(new Either.Left<>("Constraint max length content not respected"));
+                return false;
+            }
+        }
+        return true;
     }
 }

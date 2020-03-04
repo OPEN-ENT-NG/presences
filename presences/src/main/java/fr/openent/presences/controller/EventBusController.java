@@ -40,6 +40,7 @@ public class EventBusController extends ControllerHelper {
         String startDate;
         String endDate;
         boolean noReasons;
+        String recoveryMethod;
         switch (action) {
             case "get-count-event-by-student":
                 eventType = body.getInteger("eventType");
@@ -64,7 +65,8 @@ public class EventBusController extends ControllerHelper {
                 startDate = body.getString("startDate");
                 endDate = body.getString("endDate");
                 noReasons = body.getBoolean("noReasons");
-                this.eventService.getEventsByStudent(eventType, students, structure, justified, reasonsId, massmailed, startDate, endDate, noReasons, BusResponseHandler.busArrayHandler(message));
+                recoveryMethod = body.getString("recoveryMethod");
+                this.eventService.getEventsByStudent(eventType, students, structure, justified, reasonsId, massmailed, startDate, endDate, noReasons, recoveryMethod, BusResponseHandler.busArrayHandler(message));
                 break;
             case "get-reasons":
                 structure = body.getString("structure");

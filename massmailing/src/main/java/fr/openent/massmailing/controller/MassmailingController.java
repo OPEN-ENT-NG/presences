@@ -553,7 +553,7 @@ public class MassmailingController extends ControllerHelper {
 
         RequestUtils.bodyToJson(request, pathPrefix + "massmailing", body -> {
             String structure = body.getString("structure");
-            Template template = new Template(mailingType, body.getInteger("template"), structure);
+            Template template = new Template(mailingType, body.getInteger("template"), structure, config);
             Boolean massmailed = body.containsKey("massmailed") ? body.getBoolean("massmailed") : null;
             List<MassmailingType> massmailingTypeList = getMassMailingTypes(body.getJsonArray("event_types").getList());
             List<Integer> reasons = body.getJsonArray("reasons").getList();

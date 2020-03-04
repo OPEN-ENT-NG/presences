@@ -52,9 +52,17 @@ public class Sms extends MassMailingProcessor {
     }
 
     private void send(JsonObject sms, Handler<Either<String, JsonObject>> handler) {
+
+        String message = sms.getString("message");
+        int maxLength = 160;
+        if(message.length() > maxLength) {
+            message = message.substring(0, maxLength - 3);
+            message += "...";
+        }
+
         JsonObject parameters = new JsonObject()
                 .put("receivers", new JsonArray().add(sms.getString("contact")))
-                .put("message", sms.getString("message"))
+                .put("message", message)
                 .put("senderForResponse", true)
                 .put("noStopClause", true);
         JsonObject smsObject = new JsonObject()

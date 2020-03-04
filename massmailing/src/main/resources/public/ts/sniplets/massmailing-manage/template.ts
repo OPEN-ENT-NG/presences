@@ -9,7 +9,8 @@ interface ViewModel {
     mail: Template,
     mails: Template[],
     sms: Template,
-    smss: Template[]
+    smss: Template[],
+    smsMaxLength: number,
     deletion: {
         show: boolean,
         template: Template
@@ -30,12 +31,11 @@ interface ViewModel {
 
 const vm: ViewModel = {
     resetTemplate: function (type: "MAIL" | "SMS" | "PDF"): void {
-        vm[type.toLowerCase()] = {
-            name: '',
-            content: ''
-        };
+        vm[type.toLowerCase()].name = '';
+        vm[type.toLowerCase()].content = '';
         mailTemplateForm.that.$apply();
     },
+    smsMaxLength: 160,
     mail: {
         name: '',
         content: ''
@@ -50,7 +50,7 @@ const vm: ViewModel = {
         show: false,
         template: {
             name: '',
-            content: ''
+            content: '',
         }
     },
     syncTemplates: async function (type: 'MAIL' | 'SMS' | 'PDF'): Promise<void> {
@@ -130,6 +130,11 @@ export const mailTemplateForm = {
             load();
             this.$on('reload', load);
             this.$watch(() => window.model.vieScolaire.structure, load);
+            this.$watch(() => vm.sms.content, (newVal, oldVal) => {
+                if (newVal.length > vm.smsMaxLength && typeof oldVal === "string") {
+                    vm.sms.content = oldVal;
+                }
+            });
         }
     }
 };

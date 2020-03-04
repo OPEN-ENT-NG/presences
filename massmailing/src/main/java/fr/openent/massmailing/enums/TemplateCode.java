@@ -5,7 +5,9 @@ public enum TemplateCode {
     CLASS_NAME("massmailing.codes.class.name"),
     ABSENCE_NUMBER("massmailing.codes.absence.number"),
     LATENESS_NUMBER("massmailing.codes.lateness.number"),
-    SUMMARY("massmailing.codes.summary");
+    SUMMARY("massmailing.codes.summary"),
+    LAST_ABSENCE("massmailing.codes.last.absence"),
+    LAST_LATENESS("massmailing.codes.last.lateness");
 
     private final String key;
 

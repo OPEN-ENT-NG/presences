@@ -576,7 +576,7 @@ public class DefaultEventService implements EventService {
     @Override
     public void getEventsByStudent(Integer eventType, List<String> students, String structure, Boolean justified,
                                    List<Integer> reasonsId, Boolean massmailed, String startDate, String endDate,
-                                   boolean noReasons, Handler<Either<String, JsonArray>> handler) {
+                                   boolean noReasons, String recoveryMethodUsed, Handler<Either<String, JsonArray>> handler) {
         Handler<Either<String, JsonArray>> queryHandler = eventsEvt -> {
             if (eventsEvt.isLeft()) {
                 handler.handle(eventsEvt);
@@ -602,7 +602,7 @@ public class DefaultEventService implements EventService {
             }
 
             JsonObject settings = event.right().getValue();
-            String recoveryMethod = settings.getString("event_recovery_method");
+            String recoveryMethod = recoveryMethodUsed != null ? recoveryMethodUsed : settings.getString("event_recovery_method");
             switch (recoveryMethod) {
                 case "DAY":
                 case "HOUR": {

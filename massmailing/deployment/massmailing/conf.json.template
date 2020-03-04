@@ -15,6 +15,7 @@
     "app-registry.port" : 8012,
     "mode" : "${mode}",
     "entcore.port" : 8009,
+    "mail-max-length": 160,
     "mailings": {
         "MAIL": true,
         "PDF": false,

@@ -16,15 +16,16 @@ import io.vertx.core.json.JsonObject;
 import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
 import org.entcore.common.bus.WorkspaceHelper;
+import org.entcore.common.http.BaseServer;
 
 import java.text.ParseException;
 import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-public class Template {
+public class Template extends BaseServer {
     private Logger LOGGER = LoggerFactory.getLogger(Template.class);
-    private SettingsService settingsService = new DefaultSettingsService();
+    private SettingsService settingsService;
     private WorkspaceHelper workspaceHelper;
     private HashMap<TemplateCode, String> systemCodes = new HashMap<>();
     private HashMap<String, String> imageMap = new HashMap<>();
@@ -35,8 +36,10 @@ public class Template {
     private String locale;
     private String domain;
 
-    public Template(MailingType mailingType, Integer templateIdentifier, String structureId) {
+    public Template(MailingType mailingType, Integer templateIdentifier, String structureId, JsonObject config) {
         this.workspaceHelper = Massmailing.workspaceHelper;
+        this.config = config;
+        this.settingsService = new DefaultSettingsService();
         this.mailingType = mailingType;
         this.id = templateIdentifier;
         this.structure = structureId;
@@ -126,7 +129,8 @@ public class Template {
         String value = this.content;
         List<TemplateCode> codes = new ArrayList<>(codeValues.keySet());
         for (TemplateCode code : codes) {
-            if (TemplateCode.SUMMARY.equals(code)) continue;
+            if (TemplateCode.SUMMARY.equals(code) || TemplateCode.LAST_ABSENCE.equals(code) || TemplateCode.LAST_LATENESS.equals(code))
+                continue;
             try {
                 value = value.replaceAll(Pattern.quote(systemCodes.get(code)), codeValues.get(code).toString());
             } catch (Exception e) {
@@ -136,6 +140,14 @@ public class Template {
 
         if (codes.contains(TemplateCode.SUMMARY)) {
             value = value.replaceAll(Pattern.quote(systemCodes.get(TemplateCode.SUMMARY)), processSummary(codeValues));
+        }
+
+        if (codes.contains(TemplateCode.LAST_ABSENCE)) {
+            value = value.replaceAll(Pattern.quote(systemCodes.get(TemplateCode.LAST_ABSENCE)), processLastEvent(codeValues, TemplateCode.LAST_ABSENCE, "ABSENCE"));
+        }
+
+        if (codes.contains(TemplateCode.LAST_LATENESS)) {
+            value = value.replaceAll(Pattern.quote(systemCodes.get(TemplateCode.LAST_LATENESS)), processLastEvent(codeValues, TemplateCode.LAST_LATENESS, "LATENESS"));
         }
 
         return value;
@@ -186,13 +198,7 @@ public class Template {
                     for (int i = 0; i < eventsKey.size(); i++) {
                         JsonObject event = eventsKey.getJsonObject(i);
                         try {
-                            String line = DateHelper.getDateString(event.getString("display_start_date"), DateHelper.DAY_MONTH_YEAR) + ": ";
-                            line += DateHelper.getTimeString(event.getString("display_start_date"), DateHelper.SQL_FORMAT) + " - " + DateHelper.getTimeString(event.getString("display_end_date"), DateHelper.SQL_FORMAT) + "; ";
-                            if (!"LATENESS".equals(key)) {
-                                line += " - " + getReasonLabel(event);
-                                line += " - " + getRegularisedLabel(event) + "; ";
-                            }
-                            summary += line;
+                            summary += formatSmsEvent(key, event);
                         } catch (ParseException | NullPointerException e) {
                             LOGGER.error("[Massmailing@Template] Failed to generate table line", e, event.toString());
                         }
@@ -202,6 +208,31 @@ public class Template {
         }
 
         return summary;
+    }
+
+    public String processLastEvent(HashMap<TemplateCode, Object> codeValues, TemplateCode key, String type) {
+        JsonObject lastEvent = (JsonObject) codeValues.get(key);
+        String template = "";
+        if (mailingType == MailingType.SMS) {
+            template += "\n";
+            template += I18n.getInstance().translate("massmailing.summary.last." + type, domain, locale) + ": ";
+            try {
+                template = formatSmsEvent(type, lastEvent);
+            } catch (ParseException e) {
+                LOGGER.error("[Massmailing@Template] Failed to generate line", e, lastEvent.toString());
+            }
+        }
+        return template;
+    }
+
+    private String formatSmsEvent(String key, JsonObject event) throws ParseException {
+        String line = DateHelper.getDateString(event.getString("display_start_date"), DateHelper.DAY_MONTH_YEAR) + ": ";
+        line += DateHelper.getTimeString(event.getString("display_start_date"), DateHelper.SQL_FORMAT) + " - " + DateHelper.getTimeString(event.getString("display_end_date"), DateHelper.SQL_FORMAT) + "; ";
+        if (!"LATENESS".equals(key)) {
+            line += " - " + getReasonLabel(event);
+            line += " - " + getRegularisedLabel(event) + "; ";
+        }
+        return line;
     }
 
     private String getReasonLabel(JsonObject event) {
