@@ -1,8 +1,15 @@
 import {Behaviours} from 'entcore';
-import {incidentForm, incidentsPlaceManage, incidentsTypeManage,
-    incidentsProtagonistsManage, incidentsSeriousnessManage,
-    incidentsManageLightbox, incidentsPartnersManage} from './sniplets';
+import {
+    incidentForm,
+    incidentsManageLightbox,
+    incidentsPartnersManage,
+    incidentsPlaceManage,
+    incidentsProtagonistsManage,
+    incidentsSeriousnessManage,
+    incidentsTypeManage,
+} from './sniplets';
 import rights from "./rights";
+import {incidentsMementoWidget} from "./sniplets/memento/incidents";
 
 Behaviours.register('incidents', {
     rights,
@@ -14,6 +21,6 @@ Behaviours.register('incidents', {
         'incidents-manage/sniplet-incidents-seriousness-manage': incidentsSeriousnessManage,
         'incidents-manage/sniplet-incidents-partners-manage': incidentsPartnersManage,
         'incidents-manage/sniplet-incidents-manage-lightbox': incidentsManageLightbox,
-
+        'memento/incidents': incidentsMementoWidget,
     }
 });

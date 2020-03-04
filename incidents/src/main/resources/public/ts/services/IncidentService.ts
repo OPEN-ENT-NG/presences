@@ -11,7 +11,9 @@ export interface IncidentParameterType {
 }
 
 export interface IncidentService {
-    getIncidentParameterType(structureId: string): Promise<IncidentParameterType>
+    getIncidentParameterType(structureId: string): Promise<IncidentParameterType>;
+
+    getStudentIncidentsSummary(userId: string, structureId: string, startDate: string, endDate: string);
 }
 
 export const incidentService: IncidentService = {
@@ -32,6 +34,24 @@ export const incidentService: IncidentService = {
         try {
             const {data} = await http.get(`/incidents/incidents/parameter/types?structureId=${structureId}`);
             return builderIncidentParameterType(data);
+        } catch (err) {
+            throw err;
+        }
+    },
+
+    getStudentIncidentsSummary: async (userId: string, structureId: string, startDate: string, endDate: string) => {
+        try {
+            let url =
+                `/incidents/incidents?structureId=${structureId}` + `&startDate=${startDate}` + `&endDate=${endDate}`;
+
+            if (userId) {
+                url += `&userId=${userId}`;
+            }
+
+            url += `&page=${this.page}`;
+
+            const {data} = await http.get(url);
+            return data;
         } catch (err) {
             throw err;
         }

@@ -1,0 +1,55 @@
+<div class="card vertical-spacing" id="memento-incidents-sniplet">
+
+    <div class="disabled" ng-show="vm.disabled">
+        <h4>
+            <i18n>presences.memento.widget.unavailable</i18n>
+        </h4>
+    </div>
+
+    <div class="section-title">
+        <i18n>incidents.memento.punishment.sanction.title</i18n>
+    </div>
+    <div class="content">
+        <div class="vertical-spacing-four fixed_headers">
+            <table>
+                <thead>
+                <tr>
+                    <th width="10%">
+                        <i18n>incidents.csv.header.date</i18n>
+                    </th>
+                    <th width="10%">
+                        <i18n>incidents.csv.header.type</i18n>
+                    </th>
+                    <th width="60%">
+                        <i18n>incidents.informations</i18n>
+                    </th>
+                    <th width="20%">
+                        <i18n>incidents.done</i18n>
+                    </th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr data-ng-repeat="incident in vm.incidents.all track by $index" class="text-align-center">
+                    <th class="padding-lg">
+                        <span>[[vm.formatIncident(incident.date)]]</span>
+                    </th>
+                    <th class="padding-lg background-yellow text-white">
+                        <span><i18n>incidents.incident</i18n></span>
+                    </th>
+                    <th class="padding-lg">
+                        <span>[[incident.description]]</span>
+                    </th>
+                    <th class="padding-lg">
+                        <!-- display if punition / sanction -->
+                        <!--                        <label class="switch">-->
+                        <!--                            <input type="checkbox" ng-model="" ng-change="" ng-disabled="ngDisabled">-->
+                        <!--                        </label>-->
+                    </th>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+    <pagination data-page-count="vm.incidents.pageCount" data-page-number="vm.incidents.page"
+                class="pagination-sniplet"></pagination>
+</div>
