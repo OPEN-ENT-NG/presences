@@ -73,7 +73,7 @@ public class DefaultInitService implements InitService {
 
     @Override
     public void getInitIncidentSeriousnessStatement(JsonHttpServerRequest request, String structure, Handler<Either<String, JsonObject>> handler) {
-        List<Integer> seriousness = Arrays.asList(1, 3, 5, 6, 9);
+        List<Integer> seriousness = Arrays.asList(0, 2, 4, 5, 7);
         JsonArray params = new JsonArray();
         String query = "INSERT INTO incidents.seriousness(structure_id, label, level) VALUES ";
         for (int i = 0; i < seriousness.size(); i++) {

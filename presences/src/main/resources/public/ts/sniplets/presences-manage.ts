@@ -44,6 +44,7 @@ const vm: ViewModel = {
     async init(): Promise<void> {
         try {
             await http.post(`/presences/initialization/structures/${window.model.vieScolaire.structure.id}`);
+            toasts.confirm('presences.init.success');
             presencesManage.that.$broadcast('reload');
         } catch (err) {
             toasts.warning('presences.init.error');
