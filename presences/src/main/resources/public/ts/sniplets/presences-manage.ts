@@ -15,6 +15,8 @@ declare let window: any;
 console.log("presenceManage sniplet");
 
 interface ViewModel {
+    initialized: boolean;
+
     safeApply(fn?: () => void): void;
 
     scrollToElement($element): void;
@@ -39,13 +41,26 @@ function safeApply() {
     });
 }
 
+function fetchInitializationStatus(): void {
+    http.get(`/presences/initialization/structures/${window.model.vieScolaire.structure.id}`)
+        .then(({data}) => {
+            if ('initialized' in data) vm.initialized = data.initialized;
+            else vm.initialized = false;
+            vm.safeApply();
+        })
+        .catch(err => console.error('Failed to retrieve structure initialization status', err));
+}
+
 const vm: ViewModel = {
+    initialized: true,
     safeApply: null,
     async init(): Promise<void> {
         try {
             await http.post(`/presences/initialization/structures/${window.model.vieScolaire.structure.id}`);
             toasts.confirm('presences.init.success');
+            vm.initialized = true;
             presencesManage.that.$broadcast('reload');
+            vm.safeApply();
         } catch (err) {
             toasts.warning('presences.init.error');
             throw err;
@@ -121,6 +136,7 @@ export const presencesManage = {
             this.setHandler();
             presencesManage.that = this;
             vm.safeApply = safeApply;
+            fetchInitializationStatus();
         },
         setHandler: function () {
             this.$watch(() => window.model.vieScolaire.structure, async () => this.$apply());

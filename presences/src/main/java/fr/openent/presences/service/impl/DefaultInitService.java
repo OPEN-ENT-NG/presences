@@ -2,17 +2,28 @@ package fr.openent.presences.service.impl;
 
 import fr.openent.presences.Presences;
 import fr.openent.presences.service.InitService;
+import fr.wseduc.webutils.Either;
 import fr.wseduc.webutils.I18n;
 import fr.wseduc.webutils.http.Renders;
 import io.vertx.core.Future;
+import io.vertx.core.Handler;
 import io.vertx.core.http.HttpServerRequest;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
+import org.entcore.common.sql.Sql;
+import org.entcore.common.sql.SqlResult;
 
 import java.util.Arrays;
 import java.util.List;
 
 public class DefaultInitService implements InitService {
+
+    @Override
+    public void retrieveInitializationStatus(String structure, Handler<Either<String, JsonObject>> handler) {
+        String query = "SELECT initialized FROM " + Presences.dbSchema + ".settings WHERE structure_id = ?;";
+        JsonArray params = new JsonArray().add(structure);
+        Sql.getInstance().prepared(query, params, SqlResult.validUniqueResultHandler(handler));
+    }
 
     @Override
     public void getReasonsStatement(HttpServerRequest request, String structure, Future<JsonObject> future) {
@@ -57,9 +68,9 @@ public class DefaultInitService implements InitService {
 
     @Override
     public void getSettingsStatement(String structure, Future<JsonObject> future) {
-        String query = "INSERT INTO " + Presences.dbSchema + ".settings(structure_id, alert_absence_threshold, alert_lateness_threshold, alert_incident_threshold, alert_forgotten_notebook_threshold) " +
-                "VALUES (?, ?, ?, ?, ?) ON CONFLICT ON CONSTRAINT settings_pkey DO NOTHING;";
-        JsonArray params = new JsonArray().add(structure).add(5).add(3).add(3).add(3);
+        String query = "INSERT INTO " + Presences.dbSchema + ".settings(structure_id, alert_absence_threshold, alert_lateness_threshold, alert_incident_threshold, alert_forgotten_notebook_threshold, initialized) " +
+                "VALUES (?, ?, ?, ?, ?, true) ON CONFLICT ON CONSTRAINT settings_pkey DO UPDATE SET initialized = true WHERE settings.structure_id = ? ;";
+        JsonArray params = new JsonArray().add(structure).add(5).add(3).add(3).add(3).add(structure);
         future.complete(new JsonObject()
                 .put("statement", query)
                 .put("values", params)

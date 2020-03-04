@@ -7,6 +7,7 @@ import fr.openent.presences.security.Manage;
 import fr.openent.presences.service.InitService;
 import fr.openent.presences.service.impl.DefaultInitService;
 import fr.wseduc.rs.ApiDoc;
+import fr.wseduc.rs.Get;
 import fr.wseduc.rs.Post;
 import fr.wseduc.security.ActionType;
 import fr.wseduc.security.SecuredAction;
@@ -18,13 +19,14 @@ import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import org.entcore.common.controller.ControllerHelper;
 import org.entcore.common.http.filter.ResourceFilter;
-import org.entcore.common.http.response.DefaultResponseHandler;
 import org.entcore.common.sql.Sql;
 import org.entcore.common.sql.SqlResult;
 import org.entcore.common.user.UserUtils;
 
 import java.util.Arrays;
 import java.util.List;
+
+import static org.entcore.common.http.response.DefaultResponseHandler.defaultResponseHandler;
 
 public class InitController extends ControllerHelper {
     private EventBus eventBus;
@@ -33,6 +35,15 @@ public class InitController extends ControllerHelper {
     public InitController(EventBus eb) {
         super();
         this.eventBus = eb;
+    }
+
+    @Get("/initialization/structures/:id")
+    @SecuredAction(value = "", type = ActionType.RESOURCE)
+    @ResourceFilter(Manage.class)
+    @ApiDoc("Retrieve structure initialization status")
+    public void getInitializationStatus(HttpServerRequest request) {
+        String structure = request.getParam("id");
+        initService.retrieveInitializationStatus(structure, defaultResponseHandler(request));
     }
 
 
@@ -60,7 +71,7 @@ public class InitController extends ControllerHelper {
                     statements.add(future.result());
                 }
 
-                Sql.getInstance().transaction(statements, SqlResult.validUniqueResultHandler(DefaultResponseHandler.defaultResponseHandler(request)));
+                Sql.getInstance().transaction(statements, SqlResult.validUniqueResultHandler(defaultResponseHandler(request)));
             });
 
             initService.getReasonsStatement(request, structure, reasonsFuture);
