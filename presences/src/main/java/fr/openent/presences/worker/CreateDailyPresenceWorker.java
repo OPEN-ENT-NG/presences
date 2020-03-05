@@ -183,7 +183,7 @@ public class CreateDailyPresenceWorker extends BusModBase implements Handler<Mes
     }
 
     private void getFirstCounsellorId(String structureId, Handler<AsyncResult<String>> handler) {
-        String queryCounsellor = "MATCH (u:User)-[:IN]->(g:ProfileGroup)-[:DEPENDS]->(s:Structure {id:{structureId}}) WHERE ANY(function IN u.functions WHERE function =~ '.*EDU\\$EDUCATION\\$E0030.*') RETURN u";
+        String queryCounsellor = "MATCH (u:User)-[:IN]->(g:ProfileGroup)-[:DEPENDS]->(s:Structure {id:{structureId}}) WHERE ANY(function IN u.functions WHERE function =~ '.*EDU\\\\$EDUCATION\\\\$E0030.*') RETURN u";
 
         Neo4j.getInstance().execute(queryCounsellor, new JsonObject().put("structureId", structureId), Neo4jResult.validResultHandler(resultCounsellor -> {
             if (resultCounsellor.isRight()) {
@@ -250,51 +250,55 @@ public class CreateDailyPresenceWorker extends BusModBase implements Handler<Mes
     }
 
     private String getFormattedMessage(JsonObject workerResult) {
-        StringBuilder message = new StringBuilder("Rapport du " + DateHelper.getDateString(new Date().toString(), "dd/mm/yyyy à HH:mm") + ".\n\n");
+        StringBuilder message = new StringBuilder("<span>Rapport du " + DateHelper.getDateString(new Date().toString(), "dd/mm/yyyy HH:mm") + ".</span><br>");
         String error = workerResult.getString("errorMessage", null);
 
         if (error != null) {
-            message.append("Aucun appel n'a été créé: ").append(error);
+            message.append("<span>Aucun appel n'a été créé: ").append(error).append("</span>");
 
         } else {
             JsonObject structures = workerResult.getJsonObject("structures");
 
             String errorStructures = structures.getString("errorMessage", null);
             if (errorStructures != null) {
-                message.append("Erreur à la récupération des structures, aucun appel n'a été créé: ").append(errorStructures);
+                message.append("<span>Erreur à la récupération des structures, aucun appel n'a été créé: ").append(errorStructures).append("</span>");
                 return message.toString();
             }
 
             Iterator<String> structureIds = structures.fieldNames().iterator();
             Integer succeededCoursesNumber = 0;
             StringBuilder structuresMessage = new StringBuilder();
-
+            structuresMessage.append("<div style='margin-left: 10px;'>");
             while (structureIds.hasNext()) {
                 String structureId = structureIds.next();
-                StringBuilder structureMessage = new StringBuilder("\n\t Structure '" + structureId + "':\n\n");
+                StringBuilder structureMessage = new StringBuilder("<br><span> Structure '" + structureId + "':</span><br>");
                 JsonObject structure = structures.getJsonObject(structureId);
                 String errorStructure = structure.getString("errorMessage", null);
 
+
                 if (errorStructure != null) {
-                    structureMessage.append("\t\t-\t Aucun appel n'a été créé sur cette structure: ").append(errorStructure).append("\n\n");
+                    structureMessage.append("<span style='margin-left: 10px;'> Aucun appel n'a été créé sur cette structure: ").append(errorStructure).append("<br>");
                 } else {
+                    structuresMessage.append("<ul>");
+
                     Integer structureCoursesNumber = structure.getInteger("succeededCoursesNumber", 0);
 
-                    structureMessage.append("\t\t-\t Nombre d'appels créés: ").append(structureCoursesNumber).append("\n\n");
+                    structureMessage.append("<li> Nombre d'appels créés: ").append(structureCoursesNumber).append("</li><br>");
                     succeededCoursesNumber += structureCoursesNumber;
                     JsonObject coursesErrors = structure.getJsonObject("coursesErrors");
                     Set<String> coursesIds = coursesErrors.fieldNames();
 
                     for (String courseId : coursesIds) {
                         String errorMessage = coursesErrors.getString(courseId);
-                        String courseMessage = "\t\t-\t Cours '" + courseId + "': Pas d'appel créé: " + errorMessage + "\n\n";
+                        String courseMessage = "<li> Cours '" + courseId + "': Pas d'appel créé: " + errorMessage + "</li>";
                         structureMessage.append(courseMessage);
                     }
-
+                    structuresMessage.append("</ul><br>");
                 }
                 structuresMessage.append(structureMessage);
             }
-            message.append("Total appels créés: ").append(succeededCoursesNumber).append(".\n\n");
+            structuresMessage.append("</div>");
+            message.append("<span>Total appels créés: ").append(succeededCoursesNumber).append(".</span><br><br>");
             message.append(structuresMessage);
         }
 

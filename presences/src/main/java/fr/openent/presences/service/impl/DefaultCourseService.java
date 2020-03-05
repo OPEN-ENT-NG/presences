@@ -94,6 +94,7 @@ public class DefaultCourseService implements CourseService {
                 JsonObject object;
                 for (int i = 0; i < courses.size(); i++) {
                     object = courses.getJsonObject(i);
+                    LOGGER.info(object.getString("_id"));
                     object.remove("startCourse");
                     object.remove("endCourse");
                     object.remove("is_periodic");
@@ -102,6 +103,7 @@ public class DefaultCourseService implements CourseService {
                     JsonArray courseTeachers = new JsonArray();
                     JsonArray teacherIds = object.getJsonArray("teacherIds");
                     for (int j = 0; j < teacherIds.size(); j++) {
+                        if (!teacherMap.containsKey(teacherIds.getString(j))) continue;
                         courseTeachers.add(teacherMap.getJsonObject(teacherIds.getString(j)));
                     }
                     object.put("teachers", courseTeachers);
