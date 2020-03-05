@@ -324,10 +324,10 @@ public class DateHelper {
         return calendar.get(Calendar.DAY_OF_WEEK) - 1;
     }
 
-    public static String getCurrentDay() {
+    public static String getCurrentDayWithHours() {
         Calendar cal = Calendar.getInstance();
         Date date = cal.getTime();
-        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
+        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm");
         return sdf.format(date);
     }
 
@@ -338,4 +338,5 @@ public class DateHelper {
         SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
         return sdf.format(date);
     }
+
 }

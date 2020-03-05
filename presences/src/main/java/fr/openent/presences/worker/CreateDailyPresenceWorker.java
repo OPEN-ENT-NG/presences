@@ -202,6 +202,7 @@ public class CreateDailyPresenceWorker extends BusModBase implements Handler<Mes
     private void createRegister(String userId, JsonObject register, Handler<AsyncResult<Boolean>> handler) {
         if (userId == null || userId.trim().equals("")) {
             handler.handle(Future.failedFuture("No user found to assign register"));
+            return;
         }
 
         UserUtils.getUserInfos(eb, userId, user -> {
@@ -250,7 +251,7 @@ public class CreateDailyPresenceWorker extends BusModBase implements Handler<Mes
     }
 
     private String getFormattedMessage(JsonObject workerResult) {
-        StringBuilder message = new StringBuilder("<span>Rapport du " + DateHelper.getDateString(new Date().toString(), "dd/mm/yyyy HH:mm") + ".</span><br>");
+        StringBuilder message = new StringBuilder("<span>Rapport du " + DateHelper.getCurrentDayWithHours() + ".</span><br>");
         String error = workerResult.getString("errorMessage", null);
 
         if (error != null) {
