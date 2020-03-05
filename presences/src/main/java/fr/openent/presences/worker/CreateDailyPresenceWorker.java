@@ -46,8 +46,8 @@ public class CreateDailyPresenceWorker extends BusModBase implements Handler<Mes
     @Override
     public void handle(Message<JsonObject> eventMessage) {
         eventMessage.reply(new JsonObject().put("status", "ok"));
-            logger.info("Calling Worker");
-            processCreateDailyPresences();
+        logger.info("Calling Worker");
+        processCreateDailyPresences();
     }
 
     private void processCreateDailyPresences() {
@@ -90,7 +90,7 @@ public class CreateDailyPresenceWorker extends BusModBase implements Handler<Mes
             }
 
             CompositeFuture.join(futures).setHandler(resultFutures -> {
-                String title = "["+ config.getString("host") + "][Présences] Rapport d'ouverture des appels: " + (getRegistersCreationWorked(result) ? "succès." : "échec.");
+                String title = "[" + config.getString("host") + "][Présences] Rapport d'ouverture des appels: " + (getRegistersCreationWorked(result) ? "succès." : "échec.");
                 String message = getFormattedMessage(result);
                 sendMail(title, message);
             });
@@ -102,7 +102,7 @@ public class CreateDailyPresenceWorker extends BusModBase implements Handler<Mes
         List<Future> futures = new ArrayList<>();
         courseService.listCourses(
                 structureId, new ArrayList<>(), new ArrayList<>(),
-                startDate, endDate, true, true, null,resultCourses -> {
+                startDate, endDate, true, true, null, resultCourses -> {
                     if (resultCourses.isLeft()) {
                         log.error(resultCourses.left().getValue());
                         handler.handle(Future.failedFuture("Courses recovery failed: " + resultCourses.left().getValue()));
@@ -222,7 +222,7 @@ public class CreateDailyPresenceWorker extends BusModBase implements Handler<Mes
         } else {
             JsonObject structures = workerResult.getJsonObject("structures");
             String errorStructure = structures.getString("errorMessage", null);
-            if(errorStructure != null) {
+            if (errorStructure != null) {
                 return false;
             }
 
@@ -260,7 +260,7 @@ public class CreateDailyPresenceWorker extends BusModBase implements Handler<Mes
             JsonObject structures = workerResult.getJsonObject("structures");
 
             String errorStructures = structures.getString("errorMessage", null);
-            if(errorStructures != null) {
+            if (errorStructures != null) {
                 message.append("Erreur à la récupération des structures, aucun appel n'a été créé: ").append(errorStructures);
                 return message.toString();
             }
@@ -302,26 +302,30 @@ public class CreateDailyPresenceWorker extends BusModBase implements Handler<Mes
     }
 
     private void sendMail(String title, String message) {
-        JsonArray listMails = config.getJsonArray("mails-list-cron", new JsonArray().add("support.ent.fr@cgi.com"));
+        JsonArray listMails = config.getJsonArray("mails-list-cron", new JsonArray());
 
-        for (Object o: listMails) {
-            String mail = (String) o;
-            emailSender.sendEmail(
-                    null,
-                    mail,
-                    null,
-                    null,
-                    title,
-                    message,
-                    null,
-                    false,
-                    event -> {
-                        if (event.failed()) {
-                            log.error("[Presence@DailyRegistersCreation] Failed to send mail", event.cause());
-                        } else if ("error".equals(event.result().body().getString("status"))) {
-                            log.error("[Presence@DailyRegistersCreation] Failed to send mail", event.result().body().getString("message", ""));
-                        }
-                    });
+        if (listMails.isEmpty()) {
+            log.info(message);
+        } else {
+            for (Object o : listMails) {
+                String mail = (String) o;
+                emailSender.sendEmail(
+                        null,
+                        mail,
+                        null,
+                        null,
+                        title,
+                        message,
+                        null,
+                        false,
+                        event -> {
+                            if (event.failed()) {
+                                log.error("[Presence@DailyRegistersCreation] Failed to send mail", event.cause());
+                            } else if ("error".equals(event.result().body().getString("status"))) {
+                                log.error("[Presence@DailyRegistersCreation] Failed to send mail", event.result().body().getString("message", ""));
+                            }
+                        });
+            }
         }
     }
 
