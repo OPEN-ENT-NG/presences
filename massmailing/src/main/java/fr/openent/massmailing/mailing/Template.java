@@ -161,8 +161,8 @@ public class Template {
                     for (int i = 0; i < eventsKey.size(); i++) {
                         JsonObject event = eventsKey.getJsonObject(i);
                         try {
-                            String line = "<tr><td>" + DateHelper.getDateString(event.getString("start_date"), DateHelper.DAY_MONTH_YEAR) + "</td>";
-                            line += "<td>" + DateHelper.getTimeString(event.getString("start_date"), DateHelper.SQL_FORMAT) + " - " + DateHelper.getTimeString(event.getString("end_date"), DateHelper.SQL_FORMAT) + "</td>";
+                            String line = "<tr><td>" + DateHelper.getDateString(event.getString("display_start_date"), DateHelper.DAY_MONTH_YEAR) + "</td>";
+                            line += "<td>" + DateHelper.getTimeString(event.getString("display_start_date"), DateHelper.SQL_FORMAT) + " - " + DateHelper.getTimeString(event.getString("display_end_date"), DateHelper.SQL_FORMAT) + "</td>";
                             if (!"LATENESS".equals(key)) {
                                 line += "<td>" + getReasonLabel(event) + "</td>";
                                 line += "<td>" + getRegularisedLabel(event) + "</td></tr>";
@@ -186,8 +186,8 @@ public class Template {
                     for (int i = 0; i < eventsKey.size(); i++) {
                         JsonObject event = eventsKey.getJsonObject(i);
                         try {
-                            String line = DateHelper.getDateString(event.getString("start_date"), DateHelper.DAY_MONTH_YEAR) + ": ";
-                            line += DateHelper.getTimeString(event.getString("start_date"), DateHelper.SQL_FORMAT) + " - " + DateHelper.getTimeString(event.getString("end_date"), DateHelper.SQL_FORMAT) + "; ";
+                            String line = DateHelper.getDateString(event.getString("display_start_date"), DateHelper.DAY_MONTH_YEAR) + ": ";
+                            line += DateHelper.getTimeString(event.getString("display_start_date"), DateHelper.SQL_FORMAT) + " - " + DateHelper.getTimeString(event.getString("display_end_date"), DateHelper.SQL_FORMAT) + "; ";
                             if (!"LATENESS".equals(key)) {
                                 line += " - " + getReasonLabel(event);
                                 line += " - " + getRegularisedLabel(event) + "; ";

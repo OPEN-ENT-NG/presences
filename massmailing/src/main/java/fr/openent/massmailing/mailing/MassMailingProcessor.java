@@ -132,15 +132,20 @@ public abstract class MassMailingProcessor implements Mailing {
             for (int i = 0; i < absences.size(); i++) {
                 JsonObject absence = absences.getJsonObject(i);
                 switch (recoveryMethod) {
+                    case "hour":
+                        absence.put("display_start_date", absence.getString("start_date"));
+                        absence.put("display_end_date", absence.getString("end_date"));
+                        break;
                     case "DAY":
-                        absence.put("start_date", transformDate(absence.getString("start_date"), startMorningHour));
-                        absence.put("end_date", transformDate(absence.getString("end_date"), endAfternoonHour));
+                        absence.put("display_start_date", transformDate(absence.getString("start_date"), startMorningHour));
+                        absence.put("display_end_date", transformDate(absence.getString("end_date"), endAfternoonHour));
                         break;
                     case "HALF_DAY":
                     default:
                         String period = absence.getString("period");
-                        absence.put("start_date", transformDate(absence.getString("start_date"), "MORNING".equals(period) ? startMorningHour : startAfternoonHour));
-                        absence.put("end_date", transformDate(absence.getString("end_date"), "MORNING".equals(period) ? midHour : endAfternoonHour));
+                        //TODO an error throw on the second related due to reference changes below
+                        absence.put("display_start_date", transformDate(absence.getString("start_date"), "MORNING".equals(period) ? startMorningHour : startAfternoonHour));
+                        absence.put("display_end_date", transformDate(absence.getString("end_date"), "MORNING".equals(period) ? midHour : endAfternoonHour));
 
                 }
             }
