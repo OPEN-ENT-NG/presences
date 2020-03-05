@@ -5,4 +5,5 @@ export interface User {
     id: string;
     groupId: string;
     groupName: string;
+    info?: string;
 }

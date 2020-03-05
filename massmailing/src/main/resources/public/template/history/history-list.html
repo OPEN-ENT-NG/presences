@@ -46,8 +46,14 @@
             </div>
         </div>
     </div>
-    <!-- side card -->
-    <div class="history-body-content-card" id="sidebar" ng-style="{opacity: vm.selectedMailing != undefined ? 1 : 0}">
-        <div ng-include="'/massmailing/public/template/history/history-card.html'"></div>
+    <div id="sidebar" class="history-body-content-card">
+        <div ng-include="'/massmailing/public/template/history/history-card.html'"
+             ng-if="vm.selectedMailing != undefined"></div>
+        <!-- instruction click list to display card -->
+        <div class="history-body-content-card-clickDisplay"
+             ng-if="vm.selectedMailing === undefined">
+            <i18n>massmailing.click.to.display</i18n>
+            <i class="arrow-right"></i>
+        </div>
     </div>
 </section>

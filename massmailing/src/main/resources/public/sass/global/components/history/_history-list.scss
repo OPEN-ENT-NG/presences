@@ -44,5 +44,18 @@
   // side card
   &-card {
     padding-left: 16px;
+
+    &-clickDisplay {
+      display: flex;
+      flex-direction: column;
+      text-align: center;
+      margin: 72px;
+    }
+
+    .arrow-right {
+      margin-top: 24px;
+      font-size: 24px;
+      transform: rotate(180deg);
+    }
   }
 }

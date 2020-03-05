@@ -4,7 +4,7 @@ public class Person {
 
     protected String id;
     protected String displayName;
-    protected String email;
+    protected String info; // (could be email, phone number...)
 
     public String getName() {
         return displayName;
@@ -24,11 +24,11 @@ public class Person {
     }
 
     public String getEmail() {
-        return email;
+        return info;
     }
 
-    public void setEmail(String email) {
-        this.email = email;
+    public void setEmail(String info) {
+        this.info = info;
     }
 
 }

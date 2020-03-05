@@ -70,7 +70,7 @@ public class DefaultMailingService implements MailingService {
     private void fetchMailings(String structureId, String startDate, String endDate, List<String> mailingTypes, List<String> eventTypes,
                                List<String> studentsIds, Integer page, Handler<AsyncResult<List<Mailing>>> handler) {
         JsonArray params = new JsonArray();
-        String query = "SELECT mailing.*, to_json(me) as mailing_event FROM " + Massmailing.dbSchema + ".mailing as mailing" +
+        String query = "SELECT DISTINCT ON (mailing.*) mailing.*, to_json(me) as mailing_event FROM " + Massmailing.dbSchema + ".mailing as mailing" +
                 " INNER JOIN " + Massmailing.dbSchema + ".mailing_event as me on (me.mailing_id = mailing.id)" +
                 " WHERE mailing.structure_id = ? AND (mailing.created >= ? AND mailing.created <= ?) ";
         params.add(structureId)
@@ -95,7 +95,7 @@ public class DefaultMailingService implements MailingService {
             params.addAll(new JsonArray(studentsIds));
         }
 
-        query += " GROUP BY mailing.id, me.id, mailing.created ORDER BY mailing.created DESC OFFSET ? LIMIT ? ";
+        query += " GROUP BY mailing.id, me.id, mailing.created ORDER BY mailing.* DESC OFFSET ? LIMIT ? ";
         params.add(Massmailing.PAGE_SIZE * page);
         params.add(Massmailing.PAGE_SIZE);
 
@@ -114,7 +114,7 @@ public class DefaultMailingService implements MailingService {
     public void getMailingsPageNumber(String structureId, String startDate, String endDate, List<String> mailingTypes,
                                       List<String> eventTypes, List<String> studentsIds, Handler<Either<String, JsonObject>> handler) {
         JsonArray params = new JsonArray();
-        String query = "SELECT COUNT(mailing.id) FROM " + Massmailing.dbSchema + ".mailing as mailing" +
+        String query = "SELECT COUNT(DISTINCT mailing.id) FROM " + Massmailing.dbSchema + ".mailing as mailing" +
                 " INNER JOIN " + Massmailing.dbSchema + ".mailing_event as me on (me.mailing_id = mailing.id)" +
                 " WHERE mailing.structure_id = ? AND (mailing.created >= ? AND mailing.created <= ?) ";
         params.add(structureId).add(startDate).add(endDate);

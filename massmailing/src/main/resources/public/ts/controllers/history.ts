@@ -47,6 +47,8 @@ interface ViewModel {
 
     getIcons(iconValue: string): string;
 
+    getMailingTypeText(selectedMailing: Mailing): string;
+
     changePagination(): Promise<void>;
 
     updateFilter(): Promise<void>;
@@ -110,7 +112,7 @@ export const historyController = ng.controller('HistoryController',
                 Object.keys(MassmailingStatus).filter(type => !parseInt(type) && type !== '0').forEach(mailingType => {
                     switch (mailingType) {
                         case MassmailingStatus[MassmailingStatus.UNJUSTIFIED]: {
-                            let i18n = 'massmailing.types.UNJUSTIFIED';
+                            let i18n = 'massmailing.summary.ABSENCE';
                             eventTypes.push({label: i18n, value: EventType[EventType.ABSENCE], isSelected: true});
                             break;
                         }
@@ -209,6 +211,18 @@ export const historyController = ng.controller('HistoryController',
                         return 'pdf';
                     case MailingType[MailingType.SMS]:
                         return 'phone-android';
+                    default:
+                        return '';
+                }
+            };
+
+            vm.getMailingTypeText = (selectedMailing: Mailing): string => {
+                if (!selectedMailing) return '';
+                switch (selectedMailing.type) {
+                    case MailingType[MailingType.MAIL]:
+                        return 'massmailing.message.sent.to.email';
+                    case MailingType[MailingType.SMS]:
+                        return 'massmailing.message.sent.to.phone';
                     default:
                         return '';
                 }
@@ -320,6 +334,7 @@ export const historyController = ng.controller('HistoryController',
             /* Animation sidebar card */
             const startSidebarAnimation = () => {
                 let $sidebar = $("#sidebar");   // JQuery sidebar
+
                 let $window = $(window);                // JQuery window
                 let {top} = $sidebar.offset();          // top side card card offset (setting 340 value default if sidebar undefined)
                 // main navbar ENT (height 64px) + extra margin top added
@@ -327,8 +342,8 @@ export const historyController = ng.controller('HistoryController',
 
                 // while scrolling
                 $window.scroll(() => {
-                    if ($window.scrollTop() > (top === 0 ? 340 : top)) {
-                        $sidebar.stop().animate({marginTop: $window.scrollTop() - (top === 0 ? 340 : top) + navbarHeight});
+                    if ($window.scrollTop() > top) {
+                        $sidebar.stop().animate({marginTop: $window.scrollTop() - top + navbarHeight});
                     } else {
                         $sidebar.stop().animate({marginTop: 0});
                     }

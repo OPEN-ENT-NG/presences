@@ -2,7 +2,7 @@
     <!-- title section -->
     <section class="massmailing-card-header">
        <span class="massmailing-card-header-title">
-           <i18n>massmailing.message.sent</i18n>&nbsp;[[vm.selectedMailing.student.displayName]]
+           [[lang.translate(vm.getMailingTypeText(vm.selectedMailing))]]&nbsp;[[vm.selectedMailing.recipient.info]]
        </span>
     </section>
 

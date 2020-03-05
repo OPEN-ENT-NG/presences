@@ -9,10 +9,10 @@ public class User extends Person implements Cloneable {
         this.id = studentId;
     }
 
-    public User(String studentId, String email) {
+    public User(String studentId, String info) {
         super();
         this.id = studentId;
-        this.email = email;
+        this.info = info;
     }
 
     public User(JsonObject user) {
@@ -24,7 +24,7 @@ public class User extends Person implements Cloneable {
         return new JsonObject()
                 .put("id", this.id)
                 .put("displayName", this.displayName)
-                .put("email", this.email);
+                .put("info", this.info);
     }
 
     @Override
