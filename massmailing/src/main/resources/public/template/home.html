@@ -114,7 +114,7 @@
                         </div>
                     </td>
                     <td class="text-center" ng-repeat="type in vm.getKeys(vm.massmailingCount)">
-                        [[lang.translate('massmailing.anomalies.student.' + type)]]
+                        <span ng-if="anomaly.bug[type]">[[lang.translate('massmailing.anomalies.student.' + type)]]</span>
                     </td>
                 </tr>
                 </tbody>
