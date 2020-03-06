@@ -1,5 +1,5 @@
 import {Course, CourseEvent, Notebook, TimeSlot} from "../../services";
-import {moment} from "entcore";
+import {angular, moment} from "entcore";
 import {DateUtils} from "@common/utils";
 
 declare const window: any;
@@ -152,17 +152,28 @@ export class CalendarUtils {
             item.getAttribute("class") !== "schedule-item schedule-globalAbsenceReason");
 
         coursesItems.forEach(course => {
+            let courseScope = angular.element(course).scope();
 
             /* Coloring course in red if inside global absent bloc */
             absenceItems.forEach(absenceItem => {
-                if (CalendarUtils.isItemInside(course, absenceItem)) {
+                let absenceScope = angular.element(absenceItem).scope();
+                let isMatchDate = DateUtils.isMatchDate(
+                    courseScope.item.startDate, courseScope.item.endDate,
+                    absenceScope.item.startDate, absenceScope.item.endDate
+                );
+                if (CalendarUtils.isItemInside(course, absenceItem) && isMatchDate) {
                     course.querySelectorAll(".course-item")[0].classList.add("isAbsent");
                 }
             });
 
             /* Coloring course in pink if inside global justified absent bloc */
             absenceReasonItems.forEach(absenceReasonItem => {
-                if (CalendarUtils.isItemInside(course, absenceReasonItem)) {
+                let absenceReasonItemScope = angular.element(absenceReasonItem).scope();
+                let isMatchDate = DateUtils.isMatchDate(
+                    courseScope.item.startDate, courseScope.item.endDate,
+                    absenceReasonItemScope.item.startDate, absenceReasonItemScope.item.endDate
+                );
+                if (CalendarUtils.isItemInside(course, absenceReasonItem) && isMatchDate) {
                     course.querySelectorAll(".course-item")[0].classList.add("isJustifiedAbsent");
                 }
             });
