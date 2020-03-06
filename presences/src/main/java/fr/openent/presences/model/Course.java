@@ -159,7 +159,7 @@ public class Course implements Cloneable {
     }
 
     public JsonArray getClasses() {
-        return classes;
+        return classes != null ? classes : new JsonArray();
     }
 
     public void setClasses(JsonArray classes) {
@@ -167,7 +167,7 @@ public class Course implements Cloneable {
     }
 
     public JsonArray getGroups() {
-        return groups;
+        return groups != null ? groups : new JsonArray();
     }
 
     public void setGroups(JsonArray groups) {
