@@ -139,7 +139,7 @@ export const presencesManage = {
             fetchInitializationStatus();
         },
         setHandler: function () {
-            this.$watch(() => window.model.vieScolaire.structure, async () => this.$apply());
+            this.$watch(() => window.model.vieScolaire.structure, fetchInitializationStatus);
 
             /* presence discipline event */
             this.$on(PRESENCES_DISCIPLINE.SEND, (event: IAngularEvent, args) => vm.sendEvent(event, args));
