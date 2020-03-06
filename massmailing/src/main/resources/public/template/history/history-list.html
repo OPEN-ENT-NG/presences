@@ -46,7 +46,7 @@
             </div>
         </div>
     </div>
-    <div id="sidebar" class="history-body-content-card">
+    <div id="sidebar" ng-init="vm.startSidebarAnimation()" class="history-body-content-card">
         <div ng-include="'/massmailing/public/template/history/history-card.html'"
              ng-if="vm.selectedMailing != undefined"></div>
         <!-- instruction click list to display card -->

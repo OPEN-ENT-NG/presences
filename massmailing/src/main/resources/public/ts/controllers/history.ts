@@ -41,6 +41,10 @@ interface ViewModel {
 
     selectedMailing: Mailing;
 
+    $sidebar: JQuery;
+
+    startSidebarAnimation(): void;
+
     formatDayDate(date: string): string;
 
     switchMailingHistory(mailing: Mailing): void;
@@ -83,17 +87,21 @@ interface ViewModel {
     selectGroupLightbox(valueInput, groupItem): void;
 
     removeSelectedGroupsLightbox(groupItem): void;
+
+    startSidebarAnimation(): void;
 }
 
 export const historyController = ng.controller('HistoryController',
-    ['$scope', '$route', '$location', 'SearchService', 'GroupService', 'MailingService',
-        function ($scope, $route, $location, searchService: SearchService,
+    ['$scope', '$timeout', '$route', '$location', 'SearchService', 'GroupService', 'MailingService',
+        function ($scope, $timeout, $route, $location, searchService: SearchService,
                   groupService: GroupService, mailingService: MailingService) {
             const vm: ViewModel = this;
 
             /* Init mailings */
             vm.mailingsRequest = {} as MailingRequest;
             vm.selectedMailing = undefined;
+
+            vm.$sidebar = null;
 
             /* init mailing type lightbox to interact */
             const initMailingTypes = (): Array<{ label: string, isSelected: boolean }> => {
@@ -128,7 +136,9 @@ export const historyController = ng.controller('HistoryController',
 
             /* Init filter */
             vm.filter = {
-                start_date: moment().startOf('day'),
+                // TOdo uncomment and remov ethe other startDate
+                // start_date: moment().startOf('day'),
+                start_date: moment().add(-2, 'M').startOf('day'),
                 end_date: moment().endOf('day'),
                 students: [],
                 groups: [],
@@ -172,7 +182,6 @@ export const historyController = ng.controller('HistoryController',
                 prepareRequest();
                 await vm.mailings.build(await mailingService.get(vm.mailingsRequest));
                 vm.mailings.loading = false;
-                if (vm.mailings.mailingResponse.all.length > 0) startSidebarAnimation();
                 vm.selectedMailing = undefined;
                 $scope.safeApply();
             };
@@ -200,6 +209,8 @@ export const historyController = ng.controller('HistoryController',
                 });
                 /* set our selectedMailing */
                 vm.selectedMailing = vm.mailings.mailingResponse.all.find(mailing => mailing.isSelected);
+                // if (vm.mailings.mailingResponse.all.length > 0) startSidebarAnimation();
+
                 $scope.safeApply();
             };
 
@@ -332,20 +343,20 @@ export const historyController = ng.controller('HistoryController',
             };
 
             /* Animation sidebar card */
-            const startSidebarAnimation = () => {
-                let $sidebar = $("#sidebar");   // JQuery sidebar
+            vm.startSidebarAnimation = () => {
+                if (vm.$sidebar && vm.$sidebar.length > 0) return;
+                vm.$sidebar = $("#sidebar");
+                let $window = $(window);
 
-                let $window = $(window);                // JQuery window
-                let {top} = $sidebar.offset();          // top side card card offset (setting 340 value default if sidebar undefined)
-                // main navbar ENT (height 64px) + extra margin top added
-                let navbarHeight = document.querySelector('.navbar ').clientHeight + 32;
+                let top = 344;
+                let navbarHeight = 96;
 
                 // while scrolling
                 $window.scroll(() => {
                     if ($window.scrollTop() > top) {
-                        $sidebar.stop().animate({marginTop: $window.scrollTop() - top + navbarHeight});
+                        vm.$sidebar.stop().animate({marginTop: $window.scrollTop() - top + navbarHeight});
                     } else {
-                        $sidebar.stop().animate({marginTop: 0});
+                        vm.$sidebar.stop().animate({marginTop: 0});
                     }
                 });
             };
