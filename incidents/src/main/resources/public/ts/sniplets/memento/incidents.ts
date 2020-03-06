@@ -33,7 +33,6 @@ const vm: IViewModel = {
 
     async init(student: string): Promise<void> {
         try {
-            console.log('MEMENOT sniplet incidents');
             vm.incidents = new Incidents();
             vm.incidents.eventer.on('loading::true', vm.apply);
             vm.incidents.eventer.on('loading::false', vm.apply);
@@ -79,6 +78,7 @@ export const incidentsMementoWidget = {
             this.setHandler();
         },
         setHandler: function () {
+            console.log('MEMENTO incidents');
             if (!window.memento) return;
             this.$on('memento:init', (evt, {student}) => {
                 const sniplet = document.getElementById('memento-incidents-sniplet');

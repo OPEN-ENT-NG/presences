@@ -281,7 +281,7 @@
   "presences.memento.absence.month.10": "Oct",
   "presences.memento.absence.month.11": "Nov",
   "presences.memento.absence.month.12": "Déc",
-  "presences.memento.widget.unavailable": "Section non disponible",
+  "presences.memento.widget.unavailable": "Informations non disponibles - périodes non définies pour la classe",
   "presences.alerts.loading": "Alertes en cours de chargement",
   "presences.absences.load.failed": "Une erreur est survenue lors du chargement des absences à régulariser",
   "presences.absences.update_reason.error": "Une erreur est survenue lors de la modification du motif",
