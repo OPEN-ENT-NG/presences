@@ -206,7 +206,7 @@ export const historyController = ng.controller('HistoryController',
             vm.getIcons = (iconValue: string): string => {
                 switch (iconValue) {
                     case MailingType[MailingType.MAIL]:
-                        return 'email';
+                        return 'presences-email';
                     case MailingType[MailingType.PDF]:
                         return 'pdf';
                     case MailingType[MailingType.SMS]:

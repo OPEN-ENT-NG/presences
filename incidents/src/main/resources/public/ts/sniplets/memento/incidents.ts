@@ -7,6 +7,8 @@ declare let window: any;
 interface IViewModel {
     startDate: Date;
     endDate: Date;
+    schoolYears: Array<any>;
+    disabled: boolean,
     student: string,
     incidents: Incidents;
 
@@ -22,13 +24,16 @@ interface IViewModel {
 const vm: IViewModel = {
     startDate: null,
     endDate: null,
+    schoolYears: [],
     student: null,
     incidents: undefined,
+    disabled: false,
 
     apply: null,
 
     async init(student: string): Promise<void> {
         try {
+            console.log('MEMENOT sniplet incidents');
             vm.incidents = new Incidents();
             vm.incidents.eventer.on('loading::true', vm.apply);
             vm.incidents.eventer.on('loading::false', vm.apply);
@@ -37,7 +42,13 @@ const vm: IViewModel = {
             const schoolYears = await DateUtils.getSchoolYearDates(window.structure.id);
             vm.startDate = moment(schoolYears.start_date);
             vm.endDate = moment(schoolYears.end_date);
-            vm.loadStudentYearIncidents();
+            await vm.loadStudentYearIncidents();
+            if (!schoolYears.id) {
+                vm.disabled = true;
+                vm.apply();
+                return;
+            }
+            vm.disabled = false;
         } catch (e) {
             toasts.warning('presences.memento.incident.init.failed');
             throw e

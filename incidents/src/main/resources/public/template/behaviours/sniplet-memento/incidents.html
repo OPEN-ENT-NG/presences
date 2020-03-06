@@ -9,47 +9,65 @@
     <div class="section-title">
         <i18n>incidents.memento.punishment.sanction.title</i18n>
     </div>
-    <div class="content">
-        <div class="vertical-spacing-four fixed_headers">
-            <table>
-                <thead>
-                <tr>
-                    <th width="10%">
-                        <i18n>incidents.csv.header.date</i18n>
-                    </th>
-                    <th width="10%">
-                        <i18n>incidents.csv.header.type</i18n>
-                    </th>
-                    <th width="60%">
-                        <i18n>incidents.informations</i18n>
-                    </th>
-                    <th width="20%">
-                        <i18n>incidents.done</i18n>
-                    </th>
-                </tr>
-                </thead>
-                <tbody>
-                <tr data-ng-repeat="incident in vm.incidents.all track by $index" class="text-align-center">
-                    <th class="padding-lg">
-                        <span>[[vm.formatIncident(incident.date)]]</span>
-                    </th>
-                    <th class="padding-lg background-yellow text-white">
-                        <span><i18n>incidents.incident</i18n></span>
-                    </th>
-                    <th class="padding-lg">
-                        <span>[[incident.description]]</span>
-                    </th>
-                    <th class="padding-lg">
-                        <!-- display if punition / sanction -->
-                        <!--                        <label class="switch">-->
-                        <!--                            <input type="checkbox" ng-model="" ng-change="" ng-disabled="ngDisabled">-->
-                        <!--                        </label>-->
-                    </th>
-                </tr>
-                </tbody>
-            </table>
+
+    <div class="twelve empty-content" ng-show="vm.incidents.all.length === 0 && !vm.disabled">
+        <div class="twelve description max-height-80">
+            <span class="red-bar bar"></span>
+            <i18n>incident.nothing.to.report</i18n>
+            <span class="purple-bar bar"></span>
         </div>
     </div>
-    <pagination data-page-count="vm.incidents.pageCount" data-page-number="vm.incidents.page"
-                class="pagination-sniplet"></pagination>
+
+    <div class="content vertical-spacing" ng-show="vm.incidents.all.length > 0">
+        <!-- header -->
+        <div class="flex-table">
+            <div class="flex-row flex-head row__15">
+                <div class="flex-col col__2 text-center">
+                    <i18n>incidents.csv.header.date</i18n>
+                </div>
+                <div class="flex-col col__2 text-center">
+                    <i18n>incidents.csv.header.type</i18n>
+                </div>
+                <div class="flex-col col__8 text-center">
+                    <i18n>incidents.informations</i18n>
+                </div>
+                <div class="flex-col col__3 text-center">
+                    <i18n>incidents.done</i18n>
+                </div>
+            </div>
+
+            <!-- content -->
+            <div class="flex-row overflow-y">
+                <div class="flex-body" ng-repeat="incident in vm.incidents.all track by $index">
+                    <div class="flex-content">
+                        <div class="flex-row row__15">
+                            <!-- date -->
+                            <div class="flex-col col__2 min-height-60">
+                                <span>[[vm.formatIncident(incident.date)]]</span>
+                            </div>
+                            <!-- type -->
+                            <div class="flex-col col__2 min-height-60 background-yellow text-white">
+                                <span><i18n>incidents.incident</i18n></span>
+                            </div>
+                            <!-- information -->
+                            <div class="flex-col col__8 min-height-60">
+                                <span>[[incident.description]]</span>
+                            </div>
+                            <!-- status -->
+                            <!-- display if punition / sanction -->
+                            <!--                            <div class="flex-col col__3 padding-lg">-->
+                            <!--                                <label class="switch">-->
+                            <!--                                    <input type="checkbox" ng-model="" ng-change="" ng-disabled="ngDisabled">-->
+                            <!--                                </label>-->
+                            <!--                            </div>-->
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+        <pagination data-page-count="vm.incidents.pageCount" data-page-number="vm.incidents.page"
+                    class="pagination-sniplet">
+        </pagination>
+    </div>
 </div>
