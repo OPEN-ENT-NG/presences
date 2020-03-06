@@ -19,8 +19,8 @@ export class CalendarAbsenceUtils {
      * Click on any timeslot to declare an absence
      */
     public static async actionAbsenceTimeSlot($scope): Promise<void> {
-        let slots = $('.days .timeslot');
-        slots.click(function () {
+        let $slots = $('.days .timeslot');
+        $slots.click(function () {
             let _scope = angular.element(arguments[0].target).scope();
             let absenceDate = moment(_scope['day'].date).toDate();
             let startTime = moment(new Date).set({
@@ -50,17 +50,17 @@ export class CalendarAbsenceUtils {
      */
     public static async actionDragAbsence($scope): Promise<void> {
         let isClickHold = false;
-        let slots = $('.days .timeslot');
-        let slotsCourses = $('.course-item-container');
+        let $slots = $('.days .timeslot');
+        let $slotsCourses = $('.course-item-container');
         let timeSlots: TimeSlotData[] = [];
-        slots.each((i: number, e: Element) => {
+        $slots.each((i: number, e: Element) => {
             let _scope = angular.element(e).scope();
             if (e.className.startsWith("timeslot")) {
                 let timeSlot: TimeSlotData = CalendarAbsenceUtils.getTimeSlotData(i, e, _scope);
                 timeSlots.push(timeSlot);
             }
         });
-        slotsCourses.each((i: number, e: Element) => {
+        $slotsCourses.each((i: number, e: Element) => {
             let _scope = angular.element(e).scope();
             let timeSlot: TimeSlotData = CalendarAbsenceUtils.getCourseSlotData(i, e, _scope);
             timeSlots.push(timeSlot);
@@ -74,14 +74,16 @@ export class CalendarAbsenceUtils {
                     t.div.className.startsWith("timeslot"));
                 if (timeslotIndex !== -1) {
                     ts.index = timeSlots[timeslotIndex].index;
-                    ts.divTimeSlots = timeSlots[timeslotIndex].div
+                    ts.divTimeSlots = timeSlots[timeslotIndex].div;
+                    ts.timeslot = angular.element(ts.divTimeSlots).scope().timeslot;
+                    ts.isCourse = true;
                 }
             }
         });
-        timeSlots.sort((a, b) => a.index - b.index);
+        timeSlots.sort((a: TimeSlotData, b: TimeSlotData) => a.index - b.index);
         let timeSlotsFetched: TimeSlotData[] = [];
         let mdIndex;
-        slots /* click on timeslot first time */
+        $slots /* $slots is about timeslots only to interact, click on timeslot first time */
             .mousedown((e: JQueryMouseEventObject) => {
                 isClickHold = true;
                 CalendarAbsenceUtils.resetTimeSlotsFetched(timeSlots, timeSlotsFetched);
@@ -92,13 +94,10 @@ export class CalendarAbsenceUtils {
             }) /* moving current timeslot on timeslots */
             .mouseenter((e: JQueryMouseEventObject) => {
                 if (isClickHold) {
-                    if (e.currentTarget.className.startsWith("course")) {
-
-                    }
                     CalendarAbsenceUtils.resetTimeSlotsFetched(timeSlots, timeSlotsFetched);
                     CalendarAbsenceUtils.colorTimeSlots(mdIndex, e, timeSlotsFetched, timeSlots);
                 }
-            })
+            }) /* drop the mouse click to trigger a form */
             .mouseup(() => {
                 isClickHold = false;
                 let form = CalendarAbsenceUtils.formatForm(timeSlotsFetched);
@@ -106,7 +105,7 @@ export class CalendarAbsenceUtils {
                     $scope.$broadcast(ABSENCE_FORM_EVENTS.OPEN, form);
                 }
             });
-        slotsCourses
+        $slotsCourses /* $slotsCourses is about all the availables courses only to interact, click on course first time */
             .mousedown((e: JQueryMouseEventObject) => {
                 isClickHold = true;
                 CalendarAbsenceUtils.resetTimeSlotsFetched(timeSlots, timeSlotsFetched);
@@ -114,12 +113,12 @@ export class CalendarAbsenceUtils {
                     /* store position mouse event down initial */
                     mdIndex = CalendarAbsenceUtils.findElement(timeSlots, e);
                 }
-            }) /* moving current timeslot on timeslots */
+            }) /* moving current courses on courses if found */
             .mousemove((e: JQueryMouseEventObject) => {
                 if (isClickHold) {
                     CalendarAbsenceUtils.colorTimeSlots(mdIndex, e, timeSlotsFetched, timeSlots);
                 }
-            })
+            }) /* drop the mouse click to trigger a form */
             .mouseup(() => {
                 isClickHold = false;
                 let form = CalendarAbsenceUtils.formatForm(timeSlotsFetched);
@@ -163,8 +162,11 @@ export class CalendarAbsenceUtils {
         let arrayTimeSlotsFound = timeSlots.filter(t => t.div === e.currentTarget);
         if (arrayTimeSlotsFound.length > 1) {
             // index res
-            let resIndex = Math.floor(e.offsetY / this.TIMESLOT_HEIGHT);
-            return arrayTimeSlotsFound[resIndex].index;
+            let resIndex = Math.floor(Math.abs((e.offsetY <= 0 ? 0 : e.offsetY)) / this.TIMESLOT_HEIGHT);
+            // if array with resIndex fetched from Math not found, we take the last one
+            return arrayTimeSlotsFound[resIndex] ?
+                arrayTimeSlotsFound[resIndex].index :
+                arrayTimeSlotsFound[arrayTimeSlotsFound.length - 1];
         }
         return timeSlots.find(t => t.div === e.currentTarget).index;
     }
@@ -172,15 +174,22 @@ export class CalendarAbsenceUtils {
     /**
      * Format form object (startDate, endDate, startTime, endTime)
      */
-    private static formatForm(timeSlotsFetched: any[]) {
+    private static formatForm(timeSlotsFetched: TimeSlotData[]) {
         if (timeSlotsFetched.length === 0) return;
-        let start = timeSlotsFetched[0].startDate;
-        let startTime = timeSlotsFetched[0].start;
-        let startMinutes = timeSlotsFetched[0].timeslot.startMinutes;
 
-        let end = timeSlotsFetched[timeSlotsFetched.length - 1].endDate;
-        let endTime = timeSlotsFetched[timeSlotsFetched.length - 1].end;
-        let endMinutes = timeSlotsFetched[timeSlotsFetched.length - 1].timeslot.endMinutes;
+        // declare first and last element of timeSlotsFetched
+        let timeSlotsFetchedBeginning = timeSlotsFetched[0];
+        let timeSlotsFetchedEnding = timeSlotsFetched[timeSlotsFetched.length - 1];
+
+        // setting start date info
+        let start = timeSlotsFetchedBeginning.startDate;
+        let startTime = timeSlotsFetchedBeginning.start;
+        let startMinutes = timeSlotsFetchedBeginning.timeslot.startMinutes;
+
+        // setting end date info
+        let end = timeSlotsFetchedEnding.endDate;
+        let endTime = timeSlotsFetchedEnding.isCourse ? timeSlotsFetchedEnding.end : timeSlotsFetchedEnding.timeslot.end;
+        let endMinutes = timeSlotsFetchedEnding.isCourse ? timeSlotsFetchedEnding.endMinutes : timeSlotsFetchedEnding.timeslot.endMinutes;
 
         let absence = timeSlotsFetched
             .filter(t => t.index === timeSlotsFetched[0].index)
@@ -221,18 +230,19 @@ export class CalendarAbsenceUtils {
         timeSlot.timeslot = timeSlotScope;
         timeSlot.startDate = moment(dayScope.date).format(DateUtils.FORMAT['YEAR-MONTH-DAY']) + ' ' + moment(new Date).set({
             hours: timeSlotScope.start,
-            minute: 0,
+            minute: timeSlotScope.startMinutes,
             second: 0,
             millisecond: 0
         }).format(DateUtils.FORMAT['HOUR-MINUTES']);
         timeSlot.start = timeSlotScope.start;
         timeSlot.endDate = moment(dayScope.date).format(DateUtils.FORMAT['YEAR-MONTH-DAY']) + ' ' + moment(new Date).set({
             hours: timeSlotScope.end,
-            minute: 0,
+            minute: timeSlotScope.endMinutes,
             second: 0,
             millisecond: 0
         }).format(DateUtils.FORMAT['HOUR-MINUTES']);
         timeSlot.end = timeSlotScope.end;
+        timeSlot.isCourse = false;
 
         return timeSlot;
     }
@@ -255,8 +265,10 @@ export class CalendarAbsenceUtils {
         timeSlot.timeslot = {};
         timeSlot.startDate = _scope.item.startDate;
         timeSlot.start = parseInt(_scope.item.startMomentTime.split(':')[0]);
+        timeSlot.startMinutes = parseInt(_scope.item.startMomentTime.split(':')[1]);
         timeSlot.endDate = _scope.item.endDate;
         timeSlot.end = parseInt(_scope.item.endMomentTime.split(':')[0]);
+        timeSlot.endMinutes = parseInt(_scope.item.endMomentTime.split(':')[1]);
         timeSlot.type = type;
 
         return timeSlot;
