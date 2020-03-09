@@ -53,8 +53,8 @@ public class DefaultCourseService implements CourseService {
 
     @Override
     public void listCourses(String structureId, List<String> teachersList, List<String> groupsList,
-                             String start, String end, boolean forgottenFilter, boolean multipleSlot, String userDate,
-                             Handler<Either<String, JsonArray>> handler) {
+                            String start, String end, boolean forgottenFilter, boolean multipleSlot, String userDate,
+                            Handler<Either<String, JsonArray>> handler) {
         courseHelper.getCourses(structureId, teachersList, groupsList, start, end, event -> {
             if (event.isLeft()) {
                 handler.handle(new Either.Left<>(event.left().getValue()));
@@ -99,7 +99,7 @@ public class DefaultCourseService implements CourseService {
                     object.remove("endCourse");
                     object.remove("is_periodic");
                     object.remove("is_recurrent");
-                    object.put("subjectName", subjectMap.getJsonObject(object.getString("subjectId"), new JsonObject()).getString("externalId", object.getString("exceptionnal", "")));
+                    object.put("subjectName", subjectMap.getJsonObject(object.getString("subjectId"), new JsonObject()).getString("name", object.getString("exceptionnal", "")));
                     JsonArray courseTeachers = new JsonArray();
                     JsonArray teacherIds = object.getJsonArray("teacherIds");
                     for (int j = 0; j < teacherIds.size(); j++) {
