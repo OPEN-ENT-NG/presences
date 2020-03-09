@@ -39,7 +39,7 @@ export class Courses extends LoadingCollection {
 
 
     async sync(teachers: string[] = null, groups: string[], structure: string, start: string, end: string,
-               forgottenRegisters: boolean = false, multipleSlot: boolean = false) {
+               forgottenRegisters: boolean = false, multipleSlot: boolean = false, limit?: number) {
         if (this.loading) return;
         this.loading = true;
         try {
@@ -54,7 +54,8 @@ export class Courses extends LoadingCollection {
 
             const forgottenRegisterParam = `&forgotten_registers=${forgottenRegisters}`;
             const multipleSlotParam = `&multiple_slot=${multipleSlot}`;
-            const {data} = await http.get(`/presences/courses?${teacherFilter}${groupFilter}structure=${structure}&start=${start}&end=${end}${forgottenRegisterParam}${multipleSlotParam}&_t=${moment().format(DateUtils.FORMAT["YEAR-MONTH-DAY-HOUR-MIN-SEC"])}`);
+            const limitPatam = limit ? `&limit=${limit}` : '';
+            const {data} = await http.get(`/presences/courses?${teacherFilter}${groupFilter}structure=${structure}&start=${start}&end=${end}${forgottenRegisterParam}${multipleSlotParam}&_t=${moment().format(DateUtils.FORMAT["YEAR-MONTH-DAY-HOUR-MIN-SEC"])}${limitPatam}`);
             this.all = Mix.castArrayAs(Course, data);
             this.all.map((course: Course) => course.timestamp = moment(course.startDate).valueOf());
             this.all = _.sortBy(this.all, 'timestamp');

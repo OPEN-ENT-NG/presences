@@ -93,21 +93,27 @@ public class DefaultCourseService implements CourseService {
                 JsonObject teacherMap = MapHelper.transformToMap(teachers, "id");
                 JsonObject object;
                 for (int i = 0; i < courses.size(); i++) {
-                    object = courses.getJsonObject(i);
-                    LOGGER.info(object.getString("_id"));
-                    object.remove("startCourse");
-                    object.remove("endCourse");
-                    object.remove("is_periodic");
-                    object.remove("is_recurrent");
-                    object.put("subjectName", subjectMap.getJsonObject(object.getString("subjectId"), new JsonObject()).getString("name", object.getString("exceptionnal", "")));
-                    JsonArray courseTeachers = new JsonArray();
-                    JsonArray teacherIds = object.getJsonArray("teacherIds");
-                    for (int j = 0; j < teacherIds.size(); j++) {
-                        if (!teacherMap.containsKey(teacherIds.getString(j))) continue;
-                        courseTeachers.add(teacherMap.getJsonObject(teacherIds.getString(j)));
+                    try {
+
+                        object = courses.getJsonObject(i);
+                        LOGGER.info(object.getString("_id"));
+                        object.remove("startCourse");
+                        object.remove("endCourse");
+                        object.remove("is_periodic");
+                        object.remove("is_recurrent");
+                        object.put("subjectName", subjectMap.getJsonObject(object.getString("subjectId"), new JsonObject()).getString("name", object.getString("exceptionnal", "")));
+                        object.put("timestamp", DateHelper.parse(object.getString("startDate")).getTime());
+                        JsonArray courseTeachers = new JsonArray();
+                        JsonArray teacherIds = object.getJsonArray("teacherIds");
+                        for (int j = 0; j < teacherIds.size(); j++) {
+                            if (!teacherMap.containsKey(teacherIds.getString(j))) continue;
+                            courseTeachers.add(teacherMap.getJsonObject(teacherIds.getString(j)));
+                        }
+                        object.put("teachers", courseTeachers);
+                        object.remove("teacherIds");
+                    } catch (ParseException e) {
+                        LOGGER.error("[Presences@DefaultCourseService] Failed to cast date to timestamp", e);
                     }
-                    object.put("teachers", courseTeachers);
-                    object.remove("teacherIds");
                 }
 
                 Viescolaire.getInstance().getDefaultSlots(structureId, slotsResult -> {

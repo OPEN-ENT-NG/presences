@@ -43,6 +43,7 @@ public class Course implements Cloneable {
     private Integer registerStateId;
     private Boolean notified;
     private Boolean splitSlot;
+    private Long timestamp;
 
     public Course(JsonObject course, List<String> mandatoryAttributes) {
         for (String attribute : mandatoryAttributes) {
@@ -83,6 +84,7 @@ public class Course implements Cloneable {
         this.registerStateId = course.getInteger("register_state_id", null);
         this.notified = course.getBoolean("notified", null);
         this.splitSlot = course.getBoolean("split_slot", false);
+        this.timestamp = course.getLong("timestamp");
     }
 
     @Override
@@ -404,5 +406,9 @@ public class Course implements Cloneable {
 
     public void setSplitCourses(List<Course> splitCourses) {
         this.splitCourses = splitCourses;
+    }
+
+    public Long getTimestamp() {
+        return this.timestamp;
     }
 }
