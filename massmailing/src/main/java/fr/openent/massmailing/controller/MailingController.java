@@ -83,9 +83,12 @@ public class MailingController extends ControllerHelper {
                 if (mailingAsync.failed()) {
                     renderError(request, JsonObject.mapFrom(mailingAsync.cause()));
                 } else {
+                    // set 0 if count.equal massmailing.PAGE_SIZE (20 === 20) else set > 0
+                    Integer pageCount = mailingPageFuture.result().getInteger("count").equals(Massmailing.PAGE_SIZE) ? 0
+                            : mailingPageFuture.result().getInteger("count") / Massmailing.PAGE_SIZE;
                     JsonObject mailingsResult = new JsonObject()
                             .put("page", page)
-                            .put("page_count", (mailingPageFuture.result().getInteger("count") / Massmailing.PAGE_SIZE))
+                            .put("page_count", pageCount)
                             .put("all", mailingFuture.result());
 
                     renderJson(request, mailingsResult);
