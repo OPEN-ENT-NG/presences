@@ -352,7 +352,7 @@ public class DefaultEventService implements EventService {
             params.addAll(new JsonArray(userId));
         }
 
-        if (regularized && noReason) {
+        if (regularized != null && regularized && noReason) {
             query += " AND counsellor_regularisation = " + regularized + " OR reason_id IS NULL";
         } else if (regularized != null) {
             query += " AND counsellor_regularisation = " + regularized + " ";
