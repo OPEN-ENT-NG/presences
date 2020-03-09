@@ -136,9 +136,7 @@ export const historyController = ng.controller('HistoryController',
 
             /* Init filter */
             vm.filter = {
-                // TOdo uncomment and remov ethe other startDate
-                // start_date: moment().startOf('day'),
-                start_date: moment().add(-2, 'M').startOf('day'),
+                start_date: moment().startOf('day'),
                 end_date: moment().endOf('day'),
                 students: [],
                 groups: [],
