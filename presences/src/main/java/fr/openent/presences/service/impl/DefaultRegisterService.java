@@ -137,19 +137,43 @@ public class DefaultRegisterService implements RegisterService {
                         handler.handle(new Either.Left<>(message));
                     } else {
                         List<String> users = new ArrayList<>();
-                        for (int i = 0; i < studentsIdsResult.right().getValue().size(); i++) {
-                            users.add(studentsIdsResult.right().getValue().getJsonObject(i).getString("id"));
-                        }
-                        matchAbsenceToEvent(finalResult, users, user, matchingResult -> {
-                            if (matchingResult.isLeft()) {
-                                String message = "[Presences@DefaultRegisterService] Failed to create events with absence information";
+                        JsonArray studentsIds = studentsIdsResult.right().getValue();
+                        if (!studentsIds.isEmpty()) {
+                            for (int i = 0; i < studentsIds.size(); i++) {
+                                JsonObject student = studentsIds.getJsonObject(i);
+                                if (student != null) {
+                                    if (student.containsKey("id") && student.getString("id") != null) {
+                                        users.add(student.getString("id"));
+                                    }
+                                } else {
+                                    String message = "[Presences@DefaultRegisterService] Failed to store student in " +
+                                            "Array of string get jsonObject returns NULL";
+                                    LOGGER.error(message, studentsIdsResult.left().getValue());
+                                }
+                            }
+                            users.removeAll(Collections.singletonList(null));
+                            if (users.isEmpty()) {
+                                String message = "[Presences@DefaultRegisterService] array of users is actually empty";
                                 LOGGER.error(message, studentsIdsResult.left().getValue());
                                 handler.handle(new Either.Left<>(message));
                             } else {
-                                /* Finish handler */
-                                handler.handle(new Either.Right<>(finalResult));
+                                matchAbsenceToEvent(finalResult, users, user, matchingResult -> {
+                                    if (matchingResult.isLeft()) {
+                                        String message = "[Presences@DefaultRegisterService] Failed to create events with absence information";
+                                        LOGGER.error(message, studentsIdsResult.left().getValue());
+                                        handler.handle(new Either.Left<>(message));
+                                    } else {
+                                        /* Finish handler */
+                                        handler.handle(new Either.Right<>(finalResult));
+                                    }
+                                });
                             }
-                        });
+                        } else {
+                            String message = "[Presences@DefaultRegisterService] Failed to fetch students Ids result " +
+                                    "from Neo4j. Might be empty";
+                            LOGGER.error(message, studentsIdsResult.left().getValue());
+                            handler.handle(new Either.Left<>(message));
+                        }
                     }
                 });
             }
