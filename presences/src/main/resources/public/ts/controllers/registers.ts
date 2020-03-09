@@ -334,15 +334,16 @@ export const registersController = ng.controller('RegistersController',
                         vm.register = RegisterUtils.createRegisterFromCourse(currentCourse);
                         /* create or sync register on current course*/
                         if (!currentCourse.registerId) {
-                            await vm.register.create().then(async () => {
+                            vm.register.create().then(async () => {
                                 await vm.register.sync();
                                 currentCourse.registerId = vm.register.id;
+                                $scope.$emit(COURSE_EVENTS.SEND_COURSE, currentCourse);
                                 $scope.safeApply();
                             });
                         } else {
                             await vm.register.sync();
+                            $scope.$emit(COURSE_EVENTS.SEND_COURSE, currentCourse);
                         }
-                        $scope.$emit(COURSE_EVENTS.SEND_COURSE, currentCourse);
                     }
                 }
                 $scope.safeApply();
