@@ -228,7 +228,7 @@ public class DefaultEventService implements EventService {
         } else if (noReason != null) {
             query += (noReason ? " AND reason_id IS NULL" : "");
         }
-        query += setParamsForQueryEvents(userId, regularized, userIdFromClasses, params);
+        query += setParamsForQueryEvents(userId, regularized, noReason, userIdFromClasses, params);
         query += " UNION" +
                 "  SELECT absence.id AS id, absence.start_date AS start_date, absence.end_date AS end_date, " +
                 "  NULL AS created, NULL AS comment, absence.student_id AS student_id," +
@@ -263,7 +263,7 @@ public class DefaultEventService implements EventService {
         } else {
             query += " ) ";
         }
-        query += setParamsForQueryEvents(userId, regularized, userIdFromClasses, params);
+        query += setParamsForQueryEvents(userId, regularized, noReason, userIdFromClasses, params);
         query += ") SELECT * FROM allevents " +
                 "GROUP BY id, start_date, end_date, created, comment, student_id, reason_id, owner," +
                 "type_id, register_id, counsellor_regularisation, type, register_id ";
@@ -309,7 +309,7 @@ public class DefaultEventService implements EventService {
         } else if (noReason != null) {
             query += (noReason ? " AND reason_id IS NULL" : "");
         }
-        query += setParamsForQueryEvents(userId, regularized, userIdFromClasses, params);
+        query += setParamsForQueryEvents(userId, regularized, noReason, userIdFromClasses, params);
         if (eventType != null && eventType.contains("1")) {
             query += " ) AS events, ( SELECT COUNT(absence.id) FROM " + Presences.dbSchema + ".absence absence " +
                     "WHERE absence.start_date > ? AND absence.end_date < ?";
@@ -331,7 +331,7 @@ public class DefaultEventService implements EventService {
             } else {
                 query += " ) ";
             }
-            query += setParamsForQueryEvents(userId, regularized, userIdFromClasses, params);
+            query += setParamsForQueryEvents(userId, regularized, noReason, userIdFromClasses, params);
             query += ") AS absences";
         } else {
             query += " ) AS events, (SELECT COUNT (0)) AS absences";
@@ -339,7 +339,7 @@ public class DefaultEventService implements EventService {
         return query;
     }
 
-    private String setParamsForQueryEvents(List<String> userId, Boolean regularized, JsonArray userIdFromClasses, JsonArray params) {
+    private String setParamsForQueryEvents(List<String> userId, Boolean regularized, Boolean noReason, JsonArray userIdFromClasses, JsonArray params) {
         String query = "";
         if (userIdFromClasses != null && !userIdFromClasses.isEmpty()) {
             query += " AND student_id IN " + Sql.listPrepared(userIdFromClasses.getList());
@@ -352,7 +352,9 @@ public class DefaultEventService implements EventService {
             params.addAll(new JsonArray(userId));
         }
 
-        if (regularized != null) {
+        if (regularized && noReason) {
+            query += " AND counsellor_regularisation = " + regularized + " OR reason_id IS NULL";
+        } else if (regularized != null) {
             query += " AND counsellor_regularisation = " + regularized + " ";
         }
         return query;
