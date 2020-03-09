@@ -644,6 +644,7 @@ export const registersController = ng.controller('RegistersController',
                 }
                 vm.courses.clear();
                 await vm.courses.sync(users, groups, structure, start_date, end_date, forgotten_registers, multipleSlot);
+                $scope.safeApply();
             };
 
             vm.isFuturCourse = function (course: Course) {
