@@ -68,6 +68,7 @@ export class CalendarAbsenceUtils {
         let absenceTimeSlots = CalendarAbsenceUtils.duplicateAbsence(timeSlots.filter(t => t.div.className.startsWith("course")));
         timeSlots = timeSlots.filter(t => t.div.className.startsWith("timeslot")).concat(absenceTimeSlots);
         timeSlots.forEach(ts => {
+            ts.isMatchingSlot = true;
             if (ts.div.className.startsWith("course")) {
                 let timeslotIndex = timeSlots.findIndex(t =>
                     DateUtils.isBetween(t.startDate, t.endDate, ts.startDate, ts.endDate) &&
@@ -77,9 +78,12 @@ export class CalendarAbsenceUtils {
                     ts.divTimeSlots = timeSlots[timeslotIndex].div;
                     ts.timeslot = angular.element(ts.divTimeSlots).scope().timeslot;
                     ts.isCourse = true;
+                } else {
+                    ts.isMatchingSlot = false;
                 }
             }
         });
+        timeSlots = timeSlots.filter(ts => ts.isMatchingSlot);
         timeSlots.sort((a: TimeSlotData, b: TimeSlotData) => a.index - b.index);
         let timeSlotsFetched: TimeSlotData[] = [];
         let mdIndex;

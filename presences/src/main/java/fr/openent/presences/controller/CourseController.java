@@ -4,7 +4,9 @@ import fr.openent.presences.Presences;
 import fr.openent.presences.common.helper.DateHelper;
 import fr.openent.presences.constants.Actions;
 import fr.openent.presences.export.RegisterCSVExport;
-import fr.openent.presences.helper.*;
+import fr.openent.presences.helper.CourseHelper;
+import fr.openent.presences.helper.SubjectHelper;
+import fr.openent.presences.model.Course;
 import fr.openent.presences.service.CourseService;
 import fr.openent.presences.service.RegisterService;
 import fr.openent.presences.service.impl.DefaultCourseService;
@@ -28,10 +30,11 @@ import org.entcore.common.user.UserInfos;
 import org.entcore.common.user.UserUtils;
 
 import java.util.Arrays;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 
 import static fr.wseduc.webutils.Utils.handlerToAsyncHandler;
-import static org.entcore.common.http.response.DefaultResponseHandler.arrayResponseHandler;
 import static org.entcore.common.http.response.DefaultResponseHandler.defaultResponseHandler;
 
 public class CourseController extends ControllerHelper {
@@ -63,8 +66,19 @@ public class CourseController extends ControllerHelper {
         String userDate = request.getParam("_t");
         boolean forgottenFilter = params.contains("forgotten_registers") && Boolean.parseBoolean(request.getParam("forgotten_registers"));
         boolean multipleSlot = params.contains("multiple_slot") && Boolean.parseBoolean(request.getParam("multiple_slot"));
+        Integer limit = params.contains("limit") ? Integer.parseInt(request.getParam("limit")) : null;
         courseService.listCourses(params.get("structure"), params.getAll("teacher"), params.getAll("group"),
-                params.get("start"), params.get("end"), forgottenFilter, multipleSlot, userDate, arrayResponseHandler(request));
+                params.get("start"), params.get("end"), forgottenFilter, multipleSlot, userDate, event -> {
+                    if (event.isLeft()) {
+                        renderError(request);
+                    } else {
+                        List<Course> courses = event.right().getValue().getList();
+                        courses.sort(Comparator.comparing(Course::getTimestamp));
+                        Collections.reverse(courses);
+                        renderJson(request, limit != null ? new JsonArray(courses.subList(0, limit)) : new JsonArray(courses));
+//                        renderJson(request, limit != null ? new JsonArray(courses.subList(0, limit)) : courses);
+                    }
+                });
     }
 
     @Get("/courses/export")

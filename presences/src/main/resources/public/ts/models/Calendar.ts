@@ -12,4 +12,5 @@ export interface TimeSlotData {
     check?: boolean;
     type?: { event: string, id: number };
     isCourse?: boolean;
+    isMatchingSlot?: boolean;
 }

@@ -1,6 +1,5 @@
-<div class="forgotten-registers-widget registers" ng-controller="RegistersController as vm"
-     ng-init="vm.widget.forgottenRegisters = true;">
-    <h2>
+<div class="forgotten-registers-widget registers" ng-controller="RegistersController as vm">
+    <h2 ng-init="vm.widget.forgottenRegisters = true;">
         <i18n>presences.widgets.day.forgotten.registers</i18n>
     </h2>
     <div class="row card-slider" ng-show="vm.courses.all.length > 0">

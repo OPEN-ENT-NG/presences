@@ -95,7 +95,7 @@ export interface ViewModel {
     closePanel(): void;
 
     loadCourses(users?: string[], groups?: string[], structure?: string, start_date?: string,
-                end_date?: string, forgotten_registers?: boolean, multipleSlot?: boolean): Promise<void>;
+                end_date?: string, forgotten_registers?: boolean, multipleSlot?: boolean, limit?: number): Promise<void>;
 
     isFuturCourse(course: Course): boolean;
 
@@ -200,7 +200,7 @@ export const registersController = ng.controller('RegistersController',
                         // vm.openRegister(null, null);
                     }
                 },
-                forgottenRegisterWidget: () => vm.loadCourses(extractSelectedTeacherIds(), extractSelectedGroupsName()),
+                forgottenRegisterWidget: () => vm.loadCourses(extractSelectedTeacherIds(), extractSelectedGroupsName(), undefined, undefined, undefined, undefined, undefined, 16),
                 dayCoursesWidget: () => vm.loadCourses(extractSelectedTeacherIds(), extractSelectedGroupsName(), undefined, undefined, undefined, false),
                 onGoingRegisterWidget: () => getCurrentCourse(),
             };
@@ -639,12 +639,13 @@ export const registersController = ng.controller('RegistersController',
                                              start_date: string = DateUtils.format(vm.filter.start_date, DateUtils.FORMAT["YEAR-MONTH-DAY"]),
                                              end_date: string = DateUtils.format(vm.filter.end_date, DateUtils.FORMAT["YEAR-MONTH-DAY"]),
                                              forgotten_registers: boolean = vm.filter.forgotten,
-                                             multipleSlot: boolean = vm.filter.multipleSlot): Promise<void> {
+                                             multipleSlot: boolean = vm.filter.multipleSlot,
+                                             limit: number): Promise<void> {
                 if (model.me.profiles.some(profile => profile === "Personnel")) {
                     multipleSlot = true;
                 }
                 vm.courses.clear();
-                await vm.courses.sync(users, groups, structure, start_date, end_date, forgotten_registers, multipleSlot);
+                await vm.courses.sync(users, groups, structure, start_date, end_date, forgotten_registers, multipleSlot, limit);
                 $scope.safeApply();
             };
 
@@ -760,7 +761,6 @@ export const registersController = ng.controller('RegistersController',
             };
 
             function startAction() {
-                console.warn('startAction');
                 switch ($route.current.action) {
                     case 'getRegister':
                     case 'registers': {

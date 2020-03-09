@@ -394,4 +394,10 @@ export const calendarController = ng.controller('CalendarController',
                 else vm.slots.list = null;
                 $scope.safeApply();
             });
+
+            $scope.$watch(() => window.entcore.calendar.startOfDay, async (newVal, oldVal) => {
+                if (newVal !== oldVal) {
+                    initCalendar();
+                }
+            })
         }]);
