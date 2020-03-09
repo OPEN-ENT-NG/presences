@@ -16,7 +16,7 @@
   "incidents.csv.header.processed.done": "Traité",
   "incidents.csv.header.processed.undone": "Non traité",
   "incidents.memento.absence.init.failed": "Une erreur est survenue lors du chargement du widget incident",
-  "incidents.memento.punishment.sanction.title": "Punitions et sanctions",
+  "incidents.memento.punishment.sanction.title": "Incidents, punitions et sanctions",
   "incidents.navigation.management": "Gestion des incidents",
   "incidents.navigation.punishment.sanction": "Punitions & sanctions",
   "incidents.navigation.sanction": "Sanction",
