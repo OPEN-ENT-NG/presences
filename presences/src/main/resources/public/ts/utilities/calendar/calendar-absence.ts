@@ -166,7 +166,7 @@ export class CalendarAbsenceUtils {
             // if array with resIndex fetched from Math not found, we take the last one
             return arrayTimeSlotsFound[resIndex] ?
                 arrayTimeSlotsFound[resIndex].index :
-                arrayTimeSlotsFound[arrayTimeSlotsFound.length - 1];
+                arrayTimeSlotsFound[arrayTimeSlotsFound.length - 1].index;
         }
         return timeSlots.find(t => t.div === e.currentTarget).index;
     }
