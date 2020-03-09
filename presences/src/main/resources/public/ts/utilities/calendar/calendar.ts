@@ -157,11 +157,15 @@ export class CalendarUtils {
             /* Coloring course in red if inside global absent bloc */
             absenceItems.forEach(absenceItem => {
                 let absenceScope = angular.element(absenceItem).scope();
+                let isBetweenDate = DateUtils.isBetween(
+                    courseScope.item.startDate, courseScope.item.endDate,
+                    absenceScope.item.startDate, absenceScope.item.endDate
+                );
                 let isMatchDate = DateUtils.isMatchDate(
                     courseScope.item.startDate, courseScope.item.endDate,
                     absenceScope.item.startDate, absenceScope.item.endDate
                 );
-                if (CalendarUtils.isItemInside(course, absenceItem) && isMatchDate) {
+                if (isBetweenDate || isMatchDate) {
                     course.querySelectorAll(".course-item")[0].classList.add("isAbsent");
                 }
             });
@@ -169,34 +173,18 @@ export class CalendarUtils {
             /* Coloring course in pink if inside global justified absent bloc */
             absenceReasonItems.forEach(absenceReasonItem => {
                 let absenceReasonItemScope = angular.element(absenceReasonItem).scope();
+                let isBetweenDate = DateUtils.isBetween(
+                    courseScope.item.startDate, courseScope.item.endDate,
+                    absenceReasonItemScope.item.startDate, absenceReasonItemScope.item.endDate
+                );
                 let isMatchDate = DateUtils.isMatchDate(
                     courseScope.item.startDate, courseScope.item.endDate,
                     absenceReasonItemScope.item.startDate, absenceReasonItemScope.item.endDate
                 );
-                if (CalendarUtils.isItemInside(course, absenceReasonItem) && isMatchDate) {
+                if (isBetweenDate || isMatchDate) {
                     course.querySelectorAll(".course-item")[0].classList.add("isJustifiedAbsent");
                 }
             });
         });
-    }
-
-    /**
-     * Return true if bloc is inside div
-     */
-    static isItemInside(item, itemAbsence): boolean {
-        let itemPosX = item.offsetLeft;
-        let itemPosY = item.offsetTop;
-        let itemHeight = item.clientHeight;
-        let itemWidth = item.clientWidth;
-        let itemBottom = itemPosY + itemHeight - 2;
-        let itemRight = itemPosX + itemWidth;
-
-        let itemAbsenceX = itemAbsence.offsetLeft;
-        let itemAbsenceY = itemAbsence.offsetTop;
-        let itemAbsenceHeight = itemAbsence.clientHeight;
-        let itemAbsenceWidth = itemAbsence.clientWidth;
-        let itemAbsenceBottom = itemAbsenceY + itemAbsenceHeight - 2;
-        let itemAbsenceRight = itemAbsenceX + itemAbsenceWidth;
-        return !(itemBottom < itemAbsenceY || itemPosY > itemAbsenceBottom || itemRight < itemAbsenceX || itemPosX > itemAbsenceRight);
     }
 }
