@@ -372,7 +372,9 @@ export const calendarController = ng.controller('CalendarController',
 
             // callback methods for positioning absence
             const positioningAbsence = () => {
-                vm.courses.list.forEach(positioningAbsenceCourses);
+                if (vm.courses.list) {
+                    vm.courses.list.forEach(positioningAbsenceCourses);
+                }
                 initActionAbsence();
                 vm.show.loader = false;
             };
