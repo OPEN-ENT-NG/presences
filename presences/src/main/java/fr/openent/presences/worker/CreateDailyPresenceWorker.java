@@ -3,6 +3,7 @@ package fr.openent.presences.worker;
 import fr.openent.presences.Presences;
 import fr.openent.presences.common.helper.DateHelper;
 import fr.openent.presences.common.helper.FutureHelper;
+import fr.openent.presences.helper.MapHelper;
 import fr.openent.presences.model.Course;
 import fr.openent.presences.service.CourseService;
 import fr.openent.presences.service.RegisterService;
@@ -30,6 +31,7 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 public class CreateDailyPresenceWorker extends BusModBase implements Handler<Message<JsonObject>> {
     private EmailSender emailSender;
@@ -54,6 +56,12 @@ public class CreateDailyPresenceWorker extends BusModBase implements Handler<Mes
         processCreateDailyPresences();
     }
 
+    private void getStructures(JsonArray ids, Future future) {
+        String query = "MATCH (s:Structure) WHERE s.id IN {ids} RETURN s.name as name, s.id as id;";
+        JsonObject params = new JsonObject().put("ids", ids);
+        Neo4j.getInstance().execute(query, params, Neo4jResult.validResultHandler(FutureHelper.handlerJsonArray(future)));
+    }
+
     private void processCreateDailyPresences() {
         String yesterday = DateHelper.getYesterday();
 
@@ -63,6 +71,7 @@ public class CreateDailyPresenceWorker extends BusModBase implements Handler<Mes
         // TODO create future
         List<Future> futures = new ArrayList<>();
         Sql.getInstance().prepared(queryStructures, new JsonArray(), SqlResult.validResultHandler(resultStructures -> {
+            Future<JsonArray> structureFuture = Future.future();
             if (resultStructures.isLeft()) {
                 Future<JsonObject> future = Future.future();
                 futures.add(future);
@@ -73,6 +82,11 @@ public class CreateDailyPresenceWorker extends BusModBase implements Handler<Mes
                 // Tableau Structures
                 result.put("structures", new JsonObject());
                 JsonArray structureIds = resultStructures.right().getValue();
+                List<String> stuctures = ((List<JsonObject>) structureIds.getList()).stream().map(structure -> structure.getString("id")).collect(Collectors.toList());
+                if (!structureIds.isEmpty()) {
+                    futures.add(structureFuture);
+                    getStructures(new JsonArray(stuctures), structureFuture);
+                }
                 for (int i = 0; i < structureIds.size(); i++) {
                     String structureId = structureIds.getJsonObject(i).getString("id");
                     Future<JsonObject> future = Future.future();
@@ -95,7 +109,8 @@ public class CreateDailyPresenceWorker extends BusModBase implements Handler<Mes
 
             CompositeFuture.join(futures).setHandler(resultFutures -> {
                 String title = "[" + config.getString("host") + "][Présences] Rapport d'ouverture des appels: " + (getRegistersCreationWorked(result) ? "succès." : "échec.");
-                String message = getFormattedMessage(result);
+                JsonObject structureMap = structureFuture != null && structureFuture.succeeded() ? MapHelper.transformToMap(structureFuture.result(), "id") : new JsonObject();
+                String message = getFormattedMessage(result, structureMap);
                 sendMail(title, message);
             });
 
@@ -251,7 +266,7 @@ public class CreateDailyPresenceWorker extends BusModBase implements Handler<Mes
         return true;
     }
 
-    private String getFormattedMessage(JsonObject workerResult) {
+    private String getFormattedMessage(JsonObject workerResult, JsonObject structureMap) {
         StringBuilder message = new StringBuilder("<span>Rapport du " + DateHelper.getCurrentDayWithHours() + ".</span><br>");
         String error = workerResult.getString("errorMessage", null);
 
@@ -273,7 +288,7 @@ public class CreateDailyPresenceWorker extends BusModBase implements Handler<Mes
             structuresMessage.append("<div style='margin-left: 10px;'>");
             while (structureIds.hasNext()) {
                 String structureId = structureIds.next();
-                StringBuilder structureMessage = new StringBuilder("<br><span> Structure '" + structureId + "':</span><br>");
+                StringBuilder structureMessage = new StringBuilder("<br><span> Structure '" + (structureMap.containsKey(structureId) ? structureMap.getJsonObject(structureId).getString("name", structureId) : structureId) + "':</span><br>");
                 JsonObject structure = structures.getJsonObject(structureId);
                 String errorStructure = structure.getString("errorMessage", null);
 
