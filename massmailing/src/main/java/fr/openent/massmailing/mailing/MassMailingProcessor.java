@@ -63,18 +63,13 @@ public abstract class MassMailingProcessor implements Mailing {
         Future<JsonObject> templateFuture = Future.future();
         Future<JsonObject> relativeFuture = Future.future();
         Future<JsonObject> eventsFuture = Future.future();
-
+        Future<JsonObject> hourEventsFuture = Future.future();
         Future<JsonObject> reasonsFuture = Future.future();
         Future<JsonArray> slotsFutures = Future.future();
         Future<JsonObject> settingFutures = Future.future();
         Future<JsonObject> recoveryFuture = Future.future();
-        ;
-        List<Future> futures = new ArrayList<>(Arrays.asList(templateFuture, relativeFuture, eventsFuture, reasonsFuture, slotsFutures, settingFutures, recoveryFuture));
-        Future<JsonObject> summaryEventsFuture = Future.future();
-        if (!mailingType.equals(MailingType.SMS)) {
-            futures.add(summaryEventsFuture);
-        }
-        CompositeFuture.all(futures).setHandler(asyncResult -> {
+
+        CompositeFuture.all(Arrays.asList(templateFuture, relativeFuture, eventsFuture, reasonsFuture, slotsFutures, settingFutures, recoveryFuture, hourEventsFuture)).setHandler(asyncResult -> {
             if (asyncResult.failed()) {
                 LOGGER.error("[Massmailing@MassMailingProcessor] Failed to process", asyncResult.cause());
                 handler.handle(new Either.Left<>(asyncResult.cause().toString()));
@@ -82,39 +77,42 @@ public abstract class MassMailingProcessor implements Mailing {
 
             JsonObject reasons = reasonsFuture.result();
             JsonObject events = eventsFuture.result();
+            JsonObject hourEvents = hourEventsFuture.result();
             JsonObject relatives = relativeFuture.result();
             HashMap<String, JsonObject> massmailings = formatData(events, relatives, reasons);
+            HashMap<String, JsonObject> massmailingsHour = formatData(hourEvents, relatives, reasons);
             JsonArray slots = slotsFutures.result();
             JsonObject settings = settingFutures.result();
             String recoveryMethod = recoveryFuture.result().containsKey("event_recovery_method") ? recoveryFuture.result().getString("event_recovery_method") : "HALF_DAY";
-            HashMap<String, JsonObject> massmailingsSummary = new HashMap<>();
-            if (!mailingType.equals(MailingType.SMS)) {
-                JsonObject summaryEvents = summaryEventsFuture.result();
-                massmailingsSummary = formatData(summaryEvents, relatives, reasons);
-            }
 
             List<JsonObject> result = new ArrayList<>();
             for (String key : massmailings.keySet()) {
                 result.add(massmailings.get(key));
                 JsonObject massmailing = formatMassmailingBasedOnRecoveryMethod(massmailings.get(key), slots, recoveryMethod, settings.getString("end_of_half_day"));
-                JsonArray absences = massmailing.getJsonObject("events", new JsonObject()).getJsonArray(EventType.ABSENCE.name(), new JsonArray());
-                JsonArray latenesses = massmailing.getJsonObject("events", new JsonObject()).getJsonArray(EventType.LATENESS.name(), new JsonArray());
+
                 HashMap<TemplateCode, Object> codeValues = new HashMap<>();
                 codeValues.put(TemplateCode.CHILD_NAME, massmailing.getString("studentDisplayName", ""));
                 codeValues.put(TemplateCode.CLASS_NAME, massmailing.getString("className", ""));
+
+                JsonObject massmailingHour = formatMassmailingBasedOnRecoveryMethod(massmailingsHour.get(key), slots, "hour", settings.getString("end_of_half_day"));
+                JsonArray absencesHour = massmailingHour.getJsonObject("events", new JsonObject()).getJsonArray(EventType.ABSENCE.name(), new JsonArray());
+                JsonArray latenessesHour = massmailingHour.getJsonObject("events", new JsonObject()).getJsonArray(EventType.LATENESS.name(), new JsonArray());
+
+                JsonArray absences = massmailing.getJsonObject("events", new JsonObject()).getJsonArray(EventType.ABSENCE.name(), new JsonArray());
                 codeValues.put(TemplateCode.ABSENCE_NUMBER, absences.size() + " " + getTranslatedUnit(recoveryMethod));
-                codeValues.put(TemplateCode.LATENESS_NUMBER, latenesses.size());
+                codeValues.put(TemplateCode.LATENESS_NUMBER, latenessesHour.size());
+
+
                 if (mailingType.equals(MailingType.SMS)) {
-                    JsonObject absence = absences.getJsonObject(absences.size() - 1);
-                    JsonObject lateness = absences.getJsonObject(absences.size() - 1);
+                    JsonObject absence = null;
+                    JsonObject lateness = null;
+                    if (absencesHour.size() > 0) absence = absencesHour.getJsonObject(absencesHour.size() - 1);
                     codeValues.put(TemplateCode.LAST_ABSENCE, absence);
+
+                    if (latenessesHour.size() > 0) lateness = latenessesHour.getJsonObject(latenessesHour.size() - 1);
                     codeValues.put(TemplateCode.LAST_LATENESS, lateness);
                 } else {
-                    JsonObject oMassmailingSummary = massmailingsSummary.get(key);
-                    if (oMassmailingSummary != null) {
-                        JsonObject massmailingSummary = formatMassmailingBasedOnRecoveryMethod(oMassmailingSummary, slots, "hour", settings.getString("end_of_half_day"));
-                        codeValues.put(TemplateCode.SUMMARY, massmailingSummary.getJsonObject("events", new JsonObject()));
-                    }
+                    codeValues.put(TemplateCode.SUMMARY, massmailingHour.getJsonObject("events", new JsonObject()));
                 }
 
                 massmailing.put("message", template.process(codeValues));
@@ -122,10 +120,8 @@ public abstract class MassMailingProcessor implements Mailing {
             handler.handle(new Either.Right<>(result));
         });
 
-        if (!mailingType.equals(MailingType.SMS)) {
-            retrieveEvents("HOUR", FutureHelper.handlerJsonObject(summaryEventsFuture));
-        }
         retrieveEvents(null, FutureHelper.handlerJsonObject(eventsFuture));
+        retrieveEvents("HOUR", FutureHelper.handlerJsonObject(hourEventsFuture));
         retrieveRelatives(FutureHelper.handlerJsonObject(relativeFuture));
         template.init(FutureHelper.handlerJsonObject(templateFuture));
         fetchReasons(FutureHelper.handlerJsonObject(reasonsFuture));
@@ -157,11 +153,12 @@ public abstract class MassMailingProcessor implements Mailing {
     }
 
     private JsonObject formatMassmailingBasedOnRecoveryMethod(JsonObject massmailing, JsonArray slots, String recoveryMethod, String midHour) {
-        if ("HOUR".equals(recoveryMethod) || slots.isEmpty() || !massmailing.getJsonObject("events", new JsonObject()).containsKey("ABSENCE")) {
+        JsonObject events = massmailing.getJsonObject("events", new JsonObject());
+        if ("HOUR".equals(recoveryMethod) || slots.isEmpty() || !events.containsKey("ABSENCE")) {
             return massmailing;
         }
 
-        if (massmailing.getJsonObject("events").containsKey("ABSENCE")) {
+        if (events.containsKey("ABSENCE")) {
             String startMorningHour = slots.getJsonObject(0).getString("start_hour");
             String endAfternoonHour = slots.getJsonObject(slots.size() - 1).getString("end_hour");
             String startAfternoonHour = startAfternoonHour(midHour, slots);

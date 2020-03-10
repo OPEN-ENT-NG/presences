@@ -143,11 +143,11 @@ public class Template extends BaseServer {
         }
 
         if (codes.contains(TemplateCode.LAST_ABSENCE)) {
-            value = value.replaceAll(Pattern.quote(systemCodes.get(TemplateCode.LAST_ABSENCE)), processLastEvent(codeValues, TemplateCode.LAST_ABSENCE, "ABSENCE"));
+            value = value.replaceAll(Pattern.quote(systemCodes.get(TemplateCode.LAST_ABSENCE)), processLastEvent(codeValues, TemplateCode.LAST_ABSENCE));
         }
 
         if (codes.contains(TemplateCode.LAST_LATENESS)) {
-            value = value.replaceAll(Pattern.quote(systemCodes.get(TemplateCode.LAST_LATENESS)), processLastEvent(codeValues, TemplateCode.LAST_LATENESS, "LATENESS"));
+            value = value.replaceAll(Pattern.quote(systemCodes.get(TemplateCode.LAST_LATENESS)), processLastEvent(codeValues, TemplateCode.LAST_LATENESS));
         }
 
         return value;
@@ -198,7 +198,7 @@ public class Template extends BaseServer {
                     for (int i = 0; i < eventsKey.size(); i++) {
                         JsonObject event = eventsKey.getJsonObject(i);
                         try {
-                            summary += formatSmsEvent(key, event);
+                            summary += formatSmsEvent(event);
                         } catch (ParseException | NullPointerException e) {
                             LOGGER.error("[Massmailing@Template] Failed to generate table line", e, event.toString());
                         }
@@ -210,14 +210,12 @@ public class Template extends BaseServer {
         return summary;
     }
 
-    public String processLastEvent(HashMap<TemplateCode, Object> codeValues, TemplateCode key, String type) {
+    public String processLastEvent(HashMap<TemplateCode, Object> codeValues, TemplateCode key) {
         JsonObject lastEvent = (JsonObject) codeValues.get(key);
         String template = "";
-        if (mailingType == MailingType.SMS) {
-            template += "\n";
-            template += I18n.getInstance().translate("massmailing.summary.last." + type, domain, locale) + ": ";
+        if (lastEvent != null && mailingType == MailingType.SMS) {
             try {
-                template = formatSmsEvent(type, lastEvent);
+                template += " " + formatSmsEvent(lastEvent);
             } catch (ParseException e) {
                 LOGGER.error("[Massmailing@Template] Failed to generate line", e, lastEvent.toString());
             }
@@ -225,13 +223,11 @@ public class Template extends BaseServer {
         return template;
     }
 
-    private String formatSmsEvent(String key, JsonObject event) throws ParseException {
-        String line = DateHelper.getDateString(event.getString("display_start_date"), DateHelper.DAY_MONTH_YEAR) + ": ";
-        line += DateHelper.getTimeString(event.getString("display_start_date"), DateHelper.SQL_FORMAT) + " - " + DateHelper.getTimeString(event.getString("display_end_date"), DateHelper.SQL_FORMAT) + "; ";
-        if (!"LATENESS".equals(key)) {
-            line += " - " + getReasonLabel(event);
-            line += " - " + getRegularisedLabel(event) + "; ";
-        }
+    private String formatSmsEvent(JsonObject event) throws ParseException {
+        String startDate = event.getString("display_start_date", event.getString("start_date"));
+        String endDate = event.getString("display_end_date", event.getString("end_date"));
+        String line = DateHelper.getDateString(startDate, DateHelper.DAY_MONTH_YEAR) + ": ";
+        line += DateHelper.getTimeString(startDate, DateHelper.SQL_FORMAT) + " - " + DateHelper.getTimeString(endDate, DateHelper.SQL_FORMAT) + "; ";
         return line;
     }
 
