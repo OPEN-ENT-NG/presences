@@ -5,7 +5,7 @@
   "massmailing.form.description": "Saisissez ici les différents textes à envoyer lors du publipostage dans l'application Présences",
   "massmailing.template.form.mail.title": "Publipostage Mail",
   "massmailing.template.form.mail.description": "L'application Publipostage se charge automatiquement d'indiquer la liste des événements sélectionnés pour la publipostage sous forme de tableau à la fin de votre message. \n\nVous pouvez par ailleurs utiliser des codes qui seront remplacés automatiquement par le nom de l'élève ou sa classe par exemple. Vous trouverez la liste des codes disponibles sous l'éditeur de texte.",
-  "massmailing.template.form.sms.description": "Un SMS est limité à 160 caractères. Seule la date de la dernière absence, du dernier retard pourra être affichée",
+  "massmailing.template.form.sms.description": "Un SMS est limité à 160 caractères. Seule la date de la dernière absence, du dernier retard pourra être affichée.",
   "massmailing.template.form.mail.name.placeholder": "Modèle 1",
   "massmailing.template.form.sms.title": "Publipostage SMS",
   "massmailing.template.form.sms.name.placeholder": "Modèle 1",
