@@ -124,10 +124,12 @@ export class CalendarUtils {
      * @param {Course} item the current course
      */
     static changeAbsenceView(item: Course) {
+        // if document get element returns null, exit method
+        if (!document.getElementById(`absent${item.dayOfWeek}-${item.hash}`).closest('.fiveDays')) return;
         let courseItems = document
             .getElementById(`absent${item.dayOfWeek}-${item.hash}`)
             .closest('.fiveDays')
-            .querySelectorAll('.course-item:not(.is-absence)');
+            .querySelectorAll('.course-item');
         let items = [];
         Array.from(courseItems).forEach((course: HTMLElement) => {
             const item = course.closest('.schedule-item');

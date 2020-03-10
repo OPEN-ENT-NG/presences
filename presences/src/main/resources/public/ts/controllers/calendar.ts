@@ -30,8 +30,7 @@ interface ViewModel {
         presences: { displayName: string, startDate: string, endDate: string }
     };
     courses: {
-        list: Array<Course>,
-        hasLoaded: boolean
+        list: Array<Course>
     };
     slots: { list: Array<TimeSlot> };
     filter: {
@@ -52,7 +51,7 @@ interface ViewModel {
 
     searchItem(value: string): void;
 
-    changeAbsence(item: Course): string;
+    changeAbsence(item: Course): void;
 
     isAbsenceOnly(item): boolean;
 
@@ -93,9 +92,9 @@ interface CalendarScope extends Scope {
 }
 
 export const calendarController = ng.controller('CalendarController',
-    ['$scope', 'route', '$location', 'StructureService', 'CalendarService',
+    ['$scope', '$timeout', 'route', '$location', 'StructureService', 'CalendarService',
         'GroupService', 'SearchService', 'ForgottenNotebookService', 'PresenceService',
-        function ($scope: CalendarScope, route, $location, StructureService: StructureService,
+        function ($scope: CalendarScope, $timeout, route, $location, StructureService: StructureService,
                   CalendarService: CalendarService,
                   GroupService: GroupService,
                   SearchService: SearchService,
@@ -115,7 +114,7 @@ export const calendarController = ng.controller('CalendarController',
                 student: null,
                 students: null
             };
-            vm.courses = {list: [], hasLoaded: false};
+            vm.courses = {list: null};
             vm.presences = new Presences(window.structure.id);
 
             vm.slots = {list: []};
@@ -144,19 +143,11 @@ export const calendarController = ng.controller('CalendarController',
                     window.item = vm.filter.student;
                     $location.path(`/calendar/${vm.filter.student.id}`);
                 }
-                await Promise.all([
-                    vm.loadCourses(),
-                    vm.loadPresences()
-                ]).then(async () => {
-                    initActionAbsence();
-                });
+                await Promise.all([vm.loadCourses(), vm.loadPresences()]);
             }
 
-
-            vm.changeAbsence = function (item: Course): string {
-                vm.courses.hasLoaded = true;
+            const positioningAbsenceCourses = (item: Course): void => {
                 if ('hash' in item) CalendarUtils.changeAbsenceView(item);
-                return "";
             };
 
             vm.loadForgottenNotebook = async function () {
@@ -175,8 +166,6 @@ export const calendarController = ng.controller('CalendarController',
             };
 
             vm.loadCourses = async function (student: User = vm.filter.student) {
-                vm.show.loader = true;
-                vm.courses.hasLoaded = false;
                 if (vm.filter.student.id !== student.id) {
                     vm.filter.student = student;
                     window.item = student;
@@ -186,7 +175,6 @@ export const calendarController = ng.controller('CalendarController',
                 const end = DateUtils.format(DateUtils.add(model.calendar.firstDay, 1, 'w'), DateUtils.FORMAT["YEAR-MONTH-DAY"]);
                 vm.courses.list = await CalendarService.getCourses(structure.id, student.id, start, end);
                 await vm.loadForgottenNotebook();
-                vm.show.loader = false;
                 $scope.safeApply();
             };
 
@@ -382,10 +370,17 @@ export const calendarController = ng.controller('CalendarController',
             $scope.$on(SNIPLET_FORM_EMIT_EVENTS.EDIT, initCalendar);
             $scope.$on(SNIPLET_FORM_EMIT_EVENTS.DELETE, initCalendar);
 
-            $scope.$watch(() => vm.courses.hasLoaded, () => {
-                if (vm.courses.hasLoaded) {
-                    initActionAbsence();
-                }
+            // callback methods for positioning absence
+            const positioningAbsence = () => {
+                vm.courses.list.forEach(positioningAbsenceCourses);
+                initActionAbsence();
+                vm.show.loader = false;
+            };
+
+            // watching our vm.courses from initCalendar methods
+            $scope.$watch(() => vm.courses.list, () => {
+                // positioning absence with all courses (absence including), is set from initCalendar
+                if (vm.courses.list != null) $timeout(positioningAbsence);
             });
 
             $scope.$watch(() => window.structure, async () => {
@@ -397,7 +392,9 @@ export const calendarController = ng.controller('CalendarController',
 
             $scope.$watch(() => window.entcore.calendar.startOfDay, async (newVal, oldVal) => {
                 if (newVal !== oldVal) {
-                    initCalendar();
+                    // positioning absence with all courses (absence including), will set show loader true before proceeding
+                    vm.show.loader = true;
+                    $timeout(positioningAbsence);
                 }
             })
         }]);
