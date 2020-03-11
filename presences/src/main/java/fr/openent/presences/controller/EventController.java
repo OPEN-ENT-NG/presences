@@ -77,10 +77,12 @@ public class EventController extends ControllerHelper {
                 if (resultFuture.failed()) {
                     renderError(request, JsonObject.mapFrom(resultFuture.cause()));
                 } else {
+                    // set 0 if count.equal Presences.PAGE_SIZE (20 === 20) else set > 0
+                    Integer pageCount = pageNumberFuture.result().getInteger("events").equals(Presences.PAGE_SIZE) ? 0
+                            : pageNumberFuture.result().getInteger("events") / Presences.PAGE_SIZE;
                     JsonObject res = new JsonObject()
                             .put("page", page)
-                            .put("page_count", (pageNumberFuture.result().getInteger("events") +
-                                    pageNumberFuture.result().getInteger("absences")) / Presences.PAGE_SIZE)
+                            .put("page_count", pageCount)
                             .put("all", eventsFuture.result());
 
                     renderJson(request, res);

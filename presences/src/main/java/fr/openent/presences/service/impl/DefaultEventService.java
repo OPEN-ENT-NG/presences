@@ -85,11 +85,7 @@ public class DefaultEventService implements EventService {
                 LOGGER.error(message);
                 handler.handle(new Either.Left<>(message));
             } else {
-                JsonArray addAbsencesIntoEventsResults = eventHelper.duplicateAbsences(eventsFuture.result());
-                List<Event> events = eventHelper.removeDuplicateAbsences(
-                        EventHelper.getEventListFromJsonArray(addAbsencesIntoEventsResults, Event.MANDATORY_ATTRIBUTE),
-                        startDate, endDate
-                );
+                List<Event> events = EventHelper.getEventListFromJsonArray(eventsFuture.result(), Event.MANDATORY_ATTRIBUTE);
                 JsonArray absences = AbsenceHelper.removeDuplicates(events, absencesFuture.result());
                 List<Integer> reasonIds = new ArrayList<>();
                 List<String> studentIds = new ArrayList<>();
@@ -207,7 +203,7 @@ public class DefaultEventService implements EventService {
                 "  e.created AS created, e.comment AS comment, e.student_id AS student_id," +
                 "  e.reason_id AS reason_id, e.owner AS owner, e.register_id AS register_id, " +
                 "  e.counsellor_regularisation AS counsellor_regularisation," +
-                "  e.type_id AS type_id, 'event' AS type" +
+                "  e.type_id AS type_id, 'event'::text AS type" +
                 "  FROM " + Presences.dbSchema + ".event e" +
                 "  INNER JOIN presences.register AS r " +
                 "  ON (r.id = e.register_id AND r.structure_id = ?)";
@@ -227,41 +223,6 @@ public class DefaultEventService implements EventService {
             params.addAll(new JsonArray(listReasonIds));
         } else if (noReason != null) {
             query += (noReason ? " AND reason_id IS NULL" : "");
-        }
-        query += setParamsForQueryEvents(userId, regularized, noReason, userIdFromClasses, params);
-        query += " UNION" +
-                "  SELECT absence.id AS id, absence.start_date AS start_date, absence.end_date AS end_date, " +
-                "  NULL AS created, NULL AS comment, absence.student_id AS student_id," +
-                "  absence.reason_id AS reason_id, NULL AS owner, NULL AS register_id," +
-                "  absence.counsellor_regularisation AS counsellor_regularisation, 1 AS type_id, 'absence' AS type" +
-                "  FROM " + Presences.dbSchema + ".absence absence ";
-        if (eventType != null && !eventType.isEmpty()) {
-            query += "INNER JOIN presences.event_type AS event_type ON (event_type.id = 1 " +
-                    "AND 1 IN " + Sql.listPrepared(eventType.toArray()) + " ) ";
-            params.addAll(new JsonArray(eventType));
-        } else {
-            query += "INNER JOIN presences.event_type AS event_type ON event_type.id = 1 ";
-        }
-        query += "WHERE absence.structure_id = ? AND (absence.start_date > ? AND absence.end_date < ? OR ? > absence.start_date)";
-        params.add(structureId);
-        params.add(startDate + " " + defaultStartTime);
-        params.add(endDate + " " + defaultEndTime);
-        params.add(endDate + " " + defaultEndTime);
-        if (listReasonIds != null && !listReasonIds.isEmpty() && noReason != null) {
-            query += " AND (reason_id IN " + Sql.listPrepared(listReasonIds) + (noReason ? " OR reason_id IS NULL" : "") + ") ";
-            params.addAll(new JsonArray(listReasonIds));
-        } else if (noReason != null) {
-            query += (noReason ? " AND reason_id IS NULL" : "");
-        }
-        query += " AND absence.student_id NOT IN (" +
-                "  SELECT distinct event.student_id FROM presences.event" +
-                "  WHERE absence.start_date::date = event.start_date::date" +
-                "  AND absence.end_date::date = event.end_date::date";
-        if (regularized != null) {
-            query += " AND counsellor_regularisation = ? )";
-            params.add(regularized);
-        } else {
-            query += " ) ";
         }
         query += setParamsForQueryEvents(userId, regularized, noReason, userIdFromClasses, params);
         query += ") SELECT * FROM allevents " +
@@ -291,7 +252,8 @@ public class DefaultEventService implements EventService {
                                             JsonArray userIdFromClasses, JsonArray params) {
 
         String query = "SELECT (" +
-                " SELECT COUNT(e.id) FROM " + Presences.dbSchema + ".event e " +
+                " SELECT COUNT(DISTINCT (to_char(e.start_date, 'DD/MM/YYYY'), e.student_id))" +
+                " FROM " + Presences.dbSchema + ".event e " +
                 " INNER JOIN presences.register AS r ON (r.id = e.register_id AND r.structure_id = ?)";
         params.add(structureId);
         if (eventType != null && !eventType.isEmpty()) {
@@ -310,32 +272,7 @@ public class DefaultEventService implements EventService {
             query += (noReason ? " AND reason_id IS NULL" : "");
         }
         query += setParamsForQueryEvents(userId, regularized, noReason, userIdFromClasses, params);
-        if (eventType != null && eventType.contains("1")) {
-            query += " ) AS events, ( SELECT COUNT(absence.id) FROM " + Presences.dbSchema + ".absence absence " +
-                    "WHERE absence.start_date > ? AND absence.end_date < ?";
-            params.add(startDate + " " + defaultStartTime);
-            params.add(endDate + " " + defaultEndTime);
-            if (listReasonIds != null && !listReasonIds.isEmpty() && noReason != null) {
-                query += " AND (reason_id IN " + Sql.listPrepared(listReasonIds) + (noReason ? " OR reason_id IS NULL" : "") + ") ";
-                params.addAll(new JsonArray(listReasonIds));
-            } else if (noReason != null) {
-                query += (noReason ? " AND reason_id IS NULL" : "");
-            }
-            query += " AND absence.student_id NOT IN (" +
-                    "  SELECT event.student_id FROM presences.event" +
-                    "  WHERE absence.start_date::date = event.start_date::date" +
-                    "  AND absence.end_date::date = event.end_date::date";
-            if (regularized != null) {
-                query += " AND counsellor_regularisation = ? )";
-                params.add(regularized);
-            } else {
-                query += " ) ";
-            }
-            query += setParamsForQueryEvents(userId, regularized, noReason, userIdFromClasses, params);
-            query += ") AS absences";
-        } else {
-            query += " ) AS events, (SELECT COUNT (0)) AS absences";
-        }
+        query += " ) AS events ";
         return query;
     }
 
