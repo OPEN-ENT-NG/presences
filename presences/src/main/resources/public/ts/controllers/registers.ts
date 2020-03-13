@@ -177,13 +177,7 @@ export const registersController = ng.controller('RegistersController',
                     getReasons();
                     if (vm.register !== undefined) {
                         let promises = [vm.register.sync()];
-                        if (vm.filter.course) {
-                            if (vm.filter.course.teachers.length > 0) {
-                                let cp = vm.loadCourses([vm.filter.course.teachers[0].id], [], window.structure.id, DateUtils.format(vm.filter.date, DateUtils.FORMAT["YEAR-MONTH-DAY"]),
-                                    DateUtils.format(vm.filter.date, DateUtils.FORMAT["YEAR-MONTH-DAY"]), false);
-                                promises.push(cp);
-                            }
-                        }
+                        addLoadCoursesPromise(promises);
                         await Promise.all(promises);
                         if (vm.register.teachers.length > 0) vm.filter.selected.registerTeacher = vm.register.teachers[0];
                         $scope.safeApply();
@@ -192,17 +186,28 @@ export const registersController = ng.controller('RegistersController',
                         vm.register.id = id;
                         vm.register.eventer.once('loading::true', () => $scope.safeApply());
                         vm.register.eventer.once('loading::false', () => $scope.safeApply());
-                        await vm.register.sync();
+                        let promises = [vm.register.sync()];
                         if (vm.filter.selected.registerTeacher) {
                             if (vm.register.teachers.length > 0 && _.countBy(vm.register.teachers, (teacher) => teacher.id === vm.filter.selected.registerTeacher.id) === 0)
                                 vm.filter.selected.registerTeacher = vm.register.teachers[0];
                         }
-                        // vm.openRegister(null, null);
+                        addLoadCoursesPromise(promises);
+                        await Promise.all(promises);
                     }
                 },
                 forgottenRegisterWidget: () => vm.loadCourses(extractSelectedTeacherIds(), extractSelectedGroupsName(), undefined, undefined, undefined, undefined, undefined, 16),
                 dayCoursesWidget: () => vm.loadCourses(extractSelectedTeacherIds(), extractSelectedGroupsName(), undefined, undefined, undefined, false),
                 onGoingRegisterWidget: () => getCurrentCourse(),
+            };
+
+            const addLoadCoursesPromise = (promises: Promise<void>[]) => {
+                if (vm.filter.course) {
+                    if (vm.filter.course.teachers.length > 0) {
+                        let cp = vm.loadCourses([vm.filter.course.teachers[0].id], [], window.structure.id, DateUtils.format(vm.filter.date, DateUtils.FORMAT["YEAR-MONTH-DAY"]),
+                            DateUtils.format(vm.filter.date, DateUtils.FORMAT["YEAR-MONTH-DAY"]), false);
+                        promises.push(cp);
+                    }
+                }
             };
 
             vm.register = undefined;
