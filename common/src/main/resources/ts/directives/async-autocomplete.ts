@@ -48,12 +48,9 @@ export const asyncAutocomplete = ng.directive('asyncAutocomplete', ['$timeout', 
         $scope.translate = lang.translate;
         $scope.search = $scope.search || "";
 
-        /**
-         * using $timeout instead of safe.$apply() for avoiding "digest already apply" from post :
-         * https://stackoverflow.com/questions/12729122/angularjs-prevent-error-digest-already-in-progress-when-calling-scope-apply
-         */
         const setLoadingStatus = (status: boolean = true) => {
-            $timeout(() => $scope.loading = status);
+            $scope.loading = status;
+            $scope.$apply();
         };
 
         const endUserTyping = () => {
@@ -63,19 +60,18 @@ export const asyncAutocomplete = ng.directive('asyncAutocomplete', ['$timeout', 
         };
 
         $scope.$watch('options', (newVal) => {
-            $timeout(() => {
-                $scope.match = newVal;
-                cancelAnimationFrame(token);
-                setLoadingStatus(false);
-            });
+            $scope.match = newVal;
+            cancelAnimationFrame(token);
+            setLoadingStatus(false);
+            $scope.$apply();
         });
 
-        $scope.select = (option) => $scope.$eval($scope.ngChange)($scope.ngModel, option);
+        $scope.select = (option) => {
+            $scope.$eval($scope.ngChange)($scope.ngModel, option);
+            closeDropDown();
+        };
 
-        const closeDropDown = function (e: Event) {
-            if ($element.find(e.target).length > 0 || dropDownContainer.find(e.target).length > 0) {
-                return;
-            }
+        const closeDropDown = function () {
             setLoadingStatus(false);
             $scope.match = undefined;
             $scope.$apply();
@@ -114,8 +110,8 @@ export const asyncAutocomplete = ng.directive('asyncAutocomplete', ['$timeout', 
         });
 
         $('body').on('click', ($event) => {
-            if ($scope.match) {
-                closeDropDown($event);
+            if ($scope.match && !$element.find($event.target).length && !dropDownContainer.find($event.target).length) {
+                closeDropDown();
             }
         });
 
@@ -126,7 +122,8 @@ export const asyncAutocomplete = ng.directive('asyncAutocomplete', ['$timeout', 
                 setLoadingStatus(false);
                 return;
             } else {
-                $timeout(() => $scope.search = newVal);
+                $scope.search = newVal;
+                $scope.$apply();
             }
         });
     }
