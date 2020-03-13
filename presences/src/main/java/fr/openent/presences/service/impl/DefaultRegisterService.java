@@ -671,7 +671,7 @@ public class DefaultRegisterService implements RegisterService {
                 .add(register.getString("start_date"))
                 .add(register.getString("end_date"))
                 .add(register.getString("subject_id"))
-                .add(register.getBoolean("split_slot"));
+                .add(register.getBoolean("split_slot") != null ? register.getBoolean("split_slot") : true);
 
         return new JsonObject()
                 .put("statement", query)
