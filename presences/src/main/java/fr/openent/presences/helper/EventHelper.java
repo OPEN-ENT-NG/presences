@@ -43,6 +43,7 @@ public class EventHelper {
     private PersonHelper personHelper;
     private ActionService actionService;
     private UserService userService;
+    private CourseHelper courseHelper;
 
     public EventHelper(EventBus eb) {
         this.eventTypeHelper = new EventTypeHelper();
@@ -51,7 +52,7 @@ public class EventHelper {
         this.registerHelper = new RegisterHelper(eb, Presences.dbSchema);
         this.actionService = new DefaultActionService();
         this.userService = new DefaultUserService();
-
+        this.courseHelper = new CourseHelper(eb);
     }
 
     public void addLastActionAbbreviation(List<Event> events, Future<JsonObject> future) {
@@ -314,6 +315,10 @@ public class EventHelper {
             }
         });
     }
+
+//    public void addCourseToEvents(List<Event> events, Future<JsonObject> courseFuture) {
+//        courseHelper.getCoursesList(params.get("structure"), params.getAll("teacher"), params.getAll("group");
+//    }
 
     @SuppressWarnings("unchecked")
     public void addOwnerToEvents(List<Event> events, Future<JsonObject> future) {

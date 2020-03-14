@@ -347,6 +347,25 @@ $calendar-user-card-height: 56px;
                   background-color: $presences-main;
                 }
               }
+
+              &:hover .tooltip-top {
+                @include tooltipVisible();
+              }
+
+              .tooltip-top {
+                @include tooltipTemplate();
+                bottom: 27px;
+                margin-left: -3px;
+                text-align: left;
+                max-width: 115px;
+                padding: 5px !important;
+
+                &:after {
+                  @include tooltipBottomArrow();
+                  top: 100%;
+                  left: 15%;
+                }
+              }
             }
           }
         }

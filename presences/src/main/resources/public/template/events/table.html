@@ -49,8 +49,12 @@
             <ul class="period">
                 <!-- planning  -->
                 <li ng-repeat="periods in event.dayHistory track by $index"
-                    class="[[vm.eventTypeState(periods, event)]]"
-                    tooltip="[[periods.name]]">
+                    class="[[vm.eventTypeState(periods, event)]]">
+                    <!-- tooltip hovered -->
+                    <span class="tooltip-top">
+                        <span class="font-bold">Histoire-Géographie</span> <br>M.Chambol <br>
+                        [[vm.formatHourTooltip(periods.start)]] - [[vm.formatHourTooltip(periods.end)]]
+                    </span>
                 </li>
                 <li><i class="tableEdit" data-ng-click="vm.editPeriod($event, event)"></i></li>
             </ul>

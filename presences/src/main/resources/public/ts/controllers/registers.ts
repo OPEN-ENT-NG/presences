@@ -119,6 +119,8 @@ export interface ViewModel {
 
     formatDayDate(date: string): string;
 
+    formatHourTooltip(date: string): string;
+
     changeDate(): void;
 
     changeFiltersDate(): void;
@@ -700,6 +702,10 @@ export const registersController = ng.controller('RegistersController',
 
             vm.formatDayDate = function (date) {
                 return DateUtils.format(parseInt(date), DateUtils.FORMAT["DAY-DATE"]);
+            };
+
+            vm.formatHourTooltip = function (date) {
+                return DateUtils.format(date, DateUtils.FORMAT["HOUR-MINUTES"]);
             };
 
             const notifyCourse = async function (course: Course) {

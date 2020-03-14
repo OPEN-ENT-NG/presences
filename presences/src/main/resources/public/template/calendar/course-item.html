@@ -14,12 +14,23 @@
          'is-absence': item.hasOwnProperty('hash')
          }">
         <div class="data">
+            <span ng-show="item.hasOwnProperty('hash')" class="tooltip-top">
+                        <span>Absence</span> <br>
+                        <span class="font-bold"> Motif : </span>
+                        [[vm.formatPresenceDate(event.end_date)]]
+            </span>
             <div class="subject ellipsis cell">[[item.subject_name]]</div>
             <em class="metadata right-magnet"><span ng-repeat="room in item.roomLabels">[[room]]</span> </em>
         </div>
         <div class="events">
             <i ng-if="item.incident" class="report incident"></i>
-            <div class="event event-type-[[event.type_id]]" ng-repeat="event in item.events">&nbsp;</div>
+            <div class="event event-type-[[event.type_id]]" ng-repeat="event in item.events">&nbsp;
+                <span class="tooltip-top">
+                        <span>Retard / Départ</span> <br>
+                        <span class="font-bold"> Heure : </span>
+                        [[vm.formatPresenceDate(event.end_date)]]
+                </span>
+            </div>
         </div>
     </div>
     <div class="right-side">

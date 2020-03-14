@@ -41,9 +41,12 @@
             ng-class="{ disabled: vm.isEmptyDayHistory(student) }">
             <li ng-repeat="slot in student.day_history"
                 class="[[vm.getHistoryEventClassName(slot.events, slot)]]"
-                ng-class="{current: vm.isCurrentSlot(slot)}"
-                tooltip="[[::slot.name]]">
-                &nbsp;
+                ng-class="{current: vm.isCurrentSlot(slot)}">
+                <span ng-show="vm.isCurrentSlot(slot)" class="tooltip-top-register">
+                        <span class="font-bold">Mathématiques</span> <br>
+                        M.Chambol <br>
+                        [[vm.formatHourTooltip(slot.start)]] - [[vm.formatHourTooltip(slot.end)]]
+                </span>
             </li>
         </ul>
     </div>

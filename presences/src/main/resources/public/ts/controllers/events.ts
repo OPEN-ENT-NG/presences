@@ -71,6 +71,8 @@ interface ViewModel {
 
     formatDate(date: string): string;
 
+    formatHourTooltip(date: string): string;
+
     isEachEventAbsence(event: EventResponse): boolean;
 
     /* Action */
@@ -357,6 +359,10 @@ export const eventsController = ng.controller('EventsController', ['$scope', '$r
 
         vm.formatDate = function (date: string) {
             return DateUtils.format(date, DateUtils.FORMAT["DAY-MONTH-HALFYEAR"]);
+        };
+
+        vm.formatHourTooltip = function (date: string) {
+            return DateUtils.format(date, DateUtils.FORMAT["HOUR-MINUTES"]);
         };
 
         vm.createAction = function () {

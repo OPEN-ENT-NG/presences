@@ -114,6 +114,30 @@
   }
 }
 
+li {
+
+  &:hover .tooltip-top {
+    @include tooltipVisible();
+  }
+
+  .tooltip-top {
+    @include tooltipTemplate();
+    text-align: left;
+    max-width: 115px;
+    padding: 5px;
+    line-height: 20px;
+    transform: scale(0.80);
+    bottom: 35px;
+    margin-left: -30px;
+
+    &:after {
+      @include tooltipBottomArrow();
+      top: 100%;
+      left: 15%;
+    }
+  }
+}
+
 i.attach:before {
   font-size: 24px;
 }
