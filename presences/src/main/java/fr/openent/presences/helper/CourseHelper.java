@@ -1,17 +1,18 @@
 package fr.openent.presences.helper;
 
 import fr.openent.presences.common.helper.DateHelper;
+import fr.openent.presences.common.helper.FutureHelper;
 import fr.openent.presences.model.Course;
 import fr.openent.presences.model.Slot;
 import fr.wseduc.webutils.Either;
-import io.vertx.core.Future;
-import io.vertx.core.Handler;
-import io.vertx.core.MultiMap;
+import io.vertx.core.*;
 import io.vertx.core.eventbus.EventBus;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
+import org.entcore.common.neo4j.Neo4j;
+import org.entcore.common.neo4j.Neo4jResult;
 
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
@@ -25,9 +26,11 @@ public class CourseHelper {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(CourseHelper.class);
     private final EventBus eb;
+    private SubjectHelper subjectHelper;
 
     public CourseHelper(EventBus eb) {
         this.eb = eb;
+        this.subjectHelper = new SubjectHelper(eb);
     }
 
     /**
@@ -49,26 +52,73 @@ public class CourseHelper {
 
     public void getCoursesList(String structure, List<String> teachers, List<String> groups,
                                String start, String end, Future<List<Course>> handler) {
-        getCoursesList(structure, teachers, groups, start, end, either -> {
-            if (either.isLeft()) {
+        getCoursesList(structure, teachers, groups, start, end, result -> {
+            if (result.failed()) {
                 String err = "[CourseHelper@getCourses] Failed to retrieve list courses";
                 LOGGER.error(err);
-                handler.fail(either.left().getValue());
+                handler.fail(err + " " + result.cause());
             } else {
-                handler.complete(either.right().getValue());
+                handler.complete(result.result());
             }
         });
     }
 
-    public void getCoursesList(String structure, List<String> teachers, List<String> groups,
-                               String start, String end, Handler<Either<String, List<Course>>> handler) {
-        getCourses(structure, teachers, groups, start, end, either -> {
-            if (either.isLeft()) {
-                String err = "[CourseHelper@getCourses] Failed to retrieve list courses";
-                LOGGER.error(err);
-                handler.handle(new Either.Left<>(err));
+    public void getCoursesList(String structure, List<String> teachersList, List<String> groupsList,
+                               String start, String end, Handler<AsyncResult<List<Course>>> handler) {
+        getCourses(structure, teachersList, groupsList, start, end, courseResult -> {
+            if (courseResult.isLeft()) {
+                String message = "[CourseHelper@getCourses] Failed to retrieve list courses";
+                LOGGER.error(message, courseResult.left().getValue());
+                handler.handle(Future.failedFuture(message + " " + courseResult.left().getValue()));
+            } else {
+                JsonArray courses = courseResult.right().getValue();
+                JsonArray subjectIds = new JsonArray();
+                JsonArray teachersIds = new JsonArray();
+
+                for (int i = 0; i < courses.size(); i++) {
+                    JsonObject course = courses.getJsonObject(i);
+                    if (!subjectIds.contains(course.getString("subjectId"))) {
+                        subjectIds.add(course.getString("subjectId"));
+                    }
+                    JsonArray teachers = course.getJsonArray("teacherIds");
+                    for (int j = 0; j < teachers.size(); j++) {
+                        if (!teachersIds.contains(teachers.getString(j))) {
+                            teachersIds.add(teachers.getString(j));
+                        }
+                    }
+                }
+
+                Future<JsonArray> subjectsFuture = Future.future();
+                Future<JsonArray> teachersFuture = Future.future();
+
+                CompositeFuture.all(subjectsFuture, teachersFuture).setHandler(asyncHandler -> {
+                    if (asyncHandler.failed()) {
+                        String message = "[Presences@CourseHelper] Failed to retrieve subjects or teachers info";
+                        LOGGER.error(message);
+                        handler.handle(Future.failedFuture(message + " " + asyncHandler.cause().toString()));
+                        return;
+                    }
+                    JsonArray subjects = subjectsFuture.result();
+                    JsonArray teachers = teachersFuture.result();
+                    JsonObject subjectMap = MapHelper.transformToMap(subjects, "id");
+                    JsonObject teacherMap = MapHelper.transformToMap(teachers, "id");
+                    for (int i = 0; i < courses.size(); i++) {
+                        JsonObject object = courses.getJsonObject(i);
+                        object.put("subjectName", subjectMap.getJsonObject(object.getString("subjectId"), new JsonObject()).getString("name", object.getString("exceptionnal", "")));
+                        JsonArray courseTeachers = new JsonArray();
+                        JsonArray teacherIds = object.getJsonArray("teacherIds");
+                        for (int j = 0; j < teacherIds.size(); j++) {
+                            if (!teacherMap.containsKey(teacherIds.getString(j))) continue;
+                            courseTeachers.add(teacherMap.getJsonObject(teacherIds.getString(j)));
+                        }
+                        object.put("teachers", courseTeachers);
+                    }
+                    handler.handle(Future.succeededFuture(CourseHelper.getCourseListFromJsonArray(courses, Course.MANDATORY_ATTRIBUTE)));
+                });
+
+                subjectHelper.getSubjects(subjectIds, FutureHelper.handlerJsonArray(subjectsFuture));
+                getCourseTeachers(teachersIds, FutureHelper.handlerJsonArray(teachersFuture));
             }
-            handler.handle(new Either.Right<>(CourseHelper.getCourseListFromJsonArray(either.right().getValue(), Course.MANDATORY_ATTRIBUTE)));
         });
     }
 
@@ -160,6 +210,11 @@ public class CourseHelper {
             LOGGER.error("[Presences@CourseHelper] Failed to parse date [see DateHelper", e);
         }
         return splitCourses;
+    }
+
+    public void getCourseTeachers(JsonArray teachers, Handler<Either<String, JsonArray>> handler) {
+        String teacherQuery = "MATCH (u:User) WHERE u.id IN {teacherIds} RETURN u.id as id, (u.lastName + ' ' + u.firstName) as displayName";
+        Neo4j.getInstance().execute(teacherQuery, new JsonObject().put("teacherIds", teachers), Neo4jResult.validResultHandler(handler));
     }
 
     /**

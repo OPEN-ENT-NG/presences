@@ -19,8 +19,6 @@ import io.vertx.core.json.JsonObject;
 import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
 import org.entcore.common.mongodb.MongoDbResult;
-import org.entcore.common.neo4j.Neo4j;
-import org.entcore.common.neo4j.Neo4jResult;
 
 import java.text.ParseException;
 import java.time.Instant;
@@ -133,13 +131,8 @@ public class DefaultCourseService implements CourseService {
             });
 
             subjectHelper.getSubjects(subjectIds, FutureHelper.handlerJsonArray(subjectsFuture));
-            getCourseTeachers(teachersIds, FutureHelper.handlerJsonArray(teachersFuture));
+            courseHelper.getCourseTeachers(teachersIds, FutureHelper.handlerJsonArray(teachersFuture));
         });
-    }
-
-    private void getCourseTeachers(JsonArray teachers, Handler<Either<String, JsonArray>> handler) {
-        String teacherQuery = "MATCH (u:User) WHERE u.id IN {teacherIds} RETURN u.id as id, (u.lastName + ' ' + u.firstName) as displayName";
-        Neo4j.getInstance().execute(teacherQuery, new JsonObject().put("teacherIds", teachers), Neo4jResult.validResultHandler(handler));
     }
 
     private List<Course> filterForgottenCourses(List<Course> courses, String userDate) {

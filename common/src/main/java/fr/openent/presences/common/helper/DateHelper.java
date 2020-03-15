@@ -153,6 +153,33 @@ public class DateHelper {
     }
 
     /**
+     * Check if the date to compare is between start and end date (add format)
+     *
+     * @param startDateEventToCompareParam startDateEvent chosen to compare
+     * @param endDateEventToCompareParam   endDateEvent chosen to compare
+     * @param startDateParam               start date compared
+     * @param endDateParam                 end date compared
+     * @param format                       your date format (SQL_FORMAT, SQL_DATE_FORMAT, MONGO_FORMAT etc...)
+     * @param secondFormat                 your second date format for your another date (SQL_FORMAT, SQL_DATE_FORMAT, MONGO_FORMAT etc...)
+     * @return Boolean that match if the date to compare is between start and end date
+     */
+    public static boolean isBetween(String startDateEventToCompareParam, String endDateEventToCompareParam,
+                                    String startDateParam, String endDateParam, String format, String secondFormat) throws ParseException {
+
+        SimpleDateFormat sdf = new SimpleDateFormat(format);
+        Date startDateEventToCompare = sdf.parse(startDateEventToCompareParam);
+        Date endDateEventToCompare = sdf.parse(endDateEventToCompareParam);
+        SimpleDateFormat secondSdf = new SimpleDateFormat(secondFormat);
+        Date anotherStartDate = secondSdf.parse(startDateParam);
+        Date anotherEndDate = secondSdf.parse(endDateParam);
+
+        return ((anotherStartDate.after(startDateEventToCompare) || anotherStartDate.equals(startDateEventToCompare))
+                || (startDateEventToCompare.before(anotherEndDate)))
+                && ((anotherEndDate.before(endDateEventToCompare) || anotherEndDate.equals(endDateEventToCompare))
+                || (endDateEventToCompare.after(anotherStartDate)));
+    }
+
+    /**
      * Check if the first date is before or equals the second date
      *
      * @param date1 First date

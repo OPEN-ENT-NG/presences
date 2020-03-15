@@ -120,14 +120,17 @@ public class DefaultEventService implements EventService {
                         Future<JsonObject> actionFuture = Future.future();
                         Future<JsonObject> excludeFuture = Future.future();
                         Future<JsonObject> ownerFuture = Future.future();
+                        Future<JsonObject> courseFuture = Future.future();
 
                         eventHelper.addLastActionAbbreviation(events, actionFuture);
                         eventHelper.addOwnerToEvents(events, ownerFuture);
                         interactExclude(exclusionDays, saturdayCoursesCount, sundayCoursesCount, events, excludeFuture);
+                        eventHelper.addCourseToEvents(events, structureId, startDate, endDate, courseFuture);
 
-                        CompositeFuture.all(actionFuture, excludeFuture, ownerFuture).setHandler(eventResult -> {
+                        CompositeFuture.all(actionFuture, excludeFuture, ownerFuture, courseFuture).setHandler(eventResult -> {
                             if (eventResult.failed()) {
-                                String message = "[Presences@DefaultEventService] Failed to retrieve exclude days or add last action abbreviation";
+                                String message = "[Presences@DefaultEventService] Failed to retrieve exclude days, owners, " +
+                                        "add last action abbreviation or add courses to existing event";
                                 LOGGER.error(message);
                                 handler.handle(new Either.Left<>(message));
                             } else {

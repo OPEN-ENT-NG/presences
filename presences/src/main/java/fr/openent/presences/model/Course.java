@@ -79,7 +79,7 @@ public class Course implements Cloneable {
         this.color = course.getString("color", "");
         this.isPeriodic = course.getBoolean("is_periodic", null);
         this.subjectName = course.getString("subjectName", "");
-        this.teachers = course.getJsonArray("teachers", new JsonArray());
+        this.teachers = course.getJsonArray("teachers", course.getJsonArray("teacherIds", new JsonArray()));
         this.registerId = course.getInteger("register_id", null);
         this.registerStateId = course.getInteger("register_state_id", null);
         this.notified = course.getBoolean("notified", null);
