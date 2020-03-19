@@ -14,6 +14,8 @@ export class Student {
             for (let key in o) {
                 if (key == 'idEleve') {
                     this.id = o['idEleve'];
+                } else if (key == 'idClasse') {
+                    this.classeName = o['idClasse'][0].substring(10);
                 } else {
                     this[key] = o[key];
                 }
@@ -22,7 +24,8 @@ export class Student {
     }
 
     toString() {
-        return this.hasOwnProperty("displayName") ? this.displayName : this.firstName + " " + this.lastName;
+        return this.hasOwnProperty("displayName") ? this.displayName + ' - ' + this.classeName :
+            this.firstName + " " + this.lastName + ' - ' + this.classeName;
     }
 }
 
