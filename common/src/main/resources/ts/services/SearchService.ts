@@ -20,7 +20,13 @@ export const SearchService: SearchService = {
     search: async (structureId: string, value: string) => {
         try {
             const {data} = await http.get(`/presences/search?structureId=${structureId}&q=${value}`);
-            data.forEach((item) => item.toString = () => item.displayName);
+            data.forEach((item) => {
+                if (item.type == "USER") {
+                    item.toString = () => item.displayName + ' - ' + item.groupName;
+                } else if (item.type == "GROUP") {
+                    item.toString = () => item.displayName;
+                }
+            });
             return data;
         } catch (err) {
             throw err;
