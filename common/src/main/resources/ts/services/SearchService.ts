@@ -37,7 +37,14 @@ export const SearchService: SearchService = {
     searchUser: async (structureId: string, value: string, profile: string) => {
         try {
             const {data} = await http.get(`/presences/search/users?structureId=${structureId}&profile=${profile}&q=${value}&field=firstName&field=lastName`);
-            data.forEach((user) => user.toString = () => user.displayName);
+            data.forEach((user) => {
+                if (user.idClasse && user.idClasse != null) {
+                    let idClass = user.idClasse;
+                    user.idClasse = idClass.map(id => id.split('$')[1]);
+                    user.toString = () => user.displayName + ' - ' + user.idClasse;
+                } else user.toString = () => user.displayName;
+            });
+
             return data;
         } catch (err) {
             throw err;

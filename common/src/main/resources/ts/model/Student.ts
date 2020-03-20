@@ -7,7 +7,7 @@ export class Student {
     lastName: string;
     idClasse: string;
     displayName: string;
-    classeName?: string;
+    classeName?: any;
 
     constructor(o?: any) {
         if (o && typeof o === 'object') {
@@ -15,7 +15,8 @@ export class Student {
                 if (key == 'idEleve') {
                     this.id = o['idEleve'];
                 } else if (key == 'idClasse') {
-                    this.classeName = o['idClasse'][0].substring(10);
+                    let idClass = [o['idClasse'][0]];
+                    this.classeName = idClass.map(id => id.split('$')[1]);
                 } else {
                     this[key] = o[key];
                 }
