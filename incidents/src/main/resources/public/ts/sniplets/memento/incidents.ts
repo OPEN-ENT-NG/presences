@@ -1,6 +1,8 @@
 import {angular, moment, toasts} from "entcore";
 import {DateUtils} from "@common/utils";
-import {Incidents} from "@incidents/models";
+import {Incidents, ISchoolYearPeriod} from "@incidents/models";
+import {ViescolaireService} from "@common/services/ViescolaireService";
+import {IAngularEvent} from "angular";
 
 declare let window: any;
 
@@ -11,7 +13,7 @@ interface IViewModel {
     disabled: boolean,
     student: string,
     incidents: Incidents;
-
+    
     apply(): void;
 
     init(student: string): Promise<void>;
@@ -32,13 +34,14 @@ const vm: IViewModel = {
     apply: null,
 
     async init(student: string): Promise<void> {
+
         try {
             vm.incidents = new Incidents();
             vm.incidents.eventer.on('loading::true', vm.apply);
             vm.incidents.eventer.on('loading::false', vm.apply);
             vm.incidents.userId = student;
             vm.incidents.structureId = window.structure.id;
-            const schoolYears = await DateUtils.getSchoolYearDates(window.structure.id);
+            const schoolYears: ISchoolYearPeriod = await ViescolaireService.getSchoolYearDates(window.structure.id);
             vm.startDate = moment(schoolYears.start_date);
             vm.endDate = moment(schoolYears.end_date);
             await vm.loadStudentYearIncidents();
@@ -72,15 +75,17 @@ const vm: IViewModel = {
 export const incidentsMementoWidget = {
     title: 'presences.memento.incidents.title',
     public: false,
+    that: null,
     controller: {
         init: function () {
             this.vm = vm;
+            incidentsMementoWidget.that = this;
             this.setHandler();
         },
         setHandler: function () {
             console.log('MEMENTO incidents');
             if (!window.memento) return;
-            this.$on('memento:init', (evt, {student}) => {
+            this.$on('memento:init', (evt: IAngularEvent, {student}) => {
                 const sniplet = document.getElementById('memento-incidents-sniplet');
                 vm.apply = angular.element(sniplet).scope().$apply;
                 vm.init(student);

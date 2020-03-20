@@ -1,6 +1,5 @@
 import {moment} from 'entcore';
 import {DurationInputArg1, DurationInputArg2} from 'moment';
-import http from "axios";
 
 export class DateUtils {
 
@@ -145,6 +144,14 @@ export class DateUtils {
      */
     static getTimeFormat(time: string): string {
         return moment().set('HOUR', time.split(":")[0]).set('MINUTE', time.split(":")[1]);
+    }
+
+    /**
+     * ⚠ This method format your TIME but your DATE will have your date.now() ⚠
+     * @param time  time value as a string (e.g) "09:00"
+     */
+    static getTimeFormatDate(time: string): Date {
+        return moment().set('HOUR', time.split(":")[0]).set('MINUTE', time.split(":")[1]).toDate();
     }
 
 

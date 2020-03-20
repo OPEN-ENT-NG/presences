@@ -1,7 +1,7 @@
 import http from 'axios';
 import {Mix} from 'entcore-toolkit';
 import {DateUtils} from "@common/utils";
-import {LoadingCollection} from "@common/model";
+import {ITimeSlot, LoadingCollection} from "@common/model";
 import {_, moment} from "entcore";
 
 export interface Exemption {
@@ -13,18 +13,37 @@ export interface Exemption {
     endDate: Date;
     comment: string;
     attendance: boolean;
+    isEveryTwoWeeks?: boolean;
     students: any;
     subject: any;
-
+    timeSlot?: ITimeSlot;
+    dayOfWeek?: Array<string>;
+    startDateRecursive?: string;
+    endDateRecursive?: string;
 }
 
 export class Exemption {
+    id: string;
+    studentId: string;
+    structureId: string;
+    subjectId: string;
+    startDate: Date;
+    endDate: Date;
+    comment: string;
+    attendance: boolean;
+    isEveryTwoWeeks?: boolean;
+    students: any;
+    subject: any;
+    timeSlot?: ITimeSlot;
+    dayOfWeek?: Array<string>;
+    startDateRecursive?: string;
+    endDateRecursive?: string;
+
     constructor(structureId, form?) {
         this.structureId = structureId;
         this.startDate = new Date();
         this.endDate = DateUtils.add(new Date(), 7, "d");
         this.comment = "";
-        this.attendance = false;
         this.attendance = false;
         this.students = null;
         if (form == true) {
@@ -67,32 +86,48 @@ export class Exemption {
         } else {
             exemp["student_id"] = this.studentId;
         }
+        if (this.timeSlot) {
+            exemp["isEveryTwoWeeks"] = this.isEveryTwoWeeks;
+            exemp["startDateRecursive"] = this.startDateRecursive;
+            exemp["endDateRecursive"] = this.endDateRecursive;
+            exemp["dayOfWeek"] = this.dayOfWeek;
+        }
         return exemp;
     };
 
     isValidOnForm() {
         let startDate = moment(this.startDate).format('YYYY-MM-DD');
         let endDate = moment(this.endDate).format('YYYY-MM-DD');
-        return startDate
+        let isPonctualFormValid = startDate
             && endDate
             && this.subject
             && this.structureId
             && this.students
             && this.students.length
             && startDate <= endDate;
+        let isRecursiveFormValid = startDate
+            && endDate
+            && this.structureId
+            && this.students
+            && this.students.length
+            && (this.startDateRecursive && this.endDateRecursive)
+            && startDate <= endDate;
+        return this.timeSlot ? isRecursiveFormValid : isPonctualFormValid;
     };
 
-    async save(structure: string, start_date: string, end_date: string, students?: string[], audiences?: string[]) {
+    async save(structure?: string, start_date?: string, end_date?: string, students?: string[], audiences?: string[]) {
         if (this.id) {
             let url = `/presences/exemption/${this.id}`;
-            return await http.put(url, this.toJson());
+            console.log('toJson: ', this.toJson());
+            // return http.put(url, this.toJson());
         } else {
             let url = `/presences/exemptions`;
-            return await http.post(url, this.toJson());
+            console.log('toJson: ', this.toJson());
+            // return http.post(url, this.toJson());
         }
     }
 
-    async delete(structure: string, start_date: string, end_date: string, students?: string[], audiences?: string[]) {
+    async delete(structure?: string, start_date?: string, end_date?: string, students?: string[], audiences?: string[]) {
         let url = `/presences/exemption?id=${this.id}`;
         return await http.delete(url,);
     }
@@ -135,7 +170,7 @@ export class Exemptions extends LoadingCollection {
         this.end_date = end_date;
         this.students = studentsFiltered ? _.pluck(studentsFiltered, 'id') : null;
         this.audiences = audiencesFiltered ? _.pluck(audiencesFiltered, 'id') : null;
-    }
+    };
 
     async prepareSyncPaginate(structureId: string, start_date: string, end_date: string, studentsFiltered?: any[], audiencesFiltered?: any[]) {
         this.prepareSync(structureId, start_date, end_date, studentsFiltered, audiencesFiltered);

@@ -5,14 +5,14 @@ import {
     CourseEvent,
     ForgottenNotebookService,
     GroupService,
+    IViescolaireService,
     Notebook,
     NotebookRequest,
     ReasonService,
     SearchItem,
     SearchService,
     Setting,
-    StructureService,
-    TimeSlot
+    ViescolaireService,
 } from '../services';
 import {Scope} from './main';
 import {Absence, EventType, ICalendarItems, Presence, Presences, Reason, User} from '../models';
@@ -34,7 +34,7 @@ interface ViewModel {
     courses: {
         list: Array<Course>
     };
-    slots: { list: Array<TimeSlot> };
+    slots: { list: Array<ITimeSlot> };
     filter: {
         search: {
             item: string,
@@ -459,7 +459,7 @@ export const calendarController = ng.controller('CalendarController',
 
 
             $scope.$watch(() => window.structure, async () => {
-                const structure_slots = await StructureService.getSlotProfile(window.structure.id);
+                const structure_slots = await viescolaireService.getSlotProfile(window.structure.id);
                 if (Object.keys(structure_slots).length > 0) vm.slots.list = structure_slots.slots;
                 else vm.slots.list = null;
                 $scope.safeApply();

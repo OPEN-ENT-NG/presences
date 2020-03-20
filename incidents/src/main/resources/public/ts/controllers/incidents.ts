@@ -1,10 +1,11 @@
 import {_, angular, moment, ng, notify} from 'entcore';
-import {Incident, Incidents, Student, Students} from "../models";
+import {Incident, Incidents, ISchoolYearPeriod, Student, Students} from "../models";
 import {IncidentService} from "../services";
 import {Toast} from "@common/utils/toast";
 import {Scope} from "./main";
 import {INCIDENTS_FORM_EVENTS} from '../sniplets';
 import {DateUtils} from "@common/utils";
+import {IViescolaireService, ViescolaireService} from "@common/services/ViescolaireService";
 
 declare let window: any;
 
@@ -46,53 +47,55 @@ interface ViewModel {
     editIncidentLightbox(incident: Incident): void;
 }
 
-export const incidentsController = ng.controller('IncidentsController', ['$scope', 'IncidentService', async function ($scope: Scope, IncidentService: IncidentService) {
-    const vm: ViewModel = this;
-    vm.notifications = [];
-    vm.filter = {
-        startDate: null,
-        endDate: new Date(),
-        students: [],
-        student: {
-            search: ''
-        }
-    };
+export const incidentsController = ng.controller('IncidentsController',
+    ['$scope', 'IncidentService', 'ViescolaireService',
+        async function ($scope: Scope, IncidentService: IncidentService, viescolaireService: IViescolaireService) {
+            const vm: ViewModel = this;
+            vm.notifications = [];
+            vm.filter = {
+                startDate: null,
+                endDate: new Date(),
+                students: [],
+                student: {
+                    search: ''
+                }
+            };
 
-    vm.students = new Students();
-    vm.collapse = false;
-    vm.incidents = new Incidents();
-    vm.incidentId = null;
-    vm.incidents.eventer.on('loading::true', () => $scope.safeApply());
-    vm.incidents.eventer.on('loading::false', () => $scope.safeApply());
+            vm.students = new Students();
+            vm.collapse = false;
+            vm.incidents = new Incidents();
+            vm.incidentId = null;
+            vm.incidents.eventer.on('loading::true', () => $scope.safeApply());
+            vm.incidents.eventer.on('loading::false', () => $scope.safeApply());
 
-    const setStudentToSync = () => {
-        vm.incidents.userId = vm.filter.students ? vm.filter.students
-            .map(students => students.id)
-            .filter(function () {
-                return true
-            })
-            .toString() : '';
-    };
+            const setStudentToSync = () => {
+                vm.incidents.userId = vm.filter.students ? vm.filter.students
+                    .map(students => students.id)
+                    .filter(function () {
+                        return true
+                    })
+                    .toString() : '';
+            };
 
-    const getIncidents = async (): Promise<void> => {
-        if (!window.structure) return;
+            const getIncidents = async (): Promise<void> => {
+                if (!window.structure) return;
 
-        vm.incidents.structureId = window.structure.id;
+                vm.incidents.structureId = window.structure.id;
 
-        if (vm.filter.startDate === null) {
-            const schoolYears = await DateUtils.getSchoolYearDates(window.structure.id);
-            vm.filter.startDate = moment(schoolYears.start_date);
-        }
+                if (vm.filter.startDate === null) {
+                    const schoolYears: ISchoolYearPeriod = await viescolaireService.getSchoolYearDates(window.structure.id);
+                    vm.filter.startDate = moment(schoolYears.start_date);
+                }
 
-        vm.incidents.startDate = moment(vm.filter.startDate).format(DateUtils.FORMAT["YEAR-MONTH-DAY"]);
-        vm.incidents.endDate = moment(vm.filter.endDate).format(DateUtils.FORMAT["YEAR-MONTH-DAY"]);
+                vm.incidents.startDate = moment(vm.filter.startDate).format(DateUtils.FORMAT["YEAR-MONTH-DAY"]);
+                vm.incidents.endDate = moment(vm.filter.endDate).format(DateUtils.FORMAT["YEAR-MONTH-DAY"]);
 
-        setStudentToSync();
+                setStudentToSync();
 
-        // "page" uses sync() method at the same time it sets 0 (See LoadingCollection)
-        vm.incidents.page = 0;
-        $scope.safeApply();
-    };
+                // "page" uses sync() method at the same time it sets 0 (See LoadingCollection)
+                vm.incidents.page = 0;
+                $scope.safeApply();
+            };
     getIncidents();
 
     /* CSV  */

@@ -204,7 +204,11 @@ body.presences, .sniplet.presences {
   .lightbox-form {
     select {
       border: none;
-      border-bottom: solid 1px #aaa;
+      border-bottom: solid 1px $presences-grey;
+
+      &:disabled {
+        color: $presences-grey;
+      }
     }
 
     .row.spacing {

@@ -1,4 +1,4 @@
-import {TimeSlot} from "../services";
+import {ITimeSlot} from "@common/model";
 
 export class TimeSlotsUtils {
 
@@ -10,9 +10,9 @@ export class TimeSlotsUtils {
      * {M2 08:00 - 09:00}
      * {M3 08:00 - 09:00}] will get be [0, 1, 2]
      *
-     * @param {Array<TimeSlot>} slots your timeSlots from the current structure
+     * @param {Array<ITimeSlot>} slots your timeSlots from the current structure
      */
-    private static getSlotsIndexAsArray(slots: Array<TimeSlot>): number[] {
+    private static getSlotsIndexAsArray(slots: Array<ITimeSlot>): number[] {
         let slotsIndexArray = [];
         for (let i = 0; i < slots.length; i++) {
             slotsIndexArray.push(i);
@@ -39,9 +39,9 @@ export class TimeSlotsUtils {
      * e.g [0, 1, (2)] "2" could possibly belong to the afternoon slot
      *
      * @param {number} slotIndex
-     * @param {Array<TimeSlot>} slots
+     * @param {Array<ITimeSlot>} slots
      */
-    static isSlotSecondPart(slotIndex: number, slots: Array<TimeSlot>): boolean {
+    static isSlotSecondPart(slotIndex: number, slots: Array<ITimeSlot>): boolean {
         if (this.isOdd(slots.length) === 1) {
             let endSlotsOfDay = this.getEndSlotsOfDay(slots);
             return endSlotsOfDay.some(item => item === slotIndex);
@@ -56,9 +56,9 @@ export class TimeSlotsUtils {
      * note: 4 is not taken in account since it is the "middle"
      * splitting morning and afternoon then it is supposed to be the "break/lunch" time
      *
-     * @param {Array<TimeSlot>} slots
+     * @param {Array<ITimeSlot>} slots
      */
-    static getStartSlotsOfDay(slots: Array<TimeSlot>): number[] {
+    static getStartSlotsOfDay(slots: Array<ITimeSlot>): number[] {
         let slotsIndexArray = this.getSlotsIndexAsArray(slots);
         return slotsIndexArray.slice().splice(0, slotsIndexArray.length / 2);
     }
@@ -70,9 +70,9 @@ export class TimeSlotsUtils {
      * note: 4 is not taken in account since it is the "middle"
      * splitting morning and afternoon then it is supposed to be the "break/lunch" time
      *
-     * @param {Array<TimeSlot>} slots
+     * @param {Array<ITimeSlot>} slots
      */
-    static getEndSlotsOfDay(slots: Array<TimeSlot>): number[] {
+    static getEndSlotsOfDay(slots: Array<ITimeSlot>): number[] {
         let slotsIndexArray = this.getSlotsIndexAsArray(slots);
         return slotsIndexArray.slice().splice((slotsIndexArray.length / 2) + 1, slotsIndexArray.length);
     }
