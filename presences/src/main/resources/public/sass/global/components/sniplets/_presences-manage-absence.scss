@@ -111,6 +111,50 @@
         }
       }
     }
+
+    .codeMassmailing {
+      position: relative;
+      display: inline-block;
+    }
+
+    .codeMassmailing .tooltiptext {
+      font-family: Roboto;
+      visibility: hidden;
+      min-width: 120px;
+      font-size: 12px;
+      box-shadow: 0 2px 20px rgba(0, 0, 0, 0.26);
+      position: absolute;
+      background-color: $presences-white;
+      color: $presences-black;
+      padding: 5px;
+      text-align: center;
+      border-radius: 5px;
+      z-index: 1;
+      bottom: 140%;
+      left: -5%;
+      opacity: 0;
+      transition: opacity 0.3s;
+
+      &.tooltipDoubleLine {
+        bottom: 120% !important;
+      }
+    }
+
+    .codeMassmailing .tooltiptext::after {
+      content: "";
+      position: absolute;
+      top: 100%;
+      left: 50%;
+      margin-left: -5px;
+      border-left: 5px solid transparent;
+      border-right: 5px solid transparent;
+      border-top: 10px solid $presences-white;
+    }
+
+    .codeMassmailing:hover .tooltiptext {
+      visibility: visible;
+      opacity: 1;
+    }
   }
 
   .sniplet-form-lightbox {

@@ -1,4 +1,4 @@
-import {toasts} from 'entcore';
+import {idiom as lang, toasts} from 'entcore';
 import {settingsService, Template} from '../../services/';
 
 console.log('massmailing');
@@ -27,6 +27,10 @@ interface ViewModel {
     resetTemplate(type: 'MAIL' | 'SMS' | 'PDF'): void
 
     openTemplate(template: Template)
+
+    copyCode(code: string, codeTooltip: string): any
+
+    outCopy(code: string): void
 }
 
 const vm: ViewModel = {
@@ -111,6 +115,22 @@ const vm: ViewModel = {
     },
     openTemplate: function ({id, structure_id, type, name, content}: Template) {
         vm[type.toLowerCase()] = {id, structure_id, type, name, content};
+    },
+    copyCode: function (code: string, codeTooltip: string) {
+        let copyText = document.getElementById(code);
+        let textArea = document.createElement("textarea");
+        textArea.value = copyText.innerText;
+        document.body.appendChild(textArea);
+        textArea.select();
+        document.execCommand("Copy");
+        textArea.remove();
+
+        let tooltip = document.getElementById(codeTooltip);
+        tooltip.innerHTML = lang.translate('massmailing.copied') + ':' + copyText.textContent;
+    },
+    outCopy: function (codeTooltip: string) {
+        let tooltip = document.getElementById(codeTooltip);
+        tooltip.innerHTML = lang.translate('massmailing.copy');
     }
 };
 

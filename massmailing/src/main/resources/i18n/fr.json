@@ -12,6 +12,8 @@
   "massmailing.add": "Ajouter",
   "massmailing.update": "Modifier",
   "massmailing.delete": "Supprimer",
+  "massmailing.copy": "Copier",
+  "massmailing.copied": "Copié",
   "massmailing.click.to.display": "Cliquez sur une ligne pour en afficher le contenu",
   "massmailing.templates.created": "Liste des modèles déjà saisis",
   "massmailing.templates.creation.success": "Modèle ajouté avec succès",

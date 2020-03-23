@@ -41,31 +41,82 @@
                     <div class="cell four horizontal-spacing-twice">
                         <div class="sniplet-input-title">
                             <i18n>massmailing.available.code</i18n>
-                            :
+                            &#58;
                         </div>
+
                         <div>
-                            <i18n>massmailing.codes.child.name</i18n>
-                            :
+                            <div class="codeMassmailing">
+                                <!-- Mail : code -->
+                                <span id="codeMailName"
+                                      data-ng-click="vm.copyCode('codeMailName', 'tooltipMailName')"
+                                      data-ng-mouseleave="vm.outCopy('tooltipMailName')">
+                                    <i18n>massmailing.codes.child.name</i18n>
+                                </span>
+                                <!-- Mail : tooltip feedback copy -->
+                                <span id="tooltipMailName" class="tooltiptext"> <i18n>massmailing.copy</i18n> </span>
+                            </div>
+                            &#58;
+                            <!-- Mail : code description -->
                             <i18n>massmailing.codes.students.name.label</i18n>
                         </div>
                         <div>
-                            <i18n>massmailing.codes.class.name</i18n>
-                            :
+                            <div class="codeMassmailing">
+                                <!-- Mail : code -->
+                                <span id="codeMailClass"
+                                      data-ng-click="vm.copyCode('codeMailClass', 'tooltipMailClass')"
+                                      data-ng-mouseleave="vm.outCopy('tooltipMailClass')">
+                                    <i18n>massmailing.codes.class.name</i18n>
+                                </span>
+                                <!-- Mail : tooltip feedback copy -->
+                                <span id="tooltipMailClass" class="tooltiptext"> <i18n>massmailing.copy</i18n> </span>
+                            </div>
+                            &#58;
+                            <!-- Mail : code description -->
                             <i18n>massmailing.codes.class.label</i18n>
                         </div>
                         <div>
-                            <i18n>massmailing.codes.absence.number</i18n>
-                            :
+                            <div class="codeMassmailing">
+                                <!-- Mail : code -->
+                                <span id="codeMailAbsence"
+                                      data-ng-click="vm.copyCode('codeMailAbsence', 'tooltipMailAbsence')"
+                                      data-ng-mouseleave="vm.outCopy('tooltipMailAbsence')">
+                                    <i18n>massmailing.codes.absence.number</i18n>
+                                </span>
+                                <!-- Mail : tooltip feedback copy -->
+                                <span id="tooltipMailAbsence" class="tooltiptext tooltipDoubleLine"> <i18n>massmailing.copy</i18n> </span>
+                            </div>
+                            &#58;
+                            <!-- Mail : code description -->
                             <i18n>massmailing.codes.absences.number.label</i18n>
                         </div>
                         <div>
-                            <i18n>massmailing.codes.lateness.number</i18n>
-                            :
+                            <div class="codeMassmailing">
+                                <!-- Mail : code -->
+                                <span id="codeMailLateness"
+                                      data-ng-click="vm.copyCode('codeMailLateness', 'tooltipMailLateness')"
+                                      data-ng-mouseleave="vm.outCopy('tooltipMailLateness')">
+                                    <i18n>massmailing.codes.lateness.number</i18n>
+                                </span>
+                                <!-- Mail : tooltip feedback copy -->
+                                <span id="tooltipMailLateness" class="tooltiptext"> <i18n>massmailing.copy</i18n> </span>
+                            </div>
+                            &#58;
+                            <!-- Mail : code description -->
                             <i18n>massmailing.codes.lateness.number.label</i18n>
                         </div>
                         <div>
-                            <i18n>massmailing.codes.summary</i18n>
-                            :
+                            <div class="codeMassmailing">
+                                <!-- Mail : code -->
+                                <span id="codeMailSummary"
+                                      data-ng-click="vm.copyCode('codeMailSummary', 'tooltipMailSummary')"
+                                      data-ng-mouseleave="vm.outCopy('tooltipMailSummary')">
+                                    <i18n>massmailing.codes.summary</i18n>
+                                </span>
+                                <!-- Mail : tooltip feedback copy -->
+                                <span id="tooltipMailSummary" class="tooltiptext"> <i18n>massmailing.copy</i18n> </span>
+                            </div>
+                            &#58;
+                            <!-- Mail : code description -->
                             <i18n>massmailing.codes.summary.label</i18n>
                         </div>
                     </div>
@@ -130,36 +181,97 @@
                     <div class="cell four horizontal-spacing-twice">
                         <div class="sniplet-input-title">
                             <i18n>massmailing.available.code</i18n>
-                            :
+                            &#58;
                         </div>
+
                         <div>
-                            <i18n>massmailing.codes.child.name</i18n>
-                            :
+                            <div class="codeMassmailing">
+                                <!-- SMS : code description -->
+                                <span id="codeSMSName"
+                                      data-ng-click="vm.copyCode('codeSMSName', 'tooltipSMSName')"
+                                      data-ng-mouseleave="vm.outCopy('tooltipSMSName')">
+                                    <i18n>massmailing.codes.child.name</i18n>
+                                </span>
+                                <!-- SMS : tooltip feedback copy -->
+                                <span id="tooltipSMSName" class="tooltiptext"> <i18n>massmailing.copy</i18n> </span>
+                            </div>
+                            &#58;
+                            <!-- SMS : code description -->
                             <i18n>massmailing.codes.students.name.label</i18n>
                         </div>
                         <div>
-                            <i18n>massmailing.codes.class.name</i18n>
-                            :
+                            <div class="codeMassmailing">
+                                <!-- SMS : code description -->
+                                <span id="codeSMSClass"
+                                      data-ng-click="vm.copyCode('codeSMSClass', 'tooltipSMSClass')"
+                                      data-ng-mouseleave="vm.outCopy('tooltipSMSClass')">
+                                    <i18n>massmailing.codes.class.name</i18n>
+                                </span>
+                                <!-- SMS : tooltip feedback copy -->
+                                <span id="tooltipSMSClass" class="tooltiptext"> <i18n>massmailing.copy</i18n> </span>
+                            </div>
+                            &#58;
+                            <!-- SMS : code description -->
                             <i18n>massmailing.codes.class.label</i18n>
                         </div>
                         <div>
-                            <i18n>massmailing.codes.absence.number</i18n>
-                            :
+                            <div class="codeMassmailing">
+                                <!-- SMS : code description -->
+                                <span id="codeSMSAbsence"
+                                      data-ng-click="vm.copyCode('codeSMSAbsence', 'tooltipSMSAbsence')"
+                                      data-ng-mouseleave="vm.outCopy('tooltipSMSAbsence')">
+                                    <i18n>massmailing.codes.absence.number</i18n>
+                                </span>
+                                <!-- SMS : tooltip feedback copy -->
+                                <span id="tooltipSMSAbsence" class="tooltiptext tooltipDoubleLine"> <i18n>massmailing.copy</i18n> </span>
+                            </div>
+                            &#58;
+                            <!-- SMS : code description -->
                             <i18n>massmailing.codes.absences.number.label</i18n>
                         </div>
                         <div>
-                            <i18n>massmailing.codes.lateness.number</i18n>
-                            :
+                            <div class="codeMassmailing">
+                                <!-- SMS : code description -->
+                                <span id="codeSMSLateness"
+                                      data-ng-click="vm.copyCode('codeSMSLateness', 'tooltipSMSLateness')"
+                                      data-ng-mouseleave="vm.outCopy('tooltipSMSLateness')">
+                                    <i18n>massmailing.codes.lateness.number</i18n>
+                                </span>
+                                <!-- SMS : tooltip feedback copy -->
+                                <span id="tooltipSMSLateness" class="tooltiptext"> <i18n>massmailing.copy</i18n> </span>
+                            </div>
+                            &#58;
+                            <!-- SMS : code description -->
                             <i18n>massmailing.codes.lateness.number.label</i18n>
                         </div>
                         <div>
-                            <i18n>massmailing.codes.last.absence</i18n>
-                            :
+                            <div class="codeMassmailing">
+                                <!-- SMS : code description -->
+                                <span id="codeSMSLastAbsence"
+                                      data-ng-click="vm.copyCode('codeSMSLastAbsence', 'tooltipSMSLastAbsence')"
+                                      data-ng-mouseleave="vm.outCopy('tooltipSMSLastAbsence')">
+                                    <i18n>massmailing.codes.last.absence</i18n>
+                                </span>
+                                <!-- SMS : tooltip feedback copy -->
+                                <span id="tooltipSMSLastAbsence" class="tooltiptext"> <i18n>massmailing.copy</i18n> </span>
+                            </div>
+                            &#58;
+                            <!-- SMS : code description -->
                             <i18n>massmailing.codes.last.absence.label</i18n>
                         </div>
                         <div>
-                            <i18n>massmailing.codes.last.lateness</i18n>
-                            :
+                            <div class="codeMassmailing">
+                                <!-- SMS : code description -->
+                                <span id="codeSMSLastLateness"
+                                      data-ng-click="vm.copyCode('codeSMSLastLateness', 'tooltipSMSLastLateness')"
+                                      data-ng-mouseleave="vm.outCopy('tooltipSMSLastLateness')">
+                                    <i18n>massmailing.codes.last.lateness</i18n>
+                                </span>
+                                <!-- SMS : tooltip feedback copy -->
+                                <span id="tooltipSMSLastLateness" class="tooltiptext"> <i18n>massmailing.copy</i18n> </span>
+                            </div>
+                            &#58;
+                            <!-- SMS : code description -->
                             <i18n>massmailing.codes.last.lateness.label</i18n>
                         </div>
                     </div>
@@ -170,7 +282,7 @@
                     <div class="sniplet-addList-content" ng-if="vm.smss.length > 0">
                         <div class="sniplet-input-title">
                             <i18n>massmailing.templates.created</i18n>
-                            :
+                            &#58;
                         </div>
                         <ul class="sniplet-addList-content-list">
                             <li class="sniplet-addList-content-list-item"
