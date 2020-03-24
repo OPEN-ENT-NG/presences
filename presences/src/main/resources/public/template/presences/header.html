@@ -41,8 +41,8 @@
         <div class="cell twelve">
             <ul class="cell twelve search-input-ul">
                 <li ng-repeat="student in vm.studentsSearch.selectedStudents">
-                    [[student.toString()]] <i class="close"
-                                              data-ng-click="vm.removeSelectedStudents(student)"></i>
+                    [[student.displayName]] <i class="close"
+                                               data-ng-click="vm.removeSelectedStudents(student)"></i>
                 </li>
             </ul>
         </div>
