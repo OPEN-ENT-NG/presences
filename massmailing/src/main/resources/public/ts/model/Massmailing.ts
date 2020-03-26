@@ -39,7 +39,8 @@ interface MassmailingStudent {
         id: string,
         displayName: string,
         contact: string,
-        selected: boolean
+        selected: boolean,
+        address: string
     }[]
 }
 
@@ -60,9 +61,17 @@ export class Massmailing {
         this.type = type;
         this.counts = counts;
         this.students = students;
-        this.students.forEach((student) => {
+        this.students.forEach((student: MassmailingStudent) => {
             student.relative.forEach(relative => {
-                relative.selected = (relative.contact !== null && relative.contact.trim() !== '');
+                if (student.relative.length > 1) {
+                    if (relative.address && (student.relative[0].address == student.relative[1].address)) {
+                        student.relative[0].selected = (student.relative[0].contact !== null && student.relative[0].contact.trim() !== '')
+                    } else {
+                        relative.selected = (relative.contact !== null && relative.contact.trim() !== '');
+                    }
+                } else {
+                    relative.selected = (relative.contact !== null && relative.contact.trim() !== '');
+                }
                 if (!relative.selected) this.counts.massmailing--;
             });
             let shouldSelect = false;

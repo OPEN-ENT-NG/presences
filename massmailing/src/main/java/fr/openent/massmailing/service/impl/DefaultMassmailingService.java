@@ -105,7 +105,7 @@ public class DefaultMassmailingService implements MassmailingService {
                 contactValue = "r.email";
                 break;
             case SMS:
-                contactValue = "r.mobile";
+                contactValue = "r.mobile , address: r.address";
                 break;
             case PDF:
             default:
