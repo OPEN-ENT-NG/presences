@@ -57,7 +57,7 @@ export const absencesController = ng.controller('AbsenceController', ['$scope', 
                 let end = moment(vm.params.end).format(DateUtils.FORMAT["YEAR-MONTH-DAY"]);
                 let students = [];
                 vm.params.student.selection.forEach(student => students.push(student.id));
-                vm.absences = await AbsenceService.retrieve(window.structure.id, students, start, end, null, false, null);
+                vm.absences = await AbsenceService.getCounsellorAbsence(window.structure.id, students, start, end, null, false, null);
                 $scope.safeApply();
             } catch (err) {
                 notify.error('presences.absences.load.failed');

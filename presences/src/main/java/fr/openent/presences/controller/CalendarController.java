@@ -157,16 +157,7 @@ public class CalendarController extends ControllerHelper {
                                     course.setIncident(new JsonObject().put("description", incident.getString("description")).put("date", incident.getString("date")));
                                 }
                             }
-
-                            JsonArray absencesCourses = new JsonArray();
-                            if (absents != null) {
-                                for (int i = 0; i < absents.size(); i++) {
-                                    if (CalendarHelper.calendarMatchDate(absents.getJsonObject(i), params.get("start"), params.get("end"))) {
-                                        absencesCourses.addAll(CalendarHelper.addAbsencesCourses(absents.getJsonObject(i), params));
-                                    }
-                                }
-                            }
-                            JsonArray eventsCalendar = new JsonArray().addAll(new JsonArray(courses)).addAll(absencesCourses);
+                            JsonArray eventsCalendar = new JsonArray().addAll(new JsonArray(courses));
                             renderJson(request, eventsCalendar);
                         });
 

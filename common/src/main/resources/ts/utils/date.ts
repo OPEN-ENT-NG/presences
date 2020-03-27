@@ -16,7 +16,8 @@ export class DateUtils {
         'DAY-MONTH-YEAR-LETTER': 'LL',  // e.g "9 juin 2019"
         'DAY-DATE': 'dddd L',
         'DATE-FULL-LETTER': 'dddd LL',
-        'DAY-MONTH-HALFYEAR': 'DD/MM/YY'
+        'DAY-MONTH-HALFYEAR': 'DD/MM/YY',
+        'HOUR-MIN-SEC': 'HH:mm:ss'
     };
 
     /**
@@ -185,5 +186,20 @@ export class DateUtils {
     static async getSchoolYearDates(structureId) {
         let {data} = await http.get(`viescolaire/settings/periode/schoolyear?structureId=` + structureId);
         return data;
+    }
+
+    static getDateFromMoment(date) {
+        return new Date(date.year(), date.month(), date.date(), date.hour(), date.minutes(), 0)
+    }
+
+    static isBetweenTimeStamp(startDateValue: any, endDateValue: any, startDateToCompare: any, endDateToCompare: any) {
+        let aStartTimestamp = this.getDateFromMoment(startDateValue).getTime();
+        let aEndTimestamp = this.getDateFromMoment(endDateValue).getTime();
+
+        let bStartTimestamp = this.getDateFromMoment(startDateToCompare).getTime();
+        let bEndTimestamp = this.getDateFromMoment(endDateToCompare).getTime();
+
+        return (aStartTimestamp < bEndTimestamp && aEndTimestamp > bStartTimestamp)
+            || (bStartTimestamp < aEndTimestamp && bEndTimestamp > aStartTimestamp);
     }
 }

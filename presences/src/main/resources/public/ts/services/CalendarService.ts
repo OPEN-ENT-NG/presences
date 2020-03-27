@@ -1,8 +1,11 @@
 import {moment, ng} from 'entcore'
 import http from 'axios';
-import {EventType} from '../models';
+import {Absence, EventType, PresenceRequest, Presences} from '../models';
 import {User} from '@common/model/User'
 import {DateUtils} from "@common/utils";
+import {presenceService} from "../services/PresenceService";
+import {absenceService} from "../services/AbsenceService";
+import {EventsUtils} from "../utilities";
 
 export interface CourseEvent {
     id: number;
@@ -10,6 +13,7 @@ export interface CourseEvent {
     end_date: string;
     type_id: number;
     reason_id?: number;
+    counsellor_input?: boolean;
 }
 
 export interface Course {
@@ -30,19 +34,29 @@ export interface Course {
     splitCourses: Course[];
     hash?: string;
     absence?: boolean;
+    absences?: Array<Absence>;
     absenceId?: string;
     absenceReason?: number;
     eventId?: number;
+    containsAbsence?: Boolean;
+    containsReasonAbsence?: Boolean;
 }
 
 export interface CalendarService {
-    getCourses(structureId: string, user: string, start: string, end: string): Promise<Array<Course>>;
-
     getStudentsGroup(id: string): Promise<Array<User>>;
+
+    loadCourses(student: User, startWeekDate: string, structureId: string): Promise<Array<Course>>;
+
+    loadPresences(student: User, startWeekDate: string, structureId: string): Promise<Presences>;
+
+    loadAbsences(student: User, startWeekDate: string, structureId: string): Promise<Array<Absence>>;
 }
 
-export const CalendarService = ng.service('CalendarService', (): CalendarService => ({
-    getCourses: async (structureId: string, user: string, start: string, end: string): Promise<Array<Course>> => {
+export const calendarService = ng.service('CalendarService', (): CalendarService => ({
+    loadCourses: async (student: User, startWeekDate: string, structureId): Promise<Array<Course>> => {
+        const start = DateUtils.format(startWeekDate, DateUtils.FORMAT["YEAR-MONTH-DAY"]);
+        const end = DateUtils.format(DateUtils.add(startWeekDate, 1, 'w'), DateUtils.FORMAT["YEAR-MONTH-DAY"]);
+
         function containsAbsence(course: Course): boolean {
             let contains = false;
             course.events.map((event) => contains = contains ||
@@ -73,8 +87,9 @@ export const CalendarService = ng.service('CalendarService', (): CalendarService
         }
 
         try {
-            const {data} = await http.get(`/presences/calendar/courses?structure=${structureId}&start=${start}&end=${end}&user=${user}&_t=${moment().format(DateUtils.FORMAT["YEAR-MONTH-DAY-HOUR-MIN-SEC"])}`);
+            const {data} = await http.get(`/presences/calendar/courses?structure=${structureId}&start=${start}&end=${end}&user=${student.id}&_t=${moment().format(DateUtils.FORMAT["YEAR-MONTH-DAY-HOUR-MIN-SEC"])}`);
             data.map((course) => {
+                course.absences = [];
                 course.startMoment = moment(course.startDate);
                 course.endMoment = moment(course.endDate);
                 course.containsAbsence = containsAbsence(course);
@@ -83,15 +98,43 @@ export const CalendarService = ng.service('CalendarService', (): CalendarService
                     return moment(a.start_date) - moment(b.start_date);
                 });
                 this.locked = true;
-
-                // create hash to fetch in html in order to recognize "absence" course
-                if (course.absence) course.hash = Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
             });
             return buildCalendarCourses(data);
         } catch (err) {
             throw err;
         }
     },
+
+    loadPresences: async (student: User, startWeekDate: string, structureId): Promise<Presences> => {
+        let presences = new Presences(structureId);
+        let presencesRequest: PresenceRequest = {
+            structureId: structureId,
+            startDate: DateUtils.format(startWeekDate, DateUtils.FORMAT["YEAR-MONTH-DAY"]),
+            endDate: DateUtils.format(DateUtils.add(startWeekDate, 1, 'w'), DateUtils.FORMAT["YEAR-MONTH-DAY"]),
+            studentIds: [student.id]
+        } as PresenceRequest;
+        await presences.build(await presenceService.get(presencesRequest));
+        return presences
+    },
+
+    loadAbsences: async (student: User, startWeekDate: string, structureId): Promise<Array<Absence>> => {
+        let absences = await absenceService.getAbsence(
+            structureId,
+            [student.id],
+            DateUtils.format(startWeekDate, DateUtils.FORMAT["YEAR-MONTH-DAY"]),
+            DateUtils.format(DateUtils.add(startWeekDate, 1, 'w'), DateUtils.FORMAT["YEAR-MONTH-DAY"]),
+            null,
+            null,
+            null,
+        );
+        return absences.map((absence) => {
+            absence.start_date = DateUtils.format(moment(absence.start_date), DateUtils.FORMAT["YEAR-MONTH-DAY-HOUR-MIN-SEC"]);
+            absence.end_date = DateUtils.format(moment(absence.end_date), DateUtils.FORMAT["YEAR-MONTH-DAY-HOUR-MIN-SEC"]);
+            absence.type = EventsUtils.ALL_EVENTS.absence;
+            return absence;
+        });
+    },
+
     getStudentsGroup: async (id) => {
         try {
             const {data} = await http.get(`/presences/calendar/groups/${id}/students`);
@@ -100,6 +143,7 @@ export const CalendarService = ng.service('CalendarService', (): CalendarService
         } catch (err) {
             throw err;
         }
-    }
+    },
+
 }));
 

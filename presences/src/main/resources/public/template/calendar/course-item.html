@@ -1,10 +1,5 @@
 <div class="course-item-container" id="[[item.id]]"
      data-ng-click="vm.actionAbsenceForm(item, items)">
-    <div class="course-item-container-event">
-        <div ng-repeat="event in item.events">
-            <div class="absence" id="[[event.id]]" ng-if="vm.eventContainsAbsence(event, item)">&nbsp;</div>
-        </div>
-    </div>
     <div class="exemption" ng-if="item.exempted" ng-class="{absent: item.containsAbsence}">&nbsp;</div>
 
     <div class="globalAbsence" ng-if="vm.isGlobalAbsence(item)">&nbsp;</div>
@@ -13,11 +8,9 @@
     <div class="course-item"
          data-ng-attr-id="[[vm.isAbsenceOnly(item) || vm.isAbsenceJustifiedOnly(item) ? 'absent' + item.dayOfWeek + '-' + item.hash : null]]"
          ng-class="{
-         'contains-absence': item.containsAbsence,
+         'contains-absence': item.absences.length > 0 || vm.absenceEvents(item).length > 0,
          'contains-absenceReason': !item.containsAbsence && item.containsReasonAbsence,
          'contains-events': item.events.length > 0 || item.exempted,
-         'contains-globalAbsence': vm.isGlobalAbsence(item),
-         'contains-globalAbsenceReason': vm.isGlobalAbsenceReason(item),
          'is-absence': item.hasOwnProperty('hash')
          }">
         <div class="data">

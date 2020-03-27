@@ -348,6 +348,14 @@ export class Absence extends Event {
             throw err;
         }
     }
+
+    async deleteEventAbsence(eventId?: number): Promise<AxiosResponse> {
+        try {
+            return await http.delete(`/presences/events/${eventId}`);
+        } catch (err) {
+            throw err;
+        }
+    }
 }
 
 export class Lateness extends Event {

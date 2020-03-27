@@ -397,12 +397,12 @@ public class DefaultAbsenceService implements AbsenceService {
         }
 
         if (start != null) {
-            query += " AND start_date >= ? ";
+            query += " AND end_date > ? ";
             params.add(start + " " + defaultStartTime);
         }
 
         if (end != null) {
-            query += " AND start_date <= ? ";
+            query += " AND start_date < ? ";
             params.add(end + " " + defaultEndTime);
         }
 

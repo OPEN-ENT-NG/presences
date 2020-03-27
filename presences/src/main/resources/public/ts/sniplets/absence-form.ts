@@ -15,6 +15,7 @@ declare let window: any;
 
 interface ViewModel {
     createAbsenceLightBox: boolean;
+    isEventEditable: boolean;
 
     form: any;
     reasonsType: any;
@@ -31,7 +32,9 @@ interface ViewModel {
 
     editEventAbsenceForm(obj): void;
 
-    isFormValid(): void;
+    isFormValid(): boolean;
+
+    canDeleteEvent(): boolean;
 
     createAbsence(): Promise<void>;
 
@@ -49,6 +52,7 @@ const vm: ViewModel = {
     createAbsenceLightBox: false,
     reasonsType: null,
     form: Absence,
+    isEventEditable: true,
 
     openAbsenceLightbox(event: IAngularEvent, args: any): void {
         vm.createAbsenceLightBox = true;
@@ -99,6 +103,8 @@ const vm: ViewModel = {
         let response = await vm.form.getAbsence(obj.absenceId);
         if (response.status == 200 || response.status == 201) {
             /* Assign response data to form edited */
+            vm.form.absences = [response.data];
+            vm.form.absences.map(absence => absence.type = EventsUtils.ALL_EVENTS.absence);
             vm.form.id = response.data.id;
             vm.form.start_date = response.data.start_date;
             vm.form.end_date = response.data.end_date;
@@ -114,10 +120,11 @@ const vm: ViewModel = {
     editEventAbsenceForm(data): void {
         vm.createAbsenceLightBox = true;
         vm.form = new Absence(null, null, null, null);
-        vm.form.id = data.id;
+        vm.form.absences = data.absences;
+        vm.form.id = 1;
         vm.form.start_date = data.startDate;
         vm.form.end_date = data.endDate;
-        vm.form.student_id = data.studentId.id;
+        vm.form.student_id = data.studentId;
         vm.form.reason_id = data.reason_id;
         vm.form.type = data.eventType;
         vm.setFormDateParams(vm.form, vm.form.start_date, vm.form.end_date);
@@ -129,6 +136,17 @@ const vm: ViewModel = {
             return DateUtils.getDateFormat(vm.form.startDate, vm.form.startDateTime) <= DateUtils.getDateFormat(vm.form.endDate, vm.form.startDateTime);
         }
         return false;
+    },
+
+    canDeleteEvent(): boolean {
+        if (vm.form.absences.length < 0) return true;
+        for (const absence of vm.form.absences) {
+            if (('type' in absence && absence.type === EventsUtils.ALL_EVENTS.absence)
+                || ('counsellor_input' in absence && absence.counsellor_input)) {
+                return false;
+            }
+        }
+        return true;
     },
 
     async createAbsence(): Promise<void> {
@@ -149,28 +167,43 @@ const vm: ViewModel = {
         vm.form.start_date = DateUtils.getDateFormat(vm.form.startDate, vm.form.startDateTime);
         vm.form.end_date = DateUtils.getDateFormat(vm.form.endDate, vm.form.endDateTime);
         let response: AxiosResponse;
+        let responses: AxiosResponse[] = [];
         if (vm.form.type === EventsUtils.ALL_EVENTS.event) {
-            response = await vm.form.createAbsence(window.structure.id, vm.form.reason_id, model.me.userId);
+            responses = [await vm.form.createAbsence(window.structure.id, vm.form.reason_id, model.me.userId)];
         } else {
-            response = await vm.form.updateAbsence(vm.form.id, window.structure.id, vm.form.reason_id, model.me.userId);
+            for (const absence of vm.form.absences) {
+                responses.push(await vm.form.updateAbsence(absence.id, window.structure.id, vm.form.reason_id, model.me.userId));
+            }
         }
-        if (response.status == 200 || response.status == 201) {
+        let failedResponse = responses.find((response) => response.status != 200 && response.status != 201);
+
+        if (failedResponse) {
+            toasts.warning(response.data.toString());
+        } else {
             vm.closeAbsenceLightbox();
             toasts.confirm(lang.translate('presences.absence.form.edit.succeed'));
-        } else {
-            toasts.warning(response.data.toString());
         }
         absenceForm.that.$emit(SNIPLET_FORM_EMIT_EVENTS.EDIT);
         vm.safeApply();
     },
 
     async deleteAbsence(): Promise<void> {
-        let response = await vm.form.deleteAbsence(vm.form.id);
-        if (response.status == 200 || response.status == 201) {
+        let responses = [];
+
+        for (const absence of vm.form.absences) {
+            if ('type' in absence && absence.type === EventsUtils.ALL_EVENTS.absence) {
+                responses.push(await vm.form.deleteAbsence(absence.id));
+            } else {
+                responses.push(await vm.form.deleteEventAbsence(absence.id));
+            }
+        }
+
+        let failedResponse = responses.find((response) => response.status != 200 && response.status != 201);
+        if (failedResponse) {
+            toasts.warning(failedResponse.data.toString());
+        } else {
             vm.closeAbsenceLightbox();
             toasts.confirm(lang.translate('presences.absence.form.delete.succeed'));
-        } else {
-            toasts.warning(response.data.toString());
         }
         absenceForm.that.$emit(SNIPLET_FORM_EMIT_EVENTS.DELETE);
         vm.safeApply();

@@ -1,8 +1,8 @@
-import {Course, CourseEvent, Notebook, TimeSlot} from "../../services";
+import {Course, CourseEvent, Notebook} from "../../services";
 import {angular, moment} from "entcore";
 import {DateUtils} from "@common/utils";
-
-declare const window: any;
+import {Absence, EventType, ITimeSlotWithAbsence} from "../../models";
+import {ABSENCE_FORM_EVENTS} from "@common/enum/presences-event";
 
 export class CalendarUtils {
 
@@ -39,73 +39,20 @@ export class CalendarUtils {
         });
     }
 
-    private static hasHalfTime(event: CourseEvent, slot: TimeSlot): boolean {
-        let eventStartTime = DateUtils.format(event.start_date, DateUtils.FORMAT["HOUR-MINUTES"]);
-        let eventEndTime = DateUtils.format(event.end_date, DateUtils.FORMAT["HOUR-MINUTES"]);
-        let slotStartTime = DateUtils.format(DateUtils.getTimeFormat(slot.startHour), DateUtils.FORMAT["HOUR-MINUTES"]);
-        let slotEndTime = DateUtils.format(DateUtils.getTimeFormat(slot.endHour), DateUtils.FORMAT["HOUR-MINUTES"]);
-        return eventStartTime > slotStartTime || eventEndTime < slotEndTime;
+    public static getDeltaPX(aDate, bDate, bDuration, totalHeight): number {
+        let aTimestamp = DateUtils.getDateFromMoment(aDate).getTime();
+        let bTimestamp = DateUtils.getDateFromMoment(bDate).getTime();
+
+        let minutesDiff = Math.abs(Math.floor((((aTimestamp - bTimestamp) / 1000) / 60)));
+
+        return Math.floor((minutesDiff * totalHeight) / bDuration);
     }
 
-
-    private static getMinuteInEventTime(startDate: string, endDate: string): number {
-        return Math.abs(DateUtils.format(startDate, DateUtils.FORMAT["HOUR-MINUTES"]).split(":")[1] -
-            DateUtils.format(endDate, DateUtils.FORMAT["HOUR-MINUTES"]).split(":")[1]);
+    public static absenceEvents(course: Course): CourseEvent[] {
+        return course.events.filter((event: CourseEvent) => event.type_id === EventType.ABSENCE);
     }
 
-    private static eventAbsenceHasSameTime(item: Course, event: CourseEvent): boolean {
-        let eventStartTime = DateUtils.format(event.start_date, DateUtils.FORMAT["HOUR-MINUTES"]);
-        let eventEndTime = DateUtils.format(event.end_date, DateUtils.FORMAT["HOUR-MINUTES"]);
-        return ((eventStartTime === item.startMomentTime) && (eventEndTime === item.endMomentTime));
-    }
-
-    /**
-     * Rendering event containing absences in course
-     */
-    static renderAbsenceFromCourse(item: Course, event: CourseEvent, slots: Array<TimeSlot>) {
-        let absenceElement = document.getElementById(event.id.toString());
-        if (absenceElement && event.reason_id != null) {
-            absenceElement.style.backgroundColor = "#ff8a84"; // $presences-pink;
-        }
-        if (this.eventAbsenceHasSameTime(item, event)) {
-            return;
-        }
-        const daySlotHeight = document.querySelector(".day").clientHeight;
-        const oneTimeSlotHeight = daySlotHeight / slots.length;
-        let slotsIndexFetched = [];
-        slots.forEach(slot => {
-            let slotStart = DateUtils.getTimeFormat(slot.startHour);
-            let slotEnd = DateUtils.getTimeFormat(slot.endHour);
-            if (DateUtils.isBetween(event.start_date, event.end_date, slotStart, slotEnd,
-                DateUtils.FORMAT["HOUR-MINUTES"], DateUtils.FORMAT["HOUR-MINUTES"])) {
-                slotsIndexFetched.push(slots.findIndex(slotsItem => slotsItem._id === slot._id));
-            }
-        });
-        if (absenceElement) {
-            if (this.hasHalfTime(event, slots[slotsIndexFetched[0]])) {
-                absenceElement.style.height = `${((this.getMinuteInEventTime(event.start_date, event.end_date)) * oneTimeSlotHeight) / 60}px`;
-            } else {
-                absenceElement.style.height = `${oneTimeSlotHeight * slotsIndexFetched.length}px`;
-            }
-            absenceElement.style.position = 'absolute';
-        }
-    }
-
-    static positionAbsence(event: CourseEvent, item, slots: Array<TimeSlot>) {
-        const {id} = item;
-        const courseSlotsIndexes = window.model.calendar.getSlotsIndex(item.startDate, item.endDate);
-        const eventSlotsIndexes = window.model.calendar.getSlotsIndex(event.start_date, event.end_date);
-        if (courseSlotsIndexes.length === 0 || eventSlotsIndexes.length === 0) return;
-        const topDifference = courseSlotsIndexes.indexOf(eventSlotsIndexes[0]);
-        if (topDifference === -1) return;
-        const topMargin = topDifference * window.entcore.calendar.dayHeight;
-        const el = document.getElementById(event.id.toString());
-        if (el) {
-            el.style.top = `${topMargin}px`;
-        }
-    }
-
-    static addEventIdInSplitCourse(item: Course, events: CourseEvent[]) {
+    public static addEventIdInSplitCourse(item: Course, events: CourseEvent[]) {
         item.splitCourses.forEach((course: Course) => {
             const courseStartDate = DateUtils.format(course.startDate, DateUtils.FORMAT["YEAR-MONTH-DAY-HOUR-MIN-SEC"]);
             const courseEndDate = DateUtils.format(course.endDate, DateUtils.FORMAT["YEAR-MONTH-DAY-HOUR-MIN-SEC"]);
@@ -119,74 +66,163 @@ export class CalendarUtils {
         })
     }
 
-    /**
-     * Rendering absence's state (red or pink)
-     * @param {Course} item the current course
-     */
-    static changeAbsenceView(item: Course) {
-        // if document get element returns null, exit method
-        if (!document.getElementById(`absent${item.dayOfWeek}-${item.hash}`).closest('.fiveDays')) return;
-        let courseItems = document
-            .getElementById(`absent${item.dayOfWeek}-${item.hash}`)
-            .closest('.fiveDays')
-            .querySelectorAll('.course-item');
-        let items = [];
-        Array.from(courseItems).forEach((course: HTMLElement) => {
-            const item = course.closest('.schedule-item');
-            items.push(item);
-            if (item === undefined || item === null) return;
-            if ((item.parentNode as Element).querySelector('.globalAbsence')) {
-                item.setAttribute("class", "schedule-item schedule-globalAbsence");
-            } else if ((item.parentNode as Element).querySelector('.globalAbsenceReason')) {
-                item.setAttribute("class", "schedule-item schedule-globalAbsenceReason");
+
+    /* ##############################
+       ## ABSENCE POSITIONING PART ##
+       ############################## */
+
+    static initPositionAbsence(absences: Array<Absence>, courses: Array<Course>, structureId: any, timeSlotHeight: any, $scope: any) {
+        let $timeSlots = $('.days .timeslot');
+        let timeslotsByAbsences: Map<number, Array<ITimeSlotWithAbsence>> = new Map();
+
+        $timeSlots.each((i: number, slot: HTMLElement) => {
+            let elemSlot = angular.element(slot).scope();
+            let startTime = CalendarUtils.getSlotYMDMomentFormat(elemSlot, elemSlot.timeslot.start, elemSlot.timeslot.startMinutes);
+            let endTime = CalendarUtils.getSlotYMDMomentFormat(elemSlot, elemSlot.timeslot.end, elemSlot.timeslot.endMinutes);
+            let absence = CalendarUtils.getAbsenceBetweenDates(absences, startTime, endTime);
+
+            if (absence) {
+                CalendarUtils.addAbsenceInCourses(absence, courses);
+                CalendarUtils.addTimeslotMappedToAbsence(timeslotsByAbsences, absence, slot, structureId);
+
             } else {
-                item.setAttribute("class", "schedule-item schedule-course");
+                CalendarUtils.clearSlot(slot);
             }
         });
 
-        let absenceItems = items.filter(item =>
-            item.getAttribute("class") === "schedule-item schedule-globalAbsence");
-        let absenceReasonItems = items.filter(item =>
-            item.getAttribute("class") === "schedule-item schedule-globalAbsenceReason");
+        timeslotsByAbsences.forEach((timeslotByAbsences: Array<ITimeSlotWithAbsence>) => {
+            CalendarUtils.sortTimeSlotsByDate(timeslotByAbsences);
+            CalendarUtils.setTimeSlotsStyleByAbsence(timeslotByAbsences, timeSlotHeight, $scope);
+        });
+    }
 
-        let coursesItems = items.filter(item =>
-            item.getAttribute("class") !== "schedule-item schedule-globalAbsence" &&
-            item.getAttribute("class") !== "schedule-item schedule-globalAbsenceReason");
+    public static getSlotYMDMomentFormat(elemSlot, hour: number, minute: number) {
+        return moment(elemSlot.day.date).set({
+            'hour': hour,
+            'minute': minute
+        });
+    }
 
-        coursesItems.forEach(course => {
-            let courseScope = angular.element(course).scope();
+    public static getAbsenceBetweenDates(absences: Array<Absence>, startTime: any, endTime: any) {
+        // If an absence include the current timeslot "absence" is set, else it is undefined.
+        return absences.find((absence: Absence) => {
+            return DateUtils.isBetweenTimeStamp(startTime, endTime, moment(absence.start_date), moment(absence.end_date))
+        });
+    }
 
-            /* Coloring course in red if inside global absent bloc */
-            absenceItems.forEach(absenceItem => {
-                let absenceScope = angular.element(absenceItem).scope();
-                let isBetweenDate = DateUtils.isBetween(
-                    courseScope.item.startDate, courseScope.item.endDate,
-                    absenceScope.item.startDate, absenceScope.item.endDate
-                );
-                let isMatchDate = DateUtils.isMatchDate(
-                    courseScope.item.startDate, courseScope.item.endDate,
-                    absenceScope.item.startDate, absenceScope.item.endDate
-                );
-                if (isBetweenDate || isMatchDate) {
-                    course.querySelectorAll(".course-item")[0].classList.add("isAbsent");
-                }
+    public static addAbsenceInCourses(absence: Absence, courses: Array<Course>) {
+        courses.forEach((course: Course, i: number) => {
+            if (DateUtils.isBetweenTimeStamp(moment(absence.start_date), moment(absence.end_date), moment(course.startDate), moment(course.endDate))
+                && !course.absences.find((a: Absence) => a.id === absence.id)) {
+                course.absences.push(absence);
+            }
+        });
+    }
+
+
+    public static addTimeslotMappedToAbsence(timeslotsByAbsences: Map<number, Array<ITimeSlotWithAbsence>>, absence: Absence, slot, structureId: string) {
+        let elemSlot = angular.element(slot).scope();
+        let tsStartTime = CalendarUtils.getSlotYMDMomentFormat(elemSlot, elemSlot.timeslot.start, elemSlot.timeslot.startMinutes);
+        let tsEndTime = CalendarUtils.getSlotYMDMomentFormat(elemSlot, elemSlot.timeslot.end, elemSlot.timeslot.endMinutes);
+
+        let tsStartTimestamp = DateUtils.getDateFromMoment(tsStartTime).getTime();
+        let tsEndTimestamp = DateUtils.getDateFromMoment(tsEndTime).getTime();
+
+        let startMoment = moment(absence.start_date).format(DateUtils.FORMAT["HOUR-MIN-SEC"]);
+        let startMomentTime = startMoment ? startMoment : "00:00:00";
+        let endMoment = moment(absence.end_date).format(DateUtils.FORMAT["HOUR-MIN-SEC"]);
+        let endMomentTime = endMoment ? endMoment : "23:59:59";
+
+
+        let absenceItem = {
+            is_periodic: false,
+            absence: true,
+            locked: true,
+            absenceId: absence.id,
+            absenceReason: absence.reason_id ? absence.reason_id : 0,
+            structureId: structureId,
+            event: [],
+            startDate: absence.start_date,
+            startMomentDate: absence.start_date,
+            startMomentTime,
+            startTimestamp: DateUtils.getDateFromMoment(moment(absence.start_date)).getTime(),
+            endDate: absence.end_date,
+            endMomentTime,
+            endTimestamp: DateUtils.getDateFromMoment(moment(absence.end_date)).getTime()
+        };
+        let timeslotInfos = {
+            absence: absenceItem, // Info utils for edit modal.
+            slotElement: slot, // Element dom concerning the slot
+            tsStartMoment: tsStartTime, // Start date of the slot (moment typed)
+            tsEndMoment: tsEndTime, // End date of the slot (moment typed)
+            tsStartTimestamp, // Start date of the slot (thanks timestamp)
+            tsEndTimestamp, // End date of the slot (thanks timestamp)
+            slotPosition: elemSlot.$index
+        };
+
+        // Here we group timeslotsInfos by absences.
+        timeslotsByAbsences.has(absence.id) ? timeslotsByAbsences.get(absence.id).push(timeslotInfos) : timeslotsByAbsences.set(absence.id, [timeslotInfos]);
+    }
+
+    public static clearSlot(slot: HTMLElement) {
+        while (slot.firstChild) slot.removeChild(slot.lastChild);
+        slot.setAttribute("style",
+            "background-color: #000000; "
+        );
+    }
+
+    public static sortTimeSlotsByDate(timeslotByAbsences: Array<ITimeSlotWithAbsence>) {
+        timeslotByAbsences.sort((tsA: ITimeSlotWithAbsence, tsB: ITimeSlotWithAbsence) => {
+            return tsA.tsStartTimestamp - tsB.tsEndTimestamp;
+        });
+    }
+
+    public static setTimeSlotsStyleByAbsence(timeslotByAbsences: Array<ITimeSlotWithAbsence>, timeSlotHeight: any, $scope) {
+        let tsMinutesDurationStart = Math.floor((((timeslotByAbsences[0].tsEndTimestamp - timeslotByAbsences[0].tsStartTimestamp) / 1000) / 60));
+        let deltaFirstHeight = CalendarUtils.getDeltaPX(moment(timeslotByAbsences[0].absence.startDate), timeslotByAbsences[0].tsStartMoment, tsMinutesDurationStart, timeSlotHeight);
+
+        let lastAbsenceSlot = timeslotByAbsences[timeslotByAbsences.length - 1];
+        let tsMinutesDurationEnd = Math.floor((((lastAbsenceSlot.tsEndTimestamp - lastAbsenceSlot.tsStartTimestamp) / 1000) / 60));
+        let deltaLastHeight = CalendarUtils.getDeltaPX(moment(lastAbsenceSlot.absence.endDate), lastAbsenceSlot.tsEndMoment, tsMinutesDurationEnd, timeSlotHeight);
+
+        // Set timeslot style
+        timeslotByAbsences.forEach((timeslot: ITimeSlotWithAbsence, i: number) => {
+            let height = timeSlotHeight;
+            let top = 0;
+            let color = timeslot.absence.absenceReason === 0 ? "#e61610" : "#ff8a84";
+
+            let style = "" +
+                "background-color: " + color + " !important; " +
+                "border-bottom: solid 1px " + color + " !important;";
+
+            if (i === timeslotByAbsences.length - 1 && timeslot.absence.endTimestamp <= timeslot.tsEndTimestamp) {
+                height -= deltaLastHeight;
+                style += "border-bottom-left-radius: 10px !important; " +
+                    "border-bottom-right-radius: 10px !important; ";
+            }
+            if (i === 0 && timeslot.tsStartTimestamp <= timeslot.absence.startTimestamp) {
+                height -= deltaFirstHeight;
+                top += deltaFirstHeight;
+                style += "border-top-left-radius: 10px !important; " +
+                    "border-top-right-radius: 10px !important; ";
+            }
+
+            style += "height: " + height + "px; " +
+                "margin-top: " + top + "px; ";
+
+            let div = document.createElement("div");
+
+            div.setAttribute("style", style);
+
+            // event listener to open edit modal.
+            div.addEventListener("click", () => {
+                $scope.$broadcast(
+                    timeslot.absence.type_id ? ABSENCE_FORM_EVENTS.EDIT_EVENT : ABSENCE_FORM_EVENTS.EDIT,
+                    timeslot.absence);
             });
-
-            /* Coloring course in pink if inside global justified absent bloc */
-            absenceReasonItems.forEach(absenceReasonItem => {
-                let absenceReasonItemScope = angular.element(absenceReasonItem).scope();
-                let isBetweenDate = DateUtils.isBetween(
-                    courseScope.item.startDate, courseScope.item.endDate,
-                    absenceReasonItemScope.item.startDate, absenceReasonItemScope.item.endDate
-                );
-                let isMatchDate = DateUtils.isMatchDate(
-                    courseScope.item.startDate, courseScope.item.endDate,
-                    absenceReasonItemScope.item.startDate, absenceReasonItemScope.item.endDate
-                );
-                if (isBetweenDate || isMatchDate) {
-                    course.querySelectorAll(".course-item")[0].classList.add("isJustifiedAbsent");
-                }
-            });
+            while (timeslot.slotElement.firstChild) timeslot.slotElement.removeChild(timeslot.slotElement.lastChild);
+            timeslot.slotElement.style["justify-content"] = "unset";
+            timeslot.slotElement.appendChild(div);
         });
     }
 }
