@@ -125,7 +125,8 @@ const vm: ViewModel = {
         vm.form.start_date = data.startDate;
         vm.form.end_date = data.endDate;
         vm.form.student_id = data.studentId;
-        vm.form.reason_id = data.reason_id;
+        vm.form.reason_id = data.reason_id ? data.reason_id : vm.form.absences
+            .find(a => 'type' in a || 'type_id' in a).reason_id;
         vm.form.type = data.eventType;
         vm.setFormDateParams(vm.form, vm.form.start_date, vm.form.end_date);
         vm.safeApply();
@@ -168,7 +169,7 @@ const vm: ViewModel = {
         vm.form.end_date = DateUtils.getDateFormat(vm.form.endDate, vm.form.endDateTime);
         let response: AxiosResponse;
         let responses: AxiosResponse[] = [];
-        if (vm.form.type === EventsUtils.ALL_EVENTS.event) {
+        if (vm.form.type === EventsUtils.ALL_EVENTS.event && !vm.form.absences.find(a => 'type' in a)) {
             responses = [await vm.form.createAbsence(window.structure.id, vm.form.reason_id, model.me.userId)];
         } else {
             for (const absence of vm.form.absences) {
