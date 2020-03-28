@@ -8,6 +8,7 @@ import fr.openent.presences.common.service.impl.DefaultGroupService;
 import fr.openent.presences.common.viescolaire.Viescolaire;
 import fr.openent.presences.enums.EventType;
 import fr.openent.presences.enums.GroupType;
+import fr.openent.presences.helper.RegisterPresenceHelper;
 import fr.openent.presences.service.AbsenceService;
 import fr.openent.presences.service.ExemptionService;
 import fr.openent.presences.service.NotebookService;
@@ -43,6 +44,7 @@ public class DefaultRegisterService implements RegisterService {
     private ExemptionService exemptionService;
     private EventBus eb;
     private RegisterHelper registerHelper;
+    private RegisterPresenceHelper registerPresenceHelper;
     private AbsenceService absenceService;
     private NotebookService notebookService;
 
@@ -51,6 +53,7 @@ public class DefaultRegisterService implements RegisterService {
         this.groupService = new DefaultGroupService(eb);
         this.exemptionService = new DefaultExemptionService(eb);
         this.registerHelper = new RegisterHelper(eb, Presences.dbSchema);
+        this.registerPresenceHelper = new RegisterPresenceHelper(eb);
         this.absenceService = new DefaultAbsenceService(eb);
         this.notebookService = new DefaultNotebookService();
     }
@@ -310,7 +313,15 @@ public class DefaultRegisterService implements RegisterService {
                                 LOGGER.error(message, slotEvent.left().getValue());
                                 handler.handle(new Either.Left<>(message));
                             } else {
-                                handler.handle(new Either.Right<>(slotEvent.right().getValue()));
+                                registerPresenceHelper.addCourseToStudentEvent(slotEvent.right().getValue(), courseAsync -> {
+                                    if (courseAsync.failed()) {
+                                        String message = "[Presences@DefaultRegisterService] Failed to add course to slots";
+                                        LOGGER.error(message, courseAsync.cause());
+                                        handler.handle(new Either.Left<>(message + " " + courseAsync.cause()));
+                                    } else {
+                                        handler.handle(new Either.Right<>(slotEvent.right().getValue()));
+                                    }
+                                });
                             }
                         });
                     });

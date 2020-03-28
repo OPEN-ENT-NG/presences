@@ -30,6 +30,8 @@ export interface Course {
     endMomentTime?: string;
     is_recurrent: boolean;
     subject_name: string;
+    subjectName?: string;
+    teachers?: Array<{ id: string, displayName: string }>;
     events: CourseEvent[];
     splitCourses: Course[];
     hash?: string;

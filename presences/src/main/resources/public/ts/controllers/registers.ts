@@ -4,6 +4,7 @@ import {
     Course,
     Courses,
     Departure,
+    Event,
     Events,
     EventType,
     Lateness,
@@ -17,7 +18,7 @@ import {CourseUtils, DateUtils, PreferencesUtils, PresencesPreferenceUtils} from
 import rights from '../rights';
 import {Scope} from './main';
 import http from 'axios';
-import {RegisterUtils, StudentsSearch} from "../utilities";
+import {EventsUtils, RegisterUtils, StudentsSearch} from "../utilities";
 import {COURSE_EVENTS} from "@common/model";
 import {IAngularEvent} from "angular";
 import {Reason} from "@presences/models/Reason";
@@ -56,7 +57,7 @@ export interface ViewModel {
 
     // removeStudent(value): void;
 
-    openRegister(course: Course, $event: Event): Promise<void>;
+    openRegister(course: Course, $event): Promise<void>;
 
     tooltipMultipleSlot(): string;
 
@@ -120,6 +121,10 @@ export interface ViewModel {
     formatDayDate(date: string): string;
 
     formatHourTooltip(date: string): string;
+
+    findCourseInEvent(events: Array<Event>): Event;
+
+    hasCourse(events: Array<Event>): boolean;
 
     changeDate(): void;
 
@@ -386,7 +391,7 @@ export const registersController = ng.controller('RegistersController',
                 return vm.openRegister(course || vm.courses.all[0], null);
             };
 
-            vm.openRegister = async function (course: Course, $event: Event) {
+            vm.openRegister = async function (course: Course, $event) {
                 if ($event && ($event.target as Element).className.includes('notify-bell')) {
                     notifyCourse(course);
                     return;
@@ -706,6 +711,14 @@ export const registersController = ng.controller('RegistersController',
 
             vm.formatHourTooltip = function (date) {
                 return DateUtils.format(date, DateUtils.FORMAT["HOUR-MINUTES"]);
+            };
+
+            vm.findCourseInEvent = (events: Array<Event>): Event => {
+                return events.find(event => event.type === EventsUtils.ALL_EVENTS.event);
+            };
+
+            vm.hasCourse = (events: Array<Event>): boolean => {
+                return 'course' in events.find(event => event.type === EventsUtils.ALL_EVENTS.event);
             };
 
             const notifyCourse = async function (course: Course) {

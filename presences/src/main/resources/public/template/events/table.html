@@ -51,8 +51,10 @@
                 <li ng-repeat="periods in event.dayHistory track by $index"
                     class="[[vm.eventTypeState(periods, event)]]">
                     <!-- tooltip hovered -->
-                    <span class="tooltip-top">
-                        <span class="font-bold">Histoire-Géographie</span> <br>M.Chambol <br>
+                    <span class="tooltip-top"
+                          ng-if="vm.findCourseInEvent(periods.events) != undefined && vm.hasCourse(periods.events)">
+                        <span class="font-bold">[[vm.findCourseInEvent(periods.events).course.subjectName]]</span>
+                        <br>[[vm.findCourseInEvent(periods.events).course.teachers[0].displayName]]<br>
                         [[vm.formatHourTooltip(periods.start)]] - [[vm.formatHourTooltip(periods.end)]]
                     </span>
                 </li>

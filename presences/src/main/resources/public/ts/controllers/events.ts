@@ -71,7 +71,12 @@ interface ViewModel {
 
     formatDate(date: string): string;
 
+    /* tooltip */
     formatHourTooltip(date: string): string;
+
+    findCourseInEvent(event: Array<Event>): Event;
+
+    hasCourse(events: Array<Event>): boolean;
 
     isEachEventAbsence(event: EventResponse): boolean;
 
@@ -361,8 +366,16 @@ export const eventsController = ng.controller('EventsController', ['$scope', '$r
             return DateUtils.format(date, DateUtils.FORMAT["DAY-MONTH-HALFYEAR"]);
         };
 
-        vm.formatHourTooltip = function (date: string) {
+        vm.formatHourTooltip = function (date: string): string {
             return DateUtils.format(date, DateUtils.FORMAT["HOUR-MINUTES"]);
+        };
+
+        vm.findCourseInEvent = (events: Array<Event>): Event => {
+            return events.find(event => event.type === EventsUtils.ALL_EVENTS.event);
+        };
+
+        vm.hasCourse = (events: Array<Event>): boolean => {
+            return 'course' in events.find(event => event.type === EventsUtils.ALL_EVENTS.event);
         };
 
         vm.createAction = function () {

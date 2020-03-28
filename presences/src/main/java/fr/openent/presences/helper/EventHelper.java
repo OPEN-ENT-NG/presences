@@ -294,8 +294,7 @@ public class EventHelper {
                 LOGGER.error(message);
                 studentFuture.fail(message);
             } else {
-                List<RegisterEvent> registerEvents = fr.openent.presences.helper.RegisterHelper
-                        .getRegisterEventListFromJsonArray(registerEventFuture.result());
+                List<RegisterEvent> registerEvents = RegisterPresenceHelper.getRegisterEventListFromJsonArray(registerEventFuture.result());
                 List<Student> students = personHelper.getStudentListFromJsonArray(
                         studentsInfosFuture.result()
                 );

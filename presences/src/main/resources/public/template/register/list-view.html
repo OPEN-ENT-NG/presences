@@ -42,9 +42,11 @@
             <li ng-repeat="slot in student.day_history"
                 class="[[vm.getHistoryEventClassName(slot.events, slot)]]"
                 ng-class="{current: vm.isCurrentSlot(slot)}">
-                <span ng-show="vm.isCurrentSlot(slot)" class="tooltip-top-register">
-                        <span class="font-bold">Mathématiques</span> <br>
-                        M.Chambol <br>
+                <!-- tooltip hovered -->
+                <span class="tooltip-top"
+                      ng-if="vm.findCourseInEvent(slot.events) != undefined && vm.hasCourse(slot.events)">
+                        <span class="font-bold">[[vm.findCourseInEvent(slot.events).course.subjectName]]</span>
+                        <br>[[vm.findCourseInEvent(slot.events).course.teachers[0].displayName]]<br>
                         [[vm.formatHourTooltip(slot.start)]] - [[vm.formatHourTooltip(slot.end)]]
                 </span>
             </li>
