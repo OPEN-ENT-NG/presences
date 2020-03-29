@@ -1,10 +1,20 @@
 <div class="course-item-container" id="[[item.id]]"
      data-ng-click="vm.actionAbsenceForm(item, items)">
-    <div class="exemption" ng-if="item.exempted" ng-class="{absent: item.containsAbsence}">&nbsp;</div>
 
+    <!-- color css handling -->
+    <div class="exemption" ng-if="item.exempted" ng-class="{absent: item.containsAbsence}">&nbsp;</div>
     <div class="globalAbsence" ng-if="vm.isGlobalAbsence(item)">&nbsp;</div>
     <div class="globalAbsenceReason" ng-if="vm.isGlobalAbsenceReason(item)">&nbsp;</div>
 
+    <!-- hovering absence reason tooltip -->
+    <span class="tooltip-top" ng-if="vm.hasEventAbsence(item.events)"
+          data-ng-mouseenter="change($event, item, vm.presences.all)" data-ng-mouseleave="hoverOutPresence()">
+        <span><i18n>presences.register.event_type.absences</i18n></span> <br>
+        <span class="font-bold"><i18n>presences.absence.reason</i18n>&#58;</span>
+        <span>Jin</span>
+    </span>
+
+    <!-- data course item -->
     <div class="course-item"
          data-ng-attr-id="[[vm.isAbsenceOnly(item) || vm.isAbsenceJustifiedOnly(item) ? 'absent' + item.dayOfWeek + '-' + item.hash : null]]"
          ng-class="{
@@ -14,25 +24,27 @@
          'is-absence': item.hasOwnProperty('hash')
          }">
         <div class="data">
-            <span ng-show="item.hasOwnProperty('hash')" class="tooltip-top">
-                        <span>Absence</span> <br>
-                        <span class="font-bold"> Motif : </span>
-                        [[vm.formatPresenceDate(event.end_date)]]
-            </span>
+            <!-- label course info -->
             <div class="subject ellipsis cell">[[item.subject_name]]</div>
             <em class="metadata right-magnet"><span ng-repeat="room in item.roomLabels">[[room]]</span> </em>
         </div>
+
+        <!-- side events -->
         <div class="events">
             <i ng-if="item.incident" class="report incident"></i>
+
             <div class="event event-type-[[event.type_id]]" ng-repeat="event in item.events">&nbsp;
+                <!-- hovering events (late, departure) -->
                 <span class="tooltip-top">
-                        <span>Retard / Départ</span> <br>
-                        <span class="font-bold"> Heure : </span>
-                        [[vm.formatPresenceDate(event.end_date)]]
+                    <span>[[vm.getEventType(event)]]</span> <br>
+                    <span class="font-bold"><i18n>presences.hour</i18n>&#58;</span>
+                    <span>[[vm.getEventTypeDate(event)]]</span>
                 </span>
             </div>
         </div>
     </div>
+
+    <!-- side area -->
     <div class="right-side">
         <!-- hovering exemption -->
         <div data-ng-mouseenter="hoverExemption($event, item.exemption)" data-ng-mouseleave="hoverOutExemption()"

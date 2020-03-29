@@ -1,4 +1,4 @@
-import {model, moment, ng} from 'entcore';
+import {idiom as lang, model, moment, ng} from 'entcore';
 import {
     AbsenceService,
     CalendarService,
@@ -16,7 +16,7 @@ import {
     TimeSlot
 } from '../services';
 import {Scope} from './main';
-import {Absence, ICalendarItems, Presence, Presences, User} from '../models';
+import {Absence, EventType, ICalendarItems, Presence, Presences, User} from '../models';
 import {DateUtils} from '@common/utils';
 import {SNIPLET_FORM_EMIT_EVENTS, SNIPLET_FORM_EVENTS} from "@common/model";
 import {NOTEBOOK_FORM_EVENTS} from "../sniplets";
@@ -66,9 +66,17 @@ interface ViewModel {
 
     formatExemptionDate(date: any): string;
 
+    hasEventAbsence(events: Array<CourseEvent>): boolean;
+
+    getEventType(event: CourseEvent): string;
+
+    getEventTypeDate(event: CourseEvent): string;
+
     formatPresenceDate(date: string): string;
 
     canDisplayPresence(course: Course): boolean;
+
+    canDisplayReasonInEvent(course: Course): boolean;
 
     actionAbsenceForm(item: Course, items): void;
 
@@ -238,8 +246,37 @@ export const calendarController = ng.controller('CalendarController',
                 return DateUtils.format(date, DateUtils.FORMAT["DAY-MONTH-YEAR"]);
             };
 
-            vm.formatPresenceDate = function (date: string) {
+            vm.formatPresenceDate = function (date: string): string {
                 return DateUtils.format(date, DateUtils.FORMAT["HOUR-MINUTES"]);
+            };
+
+            vm.hasEventAbsence = (events: Array<CourseEvent>): boolean => {
+                if (events.length === 0) return false;
+                let isFound: boolean = false;
+                events.forEach((event: CourseEvent) => {
+                    if (event.type_id === EventType.ABSENCE) {
+                        isFound = true;
+                    }
+                });
+                return isFound;
+            };
+
+            vm.getEventType = (event: CourseEvent): string => {
+                switch (event.type_id) {
+                    case EventType.LATENESS:
+                        return lang.translate("presences.register.event_type.lateness");
+                    case EventType.DEPARTURE:
+                        return lang.translate("presences.register.event_type.departure");
+                }
+            };
+
+            vm.getEventTypeDate = (event: CourseEvent): string => {
+                switch (event.type_id) {
+                    case EventType.LATENESS:
+                        return DateUtils.format(event.end_date, DateUtils.FORMAT["HOUR-MINUTES"]);
+                    case EventType.DEPARTURE:
+                        return DateUtils.format(event.start_date, DateUtils.FORMAT["HOUR-MINUTES"]);
+                }
             };
 
             vm.canDisplayPresence = (course: Course): boolean => {

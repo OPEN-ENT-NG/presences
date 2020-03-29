@@ -232,6 +232,24 @@ $calendar-user-card-height: 56px;
             height: 100%;
             z-index: -1;
           }
+
+          &:hover .tooltip-top {
+            @include tooltipVisible();
+          }
+
+          .tooltip-top {
+            @include tooltipTemplate();
+            bottom: 49px;
+            text-align: left;
+            max-width: 115px;
+            padding: 5px !important;
+
+            &:after {
+              @include tooltipBottomArrow();
+              top: 100%;
+              left: 15%;
+            }
+          }
         }
 
         .right-side {
