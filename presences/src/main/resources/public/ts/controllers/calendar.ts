@@ -366,4 +366,12 @@ export const calendarController = ng.controller('CalendarController',
                 else vm.slots.list = null;
                 $scope.safeApply();
             });
+
+            $scope.$watch(() => window.entcore.calendar.startOfDay, async (newVal, oldVal) => {
+                if (newVal !== oldVal) {
+                    // positioning absence with all courses (absence including), will set show loader true before proceeding
+                    vm.show.loader = true;
+                    $timeout(positioningAbsence);
+                }
+            })
         }]);
