@@ -1,6 +1,7 @@
 import {Course} from "@presences/services";
 import {Presences} from "@presences/models/Presences";
 import {Absence} from "@presences/models/Event";
+import {Reason} from "@presences/models/Reason";
 
 export interface TimeSlotData {
     index: number;
@@ -32,5 +33,6 @@ export interface ITimeSlotWithAbsence {
 export interface ICalendarItems {
     courses: Array<Course>,
     presences: Presences,
-    absences: Array<Absence>
+    absences: Array<Absence>,
+    reasons: Array<Reason>
 }

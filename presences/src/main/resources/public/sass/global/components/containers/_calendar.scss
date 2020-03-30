@@ -232,24 +232,6 @@ $calendar-user-card-height: 56px;
             height: 100%;
             z-index: -1;
           }
-
-          &:hover .tooltip-top {
-            @include tooltipVisible();
-          }
-
-          .tooltip-top {
-            @include tooltipTemplate();
-            bottom: 49px;
-            text-align: left;
-            max-width: 115px;
-            padding: 5px !important;
-
-            &:after {
-              @include tooltipBottomArrow();
-              top: 100%;
-              left: 15%;
-            }
-          }
         }
 
         .right-side {
@@ -372,11 +354,12 @@ $calendar-user-card-height: 56px;
 
               .tooltip-top {
                 @include tooltipTemplate();
-                bottom: 27px;
-                margin-left: -3px;
-                text-align: left;
                 max-width: 115px;
                 padding: 5px !important;
+                width: 90px;
+                bottom: 21px;
+                margin-left: -4px;
+                line-height: 16px;
 
                 &:after {
                   @include tooltipBottomArrow();
@@ -510,7 +493,7 @@ $calendar-user-card-height: 56px;
     }
   }
 
-  #exemption-hover, #presences-hover {
+  #exemption-hover, #presences-hover, #event-absence-hover {
     width: 180px;
     position: fixed;
     display: none;
@@ -535,6 +518,22 @@ $calendar-user-card-height: 56px;
       top: 100%;
       left: calc(50% - 10px);
     }
+  }
+
+  #presences-hover {
+    z-index: 999;
+  }
+
+  #event-absence-hover {
+    width: auto;
+    min-width: 120px;
+    max-width: 200px;
+    height: auto;
+    min-height: 60px;
+    max-height: 100px;
+    justify-content: normal;
+    padding: 5px;
+    box-sizing: border-box;
   }
 
   container[template="calendarDefaultDisplayOptionsTemplate"] {

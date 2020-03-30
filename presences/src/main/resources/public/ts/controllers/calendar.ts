@@ -1,6 +1,5 @@
 import {idiom as lang, model, moment, ng} from 'entcore';
 import {
-    AbsenceService,
     CalendarService,
     Course,
     CourseEvent,
@@ -8,7 +7,7 @@ import {
     GroupService,
     Notebook,
     NotebookRequest,
-    PresenceService,
+    ReasonService,
     SearchItem,
     SearchService,
     Setting,
@@ -16,7 +15,7 @@ import {
     TimeSlot
 } from '../services';
 import {Scope} from './main';
-import {Absence, EventType, ICalendarItems, Presence, Presences, User} from '../models';
+import {Absence, EventType, ICalendarItems, Presence, Presences, Reason, User} from '../models';
 import {DateUtils} from '@common/utils';
 import {SNIPLET_FORM_EMIT_EVENTS, SNIPLET_FORM_EVENTS} from "@common/model";
 import {NOTEBOOK_FORM_EVENTS} from "../sniplets";
@@ -27,8 +26,10 @@ declare let window: any;
 
 interface ViewModel {
     show: {
-        loader: boolean, exemption: { start_date: string, end_date: string },
-        presences: { displayName: string, startDate: string, endDate: string }
+        loader: boolean,
+        exemption: { start_date: string, end_date: string },
+        presences: { displayName: string, startDate: string, endDate: string },
+        event: { reason_id: number }
     };
     courses: {
         list: Array<Course>
@@ -48,6 +49,8 @@ interface ViewModel {
     };
     presences: Presences;
 
+    reasonsMap: Map<number, Reason>;
+
     absences: {
         list: Array<Absence>
     };
@@ -65,8 +68,6 @@ interface ViewModel {
     loadForgottenNotebook(): Promise<void>;
 
     formatExemptionDate(date: any): string;
-
-    hasEventAbsence(events: Array<CourseEvent>): boolean;
 
     getEventType(event: CourseEvent): string;
 
@@ -94,22 +95,30 @@ interface CalendarScope extends Scope {
     hoverPresence($event, course: Course, presences: Array<Presence>): void;
 
     hoverOutPresence(): void;
+
+    hoverEvents($event, course: Course): void;
+
+    hoverOutEvents(): void;
 }
 
 export const calendarController = ng.controller('CalendarController',
     ['$scope', '$timeout', 'route', '$location', 'StructureService', 'CalendarService',
-        'GroupService', 'SearchService', 'ForgottenNotebookService', 'AbsenceService', 'PresenceService',
+        'GroupService', 'SearchService', 'ForgottenNotebookService', 'ReasonService',
         function ($scope: CalendarScope, $timeout, route, $location, StructureService: StructureService,
                   CalendarService: CalendarService,
                   GroupService: GroupService,
                   SearchService: SearchService,
-                  ForgottenNotebookService: ForgottenNotebookService
+                  ForgottenNotebookService: ForgottenNotebookService,
+                  reasonService: ReasonService
         ) {
             const vm: ViewModel = this;
             vm.show = {
                 loader: true,
                 exemption: null,
-                presences: null
+                presences: null,
+                event: {
+                    reason_id: null
+                }
             };
             vm.filter = {
                 search: {
@@ -122,6 +131,8 @@ export const calendarController = ng.controller('CalendarController',
             vm.courses = {list: null};
             vm.absences = {list: null};
             vm.presences = new Presences(window.structure.id);
+            vm.reasonsMap = new Map();
+
 
             vm.slots = {list: []};
 
@@ -133,19 +144,21 @@ export const calendarController = ng.controller('CalendarController',
             }
             const hover = document.getElementById('exemption-hover');
 
-            async function loadCalendarItems(student: User, startWeekDate: string, structureId: string): Promise<ICalendarItems> {
+            const loadCalendarItems = async (student: User, startWeekDate: string, structureId: string): Promise<ICalendarItems> => {
                 return Promise.all([
                     CalendarService.loadCourses(student, startWeekDate, structureId),
                     CalendarService.loadPresences(student, startWeekDate, structureId),
-                    CalendarService.loadAbsences(student, startWeekDate, structureId)]
-                ).then((values) => {
+                    CalendarService.loadAbsences(student, startWeekDate, structureId),
+                    reasonService.getReasons(structureId)]
+                ).then((values: [Array<Course>, Presences, Array<Absence>, Array<Reason>]) => {
                     return {
                         courses: values[0],
                         presences: values[1],
                         absences: values[2],
+                        reasons: values[3]
                     }
                 });
-            }
+            };
 
             async function initCalendar() {
                 vm.show.loader = true;
@@ -164,11 +177,14 @@ export const calendarController = ng.controller('CalendarController',
                     $location.path(`/calendar/${vm.filter.student.id}`);
                 }
 
-                let values = await loadCalendarItems(vm.filter.student, model.calendar.firstDay, window.structure.id);
+                let values: ICalendarItems = await loadCalendarItems(vm.filter.student, model.calendar.firstDay, window.structure.id);
+
                 vm.courses.list = values.courses;
                 await vm.loadForgottenNotebook();
 
                 vm.presences = values.presences;
+
+                values.reasons.forEach((reason: Reason) => vm.reasonsMap.set(reason.id, reason));
 
                 let absenceEvents = vm.courses.list.map((course: Course) => vm.absenceEvents(course));
                 let concatAbsenceEvents = [].concat(...absenceEvents);
@@ -250,15 +266,30 @@ export const calendarController = ng.controller('CalendarController',
                 return DateUtils.format(date, DateUtils.FORMAT["HOUR-MINUTES"]);
             };
 
-            vm.hasEventAbsence = (events: Array<CourseEvent>): boolean => {
-                if (events.length === 0) return false;
+            const hasEventAbsenceJustified = (course: Course): boolean => {
+                if (course.events.length === 0 && course.absences.length === 0) return false;
                 let isFound: boolean = false;
-                events.forEach((event: CourseEvent) => {
-                    if (event.type_id === EventType.ABSENCE) {
+                course.events.forEach((event: CourseEvent) => {
+                    if (event.type_id === EventType.ABSENCE && event.reason_id) {
+                        isFound = true;
+                    }
+                });
+                course.absences.forEach((absence: Absence) => {
+                    if (absence.type_id === EventType.ABSENCE && absence.reason_id) {
                         isFound = true;
                     }
                 });
                 return isFound;
+            };
+
+            const findEventAbsenceJustified = (course: Course): CourseEvent | Absence => {
+                let foundJustified: CourseEvent | Absence;
+                if (course.events.length !== 0) {
+                    foundJustified = course.events.find(event => event.type_id === EventType.ABSENCE && event.reason_id !== null)
+                } else if (course.absences.length !== 0) {
+                    foundJustified = course.absences.find(absence => absence.type_id === EventType.ABSENCE && absence.reason_id !== null)
+                }
+                return foundJustified;
             };
 
             vm.getEventType = (event: CourseEvent): string => {
@@ -285,7 +316,7 @@ export const calendarController = ng.controller('CalendarController',
                         DateUtils.FORMAT["YEAR-MONTH-DAY-HOUR-MIN-SEC"]
                     )
                 );
-                return (hasPresence && (course.absence || course.events.length > 0));
+                return (hasPresence && (course.absences.length > 0 || course.events.length > 0));
             };
 
             function formatAbsenceForm(itemCourse) {
@@ -363,6 +394,23 @@ export const calendarController = ng.controller('CalendarController',
 
             $scope.hoverOutPresence = () => {
                 const hover = document.getElementById('presences-hover');
+                hover.style.display = 'none';
+            };
+
+            $scope.hoverEvents = ($event, course: Course) => {
+                if (!hasEventAbsenceJustified(course)) return;
+                const hover = document.getElementById('event-absence-hover');
+                const {minWidth, minHeight} = getComputedStyle(hover);
+                let {x, y} = $event.target.closest('.course-item-container').getBoundingClientRect();
+                hover.style.top = `${y - parseInt(minHeight)}px`;
+                hover.style.left = `${x - (parseInt(minWidth) / 5)}px`;
+                hover.style.display = 'flex';
+                vm.show.event.reason_id = findEventAbsenceJustified(course).reason_id;
+                $scope.safeApply();
+            };
+
+            $scope.hoverOutEvents = () => {
+                const hover = document.getElementById('event-absence-hover');
                 hover.style.display = 'none';
             };
 

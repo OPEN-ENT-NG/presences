@@ -1,18 +1,13 @@
 <div class="course-item-container" id="[[item.id]]"
-     data-ng-click="vm.actionAbsenceForm(item, items)">
+     data-ng-click="vm.actionAbsenceForm(item, items)"
+     data-ng-mouseenter="hoverEvents($event, item)" data-ng-mouseleave="hoverOutEvents()">
+    <!-- ^ hovering events absence ^ -->
 
     <!-- color css handling -->
     <div class="exemption" ng-if="item.exempted" ng-class="{absent: item.containsAbsence}">&nbsp;</div>
     <div class="globalAbsence" ng-if="vm.isGlobalAbsence(item)">&nbsp;</div>
     <div class="globalAbsenceReason" ng-if="vm.isGlobalAbsenceReason(item)">&nbsp;</div>
 
-    <!-- hovering absence reason tooltip -->
-    <span class="tooltip-top" ng-if="vm.hasEventAbsence(item.events)"
-          data-ng-mouseenter="change($event, item, vm.presences.all)" data-ng-mouseleave="hoverOutPresence()">
-        <span><i18n>presences.register.event_type.absences</i18n></span> <br>
-        <span class="font-bold"><i18n>presences.absence.reason</i18n>&#58;</span>
-        <span>Jin</span>
-    </span>
 
     <!-- data course item -->
     <div class="course-item"
