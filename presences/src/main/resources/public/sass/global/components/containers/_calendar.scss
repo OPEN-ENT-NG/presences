@@ -216,6 +216,10 @@ $calendar-user-card-height: 56px;
           &.absent {
             background-color: $presences-red !important;
           }
+
+          &.absent-justified {
+            background-color: $presences-pink !important;
+          }
         }
 
         .course-item-container {
@@ -518,6 +522,10 @@ $calendar-user-card-height: 56px;
       top: 100%;
       left: calc(50% - 10px);
     }
+  }
+
+  #exemption-hover {
+    z-index: 999;
   }
 
   #presences-hover {

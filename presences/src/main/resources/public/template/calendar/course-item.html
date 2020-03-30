@@ -4,7 +4,11 @@
     <!-- ^ hovering events absence ^ -->
 
     <!-- color css handling -->
-    <div class="exemption" ng-if="item.exempted" ng-class="{absent: item.containsAbsence}">&nbsp;</div>
+    <div class="exemption" ng-if="item.exempted" ng-class="{
+     absent: item.absences.length > 0 || vm.absenceEvents(item).length > 0,
+     'absent-justified': !item.containsAbsence && item.containsReasonAbsence
+    }">&nbsp;
+    </div>
     <div class="globalAbsence" ng-if="vm.isGlobalAbsence(item)">&nbsp;</div>
     <div class="globalAbsenceReason" ng-if="vm.isGlobalAbsenceReason(item)">&nbsp;</div>
 
