@@ -6,7 +6,7 @@
     <!-- color css handling -->
     <div class="exemption" ng-if="item.exempted" ng-class="{
      absent: item.absences.length > 0 || vm.absenceEvents(item).length > 0,
-     'absent-justified': !item.containsAbsence && item.containsReasonAbsence
+     'absent-justified': (!item.containsAbsence && item.containsReasonAbsence) || vm.hasEventAbsenceJustified(item)
     }">&nbsp;
     </div>
     <div class="globalAbsence" ng-if="vm.isGlobalAbsence(item)">&nbsp;</div>

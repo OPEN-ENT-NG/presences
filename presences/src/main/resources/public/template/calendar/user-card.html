@@ -19,7 +19,7 @@
             </div>
         </div>
         <div class="list">
-            <div class="student" ng-click="vm.loadCourses(student); userCard.show = false;"
+            <div class="student" ng-click="vm.reloadCalendarByStudent(student); userCard.show = false;"
                  ng-repeat="student in vm.filter.students"
                  ng-show="userCard.show">
                 <div class="avatar" ng-style="{'background-image': 'url(/userbook/avatar/' + student.id + ')'}">

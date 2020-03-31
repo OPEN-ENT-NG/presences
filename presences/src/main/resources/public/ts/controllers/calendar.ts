@@ -65,6 +65,8 @@ interface ViewModel {
 
     isAbsenceJustifiedOnly(item): boolean;
 
+    reloadCalendarByStudent(): void;
+
     loadForgottenNotebook(): Promise<void>;
 
     formatExemptionDate(date: any): string;
@@ -74,6 +76,8 @@ interface ViewModel {
     getEventTypeDate(event: CourseEvent): string;
 
     formatPresenceDate(date: string): string;
+
+    hasEventAbsenceJustified(course: Course): boolean;
 
     canDisplayPresence(course: Course): boolean;
 
@@ -176,6 +180,16 @@ export const calendarController = ng.controller('CalendarController',
                     window.item = vm.filter.student;
                     $location.path(`/calendar/${vm.filter.student.id}`);
                 }
+                vm.reloadCalendarByStudent();
+                $scope.safeApply();
+            }
+
+            vm.reloadCalendarByStudent = async (student: User = vm.filter.student): Promise<void> => {
+                if (vm.filter.student.id !== student.id) {
+                    vm.show.loader = true;
+                    vm.filter.student = student;
+                    window.item = student;
+                }
 
                 let values: ICalendarItems = await loadCalendarItems(vm.filter.student, model.calendar.firstDay, window.structure.id);
 
@@ -190,7 +204,7 @@ export const calendarController = ng.controller('CalendarController',
                 let concatAbsenceEvents = [].concat(...absenceEvents);
                 vm.absences.list = [...values.absences, ...concatAbsenceEvents];
                 $scope.safeApply();
-            }
+            };
 
             vm.loadForgottenNotebook = async function () {
                 let diff = 7;
@@ -255,7 +269,6 @@ export const calendarController = ng.controller('CalendarController',
                 } else {
                     $scope.$broadcast(ABSENCE_FORM_EVENTS.OPEN, formatAbsenceForm(item));
                 }
-
             };
 
             vm.formatExemptionDate = function (date) {
@@ -266,7 +279,7 @@ export const calendarController = ng.controller('CalendarController',
                 return DateUtils.format(date, DateUtils.FORMAT["HOUR-MINUTES"]);
             };
 
-            const hasEventAbsenceJustified = (course: Course): boolean => {
+            vm.hasEventAbsenceJustified = (course: Course): boolean => {
                 if (course.events.length === 0 && course.absences.length === 0) return false;
                 let isFound: boolean = false;
                 course.events.forEach((event: CourseEvent) => {
@@ -398,7 +411,7 @@ export const calendarController = ng.controller('CalendarController',
             };
 
             $scope.hoverEvents = ($event, course: Course) => {
-                if (!hasEventAbsenceJustified(course)) return;
+                if (!vm.hasEventAbsenceJustified(course)) return;
                 const hover = document.getElementById('event-absence-hover');
                 const {minWidth, minHeight} = getComputedStyle(hover);
                 let {x, y} = $event.target.closest('.course-item-container').getBoundingClientRect();
