@@ -16,4 +16,6 @@ public interface InitService {
     void getInitIncidentSeriousnessStatement(JsonHttpServerRequest request, String structure, Handler<Either<String, JsonObject>> handler);
 
     void getInitIncidentPartnerStatement(JsonHttpServerRequest request, String structure, Handler<Either<String, JsonObject>> handler);
+
+    void getInitIncidentPunishmentType(JsonHttpServerRequest request, String structure, Handler<Either<String, JsonObject>> handler);
 }

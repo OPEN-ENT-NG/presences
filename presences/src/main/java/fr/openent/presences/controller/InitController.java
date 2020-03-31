@@ -64,7 +64,9 @@ public class InitController extends ControllerHelper {
             Future<JsonObject> incidentProtagonists = Future.future();
             Future<JsonObject> incidentSeriousness = Future.future();
             Future<JsonObject> incidentPartner = Future.future();
-            List<Future> futures = Arrays.asList(reasonsFuture, actionsFuture, settingsFuture, disciplinesFuture, massmailingTemplatesFuture, incidentTypeFuture, incidentPlacesFuture, incidentProtagonists, incidentSeriousness, incidentPartner);
+            Future<JsonObject> incidentPunishmentType = Future.future();
+            List<Future> futures = Arrays.asList(reasonsFuture, actionsFuture, settingsFuture, disciplinesFuture, massmailingTemplatesFuture,
+                    incidentTypeFuture, incidentPlacesFuture, incidentProtagonists, incidentSeriousness, incidentPartner, incidentPunishmentType);
             CompositeFuture.all(futures).setHandler(res -> {
                 JsonArray statements = new JsonArray();
                 for (Future<JsonObject> future : futures) {
@@ -84,6 +86,7 @@ public class InitController extends ControllerHelper {
             Incidents.getInstance().getInitIncidentProtagonistTypeStatement(structure, FutureHelper.handlerJsonObject(incidentProtagonists));
             Incidents.getInstance().getInitIncidentSeriousnessStatement(structure, FutureHelper.handlerJsonObject(incidentSeriousness));
             Incidents.getInstance().getInitIncidentPartnerStatement(structure, FutureHelper.handlerJsonObject(incidentPartner));
+            Incidents.getInstance().getInitIncidentPunishmentTypeStatement(structure, FutureHelper.handlerJsonObject(incidentPunishmentType));
         });
     }
 }

@@ -82,6 +82,14 @@ public class Incidents {
         eb.send(address, action, MessageResponseHandler.messageJsonObjectHandler(handler));
     }
 
+    public void getInitIncidentPunishmentTypeStatement(String structure, Handler<Either<String, JsonObject>> handler) {
+        JsonObject action = new JsonObject()
+                .put("action", "init-get-incident-punishment-type")
+                .put("structure", structure);
+
+        eb.send(address, action, MessageResponseHandler.messageJsonObjectHandler(handler));
+    }
+
     private static class IncidentsHolder {
         private static final Incidents instance = new Incidents();
 

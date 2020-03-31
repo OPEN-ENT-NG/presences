@@ -1,6 +1,7 @@
 package fr.openent.incidents.service.impl;
 
 import fr.openent.incidents.Incidents;
+import fr.openent.incidents.model.PunishmentType;
 import fr.openent.incidents.service.InitService;
 import fr.wseduc.webutils.Either;
 import fr.wseduc.webutils.I18n;
@@ -10,6 +11,7 @@ import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import org.entcore.common.http.request.JsonHttpServerRequest;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
@@ -104,6 +106,38 @@ public class DefaultInitService implements InitService {
         }
 
         query = query.substring(0, query.length() - 1) + ";";
+        handler.handle(new Either.Right<>(new JsonObject()
+                .put("statement", query)
+                .put("values", params)
+                .put("action", "prepared")));
+    }
+
+    @Override
+    public void getInitIncidentPunishmentType(JsonHttpServerRequest request, String structure, Handler<Either<String, JsonObject>> handler) {
+
+        List<PunishmentType> punishmentTypeList = new ArrayList();
+
+        punishmentTypeList.add(new PunishmentType(structure, "Devoir supplémentaire", "punition", 1));
+        punishmentTypeList.add(new PunishmentType(structure, "Retenue", "punition", 2));
+        punishmentTypeList.add(new PunishmentType(structure, "Exclusion de cours", "punition", 3));
+        punishmentTypeList.add(new PunishmentType(structure, "Avertissement", "sanction", 3));
+        punishmentTypeList.add(new PunishmentType(structure, "Blâme", "sanction", 3));
+        punishmentTypeList.add(new PunishmentType(structure, "Mesure de responsabilisation", "sanction", 4));
+        punishmentTypeList.add(new PunishmentType(structure, "Exclusion temporaire", "sanction", 4));
+        punishmentTypeList.add(new PunishmentType(structure, "Exclusion définitive", "sanction", 4));
+
+        JsonArray params = new JsonArray();
+
+        String query = "INSERT INTO " + Incidents.dbSchema + ".punishment_type(structure_id, label, type, punishment_category_id) VALUES ";
+        for (PunishmentType punishmentType : punishmentTypeList) {
+            query += "(?, ?, ?, ?),";
+            params.add(punishmentType.getStructureId())
+                    .add(punishmentType.getLabel())
+                    .add(punishmentType.getType())
+                    .add(punishmentType.getPunishmentCategoryId());
+        }
+        query = query.substring(0, query.length() - 1) + ";";
+
         handler.handle(new Either.Right<>(new JsonObject()
                 .put("statement", query)
                 .put("values", params)

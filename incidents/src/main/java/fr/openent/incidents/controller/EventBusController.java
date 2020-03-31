@@ -48,6 +48,9 @@ public class EventBusController extends ControllerHelper {
             case "init-get-incident-partner-statement":
                 initService.getInitIncidentPartnerStatement(new JsonHttpServerRequest(body.getJsonObject("request", new JsonObject())), body.getString("structure"), BusResponseHandler.busResponseHandler(message));
                 break;
+            case "init-get-incident-punishment-type":
+                initService.getInitIncidentPunishmentType(new JsonHttpServerRequest(body.getJsonObject("request", new JsonObject())), body.getString("structure"), BusResponseHandler.busResponseHandler(message));
+                break;
             default:
                 message.reply(new JsonObject()
                         .put("status", "error")
