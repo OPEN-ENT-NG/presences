@@ -3,12 +3,12 @@ package fr.openent.presences.helper;
 import fr.openent.presences.Presences;
 import fr.openent.presences.common.helper.DateHelper;
 import fr.openent.presences.common.helper.FutureHelper;
+import fr.openent.presences.common.helper.PersonHelper;
 import fr.openent.presences.common.helper.RegisterHelper;
 import fr.openent.presences.common.service.UserService;
 import fr.openent.presences.common.service.impl.DefaultUserService;
 import fr.openent.presences.enums.Events;
 import fr.openent.presences.model.Absence;
-import fr.openent.presences.model.Course;
 import fr.openent.presences.model.Event.Event;
 import fr.openent.presences.model.Event.EventType;
 import fr.openent.presences.model.Event.RegisterEvent;
@@ -44,7 +44,6 @@ public class EventHelper {
     private PersonHelper personHelper;
     private ActionService actionService;
     private UserService userService;
-    private CourseHelper courseHelper;
 
     public EventHelper(EventBus eb) {
         this.eventTypeHelper = new EventTypeHelper();
@@ -53,7 +52,6 @@ public class EventHelper {
         this.registerHelper = new RegisterHelper(eb, Presences.dbSchema);
         this.actionService = new DefaultActionService();
         this.userService = new DefaultUserService();
-        this.courseHelper = new CourseHelper(eb);
     }
 
     public void addLastActionAbbreviation(List<Event> events, Future<JsonObject> future) {
@@ -305,7 +303,6 @@ public class EventHelper {
                             event.setStudent(student.clone());
                         }
                     }
-
                     // add dayHistory to student
                     for (RegisterEvent register : registerEvents) {
                         if (register.getStudentId().equals(event.getStudent().getId())) {
@@ -342,44 +339,6 @@ public class EventHelper {
                         }));
             });
             future.complete();
-        });
-    }
-
-    @SuppressWarnings("unchecked")
-    public void addCourseToEvents(List<Event> events, String structure_id, String startDate, String endDate, Future<JsonObject> future) {
-        List<String> groups = events.stream().map(event -> event.getStudent().getClassName()).collect(Collectors.toList());
-        courseHelper.getCoursesList(structure_id, new ArrayList<>(), groups, startDate, endDate, courseAsyncResult -> {
-            if (courseAsyncResult.failed()) {
-                String message = "[Presences@EventHelper] Failed to retrieve courses for existing event";
-                LOGGER.error(message);
-                future.fail(message + " " + courseAsyncResult.cause());
-            } else {
-                List<Course> courses = courseAsyncResult.result();
-                events.forEach(event -> {
-                    Student student = event.getStudent();
-                    ((List<JsonObject>) event.getStudent().getDayHistory().getList()).forEach(dayHistory ->
-                            ((List<JsonObject>) dayHistory.getJsonArray("events").getList()).forEach(eventHistory -> {
-                                for (Course course : courses) {
-                                    try {
-                                        boolean isDateBetween = DateHelper.isBetween(
-                                                event.getStartDate(), event.getEndDate(),
-                                                course.getStartDate(), course.getEndDate(),
-                                                DateHelper.SQL_FORMAT, DateHelper.MONGO_FORMAT
-                                        );
-                                        if (!eventHistory.getString("type").toUpperCase().equals(Events.ABSENCE.toString()) &&
-                                                course.getClasses().contains(student.getClassName()) &&
-                                                !eventHistory.containsKey("course") && isDateBetween) {
-                                            eventHistory.put("course", course.toJSON());
-                                        }
-                                    } catch (ParseException e) {
-                                        String message = "[Presences@EventHelper] Failed to check if event's date is between course's date";
-                                        LOGGER.error(message, e);
-                                    }
-                                }
-                            }));
-                });
-                future.complete();
-            }
         });
     }
 

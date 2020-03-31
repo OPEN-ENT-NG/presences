@@ -1,9 +1,13 @@
 package fr.openent.presences.helper;
 
 import fr.openent.presences.common.helper.DateHelper;
+import fr.openent.presences.common.helper.PersonHelper;
+import fr.openent.presences.common.service.UserService;
+import fr.openent.presences.common.service.impl.DefaultUserService;
 import fr.openent.presences.enums.Events;
 import fr.openent.presences.model.Course;
 import fr.openent.presences.model.Event.RegisterEvent;
+import fr.openent.presences.model.Person.User;
 import fr.openent.presences.model.Register;
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Future;
@@ -16,15 +20,21 @@ import io.vertx.core.logging.LoggerFactory;
 
 import java.text.ParseException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 public class RegisterPresenceHelper {
     private static final Logger LOGGER = LoggerFactory.getLogger(RegisterPresenceHelper.class);
     private CourseHelper courseHelper;
+    private UserService userService;
+    private PersonHelper personHelper;
 
     public RegisterPresenceHelper(EventBus eb) {
         this.courseHelper = new CourseHelper(eb);
+        this.userService = new DefaultUserService();
+        this.personHelper = new PersonHelper();
     }
 
     /**
@@ -104,5 +114,45 @@ public class RegisterPresenceHelper {
                 handler.handle(Future.succeededFuture(register));
             }
         });
+    }
+
+    @SuppressWarnings("unchecked")
+    public void addOwnerToStudentEvents(JsonObject register, Future<JsonObject> future) {
+        List<String> userIds = this.getAllOwnerIds(register.getJsonArray("students"));
+        userService.getUsers(userIds, result -> {
+            if (result.isLeft()) {
+                String message = "[Presences@EventHelper] Failed to retrieve users info";
+                LOGGER.error(message);
+                future.fail(message);
+            }
+            List<User> owners = personHelper.getUserListFromJsonArray(result.right().getValue());
+            Map<String, User> userMap = new HashMap<>();
+            owners.forEach(owner -> userMap.put(owner.getId(), owner));
+            ((List<JsonObject>) register.getJsonArray("students").getList()).forEach(student ->
+                    ((List<JsonObject>) student.getJsonArray("day_history").getList()).forEach(dayHistory ->
+                            ((List<JsonObject>) dayHistory.getJsonArray("events").getList()).forEach(event -> {
+                                if (!event.getString("type").toUpperCase().equals(Events.ABSENCE.toString()) && event.getValue("owner") instanceof String) {
+                                    event.put("owner", userMap.getOrDefault(event.getString("owner"), null).toJSON());
+                                }
+                            })
+                    )
+            );
+            future.complete();
+        });
+    }
+
+    @SuppressWarnings("unchecked")
+    private List<String> getAllOwnerIds(JsonArray students) {
+        List<String> userIds = new ArrayList<>();
+        ((List<JsonObject>) students.getList()).forEach(student ->
+                ((List<JsonObject>) student.getJsonArray("day_history").getList()).forEach(dayHistory ->
+                        ((List<JsonObject>) dayHistory.getJsonArray("events").getList()).forEach(event -> {
+                            if (event.containsKey("owner") && !userIds.contains(event.getString("owner"))) {
+                                userIds.add(event.getString("owner"));
+                            }
+                        })
+                )
+        );
+        return userIds;
     }
 }

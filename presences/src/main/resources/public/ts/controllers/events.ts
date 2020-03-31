@@ -74,9 +74,7 @@ interface ViewModel {
     /* tooltip */
     formatHourTooltip(date: string): string;
 
-    findCourseInEvent(event: Array<Event>): Event;
-
-    hasCourse(events: Array<Event>): boolean;
+    findEvent(event: Array<Event>): Event;
 
     isEachEventAbsence(event: EventResponse): boolean;
 
@@ -370,12 +368,8 @@ export const eventsController = ng.controller('EventsController', ['$scope', '$r
             return DateUtils.format(date, DateUtils.FORMAT["HOUR-MINUTES"]);
         };
 
-        vm.findCourseInEvent = (events: Array<Event>): Event => {
+        vm.findEvent = (events: Array<Event>): Event => {
             return events.find(event => event.type === EventsUtils.ALL_EVENTS.event);
-        };
-
-        vm.hasCourse = (events: Array<Event>): boolean => {
-            return 'course' in events.find(event => event.type === EventsUtils.ALL_EVENTS.event);
         };
 
         vm.createAction = function () {
@@ -896,6 +890,9 @@ export const eventsController = ng.controller('EventsController', ['$scope', '$r
                 ]);
             }
         });
+
+        $scope.$watch(() => vm.filter.startDate, async () => vm.updateDate());
+        $scope.$watch(() => vm.filter.endDate, async () => vm.updateDate());
 
         /* Destroy directive and scope */
         $scope.$on("$destroy", () => {

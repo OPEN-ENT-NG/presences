@@ -44,10 +44,10 @@
                 ng-class="{current: vm.isCurrentSlot(slot)}">
                 <!-- tooltip hovered -->
                 <span class="tooltip-top"
-                      ng-if="vm.findCourseInEvent(slot.events) != undefined && vm.hasCourse(slot.events)">
-                        <span class="font-bold">[[vm.findCourseInEvent(slot.events).course.subjectName]]</span>
-                        <br>[[vm.findCourseInEvent(slot.events).course.teachers[0].displayName]]<br>
-                        [[vm.formatHourTooltip(slot.start)]] - [[vm.formatHourTooltip(slot.end)]]
+                      ng-if="vm.findEvent(slot.events) != undefined">
+                    <span class="font-bold">[[vm.formatHourTooltip(slot.start)]] - [[vm.formatHourTooltip(slot.end)]]</span>
+                    <br><i18n>presences.created.by</i18n>&nbsp;&#58;<br>
+                    <span class="font-bold">[[vm.findEvent(slot.events).owner.displayName]]</span>
                 </span>
             </li>
         </ul>

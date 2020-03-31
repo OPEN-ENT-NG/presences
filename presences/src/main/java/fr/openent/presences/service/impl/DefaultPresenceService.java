@@ -2,10 +2,10 @@ package fr.openent.presences.service.impl;
 
 import fr.openent.presences.Presences;
 import fr.openent.presences.common.helper.FutureHelper;
+import fr.openent.presences.common.helper.PersonHelper;
 import fr.openent.presences.common.service.UserService;
 import fr.openent.presences.common.service.impl.DefaultUserService;
 import fr.openent.presences.helper.DisciplineHelper;
-import fr.openent.presences.helper.PersonHelper;
 import fr.openent.presences.helper.PresenceHelper;
 import fr.openent.presences.model.Discipline;
 import fr.openent.presences.model.Person.Student;

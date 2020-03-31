@@ -11,7 +11,6 @@ import fr.openent.presences.common.viescolaire.Viescolaire;
 import fr.openent.presences.enums.EventType;
 import fr.openent.presences.enums.Events;
 import fr.openent.presences.enums.WorkflowActions;
-import fr.openent.presences.helper.AbsenceHelper;
 import fr.openent.presences.helper.CalendarHelper;
 import fr.openent.presences.helper.EventHelper;
 import fr.openent.presences.helper.SlotHelper;
@@ -86,7 +85,7 @@ public class DefaultEventService implements EventService {
                 handler.handle(new Either.Left<>(message));
             } else {
                 List<Event> events = EventHelper.getEventListFromJsonArray(eventsFuture.result(), Event.MANDATORY_ATTRIBUTE);
-                JsonArray absences = AbsenceHelper.removeDuplicates(events, absencesFuture.result());
+                JsonArray absences = absencesFuture.result();
                 List<Integer> reasonIds = new ArrayList<>();
                 List<String> studentIds = new ArrayList<>();
                 List<Integer> eventTypeIds = new ArrayList<>();
@@ -120,16 +119,14 @@ public class DefaultEventService implements EventService {
                         Future<JsonObject> actionFuture = Future.future();
                         Future<JsonObject> excludeFuture = Future.future();
                         Future<JsonObject> ownerFuture = Future.future();
-                        Future<JsonObject> courseFuture = Future.future();
 
                         eventHelper.addLastActionAbbreviation(events, actionFuture);
                         eventHelper.addOwnerToEvents(events, ownerFuture);
                         interactExclude(exclusionDays, saturdayCoursesCount, sundayCoursesCount, events, excludeFuture);
-                        eventHelper.addCourseToEvents(events, structureId, startDate, endDate, courseFuture);
 
-                        CompositeFuture.all(actionFuture, excludeFuture, ownerFuture, courseFuture).setHandler(eventResult -> {
+                        CompositeFuture.all(actionFuture, excludeFuture, ownerFuture).setHandler(eventResult -> {
                             if (eventResult.failed()) {
-                                String message = "[Presences@DefaultEventService] Failed to retrieve exclude days, owners, " +
+                                String message = "[Presences@DefaultEventService::get] Failed to retrieve exclude days, owners, " +
                                         "add last action abbreviation or add courses to existing event";
                                 LOGGER.error(message);
                                 handler.handle(new Either.Left<>(message));

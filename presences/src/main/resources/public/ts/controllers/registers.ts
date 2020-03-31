@@ -122,9 +122,7 @@ export interface ViewModel {
 
     formatHourTooltip(date: string): string;
 
-    findCourseInEvent(events: Array<Event>): Event;
-
-    hasCourse(events: Array<Event>): boolean;
+    findEvent(events: Array<Event>): Event;
 
     changeDate(): void;
 
@@ -713,12 +711,8 @@ export const registersController = ng.controller('RegistersController',
                 return DateUtils.format(date, DateUtils.FORMAT["HOUR-MINUTES"]);
             };
 
-            vm.findCourseInEvent = (events: Array<Event>): Event => {
+            vm.findEvent = (events: Array<Event>): Event => {
                 return events.find(event => event.type === EventsUtils.ALL_EVENTS.event);
-            };
-
-            vm.hasCourse = (events: Array<Event>): boolean => {
-                return 'course' in events.find(event => event.type === EventsUtils.ALL_EVENTS.event);
             };
 
             const notifyCourse = async function (course: Course) {

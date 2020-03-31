@@ -313,11 +313,18 @@ public class DefaultRegisterService implements RegisterService {
                                 LOGGER.error(message, slotEvent.left().getValue());
                                 handler.handle(new Either.Left<>(message));
                             } else {
-                                registerPresenceHelper.addCourseToStudentEvent(slotEvent.right().getValue(), courseAsync -> {
-                                    if (courseAsync.failed()) {
-                                        String message = "[Presences@DefaultRegisterService] Failed to add course to slots";
-                                        LOGGER.error(message, courseAsync.cause());
-                                        handler.handle(new Either.Left<>(message + " " + courseAsync.cause()));
+                                Future<JsonObject> courseFuture = Future.future();
+                                Future<JsonObject> ownerFuture = Future.future();
+
+                                registerPresenceHelper.addCourseToStudentEvent(slotEvent.right().getValue(), courseFuture);
+                                registerPresenceHelper.addOwnerToStudentEvents(slotEvent.right().getValue(), ownerFuture);
+
+                                CompositeFuture.all(courseFuture, ownerFuture).setHandler(eventResult -> {
+                                    if (eventResult.failed()) {
+                                        String message = "[Presences@DefaultRegisterService::get] Failed to add c" +
+                                                "ourse or owner to student events";
+                                        LOGGER.error(message);
+                                        handler.handle(new Either.Left<>(message));
                                     } else {
                                         handler.handle(new Either.Right<>(slotEvent.right().getValue()));
                                     }

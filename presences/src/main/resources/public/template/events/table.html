@@ -52,10 +52,10 @@
                     class="[[vm.eventTypeState(periods, event)]]">
                     <!-- tooltip hovered -->
                     <span class="tooltip-top"
-                          ng-if="vm.findCourseInEvent(periods.events) != undefined && vm.hasCourse(periods.events)">
-                        <span class="font-bold">[[vm.findCourseInEvent(periods.events).course.subjectName]]</span>
-                        <br>[[vm.findCourseInEvent(periods.events).course.teachers[0].displayName]]<br>
-                        [[vm.formatHourTooltip(periods.start)]] - [[vm.formatHourTooltip(periods.end)]]
+                          ng-if="vm.findEvent(periods.events) != undefined">
+                        <span class="font-bold">[[vm.formatHourTooltip(periods.start)]] - [[vm.formatHourTooltip(periods.end)]]</span>
+                        <br><i18n>presences.created.by</i18n>&nbsp;&#58;<br>
+                        <span class="font-bold">[[vm.findEvent(periods.events).owner.displayName]]</span>
                     </span>
                 </li>
                 <li><i class="tableEdit" data-ng-click="vm.editPeriod($event, event)"></i></li>
