@@ -20,11 +20,13 @@ public class MapHelper {
         JsonObject map = new JsonObject();
         for (int i = 0; i < objects.size(); i++) {
             object = objects.getJsonObject(i);
-            if (!map.containsKey(object.getString(key))) {
+            if ((object.containsKey(key) && object.getString(key) != null) && !map.containsKey(object.getString(key))) {
                 map.put(object.getString(key), new JsonArray());
             }
 
-            map.getJsonArray(object.getString(key)).add(object);
+            if ((object.containsKey(key) && object.getString(key) != null)) {
+                map.getJsonArray(object.getString(key)).add(object);
+            }
         }
 
         return map;

@@ -5,8 +5,10 @@ import io.vertx.core.logging.LoggerFactory;
 
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
+import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.ZoneId;
+import java.time.temporal.TemporalAdjusters;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
@@ -364,6 +366,48 @@ public class DateHelper {
         Date date = cal.getTime();
         SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
         return sdf.format(date);
+    }
+
+    /**
+     * Fetching a list of date based on two dates
+     *
+     * @param start_date    start_date defined (Since its localDate, it will only take 'YYYY-MM-DD' in account)
+     * @param end_date      end_date defined (Since its localDate, it will only take 'YYYY-MM-DD' in account)
+     * @param format        format date to format your type of start and end date
+     * @param day           day chosen to fetch kind of day of week, must be "MONDAY", "TUESDAY", "WEDNESDAY", "THURSDAY", "FRIDAY"
+     * @param isHalfDayMode if true = fetch data every 2 weeks (only if day is specified)
+     * @return list of LocalDate between two dates (start and end)
+     */
+    public static List<LocalDate> getListOfDateBasedOnDates(String start_date, String end_date, String format, String day,
+                                                            Boolean isHalfDayMode) {
+        LocalDate start = LocalDate.parse(DateHelper.getDateString(start_date, format));
+        LocalDate end = LocalDate.parse(DateHelper.getDateString(end_date, format));
+
+        List<LocalDate> dateFromDayOfWeekFetched = new ArrayList<>();
+
+        if (start.equals(end)) {
+            dateFromDayOfWeekFetched.add(start);
+            return dateFromDayOfWeekFetched;
+        }
+
+        // if day is specified, we add day else none
+        LocalDate dayOfWeek = day.isEmpty() ? start : start.with(TemporalAdjusters.nextOrSame(DayOfWeek.valueOf(day)));
+        while (dayOfWeek.isBefore(end)) {
+            dateFromDayOfWeekFetched.add(dayOfWeek);
+            // increment by week if we are based to fetch specified day
+            if (!day.isEmpty()) {
+                if (!isHalfDayMode) {
+                    dayOfWeek = dayOfWeek.plusWeeks(1);
+                } else {
+                    dayOfWeek = dayOfWeek.plusWeeks(2);
+                }
+            } else {
+                // increment by day if none is specified and that we want to fetch all date based on start and end
+                dayOfWeek = dayOfWeek.plusDays(1);
+            }
+        }
+
+        return dateFromDayOfWeekFetched;
     }
 
 }

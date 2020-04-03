@@ -12,10 +12,9 @@ import {
     SearchItem,
     SearchService,
     Setting,
-    ViescolaireService,
 } from '../services';
 import {Scope} from './main';
-import {Absence, EventType, ICalendarItems, Presence, Presences, Reason, User} from '../models';
+import {Absence, EventType, ICalendarItems, ITimeSlot, Presence, Presences, Reason, User} from '../models';
 import {DateUtils} from '@common/utils';
 import {SNIPLET_FORM_EMIT_EVENTS, SNIPLET_FORM_EVENTS} from "@common/model";
 import {NOTEBOOK_FORM_EVENTS} from "../sniplets";
@@ -106,14 +105,16 @@ interface CalendarScope extends Scope {
 }
 
 export const calendarController = ng.controller('CalendarController',
-    ['$scope', '$timeout', 'route', '$location', 'StructureService', 'CalendarService',
+    ['$scope', '$timeout', 'route', '$location', 'CalendarService',
         'GroupService', 'SearchService', 'ForgottenNotebookService', 'ReasonService',
-        function ($scope: CalendarScope, $timeout, route, $location, StructureService: StructureService,
+        'ViescolaireService',
+        function ($scope: CalendarScope, $timeout, route, $location,
                   CalendarService: CalendarService,
                   GroupService: GroupService,
                   SearchService: SearchService,
                   ForgottenNotebookService: ForgottenNotebookService,
-                  reasonService: ReasonService
+                  reasonService: ReasonService,
+                  viescolaireService: IViescolaireService
         ) {
             const vm: ViewModel = this;
             vm.show = {

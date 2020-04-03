@@ -14,7 +14,7 @@
         <!-- search bar -->
         <div class="row">
             <div class="cell twelve paddingRight">
-                <div class="cell twelve search-input">
+                <div class="cell twelve search-input" ng-if="!vm.isEditMode">
                     <async-autocomplete ng-disabled="false"
                                         ng-model="vm.studentSearchFormInput"
                                         ng-change="vm.selectStudentForm"
@@ -26,8 +26,9 @@
                 <div class="cell twelve">
                     <ul class="cell twelve search-input-ul">
                         <li ng-repeat="stud in vm.form.students">
-                            [[stud.toString()]] <i class="close"
-                                                   ng-click="vm.excludeStudentFromForm(stud)"></i>
+                            [[stud.displayName]] <i class="close"
+                                                    data-ng-click="vm.excludeStudentFromForm(stud)"
+                                                    ng-if="!vm.isEditMode"></i>
                         </li>
                     </ul>
                 </div>
@@ -37,7 +38,7 @@
         <!--  Select type of exemption -->
         <select ng-options="lang.translate(exemptionType.label) for exemptionType in vm.typeExemptionSelect"
                 class="type-exemption"
-                data-ng-disabled="vm.form.id"
+                data-ng-disabled="vm.form.exemption_id || vm.form.exemption_recursive_id"
                 data-ng-change="vm.switchForm()"
                 data-ng-model="vm.typeExemptionSelected">
         </select>
@@ -199,7 +200,7 @@
         <!-- Submit section -->
         <div class="row">
             <div class="twelve cell">
-                <button ng-if="vm.form.id" ng-click="vm.deleteExemption()">
+                <button ng-if="vm.form.exemption_id || vm.form.exemption_recursive_id" ng-click="vm.deleteExemption()">
                     <i18n>presences.exemptions.form.delete</i18n>
                 </button>
                 <button class="right-magnet" ng-disabled="!vm.form.isValidOnForm()" ng-click="vm.saveExemption()">

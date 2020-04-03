@@ -47,7 +47,7 @@ export class DateUtils {
         return moment(moment(date)
             .format('YYYY-MM-DD') + ' ' + moment(dateTime)
             .format('HH:mm'), 'YYYY-MM-DD HH:mm')
-            .format('YYYY-MM-DD HH:mm');
+            .format('YYYY-MM-DD HH:mm:ss');
     }
 
     /**
@@ -188,11 +188,6 @@ export class DateUtils {
                 return 1;
             return 0;
         }
-    }
-
-    static async getSchoolYearDates(structureId) {
-        let {data} = await http.get(`viescolaire/settings/periode/schoolyear?structureId=` + structureId);
-        return data;
     }
 
     static getDateFromMoment(date) {

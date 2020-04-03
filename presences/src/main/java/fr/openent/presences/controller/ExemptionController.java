@@ -6,6 +6,7 @@ import fr.openent.presences.common.service.GroupService;
 import fr.openent.presences.common.service.impl.DefaultGroupService;
 import fr.openent.presences.constants.Actions;
 import fr.openent.presences.export.ExemptionCSVExport;
+import fr.openent.presences.model.Exemption.ExemptionBody;
 import fr.openent.presences.security.ExportRight;
 import fr.openent.presences.security.ManageExemptionRight;
 import fr.openent.presences.service.ExemptionService;
@@ -14,7 +15,6 @@ import fr.wseduc.rs.*;
 import fr.wseduc.security.ActionType;
 import fr.wseduc.security.SecuredAction;
 import fr.wseduc.webutils.Either;
-import fr.wseduc.webutils.http.Renders;
 import fr.wseduc.webutils.request.RequestUtils;
 import io.vertx.core.CompositeFuture;
 import io.vertx.core.Future;
@@ -31,8 +31,6 @@ import org.entcore.common.http.response.DefaultResponseHandler;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-
-import static fr.wseduc.webutils.Utils.handlerToAsyncHandler;
 
 
 public class ExemptionController extends ControllerHelper {
@@ -164,15 +162,8 @@ public class ExemptionController extends ControllerHelper {
     @Trace(Actions.EXEMPTION_CREATION)
     public void createExemptions(final HttpServerRequest request) {
         RequestUtils.bodyToJson(request, pathPrefix + "exemption", exemptions -> {
-            exemptionService.create(
-                    exemptions.getString("structure_id"),
-                    exemptions.getJsonArray("student_id"),
-                    exemptions.getString("subject_id"),
-                    exemptions.getString("start_date"),
-                    exemptions.getString("end_date"),
-                    exemptions.getBoolean("attendance"),
-                    exemptions.getString("comment"),
-                    DefaultResponseHandler.arrayResponseHandler(request));
+            ExemptionBody exemptionBody = new ExemptionBody(exemptions);
+            exemptionService.create(exemptionBody, DefaultResponseHandler.arrayResponseHandler(request));
         });
     }
 
@@ -188,16 +179,9 @@ public class ExemptionController extends ControllerHelper {
         }
 
         RequestUtils.bodyToJson(request, pathPrefix + "exemption", exemption -> {
-            exemptionService.update(
-                    request.getParam("id"),
-                    exemption.getString("structure_id"),
-                    exemption.getString("student_id"),
-                    exemption.getString("subject_id"),
-                    exemption.getString("start_date"),
-                    exemption.getString("end_date"),
-                    exemption.getBoolean("attendance"),
-                    exemption.getString("comment"),
-                    DefaultResponseHandler.defaultResponseHandler(request));
+            ExemptionBody exemptionBody = new ExemptionBody(exemption);
+            Integer id = Integer.parseInt(request.params().get("id"));
+            exemptionService.update(id, exemptionBody, DefaultResponseHandler.defaultResponseHandler(request));
         });
     }
 
@@ -209,5 +193,15 @@ public class ExemptionController extends ControllerHelper {
     public void deleteExemption(final HttpServerRequest request) {
         List<String> exemption_ids = request.params().contains("id") ? Arrays.asList(request.getParam("id").split("\\s*,\\s*")) : null;
         exemptionService.delete(exemption_ids, DefaultResponseHandler.arrayResponseHandler(request));
+    }
+
+    @Delete("/exemption/recursive")
+    @ApiDoc("Update given exemption")
+    @ResourceFilter(ManageExemptionRight.class)
+    @SecuredAction(value = "", type = ActionType.RESOURCE)
+    @Trace(Actions.EXEMPTION_DELETION)
+    public void deleteRecursiveExemption(final HttpServerRequest request) {
+        List<String> exemption_ids = request.params().contains("id") ? Arrays.asList(request.getParam("id").split("\\s*,\\s*")) : null;
+        exemptionService.deleteRecursive(exemption_ids, DefaultResponseHandler.arrayResponseHandler(request));
     }
 }

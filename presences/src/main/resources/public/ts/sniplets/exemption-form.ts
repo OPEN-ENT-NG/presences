@@ -1,9 +1,10 @@
 import {_, idiom as lang, model, moment, toasts} from 'entcore';
-import {Exemption, IStructureSlot, Student, Students, Subjects} from '../models';
+import {Exemption, IStructureSlot, ITimeSlot, Student, Students, Subjects} from '../models';
 import rights from "../rights";
 import {SNIPLET_FORM_EMIT_EVENTS, SNIPLET_FORM_EVENTS} from '@common/model'
 import {DateUtils} from "@common/utils";
 import {ViescolaireService} from "@common/services";
+import {IAngularEvent} from "angular";
 
 console.log("ExemptionForm sniplet");
 
@@ -22,6 +23,7 @@ interface ViewModel {
     isCalendar: boolean;
     days: Array<{ label: string, value: string, isChecked: boolean }>;
     createExemptionLightBox: boolean;
+    isEditMode: boolean;
     subjects: Subjects;
     studentsFrom: Students;
     formStudentSelected: any[];
@@ -37,6 +39,10 @@ interface ViewModel {
     setFormParams(obj: any): void;
 
     editExemption(obj): void;
+
+    editFormRecursive(): void;
+
+    setRecursiveTimeSlot(): void;
 
     closeCreateExemption(): void;
 
@@ -71,6 +77,7 @@ const vm: ViewModel = {
     form: new Exemption(null, true),
     safeApply: null,
     createExemptionLightBox: false,
+    isEditMode: false,
     searchValue: '',
     formStudentSelected: [],
     subjects: new Subjects(),
@@ -130,6 +137,7 @@ const vm: ViewModel = {
         if (!model.me.hasWorkflow(rights.workflow['manageExemption'])) {
             return;
         }
+        vm.isEditMode = true;
         vm.createExemptionLightBox = true;
         vm.form = _.clone(obj);
         let studentTmp = new Student(obj.student);
@@ -141,11 +149,46 @@ const vm: ViewModel = {
             })
             .first()
             .value();
-        if (!('timeSlot' in vm.form) && !vm.form.timeSlot) {
+        if (vm.form.exemption_id) {
             vm.typeExemptionSelected = vm.typeExemptionSelect[0];
+            vm.form.isRecursiveMode = false;
+        } else {
+            vm.editFormRecursive();
+            vm.form.isRecursiveMode = true;
         }
         vm.safeApply();
     },
+
+    editFormRecursive: () => {
+        vm.form.subject = {
+            id: ''
+        };
+        vm.typeExemptionSelected = vm.typeExemptionSelect[1];
+        vm.days.forEach(day => {
+            vm.form.day_of_week.forEach((dayOfWeek: string) => {
+                if (day.value === dayOfWeek) {
+                    day.isChecked = true;
+                }
+            });
+        });
+        vm.setRecursiveTimeSlot();
+        vm.form.startDateRecursive = DateUtils.getDateFormat(new Date(vm.form.startDate),
+            DateUtils.getTimeFormatDate(vm.form.timeSlot.startHour));
+        vm.form.endDateRecursive = DateUtils.getDateFormat(new Date(vm.form.endDate),
+            DateUtils.getTimeFormatDate(vm.form.timeSlot.endHour));
+    },
+
+    setRecursiveTimeSlot: () => {
+        let start = DateUtils.format(vm.form.startDate, DateUtils.FORMAT["HOUR-MINUTES"]);
+        let end = DateUtils.format(vm.form.endDate, DateUtils.FORMAT["HOUR-MINUTES"]);
+        vm.structureTimeSlot.slots.forEach((slot: ITimeSlot) => {
+            if (slot.startHour === start && slot.endHour === end) {
+                vm.form.timeSlot = slot;
+                return;
+            }
+        });
+    },
+
     selectStudentForm: (model: Student, student) => {
         if (!_.find(vm.form.students, student)) {
             vm.form.students.push(student);
@@ -154,18 +197,24 @@ const vm: ViewModel = {
         vm.studentsFrom.all = [];
         vm.studentsFrom.searchValue = "";
     },
+
     searchFormByStudent: async (searchText: string) => {
         await vm.studentsFrom.search(window.structure.id, searchText);
         vm.safeApply();
     },
+
     excludeStudentFromForm: (student) => {
         vm.form.students = _.without(vm.form.students, student);
     },
+
     deleteExemption: async () => {
         let response = await vm.form.delete();
         vm.updateAfterSaveOrDelete(response, lang.translate('presences.exemptions.delete.succeed'));
     },
+
     saveExemption: async () => {
+        console.log("vm.form: ", vm.form);
+
         let response = await vm.form.save();
         if (vm.form.id) {
             vm.updateAfterSaveOrDelete(response, lang.translate('presences.exemptions.form.edit.succeed'));
@@ -173,30 +222,42 @@ const vm: ViewModel = {
             vm.updateAfterSaveOrDelete(response, lang.translate('presences.exemptions.form.create.succeed'));
         }
     },
+
     closeCreateExemption: () => {
         vm.createExemptionLightBox = false;
+        setTimeout(() => {
+            vm.isEditMode = false;
+            vm.days.map(day => day.isChecked = false);
+        });
     },
+
     getButtonLabel: () => lang.translate(`presences.exemptions${vm.isCalendar ? '.calendar' : ''}.create`),
 
     setDay: (day: { label: string, value: string, isChecked: boolean }): void => {
         day.isChecked = !day.isChecked;
-        vm.form.dayOfWeek = vm.days.filter(day => day.isChecked).map(day => day.value);
+        vm.form.day_of_week = vm.days.filter(day => day.isChecked).map(day => day.value);
     },
 
     switchForm: (): void => {
         if (!vm.form.id) {
             if (vm.typeExemptionSelected.type === EXEMPTION_TYPE.RECURSIVE) {
                 vm.form.timeSlot = {endHour: "", id: "", name: "", startHour: ""};
+                vm.form.isRecursiveMode = true;
             } else {
-                vm.form.timeSlot = null
+                vm.form.timeSlot = null;
+                vm.form.isRecursiveMode = false;
             }
         }
     },
 
     selectTimeSlot: (): void => {
-        vm.form.startDateRecursive = DateUtils.getDateFormat(new Date(vm.form.startDate), DateUtils.getTimeFormatDate(vm.form.timeSlot.startHour));
-        vm.form.endDateRecursive = DateUtils.getDateFormat(new Date(vm.form.endDate), DateUtils.getTimeFormatDate(vm.form.timeSlot.endHour));
-        console.log("form: ", vm.form);
+        let start = vm.form.timeSlot != null ? DateUtils.getDateFormat(new Date(vm.form.startDate),
+            DateUtils.getTimeFormatDate(vm.form.timeSlot.startHour)) : null;
+        let end = vm.form.timeSlot != null ? DateUtils.getDateFormat(new Date(vm.form.endDate),
+            DateUtils.getTimeFormatDate(vm.form.timeSlot.endHour)) : null;
+
+        vm.form.startDateRecursive = start;
+        vm.form.endDateRecursive = end;
     }
 };
 
@@ -208,7 +269,6 @@ export const exemptionForm = {
         init: async function () {
             this.vm = vm;
             this.vm.isCalendar = new RegExp('\#\/calendar').test(window.location.hash);
-            this.vm.structureTimeSlot = await ViescolaireService.getSlotProfile(window.structure.id);
             this.vm.days = [
                 {label: 'presences.monday', value: 'MONDAY', isChecked: false},
                 {label: 'presences.tuesday', value: 'TUESDAY', isChecked: false},
@@ -221,10 +281,11 @@ export const exemptionForm = {
             vm.safeApply = this.safeApply;
         },
         setHandler: function () {
-            this.$on(EXEMPTIONS_FORM_EVENTS.EDIT, (event, arg) => vm.editExemption(arg));
-            this.$on(SNIPLET_FORM_EVENTS.SET_PARAMS, (event, arg) => vm.setFormParams(arg));
+            this.$on(EXEMPTIONS_FORM_EVENTS.EDIT, (event: IAngularEvent, arg) => vm.editExemption(arg));
+            this.$on(SNIPLET_FORM_EVENTS.SET_PARAMS, (event: IAngularEvent, arg) => vm.setFormParams(arg));
             this.$watch(() => window.structure, async () => {
                 await vm.subjects.sync(window.structure.id);
+                this.vm.structureTimeSlot = await ViescolaireService.getSlotProfile(window.structure.id);
                 vm.safeApply();
             });
         }

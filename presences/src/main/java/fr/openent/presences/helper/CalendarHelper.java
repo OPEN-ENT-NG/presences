@@ -3,6 +3,7 @@ package fr.openent.presences.helper;
 import fr.openent.presences.common.helper.DateHelper;
 import fr.openent.presences.model.Course;
 import fr.openent.presences.model.Event.Event;
+import fr.openent.presences.model.Exemption.ExemptionView;
 import fr.openent.presences.model.Slot;
 import fr.wseduc.mongodb.MongoDb;
 import fr.wseduc.webutils.Either;
@@ -20,6 +21,7 @@ import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.time.LocalDate;
 import java.util.*;
+import java.util.stream.Collectors;
 
 import static fr.openent.presences.common.helper.DateHelper.*;
 
@@ -320,5 +322,29 @@ public class CalendarHelper {
         cal.set(Calendar.MILLISECOND, 0);
 
         return cal;
+    }
+
+    public static Boolean isExemptionRecursiveExempted(Course course, List<ExemptionView> exemptionView) {
+        List<ExemptionView> exemptionsNoSubject = exemptionView.stream()
+                .filter(exemption -> exemption.getSubjectId() == null || exemption.getSubjectId().isEmpty())
+                .collect(Collectors.toList());
+        if (exemptionsNoSubject.isEmpty()) {
+            return false;
+        }
+        try {
+            for (ExemptionView exemptionNoSubject : exemptionsNoSubject) {
+                if (DateHelper.isBetween(course.getStartDate(), course.getEndDate(),
+                        exemptionNoSubject.getStartDate(), exemptionNoSubject.getEndDate(),
+                        DateHelper.MONGO_FORMAT, DateHelper.SQL_FORMAT)) {
+                    return true;
+                }
+            }
+        } catch (ParseException e) {
+            String message = "[Presences@CalendarHelper::isExemptionRecursiveExempted] " +
+                    "Failed to parse date";
+            LOGGER.error(message, e);
+            return false;
+        }
+        return false;
     }
 }

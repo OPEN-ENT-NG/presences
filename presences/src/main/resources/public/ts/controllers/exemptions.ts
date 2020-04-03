@@ -211,7 +211,9 @@ export const exemptionsController = ng.controller('ExemptionsController',
 
             $scope.$watch(() => window.structure, () => {
                 if ($route.current.action === "exemptions") {
-                    initData();
+                    if ('structure' in window) {
+                        initData();
+                    }
                 } else {
                     $scope.redirectTo('/exemptions');
                 }

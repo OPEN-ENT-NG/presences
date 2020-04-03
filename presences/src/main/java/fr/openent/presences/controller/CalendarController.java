@@ -7,6 +7,7 @@ import fr.openent.presences.common.service.impl.DefaultGroupService;
 import fr.openent.presences.common.viescolaire.Viescolaire;
 import fr.openent.presences.helper.*;
 import fr.openent.presences.model.Course;
+import fr.openent.presences.model.Exemption.ExemptionView;
 import fr.openent.presences.model.Slot;
 import fr.openent.presences.service.AbsenceService;
 import fr.openent.presences.service.EventService;
@@ -106,6 +107,7 @@ public class CalendarController extends ControllerHelper {
                             JsonArray subjectList = subjectsFuture.result();
                             JsonArray events = eventsFuture.result();
                             JsonObject exemptionsMap = MapHelper.transformToMapMultiple(exemptionsFuture.result(), "subject_id");
+                            List<ExemptionView> exemptionView = ExemptionHelper.getExemptionListFromJsonArray(exemptionsFuture.result());
                             JsonObject subjectMap = MapHelper.transformToMap(subjectList, "id");
                             JsonArray incidents = incidentsFuture.result();
                             JsonArray absents = absentFuture.result();
@@ -150,6 +152,8 @@ public class CalendarController extends ControllerHelper {
                                     } else {
                                         course.setExempted(false);
                                     }
+                                } else {
+                                    course.setExempted(CalendarHelper.isExemptionRecursiveExempted(course, exemptionView));
                                 }
 
                                 JsonObject incident = CalendarHelper.incident(course, incidents);

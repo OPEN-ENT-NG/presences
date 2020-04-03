@@ -678,7 +678,7 @@ export const registersController = ng.controller('RegistersController',
                     return !model.me.hasWorkflow(rights.workflow.managePresences);
                 }
 
-                if (student.exempted_subjectId === vm.register.subject_id) {
+                if (student.exempted_subjectId === vm.register.subject_id || student.exemption_recursive_id != null) {
                     if (student.exempted && !student.exemption_attendance) {
                         return true;
                     }

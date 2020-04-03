@@ -4,42 +4,53 @@ import {DateUtils} from "@common/utils";
 import {ITimeSlot, LoadingCollection} from "@common/model";
 import {_, moment} from "entcore";
 
-export interface Exemption {
-    id: string;
-    studentId: string;
-    structureId: string;
-    subjectId: string;
-    startDate: Date;
-    endDate: Date;
-    comment: string;
-    attendance: boolean;
+export class ExemptionView {
+    exemption_id?: number;
+    exemption_recursive_id?: number;
+    start_date?: string;
+    end_date?: string;
     isEveryTwoWeeks?: boolean;
-    students: any;
-    subject: any;
+    is_every_two_weeks?: boolean;
+    structure_id?: string;
+    student?: any;
+    student_id?: string;
+    subject_id?: string;
+    recursive_id?: number;
     timeSlot?: ITimeSlot;
+    day_of_week?: Array<string>;
     dayOfWeek?: Array<string>;
     startDateRecursive?: string;
     endDateRecursive?: string;
+    isRecursiveMode?: boolean;
 }
 
-export class Exemption {
+export interface IExemption extends ExemptionView {
     id: string;
     studentId: string;
     structureId: string;
     subjectId: string;
-    startDate: Date;
-    endDate: Date;
+    startDate: any;
+    endDate: any;
     comment: string;
     attendance: boolean;
-    isEveryTwoWeeks?: boolean;
+    students?: any;
+    subject: any;
+}
+
+export class Exemption extends ExemptionView {
+    id: string;
+    studentId: string;
+    structureId: string;
+    subjectId: string;
+    startDate: any;
+    endDate: any;
+    comment: string;
+    attendance: boolean;
     students: any;
     subject: any;
-    timeSlot?: ITimeSlot;
-    dayOfWeek?: Array<string>;
-    startDateRecursive?: string;
-    endDateRecursive?: string;
 
     constructor(structureId, form?) {
+        super();
         this.structureId = structureId;
         this.startDate = new Date();
         this.endDate = DateUtils.add(new Date(), 7, "d");
@@ -47,26 +58,35 @@ export class Exemption {
         this.attendance = false;
         this.students = null;
         if (form == true) {
+            this.isRecursiveMode = false;
             this.students = [];
         }
     }
 
+    static loadData(exemptions: Array<Exemption>): Array<IExemption> {
+        let dataModel: Array<IExemption> = [];
+        exemptions.map(exemption => exemption.student.displayName = exemption.student.lastName + " " + exemption.student.firstName);
+        exemptions.forEach((exemption: IExemption) => {
 
-    static loadData(data: any[]) {
-        let dataModel = [];
-        data.forEach(i => {
-            dataModel.push({
-                id: i.id ? i.id : null,
-                studentId: i.student_id,
-                structureId: i.structure_id,
-                subjectId: i.subject_id,
-                startDate: i.start_date,
-                endDate: i.end_date,
-                comment: i.comment,
-                attendance: i.attendance,
-                student: i.student,
-                subject: i.subject
-            });
+            let exemptionElement: IExemption = {
+                id: exemption.id ? exemption.id : null,
+                exemption_id: exemption.exemption_id ? exemption.exemption_id : null,
+                exemption_recursive_id: exemption.exemption_recursive_id ? exemption.exemption_recursive_id : null,
+                studentId: exemption.student_id,
+                structureId: exemption.structure_id,
+                subjectId: exemption.subject_id,
+                startDate: exemption.start_date,
+                endDate: exemption.end_date,
+                comment: exemption.comment,
+                attendance: exemption.attendance,
+                recursive_id: exemption.recursive_id,
+                student: exemption.student,
+                subject: exemption.subject,
+                isEveryTwoWeeks: exemption.is_every_two_weeks,
+                day_of_week: exemption.day_of_week
+            } as IExemption;
+
+            dataModel.push(exemptionElement);
         });
         return dataModel;
     };
@@ -86,19 +106,21 @@ export class Exemption {
         } else {
             exemp["student_id"] = this.studentId;
         }
-        if (this.timeSlot) {
-            exemp["isEveryTwoWeeks"] = this.isEveryTwoWeeks;
+        if (this.timeSlot || this.isRecursiveMode || this.exemption_recursive_id) {
+            exemp["is_recursive"] = this.isRecursiveMode = true;
+            exemp["is_every_two_weeks"] = this.isEveryTwoWeeks;
             exemp["startDateRecursive"] = this.startDateRecursive;
             exemp["endDateRecursive"] = this.endDateRecursive;
-            exemp["dayOfWeek"] = this.dayOfWeek;
+            exemp["day_of_week"] = this.day_of_week;
         }
+        console.log("exemp: ", exemp);
         return exemp;
     };
 
     isValidOnForm() {
         let startDate = moment(this.startDate).format('YYYY-MM-DD');
         let endDate = moment(this.endDate).format('YYYY-MM-DD');
-        let isPonctualFormValid = startDate
+        let isPunctualFormValid = startDate
             && endDate
             && this.subject
             && this.structureId
@@ -110,26 +132,31 @@ export class Exemption {
             && this.structureId
             && this.students
             && this.students.length
+            && (this.day_of_week && this.day_of_week.length > 0)
             && (this.startDateRecursive && this.endDateRecursive)
             && startDate <= endDate;
-        return this.timeSlot ? isRecursiveFormValid : isPonctualFormValid;
+        return this.isRecursiveMode ? isRecursiveFormValid : isPunctualFormValid;
     };
 
     async save(structure?: string, start_date?: string, end_date?: string, students?: string[], audiences?: string[]) {
-        if (this.id) {
-            let url = `/presences/exemption/${this.id}`;
-            console.log('toJson: ', this.toJson());
-            // return http.put(url, this.toJson());
+        if (this.exemption_id || this.exemption_recursive_id) {
+            let id: number = this.exemption_id || this.exemption_recursive_id;
+            let url = `/presences/exemption/${id}`;
+            return http.put(url, this.toJson());
         } else {
             let url = `/presences/exemptions`;
-            console.log('toJson: ', this.toJson());
-            // return http.post(url, this.toJson());
+            return http.post(url, this.toJson());
         }
     }
 
     async delete(structure?: string, start_date?: string, end_date?: string, students?: string[], audiences?: string[]) {
-        let url = `/presences/exemption?id=${this.id}`;
-        return await http.delete(url,);
+        let url: string;
+        if (this.exemption_id) {
+            url = `/presences/exemption?id=${this.exemption_id}`;
+        } else {
+            url = `/presences/exemption/recursive?id=${this.exemption_recursive_id}`;
+        }
+        return http.delete(url);
     }
 
 }
