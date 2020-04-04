@@ -335,7 +335,8 @@ public class DefaultRegisterService implements RegisterService {
                     });
                 });
                 exemptionService.getRegisterExemptions(userIds, register.getString("structure_id"), register.getString("start_date"), register.getString("end_date"), FutureHelper.handlerJsonArray(exemptionFuture));
-                getLastAbsentsStudent(register.getString("personnel_id"), id, FutureHelper.handlerJsonArray(lastAbsentsFuture));
+                getLastAbsentsStudent(register.getString("personnel_id"), register.getString("course_id"), id,
+                        FutureHelper.handlerJsonArray(lastAbsentsFuture));
                 notebookService.get(userIds, day, day, FutureHelper.handlerJsonArray(forgottenNotebookFuture));
                 getGroupsName(groups, FutureHelper.handlerJsonArray(groupsNameFuture));
                 getCourseTeachers(register.getString("course_id"), FutureHelper.handlerJsonArray(teachersFuture));
@@ -601,11 +602,12 @@ public class DefaultRegisterService implements RegisterService {
         });
     }
 
-    private void getLastAbsentsStudent(String personnelId, Integer registerIdentifier, Handler<Either<String, JsonArray>> handler) {
+    private void getLastAbsentsStudent(String personnelId, String course_id, Integer registerIdentifier, Handler<Either<String, JsonArray>> handler) {
         String query = "WITH previous_register as (SELECT register.id as id " +
                 "FROM presences.register " +
                 "INNER JOIN presences.rel_group_register ON (register.id = rel_group_register.register_id) " +
                 "WHERE register.personnel_id = ? " +
+                "AND register.course_id = ? " +
                 "AND rel_group_register.group_id IN ( " +
                 "SELECT group_id " +
                 "FROM presences.register " +
@@ -621,6 +623,7 @@ public class DefaultRegisterService implements RegisterService {
 
         JsonArray params = new JsonArray()
                 .add(personnelId)
+                .add(course_id)
                 .add(registerIdentifier)
                 .add(registerIdentifier)
                 .add(EventType.ABSENCE.getType());

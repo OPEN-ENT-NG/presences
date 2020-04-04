@@ -1,8 +1,11 @@
 <div class="forgotten-registers-widget registers" ng-controller="RegistersController as vm"
      ng-init="vm.widget.dayCourses = true;">
+    <!-- title -->
     <h2>
         <i18n>presences.widgets.day.courses</i18n>
     </h2>
+
+    <!-- tooltip define multiple slot -->
     <div class="forgotten-registers-widget-tooltip">
         <i class="help">
             <span class="tooltip-top">[[vm.tooltipMultipleSlot()]]</span>
@@ -12,6 +15,8 @@
             <label class="switch"> </label>
         </switch>
     </div>
+
+    <!-- list courses -->
     <div class="row card-slider" ng-show="vm.courses.all.length > 0">
         <div class="card cell" ng-repeat="course in vm.courses.all|orderBy:'timestamp'"
              data-ng-click="vm.openRegister(course, $event)"
@@ -44,6 +49,8 @@
             </div>
         </div>
     </div>
+
+    <!-- empty state -->
     <div class="card-slider empty" ng-show="!vm.courses.loading && vm.courses.all.length === 0">
         <div class="tick-color yellow">&nbsp;</div>
         <div class="empty-title">
