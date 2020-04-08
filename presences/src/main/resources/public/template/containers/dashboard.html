@@ -44,10 +44,15 @@
          ng-if="::hasRight('widget_forgotten_registers')" workflow="presences.widget_forgotten_registers"></div>
     <div ng-include="'/presences/public/template/widgets/statements.html'" class="vertical-spacing-six"
          ng-if="::hasRight('widget_statements')" workflow="presences.widget_statements"></div>
+
     <div ng-include="'/presences/public/template/widgets/remarks.html'" class="vertical-spacing-six"
          ng-if="::hasRight('widget_remarks')" workflow="presences.widget_remarks"></div>
+
+    <!-- day course as a teacher -->
     <div ng-include="'/presences/public/template/widgets/day_courses.html'" class="vertical-spacing-six"
-         ng-if="::hasRight('widget_day_courses')" workflow="presences.widget_day_courses"></div>
+         ng-if="::hasRight('widget_day_courses')"></div>
+
+    <!-- presence area -->
     <div ng-include="'/presences/public/template/widgets/day_presences.html'" class="vertical-spacing-six"
          ng-if="::hasRight('widget_day_presences')"></div>
 

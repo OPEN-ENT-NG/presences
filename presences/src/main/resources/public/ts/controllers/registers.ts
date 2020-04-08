@@ -20,7 +20,6 @@ import {Scope} from './main';
 import http from 'axios';
 import {EventsUtils, RegisterUtils, StudentsSearch} from "../utilities";
 import {COURSE_EVENTS} from "@common/model";
-import {IAngularEvent} from "angular";
 import {Reason} from "@presences/models/Reason";
 
 declare let window: any;
@@ -41,7 +40,7 @@ interface Filter {
 }
 
 export interface ViewModel {
-    widget: { forgottenRegisters: boolean, dayCourses: boolean, onGoingRegister: boolean };
+    widget: { forgottenRegisters: boolean };
     register: Register;
     courses: Courses;
     filter: Filter;
@@ -148,8 +147,6 @@ export const registersController = ng.controller('RegistersController',
             const vm: ViewModel = this;
             vm.widget = {
                 forgottenRegisters: false,
-                dayCourses: false,
-                onGoingRegister: false,
             };
             const actions = {
                 registers: () => {
@@ -201,8 +198,6 @@ export const registersController = ng.controller('RegistersController',
                     }
                 },
                 forgottenRegisterWidget: () => vm.loadCourses(extractSelectedTeacherIds(), extractSelectedGroupsName(), undefined, undefined, undefined, undefined, undefined, 16),
-                dayCoursesWidget: () => vm.loadCourses(extractSelectedTeacherIds(), extractSelectedGroupsName(), undefined, undefined, undefined, false),
-                onGoingRegisterWidget: () => getCurrentCourse(),
             };
 
             const addLoadCoursesPromise = (promises: Promise<void>[]) => {
@@ -212,6 +207,13 @@ export const registersController = ng.controller('RegistersController',
                             DateUtils.format(vm.filter.date, DateUtils.FORMAT["YEAR-MONTH-DAY"]), false);
                         promises.push(cp);
                     }
+                }
+            };
+
+            // Get absences reasons as personal user info
+            const getReasons = async (): Promise<void> => {
+                if (model.me.profiles.some(profile => profile === "Personnel")) {
+                    vm.reasons = await ReasonService.getReasons(window.structure.id);
                 }
             };
 
@@ -674,16 +676,7 @@ export const registersController = ng.controller('RegistersController',
             };
 
             vm.isAbsenceDisabled = function (student): boolean {
-                if (student.absence !== undefined && student.absence.counsellor_input) {
-                    return !model.me.hasWorkflow(rights.workflow.managePresences);
-                }
-
-                if (student.exempted_subjectId === vm.register.subject_id || student.exemption_recursive_id != null) {
-                    if (student.exempted && !student.exemption_attendance) {
-                        return true;
-                    }
-                }
-                return false;
+                return RegisterUtils.isAbsenceDisabled(student, vm.register);
             };
 
             vm.switchForgottenFilter = function () {
@@ -773,11 +766,6 @@ export const registersController = ng.controller('RegistersController',
                 }
             };
 
-            // Get absences reasons
-            const getReasons = async (): Promise<void> => {
-                vm.reasons = await ReasonService.getReasons(window.structure.id);
-            };
-
             function startAction() {
                 switch ($route.current.action) {
                     case 'getRegister':
@@ -788,10 +776,6 @@ export const registersController = ng.controller('RegistersController',
                     case 'dashboard': {
                         if (vm.widget.forgottenRegisters) {
                             actions.forgottenRegisterWidget();
-                        } else if (vm.widget.dayCourses) {
-                            actions.dayCoursesWidget();
-                        } else if (vm.widget.onGoingRegister) {
-                            actions.onGoingRegisterWidget();
                         }
                         break;
                     }
@@ -805,6 +789,7 @@ export const registersController = ng.controller('RegistersController',
                 console.warn(`$scope.$watch window.structure: ${newVal.id}, ${oldVal.id}`);
                 startAction();
             });
+
             $scope.$watch(() => $route.current.action, (newVal, oldVal) => {
                 if (
                     (newVal === oldVal && !(newVal === 'dashboard' && oldVal === 'dashboard'))
@@ -816,7 +801,6 @@ export const registersController = ng.controller('RegistersController',
             });
 
             startAction();
-            $scope.$on(COURSE_EVENTS.OPEN_REGISTER, (event: IAngularEvent, args) => vm.openRegister(args, null));
 
             /* Destroy */
             $scope.$on("$destroy", () => {

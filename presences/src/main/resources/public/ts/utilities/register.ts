@@ -1,7 +1,9 @@
-import {Course, Register} from "../models";
+import {Course, Register, RegisterStudent} from "../models";
+import {model} from "entcore";
+import rights from "../rights";
 
 export class RegisterUtils {
-    
+
     static createRegisterFromCourse = function (course: Course): Register {
         const register = new Register();
         if (course.registerId) {
@@ -21,5 +23,17 @@ export class RegisterUtils {
 
         return register;
     };
+
+    static isAbsenceDisabled = function (student: RegisterStudent, register: Register): boolean {
+        if (student.absence !== undefined && student.absence.counsellor_input) {
+            return !model.me.hasWorkflow(rights.workflow.managePresences);
+        }
+        if (student.exempted_subjectId === register.subject_id || student.exemption_recursive_id != null) {
+            if (student.exempted && !student.exemption_attendance) {
+                return true;
+            }
+        }
+        return false;
+    }
 
 }

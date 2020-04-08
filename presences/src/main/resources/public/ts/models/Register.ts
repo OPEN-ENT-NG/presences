@@ -4,7 +4,7 @@ import {Mix} from 'entcore-toolkit'
 import {Event, EventType, Remark} from './index'
 import {LoadingCollection} from "@common/model"
 
-interface Student {
+export interface RegisterStudent {
     id: string,
     name: string,
     group: string,
@@ -15,6 +15,10 @@ interface Student {
     departure?: Event;
     lateness?: Event,
     remark?: Event,
+    exempted?: boolean;
+    exemption_attendance?: boolean;
+    exempted_subjectId?: string;
+    exemption_recursive_id?: number;
     birth_date: string
 }
 
@@ -41,7 +45,7 @@ export interface Register {
     groupMap?: any;
     notified: boolean;
     splitSlot: boolean;
-    students: Student[];
+    students: RegisterStudent[];
     teachers: Teacher[];
 }
 

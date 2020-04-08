@@ -8,4 +8,4 @@ export * from './calendar';
 export * from './registry';
 export * from './alerts';
 export * from './presences';
-export * from './absences';
+export * from './widgets';

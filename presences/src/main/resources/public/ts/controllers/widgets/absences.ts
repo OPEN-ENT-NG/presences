@@ -1,6 +1,6 @@
 import {_, moment, ng, notify} from 'entcore';
-import {AbsenceService, ReasonService} from '../services';
-import {CounsellorAbsence, Reason, Student, Students} from '../models';
+import {AbsenceService, ReasonService} from '../../services';
+import {CounsellorAbsence, Reason, Student, Students} from '../../models';
 import {DateUtils} from '@common/utils/date';
 
 interface ViewModel {
