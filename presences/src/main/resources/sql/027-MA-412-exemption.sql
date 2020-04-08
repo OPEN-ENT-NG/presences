@@ -1,4 +1,4 @@
-DROP TABLE presences.exemption_recursive CASCADE;
+DROP TABLE IF EXISTS presences.exemption_recursive CASCADE;
 ALTER TABLE presences.exemption DROP COLUMN IF EXISTS recursive_id;
 DROP VIEW IF EXISTS presences.exemption_view;
 
