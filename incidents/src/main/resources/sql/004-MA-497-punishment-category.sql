@@ -1,5 +1,6 @@
 ALTER TABLE incidents.punishment_type DROP periode_required;
 ALTER TABLE incidents.punishment_type ADD punishment_category_id bigint NOT NULL;
+ALTER TABLE incidents.punishment_type ADD COLUMN hidden boolean NOT NULL DEFAULT false;
 
 CREATE TABLE incidents.punishment_category (
 	id bigserial,

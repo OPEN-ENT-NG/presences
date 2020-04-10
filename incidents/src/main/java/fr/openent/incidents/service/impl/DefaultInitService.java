@@ -117,20 +117,20 @@ public class DefaultInitService implements InitService {
 
         List<PunishmentType> punishmentTypeList = new ArrayList();
 
-        punishmentTypeList.add(new PunishmentType(structure, "Devoir supplémentaire", "punition", 1));
-        punishmentTypeList.add(new PunishmentType(structure, "Retenue", "punition", 2));
-        punishmentTypeList.add(new PunishmentType(structure, "Exclusion de cours", "punition", 3));
-        punishmentTypeList.add(new PunishmentType(structure, "Avertissement", "sanction", 3));
-        punishmentTypeList.add(new PunishmentType(structure, "Blâme", "sanction", 3));
-        punishmentTypeList.add(new PunishmentType(structure, "Mesure de responsabilisation", "sanction", 4));
-        punishmentTypeList.add(new PunishmentType(structure, "Exclusion temporaire", "sanction", 4));
-        punishmentTypeList.add(new PunishmentType(structure, "Exclusion définitive", "sanction", 4));
+        punishmentTypeList.add(new PunishmentType(structure, "Devoir supplémentaire", "PUNITION", 1, false));
+        punishmentTypeList.add(new PunishmentType(structure, "Retenue", "PUNITION", 2, false));
+        punishmentTypeList.add(new PunishmentType(structure, "Exclusion de cours", "PUNITION", 3, false));
+        punishmentTypeList.add(new PunishmentType(structure, "Avertissement", "SANCTION", 3, false));
+        punishmentTypeList.add(new PunishmentType(structure, "Blâme", "SANCTION", 3, false));
+        punishmentTypeList.add(new PunishmentType(structure, "Mesure de responsabilisation", "SANCTION", 4, false));
+        punishmentTypeList.add(new PunishmentType(structure, "Exclusion temporaire", "SANCTION", 4, false));
+        punishmentTypeList.add(new PunishmentType(structure, "Exclusion définitive", "SANCTION", 4, false));
 
         JsonArray params = new JsonArray();
 
-        String query = "INSERT INTO " + Incidents.dbSchema + ".punishment_type(structure_id, label, type, punishment_category_id) VALUES ";
+        String query = "INSERT INTO " + Incidents.dbSchema + ".punishment_type(structure_id, label, type, punishment_category_id, hidden) VALUES ";
         for (PunishmentType punishmentType : punishmentTypeList) {
-            query += "(?, ?, ?, ?),";
+            query += "(?, ?, ?, ?, false),";
             params.add(punishmentType.getStructureId())
                     .add(punishmentType.getLabel())
                     .add(punishmentType.getType())

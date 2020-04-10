@@ -37,4 +37,10 @@ public class Actions {
     public static final String INCIDENT_SERIOUSNESS_UPDATE = "INCIDENT_SERIOUSNESS_UPDATE";
     // A user deletes an incident seriousness
     public static final String INCIDENT_SERIOUSNESS_DELETION = "INCIDENT_SERIOUSNESS_DELETION";
+    // A user creates a punishemnt_type
+    public static final String INCIDENT_PUNISHMENT_TYPE_CREATION = "INCIDENT_PUNISHMENT_TYPE_CREATION";
+    // A user updates a punishemnt_type
+    public static final String INCIDENT_PUNISHMENT_TYPE_UPDATE = "INCIDENT_PUNISHMENT_TYPE_UPDATE";
+    // A user deletes a punishemnt_type
+    public static final String INCIDENT_PUNISHMENT_TYPE_DELETE = "INCIDENT_PUNISHMENT_TYPE_DELETE";
 }
