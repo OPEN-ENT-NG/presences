@@ -21,3 +21,8 @@ export interface ITimeSlot {
     id: string;
     _id?: string;
 }
+
+export enum TimeSlotHourPeriod {
+    START_HOUR = 'startHour',
+    END_HOUR = 'endHour'
+}

@@ -144,9 +144,10 @@
                         <i18n>presences.by</i18n>&#58;
                         <label class="timeslot-select">
                             <i class="time-picker"></i>
-                            <select data-ng-model="vm.form.timeSlot"
-                                    data-ng-change="vm.selectTimeSlot()"
-                                    ng-options="item.name + ' : ' + item.startHour for item in vm.structureTimeSlot.slots | orderBy:'startHour'">
+                            <select data-ng-model="vm.form.timeSlotTimePeriod.start"
+                                    data-ng-change="vm.selectTimeSlot(vm.timeSlotHourPeriod.START_HOUR)"
+                                    ng-options="item.name + ' : ' + item.startHour for item in vm.structureTimeSlot.slots
+                                    | orderBy:vm.timeSlotHourPeriod.START_HOUR">
                                 <option value="">[[lang.translate('presences.pick.timeslot')]]</option>
                             </select>
                         </label>
@@ -154,9 +155,10 @@
                         <i18n>presences.at</i18n>&#58;
                         <label class="timeslot-select">
                             <i class="time-picker"></i>
-                            <select data-ng-model="vm.form.timeSlot"
-                                    data-ng-change="vm.selectTimeSlot()"
-                                    ng-options="item.name + ' : ' + item.endHour for item in vm.structureTimeSlot.slots | orderBy:'endHour'">
+                            <select data-ng-model="vm.form.timeSlotTimePeriod.end"
+                                    data-ng-change="vm.selectTimeSlot(vm.timeSlotHourPeriod.END_HOUR)"
+                                    ng-options="item.name + ' : ' + item.endHour for item in vm.structureTimeSlot.slots
+                                    | orderBy:vm.timeSlotHourPeriod.END_HOUR">
                                 <option value="">[[lang.translate('presences.pick.timeslot')]]</option>
                             </select>
                         </label>

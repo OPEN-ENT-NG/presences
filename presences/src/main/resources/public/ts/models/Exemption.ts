@@ -16,7 +16,10 @@ export class ExemptionView {
     student_id?: string;
     subject_id?: string;
     recursive_id?: number;
-    timeSlot?: ITimeSlot;
+    timeSlotTimePeriod?: {
+        start: ITimeSlot;
+        end: ITimeSlot;
+    };
     day_of_week?: Array<string>;
     dayOfWeek?: Array<string>;
     startDateRecursive?: string;
@@ -106,14 +109,13 @@ export class Exemption extends ExemptionView {
         } else {
             exemp["student_id"] = this.studentId;
         }
-        if (this.timeSlot || this.isRecursiveMode || this.exemption_recursive_id) {
+        if (this.timeSlotTimePeriod || this.isRecursiveMode || this.exemption_recursive_id) {
             exemp["is_recursive"] = this.isRecursiveMode = true;
             exemp["is_every_two_weeks"] = this.isEveryTwoWeeks;
             exemp["startDateRecursive"] = this.startDateRecursive;
             exemp["endDateRecursive"] = this.endDateRecursive;
             exemp["day_of_week"] = this.day_of_week;
         }
-        console.log("exemp: ", exemp);
         return exemp;
     };
 
@@ -133,7 +135,7 @@ export class Exemption extends ExemptionView {
             && this.students
             && this.students.length
             && (this.day_of_week && this.day_of_week.length > 0)
-            && (this.startDateRecursive && this.endDateRecursive)
+            && ((this.startDateRecursive && this.endDateRecursive) && (this.startDateRecursive <= this.endDateRecursive))
             && startDate <= endDate;
         return this.isRecursiveMode ? isRecursiveFormValid : isPunctualFormValid;
     };

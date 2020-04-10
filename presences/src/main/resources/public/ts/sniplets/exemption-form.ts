@@ -1,5 +1,5 @@
 import {_, idiom as lang, model, moment, toasts} from 'entcore';
-import {Exemption, IStructureSlot, ITimeSlot, Student, Students, Subjects} from '../models';
+import {Exemption, IStructureSlot, ITimeSlot, Student, Students, Subjects, TimeSlotHourPeriod} from '../models';
 import rights from "../rights";
 import {SNIPLET_FORM_EMIT_EVENTS, SNIPLET_FORM_EVENTS} from '@common/model'
 import {DateUtils} from "@common/utils";
@@ -33,6 +33,7 @@ interface ViewModel {
     typeExemptionSelect: Array<{ label: string, type: string }>;
     typeExemptionSelected: { label: string, type: string };
     structureTimeSlot: IStructureSlot;
+    timeSlotHourPeriod: any;
 
     createExemption(): void;
 
@@ -68,7 +69,7 @@ interface ViewModel {
 
     switchForm(): void;
 
-    selectTimeSlot(): void;
+    selectTimeSlot(hourPeriod: TimeSlotHourPeriod): void;
 }
 
 const vm: ViewModel = {
@@ -87,6 +88,7 @@ const vm: ViewModel = {
         {label: lang.translate('presences.exemptions.punctual'), type: EXEMPTION_TYPE.PUNCTUAL},
         {label: lang.translate('presences.exemptions.recursive'), type: EXEMPTION_TYPE.RECURSIVE}
     ],
+    timeSlotHourPeriod: TimeSlotHourPeriod,
     typeExemptionSelected: null,
     structureTimeSlot: {} as IStructureSlot,
 
@@ -160,9 +162,7 @@ const vm: ViewModel = {
     },
 
     editFormRecursive: () => {
-        vm.form.subject = {
-            id: ''
-        };
+        vm.form.subject = {id: ''};
         vm.typeExemptionSelected = vm.typeExemptionSelect[1];
         vm.days.forEach(day => {
             vm.form.day_of_week.forEach((dayOfWeek: string) => {
@@ -173,19 +173,23 @@ const vm: ViewModel = {
         });
         vm.setRecursiveTimeSlot();
         vm.form.startDateRecursive = DateUtils.getDateFormat(new Date(vm.form.startDate),
-            DateUtils.getTimeFormatDate(vm.form.timeSlot.startHour));
+            DateUtils.getTimeFormatDate(vm.form.timeSlotTimePeriod.start.startHour));
         vm.form.endDateRecursive = DateUtils.getDateFormat(new Date(vm.form.endDate),
-            DateUtils.getTimeFormatDate(vm.form.timeSlot.endHour));
+            DateUtils.getTimeFormatDate(vm.form.timeSlotTimePeriod.end.endHour));
     },
 
     setRecursiveTimeSlot: () => {
         let start = DateUtils.format(vm.form.startDate, DateUtils.FORMAT["HOUR-MINUTES"]);
         let end = DateUtils.format(vm.form.endDate, DateUtils.FORMAT["HOUR-MINUTES"]);
+        vm.form.timeSlotTimePeriod = {start, end: {endHour: "", id: "", name: "", startHour: ""}};
         vm.structureTimeSlot.slots.forEach((slot: ITimeSlot) => {
-            if (slot.startHour === start && slot.endHour === end) {
-                vm.form.timeSlot = slot;
-                return;
+            if (slot.startHour === start) {
+                vm.form.timeSlotTimePeriod.start = slot;
             }
+            if (slot.endHour === end) {
+                vm.form.timeSlotTimePeriod.end = slot;
+            }
+            if (vm.form.timeSlotTimePeriod.start && vm.form.timeSlotTimePeriod.end) return;
         });
     },
 
@@ -241,23 +245,33 @@ const vm: ViewModel = {
     switchForm: (): void => {
         if (!vm.form.id) {
             if (vm.typeExemptionSelected.type === EXEMPTION_TYPE.RECURSIVE) {
-                vm.form.timeSlot = {endHour: "", id: "", name: "", startHour: ""};
+                vm.form.timeSlotTimePeriod = {
+                    start: {endHour: "", id: "", name: "", startHour: ""},
+                    end: {endHour: "", id: "", name: "", startHour: ""}
+                };
                 vm.form.isRecursiveMode = true;
             } else {
-                vm.form.timeSlot = null;
+                vm.form.timeSlotTimePeriod = null;
                 vm.form.isRecursiveMode = false;
             }
         }
     },
 
-    selectTimeSlot: (): void => {
-        let start = vm.form.timeSlot != null ? DateUtils.getDateFormat(new Date(vm.form.startDate),
-            DateUtils.getTimeFormatDate(vm.form.timeSlot.startHour)) : null;
-        let end = vm.form.timeSlot != null ? DateUtils.getDateFormat(new Date(vm.form.endDate),
-            DateUtils.getTimeFormatDate(vm.form.timeSlot.endHour)) : null;
-
-        vm.form.startDateRecursive = start;
-        vm.form.endDateRecursive = end;
+    selectTimeSlot: (hourPeriod: TimeSlotHourPeriod): void => {
+        switch (hourPeriod) {
+            case TimeSlotHourPeriod.START_HOUR:
+                let start = vm.form.timeSlotTimePeriod.start != null ? DateUtils.getDateFormat(new Date(vm.form.startDate),
+                    DateUtils.getTimeFormatDate(vm.form.timeSlotTimePeriod.start.startHour)) : null;
+                vm.form.startDateRecursive = start;
+                break;
+            case TimeSlotHourPeriod.END_HOUR:
+                let end = vm.form.timeSlotTimePeriod.end != null ? DateUtils.getDateFormat(new Date(vm.form.endDate),
+                    DateUtils.getTimeFormatDate(vm.form.timeSlotTimePeriod.end.endHour)) : null;
+                vm.form.endDateRecursive = end;
+                break;
+            default:
+                return;
+        }
     }
 };
 
