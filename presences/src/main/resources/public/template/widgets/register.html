@@ -1,6 +1,6 @@
 <div class="registers register-widget height-100" ng-controller="SideRegisterController as vm">
 
-    <div class="height-100" ng-if="vm.register !== undefined">
+    <div class="height-100" ng-if="!vm.isEmpty()">
 
         <!-- Search bar -->
         <div class="search-field">
@@ -43,7 +43,7 @@
     </div>
 
     <!-- empty state -->
-    <div class="empty-state" ng-if="vm.register === undefined">
+    <div class="empty-state" ng-if="vm.isEmpty()">
         <div class="tick-color red">&nbsp;</div>
         <div class="empty-title">
             <i18n>presences.register.empty.state</i18n>

@@ -17,6 +17,8 @@ interface ViewModel {
 
     validRegister(): Promise<void>;
 
+    isEmpty(): boolean;
+
     openRegister(course: Course): void;
 }
 
@@ -27,7 +29,7 @@ export const sideRegisterController = ng.controller('SideRegisterController', ['
         const vm: ViewModel = this;
 
         vm.courses = new Courses();
-        vm.register = new Register();
+        vm.register = undefined;
         vm.RegisterStatus = RegisterStatus;
 
         vm.load = async function (): Promise<void> {
@@ -80,6 +82,7 @@ export const sideRegisterController = ng.controller('SideRegisterController', ['
                             await vm.register.sync();
                             currentCourse.registerId = vm.register.id;
                             $scope.$emit(COURSE_EVENTS.SEND_COURSE, currentCourse);
+                            $scope.safeApply();
                         });
                     } else {
                         await vm.register.sync();
@@ -88,6 +91,10 @@ export const sideRegisterController = ng.controller('SideRegisterController', ['
                 }
             }
         }
+
+        vm.isEmpty = function (): boolean {
+            return vm.register === undefined;
+        };
 
         async function toggleEvent(student, event, start_date, end_date) {
             if (student[event]) {
