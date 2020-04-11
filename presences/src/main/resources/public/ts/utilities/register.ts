@@ -34,6 +34,24 @@ export class RegisterUtils {
             }
         }
         return false;
+    };
+
+    static initCourseToFilter = function (): Course {
+        return {
+            classes: [],
+            dayOfWeek: 0,
+            endDate: "",
+            groups: [],
+            id: "",
+            notified: false,
+            roomLabels: [],
+            splitSlot: false,
+            startDate: "",
+            structureId: "",
+            subjectId: "",
+            subjectName: "",
+            teachers: []
+        }
     }
 
 }

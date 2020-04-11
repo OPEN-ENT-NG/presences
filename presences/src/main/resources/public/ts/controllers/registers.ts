@@ -141,8 +141,8 @@ export interface ViewModel {
 }
 
 export const registersController = ng.controller('RegistersController',
-    ['$scope', '$route', '$rootScope', 'SearchService', 'GroupService', 'ReasonService',
-        async function ($scope: Scope, $route, $rootScope,
+    ['$scope', '$route', '$location', '$rootScope', 'SearchService', 'GroupService', 'ReasonService',
+        async function ($scope: Scope, $route, $location, $rootScope,
                         SearchService: SearchService, GroupService: GroupService, ReasonService: ReasonService) {
             const vm: ViewModel = this;
             vm.widget = {
@@ -174,6 +174,7 @@ export const registersController = ng.controller('RegistersController',
                     if ('filter' in window && window.filter) {
                         vm.filter = {...vm.filter, ...window.filter};
                     }
+                    vm.filter.course = RegisterUtils.initCourseToFilter();
                     template.open('register', 'register/list-view');
                     template.open('register-panel', 'register/panel');
                     getReasons();
@@ -188,13 +189,8 @@ export const registersController = ng.controller('RegistersController',
                         vm.register.id = id;
                         vm.register.eventer.once('loading::true', () => $scope.safeApply());
                         vm.register.eventer.once('loading::false', () => $scope.safeApply());
-                        let promises = [vm.register.sync()];
-                        if (vm.filter.selected.registerTeacher) {
-                            if (vm.register.teachers.length > 0 && _.countBy(vm.register.teachers, (teacher) => teacher.id === vm.filter.selected.registerTeacher.id) === 0)
-                                vm.filter.selected.registerTeacher = vm.register.teachers[0];
-                        }
-                        addLoadCoursesPromise(promises);
-                        await Promise.all(promises);
+                        await vm.register.sync();
+                        await initCourses();
                     }
                 },
                 forgottenRegisterWidget: () => vm.loadCourses(extractSelectedTeacherIds(), extractSelectedGroupsName(), undefined, undefined, undefined, undefined, undefined, 16),
@@ -208,6 +204,20 @@ export const registersController = ng.controller('RegistersController',
                         promises.push(cp);
                     }
                 }
+            };
+
+            const initCourses = async () => {
+                if (!vm.register.teachers) return;
+                vm.register.teachers.forEach(teacher =>
+                    vm.filter.course.teachers.push({id: teacher.id, displayName: teacher.displayName})
+                );
+                if (vm.filter.selected.registerTeacher) {
+                    if (vm.register.teachers.length > 0 && _.countBy(vm.register.teachers, (teacher) => teacher.id === vm.filter.selected.registerTeacher.id) === 0)
+                        vm.filter.selected.registerTeacher = vm.register.teachers[0];
+                }
+                await vm.loadCourses([vm.filter.course.teachers[0].id], [], window.structure.id, DateUtils.format(vm.filter.date, DateUtils.FORMAT["YEAR-MONTH-DAY"]),
+                    DateUtils.format(vm.filter.date, DateUtils.FORMAT["YEAR-MONTH-DAY"]), false);
+                $scope.safeApply();
             };
 
             // Get absences reasons as personal user info
@@ -416,6 +426,7 @@ export const registersController = ng.controller('RegistersController',
                     $scope.redirectTo(`/registers/${vm.register.id}`);
                     $scope.safeApply();
                 } else {
+                    if (vm.register.id) window.location.hash = window.location.hash.replace($route.current.params.id, vm.register.id);
                     vm.register.eventer.on('loading::true', () => $scope.safeApply());
                     vm.register.eventer.on('loading::false', () => $scope.safeApply());
                     await vm.register.sync();

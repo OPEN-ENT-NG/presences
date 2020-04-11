@@ -222,7 +222,7 @@ public class DefaultRegisterService implements RegisterService {
 
     @Override
     public void get(Integer id, Handler<Either<String, JsonObject>> handler) {
-        String query = "SELECT personnel_id, proof_id, course_id, notified, subject_id, start_date, end_date, structure_id, counsellor_input, state_id, json_agg(\"group\".*) as groups " +
+        String query = "SELECT personnel_id, proof_id, course_id, owner, notified, subject_id, start_date, end_date, structure_id, counsellor_input, state_id, json_agg(\"group\".*) as groups " +
                 "FROM " + Presences.dbSchema + ".register " +
                 "INNER JOIN " + Presences.dbSchema + ".rel_group_register ON (register.id = rel_group_register.register_id) " +
                 "INNER JOIN " + Presences.dbSchema + ".\"group\" ON (rel_group_register.group_id = \"group\".id) " +
@@ -335,7 +335,8 @@ public class DefaultRegisterService implements RegisterService {
                     });
                 });
                 exemptionService.getRegisterExemptions(userIds, register.getString("structure_id"), register.getString("start_date"), register.getString("end_date"), FutureHelper.handlerJsonArray(exemptionFuture));
-                getLastAbsentsStudent(register.getString("personnel_id"), register.getString("course_id"), id,
+                getLastAbsentsStudent(register.getString("personnel_id"), register.getString("subject_id"),
+                        register.getString("owner"), day, id,
                         FutureHelper.handlerJsonArray(lastAbsentsFuture));
                 notebookService.get(userIds, day, day, FutureHelper.handlerJsonArray(forgottenNotebookFuture));
                 getGroupsName(groups, FutureHelper.handlerJsonArray(groupsNameFuture));
@@ -602,30 +603,31 @@ public class DefaultRegisterService implements RegisterService {
         });
     }
 
-    private void getLastAbsentsStudent(String personnelId, String course_id, Integer registerIdentifier, Handler<Either<String, JsonArray>> handler) {
+    private void getLastAbsentsStudent(String personnelId, String subject_id, String owner, String day,
+                                       Integer registerIdentifier, Handler<Either<String, JsonArray>> handler) {
         String query = "WITH previous_register as (SELECT register.id as id " +
                 "FROM presences.register " +
                 "INNER JOIN presences.rel_group_register ON (register.id = rel_group_register.register_id) " +
-                "WHERE register.personnel_id = ? " +
-                "AND register.course_id = ? " +
+                "WHERE (register.personnel_id = ? OR register.owner = ?)" +
+                "AND register.subject_id = ? " +
                 "AND rel_group_register.group_id IN ( " +
                 "SELECT group_id " +
                 "FROM presences.register " +
                 "INNER JOIN presences.rel_group_register ON (register.id = rel_group_register.register_id) " +
                 "WHERE register.id = ?) " +
-                "AND register.id < ? " +
-                "ORDER BY start_date DESC " +
-                "LIMIT 1) " +
+                "AND register.id != ? AND register.start_date < ? ORDER BY start_date DESC) " +
                 "SELECT student_id " +
                 "FROM presences.event " +
                 "INNER JOIN previous_register ON (previous_register.id = event.register_id) " +
-                "AND type_id = ?;";
+                "AND type_id = ? ORDER BY start_date DESC LIMIT 1;";
 
         JsonArray params = new JsonArray()
                 .add(personnelId)
-                .add(course_id)
+                .add(owner)
+                .add(subject_id)
                 .add(registerIdentifier)
                 .add(registerIdentifier)
+                .add(day + " 23:59:59")
                 .add(EventType.ABSENCE.getType());
 
         Sql.getInstance().prepared(query, params, SqlResult.validResultHandler(handler));
