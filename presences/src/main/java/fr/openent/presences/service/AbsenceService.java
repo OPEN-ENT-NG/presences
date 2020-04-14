@@ -56,7 +56,7 @@ public interface AbsenceService {
      * @param user        userInfo
      * @param handler     Function handler returning data
      */
-    void create(JsonObject absenceBody, UserInfos user, Handler<Either<String, JsonObject>> handler);
+    void create(JsonObject absenceBody, UserInfos user, boolean editEvents, Handler<Either<String, JsonObject>> handler);
 
     /**
      * update absence
@@ -65,7 +65,7 @@ public interface AbsenceService {
      * @param absenceBody absenceBody fetched
      * @param handler     Function handler returning data
      */
-    void update(Integer absenceId, JsonObject absenceBody, UserInfos user, Handler<Either<String, JsonObject>> handler);
+    void update(Long absenceId, JsonObject absenceBody, UserInfos user, boolean editEvents, Handler<Either<String, JsonObject>> handler);
 
     /**
      * update absence reason

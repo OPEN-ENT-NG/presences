@@ -137,7 +137,9 @@ public class EventController extends ControllerHelper {
     @Trace(Actions.EVENT_SET_REASON)
     public void changeReasonEvents(HttpServerRequest request) {
         RequestUtils.bodyToJson(request, event -> {
-            eventService.changeReasonEvents(event, DefaultResponseHandler.defaultResponseHandler(request));
+            UserUtils.getUserInfos(eb, request, user -> {
+                eventService.changeReasonEvents(event, user, DefaultResponseHandler.defaultResponseHandler(request));
+            });
         });
     }
 
@@ -148,7 +150,9 @@ public class EventController extends ControllerHelper {
     @Trace(Actions.ABSENCE_REGULARIZATION)
     public void regularizedEvents(HttpServerRequest request) {
         RequestUtils.bodyToJson(request, event -> {
-            eventService.changeRegularizedEvents(event, DefaultResponseHandler.defaultResponseHandler(request));
+            UserUtils.getUserInfos(eb, request, user -> {
+                eventService.changeRegularizedEvents(event, user, DefaultResponseHandler.defaultResponseHandler(request));
+            });
         });
     }
 

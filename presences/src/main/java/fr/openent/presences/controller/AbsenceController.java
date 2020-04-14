@@ -58,7 +58,7 @@ public class AbsenceController extends ControllerHelper {
                 return;
             }
 
-            UserUtils.getUserInfos(eb, request, user -> absenceService.create(event, user, either -> {
+            UserUtils.getUserInfos(eb, request, user -> absenceService.create(event, user, true, either -> {
                 if (either.isLeft()) {
                     log.error("[Presences@AbsenceController] failed to create absent or events", either.left().getValue());
                     renderError(request);
@@ -81,13 +81,13 @@ public class AbsenceController extends ControllerHelper {
             badRequest(request);
             return;
         }
-        Integer absenceId = Integer.parseInt(request.getParam("id"));
+        Long absenceId = Long.parseLong(request.getParam("id"));
         RequestUtils.bodyToJson(request, absence -> {
             if (!isAbsenceBodyValid(absence)) {
                 badRequest(request);
                 return;
             }
-            UserUtils.getUserInfos(eb, request, user -> absenceService.update(absenceId, absence, user, either -> {
+            UserUtils.getUserInfos(eb, request, user -> absenceService.update(absenceId, absence, user, true, either -> {
                 if (either.isLeft()) {
                     log.error("[Presences@AbsenceController] failed to update absence", either.left().getValue());
                     renderError(request);

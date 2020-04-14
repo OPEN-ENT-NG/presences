@@ -630,8 +630,8 @@ export const registersController = ng.controller('RegistersController',
                 });
             };
 
-            vm.updateAbsence = function (events) {
-                new Events().updateReason([events.id], events.reason_id);
+            vm.updateAbsence = function (events, student_id) {
+                new Events().updateReason([events.id], events.reason_id, student_id, window.structure.id);
             };
 
 

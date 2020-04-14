@@ -85,7 +85,7 @@ public interface EventService {
      * @param eventBody Event body that can contain list of id's events and its reason_id retrieved
      * @param handler   Function handler returning data
      */
-    void changeReasonEvents(JsonObject eventBody, Handler<Either<String, JsonObject>> handler);
+    void changeReasonEvents(JsonObject eventBody, UserInfos user, Handler<Either<String, JsonObject>> handler);
 
     /**
      * Update regularized for each event
@@ -93,7 +93,7 @@ public interface EventService {
      * @param event   Event body that can contain list of id's events and its reason_id retrieved
      * @param handler Function handler returning data
      */
-    void changeRegularizedEvents(JsonObject event, Handler<Either<String, JsonObject>> handler);
+    void changeRegularizedEvents(JsonObject event, UserInfos user, Handler<Either<String, JsonObject>> handler);
 
 
     /**

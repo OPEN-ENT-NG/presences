@@ -265,19 +265,21 @@ export class Events extends LoadingCollection {
         }
     }
 
-    async updateReason(arrayEventsId, reasonId): Promise<void> {
-        if (arrayEventsId.length === 0) return;
+    async updateReason(arrayEvents, reasonId, studentId, structureId): Promise<void> {
+        if (arrayEvents.length === 0) return;
         try {
-            await http.put(`/presences/events/reason`, {ids: arrayEventsId, reasonId: reasonId});
+            arrayEvents.forEach(e => delete e.$$hashKey);
+            await http.put(`/presences/events/reason`, {events: arrayEvents, reasonId: reasonId, student_id: studentId, structure_id: structureId});
         } catch (err) {
             throw err;
         }
     }
 
-    async updateRegularized(eventsId, regularized): Promise<void> {
-        if (eventsId.length === 0) return;
+    async updateRegularized(events, regularized, studentId, structureId): Promise<void> {
+        if (events.length === 0) return;
         try {
-            await http.put(`/presences/events/regularized`, {ids: eventsId, regularized: regularized});
+            events.forEach(e => delete e.$$hashKey);
+            await http.put(`/presences/events/regularized`, {events: events, regularized: regularized, student_id: studentId, structure_id: structureId});
         } catch (err) {
             throw err;
         }

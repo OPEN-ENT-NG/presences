@@ -38,10 +38,10 @@ export class EventsUtils {
         absence: 'absence'
     };
 
-    public static addEventsArray = function (item: Event, eventsId: number[]): void {
+    public static addEventsArray = function (item: Event, events: Array<Event | EventResponse>): void {
         if (item.type === EventsUtils.ALL_EVENTS.event && item.type_id === 1) {
-            if (eventsId.indexOf(item.id) === -1) {
-                eventsId.push(item.id);
+            if (events.map(event => event.id).indexOf(item.id) === -1) {
+                events.push(item);
             }
         }
     };
@@ -63,12 +63,12 @@ export class EventsUtils {
      * Method to fetch all ids in the concerned dayHistory and events
      * from one student's event.all
      */
-    public static fetchEvents(event: EventResponse, fetchedEventIds: number[]) {
+    public static fetchEvents(event: EventResponse, fetchedEvents: Array<Event | EventResponse>) {
         event.events.forEach(event => {
-            EventsUtils.addEventsArray(event, fetchedEventIds);
+            EventsUtils.addEventsArray(event, fetchedEvents);
             if ('events' in event) {
                 event.events.forEach(ee => {
-                    EventsUtils.addEventsArray(ee, fetchedEventIds);
+                    EventsUtils.addEventsArray(ee, fetchedEvents);
                 });
             }
         });

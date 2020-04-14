@@ -1,5 +1,6 @@
 package fr.openent.presences.service.impl;
 
+import com.mongodb.util.JSON;
 import fr.openent.presences.Presences;
 import fr.openent.presences.common.helper.FutureHelper;
 import fr.openent.presences.common.helper.WorkflowHelper;
@@ -15,6 +16,7 @@ import fr.openent.presences.helper.CalendarHelper;
 import fr.openent.presences.helper.EventHelper;
 import fr.openent.presences.helper.SlotHelper;
 import fr.openent.presences.model.Event.Event;
+import fr.openent.presences.model.Reason;
 import fr.openent.presences.service.AbsenceService;
 import fr.openent.presences.service.EventService;
 import fr.openent.presences.service.SettingsService;
@@ -31,8 +33,12 @@ import org.entcore.common.sql.Sql;
 import org.entcore.common.sql.SqlResult;
 import org.entcore.common.user.UserInfos;
 
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.*;
+import java.util.function.Supplier;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 public class DefaultEventService implements EventService {
 
@@ -352,7 +358,16 @@ public class DefaultEventService implements EventService {
     }
 
     @Override
-    public void changeReasonEvents(JsonObject eventBody, Handler<Either<String, JsonObject>> handler) {
+    public void changeReasonEvents(JsonObject eventBody, UserInfos user, Handler<Either<String, JsonObject>> handler) {
+        List<Event> events = new ArrayList<>();
+        List<Integer> ids = new ArrayList<>();
+        JsonArray arrayEvents = eventBody.getJsonArray("events");
+        for (int i = 0; i < arrayEvents.size(); i++) {
+            Event event = new Event(arrayEvents.getJsonObject(i), new ArrayList<>());
+            ids.add(event.getId());
+            events.add(event);
+        }
+
         JsonArray params = new JsonArray();
         String query = "UPDATE " + Presences.dbSchema + ".event SET reason_id = ? ";
         if (eventBody.getInteger("reasonId") != null) {
@@ -360,20 +375,270 @@ public class DefaultEventService implements EventService {
         } else {
             params.addNull();
         }
-        query += " WHERE id IN " + Sql.listPrepared(eventBody.getJsonArray("ids").getList()) + " AND type_id = 1";
-        params.addAll(eventBody.getJsonArray("ids"));
-        Sql.getInstance().prepared(query, params, SqlResult.validUniqueResultHandler(handler));
+        query += " WHERE id IN " + Sql.listPrepared(ids) + " AND type_id = 1";
+        params.addAll(new JsonArray(ids));
+        Sql.getInstance().prepared(query, params, SqlResult.validUniqueResultHandler(eventEither -> {
+            if (eventEither.isLeft()) {
+                String message = "[Presences@DefaultEventService] Failed to edit reason on events";
+                LOGGER.error(message);
+                handler.handle(new Either.Left<>(message));
+                return;
+            }
+
+            handler.handle(new Either.Right<>(eventEither.right().getValue()));
+            // User don't need to know that absences will be treated, so we can already return result for events
+            editCorrespondingAbsences(events, user, eventBody.getString("student_id"), eventBody.getString("structure_id"));
+        }));
     }
 
+
     @Override
-    public void changeRegularizedEvents(JsonObject eventBody, Handler<Either<String, JsonObject>> handler) {
+    public void changeRegularizedEvents(JsonObject eventBody, UserInfos user, Handler<Either<String, JsonObject>> handler) {
+        List<Event> events = new ArrayList<>();
+        List<Integer> ids = new ArrayList<>();
+        JsonArray arrayEvents = eventBody.getJsonArray("events");
+        for (int i = 0; i < arrayEvents.size(); i++) {
+            Event event = new Event(arrayEvents.getJsonObject(i), new ArrayList<>());
+            ids.add(event.getId());
+            events.add(event);
+        }
+
         JsonArray params = new JsonArray();
         String query = "UPDATE " + Presences.dbSchema + ".event SET counsellor_regularisation = ? ";
         params.add(eventBody.getBoolean("regularized"));
 
-        query += " WHERE id IN " + Sql.listPrepared(eventBody.getJsonArray("ids").getList()) + " AND type_id = 1";
-        params.addAll(eventBody.getJsonArray("ids"));
-        Sql.getInstance().prepared(query, params, SqlResult.validUniqueResultHandler(handler));
+        query += " WHERE id IN " + Sql.listPrepared(ids) + " AND type_id = 1";
+        params.addAll(new JsonArray(ids));
+        Sql.getInstance().prepared(query, params, SqlResult.validUniqueResultHandler(eventEither -> {
+            if (eventEither.isLeft()) {
+                String message = "[Presences@DefaultEventService] Failed to edit reason on events";
+                LOGGER.error(message);
+                handler.handle(new Either.Left<>(message));
+                return;
+            }
+
+            handler.handle(new Either.Right<>(eventEither.right().getValue()));
+            // User don't need to know that absences will be treated, so we can already return result for events
+            editCorrespondingAbsences(events, user, eventBody.getString("student_id"), eventBody.getString("structure_id"));
+        }));
+    }
+
+    private void editCorrespondingAbsences(List<Event> editedEvents, UserInfos user, String studentId, String structureId) {
+        SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss");
+        Date startDate = editedEvents.stream().map(event -> {
+            try {
+                return formatter.parse(event.getStartDate());
+            } catch (ParseException e) {
+                throw new RuntimeException("Parse Date failed", e);
+            }
+        }).min(Date::compareTo).get();
+
+        Date endDate = editedEvents.stream().map(event -> {
+            try {
+                return formatter.parse(event.getEndDate());
+            } catch (ParseException e) {
+                throw new RuntimeException("Parse Date failed", e);
+            }
+        }).max(Date::compareTo).get();
+
+        String query = " SELECT a.id, " +
+                "        a.student_id, " +
+                "        a.counsellor_regularisation, " +
+                "        a.start_date, " +
+                "        a.end_date, " +
+                "        a.structure_id, " +
+                "        a.reason_id, " +
+                "        array_to_json(array_agg(e)) as events " +
+                " FROM presences.absence a " +
+                "          RIGHT JOIN presences.event e " +
+                "                     ON (a.start_date < e.end_date AND e.start_date < a.end_date) OR " +
+                "                        (e.start_date < a.end_date AND a.start_date < e.end_date) " +
+                " WHERE e.type_id = 1 " +
+                "   AND (" +
+                "           ((e.start_date < ? AND ? < e.end_date) " +
+                "               OR (? < e.end_date AND e.start_date < ?)) " +
+                "           OR ((a.start_date < ? AND ? < a.end_date) " +
+                "               OR (? < a.end_date AND a.start_date < ?))" +
+                "        ) " +
+                "   AND e.student_id = ? " +
+                "   AND (a.student_id = e.student_id OR a.student_id IS NULL) " +
+                " GROUP BY a.id; ";
+
+        JsonArray params = new JsonArray();
+        params.add(endDate.toString());
+        params.add(startDate.toString());
+        params.add(startDate.toString());
+        params.add(endDate.toString());
+        params.add(endDate.toString());
+        params.add(startDate.toString());
+        params.add(startDate.toString());
+        params.add(endDate.toString());
+        params.add(studentId);
+        Sql.getInstance().prepared(query, params, SqlResult.validResultHandler(result -> {
+            if (result.isLeft()) {
+                String message = "[Presences@DefaultEventService::editCorrespondingAbsences] Failed to retrieve absences from list events";
+                LOGGER.error(message);
+            } else {
+                JsonArray absences = result.right().getValue();
+
+                JsonObject nullAbsenceEvents = (JsonObject) absences.stream().filter(oAbsence -> {
+                    JsonObject absence = (JsonObject) oAbsence;
+                    return absence.getInteger("id") == null;
+                }).findFirst().orElse(null);
+
+                List<JsonObject> absencesWithEvents = absences.stream().filter(oAbsence -> {
+                    JsonObject absence = (JsonObject) oAbsence;
+                    return absence.getInteger("id") != null;
+                }).map(oAbsence -> (JsonObject) oAbsence).collect(Collectors.toList());
+
+                if (nullAbsenceEvents != null) {
+                    createAbsencesFromEvents(nullAbsenceEvents, absencesWithEvents, user, studentId, structureId, formatter);
+                }
+
+                for (JsonObject absence : absencesWithEvents) {
+                    updateAbsenceFromEvents(absence, user);
+                }
+            }
+        }));
+    }
+
+    private void createAbsencesFromEvents(JsonObject nullAbsenceEvents, List<JsonObject> absencesWithEvents, UserInfos user, String studentId, String structureId, SimpleDateFormat formatter) {
+        ArrayList<Event> independentEvents = (ArrayList<Event>) new JsonArray(nullAbsenceEvents.getString("events"))
+                .stream()
+                .map((oEvent) -> new Event((JsonObject) oEvent, new ArrayList<>()))
+                .collect(Collectors.toList());
+
+        independentEvents = (ArrayList<Event>) independentEvents.stream().sorted((eventA, eventB) -> {
+            try {
+                Date dateA = formatter.parse(eventA.getStartDate());
+                Date dateB = formatter.parse(eventB.getStartDate());
+                return dateA.compareTo(dateB);
+            } catch (ParseException e) {
+                throw new RuntimeException("Parse Date failed", e);
+            }
+        }).collect(Collectors.toList());
+
+        try {
+            Date startAbsenceDate = null;
+            Date endAbsenceDate = null;
+            JsonObject createAbsence = new JsonObject();
+            createAbsence
+                    .put("student_id", studentId)
+                    .put("structure_id", structureId);
+
+            ArrayList<Event> packEvents = null;
+            for (int i = 0; i < independentEvents.size(); i++) {
+                Event event = independentEvents.get(i);
+
+                if (startAbsenceDate == null) {
+                    startAbsenceDate = formatter.parse(event.getStartDate());
+                    endAbsenceDate = formatter.parse(event.getEndDate());
+                    packEvents = new ArrayList<>();
+                    packEvents.add(event);
+                }
+
+                if (i + 1 < independentEvents.size()) {
+                    Event nextEvent = independentEvents.get(i + 1);
+                    Date nextEventStartDate = formatter.parse(nextEvent.getStartDate());
+                    Date finalEndAbsenceDate = endAbsenceDate;
+
+                    long absencesBeforeCount = absencesWithEvents.stream().filter(absence -> {
+                        try {
+                            Date absenceStartDate = formatter.parse(absence.getString("start_date"));
+                            return (finalEndAbsenceDate.before(absenceStartDate) || finalEndAbsenceDate.equals(absenceStartDate)) && absenceStartDate.before(nextEventStartDate);
+                        } catch (ParseException e) {
+                            throw new RuntimeException("Parse Date failed", e);
+                        }
+                    }).count();
+                    if (absencesBeforeCount > 0) {
+                        createAbsence.put("start_date", startAbsenceDate.toString());
+                        createAbsence.put("end_date", endAbsenceDate.toString());
+                        createAbsence.put("reason_id", getAbsenceReasonId(packEvents));
+                        ArrayList<Event> finalPackEvents = packEvents;
+                        absenceService.create(createAbsence, user, false, resultCreate -> {
+                            if (resultCreate.isLeft()) {
+                                String message = "[Presences@DefaultEventService::editCorrespondingAbsences] Failed to create absence";
+                                LOGGER.error(message);
+                            } else {
+                                createAbsence.put("id", resultCreate.right().getValue().getInteger("id"));
+                                // Here we update twice because of 013-MA-403-sync-absence-with-events.sql trigger.
+                                updateRegularizationAbsence(createAbsence, finalPackEvents);
+                            }
+                        });
+
+                        startAbsenceDate = null;
+                        endAbsenceDate = null;
+                    } else {
+                        endAbsenceDate = formatter.parse(nextEvent.getEndDate());
+                        packEvents.add(nextEvent);
+                    }
+                } else {
+                    createAbsence.put("start_date", startAbsenceDate.toString());
+                    createAbsence.put("end_date", endAbsenceDate.toString());
+                    createAbsence.put("reason_id", getAbsenceReasonId(packEvents));
+                    ArrayList<Event> finalPackEvents = packEvents;
+                    absenceService.create(createAbsence, user, false, resultCreate -> {
+                        if (resultCreate.isLeft()) {
+                            String message = "[Presences@DefaultEventService::editCorrespondingAbsences] Failed to create absence";
+                            LOGGER.error(message);
+                        } else {
+                            createAbsence.put("id", resultCreate.right().getValue().getInteger("id"));
+                            // Here we update twice because of 013-MA-403-sync-absence-with-events.sql trigger.
+                            updateRegularizationAbsence(createAbsence, finalPackEvents);
+                        }
+                    });
+                }
+            }
+        } catch (ParseException e) {
+            throw new RuntimeException("Parse Date failed", e);
+        }
+    }
+
+    private void updateAbsenceFromEvents(JsonObject absence, UserInfos user) {
+        ArrayList<Event> events = (ArrayList<Event>) new JsonArray(absence.getString("events"))
+                .stream()
+                .map((oEvent) -> new Event((JsonObject) oEvent, new ArrayList<>()))
+                .collect(Collectors.toList());
+
+        Integer newReasonId = getAbsenceReasonId(events);
+        if (absence.getInteger("reason_id") != newReasonId) {
+            absence.put("reason_id", newReasonId);
+            absenceService.update(absence.getLong("id"), absence, user, false, resultUpdate -> {
+                if (resultUpdate.isLeft()) {
+                    String message = "[Presences@DefaultEventService::editCorrespondingAbsences] Failed to update absence";
+                    LOGGER.error(message);
+                }
+            });
+        }
+        // Here we update twice because of 013-MA-403-sync-absence-with-events.sql trigger.
+        updateRegularizationAbsence(absence, events);
+    }
+
+    private Integer getAbsenceReasonId(ArrayList<Event> events) {
+        ArrayList<Integer> distinctReasons = (ArrayList<Integer>) events.stream().map(event -> event.getReason().getId()).distinct().collect(Collectors.toList());
+
+        if (distinctReasons.size() > 1) {
+            return -1;
+        } else if (distinctReasons.size() == 1) {
+            return distinctReasons.get(0);
+        }
+        return null;
+    }
+
+    private void updateRegularizationAbsence(JsonObject absence, ArrayList<Event> events) {
+        long countUnregularized = events.stream().filter(event -> !event.isCounsellorRegularisation()).count();
+        boolean absenceRegularization = countUnregularized == 0;
+        if (absence.getBoolean("counsellor_regularisation", false) != absenceRegularization) {
+
+            absence.put("regularized", absenceRegularization);
+            absence.put("ids", (new JsonArray()).add(absence.getInteger("id")));
+            absenceService.changeRegularizedAbsences(absence, resultUpdate -> {
+                if (resultUpdate.isLeft()) {
+                    String message = "[Presences@DefaultEventService::editCorrespondingAbsences] Failed to update absence";
+                    LOGGER.error(message);
+                }
+            });
+        }
     }
 
     @Override

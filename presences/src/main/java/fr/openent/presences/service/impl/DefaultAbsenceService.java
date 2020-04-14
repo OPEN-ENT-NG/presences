@@ -105,7 +105,7 @@ public class DefaultAbsenceService implements AbsenceService {
     }
 
     @Override
-    public void create(JsonObject absenceBody, UserInfos user, Handler<Either<String, JsonObject>> handler) {
+    public void create(JsonObject absenceBody, UserInfos user, boolean editEvents, Handler<Either<String, JsonObject>> handler) {
         String query = "INSERT INTO " + Presences.dbSchema + ".absence(structure_id, start_date, end_date, student_id, reason_id) " +
                 "VALUES (?, ?, ?, ?, ?) RETURNING id;";
         JsonArray params = new JsonArray()
@@ -120,27 +120,18 @@ public class DefaultAbsenceService implements AbsenceService {
         }
 
         Sql.getInstance().prepared(query, params, SqlResult.validUniqueResultHandler(absenceResult -> {
-            if (absenceResult.isLeft()) {
-                String message = "[Presences@DefaultAbsenceService] failed to create absence";
-                LOGGER.error(message, absenceResult.left().getValue());
-                handler.handle(new Either.Left<>(message));
-            } else {
-                interactingEvents(absenceBody, event -> {
-                    if (event.isLeft()) {
-                        String message = "[Presences@DefaultAbsenceService] failed to interact with events while creating absence";
-                        LOGGER.error(message, absenceResult.left().getValue());
-                        handler.handle(new Either.Left<>(message));
-                    } else {
-                        handler.handle(new Either.Right<>(event.right().getValue()
-                                .put("id", absenceResult.right().getValue().getLong("id"))));
-                    }
-                });
-            }
+            afterPersistAbsence(
+                    absenceResult.isRight() ? absenceResult.right().getValue().getLong("id") : null,
+                    absenceBody,
+                    editEvents,
+                    handler,
+                    absenceResult
+            );
         }));
     }
 
     @Override
-    public void update(Integer absenceId, JsonObject absenceBody, UserInfos user, Handler<Either<String, JsonObject>> handler) {
+    public void update(Long absenceId, JsonObject absenceBody, UserInfos user, boolean editEvents, Handler<Either<String, JsonObject>> handler) {
         String query = "UPDATE " + Presences.dbSchema + ".absence " +
                 "SET structure_id = ?, start_date = ?, end_date = ?, student_id = ?, reason_id = ? WHERE id = ?";
 
@@ -157,23 +148,61 @@ public class DefaultAbsenceService implements AbsenceService {
         values.add(absenceId);
 
         Sql.getInstance().prepared(query, values, SqlResult.validUniqueResultHandler(absenceResult -> {
-            if (absenceResult.isLeft()) {
-                String message = "[Presences@DefaultAbsenceService] failed to update absence";
-                LOGGER.error(message, absenceResult.left().getValue());
-                handler.handle(new Either.Left<>(message));
-            } else {
-                interactingEvents(absenceBody, event -> {
-                    if (event.isLeft()) {
-                        String message = "[Presences@DefaultAbsenceService] failed to interact with events while updating absence";
-                        LOGGER.error(message, absenceResult.left().getValue());
-                        handler.handle(new Either.Left<>(message));
-                    } else {
-                        handler.handle(new Either.Right<>(event.right().getValue()
-                                .put("id", absenceId)));
-                    }
-                });
-            }
+            afterPersistAbsence(absenceId, absenceBody, editEvents, handler, absenceResult);
         }));
+    }
+
+    private void afterPersistAbsence(Long absenceId, JsonObject absenceBody, boolean editEvents, Handler<Either<String, JsonObject>> handler, Either<String, JsonObject> absenceResult) {
+        if (absenceResult.isLeft()) {
+            String message = "[Presences@DefaultAbsenceService] failed to update absence";
+            LOGGER.error(message, absenceResult.left().getValue());
+            handler.handle(new Either.Left<>(message));
+        } else if (editEvents) {
+            interactingEvents(absenceBody, event -> {
+                if (event.isLeft()) {
+                    String message = "[Presences@DefaultAbsenceService] failed to interact with events while updating absence";
+                    LOGGER.error(message, absenceResult.left().getValue());
+                    handler.handle(new Either.Left<>(message));
+                } else {
+                    handler.handle(new Either.Right<>(event.right().getValue()
+                            .put("id", absenceId)));
+                }
+            });
+        } else {
+            handler.handle(new Either.Right<>(absenceResult.right().getValue()));
+        }
+    }
+
+    private void afterPersistAbsences(List<Long> absenceIds, Handler<Either<String, JsonObject>> handler, Either<String, JsonObject> absencesResult) {
+        if (absencesResult.isLeft()) {
+            String message = "[Presences@DefaultAbsenceService] failed to update absence";
+            LOGGER.error(message, absencesResult.left().getValue());
+            handler.handle(new Either.Left<>(message));
+        } else {
+            handler.handle(new Either.Right<>(absencesResult.right().getValue()));
+
+            String query = " SELECT * " +
+                    " FROM " + Presences.dbSchema + ".absence " +
+                    " WHERE id IN " + Sql.listPrepared(absenceIds);
+
+            JsonArray params = new JsonArray();
+            params.addAll(new JsonArray(absenceIds));
+
+            Sql.getInstance().prepared(query, params, SqlResult.validResultHandler(result -> {
+                if (result.isLeft()) {
+                    String message = "[Presences@DefaultAbsenceService::afterPersistAbsences] Failed to retrieve absences from list of ids";
+                    LOGGER.error(message);
+                    handler.handle(new Either.Left<>(message));
+                } else {
+                    JsonArray absences = result.right().getValue();
+
+                    absences.forEach(oAbsence -> {
+                        JsonObject absence = (JsonObject) oAbsence;
+                        interactingEvents(absence, handler);
+                    });
+                }
+            }));
+        }
     }
 
     private void interactingEvents(JsonObject absenceBody, Handler<Either<String, JsonObject>> handler) {
@@ -233,7 +262,10 @@ public class DefaultAbsenceService implements AbsenceService {
         }
         query += " WHERE id IN " + Sql.listPrepared(absenceBody.getJsonArray("ids").getList());
         params.addAll(absenceBody.getJsonArray("ids"));
-        Sql.getInstance().prepared(query, params, SqlResult.validUniqueResultHandler(handler));
+        Sql.getInstance().prepared(query, params, SqlResult.validUniqueResultHandler(result -> {
+            List<Long> ids = absenceBody.getJsonArray("ids").stream().map(id -> Long.parseLong((String) id)).collect(Collectors.toList());
+            afterPersistAbsences(ids, handler, result);
+        }));
     }
 
     @Override
@@ -244,7 +276,10 @@ public class DefaultAbsenceService implements AbsenceService {
 
         query += " WHERE id IN " + Sql.listPrepared(absenceBody.getJsonArray("ids").getList());
         params.addAll(absenceBody.getJsonArray("ids"));
-        Sql.getInstance().prepared(query, params, SqlResult.validUniqueResultHandler(handler));
+        Sql.getInstance().prepared(query, params, SqlResult.validUniqueResultHandler(result -> {
+            List<Long> ids = absenceBody.getJsonArray("ids").stream().map(id -> Long.parseLong(id.toString())).collect(Collectors.toList());
+            afterPersistAbsences(ids, handler, result);
+        }));
     }
 
     private void createEventsWithAbsents(JsonObject absenceBody, List<String> groupIds, Handler<Either<String, JsonArray>> handler) {

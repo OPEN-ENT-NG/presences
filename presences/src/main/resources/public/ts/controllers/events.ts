@@ -57,13 +57,13 @@ interface ViewModel {
 
     regularizedChecked(event: EventResponse): boolean;
 
-    changeAllReason(event: EventResponse): Promise<void>;
+    changeAllReason(event: EventResponse, studentId: string): Promise<void>;
 
-    changeReason(history: Event, event: EventResponse): Promise<void>;
+    changeReason(history: Event, event: EventResponse, studentId: string): Promise<void>;
 
-    toggleAllEventsRegularised(event: EventResponse): Promise<void>;
+    toggleAllEventsRegularised(event: EventResponse, studentId: string): Promise<void>;
 
-    toggleEventRegularised(history: Event, event: EventResponse): Promise<void>;
+    toggleEventRegularised(history: Event, event: EventResponse, studentId: string): Promise<void>;
 
     hasEventsAllRegularized(event: Event[]): boolean;
 
@@ -498,15 +498,15 @@ export const eventsController = ng.controller('EventsController', ['$scope', '$r
         };
 
         /* Add global reason_id to all events that exist */
-        vm.changeAllReason = async (event: EventResponse): Promise<void> => {
+        vm.changeAllReason = async (event: EventResponse, studentId: string): Promise<void> => {
             let initialReasonId = event.globalReason;
-            let fetchedEventIds: number[] = [];
+            let fetchedEvent: Event|EventResponse[] = [];
             if (isWidget) {
-                fetchedEventIds.push(event.id);
+                fetchedEvent.push(event);
             } else {
-                EventsUtils.fetchEvents(event, fetchedEventIds);
+                EventsUtils.fetchEvents(event, fetchedEvent);
             }
-            await vm.events.updateReason(fetchedEventIds, initialReasonId)
+            await vm.events.updateReason(fetchedEvent, initialReasonId, studentId, window.structure.id)
                 .then(() => {
                     if (isWidget) vm.events.page = 0;
                     getEvents(true);
@@ -518,13 +518,13 @@ export const eventsController = ng.controller('EventsController', ['$scope', '$r
         };
 
         /* Change its description reason id */
-        vm.changeReason = async (history: Event, event: EventResponse): Promise<void> => {
+        vm.changeReason = async (history: Event, event: EventResponse, studentId: string): Promise<void> => {
             let initialReasonId = history.reason ? history.reason.id : history.reason_id;
-            let fetchedEventIds: number[] = [];
+            let fetchedEvent: Array<Event|EventResponse> = [];
             history.counsellor_regularisation = vm.provingReasonsMap[history.reason_id];
-            fetchedEventIds.push(history.id);
+            fetchedEvent.push(history);
             event.globalReason = EventsUtils.initGlobalReason(event);
-            await vm.events.updateReason(fetchedEventIds, initialReasonId)
+            await vm.events.updateReason(fetchedEvent, initialReasonId, studentId, window.structure.id)
                 .then(() => {
                     if (EventsUtils.isEachEventsCounsellorRegularized(event.events) &&
                         EventsUtils.hasSameEventsReason(event.events)) {
@@ -537,11 +537,11 @@ export const eventsController = ng.controller('EventsController', ['$scope', '$r
             $scope.safeApply();
         };
 
-        vm.toggleAllEventsRegularised = async (event: EventResponse): Promise<void> => {
+        vm.toggleAllEventsRegularised = async (event: EventResponse, studentId: string): Promise<void> => {
             let initialCounsellorRegularisation = event.globalCounsellorRegularisation;
-            let fetchedEventIds: number[] = [];
-            EventsUtils.fetchEvents(event, fetchedEventIds);
-            await vm.events.updateRegularized(fetchedEventIds, initialCounsellorRegularisation)
+            let fetchedEvent: Event|EventResponse[] = [];
+            EventsUtils.fetchEvents(event, fetchedEvent);
+            await vm.events.updateRegularized(fetchedEvent, initialCounsellorRegularisation, studentId, window.structure.id)
                 .then(() => {
                     getEvents(true);
                     vm.eventId = null;
@@ -549,16 +549,17 @@ export const eventsController = ng.controller('EventsController', ['$scope', '$r
             $scope.safeApply();
         };
 
-        vm.toggleEventRegularised = async (history: Event, event: EventResponse): Promise<void> => {
+        vm.toggleEventRegularised = async (history: Event, event: EventResponse, studentId: string): Promise<void> => {
             let initialCounsellorRegularisation = history.counsellor_regularisation;
-            let fetchedEventIds: number[] = [];
+            let fetchedEvent: Array<Event|EventResponse> = [];
             if (history.type === EventsUtils.ALL_EVENTS.event) {
-                fetchedEventIds.push(history.id);
+                fetchedEvent.push(history);
             }
             event.globalCounsellorRegularisation = EventsUtils.initGlobalCounsellor(event);
-            await vm.events.updateRegularized(fetchedEventIds, initialCounsellorRegularisation)
+            await vm.events.updateRegularized(fetchedEvent, initialCounsellorRegularisation, studentId, window.structure.id)
                 .then(() => {
                     if (!isWidget) {
+
                         if (EventsUtils.hasSameEventsCounsellor(event.events)) {
                             getEvents(true);
                             if (!vm.filter.justifiedRegularized) {

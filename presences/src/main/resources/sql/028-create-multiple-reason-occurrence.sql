@@ -1,0 +1,2 @@
+INSERT INTO presences.reason (id, structure_id, label, proving, comment, "default", "group", hidden, absence_compliance)
+VALUES (-1, -1, 'presences.absence.select.multiple', false, '', false, false, false, false);
