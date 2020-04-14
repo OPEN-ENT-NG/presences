@@ -240,20 +240,23 @@ export const presenceForm = {
     controller: {
         init: async function () {
             this.vm = vm;
-            this.getDisciplines();
             this.setHandler();
             presenceForm.that = this;
             this.setButton();
             vm.safeApply = this.safeApply;
         },
         async getDisciplines(): Promise<void> {
-            if (!vm.disciplines || vm.disciplines.length <= 1 && window.structure) {
+            if (!vm.disciplines || vm.disciplines.length <= 1) {
                 vm.disciplines = await disciplineService.get(window.structure.id);
                 vm.disciplinesDescription = _.clone(vm.disciplines);
             }
         },
         setHandler: function () {
             this.$on(SNIPLET_FORM_EVENTS.SET_PARAMS, (event: IAngularEvent, presence: Presence) => vm.openEditPresence(presence));
+            this.$watch(() => window.structure, async () => {
+                this.getDisciplines();
+                vm.safeApply();
+            });
         },
         setButton: function () {
             switch (window.location.hash) {
