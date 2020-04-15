@@ -1,5 +1,5 @@
 import {Me, model, moment, ng, notify} from 'entcore';
-import {CourseUtils, DateUtils, PreferencesUtils} from "@common/utils";
+import {CourseUtils, DateUtils, PreferencesUtils, PresencesPreferenceUtils} from "@common/utils";
 import {Course, Courses, Register, RegisterStatus} from "../../models";
 import {RegisterUtils} from "../../utilities";
 import http from "axios";
@@ -24,6 +24,8 @@ interface ViewModel {
 
     canNotify(start_date: string, state: RegisterStatus): boolean;
 
+    switchMultipleSlot(): Promise<void>;
+
     getGroups(classes: Array<string>, groups: Array<string>): Array<string>;
 }
 
@@ -42,11 +44,10 @@ export const dayCourse = ng.controller('DayCourse', ['$scope', async function ($
     const loadCourses = async (): Promise<void> => {
         let start_date = DateUtils.format(new Date(), DateUtils.FORMAT["YEAR-MONTH-DAY"]);
         let end_date = DateUtils.format(new Date(), DateUtils.FORMAT["YEAR-MONTH-DAY"]);
-        let isMultipleSlot: boolean;
         if (model.me.profiles.some(profile => profile === "Personnel")) {
-            isMultipleSlot = true;
+            vm.isMultipleSlot = true
         }
-        await vm.dayCourse.sync([model.me.userId], [], window.structure.id, start_date, end_date, false, isMultipleSlot);
+        await vm.dayCourse.sync([model.me.userId], [], window.structure.id, start_date, end_date, false, vm.isMultipleSlot);
         $scope.safeApply();
     };
 
@@ -96,6 +97,11 @@ export const dayCourse = ng.controller('DayCourse', ['$scope', async function ($
             && isForgotten(start_date)
             && !vm.isFutureCourse(({startDate: start_date} as Course))
             && moment(DateUtils.setFirstTime(moment())).diff(moment(DateUtils.setFirstTime(start_date)), 'days') < 2
+    };
+
+    vm.switchMultipleSlot = async function (): Promise<void> {
+        await PresencesPreferenceUtils.updatePresencesRegisterPreference(vm.isMultipleSlot);
+        loadCourses();
     };
 
     const notifyCourse = async (course: Course) => {
