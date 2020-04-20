@@ -5,6 +5,7 @@ import fr.openent.presences.common.security.SearchRight;
 import fr.openent.presences.common.service.GroupService;
 import fr.openent.presences.common.service.impl.DefaultGroupService;
 import fr.openent.presences.enums.GroupType;
+import fr.openent.presences.security.SearchStudents;
 import fr.openent.presences.service.SearchService;
 import fr.openent.presences.service.impl.DefaultSearchService;
 import fr.wseduc.rs.ApiDoc;
@@ -57,6 +58,30 @@ public class SearchController extends ControllerHelper {
                     .put("profile", profile)
                     .put("structureId", structure_id);
 
+            callViescolaireEventBus(action, request);
+        } else {
+            badRequest(request);
+        }
+    }
+
+    @Get("/search/students")
+    @ApiDoc("Search for students")
+    @SecuredAction(value = "", type = ActionType.RESOURCE)
+    @ResourceFilter(SearchStudents.class)
+    public void searchStudents(HttpServerRequest request) {
+        if (request.params().contains("q") && !"".equals(request.params().get("q").trim())
+                && request.params().contains("field")
+                && request.params().contains("structureId")) {
+            String query = request.getParam("q");
+            List<String> fields = request.params().getAll("field");
+            String structure_id = request.getParam("structureId");
+
+            JsonObject action = new JsonObject()
+                    .put("action", "user.search")
+                    .put("q", query)
+                    .put("fields", new JsonArray(fields))
+                    .put("profile", "Student")
+                    .put("structureId", structure_id);
             callViescolaireEventBus(action, request);
         } else {
             badRequest(request);

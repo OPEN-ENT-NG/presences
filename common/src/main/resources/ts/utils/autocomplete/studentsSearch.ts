@@ -56,7 +56,7 @@ export class StudentsSearch extends AutoCompleteUtils {
 
     public async searchStudents(valueInput: string) {
         try {
-            this.students = await this.searchService.searchUser(this.structureId, valueInput, 'Student');
+            this.students = await this.searchService.searchStudents(this.structureId, valueInput);
         } catch (err) {
             this.students = [];
             throw err;
