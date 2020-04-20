@@ -55,7 +55,7 @@ public class DefaultReasonService implements ReasonService {
         String query = "WITH ids AS (" +
                 "SELECT r.id, r.label FROM " + Presences.dbSchema + ".reason r " +
                 "WHERE structure_id = '" + structureId +
-                "') " +
+                "' OR structure_id = '-1') " +
                 "SELECT DISTINCT i.id, i.label FROM ids i " +
                 "WHERE (i.id IN (SELECT reason_id FROM " + Presences.dbSchema + ".event))" +
                 "OR (i.id IN (SELECT reason_id FROM " + Presences.dbSchema + ".absence))";
@@ -63,7 +63,7 @@ public class DefaultReasonService implements ReasonService {
     }
 
     public void fetchReason(String structureId, Handler<Either<String, JsonArray>> handler) {
-        String query = "SELECT * FROM " + Presences.dbSchema + ".reason where structure_id = '" + structureId + "'";
+        String query = "SELECT * FROM " + Presences.dbSchema + ".reason where structure_id = '" + structureId + "' OR structure_id = '-1'";
         Sql.getInstance().raw(query, SqlResult.validResultHandler(handler));
     }
 

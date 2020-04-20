@@ -410,8 +410,6 @@ export const eventsController = ng.controller('EventsController', ['$scope', '$r
                         let arrayIndex = priority.indexOf(periods.events[i].type_id);
                         index = arrayIndex < index ? arrayIndex : index;
                     }
-                } else {
-                    index = periods.events[i].reason_id != null ? 4 : 0;
                 }
             }
             return className[index] || '';
@@ -526,6 +524,7 @@ export const eventsController = ng.controller('EventsController', ['$scope', '$r
             event.globalReason = EventsUtils.initGlobalReason(event);
             await vm.events.updateReason(fetchedEvent, initialReasonId, studentId, window.structure.id)
                 .then(() => {
+
                     if (EventsUtils.isEachEventsCounsellorRegularized(event.events) &&
                         EventsUtils.hasSameEventsReason(event.events)) {
                         if (!vm.filter.justifiedRegularized) {

@@ -1,6 +1,7 @@
 import {ng} from 'entcore'
 import http, {AxiosResponse} from 'axios';
 import {Reason, ReasonRequest} from "@presences/models/Reason";
+import {idiom as lang} from "entcore";
 
 export interface ReasonService {
     getReasons(structureId: string): Promise<Reason[]>;
@@ -16,6 +17,11 @@ export const reasonService: ReasonService = {
     getReasons: async (structureId: string): Promise<Reason[]> => {
         try {
             const {data} = await http.get(`/presences/reasons?structureId=${structureId}`);
+            data.map((reason) => {
+                if (reason.id === -1) {
+                    reason.label = lang.translate(reason.label);
+                }
+            });
             return data;
         } catch (err) {
             throw err;
