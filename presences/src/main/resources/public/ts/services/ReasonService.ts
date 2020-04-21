@@ -1,7 +1,6 @@
-import {ng} from 'entcore'
+import {idiom as lang, ng} from 'entcore'
 import http, {AxiosResponse} from 'axios';
 import {Reason, ReasonRequest} from "@presences/models/Reason";
-import {idiom as lang} from "entcore";
 
 export interface ReasonService {
     getReasons(structureId: string): Promise<Reason[]>;
@@ -20,6 +19,7 @@ export const reasonService: ReasonService = {
             data.map((reason) => {
                 if (reason.id === -1) {
                     reason.label = lang.translate(reason.label);
+                    reason.hidden = true;
                 }
             });
             return data;
