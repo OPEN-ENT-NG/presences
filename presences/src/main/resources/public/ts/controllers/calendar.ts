@@ -20,6 +20,7 @@ import {SNIPLET_FORM_EMIT_EVENTS, SNIPLET_FORM_EVENTS} from "@common/model";
 import {NOTEBOOK_FORM_EVENTS} from "../sniplets";
 import {CalendarAbsenceUtils, CalendarUtils, EventsUtils} from "../utilities";
 import {ABSENCE_FORM_EVENTS} from "@common/enum/presences-event";
+import {IAngularEvent} from "angular";
 
 declare let window: any;
 
@@ -32,6 +33,7 @@ interface ViewModel {
     };
     courses: {
         list: Array<Course>
+        templateInitialized: Boolean
     };
     slots: { list: Array<ITimeSlot> };
     filter: {
@@ -133,7 +135,7 @@ export const calendarController = ng.controller('CalendarController',
                 student: null,
                 students: null
             };
-            vm.courses = {list: null};
+            vm.courses = {list: null, templateInitialized: false};
             vm.absences = {list: null};
             vm.presences = new Presences(window.structure.id);
             vm.reasonsMap = new Map();
@@ -472,5 +474,12 @@ export const calendarController = ng.controller('CalendarController',
                     vm.show.loader = true;
                     $timeout(positioningAbsence);
                 }
-            })
+            });
+
+            $scope.$on('$includeContentLoaded', function (event: IAngularEvent, target) {
+                if (target.includes("course-item") && !vm.courses.templateInitialized) {
+                    vm.courses.templateInitialized = true;
+                    if (vm.absences.list != null && vm.courses.list != null) $timeout(positioningAbsence);
+                }
+            });
         }]);
