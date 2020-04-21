@@ -424,6 +424,7 @@ public class DefaultEventService implements EventService {
     }
 
     private void editCorrespondingAbsences(List<Event> editedEvents, UserInfos user, String studentId, String structureId) {
+        LOGGER.info("[Presences@DefaultEventService::editCorrespondingAbsences] Starting to manage corresponding absences ");
         SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss");
         Date startDate = editedEvents.stream().map(event -> {
             try {
@@ -441,39 +442,43 @@ public class DefaultEventService implements EventService {
             }
         }).max(Date::compareTo).get();
 
-        String query = " SELECT a.id, " +
-                "        a.student_id, " +
-                "        a.counsellor_regularisation, " +
-                "        a.start_date, " +
-                "        a.end_date, " +
-                "        a.structure_id, " +
-                "        a.reason_id, " +
-                "        array_to_json(array_agg(e)) as events " +
-                " FROM presences.absence a " +
-                "          RIGHT JOIN presences.event e " +
-                "                     ON (a.start_date < e.end_date AND e.start_date < a.end_date) OR " +
-                "                        (e.start_date < a.end_date AND a.start_date < e.end_date) " +
-                " WHERE e.type_id = 1 " +
-                "   AND (" +
-                "           ((e.start_date < ? AND ? < e.end_date) " +
-                "               OR (? < e.end_date AND e.start_date < ?)) " +
-                "           OR ((a.start_date < ? AND ? < a.end_date) " +
-                "               OR (? < a.end_date AND a.start_date < ?))" +
-                "        ) " +
-                "   AND e.student_id = ? " +
-                "   AND (a.student_id = e.student_id OR a.student_id IS NULL) " +
-                " GROUP BY a.id; ";
+        String query = "SELECT a.id, " +
+                "       a.student_id, " +
+                "       a.counsellor_regularisation, " +
+                "       a.start_date, " +
+                "       a.end_date, " +
+                "       a.structure_id, " +
+                "       a.reason_id, " +
+                "       array_to_json(array_agg(e)) as events " +
+                "      FROM presences.absence a " +
+                "         RIGHT JOIN presences.event e " +
+                "                    ON ( " +
+                "                               (a.start_date < e.end_date AND e.start_date < a.end_date) OR " +
+                "                               (e.start_date < a.end_date AND a.start_date < e.end_date) " +
+                "                           ) " +
+                "                        AND e.type_id = 1 " +
+                "                        AND e.student_id = ? " +
+                "                        AND (a.student_id = e.student_id OR a.student_id IS NULL) " +
+                "       WHERE (( " +
+                "                    (e.start_date < ? AND ? < e.end_date) " +
+                "                    OR (? < e.end_date AND e.start_date < ?) " +
+                "                ) " +
+                "           OR ( " +
+                "                    (a.start_date < ? AND ? < a.end_date) " +
+                "                    OR (? < a.end_date AND a.start_date < ?) " +
+                "                )) " +
+                "   GROUP BY a.id";
 
         JsonArray params = new JsonArray();
-        params.add(endDate.toString());
-        params.add(startDate.toString());
-        params.add(startDate.toString());
-        params.add(endDate.toString());
-        params.add(endDate.toString());
-        params.add(startDate.toString());
-        params.add(startDate.toString());
-        params.add(endDate.toString());
         params.add(studentId);
+        params.add(endDate.toString());
+        params.add(startDate.toString());
+        params.add(startDate.toString());
+        params.add(endDate.toString());
+        params.add(endDate.toString());
+        params.add(startDate.toString());
+        params.add(startDate.toString());
+        params.add(endDate.toString());
         Sql.getInstance().prepared(query, params, SqlResult.validResultHandler(result -> {
             if (result.isLeft()) {
                 String message = "[Presences@DefaultEventService::editCorrespondingAbsences] Failed to retrieve absences from list events";
