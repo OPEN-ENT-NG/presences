@@ -6,12 +6,9 @@ import {DateUtils} from "@common/utils";
 export interface EventService {
     get(notebook): Promise<{ pageCount: number, events: EventResponse[], all: EventResponse[] }>;
 
-    // Actions
     getEventActions(event_id: number): Promise<ActionBody[]>;
 
     createAction(actionBody: ActionBody): Promise<AxiosResponse>;
-
-    // updateAction(actionBody: ActionBody): Promise<AxiosResponse>;
 }
 
 export interface EventRequest {
@@ -36,7 +33,7 @@ export const eventService: EventService = {
             const endDate = `&endDate=${DateUtils.format(eventRequest.endDate, dateFormat)}`;
             const noReason = eventRequest.noReason ? `&noReason=${eventRequest.noReason}` : "";
             const eventType = `&eventType=${eventRequest.eventType}`;
-            const listReasonIds = `&reasonIds=${eventRequest.listReasonIds}`;
+            const listReasonIds = eventRequest.listReasonIds ? `&reasonIds=${eventRequest.listReasonIds}` : "";
             const userId = eventRequest.userId.length === 0 ? "" : `&userId=${eventRequest.userId}`;
             const classes = eventRequest.classes.length === 0 ? "" : `&eventType=${eventRequest.classes}`;
             const regularized = eventRequest.regularized ? `&regularized=${!eventRequest.regularized}` : "";
@@ -54,8 +51,7 @@ export const eventService: EventService = {
             throw err;
         }
     },
-
-    // Actions
+    
     getEventActions: async (eventId: number): Promise<ActionBody[]> => {
         try {
             const {data} = await http.get(`/presences/events/${eventId}/actions`);
@@ -65,7 +61,7 @@ export const eventService: EventService = {
         }
     },
 
-    createAction: (actionBody: ActionBody): Promise<AxiosResponse> => {
+    createAction: async (actionBody: ActionBody): Promise<AxiosResponse> => {
         return http.post(`/presences/events/actions`, actionBody);
     }
 };

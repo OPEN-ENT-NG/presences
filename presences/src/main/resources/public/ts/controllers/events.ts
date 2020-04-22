@@ -83,7 +83,7 @@ interface ViewModel {
 
     getLastAction(): void;
 
-    createAction(): void;
+    createAction(): Promise<void>;
 
     showHistory(): void;
 
@@ -372,8 +372,8 @@ export const eventsController = ng.controller('EventsController', ['$scope', '$r
             return events.find(event => event.type === EventsUtils.ALL_EVENTS.event);
         };
 
-        vm.createAction = function () {
-            eventService.createAction(vm.actionForm);
+        vm.createAction = async function () {
+            await eventService.createAction(vm.actionForm);
             getEvents(true);
         };
 
