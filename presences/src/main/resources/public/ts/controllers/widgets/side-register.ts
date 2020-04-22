@@ -15,6 +15,8 @@ interface ViewModel {
 
     toggleAbsence(student: RegisterStudent): Promise<void>;
 
+    isAbsenceDisabled(student: RegisterStudent): boolean;
+
     validRegister(): Promise<void>;
 
     isEmpty(): boolean;
@@ -54,6 +56,10 @@ export const sideRegisterController = ng.controller('SideRegisterController', ['
             student.departure = undefined;
             student.lateness = undefined;
             $scope.safeApply();
+        };
+
+        vm.isAbsenceDisabled = function (student: RegisterStudent): boolean {
+            return RegisterUtils.isAbsenceDisabled(student, vm.register);
         };
 
         vm.validRegister = async function () {
