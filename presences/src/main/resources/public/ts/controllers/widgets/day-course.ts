@@ -39,7 +39,12 @@ export const dayCourse = ng.controller('DayCourse', ['$scope', async function ($
 
     let registerTimeSlot = await Me.preference(PreferencesUtils.PREFERENCE_KEYS.PRESENCE_REGISTER);
 
-    vm.isMultipleSlot = registerTimeSlot.multipleSlot;
+    const initMultipleSlotPreference = async (): Promise<boolean> => {
+        await PresencesPreferenceUtils.updatePresencesRegisterPreference(true);
+        return true;
+    };
+
+    vm.isMultipleSlot = ('multipleSlot' in registerTimeSlot) ? registerTimeSlot.multipleSlot : await initMultipleSlotPreference();
 
     const loadCourses = async (): Promise<void> => {
         let start_date = DateUtils.format(new Date(), DateUtils.FORMAT["YEAR-MONTH-DAY"]);
