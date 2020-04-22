@@ -126,9 +126,11 @@ public class DefaultRegisterService implements RegisterService {
     }
 
     private void absenceInteraction(UserInfos user, JsonObject finalResult, Handler<Either<String, JsonObject>> handler) {
+        LOGGER.info("[Presences@DefaultRegisterService::absenceInteraction] Starting to interact with absences ");
         getRegisterIdGroup(finalResult.getLong("id"), registerIdGroupResult -> {
             if (registerIdGroupResult.isLeft()) {
-                String message = "[Presences@DefaultRegisterService] Failed to retrieve register id group reference";
+                String message = "[Presences@DefaultRegisterService::absenceInteraction::getRegisterIdGroup]" +
+                        " Failed to retrieve register id group reference";
                 LOGGER.error(message, registerIdGroupResult.left().getValue());
                 handler.handle(new Either.Left<>(message));
             } else {
@@ -136,7 +138,8 @@ public class DefaultRegisterService implements RegisterService {
                 List<String> ids = groups.stream().map(group -> group.getString("group_id")).collect(Collectors.toList());
                 groupService.getGroupStudents(ids, studentsIdsResult -> {
                     if (studentsIdsResult.isLeft()) {
-                        String message = "[Presences@DefaultRegisterService] Failed to retrieve students info";
+                        String message = "[Presences@DefaultRegisterService::" +
+                                "absenceInteraction::getGroupStudents] Failed to retrieve students info";
                         LOGGER.error(message, studentsIdsResult.left().getValue());
                         handler.handle(new Either.Left<>(message));
                     } else {
@@ -150,31 +153,35 @@ public class DefaultRegisterService implements RegisterService {
                                         users.add(student.getString("id"));
                                     }
                                 } else {
-                                    String message = "[Presences@DefaultRegisterService] Failed to store student in " +
-                                            "Array of string get jsonObject returns NULL";
+                                    String message = "[Presences@DefaultRegisterService::absenceInteraction::getGroupStudents] " +
+                                            "Failed to store student in Array of string get jsonObject returns NULL";
                                     LOGGER.error(message, studentsIdsResult.left().getValue());
                                 }
                             }
                             users.removeAll(Collections.singletonList(null));
                             if (users.isEmpty()) {
-                                String message = "[Presences@DefaultRegisterService] array of users is actually empty";
+                                String message = "[Presences@DefaultRegisterService::absenceInteraction::getGroupStudents] " +
+                                        "array of users is actually empty";
                                 LOGGER.error(message, studentsIdsResult.left().getValue());
                                 handler.handle(new Either.Left<>(message));
                             } else {
                                 matchAbsenceToEvent(finalResult, users, user, matchingResult -> {
                                     if (matchingResult.isLeft()) {
-                                        String message = "[Presences@DefaultRegisterService] Failed to create events with absence information";
+                                        String message = "[Presences@DefaultRegisterService::matchAbsenceToEvent] " +
+                                                "Failed to create events with absence information";
                                         LOGGER.error(message, studentsIdsResult.left().getValue());
                                         handler.handle(new Either.Left<>(message));
                                     } else {
                                         /* Finish handler */
+                                        LOGGER.info("[Presences@DefaultRegisterService::matchAbsenceToEvent] " +
+                                                "Finished processing with matching absence to event ");
                                         handler.handle(new Either.Right<>(finalResult));
                                     }
                                 });
                             }
                         } else {
-                            String message = "[Presences@DefaultRegisterService] Failed to fetch students Ids result " +
-                                    "from Neo4j. Might be empty";
+                            String message = "[Presences@DefaultRegisterService::absenceInteraction::getGroupStudents] " +
+                                    "Failed to fetch students Ids result from Neo4j. Might be empty";
                             LOGGER.error(message, studentsIdsResult.left().getValue());
                             handler.handle(new Either.Left<>(message));
                         }
@@ -191,6 +198,7 @@ public class DefaultRegisterService implements RegisterService {
     }
 
     private void matchAbsenceToEvent(JsonObject finalResult, List<String> users, UserInfos user, Handler<Either<String, JsonArray>> handler) {
+        LOGGER.info("[Presences@DefaultRegisterService::matchAbsenceToEvent] Starting to match absence with event ");
         JsonArray params = new JsonArray();
         String query = "WITH absence as (SELECT absence.id, absence.start_date, absence.end_date, absence.student_id, absence.reason_id" +
                 " FROM presences.absence WHERE absence.student_id IN " + Sql.listPrepared(users.toArray()) +
