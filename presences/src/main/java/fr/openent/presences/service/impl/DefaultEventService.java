@@ -450,14 +450,22 @@ public class DefaultEventService implements EventService {
                 "         RIGHT JOIN presences.event e " +
                 "                    ON e.type_id = 1 " +
                 "                        AND (a.student_id = e.student_id) " +
+                "                        AND e.student_id = ?" +
                 "                        AND ((a.start_date < e.end_date AND e.start_date < a.end_date) OR " +
                 "                             (e.start_date < a.end_date AND a.start_date < e.end_date)) " +
                 "      WHERE ((e.start_date < ? AND ? < e.end_date) " +
-                "       OR (? < e.end_date AND e.start_date < ?)) " +
+                "       OR (? < e.end_date AND e.start_date < ?) " +
+                "       OR (a.start_date < ? AND ? < a.end_date) " +
+                "       OR (? < a.end_date AND a.start_date < ?)) " +
                 "      AND e.student_id = ? " +
                 "      GROUP BY a.id;";
 
         JsonArray params = new JsonArray();
+        params.add(studentId);
+        params.add(endDate.toString());
+        params.add(startDate.toString());
+        params.add(startDate.toString());
+        params.add(endDate.toString());
         params.add(endDate.toString());
         params.add(startDate.toString());
         params.add(startDate.toString());
