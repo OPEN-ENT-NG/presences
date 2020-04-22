@@ -250,7 +250,9 @@ export const eventsController = ng.controller('EventsController', ['$scope', '$r
                 vm.eventReasonsType.forEach((r) => {
                     r.isSelected = reasonIds.includes(r.id)
                 });
+                vm.eventType = [];
             } else {
+                vm.eventType = [];
                 vm.filter = {
                     ...vm.filter, ...{
                         absences: true,
