@@ -179,9 +179,8 @@ export const registersController = ng.controller('RegistersController',
                     template.open('register-panel', 'register/panel');
                     getReasons();
                     if (vm.register !== undefined) {
-                        let promises = [vm.register.sync()];
-                        addLoadCoursesPromise(promises);
-                        await Promise.all(promises);
+                        await vm.register.sync();
+                        await initCourses();
                         if (vm.register.teachers.length > 0) vm.filter.selected.registerTeacher = vm.register.teachers[0];
                         $scope.safeApply();
                     } else {
@@ -194,16 +193,6 @@ export const registersController = ng.controller('RegistersController',
                     }
                 },
                 forgottenRegisterWidget: () => vm.loadCourses(extractSelectedTeacherIds(), extractSelectedGroupsName(), undefined, undefined, undefined, undefined, undefined, 16),
-            };
-
-            const addLoadCoursesPromise = (promises: Promise<void>[]) => {
-                if (vm.filter.course) {
-                    if (vm.filter.course.teachers.length > 0) {
-                        let cp = vm.loadCourses([vm.filter.course.teachers[0].id], [], window.structure.id, DateUtils.format(vm.filter.date, DateUtils.FORMAT["YEAR-MONTH-DAY"]),
-                            DateUtils.format(vm.filter.date, DateUtils.FORMAT["YEAR-MONTH-DAY"]), false);
-                        promises.push(cp);
-                    }
-                }
             };
 
             const initCourses = async () => {
