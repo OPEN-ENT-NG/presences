@@ -1,6 +1,5 @@
 package fr.openent.presences.service.impl;
 
-import com.mongodb.util.JSON;
 import fr.openent.presences.Presences;
 import fr.openent.presences.common.helper.FutureHelper;
 import fr.openent.presences.common.helper.WorkflowHelper;
@@ -16,7 +15,6 @@ import fr.openent.presences.helper.CalendarHelper;
 import fr.openent.presences.helper.EventHelper;
 import fr.openent.presences.helper.SlotHelper;
 import fr.openent.presences.model.Event.Event;
-import fr.openent.presences.model.Reason;
 import fr.openent.presences.service.AbsenceService;
 import fr.openent.presences.service.EventService;
 import fr.openent.presences.service.SettingsService;
@@ -36,9 +34,7 @@ import org.entcore.common.user.UserInfos;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.*;
-import java.util.function.Supplier;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 public class DefaultEventService implements EventService {
 
@@ -452,33 +448,21 @@ public class DefaultEventService implements EventService {
                 "       array_to_json(array_agg(e)) as events " +
                 "      FROM presences.absence a " +
                 "         RIGHT JOIN presences.event e " +
-                "                    ON ( " +
-                "                               (a.start_date < e.end_date AND e.start_date < a.end_date) OR " +
-                "                               (e.start_date < a.end_date AND a.start_date < e.end_date) " +
-                "                           ) " +
-                "                        AND e.type_id = 1 " +
-                "                        AND e.student_id = ? " +
-                "                        AND (a.student_id = e.student_id OR a.student_id IS NULL) " +
-                "       WHERE (( " +
-                "                    (e.start_date < ? AND ? < e.end_date) " +
-                "                    OR (? < e.end_date AND e.start_date < ?) " +
-                "                ) " +
-                "           OR ( " +
-                "                    (a.start_date < ? AND ? < a.end_date) " +
-                "                    OR (? < a.end_date AND a.start_date < ?) " +
-                "                )) " +
-                "   GROUP BY a.id";
+                "                    ON e.type_id = 1 " +
+                "                        AND (a.student_id = e.student_id) " +
+                "                        AND ((a.start_date < e.end_date AND e.start_date < a.end_date) OR " +
+                "                             (e.start_date < a.end_date AND a.start_date < e.end_date)) " +
+                "      WHERE ((e.start_date < ? AND ? < e.end_date) " +
+                "       OR (? < e.end_date AND e.start_date < ?)) " +
+                "      AND e.student_id = ? " +
+                "      GROUP BY a.id;";
 
         JsonArray params = new JsonArray();
+        params.add(endDate.toString());
+        params.add(startDate.toString());
+        params.add(startDate.toString());
+        params.add(endDate.toString());
         params.add(studentId);
-        params.add(endDate.toString());
-        params.add(startDate.toString());
-        params.add(startDate.toString());
-        params.add(endDate.toString());
-        params.add(endDate.toString());
-        params.add(startDate.toString());
-        params.add(startDate.toString());
-        params.add(endDate.toString());
         Sql.getInstance().prepared(query, params, SqlResult.validResultHandler(result -> {
             if (result.isLeft()) {
                 String message = "[Presences@DefaultEventService::editCorrespondingAbsences] Failed to retrieve absences from list events";
