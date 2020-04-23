@@ -7,6 +7,7 @@ import {
     incidentsProtagonistsManage,
     incidentsSeriousnessManage,
     incidentsTypeManage,
+    punishmentsTypeManage,
 } from './sniplets';
 import rights from "./rights";
 import {incidentsMementoWidget} from "./sniplets/memento/incidents";
@@ -22,5 +23,6 @@ Behaviours.register('incidents', {
         'incidents-manage/sniplet-incidents-partners-manage': incidentsPartnersManage,
         'incidents-manage/sniplet-incidents-manage-lightbox': incidentsManageLightbox,
         'memento/incidents': incidentsMementoWidget,
+        'punishments-manage/sniplet-punishments-type-manage': punishmentsTypeManage
     }
 });

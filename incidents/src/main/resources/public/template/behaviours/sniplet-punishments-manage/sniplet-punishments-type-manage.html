@@ -1,0 +1,132 @@
+<div class="ten sniplet presences sniplet-presence-form sniplet-manage-punishment">
+    <div class="sniplet-form">
+
+        <!-- header -->
+        <div class="sniplet-header">
+            <span class="sniplet-header-icon"><i class="punishment-active" aria-hidden="true"></i></span>
+            <h3 class="sniplet-header-title">
+                <i18n>presences.punishments.type.title</i18n>
+            </h3>
+        </div>
+
+        <div class="sniplet-flex">
+            <!-- Form input -->
+            <div class="sniplet-input ten">
+
+                <!-- Title -->
+                <label class="sniplet-input-title">
+                    <i18n>presences.punishments.type.form.input</i18n>
+                </label>
+
+                <!-- Select Punishment Category -->
+                <div>
+                    <label>
+                        <select class="sniplet-select-width"
+                                data-ng-model="vm.form.punishment_category_id"
+                                ng-options="punishmentCategory.id as punishmentCategory.label for punishmentCategory in vm.punishmentCategory"
+                                data-ng-change="vm.switchCategory()">
+                            <option value="">[[lang.translate('presences.punishments.category.title')]]</option>
+                        </select>
+                    </label>
+
+
+                </div>
+
+                <!-- Punishments type choice -->
+                <div class="sniplet-input">
+                    <div class="sniplet-input-flex sniplet-input-margin">
+                        <div class="md-radio md-radio-inline">
+                            <input type="radio" ng-model="vm.form.type"
+                                   ng-value="'PUNITION'"
+                                   id="punition">
+                            <label for="punition">
+                                <i18n>presences.punishment</i18n>
+                            </label>
+                        </div>
+                        <div class="md-radio md-radio-inline">
+                            <input type="radio" ng-model="vm.form.type"
+                                   ng-value="'SANCTION'"
+                                   id="sanction">
+                            <label for="sanction">
+                                <i18n>presences.sanction</i18n>
+                            </label>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Form -->
+                <div class="incident-sniplet-form">
+                    <!-- Input -->
+                    <div class="search-input sniplet-input-form sniplet-select-width">
+                        <input type="text" data-ng-model="vm.form.label" class="twelve cell"
+                               i18n-placeholder="presences.punishments.type.form.input.placeholder">
+                    </div>
+
+                    <!-- Submit -->
+                    <button data-ng-click="vm.createPunishmentType()"
+                            data-ng-disabled="!vm.form.punishment_category_id || !vm.form.label || !vm.form.type">
+                        <i18n>add</i18n>
+                    </button>
+                </div>
+
+
+                <!-- Lists -->
+                <div class="sniplet-punishment-margin-top-xlg">
+                    <div class="sniplet-addList-content" ng-if="vm.punishments.length > 0">
+                        <i18n>presences.punishments.type.lists</i18n>
+                        <ul class="sniplet-addList-content-punishment-list">
+                            <li class="sniplet-addList-content-list-punishment-item"
+                                ng-repeat="punishment in vm.punishments | orderBy:'id'">
+
+                                <div class="sniplet-addList-content-list-item-title">
+                                    <label class="sniplet-addList-content-list-item-title-label">[[punishment.label]]</label>
+                                    <i class="presence-edit"
+                                       data-ng-click="vm.openIncidentsManageLightbox(punishment)"></i>
+                                </div>
+
+                                <div class="sniplet-addList-content-list-item-icons">
+                                    <i class="visible" data-ng-show="punishment.used && !punishment.hidden"
+                                       data-ng-click="vm.toggleVisibility(punishment)"></i>
+                                    <i class="invisible" data-ng-show="punishment.hidden && punishment.used"
+                                       data-ng-click="vm.toggleVisibility(punishment)"></i>
+                                    <i class="delete" data-ng-show="!punishmentType.used"
+                                       data-ng-click="vm.deletePunishmentType(punishment)"></i>
+                                </div>
+                            </li>
+                </ul>
+            </div>
+
+                    <div class="sniplet-addList-content" ng-if="vm.sanctions.length > 0">
+                        <i18n>presences.sanctions.type.lists</i18n>
+                        <ul class="sniplet-addList-content-punishment-list">
+                            <li class="sniplet-addList-content-list-punishment-item"
+                                ng-repeat="sanction in vm.sanctions | orderBy:'id'">
+
+                                <div class="sniplet-addList-content-list-item-title">
+                                    <label class="sniplet-addList-content-list-item-title-label">[[sanction.label]]</label>
+                                    <i class="presence-edit"
+                                       data-ng-click="vm.openIncidentsManageLightbox(sanction)"></i>
+                                </div>
+
+                                <div class="sniplet-addList-content-list-item-icons">
+                                    <i class="visible" data-ng-show="sanction.used && !sanction.hidden"
+                                       data-ng-click="vm.toggleVisibility(sanction)"></i>
+                                    <i class="invisible" data-ng-show="sanction.hidden && sanction.used"
+                                       data-ng-click="vm.toggleVisibility(sanction)"></i>
+                                    <i class="delete" data-ng-show="!sanction.used"
+                                       data-ng-click="vm.deletePunishmentType(sanction)"></i>
+                                </div>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+
+            </div>
+
+            <div>
+                <img src="[[vm.img]]" alt="template saisie de punitions et sanctions"
+                     ng-show="vm.form.punishment_category_id">
+            </div>
+        </div>
+    </div>
+</div>

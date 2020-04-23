@@ -86,5 +86,7 @@
   "incident.init.incident.partner.2": "Parquet",
   "incident.init.incident.partner.3": "Inspection académique",
   "incident.init.incident.partner.4": "Assistance sociale",
-  "incidents.memento.widget.unavailable": "Informations non disponibles - périodes de l'année scolaire non définies"
+  "incidents.memento.widget.unavailable": "Informations non disponibles - périodes de l'année scolaire non définies",
+  "incidents.select.category": "Sélectionner la catégorie",
+  "incidents.select.type": "Sélectionner le type"
 }

@@ -10,7 +10,7 @@ CREATE TABLE incidents.punishment_category (
 
 INSERT INTO incidents.punishment_category(label, url_img)
    VALUES
-   ('Devoir supplémentaire', 'resources/public/img/punishment_category/devoir_supplementaire.jpg'),
-   ('Retenue', 'resources/public/img/punishment_category/retenue.jpg'),
-   ('Blâme', 'resources/public/img/punishment_category/blame.jpg'),
-   ('Exclusion', 'resources/public/img/punishment_category/exclusion.jpg');
+   ('Devoir supplémentaire', '/incidents/public/img/punishment_category/devoir_supplementaire.jpg'),
+   ('Retenue', '/incidents/public/img/punishment_category/retenue.jpg'),
+   ('Blâme', '/incidents/public/img/punishment_category/blame.jpg'),
+   ('Exclusion', '/incidents/public/img/punishment_category/exclusion.jpg');

@@ -23,7 +23,7 @@
         </div>
 
         <!-- Color mode if sniplet is on seriousness -->
-        <div ng-if="vm.seriousnessMode " class="sniplet-form-lightbox-body-color">
+        <div ng-if="vm.seriousnessMode" class="sniplet-form-lightbox-body-color">
             <label>
                 <i18n>incident.seriousness.form.input.color</i18n>
             </label>
@@ -33,8 +33,50 @@
                 <li class="seriousness-form-[[i]]"
                     ng-repeat="i in [0, 1, 2, 3, 4, 5, 6, 7]"
                     ng-class="{active: vm.form.level === i}"
-                    data-ng-click="vm.chooseLevel(i)">&nbsp;</li>
+                    data-ng-click="vm.chooseLevel(i)">&nbsp;
+                </li>
             </ul>
+        </div>
+
+        <!-- Choice category and type mode if sniplet is on punishment -->
+        <div ng-if="vm.punishmentMode">
+            <!-- category -->
+            <label>
+                <i18n>presences.punishments.select.category</i18n>
+            </label>
+
+            <div class="sniplet-form-lightbox-body-regularisable">
+                <label>
+                    <select ng-model="vm.form.punishment_category_id"
+                            ng-options="punishmentCategory.id as punishmentCategory.label for punishmentCategory in vm.punishmentCategory"
+                            ng-change="vm.switchCategory()">
+                    </select>
+                </label>
+            </div>
+
+            <!-- type -->
+            <label>
+                <i18n>presences.punishments.select.type</i18n>
+            </label>
+
+            <div class="sniplet-form-lightbox-body-regularisable">
+                <div class="md-radio md-radio-inline">
+                    <input type="radio" ng-model="vm.form.type"
+                           ng-value="'PUNITION'"
+                           id="punition-lightbox">
+                    <label for="punition-lightbox">
+                        <i18n>presences.punishment</i18n>
+                    </label>
+                    <div class="md-radio md-radio-inline">
+                        <input type="radio" ng-model="vm.form.type"
+                               ng-value="'SANCTION'"
+                               id="sanction-lightbox">
+                        <label for="sanction-lightbox">
+                            <i18n>presences.sanction</i18n>
+                        </label>
+                    </div>
+                </div>
+            </div>
         </div>
 
     </section>

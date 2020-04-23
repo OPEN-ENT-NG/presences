@@ -1,17 +1,19 @@
 package fr.openent.incidents.service.impl;
 
 import fr.openent.incidents.Incidents;
+import fr.openent.incidents.service.PunishmentCategoryService;
 import fr.wseduc.webutils.Either;
 import io.vertx.core.Handler;
-import io.vertx.core.json.JsonObject;
+import io.vertx.core.json.JsonArray;
 import org.entcore.common.sql.Sql;
 import org.entcore.common.sql.SqlResult;
 
-public class DefaultPunishmentCategoryService {
+public class DefaultPunishmentCategoryService implements PunishmentCategoryService {
 
-    public void get(String structureId, Handler<Either<String, JsonObject>> handler) {
-        String query = "SELECT * FROM " + Incidents.dbSchema + ".punishment_category where structure_id = '" + structureId + "'";
+    @Override
+    public void get(Handler<Either<String, JsonArray>> handler) {
+        String query = "SELECT * FROM " + Incidents.dbSchema + ".punishment_category";
 
-        Sql.getInstance().raw(query, SqlResult.validUniqueResultHandler(handler));
+        Sql.getInstance().raw(query, SqlResult.validResultHandler(handler));
     }
 }

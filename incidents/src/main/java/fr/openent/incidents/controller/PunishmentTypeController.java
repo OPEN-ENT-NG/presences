@@ -45,10 +45,7 @@ public class PunishmentTypeController extends ControllerHelper {
     @SecuredAction(value = "", type = ActionType.RESOURCE)
     public void post(final HttpServerRequest request) {
         RequestUtils.bodyToJson(request, punishmentTypeBody -> {
-            if (isPunishmentTypeBodyInvalid(punishmentTypeBody)
-                    && !punishmentTypeBody.getString("type").equals(PunishmentsType.PUNITION.toString())
-                    && !punishmentTypeBody.getString("type").equals(PunishmentsType.SANCTION.toString())
-            ) {
+            if (isPunishmentTypeBodyInvalid(punishmentTypeBody) || isTypeInvalid(punishmentTypeBody)) {
                 badRequest(request);
                 return;
             }
@@ -67,8 +64,12 @@ public class PunishmentTypeController extends ControllerHelper {
     private boolean isPunishmentTypeBodyInvalid(JsonObject punishmentTypeBody) {
         return !punishmentTypeBody.containsKey("structure_id") &&
                 !punishmentTypeBody.containsKey("label") &&
-                !punishmentTypeBody.containsKey("type") &&
                 !punishmentTypeBody.containsKey("punishment_category_id");
+    }
+
+    private boolean isTypeInvalid(JsonObject punishmentTypeBody) {
+        return !punishmentTypeBody.getString("type").equals(PunishmentsType.PUNITION.toString()) &&
+                !punishmentTypeBody.getString("type").equals(PunishmentsType.SANCTION.toString());
     }
 
     @Put("/punishments/type")
@@ -80,9 +81,7 @@ public class PunishmentTypeController extends ControllerHelper {
         RequestUtils.bodyToJson(request, punishmentTypeBody -> {
             if (isPunishmentTypeBodyInvalid(punishmentTypeBody)
                     && !punishmentTypeBody.containsKey("hidden")
-                    && !punishmentTypeBody.containsKey("id")
-                    && !punishmentTypeBody.getString("type").equals(PunishmentsType.PUNITION.toString())
-                    && !punishmentTypeBody.getString("type").equals(PunishmentsType.SANCTION.toString())) {
+                    && !punishmentTypeBody.containsKey("id") || isTypeInvalid(punishmentTypeBody)) {
                 badRequest(request);
                 return;
             }

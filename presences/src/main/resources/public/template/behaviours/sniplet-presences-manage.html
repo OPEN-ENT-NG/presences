@@ -39,7 +39,7 @@
         </a>
 
         <!-- punishment/sanctions -->
-        <a class="flex-col col__1 presence-navigation-item forbidden">
+        <a class="flex-col col__1 presence-navigation-item" data-ng-click="vm.scrollToElement('punishment')">
             <div class="presence-icon flex-row"><i class="punishment-active" aria-hidden="true"></i></div>
             <span class="flex-row"><i18n>presences.punishments</i18n>&nbsp<i18n>presences.sanctions</i18n></span>
         </a>
@@ -111,6 +111,12 @@
 
     <!-- lightbox edit incident -->
     <sniplet template="incidents-manage/sniplet-incidents-manage-lightbox" application="incidents"></sniplet>
+</div>
+
+<!-- INCIDENTS MODULE SNIPLETS / PUNISHMENT -->
+<div class="sniplet presences incidents" id="punishment">
+    <!-- Punishment -->
+    <sniplet template="punishments-manage/sniplet-punishments-type-manage" application="incidents"></sniplet>
 </div>
 
 <!-- MASSMAILING MODULE SNIPLETS -->

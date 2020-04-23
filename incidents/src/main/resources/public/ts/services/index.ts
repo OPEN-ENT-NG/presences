@@ -5,3 +5,5 @@ export * from './PlaceService';
 export * from './ProtagonistTypeService';
 export * from './SeriousnessService';
 export * from '@common/services/ViescolaireService';
+export * from './PunishmentTypeService';
+export * from './PunishmentCategoryService';
