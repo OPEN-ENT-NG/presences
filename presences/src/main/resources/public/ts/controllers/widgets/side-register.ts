@@ -1,10 +1,11 @@
 import {model, ng, notify, toasts} from 'entcore';
 import {Absence, Course, Courses, Register, RegisterStatus, RegisterStudent} from '../../models';
 import {DateUtils} from '@common/utils/date';
-import {CourseUtils} from "@common/utils";
+import {CourseUtils, PresencesPreferenceUtils} from "@common/utils";
 import {RegisterUtils} from "../../utilities";
 import {COURSE_EVENTS} from "@common/model";
 import {IAngularEvent} from "angular";
+import http from "axios";
 
 interface ViewModel {
     courses: Courses;
@@ -38,7 +39,9 @@ export const sideRegisterController = ng.controller('SideRegisterController', ['
             try {
                 let start_date = DateUtils.format(new Date(), DateUtils.FORMAT["YEAR-MONTH-DAY"]);
                 let end_date = DateUtils.format(new Date(), DateUtils.FORMAT["YEAR-MONTH-DAY"]);
-                let isMultipleSlot: boolean;
+                let registerTimeSlot = await getPreference();
+                
+                let isMultipleSlot: boolean = ('multipleSlot' in registerTimeSlot) ? registerTimeSlot.multipleSlot : await initMultipleSlotPreference();
                 if (model.me.profiles.some(profile => profile === "Personnel")) {
                     isMultipleSlot = true;
                 }
@@ -124,6 +127,15 @@ export const sideRegisterController = ng.controller('SideRegisterController', ['
             }
             vm.register.setStatus(RegisterStatus.IN_PROGRESS);
             $scope.safeApply();
+        }
+
+        async function initMultipleSlotPreference(): Promise<boolean> {
+            await PresencesPreferenceUtils.updatePresencesRegisterPreference(true);
+            return true;
+        }
+
+        async function getPreference(): Promise<any> {
+            return http.get(`userbook/preference/presences.register`);
         }
 
         vm.load();
