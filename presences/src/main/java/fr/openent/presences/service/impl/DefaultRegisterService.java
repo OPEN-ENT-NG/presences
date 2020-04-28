@@ -130,19 +130,23 @@ public class DefaultRegisterService implements RegisterService {
         getRegisterIdGroup(finalResult.getLong("id"), registerIdGroupResult -> {
             if (registerIdGroupResult.isLeft()) {
                 String message = "[Presences@DefaultRegisterService::absenceInteraction::getRegisterIdGroup]" +
-                        " Failed to retrieve register id group reference";
-                LOGGER.error(message, registerIdGroupResult.left().getValue());
+                        " Failed to retrieve register id group reference " +
+                        (registerIdGroupResult.left() != null ? registerIdGroupResult.left().getValue() : "");
+                LOGGER.error(message);
                 handler.handle(new Either.Left<>(message));
             } else {
+                LOGGER.info("[Presences@DefaultRegisterService::getRegisterIdGroup] Proceeding treating group ids fetched ");
                 List<JsonObject> groups = registerIdGroupResult.right().getValue().getList();
                 List<String> ids = groups.stream().map(group -> group.getString("group_id")).collect(Collectors.toList());
                 groupService.getGroupStudents(ids, studentsIdsResult -> {
                     if (studentsIdsResult.isLeft()) {
                         String message = "[Presences@DefaultRegisterService::" +
-                                "absenceInteraction::getGroupStudents] Failed to retrieve students info";
-                        LOGGER.error(message, studentsIdsResult.left().getValue());
+                                "absenceInteraction::getGroupStudents] Failed to retrieve students info " +
+                                (studentsIdsResult.left() != null ? studentsIdsResult.left().getValue() : "");
+                        LOGGER.error(message);
                         handler.handle(new Either.Left<>(message));
                     } else {
+                        LOGGER.info("[Presences@DefaultRegisterService::getGroupStudents] Proceeding treating student ids fetched ");
                         List<String> users = new ArrayList<>();
                         JsonArray studentsIds = studentsIdsResult.right().getValue();
                         if (!studentsIds.isEmpty()) {
@@ -155,21 +159,22 @@ public class DefaultRegisterService implements RegisterService {
                                 } else {
                                     String message = "[Presences@DefaultRegisterService::absenceInteraction::getGroupStudents] " +
                                             "Failed to store student in Array of string get jsonObject returns NULL";
-                                    LOGGER.error(message, studentsIdsResult.left().getValue());
+                                    LOGGER.error(message);
                                 }
                             }
                             users.removeAll(Collections.singletonList(null));
                             if (users.isEmpty()) {
                                 String message = "[Presences@DefaultRegisterService::absenceInteraction::getGroupStudents] " +
                                         "array of users is actually empty";
-                                LOGGER.error(message, studentsIdsResult.left().getValue());
+                                LOGGER.error(message);
                                 handler.handle(new Either.Left<>(message));
                             } else {
                                 matchAbsenceToEvent(finalResult, users, user, matchingResult -> {
                                     if (matchingResult.isLeft()) {
                                         String message = "[Presences@DefaultRegisterService::matchAbsenceToEvent] " +
-                                                "Failed to create events with absence information";
-                                        LOGGER.error(message, studentsIdsResult.left().getValue());
+                                                "Failed to create events with absence information " +
+                                                (matchingResult.left() != null ? matchingResult.left().getValue() : "");
+                                        LOGGER.error(message);
                                         handler.handle(new Either.Left<>(message));
                                     } else {
                                         /* Finish handler */
@@ -182,7 +187,7 @@ public class DefaultRegisterService implements RegisterService {
                         } else {
                             String message = "[Presences@DefaultRegisterService::absenceInteraction::getGroupStudents] " +
                                     "Failed to fetch students Ids result from Neo4j. Might be empty";
-                            LOGGER.error(message, studentsIdsResult.left().getValue());
+                            LOGGER.error(message);
                             handler.handle(new Either.Left<>(message));
                         }
                     }
