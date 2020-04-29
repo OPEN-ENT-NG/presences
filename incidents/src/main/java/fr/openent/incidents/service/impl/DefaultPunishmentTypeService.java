@@ -5,18 +5,21 @@ import fr.openent.incidents.helper.PunishmentTypeHelper;
 import fr.openent.incidents.model.PunishmentType;
 import fr.openent.incidents.service.PunishmentTypeService;
 import fr.openent.presences.common.helper.FutureHelper;
+import fr.wseduc.mongodb.MongoDb;
 import fr.wseduc.webutils.Either;
-import io.vertx.core.CompositeFuture;
 import io.vertx.core.Future;
 import io.vertx.core.Handler;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
+import org.entcore.common.mongodb.MongoDbResult;
 import org.entcore.common.sql.Sql;
 import org.entcore.common.sql.SqlResult;
 
+import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 public class DefaultPunishmentTypeService implements PunishmentTypeService {
 
@@ -24,46 +27,58 @@ public class DefaultPunishmentTypeService implements PunishmentTypeService {
 
     @Override
     public void get(String structure_id, Handler<Either<String, JsonArray>> handler) {
-        Future<JsonArray> punishmentsTypeFuture = Future.future();
-        Future<JsonArray> punishmentsTypeUsedFuture = Future.future();
 
-        fetchPunishmentsType(structure_id, FutureHelper.handlerJsonArray(punishmentsTypeFuture));
-        fetchUsedPunishmentsType(structure_id, FutureHelper.handlerJsonArray(punishmentsTypeUsedFuture));
-
-        CompositeFuture.all(punishmentsTypeFuture, punishmentsTypeUsedFuture).setHandler(event -> {
-            if (event.failed()) {
+        fetchPunishmentsType(structure_id, punishmentTypeAsync -> {
+            if (punishmentTypeAsync.isLeft()) {
                 String message = "[Incidents@PunishementsTypeService::get] Failed to fetch Punishments type";
                 LOGGER.error(message);
                 handler.handle(new Either.Left<>(message));
             } else {
-                List<PunishmentType> punishmentsType = PunishmentTypeHelper.getPunishmentTypeListFromJsonArray(punishmentsTypeFuture.result());
-                List<PunishmentType> punishmentsTypeUsed = PunishmentTypeHelper.getPunishmentTypeListFromJsonArray(punishmentsTypeUsedFuture.result());
+                List<PunishmentType> punishmentsType = PunishmentTypeHelper.
+                        getPunishmentTypeListFromJsonArray(punishmentTypeAsync.right().getValue());
 
-                for (PunishmentType punishmentType : punishmentsType) {
-                    punishmentType.setUsed(false);
-                    for (PunishmentType punishmentTypeUsed : punishmentsTypeUsed) {
-                        if (punishmentType.getId().equals(punishmentTypeUsed.getId())) {
-                            punishmentType.setUsed(true);
-                        }
-                    }
+                List<Integer> punishmentsIds = punishmentsType.stream().map(PunishmentType::getId).collect(Collectors.toList());
+                List<Future<JsonObject>> futures = new ArrayList<>();
+
+                for (Integer punishmentId : punishmentsIds) {
+                    Future<JsonObject> future = Future.future();
+                    futures.add(future);
+                    findPunishmentTypeIdIfExist(structure_id, punishmentId, FutureHelper.handlerJsonObject(future));
                 }
-                handler.handle(new Either.Right<>(PunishmentTypeHelper.toJsonArray(punishmentsType)));
+
+                FutureHelper.all(futures).setHandler(event -> {
+                    if (event.failed()) {
+                        String message = "[Incidents@PunishementsTypeService::get] Failed to " +
+                                "fetch used punishments type in mongodb" + " " + event.cause().toString();
+                        LOGGER.error(message);
+                        handler.handle(new Either.Left<>(message));
+                    } else {
+                        for (PunishmentType punishmentType : punishmentsType) {
+                            for (int i = 0; i < event.result().size(); i++) {
+                                if (!((JsonObject) event.result().resultAt(i)).isEmpty()) {
+                                    JsonObject resultCategory = event.result().resultAt(i);
+                                    // @TODO changer le getJsonObject dayOfweek par l'information en question
+                                    if (punishmentType.getId().equals(resultCategory.getInteger("dayOfWeek"))) {
+                                        punishmentType.setUsed(true);
+                                    }
+                                }
+                            }
+                        }
+                        handler.handle(new Either.Right<>(PunishmentTypeHelper.toJsonArray(punishmentsType)));
+                    }
+                });
             }
         });
     }
 
-    private void fetchPunishmentsType(String structureId, Handler<Either<String, JsonArray>> handler) {
-        String query = "SELECT * FROM " + Incidents.dbSchema + ".punishment_type where structure_id = '" + structureId + "'";
-        Sql.getInstance().raw(query, SqlResult.validResultHandler(handler));
+    private void findPunishmentTypeIdIfExist(String structure_id, Integer punishmentId, Handler<Either<String, JsonObject>> handler) {
+        // TODO repace dayOfWeek by your punishment_type_id and structureId and obv courses with punishment collection
+        JsonObject query = new JsonObject().put("dayOfWeek", punishmentId).put("structureId", structure_id);
+        MongoDb.getInstance().findOne("courses", query, message -> handler.handle(MongoDbResult.validResult(message)));
     }
 
-    private void fetchUsedPunishmentsType(String structureId, Handler<Either<String, JsonArray>> handler) {
-        String query = "WITH ids AS (" +
-                "SELECT i.id, i.label, i.type, i.punishment_category_id FROM " + Incidents.dbSchema + ".punishment_type i " +
-                "WHERE structure_id = '" + structureId +
-                "') " +
-                "SELECT DISTINCT i.id, i.label, i.type, i.punishment_category_id FROM ids i " +
-                "WHERE (i.id IN (SELECT type_id FROM " + Incidents.dbSchema + ".incident))";
+    private void fetchPunishmentsType(String structureId, Handler<Either<String, JsonArray>> handler) {
+        String query = "SELECT * FROM " + Incidents.dbSchema + ".punishment_type where structure_id = '" + structureId + "'";
         Sql.getInstance().raw(query, SqlResult.validResultHandler(handler));
     }
 
