@@ -67,7 +67,15 @@ public class DefaultGroupService implements GroupService {
                 LOGGER.error(message);
                 handler.handle(new Either.Left<>(message));
             } else {
-                handler.handle(new Either.Right<>(body.getJsonArray("results")));
+                // remove student if is delete
+                JsonArray studentList = body.getJsonArray("results");
+                for (int i = 0; i < studentList.size(); i++) {
+                    JsonObject student = studentList.getJsonObject(i);
+                    if (student.getString("deleteDate") != null) {
+                        studentList.remove(student);
+                    }
+                }
+                handler.handle(new Either.Right<>(studentList));
             }
         });
     }
