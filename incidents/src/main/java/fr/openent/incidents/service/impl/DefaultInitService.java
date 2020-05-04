@@ -128,9 +128,9 @@ public class DefaultInitService implements InitService {
 
         JsonArray params = new JsonArray();
 
-        String query = "INSERT INTO " + Incidents.dbSchema + ".punishment_type(structure_id, label, type, punishment_category_id, hidden) VALUES ";
+        String query = "INSERT INTO " + Incidents.dbSchema + ".punishment_type(structure_id, label, type, punishment_category_id) VALUES ";
         for (PunishmentType punishmentType : punishmentTypeList) {
-            query += "(?, ?, ?, ?, false),";
+            query += "(?, ?, ?, ?),";
             params.add(punishmentType.getStructureId())
                     .add(punishmentType.getLabel())
                     .add(punishmentType.getType())

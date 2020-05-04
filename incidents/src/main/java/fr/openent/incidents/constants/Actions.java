@@ -43,4 +43,10 @@ public class Actions {
     public static final String INCIDENT_PUNISHMENT_TYPE_UPDATE = "INCIDENT_PUNISHMENT_TYPE_UPDATE";
     // A user deletes a punishemnt_type
     public static final String INCIDENT_PUNISHMENT_TYPE_DELETE = "INCIDENT_PUNISHMENT_TYPE_DELETE";
+    // A user creates a punishment
+    public static final String INCIDENT_PUNISHMENT_CREATION = "INCIDENT_PUNISHMENT_CREATION";
+    // A user updates a punishment
+    public static final String INCIDENT_PUNISHMENT_UPDATE = "INCIDENT_PUNISHMENT_UPDATE";
+    // A user deletes a punishment
+    public static final String INCIDENT_PUNISHMENT_DELETE = "INCIDENT_PUNISHMENT_DELETE";
 }
