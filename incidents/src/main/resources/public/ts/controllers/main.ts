@@ -22,7 +22,10 @@ export const mainController = ng.controller('MainController', ['$scope', 'route'
 
         route({
             incidents: () => {
-            }
+            },
+            punishment: () => {
+                template.open('main', `containers/punishment`);
+            },
         });
 
         $scope.lang = idiom;

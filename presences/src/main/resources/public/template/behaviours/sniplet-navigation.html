@@ -1,5 +1,6 @@
 <div class="sniplet presences">
     <nav role="navigation" aria-label="main navigation">
+        <!-- main nav -->
         <div class="nav">
             <div class="items">
                 <div role="menuitem" ng-if="structures.length > 1"
@@ -62,6 +63,8 @@
                 </a>
             </div>
         </div>
+
+        <!-- all sub nav -->
         <div class="sub-nav" role="navigation" aria-label="sub navigation">
             <div class="items">
                 <div class="item structure-choice-item">
@@ -115,13 +118,16 @@
                     </div>
                 </div>
                 <div class="item"></div>
+                <!-- incidents -->
                 <div class="item">
                     <div class="sub-items" ng-class="{hovered: menu.hovered === 'INCIDENTS'}"
+                         ng-if="hasIncidentRight('access') || hasIncidentRight('readPunishment') || hasIncidentRight('readSanction')"
                          data-ng-mouseover="hoverIn('INCIDENTS')"
                          data-ng-mouseleave="hoverOut()">
                         <h2>
                             <i18n>incidents.navigation.management</i18n>
                         </h2>
+                        <!-- sub nav incident -->
                         <a class="sub-item"
                            href="/incidents#/incidents"
                            ng-if="::hasIncidentRight('access')"
@@ -129,7 +135,11 @@
                             <i class="incident" aria-hidden="true"></i>
                             <span><i18n>incidents.title</i18n></span>
                         </a>
-                        <a class="sub-item forbidden" href="#">
+                        <!-- sub nav punishment/sanction -->
+                        <a class="sub-item"
+                           href="/incidents#/punishment/sanction"
+                           ng-if="hasIncidentRight('readPunishment') || hasIncidentRight('readSanction')"
+                           ng-class="{active: getCurrentState() === 'punishment/sanction'}">
                             <i class="punishment" aria-hidden="true"></i>
                             <span><i18n>incidents.navigation.punishment.sanction</i18n></span>
                         </a>

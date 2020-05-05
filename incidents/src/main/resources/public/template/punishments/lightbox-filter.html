@@ -1,0 +1,127 @@
+<!-- Title -->
+<section class="head ">
+    <h3>
+        <i18n>massmailing.filters</i18n>
+    </h3>
+</section>
+
+<!-- Body -->
+<section class="body lightbox-form">
+    <!-- search bar section -->
+
+    <div class="row vertical-spacing">
+        <!-- Students search bar -->
+        <div class="cell six paddingRight">
+            <div class="cell twelve">
+                <async-autocomplete data-ng-disabled="false"
+                                    data-ng-model="vm.studentsSearchLightbox.student"
+                                    data-ng-change="vm.selectStudentLightbox"
+                                    data-on-search="vm.searchStudentLightbox"
+                                    data-options="vm.studentsSearchLightbox.students"
+                                    data-placeholder="presences.exemptions.search.student"
+                                    data-search="vm.studentsSearchLightbox.student">
+                </async-autocomplete>
+            </div>
+            <div class="cell twelve">
+                <ul class="cell twelve search-input-ul"
+                    data-ng-show="vm.studentsSearchLightbox.selectedStudents.length > 0">
+                    <li ng-repeat="student in vm.studentsSearchLightbox.selectedStudents">
+                        [[student.toString()]] <i class="close"
+                                                  data-ng-click="vm.removeSelectedStudentsLightbox(student)"></i>
+                    </li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- Groups search bar -->
+        <div class="cell six paddingLeft">
+            <div class="cell twelve">
+                <async-autocomplete data-ng-disabled="false"
+                                    data-ng-model="vm.groupsSearchLightbox.group"
+                                    data-ng-change="vm.selectGroupLightbox"
+                                    data-on-search="vm.searchGroupLightbox"
+                                    data-options="vm.groupsSearchLightbox.groups"
+                                    data-placeholder="presences.search.class"
+                                    data-search="vm.groupsSearchLightbox.group">
+                </async-autocomplete>
+            </div>
+            <div class="cell twelve">
+                <ul class="cell twelve search-input-ul"
+                    data-ng-show="vm.groupsSearchLightbox.selectedGroups.length > 0">
+                    <li ng-repeat="group in vm.groupsSearchLightbox.selectedGroups">
+                        [[group.toString()]] <i class="close"
+                                                data-ng-click="vm.removeSelectedGroupsLightbox(group)"></i>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <!-- Punishment Type filter -->
+    <div class="row vertical-spacing">
+        <h4 class="header-lightbox">
+            <i18n>incidents.punishment.or.sanction</i18n>
+        </h4>
+        <div class="chips">
+            <div class="chip"
+                 ng-repeat="punishmentRule in vm.filterForm.punishmentsRules"
+                 ng-class="{ selected: punishmentRule.isSelected }"
+                 data-ng-click="vm.togglePunishmentType(punishmentRule)">
+                <span>[[lang.translate(punishmentRule.label)]]</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Types filter -->
+    <div class="row vertical-spacing">
+        <!-- title -->
+        <h4 class="row">
+            <i18n class="cell">incidents.types</i18n>
+            <span class="horizontal-spacing card cell horizontal-margin">
+                [[vm.getSelectedPunishmentType()]]/[[vm.punishmentsTypes.length]]
+            </span>
+        </h4>
+        <!--  list of punishmentTypes -->
+        <div class="chips">
+            <div class="chip" ng-class="{selected: vm.filterForm.isAllPunishmentTypeSelected}"
+                 data-ng-click="vm.toggleAllPunishmentType()">
+                <i18n>massmailing.all.none</i18n>
+            </div>
+            <div class="chip"
+                 ng-repeat="punishmentType in vm.punishmentsTypes track by $index"
+                 ng-class="{ selected: punishmentType.isSelected}"
+                 data-ng-click="vm.setSelectedPunishmentType(punishmentType)">
+                <span class="no-style">[[punishmentType.label]]</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- is mass-mailed TODO massmailing next feature -->
+    <!--    <div class="row vertical-spacing">-->
+    <!--        <h4 class="header-lightbox">-->
+    <!--            <i18n>massmailing.filters.massmailing</i18n>-->
+    <!--        </h4>-->
+    <!--        <div class="chips">-->
+    <!--            <div class="chip"-->
+    <!--                 ng-repeat="massmaillingPunishment in vm.filterForm.massmaillingsPunishments"-->
+    <!--                 ng-class="{ selected: massmaillingPunishment.isSelected }"-->
+    <!--                 data-ng-click="massmaillingPunishment.isSelected = !massmaillingPunishment.isSelected">-->
+    <!--                <span>[[lang.translate(massmaillingPunishment.label)]]</span>-->
+    <!--            </div>-->
+    <!--        </div>-->
+    <!--    </div>-->
+</section>
+
+<!-- Footer -->
+<section>
+    <div class="row horizontal-spacing">
+        <div class="twelve cell">
+            <button class="right-magnet" data-ng-click="vm.validFilterLightboxForm()">
+                <i18n>massmailing.validate</i18n>
+            </button>
+            <button class="right-magnet cancel" data-ng-click="vm.filterForm.isOpen = false">
+                <i18n>massmailing.cancel</i18n>
+            </button>
+        </div>
+    </div>
+</section>

@@ -5,6 +5,7 @@ import {punishmentsCategoryService} from "@incidents/services/PunishmentCategory
 import {AxiosResponse} from "axios";
 import {toasts} from "entcore";
 import {INCIDENTS_PUNISHMENT_TYPE_EVENT} from "@common/enum/incidents-event";
+import {PunishmentsUtils} from "@incidents/utilities/punishments";
 
 declare let window: any;
 
@@ -71,11 +72,10 @@ const vm: ViewModel = {
         vm.punishmentCategory = await punishmentsCategoryService.get();
         vm.punishmentType = await punishmentsTypeService.get(window.model.vieScolaire.structure.id);
         vm.punishmentType.forEach((item: IPunishmentType) => {
-            // @ TODO remove magic string (see punishmentUtils)
-            if (item.type == "PUNITION") {
+            if (item.type == PunishmentsUtils.RULES.punishment) {
                 vm.punishments.push(item);
             }
-            if (item.type == "SANCTION") {
+            if (item.type == PunishmentsUtils.RULES.sanction) {
                 vm.sanctions.push(item);
             }
         });

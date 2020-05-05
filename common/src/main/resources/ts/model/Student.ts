@@ -5,9 +5,11 @@ export class Student {
     id: string;
     firstName: string;
     lastName: string;
+    name?: string;
     idClasse: string;
     displayName: string;
     classeName?: any;
+    className?: string;
 
     constructor(o?: any) {
         if (o && typeof o === 'object') {

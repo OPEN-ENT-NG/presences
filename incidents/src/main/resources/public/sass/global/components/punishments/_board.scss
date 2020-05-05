@@ -1,0 +1,23 @@
+.punishment-board {
+  background: $whitesmoke;
+
+  &-title {
+    background: $white;
+  }
+
+  .student {
+    justify-content: flex-start !important;
+  }
+
+  switch {
+    .switch {
+      input[type=checkbox]:checked + .tick {
+        background: $green;
+      }
+
+      input[type=checkbox]:checked + .tick:before {
+        background: $deep-green;
+      }
+    }
+  }
+}

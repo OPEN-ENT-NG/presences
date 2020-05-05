@@ -1,4 +1,5 @@
-import {ng, routes} from 'entcore';
+import {model, ng, routes} from 'entcore';
+import rights from './rights'
 import * as controllers from './controllers';
 import * as directives from './directives';
 import * as services from './services';
@@ -27,4 +28,8 @@ routes.define(function ($routeProvider) {
         .otherwise({
             redirectTo: '/incidents'
         });
-})
+
+    if (model.me.hasWorkflow(rights.workflow.readPunishment) || model.me.hasWorkflow(rights.workflow.readSanction)) {
+        $routeProvider.when('/punishment/sanction', {action: 'punishment'})
+    }
+});

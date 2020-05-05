@@ -1,0 +1,25 @@
+.punishment-detention-form {
+  &-date {
+    display: flex;
+    justify-content: space-between;
+    padding-bottom: $spacing-M;
+
+    .timeslot-select {
+      margin-right: $spacing-M;
+    }
+  }
+
+  &-place {
+    padding: $spacing-L 0;
+
+    input {
+      border: none;
+      background: none;
+      border-bottom: 1px dotted $grey-light;
+
+      &:focus {
+        outline: none;
+      }
+    }
+  }
+}

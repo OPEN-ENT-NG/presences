@@ -1,0 +1,100 @@
+<div class="row">
+    <!--Title-->
+    <h1 class="cell paddingRight">
+        <i18n>incidents.punishments.and.sanctions</i18n>
+    </h1>
+
+    <!-- Students search bar -->
+    <div class="cell four paddingLeft">
+        <div class="cell twelve search-input">
+            <async-autocomplete data-ng-disabled="false"
+                                data-ng-model="vm.studentsSearch.student"
+                                data-ng-change="vm.selectStudent"
+                                data-on-search="vm.searchStudent"
+                                data-options="vm.studentsSearch.students"
+                                data-placeholder="presences.exemptions.search.student"
+                                data-search="vm.studentsSearch.student">
+            </async-autocomplete>
+        </div>
+        <div class="cell twelve">
+            <ul class="cell twelve search-input-ul">
+                <li ng-repeat="student in vm.studentsSearch.selectedStudents">
+                    [[student.displayName]] <i class="close"
+                                               data-ng-click="vm.removeSelectedStudents(student)"></i>
+                </li>
+            </ul>
+        </div>
+    </div>
+
+    <!-- Classes/groups search bar -->
+    <div class="cell four paddingLeft">
+        <div class="scell twelve search-input">
+            <async-autocomplete data-ng-disabled="false"
+                                data-ng-model="vm.groupsSearch.group"
+                                data-ng-change="vm.selectGroup"
+                                data-on-search="vm.searchGroup"
+                                data-options="vm.groupsSearch.groups"
+                                data-placeholder="presences.search.class"
+                                data-search="vm.groupsSearch.group">
+            </async-autocomplete>
+        </div>
+        <div class="cell twelve">
+            <ul class="cell twelve search-input-ul" data-ng-show="vm.groupsSearch.selectedGroups.length > 0">
+                <li ng-repeat="group in vm.groupsSearch.selectedGroups">
+                    [[group.toString()]] <i class="close"
+                                            data-ng-click="vm.removeSelectedGroups(group)"></i>
+                </li>
+            </ul>
+        </div>
+    </div>
+
+</div>
+
+<!-- Date filter -->
+<div class="row top5">
+    <div class="cell eight">
+        <i18n>presences.from</i18n>&#58;
+        <span class="card date-picker">
+             <date-picker ng-change="vm.updateFilter();" ng-model="vm.filter.start_date"></date-picker>
+        </span>
+        <i18n>presences.to</i18n>&#58;
+        <span class="card date-picker">
+            <date-picker ng-change="vm.updateFilter();" ng-model="vm.filter.end_date"></date-picker>
+        </span>
+    </div>
+
+    <!-- Button menu -->
+    <div class="four cell">
+        <sniplet template="punishment-form" application="incidents"></sniplet>
+        <!-- export csv button -->
+        <button class="right-magnet forbidden" disabled>
+            <i18n>presences.export.tocsv</i18n>
+        </button>
+    </div>
+</div>
+
+<!-- Filter -->
+<div class="row vertical-spacing-twice">
+    <!-- Form lightbox icon-->
+    <i class="filter cell" data-ng-click="vm.openFilterLightbox()">&nbsp;</i>
+
+    <!--  Punishments rules (punitions/sanctions) card filtered -->
+    <div class="cell" ng-repeat="punishmentRule in vm.filter.punishmentsRules">
+        <div class="card horizontal-margin-small horizontal-spacing" ng-if="punishmentRule.isSelected">
+            <span>[[lang.translate(punishmentRule.label)]]</span>
+        </div>
+    </div>
+
+    <!--  Punishments massmaillings filtered  TODO massmailing next feature -->
+    <!--    <div class="cell" ng-repeat="massmaillingPunishment in vm.filter.massmaillingsPunishments">-->
+    <!--        <div class="card horizontal-margin-small horizontal-spacing" ng-if="massmaillingPunishment.isSelected">-->
+    <!--            <span>[[lang.translate(massmaillingPunishment.label)]]</span>-->
+    <!--        </div>-->
+    <!--    </div>-->
+
+</div>
+
+<!-- filter form lightbox displayed if icon is clicked -->
+<lightbox show="vm.filterForm.isOpen" on-close="vm.filterForm.isOpen = false" class="history-lightbox">
+    <div ng-include="'/incidents/public/template/punishments/lightbox-filter.html'"></div>
+</lightbox>

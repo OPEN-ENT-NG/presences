@@ -1,0 +1,28 @@
+.punishment-exclude-form {
+  &-date {
+    padding-bottom: $spacing-M;
+
+    date-picker {
+      margin-right: $spacing-L;
+    }
+  }
+
+  &-mandatory {
+    padding: $spacing-LXS 0 $spacing-L 0;
+    display: inline-flex;
+    justify-content: center;
+    align-items: center;
+
+    switch {
+      .switch {
+        input[type=checkbox]:checked + .tick {
+          background: $green;
+        }
+
+        input[type=checkbox]:checked + .tick:before {
+          background: $deep-green;
+        }
+      }
+    }
+  }
+}

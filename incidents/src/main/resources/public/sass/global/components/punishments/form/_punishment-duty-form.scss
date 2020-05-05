@@ -1,0 +1,14 @@
+.punishment-duty-form {
+  &-date {
+    padding-bottom: $spacing-M;
+  }
+
+  &-instruction {
+    padding: $spacing-LXS 0 $spacing-M 0;
+
+    textarea {
+      background: none;
+      margin: $spacing-M 0
+    }
+  }
+}

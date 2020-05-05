@@ -1,0 +1,79 @@
+.punishment-form-lightbox {
+
+  /* Body part */
+  &-body {
+    padding: $spacing-M;
+    background: $incident-light-grey;
+
+    &-student {
+      font-size: $spacing-M;
+      font-weight: bold;
+    }
+
+    &-type {
+      display: flex;
+      padding-top: $spacing-S;
+
+      &-select {
+        display: flex;
+        flex-direction: column;
+      }
+    }
+
+    &-form {
+      padding: $spacing-M 0;
+    }
+  }
+
+  /* Footer part */
+  &-footer {
+    padding: $spacing-LXS $spacing-LXS 0 $spacing-LXS;
+
+    &-body {
+      margin: $spacing-M $spacing-M 0 $spacing-LXS;
+
+      &-search {
+        display: flex;
+        align-items: center;
+
+        &-title {
+          margin-top: 0;
+          color: $black;
+        }
+      }
+    }
+
+    &-submit {
+      display: flex;
+      align-items: center;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      padding-top: $spacing-M;
+
+      &-right {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+
+      &.create {
+        justify-content: flex-end;
+      }
+
+      .button {
+        padding: $spacing-LXS;
+      }
+    }
+  }
+
+  textarea {
+    border: none;
+    border-bottom: 1px dotted $grey-light;
+    padding: 0;
+    height: $spacing-L;
+
+    &:focus {
+      border: none;
+    }
+  }
+}

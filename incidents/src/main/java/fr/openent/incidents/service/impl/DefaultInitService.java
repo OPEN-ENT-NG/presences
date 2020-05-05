@@ -117,9 +117,9 @@ public class DefaultInitService implements InitService {
 
         List<PunishmentType> punishmentTypeList = new ArrayList();
 
-        punishmentTypeList.add(new PunishmentType(structure, "Devoir supplémentaire", "PUNITION", 1, false));
-        punishmentTypeList.add(new PunishmentType(structure, "Retenue", "PUNITION", 2, false));
-        punishmentTypeList.add(new PunishmentType(structure, "Exclusion de cours", "PUNITION", 3, false));
+        punishmentTypeList.add(new PunishmentType(structure, "Devoir supplémentaire", "PUNISHMENT", 1, false));
+        punishmentTypeList.add(new PunishmentType(structure, "Retenue", "PUNISHMENT", 2, false));
+        punishmentTypeList.add(new PunishmentType(structure, "Exclusion de cours", "PUNISHMENT", 3, false));
         punishmentTypeList.add(new PunishmentType(structure, "Avertissement", "SANCTION", 3, false));
         punishmentTypeList.add(new PunishmentType(structure, "Blâme", "SANCTION", 3, false));
         punishmentTypeList.add(new PunishmentType(structure, "Mesure de responsabilisation", "SANCTION", 4, false));

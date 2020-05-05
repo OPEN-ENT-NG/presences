@@ -1,0 +1,242 @@
+import {idiom as lang, moment, toasts} from 'entcore';
+import {IPunishment, IPunishmentBody, IStructureSlot, Student} from "../models";
+import {SNIPLET_FORM_EMIT_PUNISHMENT_EVENTS, SNIPLET_FORM_EVENTS} from '@common/model'
+import {IAngularEvent} from "angular";
+import {StudentsSearch} from "@common/utils";
+import {SearchService} from "@common/services/SearchService";
+import {punishmentService, punishmentsTypeService, ViescolaireService} from "@incidents/services";
+import {PunishmentCategoryType} from "@incidents/models/PunishmentCategory";
+import {IPunishmentType} from "@incidents/models/PunishmentType";
+import {User} from "@common/model/User";
+import {PunishmentsUtils} from "@incidents/utilities/punishments";
+
+declare let window: any;
+
+console.log('Sniplet Punishment create/edit form');
+
+interface ViewModel {
+    safeApply(fn?: () => void): void;
+
+    createPunishmentLightBox: boolean;
+    studentsSearch: StudentsSearch;
+    date: { date: string, startTime: Date, endTime: Date };
+    punishment: IPunishment;
+    form: IPunishmentBody;
+    punishmentTypes: Array<IPunishmentType>;
+    punishmentCategoriesType: typeof PunishmentCategoryType;
+    structureTimeSlot: IStructureSlot;
+
+
+    safeApply(fn?: () => void): void;
+
+    openPunishmentLightbox(): void;
+
+    editPunishmentForm(punishment: IPunishment): void;
+
+    isFormValid(): boolean;
+
+    preparePunishmentForm(): void;
+
+    initPunishmentEdit(punishment: IPunishment): void;
+
+    setCategory(): void;
+
+    create(): Promise<void>;
+
+    update(): Promise<void>;
+
+    delete(): Promise<void>;
+
+    // search bar method
+
+    searchStudent(studentForm: string): Promise<void>;
+
+    selectStudent(valueInput, studentItem): void;
+
+    removeSelectedStudents(studentItem): void;
+
+    closePunishmentLightbox(): void;
+}
+
+const vm: ViewModel = {
+    safeApply: null,
+    createPunishmentLightBox: false,
+    studentsSearch: undefined,
+    punishmentTypes: [],
+    form: {} as IPunishmentBody,
+    punishmentCategoriesType: PunishmentCategoryType,
+    structureTimeSlot: {} as IStructureSlot,
+    date: {
+        date: moment(),
+        startTime: moment().set({second: 0, millisecond: 0}).toDate(),
+        endTime: moment().add(1, 'h').set({second: 0, millisecond: 0}).toDate(),
+    },
+    punishment: {} as IPunishment,
+
+    openPunishmentLightbox(): void {
+        vm.studentsSearch = new StudentsSearch(window.structure.id, SearchService);
+        vm.form = {} as IPunishmentBody;
+        vm.punishment = {} as IPunishment;
+        vm.createPunishmentLightBox = true;
+        vm.safeApply();
+    },
+
+    editPunishmentForm(punishment: IPunishment): void {
+        vm.studentsSearch = new StudentsSearch(window.structure.id, SearchService);
+        vm.initPunishmentEdit(punishment);
+        vm.createPunishmentLightBox = true;
+        vm.safeApply();
+    },
+
+    isFormValid(): boolean {
+        return vm.form.type_id != null &&
+            vm.form.fields != null &&
+            (vm.studentsSearch.getSelectedStudents().map(student => student["id"]).length > 0 ||
+                vm.punishment.student.name != null);
+    },
+
+    preparePunishmentForm: (): void => {
+        if (vm.punishment.id) {
+            vm.form.type_id = vm.punishment.type.id;
+            vm.form.student_id = vm.punishment.student.id;
+            vm.form.owner_id = vm.punishment.owner.id;
+            vm.form.description = vm.punishment.description;
+            // todo edit incident for next feature
+            vm.form.incident_id = null;
+        } else {
+            vm.form.structure_id = window.structure.id;
+            vm.form.student_ids = vm.studentsSearch.getSelectedStudents().map(student => student["id"]);
+            // todo edit incident for next feature
+            vm.form.incident_id = null;
+        }
+    },
+
+    initPunishmentEdit: (punishment: IPunishment): void => {
+        /* when click on card to edit presence */
+        vm.punishment = {
+            id: punishment.id,
+            structure_id: punishment.structure_id,
+            type: punishment.type,
+            fields: punishment.fields,
+            description: punishment.description,
+            owner: {
+                displayName: punishment.owner.displayName,
+                id: punishment.owner.id
+            } as User,
+            student: {
+                id: punishment.student.id,
+                name: punishment.student.name,
+                className: punishment.student.className,
+            } as Student,
+        };
+        vm.form.id = punishment.id;
+        vm.form.structure_id = punishment.structure_id;
+        vm.form.description = punishment.description;
+        vm.form.fields = punishment.fields;
+        vm.form.category_id = punishment.type.punishment_category_id;
+        vm.form.type_id = punishment.type.id;
+        console.log("vm.form: ", vm.form);
+    },
+
+    setCategory: (): void => {
+        vm.form.category_id = vm.punishmentTypes
+            .find((punishmentType: IPunishmentType) => punishmentType.id === vm.form.type_id)
+            .punishment_category_id;
+    },
+
+    async create(): Promise<void> {
+        vm.preparePunishmentForm();
+        let response = await punishmentService.create(vm.form);
+        if (response.status == 200 || response.status == 201) {
+            vm.closePunishmentLightbox();
+            toasts.confirm(lang.translate('incidents.punishment.create.succeed'));
+        } else {
+            toasts.warning(response.data.toString());
+        }
+        punishmentForm.that.$emit(SNIPLET_FORM_EMIT_PUNISHMENT_EVENTS.CREATION);
+        vm.safeApply();
+    },
+
+    async update(): Promise<void> {
+        vm.preparePunishmentForm();
+        let response = await punishmentService.update(vm.form);
+        if (response.status == 200 || response.status == 201) {
+            vm.closePunishmentLightbox();
+            toasts.confirm(lang.translate('incidents.punishment.edit.succeed'));
+        } else {
+            toasts.warning(response.data.toString());
+        }
+        punishmentForm.that.$emit(SNIPLET_FORM_EMIT_PUNISHMENT_EVENTS.EDIT);
+        vm.safeApply();
+    },
+
+    async delete(): Promise<void> {
+        vm.preparePunishmentForm();
+        let response = await punishmentService.delete(vm.form.id);
+        if (response.status == 200 || response.status == 201) {
+            vm.closePunishmentLightbox();
+            toasts.confirm(lang.translate('incidents.punishment.delete.succeed'));
+        } else {
+            toasts.warning(response.data.toString());
+        }
+        punishmentForm.that.$emit(SNIPLET_FORM_EMIT_PUNISHMENT_EVENTS.DELETE);
+        vm.safeApply();
+    },
+
+    closePunishmentLightbox(): void {
+        vm.form = {} as IPunishmentBody;
+        vm.punishment = {} as IPunishment;
+        vm.createPunishmentLightBox = false;
+    },
+
+    // search bar method
+
+    async searchStudent(studentForm: string): Promise<void> {
+        await vm.studentsSearch.searchStudents(studentForm);
+        vm.safeApply();
+    },
+
+    async selectStudent(valueInput, studentItem): Promise<void> {
+        vm.studentsSearch.selectStudents(valueInput, studentItem);
+        vm.studentsSearch.student = "";
+    },
+
+    async removeSelectedStudents(studentItem): Promise<void> {
+        vm.studentsSearch.removeSelectedStudents(studentItem);
+    },
+};
+
+export const punishmentForm = {
+    public: false,
+    that: null,
+    controller: {
+        init: function () {
+            this.vm = vm;
+            vm.safeApply = this.safeApply;
+            punishmentForm.that = this;
+            this.setHandler();
+        },
+        async getPunishmentCategory(structure_id: string): Promise<void> {
+            if (!vm.punishmentTypes || vm.punishmentTypes.length <= 1) {
+                vm.punishmentTypes = await punishmentsTypeService.get(structure_id);
+            }
+            if (PunishmentsUtils.canCreatePunishmentOnly()) {
+                vm.punishmentTypes = vm.punishmentTypes.filter((punishmentType: IPunishmentType) =>
+                    punishmentType.type === PunishmentsUtils.RULES.punishment);
+            }
+        },
+        async getTimeSlots(structure_id: string): Promise<void> {
+            if (!vm.structureTimeSlot || !('slots' in vm.structureTimeSlot)) {
+                vm.structureTimeSlot = await ViescolaireService.getSlotProfile(structure_id);
+            }
+        },
+        setHandler: function () {
+            this.$on(SNIPLET_FORM_EVENTS.SET_PARAMS, (event: IAngularEvent, punishment) => vm.editPunishmentForm(punishment));
+            this.$watch(() => window.structure, async () => {
+                this.getPunishmentCategory(window.structure.id);
+                this.getTimeSlots(window.structure.id);
+                vm.safeApply();
+            });
+        }
+    }
+};

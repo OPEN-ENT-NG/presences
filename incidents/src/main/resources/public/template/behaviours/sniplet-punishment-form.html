@@ -1,0 +1,127 @@
+<!-- Button to access lightbox -->
+<button class="right-magnet" data-ng-click="vm.openPunishmentLightbox()">
+    <i18n>incidents.punishments.button.form</i18n>
+</button>
+
+<lightbox class="punishment-form-lightbox" show="vm.createPunishmentLightBox" on-close="vm.closePunishmentLightbox()">
+
+    <!-- title -->
+    <section class="head">
+        <h3>
+            <i18n>incidents.punishments.button.title</i18n>
+        </h3>
+    </section>
+
+    <!-- All content -->
+    <section class="punishment-form-lightbox-body">
+        <!-- search bar -->
+        <div class="punishment-form-lightbox-body-search row" ng-if="!vm.punishment.id">
+            <div>
+                <div class="cell twelve search-input">
+                    <async-autocomplete data-ng-disabled="false"
+                                        data-ng-model="vm.studentsSearch.student"
+                                        data-ng-change="vm.selectStudent"
+                                        data-on-search="vm.searchStudent"
+                                        data-options="vm.studentsSearch.students"
+                                        data-placeholder="presences.exemptions.search.student"
+                                        data-search="vm.studentsSearch.student">
+                    </async-autocomplete>
+                </div>
+                <div class="cell twelve">
+                    <ul class="cell twelve search-input-ul"
+                        data-ng-show="vm.studentsSearch.selectedStudents.length > 0">
+                        <li ng-repeat="student in vm.studentsSearch.selectedStudents">
+                            [[student.toString()]] <i class="close"
+                                                      data-ng-click="vm.removeSelectedStudents(student)"></i>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+        <span class="punishment-form-lightbox-body-student">[[vm.punishment.student.name]]</span>
+
+        <!-- select category punishment -->
+        <div class="punishment-form-lightbox-body-type">
+            <label class="punishment-form-lightbox-body-type-select">
+                <i18n>incidents.types</i18n>
+                <select data-ng-model="vm.form.type_id"
+                        data-ng-change="vm.setCategory()"
+                        ng-options="punishmentType.id as punishmentType.label for punishmentType in vm.punishmentTypes">
+                    <option value=""></option>
+                </select>
+            </label>
+        </div>
+
+        <!-- differents form -->
+        <div class="punishment-form-lightbox-body-form">
+            <!-- devoir supplémentaire // EXTRA_DUTY form -->
+            <punishment-duty-form ng-if="vm.form.category_id === vm.punishmentCategoriesType.EXTRA_DUTY"
+                                  form="vm.form"
+                                  punishment="vm.punishment">
+            </punishment-duty-form>
+
+            <!-- Retenue // DETENTION form -->
+            <punishment-detention-form ng-if="vm.form.category_id === vm.punishmentCategoriesType.DETENTION"
+                                       form="vm.form"
+                                       punishment="vm.punishment"
+                                       time-slots="vm.structureTimeSlot.slots">
+            </punishment-detention-form>
+
+            <!-- Blame // BLAME form -->
+            <punishment-blame-form ng-if="vm.form.category_id === vm.punishmentCategoriesType.BLAME"
+                                   form="vm.form"
+                                   punishment="vm.punishment">
+            </punishment-blame-form>
+
+            <!-- Exclusion // EXCLUSION form -->
+            <punishment-exclude-form ng-if="vm.form.category_id === vm.punishmentCategoriesType.EXCLUSION"
+                                     punishment="vm.punishment"
+                                     form="vm.form">
+            </punishment-exclude-form>
+        </div>
+
+    </section>
+
+    <section class="punishment-form-lightbox-footer">
+
+        <!-- description -->
+        <div class="punishment-form-lightbox-footer-body">
+            <div class="punishment-form-lightbox-footer-body-search">
+                <h3 class="punishment-form-lightbox-footer-body-search-title">
+                    <i18n>incidents.description</i18n>
+                </h3>
+            </div>
+
+            <label>
+                <textarea i18n-placeholder="incidents.write.text" data-ng-model="vm.form.description"></textarea>
+            </label>
+        </div>
+
+
+        <!-- Button/submit -->
+        <div class="punishment-form-lightbox-footer-submit row" ng-class="{create: !vm.punishment.id}">
+
+            <!-- Delete mode  -->
+            <button ng-if="vm.punishment.id" data-ng-click="vm.delete()">
+                <i18n>presences.exemptions.form.delete</i18n>
+            </button>
+
+            <div class="punishment-form-lightbox-footer-submit-right">
+                <!-- Submit mode -->
+                <button ng-if="!vm.punishment.id"
+                        data-ng-click="vm.create()"
+                        data-ng-disabled="!vm.isFormValid()">
+                    <i18n>presences.exemptions.form.submit</i18n>
+                </button>
+
+                <!-- Edit mode  -->
+                <button ng-if="vm.punishment.id"
+                        data-ng-click="vm.update()"
+                        data-ng-disabled="!vm.isFormValid()">
+                    <i18n>presences.absence.form.edit</i18n>
+                </button>
+            </div>
+        </div>
+    </section>
+
+</lightbox>

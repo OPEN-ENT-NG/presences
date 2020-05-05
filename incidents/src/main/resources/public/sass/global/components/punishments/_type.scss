@@ -1,0 +1,13 @@
+.punishment-type {
+  &-punishment, &-sanction {
+    color: $white;
+  }
+
+  &-punishment {
+    background-color: $yellow-main;
+  }
+
+  &-sanction {
+    background-color: $yellow-sand;
+  }
+}

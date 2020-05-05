@@ -57,8 +57,7 @@ public class DefaultPunishmentTypeService implements PunishmentTypeService {
                             for (int i = 0; i < event.result().size(); i++) {
                                 if (!((JsonObject) event.result().resultAt(i)).isEmpty()) {
                                     JsonObject resultCategory = event.result().resultAt(i);
-                                    // @TODO changer le getJsonObject dayOfweek par l'information en question
-                                    if (punishmentType.getId().equals(resultCategory.getInteger("dayOfWeek"))) {
+                                    if (punishmentType.getId().equals(resultCategory.getInteger("type_id"))) {
                                         punishmentType.setUsed(true);
                                     }
                                 }
@@ -72,9 +71,8 @@ public class DefaultPunishmentTypeService implements PunishmentTypeService {
     }
 
     private void findPunishmentTypeIdIfExist(String structure_id, Integer punishmentId, Handler<Either<String, JsonObject>> handler) {
-        // TODO repace dayOfWeek by your punishment_type_id and structureId and obv courses with punishment collection
-        JsonObject query = new JsonObject().put("dayOfWeek", punishmentId).put("structureId", structure_id);
-        MongoDb.getInstance().findOne("courses", query, message -> handler.handle(MongoDbResult.validResult(message)));
+        JsonObject query = new JsonObject().put("type_id", punishmentId).put("structure_id", structure_id);
+        MongoDb.getInstance().findOne("punishment", query, message -> handler.handle(MongoDbResult.validResult(message)));
     }
 
     private void fetchPunishmentsType(String structureId, Handler<Either<String, JsonArray>> handler) {

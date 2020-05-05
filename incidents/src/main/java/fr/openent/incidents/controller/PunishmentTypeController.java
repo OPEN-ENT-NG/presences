@@ -68,7 +68,7 @@ public class PunishmentTypeController extends ControllerHelper {
     }
 
     private boolean isTypeInvalid(JsonObject punishmentTypeBody) {
-        return !punishmentTypeBody.getString("type").equals(PunishmentsType.PUNITION.toString()) &&
+        return !punishmentTypeBody.getString("type").equals(PunishmentsType.PUNISHMENT.toString()) &&
                 !punishmentTypeBody.getString("type").equals(PunishmentsType.SANCTION.toString());
     }
 

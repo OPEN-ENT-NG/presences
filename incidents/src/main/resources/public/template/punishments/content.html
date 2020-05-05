@@ -1,0 +1,29 @@
+<div class="punishment">
+
+    <loader data-ng-show="vm.punishments.loading" min-height="'250px'"/>
+
+    <div data-ng-show="!vm.punishments.loading">
+
+        <!-- Empty state -->
+        <div class="empty-content" data-ng-show="vm.punishments.punishmentResponse.all.length === 0">
+            <div class="five description">
+                <span class="red-bar bar"></span>
+                <i18n>incidents.punishments.empty.state</i18n>
+                <span class="yellow-bar bar"></span>
+            </div>
+            <img data-ng-src="/incidents/public/img/girl-book.svg" class="four" alt="">
+        </div>
+
+        <!-- board -->
+        <div ng-include="'/incidents/public/template/punishments/board.html'" class="vertical-spacing"
+             data-ng-show="vm.punishments.punishmentResponse.all && vm.punishments.punishmentResponse.all.length > 0"></div>
+
+        <!-- pagination punishment/sanction list -->
+        <pagination data-page-count="vm.punishments.punishmentResponse.all.page_count"
+                    data-page-number="vm.punishments.punishmentResponse.all.page"
+                    data-ng-click="console.log('clicked')"
+                    class="vertical-spacing pagination">
+        </pagination>
+    </div>
+
+</div>

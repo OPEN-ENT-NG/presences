@@ -6,6 +6,12 @@ export enum SNIPLET_FORM_EMIT_EVENTS {
     CANCEL = 'form:cancel'
 }
 
+export enum SNIPLET_FORM_EMIT_PUNISHMENT_EVENTS {
+    CREATION = 'punishment-form:creation',
+    EDIT = 'punishment-form:edit',
+    DELETE = 'punishment-form:delete'
+}
+
 export enum SNIPLET_FORM_EVENTS {
     SET_PARAMS = 'form:set_params'
 }

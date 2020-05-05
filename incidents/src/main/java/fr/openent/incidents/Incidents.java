@@ -34,6 +34,7 @@ public class Incidents extends BaseServer {
         addController(new PunishmentTypeController());
         addController(new PunishmentCategoryController());
         addController(new EventBusController(eb));
+        addController(new FakeRight());
     }
 
 }
