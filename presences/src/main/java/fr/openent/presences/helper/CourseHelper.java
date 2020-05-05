@@ -198,13 +198,14 @@ public class CourseHelper {
             SimpleDateFormat parser = new SimpleDateFormat(DateHelper.HOUR_MINUTES_SECONDS);
             Date startTime = parser.parse(DateHelper.getTimeString(course.getStartDate(), DateHelper.MONGO_FORMAT));
             Date endTime = parser.parse(DateHelper.getTimeString(course.getEndDate(), DateHelper.MONGO_FORMAT));
-            for (Slot slot : slots) {
+            for (int i = 0; i < slots.size(); i++) {
+                Slot slot = slots.get(i);
                 Date slotStartHour = parser.parse(slot.getStartHour());
                 Date slotEndHour = parser.parse(slot.getEndHour());
                 if (((slotStartHour.after(startTime) || slotStartHour.equals(startTime)) || (startTime.before(slotEndHour)))
                         && ((slotEndHour.before(endTime) || slotEndHour.equals(endTime)) || (endTime.after(slotStartHour)))
                         && !(course.getRegisterId() != null && !course.isSplitSlot())) {
-                    Course newCourse = treatingSplitSlot(course, slot, parser);
+                    Course newCourse = treatingSplitSlot(course, slot, i + 1 <= slots.size() ? slots.get(i + 1) : slot, parser);
                     splitCourses.add(newCourse);
                 }
             }
@@ -236,13 +237,14 @@ public class CourseHelper {
                 Date startTime = parser.parse(DateHelper.getTimeString(course.getStartDate(), DateHelper.MONGO_FORMAT));
                 Date endTime = parser.parse(DateHelper.getTimeString(course.getEndDate(), DateHelper.MONGO_FORMAT));
 
-                for (Slot slot : slots) {
+                for (int i = 0; i < slots.size(); i++) {
+                    Slot slot = slots.get(i);
                     Date slotStartHour = parser.parse(slot.getStartHour());
                     Date slotEndHour = parser.parse(slot.getEndHour());
                     if (((slotStartHour.after(startTime) || slotStartHour.equals(startTime)) || (startTime.before(slotEndHour)))
                             && ((slotEndHour.before(endTime) || slotEndHour.equals(endTime)) || (endTime.after(slotStartHour)))
                             && !(course.getRegisterId() != null && !course.isSplitSlot())) {
-                        Course newCourse = treatingSplitSlot(course, slot, parser);
+                        Course newCourse = treatingSplitSlot(course, slot, i + 1 <= slots.size() ? slots.get(i + 1) : slot, parser);
                         splitCoursesEvent.add(newCourse);
                     }
                 }
@@ -261,12 +263,12 @@ public class CourseHelper {
      * Util function that compares the current course element and the current slot time
      * for treating split slot
      *
-     * @param course    course element
-     * @param slot      slot element
-     * @param parser    Parse format
+     * @param course course element
+     * @param slot   slot element
+     * @param parser Parse format
      * @return new course with new start and end time defined from the slot
      */
-    public static Course treatingSplitSlot(Course course, Slot slot, SimpleDateFormat parser) throws ParseException {
+    public static Course treatingSplitSlot(Course course, Slot slot, Slot nextSlot, SimpleDateFormat parser) throws ParseException {
         String newStartDate = DateHelper.getDateString(course.getStartDate(), DateHelper.YEAR_MONTH_DAY);
         String newStartTime;
         if (isCourseStartTimeAfterSlotStartTime(course, slot, parser)) {
@@ -276,7 +278,7 @@ public class CourseHelper {
         }
         String newEndDate = DateHelper.getDateString(course.getEndDate(), DateHelper.YEAR_MONTH_DAY);
         String newEndTime;
-        if (isCourseEndTimeBeforeSlotEndTime(course, slot, parser)) {
+        if (isCourseEndTimeBeforeSlotEndTime(course, slot, parser) || isCourseEndTimeBeforeNextSlotStartTime(course, nextSlot, parser)) {
             newEndTime = DateHelper.getTimeString(course.getEndDate(), DateHelper.MONGO_FORMAT);
         } else {
             newEndTime = DateHelper.getTimeString(slot.getEndHour(), DateHelper.HOUR_MINUTES_SECONDS);
@@ -285,6 +287,11 @@ public class CourseHelper {
         newCourse.setStartDate(newStartDate + " " + newStartTime);
         newCourse.setEndDate(newEndDate + " " + newEndTime);
         return newCourse;
+    }
+
+    private static boolean isCourseEndTimeBeforeNextSlotStartTime(Course course, Slot slot, SimpleDateFormat parser) throws ParseException {
+        return !parser.parse(DateHelper.getTimeString(course.getEndDate(), DateHelper.MONGO_FORMAT))
+                .after(parser.parse(DateHelper.getTimeString(slot.getStartHour(), DateHelper.HOUR_MINUTES_SECONDS)));
     }
 
     private static boolean isCourseStartTimeAfterSlotStartTime(Course course, Slot slot, SimpleDateFormat parser) throws ParseException {

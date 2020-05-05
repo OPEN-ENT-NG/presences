@@ -42,13 +42,14 @@ public class CalendarHelper {
                 SimpleDateFormat parser = new SimpleDateFormat(DateHelper.HOUR_MINUTES_SECONDS);
                 Date startTime = parser.parse(DateHelper.getTimeString(course.getStartDate(), DateHelper.MONGO_FORMAT));
                 Date endTime = parser.parse(DateHelper.getTimeString(course.getEndDate(), DateHelper.MONGO_FORMAT));
-                for (Slot slot : slots) {
+                for (int i = 0; i < slots.size(); i++) {
+                    Slot slot = slots.get(i);
                     Date slotStartHour = parser.parse(slot.getStartHour());
                     Date slotEndHour = parser.parse(slot.getEndHour());
                     if (((slotStartHour.after(startTime) || slotStartHour.equals(startTime)) || (startTime.before(slotEndHour)))
                             && ((slotEndHour.before(endTime) || slotEndHour.equals(endTime)) || (endTime.after(slotStartHour)))
                             && !(course.getRegisterId() != null && !course.isSplitSlot())) {
-                        Course newCourse = CourseHelper.treatingSplitSlot(course, slot, parser);
+                        Course newCourse = CourseHelper.treatingSplitSlot(course, slot, i + 1 <= slots.size() ? slots.get(i + 1) : slot, parser);
                         String hashCourse = hash(newCourse.getId() + newCourse.getStartDate() + newCourse.getEndDate());
                         Map<String, Course> mainCourse = new LinkedHashMap<>();
                         mainCourse.put(hashMainCourse, course);
