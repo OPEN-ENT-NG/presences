@@ -64,7 +64,7 @@ public class DefaultCourseService implements CourseService {
             JsonObject course;
             for (int i = 0; i < courses.size(); i++) {
                 course = courses.getJsonObject(i);
-                if (!subjectIds.contains(course.getString("subjectId"))) {
+                if (course.containsKey("subjectId") && !subjectIds.contains(course.getString("subjectId"))) {
                     subjectIds.add(course.getString("subjectId"));
                 }
 
@@ -99,7 +99,9 @@ public class DefaultCourseService implements CourseService {
                         object.remove("endCourse");
                         object.remove("is_periodic");
                         object.remove("is_recurrent");
-                        object.put("subjectName", subjectMap.getJsonObject(object.getString("subjectId"), new JsonObject()).getString("name", object.getString("exceptionnal", "")));
+                        if (object.containsKey("subjectId")) {
+                            object.put("subjectName", subjectMap.getJsonObject(object.getString("subjectId"), new JsonObject()).getString("name", object.getString("exceptionnal", "")));
+                        } else object.put("subjectName", "");
                         object.put("timestamp", DateHelper.parse(object.getString("startDate")).getTime());
                         JsonArray courseTeachers = new JsonArray();
                         JsonArray teacherIds = object.getJsonArray("teacherIds");
