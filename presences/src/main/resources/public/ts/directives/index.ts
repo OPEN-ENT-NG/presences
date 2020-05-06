@@ -10,3 +10,5 @@ export * from '@common/directives/staticInclude';
 export * from '@common/directives/select-disabled';
 export * from '@common/directives/pagination';
 export * from '@common/directives/student-name';
+export * from '@common/directives/student-name';
+export * from '@incidents/directives/punishment-form/index';

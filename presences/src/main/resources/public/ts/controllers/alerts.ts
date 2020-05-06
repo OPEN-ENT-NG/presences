@@ -70,6 +70,8 @@ interface ViewModel {
 
     selectAll(): void;
 
+    toggleAlert(alert): void;
+
     reset(): void;
 }
 
@@ -218,6 +220,12 @@ export const alertsController = ng.controller('AlertsController', ['$scope', '$r
 
         vm.selectAll = function () {
             vm.listAlert.forEach(alert => alert.selected = vm.selection.all);
+            window.alerts_item = vm.listAlert;
+        };
+
+        vm.toggleAlert = function (alert) {
+            alert.selected = !alert.selected;
+            window.alerts_item = vm.listAlert;
         };
 
         vm.reset = async function () {

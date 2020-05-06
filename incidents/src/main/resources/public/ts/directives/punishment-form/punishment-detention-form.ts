@@ -156,25 +156,11 @@ export const PunishmentDetentionForm = ng.directive('punishmentDetentionForm', (
                     end_date: DateUtils.format(vm.date.date, DateUtils.FORMAT["YEAR-MONTH-DAY-HOUR-MIN-SEC"]),
                     place: ""
                 } as IPDetentionField;
-                vm.owner = model.me.username;
+                vm.owner = model.me.lastName + " " + model.me.firstName;
             } else {
                 // create mode
                 vm.form.owner_id = vm.punishment.owner.id;
                 vm.form.fields = vm.punishment.fields;
-
-                // on switch category (in case we reset)
-                if (!(Object.keys(vm.form.fields).length > 0)) {
-                    vm.form.fields = {
-                        start_date: DateUtils.format(vm.date.date, DateUtils.FORMAT["YEAR-MONTH-DAY-HOUR-MIN-SEC"]),
-                        end_date: DateUtils.format(vm.date.date, DateUtils.FORMAT["YEAR-MONTH-DAY-HOUR-MIN-SEC"]),
-                        place: ""
-                    } as IPDetentionField;
-                    vm.date.isFree = false;
-                    vm.timeSlotTimePeriod = {
-                        start: null,
-                        end: null
-                    };
-                }
 
                 vm.date = {
                     date: moment((<IPDetentionField>vm.form.fields).start_at),
@@ -189,6 +175,19 @@ export const PunishmentDetentionForm = ng.directive('punishmentDetentionForm', (
                     isFree: true
                 };
                 setTimeSlot();
+                // on switch category (in case we reset)
+                if (!(Object.keys(vm.form.fields).length > 0)) {
+                    vm.form.fields = {
+                        start_date: DateUtils.format(vm.date.date, DateUtils.FORMAT["YEAR-MONTH-DAY-HOUR-MIN-SEC"]),
+                        end_date: DateUtils.format(vm.date.date, DateUtils.FORMAT["YEAR-MONTH-DAY-HOUR-MIN-SEC"]),
+                        place: ""
+                    } as IPDetentionField;
+                    vm.date.isFree = false;
+                    vm.timeSlotTimePeriod = {
+                        start: null,
+                        end: null
+                    };
+                }
                 vm.owner = vm.punishment.owner.displayName;
             }
         },
@@ -204,8 +203,6 @@ export const PunishmentDetentionForm = ng.directive('punishmentDetentionForm', (
                         (<IPDetentionField>vm.form.fields).start_at = start;
                         (<IPDetentionField>vm.form.fields).end_at = vm.timeSlotTimePeriod.end != null ? DateUtils.getDateFormat(new Date(vm.date.date),
                             DateUtils.getTimeFormatDate(vm.timeSlotTimePeriod.end.endHour)) : moment(new Date(vm.date.date));
-
-                        console.log("VMDetention: ", vm.form);
                         break;
                     case TimeSlotHourPeriod.END_HOUR:
                         let end = vm.timeSlotTimePeriod.end != null ? DateUtils.getDateFormat(new Date(vm.date.date),
@@ -213,7 +210,6 @@ export const PunishmentDetentionForm = ng.directive('punishmentDetentionForm', (
                         (<IPDetentionField>vm.form.fields).end_at = end;
                         (<IPDetentionField>vm.form.fields).start_at = vm.timeSlotTimePeriod.start != null ? DateUtils.getDateFormat(new Date(vm.date.date),
                             DateUtils.getTimeFormatDate(vm.timeSlotTimePeriod.start.startHour)) : moment(new Date(vm.date.date));
-                        console.log("VMDetention: ", vm.form);
                         break;
                     default:
                         return;
@@ -223,7 +219,6 @@ export const PunishmentDetentionForm = ng.directive('punishmentDetentionForm', (
             vm.changeTimeInput = (): void => {
                 (<IPDetentionField>vm.form.fields).start_at = DateUtils.getDateFormat(moment(vm.date.date), vm.date.start_time);
                 (<IPDetentionField>vm.form.fields).end_at = DateUtils.getDateFormat(moment(vm.date.date), vm.date.end_time);
-                console.log("VMDetention: ", vm.form);
             };
         }
     };

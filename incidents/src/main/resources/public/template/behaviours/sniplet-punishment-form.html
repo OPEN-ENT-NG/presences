@@ -38,15 +38,19 @@
                 </div>
             </div>
         </div>
-        <span class="punishment-form-lightbox-body-student">[[vm.punishment.student.name]]</span>
+        <span class="punishment-form-lightbox-body-student"
+              ng-if="vm.punishment.id">[[vm.punishment.student.name]]</span>
 
         <!-- select category punishment -->
         <div class="punishment-form-lightbox-body-type">
             <label class="punishment-form-lightbox-body-type-select">
                 <i18n>incidents.types</i18n>
-                <select data-ng-model="vm.form.type_id"
+                <select required
+                        id="selectPunishmentType"
+                        data-ng-model="vm.form.type"
                         data-ng-change="vm.setCategory()"
-                        ng-options="punishmentType.id as punishmentType.label for punishmentType in vm.punishmentTypes">
+                        ng-options="punishmentType.label for punishmentType in vm.punishmentTypes track by punishmentType.id"
+                        options-disabled="punishmentType.hidden for punishmentType in vm.punishmentTypes">
                     <option value=""></option>
                 </select>
             </label>

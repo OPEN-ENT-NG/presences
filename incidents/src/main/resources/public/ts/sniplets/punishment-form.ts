@@ -26,8 +26,11 @@ interface ViewModel {
     punishmentCategoriesType: typeof PunishmentCategoryType;
     structureTimeSlot: IStructureSlot;
 
-
     safeApply(fn?: () => void): void;
+
+    checkOptionState(): void;
+
+    removeEmptyOption(): void;
 
     openPunishmentLightbox(): void;
 
@@ -46,6 +49,8 @@ interface ViewModel {
     update(): Promise<void>;
 
     delete(): Promise<void>;
+
+    getStudentsFromView(): void;
 
     // search bar method
 
@@ -76,9 +81,29 @@ const vm: ViewModel = {
     openPunishmentLightbox(): void {
         vm.studentsSearch = new StudentsSearch(window.structure.id, SearchService);
         vm.form = {} as IPunishmentBody;
+        vm.form.type = {} as IPunishmentType;
+        vm.getStudentsFromView();
         vm.punishment = {} as IPunishment;
+        // check if add empty state
+        vm.checkOptionState();
         vm.createPunishmentLightBox = true;
         vm.safeApply();
+    },
+
+    checkOptionState(): void {
+        let selectPunishmentType = document.getElementById('selectPunishmentType');
+        if (selectPunishmentType['options'][0].value !== '') {
+            let option = document.createElement('option');
+            option.value = '';
+            selectPunishmentType.insertBefore(option, selectPunishmentType.firstChild)
+        }
+    },
+
+    removeEmptyOption(): void {
+        let selectPunishmentType = document.getElementById('selectPunishmentType');
+        if (selectPunishmentType['options'][0].value === '') {
+            selectPunishmentType.removeChild(selectPunishmentType['options'][0]);
+        }
     },
 
     editPunishmentForm(punishment: IPunishment): void {
@@ -97,7 +122,6 @@ const vm: ViewModel = {
 
     preparePunishmentForm: (): void => {
         if (vm.punishment.id) {
-            vm.form.type_id = vm.punishment.type.id;
             vm.form.student_id = vm.punishment.student.id;
             vm.form.owner_id = vm.punishment.owner.id;
             vm.form.description = vm.punishment.description;
@@ -135,13 +159,16 @@ const vm: ViewModel = {
         vm.form.fields = punishment.fields;
         vm.form.category_id = punishment.type.punishment_category_id;
         vm.form.type_id = punishment.type.id;
-        console.log("vm.form: ", vm.form);
+        vm.form.type = punishment.type;
     },
 
     setCategory: (): void => {
-        vm.form.category_id = vm.punishmentTypes
-            .find((punishmentType: IPunishmentType) => punishmentType.id === vm.form.type_id)
-            .punishment_category_id;
+        vm.removeEmptyOption();
+        let punishmentType: IPunishmentType = vm.punishmentTypes
+            .find((punishmentType: IPunishmentType) => punishmentType.id === vm.form.type.id);
+        if (!punishmentType) return;
+        vm.form.category_id = punishmentType.punishment_category_id;
+        vm.form.type_id = punishmentType.id;
     },
 
     async create(): Promise<void> {
@@ -189,6 +216,41 @@ const vm: ViewModel = {
         vm.createPunishmentLightBox = false;
     },
 
+    getStudentsFromView: (): void => {
+        const viewUrl = window.location.hash;
+        const findView = (view) => {
+            if (viewUrl.includes(view)) {
+                return viewUrl;
+            }
+        };
+        switch (viewUrl) {
+            case findView('#/calendar'): {
+                // window.item stored from calendar controller
+                vm.studentsSearch.setSelectedStudents([window.item]);
+                break;
+            }
+            case findView('#/alerts'): {
+                let students: Array<User> = [];
+                // window.alerts_item stored from alerts controller
+                if ('alerts_item' in window) {
+                    window.alerts_item
+                        .filter(alert => alert.selected)
+                        .forEach(alert => {
+                            students.push({
+                                id: alert.student_id,
+                                displayName: alert.name,
+                                toString: () => alert.name
+                            } as User);
+                        });
+                    vm.studentsSearch.setSelectedStudents(students);
+                }
+                break;
+            }
+            default:
+                return;
+        }
+    },
+
     // search bar method
 
     async searchStudent(studentForm: string): Promise<void> {
@@ -232,6 +294,10 @@ export const punishmentForm = {
         },
         setHandler: function () {
             this.$on(SNIPLET_FORM_EVENTS.SET_PARAMS, (event: IAngularEvent, punishment) => vm.editPunishmentForm(punishment));
+            this.$on("$destroy", () => {
+                console.log("leaving");
+                delete window.alerts_item;
+            });
             this.$watch(() => window.structure, async () => {
                 this.getPunishmentCategory(window.structure.id);
                 this.getTimeSlots(window.structure.id);

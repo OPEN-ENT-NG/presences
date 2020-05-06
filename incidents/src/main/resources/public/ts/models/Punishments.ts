@@ -32,6 +32,7 @@ export interface IPunishmentBody {
     owner_id?: string;
     category_id?: number;
     type_id?: number;
+    type?: IPunishmentType;
     incident_id?: number;
     processed?: boolean;
     student_id?: string,

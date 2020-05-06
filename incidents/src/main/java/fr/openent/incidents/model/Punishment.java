@@ -99,11 +99,11 @@ public class Punishment extends Model {
                     }
                     PunishmentCategory category = result.result();
                     setFields(category.toJsonObject());
-                    setOwnerId(user.getUserId());
 
                     if (getId() != null) {
                         updateMongo(user, getId(), handler);
                     } else {
+                        setOwnerId(user.getUserId());
                         createMongo(user, handler);
                     }
                 });
@@ -124,7 +124,7 @@ public class Punishment extends Model {
 
         JsonObject criteria = new JsonObject()
                 .put("_id", id)
-                .put("owner_id", user.getUserId());
+                .put("owner_id", this.owner_id.isEmpty() ? user.getUserId() : this.owner_id);
         JsonObject returnFields = new JsonObject().put("_id", id);
 
         JsonObject set = new JsonObject().put("$set", data);

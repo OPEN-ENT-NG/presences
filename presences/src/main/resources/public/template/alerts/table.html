@@ -4,7 +4,7 @@
              ng-repeat="alert in vm.listAlert"
              ng-model="selected"
              ng-class="{selected: alert.selected}"
-             ng-click="alert.selected = !alert.selected">
+             ng-click="vm.toggleAlert(alert)">
             <div class="twelve flex space-between">
                 <div class="bold">[[alert.name]]</div>
                 <div>[[alert.audience]]</div>

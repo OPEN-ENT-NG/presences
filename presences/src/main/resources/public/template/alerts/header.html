@@ -59,9 +59,7 @@
         <button class="right-magnet forbidden" disabled>
             <i18n>presences.export.tocsv</i18n>
         </button>
-        <button class="right-magnet forbidden" disabled>
-            <i18n>presences.punishments.sanction</i18n>
-        </button>
+        <sniplet template="punishment-form" application="incidents"></sniplet>
         <button class="right-magnet" data-ng-click="vm.reset()"
                 ng-disabled="!vm.someSelectedAlert()">
             <i18n>presences.reset</i18n>

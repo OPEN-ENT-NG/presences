@@ -62,7 +62,7 @@ export const PunishmentExcludeForm = ng.directive('punishmentExcludeForm', () =>
                     end_date: DateUtils.format(vm.end_date, DateUtils.FORMAT["YEAR-MONTH-DAY-HOUR-MIN-SEC"]),
                     mandatory_presence: false,
                 } as IPExcludeField;
-                vm.owner = model.me.username;
+                vm.owner = model.me.lastName + " " + model.me.firstName;
             } else {
                 vm.form.owner_id = vm.punishment.owner.id;
                 vm.form.fields = vm.punishment.fields;

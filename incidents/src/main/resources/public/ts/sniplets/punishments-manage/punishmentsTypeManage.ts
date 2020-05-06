@@ -101,6 +101,7 @@ const vm: ViewModel = {
         form.id = punishmentType.id;
         form.label = punishmentType.label;
         form.type = punishmentType.type;
+        form.punishment_category_id = punishmentType.punishment_category_id;
         form.hidden = punishmentType.hidden;
         await punishmentsTypeService.update(form);
     },

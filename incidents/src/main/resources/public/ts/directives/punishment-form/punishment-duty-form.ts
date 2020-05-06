@@ -55,7 +55,7 @@ export const PunishmentDutyForm = ng.directive('punishmentDutyForm', () => {
                     delay_at: DateUtils.format(vm.date, DateUtils.FORMAT["YEAR-MONTH-DAY-HOUR-MIN-SEC"]),
                     instruction: ""
                 } as IPDutyField;
-                vm.owner = model.me.username;
+                vm.owner = model.me.lastName + " " + model.me.firstName;
             } else {
                 vm.form.owner_id = vm.punishment.owner.id;
                 vm.form.fields = vm.punishment.fields;

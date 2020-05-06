@@ -1,6 +1,7 @@
 <!-- board -->
 <div class="punishment-board flex-table">
-    <div class="flex-row punishment-board-title flex-head row__16">
+    <!-- Add 14 instead of 16 in order to hide incident -->
+    <div class="flex-row punishment-board-title flex-head row__14">
         <div class="flex-col col__3 text-center">
             <i18n>presences.exemptions.student</i18n>
         </div>
@@ -16,9 +17,9 @@
         <div class="flex-col col__2 text-center">
             <i18n>presences.responsible</i18n>
         </div>
-        <div class="flex-col col__2 text-center">
-            <i18n>incidents.linked</i18n>
-        </div>
+        <!--        <div class="flex-col col__2 text-center">-->
+        <!--            <i18n>incidents.linked</i18n>-->
+        <!--        </div>-->
         <div class="flex-col col__2 text-center">
             <i18n>incidents.massmailed</i18n>
         </div>
@@ -33,7 +34,8 @@
              data-ng-click="vm.openPunishment(punishment)">
             <div class="flex-content">
                 <!-- student info -->
-                <div class="flex-row row__16">
+                <!-- Add 14 instead of 16 in order to hide incident -->
+                <div class="flex-row row__14">
                     <div class="flex-col col__1">
                         <!-- student picture -->
                         <img src="/userbook/avatar/[[punishment.student.id]]" height="30" width="30">
@@ -59,9 +61,9 @@
                         <span>[[punishment.owner.displayName]]</span>
                     </div>
                     <!-- linked incidents -->
-                    <div class="flex-col col__2">
+                    <!--                    <div class="flex-col col__2">-->
 
-                    </div>
+                    <!--                    </div>-->
                     <!-- massmailed -->
                     <div class="flex-col col__2">
                         

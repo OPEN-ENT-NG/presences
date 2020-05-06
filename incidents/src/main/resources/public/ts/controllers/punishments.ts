@@ -162,8 +162,7 @@ export const punishmentController = ng.controller('PunishmentController',
 
                 /* get punishmentType */
                 vm.punishmentsTypes = await punishmentTypeService.get(vm.punishments.structure_id);
-                vm.punishmentsTypes = vm.punishmentsTypes.filter((punishmentType: IPunishmentType) => !punishmentType.hidden);
-
+                
                 if (PunishmentsUtils.canCreatePunishmentOnly()) {
                     vm.punishmentsTypes = vm.punishmentsTypes.filter((punishmentType: IPunishmentType) =>
                         punishmentType.type === PunishmentsUtils.RULES.punishment);
