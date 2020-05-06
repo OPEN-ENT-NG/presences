@@ -2,12 +2,12 @@
     <div class="row">
         <div class="date-filters cell">
             <span><i18n>massmailing.from</i18n></span>
-            <span class="date-picker">
+            <span class="card date-picker">
             <date-picker ng-model="vm.filter.start_date"
                          ng-change="vm.fetchData()"></date-picker>
         </span>
             <span><i18n>massmailing.to</i18n></span>
-            <span class="date-picker">
+            <span class="card date-picker">
             <date-picker ng-model="vm.filter.end_date"
                          ng-change="vm.fetchData()"></date-picker>
         </span>
