@@ -99,33 +99,33 @@ public class Course implements Cloneable {
     public JsonObject toJSON() {
         JsonObject thisJsonObject = new JsonObject()
                 .put("_id", this._id)
-                .put("structureId", this.structureId)
-                .put("subjectId", this.subjectId)
-                .put("classes", this.classes)
-                .put("exceptionnal", this.exceptionnal)
-                .put("groups", this.groups)
-                .put("roomLabels", this.roomLabels)
-                .put("events", this.events)
-                .put("exemption", this.events)
-                .put("incident", this.events)
-                .put("dayOfWeek", this.dayOfWeek)
+                .put("structureId", this.getStructureId())
+                .put("subjectId", this.getSubjectId())
+                .put("classes", this.getClasses())
+                .put("exceptionnal", this.getExceptionnal())
+                .put("groups", this.getGroups())
+                .put("roomLabels", this.getRoomLabels())
+                .put("events", this.getEvents())
+                .put("exemption", this.getEvents())
+                .put("incident", this.getEvents())
+                .put("dayOfWeek", this.getDayOfWeek())
                 .put("manual", this.manual)
                 .put("locked", this.locked)
-                .put("updated", this.updated)
-                .put("lastUser", this.lastUser)
-                .put("startDate", this.startDate)
-                .put("endDate", this.endDate)
-                .put("startCourse", this.startCourse)
-                .put("endCourse", this.endCourse)
-                .put("startMomentDate", this.startMomentDate)
-                .put("startMomentTime", this.startMomentTime)
-                .put("endMomentDate", this.endMomentDate)
-                .put("endMomentTime", this.endMomentTime)
+                .put("updated", this.getUpdated())
+                .put("lastUser", this.getLastUser())
+                .put("startDate", this.getStartDate())
+                .put("endDate", this.getEndDate())
+                .put("startCourse", this.getStartCourse())
+                .put("endCourse", this.getEndCourse())
+                .put("startMomentDate", this.getStartMomentDate())
+                .put("startMomentTime", this.getStartMomentTime())
+                .put("endMomentDate", this.getEndMomentDate())
+                .put("endMomentTime", this.getEndMomentTime())
                 .put("is_recurrent", this.isRecurrent)
-                .put("color", this.color)
+                .put("color", this.getColor())
                 .put("is_periodic", this.isPeriodic)
-                .put("subjectName", this.subjectName)
-                .put("teachers", this.teachers)
+                .put("subjectName", this.getSubjectName())
+                .put("teachers", this.getTeachers())
                 .put("split_slot", this.splitSlot);
         if (this.registerId != null && this.registerStateId != null && this.notified != null) {
             thisJsonObject
@@ -153,7 +153,7 @@ public class Course implements Cloneable {
     }
 
     public String getSubjectId() {
-        return subjectId;
+        return subjectId != null ? subjectId : "";
     }
 
     public void setSubjectId(String subjectId) {

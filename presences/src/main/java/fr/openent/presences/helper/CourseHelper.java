@@ -77,7 +77,7 @@ public class CourseHelper {
 
                 for (int i = 0; i < courses.size(); i++) {
                     JsonObject course = courses.getJsonObject(i);
-                    if (!subjectIds.contains(course.getString("subjectId"))) {
+                    if (course.containsKey("subjectId") && !subjectIds.contains(course.getString("subjectId"))) {
                         subjectIds.add(course.getString("subjectId"));
                     }
                     JsonArray teachers = course.getJsonArray("teacherIds");
@@ -104,7 +104,9 @@ public class CourseHelper {
                     JsonObject teacherMap = MapHelper.transformToMap(teachers, "id");
                     for (int i = 0; i < courses.size(); i++) {
                         JsonObject object = courses.getJsonObject(i);
-                        object.put("subjectName", subjectMap.getJsonObject(object.getString("subjectId"), new JsonObject()).getString("name", object.getString("exceptionnal", "")));
+                        if (object.containsKey("subjectId")) {
+                            object.put("subjectName", subjectMap.getJsonObject(object.getString("subjectId"), new JsonObject()).getString("name", object.getString("exceptionnal", "")));
+                        } else object.put("subjectName", "");
                         JsonArray courseTeachers = new JsonArray();
                         JsonArray teacherIds = object.getJsonArray("teacherIds");
                         for (int j = 0; j < teacherIds.size(); j++) {

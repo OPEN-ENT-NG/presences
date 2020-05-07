@@ -306,7 +306,7 @@ public class DefaultRegisterService implements RegisterService {
                         for (int i = 0; i < users.size(); i++) {
                             JsonObject user = users.getJsonObject(i);
                             boolean exempted = exemptionsMap.containsKey(user.getString("id"));
-                            String exempted_subjectId = exemptionsMap.containsKey(user.getString("id")) ? exemptionsMap.getJsonObject(user.getString("id")).getString("subject_id") : "0";
+                            String exempted_subjectId = exemptionsMap.containsKey(user.getString("id")) ? exemptionsMap.getJsonObject(user.getString("id")).getString("subject_id", "") : "0";
                             Integer exemption_recursive_id = exemptionsMap.containsKey(user.getString("id")) ? exemptionsMap.getJsonObject(user.getString("id")).getInteger("recursive_id") : null;
                             boolean exemption_attendance = exemptionsMap.containsKey(user.getString("id")) ? exemptionsMap.getJsonObject(user.getString("id")).getBoolean("attendance") : false;
                             formattedUsers.add(formatStudent(id, user, historyMap.getJsonArray(user.getString("id"), new JsonArray()),
