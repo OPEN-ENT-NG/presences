@@ -55,7 +55,7 @@ interface IViewModel {
 
     getPunishmentDate(punishment: IPunishment);
 
-    stopProcessPropagation($event): void;
+    stopPropagation($event): void;
 
     updateProcessPunishment(punishment: IPunishment): Promise<void>;
 
@@ -227,7 +227,7 @@ export const punishmentController = ng.controller('PunishmentController',
                 await getPunishments();
             };
 
-            vm.stopProcessPropagation = ($event): void => {
+            vm.stopPropagation = ($event): void => {
                 $event.stopPropagation();
             };
 

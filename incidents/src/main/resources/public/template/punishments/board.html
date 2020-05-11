@@ -42,7 +42,9 @@
                     </div>
                     <!-- student name -->
                     <div class="flex-col student student col__2">
-                        <span>[[punishment.student.name]]</span>
+                        <student-name data-ng-click="vm.stopPropagation($event)"
+                                      name="punishment.student.name"
+                                      id="punishment.student.id"/>
                     </div>
                     <!-- student class -->
                     <div class="flex-col col__1">
@@ -71,7 +73,7 @@
                     <!-- done  -->
                     <div class="flex-col col__2">
                         <switch ng-model="punishment.processed"
-                                data-ng-click="vm.stopProcessPropagation($event)"
+                                data-ng-click="vm.stopPropagation($event)"
                                 ng-change="vm.updateProcessPunishment(punishment)">
                             <label class="switch"></label>
                         </switch>
