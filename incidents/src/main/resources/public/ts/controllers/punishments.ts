@@ -161,14 +161,16 @@ export const punishmentController = ng.controller('PunishmentController',
                 vm.groupsSearchLightbox = new GroupsSearch(window.structure.id, searchService, groupService);
 
                 /* get punishmentType */
-                vm.punishmentsTypes = await punishmentTypeService.get(vm.punishments.structure_id);
-                
-                if (PunishmentsUtils.canCreatePunishmentOnly()) {
-                    vm.punishmentsTypes = vm.punishmentsTypes.filter((punishmentType: IPunishmentType) =>
-                        punishmentType.type === PunishmentsUtils.RULES.punishment);
-                }
+                if (!vm.punishmentsTypes || vm.punishmentsTypes.length <= 0) {
+                    vm.punishmentsTypes = await punishmentTypeService.get(vm.punishments.structure_id);
+                    vm.punishmentsTypes = await punishmentTypeService.get(vm.punishments.structure_id);
 
-                vm.punishmentsTypes.map((punishmentType: IPunishmentType) => punishmentType.isSelected = false);
+                    if (PunishmentsUtils.canCreatePunishmentOnly()) {
+                        vm.punishmentsTypes = vm.punishmentsTypes.filter((punishmentType: IPunishmentType) =>
+                            punishmentType.type === PunishmentsUtils.RULES.punishment);
+                    }
+                    vm.punishmentsTypes.map((punishmentType: IPunishmentType) => punishmentType.isSelected = false);
+                }
 
                 /* event */
                 vm.punishments.eventer.on('loading::true', () => $scope.safeApply());
@@ -218,6 +220,7 @@ export const punishmentController = ng.controller('PunishmentController',
                     let form = {
                         id: punishment.id,
                         structure_id: punishment.structure_id,
+                        owner_id: punishment.owner.id,
                         fields: punishment.fields,
                         type_id: punishment.type.id,
                         processed: punishment.processed
