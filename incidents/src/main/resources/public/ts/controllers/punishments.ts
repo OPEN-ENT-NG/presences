@@ -2,8 +2,14 @@ import {moment, ng, notify, toasts} from 'entcore';
 import {DateUtils, StudentsSearch} from "@common/utils";
 import {GroupsSearch} from "@common/utils/autocomplete/groupsSearch";
 import {PunishmentsUtils} from "@incidents/utilities/punishments";
-import {IPunishment, IPunishmentBody, IPunishmentRequest, Punishments} from "@incidents/models";
-import {GroupService, IPunishmentService, IPunishmentsTypeService, SearchService} from "@incidents/services";
+import {IPunishment, IPunishmentBody, IPunishmentRequest, ISchoolYearPeriod, Punishments} from "@incidents/models";
+import {
+    GroupService,
+    IPunishmentService,
+    IPunishmentsTypeService,
+    IViescolaireService,
+    SearchService
+} from "@incidents/services";
 import {SNIPLET_FORM_EMIT_PUNISHMENT_EVENTS, SNIPLET_FORM_EVENTS} from "@common/model";
 import {IPunishmentType} from "@incidents/models/PunishmentType";
 
@@ -97,10 +103,10 @@ interface IViewModel {
 
 export const punishmentController = ng.controller('PunishmentController',
     ['$scope', '$route', '$location', 'SearchService', 'GroupService', 'PunishmentService',
-        'PunishmentsTypeService',
+        'PunishmentsTypeService', 'ViescolaireService',
         function ($scope, $route, $location, searchService: SearchService,
                   groupService: GroupService, punishmentService: IPunishmentService,
-                  punishmentTypeService: IPunishmentsTypeService) {
+                  punishmentTypeService: IPunishmentsTypeService, viescolaireService: IViescolaireService) {
             const vm: IViewModel = this;
 
             /* Init search bar */
@@ -115,7 +121,7 @@ export const punishmentController = ng.controller('PunishmentController',
 
             /* Init filter */
             vm.filter = {
-                start_date: moment().startOf('day'),
+                start_date: null,
                 end_date: moment().endOf('day'),
                 students: [],
                 groups: [],
@@ -159,6 +165,16 @@ export const punishmentController = ng.controller('PunishmentController',
                 /* Init search bar lightbox */
                 vm.studentsSearchLightbox = new StudentsSearch(window.structure.id, searchService);
                 vm.groupsSearchLightbox = new GroupsSearch(window.structure.id, searchService, groupService);
+
+                /* Init date beginning */
+                if (vm.filter.start_date === null) {
+                    const schoolYears: ISchoolYearPeriod = await viescolaireService.getSchoolYearDates(window.structure.id);
+                    if (schoolYears) {
+                        vm.filter.start_date = moment(schoolYears.start_date);
+                    } else {
+                        vm.filter.start_date = moment().startOf('day');
+                    }
+                }
 
                 /* get punishmentType */
                 if (!vm.punishmentsTypes || vm.punishmentsTypes.length <= 0) {
