@@ -26,6 +26,8 @@ interface ViewModel {
     punishmentCategoriesType: typeof PunishmentCategoryType;
     structureTimeSlot: IStructureSlot;
 
+    selectPunishmentGroupBy: (punishment: IPunishmentType) => string;
+
     safeApply(fn?: () => void): void;
 
     checkOptionState(): void;
@@ -77,6 +79,8 @@ const vm: ViewModel = {
         endTime: moment().add(1, 'h').set({second: 0, millisecond: 0}).toDate(),
     },
     punishment: {} as IPunishment,
+    selectPunishmentGroupBy: (punishmentType: IPunishmentType) => punishmentType.type === PunishmentsUtils.RULES.punishment ?
+        lang.translate("incidents.punishments") : lang.translate("incidents.sanctions"),
 
     openPunishmentLightbox(): void {
         vm.studentsSearch = new StudentsSearch(window.structure.id, SearchService);
@@ -117,7 +121,7 @@ const vm: ViewModel = {
         return vm.form.type_id != null &&
             vm.form.fields != null &&
             (vm.studentsSearch.getSelectedStudents().map(student => student["id"]).length > 0 ||
-                vm.punishment.student.name != null);
+                vm.punishment.student != undefined);
     },
 
     preparePunishmentForm: (): void => {
