@@ -205,7 +205,7 @@ public class CourseHelper {
                 if (((slotStartHour.after(startTime) || slotStartHour.equals(startTime)) || (startTime.before(slotEndHour)))
                         && ((slotEndHour.before(endTime) || slotEndHour.equals(endTime)) || (endTime.after(slotStartHour)))
                         && !(course.getRegisterId() != null && !course.isSplitSlot())) {
-                    Course newCourse = treatingSplitSlot(course, slot, i + 1 <= slots.size() ? slots.get(i + 1) : slot, parser);
+                    Course newCourse = treatingSplitSlot(course, slot, i + 1 < slots.size() ? slots.get(i + 1) : slot, parser);
                     splitCourses.add(newCourse);
                 }
             }
@@ -244,7 +244,7 @@ public class CourseHelper {
                     if (((slotStartHour.after(startTime) || slotStartHour.equals(startTime)) || (startTime.before(slotEndHour)))
                             && ((slotEndHour.before(endTime) || slotEndHour.equals(endTime)) || (endTime.after(slotStartHour)))
                             && !(course.getRegisterId() != null && !course.isSplitSlot())) {
-                        Course newCourse = treatingSplitSlot(course, slot, i + 1 <= slots.size() ? slots.get(i + 1) : slot, parser);
+                        Course newCourse = treatingSplitSlot(course, slot, i + 1 < slots.size() ? slots.get(i + 1) : slot, parser);
                         splitCoursesEvent.add(newCourse);
                     }
                 }

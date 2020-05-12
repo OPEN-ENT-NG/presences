@@ -49,7 +49,7 @@ public class CalendarHelper {
                     if (((slotStartHour.after(startTime) || slotStartHour.equals(startTime)) || (startTime.before(slotEndHour)))
                             && ((slotEndHour.before(endTime) || slotEndHour.equals(endTime)) || (endTime.after(slotStartHour)))
                             && !(course.getRegisterId() != null && !course.isSplitSlot())) {
-                        Course newCourse = CourseHelper.treatingSplitSlot(course, slot, i + 1 <= slots.size() ? slots.get(i + 1) : slot, parser);
+                        Course newCourse = CourseHelper.treatingSplitSlot(course, slot, i + 1 < slots.size() ? slots.get(i + 1) : slot, parser);
                         String hashCourse = hash(newCourse.getId() + newCourse.getStartDate() + newCourse.getEndDate());
                         Map<String, Course> mainCourse = new LinkedHashMap<>();
                         mainCourse.put(hashMainCourse, course);
