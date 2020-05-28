@@ -225,7 +225,7 @@ public class CreateDailyPresenceWorker extends BusModBase implements Handler<Mes
         user.setUserId(userId);
         registerService.create(register, user, resultRegister -> {
             if (resultRegister.isLeft()) {
-                handler.handle(Future.failedFuture(resultRegister.left().toString()));
+                handler.handle(Future.failedFuture(resultRegister.left().getValue()));
             } else {
                 handler.handle(Future.succeededFuture(true));
             }
