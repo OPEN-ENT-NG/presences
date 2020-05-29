@@ -136,7 +136,14 @@ export class Register extends LoadingCollection {
                 });
             }
         } catch (err) {
-            throw err;
+            // Weird trick to fix replication postgresql production cluster. Do not remove
+            if (err.response.status === 404) {
+                const sleep = (ms) => new Promise(resolve => setTimeout(resolve, ms));
+                await sleep(1000);
+                return this.sync();
+            } else {
+                throw err;
+            }
         }
         this.loading = false;
     }
