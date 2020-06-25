@@ -153,6 +153,7 @@ export const punishmentsTypeManage = {
         setHandler: function () {
             this.$watch(() => window.model.vieScolaire.structure, async () => vm.getPunishmentsType());
             this.$on(INCIDENTS_PUNISHMENT_TYPE_EVENT.RESPOND, () => vm.getPunishmentsType());
+            this.$on('reload', vm.getPunishmentsType);
         }
     }
 };
