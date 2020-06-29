@@ -17,6 +17,7 @@ import org.entcore.common.service.impl.SqlCrudService;
 import org.entcore.common.sql.Sql;
 import org.entcore.common.sql.SqlResult;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
@@ -132,6 +133,11 @@ public class DefaultExemptionService extends SqlCrudService implements Exemption
     @Override
     public void getRegisterExemptions(List<String> studentList, String structure_id, String start_date, String end_date,
                                       Handler<Either<String, JsonArray>> handler) {
+        if(studentList.isEmpty()) {
+            handler.handle(new Either.Right<>(new JsonArray()));
+            return;
+        }
+
         String query = "SELECT student_id, subject_id, recursive_id, attendance FROM " + Presences.dbSchema + "." +
                 DATABASE_TABLE + " WHERE start_date <= ? AND end_date >= ? AND student_id IN " + Sql.listPrepared(studentList);
         JsonArray params = new JsonArray()

@@ -1,7 +1,7 @@
 <h1>
     <i18n>presences.register.register.title</i18n>
 </h1>
-<loader ng-show="vm.register.loading || vm.courses.loading"
+<loader ng-show="vm.isLoading()"
         title="lang.translate('presences.register.loading.text')"
         min-height="'250px'"/>
 <user-cards users="vm.register.teachers"
@@ -14,7 +14,7 @@
             ng-if="vm.register && vm.register.teachers"
             ng-show="!vm.register.loading && vm.register.teachers.length > 0">
 </user-cards>
-<div class="row register" ng-if="!vm.register.loading && !vm.courses.loading">
+<div class="row register" ng-if="!vm.isLoading() && !vm.isEmptyGroupRegister()">
     <panel opened="vm.filter.student !== undefined">
         <container template="register-panel"></container>
     </panel>
@@ -105,4 +105,14 @@
             ng-show="vm.register && !vm.register.loading">
         <i18n>presences.register.validation</i18n>
     </button>
+</div>
+<div class="row register" ng-if="!vm.isLoading() && vm.isEmptyGroupRegister()">
+    <div class="nine empty-content">
+        <div class="eight description">
+            <span class="red-bar bar"></span>
+            <i18n>presences.registers.group.empty</i18n>
+            <span class="purple-bar bar"></span>
+        </div>
+        <img data-ng-src="/presences/public/img/registers_empty.svg" class="four">
+    </div>
 </div>

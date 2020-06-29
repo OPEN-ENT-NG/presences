@@ -28,12 +28,16 @@ public class DefaultNotebookService implements NotebookService {
     }
 
     @Override
-    public void get(List<String> studentId, String startDate, String endDate, Handler<Either<String, JsonArray>> handler) {
+    public void get(List<String> studentIds, String startDate, String endDate, Handler<Either<String, JsonArray>> handler) {
+        if(studentIds.isEmpty()) {
+            handler.handle(new Either.Right<>(new JsonArray()));
+            return;
+        }
         JsonArray params = new JsonArray();
         String query = "SELECT id, student_id, structure_id, to_char(date, 'YYYY-MM-DD') as date" +
                 " FROM " + Presences.dbSchema + ".forgotten_notebook WHERE student_id IN "
-                + Sql.listPrepared(studentId.toArray()) + " ";
-        params.addAll(new JsonArray(studentId));
+                + Sql.listPrepared(studentIds.toArray()) + " ";
+        params.addAll(new JsonArray(studentIds));
         if (!startDate.contentEquals("null") && !endDate.contentEquals("null")) {
             query += " AND date >= ? AND date <= ? ";
             params.add(startDate);

@@ -234,6 +234,7 @@
   "presences.register.validation.success": "Appel validé avec succès",
   "presences.registers.attenders": "Présents",
   "presences.registers.empty": "Pas d'appel oublié pour le moment",
+  "presences.registers.group.empty": "Le groupe est vide, pas d'appel nécessaire",
   "presences.registry.empty.state": "Veuillez choisir une classe",
   "presences.registry.empty.state.both": "Veuillez choisir un filtre et une classe",
   "presences.registry.empty.state.filter": "Veuillez choisir un filtre",

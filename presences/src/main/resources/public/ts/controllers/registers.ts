@@ -109,6 +109,10 @@ export interface ViewModel {
 
     dropFilter(object, list): void;
 
+    isLoading(): boolean;
+
+    isEmptyGroupRegister(): boolean
+
     isEmptyDayHistory(student): boolean;
 
     isAbsenceDisabled(student): boolean;
@@ -189,6 +193,7 @@ export const registersController = ng.controller('RegistersController',
                         vm.register.eventer.once('loading::true', () => $scope.safeApply());
                         vm.register.eventer.once('loading::false', () => $scope.safeApply());
                         await vm.register.sync();
+                        console.log(vm.register);
                         await initCourses();
                     }
                 },
@@ -660,6 +665,14 @@ export const registersController = ng.controller('RegistersController',
                 vm.courses.clear();
                 await vm.courses.sync(users, groups, structure, start_date, end_date, forgotten_registers, multipleSlot, limit);
                 $scope.safeApply();
+            };
+
+            vm.isEmptyGroupRegister = function () {
+                return !vm.register || vm.register.students.length === 0;
+            };
+
+            vm.isLoading = function () {
+                return vm.register.loading || vm.courses.loading;
             };
 
             vm.isFuturCourse = function (course: Course) {
