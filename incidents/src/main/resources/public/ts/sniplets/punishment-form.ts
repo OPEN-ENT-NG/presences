@@ -1,6 +1,6 @@
 import {idiom as lang, moment, toasts} from 'entcore';
 import {IPunishment, IPunishmentBody, IStructureSlot, Student} from "../models";
-import {SNIPLET_FORM_EMIT_PUNISHMENT_EVENTS, SNIPLET_FORM_EVENTS} from '@common/model'
+import {SNIPLET_FORM_EMIT_PUNISHMENT_EVENTS} from '@common/model'
 import {IAngularEvent} from "angular";
 import {StudentsSearch} from "@common/utils";
 import {SearchService} from "@common/services/SearchService";
@@ -297,7 +297,7 @@ export const punishmentForm = {
             }
         },
         setHandler: function () {
-            this.$on(SNIPLET_FORM_EVENTS.SET_PARAMS, (event: IAngularEvent, punishment) => vm.editPunishmentForm(punishment));
+            this.$on(SNIPLET_FORM_EMIT_PUNISHMENT_EVENTS.OPEN, (event: IAngularEvent, punishment) => vm.editPunishmentForm(punishment));
             this.$on("$destroy", () => {
                 console.log("leaving");
                 delete window.alerts_item;

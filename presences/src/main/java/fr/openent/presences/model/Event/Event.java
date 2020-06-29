@@ -49,7 +49,8 @@ public class Event {
             this.eventType = new EventType(event.getJsonObject("event_type", new JsonObject()), EventType.MANDATORY_ATTRIBUTE);
         }
         this.reason = new Reason(event.getInteger("reason_id", null));
-        this.owner = event.getValue("owner") instanceof String ? new User(event.getString("owner")) : new User(event.getJsonObject("owner"));
+        this.owner = event.getValue("owner") instanceof String ? new User(event.getString("owner")) :
+                new User(event.getJsonObject("owner", new JsonObject()));
         this.created = event.getString("created", null);
         this.counsellorRegularisation = event.getBoolean("counsellor_regularisation", false);
         this.massmailed = event.getBoolean("massmailed", false);

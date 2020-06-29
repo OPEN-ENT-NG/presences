@@ -10,7 +10,7 @@ import {
     IViescolaireService,
     SearchService
 } from "@incidents/services";
-import {SNIPLET_FORM_EMIT_PUNISHMENT_EVENTS, SNIPLET_FORM_EVENTS} from "@common/model";
+import {SNIPLET_FORM_EMIT_PUNISHMENT_EVENTS} from "@common/model";
 import {IPunishmentType} from "@incidents/models/PunishmentType";
 
 declare let window: any;
@@ -261,7 +261,7 @@ export const punishmentController = ng.controller('PunishmentController',
             };
 
             vm.openPunishment = (punishment: IPunishment): void => {
-                $scope.$broadcast(SNIPLET_FORM_EVENTS.SET_PARAMS, JSON.parse(JSON.stringify(punishment)));
+                $scope.$broadcast(SNIPLET_FORM_EMIT_PUNISHMENT_EVENTS.OPEN, JSON.parse(JSON.stringify(punishment)));
             };
 
             /**

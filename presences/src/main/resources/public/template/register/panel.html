@@ -28,7 +28,8 @@
                 <label>
                     <select ng-model="vm.filter.student.absence.reason_id"
                             ng-options="reason.id as reason.label for reason in vm.reasons"
-                            ng-change="vm.updateAbsence(vm.filter.student.absence, vm.filter.student.id)">
+                            options-disabled="reason.hidden for reason in vm.reasons"
+                            ng-change="vm.manageAbsence(vm.filter.student.absence, vm.filter.student)">
                         <option value="">
                             [[lang.translate('presences.absence.select.empty')]]
                         </option>

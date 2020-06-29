@@ -16,8 +16,8 @@ public class User extends Person implements Cloneable {
     }
 
     public User(JsonObject user) {
-        this.id = user.getString("id");
-        this.displayName = user.getString("displayName");
+        this.id = user.getString("id", null);
+        this.displayName = user.getString("displayName", null);
     }
 
     public JsonObject toJSON() {

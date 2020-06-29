@@ -41,7 +41,6 @@ export const punishmentService: IPunishmentService = {
             const dateUrl = `&start_at=${punishmentRequest.start_at}&end_at=${punishmentRequest.end_at}`;
             const urlParams = `${typeParams}${studentParams}${groupParams}`;
             const pageUrl = `&page=${punishmentRequest.page}`;
-            console.log("requete: ", punishmentRequest);
             const {data} = await http.get(`/incidents/punishments${structureUrl}${dateUrl}${urlParams}${pageUrl}`);
             return data;
         } catch (err) {

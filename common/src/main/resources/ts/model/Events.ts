@@ -7,6 +7,7 @@ export enum SNIPLET_FORM_EMIT_EVENTS {
 }
 
 export enum SNIPLET_FORM_EMIT_PUNISHMENT_EVENTS {
+    OPEN = 'punishment-form:open',
     CREATION = 'punishment-form:creation',
     EDIT = 'punishment-form:edit',
     DELETE = 'punishment-form:delete'

@@ -707,11 +707,14 @@ export const eventsController = ng.controller('EventsController', ['$scope', '$r
 
             /* Fetch reason Id */
             vm.eventReasonsId = [];
-            vm.eventReasonsType.forEach(r => {
-                if (r.isSelected && r.id) {
-                    vm.eventReasonsId.push(r.id);
-                }
-            });
+
+            if (vm.eventReasonsType && vm.eventReasonsType.length > 0) {
+                vm.eventReasonsType.forEach(r => {
+                    if (r.isSelected && r.id) {
+                        vm.eventReasonsId.push(r.id);
+                    }
+                });
+            }
 
             /* Delete eventReasonId */
             if (vm.filter.unjustified && (!vm.filter.justifiedNotRegularized && !vm.filter.justifiedRegularized) ||

@@ -19,7 +19,6 @@ import rights from '../rights';
 import {Scope} from './main';
 import http from 'axios';
 import {EventsUtils, RegisterUtils, StudentsSearch} from "../utilities";
-import {COURSE_EVENTS} from "@common/model";
 import {Reason} from "@presences/models/Reason";
 
 declare let window: any;
@@ -86,7 +85,7 @@ export interface ViewModel {
 
     updateDeparture(): void;
 
-    updateAbsence(events, reason): void;
+    manageAbsence(events, student): void;
 
     getHistoryEventClassName(events, slot): string;
 
@@ -193,7 +192,6 @@ export const registersController = ng.controller('RegistersController',
                         vm.register.eventer.once('loading::true', () => $scope.safeApply());
                         vm.register.eventer.once('loading::false', () => $scope.safeApply());
                         await vm.register.sync();
-                        console.log(vm.register);
                         await initCourses();
                     }
                 },
@@ -327,10 +325,6 @@ export const registersController = ng.controller('RegistersController',
                 return names;
             };
 
-            function initAutocomplete() {
-                vm.studentsSearch = new StudentsSearch(window.structure.id, SearchService);
-            }
-
             vm.searchStudents = async (value): Promise<void> => {
                 await vm.studentsSearch.searchStudentsFromArray(value, vm.register.students);
                 $scope.safeApply();
@@ -340,30 +334,6 @@ export const registersController = ng.controller('RegistersController',
                 vm.studentsSearch.selectStudent(valueInput, studentItem);
                 vm.studentsSearch.student = "";
                 vm.studentsSearch.resetStudents();
-            };
-
-            const getCurrentCourse = async (): Promise<void> => {
-                initAutocomplete();
-                await vm.loadCourses(extractSelectedTeacherIds(), extractSelectedGroupsName(), undefined, undefined, undefined, false);
-                if (vm.courses.all.length > 0) {
-                    let currentCourse = vm.courses.all.find(course => CourseUtils.isCurrentCourse(course));
-                    if (currentCourse) {
-                        vm.register = RegisterUtils.createRegisterFromCourse(currentCourse);
-                        /* create or sync register on current course*/
-                        if (!currentCourse.registerId) {
-                            vm.register.create().then(async () => {
-                                await vm.register.sync();
-                                currentCourse.registerId = vm.register.id;
-                                $scope.$emit(COURSE_EVENTS.SEND_COURSE, currentCourse);
-                                $scope.safeApply();
-                            });
-                        } else {
-                            await vm.register.sync();
-                            $scope.$emit(COURSE_EVENTS.SEND_COURSE, currentCourse);
-                        }
-                    }
-                }
-                $scope.safeApply();
             };
 
             vm.selectTeacher = function (model, teacher) {
@@ -625,10 +595,24 @@ export const registersController = ng.controller('RegistersController',
                 });
             };
 
-            vm.updateAbsence = function (events, student_id) {
-                new Events().updateReason([events.id], events.reason_id, student_id, window.structure.id);
+            vm.manageAbsence = async function (events, student) {
+                if (events.id) {
+                    if (typeof events.register_id === 'string') {
+                        events.register_id = parseInt(events.register_id);
+                    }
+                    new Events().updateReason([events], events.reason_id, student.id, window.structure.id);
+                } else {
+                    let reason_id = events.reason_id;
+                    student.absence = undefined;
+                    await vm.toggleAbsence(student);
+                    if (typeof student.absence.register_id === 'string') {
+                        student.absence.register_id = parseInt(student.absence.register_id);
+                    }
+                    new Events().updateReason([student.absence], reason_id, student.id, window.structure.id);
+                    student.absence.reason_id = reason_id;
+                    $scope.safeApply();
+                }
             };
-
 
             vm.closePanel = function () {
                 delete vm.filter.student;
@@ -672,7 +656,7 @@ export const registersController = ng.controller('RegistersController',
             };
 
             vm.isLoading = function () {
-                return vm.register.loading || vm.courses.loading;
+                return (vm.register && vm.register.loading) || vm.courses.loading;
             };
 
             vm.isFuturCourse = function (course: Course) {

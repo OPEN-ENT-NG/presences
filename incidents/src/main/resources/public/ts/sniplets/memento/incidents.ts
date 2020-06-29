@@ -83,7 +83,6 @@ export const incidentsMementoWidget = {
             this.setHandler();
         },
         setHandler: function () {
-            console.log('MEMENTO incidents');
             if (!window.memento) return;
             this.$on('memento:init', (evt: IAngularEvent, {student}) => {
                 const sniplet = document.getElementById('memento-incidents-sniplet');
