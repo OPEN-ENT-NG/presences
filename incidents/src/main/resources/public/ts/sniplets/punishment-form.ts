@@ -128,7 +128,6 @@ const vm: ViewModel = {
         if (vm.punishment.id) {
             vm.form.student_id = vm.punishment.student.id;
             vm.form.owner_id = vm.punishment.owner.id;
-            vm.form.description = vm.punishment.description;
             // todo edit incident for next feature
             vm.form.incident_id = null;
         } else {
