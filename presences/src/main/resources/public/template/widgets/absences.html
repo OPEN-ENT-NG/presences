@@ -51,7 +51,8 @@
                 <div>
                     <select data-ng-model="absence.reason_id"
                             data-ng-change="absence.updateReason(); vm.setAbsenceRegularisation(absence)"
-                            ng-options="reason.id as reason.label for reason in vm.reasons">
+                            ng-options="reason.id as reason.label for reason in vm.reasons"
+                            options-disabled="reason.hidden for reason in vm.reasons">
                         <option value="" label="[[lang.translate('presences.absence.select.empty')]]">
                             [[lang.translate('presences.absence.select.empty')]]
                         </option>
