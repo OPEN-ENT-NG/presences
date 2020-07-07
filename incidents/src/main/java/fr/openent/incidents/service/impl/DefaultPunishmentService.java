@@ -137,7 +137,7 @@ public class DefaultPunishmentService implements PunishmentService {
                     student_ids.add(student.getString("id"));
                 });
 
-                int page = pageString != null && !pageString.equals("") ? Integer.parseInt(pageString) : 1;
+                int page = pageString != null && !pageString.equals("") ? Integer.parseInt(pageString) : 0;
 
                 if (start_at != null && end_at != null) {
 
@@ -181,7 +181,7 @@ public class DefaultPunishmentService implements PunishmentService {
                         JsonObject.mapFrom(query),
                         sort,
                         null,
-                        ((page - 1) * aPageNumber),
+                        (page * aPageNumber),
                         aPageNumber,
                         aPageNumber,
                         null,
@@ -206,9 +206,10 @@ public class DefaultPunishmentService implements PunishmentService {
                     if (resultFuture.failed()) {
                         handler.handle(Future.failedFuture(resultFuture.cause()));
                     } else {
+                        Long pageCount = countFuture.result() / Incidents.PAGE_SIZE;
                         JsonObject finalResult = new JsonObject()
                                 .put("page", page)
-                                .put("page_count", (int) Math.ceil((double) countFuture.result() / aPageNumber))
+                                .put("page_count", pageCount)
                                 .put("all", findFuture.result());
                         handler.handle(Future.succeededFuture(finalResult));
                     }
@@ -221,8 +222,7 @@ public class DefaultPunishmentService implements PunishmentService {
     public void delete(UserInfos user, MultiMap body, Handler<AsyncResult<JsonObject>> handler) {
         Punishment punishment = new Punishment();
         JsonObject query = new JsonObject()
-                .put("_id", body.get("id"))
-                .put("owner_id", user.getUserId());
+                .put("_id", body.get("id"));
         MongoDb.getInstance().delete(punishment.getTable(), query, message -> {
             Either<String, JsonObject> messageCheck = MongoDbResult.validResult(message);
             if (messageCheck.isLeft()) {

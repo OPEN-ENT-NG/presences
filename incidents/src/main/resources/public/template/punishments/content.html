@@ -19,9 +19,9 @@
              data-ng-show="vm.punishments.punishmentResponse.all && vm.punishments.punishmentResponse.all.length > 0"></div>
 
         <!-- pagination punishment/sanction list -->
-        <pagination data-page-count="vm.punishments.punishmentResponse.all.page_count"
-                    data-page-number="vm.punishments.punishmentResponse.all.page"
-                    data-ng-click="console.log('clicked')"
+        <pagination data-page-count="vm.punishments.punishmentResponse.page_count"
+                    data-page-number="vm.punishments.punishmentResponse.page"
+                    data-ng-click="vm.changePagination()"
                     class="vertical-spacing pagination">
         </pagination>
     </div>

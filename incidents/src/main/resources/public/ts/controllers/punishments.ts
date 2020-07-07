@@ -61,6 +61,8 @@ interface IViewModel {
 
     openPunishment(punishment: IPunishment): void;
 
+    changePagination(): void;
+
     /* lightbox methods */
     openFilterLightbox(): void;
 
@@ -127,8 +129,9 @@ export const punishmentController = ng.controller('PunishmentController',
                 groups: [],
                 punishmentsRules: PunishmentsUtils.initPunishmentRules(),
                 massmaillingsPunishments: PunishmentsUtils.initMassmailingsPunishments(),
-                page: 1
+                page: 0
             };
+
 
             /* Init lightbox */
             vm.filterForm = {
@@ -212,7 +215,8 @@ export const punishmentController = ng.controller('PunishmentController',
                     .filter(punishmentType => punishmentType.isSelected)
                     .map(punishmentType => punishmentType.id);
                 vm.punishmentsRequest.massmailed = undefined;
-                vm.punishmentsRequest.page = 1;
+                vm.punishmentsRequest.page = vm.filter.page;
+
             };
 
             vm.getPunishmentDate = (punishment: IPunishment): string => {
@@ -262,6 +266,11 @@ export const punishmentController = ng.controller('PunishmentController',
 
             vm.openPunishment = (punishment: IPunishment): void => {
                 $scope.$broadcast(SNIPLET_FORM_EMIT_PUNISHMENT_EVENTS.OPEN, JSON.parse(JSON.stringify(punishment)));
+            };
+
+            vm.changePagination = async (): Promise<void> => {
+                vm.filter.page = vm.punishments.punishmentResponse.page;
+                await getPunishments();
             };
 
             /**
