@@ -496,6 +496,9 @@ export const registersController = ng.controller('RegistersController',
                     if (event === 'absence') vm.register.absenceCounter++;
                 }
                 vm.register.setStatus(RegisterStatus.IN_PROGRESS);
+                if (student.absence && event === 'lateness') {
+                    await toggleEvent(student, 'absence', start_date, end_date);
+                }
                 $scope.safeApply();
             };
 

@@ -42,8 +42,7 @@
         <div class="row">
             <label class="checkbox">
                 <input type="checkbox"
-                       ng-disabled="vm.filter.student.absence !== undefined ||
-                       (vm.filter.student.exempted_subjectId ===
+                       ng-disabled="(vm.filter.student.exempted_subjectId ===
                        vm.register.subject_id && vm.filter.student.exempted && !vm.filter.student.exemption_attendance)"
                        ng-checked="vm.filter.student.lateness !== undefined"
                        ng-click="vm.toggleLateness(vm.filter.student)"/>

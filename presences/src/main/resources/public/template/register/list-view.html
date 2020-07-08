@@ -28,7 +28,7 @@
             <i class="forgotten-notebook" data-ng-show="student.forgotten_notebook"></i>
         </div>
     </div>
-    <div class="register-event-status two">
+    <div class="register-event-status two" ng-click="vm.openPanel(student)">
         <div class="absence" ng-show="student.absence !== undefined">&nbsp;</div>
         <div class="lateness" ng-show="student.lateness !== undefined">&nbsp;</div>
         <div class="departure" ng-show="student.departure !== undefined">&nbsp;</div>
