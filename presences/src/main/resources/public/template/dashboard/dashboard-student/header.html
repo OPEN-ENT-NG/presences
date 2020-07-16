@@ -1,0 +1,20 @@
+<div class="dashboard-student-header margin-bottom-md">
+    <!-- title content-->
+    <app-title class="paddingRight">
+        <!-- module title name -->
+        <h1>
+            <i18n>presences.title</i18n>
+        </h1>
+    </app-title>
+
+    <!-- select children (relative's feat) -->
+    <div class="dashboard-student-header-selectChild" ng-if="vm.isRelative()">
+        <label>
+            <select class="card" required
+                    data-ng-change="vm.switchChild()"
+                    data-ng-model="vm.filter.selectedChildren"
+                    ng-options="child as child.displayName for child in vm.filter.children">
+            </select>
+        </label>
+    </div>
+</div>

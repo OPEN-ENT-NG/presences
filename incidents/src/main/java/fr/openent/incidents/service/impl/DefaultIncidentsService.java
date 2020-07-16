@@ -48,17 +48,40 @@ public class DefaultIncidentsService extends SqlCrudService implements Incidents
     }
 
     @Override
-    public void get(String structureId, String startDate, String endDate, String userId, Handler<Either<String, JsonArray>> handler) {
-        String query = "SELECT incident.* " +
-                "FROM " + Incidents.dbSchema + ".incident " +
-                "INNER JOIN " + Incidents.dbSchema + ".protagonist ON (incident.id = protagonist.incident_id) " +
-                "WHERE protagonist.user_id = ? " +
-                "AND incident.structure_id = ? " +
-                "AND incident.date >= to_date(?, 'YYYY-MM-DD') " +
-                "AND incident.date <= to_date(?, 'YYYY-MM-DD')";
-        JsonArray params = new JsonArray(Arrays.asList(userId, structureId, startDate, endDate));
+    public void get(String structureId, String startDate, String endDate, String userId, String limit, String offset,
+                    Handler<Either<String, JsonArray>> handler) {
+        String query = "SELECT i.id, i.owner, i.structure_id, i.date, i.selected_hour, i.description, i.created, i.processed, i.place_id, " +
+                " i.partner_id, i.type_id, i.seriousness_id, p.type_id as protagonist_type_id " +
+                "FROM " + Incidents.dbSchema + ".incident i " +
+                "INNER JOIN " + Incidents.dbSchema + ".protagonist p ON (i.id = p.incident_id) " +
+                "WHERE p.user_id = ? " +
+                "AND i.structure_id = ? " +
+                "AND i.date >= to_date(?, 'YYYY-MM-DD') " +
+                "AND i.date <= to_date(?, 'YYYY-MM-DD')" +
+                "ORDER BY i.date DESC ";
+
+        JsonArray params = new JsonArray()
+                .add(userId)
+                .add(structureId)
+                .add(startDate)
+                .add(endDate);
+
+        if (limit != null) {
+            query += " LIMIT ? ";
+            params.add(limit);
+        }
+
+        if (offset != null) {
+            query += " OFFSET ? ";
+            params.add(offset);
+        }
 
         Sql.getInstance().prepared(query, params, SqlResult.validResultHandler(handler));
+    }
+
+    @Override
+    public void get(String structureId, String startDate, String endDate, String userId, Handler<Either<String, JsonArray>> handler) {
+        get(structureId, startDate, endDate, userId, null, null, handler);
     }
 
     @Override
@@ -221,26 +244,26 @@ public class DefaultIncidentsService extends SqlCrudService implements Incidents
         JsonObject params = new JsonObject().put("idStudents", protagonists);
 
         Neo4j.getInstance().execute(query, params, Neo4jResult.validResultHandler(result -> {
-        if (result.isRight()) {
-            JsonArray protagonistResult = result.right().getValue();
+            if (result.isRight()) {
+                JsonArray protagonistResult = result.right().getValue();
 
-            for (int i = 0; i < arrayIncidents.size(); i++) {
-                JsonArray protagonist = arrayIncidents.getJsonObject(i).getJsonArray("protagonists");
-                for (int j = 0; j < protagonist.size(); j++) {
-                    for (int k = 0; k < protagonistResult.size(); k++) {
-                        if (protagonist.getJsonObject(j).getString("user_id").
-                                equals(protagonistResult.getJsonObject(k).getString("idEleve"))) {
-                            protagonist.getJsonObject(j).put("student", protagonistResult.getJsonObject(k));
+                for (int i = 0; i < arrayIncidents.size(); i++) {
+                    JsonArray protagonist = arrayIncidents.getJsonObject(i).getJsonArray("protagonists");
+                    for (int j = 0; j < protagonist.size(); j++) {
+                        for (int k = 0; k < protagonistResult.size(); k++) {
+                            if (protagonist.getJsonObject(j).getString("user_id").
+                                    equals(protagonistResult.getJsonObject(k).getString("idEleve"))) {
+                                protagonist.getJsonObject(j).put("student", protagonistResult.getJsonObject(k));
+                            }
                         }
                     }
                 }
+                handler.handle(new Either.Right<>(arrayIncidents));
+            } else {
+                handler.handle(new Either.Left<>("Failed to query protagonist info"));
             }
-            handler.handle(new Either.Right<>(arrayIncidents));
-        } else {
-            handler.handle(new Either.Left<>("Failed to query protagonist info"));
-        }
-    }));
-}
+        }));
+    }
 
     @Override
     public void getIncidentParameter(String structureId, Handler<Either<String, JsonObject>> handler) {

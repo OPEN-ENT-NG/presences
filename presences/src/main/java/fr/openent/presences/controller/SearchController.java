@@ -3,7 +3,9 @@ package fr.openent.presences.controller;
 import fr.openent.presences.Presences;
 import fr.openent.presences.common.security.SearchRight;
 import fr.openent.presences.common.service.GroupService;
+import fr.openent.presences.common.service.UserService;
 import fr.openent.presences.common.service.impl.DefaultGroupService;
+import fr.openent.presences.common.service.impl.DefaultUserService;
 import fr.openent.presences.enums.GroupType;
 import fr.openent.presences.security.SearchStudents;
 import fr.openent.presences.service.SearchService;
@@ -29,6 +31,7 @@ public class SearchController extends ControllerHelper {
     private EventBus eb;
     private GroupService groupService;
     private SearchService searchService;
+    private UserService userService;
 
 
     public SearchController(EventBus eb) {
@@ -36,6 +39,7 @@ public class SearchController extends ControllerHelper {
         this.eb = eb;
         this.groupService = new DefaultGroupService(eb);
         this.searchService = new DefaultSearchService();
+        this.userService = new DefaultUserService();
     }
 
     @Get("/search/users")
@@ -131,6 +135,17 @@ public class SearchController extends ControllerHelper {
         }
     }
 
+    @Get("/children")
+    @ApiDoc("get children from relative")
+    @SecuredAction(Presences.READ_CHILDREN)
+    public void getChildren(HttpServerRequest request) {
+        if (request.params().contains("relativeId")) {
+            userService.getChildren(request.getParam("relativeId"), arrayResponseHandler(request));
+        } else {
+            log.error("[Presences@SearchController::getChildren] Failed to get children, probably no relativeId given");
+            badRequest(request);
+        }
+    }
 
     private void callViescolaireEventBus(JsonObject action, HttpServerRequest request) {
         eb.send("viescolaire", action, handlerToAsyncHandler(event -> {

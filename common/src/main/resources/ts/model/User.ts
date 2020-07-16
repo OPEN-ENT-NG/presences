@@ -7,3 +7,5 @@ export interface User {
     groupName: string;
     info?: string;
 }
+
+// id, child.displayName as displayName, c.id as classId, c.name as className

@@ -2,12 +2,14 @@ package fr.openent.presences.controller;
 
 import fr.openent.presences.constants.Actions;
 import fr.openent.presences.security.Manage;
+import fr.openent.presences.security.StudentEventsViewRight;
 import fr.openent.presences.service.NotebookService;
 import fr.openent.presences.service.impl.DefaultNotebookService;
 import fr.wseduc.rs.*;
 import fr.wseduc.security.ActionType;
 import fr.wseduc.security.SecuredAction;
 import fr.wseduc.webutils.request.RequestUtils;
+import io.vertx.core.MultiMap;
 import io.vertx.core.http.HttpServerRequest;
 import org.entcore.common.controller.ControllerHelper;
 import org.entcore.common.http.filter.ResourceFilter;
@@ -36,6 +38,26 @@ public class NotebookController extends ControllerHelper {
         String startDate = String.valueOf(request.getParam("startDate"));
         String endDate = String.valueOf(request.getParam("endDate"));
         notebookService.get(studentId, startDate, endDate, DefaultResponseHandler.arrayResponseHandler(request));
+    }
+
+    @Get("/forgotten/notebook/student/:id")
+    @ApiDoc("Get forgotten notebook from student")
+    @ResourceFilter(StudentEventsViewRight.class)
+    @SecuredAction(value = "", type = ActionType.RESOURCE)
+    public void studentGet(HttpServerRequest request) {
+        MultiMap params = request.params();
+        if (!params.contains("structure_id")) {
+            badRequest(request);
+            return;
+        }
+        String studentId = params.get("id");
+        String startDate = params.get("start_at");
+        String endDate = params.get("end_at");
+        String limit = params.get("limit");
+        String offset = params.get("offset");
+        String structureId = params.get("structure_id");
+
+        notebookService.studentGet(studentId, startDate, endDate, limit, offset, structureId, DefaultResponseHandler.defaultResponseHandler(request));
     }
 
     @Post("/forgotten/notebook")

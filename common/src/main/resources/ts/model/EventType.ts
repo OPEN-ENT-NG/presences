@@ -5,3 +5,13 @@ export enum EventType {
     REMARK = 4,
     INCIDENT
 }
+
+export enum EVENT_TYPES {
+    UNJUSTIFIED = "UNJUSTIFIED",
+    JUSTIFIED = "JUSTIFIED",
+    LATENESS = "LATENESS",
+    DEPARTURE = "DEPARTURE",
+    INCIDENT = "INCIDENT",
+    PUNISHMENT = "PUNISHMENT",
+    NOTEBOOK = "NOTEBOOK"
+}

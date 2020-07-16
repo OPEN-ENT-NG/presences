@@ -21,7 +21,8 @@
     <body ng-controller="MainController" class="presences">
 		<portal>
 			<sniplet template="memento" application="viescolaire"></sniplet>
-            <sniplet template="navigation" application="presences"></sniplet>
+			<sniplet template="navigation" application="presences"
+					 data-ng-show="!(isChild() || isRelative())"></sniplet>
 			<container template="main"></container>
 		</portal>
 	</body>

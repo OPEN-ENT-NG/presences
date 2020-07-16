@@ -30,6 +30,8 @@ public interface IncidentsService {
      * @param userId      User that needs to retrieve incidents
      * @param handler     Function handler returning data
      */
+    void get(String structureId, String startDate, String endDate, String userId, String limit, String offset, Handler<Either<String, JsonArray>> handler);
+
     void get(String structureId, String startDate, String endDate, String userId, Handler<Either<String, JsonArray>> handler);
 
     /**

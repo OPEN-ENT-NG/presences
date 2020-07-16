@@ -1,4 +1,4 @@
-import {INCIDENTS_PROTAGONIST_TYPE_EVENT} from "@common/enum/incidents-event";
+import {INCIDENTS_PROTAGONIST_TYPE_EVENT} from "@common/core/enum/incidents-event";
 import {ProtagonistType, ProtagonistTypeRequest, protagonistTypeService} from "@incidents/services";
 import {AxiosResponse} from "axios";
 

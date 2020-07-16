@@ -7,11 +7,8 @@ import fr.openent.presences.controller.*;
 import fr.openent.presences.cron.CreateDailyRegistersTask;
 import fr.openent.presences.worker.CreateDailyPresenceWorker;
 import fr.wseduc.cron.CronTrigger;
-import fr.wseduc.webutils.Utils;
 import io.vertx.core.DeploymentOptions;
-import io.vertx.core.eventbus.DeliveryOptions;
 import io.vertx.core.eventbus.EventBus;
-import io.vertx.core.json.JsonObject;
 import org.entcore.common.http.BaseServer;
 
 import java.text.ParseException;
@@ -28,6 +25,7 @@ public class Presences extends BaseServer {
     public static final String CREATE_REGISTER = "presences.register.create";
     public static final String SEARCH = "presences.search";
     public static final String SEARCH_STUDENTS = "presences.search.students";
+    public static final String READ_CHILDREN = "presences.children.read";
     public static final String EXPORT = "presences.export";
     public static final String NOTIFY = "presences.notify";
     public static final String CREATE_EVENT = "presences.event.create";
@@ -37,6 +35,7 @@ public class Presences extends BaseServer {
     public static final String MANAGE = "presences.manage";
     public static final String REGISTRY = "presences.registry";
     public static final String CREATE_ACTION = "presences.action.create";
+    public static final String STUDENT_EVENTS_VIEW = "presences.student.events.view";
 
     // Widget rights
     public static final String ALERTS_WIDGET = "presences.widget.alerts";
@@ -77,6 +76,7 @@ public class Presences extends BaseServer {
         addController(new ActionController());
         addController(new DisciplineController());
         addController(new InitController(eb));
+        addController(new StudentController(eb));
 
         // Controller that create fake rights for widgets
         addController(new FakeRight());

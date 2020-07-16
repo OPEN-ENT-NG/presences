@@ -2,28 +2,37 @@ import http from 'axios';
 import {Mix} from 'entcore-toolkit';
 import {DateUtils} from '@common/utils'
 import {LoadingCollection} from '@common/model'
-import {IncidentType, Partner, Place, ProtagonistType, Seriousness} from "../services";
+import {IncidentType, Partner, Place, ProtagonistType, Seriousness} from "../../services";
 import {model, moment} from "entcore";
 
 export interface Incident {
     id: number;
     owner: string;
     structureId: string;
+    structure_id?: string;
 
     date: Date;
     dateTime: Date;
     created: Date;
 
     selectedHour: boolean;
+    selected_hour?: boolean;
     description: string;
     processed: boolean;
 
     place: Place;
+    place_id?: number;
     partner: Partner;
+    partner_id?: number;
+    type_id?: number;
+    type?: IncidentType;
     incidentType: IncidentType;
     seriousness: Seriousness;
+    seriousness_id?: number;
 
     protagonists: ProtagonistForm[];
+    protagonist_type_id?: number;
+    protagonist?: ProtagonistType;
 }
 
 export interface ProtagonistForm {

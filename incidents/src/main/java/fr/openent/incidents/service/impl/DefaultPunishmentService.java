@@ -31,6 +31,7 @@ public class DefaultPunishmentService implements PunishmentService {
     private static final Logger LOGGER = LoggerFactory.getLogger(DefaultPunishmentService.class);
     private GroupService groupService;
     private UserService userService;
+    private Punishment punishment = new Punishment();
 
 
     public DefaultPunishmentService(EventBus eb) {
@@ -49,11 +50,11 @@ public class DefaultPunishmentService implements PunishmentService {
             Future future = Future.future();
             futures.add(future);
             String student_id = (String) oStudent_id;
-            Punishment punishment = new Punishment();
-            punishment.setFromJson(body);
-            punishment.setStudentId(student_id);
+            Punishment createPunishment = new Punishment();
+            createPunishment.setFromJson(body);
+            createPunishment.setStudentId(student_id);
 
-            punishment.persistMongo(user, result -> {
+            createPunishment.persistMongo(user, result -> {
                 if (result.failed()) {
                     future.fail(result.cause().getMessage());
                 } else {
@@ -74,11 +75,11 @@ public class DefaultPunishmentService implements PunishmentService {
 
     @Override
     public void update(UserInfos user, JsonObject body, Handler<AsyncResult<JsonObject>> handler) {
-        Punishment punishment = new Punishment();
-        punishment.setFromJson(body);
-        punishment.persistMongo(user, result -> {
+        Punishment updatePunishment = new Punishment();
+        updatePunishment.setFromJson(body);
+        updatePunishment.persistMongo(user, result -> {
             if (result.failed()) {
-                Future.failedFuture(result.cause().getMessage());
+                handler.handle(Future.failedFuture(result.cause().getMessage()));
                 return;
             }
             handler.handle(Future.succeededFuture(result.result()));
@@ -86,104 +87,71 @@ public class DefaultPunishmentService implements PunishmentService {
     }
 
     @Override
-    public void get(UserInfos user, MultiMap body, Handler<AsyncResult<JsonObject>> handler) {
-        int aPageNumber = Incidents.PAGE_SIZE;
-        Punishment punishment = new Punishment();
-        String id = body.get("id");
-        List<BasicDBObject> queries = new ArrayList<>();
-        BasicDBObject query = new BasicDBObject();
+    public void get(UserInfos user, MultiMap body, boolean isStudent, Handler<AsyncResult<JsonObject>> handler) {
+        getQuery(user, body, isStudent, queryResult -> {
+            if(queryResult.failed()) {
+                handler.handle(Future.failedFuture(queryResult.cause().getMessage()));
+                return;
+            }
 
-        if (!WorkflowHelper.hasRight(user, WorkflowActions.PUNISHMENTS_VIEW.toString()) || !WorkflowHelper.hasRight(user, WorkflowActions.SANCTIONS_VIEW.toString())) {
-            queries.add(new BasicDBObject("owner_id", user.getUserId()));
-        }
+            String id = body.get("id");
 
-        queries.add(new BasicDBObject("structure_id", body.get("structure_id")));
-        if (id != null && !id.equals("")) {
-            queries.add(new BasicDBObject("_id", id));
-            query.put("$and", queries);
-
-            MongoDb.getInstance().findOne(punishment.getTable(), JsonObject.mapFrom(query), message -> {
-                Either<String, JsonObject> messageCheck = MongoDbResult.validResult(message);
-                if (messageCheck.isLeft()) {
-                    handler.handle(Future.failedFuture("[Incidents@Punishment::persistMongo] Failed to get punishment by id."));
-                } else {
-                    JsonObject result = messageCheck.right().getValue();
-                    mapGetterResults(new JsonArray().add(result), mapResult -> {
-                        if (mapResult.failed()) {
-                            handler.handle(Future.failedFuture(mapResult.cause()));
-                        } else {
-                            handler.handle(Future.succeededFuture(mapResult.result().getJsonObject(0)));
-                        }
-                    });
-                }
-            });
-        } else {
-
-            String start_at = body.get("start_at");
-            String end_at = body.get("end_at");
-            List<String> student_ids = body.getAll("student_id");
-            List<String> group_ids = body.getAll("group_id");
-            List<String> type_ids = body.getAll("type_id");
-            String pageString = body.get("page");
-
-            this.groupService.getGroupStudents(group_ids, groupResult -> {
-                if (groupResult.isLeft()) {
-                    handler.handle(Future.failedFuture("[Incidents@Punishment::persistMongo] Failed to retrieve students from groups"));
-                    return;
-                }
-
-                groupResult.right().getValue().forEach(oStudent -> {
-                    JsonObject student = (JsonObject) oStudent;
-                    student_ids.add(student.getString("id"));
+            if (id != null && !id.equals("")) {
+                MongoDb.getInstance().findOne(punishment.getTable(), JsonObject.mapFrom(queryResult.result()), message -> {
+                    Either<String, JsonObject> messageCheck = MongoDbResult.validResult(message);
+                    if (messageCheck.isLeft()) {
+                        handler.handle(Future.failedFuture("[Incidents@Punishment::persistMongo] Failed to get punishment by id."));
+                    } else {
+                        JsonObject result = messageCheck.right().getValue();
+                        mapGetterResults(new JsonArray().add(result), mapResult -> {
+                            if (mapResult.failed()) {
+                                handler.handle(Future.failedFuture(mapResult.cause()));
+                            } else {
+                                handler.handle(Future.succeededFuture(mapResult.result().getJsonObject(0)));
+                            }
+                        });
+                    }
                 });
+            } else {
+                Integer limit, offset, page = null;
+                String pageString = body.get("page");
+                String limitString = body.get("limit");
+                String offsetString = body.get("offset");
 
-                int page = pageString != null && !pageString.equals("") ? Integer.parseInt(pageString) : 0;
-
-                if (start_at != null && end_at != null) {
-
-                    List<BasicDBObject> containDateQueries = new ArrayList<>();
-                    containDateQueries.add(new BasicDBObject("fields.start_at", new BasicDBObject("$lt", end_at)));
-                    containDateQueries.add(new BasicDBObject("fields.end_at", new BasicDBObject("$gt", start_at)));
-                    BasicDBObject containDateQuery = new BasicDBObject("$and", containDateQueries);
-                    BasicDBObject nullDateQuery = new BasicDBObject("created_at", new BasicDBObject("$gt", start_at).append("$lt", end_at));
-
-                    queries.add(new BasicDBObject("$or", Arrays.asList(containDateQuery, nullDateQuery)));
-                }
-
-                if (student_ids != null && student_ids.size() > 0) {
-                    queries.add(new BasicDBObject("student_id", new BasicDBObject("$in", student_ids)));
-                }
-
-                if (type_ids != null && type_ids.size() > 0) {
-                    List<Long> listTypeIds = new ArrayList<>();
-                    type_ids.forEach(type_id -> listTypeIds.add(Long.parseLong(type_id)));
-                    queries.add(new BasicDBObject("type_id", new BasicDBObject("$in", listTypeIds)));
-                }
-
-                JsonObject sort = new JsonObject().put("created_at", -1);
-
-                query.put("$and", queries);
+                int aPageNumber = Incidents.PAGE_SIZE;
 
                 Future<Long> countFuture = Future.future();
                 Future<JsonArray> findFuture = Future.future();
 
+                JsonObject sort = new JsonObject()
+                        .put("fields.end_at", -1)
+                        .put("fields.start_at", -1)
+                        .put("created_at", -1);
 
-                MongoDb.getInstance().count(punishment.getTable(), JsonObject.mapFrom(query), message -> {
-                    Either<String, JsonObject> messageCheck = MongoDbResult.validResult(message);
-                    if (messageCheck.isLeft()) {
-                        countFuture.fail("[Incidents@Punishment::persistMongo] Failed to get count values.");
-                    } else {
-                        countFuture.complete(message.body().getLong("count"));
+                if (pageString != null && !pageString.equals("")) {
+                    page = Integer.parseInt(pageString);
+                    offset = page * aPageNumber;
+                    limit = aPageNumber;
+                } else {
+                    offset = offsetString != null && !offsetString.equals("") ? Integer.parseInt(offsetString) : 0;
+                    limit = limitString != null && !limitString.equals("") ? Integer.parseInt(limitString) : -1;
+                }
+
+                countFromQuery(queryResult.result(), countResult -> {
+                    if (countResult.failed()) {
+                        countFuture.fail(countResult.cause());
+                        return;
                     }
+                    countFuture.complete(countResult.result());
                 });
 
                 MongoDb.getInstance().find(punishment.getTable(),
-                        JsonObject.mapFrom(query),
+                        JsonObject.mapFrom(queryResult.result()),
                         sort,
                         null,
-                        (page * aPageNumber),
-                        aPageNumber,
-                        aPageNumber,
+                        offset,
+                        limit,
+                        limit,
                         null,
                         message -> {
                             Either<String, JsonObject> messageCheck = MongoDbResult.validResult(message);
@@ -202,25 +170,55 @@ public class DefaultPunishmentService implements PunishmentService {
                             }
                         });
 
+                Integer finalPage = page;
                 CompositeFuture.all(countFuture, findFuture).setHandler(resultFuture -> {
                     if (resultFuture.failed()) {
                         handler.handle(Future.failedFuture(resultFuture.cause()));
                     } else {
-                        Long pageCount = countFuture.result() / Incidents.PAGE_SIZE;
-                        JsonObject finalResult = new JsonObject()
-                                .put("page", page)
-                                .put("page_count", pageCount)
-                                .put("all", findFuture.result());
+                        JsonObject finalResult = new JsonObject();
+                        if (finalPage != null) {
+                            Long pageCount = countFuture.result() / Incidents.PAGE_SIZE;
+                            finalResult
+                                    .put("page", finalPage)
+                                    .put("page_count", pageCount);
+                        } else {
+                            finalResult
+                                    .put("limit", limit)
+                                    .put("offset", offset);
+                        }
+
+                        finalResult.put("all", findFuture.result());
                         handler.handle(Future.succeededFuture(finalResult));
                     }
                 });
-            });
-        }
+            }
+        });
+    }
+
+    @Override
+    public void count(UserInfos user, MultiMap body, boolean isStudent, Handler<AsyncResult<Long>> handler) {
+        getQuery(user, body, isStudent, result -> {
+            if(result.failed()) {
+                handler.handle(Future.failedFuture(result.cause().getMessage()));
+                return;
+            }
+            countFromQuery(result.result(), handler);
+        });
+    }
+
+    private void countFromQuery(BasicDBObject query, Handler<AsyncResult<Long>> handler) {
+        MongoDb.getInstance().count(punishment.getTable(), JsonObject.mapFrom(query), message -> {
+            Either<String, JsonObject> messageCheck = MongoDbResult.validResult(message);
+            if (messageCheck.isLeft()) {
+                handler.handle(Future.failedFuture("[Incidents@Punishment::countFromQuery] Failed to get count values."));
+            } else {
+                handler.handle(Future.succeededFuture(message.body().getLong("count")));
+            }
+        });
     }
 
     @Override
     public void delete(UserInfos user, MultiMap body, Handler<AsyncResult<JsonObject>> handler) {
-        Punishment punishment = new Punishment();
         JsonObject query = new JsonObject()
                 .put("_id", body.get("id"));
         MongoDb.getInstance().delete(punishment.getTable(), query, message -> {
@@ -232,6 +230,72 @@ public class DefaultPunishmentService implements PunishmentService {
                 handler.handle(Future.succeededFuture(result));
             }
         });
+    }
+
+    private void getQuery(UserInfos user, MultiMap body, boolean isStudent, Handler<AsyncResult<BasicDBObject>> handler) {
+        String id = body.get("id");
+        List<BasicDBObject> queries = new ArrayList<>();
+        BasicDBObject query = new BasicDBObject();
+
+        if (!isStudent && (!WorkflowHelper.hasRight(user, WorkflowActions.PUNISHMENTS_VIEW.toString()) || !WorkflowHelper.hasRight(user, WorkflowActions.SANCTIONS_VIEW.toString()))) {
+            queries.add(new BasicDBObject("owner_id", user.getUserId()));
+        }
+
+        queries.add(new BasicDBObject("structure_id", body.get("structure_id")));
+
+        if (id != null && !id.equals("")) {
+
+            queries.add(new BasicDBObject("_id", id));
+            if (isStudent) queries.add(new BasicDBObject("student_id", user.getUserId()));
+            query.put("$and", queries);
+            handler.handle(Future.succeededFuture(query));
+        } else {
+            String start_at = body.get("start_at");
+            String end_at = body.get("end_at");
+            List<String> student_ids = body.getAll("student_id");
+            List<String> group_ids = body.getAll("group_id");
+            List<String> type_ids = body.getAll("type_id");
+
+            this.groupService.getGroupStudents(group_ids, groupResult -> {
+                if (groupResult.isLeft()) {
+                    handler.handle(Future.failedFuture("[Incidents@Punishment::getQuery] Failed to retrieve students from groups"));
+                    return;
+                }
+
+                if (start_at != null && end_at != null) {
+
+                    List<BasicDBObject> containDateQueries = new ArrayList<>();
+                    containDateQueries.add(new BasicDBObject("fields.start_at", new BasicDBObject("$lt", end_at)));
+                    containDateQueries.add(new BasicDBObject("fields.end_at", new BasicDBObject("$gt", start_at)));
+                    BasicDBObject containDateQuery = new BasicDBObject("$and", containDateQueries);
+                    BasicDBObject nullDateQuery = new BasicDBObject("created_at", new BasicDBObject("$gt", start_at).append("$lt", end_at));
+
+                    queries.add(new BasicDBObject("$or", Arrays.asList(containDateQuery, nullDateQuery)));
+                }
+
+                if (isStudent) queries.add(new BasicDBObject("student_id", user.getUserId()));
+                else {
+                    groupResult.right().getValue().forEach(oStudent -> {
+                        JsonObject student = (JsonObject) oStudent;
+                        student_ids.add(student.getString("id"));
+                    });
+
+                    if (student_ids != null && student_ids.size() > 0) {
+                        queries.add(new BasicDBObject("student_id", new BasicDBObject("$in", student_ids)));
+                    }
+                }
+
+                if (type_ids != null && type_ids.size() > 0) {
+                    List<Long> listTypeIds = new ArrayList<>();
+                    type_ids.forEach(type_id -> listTypeIds.add(Long.parseLong(type_id)));
+                    queries.add(new BasicDBObject("type_id", new BasicDBObject("$in", listTypeIds)));
+                }
+
+                query.put("$and", queries);
+
+                handler.handle(Future.succeededFuture(query));
+            });
+        }
     }
 
     private void mapGetterResults(JsonArray result, Handler<AsyncResult<JsonArray>> handler) {

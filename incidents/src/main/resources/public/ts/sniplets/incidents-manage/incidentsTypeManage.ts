@@ -1,6 +1,6 @@
 import {incidentsTypeService, IncidentType, IncidentTypeRequest} from "@incidents/services";
 import {AxiosResponse} from "axios";
-import {INCIDENTS_TYPE_EVENT} from "@common/enum/incidents-event";
+import {INCIDENTS_TYPE_EVENT} from "@common/core/enum/incidents-event";
 
 declare let window: any;
 

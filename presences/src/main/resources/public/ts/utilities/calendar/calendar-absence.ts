@@ -3,7 +3,7 @@ import {SNIPLET_FORM_EMIT_EVENTS} from "@common/model";
 import {TimeSlotData} from "../../models/";
 import {EventsUtils} from "../../utilities/";
 import {DateUtils} from "@common/utils";
-import {ABSENCE_FORM_EVENTS} from "@common/enum/presences-event";
+import {ABSENCE_FORM_EVENTS} from "@common/core/enum/presences-event";
 
 /**
  * ⚠ This class is used for calendar while doing ACTION such as

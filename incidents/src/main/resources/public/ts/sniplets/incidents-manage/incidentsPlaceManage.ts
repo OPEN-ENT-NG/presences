@@ -1,4 +1,4 @@
-import {INCIDENTS_PLACE_EVENT} from "@common/enum/incidents-event";
+import {INCIDENTS_PLACE_EVENT} from "@common/core/enum/incidents-event";
 import {Place, PlaceRequest, placeService} from "@incidents/services";
 import {AxiosResponse} from "axios";
 

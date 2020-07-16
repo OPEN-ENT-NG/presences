@@ -1,6 +1,6 @@
 import {actionService} from "../../services";
 import {Action, ActionRequest} from "../../models";
-import {PRESENCES_ACTION} from "@common/enum/presences-event";
+import {PRESENCES_ACTION} from "@common/core/enum/presences-event";
 import {AxiosResponse} from "axios";
 import {toasts} from "entcore";
 

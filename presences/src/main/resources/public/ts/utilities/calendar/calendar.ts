@@ -2,7 +2,7 @@ import {Course, CourseEvent, Notebook} from "../../services";
 import {angular, moment} from "entcore";
 import {DateUtils} from "@common/utils";
 import {Absence, EventType, ITimeSlotWithAbsence} from "../../models";
-import {ABSENCE_FORM_EVENTS} from "@common/enum/presences-event";
+import {ABSENCE_FORM_EVENTS} from "@common/core/enum/presences-event";
 
 export class CalendarUtils {
 

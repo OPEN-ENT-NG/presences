@@ -1,6 +1,6 @@
 import {Partner, PartnerRequest, partnerService} from "@incidents/services";
 import {AxiosResponse} from "axios";
-import {INCIDENTS_PARTNER_EVENT} from "@common/enum/incidents-event";
+import {INCIDENTS_PARTNER_EVENT} from "@common/core/enum/incidents-event";
 
 declare let window: any;
 

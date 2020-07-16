@@ -18,7 +18,7 @@ import {
     INCIDENTS_PUNISHMENT_TYPE_EVENT,
     INCIDENTS_SERIOUSNESS_EVENT,
     INCIDENTS_TYPE_EVENT
-} from "@common/enum/incidents-event";
+} from "@common/core/enum/incidents-event";
 import {AxiosResponse} from "axios";
 import {IPunishmentTypeBody} from "../../models/PunishmentType";
 import {IPunishmentCategory} from "@incidents/models/PunishmentCategory";

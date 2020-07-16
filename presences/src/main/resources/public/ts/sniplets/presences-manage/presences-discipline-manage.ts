@@ -1,7 +1,7 @@
 import {AxiosResponse} from "axios";
 import {Discipline, DisciplineRequest} from "../../models";
 import {disciplineService} from "../../services";
-import {PRESENCES_DISCIPLINE} from "@common/enum/presences-event";
+import {PRESENCES_DISCIPLINE} from "@common/core/enum/presences-event";
 
 declare let window: any;
 

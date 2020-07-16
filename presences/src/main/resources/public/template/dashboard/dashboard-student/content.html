@@ -1,0 +1,98 @@
+<div class="dashboard-student-content margin-bottom-md">
+    <!-- Historic displaying student name -->
+    <div class="margin-bottom-md">
+        <i18n>presences.student.historic</i18n>&nbsp;[[vm.filter.selectedChildren.displayName]]
+    </div>
+
+    <!-- select period (select current based on datenow() period by default) -->
+    <div class="dashboard-student-content-selectPeriod margin-bottom-md" ng-if="vm.filter.periods.length !== 0">
+        <label>
+            <select class="card" required
+                    data-ng-change="vm.switchPeriod()"
+                    data-ng-model="vm.filter.selectedPeriod"
+                    ng-options="period as period.label for period in vm.filter.periods">
+            </select>
+        </label>
+    </div>
+
+    <div>
+        <!-- absences -->
+        <events-card title="vm.eventsTitle.absences"
+                     student="vm.filter.selectedChildren"
+                     period="vm.filter.selectedPeriod"
+                     events="vm.presenceEvents.all.UNJUSTIFIED"
+                     type="vm.types.UNJUSTIFIED"
+                     event-count="vm.presenceEvents.totals.UNJUSTIFIED"
+                     recovery-method="vm.getRecoveryMethodLabel(vm.presenceEvents.recovery_method)"
+                     color="vm.color.red">
+        </events-card>
+
+        <!-- justified absence -->
+        <events-card title="vm.eventsTitle.absences"
+                     student="vm.filter.selectedChildren"
+                     period="vm.filter.selectedPeriod"
+                     class="top20"
+                     events="vm.presenceEvents.all.JUSTIFIED"
+                     type="vm.types.JUSTIFIED"
+                     event-count="vm.presenceEvents.totals.JUSTIFIED"
+                     recovery-method="vm.getRecoveryMethodLabel(vm.presenceEvents.recovery_method)"
+                     color="vm.color.pink">
+        </events-card>
+
+        <!-- lateness -->
+        <events-card title="vm.eventsTitle.lateness"
+                     student="vm.filter.selectedChildren"
+                     period="vm.filter.selectedPeriod"
+                     class="top20"
+                     type="vm.types.LATENESS"
+                     events="vm.presenceEvents.all.LATENESS"
+                     event-count="vm.presenceEvents.totals.LATENESS"
+                     color="vm.color.purple">
+        </events-card>
+
+        <!-- incident -->
+        <events-card title="vm.eventsTitle.incidents"
+                     student="vm.filter.selectedChildren"
+                     period="vm.filter.selectedPeriod"
+                     class="top20"
+                     type="vm.types.INCIDENT"
+                     events="vm.incidentsEvents.all.INCIDENT"
+                     event-count="vm.incidentsEvents.totals.INCIDENT"
+                     color="vm.color.grey">
+        </events-card>
+
+        <!-- punishments -->
+        <events-card title="vm.eventsTitle.punishments"
+                     student="vm.filter.selectedChildren"
+                     period="vm.filter.selectedPeriod"
+                     class="top20"
+                     type="vm.types.PUNISHMENT"
+                     events="vm.incidentsEvents.all.PUNISHMENT"
+                     event-count="vm.incidentsEvents.totals.PUNISHMENT"
+                     color="vm.color.yellow">
+        </events-card>
+
+        <!-- forgotten notebook -->
+        <events-card title="vm.eventsTitle.forgottenNotebook"
+                     student="vm.filter.selectedChildren"
+                     period="vm.filter.selectedPeriod"
+                     class="top20"
+                     type="vm.types.NOTEBOOK"
+                     events="vm.forgottenNotebook.all"
+                     event-count="vm.forgottenNotebook.totals"
+                     color="vm.color.turquoise">
+        </events-card>
+
+        <!-- departure -->
+        <events-card title="vm.eventsTitle.departure"
+                     student="vm.filter.selectedChildren"
+                     period="vm.filter.selectedPeriod"
+                     class="top20"
+                     type="vm.types.DEPARTURE"
+                     events="vm.presenceEvents.all.DEPARTURE"
+                     event-count="vm.presenceEvents.totals.DEPARTURE"
+                     color="vm.color.blue">
+        </events-card>
+    </div>
+
+</div>

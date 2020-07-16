@@ -1,0 +1,23 @@
+.dashboard-student {
+
+  /**
+   * Remove navbar spacing
+   */
+  margin-left: $navbar-width-removed;
+
+  &-header {
+    display: flex;
+    align-items: center;
+
+    h1 {
+      margin: 0;
+    }
+
+    &-selectChild {
+      select {
+        margin: 0;
+      }
+    }
+  }
+
+}

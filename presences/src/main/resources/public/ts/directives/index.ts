@@ -12,3 +12,4 @@ export * from '@common/directives/pagination';
 export * from '@common/directives/student-name';
 export * from '@common/directives/student-name';
 export * from '@incidents/directives/punishment-form/index';
+export * from './events-card';

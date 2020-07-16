@@ -4,6 +4,7 @@ import http, {AxiosResponse} from 'axios';
 export interface ProtagonistType {
     id: number;
     structureId: string;
+    structure_id?: string;
     label: string;
     hidden: boolean;
     used?: boolean;

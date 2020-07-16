@@ -1,7 +1,7 @@
 export * from './Course';
 export * from './Register';
 export * from '@common/model/EventType';
-export * from './Event';
+export * from './Event/index';
 export * from './Preferences';
 export * from './RegisterStatus';
 export * from './Exemption';
@@ -16,3 +16,5 @@ export * from './Discipline';
 export * from './Presences';
 export * from './CounsellorAbsence';
 export * from './Reason';
+export * from './ForgottenNotebook';
+export * from "@incidents/models/incidents/StudentIncident";

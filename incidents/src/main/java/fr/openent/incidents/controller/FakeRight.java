@@ -35,7 +35,9 @@ public class FakeRight extends ControllerHelper {
 
     @Get("/rights/incidents/sanctions_view")
     @SecuredAction(Incidents.SANCTIONS_VIEW)
-    public void sanctionsView(HttpServerRequest request) {
-        notImplemented(request);
-    }
+    public void sanctionsView(HttpServerRequest request) {notImplemented(request);}
+
+    @Get("/rights/incidents/student/events/view")
+    @SecuredAction(Incidents.STUDENT_EVENTS_VIEW)
+    public void studentEventsView(HttpServerRequest request) {notImplemented(request);}
 }

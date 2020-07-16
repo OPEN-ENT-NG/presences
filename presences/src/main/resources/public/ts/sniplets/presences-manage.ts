@@ -5,8 +5,8 @@ import {
     INCIDENTS_PUNISHMENT_TYPE_EVENT,
     INCIDENTS_SERIOUSNESS_EVENT,
     INCIDENTS_TYPE_EVENT
-} from "@common/enum/incidents-event";
-import {PRESENCES_ACTION, PRESENCES_DISCIPLINE} from "@common/enum/presences-event";
+} from "@common/core/enum/incidents-event";
+import {PRESENCES_ACTION, PRESENCES_DISCIPLINE} from "@common/core/enum/presences-event";
 import {IAngularEvent} from "angular";
 import {toasts} from "entcore";
 import http from 'axios';

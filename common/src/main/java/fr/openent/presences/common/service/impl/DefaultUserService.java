@@ -28,4 +28,16 @@ public class DefaultUserService implements UserService {
 
         Neo4j.getInstance().execute(query, params, Neo4jResult.validResultHandler(handler));
     }
+
+    @Override
+    public void getChildren(String relativeId, final Handler<Either<String, JsonArray>> handler) {
+        JsonObject params = new JsonObject().put("id", relativeId);
+
+        String query = "MATCH (n:User {id : {id}}) WHERE HAS(n.login) " +
+                "MATCH n<-[:RELATED]-(child:User) MATCH child-[:IN]->(gp:Group) " +
+                "MATCH gp-[:DEPENDS]->(c:Class) RETURN distinct " +
+                "child.id as id, child.displayName as displayName, c.id as classId, c.name as className ";
+
+        Neo4j.getInstance().execute(query, params, Neo4jResult.validResultHandler(handler));
+    }
 }

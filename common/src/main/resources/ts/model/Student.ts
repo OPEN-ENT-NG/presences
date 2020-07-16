@@ -7,6 +7,7 @@ export class Student {
     lastName: string;
     name?: string;
     idClasse: string;
+    classId?: string;
     displayName: string;
     classeName?: any;
     className?: string;

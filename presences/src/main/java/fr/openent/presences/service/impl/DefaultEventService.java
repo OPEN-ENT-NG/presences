@@ -686,7 +686,7 @@ public class DefaultEventService implements EventService {
                 case "DAY":
                 case "HOUR": {
                     JsonObject eventsQuery = getEventQuery(eventType, students, structure, justified, reasonsId,
-                            massmailed, startDate, endDate, noReasons, recoveryMethod, null, null);
+                            massmailed, startDate, endDate, noReasons, recoveryMethod, null, null, null, null, true);
                     String query = "WITH count_by_user AS (WITH events as (" + eventsQuery.getString("query") + ") " +
                             "SELECT count(*), student_id FROM events GROUP BY student_id) SELECT * FROM count_by_user WHERE count >= " + startAt;
                     Sql.getInstance().prepared(query, eventsQuery.getJsonArray("params"), SqlResult.validResultHandler(handler));
@@ -705,9 +705,9 @@ public class DefaultEventService implements EventService {
                         if (slotSetting.containsKey("end_of_half_day") && slotSetting.getString("end_of_half_day") != null) {
                             String halfOfDay = slotSetting.getString("end_of_half_day");
                             JsonObject morningQuery = getEventQuery(eventType, students, structure, justified,
-                                    reasonsId, massmailed, startDate, endDate, noReasons, recoveryMethod, defaultStartTime, halfOfDay);
+                                    reasonsId, massmailed, startDate, endDate, noReasons, recoveryMethod, defaultStartTime, halfOfDay, null, null, true);
                             JsonObject afternoonQuery = getEventQuery(eventType, students, structure, justified,
-                                    reasonsId, massmailed, startDate, endDate, noReasons, recoveryMethod, halfOfDay, defaultEndTime);
+                                    reasonsId, massmailed, startDate, endDate, noReasons, recoveryMethod, halfOfDay, defaultEndTime, null, null, true);
                             String query = "WITH count_by_user AS (WITH events as (" + morningQuery.getString("query") + " UNION ALL " + afternoonQuery.getString("query") + ") " +
                                     "SELECT count(*), student_id FROM events GROUP BY student_id) SELECT * FROM count_by_user WHERE count >= " + startAt;
                             JsonArray params = new JsonArray()
@@ -726,7 +726,8 @@ public class DefaultEventService implements EventService {
 
     private JsonObject getEventQuery(Integer eventTypes, List<String> students, String structure, Boolean justified,
                                      List<Integer> reasonsId, Boolean massmailed, String startDate, String endDate,
-                                     boolean noReasons, String recoveryMethod, String startTime, String endTime) {
+                                     boolean noReasons, String recoveryMethod, String startTime, String endTime,
+                                     String limit, String offset, boolean isCount) {
         String dateCast = !"HOUR".equals(recoveryMethod) ? "::date" : "";
         String periodRange;
         periodRange = "HALF_DAY".equals(recoveryMethod) && endTime.equals(defaultEndTime) ? ",'AFTERNOON' as period " : "";
@@ -754,7 +755,6 @@ public class DefaultEventService implements EventService {
             params.addAll(new JsonArray(students));
         }
         if (justified != null) {
-//            query += " AND (counsellor_regularisation = " + (justified ? "true) " : "false OR reason_id IS NULL) ");
             query += " AND reason_id IS " + (justified ? "NOT" : "") + " NULL ";
         }
         if (!reasonsId.isEmpty()) {
@@ -767,9 +767,21 @@ public class DefaultEventService implements EventService {
         }
 
         query += " GROUP BY event.start_date" + dateCast + ", event.student_id, event.end_date" + dateCast + ", event.type_id ";
-        if (!"HALF_DAY".equals(recoveryMethod)) {
-            query += "ORDER BY event.start_date" + dateCast;
+        if (!isCount) {
+            query += "ORDER BY event.end_date" + dateCast + " DESC, event.start_date" + dateCast + " DESC";
         }
+
+        if (limit != null) {
+            query += " LIMIT ? ";
+            params.add(limit);
+        }
+
+        if (offset != null) {
+            query += " OFFSET ? ";
+            params.add(offset);
+        }
+
+
         return new JsonObject()
                 .put("query", query)
                 .put("params", params);
@@ -778,7 +790,7 @@ public class DefaultEventService implements EventService {
     @Override
     public void getEventsByStudent(Integer eventType, List<String> students, String structure, Boolean justified,
                                    List<Integer> reasonsId, Boolean massmailed, String startDate, String endDate,
-                                   boolean noReasons, String recoveryMethodUsed, Handler<Either<String, JsonArray>> handler) {
+                                   boolean noReasons, String recoveryMethodUsed, String limit, String offset, Handler<Either<String, JsonArray>> handler) {
         Handler<Either<String, JsonArray>> queryHandler = eventsEvt -> {
             if (eventsEvt.isLeft()) {
                 handler.handle(eventsEvt);
@@ -792,7 +804,8 @@ public class DefaultEventService implements EventService {
         };
 
         if (eventType != 1) {
-            JsonObject eventsQuery = getEventQuery(eventType, students, structure, justified, reasonsId, massmailed, startDate, endDate, noReasons, "HOUR", null, null);
+            JsonObject eventsQuery = getEventQuery(eventType, students, structure, justified, reasonsId, massmailed,
+                    startDate, endDate, noReasons, "HOUR", null, null, limit, offset, false);
             Sql.getInstance().prepared(eventsQuery.getString("query"), eventsQuery.getJsonArray("params"), SqlResult.validResultHandler(queryHandler));
             return;
         }
@@ -808,7 +821,8 @@ public class DefaultEventService implements EventService {
             switch (recoveryMethod) {
                 case "DAY":
                 case "HOUR": {
-                    JsonObject eventsQuery = getEventQuery(eventType, students, structure, justified, reasonsId, massmailed, startDate, endDate, noReasons, recoveryMethod, null, null);
+                    JsonObject eventsQuery = getEventQuery(eventType, students, structure, justified, reasonsId,
+                            massmailed, startDate, endDate, noReasons, recoveryMethod, null, null, limit, offset, false);
                     Sql.getInstance().prepared(eventsQuery.getString("query"), eventsQuery.getJsonArray("params"), SqlResult.validResultHandler(queryHandler));
                     break;
                 }
@@ -822,14 +836,29 @@ public class DefaultEventService implements EventService {
                         }
 
                         JsonObject slotSetting = evt.right().getValue();
-                        if (slotSetting.containsKey("end_of_half_day")) {
+                        if (slotSetting.containsKey("end_of_half_day") && slotSetting.getString("end_of_half_day") != null) {
                             String halfOfDay = slotSetting.getString("end_of_half_day");
-                            JsonObject morningQuery = getEventQuery(eventType, students, structure, justified, reasonsId, massmailed, startDate, endDate, noReasons, recoveryMethod, defaultStartTime, halfOfDay);
-                            JsonObject afternoonQuery = getEventQuery(eventType, students, structure, justified, reasonsId, massmailed, startDate, endDate, noReasons, recoveryMethod, halfOfDay, defaultEndTime);
-                            String query = "WITH events as (" + morningQuery.getString("query") + " UNION ALL " + afternoonQuery.getString("query") + ") SELECT * FROM events ORDER BY start_date";
+                            JsonObject afternoonQuery = getEventQuery(eventType, students, structure, justified, reasonsId,
+                                    massmailed, startDate, endDate, noReasons, recoveryMethod, halfOfDay, defaultEndTime, null, null, false);
+                            JsonObject morningQuery = getEventQuery(eventType, students, structure, justified, reasonsId,
+                                    massmailed, startDate, endDate, noReasons, recoveryMethod, defaultStartTime, halfOfDay, null, null, false);
+                            String query = "WITH events as ((" + afternoonQuery.getString("query") + ") UNION ALL (" + morningQuery.getString("query") +")" +
+                                    ") SELECT * FROM events ORDER BY end_date DESC, start_date DESC, period";
+
                             JsonArray params = new JsonArray()
-                                    .addAll(morningQuery.getJsonArray("params"))
-                                    .addAll(afternoonQuery.getJsonArray("params"));
+                                    .addAll(afternoonQuery.getJsonArray("params"))
+                                    .addAll(morningQuery.getJsonArray("params"));
+
+                            if (limit != null) {
+                                query += " LIMIT ? ";
+                                params.add(limit);
+                            }
+
+                            if (offset != null) {
+                                query += " OFFSET ? ";
+                                params.add(offset);
+                            }
+
                             Sql.getInstance().prepared(query, params, SqlResult.validResultHandler(queryHandler));
                         } else {
                             handler.handle(new Either.Left<>("Structure does not initialize end of half day"));
@@ -838,6 +867,15 @@ public class DefaultEventService implements EventService {
             }
         });
     }
+
+    @Override
+    public void getEventsByStudent(Integer eventType, List<String> students, String structure, Boolean justified,
+                                   List<Integer> reasonsId, Boolean massmailed, String startDate, String endDate,
+                                   boolean noReasons, String recoveryMethodUsed, Handler<Either<String, JsonArray>> handler) {
+
+        this.getEventsByStudent(eventType, students, structure, justified, reasonsId, massmailed, startDate, endDate, noReasons, recoveryMethodUsed, null, null, handler);
+    }
+
 
     @Override
     public void getAbsenceRate(String student, String structure, String start, String end, Handler<Either<String, JsonObject>> handler) {

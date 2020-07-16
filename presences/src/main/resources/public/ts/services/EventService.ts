@@ -1,6 +1,6 @@
 import {ng} from 'entcore'
 import http, {AxiosResponse} from 'axios';
-import {ActionBody, EventResponse, Events} from "../models";
+import {ActionBody, EventResponse, Events, IStudentEventRequest, IStudentEventResponse} from "../models";
 import {DateUtils} from "@common/utils";
 
 export interface EventService {
@@ -9,6 +9,8 @@ export interface EventService {
     getEventActions(event_id: number): Promise<ActionBody[]>;
 
     createAction(actionBody: ActionBody): Promise<AxiosResponse>;
+
+    getStudentEvent(studentEventRequest: IStudentEventRequest): Promise<IStudentEventResponse>;
 }
 
 export interface EventRequest {
@@ -63,7 +65,39 @@ export const eventService: EventService = {
 
     createAction: async (actionBody: ActionBody): Promise<AxiosResponse> => {
         return http.post(`/presences/events/actions`, actionBody);
-    }
+    },
+
+    getStudentEvent: async (studentEventRequest: IStudentEventRequest): Promise<IStudentEventResponse> => {
+        try {
+            const structure_id: string = `?structure_id=${studentEventRequest.structure_id}`;
+            const start_at: string = `&start_at=${studentEventRequest.start_at}`;
+            const end_at: string = `&end_at=${studentEventRequest.end_at}`;
+
+            let types: string = '';
+            if (studentEventRequest.type) {
+                studentEventRequest.type.forEach((type: string) => {
+                    types += `&type=${type}`;
+                });
+            }
+
+            let limit: string = '';
+            if (studentEventRequest.limit) {
+                limit = `&limit=${studentEventRequest.limit}`;
+            }
+
+            let offset: string = '';
+            if (studentEventRequest.offset) {
+                offset = `&offset=${studentEventRequest.offset}`;
+            }
+
+            const urlParams = `${structure_id}${start_at}${end_at}${types}${limit}${offset}`;
+            const {data} = await http.get(`/presences/students/${studentEventRequest.student_id}/events${urlParams}`);
+            return data
+        } catch (err) {
+            throw err;
+        }
+    },
+
 };
 
 export const EventService = ng.service('EventService',

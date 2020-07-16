@@ -12,6 +12,7 @@ $presences-dark-green: #46bfaf;
 $presences-blue: #2a9cc8;
 $presences-remark: #2f5be0;
 $presences-grey: #aaaaaa;
+$presences-grey-average: #7a7a7a;
 $presences-grey-clear: #eeeeee;
 $presences-grey-incident: #d6d6d6;
 $presences-grey-light: #f0f0f0;
@@ -24,6 +25,21 @@ $presences-black-light: #555555;
 $portal-header-height: 64px;
 $responsive-portal-header-height: 50px;
 $navbar-width: 80px;
+$navbar-width-removed: -80px;
+
+$box-shadow: 0 5px 5px rgba(0, 0, 0, 0.21);
+
+@mixin mobile {
+  @media (max-width: 768px) {
+    @content;
+  }
+}
+
+@mixin mobileMini {
+  @media (max-width: 350px) {
+    @content;
+  }
+}
 
 .toasts .warning {
   text-align: left !important;

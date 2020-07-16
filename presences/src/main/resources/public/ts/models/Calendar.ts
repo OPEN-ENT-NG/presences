@@ -1,6 +1,6 @@
 import {Course} from "@presences/services";
 import {Presences} from "@presences/models/Presences";
-import {Absence} from "@presences/models/Event";
+import {Absence} from "@presences/models/Event/Event";
 import {Reason} from "@presences/models/Reason";
 
 export interface TimeSlotData {

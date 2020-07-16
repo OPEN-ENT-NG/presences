@@ -1,0 +1,14 @@
+<div class="dashboard-student" ng-controller="DashboardStudentController as vm">
+
+    <loader data-ng-show="vm.isLoading" min-height="'250px'"/>
+
+    <div data-ng-show="!vm.isLoading">
+        <!-- content dashboard inside -->
+        <div ng-include="'/presences/public/template/dashboard/dashboard-student/header.html'"></div>
+
+        <!-- content dashboard inside -->
+        <div ng-include="'/presences/public/template/dashboard/dashboard-student/content.html'"></div>
+    </div>
+
+
+</div>

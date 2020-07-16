@@ -19,6 +19,18 @@ public interface NotebookService {
      */
     void get(String studentId, String startDate, String endDate, Handler<Either<String, JsonArray>> handler);
 
+    /**
+     * Retrieve forgotten notebook from student based on student_id and date since filter is possible
+     *
+     * @param studentId     student identifier
+     * @param startDate     beginning date to filter. Format is : YYYY-DD-MM
+     * @param endDate       end date to filter. Format is : YYYY-DD-MM
+     * @param limit         limit of occurrences.
+     * @param offset        offset to get occurrences.
+     * @param structureId   structure identifier
+     * @param handler       Function handler returning data. Returns a JsonArray
+     */
+    void studentGet(String studentId, String startDate, String endDate, String limit, String offset, String structureId, Handler<Either<String, JsonObject>> handler);
 
     /**
      * Retrieve forgotten notebook based on a list of student_id and date

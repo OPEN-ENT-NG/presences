@@ -65,7 +65,9 @@ public class FakeRight extends ControllerHelper {
 
     @Get("/rights/manage/event/absent")
     @SecuredAction(Presences.MANAGE)
-    public void managePresences(HttpServerRequest request) {
-        notImplemented(request);
-    }
+    public void managePresences(HttpServerRequest request) {notImplemented(request);}
+
+    @Get("/rights/student/events/view")
+    @SecuredAction(Presences.STUDENT_EVENTS_VIEW)
+    public void studentEventsView(HttpServerRequest request) {notImplemented(request);}
 }

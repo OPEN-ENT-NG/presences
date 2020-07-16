@@ -1,5 +1,5 @@
 import {AxiosResponse} from "axios";
-import {PRESENCES_ACTION, PRESENCES_DISCIPLINE} from "@common/enum/presences-event";
+import {PRESENCES_ACTION, PRESENCES_DISCIPLINE} from "@common/core/enum/presences-event";
 import {IAngularEvent} from "angular";
 import {actionService, disciplineService} from "../../services";
 import {ActionRequest} from "@presences/models";

@@ -3,7 +3,7 @@ import {_, moment} from 'entcore';
 import {DateUtils} from '@common/utils'
 import {EventType, LoadingCollection} from "@common/model";
 import {Reason} from "@presences/models/Reason";
-import {EventsUtils} from "../utilities";
+import {EventsUtils} from "../../utilities";
 import {User} from "@common/model/User";
 import {Course} from "@presences/services";
 

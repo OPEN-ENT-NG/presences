@@ -1,4 +1,4 @@
-import {INCIDENTS_SERIOUSNESS_EVENT} from "@common/enum/incidents-event";
+import {INCIDENTS_SERIOUSNESS_EVENT} from "@common/core/enum/incidents-event";
 import {Seriousness, SeriousnessRequest, seriousnessService} from "@incidents/services";
 import {AxiosResponse} from "axios";
 

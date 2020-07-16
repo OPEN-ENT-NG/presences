@@ -1,0 +1,183 @@
+@mixin listStyleSquare() {
+  content: "■";
+  font-weight: bold;
+  display: inline-block;
+  width: 2em;
+  margin-left: -1.2em;
+  position: absolute;
+  border-bottom: 1px solid $presences-grey-light;
+}
+
+.events-card {
+  flex-direction: column;
+  border-radius: 7px;
+  background-color: $presences-white;
+  box-shadow: $box-shadow;
+  display: flex;
+  justify-content: center;
+
+  &-content {
+    padding: 8px 16px;
+
+    &-title {
+      color: $presences-grey-average;
+      margin-bottom: 8px;
+    }
+
+    &-inside {
+      display: flex;
+
+      &-side {
+        display: flex;
+        flex-direction: column;
+        text-align: center;
+        width: 80px;
+
+        &-eventCount {
+          font-size: 48px;
+          min-height: 48px;
+          font-weight: bold;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+        }
+
+        &-eventOption {
+          margin-top: 8px;
+          color: $presences-grey-average;
+          font-size: 11px;
+          white-space: nowrap;
+        }
+      }
+
+      &-list {
+        width: 100%;
+        margin: 0;
+        @include mobile {
+          font-size: 10px;
+        }
+
+        li {
+          display: flex;
+          justify-content: space-between;
+          border-bottom: 1px solid $presences-grey-light;
+          line-height: 32px;
+          margin-bottom: 8px;
+
+          &.red-event::before {
+            @include listStyleSquare();
+            color: $presences-red;
+          }
+
+          &.pink-event::before {
+            @include listStyleSquare();
+            color: $presences-pink;
+          }
+
+          &.purple-event::before {
+            @include listStyleSquare();
+            color: $presences-purple;
+          }
+
+          &.yellow-event::before {
+            @include listStyleSquare();
+            color: $presences-main;
+          }
+
+          &.turquoise-event::before {
+            @include listStyleSquare();
+            color: $presences-water-green;
+          }
+
+          &.blue-event::before {
+            @include listStyleSquare();
+            color: $presences-green;
+          }
+
+          &.grey-event::before {
+            @include listStyleSquare();
+            color: $presences-grey-incident;
+          }
+        }
+
+        &-first {
+          li {
+            &:last-child {
+              border-bottom: 0;
+              margin: 0;
+
+              &:before {
+                border-bottom: 0;
+              }
+            }
+          }
+
+          &.collapsed {
+            li {
+              &:last-child {
+                border-bottom: 1px solid $presences-grey-light;
+                margin-bottom: 8px;
+
+                &:before {
+                  border-bottom: 1px solid $presences-grey-light;
+
+                }
+              }
+            }
+          }
+        }
+
+        &-full {
+          li {
+            &:last-child {
+              border-bottom: 0;
+              margin: 0;
+
+              &:before {
+                border-bottom: 0;
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+
+  &-toggle {
+    display: flex;
+    flex-direction: column;
+    text-align: center;
+    color: $presences-white;
+    border-bottom-left-radius: 7px;
+    border-bottom-right-radius: 7px;
+    height: 23px;
+
+    &.red-event {
+      background-color: $presences-red;
+    }
+
+    &.pink-event {
+      background-color: $presences-pink;
+    }
+
+    &.purple-event {
+      background-color: $presences-purple;
+    }
+
+    &.yellow-event {
+      background-color: $presences-main;
+    }
+
+    &.turquoise-event {
+      background-color: $presences-water-green;
+    }
+
+    &.blue-event {
+      background-color: $presences-green;
+    }
+
+    &.grey-event {
+      background-color: $presences-grey-incident;
+    }
+  }
+}

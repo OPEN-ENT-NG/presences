@@ -19,7 +19,7 @@ import {DateUtils} from '@common/utils';
 import {SNIPLET_FORM_EMIT_EVENTS, SNIPLET_FORM_EVENTS} from "@common/model";
 import {NOTEBOOK_FORM_EVENTS} from "../sniplets";
 import {CalendarAbsenceUtils, CalendarUtils, EventsUtils} from "../utilities";
-import {ABSENCE_FORM_EVENTS} from "@common/enum/presences-event";
+import {ABSENCE_FORM_EVENTS} from "@common/core/enum/presences-event";
 import {IAngularEvent} from "angular";
 
 declare let window: any;

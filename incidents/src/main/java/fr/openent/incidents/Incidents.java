@@ -14,6 +14,7 @@ public class Incidents extends BaseServer {
     public static final String PUNISHMENT_CREATE = "incidents.punishment.create";
     public static final String PUNISHMENTS_VIEW = "incidents.punishments.view";
     public static final String SANCTIONS_VIEW = "incidents.sanction.view";
+    public static final String STUDENT_EVENTS_VIEW = "presences.student.events.view";
 
     public static Integer PAGE_SIZE = 20;
 
@@ -30,6 +31,7 @@ public class Incidents extends BaseServer {
         addController(new PlaceController());
         addController(new ProtagonistTypeController());
         addController(new SeriousnessController());
+        addController(new StudentController(eb));
         addController(new PunishmentController());
         addController(new PunishmentTypeController());
         addController(new PunishmentCategoryController());

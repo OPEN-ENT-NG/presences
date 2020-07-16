@@ -27,7 +27,7 @@ public class PunishmentController extends ControllerHelper {
             return;
         }
         UserUtils.getUserInfos(eb, request, user -> {
-            punishmentService.get(user, request.params(), result -> {
+            punishmentService.get(user, request.params(), false, result -> {
                 if (result.failed()) {
                     log.error(result.cause().getMessage());
                     renderError(request);

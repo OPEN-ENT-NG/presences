@@ -4,7 +4,7 @@ import {idiom as lang, model, moment, toasts} from "entcore";
 import {reasonService, ViescolaireService} from "../services";
 import {IAngularEvent} from "angular";
 import {DateUtils} from "@common/utils";
-import {ABSENCE_FORM_EVENTS} from "@common/enum/presences-event";
+import {ABSENCE_FORM_EVENTS} from "@common/core/enum/presences-event";
 import {EventsUtils} from "../utilities";
 import {AxiosResponse} from "axios";
 

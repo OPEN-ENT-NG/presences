@@ -4,7 +4,7 @@ import {IPunishmentCategory} from "@incidents/models/PunishmentCategory";
 import {punishmentsCategoryService} from "@incidents/services/PunishmentCategoryService";
 import {AxiosResponse} from "axios";
 import {toasts} from "entcore";
-import {INCIDENTS_PUNISHMENT_TYPE_EVENT} from "@common/enum/incidents-event";
+import {INCIDENTS_PUNISHMENT_TYPE_EVENT} from "@common/core/enum/incidents-event";
 import {PunishmentsUtils} from "@incidents/utilities/punishments";
 
 declare let window: any;

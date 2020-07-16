@@ -147,8 +147,13 @@ public interface EventService {
      * @param reasonsId  Reasons identifiers. Can be sorted by reasons identifiers
      * @param noReasons  Should retrieve no reasons event
      * @param recoveryMethodUsed  method used to recover events, can be null if method in settings is wanted.
+     * @param limit   corresponding to the limit of data rows wanted (optional)   method used to recover events, can be null if method in settings is wanted.
+     * @param offset  corresponding to the offset data rows wanted (optional).
      * @param handler    Function handler returning data
      */
+    void getEventsByStudent(Integer eventType, List<String> students, String structure, Boolean justified, List<Integer> reasonsId, Boolean massmailed,
+                            String startDate, String endDate, boolean noReasons, String recoveryMethodUsed, String limit, String offset, Handler<Either<String, JsonArray>> handler);
+
     void getEventsByStudent(Integer eventType, List<String> students, String structure, Boolean justified, List<Integer> reasonsId, Boolean massmailed,
                             String startDate, String endDate, boolean noReasons, String recoveryMethodUsed, Handler<Either<String, JsonArray>> handler);
 
