@@ -1,20 +1,27 @@
-import {SNIPLET_FORM_EMIT_EVENTS, SNIPLET_FORM_EVENTS} from "@common/model";
-import {Absence, Reason} from "../models";
+import {IStructureSlot, ITimeSlot, SNIPLET_FORM_EMIT_EVENTS, SNIPLET_FORM_EVENTS} from "@common/model";
+import {Absence, Reason, TimeSlotHourPeriod} from "../models";
 import {idiom as lang, model, moment, toasts} from "entcore";
-import {reasonService} from "../services";
+import {reasonService, ViescolaireService} from "../services";
 import {IAngularEvent} from "angular";
 import {DateUtils} from "@common/utils";
 import {ABSENCE_FORM_EVENTS} from "@common/enum/presences-event";
 import {EventsUtils} from "../utilities";
 import {AxiosResponse} from "axios";
 
-console.log("absenceFormSnipplets");
+console.log("absenceFormSniplets");
 
 declare let window: any;
 
 interface ViewModel {
+    structureTimeSlot: IStructureSlot;
     createAbsenceLightBox: boolean;
     isEventEditable: boolean;
+    timeSlotHourPeriod: typeof TimeSlotHourPeriod;
+    display: any;
+    timeSlotTimePeriod?: {
+        start: ITimeSlot;
+        end: ITimeSlot;
+    }
 
     form: any;
     reasons: Array<Reason>;
@@ -41,6 +48,10 @@ interface ViewModel {
 
     closeAbsenceLightbox(): void;
 
+    selectTimeSlot(hourPeriod: TimeSlotHourPeriod): void;
+
+    setTimeSlot(): void;
+
     safeApply(fn?: () => void): void;
 }
 
@@ -50,6 +61,9 @@ const vm: ViewModel = {
     reasons: null,
     form: Absence,
     isEventEditable: true,
+    timeSlotHourPeriod: TimeSlotHourPeriod,
+    display: {isFreeSchedule: true},
+    structureTimeSlot: {} as IStructureSlot,
 
     openAbsenceLightbox(event: IAngularEvent, args: any): void {
         vm.createAbsenceLightBox = true;
@@ -60,6 +74,7 @@ const vm: ViewModel = {
             vm.form.endDate = args.endDate;
             vm.form.startDateTime = args.startTime;
             vm.form.endDateTime = args.endTime;
+            vm.setTimeSlot();
         }
         vm.form.reason_id = null;
         vm.safeApply();
@@ -88,6 +103,24 @@ const vm: ViewModel = {
         form.end_date = DateUtils.getDateFormat(form.endDate, form.endDateTime);
     },
 
+    setTimeSlot: () => {
+        let start = DateUtils.format(vm.form.startDate, DateUtils.FORMAT["HOUR-MINUTES"]);
+        let end = DateUtils.format(vm.form.endDate, DateUtils.FORMAT["HOUR-MINUTES"]);
+        vm.timeSlotTimePeriod = {
+            start: {endHour: "", id: "", name: "", startHour: ""},
+            end: {endHour: "", id: "", name: "", startHour: ""}
+        };
+        vm.structureTimeSlot.slots.forEach((slot: ITimeSlot) => {
+            if (slot.startHour === start) {
+                vm.timeSlotTimePeriod.start = slot;
+            }
+            if (slot.endHour === end) {
+                vm.timeSlotTimePeriod.end = slot;
+            }
+        });
+        vm.display.isFreeSchedule = !(vm.timeSlotTimePeriod.start.startHour !== "" && vm.timeSlotTimePeriod.end.endHour !== "");
+    },
+
     async editAbsenceForm(obj): Promise<void> {
         vm.createAbsenceLightBox = true;
         vm.form = new Absence(null, null, null, null);
@@ -102,6 +135,7 @@ const vm: ViewModel = {
             vm.form.student_id = response.data.student_id;
             vm.form.reason_id = response.data.reason_id;
             vm.setFormDateParams(vm.form, vm.form.start_date, vm.form.end_date);
+            vm.setTimeSlot();
         } else {
             toasts.warning(response.data.toString());
         }
@@ -142,8 +176,12 @@ const vm: ViewModel = {
     },
 
     async createAbsence(): Promise<void> {
-        vm.form.start_date = DateUtils.getDateFormat(vm.form.startDate, vm.form.startDateTime);
-        vm.form.end_date = DateUtils.getDateFormat(vm.form.endDate, vm.form.endDateTime);
+        vm.form.start_date = vm.display.isFreeSchedule ?
+            DateUtils.getDateFormat(vm.form.startDate, vm.form.startDateTime) :
+            DateUtils.getDateFormat(moment(vm.form.startDate), DateUtils.getTimeFormatDate(vm.timeSlotTimePeriod.start.startHour));
+        vm.form.end_date = vm.display.isFreeSchedule ?
+            DateUtils.getDateFormat(vm.form.endDate, vm.form.endDateTime) :
+            DateUtils.getDateFormat(moment(vm.form.endDate), DateUtils.getTimeFormatDate(vm.timeSlotTimePeriod.end.endHour));
         let response = await vm.form.createAbsence(window.structure.id, vm.form.reason_id, model.me.userId);
         if (response.status == 200 || response.status == 201) {
             vm.closeAbsenceLightbox();
@@ -156,8 +194,12 @@ const vm: ViewModel = {
     },
 
     async updateAbsence(): Promise<void> {
-        vm.form.start_date = DateUtils.getDateFormat(vm.form.startDate, vm.form.startDateTime);
-        vm.form.end_date = DateUtils.getDateFormat(vm.form.endDate, vm.form.endDateTime);
+        vm.form.start_date = vm.display.isFreeSchedule ?
+            DateUtils.getDateFormat(vm.form.startDate, vm.form.startDateTime) :
+            DateUtils.getDateFormat(moment(vm.form.startDate), DateUtils.getTimeFormatDate(vm.timeSlotTimePeriod.start.startHour));
+        vm.form.end_date = vm.display.isFreeSchedule ?
+            DateUtils.getDateFormat(vm.form.endDate, vm.form.endDateTime) :
+            DateUtils.getDateFormat(moment(vm.form.endDate), DateUtils.getTimeFormatDate(vm.timeSlotTimePeriod.end.endHour));
         let response: AxiosResponse;
         let responses: AxiosResponse[] = [];
         if (vm.form.type === EventsUtils.ALL_EVENTS.event && !vm.form.absences.find(a => 'type' in a)) {
@@ -203,7 +245,28 @@ const vm: ViewModel = {
 
     closeAbsenceLightbox(): void {
         vm.createAbsenceLightBox = false;
+        vm.timeSlotTimePeriod = {
+            start: {endHour: "", id: "", name: "", startHour: ""},
+            end: {endHour: "", id: "", name: "", startHour: ""}
+        };
         absenceForm.that.$emit(SNIPLET_FORM_EMIT_EVENTS.CANCEL);
+    },
+
+    selectTimeSlot: (hourPeriod: TimeSlotHourPeriod): void => {
+        switch (hourPeriod) {
+            case TimeSlotHourPeriod.START_HOUR:
+                let start = vm.form.timeSlotTimePeriod.start != null ? DateUtils.getDateFormat(new Date(vm.form.startDate),
+                    DateUtils.getTimeFormatDate(vm.timeSlotTimePeriod.start.startHour)) : null;
+                vm.form.startSlot = start;
+                break;
+            case TimeSlotHourPeriod.END_HOUR:
+                let end = vm.form.timeSlotTimePeriod.end != null ? DateUtils.getDateFormat(new Date(vm.form.endDate),
+                    DateUtils.getTimeFormatDate(vm.timeSlotTimePeriod.end.endHour)) : null;
+                vm.form.endSlot = end;
+                break;
+            default:
+                return;
+        }
     }
 };
 
@@ -218,7 +281,10 @@ export const absenceForm = {
             absenceForm.that = this;
             vm.safeApply = this.safeApply;
         },
-        setHandler: function () {
+        async getStructureTimeSlot(): Promise<void> {
+            vm.structureTimeSlot = await ViescolaireService.getSlotProfile(window.structure.id);
+        },
+        setHandler: async function () {
             this.$on(ABSENCE_FORM_EVENTS.EDIT, (event: IAngularEvent, args) => vm.editAbsenceForm(args));
             this.$on(ABSENCE_FORM_EVENTS.EDIT_EVENT, (event: IAngularEvent, args) => vm.editEventAbsenceForm(args));
             this.$on(ABSENCE_FORM_EVENTS.OPEN, (event: IAngularEvent, args) => vm.openAbsenceLightbox(event, args));
@@ -227,6 +293,7 @@ export const absenceForm = {
                 if (!vm.reasons || vm.reasons.length <= 1) {
                     vm.reasons = await reasonService.getReasons(window.structure.id);
                 }
+                this.getStructureTimeSlot();
                 vm.safeApply();
             });
         }

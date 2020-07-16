@@ -30,7 +30,7 @@
                     <date-picker required ng-model="vm.date.date"></date-picker>
                 </span>
 
-                <div class="presenceLightbox-body-info-time">
+                <div ng-show="vm.date.isFreeSchedule" class="presenceLightbox-body-info-time">
                     <!-- start time -->
                     <span class="presenceLightbox-body-info-time-start">
                         <i18n>presences.by</i18n> &#58;
@@ -47,7 +47,39 @@
                         </span>
                     </span>
                 </div>
+
+                <div ng-show="!vm.date.isFreeSchedule" class="presenceLightbox-body-info-timeslot">
+                    <i18n>presences.by</i18n>&#58;
+                    <label class="timeslot-select">
+                        <i class="time-picker"></i>
+                        <select data-ng-model="vm.timeSlotTimePeriod.start"
+                                data-ng-change="vm.selectTimeSlot(vm.timeSlotHourPeriod.START_HOUR)"
+                                ng-options="item.name + ' : ' + item.startHour for item in vm.structureTimeSlot.slots
+                                    | orderBy:vm.timeSlotHourPeriod.START_HOUR">
+                            <option value="">[[lang.translate('presences.pick.timeslot')]]</option>
+                        </select>
+                    </label>
+
+                    <i18n>presences.at</i18n>&#58;
+                    <label class="timeslot-select">
+                        <i class="time-picker"></i>
+                        <select data-ng-model="vm.timeSlotTimePeriod.end"
+                                data-ng-change="vm.selectTimeSlot(vm.timeSlotHourPeriod.END_HOUR)"
+                                ng-options="item.name + ' : ' + item.endHour for item in vm.structureTimeSlot.slots
+                                    | orderBy:vm.timeSlotHourPeriod.END_HOUR">
+                            <option value="">[[lang.translate('presences.pick.timeslot')]]</option>
+                        </select>
+                    </label>
+                </div>
             </div>
+
+            <div class="presenceLightbox-body-info-choice">
+                <label class="checkbox">
+                    <input type="checkbox" ng-model="vm.date.isFreeSchedule"/>
+                    <span class="presenceLightbox-body-info-checkbox"><i18n>incidents.choice.time.slot</i18n></span>
+                </label>
+            </div>
+
 
             <div class="presenceLightbox-body-info-discipline">
 

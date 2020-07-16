@@ -13,11 +13,15 @@
       &-date {
         display: flex;
         align-items: center;
-        margin: 16px 0 32px 0;
+        margin: 16px 0;
 
         &-datepicker {
           margin: 0 40px 0 8px;
         }
+      }
+
+      &-choice {
+        margin-bottom: 16px;
       }
 
       &-time {
@@ -30,6 +34,11 @@
         &-end {
           margin-left: 16px;
         }
+      }
+
+      &-timeslot {
+        /* Select css */
+        @include select-timeslot(0);
       }
 
       &-discipline {

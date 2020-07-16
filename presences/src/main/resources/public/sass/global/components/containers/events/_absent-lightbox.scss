@@ -29,7 +29,20 @@
 
       &-reason {
         select {
-          border: unset!important;
+          border: unset !important;
+        }
+      }
+    }
+
+    &-timeslot {
+      /* Select css */
+      @include select-timeslot(0);
+
+      &-margin {
+        margin-right: 10px;
+
+        &-bottom {
+          margin-bottom: 7px;
         }
       }
     }

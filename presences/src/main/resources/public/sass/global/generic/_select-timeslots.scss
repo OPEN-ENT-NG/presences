@@ -1,0 +1,29 @@
+@mixin select-timeslot($padding-value) {
+  padding-top: 8px;
+
+  .timeslot-select {
+    display: inline-flex;
+    padding: $padding-value;
+    margin: 0 24px 8px 0;
+    text-align: center;
+    box-shadow: 0 3px 3px rgba(0, 0, 0, 0.1);
+    background: white;
+    border: none;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+
+    .time-picker {
+      padding-left: 8px;
+      text-indent: 0;
+    }
+
+    select {
+      -webkit-appearance: none;
+      -moz-appearance: none;
+      border: none;
+      margin: 0;
+      min-width: 0;
+      padding: 0 8px;
+    }
+  }
+}

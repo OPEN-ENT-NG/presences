@@ -1,4 +1,4 @@
-import {Discipline} from "../models";
+import {Discipline, ITimeSlot} from "../models";
 import {User} from "@common/model/User";
 import {Student} from "@common/model/Student";
 import {LoadingCollection} from "@common/model";
@@ -31,6 +31,10 @@ export interface PresenceBody {
     endDate: string;
     disciplineId: number;
     markedStudents: Array<MarkedStudentRequest>;
+    timeSlotTimePeriod?: {
+        start: ITimeSlot;
+        end: ITimeSlot;
+    };
 }
 
 export interface Presence {

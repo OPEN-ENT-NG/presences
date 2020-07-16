@@ -16,40 +16,74 @@
         <!-- Info Date/reason -->
         <div class="absentLightbox-body-info row spacing">
 
-                <!-- Start date -->
-                <div class="absentLightbox-body-info-startDate twelve cell">
-                    <i18n>presences.from</i18n>
-                    <span class="absentLightbox-body-info-startDate-datepicker card date-picker">
-                        <date-picker required ng-model="vm.form.startDate"></date-picker>
-                    </span>
+            <!-- Start date -->
+            <div class="twelve absentLightbox-body-timeslot-margin-bottom">
+                <i18n>presences.from</i18n>
+                <span class="card date-picker">
+                    <date-picker required ng-model="vm.form.startDate"></date-picker>
+                </span>
 
-                    <span class="card incident-lightbox-body-dateAndPlace-date-content-timePicker">
-                          <time-picker required ng-model="vm.form.startDateTime"></time-picker>
-                    </span>
-                </div>
+                <span ng-show="vm.display.isFreeSchedule"
+                      class="card incident-lightbox-body-dateAndPlace-date-content-timePicker
+                            absentLightbox-body-info-endDate-datepicker">
+                    <time-picker required ng-model="vm.form.startDateTime"></time-picker>
+                </span>
 
-                <!-- End date -->
-                <div class="absentLightbox-body-info-endDate twelve cell">
-                    <i18n>presences.from</i18n>
-                    <span class="absentLightbox-body-info-endDate-datepicker card date-picker">
-                        <date-picker required ng-model="vm.form.endDate"></date-picker>
-                    </span>
-
-                    <span class="card incident-lightbox-body-dateAndPlace-date-content-timePicker">
-                          <time-picker required ng-model="vm.form.endDateTime"></time-picker>
-                    </span>
-                </div>
-
-                <!-- Reasons -->
-                <div class="absentLightbox-body-info-reason twelve cell table-reason">
-                    <label>
-                        <select data-ng-model="vm.form.reason_id"
-                                ng-options="reason.id as reason.label for reason in vm.reasons"
-                                options-disabled="reason.hidden for reason in vm.reasons">
-                            <option value="">[[lang.translate('presences.absence.select.empty')]]</option>
+                <label ng-show="!vm.display.isFreeSchedule"
+                       class="absentLightbox-body-timeslot">
+                    <label class="timeslot-select">
+                        <i class="time-picker"></i>
+                        <select data-ng-model="vm.timeSlotTimePeriod.start"
+                                data-ng-change="vm.selectTimeSlot(vm.timeSlotHourPeriod.START_HOUR)"
+                                ng-options="item.name + ' : ' + item.startHour for item in vm.structureTimeSlot.slots
+                                        | orderBy:vm.timeSlotHourPeriod.START_HOUR">
+                            <option value="">[[lang.translate('presences.pick.timeslot')]]</option>
                         </select>
                     </label>
-                </div>
+                </label>
+
+                <i18n>presences.to</i18n>
+                <span class="card date-picker">
+                    <date-picker required ng-model="vm.form.endDate"></date-picker>
+                </span>
+
+                <span ng-show="vm.display.isFreeSchedule"
+                      class="card incident-lightbox-body-dateAndPlace-date-content-timePicker">
+                    <time-picker required ng-model="vm.form.endDateTime"></time-picker>
+                </span>
+
+                <label ng-show="!vm.display.isFreeSchedule" class="absentLightbox-body-timeslot">
+                    <label class="timeslot-select">
+                        <i class="time-picker"></i>
+                        <select data-ng-model="vm.timeSlotTimePeriod.end"
+                                data-ng-change="vm.selectTimeSlot(vm.timeSlotHourPeriod.END_HOUR)"
+                                ng-options="item.name + ' : ' + item.endHour for item in vm.structureTimeSlot.slots
+                                    | orderBy:vm.timeSlotHourPeriod.END_HOUR">
+                            <option value="">[[lang.translate('presences.pick.timeslot')]]</option>
+                        </select>
+                    </label>
+                </label>
+            </div>
+
+            <div class="presenceLightbox-body-info-choice">
+                <label class="checkbox">
+                    <input type="checkbox" ng-model="vm.display.isFreeSchedule"/>
+                    <span class="presenceLightbox-body-info-checkbox">
+                        <i18n>incidents.choice.time.slot</i18n>
+                    </span>
+                </label>
+            </div>
+
+            <!-- Reasons -->
+            <div class="absentLightbox-body-info-reason twelve cell table-reason">
+                <label>
+                    <select data-ng-model="vm.form.reason_id"
+                            ng-options="reason.id as reason.label for reason in vm.reasons"
+                            options-disabled="reason.hidden for reason in vm.reasons">
+                        <option value="">[[lang.translate('presences.absence.select.empty')]]</option>
+                    </select>
+                </label>
+            </div>
 
         </div>
 

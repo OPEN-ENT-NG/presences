@@ -1,6 +1,24 @@
 import {IAngularEvent} from "angular";
-import {disciplineService, GroupService, presenceService, SearchItem, SearchService} from "../services";
-import {Discipline, MarkedStudent, MarkedStudentRequest, Presence, PresenceBody, Student, User} from "../models";
+import {
+    disciplineService,
+    GroupService,
+    presenceService,
+    SearchItem,
+    SearchService,
+    ViescolaireService
+} from "../services";
+import {
+    Discipline,
+    IStructureSlot,
+    ITimeSlot,
+    MarkedStudent,
+    MarkedStudentRequest,
+    Presence,
+    PresenceBody,
+    Student,
+    TimeSlotHourPeriod,
+    User
+} from "../models";
 import {SNIPLET_FORM_EMIT_EVENTS, SNIPLET_FORM_EVENTS} from "@common/model";
 import {_, idiom as lang, model, moment, toasts} from "entcore";
 import {DateUtils} from "@common/utils";
@@ -11,14 +29,20 @@ console.log("presenceFormSnipplets");
 declare let window: any;
 
 interface ViewModel {
+    structureTimeSlot: IStructureSlot;
     createPresenceLightBox: boolean;
     presence: Presence;
     form: PresenceBody;
     globalSearch: GlobalSearch;
-    date: { date: string, startTime: Date, endTime: Date };
+    date: { date: string, startTime: Date, endTime: Date, isFreeSchedule: boolean };
     disciplines: Array<Discipline>;
     disciplinesDescription: Array<Discipline>;
     isButtonAllowed: boolean;
+    timeSlotHourPeriod: typeof TimeSlotHourPeriod;
+    timeSlotTimePeriod?: {
+        start: ITimeSlot;
+        end: ITimeSlot;
+    }
 
     openPresenceLightbox(): void;
 
@@ -52,6 +76,10 @@ interface ViewModel {
 
     editMarkedStudentComment($event, $index: number, markedStudent: MarkedStudent): void;
 
+    selectTimeSlot(hourPeriod: TimeSlotHourPeriod): void;
+
+    setTimeSlot(): void;
+
     safeApply(fn?: () => void): void;
 }
 
@@ -64,11 +92,14 @@ const vm: ViewModel = {
         date: moment(),
         startTime: moment().set({second: 0, millisecond: 0}).toDate(),
         endTime: moment().add(1, 'h').set({second: 0, millisecond: 0}).toDate(),
+        isFreeSchedule: true
     },
     presence: {owner: {} as User, discipline: {} as Discipline, markedStudents: []} as Presence,
     form: {} as PresenceBody,
     globalSearch: null,
     isButtonAllowed: true,
+    timeSlotHourPeriod: TimeSlotHourPeriod,
+    structureTimeSlot: {} as IStructureSlot,
 
     openPresenceLightbox(): void {
         vm.globalSearch = new GlobalSearch(window.structure.id, SearchService, GroupService);
@@ -133,6 +164,7 @@ const vm: ViewModel = {
         vm.presence.structureId = presence.structureId;
         vm.presence.discipline = presence.discipline;
         vm.presence.markedStudents = presence.markedStudents;
+        vm.setTimeSlot();
     },
 
     initPresence: (): void => {
@@ -148,10 +180,33 @@ const vm: ViewModel = {
         vm.presence.markedStudents = [];
     },
 
+    setTimeSlot: () => {
+        let start = DateUtils.format(vm.date.startTime, DateUtils.FORMAT["HOUR-MINUTES"]);
+        let end = DateUtils.format(vm.date.endTime, DateUtils.FORMAT["HOUR-MINUTES"]);
+        vm.timeSlotTimePeriod = {
+            start: {endHour: "", id: "", name: "", startHour: ""},
+            end: {endHour: "", id: "", name: "", startHour: ""}
+        };
+        vm.structureTimeSlot.slots.forEach((slot: ITimeSlot) => {
+            if (slot.startHour === start) {
+                vm.timeSlotTimePeriod.start = slot;
+            }
+            if (slot.endHour === end) {
+                vm.timeSlotTimePeriod.end = slot;
+            }
+        });
+        vm.date.isFreeSchedule = !(vm.timeSlotTimePeriod.start.startHour !== "" && vm.timeSlotTimePeriod.end.endHour !== "");
+    },
+
     preparePresenceForm: (): void => {
         vm.form.id = vm.presence.id;
-        vm.form.startDate = DateUtils.getDateFormat(moment(vm.date.date), vm.date.startTime);
-        vm.form.endDate = DateUtils.getDateFormat(moment(vm.date.date), vm.date.endTime);
+        vm.form.startDate = vm.date.isFreeSchedule ?
+            DateUtils.getDateFormat(moment(vm.date.date), vm.date.startTime) :
+            DateUtils.getDateFormat(moment(vm.date.date), DateUtils.getTimeFormatDate(vm.timeSlotTimePeriod.start.startHour));
+        vm.form.endDate = vm.date.isFreeSchedule ?
+            DateUtils.getDateFormat(moment(vm.date.date), vm.date.endTime) :
+            DateUtils.getDateFormat(moment(vm.date.date), DateUtils.getTimeFormatDate(vm.timeSlotTimePeriod.end.endHour));
+
         vm.form.structureId = vm.presence.structureId;
         vm.form.disciplineId = vm.presence.discipline.id;
         vm.form.markedStudents = [];
@@ -231,6 +286,23 @@ const vm: ViewModel = {
     closePresenceLightbox(): void {
         vm.createPresenceLightBox = false;
     },
+
+    selectTimeSlot: (hourPeriod: TimeSlotHourPeriod): void => {
+        switch (hourPeriod) {
+            case TimeSlotHourPeriod.START_HOUR:
+                let start = vm.timeSlotTimePeriod.start != null ? DateUtils.getDateFormat(new Date(vm.form.startDate),
+                    DateUtils.getTimeFormatDate(vm.timeSlotTimePeriod.start.startHour)) : null;
+                vm.form.startDate = start;
+                break;
+            case TimeSlotHourPeriod.END_HOUR:
+                let end = vm.timeSlotTimePeriod.end != null ? DateUtils.getDateFormat(new Date(vm.form.endDate),
+                    DateUtils.getTimeFormatDate(vm.timeSlotTimePeriod.end.endHour)) : null;
+                vm.form.endDate = end;
+                break;
+            default:
+                return;
+        }
+    }
 };
 
 export const presenceForm = {
@@ -246,15 +318,17 @@ export const presenceForm = {
             vm.safeApply = this.safeApply;
         },
         async getDisciplines(): Promise<void> {
-            if (!vm.disciplines || vm.disciplines.length <= 1) {
-                vm.disciplines = await disciplineService.get(window.structure.id);
-                vm.disciplinesDescription = _.clone(vm.disciplines);
-            }
+            vm.disciplines = await disciplineService.get(window.structure.id);
+            vm.disciplinesDescription = _.clone(vm.disciplines);
         },
-        setHandler: function () {
+        async getStructureTimeSlot(): Promise<void> {
+            vm.structureTimeSlot = await ViescolaireService.getSlotProfile(window.structure.id);
+        },
+        setHandler: async function () {
             this.$on(SNIPLET_FORM_EVENTS.SET_PARAMS, (event: IAngularEvent, presence: Presence) => vm.openEditPresence(presence));
             this.$watch(() => window.structure, async () => {
                 this.getDisciplines();
+                this.getStructureTimeSlot();
                 vm.safeApply();
             });
         },
