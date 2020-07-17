@@ -47,10 +47,10 @@ public abstract class Validator {
                 })
                 .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
 
-        boolean res = failures.size() <= 0;
-        if(res) {
+        boolean failed = failures.size() > 0;
+        if(failed) {
             log.error("Validation mandatory failed for the following fields: ", failures);
         }
-        return res;
+        return !failed;
     }
 }

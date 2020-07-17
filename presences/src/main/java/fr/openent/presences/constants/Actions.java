@@ -73,4 +73,8 @@ public class Actions {
     public static final String ABSENCE_UPDATE_SET_REASON = "ABSENCE_UPDATE_SET_REASON";
     // A user regularized an absence
     public static final String ABSENCE_REGULARISATION = "ABSENCE_REGULARISATION";
+    // A user creates an absence statement
+    public static final String ABSENCE_STATEMENT_CREATION = "ABSENCE_STATEMENT_CREATION";
+    // A user validate an absence statement
+    public static final String ABSENCE_STATEMENT_VALIDATE = "ABSENCE_STATEMENT_VALIDATE";
 }

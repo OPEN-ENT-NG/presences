@@ -70,7 +70,7 @@ public abstract class Repository {
 
     public static String fieldsToQuestionMarks(List<String> fieldList) {
         String questionMarks = new String(new char[fieldList.size()]).replace("\0", "?, ");
-        return questionMarks.substring(0, questionMarks.length() - 1);
+        return questionMarks.substring(0, questionMarks.length() - 2);
     }
 
     public static String fieldsToAttributeQuestionMarks(List<String> fieldList) {
@@ -79,7 +79,7 @@ public abstract class Repository {
             resultBuilder.append(field).append(" = ?, ");
         }
         String result = resultBuilder.toString();
-        if (fieldList.size() > 0) return result.substring(0, result.length() - 1);
+        if (fieldList.size() > 0) return result.substring(0, result.length() - 2);
         return result;
     }
 

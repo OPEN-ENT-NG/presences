@@ -74,7 +74,7 @@ public class DefaultAbsenceService implements AbsenceService {
             params.addAll(new JsonArray(users));
         }
         query += " AND absence.student_id IN (" +
-                " SELECT distinct event.student_id FROM presences.event" +
+                " SELECT distinct event.student_id FROM " + Presences.dbSchema + ".event" +
                 " WHERE absence.start_date::date = event.start_date::date" +
                 " AND absence.end_date::date = event.end_date::date" +
                 " ) ";

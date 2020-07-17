@@ -10,6 +10,8 @@ import fr.wseduc.cron.CronTrigger;
 import io.vertx.core.DeploymentOptions;
 import io.vertx.core.eventbus.EventBus;
 import org.entcore.common.http.BaseServer;
+import org.entcore.common.storage.Storage;
+import org.entcore.common.storage.StorageFactory;
 
 import java.text.ParseException;
 
@@ -36,6 +38,9 @@ public class Presences extends BaseServer {
     public static final String REGISTRY = "presences.registry";
     public static final String CREATE_ACTION = "presences.action.create";
     public static final String STUDENT_EVENTS_VIEW = "presences.student.events.view";
+    public static final String ABSENCE_STATEMENTS_VIEW = "presences.absence.statements.view";
+    public static final String MANAGE_ABSENCE_STATEMENTS = "presences.manage.absence.statements";
+    public static final String ABSENCE_STATEMENTS_CREATE = "presences.absence.statements.create";
 
     // Widget rights
     public static final String ALERTS_WIDGET = "presences.widget.alerts";
@@ -55,6 +60,7 @@ public class Presences extends BaseServer {
         dbSchema = config.getString("db-schema");
         ebViescoAddress = "viescolaire";
         final EventBus eb = getEventBus(vertx);
+        Storage storage = new StorageFactory(vertx, config).getStorage();
 //        final String exportCron = config.getString("export-cron");
 
 
@@ -77,6 +83,7 @@ public class Presences extends BaseServer {
         addController(new DisciplineController());
         addController(new InitController(eb));
         addController(new StudentController(eb));
+        addController(new StatementAbsenceController(eb, storage));
 
         // Controller that create fake rights for widgets
         addController(new FakeRight());

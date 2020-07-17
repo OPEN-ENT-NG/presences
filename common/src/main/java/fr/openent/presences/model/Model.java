@@ -76,6 +76,7 @@ public abstract class Model {
                 return;
             }
             setFromJson(result.result());
+            handler.handle(Future.succeededFuture(toJsonObject()));
         });
     }
 
@@ -91,6 +92,7 @@ public abstract class Model {
                 return;
             }
             setFromJson(result.result());
+            handler.handle(Future.succeededFuture(toJsonObject()));
         });
     }
 
