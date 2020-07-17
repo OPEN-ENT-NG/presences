@@ -18,7 +18,9 @@ export class DateUtils {
         'DAY-DATE': 'dddd L',
         'DATE-FULL-LETTER': 'dddd LL',
         'DAY-MONTH-HALFYEAR': 'DD/MM/YY',
-        'HOUR-MIN-SEC': 'HH:mm:ss'
+        'DAY-MONTH-HALFYEAR-HOUR-MIN': 'DD/MM/YY HH:mm',
+        'HOUR-MIN-SEC': 'HH:mm:ss',
+        'MINUTES': 'mm'
     };
 
     /**

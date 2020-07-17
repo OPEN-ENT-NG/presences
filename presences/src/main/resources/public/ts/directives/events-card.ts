@@ -1,4 +1,4 @@
-import {ng} from 'entcore';
+import {moment, ng} from 'entcore';
 import {COLOR_TYPE} from "@common/core/constants/ColorType";
 import {DASHBOARD_STUDENT_EVENTS} from "../core/enum/dashboard-student-events";
 import {Student} from "@common/model/Student";
@@ -28,7 +28,7 @@ interface IViewModel {
     getToggledEvents(events: Array<Event> | Array<Incident> | Array<IPunishment> | Array<Notebook>):
         Array<Event> | Array<Incident> | Array<IPunishment> | Array<Notebook>;
 
-    getEventDate(event: Event | Incident | IPunishment | Notebook): string;
+    setCorrectFormatEvent(event: Event | Incident | IPunishment | Notebook): string;
 
     hasOnlyTwoEvents(): boolean;
 
@@ -40,7 +40,7 @@ export const EventsCard = ng.directive('eventsCard', () => {
         restrict: 'E',
         transclude: true,
         scope: {
-            title: '=',
+            eventTitle: '=',
             student: '=',
             period: '=',
             events: '=',
@@ -53,7 +53,7 @@ export const EventsCard = ng.directive('eventsCard', () => {
             <div class="events-card">
                 <div class="events-card-content">
                     <!--  title -->
-                    <span class="events-card-content-title">[[vm.title]]</span>
+                    <span class="events-card-content-title">[[vm.eventTitle]]</span>
                         
                     <div class="events-card-content-inside">
                         <!--  side --> 
@@ -65,16 +65,16 @@ export const EventsCard = ng.directive('eventsCard', () => {
                         <!--  events list content -->
                         <ul class="events-card-content-inside-list">
                             <div class="events-card-content-inside-list-first" ng-class="{'collapsed': vm.isEventToggled}">
-                                <li class="[[vm.getColorEvent(vm.color)]]" 
-                                    ng-repeat="event in vm.getTwoLastEvents(vm.events)"> 
-                                    <span>[[vm.getEventDate(event)]]</span>
+                                <li class="[[vm.getColorEvent(vm.color)]]"
+                                    ng-repeat="event in vm.getTwoLastEvents(vm.events)">
+                                    <div ng-bind-html="[[vm.setCorrectFormatEvent(event)]]"></div>
                                     <span>[[event.reason.label]]</span>
                                 </li>
                             </div>
                             <div class="events-card-content-inside-list-full flex-collapse" ng-class="{'open-details': vm.isEventToggled}">
                                 <div class="flex-content">
                                      <li class="[[vm.getColorEvent(vm.color)]]" ng-repeat="event in vm.getToggledEvents(vm.events)"> 
-                                        <span>[[vm.getEventDate(event)]]</span>
+                                        <div ng-bind-html="[[vm.setCorrectFormatEvent(event)]]"></div>
                                         <span>[[event.reason.label]]</span>
                                      </li>
                                 </div>
@@ -127,23 +127,33 @@ export const EventsCard = ng.directive('eventsCard', () => {
                 }
             };
 
-            vm.getEventDate = (event: Event | Incident | IPunishment | Notebook): string => {
+            vm.setCorrectFormatEvent = (event: Event | Incident | IPunishment | Notebook): string => {
                 if (event) {
                     switch (vm.type) {
                         case EVENT_TYPES.JUSTIFIED:
-                        case EVENT_TYPES.UNJUSTIFIED:
-                        case EVENT_TYPES.LATENESS:
+                        case EVENT_TYPES.UNJUSTIFIED: {
+                            const date = `<span><b>${formatDayDate((<Event>event).start_date)}</b></span>`;
+                            const startTime = `<span>${formatHour((<Event>event).start_date)}</span>`;
+                            const endTime = `<span>${formatHour((<Event>event).end_date)}</span>`;
+                            return `${date} - ${startTime} - ${endTime}`;
+                        }
+                        case EVENT_TYPES.LATENESS: {
+                            const date = `<span>${formatDayDate((<Event>event).start_date)}</span>`;
+                            const startTime = `<span>${formatHour((<Event>event).start_date)}</span>`;
+                            const endTime = `<span>${formatHour((<Event>event).end_date)}</span>`;
+                            const calculatedLateTime = `${getCalculatedTime((<Event>event).start_date, (<Event>event).end_date)}mn`;
+                            return `${date} - ${startTime} - ${endTime} - <span><b>${calculatedLateTime}</b></span>`;
+                        }
                         case EVENT_TYPES.DEPARTURE: {
-                            return formatDayDate((<Event>event).start_date) + ' - ' +
-                                formatHour((<Event>event).start_date) + ' - ' + formatHour((<Event>event).end_date);
+                            return formatDayDate((<Event>event).start_date) + ' - ' + formatHour((<Event>event).start_date);
                         }
                         case EVENT_TYPES.PUNISHMENT:
-                            return (<IPunishment>event).type.label + ' ' + formatDate((<IPunishment>event).created_at);
+                            return (<IPunishment>event).type.label + ' - ' + formatDate((<IPunishment>event).created_at);
                         case EVENT_TYPES.INCIDENT:
-                            return (<Incident>event).type.label + ' ' + formatDate((<Incident>event).date.toString()) + ' ' +
+                            return (<Incident>event).type.label + ' - ' + formatDate((<Incident>event).date.toString()) + ' - ' +
                                 (<Incident>event).protagonist.label;
                         case EVENT_TYPES.NOTEBOOK:
-                            return (<Notebook>event).date;
+                            return formatDayDate((<Notebook>event).date);
                         default:
                             return '';
                     }
@@ -152,9 +162,13 @@ export const EventsCard = ng.directive('eventsCard', () => {
                 }
             };
 
+            const getCalculatedTime = (startDate: string, endDate: string): string => {
+                const duration = moment(endDate).diff(moment(startDate));
+                return DateUtils.format(duration, DateUtils.FORMAT["MINUTES"]);
+            };
             const formatHour = (date: string): string => DateUtils.format(date, DateUtils.FORMAT["HOUR-MINUTES"]);
             const formatDayDate = (date: string): string => DateUtils.format(date, DateUtils.FORMAT["DAY-MONTH-HALFYEAR"]);
-            const formatDate = (date: string): string => DateUtils.format(date, DateUtils.FORMAT["YEAR/MONTH/DAY-HOUR-MIN"]);
+            const formatDate = (date: string): string => DateUtils.format(date, DateUtils.FORMAT["DAY-MONTH-HALFYEAR-HOUR-MIN"]);
 
             vm.getTwoLastEvents = (events: Array<Event> | Array<Incident> | Array<IPunishment> | Array<Notebook>):
                 Array<Event> | Array<Incident> | Array<IPunishment> | Array<Notebook> => {
@@ -200,10 +214,12 @@ export const EventsCard = ng.directive('eventsCard', () => {
 
             $scope.$watch(() => vm.student, () => {
                 vm.hasToggledOnce = false;
+                vm.isEventToggled = false;
             });
 
             $scope.$watch(() => vm.period, () => {
                 vm.hasToggledOnce = false;
+                vm.isEventToggled = false;
             });
         }
     };
