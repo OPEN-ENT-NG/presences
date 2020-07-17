@@ -1,0 +1,54 @@
+.statement-absence-content {
+  &-titles {
+
+  }
+
+  &-list {
+    &-body {
+      &-content {
+        &-inside {
+          cursor: context-menu !important;
+
+          &-student {
+            display: flex !important;
+            flex-direction: column !important;
+            align-items: normal !important;
+
+            &-content {
+              display: flex;
+              justify-content: normal;
+
+              &-class {
+                font-family: 'Roboto Light', arial, sans-serif;
+                font-size: 14px;
+              }
+            }
+          }
+
+          &-date {
+            background-color: $presences-main;
+            color: $presences-white;
+            display: flex;
+            flex-direction: column;
+          }
+
+          &-download {
+            transform: rotate(-90deg);
+          }
+        }
+      }
+    }
+  }
+
+  switch {
+    .switch {
+      input[type=checkbox]:checked + .tick {
+        background: $presences-light-green;
+      }
+
+      input[type=checkbox]:checked + .tick:before {
+        background: $presences-dark-green;
+      }
+    }
+  }
+}

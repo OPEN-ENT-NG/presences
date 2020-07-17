@@ -15,3 +15,5 @@ export * from './PresenceService';
 export * from './AbsenceService';
 export * from './PeriodService';
 export * from "@incidents/services/IncidentService";
+
+export * from './StatementsAbsencesService';

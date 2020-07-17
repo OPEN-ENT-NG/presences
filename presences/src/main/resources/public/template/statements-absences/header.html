@@ -1,0 +1,60 @@
+<div class="row">
+    <!--Title-->
+    <h1 class="cell paddingRight">
+        <i18n>presences.statements.absence</i18n>
+    </h1>
+
+    <!-- Students search bar -->
+    <div class="cell four paddingLeft">
+        <div class="cell twelve search-input">
+            <async-autocomplete data-ng-disabled="false"
+                                data-ng-model="vm.studentsSearch.student"
+                                data-ng-change="vm.selectStudent"
+                                data-on-search="vm.searchStudent"
+                                data-options="vm.studentsSearch.students"
+                                data-placeholder="presences.exemptions.search.student"
+                                data-search="vm.studentsSearch.student">
+            </async-autocomplete>
+        </div>
+        <div class="cell twelve">
+            <ul class="cell twelve search-input-ul">
+                <li ng-repeat="student in vm.studentsSearch.selectedStudents">
+                    [[student.displayName]] <i class="close"
+                                               data-ng-click="vm.removeSelectedStudents(student)"></i>
+                </li>
+            </ul>
+        </div>
+    </div>
+</div>
+
+<!-- Date filter -->
+<div class="row top5">
+    <div class="cell eight">
+        <i18n>presences.from</i18n>&#58;
+        <span class="card date-picker">
+             <date-picker ng-model="vm.filter.start_at"></date-picker>
+        </span>
+        <i18n class="paddingLeft">presences.to</i18n>&#58;
+        <span class="card date-picker">
+            <date-picker ng-model="vm.filter.end_at"></date-picker>
+        </span>
+    </div>
+
+    <!-- Button menu -->
+    <div class="four cell">
+        <!-- export csv button -->
+        <button class="right-magnet forbidden" disabled>
+            <i18n>presences.export.tocsv</i18n>
+        </button>
+    </div>
+</div>
+
+<!-- Filter -->
+<div class="row vertical-spacing-twice">
+    <!-- toggle treated -->
+    <div class="chips cell">
+        <label class="chip" ng-class="{selected: !vm.filter.isTreated}" data-ng-click="vm.toggleTreated()">
+            <span class="no-style">[[lang.translate('presences.treated.false')]]</span>
+        </label>
+    </div>
+</div>

@@ -1,0 +1,76 @@
+<!-- board/list of student -->
+<div class="statement-absence-content top20 flex-table">
+
+    <!-- title -->
+    <div class="statement-absence-content-titles flex-row flex-head row__16">
+        <div class="flex-col col__4">
+            <i18n>presences.exemptions.student</i18n>
+        </div>
+        <div class="flex-col col__4 text-center">
+            <i18n>presences.absence.dates</i18n>
+        </div>
+        <div class="flex-col col__4 text-center">
+            <i18n>presences.absence.reason</i18n>
+        </div>
+        <div class="flex-col col__2 text-center">
+            <i18n>presences.attachment</i18n>
+        </div>
+        <div class="flex-col col__2 text-center">
+            <i18n>presences.actions.init.4</i18n>
+        </div>
+    </div>
+
+    <!-- list student -->
+    <div class="statement-absence-content-list flex-row"
+         data-ng-show="vm.statementsAbsences.statementAbsenceResponse.all.length > 0">
+        <div class="statement-absence-content-list-body flex-body"
+             ng-repeat="statementAbsence in vm.statementsAbsences.statementAbsenceResponse.all track by $index">
+            <div class="statement-absence-content-list-body-content flex-content">
+                <div class="statement-absence-content-list-body-content-inside flex-row row__16">
+
+                    <div class="flex-col col__1">
+                        <!-- student picture -->
+                        <img src="/userbook/avatar/[[statementAbsence.student.id]]" height="30" width="30">
+                    </div>
+
+                    <!-- student name -->
+                    <div class="flex-col statement-absence-content-list-body-content-inside-student col__3">
+                        <div class="statement-absence-content-list-body-content-inside-student-content">
+                            <student-name class="paddingRight"
+                                          data-ng-click="vm.stopPropagation($event)"
+                                          name="statementAbsence.student.displayName"
+                                          id="'statementAbsence.student.id'"/>
+                            <i class="tableEdit" data-ng-click="vm.redirectCalendar($event, event)"></i>
+                        </div>
+                        <span class="statement-absence-content-list-body-content-inside-class">[[statementAbsence.student.className]]</span>
+                    </div>
+                    <!-- start date -->
+                    <div class="flex-col statement-absence-content-list-body-content-inside-date col__2">
+                        <span>[[vm.formatDayDate(statementAbsence.start_at)]]</span>
+                        <span>[[vm.formatHour(statementAbsence.start_at)]]</span>
+                    </div>
+                    <!-- end date -->
+                    <div class="flex-col statement-absence-content-list-body-content-inside-date col__2">
+                        <span>[[vm.formatDayDate(statementAbsence.end_at)]]</span>
+                        <span>[[vm.formatHour(statementAbsence.end_at)]]</span>
+                    </div>
+                    <!-- reason -->
+                    <div class="flex-col col__4">
+                        <span>[[statementAbsence.description]]</span>
+                    </div>
+                    <!-- download file -->
+                    <div class="flex-col statement-absence-content-list-body-content-inside-download col__2">
+                        <i class="attach" data-ng-click="vm.downloadFile($event)"></i>
+                    </div>
+                    <!-- treated -->
+                    <div class="flex-col col__2">
+                        <switch ng-model="statementAbsence.isTreated"
+                                ng-change="vm.updateTreatStatement(statementAbsence)">
+                            <label class="switch"></label>
+                        </switch>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

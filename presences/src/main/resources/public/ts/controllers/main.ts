@@ -118,7 +118,15 @@ export const mainController = ng.controller('MainController', ['$scope', 'route'
                     if (!window.item) $location.path('/');
                     template.open('main', 'containers/calendar')
                 }
-            }
+            },
+            'statements-absences': () => {
+                /* Handle redirect URL as child/relative user */
+                if ($scope.isChild() || $scope.isRelative()) {
+                    template.open('main', `containers/dashboard-student`);
+                } else {
+                    template.open('main', `containers/statements-absences`);
+                }
+            },
         });
 
 

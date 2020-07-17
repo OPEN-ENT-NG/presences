@@ -10,3 +10,4 @@ export * from './alerts';
 export * from './presences';
 export * from './widgets';
 export * from './dashboard-student';
+export * from './statements-absences';
