@@ -1,4 +1,4 @@
-@mixin select-timeslot($padding-value) {
+@mixin select-timeslot($padding-value, $box-shadow-value) {
   padding-top: 8px;
 
   .timeslot-select {
@@ -6,8 +6,8 @@
     padding: $padding-value;
     margin: 0 24px 8px 0;
     text-align: center;
-    box-shadow: 0 3px 3px rgba(0, 0, 0, 0.1);
-    background: white;
+    box-shadow: $box-shadow-value;
+    background: $presences-white;
     border: none;
     -webkit-appearance: none;
     -moz-appearance: none;

@@ -69,7 +69,7 @@
 
   /* Select css */
   .timeslot {
-    @include select-timeslot(5px);
+    @include select-timeslot(5px, $box-shadow-2);
   }
 
   .exemption-switch {

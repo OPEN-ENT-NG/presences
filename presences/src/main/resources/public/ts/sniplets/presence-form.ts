@@ -92,7 +92,7 @@ const vm: ViewModel = {
         date: moment(),
         startTime: moment().set({second: 0, millisecond: 0}).toDate(),
         endTime: moment().add(1, 'h').set({second: 0, millisecond: 0}).toDate(),
-        isFreeSchedule: true
+        isFreeSchedule: false
     },
     presence: {owner: {} as User, discipline: {} as Discipline, markedStudents: []} as Presence,
     form: {} as PresenceBody,
@@ -173,6 +173,7 @@ const vm: ViewModel = {
         vm.date.date = moment();
         vm.date.startTime = moment().set({second: 0, millisecond: 0}).toDate();
         vm.date.endTime = moment().add(1, 'h').set({second: 0, millisecond: 0}).toDate();
+        vm.date.isFreeSchedule = false;
         vm.presence.owner.displayName = model.me.username;
         vm.presence.owner.id = model.me.userId;
         vm.presence.structureId = window.structure.id;
@@ -285,6 +286,10 @@ const vm: ViewModel = {
 
     closePresenceLightbox(): void {
         vm.createPresenceLightBox = false;
+        vm.timeSlotTimePeriod = {
+            start: {name: "", startHour: "", endHour: "", id: ""},
+            end: {name: "", startHour: "", endHour: "", id: ""}
+        };
     },
 
     selectTimeSlot: (hourPeriod: TimeSlotHourPeriod): void => {

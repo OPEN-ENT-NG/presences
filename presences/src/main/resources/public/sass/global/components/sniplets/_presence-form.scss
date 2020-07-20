@@ -38,7 +38,11 @@
 
       &-timeslot {
         /* Select css */
-        @include select-timeslot(0);
+        @include select-timeslot(0, $box-shadow-1);
+
+        .select {
+          height: unset;
+        }
       }
 
       &-discipline {

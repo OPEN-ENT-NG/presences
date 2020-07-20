@@ -62,11 +62,12 @@ const vm: ViewModel = {
     form: Absence,
     isEventEditable: true,
     timeSlotHourPeriod: TimeSlotHourPeriod,
-    display: {isFreeSchedule: true},
+    display: {isFreeSchedule: false},
     structureTimeSlot: {} as IStructureSlot,
 
     openAbsenceLightbox(event: IAngularEvent, args: any): void {
         vm.createAbsenceLightBox = true;
+        vm.display.isFreeSchedule = false;
         vm.form = new Absence(null, null, null, null);
         absenceForm.that.$emit(SNIPLET_FORM_EMIT_EVENTS.CREATION);
         if (event) {
@@ -94,6 +95,7 @@ const vm: ViewModel = {
         if (form.id) {
             form.startDateTime = moment(form.startDate).set({second: 0, millisecond: 0}).toDate();
             form.endDateTime = moment(form.endDate).set({second: 0, millisecond: 0}).toDate();
+            vm.setTimeSlot();
             return;
         } else {
             form.startDateTime = moment(new Date()).set({second: 0, millisecond: 0}).toDate();
@@ -246,8 +248,8 @@ const vm: ViewModel = {
     closeAbsenceLightbox(): void {
         vm.createAbsenceLightBox = false;
         vm.timeSlotTimePeriod = {
-            start: {endHour: "", id: "", name: "", startHour: ""},
-            end: {endHour: "", id: "", name: "", startHour: ""}
+            start: {name: "", startHour: "", endHour: "", id: ""},
+            end: {name: "", startHour: "", endHour: "", id: ""}
         };
         absenceForm.that.$emit(SNIPLET_FORM_EMIT_EVENTS.CANCEL);
     },

@@ -28,6 +28,8 @@ $navbar-width: 80px;
 $navbar-width-removed: -80px;
 
 $box-shadow: 0 5px 5px rgba(0, 0, 0, 0.21);
+$box-shadow-1: 0 1px 3px rgba(0, 0, 0, 0.1);
+$box-shadow-2: 0 3px 3px rgba(0, 0, 0, 0.1);
 
 @mixin mobile {
   @media (max-width: 768px) {
