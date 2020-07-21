@@ -1,13 +1,7 @@
 import {moment, ng, toasts} from 'entcore';
 import {DateUtils, StudentsSearch} from "@common/utils";
 import {SearchService} from "@common/services/SearchService";
-import {
-    IStatementAbsenceBody,
-    IStatementsAbsences,
-    IStatementsAbsencesRequest,
-    mockupStatement,
-    StatementsAbsences
-} from "../models";
+import {IStatementAbsenceBody, IStatementsAbsences, IStatementsAbsencesRequest, StatementsAbsences} from "../models";
 import {IStatementsAbsencesService} from "../services";
 
 declare let window: any;
@@ -84,16 +78,16 @@ export const statementsAbsencesController = ng.controller('StatementsAbsencesCon
             const getStatementsAbsences = async (): Promise<void> => {
                 vm.statementsAbsences.loading = true;
                 prepareRequest();
-                // await vm.statementsAbsences.build(await statementAbsenceService.get(vm.statementsAbsencesRequest));
-                //todo replace mockup by real get
-                await vm.statementsAbsences.build(mockupStatement);
+                await vm.statementsAbsences.build(await statementAbsenceService.get(vm.statementsAbsencesRequest));
+                // todo replace mockup by real get
+                // await vm.statementsAbsences.build(mockupStatement);
                 vm.statementsAbsences.loading = false;
             };
 
             const prepareRequest = (): void => {
                 vm.statementsAbsencesRequest.structure_id = vm.statementsAbsences.structure_id;
-                vm.statementsAbsencesRequest.start_at = DateUtils.format(vm.filter.start_at, DateUtils.FORMAT["YEAR/MONTH/DAY-HOUR-MIN-SEC"]);
-                vm.statementsAbsencesRequest.end_at = DateUtils.format(vm.filter.end_at, DateUtils.FORMAT["YEAR/MONTH/DAY-HOUR-MIN-SEC"]);
+                vm.statementsAbsencesRequest.start_at = DateUtils.format(vm.filter.start_at, DateUtils.FORMAT["YEAR-MONTH-DAY"]);
+                vm.statementsAbsencesRequest.end_at = DateUtils.format(vm.filter.end_at, DateUtils.FORMAT["YEAR-MONTH-DAY"]);
                 vm.statementsAbsencesRequest.student_ids = vm.filter.student_ids;
                 vm.statementsAbsencesRequest.page = vm.filter.page;
             };

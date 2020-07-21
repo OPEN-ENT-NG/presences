@@ -2,7 +2,6 @@ package fr.openent.presences.controller;
 
 import fr.openent.presences.Presences;
 import fr.openent.presences.constants.Actions;
-import fr.openent.presences.security.AbsenceStatementsCreateRight;
 import fr.openent.presences.security.AbsenceStatementsGetFileRight;
 import fr.openent.presences.security.AbsenceStatementsViewRight;
 import fr.openent.presences.service.StatementAbsenceService;
@@ -56,31 +55,42 @@ public class StatementAbsenceController extends ControllerHelper {
 
     @Post("/statements/absences")
     @ApiDoc("Create statement absence")
-    @ResourceFilter(AbsenceStatementsCreateRight.class)
-    @SecuredAction(value = "", type = ActionType.RESOURCE)
+    @SecuredAction(Presences.ABSENCE_STATEMENTS_CREATE)
     @Trace(Actions.ABSENCE_STATEMENT_CREATION)
     public void create(HttpServerRequest request) {
         request.setExpectMultipart(true);
-        request.endHandler(resultHandler -> {
-            saveAbsenceStatement(request, null);
+        UserUtils.getUserInfos(eb, request, user -> {
+            request.endHandler(resultHandler -> {
+                if (!(user.getChildrenIds().contains(request.getFormAttribute("student_id")))) {
+                    unauthorized(request);
+                }
+                saveAbsenceStatement(request, null);
+            });
         });
     }
 
     @Post("/statements/absences/attachment")
     @ApiDoc("Create statement absence with an attachment")
-    @ResourceFilter(AbsenceStatementsCreateRight.class)
-    @SecuredAction(value = "", type = ActionType.RESOURCE)
+    @SecuredAction(Presences.ABSENCE_STATEMENTS_CREATE)
     @Trace(Actions.ABSENCE_STATEMENT_CREATION)
     public void createWithFile(HttpServerRequest request) {
-        storage.writeUploadFile(request, resultUpload -> {
-            if (!"ok".equals(resultUpload.getString("status"))) {
-                String message = "[Presences@DefaultStatementAbsenceService:create] Failed to save file.";
-                log.error(message + " " + resultUpload.getString("message"));
-                renderError(request);
-                return;
-            }
+        UserUtils.getUserInfos(eb, request, user -> {
+            storage.writeUploadFile(request, resultUpload -> {
+                if (!"ok".equals(resultUpload.getString("status"))) {
+                    String message = "[Presences@DefaultStatementAbsenceService:create] Failed to save file.";
+                    log.error(message + " " + resultUpload.getString("message"));
+                    renderError(request);
+                    return;
+                }
 
-            saveAbsenceStatement(request, resultUpload.getString("_id"));
+                String file_id = resultUpload.getString("_id");
+                if (!(user.getChildrenIds().contains(request.getFormAttribute("student_id")))) {
+                    deleteFile(file_id);
+                    unauthorized(request);
+                }
+
+                saveAbsenceStatement(request, file_id);
+            });
         });
     }
 
