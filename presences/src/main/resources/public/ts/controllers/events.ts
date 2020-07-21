@@ -412,6 +412,10 @@ export const eventsController = ng.controller('EventsController', ['$scope', '$r
                         let arrayIndex = priority.indexOf(periods.events[i].type_id);
                         index = arrayIndex < index ? arrayIndex : index;
                     }
+                } else if ("type" in periods.events[i]) {
+                    if (periods.events[i].type === 'absence') {
+                        index = periods.events[i].reason_id !== null ? 4 : 0;
+                    }
                 }
             }
             return className[index] || '';
