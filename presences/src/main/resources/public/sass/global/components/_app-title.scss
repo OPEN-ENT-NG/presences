@@ -1,0 +1,20 @@
+app-title, .application-title {
+  width: auto;
+  /* Remove move-right custom */
+  &.move-right {
+    padding-left: 0;
+    margin-left: 30px;
+  }
+
+  img {
+    height: 40px;
+    max-width: none;
+    margin-right: 10px;
+  }
+
+  i18n {
+    @include mobile {
+      font-size: 5vw;
+    }
+  }
+}

@@ -38,9 +38,9 @@
                         <div class="statement-absence-content-list-body-content-inside-student-content">
                             <student-name class="paddingRight"
                                           data-ng-click="vm.stopPropagation($event)"
-                                          name="statementAbsence.student.displayName"
+                                          name="statementAbsence.student.name"
                                           id="'statementAbsence.student.id'"/>
-                            <i class="tableEdit" data-ng-click="vm.redirectCalendar($event, event)"></i>
+                            <i class="tableEdit" data-ng-click="vm.redirectCalendar($event, statementAbsence)"></i>
                         </div>
                         <span class="statement-absence-content-list-body-content-inside-class">[[statementAbsence.student.className]]</span>
                     </div>
@@ -60,7 +60,9 @@
                     </div>
                     <!-- download file -->
                     <div class="flex-col statement-absence-content-list-body-content-inside-download col__2">
-                        <i class="attach" data-ng-click="vm.downloadFile($event)"></i>
+                        <i class="attach"
+                           data-ng-click="vm.downloadFile(statementAbsence)"
+                           data-ng-show="statementAbsence.attachment_id"></i>
                     </div>
                     <!-- treated -->
                     <div class="flex-col col__2">

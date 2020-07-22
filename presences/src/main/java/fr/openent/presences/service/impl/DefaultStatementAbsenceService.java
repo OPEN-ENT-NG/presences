@@ -17,6 +17,7 @@ import org.entcore.common.storage.Storage;
 import org.entcore.common.user.UserInfos;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 
@@ -81,8 +82,17 @@ public class DefaultStatementAbsenceService implements StatementAbsenceService {
     public void getFile(UserInfos user, MultiMap body, Handler<AsyncResult<JsonObject>> handler) {
         List<String> student_ids = null;
         if (!WorkflowHelper.hasRight(user, WorkflowActions.MANAGE_ABSENCE_STATEMENTS.toString())) {
-            student_ids = new ArrayList<>();
-            student_ids.add(body.get("student_id"));
+            student_ids = body.getAll("student_id");
+            boolean isValid = student_ids.size() > 0;
+            for (String id : student_ids) {
+                if (!(user.getUserId().equals(id) || user.getChildrenIds().contains(id))) isValid = false;
+            }
+            if (!isValid) {
+                String message = "[Presences@DefaultStatementAbsenceService:getFile] You are not authorized to get this file.";
+                log.error(message);
+                handler.handle(Future.failedFuture(message));
+                return;
+            }
         }
 
         getRequest(null, body.get("structure_id"), body.get("idStatement"), null, null, student_ids, null, result -> {
@@ -92,6 +102,14 @@ public class DefaultStatementAbsenceService implements StatementAbsenceService {
                 handler.handle(Future.failedFuture(message));
                 return;
             }
+
+            if (result.result().size() != 1) {
+                String message = "[Presences@DefaultStatementAbsenceService:getFile] You are not authorized to get this file.";
+                log.error(message);
+                handler.handle(Future.failedFuture(message));
+                return;
+            }
+
             handler.handle(Future.succeededFuture(result.result().getJsonObject(0)));
         });
     }
@@ -119,7 +137,7 @@ public class DefaultStatementAbsenceService implements StatementAbsenceService {
 
         if (student_ids != null && student_ids.size() > 0) {
             query += "AND student_id IN " + Sql.listPrepared(student_ids) + " ";
-            params.add(student_ids);
+            params.addAll(new JsonArray(student_ids));
         }
 
         if (is_treated != null) {

@@ -11,6 +11,7 @@ export class Student {
     displayName: string;
     classeName?: any;
     className?: string;
+    birth?: string;
 
     constructor(o?: any) {
         if (o && typeof o === 'object') {

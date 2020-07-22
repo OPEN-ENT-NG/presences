@@ -23,6 +23,7 @@ const rights = {
         widget_day_presences: 'fr.openent.presences.controller.FakeRight|widgetDayPresences',
         readPresences: 'fr.openent.presences.controller.PresencesController|getPresences',
         createPresences: 'fr.openent.presences.controller.PresencesController|createPresence',
+        manageStatementAbsences: 'fr.openent.presences.controller.StatementAbsenceController|validate'
     }
 };
 

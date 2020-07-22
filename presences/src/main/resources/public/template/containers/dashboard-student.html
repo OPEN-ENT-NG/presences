@@ -1,14 +1,27 @@
-<div class="dashboard-student" ng-controller="DashboardStudentController as vm">
+<div class="dashboard-student" data-ng-controller="DashboardStudentController as vm">
 
     <loader data-ng-show="vm.isLoading" min-height="'250px'"/>
 
-    <div data-ng-show="!vm.isLoading">
-        <!-- content dashboard inside -->
-        <div ng-include="'/presences/public/template/dashboard/dashboard-student/header.html'"></div>
+    <presences-nav-bar data-ng-if="!vm.isLoading && vm.isRelative()"
+                       routing-keys="vm.routing"
+                       mobile-mode="true">
+    </presences-nav-bar>
 
-        <!-- content dashboard inside -->
-        <div ng-include="'/presences/public/template/dashboard/dashboard-student/content.html'"></div>
+    <div class="presences-flex" data-ng-show="!vm.isLoading">
+        <div class="dashboard-student-main margin-right-lg" data-ng-show="vm.isCurrentMobileRoute(vm.routing[0])">
+            <!-- content dashboard inside -->
+            <div ng-include="'/presences/public/template/dashboard/dashboard-student/header.html'"></div>
+
+            <!-- content dashboard inside -->
+            <div ng-include="'/presences/public/template/dashboard/dashboard-student/content.html'"></div>
+        </div>
+
+        <!-- form via relative -->
+        <statements-absence-form data-ng-show="vm.isRelative() && vm.isCurrentMobileRoute(vm.routing[1])"
+                                 class="dashboard-student-statementAbsence"
+                                 timeslots="vm.structureTimeSlot"
+                                 student="vm.filter.selectedChildren">
+        </statements-absence-form>
     </div>
-
 
 </div>

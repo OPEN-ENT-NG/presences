@@ -30,9 +30,11 @@ interface IViewModel {
 
     toggleTreated(): void;
 
-    redirectCalendar($event, event): void;
+    redirectCalendar($event, statementAbsence: IStatementsAbsences): void;
 
     updateTreatStatement(statementAbsence: IStatementsAbsences): Promise<void>;
+
+    downloadFile(statementAbsence: IStatementAbsenceBody): void
 
     /* search bar methods */
     searchStudent(studentForm: string): Promise<void>;
@@ -79,8 +81,6 @@ export const statementsAbsencesController = ng.controller('StatementsAbsencesCon
                 vm.statementsAbsences.loading = true;
                 prepareRequest();
                 await vm.statementsAbsences.build(await statementAbsenceService.get(vm.statementsAbsencesRequest));
-                // todo replace mockup by real get
-                // await vm.statementsAbsences.build(mockupStatement);
                 vm.statementsAbsences.loading = false;
             };
 
@@ -89,6 +89,7 @@ export const statementsAbsencesController = ng.controller('StatementsAbsencesCon
                 vm.statementsAbsencesRequest.start_at = DateUtils.format(vm.filter.start_at, DateUtils.FORMAT["YEAR-MONTH-DAY"]);
                 vm.statementsAbsencesRequest.end_at = DateUtils.format(vm.filter.end_at, DateUtils.FORMAT["YEAR-MONTH-DAY"]);
                 vm.statementsAbsencesRequest.student_ids = vm.filter.student_ids;
+                vm.statementsAbsencesRequest.isTreated = vm.filter.isTreated;
                 vm.statementsAbsencesRequest.page = vm.filter.page;
             };
 
@@ -114,40 +115,41 @@ export const statementsAbsencesController = ng.controller('StatementsAbsencesCon
             };
 
             vm.updateTreatStatement = async (statementAbsence: IStatementsAbsences): Promise<void> => {
-                statementAbsence.treated = statementAbsence.isTreated ?
-                    DateUtils.format(moment(), DateUtils.FORMAT["YEAR-MONTH-DAY-HOUR-MIN-SEC"]) : null;
-
                 let form = {
-                    treated: statementAbsence.treated
+                    isTreated: statementAbsence.isTreated,
                 } as IStatementAbsenceBody;
-
-                let response = await statementAbsenceService.update(statementAbsence.id, form);
+                let response = await statementAbsenceService.validate(statementAbsence.id, form);
                 if (response.status == 200 || response.status == 201) {
                     if (statementAbsence.isTreated) {
                         toasts.confirm('presences.statements.treated.true');
                     } else {
                         toasts.confirm('presences.statements.treated.false');
                     }
+                    vm.updateFilter();
                 } else {
                     toasts.warning(response.data.toString());
                 }
                 $scope.safeApply();
             };
 
-            vm.redirectCalendar = ($event, {studentId, date, displayName, className, classId}): void => {
+            vm.downloadFile = (statementAbsence: IStatementsAbsences): void => {
+                statementAbsenceService.download(statementAbsence);
+            };
+
+            vm.redirectCalendar = ($event, statementsAbsence: IStatementsAbsences): void => {
                 $event.stopPropagation();
+                const date: string = DateUtils.format(statementsAbsence.start_at, DateUtils.FORMAT["YEAR-MONTH-DAY"]);
                 window.item = {
-                    id: studentId,
-                    date,
-                    displayName,
+                    id: statementsAbsence.student.id,
+                    date: date,
+                    displayName: statementsAbsence.student.name,
                     type: 'USER',
-                    groupName: className,
-                    groupId: classId,
+                    groupName: statementsAbsence.student.className,
                     toString: function () {
-                        return this.displayName;
+                        return statementsAbsence.student.name;
                     }
                 };
-                $location.path(`/calendar/${studentId}?date=${date}`);
+                $location.path(`/calendar/${statementsAbsence.student.id}?date=${date}`);
                 $scope.safeApply();
             };
 

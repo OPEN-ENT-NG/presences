@@ -22,7 +22,6 @@ export interface IStatementAbsenceBody {
     student_id?: string;
     start_at?: string;
     end_at?: string;
-    attachment?: string;
     file?: File;
     description?: string;
     treated?: string;
@@ -36,8 +35,8 @@ export interface IStatementsAbsences {
     start_at: string;
     end_at: string;
     description: string;
-    attachment: string;
-    treated: string;
+    attachment_id: string;
+    treated_at: string;
     isTreated?: boolean;
 }
 
@@ -53,11 +52,11 @@ export class StatementsAbsences extends LoadingCollection {
 
     async build(data: IStatementsAbsencesResponse): Promise<void> {
         this.statementAbsenceResponse.all = [];
-        data.all.forEach((punishment: IStatementsAbsences) => {
-            this.statementAbsenceResponse.all.push(punishment);
+        data.all.forEach((statementAbsence: IStatementsAbsences) => {
+            this.statementAbsenceResponse.all.push(statementAbsence);
         });
         this.statementAbsenceResponse.all.map((statementAbsence: IStatementsAbsences) =>
-            statementAbsence.isTreated = statementAbsence.treated != null);
+            statementAbsence.isTreated = statementAbsence.treated_at != null);
         this.statementAbsenceResponse.page = data.page;
         this.statementAbsenceResponse.page_count = data.page_count;
     }
@@ -83,8 +82,8 @@ export const mockupStatement: IStatementsAbsencesResponse = {
             start_at: '2020-06-24 10:30:00',
             end_at: '2020-06-25 15:30:00',
             description: 'alors là il est en pls mdr',
-            attachment: 'fezafzeigoklazgeg',
-            treated: '2020-06-25 15:30:00',
+            attachment_id: 'fezafzeigoklazgeg',
+            treated_at: '2020-06-25 15:30:00',
         }
     ]
 }

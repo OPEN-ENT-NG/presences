@@ -30,10 +30,6 @@ routes.define(function ($routeProvider) {
         // .when('/group-absences', {
         //     action: 'group-absences'
         // })
-        // @todo to change workflow rights for declare absences
-        .when('/statements-absences', {
-            action: 'statements-absences'
-        })
         .otherwise({
             redirectTo: '/dashboard'
         });
@@ -85,6 +81,13 @@ routes.define(function ($routeProvider) {
         $routeProvider
             .when('/presences', {
                 action: 'presences'
+            })
+    }
+
+    if (model.me.hasWorkflow(rights.workflow.manageStatementAbsences)) {
+        $routeProvider
+            .when('/statements-absences', {
+                action: 'statements-absences'
             })
     }
 });

@@ -11,12 +11,6 @@ import org.entcore.common.user.UserInfos;
 public class AbsenceStatementsCreateRight implements ResourcesProvider {
     @Override
     public void authorize(HttpServerRequest request, Binding binding, UserInfos user, Handler<Boolean> handler) {
-        request.setExpectMultipart(true);
-        request.endHandler(resultHandler -> {
-            handler.handle(
-                    WorkflowHelper.hasRight(user, WorkflowActions.ABSENCE_STATEMENTS_CREATE.toString())
-                            && user.getChildrenIds().contains(request.getFormAttribute("student_id"))
-            );
-        });
+        handler.handle(WorkflowHelper.hasRight(user, WorkflowActions.ABSENCE_STATEMENTS_CREATE.toString()));
     }
 }

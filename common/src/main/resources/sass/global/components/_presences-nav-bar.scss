@@ -1,0 +1,33 @@
+$presences-grey-light: #F0F0F0;
+
+.presences-nav-bar {
+  @include mobile {
+    margin-left: 30px;
+  }
+
+  nav {
+    height: 80px !important;
+  }
+
+  nav[side-nav] {
+    position: fixed;
+    left: 0;
+    top: 50px;
+    z-index: 10001;
+    transition: all 250ms ease;
+    box-sizing: border-box;
+    width: 0;
+    overflow: hidden;
+    padding: 0;
+    background-color: $presences-grey-light;
+    border-radius: 2px;
+    border-left: none;
+    box-shadow: 0 6px 18px rgba(0, 0, 0, 0.26);
+
+    &.slide {
+      width: 155px;
+      padding: 0 10px;
+      overflow: unset;
+    }
+  }
+}

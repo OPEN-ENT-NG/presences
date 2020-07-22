@@ -1,6 +1,11 @@
-<div class="dashboard-student-header margin-bottom-md">
+<div class="dashboard-student-main-header margin-bottom-md">
     <!-- title content-->
-    <app-title class="paddingRight">
+    <app-title class="dashboard-student-main-header-title paddingRight">
+        <!-- logo -->
+        <div data-ng-show="!vm.isMobile()">
+            <img src="/presences/public/img/uni-presence.svg" alt="Présences">
+        </div>
+
         <!-- module title name -->
         <h1>
             <i18n>presences.title</i18n>
@@ -8,12 +13,12 @@
     </app-title>
 
     <!-- select children (relative's feat) -->
-    <div class="dashboard-student-header-selectChild" ng-if="vm.isRelative()">
+    <div class="dashboard-student-main-header-selectChild" data-ng-if="vm.isRelative()">
         <label>
             <select class="card" required
                     data-ng-change="vm.switchChild()"
                     data-ng-model="vm.filter.selectedChildren"
-                    ng-options="child as child.displayName for child in vm.filter.children">
+                    data-ng-options="child as child.displayName for child in vm.filter.children">
             </select>
         </label>
     </div>

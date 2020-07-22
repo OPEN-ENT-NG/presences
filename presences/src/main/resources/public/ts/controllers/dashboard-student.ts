@@ -13,11 +13,15 @@ import {
     EVENT_TYPES,
     IForgottenNotebookResponse,
     ISchoolYearPeriod,
+    IStructureSlot,
     IStudentEventRequest,
     IStudentEventResponse,
     IStudentIncidentResponse
 } from "../models";
 import {EVENT_RECOVERY_METHOD} from "@common/core/enum/event-recovery-method";
+import {IRouting} from "@common/model/Route";
+import {ROUTING_EVENTS, ROUTING_KEYS} from "@common/core/enum/routing-keys";
+import {MobileUtils} from "@common/utils/mobile";
 
 declare let window: any;
 
@@ -39,13 +43,18 @@ interface IFilter {
 
 interface IViewModel {
     filter: IFilter;
-
+    routing: Array<IRouting>;
     color: IColor;
     types: typeof EVENT_TYPES;
     eventsTitle: IEvent;
     presenceEvents: IStudentEventResponse;
     incidentsEvents: IStudentIncidentResponse;
     forgottenNotebook: IForgottenNotebookResponse;
+    structureTimeSlot: IStructureSlot;
+
+    isMobile(): boolean;
+
+    isCurrentMobileRoute(routing: IRouting): boolean;
 
     getRecoveryMethodLabel(recoveryMethod: string): string;
 
@@ -75,6 +84,20 @@ export const dashboardStudentController = ng.controller('DashboardStudentControl
                 selectedPeriod: null
             };
 
+            /* Mobile featuring only */
+            vm.routing = [
+                {
+                    label: `${idiom.translate(`presences.dashboard`).toUpperCase()}`,
+                    key: ROUTING_KEYS.DASHBOARD_STUDENT_MAIN, isSelected: true
+                },
+                {
+                    label: `${idiom.translate(`presences.statements`).toUpperCase()}`,
+                    key: ROUTING_KEYS.DASHBOARD_STUDENT_STATEMENT_FORM, isSelected: false
+                }
+            ];
+
+
+            vm.structureTimeSlot = null;
             vm.color = COLOR_TYPE;
             vm.types = EVENT_TYPES;
 
@@ -169,7 +192,12 @@ export const dashboardStudentController = ng.controller('DashboardStudentControl
                         resolve(undefined);
                     });
                 });
-            }
+            };
+
+            const getTimeSlots = async (structure_id: string): Promise<void> => {
+                vm.structureTimeSlot = await viescolaireService.getSlotProfile(structure_id);
+                $scope.safeApply();
+            };
 
             const reloadType = (type: string): void => {
                 switch (type) {
@@ -200,6 +228,17 @@ export const dashboardStudentController = ng.controller('DashboardStudentControl
                             });
                         break;
                 }
+            };
+
+            vm.isCurrentMobileRoute = (routing: IRouting): boolean => {
+                if (MobileUtils.isMobile()) {
+                    return routing.isSelected;
+                }
+                return true;
+            };
+
+            vm.isMobile = (): boolean => {
+                return MobileUtils.isMobile();
             };
 
             vm.getRecoveryMethodLabel = (recoveryMethod: string): string => {
@@ -233,7 +272,7 @@ export const dashboardStudentController = ng.controller('DashboardStudentControl
             /* event handler */
             $scope.$watch(() => window.structure, async () => {
                 if ('structure' in window) {
-                    await load();
+                    await Promise.all([load(), getTimeSlots(window.structure.id)]);
                     await loadEvents();
                     $scope.safeApply();
                 }
@@ -244,6 +283,11 @@ export const dashboardStudentController = ng.controller('DashboardStudentControl
                 if (!isToggleOnce) {
                     reloadType(type);
                 }
+            });
+
+            $scope.$on(ROUTING_EVENTS.SWITCH, (event: IAngularEvent, routerKey: string) => {
+                console.log("router: ", routerKey);
+                console.log("vm.router: ", vm.routing);
             });
 
         }]);

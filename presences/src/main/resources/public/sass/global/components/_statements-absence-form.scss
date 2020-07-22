@@ -1,0 +1,105 @@
+.statements-absence-form {
+  // margin space handling
+  margin: -18px -35px 0 0;
+  @include mobile {
+    margin: -8px -15px;
+  }
+
+  background: $presences-white;
+  box-shadow: 0 5px 5px rgba(0, 0, 0, 0.21);
+
+  &-title {
+    display: flex;
+    background: $presences-main;
+    color: $presences-white;
+    padding: 16px;
+    justify-content: space-between;
+
+    &-content {
+      display: flex;
+      flex-direction: column;
+
+      &-name {
+        font-size: 24px;
+        margin-bottom: 8px;
+      }
+    }
+
+    img {
+      border-radius: 50%;
+    }
+  }
+
+  &-content {
+    padding: 8px 16px;
+
+    &-title {
+      color: $presences-black;
+    }
+
+    &-date {
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between
+    }
+
+    &-time {
+      display: flex;
+      justify-content: space-between;
+
+      &-start, &-end {
+        display: flex;
+        flex-direction: column;
+
+        time-picker {
+          input {
+            width: 62%;
+          }
+        }
+      }
+    }
+
+    &-description {
+      display: flex;
+      flex-direction: column;
+
+      input {
+        border: none;
+        background: none;
+        border-bottom: 1px dotted $presences-grey-heavy-light;
+        margin: 16px 0;
+
+        &:focus {
+          outline: none;
+        }
+      }
+
+      &-upload {
+        margin: 16px 0;
+        font-size: 1.25rem;
+        position: relative;
+        padding: 100px 20px;
+
+        outline: 2px dashed $presences-transparent-white;
+
+        &-box {
+          text-align: center;
+
+          input {
+            display: none;
+          }
+
+          label {
+            color: $presences-transparent-white;
+            cursor: pointer;
+          }
+        }
+      }
+    }
+
+    &-valid {
+      display: flex;
+      justify-content: flex-end;
+    }
+  }
+}

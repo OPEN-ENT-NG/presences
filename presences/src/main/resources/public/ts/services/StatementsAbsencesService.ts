@@ -1,6 +1,11 @@
 import {ng} from 'entcore'
 import http, {AxiosResponse} from 'axios';
-import {IStatementAbsenceBody, IStatementsAbsencesRequest, IStatementsAbsencesResponse} from "../models";
+import {
+    IStatementAbsenceBody,
+    IStatementsAbsences,
+    IStatementsAbsencesRequest,
+    IStatementsAbsencesResponse
+} from "../models";
 
 export interface IStatementsAbsencesService {
     get(statementsAbsencesRequest: IStatementsAbsencesRequest): Promise<IStatementsAbsencesResponse>;
@@ -40,8 +45,11 @@ export const statementsAbsencesService: IStatementsAbsencesService = {
         }
     },
 
-    download: async (statementsAbsences: IStatementAbsenceBody): Promise<void> => {
-        window.location.href = `/presences/statements/absences/${statementsAbsences.id}/attachment/${statementsAbsences.attachment}`;
+    download: async (statementsAbsences: IStatementsAbsences): Promise<void> => {
+        const basicUrl: string = `/presences/statements/absences/`;
+        const urlFetchingData: string = `${statementsAbsences.id}/attachment/${statementsAbsences.attachment_id}`;
+        const structure_id: string = `?structure_id=${statementsAbsences.structure_id}`;
+        window.open(`${basicUrl}${urlFetchingData}${structure_id}`);
     },
 
     create: async (statementsAbsences: IStatementAbsenceBody): Promise<AxiosResponse> => {

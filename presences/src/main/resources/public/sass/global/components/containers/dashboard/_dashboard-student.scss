@@ -5,18 +5,33 @@
    */
   margin-left: $navbar-width-removed;
 
-  &-header {
-    display: flex;
-    align-items: center;
+  &-main {
+    flex: 1;
 
-    h1 {
-      margin: 0;
-    }
+    &-header {
+      display: flex;
+      align-items: center;
 
-    &-selectChild {
-      select {
+      &-title {
+        display: flex;
+      }
+
+      h1 {
         margin: 0;
       }
+
+      &-selectChild {
+        select {
+          margin: 0;
+        }
+      }
+    }
+  }
+
+  &-statementAbsence {
+    width: 350px;
+    @include mobile {
+      width: stretch;
     }
   }
 

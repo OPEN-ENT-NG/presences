@@ -2,6 +2,7 @@ package fr.openent.presences.controller;
 
 import fr.openent.presences.Presences;
 import fr.openent.presences.constants.Actions;
+import fr.openent.presences.security.AbsenceStatementsCreateRight;
 import fr.openent.presences.security.AbsenceStatementsGetFileRight;
 import fr.openent.presences.security.AbsenceStatementsViewRight;
 import fr.openent.presences.service.StatementAbsenceService;
@@ -55,8 +56,8 @@ public class StatementAbsenceController extends ControllerHelper {
 
     @Post("/statements/absences")
     @ApiDoc("Create statement absence")
-    @SecuredAction(Presences.ABSENCE_STATEMENTS_CREATE)
-    @Trace(Actions.ABSENCE_STATEMENT_CREATION)
+    @ResourceFilter(AbsenceStatementsCreateRight.class)
+    @SecuredAction(value = "", type = ActionType.RESOURCE)
     public void create(HttpServerRequest request) {
         request.setExpectMultipart(true);
         UserUtils.getUserInfos(eb, request, user -> {
@@ -71,13 +72,13 @@ public class StatementAbsenceController extends ControllerHelper {
 
     @Post("/statements/absences/attachment")
     @ApiDoc("Create statement absence with an attachment")
-    @SecuredAction(Presences.ABSENCE_STATEMENTS_CREATE)
-    @Trace(Actions.ABSENCE_STATEMENT_CREATION)
+    @ResourceFilter(AbsenceStatementsCreateRight.class)
+    @SecuredAction(value = "", type = ActionType.RESOURCE)
     public void createWithFile(HttpServerRequest request) {
         UserUtils.getUserInfos(eb, request, user -> {
             storage.writeUploadFile(request, resultUpload -> {
                 if (!"ok".equals(resultUpload.getString("status"))) {
-                    String message = "[Presences@DefaultStatementAbsenceService:create] Failed to save file.";
+                    String message = "[Presences@DefaultStatementAbsenceController:createWithFile] Failed to save file.";
                     log.error(message + " " + resultUpload.getString("message"));
                     renderError(request);
                     return;
