@@ -2,6 +2,8 @@ package fr.openent.presences.service.impl;
 
 import fr.openent.presences.Presences;
 import fr.openent.presences.common.helper.WorkflowHelper;
+import fr.openent.presences.common.service.UserService;
+import fr.openent.presences.common.service.impl.DefaultUserService;
 import fr.openent.presences.enums.WorkflowActions;
 import fr.openent.presences.model.StatementAbsence;
 import fr.openent.presences.service.StatementAbsenceService;
@@ -16,19 +18,19 @@ import org.entcore.common.sql.SqlResult;
 import org.entcore.common.storage.Storage;
 import org.entcore.common.user.UserInfos;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Date;
-import java.util.List;
+import java.util.*;
+import java.util.stream.Collectors;
 
 public class DefaultStatementAbsenceService implements StatementAbsenceService {
 
     private static final Logger log = LoggerFactory.getLogger(DefaultStatementAbsenceService.class);
 
     private Storage storage;
+    private UserService userService;
 
     public DefaultStatementAbsenceService(Storage storage) {
         this.storage = storage;
+        this.userService = new DefaultUserService();
     }
 
     @Override
@@ -38,7 +40,7 @@ public class DefaultStatementAbsenceService implements StatementAbsenceService {
         String end_at = body.get("end_at");
         String start_at = body.get("start_at");
         List<String> student_ids = body.getAll("student_id");
-        Boolean is_treated = body.get("is_treated") != null ? Boolean.getBoolean(body.get("is_treated")) : null;
+        Boolean is_treated = body.get("is_treated") != null ? Boolean.valueOf(body.get("is_treated")) : null;
         Integer page = body.get("page") != null ? Integer.parseInt(body.get("page")) : null;
 
         Future<JsonArray> listResultsFuture = Future.future();
@@ -145,8 +147,8 @@ public class DefaultStatementAbsenceService implements StatementAbsenceService {
         }
 
         if (page != null) {
-            query += "LIMIT " + Presences.PAGE_SIZE;
-            query += "OFFSET " + page * Presences.PAGE_SIZE;
+            query += "LIMIT " + Presences.PAGE_SIZE + " ";
+            query += "OFFSET " + page * Presences.PAGE_SIZE + " ";
         }
 
         return query;
@@ -181,7 +183,35 @@ public class DefaultStatementAbsenceService implements StatementAbsenceService {
                         return;
                     }
 
-                    future.complete(eventResult.right().getValue());
+                    JsonArray result = eventResult.right().getValue();
+                    List<String> studentIds = ((List<JsonObject>) result.getList())
+                            .stream()
+                            .map(res -> res.getString("student_id"))
+                            .collect(Collectors.toList());
+
+                    userService.getStudents(studentIds, resUsers -> {
+                        if (resUsers.isLeft()) {
+                            String message = "[Presences@DefaultStatementAbsenceService::get] Failed to get students";
+                            log.error(message);
+                            future.fail(message);
+                            return;
+                        }
+
+                        Map<String, JsonObject> studentMap = new HashMap<>();
+                        resUsers.right().getValue().forEach(oStudent -> {
+                            JsonObject student = (JsonObject) oStudent;
+                            studentMap.put(student.getString("id"), student);
+                        });
+
+                        result.forEach(oRes -> {
+                            JsonObject res = (JsonObject) oRes;
+                            res.put("student", studentMap.get(res.getString("student_id")));
+                            res.remove("student_id");
+                        });
+
+                        future.complete(eventResult.right().getValue());
+                    });
+
                 }));
     }
 
