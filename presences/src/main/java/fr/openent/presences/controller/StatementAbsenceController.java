@@ -1,6 +1,7 @@
 package fr.openent.presences.controller;
 
 import fr.openent.presences.Presences;
+import fr.openent.presences.common.helper.DateHelper;
 import fr.openent.presences.constants.Actions;
 import fr.openent.presences.security.AbsenceStatementsCreateRight;
 import fr.openent.presences.security.AbsenceStatementsGetFileRight;
@@ -16,12 +17,16 @@ import fr.wseduc.security.SecuredAction;
 import fr.wseduc.webutils.request.RequestUtils;
 import io.vertx.core.eventbus.EventBus;
 import io.vertx.core.http.HttpServerRequest;
+import io.vertx.core.json.Json;
 import io.vertx.core.json.JsonObject;
 import org.entcore.common.controller.ControllerHelper;
 import org.entcore.common.http.filter.ResourceFilter;
 import org.entcore.common.http.filter.Trace;
 import org.entcore.common.storage.Storage;
 import org.entcore.common.user.UserUtils;
+
+import java.text.ParseException;
+import java.util.Date;
 
 public class StatementAbsenceController extends ControllerHelper {
 
@@ -120,12 +125,17 @@ public class StatementAbsenceController extends ControllerHelper {
     @SecuredAction(value = "", type = ActionType.RESOURCE)
     public void getFile(HttpServerRequest request) {
         UserUtils.getUserInfos(eb, request, user -> {
-            statementAbsenceService.getFile(user, request.params(), result -> {
-                if (result.failed()) {
+            statementAbsenceService.getFile(user, request.params(), resultFile -> {
+                if (resultFile.failed()) {
                     notFound(request);
                     return;
                 }
-                storage.sendFile(request.getParam("id"), "", request, false, new JsonObject());
+
+                JsonObject result = resultFile.result();
+                String studentName = result.getJsonObject("student").getString("name").replace(" ", "_");
+                String createdAt = DateHelper.getDateString(result.getString("created_at"), DateHelper.YEAR_MONTH_DAY);
+                String name = "Declaration_" + studentName + (createdAt.equals("") ? "" : "_" + createdAt);
+                storage.sendFile(request.getParam("id"), name, request, false, new JsonObject());
             });
         });
     }

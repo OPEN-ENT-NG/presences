@@ -42,11 +42,13 @@ public class DefaultStatementAbsenceService implements StatementAbsenceService {
         List<String> student_ids = body.getAll("student_id");
         Boolean is_treated = body.get("is_treated") != null ? Boolean.valueOf(body.get("is_treated")) : null;
         Integer page = body.get("page") != null ? Integer.parseInt(body.get("page")) : null;
+        String limit = body.get("limit");
+        String offset = body.get("offset");
 
         Future<JsonArray> listResultsFuture = Future.future();
         Future<Long> countResultsFuture = Future.future();
 
-        getRequest(page, structure_id, id, start_at, end_at, student_ids, is_treated, listResultsFuture);
+        getRequest(page, limit, offset, structure_id, id, start_at, end_at, student_ids, is_treated, listResultsFuture);
         countRequest(structure_id, id, start_at, end_at, student_ids, is_treated, countResultsFuture);
 
         CompositeFuture.all(listResultsFuture, countResultsFuture).setHandler(eventResult -> {
@@ -97,7 +99,7 @@ public class DefaultStatementAbsenceService implements StatementAbsenceService {
             }
         }
 
-        getRequest(null, body.get("structure_id"), body.get("idStatement"), null, null, student_ids, null, result -> {
+        getRequest(null, null, null,body.get("structure_id"), body.get("idStatement"), null, null, student_ids, null, result -> {
             if (result.failed()) {
                 String message = "[Presences@DefaultStatementAbsenceService:getFile] Failed to retrieve absence statements.";
                 log.error(message + " " + result.cause().getMessage());
@@ -117,7 +119,8 @@ public class DefaultStatementAbsenceService implements StatementAbsenceService {
     }
 
 
-    private String queryGetter(Boolean isCountQuery, Integer page, String structure_id, String id, String start_at, String end_at, List<String> student_ids, Boolean is_treated, JsonArray params) {
+    private String queryGetter(Boolean isCountQuery, Integer page, String limit, String offset, String structure_id, String id, String start_at, String end_at,
+                               List<String> student_ids, Boolean is_treated, JsonArray params) {
         String query = (isCountQuery ? "SELECT COUNT(*) " : "SELECT * ") + " FROM " + Presences.dbSchema + ".statement_absence WHERE structure_id = ? ";
 
         params.add(structure_id);
@@ -149,16 +152,26 @@ public class DefaultStatementAbsenceService implements StatementAbsenceService {
         if (page != null) {
             query += "LIMIT " + Presences.PAGE_SIZE + " ";
             query += "OFFSET " + page * Presences.PAGE_SIZE + " ";
+        } else {
+            if (limit != null) {
+                query += "LIMIT ? ";
+                params.add(limit);
+            }
+
+            if (offset != null) {
+                query += "OFFSET ? ";
+                params.add(offset);
+            }
         }
 
         return query;
     }
 
 
-    private void getRequest(Integer page, String structure_id, String id, String start_at, String end_at,
+    private void getRequest(Integer page, String limit, String offset, String structure_id, String id, String start_at, String end_at,
                             List<String> student_ids, Boolean is_treated, Handler<AsyncResult<JsonArray>> handler) {
         JsonArray params = new JsonArray();
-        Sql.getInstance().prepared(queryGetter(false, page, structure_id, id, start_at, end_at, student_ids, is_treated, params),
+        Sql.getInstance().prepared(queryGetter(false, page, limit, offset, structure_id, id, start_at, end_at, student_ids, is_treated, params),
                 params, SqlResult.validResultHandler(eventResult -> {
                     if (eventResult.isLeft()) {
                         String message = "[Presences@DefaultStatementAbsenceService:getRequest] Failed to retrieve absence statements.";
@@ -167,14 +180,20 @@ public class DefaultStatementAbsenceService implements StatementAbsenceService {
                         return;
                     }
 
-                    handler.handle(Future.succeededFuture(eventResult.right().getValue()));
+                    setStudents(eventResult.right().getValue(), result -> {
+                        if (result.failed()) {
+                            handler.handle(Future.failedFuture(result.cause().getMessage()));
+                            return;
+                        }
+                        handler.handle(Future.succeededFuture(result.result()));
+                    });
                 }));
     }
 
-    private void getRequest(Integer page, String structure_id, String id, String start_at, String end_at,
+    private void getRequest(Integer page, String limit, String offset, String structure_id, String id, String start_at, String end_at,
                             List<String> student_ids, Boolean is_treated, Future<JsonArray> future) {
         JsonArray params = new JsonArray();
-        Sql.getInstance().prepared(queryGetter(false, page, structure_id, id, start_at, end_at, student_ids, is_treated, params),
+        Sql.getInstance().prepared(queryGetter(false, page, limit, offset, structure_id, id, start_at, end_at, student_ids, is_treated, params),
                 params, SqlResult.validResultHandler(eventResult -> {
                     if (eventResult.isLeft()) {
                         String message = "[Presences@DefaultStatementAbsenceService:getRequest] Failed to retrieve absence statements.";
@@ -182,34 +201,12 @@ public class DefaultStatementAbsenceService implements StatementAbsenceService {
                         future.fail(message);
                         return;
                     }
-
-                    JsonArray result = eventResult.right().getValue();
-                    List<String> studentIds = ((List<JsonObject>) result.getList())
-                            .stream()
-                            .map(res -> res.getString("student_id"))
-                            .collect(Collectors.toList());
-
-                    userService.getStudents(studentIds, resUsers -> {
-                        if (resUsers.isLeft()) {
-                            String message = "[Presences@DefaultStatementAbsenceService::get] Failed to get students";
-                            log.error(message);
-                            future.fail(message);
+                    setStudents(eventResult.right().getValue(), result -> {
+                        if (result.failed()) {
+                            future.fail(result.cause().getMessage());
                             return;
                         }
-
-                        Map<String, JsonObject> studentMap = new HashMap<>();
-                        resUsers.right().getValue().forEach(oStudent -> {
-                            JsonObject student = (JsonObject) oStudent;
-                            studentMap.put(student.getString("id"), student);
-                        });
-
-                        result.forEach(oRes -> {
-                            JsonObject res = (JsonObject) oRes;
-                            res.put("student", studentMap.get(res.getString("student_id")));
-                            res.remove("student_id");
-                        });
-
-                        future.complete(eventResult.right().getValue());
+                        future.complete(result.result());
                     });
 
                 }));
@@ -218,7 +215,7 @@ public class DefaultStatementAbsenceService implements StatementAbsenceService {
     private void countRequest(String structure_id, String id, String start_at, String end_at,
                               List<String> student_ids, Boolean is_treated, Future<Long> future) {
         JsonArray params = new JsonArray();
-        Sql.getInstance().prepared(queryGetter(true, null, structure_id, id, start_at, end_at, student_ids, is_treated, params),
+        Sql.getInstance().prepared(queryGetter(true, null, null, null, structure_id, id, start_at, end_at, student_ids, is_treated, params),
                 params, SqlResult.validUniqueResultHandler(eventResult -> {
                     if (eventResult.isLeft()) {
                         String message = "[Presences@DefaultStatementAbsenceService:countRequest] Failed to count absence statements.";
@@ -227,8 +224,42 @@ public class DefaultStatementAbsenceService implements StatementAbsenceService {
                         return;
                     }
 
-                    future.complete(eventResult.right().getValue().getLong("count") / Presences.PAGE_SIZE);
+                    Long count = eventResult.right().getValue().getLong("count");
+                    Long countPageNumber = count / Presences.PAGE_SIZE;
+                    if (count % 20 == 0) countPageNumber--;
+
+                    future.complete(countPageNumber);
                 }));
+    }
+
+    private void setStudents(JsonArray dataList, Handler<AsyncResult<JsonArray>> handler) {
+        List<String> studentIds = ((List<JsonObject>) dataList.getList())
+                .stream()
+                .map(res -> res.getString("student_id"))
+                .collect(Collectors.toList());
+
+        userService.getStudents(studentIds, resUsers -> {
+            if (resUsers.isLeft()) {
+                String message = "[Presences@DefaultStatementAbsenceService::get] Failed to get students";
+                log.error(message);
+                handler.handle(Future.failedFuture(message));
+                return;
+            }
+
+            Map<String, JsonObject> studentMap = new HashMap<>();
+            resUsers.right().getValue().forEach(oStudent -> {
+                JsonObject student = (JsonObject) oStudent;
+                studentMap.put(student.getString("id"), student);
+            });
+
+            dataList.forEach(oRes -> {
+                JsonObject res = (JsonObject) oRes;
+                res.put("student", studentMap.get(res.getString("student_id")));
+                res.remove("student_id");
+            });
+
+            handler.handle(Future.succeededFuture(dataList));
+        });
     }
 
 }
