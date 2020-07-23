@@ -49,6 +49,8 @@ interface IViewModel {
     selectStudent(valueInput, studentItem): void;
 
     removeSelectedStudents(studentItem): void;
+
+    getSchoolYear(): void;
 }
 
 export const statementsAbsencesController = ng.controller('StatementsAbsencesController',
@@ -57,12 +59,11 @@ export const statementsAbsencesController = ng.controller('StatementsAbsencesCon
                         statementAbsenceService: IStatementsAbsencesService, viescolaireService: IViescolaireService) {
 
             const vm: IViewModel = this;
-            const schoolYears: ISchoolYearPeriod = await viescolaireService.getSchoolYearDates(window.structure.id);
 
             /* Init filter */
             vm.filter = {
                 start_at: moment().startOf('day'),
-                end_at: moment(schoolYears.end_date),
+                end_at: moment().endOf('day'),
                 student_ids: [],
                 isTreated: false,
                 page: 0
@@ -74,7 +75,7 @@ export const statementsAbsencesController = ng.controller('StatementsAbsencesCon
             vm.statementsAbsences = undefined;
             vm.statementsAbsencesRequest = {} as IStatementsAbsencesRequest;
 
-            const load = (): void => {
+            const load = async (): Promise<void> => {
                 vm.statementsAbsences = new StatementsAbsences(window.structure.id);
 
                 /* Init search bar */
@@ -83,7 +84,16 @@ export const statementsAbsencesController = ng.controller('StatementsAbsencesCon
                 /* event */
                 vm.statementsAbsences.eventer.on('loading::true', () => $scope.safeApply());
                 vm.statementsAbsences.eventer.on('loading::false', () => $scope.safeApply());
+
+                /* Init filter end_date */
+                getSchoolYear();
+
                 getStatementsAbsences();
+            };
+
+            const getSchoolYear = async (): Promise<void> => {
+                const schoolYears: ISchoolYearPeriod = await viescolaireService.getSchoolYearDates(window.structure.id);
+                vm.filter.end_at = moment(schoolYears.end_date);
             };
 
             const getStatementsAbsences = async (): Promise<void> => {
