@@ -58,9 +58,19 @@ public class DefaultStatementAbsenceService implements StatementAbsenceService {
             }
 
             JsonObject result = new JsonObject()
-                    .put("page", page)
-                    .put("page_count", countResultsFuture.result())
-                    .put("all", listResultsFuture.result());
+                    .put("all", listResultsFuture.result())
+                    .put("page_count", countResultsFuture.result());
+
+            if(page != null) {
+                result.put("page", page);
+            } else {
+                if (limit != null) {
+                    result.put("limit", limit);
+                }
+                if (offset != null) {
+                    result.put("offset", offset);
+                }
+            }
 
             handler.handle(Future.succeededFuture(result));
         });
