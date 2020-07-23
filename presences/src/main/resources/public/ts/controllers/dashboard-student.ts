@@ -20,7 +20,7 @@ import {
 } from "../models";
 import {EVENT_RECOVERY_METHOD} from "@common/core/enum/event-recovery-method";
 import {IRouting} from "@common/model/Route";
-import {ROUTING_EVENTS, ROUTING_KEYS} from "@common/core/enum/routing-keys";
+import {ROUTING_KEYS} from "@common/core/enum/routing-keys";
 import {MobileUtils} from "@common/utils/mobile";
 
 declare let window: any;
@@ -286,10 +286,4 @@ export const dashboardStudentController = ng.controller('DashboardStudentControl
                     reloadType(type);
                 }
             });
-
-            $scope.$on(ROUTING_EVENTS.SWITCH, (event: IAngularEvent, routerKey: string) => {
-                console.log("router: ", routerKey);
-                console.log("vm.router: ", vm.routing);
-            });
-
         }]);

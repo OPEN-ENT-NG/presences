@@ -1,20 +1,79 @@
 .statements-widgets {
+  &-content {
+    display: flex;
+    flex-flow: row wrap;
+    justify-content: right;
+  }
+
   .statement {
     display: flex;
-    padding: 15px;
-    justify-content: space-around;
-    align-items: center;
-    height: 96px;
-    box-sizing: border-box;
+    height: 110px;
+    border-radius: 7px;
+    box-shadow: $box-shadow;
+    margin: 0 16px 16px 0;
+    width: 30%;
+    cursor: pointer;
 
-    > div {
-      color: $presences-grey;
-      font-size: 18px;
-      font-weight: bold;
+    &:hover {
+      background: $presences-main;
+      color: $presences-white;
     }
 
-    img {
-      height: 57px;
+    &-description {
+      padding: 8px 16px;
+      flex: 2;
+
+      &-title {
+        margin-bottom: 8px;
+      }
+
+      &-inside {
+        overflow: hidden;
+        white-space: nowrap;
+        text-overflow: ellipsis;
+        width: 150px;
+        display: inline-block;
+      }
+    }
+
+    &-date {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: space-between;
+      margin: 7px;
+      border-left: 1px solid $presences-grey-incident;
+
+      &-time {
+        display: flex;
+        flex-direction: column;
+      }
+    }
+  }
+
+  .empty-state {
+    display: flex;
+    align-items: center;
+    flex-direction: row;
+    width: 100%;
+    justify-content: center;
+
+    &-title {
+      width: auto;
+      color: $presences-middle-grey;
+      font-size: 18px;
+      text-align: center;
+    }
+
+    .tick-color {
+      &:first-child {
+        margin-right: 50px;
+      }
+
+      &:last-child {
+        margin-left: 50px;
+      }
     }
   }
 }

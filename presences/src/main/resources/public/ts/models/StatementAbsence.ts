@@ -2,8 +2,10 @@ import {Student} from "../models";
 import {LoadingCollection} from "@common/model";
 
 export interface IStatementsAbsencesResponse {
-    page: number;
-    page_count: number;
+    page?: number;
+    page_count?: number;
+    limit?: number;
+    offset?: number;
     all: Array<IStatementsAbsences>;
 }
 
@@ -14,6 +16,8 @@ export interface IStatementsAbsencesRequest {
     end_at?: string;
     isTreated?: boolean;
     page?: number;
+    limit?: number;
+    offset?: number;
 }
 
 export interface IStatementAbsenceBody {

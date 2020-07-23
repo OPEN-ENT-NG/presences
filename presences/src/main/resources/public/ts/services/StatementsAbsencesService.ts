@@ -35,9 +35,16 @@ export const statementsAbsencesService: IStatementsAbsencesService = {
                     student_ids += `&student_id=${student_id}`;
                 });
             }
-            const page: string = `&page=${statementsAbsences.page}`;
+            const page: string = (statementsAbsences.page || statementsAbsences.page === 0) ?
+                `&page=${statementsAbsences.page}` : ``;
 
-            const urlParams = `${structure_id}${start_at}${end_at}${student_ids}${isTreated}${page}`;
+            const limit: string = (statementsAbsences.limit || statementsAbsences.limit === 0) ?
+                `&limit=${statementsAbsences.limit}` : ``;
+
+            const offset: string = (statementsAbsences.offset || statementsAbsences.offset === 0) ?
+                `&offset=${statementsAbsences.offset}` : ``;
+
+            const urlParams = `${structure_id}${start_at}${end_at}${student_ids}${isTreated}${page}${limit}${offset}`;
             const {data} = await http.get(`/presences/statements/absences${urlParams}`);
             return data;
         } catch (err) {

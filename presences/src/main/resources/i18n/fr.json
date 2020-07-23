@@ -269,6 +269,7 @@
   "presences.statements.absence.form": "Déclarer une absence",
   "presences.statistics": "Statistiques",
   "presences.statistics.empty.state": "Aucune déclaration d'absence sur cette période",
+  "presences.statistics.empty.state.2": "Aucune déclaration pour le moment",
   "presences.statistics.manage.description": "Sélectionnez ici la façon de recencer les absences, retards et autres événements dans Présences. Ce comptage intervient dans Alertes, Statistiques, Publipostage, Bulletin",
   "presences.statistics.manage.event.inventory.method.load.error": "Comptage des événements: une erreur est survenue lors de la récupération du paramètrage",
   "presences.statistics.manage.event.inventory.method.save.confirm": "Comptage des événements: modification enregistrée avec succès",

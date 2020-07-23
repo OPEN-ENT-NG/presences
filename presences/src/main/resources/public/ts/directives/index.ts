@@ -15,3 +15,4 @@ export * from './events-card';
 export * from './statements-absence-form';
 export * from '@common/directives/presences-nav-bar';
 export * from '@common/directives/upload-file-change';
+export * from './widgets';

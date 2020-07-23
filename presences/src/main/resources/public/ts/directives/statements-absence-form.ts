@@ -159,6 +159,7 @@ export const StatementsAbsenceForm = ng.directive('statementsAbsenceForm', () =>
                 let response: AxiosResponse = await statementsAbsencesService.create(form);
                 if (response.status == 200 || response.status == 201) {
                     toasts.confirm(lang.translate('presences.statement.form.create.success'));
+                    vm.form.description = "";
                 } else {
                     toasts.warning('presences.statement.form.create.error');
                 }
