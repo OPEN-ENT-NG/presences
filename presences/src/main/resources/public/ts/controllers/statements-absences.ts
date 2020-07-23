@@ -1,8 +1,15 @@
 import {moment, ng, toasts} from 'entcore';
 import {DateUtils, StudentsSearch} from "@common/utils";
 import {SearchService} from "@common/services/SearchService";
-import {IStatementAbsenceBody, IStatementsAbsences, IStatementsAbsencesRequest, StatementsAbsences} from "../models";
+import {
+    ISchoolYearPeriod,
+    IStatementAbsenceBody,
+    IStatementsAbsences,
+    IStatementsAbsencesRequest,
+    StatementsAbsences
+} from "../models";
 import {IStatementsAbsencesService} from "../services";
+import {IViescolaireService, ViescolaireService} from "@common/services/ViescolaireService";
 
 declare let window: any;
 
@@ -45,15 +52,17 @@ interface IViewModel {
 }
 
 export const statementsAbsencesController = ng.controller('StatementsAbsencesController',
-    ['$scope', 'route', '$location', 'SearchService', 'StatementsAbsencesService',
-        function ($scope, route, $location, searchService: SearchService, statementAbsenceService: IStatementsAbsencesService) {
+    ['$scope', 'route', '$location', 'SearchService', 'StatementsAbsencesService', 'ViescolaireService',
+        async function ($scope, route, $location, searchService: SearchService,
+                        statementAbsenceService: IStatementsAbsencesService, viescolaireService: IViescolaireService) {
 
             const vm: IViewModel = this;
+            const schoolYears: ISchoolYearPeriod = await viescolaireService.getSchoolYearDates(window.structure.id);
 
             /* Init filter */
             vm.filter = {
-                start_at: moment().add(-1, 'M').startOf('day'),
-                end_at: moment().endOf('day'),
+                start_at: moment().startOf('day'),
+                end_at: moment(schoolYears.end_date),
                 student_ids: [],
                 isTreated: false,
                 page: 0
