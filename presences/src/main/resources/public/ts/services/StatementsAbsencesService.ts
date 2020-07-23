@@ -27,7 +27,7 @@ export const statementsAbsencesService: IStatementsAbsencesService = {
             const structure_id: string = `?structure_id=${statementsAbsences.structure_id}`;
             const start_at: string = `&start_at=${statementsAbsences.start_at}`;
             const end_at: string = `&end_at=${statementsAbsences.end_at}`;
-            const isTreated: string = `&is_treated=${statementsAbsences.isTreated}`;
+            const isTreated: string = statementsAbsences.isTreated ? '' : `&is_treated=${statementsAbsences.isTreated}`;
 
             let student_ids: string = '';
             if (statementsAbsences.student_ids) {

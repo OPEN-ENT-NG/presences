@@ -106,7 +106,7 @@ export const statementsAbsencesController = ng.controller('StatementsAbsencesCon
             const prepareRequest = (): void => {
                 vm.statementsAbsencesRequest.structure_id = vm.statementsAbsences.structure_id;
                 vm.statementsAbsencesRequest.start_at = DateUtils.format(vm.filter.start_at, DateUtils.FORMAT["YEAR-MONTH-DAY"]);
-                vm.statementsAbsencesRequest.end_at = DateUtils.format(vm.filter.end_at, DateUtils.FORMAT["YEAR-MONTH-DAY"]);
+                vm.statementsAbsencesRequest.end_at = DateUtils.format(DateUtils.setLastTime(vm.filter.end_at), DateUtils.FORMAT["YEAR-MONTH-DAY-HOUR-MIN-SEC"]);
                 vm.statementsAbsencesRequest.student_ids = vm.filter.student_ids;
                 vm.statementsAbsencesRequest.isTreated = vm.filter.isTreated;
                 vm.statementsAbsencesRequest.page = vm.filter.page;
