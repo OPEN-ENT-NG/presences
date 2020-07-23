@@ -34,6 +34,8 @@
   "presences.absence.form.edit": "Modifier",
   "presences.absence.form.edit.succeed": "Absence(s) Modifiée(s) avec succès",
   "presences.absence.form.title": "Informations sur l'absence",
+  "presences.absence.justified": "Absences justifiées",
+  "presences.absence.unjustified": "Absences non justifiées",
   "presences.absence.lateness": "Retards",
   "presences.absence.no.reason": "Sans motif",
   "presences.absence.period": "Période",

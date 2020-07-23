@@ -26,7 +26,8 @@ import {MobileUtils} from "@common/utils/mobile";
 declare let window: any;
 
 interface IEvent {
-    absences: string;
+    absencesUnjustified: string;
+    absencesJustified: string;
     lateness: string;
     incidents: string;
     punishments: string;
@@ -102,7 +103,8 @@ export const dashboardStudentController = ng.controller('DashboardStudentControl
             vm.types = EVENT_TYPES;
 
             vm.eventsTitle = {
-                absences: `${idiom.translate(`presences.alerts.type.ABSENCE`).toUpperCase()}`,
+                absencesUnjustified: `${idiom.translate(`presences.absence.unjustified`).toUpperCase()}`,
+                absencesJustified: `${idiom.translate(`presences.absence.justified`).toUpperCase()}`,
                 departure: `${idiom.translate(`presences.register.event_type.departure.early`).toUpperCase()}`,
                 forgottenNotebook: `${idiom.translate(`presences.forgotten.notebook`).toUpperCase()}`,
                 incidents: `${idiom.translate(`presences.alerts.type.INCIDENT`).toUpperCase()}`,
