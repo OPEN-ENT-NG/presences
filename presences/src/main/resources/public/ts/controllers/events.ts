@@ -187,7 +187,7 @@ export const eventsController = ng.controller('EventsController', ['$scope', '$r
         const isWidget = $route.current.action === 'dashboard';
         const vm: ViewModel = this;
         vm.filter = {
-            startDate: isWidget ? DateUtils.add(new Date(), -5, "d") : DateUtils.add(new Date(), -30, "d"),
+            startDate: isWidget ? DateUtils.add(new Date(), -5, "d") : DateUtils.add(new Date(), -7, "d"),
             endDate: isWidget ? DateUtils.add(new Date(), -1, "d") : moment().endOf('day').toDate(),
             students: [],
             classes: [],
