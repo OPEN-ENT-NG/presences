@@ -126,7 +126,7 @@ export const StatementsAbsenceForm = ng.directive('statementsAbsenceForm', () =>
         controller: function () {
             const vm: IViewModel = <IViewModel>this;
             vm.form = {
-                start_at: moment().add(-1, 'M').startOf('day'),
+                start_at: moment().endOf('day'),
                 end_at: moment().endOf('day'),
                 file: null,
             };
