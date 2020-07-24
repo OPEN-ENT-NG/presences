@@ -21,7 +21,7 @@ $presences-white: #ffffff;
 $presences-transparent-white: #e9ebef;
 $presences-middle-grey: #929292;
 $presences-grey-heavy-light: #7a7a7a;
-$presences-black: rgba(0, 0, 0, .87);
+$presences-black: rgba(68, 68, 68, .87);
 $presences-black-light: #555555;
 
 
@@ -121,6 +121,10 @@ body.presences, .sniplet.presences {
     text-overflow: ellipsis;
     overflow: hidden;
     white-space: nowrap;
+  }
+
+  .text-center {
+    text-align: center !important;
   }
 
   .radius {

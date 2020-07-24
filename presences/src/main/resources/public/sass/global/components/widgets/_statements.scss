@@ -2,9 +2,10 @@
   &-content {
     display: flex;
     flex-flow: row wrap;
-    justify-content: right;
+    justify-content: left;
   }
 
+  /* content each card css */
   .statement {
     display: flex;
     height: 110px;
@@ -27,12 +28,8 @@
         margin-bottom: 8px;
       }
 
+      /* description */
       &-inside {
-        overflow: hidden;
-        white-space: nowrap;
-        text-overflow: ellipsis;
-        width: 150px;
-        display: inline-block;
       }
     }
 
@@ -45,6 +42,10 @@
       margin: 7px;
       border-left: 1px solid $presences-grey-incident;
 
+      &.same {
+        justify-content: center;
+      }
+
       &-time {
         display: flex;
         flex-direction: column;
@@ -52,6 +53,7 @@
     }
   }
 
+  /* empty state css */
   .empty-state {
     display: flex;
     align-items: center;

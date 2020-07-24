@@ -159,6 +159,8 @@ public class DefaultStatementAbsenceService implements StatementAbsenceService {
             query += "AND treated_at " + (is_treated ? "IS NOT NULL " : "IS NULL ");
         }
 
+        if (!isCountQuery) query += "ORDER BY created_at DESC ";
+
         if (page != null) {
             query += "LIMIT " + Presences.PAGE_SIZE + " ";
             query += "OFFSET " + page * Presences.PAGE_SIZE + " ";

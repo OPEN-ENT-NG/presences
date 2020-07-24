@@ -1,0 +1,23 @@
+@mixin ellipsis-multiline($multiline) {
+  display: block;
+  display: -webkit-box;
+  margin: 0 auto;
+  -webkit-line-clamp: $multiline;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  /*! autoprefixer: off */
+  -webkit-box-orient: vertical;
+  /* autoprefixer: on */
+}
+
+.ellipsis {
+  text-overflow: ellipsis;
+  overflow: hidden;
+  white-space: nowrap;
+}
+
+.ellipsis-multiline {
+  &-three {
+    @include ellipsis-multiline(3);
+  }
+}

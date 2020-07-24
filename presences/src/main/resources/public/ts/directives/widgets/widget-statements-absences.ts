@@ -50,12 +50,12 @@ export const WidgetStatementsAbsences = ng.directive('widgetStatementsAbsences',
                                 <div class="statement-description-title">
                                     <span>[[statement.student.name]], [[statement.student.className]]</span>
                                 </div>
-                                <span class="statement-description-inside">[[statement.description]]</span>
+                                <span class="statement-description-inside ellipsis-multiline-three">[[statement.description]]</span>
                             </div>
                             
                             
                             <!-- date -->
-                            <div class="statement-date">
+                            <div class="statement-date" data-ng-class="{ same: vm.isSameDate(statement) }">
                             
                                 <!-- beginning of start date OR current date -->
                                 <div class="statement-date-time">
@@ -86,7 +86,7 @@ export const WidgetStatementsAbsences = ng.directive('widgetStatementsAbsences',
                         vm.filter = {
                             structure_id: vm.statementsAbsences.structure_id,
                             start_at: DateUtils.format(moment(), DateUtils.FORMAT["YEAR-MONTH-DAY"]),
-                            end_at: DateUtils.format(moment(), DateUtils.FORMAT["YEAR-MONTH-DAY"]),
+                            end_at: DateUtils.format(DateUtils.setLastTime(moment()), DateUtils.FORMAT["YEAR-MONTH-DAY-HOUR-MIN-SEC"]),
                             isTreated: false,
                             limit: 6
                         }

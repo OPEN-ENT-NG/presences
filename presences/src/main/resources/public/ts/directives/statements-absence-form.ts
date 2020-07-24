@@ -126,8 +126,9 @@ export const StatementsAbsenceForm = ng.directive('statementsAbsenceForm', () =>
         controller: function () {
             const vm: IViewModel = <IViewModel>this;
             vm.form = {
-                start_at: moment().startOf('day'),
-                end_at: moment().endOf('day'),
+                start_at: moment().startOf('day').add(8,"hours"),
+                end_at: moment().startOf('day').add(17, 'hours'),
+                description: "",
                 file: null,
             };
             vm.date = {
@@ -160,6 +161,7 @@ export const StatementsAbsenceForm = ng.directive('statementsAbsenceForm', () =>
                 if (response.status == 200 || response.status == 201) {
                     toasts.confirm(lang.translate('presences.statement.form.create.success'));
                     vm.form.description = "";
+                    $scope.$apply();
                 } else {
                     toasts.warning('presences.statement.form.create.error');
                 }
