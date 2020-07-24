@@ -144,7 +144,7 @@ public class CourseController extends ControllerHelper {
                         if (subjects.isEmpty()) {
                             subjectName = course.containsKey("exceptionnal") ? course.getString("exceptionnal") : course.getString("subjectId");
                         } else {
-                            subjectName = subjects.getJsonObject(0).getString("externalId");
+                            subjectName = subjects.getJsonObject(0).getString("name");
                         }
                         String startHour = DateHelper.getDateString(start, "kk'h'mm");
                         String endHour = DateHelper.getDateString(end, "kk'h'mm");
