@@ -241,19 +241,19 @@ public class DefaultEventStudentService implements EventStudentService {
         switch (type) {
             case UNJUSTIFIED:
                 eventService.getEventsByStudent(1, Collections.singletonList(studentId), structureId,
-                        false, new ArrayList<>(), null, start, end, true, null, limit, offset, handler);
+                        false, new ArrayList<>(), null, start, end, true, null, limit, offset, null, handler);
                 break;
             case JUSTIFIED:
                 eventService.getEventsByStudent(1, Collections.singletonList(studentId), structureId,
-                        true, new ArrayList<>(), null, start, end, true, null, limit, offset, handler);
+                        true, new ArrayList<>(), null, start, end, true, null, limit, offset, null, handler);
                 break;
             case LATENESS:
                 eventService.getEventsByStudent(2, Collections.singletonList(studentId), structureId,
-                        null, new ArrayList<>(), null, start, end, true, null, limit, offset, handler);
+                        null, new ArrayList<>(), null, start, end, true, null, limit, offset, null, handler);
                 break;
             case DEPARTURE:
                 eventService.getEventsByStudent(3, Collections.singletonList(studentId), structureId,
-                        null, new ArrayList<>(), null, start, end, true, null, limit, offset, handler);
+                        null, new ArrayList<>(), null, start, end, true, null, limit, offset, null, handler);
                 break;
             default:
                 //There is no default case

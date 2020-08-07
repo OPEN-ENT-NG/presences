@@ -52,15 +52,15 @@ public class DefaultMassmailingService implements MassmailingService {
         switch (type) {
             case JUSTIFIED:
                 Presences.getInstance().getCountEventByStudent(EventType.ABSENCE.getType(), students, structure, true, startAt,
-                        reasons, massmailed, startDate, endDate, noReasons, handler);
+                        reasons, massmailed, startDate, endDate, noReasons, null, handler);
                 break;
             case UNJUSTIFIED:
                 Presences.getInstance().getCountEventByStudent(EventType.ABSENCE.getType(), students, structure, false, startAt,
-                        reasons, massmailed, startDate, endDate, noReasons, handler);
+                        reasons, massmailed, startDate, endDate, noReasons, null, handler);
                 break;
             case LATENESS:
                 Presences.getInstance().getCountEventByStudent(EventType.LATENESS.getType(), students, structure, null, startAt,
-                        new ArrayList<>(), massmailed, startDate, endDate, noReasons, handler);
+                        new ArrayList<>(), massmailed, startDate, endDate, noReasons, null, handler);
                 break;
             default:
                 handler.handle(new Either.Left<>("[Massmailing@DefaultMassmailingService] Unknown Massmailing type"));

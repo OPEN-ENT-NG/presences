@@ -1,0 +1,26 @@
+    {
+      "name": "fr.openent~statistics-presences~0.10-SNAPSHOT",
+      "config": {
+        "main" : "fr.openent.statistics_presences.StatisticsPresences",
+        "port" : 8066,
+        "app-name" : "Statistics-presences",
+    	"app-address" : "/statistics-presences",
+    	"path-prefix" : "statistics-presences",
+    	"app-icon" : "Statistics-presences-large",
+        "host": "${host}",
+        "ssl" : $ssl,
+        "auto-redeploy": false,
+        "userbook-host": "${host}",
+        "integration-mode" : "HTTP",
+        "app-registry.port" : 8012,
+        "mode" : "${mode}",
+        "sql": true,
+        "db-schema": "presences_statistics",
+        "entcore.port" : 8009,
+        "processing-cron": "0 0/30 * * * ? *",
+        "report-recipients": [],
+        "indicators": [
+            "Global"
+        ]
+      }
+    }

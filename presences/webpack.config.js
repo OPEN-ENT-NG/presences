@@ -24,7 +24,8 @@ module.exports = {
         alias: {
             "@common": path.resolve(__dirname, '../common/src/main/resources/ts'),
             "@incidents": path.resolve(__dirname, '../incidents/src/main/resources/public/ts'),
-            "@massmailing": path.resolve(__dirname, '../massmailing/src/main/resources/public/ts')
+            "@massmailing": path.resolve(__dirname, '../massmailing/src/main/resources/public/ts'),
+            "@statistics": path.resolve(__dirname, '../statistics-presences/src/main/resources/public/ts')
         }
     },
     devtool: "source-map",

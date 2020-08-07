@@ -1,0 +1,39 @@
+.global-indicator {
+  font-size: 16px;
+
+  &.table {
+    position: relative;
+    padding-top: 45px;
+
+    .thead {
+      position: absolute;
+      width: 100%;
+      top: 0;
+    }
+
+    .th.student, .td.student {
+      flex: 1;
+    }
+  }
+
+  .indicator-value:nth-child(odd) {
+    background-color: $statistics-presences-light-background;
+  }
+
+  .max-value {
+    background-color: $statistics-presences-main !important;
+    color: $white;
+    font-weight: bold;
+  }
+
+  .tbody.count {
+    font-size: 18px;
+    font-weight: bold;
+    background-color: $white;
+
+    .student-count {
+      flex: 2;
+      padding: 10px 20px;
+    }
+  }
+}

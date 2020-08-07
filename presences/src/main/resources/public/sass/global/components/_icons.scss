@@ -54,6 +54,11 @@ i {
     content: "\fab8";
   }
 
+  &.statistics-presences::before {
+    font-family: 'material-icons';
+    content: "\f128";
+  }
+
   &.testimony::before {
     font-family: 'material-icons';
     content: "\f362";

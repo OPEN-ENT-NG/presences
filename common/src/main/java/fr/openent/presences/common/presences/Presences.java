@@ -25,7 +25,7 @@ public class Presences {
     }
 
     public void getCountEventByStudent(Integer eventType, List<String> students, String structure, Boolean justified, Integer startAt, List<Integer> reasonsId, Boolean massmailed,
-                                       String startDate, String endDate, boolean noReasons, Handler<Either<String, JsonArray>> handler) {
+                                       String startDate, String endDate, boolean noReasons, Boolean regularized, Handler<Either<String, JsonArray>> handler) {
         JsonObject action = new JsonObject()
                 .put("eventType", eventType)
                 .put("justified", justified)
@@ -36,13 +36,14 @@ public class Presences {
                 .put("massmailed", massmailed)
                 .put("startDate", startDate)
                 .put("endDate", endDate)
+                .put("regularized", regularized)
                 .put("noReasons", noReasons)
                 .put("action", "get-count-event-by-student");
         eb.send(address, action, MessageResponseHandler.messageJsonArrayHandler(handler));
     }
 
     public void getEventsByStudent(Integer eventType, List<String> students, String structure, Boolean justified, List<Integer> reasonsId, Boolean massmailed,
-                                   String startDate, String endDate, Boolean noReasons, String recoveryMethod, Handler<Either<String, JsonArray>> handler) {
+                                   String startDate, String endDate, Boolean noReasons, String recoveryMethod, Boolean regularized, Handler<Either<String, JsonArray>> handler) {
         JsonObject action = new JsonObject()
                 .put("eventType", eventType)
                 .put("justified", justified)
@@ -54,8 +55,15 @@ public class Presences {
                 .put("endDate", endDate)
                 .put("noReasons", noReasons)
                 .put("recoveryMethod", recoveryMethod)
+                .put("regularized", regularized)
                 .put("action", "get-events-by-student");
         eb.send(address, action, MessageResponseHandler.messageJsonArrayHandler(handler));
+    }
+
+
+    public void getEventsByStudent(Integer eventType, List<String> students, String structure, Boolean justified, List<Integer> reasonsId, Boolean massmailed,
+                                   String startDate, String endDate, Boolean noReasons, String recoveryMethod, Handler<Either<String, JsonArray>> handler) {
+        getEventsByStudent(eventType, students, structure, justified, reasonsId, massmailed, startDate, endDate, noReasons, recoveryMethod, null, handler);
     }
 
     public void getReasons(String structure, Handler<Either<String, JsonArray>> handler) {

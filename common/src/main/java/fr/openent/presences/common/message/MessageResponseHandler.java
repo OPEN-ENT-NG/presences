@@ -17,7 +17,7 @@ public class MessageResponseHandler {
             if (event.succeeded() && "ok".equals(event.result().body().getString("status"))) {
                 handler.handle(new Either.Right<>(event.result().body().getJsonArray("result")));
             } else {
-                handler.handle(new Either.Left<>(event.cause().getMessage()));
+                handler.handle(new Either.Left<>(event.result().body().getString("message")));
             }
         };
     }

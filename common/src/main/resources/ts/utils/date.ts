@@ -2,7 +2,6 @@ import {moment} from 'entcore';
 import {DurationInputArg1, DurationInputArg2} from 'moment';
 
 export class DateUtils {
-
     static FORMAT = {
         'YEAR-MONTH-DAY-HOUR-MIN-SEC': 'YYYY-MM-DD HH:mm:ss',
         'YEAR/MONTH/DAY-HOUR-MIN-SEC': 'YYYY/MM/DD HH:mm:ss',

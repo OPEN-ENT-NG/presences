@@ -1,0 +1,78 @@
+<lightbox show="vm.filter.show" on-close="vm.filter.show = false">
+    <section class="head massmailing-lightbox-header">
+        <h3>
+            <i18n>statistics-presences.parameters</i18n>
+        </h3>
+    </section>
+    <section class="massmailing-lightbox-body body lightbox-form statistics-presences-filters">
+        <div class="row vertical-spacing">
+            <h4>
+                <i18n>statistics-presences.filters.types</i18n>
+            </h4>
+            <div class="chips">
+                <div class="chip" ng-repeat="filterType in vm.filter.filterTypes"
+                     ng-class="{ selected: filterType.selected() }"
+                     data-ng-click="filterType.select(!filterType.selected()); filterType.process(filterType.selected())">
+                    <span>[[idiom.translate('statistics-presences.indicator.filter.type.' + filterType.name())]]</span>
+                </div>
+            </div>
+        </div>
+        <div class="row vertical-spacing">
+            <h4 class="row">
+                <i18n class="cell">massmailing.filters.reasons</i18n>
+            </h4>
+            <div class="chips">
+                <div class="chip"
+                     ng-repeat="reason in vm.reasons track by $index|orderBy:'label'"
+                     ng-class="{ selected: vm.indicator._factoryFilter.reasonsMap[reason.id] }"
+                     data-ng-click="vm.indicator._factoryFilter.reasonsMap[reason.id]  = !vm.indicator._factoryFilter.reasonsMap[reason.id]">
+                    <span class="no-style">[[reason.label]]</span>
+                </div>
+            </div>
+        </div>
+        <div class="row vertical-spacing" ng-if="vm.indicator.filterEnabled('FROM') !== null">
+            <h4 ng-class="{disabled: !vm.indicator.filter('FROM').selected}">
+                <label class="checkbox">
+                    <input type="checkbox" data-ng-model="vm.indicator.filter('FROM').selected">
+                    <span><i18n>statistics-presences.display.from</i18n></span>
+                </label>
+                <input type="number" data-ng-disabled="!vm.indicator.filter('FROM').selected"
+                       data-ng-model="vm.indicator.filter('FROM').value" class="horizontal-margin-small"/>
+                <i18n>statistics-presences.events</i18n>
+            </h4>
+        </div>
+
+        <div class="row vertical-spacing" ng-if="vm.indicator.filterEnabled('TO') !== null">
+            <h4 ng-class="{disabled: !vm.indicator.filter('TO').selected}">
+                <label class="checkbox">
+                    <input type="checkbox" data-ng-model="vm.indicator.filter('TO').selected">
+                    <span><i18n>statistics-presences.display.to</i18n></span>
+                </label>
+                <input type="number" data-ng-disabled="!vm.indicator.filter('TO').selected"
+                       data-ng-model="vm.indicator.filter('TO').value" class="horizontal-margin-small"/>
+                <i18n>statistics-presences.events</i18n>
+            </h4>
+        </div>
+
+        <div class="row vertical-spacing" ng-if="vm.indicator.filterEnabled('HOUR_DETAIL') !== null">
+            <h4 ng-class="{disabled: !vm.indicator.filter('HOUR_DETAIL').selected}">
+                <label class="checkbox">
+                    <input type="checkbox" data-ng-model="vm.indicator.filter('HOUR_DETAIL').selected">
+                    <span><i18n>statistics-presences.display.hour_detail</i18n></span>
+                </label>
+            </h4>
+        </div>
+    </section>
+    <section class="massmailing-lightbox-footer">
+        <div class="row horizontal-spacing">
+            <div class="massmailing-lightbox-footer-submit twelve cell">
+                <button class="right-magnet" data-ng-click="vm.resetIndicator()">
+                    <i18n>massmailing.validate</i18n>
+                </button>
+                <button class="right-magnet cancel" data-ng-click="vm.filter.show = false">
+                    <i18n>massmailing.cancel</i18n>
+                </button>
+            </div>
+        </div>
+    </section>
+</lightbox>

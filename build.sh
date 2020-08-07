@@ -106,6 +106,20 @@ massmailing:buildGradle () {
   docker-compose run --rm -u "$USER_UID:$GROUP_GID" gradle gradle :massmailing:shadowJar :massmailing:install :massmailing:publishToMavenLocal
 }
 
+statistics () {
+  case `uname -s` in
+    MINGW*)
+      docker-compose run --rm -u "$USER_UID:$GROUP_GID" node sh -c "npm install --no-bin-links && node_modules/gulp/bin/gulp.js build --module=statistics-presences"
+      ;;
+    *)
+      docker-compose run --rm -u "$USER_UID:$GROUP_GID" node sh -c "npm install && node_modules/gulp/bin/gulp.js build --module=statistics-presences"
+  esac
+  docker-compose run --rm -u "$USER_UID:$GROUP_GID" gradle gradle :statistics:shadowJar :statistics:install :statistics:publishToMavenLocal
+}
+
+statistics:buildGradle () {
+  docker-compose run --rm -u "$USER_UID:$GROUP_GID" gradle gradle :statistics:shadowJar :statistics:install :statistics:publishToMavenLocal
+}
 
 for param in "$@"
 do
@@ -137,6 +151,9 @@ do
     massmailing)
       massmailing
       ;;
+    statistics)
+      statistics
+      ;;
     presences:buildGradle)
       presences:buildGradle
       ;;
@@ -145,6 +162,9 @@ do
       ;;
     massmailing:buildGradle)
       massmailing:buildGradle
+      ;;
+    statistics:buildGradle)
+      statistics:buildGradle
       ;;
     *)
       echo "Invalid argument : $param"

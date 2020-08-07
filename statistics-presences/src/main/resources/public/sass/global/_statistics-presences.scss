@@ -1,0 +1,8 @@
+$statistics-presences-main: #ffb600;
+$statistics-presences-middle-grey: #929292;
+$statistics-presences-light-background: #f7f6f6;
+
+body.statistics-presences {
+  @import "components/index";
+  @import "indicators/index";
+}

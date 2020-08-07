@@ -1,1 +1,1 @@
-include 'common', 'presences', 'incidents', 'massmailing'
+include 'common', 'presences', 'incidents', 'massmailing', 'statistics-presences'

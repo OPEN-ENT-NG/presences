@@ -2,6 +2,7 @@ import {Me, model} from 'entcore';
 import rights from '../rights';
 import incidentsRights from '@incidents/rights'
 import massmailingRights from '@massmailing/rights';
+import statisticsRights from '@statistics/rights';
 import {PreferencesUtils} from "@common/utils";
 
 declare let window: any;
@@ -63,6 +64,10 @@ export const navigation = {
             const res = window.location.hash.split('/');
             return (res !== null && res.length > 1) ? res[1] : '';
         },
+        getCurrentPathState: () => {
+            const res = window.location.pathname.split('/');
+            return (res !== null && res.length > 1) ? res[1] : '';
+        },
         hasRight: (right) => {
             return model.me.hasWorkflow(rights.workflow[right]);
         },
@@ -71,6 +76,9 @@ export const navigation = {
         },
         hasMassmailingRight: (right) => {
             return model.me.hasWorkflow(massmailingRights.workflow[right]);
+        },
+        hasStatisticsRight: right => {
+            return model.me.hasWorkflow(statisticsRights.workflow[right]);
         }
     }
 };

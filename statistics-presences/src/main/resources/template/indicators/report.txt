@@ -1,0 +1,16 @@
+Rapport de calcul des indicateurs du {{#datetime}}{{date}}{{/datetime}}
+
+Début: {{#datetime}}{{start}}{{/datetime}}
+Fin: {{#datetime}}{{end}}{{/datetime}}
+Durée: {{runTime}}
+
+{{#indicators}}
+============================== {{name}} ==============================
+Durée: {{duration}}
+Enregistrement réussi: {{saved}}
+Erreur(s): {{errorCount}}
+
+{{#errors}}
+{{.}}\n
+{{/errors}}
+{{/indicators}}

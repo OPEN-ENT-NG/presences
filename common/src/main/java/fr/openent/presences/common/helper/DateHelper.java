@@ -212,7 +212,7 @@ public class DateHelper {
             return date;
         }
     }
-
+    
     /**
      * Get Simple date as string, use in case your date format is not standard
      *

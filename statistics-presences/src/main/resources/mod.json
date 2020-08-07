@@ -1,0 +1,11 @@
+{
+  "main": "fr.openent.statistics_presences.StatisticsPresences",
+  "port": 8066,
+  "app-name": "Statistics-presences",
+  "app-address": "/statistics-presences",
+  "app-icon": "statistics-presences-large",
+  "app-displayName": "Statistics-presences",
+  "mode": "dev",
+  "entcore.port": 8090,
+  "auto-redeploy": false
+}

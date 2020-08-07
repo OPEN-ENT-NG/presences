@@ -28,6 +28,9 @@
       ],
       "@massmailing/*": [
         "massmailing/src/main/resources/public/ts/*"
+      ],
+      "@statistics/*": [
+        "statistics-presences/src/main/resources/public/ts/*"
       ]
     }
   },

@@ -2,7 +2,7 @@ import {appPrefix, Behaviours, idiom} from "entcore";
 
 export class DependencyManager {
     private appPrefix: string;
-    private mods: string[] = ['presences', 'incidents', 'massmailing', 'viescolaire'];
+    private mods: string[] = ['presences', 'incidents', 'massmailing', 'viescolaire', 'statistics-presences'];
 
     constructor() {
         this.appPrefix = appPrefix;

@@ -1,0 +1,19 @@
+.filter-row {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+.statistics-presences-filters {
+  h4.disabled {
+    color: $statistics-presences-middle-grey !important;
+  }
+
+  h4 {
+    input[type="number"] {
+      width: 30px;
+      text-align: center;
+    }
+  }
+}
