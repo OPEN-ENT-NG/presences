@@ -4,10 +4,11 @@ import {DateUtils} from '@common/utils'
 import {LoadingCollection} from '@common/model'
 import {IncidentType, Partner, Place, ProtagonistType, Seriousness} from "../../services";
 import {model, moment} from "entcore";
+import {User} from "@common/model/User";
 
 export interface Incident {
     id: number;
-    owner: string;
+    owner: User;
     structureId: string;
     structure_id?: string;
 
@@ -45,7 +46,9 @@ export class Incident {
 
     constructor(structureId) {
         this.id = null;
-        this.owner = model.me.userId;
+        this.owner = {
+            id: model.me.userId
+        };
         this.structureId = structureId;
 
         this.date = moment(new Date()).set({second: 0, millisecond: 0}).toDate();

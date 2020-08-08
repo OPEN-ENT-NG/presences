@@ -3,29 +3,41 @@ package fr.openent.incidents.service.impl;
 import fr.openent.incidents.Incidents;
 import fr.openent.incidents.service.IncidentsService;
 import fr.openent.presences.common.helper.FutureHelper;
+import fr.openent.presences.common.service.UserService;
+import fr.openent.presences.common.service.impl.DefaultUserService;
 import fr.wseduc.webutils.Either;
+import io.vertx.core.AsyncResult;
 import io.vertx.core.CompositeFuture;
 import io.vertx.core.Future;
 import io.vertx.core.Handler;
 import io.vertx.core.eventbus.EventBus;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
+import io.vertx.core.logging.Logger;
+import io.vertx.core.logging.LoggerFactory;
 import org.entcore.common.neo4j.Neo4j;
 import org.entcore.common.neo4j.Neo4jResult;
 import org.entcore.common.service.impl.SqlCrudService;
 import org.entcore.common.sql.Sql;
 import org.entcore.common.sql.SqlResult;
 
-import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 public class DefaultIncidentsService extends SqlCrudService implements IncidentsService {
+    private static final Logger log = LoggerFactory.getLogger(DefaultIncidentsService.class);
+
     private final static String DATABASE_TABLE = "incident";
+
     private EventBus eb;
+    private UserService userService;
 
     public DefaultIncidentsService(EventBus eb) {
         super(Incidents.dbSchema, DATABASE_TABLE);
         this.eb = eb;
+        this.userService = new DefaultUserService();
     }
 
     @Override
@@ -40,7 +52,21 @@ public class DefaultIncidentsService extends SqlCrudService implements Incidents
                 for (int i = 0; i < arrayIncidents.size(); i++) {
                     toFormatJson(arrayIncidents.getJsonObject(i));
                 }
-                getUsersInfo(arrayIncidents, handler);
+
+
+                Future<JsonArray> protagonistsFuture = Future.future();
+                Future<JsonArray> ownersFuture = Future.future();
+
+                setProtagonists(arrayIncidents, protagonistsFuture);
+                setOwners(arrayIncidents, ownersFuture);
+
+                CompositeFuture.all(protagonistsFuture, ownersFuture).setHandler(resultUsers -> {
+                   if (resultUsers.failed()) {
+                       handler.handle(new Either.Left<>(resultUsers.cause().getMessage()));
+                       return;
+                   }
+                   handler.handle(new Either.Right<>(arrayIncidents));
+                });
             } else {
                 handler.handle(new Either.Left<>(result.left().getValue()));
             }
@@ -226,9 +252,9 @@ public class DefaultIncidentsService extends SqlCrudService implements Incidents
      * Get user infos from neo4j
      *
      * @param arrayIncidents incidents []
-     * @param handler        handler
+     * @param future        future
      */
-    private void getUsersInfo(JsonArray arrayIncidents, Handler<Either<String, JsonArray>> handler) {
+    private void setProtagonists(JsonArray arrayIncidents, Future<JsonArray> future) {
         JsonArray protagonists = new JsonArray();
         for (int i = 0; i < arrayIncidents.size(); i++) {
             JsonArray protagonist = arrayIncidents.getJsonObject(i).getJsonArray("protagonists");
@@ -258,11 +284,39 @@ public class DefaultIncidentsService extends SqlCrudService implements Incidents
                         }
                     }
                 }
-                handler.handle(new Either.Right<>(arrayIncidents));
+                future.complete(arrayIncidents);
             } else {
-                handler.handle(new Either.Left<>("Failed to query protagonist info"));
+                future.fail("Failed to query protagonist info");
             }
         }));
+    }
+
+    private void setOwners(JsonArray arrayIncidents, Future<JsonArray> future) {
+        List<String> ownerIds = ((List<JsonObject>) arrayIncidents.getList())
+                .stream()
+                .map(res -> res.getString("owner"))
+                .collect(Collectors.toList());
+
+        userService.getUsers(ownerIds, resUsers -> {
+            if (resUsers.isLeft()) {
+                String message = "[Incidents@DefaultIncidentsService::setOwner] Failed to get Owners";
+                log.error(message);
+                future.fail(message);
+                return;
+            }
+
+            Map<String, JsonObject> ownerMap = new HashMap<>();
+            resUsers.right().getValue().forEach(oStudent -> {
+                JsonObject owner = (JsonObject) oStudent;
+                ownerMap.put(owner.getString("id"), owner);
+            });
+
+            arrayIncidents.forEach(oRes -> {
+                JsonObject res = (JsonObject) oRes;
+                res.put("owner", ownerMap.get(res.getString("owner")));
+            });
+            future.complete(arrayIncidents);
+        });
     }
 
     @Override
