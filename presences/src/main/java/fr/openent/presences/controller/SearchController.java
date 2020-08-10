@@ -1,7 +1,6 @@
 package fr.openent.presences.controller;
 
 import fr.openent.presences.Presences;
-import fr.openent.presences.common.security.SearchRight;
 import fr.openent.presences.common.service.GroupService;
 import fr.openent.presences.common.service.UserService;
 import fr.openent.presences.common.service.impl.DefaultGroupService;
@@ -95,7 +94,7 @@ public class SearchController extends ControllerHelper {
     @Get("/search/groups")
     @ApiDoc("Search for groups")
     @SecuredAction(value = "", type = ActionType.RESOURCE)
-    @ResourceFilter(SearchRight.class)
+    @ResourceFilter(SearchStudents.class)
     public void searchGroups(HttpServerRequest request) {
         if (request.params().contains("q") && !"".equals(request.params().get("q").trim())
                 && request.params().contains("field")
