@@ -2,6 +2,7 @@
   "empty": "Aucun",
   "incident.date.from": "Du",
   "incident.date.to": "Au",
+  "incident.declared.by": "Déclaré par",
   "incident.init.incident.partner.0": "Rectorat",
   "incident.init.incident.partner.1": "Police",
   "incident.init.incident.partner.2": "Parquet",
