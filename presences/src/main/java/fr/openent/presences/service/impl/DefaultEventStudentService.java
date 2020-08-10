@@ -295,7 +295,8 @@ public class DefaultEventStudentService implements EventStudentService {
     }
 
     // If absences events are recovered by Half Days or Days, map start_date and end_date events to correspond to it.
-    private void addAbsencesByRecovery(JsonObject sorted_events, JsonObject eventsData, JsonObject settings, String type, String recovery, Map reasons) throws ParseException {
+    private void addAbsencesByRecovery(JsonObject sorted_events, JsonObject eventsData, JsonObject settings,
+                                       String type, String recovery, Map reasons) throws ParseException {
         JsonArray slots = settings.getJsonArray("slots");
 
         String halfDay = settings.getString("end_of_half_day");
@@ -318,13 +319,13 @@ public class DefaultEventStudentService implements EventStudentService {
                 start.setTime(start.getTime() + halfTime);
                 end.setTime(end.getTime() + endLastSlotTime);
             }
-            eventsData.put("start_date", start.toString());
-            eventsData.put("end_date", end.toString());
+            eventsData.put("start_date", DateHelper.getDateString(start.toInstant().toString(), DateHelper.MONGO_FORMAT));
+            eventsData.put("end_date", DateHelper.getDateString(end.toInstant().toString(), DateHelper.MONGO_FORMAT));
         } else { // For DAY start_date is start of day and end_date is end of day
             start.setTime(start.getTime() + startFirstSlotTime);
             end.setTime(end.getTime() + endLastSlotTime);
-            eventsData.put("start_date", start.toString());
-            eventsData.put("end_date", end.toString());
+            eventsData.put("start_date", DateHelper.getDateString(start.toInstant().toString(), DateHelper.MONGO_FORMAT));
+            eventsData.put("end_date", DateHelper.getDateString(end.toInstant().toString(), DateHelper.MONGO_FORMAT));
         }
         addReasonToRecoveredAbsence(eventsData, reasons);
         eventsData.remove("events");
