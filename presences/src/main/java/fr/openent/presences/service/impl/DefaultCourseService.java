@@ -94,7 +94,6 @@ public class DefaultCourseService implements CourseService {
                     try {
 
                         object = courses.getJsonObject(i);
-                        LOGGER.info(object.getString("_id"));
                         object.remove("startCourse");
                         object.remove("endCourse");
                         object.remove("is_periodic");
