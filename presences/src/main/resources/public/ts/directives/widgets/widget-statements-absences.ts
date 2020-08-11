@@ -115,7 +115,7 @@ export const WidgetStatementsAbsences = ng.directive('widgetStatementsAbsences',
                         return DateUtils.format(statement.start_at, DateUtils.FORMAT["DAY-MONTH-YEAR"]) ===
                         DateUtils.format(statement.end_at, DateUtils.FORMAT["DAY-MONTH-YEAR"]) ?
                             `${idiom.translate(`presences.the`)}` :
-                            `${idiom.translate(`presences.by`)}`
+                            `${idiom.translate(`presences.from`)}`
                     };
 
                     vm.redirectCalendar = (statementsAbsence: IStatementsAbsences): void => {
