@@ -36,7 +36,7 @@ public class Punishment extends Model {
 
 
     public Punishment() {
-        table = "punishment";
+        table = "presences.punishments";
 
         fillables.put("id", Arrays.asList("UPDATE", "mandatory"));
         fillables.put("description", Arrays.asList("CREATE", "UPDATE"));
