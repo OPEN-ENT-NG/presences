@@ -23,10 +23,16 @@ public class DefaultSearchService implements SearchService {
                 "OR toLower(u.lastName) CONTAINS '" + query.toLowerCase() + "' " +
                 "RETURN distinct u.id as id, (u.lastName + ' ' + u.firstName) as displayName, 'USER' as type, c.id as groupId, c.name as groupName " +
                 "UNION " +
+                // MATCHING Functional Group
                 "MATCH (g)-[:BELONGS|:DEPENDS]->(s:Structure {id:{structureId}}) " +
                 "WHERE toLower(g.name) CONTAINS '" + query.toLowerCase() + "' " +
                 "AND (g:Class OR g:FunctionalGroup) " +
-                "RETURN g.id as id, g.name as displayName, 'GROUP' as type, g.id as groupId, g.name as groupName ";
+                "RETURN g.id as id, g.name as displayName, 'GROUP' as type, g.id as groupId, g.name as groupName " +
+                // MATCHING Manual Group
+                "UNION " +
+                "MATCH (User {profiles:['Student']})-[:IN]->(g:ManualGroup)-[:BELONGS|:DEPENDS]->(s:Structure {id: {structureId}}) " +
+                "WHERE toLower(g.name) CONTAINS '" + query.toLowerCase() + "' " +
+                "RETURN DISTINCT g.id as id, g.name as displayName, 'GROUP' as type, g.id as groupId, g.name as groupName ";
 
         JsonObject params = new JsonObject()
                 .put("structureId", structureId);
