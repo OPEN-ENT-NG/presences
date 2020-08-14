@@ -27,17 +27,17 @@ import static org.entcore.common.http.response.DefaultResponseHandler.arrayRespo
 
 public class SearchController extends ControllerHelper {
 
-    private EventBus eb;
-    private GroupService groupService;
-    private SearchService searchService;
-    private UserService userService;
+    private final EventBus eb;
+    private final GroupService groupService;
+    private final SearchService searchService;
+    private final UserService userService;
 
 
     public SearchController(EventBus eb) {
         super();
         this.eb = eb;
         this.groupService = new DefaultGroupService(eb);
-        this.searchService = new DefaultSearchService();
+        this.searchService = new DefaultSearchService(eb);
         this.userService = new DefaultUserService();
     }
 
@@ -96,20 +96,15 @@ public class SearchController extends ControllerHelper {
     @SecuredAction(value = "", type = ActionType.RESOURCE)
     @ResourceFilter(SearchStudents.class)
     public void searchGroups(HttpServerRequest request) {
-        if (request.params().contains("q") && !"".equals(request.params().get("q").trim())
+        if (request.params().contains("q")
+                && !"".equals(request.params().get("q").trim())
                 && request.params().contains("field")
                 && request.params().contains("structureId")) {
             String query = request.getParam("q");
             List<String> fields = request.params().getAll("field");
             String structure_id = request.getParam("structureId");
 
-            JsonObject action = new JsonObject()
-                    .put("action", "groupe.search")
-                    .put("q", query)
-                    .put("fields", new JsonArray(fields))
-                    .put("structureId", structure_id);
-
-            callViescolaireEventBus(action, request);
+            searchService.searchGroups(query, fields, structure_id, arrayResponseHandler(request));
         } else {
             badRequest(request);
         }
@@ -150,12 +145,12 @@ public class SearchController extends ControllerHelper {
         eb.send("viescolaire", action, handlerToAsyncHandler(event -> {
             JsonObject body = event.body();
             if (!"ok".equals(body.getString("status"))) {
-                log.error("[Presences@SearchController] Failed to search for user");
+                log.error("[Presences@SearchController::callViescolaireEventBus] An error has occured while using viescolaire eb");
                 renderError(request);
                 return;
             }
-
             renderJson(request, body.getJsonArray("results"));
         }));
     }
+
 }
