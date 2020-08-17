@@ -58,12 +58,13 @@ public class DefaultReasonService implements ReasonService {
                 "' OR structure_id = '-1') " +
                 "SELECT DISTINCT i.id, i.label FROM ids i " +
                 "WHERE (i.id IN (SELECT reason_id FROM " + Presences.dbSchema + ".event))" +
-                "OR (i.id IN (SELECT reason_id FROM " + Presences.dbSchema + ".absence))";
+                "OR (i.id IN (SELECT reason_id FROM " + Presences.dbSchema + ".absence)) ORDER BY label ASC";
         Sql.getInstance().raw(query, SqlResult.validResultHandler(handler));
     }
 
     public void fetchReason(String structureId, Handler<Either<String, JsonArray>> handler) {
-        String query = "SELECT * FROM " + Presences.dbSchema + ".reason where structure_id = '" + structureId + "' OR structure_id = '-1'";
+        String query = "SELECT * FROM " + Presences.dbSchema +
+                ".reason where structure_id = '" + structureId + "' OR structure_id = '-1' ORDER BY label ASC";
         Sql.getInstance().raw(query, SqlResult.validResultHandler(handler));
     }
 
