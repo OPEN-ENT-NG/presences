@@ -40,6 +40,11 @@ public class Reason {
         this.id = reasonId;
     }
 
+    public Reason(String label, boolean isProving) {
+        this.label = label;
+        this.isProving = isProving;
+    }
+
     public Reason() {
 
     }

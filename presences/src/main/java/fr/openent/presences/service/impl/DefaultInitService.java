@@ -1,6 +1,8 @@
 package fr.openent.presences.service.impl;
 
 import fr.openent.presences.Presences;
+import fr.openent.presences.helper.ReasonHelper;
+import fr.openent.presences.model.Reason;
 import fr.openent.presences.service.InitService;
 import fr.wseduc.webutils.Either;
 import fr.wseduc.webutils.I18n;
@@ -13,7 +15,6 @@ import io.vertx.core.json.JsonObject;
 import org.entcore.common.sql.Sql;
 import org.entcore.common.sql.SqlResult;
 
-import java.util.Arrays;
 import java.util.List;
 
 public class DefaultInitService implements InitService {
@@ -27,15 +28,15 @@ public class DefaultInitService implements InitService {
 
     @Override
     public void getReasonsStatement(HttpServerRequest request, String structure, Future<JsonObject> future) {
-        List<Boolean> proving = Arrays.asList(false, true, false, true, false, false, false, true, false, false);
+        List<Reason> reasons = ReasonHelper.getReasonsInit();
+
         JsonArray params = new JsonArray();
         String query = "INSERT INTO " + Presences.dbSchema + ".reason(structure_id, label, proving, comment, absence_compliance) VALUES ";
-        for (int i = 0; i < proving.size(); i++) {
-            String i18nKey = "presences.reasons.init." + i;
+        for (Reason reason : reasons) {
             query += "(?, ?, ?, '', true),";
             params.add(structure)
-                    .add(I18n.getInstance().translate(i18nKey, Renders.getHost(request), I18n.acceptLanguage(request)))
-                    .add(proving.get(i));
+                    .add(I18n.getInstance().translate(reason.getLabel(), Renders.getHost(request), I18n.acceptLanguage(request)))
+                    .add(reason.isProving());
         }
 
         query = query.substring(0, query.length() - 1) + ";";
@@ -47,7 +48,7 @@ public class DefaultInitService implements InitService {
 
     @Override
     public void getActionsStatement(HttpServerRequest request, String structure, Future<JsonObject> future) {
-        Integer occurrences = 5;
+        int occurrences = 5;
         JsonArray params = new JsonArray();
         String query = "INSERT INTO " + Presences.dbSchema + ".actions(structure_id, label, abbreviation) VALUES ";
         for (int i = 0; i < occurrences; i++) {
@@ -79,7 +80,7 @@ public class DefaultInitService implements InitService {
 
     @Override
     public void getPresencesDisciplinesStatement(HttpServerRequest request, String structure, Future<JsonObject> future) {
-        Integer occurrences = 3;
+        int occurrences = 4;
         JsonArray params = new JsonArray();
         String query = "INSERT INTO " + Presences.dbSchema + ".discipline(structure_id, label) VALUES ";
         for (int i = 0; i < occurrences; i++) {
