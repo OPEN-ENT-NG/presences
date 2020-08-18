@@ -117,13 +117,13 @@ public class RegisterPresenceHelper {
     }
 
     @SuppressWarnings("unchecked")
-    public void addOwnerToStudentEvents(JsonObject register, Future<JsonObject> future) {
+    public void addOwnerToStudentEvents(JsonObject register, Handler<AsyncResult<JsonObject>> handler) {
         List<String> userIds = this.getAllOwnerIds(register.getJsonArray("students"));
         userService.getUsers(userIds, result -> {
             if (result.isLeft()) {
                 String message = "[Presences@EventHelper] Failed to retrieve users info";
                 LOGGER.error(message);
-                future.fail(message);
+                handler.handle(Future.failedFuture(message));
             }
             List<User> owners = personHelper.getUserListFromJsonArray(result.right().getValue());
             Map<String, User> userMap = new HashMap<>();
@@ -137,7 +137,7 @@ public class RegisterPresenceHelper {
                             })
                     )
             );
-            future.complete();
+            handler.handle(Future.succeededFuture());
         });
     }
 
