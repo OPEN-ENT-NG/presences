@@ -82,23 +82,8 @@ public class SquashHelper {
                     }
                 }
             }
-
             handler.handle(new Either.Right<>(courses));
         });
-    }
-
-    /**
-     * Function that checks all courses who have the same id as the current course
-     * and also verify if one of the courses with same id has a split slot set true
-     *
-     * @param courses list of register
-     * @param course  current course
-     * @return true if there are courses with same id than the current course having split slot set true
-     */
-    private boolean checkSplitSlot(List<Course> courses, Course course) {
-        return courses.stream().anyMatch(item ->
-                item.getId().equals(course.getId()) && item.isSplitSlot()
-        );
     }
 
     /**

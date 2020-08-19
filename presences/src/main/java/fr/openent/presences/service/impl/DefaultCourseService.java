@@ -61,25 +61,13 @@ public class DefaultCourseService implements CourseService {
             JsonArray courses = event.right().getValue();
             JsonArray subjectIds = new JsonArray();
             JsonArray teachersIds = new JsonArray();
-            JsonObject course;
-            for (int i = 0; i < courses.size(); i++) {
-                course = courses.getJsonObject(i);
-                if (course.containsKey("subjectId") && !subjectIds.contains(course.getString("subjectId"))) {
-                    subjectIds.add(course.getString("subjectId"));
-                }
-
-                JsonArray teachers = course.getJsonArray("teacherIds");
-                for (int j = 0; j < teachers.size(); j++) {
-                    if (!teachersIds.contains(teachers.getString(j))) {
-                        teachersIds.add(teachers.getString(j));
-                    }
-                }
-            }
+            setSubjectsTeachersCourses(courses, subjectIds, teachersIds);
 
             Future<JsonArray> subjectsFuture = Future.future();
             Future<JsonArray> teachersFuture = Future.future();
+            Future<JsonArray> slotsFuture = Future.future();
 
-            CompositeFuture.all(subjectsFuture, teachersFuture).setHandler(asyncHandler -> {
+            CompositeFuture.all(subjectsFuture, teachersFuture, slotsFuture).setHandler(asyncHandler -> {
                 if (asyncHandler.failed()) {
                     handler.handle(new Either.Left<>(asyncHandler.cause().toString()));
                     return;
@@ -89,51 +77,35 @@ public class DefaultCourseService implements CourseService {
                 JsonArray teachers = teachersFuture.result();
                 JsonObject subjectMap = MapHelper.transformToMap(subjects, "id");
                 JsonObject teacherMap = MapHelper.transformToMap(teachers, "id");
-                JsonObject object;
-                for (int i = 0; i < courses.size(); i++) {
-                    try {
 
-                        object = courses.getJsonObject(i);
-                        object.remove("startCourse");
-                        object.remove("endCourse");
-                        object.remove("is_periodic");
-                        object.remove("is_recurrent");
-                        if (object.containsKey("subjectId")) {
-                            object.put("subjectName", subjectMap.getJsonObject(object.getString("subjectId"), new JsonObject()).getString("name", object.getString("exceptionnal", "")));
-                        } else object.put("subjectName", "");
-                        object.put("timestamp", DateHelper.parse(object.getString("startDate")).getTime());
-                        JsonArray courseTeachers = new JsonArray();
-                        JsonArray teacherIds = object.getJsonArray("teacherIds");
-                        for (int j = 0; j < teacherIds.size(); j++) {
-                            if (!teacherMap.containsKey(teacherIds.getString(j))) continue;
-                            courseTeachers.add(teacherMap.getJsonObject(teacherIds.getString(j)));
-                        }
-                        object.put("teachers", courseTeachers);
-                        object.remove("teacherIds");
-                    } catch (ParseException e) {
-                        LOGGER.error("[Presences@DefaultCourseService] Failed to cast date to timestamp", e);
-                    }
-                }
+                CourseHelper.formatCourse(courses, subjectMap, teacherMap);
 
-                Viescolaire.getInstance().getDefaultSlots(structureId, slotsResult -> {
-                    List<Slot> slots = SlotHelper.getSlotListFromJsonArray(slotsResult.right().getValue(), Slot.MANDATORY_ATTRIBUTE);
-                    List<Course> coursesEvent = CourseHelper.getCourseListFromJsonArray(courses, Course.MANDATORY_ATTRIBUTE);
-                    List<Course> splitCoursesEvent = CourseHelper.splitCoursesFromSlot(coursesEvent, slots);
+                List<Slot> slots = SlotHelper.getSlotListFromJsonArray(slotsFuture.result(), Slot.MANDATORY_ATTRIBUTE);
+                List<Course> coursesEvent = CourseHelper.getCourseListFromJsonArray(courses, Course.MANDATORY_ATTRIBUTE);
+                List<Course> splitCoursesEvent = CourseHelper.splitCoursesFromSlot(coursesEvent, slots);
 
-                    SquashHelper squashHelper = new SquashHelper(eb);
-                    squashHelper.squash(structureId, start + " 00:00:00", end + " 23:59:59",
-                            coursesEvent, splitCoursesEvent, squashEvent ->
-                                    handler.handle(new Either.Right<>(forgottenFilter ? new JsonArray(filterForgottenCourses(
-                                            CourseHelper.formatCourses(squashEvent.right().getValue(), multipleSlot, slots),
-                                            userDate
-                                    )) : new JsonArray(CourseHelper.formatCourses(squashEvent.right().getValue(), multipleSlot, slots))))
-                    );
-                });
+                SquashHelper squashHelper = new SquashHelper(eb);
+                squashHelper.squash(structureId, start + " 00:00:00", end + " 23:59:59",
+                        coursesEvent, splitCoursesEvent, squashEvent -> {
+                            handler.handle(new Either.Right<>(forgottenFilter ? new JsonArray(filterForgottenCourses(
+                                    CourseHelper.formatCourses(squashEvent.right().getValue(), multipleSlot, slots),
+                                    userDate
+                            )) : new JsonArray(CourseHelper.formatCourses(squashEvent.right().getValue(), multipleSlot, slots))));
+                        });
             });
 
             subjectHelper.getSubjects(subjectIds, FutureHelper.handlerJsonArray(subjectsFuture));
             courseHelper.getCourseTeachers(teachersIds, FutureHelper.handlerJsonArray(teachersFuture));
+            Viescolaire.getInstance().getDefaultSlots(structureId, FutureHelper.handlerJsonArray(slotsFuture));
         });
+    }
+
+    private void setSubjectsTeachersCourses(JsonArray courses, JsonArray subjectIds, JsonArray teachersIds) {
+        JsonObject course;
+        for (int i = 0; i < courses.size(); i++) {
+            course = courses.getJsonObject(i);
+            CourseHelper.treatSubjectAndTeacherInCourse(subjectIds, teachersIds, course);
+        }
     }
 
     private List<Course> filterForgottenCourses(List<Course> courses, String userDate) {

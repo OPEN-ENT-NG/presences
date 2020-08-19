@@ -77,15 +77,7 @@ public class CourseHelper {
 
                 for (int i = 0; i < courses.size(); i++) {
                     JsonObject course = courses.getJsonObject(i);
-                    if (course.containsKey("subjectId") && !subjectIds.contains(course.getString("subjectId"))) {
-                        subjectIds.add(course.getString("subjectId"));
-                    }
-                    JsonArray teachers = course.getJsonArray("teacherIds");
-                    for (int j = 0; j < teachers.size(); j++) {
-                        if (!teachersIds.contains(teachers.getString(j))) {
-                            teachersIds.add(teachers.getString(j));
-                        }
-                    }
+                    treatSubjectAndTeacherInCourse(subjectIds, teachersIds, course);
                 }
 
                 Future<JsonArray> subjectsFuture = Future.future();
@@ -107,13 +99,7 @@ public class CourseHelper {
                         if (object.containsKey("subjectId")) {
                             object.put("subjectName", subjectMap.getJsonObject(object.getString("subjectId"), new JsonObject()).getString("name", object.getString("exceptionnal", "")));
                         } else object.put("subjectName", "");
-                        JsonArray courseTeachers = new JsonArray();
-                        JsonArray teacherIds = object.getJsonArray("teacherIds");
-                        for (int j = 0; j < teacherIds.size(); j++) {
-                            if (!teacherMap.containsKey(teacherIds.getString(j))) continue;
-                            courseTeachers.add(teacherMap.getJsonObject(teacherIds.getString(j)));
-                        }
-                        object.put("teachers", courseTeachers);
+                        setTeacherCourseObject(teacherMap, object);
                     }
                     handler.handle(Future.succeededFuture(CourseHelper.getCourseListFromJsonArray(courses, Course.MANDATORY_ATTRIBUTE)));
                 });
@@ -122,6 +108,28 @@ public class CourseHelper {
                 getCourseTeachers(teachersIds, FutureHelper.handlerJsonArray(teachersFuture));
             }
         });
+    }
+
+    public static void treatSubjectAndTeacherInCourse(JsonArray subjectIds, JsonArray teachersIds, JsonObject course) {
+        if (course.containsKey("subjectId") && !subjectIds.contains(course.getString("subjectId"))) {
+            subjectIds.add(course.getString("subjectId"));
+        }
+        JsonArray teachers = course.getJsonArray("teacherIds");
+        for (int j = 0; j < teachers.size(); j++) {
+            if (!teachersIds.contains(teachers.getString(j))) {
+                teachersIds.add(teachers.getString(j));
+            }
+        }
+    }
+
+    private static void setTeacherCourseObject(JsonObject teacherMap, JsonObject object) {
+        JsonArray courseTeachers = new JsonArray();
+        JsonArray teacherIds = object.getJsonArray("teacherIds");
+        for (int j = 0; j < teacherIds.size(); j++) {
+            if (!teacherMap.containsKey(teacherIds.getString(j))) continue;
+            courseTeachers.add(teacherMap.getJsonObject(teacherIds.getString(j)));
+        }
+        object.put("teachers", courseTeachers);
     }
 
     public void getCourses(String structure, List<String> teachers, List<String> groups, String start,
@@ -143,6 +151,36 @@ public class CourseHelper {
                 handler.handle(new Either.Right<>(((JsonObject) event.result().body()).getJsonArray("results")));
             }
         });
+    }
+
+    /**
+     * Format course fetched (must provide subject and teacher datas)
+     *
+     * @param courses    courses JsonArray
+     * @param subjectMap Map of subject fetched
+     * @param teacherMap Map of teacher fetched
+     * @return new list of courses
+     */
+    public static void formatCourse(JsonArray courses, JsonObject subjectMap, JsonObject teacherMap) {
+        JsonObject object;
+        for (int i = 0; i < courses.size(); i++) {
+            try {
+
+                object = courses.getJsonObject(i);
+                object.remove("startCourse");
+                object.remove("endCourse");
+                object.remove("is_periodic");
+                object.remove("is_recurrent");
+                if (object.containsKey("subjectId")) {
+                    object.put("subjectName", subjectMap.getJsonObject(object.getString("subjectId"), new JsonObject()).getString("name", object.getString("exceptionnal", "")));
+                } else object.put("subjectName", "");
+                object.put("timestamp", DateHelper.parse(object.getString("startDate")).getTime());
+                setTeacherCourseObject(teacherMap, object);
+                object.remove("teacherIds");
+            } catch (ParseException e) {
+                LOGGER.error("[Presences@DefaultCourseService] Failed to cast date to timestamp", e);
+            }
+        }
     }
 
     /**
@@ -195,20 +233,7 @@ public class CourseHelper {
     public static List<Course> splitCoursesWithOneCourse(Course course, List<Slot> slots) {
         List<Course> splitCourses = new ArrayList<>();
         try {
-            SimpleDateFormat parser = new SimpleDateFormat(DateHelper.HOUR_MINUTES_SECONDS);
-            Date startTime = parser.parse(DateHelper.getTimeString(course.getStartDate(), DateHelper.MONGO_FORMAT));
-            Date endTime = parser.parse(DateHelper.getTimeString(course.getEndDate(), DateHelper.MONGO_FORMAT));
-            for (int i = 0; i < slots.size(); i++) {
-                Slot slot = slots.get(i);
-                Date slotStartHour = parser.parse(slot.getStartHour());
-                Date slotEndHour = parser.parse(slot.getEndHour());
-                if (((slotStartHour.after(startTime) || slotStartHour.equals(startTime)) || (startTime.before(slotEndHour)))
-                        && ((slotEndHour.before(endTime) || slotEndHour.equals(endTime)) || (endTime.after(slotStartHour)))
-                        && !(course.getRegisterId() != null && !course.isSplitSlot())) {
-                    Course newCourse = treatingSplitSlot(course, slot, i + 1 < slots.size() ? slots.get(i + 1) : slot, parser);
-                    splitCourses.add(newCourse);
-                }
-            }
+            splitCourseTreatment(slots, splitCourses, course);
         } catch (ParseException e) {
             LOGGER.error("[Presences@CourseHelper] Failed to parse date [see DateHelper", e);
         }
@@ -233,22 +258,7 @@ public class CourseHelper {
         List<Course> splitCoursesEvent = new ArrayList<>();
         try {
             for (Course course : courses) {
-                SimpleDateFormat parser = new SimpleDateFormat(DateHelper.HOUR_MINUTES_SECONDS);
-                Date startTime = parser.parse(DateHelper.getTimeString(course.getStartDate(), DateHelper.MONGO_FORMAT));
-                Date endTime = parser.parse(DateHelper.getTimeString(course.getEndDate(), DateHelper.MONGO_FORMAT));
-
-                for (int i = 0; i < slots.size(); i++) {
-                    Slot slot = slots.get(i);
-                    Date slotStartHour = parser.parse(slot.getStartHour());
-                    Date slotEndHour = parser.parse(slot.getEndHour());
-                    if (((slotStartHour.after(startTime) || slotStartHour.equals(startTime)) || (startTime.before(slotEndHour)))
-                            && ((slotEndHour.before(endTime) || slotEndHour.equals(endTime)) || (endTime.after(slotStartHour)))
-                            && !(course.getRegisterId() != null && !course.isSplitSlot())) {
-                        Course newCourse = treatingSplitSlot(course, slot, i + 1 < slots.size() ? slots.get(i + 1) : slot, parser);
-                        splitCoursesEvent.add(newCourse);
-                    }
-                }
-
+                splitCourseTreatment(slots, splitCoursesEvent, course);
                 if (course.getRegisterId() != null && !course.isSplitSlot()) {
                     splitCoursesEvent.add(course.clone());
                 }
@@ -257,6 +267,24 @@ public class CourseHelper {
             LOGGER.error("[Presences@CourseHelper] Failed to parse date [see DateHelper", e);
         }
         return splitCoursesEvent;
+    }
+
+    private static void splitCourseTreatment(List<Slot> slots, List<Course> splitCoursesEvent, Course course) throws ParseException {
+        SimpleDateFormat parser = new SimpleDateFormat(DateHelper.HOUR_MINUTES_SECONDS);
+        Date startTime = parser.parse(DateHelper.getTimeString(course.getStartDate(), DateHelper.MONGO_FORMAT));
+        Date endTime = parser.parse(DateHelper.getTimeString(course.getEndDate(), DateHelper.MONGO_FORMAT));
+
+        for (int i = 0; i < slots.size(); i++) {
+            Slot slot = slots.get(i);
+            Date slotStartHour = parser.parse(slot.getStartHour());
+            Date slotEndHour = parser.parse(slot.getEndHour());
+            if (((slotStartHour.after(startTime) || slotStartHour.equals(startTime)) || (startTime.before(slotEndHour)))
+                    && ((slotEndHour.before(endTime) || slotEndHour.equals(endTime)) || (endTime.after(slotStartHour)))
+                    && !(course.getRegisterId() != null && !course.isSplitSlot())) {
+                Course newCourse = treatingSplitSlot(course, slot, i + 1 < slots.size() ? slots.get(i + 1) : slot, parser);
+                splitCoursesEvent.add(newCourse);
+            }
+        }
     }
 
     /**
