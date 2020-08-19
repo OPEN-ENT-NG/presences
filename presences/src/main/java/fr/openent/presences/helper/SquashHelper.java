@@ -2,11 +2,6 @@ package fr.openent.presences.helper;
 
 import fr.openent.presences.common.helper.DateHelper;
 import fr.openent.presences.model.Course;
-import fr.openent.presences.service.RegisterService;
-import fr.openent.presences.service.impl.DefaultRegisterService;
-import fr.wseduc.webutils.Either;
-import io.vertx.core.Handler;
-import io.vertx.core.eventbus.EventBus;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import io.vertx.core.logging.Logger;
@@ -19,71 +14,55 @@ import java.util.List;
 
 public class SquashHelper {
     private static final Logger LOGGER = LoggerFactory.getLogger(SquashHelper.class);
-    private RegisterService registerService;
 
-    public SquashHelper(EventBus eb) {
-        this.registerService = new DefaultRegisterService(eb);
+    public SquashHelper() {
     }
+
     /**
      * Squash courses with registers. Each course will be squashed with its register.
      *
-     * @param structureId           Structure identifier
-     * @param start                 Start period date
-     * @param end                   End period date
-     * @param coursesEvent          Course list
-     * @param splitCoursesEvent     Course list split
-     * @param handler               Function handler returning data
+     * @param coursesEvent      Course list
+     * @param splitCoursesEvent Course list split
      */
-    public void squash(String structureId, String start, String end,
-                       List<Course> coursesEvent, List<Course> splitCoursesEvent,
-                       Handler<Either<String, List<Course>>> handler) {
-        registerService.list(structureId, start, end, registerEvent -> {
-            if (registerEvent.isLeft()) {
-                String message = "[Presences@SquashHelper] Failed to retrieve registers";
-                LOGGER.error(message);
-                handler.handle(new Either.Left<>(message));
-                return;
+    public List<Course> squash(List<Course> coursesEvent, List<Course> splitCoursesEvent, JsonArray registerEvent) {
+        List<Course> courses = new ArrayList<>();
+        for (Course course : coursesEvent) {
+            course.setSplitSlot(false);
+        }
+        for (Course course : splitCoursesEvent) {
+            course.setSplitSlot(true);
+        }
+        courses.addAll(coursesEvent);
+        courses.addAll(splitCoursesEvent);
+        JsonObject registers = groupRegisters(registerEvent);
+        for (Course course : courses) {
+            boolean found = false;
+            int j = 0;
+            JsonArray courseRegisters = registers.getJsonArray(course.getId());
+            if (courseRegisters == null) {
+                continue;
             }
-
-            List<Course> courses = new ArrayList<>();
-            for (Course course : coursesEvent) {
-                course.setSplitSlot(false);
-            }
-            for (Course course : splitCoursesEvent) {
-                course.setSplitSlot(true);
-            }
-            courses.addAll(coursesEvent);
-            courses.addAll(splitCoursesEvent);
-            JsonObject registers = groupRegisters(registerEvent.right().getValue());
-            for (Course course : courses) {
-                boolean found = false;
-                int j = 0;
-                JsonArray courseRegisters = registers.getJsonArray(course.getId());
-                if (courseRegisters == null) {
-                    continue;
-                }
-                while (!found && j < courseRegisters.size()) {
-                    JsonObject register = courseRegisters.getJsonObject(j);
-                    try {
-                        if ((DateHelper.getAbsTimeDiff(course.getStartDate(), register.getString("start_date")) < DateHelper.TOLERANCE
-                                && DateHelper.getAbsTimeDiff(course.getEndDate(), register.getString("end_date")) < DateHelper.TOLERANCE)
-                                || isMatchRegisterCourse(course, register)) {
-                            course.setRegisterId(register.getInteger("id"));
-                            course.setRegisterStateId(register.getInteger("state_id"));
-                            course.setNotified(register.getBoolean("notified"));
-                            found = true;
-                        } else {
-                            course.setNotified(false);
-                        }
-                    } catch (ParseException err) {
-                        LOGGER.error("[Presences@SquashHelper] Failed to parse date for register " + register.getInteger("id"), err);
-                    } finally {
-                        j++;
+            while (!found && j < courseRegisters.size()) {
+                JsonObject register = courseRegisters.getJsonObject(j);
+                try {
+                    if ((DateHelper.getAbsTimeDiff(course.getStartDate(), register.getString("start_date")) < DateHelper.TOLERANCE
+                            && DateHelper.getAbsTimeDiff(course.getEndDate(), register.getString("end_date")) < DateHelper.TOLERANCE)
+                            || isMatchRegisterCourse(course, register)) {
+                        course.setRegisterId(register.getInteger("id"));
+                        course.setRegisterStateId(register.getInteger("state_id"));
+                        course.setNotified(register.getBoolean("notified"));
+                        found = true;
+                    } else {
+                        course.setNotified(false);
                     }
+                } catch (ParseException err) {
+                    LOGGER.error("[Presences@SquashHelper] Failed to parse date for register " + register.getInteger("id"), err);
+                } finally {
+                    j++;
                 }
             }
-            handler.handle(new Either.Right<>(courses));
-        });
+        }
+        return courses;
     }
 
     /**

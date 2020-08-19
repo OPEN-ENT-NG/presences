@@ -6,6 +6,8 @@ import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import org.entcore.common.user.UserInfos;
 
+import java.util.List;
+
 public interface RegisterService {
 
     /**
@@ -17,6 +19,8 @@ public interface RegisterService {
      * @param handler     function handler returning data
      */
     void list(String structureId, String start, String end, Handler<Either<String, JsonArray>> handler);
+
+    void list(String structureId, List<String> courseIds, Handler<Either<String, JsonArray>> handler);
 
     /**
      * Create register

@@ -75,6 +75,24 @@ public class DefaultRegisterService implements RegisterService {
     }
 
     @Override
+    public void list(String structureId, List<String> coursesId, Handler<Either<String, JsonArray>> handler) {
+        if (coursesId.isEmpty()) {
+            /* sending empty array since we did not fetch any course_id */
+            handler.handle(new Either.Right<>(new JsonArray()));
+        } else {
+            String query = "SELECT id, start_date, end_date, course_id, state_id, notified, split_slot " +
+                    "FROM " + Presences.dbSchema + ".register " +
+                    "WHERE register.structure_id = ? " +
+                    "AND course_id IN " + Sql.listPrepared(coursesId);
+            JsonArray params = new JsonArray()
+                    .add(structureId)
+                    .addAll(new JsonArray(coursesId));
+
+            Sql.getInstance().prepared(query, params, SqlResult.validResultHandler(handler));
+        }
+    }
+
+    @Override
     public void create(JsonObject register, UserInfos user, Handler<Either<String, JsonObject>> handler) {
         String query = "SELECT nextval('" + Presences.dbSchema + ".register_id_seq') as id";
         Sql.getInstance().raw(query, SqlResult.validUniqueResultHandler(idEvent -> {
@@ -209,7 +227,7 @@ public class DefaultRegisterService implements RegisterService {
 
         Sql.getInstance().prepared(query, params, SqlResult.validUniqueResultHandler(registerEither -> {
             if (registerEither.isLeft()) {
-                String message = "[Presences@DefaultRegisterService] Failed to retrieve register " + id;
+                String message = "[Presences@DefaultRegisterService::get] Failed to retrieve register " + id;
                 LOGGER.error(message);
                 handler.handle(new Either.Left<>(message));
                 return;
@@ -224,13 +242,13 @@ public class DefaultRegisterService implements RegisterService {
             try {
                 day = getDay(register);
             } catch (ParseException e) {
-                handler.handle(new Either.Left<>("[Presences@DefaultRegister] Failed to parse register date"));
+                handler.handle(new Either.Left<>("[Presences@DefaultRegisterService::get] Failed to parse register date"));
                 return;
             }
             JsonArray groups = new JsonArray(register.getString("groups"));
             getUsers(groups, userEither -> {
                 if (userEither.isLeft()) {
-                    LOGGER.error("[Presences@DefaultRegisterService] Failed to retrieve users", userEither.left().getValue());
+                    LOGGER.error("[Presences@DefaultRegisterService::get] Failed to retrieve users", userEither.left().getValue());
                     handler.handle(new Either.Left<>(userEither.left().getValue()));
                     return;
                 }
@@ -240,15 +258,26 @@ public class DefaultRegisterService implements RegisterService {
                     userIds.add(users.getJsonObject(i).getString("id"));
                 }
 
+                List<Future<JsonArray>> futures = new ArrayList<>();
+
                 Future<JsonArray> lastAbsentsFuture = Future.future();
                 Future<JsonArray> groupsNameFuture = Future.future();
                 Future<JsonArray> teachersFuture = Future.future();
                 Future<JsonArray> exemptionFuture = Future.future();
                 Future<JsonArray> forgottenNotebookFuture = Future.future();
+                Future<JsonArray> registerEventHistoryFuture = Future.future();
 
-                CompositeFuture.all(lastAbsentsFuture, groupsNameFuture, teachersFuture, exemptionFuture, forgottenNotebookFuture).setHandler(asyncEvent -> {
+                futures.add(lastAbsentsFuture);
+                futures.add(groupsNameFuture);
+                futures.add(teachersFuture);
+                futures.add(exemptionFuture);
+                futures.add(forgottenNotebookFuture);
+                futures.add(registerEventHistoryFuture);
+
+                FutureHelper.all(futures).setHandler(asyncEvent -> {
                     if (asyncEvent.failed()) {
-                        String message = "[Presences@DefaultRegisterService] Failed to retrieve groups users or last absents students";
+                        String message = "[Presences@DefaultRegisterService::get] Failed to retrieve groups users " +
+                                "or last absents students";
                         LOGGER.error(message);
                         handler.handle(new Either.Left<>(message));
                         return;
@@ -259,48 +288,28 @@ public class DefaultRegisterService implements RegisterService {
                     JsonArray forgottenNotebooks = forgottenNotebookFuture.result();
                     JsonObject groupsNameMap = mapGroupsName(groupsNameFuture.result());
 
-                    registerHelper.getRegisterEventHistory(day, null, new JsonArray(userIds), historyEvent -> {
-                        if (historyEvent.isLeft()) {
-                            String message = "[Presences@DefaultRegisterService] Failed to retrieve register history";
-                            LOGGER.error(message);
+                    JsonArray events = registerEventHistoryFuture.result();
+                    JsonObject historyMap = extractUsersEvents(events);
+
+                    formatRegister(id, register, groups, users, teachersFuture, exemptionsMap, lastAbsentUsers,
+                            forgottenNotebooks, groupsNameMap, historyMap);
+
+                    matchSlots(register, register.getString("structure_id"), slotEvent -> {
+                        if (slotEvent.isLeft()) {
+                            String message = "[Presences@DefaultRegisterService::get] Failed to match slots";
+                            LOGGER.error(message, slotEvent.left().getValue());
                             handler.handle(new Either.Left<>(message));
-                            return;
+                        } else {
+                            registerPresenceHelper.addOwnerToStudentEvents(slotEvent.right().getValue(), eventResult -> {
+                                if (eventResult.failed()) {
+                                    String message = "[Presences@DefaultRegisterService::get] Failed to add course or owner to student events";
+                                    LOGGER.error(message);
+                                    handler.handle(new Either.Left<>(message));
+                                } else {
+                                    handler.handle(new Either.Right<>(slotEvent.right().getValue()));
+                                }
+                            });
                         }
-                        JsonArray events = historyEvent.right().getValue();
-                        JsonObject historyMap = extractUsersEvents(events);
-
-                        JsonArray formattedUsers = new JsonArray();
-                        for (int i = 0; i < users.size(); i++) {
-                            JsonObject user = users.getJsonObject(i);
-                            boolean exempted = exemptionsMap.containsKey(user.getString("id"));
-                            String exempted_subjectId = exemptionsMap.containsKey(user.getString("id")) ? exemptionsMap.getJsonObject(user.getString("id")).getString("subject_id", "") : "0";
-                            Integer exemption_recursive_id = exemptionsMap.containsKey(user.getString("id")) ? exemptionsMap.getJsonObject(user.getString("id")).getInteger("recursive_id") : null;
-                            boolean exemption_attendance = exemptionsMap.containsKey(user.getString("id")) ? exemptionsMap.getJsonObject(user.getString("id")).getBoolean("attendance") : false;
-                            formattedUsers.add(formatStudent(id, user, historyMap.getJsonArray(user.getString("id"), new JsonArray()),
-                                    lastAbsentUsers.contains(user.getString("id")), groupsNameMap.getString(user.getString("groupId")),
-                                    exempted, exemption_recursive_id, exemption_attendance, exempted_subjectId, forgottenNotebooks));
-                        }
-                        register.put("students", formattedUsers);
-                        register.put("groups", groups);
-                        register.put("teachers", teachersFuture.result());
-
-                        matchSlots(register, register.getString("structure_id"), slotEvent -> {
-                            if (slotEvent.isLeft()) {
-                                String message = "[Presences@DefaultRegisterService] Failed to match slots";
-                                LOGGER.error(message, slotEvent.left().getValue());
-                                handler.handle(new Either.Left<>(message));
-                            } else {
-                                registerPresenceHelper.addOwnerToStudentEvents(slotEvent.right().getValue(), eventResult -> {
-                                    if (eventResult.failed()) {
-                                        String message = "[Presences@DefaultRegisterService::get] Failed to add course or owner to student events";
-                                        LOGGER.error(message);
-                                        handler.handle(new Either.Left<>(message));
-                                    } else {
-                                        handler.handle(new Either.Right<>(slotEvent.right().getValue()));
-                                    }
-                                });
-                            }
-                        });
                     });
                 });
                 exemptionService.getRegisterExemptions(userIds, register.getString("structure_id"), register.getString("start_date"), register.getString("end_date"), FutureHelper.handlerJsonArray(exemptionFuture));
@@ -312,8 +321,29 @@ public class DefaultRegisterService implements RegisterService {
                 notebookService.get(userIds, day, day, FutureHelper.handlerJsonArray(forgottenNotebookFuture));
                 getGroupsName(groups, FutureHelper.handlerJsonArray(groupsNameFuture));
                 getCourseTeachers(register.getString("course_id"), FutureHelper.handlerJsonArray(teachersFuture));
+                registerHelper.getRegisterEventHistory(day, null, new JsonArray(userIds),
+                        FutureHelper.handlerJsonArray(registerEventHistoryFuture));
             });
         }));
+    }
+
+    private void formatRegister(Integer id, JsonObject register, JsonArray groups, JsonArray users, Future<JsonArray> teachersFuture,
+                                JsonObject exemptionsMap, JsonArray lastAbsentUsers, JsonArray forgottenNotebooks,
+                                JsonObject groupsNameMap, JsonObject historyMap) {
+        JsonArray formattedUsers = new JsonArray();
+        for (int i = 0; i < users.size(); i++) {
+            JsonObject user = users.getJsonObject(i);
+            boolean exempted = exemptionsMap.containsKey(user.getString("id"));
+            String exempted_subjectId = exemptionsMap.containsKey(user.getString("id")) ? exemptionsMap.getJsonObject(user.getString("id")).getString("subject_id", "") : "0";
+            Integer exemption_recursive_id = exemptionsMap.containsKey(user.getString("id")) ? exemptionsMap.getJsonObject(user.getString("id")).getInteger("recursive_id") : null;
+            boolean exemption_attendance = exemptionsMap.containsKey(user.getString("id")) ? exemptionsMap.getJsonObject(user.getString("id")).getBoolean("attendance") : false;
+            formattedUsers.add(formatStudent(id, user, historyMap.getJsonArray(user.getString("id"), new JsonArray()),
+                    lastAbsentUsers.contains(user.getString("id")), groupsNameMap.getString(user.getString("groupId")),
+                    exempted, exemption_recursive_id, exemption_attendance, exempted_subjectId, forgottenNotebooks));
+        }
+        register.put("students", formattedUsers);
+        register.put("groups", groups);
+        register.put("teachers", teachersFuture.result());
     }
 
     @Override
@@ -614,7 +644,7 @@ public class DefaultRegisterService implements RegisterService {
         Viescolaire.getInstance().getSlotProfiles(structureId, event -> {
             JsonArray slots = new JsonArray();
             if (event.isLeft()) {
-                LOGGER.error("[Presences@DefaultRegistrerService] Failed to retrieve slot profile");
+                LOGGER.error("[Presences@DefaultRegistrerService::matchSlots] Failed to retrieve slot profile");
             } else if (event.right().getValue().containsKey("slots") && !event.right().getValue().getJsonArray("slots").isEmpty()) {
                 slots = event.right().getValue().getJsonArray("slots");
             }
@@ -635,7 +665,7 @@ public class DefaultRegisterService implements RegisterService {
                 }
                 handler.handle(new Either.Right<>(register));
             } catch (Exception e) {
-                String message = "[Presences@DefaultRegisterService] Failed to parse slots";
+                String message = "[Presences@DefaultRegisterService::matchSlots] Failed to parse slots";
                 LOGGER.error(message, e);
                 handler.handle(new Either.Left<>(message));
                 return;

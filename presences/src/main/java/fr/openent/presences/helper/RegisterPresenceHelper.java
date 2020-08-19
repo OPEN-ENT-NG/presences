@@ -121,7 +121,7 @@ public class RegisterPresenceHelper {
         List<String> userIds = this.getAllOwnerIds(register.getJsonArray("students"));
         userService.getUsers(userIds, result -> {
             if (result.isLeft()) {
-                String message = "[Presences@EventHelper] Failed to retrieve users info";
+                String message = "[Presences@RegisterPresenceHelper::addOwnerToStudentEvents] Failed to retrieve users info";
                 LOGGER.error(message);
                 handler.handle(Future.failedFuture(message));
             }

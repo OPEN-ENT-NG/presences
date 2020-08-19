@@ -8,6 +8,7 @@ import fr.openent.presences.helper.*;
 import fr.openent.presences.model.Course;
 import fr.openent.presences.model.Slot;
 import fr.openent.presences.service.CourseService;
+import fr.openent.presences.service.RegisterService;
 import fr.wseduc.mongodb.MongoDb;
 import fr.wseduc.webutils.Either;
 import io.vertx.core.CompositeFuture;
@@ -26,6 +27,7 @@ import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import java.util.stream.Collectors;
 
 public class DefaultCourseService implements CourseService {
 
@@ -33,11 +35,13 @@ public class DefaultCourseService implements CourseService {
     private EventBus eb;
     private CourseHelper courseHelper;
     private SubjectHelper subjectHelper;
+    private RegisterService registerService;
 
     public DefaultCourseService(EventBus eb) {
         this.eb = eb;
         this.courseHelper = new CourseHelper(eb);
         this.subjectHelper = new SubjectHelper(eb);
+        this.registerService = new DefaultRegisterService(eb);
     }
 
     @Override
@@ -63,11 +67,17 @@ public class DefaultCourseService implements CourseService {
             JsonArray teachersIds = new JsonArray();
             setSubjectsTeachersCourses(courses, subjectIds, teachersIds);
 
+            List<String> coursesIds = ((List<JsonObject>) courses.getList())
+                    .stream()
+                    .map(course -> course.getString("_id")).collect(Collectors.toList());
+
+
             Future<JsonArray> subjectsFuture = Future.future();
             Future<JsonArray> teachersFuture = Future.future();
             Future<JsonArray> slotsFuture = Future.future();
+            Future<JsonArray> registerEventFuture = Future.future();
 
-            CompositeFuture.all(subjectsFuture, teachersFuture, slotsFuture).setHandler(asyncHandler -> {
+            CompositeFuture.all(subjectsFuture, teachersFuture, slotsFuture, registerEventFuture).setHandler(asyncHandler -> {
                 if (asyncHandler.failed()) {
                     handler.handle(new Either.Left<>(asyncHandler.cause().toString()));
                     return;
@@ -84,19 +94,18 @@ public class DefaultCourseService implements CourseService {
                 List<Course> coursesEvent = CourseHelper.getCourseListFromJsonArray(courses, Course.MANDATORY_ATTRIBUTE);
                 List<Course> splitCoursesEvent = CourseHelper.splitCoursesFromSlot(coursesEvent, slots);
 
-                SquashHelper squashHelper = new SquashHelper(eb);
-                squashHelper.squash(structureId, start + " 00:00:00", end + " 23:59:59",
-                        coursesEvent, splitCoursesEvent, squashEvent -> {
-                            handler.handle(new Either.Right<>(forgottenFilter ? new JsonArray(filterForgottenCourses(
-                                    CourseHelper.formatCourses(squashEvent.right().getValue(), multipleSlot, slots),
-                                    userDate
-                            )) : new JsonArray(CourseHelper.formatCourses(squashEvent.right().getValue(), multipleSlot, slots))));
-                        });
+                SquashHelper squashHelper = new SquashHelper();
+                List<Course> squashCourses = squashHelper.squash(coursesEvent, splitCoursesEvent, registerEventFuture.result());
+
+                handler.handle(new Either.Right<>(forgottenFilter ?
+                        new JsonArray(filterForgottenCourses(CourseHelper.formatCourses(squashCourses, multipleSlot, slots), userDate)) :
+                        new JsonArray(CourseHelper.formatCourses(squashCourses, multipleSlot, slots))));
             });
 
             subjectHelper.getSubjects(subjectIds, FutureHelper.handlerJsonArray(subjectsFuture));
             courseHelper.getCourseTeachers(teachersIds, FutureHelper.handlerJsonArray(teachersFuture));
             Viescolaire.getInstance().getDefaultSlots(structureId, FutureHelper.handlerJsonArray(slotsFuture));
+            registerService.list(structureId, coursesIds, FutureHelper.handlerJsonArray(registerEventFuture));
         });
     }
 
