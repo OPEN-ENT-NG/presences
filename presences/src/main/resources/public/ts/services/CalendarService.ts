@@ -28,7 +28,6 @@ export interface Course {
     startMomentTime?: string;
     endDate: string;
     endMomentTime?: string;
-    is_recurrent: boolean;
     subject_name: string;
     subjectName?: string;
     teachers?: Array<{ id: string, displayName: string }>;
@@ -80,7 +79,6 @@ export const calendarService = ng.service('CalendarService', (): CalendarService
                     if (itemData.hasOwnProperty(k) && !itemData.hasOwnProperty("_id")) {
                         itemData._id = itemData.id;
                         itemData.is_periodic = itemData.periodic;
-                        itemData.is_recurrent = itemData.recurrent;
                         itemData.subject_name = itemData.subjectName;
                     }
                 }
