@@ -6,7 +6,6 @@ import fr.openent.presences.common.helper.FutureHelper;
 import fr.openent.presences.common.service.UserService;
 import fr.openent.presences.common.service.impl.DefaultUserService;
 import fr.wseduc.webutils.Either;
-import io.vertx.core.AsyncResult;
 import io.vertx.core.CompositeFuture;
 import io.vertx.core.Future;
 import io.vertx.core.Handler;
@@ -415,7 +414,7 @@ public class DefaultIncidentsService extends SqlCrudService implements Incidents
                 "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
         JsonArray values = new JsonArray()
                 .add(id)
-                .add(incident.getString("owner"))
+                .add(incident.getJsonObject("owner").getString("id"))
                 .add(incident.getString("structure_id"))
                 .add(incident.getString("date"))
                 .add(incident.getBoolean("selected_hour"))
