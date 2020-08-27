@@ -75,7 +75,7 @@ public class StatementAbsenceController extends ControllerHelper {
                 JsonArray statementAbsences = result.result().getJsonArray("all");
                 List<String> csvHeaders = new ArrayList<>(Arrays.asList(
                         "presences.statements.absence.csv.header.id",
-                        "presences.csv.header.student.firstName", "presences.csv.header.student.lastName",
+                        "presences.csv.header.student.lastName", "presences.csv.header.student.firstName",
                         "presences.statements.absence.csv.header.start.at.date", "presences.statements.absence.csv.header.start.at.hour",
                         "presences.statements.absence.csv.header.end.at.date", "presences.statements.absence.csv.header.end.at.hour",
                         "presences.statements.absence.csv.header.description",

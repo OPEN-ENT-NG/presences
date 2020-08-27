@@ -32,8 +32,8 @@ export const statementsAbsencesService: IStatementsAbsencesService = {
 
     get: async (statementsAbsences: IStatementsAbsencesRequest): Promise<IStatementsAbsencesResponse> => {
         try {
-            const urlParams: string = statementsAbsencesService.getUrl(statementsAbsences, statementsAbsences.page, statementsAbsences.limit, statementsAbsences.offset);
-            const {data}: IStatementsAbsencesResponse = await http.get(`${statementsAbsencesService.baseUrl}${urlParams}`);
+            const urlParams: String = statementsAbsencesService.getUrl(statementsAbsences, statementsAbsences.page, statementsAbsences.limit, statementsAbsences.offset);
+            const {data}: AxiosResponse = await http.get(`${statementsAbsencesService.baseUrl}${urlParams}`);
             return data;
         } catch (err) {
             throw err;
@@ -74,7 +74,7 @@ export const statementsAbsencesService: IStatementsAbsencesService = {
     },
 
     export: async (statementsAbsences: IStatementsAbsencesRequest): Promise<void> => {
-        const urlParams: string = statementsAbsencesService.getUrl(statementsAbsences, statementsAbsences.page, statementsAbsences.limit, statementsAbsences.offset);
+        const urlParams: String = statementsAbsencesService.getUrl(statementsAbsences, statementsAbsences.page, statementsAbsences.limit, statementsAbsences.offset);
         window.open(`${statementsAbsencesService.baseUrl}/export${urlParams}`);
     },
 
