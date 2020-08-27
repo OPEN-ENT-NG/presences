@@ -101,6 +101,9 @@ interface IViewModel {
     selectGroupLightbox(valueInput, groupItem): void;
 
     removeSelectedGroupsLightbox(groupItem): void;
+
+    // CSV
+    exportCsv(): void;
 }
 
 export const punishmentController = ng.controller('PunishmentController',
@@ -460,6 +463,18 @@ export const punishmentController = ng.controller('PunishmentController',
                 vm.groupsSearchLightbox.removeSelectedGroups(groupForm);
             };
 
+            /* CSV  */
+            vm.exportCsv = (): void => {
+                if (vm.punishments.punishmentResponse.page_count > 50) {
+                    toasts.warning('incidents.csv.full');
+                } else {
+                    if (vm.punishments.punishmentResponse.all.length === 0) {
+                        toasts.info('incidents.csv.empty');
+                    } else {
+                        punishmentService.exportCSV(vm.punishmentsRequest);
+                    }
+                }
+            };
 
             /* ----------------------------
              Punishments events emitted from punishment form sniplet

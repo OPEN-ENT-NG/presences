@@ -21,6 +21,7 @@ public class DateHelper {
     public static final String SQL_FORMAT = "yyyy-MM-dd'T'HH:mm:ss";
     public static final String SQL_DATE_FORMAT = "yyyy-MM-dd HH:mm:ss.SSSSSSZ";
     public static final String MONGO_FORMAT = "yyyy-MM-dd HH:mm:ss";
+    public static final String YEAR_MONTH_DAY_HOUR_MINUTES_SECONDS = "yyyy/MM/dd HH:mm:ss";
 
     public static final String YEAR_MONTH_DAY = "yyyy-MM-dd";
     public static final String DAY_MONTH_YEAR = "dd/MM/yyyy";
@@ -209,7 +210,25 @@ public class DateHelper {
             Date parsedDate = parse(date);
             return new SimpleDateFormat(format).format(parsedDate);
         } catch (ParseException err) {
-            LOGGER.error("[Common@DataHelper] Failed to parse date " + date, err);
+            LOGGER.error("[Common@DateHelper::getDateString] Failed to parse date " + date, err);
+            return date;
+        }
+    }
+
+    /**
+     * Get Simple date as string, use in case your date format is not standard
+     *
+     * @param date          date to format
+     * @param format        the source format
+     * @param wishedFormat  the format wished
+     * @return Simple date format as string
+     */
+    public static String getDateString(String date, String format, String wishedFormat) {
+        try {
+            Date parsedDate = parse(date, format);
+            return new SimpleDateFormat(wishedFormat).format(parsedDate);
+        } catch (ParseException err) {
+            LOGGER.error("[Common@DateHelper::getDateString] Failed to parse date " + date, err);
             return date;
         }
     }

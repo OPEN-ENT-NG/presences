@@ -10,6 +10,8 @@ export interface IPunishmentService {
     update(punishmentBody: IPunishmentBody): Promise<AxiosResponse>;
 
     delete(punishmentId: string): Promise<AxiosResponse>;
+
+    exportCSV(punishmentRequest: IPunishmentRequest): void;
 }
 
 export const punishmentService: IPunishmentService = {
@@ -58,6 +60,38 @@ export const punishmentService: IPunishmentService = {
 
     async delete(punishmentId: string): Promise<AxiosResponse> {
         return http.delete(`/incidents/punishments?id=${punishmentId}`);
+    },
+
+
+    /**
+     * Export the punishments list as CSV format.
+     * @param punishmentRequest the punishments get request.
+     */
+    exportCSV(punishmentRequest: IPunishmentRequest): void {
+        let filterParams: string = '';
+        if (punishmentRequest.type_ids) {
+            punishmentRequest.type_ids.forEach((type_id: number) => {
+                filterParams += `&type_id=${type_id}`;
+            });
+        }
+
+        if (punishmentRequest.students_ids) {
+            punishmentRequest.students_ids.forEach((studentId: string) => {
+                filterParams += `&student_id=${studentId}`;
+            });
+        }
+
+        if (punishmentRequest.groups_ids) {
+            punishmentRequest.groups_ids.forEach((groupId: string) => {
+                filterParams += `&group_id=${groupId}`;
+            });
+        }
+
+        let url: string = `/incidents/punishments/export?structure_id=${punishmentRequest.structure_id}` +
+            `&start_at=${punishmentRequest.start_at}` +
+            `&end_at=${punishmentRequest.end_at}` + filterParams;
+
+        window.open(url);
     }
 };
 
