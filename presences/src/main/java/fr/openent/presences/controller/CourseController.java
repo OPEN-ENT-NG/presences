@@ -104,9 +104,14 @@ public class CourseController extends ControllerHelper {
                     }
 
                     JsonArray courses = event.right().getValue();
-                    List<String> csvHeaders = Arrays.asList("presences.register.csv.header.date", "presences.register.csv.header.teacher",
-                            "presences.register.csv.header.groups", "presences.register.csv.header.subject");
-                    RegisterCSVExport rce = new RegisterCSVExport(courses);
+                    List<String> csvHeaders = Arrays.asList(
+                            "presences.exemptions.dates",
+                            "presences.hour",
+                            "presences.register.csv.header.teacher",
+                            "presences.register.csv.header.groups",
+                            "presences.exemptions.csv.header.subject",
+                            "presences.register.forgotten");
+                    RegisterCSVExport rce = new RegisterCSVExport(courses, forgottenFilter);
                     rce.setRequest(request);
                     rce.setHeader(csvHeaders);
                     rce.export();
