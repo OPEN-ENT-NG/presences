@@ -246,7 +246,8 @@ export const punishmentController = ng.controller('PunishmentController',
                         owner_id: punishment.owner.id,
                         fields: punishment.fields,
                         type_id: punishment.type.id,
-                        processed: punishment.processed
+                        processed: punishment.processed,
+                        description: punishment.description
                     } as IPunishmentBody;
 
                     let response = await punishmentService.update(form);
