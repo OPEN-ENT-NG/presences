@@ -15,6 +15,8 @@ public class Student extends Person implements Cloneable {
         this.displayName = student.getString("displayName", null);
         this.classId = student.getString("classId", null);
         this.className = student.getString("classeName", null);
+        this.firstName = student.getString("firstName", null);
+        this.lastName = student.getString("lastName", null);
         this.dayHistory = student.getJsonArray("day_history", new JsonArray());
     }
 
@@ -27,6 +29,8 @@ public class Student extends Person implements Cloneable {
         return new JsonObject()
                 .put("id", this.id)
                 .put("displayName", this.displayName)
+                .put("firstName", this.firstName)
+                .put("lastName", this.lastName)
                 .put("classId", this.classId)
                 .put("classeName", this.className)
                 .put("day_history", this.dayHistory);

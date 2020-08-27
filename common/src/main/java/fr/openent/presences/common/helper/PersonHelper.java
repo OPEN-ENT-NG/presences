@@ -59,8 +59,10 @@ public class PersonHelper {
     public void getStudentsInfo(String structureId, List<String> studentIds, Handler<Either<String, JsonArray>> handler) {
         String query = "MATCH (s:Structure {id: {structureId} })<-[:ADMINISTRATIVE_ATTACHMENT]-" +
                 "(u:User {profiles:['Student']})-[:IN]->(:ProfileGroup)-[:DEPENDS]->(c:Class) WHERE u.id IN {idStudents} " +
-                "RETURN distinct (u.lastName + ' ' + u.firstName) as displayName, u.id as id, c.name as classeName, c.id as classId";
+                "RETURN distinct (u.lastName + ' ' + u.firstName) as displayName, u.lastName as lastName, " +
+                "u.firstName as firstName, u.id as id, c.name as classeName, c.id as classId";
         JsonObject params = new JsonObject().put("structureId", structureId).put("idStudents", studentIds);
         Neo4j.getInstance().execute(query, params, Neo4jResult.validResultHandler(handler));
     }
+
 }
