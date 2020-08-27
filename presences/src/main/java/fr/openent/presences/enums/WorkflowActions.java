@@ -8,6 +8,7 @@ public enum WorkflowActions {
     SEARCH(Presences.SEARCH),
     SEARCH_STUDENTS(Presences.SEARCH_STUDENTS),
     EXPORT(Presences.EXPORT),
+    READ_EVENT(Presences.READ_EVENT),
     NOTIFY(Presences.NOTIFY),
     CREATE_EVENT(Presences.CREATE_EVENT),
     MANAGE_EXEMPTION(Presences.MANAGE_EXEMPTION),

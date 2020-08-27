@@ -19,6 +19,7 @@ import fr.openent.presences.service.AbsenceService;
 import fr.openent.presences.service.EventService;
 import fr.openent.presences.service.SettingsService;
 import fr.wseduc.webutils.Either;
+import io.vertx.core.AsyncResult;
 import io.vertx.core.CompositeFuture;
 import io.vertx.core.Future;
 import io.vertx.core.Handler;
@@ -183,6 +184,66 @@ public class DefaultEventService implements EventService {
                 " AND student_id IN " + Sql.listPrepared(users);
 
         Sql.getInstance().prepared(query, params, SqlResult.validResultHandler(handler));
+    }
+
+    @Override
+    public void getCsvData(String structureId, String startDate, String endDate, List<String> eventType,
+                           List<String> listReasonIds, Boolean noReason, List<String> userId, JsonArray userIdFromClasses,
+                           List<String> classes, Boolean regularized, Handler<AsyncResult<List<Event>>> handler) {
+        getEvents(structureId, startDate, endDate, eventType, listReasonIds, noReason, userId, userIdFromClasses,
+                regularized, null, eventHandler -> {
+                    if (eventHandler.isLeft()) {
+                        String err = "[Presences@DefaultEventService::getCsvData] Failed to fetch events";
+                        LOGGER.error(err, eventHandler.left().getValue());
+                        handler.handle(Future.failedFuture(err));
+                    } else {
+                        List<Event> events = EventHelper.getEventListFromJsonArray(eventHandler.right().getValue(), Event.MANDATORY_ATTRIBUTE);
+
+                        List<Integer> reasonIds = new ArrayList<>();
+                        List<String> studentIds = new ArrayList<>();
+                        List<String> ownerIds = new ArrayList<>();
+                        List<Integer> eventTypeIds = new ArrayList<>();
+
+                        for (Event event : events) {
+                            reasonIds.add(event.getReason().getId());
+                            if (!studentIds.contains(event.getStudent().getId())) {
+                                studentIds.add(event.getStudent().getId());
+                            }
+                            if (!ownerIds.contains(event.getOwner().getId())) {
+                                ownerIds.add(event.getOwner().getId());
+                            }
+                            eventTypeIds.add(event.getEventType().getId());
+                        }
+
+                        // remove potential null value for each list
+                        reasonIds.removeAll(Collections.singletonList(null));
+                        studentIds.removeAll(Collections.singletonList(null));
+                        ownerIds.removeAll(Collections.singletonList(null));
+                        eventTypeIds.removeAll(Collections.singletonList(null));
+
+                        Future<JsonObject> reasonFuture = Future.future();
+                        Future<JsonObject> studentFuture = Future.future();
+                        Future<JsonObject> ownerFuture = Future.future();
+                        Future<JsonObject> eventTypeFuture = Future.future();
+
+                        eventHelper.addReasonsToEvents(events, reasonIds, reasonFuture);
+                        eventHelper.addStudentsToEvents(events, studentIds, structureId, studentFuture);
+                        eventHelper.addOwnerToEvents(events, ownerIds, ownerFuture);
+                        eventHelper.addEventTypeToEvents(events, eventTypeIds, eventTypeFuture);
+
+                        CompositeFuture.all(reasonFuture, eventTypeFuture, studentFuture, ownerFuture)
+                                .setHandler(eventResult -> {
+                                    if (eventResult.failed()) {
+                                        String message = "[Presences@DefaultEventService::getCsvData] Failed to add " +
+                                                "reasons, eventType, last action abbreviation, students or owner to corresponding event ";
+                                        LOGGER.error(message + eventResult.cause().getMessage());
+                                        handler.handle(Future.failedFuture(message));
+                                    } else {
+                                        handler.handle(Future.succeededFuture(events));
+                                    }
+                                });
+                    }
+                });
     }
 
     /**

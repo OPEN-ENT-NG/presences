@@ -234,10 +234,10 @@ public class DateHelper {
     }
 
     /**
-     * Get Simple Time as string
+     * Get Simple Time as string || fetchTimeString to avoid using Try Catch in ur own function
      *
      * @param date   date to format into time
-     * @param format the format wished
+     * @param format the format of your date
      * @return Simple Time format as string
      * (e.g "2019-11-05 11:00:00" (do not forget to mention the GOOD FORMAT in parameter)
      * would be "11:00:00"
@@ -250,6 +250,22 @@ public class DateHelper {
 
         cal.setTime(sdf.parse(date));
         return sdft.format(cal.getTime());
+    }
+
+    public static String fetchTimeString(String date, String format) {
+        try {
+            Calendar cal = Calendar.getInstance();
+
+            SimpleDateFormat sdf = new SimpleDateFormat(format);
+            SimpleDateFormat sdft = new SimpleDateFormat(HOUR_MINUTES_SECONDS);
+
+            cal.setTime(sdf.parse(date));
+
+            return sdft.format(cal.getTime());
+        } catch (ParseException err) {
+            LOGGER.error("[Common@DataHelper::fetchTimeString] Failed to parse date " + date, err);
+            return date;
+        }
     }
 
     /**

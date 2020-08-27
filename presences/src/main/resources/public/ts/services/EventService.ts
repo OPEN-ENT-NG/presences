@@ -11,6 +11,8 @@ export interface EventService {
     createAction(actionBody: ActionBody): Promise<AxiosResponse>;
 
     getStudentEvent(studentEventRequest: IStudentEventRequest): Promise<IStudentEventResponse>;
+
+    exportCSV(eventRequest: EventRequest): string;
 }
 
 export interface EventRequest {
@@ -23,7 +25,7 @@ export interface EventRequest {
     regularized: boolean;
     userId: string;
     classes: string;
-    page: number;
+    page?: number;
 }
 
 export const eventService: EventService = {
@@ -97,6 +99,23 @@ export const eventService: EventService = {
             throw err;
         }
     },
+
+    exportCSV(eventRequest: EventRequest): string {
+        const dateFormat: string = DateUtils.FORMAT['YEAR-MONTH-DAY'];
+
+        const url: string = `/presences/events/export`;
+        const structureId: string = `?structureId=${eventRequest.structureId}`;
+        const startDate: string = `&startDate=${DateUtils.format(eventRequest.startDate, dateFormat)}`;
+        const endDate: string = `&endDate=${DateUtils.format(eventRequest.endDate, dateFormat)}`;
+        const noReason: string = eventRequest.noReason ? `&noReason=${eventRequest.noReason}` : "";
+        const eventType: string = `&eventType=${eventRequest.eventType}`;
+        const listReasonIds: string = eventRequest.listReasonIds ? `&reasonIds=${eventRequest.listReasonIds}` : "";
+        const userId: string = eventRequest.userId.length === 0 ? "" : `&userId=${eventRequest.userId}`;
+        const classes: string = eventRequest.classes.length === 0 ? "" : `&eventType=${eventRequest.classes}`;
+        const regularized: string = eventRequest.regularized ? `&regularized=${!eventRequest.regularized}` : "";
+
+        return `${url}${structureId}${startDate}${endDate}${noReason}${eventType}${listReasonIds}${userId}${classes}${regularized}`;
+    }
 
 };
 

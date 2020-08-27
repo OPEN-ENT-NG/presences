@@ -1,6 +1,8 @@
 package fr.openent.presences.service;
 
+import fr.openent.presences.model.Event.Event;
 import fr.wseduc.webutils.Either;
+import io.vertx.core.AsyncResult;
 import io.vertx.core.Handler;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
@@ -40,6 +42,25 @@ public interface EventService {
      * @param handler   Function handler returning data
      */
     void get(String startDate, String endDate, List<Number> eventType, List<String> users, Handler<Either<String, JsonArray>> handler);
+
+    /**
+     * Get events. Will after export this into csv
+     *
+     * @param structureId       structure identifier
+     * @param startDate         startDate start date
+     * @param endDate           endDate end date
+     * @param eventType         event type
+     * @param listReasonIds     reasonId reason_id
+     * @param noReason          noReason filter
+     * @param userId            userId userId neo4j
+     * @param userIdFromClasses userId fetched from classes neo4j
+     * @param classes           classes list
+     * @param regularized       regularized filter
+     * @param handler           Function handler returning data
+     */
+    void getCsvData(String structureId, String startDate, String endDate, List<String> eventType, List<String> listReasonIds,
+                    Boolean noReason, List<String> userId, JsonArray userIdFromClasses, List<String> classes,
+                    Boolean regularized, Handler<AsyncResult<List<Event>>> handler);
 
     /**
      * Get events page number

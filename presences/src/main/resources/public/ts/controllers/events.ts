@@ -2,7 +2,7 @@ import {_, angular, idiom as lang, Me, model, moment, ng} from 'entcore';
 import {Action, ActionBody, Event, EventResponse, Events, EventType, Student, Students} from "../models";
 import {DateUtils, PresencesPreferenceUtils} from "@common/utils";
 import {GroupService} from "@common/services/GroupService";
-import {actionService, EventService, ReasonService} from "../services";
+import {actionService, EventRequest, EventService, ReasonService} from "../services";
 import {EventsFilter, EventsUtils} from "../utilities";
 import {Reason} from "@presences/models/Reason";
 
@@ -763,8 +763,19 @@ export const eventsController = ng.controller('EventsController', ['$scope', '$r
             console.log("exporting Pdf");
         };
 
-        vm.exportCsv = function () {
-            console.log("exporting Csv");
+        vm.exportCsv = (): void => {
+            const filter: EventRequest = {
+                structureId: vm.events.structureId,
+                startDate: vm.events.startDate,
+                endDate: vm.events.endDate,
+                noReason: vm.events.noReason,
+                eventType: vm.events.eventType,
+                listReasonIds: vm.events.listReasonIds,
+                regularized: vm.events.regularized,
+                userId: vm.events.userId,
+                classes: vm.events.classes,
+            };
+            window.open(eventService.exportCSV(filter));
         };
 
         /* ----------------------------

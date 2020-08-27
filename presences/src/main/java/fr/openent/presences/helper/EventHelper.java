@@ -315,6 +315,47 @@ public class EventHelper {
         });
     }
 
+    public void addStudentsToEvents(List<Event> events, List<String> studentIds, String structureId,
+                                    Future<JsonObject> studentFuture) {
+        personHelper.getStudentsInfo(structureId, studentIds, studentResp -> {
+            if (studentResp.isLeft()) {
+                String message = "[Presences@EventHelper::addStudentsToEvents] Failed to retrieve students info";
+                LOGGER.error(message);
+                studentFuture.fail(message);
+            } else {
+                List<Student> students = personHelper.getStudentListFromJsonArray(studentResp.right().getValue());
+                // for some reason, we still manage to find some "duplicate" data so we use mergeFunction (see collectors.toMap)
+                Map<String, Student> studentsMap = students.stream().collect(Collectors.toMap(Student::getId, Student::clone,
+                        (student1, student2) -> student1));
+                events.forEach(event ->
+                        event.setStudent(
+                                studentsMap.getOrDefault(event.getStudent().getId(),
+                                        new Student(event.getStudent().getId()))
+                        )
+                );
+                studentFuture.complete();
+            }
+        });
+    }
+
+    public void addOwnerToEvents(List<Event> events, List<String> ownerIds, Future<JsonObject> ownerFuture) {
+        userService.getUsers(ownerIds, ownerRes -> {
+            if (ownerRes.isLeft()) {
+                String message = "[Presences@EventHelper::addOwnerToEvents] Failed to retrieve owner info";
+                LOGGER.error(message);
+                ownerFuture.fail(message);
+            } else {
+                List<User> owners = personHelper.getUserListFromJsonArray(ownerRes.right().getValue());
+                Map<String, User> ownersMap = owners.stream().collect(Collectors.toMap(User::getId, User::clone));
+                events.forEach(
+                        event -> event.setOwner(ownersMap.getOrDefault(event.getOwner().getId(), new User(event.getOwner().getId())))
+                );
+                ownerFuture.complete();
+            }
+        });
+    }
+
+
     @SuppressWarnings("unchecked")
     public void addOwnerToEvents(List<Event> events, Future<JsonObject> future) {
         List<String> userIds = this.getAllOwnerIds(events);

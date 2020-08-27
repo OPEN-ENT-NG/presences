@@ -4,8 +4,11 @@ import fr.openent.presences.Presences;
 import fr.openent.presences.common.helper.FutureHelper;
 import fr.openent.presences.constants.Actions;
 import fr.openent.presences.enums.EventType;
+import fr.openent.presences.export.EventsCSVExport;
+import fr.openent.presences.model.Event.Event;
 import fr.openent.presences.security.ActionRight;
 import fr.openent.presences.security.CreateEventRight;
+import fr.openent.presences.security.Event.EventReadRight;
 import fr.openent.presences.service.EventService;
 import fr.openent.presences.service.impl.DefaultEventService;
 import fr.wseduc.rs.*;
@@ -35,7 +38,7 @@ import static org.entcore.common.http.response.DefaultResponseHandler.defaultRes
 
 public class EventController extends ControllerHelper {
 
-    private EventService eventService;
+    private final EventService eventService;
 
     public EventController(EventBus eb) {
         super();
@@ -92,6 +95,62 @@ public class EventController extends ControllerHelper {
                     classes, regularized, page, FutureHelper.handlerJsonArray(eventsFuture));
             eventService.getPageNumber(structureId, startDate, endDate, eventType, reasonIds, noReason, userId,
                     regularized, userIdFromClasses, FutureHelper.handlerJsonObject(pageNumberFuture));
+        });
+    }
+
+    @Get("/events/export")
+    @ApiDoc("Export events")
+    @ResourceFilter(EventReadRight.class)
+    @SecuredAction(value = "", type = ActionType.RESOURCE)
+    public void exportEvents(HttpServerRequest request) {
+        String structureId = request.getParam("structureId");
+        String startDate = request.getParam("startDate");
+        String endDate = request.getParam("endDate");
+
+        List<String> eventType = request.getParam("eventType") != null ? Arrays.asList(request.getParam("eventType").split("\\s*,\\s*")) : null;
+        List<String> reasonIds = request.getParam("reasonIds") != null ? Arrays.asList(request.getParam("reasonIds").split("\\s*,\\s*")) : null;
+        Boolean noReason = request.params().contains("noReason") ? Boolean.parseBoolean(request.getParam("noReason")) : false;
+        List<String> userId = request.getParam("userId") != null ? Arrays.asList(request.getParam("userId").split("\\s*,\\s*")) : null;
+        List<String> classes = request.getParam("classes") != null ? Arrays.asList(request.getParam("classes").split("\\s*,\\s*")) : null;
+        Boolean regularized = request.params().contains("regularized") ? Boolean.parseBoolean(request.getParam("regularized")) : null;
+
+        if (!request.params().contains("structureId") || !request.params().contains("startDate") ||
+                !request.params().contains("endDate")) {
+            badRequest(request);
+            return;
+        }
+
+        getUserIdFromClasses(classes, userResponse -> {
+            if (userResponse.isLeft()) {
+                renderError(request, JsonObject.mapFrom(userResponse.left().getValue()));
+            } else {
+                JsonArray userIdFromClasses = userResponse.right().getValue();
+                eventService.getCsvData(structureId, startDate, endDate, eventType, reasonIds, noReason, userId, userIdFromClasses,
+                        classes, regularized, event -> {
+                            if (event.failed()) {
+                                log.error("[Presences@EventController::exportEvents] Something went wrong while getting CSV data",
+                                        event.cause().getMessage());
+                                renderError(request);
+                            } else {
+                                List<Event> events = event.result();
+                                List<String> csvHeaders = Arrays.asList(
+                                        "presences.csv.header.student.firstName",
+                                        "presences.csv.header.student.lastName",
+                                        "presences.exemptions.csv.header.audiance",
+                                        "presences.event.type",
+                                        "presences.absence.reason",
+                                        "presences.created.by",
+                                        "presences.exemptions.dates",
+                                        "presences.hour",
+                                        "presences.exemptions.csv.header.comment",
+                                        "presences.widgets.absences.regularized");
+                                EventsCSVExport ece = new EventsCSVExport(events);
+                                ece.setRequest(request);
+                                ece.setHeader(csvHeaders);
+                                ece.export();
+                            }
+                        });
+            }
         });
     }
 
