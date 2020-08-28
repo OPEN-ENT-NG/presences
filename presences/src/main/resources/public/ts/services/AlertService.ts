@@ -7,9 +7,11 @@ export interface AlertService {
 
     getStudentsAlerts(structureId: string, type: string[], students, classes): Promise<Array<Alert>>;
 
-    getStudentAlerts(structureId: string, studentId: string, type: string): Promise<{count: number, threshold: number}>;
+    getStudentAlerts(structureId: string, studentId: string, type: string): Promise<{ count: number, threshold: number }>;
 
     reset(alerts: Array<number>): Promise<void>;
+
+    exportCSV(structureId: string, type: string[]): void;
 }
 
 export const alertService: AlertService = {
@@ -68,6 +70,15 @@ export const alertService: AlertService = {
         } catch (e) {
             throw e;
         }
+    },
+
+    exportCSV(structureId: string, types: string[]): void {
+        let url: string = `/presences/structures/${structureId}/alerts/export?`;
+        types.forEach(type => {
+            url += `&type=${type}`;
+        });
+
+        window.open(url);
     }
 
 

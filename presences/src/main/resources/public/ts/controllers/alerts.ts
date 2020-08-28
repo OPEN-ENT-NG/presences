@@ -73,6 +73,8 @@ interface ViewModel {
     toggleAlert(alert): void;
 
     reset(): void;
+
+    exportAlertCSV(): void;
 }
 
 export const alertsController = ng.controller('AlertsController', ['$scope', '$route', '$location',
@@ -241,6 +243,15 @@ export const alertsController = ng.controller('AlertsController', ['$scope', '$r
                 toasts.warning('presences.error.reset.alert');
                 throw e;
             }
+        };
+
+        /*  ----------------------------
+            Export CSV
+            ---------------------------- */
+
+        vm.exportAlertCSV = (): void => {
+            const structureId: string = window.structure.id;
+            alertService.exportCSV(structureId, vm.alertType);
         };
 
         $scope.$watch(() => window.structure, initData);

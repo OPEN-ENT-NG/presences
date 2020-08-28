@@ -69,13 +69,13 @@ public class DefaultAlertService implements AlertService {
             }
 
             JsonArray alerts = response.right().getValue();
-            // Récupérer les identifiants des élèves présents dans les alertes
+            // Retrieve student's alert present ID with alerts
             JsonArray studentsAlerts = new JsonArray();
             for (int i = 0; i < alerts.size(); i++) {
                 studentsAlerts.add(alerts.getJsonObject(i).getString("student_id"));
             }
 
-            // Récupérer leurs noms, prénoms et nom de la classe :
+            // Get names, first names and class name
             String studentQuery =
                     "MATCH (u:User)-[:IN]->(:ProfileGroup)-[:DEPENDS]->(c:Class) " +
                             "WHERE u.id IN {studentsId} " +
@@ -101,6 +101,8 @@ public class DefaultAlertService implements AlertService {
                     String studentId = alert.getString("student_id");
                     if (!studentMap.containsKey(studentId)) continue;
                     alert.put("name", studentMap.get(studentId).getString("lastName") + " " + studentMap.get(studentId).getString("firstName"));
+                    alert.put("lastName", studentMap.get(studentId).getString("lastName"));
+                    alert.put("firstName", studentMap.get(studentId).getString("firstName"));
                     alert.put("audience", studentMap.get(studentId).getString("audience"));
                 }
 
