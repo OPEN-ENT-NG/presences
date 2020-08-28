@@ -82,11 +82,7 @@ public class Punishment extends Model {
         JsonObject result = new JsonObject();
         fillables.forEach((key, value) -> {
             if (value.contains(method)) {
-                try {
-                    result.put(key, get(key));
-                } catch (NoSuchFieldException | IllegalAccessException e) {
-                    e.printStackTrace();
-                }
+                result.put(key, get(key));
             }
         });
         return result;

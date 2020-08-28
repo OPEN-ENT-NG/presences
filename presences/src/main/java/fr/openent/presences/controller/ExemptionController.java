@@ -115,8 +115,8 @@ public class ExemptionController extends ControllerHelper {
             public void handle(Either<String, JsonArray> event) {
                 JsonArray exemptions = event.right().getValue();
                 List<String> csvHeaders = Arrays.asList(
-                        "presences.exemptions.csv.header.student.firstName",
-                        "presences.exemptions.csv.header.student.lastName",
+                        "presences.csv.header.student.firstName",
+                        "presences.csv.header.student.lastName",
                         "presences.exemptions.csv.header.audiance",
                         "presences.exemptions.csv.header.subject",
                         "presences.exemptions.csv.header.startDate",

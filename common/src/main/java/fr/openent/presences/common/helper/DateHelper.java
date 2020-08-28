@@ -26,6 +26,7 @@ public class DateHelper {
     public static final String DAY_MONTH_YEAR = "dd/MM/yyyy";
     public static final String HOUR_MINUTES = "HH:mm";
     public static final String HOUR_MINUTES_SECONDS = "HH:mm:ss";
+    public static final String SAFE_HOUR_MINUTES = "kk'h'mm";
 
     private DateHelper() {
     }

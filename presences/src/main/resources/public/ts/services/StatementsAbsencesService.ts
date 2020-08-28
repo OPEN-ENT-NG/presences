@@ -8,6 +8,8 @@ import {
 } from "../models";
 
 export interface IStatementsAbsencesService {
+    baseUrl: string;
+
     get(statementsAbsencesRequest: IStatementsAbsencesRequest): Promise<IStatementsAbsencesResponse>;
 
     download(statementsAbsencesBody: IStatementAbsenceBody): void;
@@ -19,33 +21,19 @@ export interface IStatementsAbsencesService {
     validate(statementsAbsencesId: number, statementsAbsencesBody: IStatementAbsenceBody): Promise<AxiosResponse>;
 
     delete(statementsAbsencesId: number): Promise<AxiosResponse>;
+
+    export(statementsAbsences: IStatementsAbsencesRequest): void;
+
+    getUrl(statementsAbsences: IStatementsAbsencesRequest, page: number, limit: number, offset: number): String;
 }
 
 export const statementsAbsencesService: IStatementsAbsencesService = {
+    baseUrl: '/presences/statements/absences',
+
     get: async (statementsAbsences: IStatementsAbsencesRequest): Promise<IStatementsAbsencesResponse> => {
         try {
-            const structure_id: string = `?structure_id=${statementsAbsences.structure_id}`;
-            const start_at: string = `&start_at=${statementsAbsences.start_at}`;
-            const end_at: string = `&end_at=${statementsAbsences.end_at}`;
-            const isTreated: string = statementsAbsences.isTreated ? '' : `&is_treated=${statementsAbsences.isTreated}`;
-
-            let student_ids: string = '';
-            if (statementsAbsences.student_ids) {
-                statementsAbsences.student_ids.forEach((student_id: string) => {
-                    student_ids += `&student_id=${student_id}`;
-                });
-            }
-            const page: string = (statementsAbsences.page || statementsAbsences.page === 0) ?
-                `&page=${statementsAbsences.page}` : ``;
-
-            const limit: string = (statementsAbsences.limit || statementsAbsences.limit === 0) ?
-                `&limit=${statementsAbsences.limit}` : ``;
-
-            const offset: string = (statementsAbsences.offset || statementsAbsences.offset === 0) ?
-                `&offset=${statementsAbsences.offset}` : ``;
-
-            const urlParams = `${structure_id}${start_at}${end_at}${student_ids}${isTreated}${page}${limit}${offset}`;
-            const {data} = await http.get(`/presences/statements/absences${urlParams}`);
+            const urlParams: string = statementsAbsencesService.getUrl(statementsAbsences, statementsAbsences.page, statementsAbsences.limit, statementsAbsences.offset);
+            const {data}: IStatementsAbsencesResponse = await http.get(`${statementsAbsencesService.baseUrl}${urlParams}`);
             return data;
         } catch (err) {
             throw err;
@@ -74,15 +62,44 @@ export const statementsAbsencesService: IStatementsAbsencesService = {
     },
 
     validate: async (statementsAbsencesId: number, {isTreated}: IStatementAbsenceBody): Promise<AxiosResponse> => {
-        return http.put(`/presences/statements/absences/${statementsAbsencesId}/validate`, {is_treated: isTreated});
+        return http.put(`${statementsAbsencesService.baseUrl}${statementsAbsencesId}/validate`, {is_treated: isTreated});
     },
 
     update: async (statementsAbsencesId: number, statementsAbsences: IStatementAbsenceBody): Promise<AxiosResponse> => {
-        return http.put(`/presences/statements/absences/${statementsAbsencesId}`, statementsAbsences);
+        return http.put(`${statementsAbsencesService.baseUrl}${statementsAbsencesId}`, statementsAbsences);
     },
 
     delete: async (statementsAbsencesId: number): Promise<AxiosResponse> => {
-        return http.delete(`/presences/statements/absences/${statementsAbsencesId}`);
+        return http.delete(`${statementsAbsencesService.baseUrl}${statementsAbsencesId}`);
+    },
+
+    export: async (statementsAbsences: IStatementsAbsencesRequest): Promise<void> => {
+        const urlParams: string = statementsAbsencesService.getUrl(statementsAbsences, statementsAbsences.page, statementsAbsences.limit, statementsAbsences.offset);
+        window.open(`${statementsAbsencesService.baseUrl}/export${urlParams}`);
+    },
+
+    getUrl: (statementsAbsences: IStatementsAbsencesRequest, pageNumber: number, limitNumber: number, offsetNumber: number): String => {
+        const structure_id: string = `?structure_id=${statementsAbsences.structure_id}`;
+        const start_at: string = `&start_at=${statementsAbsences.start_at}`;
+        const end_at: string = `&end_at=${statementsAbsences.end_at}`;
+        const isTreated: string = statementsAbsences.isTreated ? '' : `&is_treated=${statementsAbsences.isTreated}`;
+
+        let student_ids: string = '';
+        if (statementsAbsences.student_ids) {
+            statementsAbsences.student_ids.forEach((student_id: string) => {
+                student_ids += `&student_id=${student_id}`;
+            });
+        }
+        const page: string = (pageNumber || pageNumber === 0) ?
+            `&page=${pageNumber}` : ``;
+
+        const limit: string = (limitNumber || limitNumber === 0) ?
+            `&limit=${limitNumber}` : ``;
+
+        const offset: string = (offsetNumber || offsetNumber === 0) ?
+            `&offset=${offsetNumber}` : ``;
+
+        return `${structure_id}${start_at}${end_at}${student_ids}${isTreated}${page}${limit}${offset}`;
     }
 };
 

@@ -3,6 +3,7 @@ package fr.openent.presences.controller;
 import fr.openent.presences.Presences;
 import fr.openent.presences.common.helper.DateHelper;
 import fr.openent.presences.constants.Actions;
+import fr.openent.presences.export.StatementAbsencesCSVExport;
 import fr.openent.presences.security.AbsenceStatementsCreateRight;
 import fr.openent.presences.security.AbsenceStatementsGetFileRight;
 import fr.openent.presences.security.AbsenceStatementsViewRight;
@@ -17,7 +18,7 @@ import fr.wseduc.security.SecuredAction;
 import fr.wseduc.webutils.request.RequestUtils;
 import io.vertx.core.eventbus.EventBus;
 import io.vertx.core.http.HttpServerRequest;
-import io.vertx.core.json.Json;
+import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import org.entcore.common.controller.ControllerHelper;
 import org.entcore.common.http.filter.ResourceFilter;
@@ -25,8 +26,9 @@ import org.entcore.common.http.filter.Trace;
 import org.entcore.common.storage.Storage;
 import org.entcore.common.user.UserUtils;
 
-import java.text.ParseException;
-import java.util.Date;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 
 public class StatementAbsenceController extends ControllerHelper {
 
@@ -54,6 +56,35 @@ public class StatementAbsenceController extends ControllerHelper {
                     return;
                 }
                 renderJson(request, result.result());
+            });
+        });
+    }
+
+    @Get("/statements/absences/export")
+    @ApiDoc("Export statement absences")
+    @ResourceFilter(AbsenceStatementsViewRight.class)
+    @SecuredAction(value = "", type = ActionType.RESOURCE)
+    public void export(HttpServerRequest request) {
+        UserUtils.getUserInfos(eb, request, user -> {
+            statementAbsenceService.get(user, request.params(), result -> {
+                if (result.failed()) {
+                    renderError(request);
+                    return;
+                }
+
+                JsonArray statementAbsences = result.result().getJsonArray("all");
+                List<String> csvHeaders = new ArrayList<>(Arrays.asList(
+                        "presences.statements.absence.csv.header.id",
+                        "presences.csv.header.student.firstName", "presences.csv.header.student.lastName",
+                        "presences.statements.absence.csv.header.start.at.date", "presences.statements.absence.csv.header.start.at.hour",
+                        "presences.statements.absence.csv.header.end.at.date", "presences.statements.absence.csv.header.end.at.hour",
+                        "presences.statements.absence.csv.header.description",
+                        "presences.statements.absence.csv.header.treated.at.date", "presences.statements.absence.csv.header.treated.at.hour",
+                        "presences.statements.absence.csv.header.created.at.date", "presences.statements.absence.csv.header.created.at.hour"));
+                StatementAbsencesCSVExport csv = new StatementAbsencesCSVExport(statementAbsences);
+                csv.setRequest(request);
+                csv.setHeader(csvHeaders);
+                csv.export();
             });
         });
     }

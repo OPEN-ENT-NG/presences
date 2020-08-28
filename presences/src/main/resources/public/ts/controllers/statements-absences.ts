@@ -51,6 +51,8 @@ interface IViewModel {
     removeSelectedStudents(studentItem): void;
 
     getSchoolYear(): void;
+
+    exportCsv(): void;
 }
 
 export const statementsAbsencesController = ng.controller('StatementsAbsencesController',
@@ -193,6 +195,19 @@ export const statementsAbsencesController = ng.controller('StatementsAbsencesCon
                 vm.studentsSearch.removeSelectedStudents(studentItem);
                 vm.filter.student_ids = vm.studentsSearch.getSelectedStudents().map(student => student["id"]);
                 vm.updateFilter();
+            };
+
+            /* CSV  */
+            vm.exportCsv = (): void => {
+                if (vm.statementsAbsences.statementAbsenceResponse.page_count < 50 && vm.statementsAbsences.statementAbsenceResponse.all.length > 0) {
+                    statementAbsenceService.export(vm.statementsAbsencesRequest);
+                    return;
+                }
+
+                if (vm.statementsAbsences.statementAbsenceResponse.page_count > 50)
+                    toasts.warning('incidents.csv.full');
+                else
+                    toasts.warning('incidents.csv.empty');
             };
 
             /* handling filter date event*/
