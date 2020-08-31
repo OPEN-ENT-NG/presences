@@ -104,6 +104,8 @@ public class CourseController extends ControllerHelper {
                     }
 
                     JsonArray courses = event.right().getValue();
+                    courses.getList().sort(Comparator.comparing(Course::getTimestamp));
+                    Collections.reverse(courses.getList());
                     List<String> csvHeaders = Arrays.asList(
                             "presences.exemptions.dates",
                             "presences.hour",
