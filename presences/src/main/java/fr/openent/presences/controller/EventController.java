@@ -133,9 +133,10 @@ public class EventController extends ControllerHelper {
                                 renderError(request);
                             } else {
                                 List<Event> events = event.result();
+
                                 List<String> csvHeaders = Arrays.asList(
-                                        "presences.csv.header.student.firstName",
                                         "presences.csv.header.student.lastName",
+                                        "presences.csv.header.student.firstName",
                                         "presences.exemptions.csv.header.audiance",
                                         "presences.event.type",
                                         "presences.absence.reason",

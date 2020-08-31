@@ -295,6 +295,8 @@ public class DefaultEventService implements EventService {
             query += "ORDER BY start_date DESC OFFSET ? LIMIT ? ";
             params.add(Presences.PAGE_SIZE * page);
             params.add(Presences.PAGE_SIZE);
+        } else {
+            query += "ORDER BY start_date DESC ";
         }
         return query;
     }
