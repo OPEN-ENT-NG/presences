@@ -19,8 +19,12 @@ export class Student {
                 if (key == 'idEleve') {
                     this.id = o['idEleve'];
                 } else if (key == 'idClasse') {
-                    let idClass = [o['idClasse'][0]];
-                    this.classeName = idClass.map(id => id.split('$')[1]);
+                    if (o['idClasse'].length !== 0) {
+                        let idClass = [o['idClasse'][0]];
+                        this.classeName = idClass.map(id => id.split('$')[1]);
+                    } else {
+                        this.classeName = [];
+                    }
                 } else {
                     this[key] = o[key];
                 }
