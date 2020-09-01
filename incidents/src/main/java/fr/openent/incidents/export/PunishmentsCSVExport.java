@@ -8,13 +8,15 @@ import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 
 import java.text.ParseException;
+import java.util.Collections;
+import java.util.List;
 
 public class PunishmentsCSVExport extends CSVExport {
     private JsonArray punishments;
 
     public PunishmentsCSVExport(JsonArray punishments) {
         super();
-        this.punishments = punishments;
+        this.punishments = sort(punishments);
         this.filename = "incidents.punishments.csv.filename";
     }
 
@@ -55,5 +57,11 @@ public class PunishmentsCSVExport extends CSVExport {
             return I18n.getInstance().translate("incidents.punishments.csv.header.processed.undone",
                     Renders.getHost(this.request), I18n.acceptLanguage(this.request));
         }
+    }
+
+    private JsonArray sort(JsonArray punishments) {
+        List<JsonObject> list = punishments.getList();
+        Collections.sort(list, (o1, o2) -> o1.getJsonObject("student").getString("name").compareToIgnoreCase(o2.getJsonObject("student").getString("name")));
+        return new JsonArray(list);
     }
 }
