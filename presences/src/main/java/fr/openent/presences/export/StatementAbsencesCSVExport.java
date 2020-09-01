@@ -33,9 +33,11 @@ public class StatementAbsencesCSVExport extends CSVExport {
 
     private String getLine(JsonObject statementAbsence) throws ParseException {
         String treated_at = statementAbsence.getString("treated_at");
-        String line = statementAbsence.getLong("id") + SEPARATOR;
-        line += statementAbsence.getJsonObject("student").getString("lastName") + SEPARATOR;
+        JsonObject parent = statementAbsence.getJsonObject("parent");
+        String line = statementAbsence.getJsonObject("student").getString("lastName") + SEPARATOR;
         line += statementAbsence.getJsonObject("student").getString("firstName") + SEPARATOR;
+        line += (parent != null ? parent.getString("lastName") : "") + SEPARATOR;
+        line += (parent != null ? parent.getString("firstName") : "") + SEPARATOR;
         line += DateHelper.getDateString(statementAbsence.getString("start_at"), DateHelper.DAY_MONTH_YEAR) + SEPARATOR;
         line += DateHelper.getDateString(statementAbsence.getString("start_at"), DateHelper.SAFE_HOUR_MINUTES) + SEPARATOR;
         line += DateHelper.getDateString(statementAbsence.getString("end_at"), DateHelper.DAY_MONTH_YEAR) + SEPARATOR;

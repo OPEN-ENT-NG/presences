@@ -15,6 +15,7 @@ public class StatementAbsence extends Model {
     private String description;
     private String treated_at;
     private String validator_id;
+    private String parent_id;
     private String attachment_id;
     private String created_at;
 
@@ -29,6 +30,7 @@ public class StatementAbsence extends Model {
         fillables.put("structure_id", Arrays.asList("CREATE", "mandatory"));
         fillables.put("description", Collections.singletonList("CREATE"));
         fillables.put("treated_at", Collections.singletonList("UPDATE"));
+        fillables.put("parent_id", Collections.singletonList("CREATE"));
         fillables.put("validator_id", Collections.singletonList("UPDATE"));
         fillables.put("attachment_id", Collections.singletonList("CREATE"));
         fillables.put("created_at", Collections.emptyList());

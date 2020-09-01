@@ -2,6 +2,8 @@ package fr.openent.presences.controller;
 
 import fr.openent.presences.Presences;
 import fr.openent.presences.common.helper.DateHelper;
+import fr.openent.presences.common.service.UserService;
+import fr.openent.presences.common.service.impl.DefaultUserService;
 import fr.openent.presences.constants.Actions;
 import fr.openent.presences.export.StatementAbsencesCSVExport;
 import fr.openent.presences.security.AbsenceStatementsCreateRight;
@@ -16,6 +18,9 @@ import fr.wseduc.rs.Put;
 import fr.wseduc.security.ActionType;
 import fr.wseduc.security.SecuredAction;
 import fr.wseduc.webutils.request.RequestUtils;
+import io.vertx.core.AsyncResult;
+import io.vertx.core.Future;
+import io.vertx.core.Handler;
 import io.vertx.core.eventbus.EventBus;
 import io.vertx.core.http.HttpServerRequest;
 import io.vertx.core.json.JsonArray;
@@ -26,21 +31,22 @@ import org.entcore.common.http.filter.Trace;
 import org.entcore.common.storage.Storage;
 import org.entcore.common.user.UserUtils;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
+import java.util.*;
+import java.util.stream.Collectors;
 
 public class StatementAbsenceController extends ControllerHelper {
 
     private StatementAbsenceService statementAbsenceService;
     private EventBus eb;
     private Storage storage;
+    private UserService userService;
 
     public StatementAbsenceController(EventBus eventBus, Storage storage) {
         super();
         this.statementAbsenceService = new DefaultStatementAbsenceService(storage);
         this.storage = storage;
         this.eb = eventBus;
+        this.userService = new DefaultUserService();
     }
 
 
@@ -72,19 +78,21 @@ public class StatementAbsenceController extends ControllerHelper {
                     return;
                 }
 
-                JsonArray statementAbsences = result.result().getJsonArray("all");
-                List<String> csvHeaders = new ArrayList<>(Arrays.asList(
-                        "presences.statements.absence.csv.header.id",
-                        "presences.csv.header.student.lastName", "presences.csv.header.student.firstName",
-                        "presences.statements.absence.csv.header.start.at.date", "presences.statements.absence.csv.header.start.at.hour",
-                        "presences.statements.absence.csv.header.end.at.date", "presences.statements.absence.csv.header.end.at.hour",
-                        "presences.statements.absence.csv.header.description",
-                        "presences.statements.absence.csv.header.treated.at.date", "presences.statements.absence.csv.header.treated.at.hour",
-                        "presences.statements.absence.csv.header.created.at.date", "presences.statements.absence.csv.header.created.at.hour"));
-                StatementAbsencesCSVExport csv = new StatementAbsencesCSVExport(statementAbsences);
-                csv.setRequest(request);
-                csv.setHeader(csvHeaders);
-                csv.export();
+                setParent(result.result().getJsonArray("all"), listResult -> {
+                    JsonArray statementAbsences = listResult.result();
+                    List<String> csvHeaders = new ArrayList<>(Arrays.asList(
+                            "presences.csv.header.student.lastName", "presences.csv.header.student.firstName",
+                            "presences.csv.header.parent.lastName", "presences.csv.header.parent.firstName",
+                            "presences.statements.absence.csv.header.start.at.date", "presences.statements.absence.csv.header.start.at.hour",
+                            "presences.statements.absence.csv.header.end.at.date", "presences.statements.absence.csv.header.end.at.hour",
+                            "presences.statements.absence.csv.header.description",
+                            "presences.statements.absence.csv.header.treated.at.date", "presences.statements.absence.csv.header.treated.at.hour",
+                            "presences.statements.absence.csv.header.created.at.date", "presences.statements.absence.csv.header.created.at.hour"));
+                    StatementAbsencesCSVExport csv = new StatementAbsencesCSVExport(statementAbsences);
+                    csv.setRequest(request);
+                    csv.setHeader(csvHeaders);
+                    csv.export();
+                });
             });
         });
     }
@@ -101,7 +109,7 @@ public class StatementAbsenceController extends ControllerHelper {
                 if (!(user.getChildrenIds().contains(request.getFormAttribute("student_id")))) {
                     unauthorized(request);
                 }
-                saveAbsenceStatement(request, null);
+                saveAbsenceStatement(request, null, user.getUserId());
             });
         });
     }
@@ -126,7 +134,7 @@ public class StatementAbsenceController extends ControllerHelper {
                     unauthorized(request);
                 }
 
-                saveAbsenceStatement(request, file_id);
+                saveAbsenceStatement(request, file_id, user.getUserId());
             });
         });
     }
@@ -185,9 +193,10 @@ public class StatementAbsenceController extends ControllerHelper {
         });
     }
 
-    private void saveAbsenceStatement(HttpServerRequest request, String file_id) {
+    private void saveAbsenceStatement(HttpServerRequest request, String file_id, String parent_id) {
         JsonObject body = new JsonObject();
         body.put("attachment_id", file_id);
+        body.put("parent_id", parent_id);
 
         request.formAttributes().entries().forEach(entry -> {
             body.put(entry.getKey(), entry.getValue());
@@ -202,4 +211,36 @@ public class StatementAbsenceController extends ControllerHelper {
             renderJson(request, result.result());
         });
     }
+
+
+    private void setParent(JsonArray dataList, Handler<AsyncResult<JsonArray>> handler) {
+        List<String> parentIds = ((List<JsonObject>) dataList.getList())
+                .stream()
+                .map(res -> res.getString("parent_id"))
+                .collect(Collectors.toList());
+
+        userService.getUsers(parentIds, resUsers -> {
+            if (resUsers.isLeft()) {
+                String message = "[Presences@StatementAbsenceController::setParent] Failed to get parents";
+                log.error(message);
+                handler.handle(Future.failedFuture(message));
+                return;
+            }
+
+            Map<String, JsonObject> parentMap = new HashMap<>();
+            resUsers.right().getValue().forEach(oParent -> {
+                JsonObject parent = (JsonObject) oParent;
+                parentMap.put(parent.getString("id"), parent);
+            });
+
+            dataList.forEach(oRes -> {
+                JsonObject res = (JsonObject) oRes;
+                res.put("parent", parentMap.get(res.getString("parent_id")));
+                res.remove("parent_id");
+            });
+
+            handler.handle(Future.succeededFuture(dataList));
+        });
+    }
+
 }
