@@ -42,6 +42,8 @@ export interface RegistryRequest {
 
 export interface RegistryService {
     getRegisterSummary(registryParam: RegistryRequest): Promise<Registry[]>;
+
+    exportCSV(registryParam: RegistryRequest) : void;
 }
 
 export const registryService: RegistryService = {
@@ -63,6 +65,26 @@ export const registryService: RegistryService = {
             const {data} = await http.get(`/presences/registry${urlParams}${forgottenNotebookParam}`);
 
             return data;
+        } catch (err) {
+            throw err;
+        }
+    },
+
+    exportCSV: async (registryParam: RegistryRequest) : Promise<void> => {
+        try {
+            let groupParams : string = '';
+            registryParam.group.forEach(groupId => {
+                groupParams += `&group=${groupId}`;
+            });
+
+            let typeParams : string = '';
+            registryParam.type.forEach(typeName => {
+                typeParams += `&type=${typeName}`;
+            });
+
+            const urlParams : string = `?structureId=${registryParam.structureId}&month=${registryParam.month}${groupParams}${typeParams}`;
+            const forgottenNotebookParam : string = `&forgottenNotebook=${registryParam.forgottenNotebook}`;
+            window.open(`/presences/registry/export${urlParams}${forgottenNotebookParam}`)
         } catch (err) {
             throw err;
         }

@@ -103,13 +103,13 @@ public class DefaultGroupService implements GroupService {
         String query = "MATCH (g:Group)<-[:IN]-(u:User)-[:IN]->(:ProfileGroup)-[:DEPENDS]->(c:Class) " +
                 "WHERE u.profiles = ['Student'] " +
                 "AND g.id IN {ids} " +
-                "RETURN distinct u.id as id, (u.lastName + ' ' + u.firstName) as displayName, 'USER' as type, c.id as groupId, c.name as groupName " +
+                "RETURN distinct u.id as id, (u.lastName + ' ' + u.firstName) as displayName, u.lastName as lastName, u.firstName as firstName, 'USER' as type, c.id as groupId, c.name as groupName " +
                 "ORDER BY displayName " +
                 "UNION  " +
                 "MATCH (u:User)-[:IN]->(:ProfileGroup)-[:DEPENDS]->(c:Class) " +
                 "WHERE u.profiles = ['Student'] " +
                 "AND c.id IN {ids} " +
-                "RETURN distinct u.id as id, (u.lastName + ' ' + u.firstName) as displayName, 'USER' as type, c.id as groupId, c.name as groupName " +
+                "RETURN distinct u.id as id, (u.lastName + ' ' + u.firstName) as displayName, u.lastName as lastName, u.firstName as firstName, 'USER' as type, c.id as groupId, c.name as groupName " +
                 "ORDER BY displayName";
         JsonObject params = new JsonObject()
                 .put("ids", new JsonArray(groups));

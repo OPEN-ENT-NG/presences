@@ -41,10 +41,15 @@ public class DefaultRegistryService implements RegistryService {
     @Override
     public void get(String month, List<String> groups, List<String> eventTypes,
                     String structureId, boolean forgottenBooleanFilter, Handler<Either<String, JsonArray>> handler) {
-        String startDate, endDate;
+        getStudents(month, groups, eventTypes, structureId, forgottenBooleanFilter, handler);
+    }
+
+    private void getStudents(String month, List<String> groups, List<String> eventTypes, String structureId, boolean forgottenBooleanFilter, Handler<Either<String, JsonArray>> handler) {
+        String startDate;
+        String endDate;
         Date monthDate;
         try {
-            monthDate = DateHelper.parse(month, "yyyy-MM");
+            monthDate = DateHelper.parse(month, DateHelper.YEAR_MONTH);
             startDate = DateHelper.getFirstDayOfMonth(monthDate);
             endDate = DateHelper.getLastDayOfMonth(monthDate);
         } catch (ParseException e) {
@@ -104,6 +109,51 @@ public class DefaultRegistryService implements RegistryService {
         });
     }
 
+    @Override
+    public void getCSV(String month, List<String> groups, List<String> eventTypes,
+                       String structureId, boolean forgottenBooleanFilter, Handler<Either<String, JsonArray>> handler) {
+
+        getStudents(month, groups, eventTypes, structureId, forgottenBooleanFilter, result -> {
+
+            if (result.isLeft()) {
+                handler.handle(new Either.Left<>("[Presences@DefaultRegistry::getCSV] Failed to export Registry"));
+            } else {
+                JsonArray students = result.right().getValue();
+
+                JsonArray events = new JsonArray();
+                for (int studentIndex = 0; studentIndex < students.size(); studentIndex++) {
+                    JsonObject student = students.getJsonObject(studentIndex);
+                    JsonArray days = student.getJsonArray("days");
+
+                    for (int dayIndex = 0; dayIndex < days.size(); dayIndex++) {
+                        JsonObject day = days.getJsonObject(dayIndex);
+                        JsonArray ev = day.getJsonArray("events");
+
+                        for (int eventIndex = 0; eventIndex < ev.size(); eventIndex++) {
+                            JsonObject event = ev.getJsonObject(eventIndex);
+                            event.put("lastName",student.getString("lastName"));
+                            event.put("firstName",student.getString("firstName"));
+                            event.put("className", student.getString("className"));
+                            events.add(event);
+                        }
+
+                        if(day.getBoolean("forgottenNotebook")) {
+                            JsonObject event = new JsonObject();
+                            event.put("lastName",student.getString("lastName"));
+                            event.put("firstName",student.getString("firstName"));
+                            event.put("className", student.getString("className"));
+                            event.put("start_date", day.getString("date"));
+                            event.put("end_date", (byte[]) null);
+                            event.put("type", EventType.FORGOTTEN_NOTEBOOK.toString());
+                            events.add(event);
+                        }
+                    }
+                }
+                handler.handle(new Either.Right<>(events));
+            }
+        });
+    }
+
     /**
      * Format users as renderer list
      *
@@ -121,6 +171,8 @@ public class DefaultRegistryService implements RegistryService {
             JsonObject user = new JsonObject();
             user.put("id", u.getString("id", ""))
                     .put("displayName", u.getString("displayName", ""))
+                    .put("lastName", u.getString("lastName", ""))
+                    .put("firstName", u.getString("firstName", ""))
                     .put("className", u.getString("groupName", ""))
                     .put("days", days);
 
