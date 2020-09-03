@@ -1,7 +1,6 @@
 package fr.openent.incidents.service.impl;
 
 import com.mongodb.BasicDBObject;
-import com.sun.org.apache.xpath.internal.operations.Bool;
 import fr.openent.incidents.Incidents;
 import fr.openent.incidents.enums.PunishmentsProcessState;
 import fr.openent.incidents.enums.WorkflowActions;
