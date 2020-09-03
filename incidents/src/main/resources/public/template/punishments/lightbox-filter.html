@@ -96,6 +96,21 @@
         </div>
     </div>
 
+    <!-- Processed filter -->
+    <div class="row vertical-spacing">
+        <h4 class="header-lightbox">
+            <i18n>incidents.state</i18n>
+        </h4>
+        <div class="chips">
+            <div class="chip"
+                 ng-repeat="punishmentState in vm.filterForm.punishmentsStates"
+                 ng-class="{ selected: punishmentState.isSelected }"
+                 data-ng-click="vm.togglePunishmentState(punishmentState)">
+                <span>[[lang.translate(punishmentState.label)]]</span>
+            </div>
+        </div>
+    </div>
+
     <!-- is mass-mailed TODO massmailing next feature -->
     <!--    <div class="row vertical-spacing">-->
     <!--        <h4 class="header-lightbox">-->

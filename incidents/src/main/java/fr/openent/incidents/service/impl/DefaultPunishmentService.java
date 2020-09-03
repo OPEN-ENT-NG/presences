@@ -1,7 +1,9 @@
 package fr.openent.incidents.service.impl;
 
 import com.mongodb.BasicDBObject;
+import com.sun.org.apache.xpath.internal.operations.Bool;
 import fr.openent.incidents.Incidents;
+import fr.openent.incidents.enums.PunishmentsProcessState;
 import fr.openent.incidents.enums.WorkflowActions;
 import fr.openent.incidents.model.Punishment;
 import fr.openent.incidents.service.PunishmentService;
@@ -255,6 +257,7 @@ public class DefaultPunishmentService implements PunishmentService {
             List<String> student_ids = body.getAll("student_id");
             List<String> group_ids = body.getAll("group_id");
             List<String> type_ids = body.getAll("type_id");
+            List<String> process_states = body.getAll("process");
 
             this.groupService.getGroupStudents(group_ids, groupResult -> {
                 if (groupResult.isLeft()) {
@@ -289,6 +292,21 @@ public class DefaultPunishmentService implements PunishmentService {
                     List<Long> listTypeIds = new ArrayList<>();
                     type_ids.forEach(type_id -> listTypeIds.add(Long.parseLong(type_id)));
                     queries.add(new BasicDBObject("type_id", new BasicDBObject("$in", listTypeIds)));
+                }
+
+
+                if (process_states != null && process_states.size() > 0) {
+                    Boolean isProcessed = process_states.contains(PunishmentsProcessState.PROCESSED.toString());
+                    Boolean isNotProcessed = process_states.contains(PunishmentsProcessState.NOT_PROCESSED.toString());
+                    Boolean isAllSelected = isProcessed && isNotProcessed;
+
+                    if (!isAllSelected) {
+                        if (isProcessed) {
+                            queries.add(new BasicDBObject("processed", true));
+                        } else if (isNotProcessed) {
+                            queries.add(new BasicDBObject("processed", false));
+                        }
+                    }
                 }
 
                 query.put("$and", queries);

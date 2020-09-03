@@ -13,6 +13,11 @@ export enum MassmailingsPunishments {
     NOT_PUBLISHED
 }
 
+export enum PunishmentsProcessStates {
+    PROCESSED,
+    NOT_PROCESSED
+}
+
 export interface IPunishmentRequest {
     structure_id: string;
     start_at: string;
@@ -20,6 +25,7 @@ export interface IPunishmentRequest {
     students_ids: Array<string>;
     groups_ids: Array<string>;
     type_ids: Array<number>;
+    process_state: Array<{ label: string , isSelected: boolean }>;
     massmailed?: boolean;
     page: number;
 }

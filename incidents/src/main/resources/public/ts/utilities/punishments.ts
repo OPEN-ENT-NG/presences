@@ -1,4 +1,4 @@
-import {MassmailingsPunishments, PunishmentsRules} from "@incidents/models";
+import {MassmailingsPunishments, PunishmentsProcessStates, PunishmentsRules} from "@incidents/models";
 import {model} from "entcore";
 import incidentsRights from "@incidents/rights";
 
@@ -40,6 +40,29 @@ export class PunishmentsUtils {
             });
         return punishmentsRules;
     };
+
+    /**
+     * Init punishments rules to interact
+     */
+    static initPunishmentStates = (): Array<{ label: string, value: string, isSelected: boolean }> => {
+        let punishmentsStates: Array<{ label: string, value: string, isSelected: boolean }> = [];
+        Object.keys(PunishmentsProcessStates)
+            .forEach((punishmentState: string) => {
+                switch (punishmentState) {
+                    case PunishmentsProcessStates[PunishmentsProcessStates.PROCESSED]: {
+                        let i18n: string = 'incidents.state.processed';
+                        punishmentsStates.push({label: i18n, value: punishmentState, isSelected: true});
+                        break;
+                    }
+                    case PunishmentsProcessStates[PunishmentsProcessStates.NOT_PROCESSED]: {
+                        let i18n: string = 'incidents.state.not.processed';
+                        punishmentsStates.push({label: i18n, value: punishmentState, isSelected: true});
+                        break;
+                    }
+                }
+            });
+        return punishmentsStates;
+    }
 
     /* init massmailing punishments menu to interact */
     static initMassmailingsPunishments = (): Array<{ label: string, isSelected: boolean }> => {

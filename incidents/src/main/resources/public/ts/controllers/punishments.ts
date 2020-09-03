@@ -21,6 +21,7 @@ interface IFilter {
     students: Array<string>;
     groups: Array<string>;
     punishmentsRules: Array<{ label: string, value: string, isSelected: boolean, type: string }>;
+    punishmentsStates: Array<{ label: string, value: string, isSelected: boolean }>;
     massmaillingsPunishments: Array<{ label: string, isSelected: boolean }>;
     page: number;
 }
@@ -31,11 +32,13 @@ interface IFilterForm {
     groups: Array<{}>;
     isAllPunishmentTypeSelected: boolean;
     punishmentsRules: Array<{ label: string, value: string, isSelected: boolean, type: string }>;
+    punishmentsStates: Array<{ label: string,  value: string, isSelected: boolean }>;
     massmaillingsPunishments: Array<{ label: string, isSelected: boolean }>;
     isUpdated?: boolean;
 }
 
 interface IViewModel {
+
     filter: IFilter;
     punishments: Punishments;
 
@@ -71,6 +74,8 @@ interface IViewModel {
     toggleAllPunishmentType(): void;
 
     togglePunishmentType(punishmentRule: { label: string, value: string, isSelected: boolean }): void;
+
+    togglePunishmentState(punishmentState: { label: string, value: string, isSelected: boolean, type: string }): void;
 
     setSelectedPunishmentType(punishmentType: IPunishmentType): void;
 
@@ -131,6 +136,7 @@ export const punishmentController = ng.controller('PunishmentController',
                 students: [],
                 groups: [],
                 punishmentsRules: PunishmentsUtils.initPunishmentRules(),
+                punishmentsStates: PunishmentsUtils.initPunishmentStates(),
                 massmaillingsPunishments: PunishmentsUtils.initMassmailingsPunishments(),
                 page: 0
             };
@@ -143,6 +149,7 @@ export const punishmentController = ng.controller('PunishmentController',
                 groups: [],
                 isAllPunishmentTypeSelected: false,
                 punishmentsRules: PunishmentsUtils.initPunishmentRules(),
+                punishmentsStates: PunishmentsUtils.initPunishmentStates(),
                 massmaillingsPunishments: PunishmentsUtils.initMassmailingsPunishments(),
                 isUpdated: false,
             };
@@ -218,6 +225,7 @@ export const punishmentController = ng.controller('PunishmentController',
                     .filter(punishmentType => punishmentType.isSelected)
                     .map(punishmentType => punishmentType.id);
                 vm.punishmentsRequest.massmailed = undefined;
+                vm.punishmentsRequest.process_state = vm.filter.punishmentsStates;
                 vm.punishmentsRequest.page = vm.filter.page;
 
             };
@@ -304,6 +312,16 @@ export const punishmentController = ng.controller('PunishmentController',
                 punishmentRule.isSelected = !punishmentRule.isSelected;
                 applyPunishmentTypeFilterOnRule(punishmentRule);
                 updateAllNoneOption();
+            };
+
+            /**
+             * Activate or deactivate the processed value of the punishment.
+             * @param punishmentState   the punishment processed state.
+             */
+            vm.togglePunishmentState = (punishmentState: { label: string, value: string, isSelected: boolean, type: string }): void => {
+                punishmentState.isSelected = !punishmentState.isSelected;
+                vm.filter.punishmentsStates.filter(state => state.value === punishmentState.value)
+                    .forEach(state => state.isSelected = punishmentState.isSelected);
             };
 
             const initPunishmentTypeFilter = () => {
