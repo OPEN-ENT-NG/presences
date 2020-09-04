@@ -234,6 +234,16 @@ public class DateHelper {
         }
     }
 
+    public static String getDateString(Date date) {
+        SimpleDateFormat sdf = new SimpleDateFormat();
+        return sdf.format(date);
+    }
+
+    public static String getDateString(Date date, String format) {
+        SimpleDateFormat sdf = new SimpleDateFormat(format);
+        return sdf.format(date);
+    }
+
     /**
      * Get Simple Time as string || fetchTimeString to avoid using Try Catch in ur own function
      *
@@ -401,8 +411,19 @@ public class DateHelper {
         Calendar cal = Calendar.getInstance();
         cal.add(Calendar.DATE, -1);
         Date date = cal.getTime();
-        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
-        return sdf.format(date);
+        return DateHelper.getDateString(date, DateHelper.YEAR_MONTH_DAY);
+    }
+
+    public static String getCurrentDay() {
+        Calendar cal = Calendar.getInstance();
+        Date date = cal.getTime();
+        return DateHelper.getDateString(date, DateHelper.YEAR_MONTH_DAY);
+    }
+
+    public static String getCurrentTime() {
+        Calendar cal = Calendar.getInstance();
+        Date date = cal.getTime();
+        return DateHelper.getDateString(date, DateHelper.HOUR_MINUTES);
     }
 
     /**

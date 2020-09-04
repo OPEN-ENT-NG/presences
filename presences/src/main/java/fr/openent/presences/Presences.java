@@ -93,12 +93,13 @@ public class Presences extends BaseServer {
         Viescolaire.getInstance().init(eb);
         Massmailing.getInstance().init(eb);
 
-        vertx.deployVerticle(CreateDailyPresenceWorker.class, new DeploymentOptions().setConfig(config).setWorker(true));
-
-        try {
-            new CronTrigger(vertx, config.getString("registers-cron", "0 1 * * * ? *")).schedule(new CreateDailyRegistersTask(vertx.eventBus()));
-        } catch (ParseException e) {
-            log.fatal(e.getMessage(), e);
+        if (config.containsKey("registers-cron")) {
+            vertx.deployVerticle(CreateDailyPresenceWorker.class, new DeploymentOptions().setConfig(config).setWorker(true));
+            try {
+                new CronTrigger(vertx, config.getString("registers-cron")).schedule(new CreateDailyRegistersTask(vertx.eventBus()));
+            } catch (ParseException e) {
+                log.fatal(e.getMessage(), e);
+            }
         }
     }
 

@@ -62,7 +62,7 @@ public class CourseHelper {
 
     public void getCoursesList(String structure, List<String> teachersList, List<String> groupsList,
                                String start, String end, Handler<AsyncResult<List<Course>>> handler) {
-        getCourses(structure, teachersList, groupsList, start, end, courseResult -> {
+        getCourses(structure, teachersList, groupsList, start, end, null, null, courseResult -> {
             if (courseResult.isLeft()) {
                 String message = "[CourseHelper@getCourses] Failed to retrieve list courses";
                 LOGGER.error(message, courseResult.left().getValue());
@@ -130,14 +130,16 @@ public class CourseHelper {
     }
 
     public void getCourses(String structure, List<String> teachers, List<String> groups, String start,
-                           String end, Handler<Either<String, JsonArray>> handler) {
+                           String end, String startTime, String endTime, Handler<Either<String, JsonArray>> handler) {
         JsonObject action = new JsonObject()
                 .put("action", "course.getCoursesOccurences")
                 .put("structureId", structure)
                 .put("teacherId", new JsonArray(teachers))
                 .put("group", new JsonArray(groups))
                 .put("begin", start)
-                .put("end", end);
+                .put("end", end)
+                .put("startTime", startTime)
+                .put("endTime", endTime);
 
         eb.send("viescolaire", action, event -> {
             if (event.failed() || event.result() == null || "error".equals(((JsonObject) event.result().body()).getString("status"))) {

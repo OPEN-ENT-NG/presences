@@ -63,12 +63,13 @@ public class CreateDailyPresenceWorker extends BusModBase implements Handler<Mes
     }
 
     private void processCreateDailyPresences() {
-        String yesterday = DateHelper.getYesterday();
+        String today = DateHelper.getCurrentDay();
+        String startDayTime = "00:00";
+        String currentTime = DateHelper.getCurrentTime();
 
         String queryStructures = "SELECT id_etablissement as id FROM " + Presences.dbSchema + " .etablissements_actifs";
 
         JsonObject result = new JsonObject();
-        // TODO create future
         List<Future> futures = new ArrayList<>();
         Sql.getInstance().prepared(queryStructures, new JsonArray(), SqlResult.validResultHandler(resultStructures -> {
             Future<JsonArray> structureFuture = Future.future();
@@ -91,7 +92,7 @@ public class CreateDailyPresenceWorker extends BusModBase implements Handler<Mes
                     String structureId = structureIds.getJsonObject(i).getString("id");
                     Future<JsonObject> future = Future.future();
                     futures.add(future);
-                    createStructureCoursesRegister(structureId, yesterday, yesterday, resultCreations -> {
+                    createStructureCoursesRegister(structureId, today, startDayTime, currentTime, resultCreations -> {
                         try {
                             if (resultCreations.succeeded()) {
                                 result.getJsonObject("structures").put(structureId, resultCreations.result());
@@ -117,7 +118,7 @@ public class CreateDailyPresenceWorker extends BusModBase implements Handler<Mes
         }));
     }
 
-    private void createStructureCoursesRegister(String structureId, String startDate, String endDate, Handler<AsyncResult<JsonObject>> handler) {
+    private void createStructureCoursesRegister(String structureId, String date, String startTime, String endTime, Handler<AsyncResult<JsonObject>> handler) {
         List<Future> futures = new ArrayList<>();
 
         Future personnelFuture = Future.future();
@@ -191,7 +192,7 @@ public class CreateDailyPresenceWorker extends BusModBase implements Handler<Mes
             });
         });
 
-        courseService.listCourses(structureId, new ArrayList<>(), new ArrayList<>(), startDate, endDate, true, true, null, FutureHelper.handlerJsonArray(courseFuture));
+        courseService.listCourses(structureId, new ArrayList<>(), new ArrayList<>(), date, date, startTime, endTime,true, true, null, FutureHelper.handlerJsonArray(courseFuture));
         getFirstCounsellorId(structureId, personnelFuture);
     }
 

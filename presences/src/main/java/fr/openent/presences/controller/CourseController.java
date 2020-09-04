@@ -69,7 +69,7 @@ public class CourseController extends ControllerHelper {
         Integer limit = params.contains("limit") ? Integer.parseInt(request.getParam("limit")) : null;
 
         courseService.listCourses(params.get("structure"), params.getAll("teacher"), params.getAll("group"),
-                params.get("start"), params.get("end"), forgottenFilter, multipleSlot, userDate, event -> {
+                params.get("start"), params.get("end"), null, null, forgottenFilter, multipleSlot, userDate, event -> {
                     if (event.isLeft()) {
                         renderError(request);
                     } else {
@@ -96,7 +96,7 @@ public class CourseController extends ControllerHelper {
         boolean forgottenFilter = params.contains("forgotten_registers") && Boolean.parseBoolean(request.getParam("forgotten_registers"));
         boolean multipleSlot = params.contains("multiple_slot") && Boolean.parseBoolean(request.getParam("multiple_slot"));
         courseService.listCourses(params.get("structure"), params.getAll("teacher"), params.getAll("group"),
-                params.get("start"), params.get("end"), forgottenFilter, multipleSlot, userDate, event -> {
+                params.get("start"), params.get("end"), null, null, forgottenFilter, multipleSlot, userDate, event -> {
                     if (event.isLeft()) {
                         log.error("[Presences@CourseController] Failed to list courses", event.left().getValue());
                         renderError(request);
