@@ -1,5 +1,6 @@
-<button class="forgotten" data-ng-click="vm.openForgottenNotebook()">
-    <i18n>presences.forgotten.notebook</i18n>
+<button class="forgotten"
+        data-ng-click="vm.openForgottenNotebook()">
+    <span>[[vm.title]]</span>
 </button>
 
 <lightbox class="forgotten-notebook-form" show="vm.openForgottenNotebookLightBox"

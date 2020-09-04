@@ -22,6 +22,8 @@ export interface Scope extends IRootScopeService {
     isRelative(): boolean;
 
     isChild(): boolean;
+
+    isTeacher(): boolean;
 }
 
 /**
@@ -158,6 +160,10 @@ export const mainController = ng.controller('MainController', ['$scope', 'route'
 
         $scope.isChild = (): boolean => {
             return UserUtils.isChild(model.me.type);
+        };
+
+        $scope.isTeacher = (): boolean => {
+            return UserUtils.isTeacher(model.me.type);
         };
 
         $scope.redirectTo = (path: string) => {

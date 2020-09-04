@@ -1,8 +1,8 @@
 package fr.openent.presences.controller;
 
+import fr.openent.presences.Presences;
 import fr.openent.presences.constants.Actions;
-import fr.openent.presences.security.Manage;
-import fr.openent.presences.security.StudentEventsViewRight;
+import fr.openent.presences.security.ForgottenNotebook.ForgottenNotebookManageRight;
 import fr.openent.presences.service.NotebookService;
 import fr.openent.presences.service.impl.DefaultNotebookService;
 import fr.wseduc.rs.*;
@@ -25,10 +25,14 @@ public class NotebookController extends ControllerHelper {
         this.notebookService = new DefaultNotebookService();
     }
 
+    @SecuredAction(value = Presences.MANAGE_FORGOTTEN_NOTEBOOK, type = ActionType.WORKFLOW)
+    public void worflowManageForgottenNotebook(final HttpServerRequest request) {
+    }
+
     @Get("/forgotten/notebook")
     @ApiDoc("Get forgotten notebook")
-    @ResourceFilter(Manage.class)
     @SecuredAction(value = "", type = ActionType.RESOURCE)
+    @ResourceFilter(ForgottenNotebookManageRight.class)
     public void get(final HttpServerRequest request) {
         if (!request.params().contains("studentId")) {
             badRequest(request);
@@ -42,8 +46,8 @@ public class NotebookController extends ControllerHelper {
 
     @Get("/forgotten/notebook/student/:id")
     @ApiDoc("Get forgotten notebook from student")
-    @ResourceFilter(StudentEventsViewRight.class)
     @SecuredAction(value = "", type = ActionType.RESOURCE)
+    @ResourceFilter(ForgottenNotebookManageRight.class)
     public void studentGet(HttpServerRequest request) {
         MultiMap params = request.params();
         if (!params.contains("structure_id")) {
@@ -62,8 +66,8 @@ public class NotebookController extends ControllerHelper {
 
     @Post("/forgotten/notebook")
     @ApiDoc("Create forgotten notebook")
-    @ResourceFilter(Manage.class)
     @SecuredAction(value = "", type = ActionType.RESOURCE)
+    @ResourceFilter(ForgottenNotebookManageRight.class)
     @Trace(Actions.FORGOTTEN_NOTEBOOK_CREATION)
     public void post(HttpServerRequest request) {
         RequestUtils.bodyToJson(request, notebookBody -> {
@@ -79,8 +83,8 @@ public class NotebookController extends ControllerHelper {
 
     @Put("/forgotten/notebook/:id")
     @ApiDoc("Update forgotten notebook")
-    @ResourceFilter(Manage.class)
     @SecuredAction(value = "", type = ActionType.RESOURCE)
+    @ResourceFilter(ForgottenNotebookManageRight.class)
     @Trace(Actions.FORGOTTEN_NOTEBOOK_UPDATE)
     public void update(final HttpServerRequest request) {
         if (!request.params().contains("id")) {
@@ -99,8 +103,8 @@ public class NotebookController extends ControllerHelper {
 
     @Delete("/forgotten/notebook/:id")
     @ApiDoc("Delete absence")
-    @ResourceFilter(Manage.class)
     @SecuredAction(value = "", type = ActionType.RESOURCE)
+    @ResourceFilter(ForgottenNotebookManageRight.class)
     @Trace(Actions.FORGOTTEN_NOTEBOOK_DELETION)
     public void delete(final HttpServerRequest request) {
         if (!request.params().contains("id")) {

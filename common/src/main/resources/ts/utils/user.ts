@@ -20,4 +20,13 @@ export class UserUtils {
     static isChild(type: string): boolean {
         return type === USER_TYPES.student;
     }
+
+    /**
+     * Check if our model.me.type is the one that match with type (Case is Teacher)
+     * @param {String} type
+     * @return boolean
+     */
+    static isTeacher(type: string): boolean {
+        return type === USER_TYPES.teacher;
+    }
 }

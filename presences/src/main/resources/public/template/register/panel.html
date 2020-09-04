@@ -16,6 +16,14 @@
             </div>
         </div>
     </div>
+
+    <!-- Forgotten notebook (teacher only) -->
+    <div ng-show="isTeacher()" class="forgotten-notebook eleven vertical-spacing"
+         ng-class="{ disabled: vm.filter.student.forgotten_notebook }">
+        <sniplet template="forgotten-notebook-form" application="presences"></sniplet>
+    </div>
+
+    <!-- Absence (CPE only) -->
     <div ng-if="hasSearchRight()" class="eleven centered vertical-spacing">
         <div class="row">
             <label class="checkbox">
@@ -38,6 +46,8 @@
             </div>
         </div>
     </div>
+
+    <!-- Lateness -->
     <div class="lateness eleven centered vertical-spacing">
         <div class="row">
             <label class="checkbox">
@@ -67,6 +77,8 @@
             </label>
         </div>
     </div>
+
+    <!-- Departure -->
     <div class="departure eleven centered vertical-spacing">
         <div class="row">
             <label class="checkbox">

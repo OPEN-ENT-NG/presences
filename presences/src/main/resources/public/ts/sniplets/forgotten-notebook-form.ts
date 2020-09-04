@@ -4,7 +4,7 @@ import {idiom as lang, moment, toasts} from "entcore";
 import {DateUtils} from "@common/utils";
 import {AlertType} from "../models";
 
-console.log("forgottenNotebookFormSnipplets");
+console.log("forgottenNotebookFormSniplets");
 
 export enum NOTEBOOK_FORM_EVENTS {
     EDIT = 'notebook-form:edit',
@@ -15,6 +15,7 @@ declare let window: any;
 interface ViewModel {
     openForgottenNotebookLightBox: boolean;
     student: string;
+    title: string;
     form: NotebookRequest;
     count_forgotten_notebook: number;
     threshold_forgotten_notebook: number;
@@ -34,13 +35,14 @@ interface ViewModel {
 
     deleteForbiddenNotebook(): Promise<void>;
 
-    getStudentForgottenNoteBookNumberWithThreshold(): void
+    getStudentForgottenNoteBookNumberWithThreshold(id?: string): void;
 
     safeApply(fn?: () => void): void;
 }
 
 const vm: ViewModel = {
     safeApply: null,
+    title: null,
     openForgottenNotebookLightBox: false,
     student: '',
     form: {} as NotebookRequest,
@@ -51,7 +53,6 @@ const vm: ViewModel = {
     openForgottenNotebook(): void {
         vm.openForgottenNotebookLightBox = true;
         forgottenNotebookForm.that.$emit(SNIPLET_FORM_EMIT_EVENTS.CREATION);
-        this.getStudentForgottenNoteBookNumberWithThreshold();
         vm.safeApply();
     },
 
@@ -61,18 +62,22 @@ const vm: ViewModel = {
         vm.safeApply();
     },
 
-    setFormParams: ({student}) => {
+    setFormParams: ({student, date}) => {
+        vm.getStudentForgottenNoteBookNumberWithThreshold(student.id);
         if (vm.form) {
-            vm.student = student.displayName;
+            vm.student = student.displayName ? student.displayName : student.name;
             vm.form.studentId = student.id;
             vm.form.structureId = window.structure.id;
-            vm.form.date = moment(new Date()).set({second: 0, millisecond: 0}).toDate();
+            vm.form.date = date ? moment(date).set({
+                second: 0,
+                millisecond: 0
+            }).toDate() : moment(new Date()).set({second: 0, millisecond: 0}).toDate();
             vm.safeApply();
         }
     },
 
     async editNotebookForm(obj: { student, notebook }): Promise<void> {
-        this.getStudentForgottenNoteBookNumberWithThreshold();
+        vm.getStudentForgottenNoteBookNumberWithThreshold(obj.student.id);
         vm.openForgottenNotebookLightBox = true;
         vm.student = obj.student.displayName;
         vm.form.id = obj.notebook.id;
@@ -120,8 +125,11 @@ const vm: ViewModel = {
         vm.safeApply();
     },
 
-    getStudentForgottenNoteBookNumberWithThreshold: async () => {
-        let {count, threshold} = await alertService.getStudentAlerts(window.structure.id, window.item.id, AlertType[AlertType.FORGOTTEN_NOTEBOOK]);
+    getStudentForgottenNoteBookNumberWithThreshold: async (id?: string) => {
+        // assigning id from parameter as student id, case we did not find it,
+        // we use window.item.id fetched from calendar controller
+        const studentId: string = id ? id : window.item.id;
+        let {count, threshold} = await alertService.getStudentAlerts(window.structure.id, studentId, AlertType[AlertType.FORGOTTEN_NOTEBOOK]);
         vm.count_forgotten_notebook = count ? count : 0;
         vm.threshold_forgotten_notebook = threshold ? threshold : 0;
         vm.after_threshold = count - threshold > 0 ? count - threshold : 0;
@@ -136,6 +144,7 @@ export const forgottenNotebookForm = {
         init: async function () {
             this.vm = vm;
             this.setHandler();
+            this.setTitle();
             forgottenNotebookForm.that = this;
             vm.safeApply = this.safeApply;
         },
@@ -144,5 +153,24 @@ export const forgottenNotebookForm = {
             this.$on(NOTEBOOK_FORM_EVENTS.EDIT, (event, args) => vm.editNotebookForm(args));
             this.$on(SNIPLET_FORM_EVENTS.SET_PARAMS, (event, arg) => vm.setFormParams(arg));
         },
+
+        setTitle: function (): void {
+            const url: string = window.location.hash;
+            const findTerm = (term: string): string => {
+                if (url.includes(term)) {
+                    return url;
+                }
+            };
+            switch (url) {
+                case findTerm('#/registers/'): {
+                    vm.title = lang.translate('presences.declare.forgotten.notebook.form.title');
+                    break;
+                }
+                case findTerm('#/calendar/'): {
+                    vm.title = lang.translate('presences.forgotten.notebook');
+                    break;
+                }
+            }
+        }
     }
 };

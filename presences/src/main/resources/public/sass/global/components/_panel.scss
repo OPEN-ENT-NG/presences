@@ -69,6 +69,32 @@ panel .content {
       }
     }
 
+    .forgotten-notebook {
+      margin-left: auto;
+      margin-right: auto;
+
+      .forgotten {
+        width: 100%;
+      }
+
+      .content {
+        height: auto;
+        right: 35%;
+      }
+
+      .toasts {
+        z-index: 100001;
+      }
+    }
+
+    .disabled {
+      button {
+        background: $presences-black-light;
+        pointer-events: none;
+        cursor: default;
+      }
+    }
+
     textarea {
       height: 75px;
     }

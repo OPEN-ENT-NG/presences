@@ -4,7 +4,7 @@ button, a.button {
   box-shadow: none;
 
   &:disabled {
-    background: #555;
+    background: $presences-black-light;
   }
 
   &.cancel {

@@ -20,6 +20,7 @@ import {Scope} from './main';
 import http from 'axios';
 import {EventsUtils, RegisterUtils, StudentsSearch} from "../utilities";
 import {Reason} from "@presences/models/Reason";
+import {SNIPLET_FORM_EMIT_EVENTS, SNIPLET_FORM_EVENTS} from "@common/model";
 
 declare let window: any;
 
@@ -785,6 +786,14 @@ export const registersController = ng.controller('RegistersController',
                 }
             }
 
+            startAction();
+
+            /* events handler */
+
+            $scope.$on(SNIPLET_FORM_EMIT_EVENTS.FILTER, startAction);
+            $scope.$on(SNIPLET_FORM_EMIT_EVENTS.EDIT, startAction);
+            $scope.$on(SNIPLET_FORM_EMIT_EVENTS.DELETE, startAction);
+
             $scope.$watch(() => window.structure, (newVal, oldVal) => {
                 if (newVal.id === oldVal.id) return;
                 console.warn(`$scope.$watch window.structure: ${newVal.id}, ${oldVal.id}`);
@@ -801,7 +810,12 @@ export const registersController = ng.controller('RegistersController',
                 startAction();
             });
 
-            startAction();
+            $scope.$on(SNIPLET_FORM_EMIT_EVENTS.CREATION, () => {
+                $scope.$broadcast(SNIPLET_FORM_EVENTS.SET_PARAMS, {
+                    student: vm.filter.student,
+                    date: vm.filter.date
+                });
+            });
 
             /* Destroy */
             $scope.$on("$destroy", () => {
