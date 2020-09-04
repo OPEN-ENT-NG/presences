@@ -118,12 +118,13 @@ public class PunishmentController extends ControllerHelper {
 
 
                 List<String> csvHeaders = new ArrayList<>(Arrays.asList(
-                        "incidents.punishments.csv.header.date",
-                        "incidents.punishments.csv.header.time",
                         "incidents.punishments.csv.header.student.lastName",
                         "incidents.punishments.csv.header.student.firstName",
                         "incidents.punishments.csv.header.classname",
                         "incidents.punishments.csv.header.type",
+                        "incidents.punishments.csv.header.start.date",
+                        "incidents.punishments.csv.header.end.date",
+                        "incidents.punishments.csv.header.slots",
                         "incidents.punishments.csv.header.description",
                         "incidents.punishments.csv.header.owner",
                         "incidents.punishments.csv.header.processed"));

@@ -20,6 +20,7 @@ export class DateUtils {
         'DAY-MONTH-HALFYEAR': 'DD/MM/YY',
         'DAY-MONTH-HALFYEAR-HOUR-MIN': 'DD/MM/YY HH:mm',
         'HOUR-MIN-SEC': 'HH:mm:ss',
+        'HOUR-MIN': 'HH:mm',
         'MINUTES': 'mm'
     };
 

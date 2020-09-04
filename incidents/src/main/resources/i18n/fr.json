@@ -41,7 +41,10 @@
   "incidents.csv.header.type": "Type",
 
   "incidents.punishments.csv.header.date": "Date",
+  "incidents.punishments.csv.header.start.date": "Date de début",
+  "incidents.punishments.csv.header.end.date": "Date de fin",
   "incidents.punishments.csv.header.time": "Heure",
+  "incidents.punishments.csv.header.slots": "Créneaux",
   "incidents.punishments.csv.header.description": "Description",
   "incidents.punishments.csv.header.student.lastName": "Nom Eleve",
   "incidents.punishments.csv.header.student.firstName": "Prénom Eleve",
@@ -51,6 +54,12 @@
   "incidents.punishments.csv.header.processed.done": "Traité",
   "incidents.punishments.csv.header.processed.undone": "Non traité",
   "incidents.punishments.csv.header.classname": "Classe",
+
+  "incidents.punishments.date.for.the": "Pour le ",
+  "incidents.punishments.date.from": "Du ",
+  "incidents.punishments.date.created.on": "Créé le ",
+  "incidents.punishments.date.to": " au ",
+
 
   "incidents.date": "Date",
   "incidents.delete.err": "Une erreur est survenue lors de la suppression d'un incident",

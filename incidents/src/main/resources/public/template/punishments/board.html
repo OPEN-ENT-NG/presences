@@ -1,7 +1,7 @@
 <!-- board -->
 <div class="punishment-board flex-table">
     <!-- Add 14 instead of 16 in order to hide incident -->
-    <div class="flex-row punishment-board-title flex-head row__14">
+    <div class="flex-row punishment-board-title flex-head row__16">
         <div class="flex-col col__3 text-center">
             <i18n>presences.exemptions.student</i18n>
         </div>
@@ -11,8 +11,11 @@
         <div class="flex-col col__2 text-center">
             <i18n>incidents.csv.header.type</i18n>
         </div>
-        <div class="flex-col col__2 text-center">
+        <div class="flex-col col__3 text-center">
             <i18n>incidents.csv.header.date</i18n>
+        </div>
+        <div class="flex-col col__2 text-center">
+            <i18n>incidents.punishments.csv.header.slots</i18n>
         </div>
         <div class="flex-col col__2 text-center">
             <i18n>presences.responsible</i18n>
@@ -23,7 +26,7 @@
         <div class="flex-col col__2 text-center">
             <i18n>incidents.massmailed</i18n>
         </div>
-        <div class="flex-col col__2 text-center">
+        <div class="flex-col col__1 text-center">
             <i18n>incidents.done</i18n>
         </div>
     </div>
@@ -35,7 +38,7 @@
             <div class="flex-content">
                 <!-- student info -->
                 <!-- Add 14 instead of 16 in order to hide incident -->
-                <div class="flex-row row__14">
+                <div class="flex-row row__16">
                     <div class="flex-col col__1">
                         <!-- student picture -->
                         <img src="/userbook/avatar/[[punishment.student.id]]" height="30" width="30">
@@ -55,8 +58,12 @@
                         <span>[[punishment.type.label]]</span>
                     </div>
                     <!-- date -->
-                    <div class="flex-col col__2">
+                    <div class="flex-col col__3">
                         <span>[[vm.getPunishmentDate(punishment)]]</span>
+                    </div>
+                    <!-- heure -->
+                    <div class="flex-col col__2">
+                        <span>[[vm.getPunishmentTime(punishment)]]</span>
                     </div>
                     <!-- responsible -->
                     <div class="flex-col col__2">
@@ -71,7 +78,7 @@
                         
                     </div>
                     <!-- done  -->
-                    <div class="flex-col col__2">
+                    <div class="flex-col col__1">
                         <switch ng-model="punishment.processed"
                                 data-ng-click="vm.stopPropagation($event)"
                                 ng-change="vm.updateProcessPunishment(punishment)">

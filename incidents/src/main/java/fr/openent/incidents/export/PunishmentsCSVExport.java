@@ -33,12 +33,27 @@ public class PunishmentsCSVExport extends CSVExport {
     }
 
     private String getLine(JsonObject punishment) throws ParseException {
-        String line = DateHelper.getDateString(punishment.getString("created_at"), DateHelper.YEAR_MONTH_DAY_HOUR_MINUTES_SECONDS, DateHelper.DAY_MONTH_YEAR) + SEPARATOR;
-        line += DateHelper.getTimeString(punishment.getString("created_at"), DateHelper.YEAR_MONTH_DAY_HOUR_MINUTES_SECONDS) + SEPARATOR;
-        line += punishment.getJsonObject("student").getString("lastName") + SEPARATOR;
+        String line = punishment.getJsonObject("student").getString("lastName") + SEPARATOR;
         line += punishment.getJsonObject("student").getString("firstName") + SEPARATOR;
         line += punishment.getJsonObject("student").getString("className") + SEPARATOR;
         line += punishment.getJsonObject("type").getString("label") + SEPARATOR;
+        if (punishment.getJsonObject("type").getInteger("punishment_category_id") == 4) { //if exclusion
+            line += DateHelper.getDateString(punishment.getJsonObject("fields").getString("start_at"), DateHelper.MONGO_FORMAT, DateHelper.DAY_MONTH_YEAR) + SEPARATOR;
+            line += DateHelper.getDateString(punishment.getJsonObject("fields").getString("end_at"), DateHelper.MONGO_FORMAT, DateHelper.DAY_MONTH_YEAR) + SEPARATOR;
+        } else if (punishment.getJsonObject("type").getInteger("punishment_category_id") == 2) { //if detention
+            line += DateHelper.getDateString(punishment.getJsonObject("fields").getString("start_at"), DateHelper.MONGO_FORMAT, DateHelper.DAY_MONTH_YEAR) + SEPARATOR;
+            line += " " + SEPARATOR;
+        }
+        else {
+            line += DateHelper.getDateString(punishment.getString("created_at"), DateHelper.YEAR_MONTH_DAY_HOUR_MINUTES_SECONDS, DateHelper.DAY_MONTH_YEAR) + SEPARATOR;
+            line += " " + SEPARATOR;
+        }
+        if (punishment.getJsonObject("type").getInteger("punishment_category_id") == 2) { //if detention
+            line += DateHelper.getTimeString(punishment.getJsonObject("fields").getString("start_at"), DateHelper.MONGO_FORMAT) + " - ";
+            line += DateHelper.getTimeString(punishment.getJsonObject("fields").getString("end_at"), DateHelper.MONGO_FORMAT) + SEPARATOR;
+        } else {
+            line += "" + SEPARATOR;
+        }
         if(punishment.getString("description") == null) {
             line += "" + SEPARATOR;
         } else {

@@ -152,8 +152,8 @@ export const PunishmentDetentionForm = ng.directive('punishmentDetentionForm', (
                     end: null
                 };
                 vm.form.fields = {
-                    start_date: DateUtils.format(vm.date.date, DateUtils.FORMAT["YEAR-MONTH-DAY-HOUR-MIN-SEC"]),
-                    end_date: DateUtils.format(vm.date.date, DateUtils.FORMAT["YEAR-MONTH-DAY-HOUR-MIN-SEC"]),
+                    start_at: DateUtils.format(vm.date.start_time, DateUtils.FORMAT["YEAR-MONTH-DAY-HOUR-MIN-SEC"]),
+                    end_at: DateUtils.format(vm.date.end_time, DateUtils.FORMAT["YEAR-MONTH-DAY-HOUR-MIN-SEC"]),
                     place: ""
                 } as IPDetentionField;
                 vm.owner = model.me.lastName + " " + model.me.firstName;
@@ -178,8 +178,8 @@ export const PunishmentDetentionForm = ng.directive('punishmentDetentionForm', (
                 // on switch category (in case we reset)
                 if (!(Object.keys(vm.form.fields).length > 0)) {
                     vm.form.fields = {
-                        start_date: DateUtils.format(vm.date.date, DateUtils.FORMAT["YEAR-MONTH-DAY-HOUR-MIN-SEC"]),
-                        end_date: DateUtils.format(vm.date.date, DateUtils.FORMAT["YEAR-MONTH-DAY-HOUR-MIN-SEC"]),
+                        start_at: DateUtils.format(vm.date.start_time, DateUtils.FORMAT["YEAR-MONTH-DAY-HOUR-MIN-SEC"]),
+                        end_at: DateUtils.format(vm.date.end_time, DateUtils.FORMAT["YEAR-MONTH-DAY-HOUR-MIN-SEC"]),
                         place: ""
                     } as IPDetentionField;
                     vm.date.isFree = false;
