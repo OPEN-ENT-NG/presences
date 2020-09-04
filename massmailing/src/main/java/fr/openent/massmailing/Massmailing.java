@@ -11,6 +11,7 @@ import fr.openent.presences.common.viescolaire.Viescolaire;
 import fr.wseduc.webutils.email.EmailSender;
 import io.vertx.core.eventbus.EventBus;
 import io.vertx.core.json.JsonObject;
+import io.vertx.core.shareddata.LocalMap;
 import org.entcore.common.bus.WorkspaceHelper;
 import org.entcore.common.email.EmailFactory;
 import org.entcore.common.http.BaseServer;
@@ -25,6 +26,8 @@ public class Massmailing extends BaseServer {
 
     public static final String MANAGE = "massmailing.manage";
     public static final String VIEW = "massmailing.view";
+
+    public static String SMS_ADDRESS = "entcore.sms";
 
     public static Integer PAGE_SIZE = 20;
 
@@ -48,6 +51,15 @@ public class Massmailing extends BaseServer {
         Viescolaire.getInstance().init(eb);
 
         vertx.setTimer(30000, handle -> new DatabaseStarter().init());
+        setEbAddresses();
+    }
+
+    private void setEbAddresses() {
+        LocalMap<Object, Object> server = vertx.sharedData().getLocalMap("server");
+        if (server != null) {
+            final String node = (String) server.get("node");
+            SMS_ADDRESS = (node != null ? node : "") + SMS_ADDRESS;
+        }
     }
 
     private HashMap<MailingType, Boolean> mailingsConfig() {

@@ -1,5 +1,6 @@
 package fr.openent.massmailing.mailing;
 
+import fr.openent.massmailing.Massmailing;
 import fr.openent.massmailing.enums.MailingType;
 import fr.openent.massmailing.enums.MassmailingType;
 import fr.openent.presences.common.helper.FutureHelper;
@@ -55,7 +56,7 @@ public class Sms extends MassMailingProcessor {
 
         String message = sms.getString("message");
         int maxLength = 160;
-        if(message.length() > maxLength) {
+        if (message.length() > maxLength) {
             message = message.substring(0, maxLength - 3);
             message += "...";
         }
@@ -70,7 +71,7 @@ public class Sms extends MassMailingProcessor {
                 .put("action", "send-sms")
                 .put("parameters", parameters);
 
-        eventBus.send("entcore.sms", smsObject, handlerToAsyncHandler(event -> {
+        eventBus.send(Massmailing.SMS_ADDRESS, smsObject, handlerToAsyncHandler(event -> {
             if ("error".equals(event.body().getString("status"))) {
                 handler.handle(new Either.Left<>(event.body().getString("message")));
             } else {
