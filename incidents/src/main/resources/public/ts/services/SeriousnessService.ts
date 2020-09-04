@@ -3,7 +3,7 @@ import http, {AxiosResponse} from 'axios';
 
 export interface Seriousness {
     id: number;
-    structureId: string;
+    structure_id?: string;
     label: string;
     level: number;
     hidden: boolean;

@@ -1,5 +1,5 @@
 import {ng} from 'entcore'
-import http from 'axios';
+import http, {AxiosResponse} from 'axios';
 import {IncidentType, Partner, Place, ProtagonistType, Seriousness} from "@incidents/services";
 import {IStudentEventRequest} from "@presences/models";
 import {IStudentIncidentResponse} from "@incidents/models";
@@ -23,23 +23,10 @@ export interface IncidentService {
 }
 
 export const incidentService: IncidentService = {
-    getIncidentParameterType: async (structureId: string) => {
-        function builderIncidentParameterType(data) {
-            let dataModel = data;
-            for (let type in dataModel) {
-                if (dataModel.hasOwnProperty(type)) {
-                    dataModel[type].forEach(item => {
-                        item.structureId = item.structure_id;
-                        delete item.structure_id;
-                    });
-                }
-            }
-            return dataModel;
-        }
-
+    getIncidentParameterType: async (structureId: string): Promise<IncidentParameterType> => {
         try {
-            const {data} = await http.get(`/incidents/incidents/parameter/types?structureId=${structureId}`);
-            return builderIncidentParameterType(data);
+            const {data}: AxiosResponse = await http.get(`/incidents/incidents/parameter/types?structureId=${structureId}`);
+            return data;
         } catch (err) {
             throw err;
         }

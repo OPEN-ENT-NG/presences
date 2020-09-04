@@ -67,7 +67,7 @@ const vm: ViewModel = {
         vm.lightbox.createMode = true;
         if (!vm.incidentParameterType) {
             vm.incidentParameterType = await incidentService.getIncidentParameterType(window.structure.id);
-            vm.emptyParameter = vm.incidentParameterType.partner.find(item => item.structureId === '');
+            vm.emptyParameter = vm.incidentParameterType.partner.find(item => item.structure_id === '');
             vm.incidentParameterType.partner.pop();
         }
         // check if add empty state
@@ -228,7 +228,7 @@ const vm: ViewModel = {
         vm.lightbox.editMode = true;
         if (!vm.incidentParameterType) {
             vm.incidentParameterType = await incidentService.getIncidentParameterType(window.structure.id);
-            vm.emptyParameter = vm.incidentParameterType.partner.find(item => item.structureId === '');
+            vm.emptyParameter = vm.incidentParameterType.partner.find(item => item.structure_id === '');
             vm.incidentParameterType.partner.pop();
             vm.safeApply();
         }

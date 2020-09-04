@@ -478,7 +478,7 @@ public class DefaultIncidentsService extends SqlCrudService implements Incidents
                 " processed = ?, place_id = ?, partner_id = ?, type_id = ?, seriousness_id = ?" +
                 " WHERE id = ?";
         JsonArray values = new JsonArray()
-                .add(incident.getString("owner"))
+                .add(incident.getJsonObject("owner").getString("id"))
                 .add(incident.getString("structure_id"))
                 .add(incident.getString("date"))
                 .add(incident.getBoolean("selected_hour"))
