@@ -16,10 +16,7 @@ import org.entcore.common.neo4j.Neo4jResult;
 
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.List;
-import java.util.Objects;
+import java.util.*;
 import java.util.stream.Collectors;
 
 public class CourseHelper {
@@ -270,6 +267,7 @@ public class CourseHelper {
     }
 
     private static void splitCourseTreatment(List<Slot> slots, List<Course> splitCoursesEvent, Course course) throws ParseException {
+        Set<String> courseList = new HashSet<>(); // Weird fix to prevent same multiple course
         SimpleDateFormat parser = new SimpleDateFormat(DateHelper.HOUR_MINUTES_SECONDS);
         Date startTime = parser.parse(DateHelper.getTimeString(course.getStartDate(), DateHelper.MONGO_FORMAT));
         Date endTime = parser.parse(DateHelper.getTimeString(course.getEndDate(), DateHelper.MONGO_FORMAT));
@@ -282,7 +280,10 @@ public class CourseHelper {
                     && ((slotEndHour.before(endTime) || slotEndHour.equals(endTime)) || (endTime.after(slotStartHour)))
                     && !(course.getRegisterId() != null && !course.isSplitSlot())) {
                 Course newCourse = treatingSplitSlot(course, slot, i + 1 < slots.size() ? slots.get(i + 1) : slot, parser);
-                splitCoursesEvent.add(newCourse);
+                if (!courseList.contains(newCourse.mapId())) {
+                    courseList.add(newCourse.mapId());
+                    splitCoursesEvent.add(newCourse);
+                }
             }
         }
     }

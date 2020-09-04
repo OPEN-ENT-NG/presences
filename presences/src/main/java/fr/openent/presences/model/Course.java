@@ -411,4 +411,8 @@ public class Course implements Cloneable {
     public Long getTimestamp() {
         return this.timestamp;
     }
+
+    public String mapId() {
+        return String.format("%s$%s$%s", this.getId(), this.getStartDate(), this.getEndDate());
+    }
 }
