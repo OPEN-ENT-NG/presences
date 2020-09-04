@@ -94,80 +94,104 @@ public class DefaultRegisterService implements RegisterService {
 
     @Override
     public void create(JsonObject register, UserInfos user, Handler<Either<String, JsonObject>> handler) {
-        String query = "SELECT nextval('" + Presences.dbSchema + ".register_id_seq') as id";
-        Sql.getInstance().raw(query, SqlResult.validUniqueResultHandler(idEvent -> {
-            if (idEvent.isLeft()) {
-                handler.handle(new Either.Left<>("[Presences@DefaultRegisterService] Failed to query next register identifier"));
+        fetchIfRegisterExists(register, existsEither -> {
+            if (existsEither.isLeft()) {
+                handler.handle(existsEither.left());
                 return;
             }
 
-            try {
-                Number id = idEvent.right().getValue().getInteger("id");
-                groupService.getGroupsId(register.getString("structure_id"), register.getJsonArray("groups"), register.getJsonArray("classes"), groupsEvent -> {
-                    if (groupsEvent.isLeft()) {
-                        String message = "[Presences@DefaultRegisterService] Failed to retrieve group identifiers";
-                        LOGGER.error(message, groupsEvent.left().getValue());
-                        handler.handle(new Either.Left<>(message));
-                        return;
-                    }
+            JsonObject existingRegister = existsEither.right().getValue();
+            if (!existingRegister.fieldNames().isEmpty()) {
+                handler.handle(existsEither.right());
+                return;
+            }
 
-                    JsonArray classes = groupsEvent.right().getValue().getJsonArray("classes");
-                    JsonArray groups = groupsEvent.right().getValue().getJsonArray("groups");
-                    JsonArray audiences = new JsonArray().addAll(classes).addAll(groups);
+            String query = "SELECT nextval('" + Presences.dbSchema + ".register_id_seq') as id";
+            Sql.getInstance().raw(query, SqlResult.validUniqueResultHandler(idEvent -> {
+                if (idEvent.isLeft()) {
+                    handler.handle(new Either.Left<>("[Presences@DefaultRegisterService] Failed to query next register identifier"));
+                    return;
+                }
 
-                    List<String> audienceIds = ((List<JsonObject>) audiences.getList())
-                            .stream()
-                            .map(audience -> audience.getString("id"))
-                            .filter(Objects::nonNull)
-                            .collect(Collectors.toList());
-
-                    groupService.getGroupStudents(audienceIds, studentsEvt -> {
-                        if (studentsEvt.isLeft()) {
-                            LOGGER.error("[Presences@DefaultRegisterService::create] Failed to retrieve student groups for ids: "
-                                    + new JsonArray(audienceIds).encode(), studentsEvt.left().getValue());
-                            handler.handle(new Either.Left<>(studentsEvt.left().getValue()));
+                try {
+                    Number id = idEvent.right().getValue().getInteger("id");
+                    groupService.getGroupsId(register.getString("structure_id"), register.getJsonArray("groups"), register.getJsonArray("classes"), groupsEvent -> {
+                        if (groupsEvent.isLeft()) {
+                            String message = "[Presences@DefaultRegisterService] Failed to retrieve group identifiers";
+                            LOGGER.error(message, groupsEvent.left().getValue());
+                            handler.handle(new Either.Left<>(message));
                             return;
                         }
 
-                        JsonArray statements = new JsonArray();
-                        statements.add(getRegisterCreationStatement(id, register, user));
-                        for (int i = 0; i < classes.size(); i++) {
-                            String classId = classes.getJsonObject(i).getString("id");
-                            statements.add(getGroupCreationStatement(classId, GroupType.CLASS));
-                            statements.add(getRelRegisterGroupStatement(id, classId));
-                        }
+                        JsonArray classes = groupsEvent.right().getValue().getJsonArray("classes");
+                        JsonArray groups = groupsEvent.right().getValue().getJsonArray("groups");
+                        JsonArray audiences = new JsonArray().addAll(classes).addAll(groups);
 
-                        for (int i = 0; i < groups.size(); i++) {
-                            String groupId = groups.getJsonObject(i).getString("id");
-                            statements.add(getGroupCreationStatement(groupId, GroupType.GROUP));
-                            statements.add(getRelRegisterGroupStatement(id, groupId));
-                        }
+                        List<String> audienceIds = ((List<JsonObject>) audiences.getList())
+                                .stream()
+                                .map(audience -> audience.getString("id"))
+                                .filter(Objects::nonNull)
+                                .collect(Collectors.toList());
 
-                        List<String> students = extractStudentIdentifiers(studentsEvt.right().getValue());
-                        if (!students.isEmpty()) {
-                            register.put("id", id);
-                            statements.add(absenceToEventStatement(register, students, user));
-                        }
-
-                        Sql.getInstance().transaction(statements, event -> {
-                            Either<String, JsonObject> result = SqlResult.validUniqueResult(0, event);
-                            if (result.isLeft()) {
-                                String message = "Failed to create register";
-                                LOGGER.error(message, result.left().getValue());
-                                handler.handle(new Either.Left<>(message));
-                            } else {
-                                /* Create absence on register */
-                                handler.handle(result);
+                        groupService.getGroupStudents(audienceIds, studentsEvt -> {
+                            if (studentsEvt.isLeft()) {
+                                LOGGER.error("[Presences@DefaultRegisterService::create] Failed to retrieve student groups for ids: "
+                                        + new JsonArray(audienceIds).encode(), studentsEvt.left().getValue());
+                                handler.handle(new Either.Left<>(studentsEvt.left().getValue()));
+                                return;
                             }
+
+                            JsonArray statements = new JsonArray();
+                            statements.add(getRegisterCreationStatement(id, register, user));
+                            for (int i = 0; i < classes.size(); i++) {
+                                String classId = classes.getJsonObject(i).getString("id");
+                                statements.add(getGroupCreationStatement(classId, GroupType.CLASS));
+                                statements.add(getRelRegisterGroupStatement(id, classId));
+                            }
+
+                            for (int i = 0; i < groups.size(); i++) {
+                                String groupId = groups.getJsonObject(i).getString("id");
+                                statements.add(getGroupCreationStatement(groupId, GroupType.GROUP));
+                                statements.add(getRelRegisterGroupStatement(id, groupId));
+                            }
+
+                            List<String> students = extractStudentIdentifiers(studentsEvt.right().getValue());
+                            if (!students.isEmpty()) {
+                                register.put("id", id);
+                                statements.add(absenceToEventStatement(register, students, user));
+                            }
+
+                            Sql.getInstance().transaction(statements, event -> {
+                                Either<String, JsonObject> result = SqlResult.validUniqueResult(0, event);
+                                if (result.isLeft()) {
+                                    String message = "Failed to create register";
+                                    LOGGER.error(message, result.left().getValue());
+                                    handler.handle(new Either.Left<>(message));
+                                } else {
+                                    /* Create absence on register */
+                                    handler.handle(result);
+                                }
+                            });
+
                         });
 
                     });
+                } catch (ClassCastException e) {
+                    handler.handle(new Either.Left<>("[Presences@DefaultRegisterService] Failed cast next register identifier"));
+                }
+            }));
+        });
+    }
 
-                });
-            } catch (ClassCastException e) {
-                handler.handle(new Either.Left<>("[Presences@DefaultRegisterService] Failed cast next register identifier"));
-            }
-        }));
+    private void fetchIfRegisterExists(JsonObject register, Handler<Either<String, JsonObject>> handler) {
+        String query = "SELECT id, structure_id, course_id, subject_id, start_date, end_date, counsellor_input, state_id " +
+                "FROM " + Presences.dbSchema + ".register WHERE course_id = ? AND start_date = ? AND end_date = ?;";
+        JsonArray params = new JsonArray()
+                .add(register.getString("course_id"))
+                .add(register.getString("start_date"))
+                .add(register.getString("end_date"));
+
+        Sql.getInstance().prepared(query, params, SqlResult.validUniqueResultHandler(handler));
     }
 
     private List<String> extractStudentIdentifiers(JsonArray students) {
