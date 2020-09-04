@@ -61,8 +61,7 @@
             </div>
             <div>
                 <em class="metadata">
-                    [[absence.start_date | date: 'dd/MM/yyyy']]
-                    [[absence.start_date | date:'HH:mm']]-[[absence.end_date | date:'HH:mm']]
+                    [[vm.showAbsenceRange(absence)]]
                 </em>
                 <div ng-style="{opacity: event.reason.id !== null && !vm.provingReasonsMap[event.reason.id] ? 1 : 0}">
                     <i18n>presences.widgets.absences.regularized</i18n>

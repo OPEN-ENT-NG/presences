@@ -194,6 +194,10 @@ export class DateUtils {
         }
     }
 
+    static getDayNumberDifference(dateA: String | Date, dateB: String | Date): number {
+        return moment(dateA).diff(moment(dateB), 'days');
+    }
+
     static getDateFromMoment(date) {
         return new Date(date.year(), date.month(), date.date(), date.hour(), date.minutes(), 0)
     }

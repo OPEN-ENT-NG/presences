@@ -30,6 +30,8 @@ interface ViewModel {
     setAbsenceRegularisation(absence: CounsellorAbsence): void
 
     regularizeAbsence(absence): void
+
+    showAbsenceRange(absence: CounsellorAbsence): String
 }
 
 declare let window: any;
@@ -101,6 +103,17 @@ export const absencesController = ng.controller('AbsenceController', ['$scope', 
                 vm.absences = vm.absences.filter(abs => abs.id !== absence.id);
                 $scope.safeApply();
             }
+        };
+
+        vm.showAbsenceRange = (absence: CounsellorAbsence): String => {
+            let result: String = `${DateUtils.format(absence.start_date, DateUtils.FORMAT['DAY-MONTH-YEAR'])} ${DateUtils.format(absence.start_date, DateUtils.FORMAT['HOUR-MINUTES'])}`;
+
+            if (DateUtils.getDayNumberDifference(absence.start_date, absence.end_date))
+                result += ` - ${DateUtils.format(absence.end_date, DateUtils.FORMAT['DAY-MONTH-YEAR'])} `;
+            else
+                result += "-";
+
+            return result + DateUtils.format(absence.end_date, DateUtils.FORMAT['HOUR-MINUTES']);
         };
 
         loadReasons();
