@@ -24,17 +24,21 @@
     <div class="search-field">
         <div class="twelve search-input">
             <async-autocomplete data-ng-disabled="false"
-                                data-ng-model="vm.params.student.search"
-                                data-ng-change="vm.selectStudent"
-                                data-on-search="vm.searchStudent"
-                                data-options="vm.students.all"
-                                data-placeholder="presences.exemptions.search.student"
-                                data-search="vm.params.student.search">
+                                data-ng-model="vm.params.search"
+                                data-ng-change="vm.selectStudentOrGroup"
+                                data-on-search="vm.searchStudentOrGroup"
+                                data-options="vm.searchResults"
+                                data-placeholder="presences.exemptions.search.student.group"
+                                data-search="vm.params.search">
             </async-autocomplete>
         </div>
         <div class="cell twelve absence-widget-student-list">
             <ul class="cell twelve search-input-ul">
-                <li ng-repeat="student in vm.params.student.selection">
+                <li ng-repeat="group in vm.params.groups">
+                    [[group.toString()]] <i class="close"
+                                              data-ng-click="vm.removeGroup(group)"></i>
+                </li>
+                <li ng-repeat="student in vm.params.students">
                     [[student.toString()]] <i class="close"
                                               data-ng-click="vm.removeStudent(student)"></i>
                 </li>

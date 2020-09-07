@@ -1,5 +1,7 @@
 package fr.openent.presences.controller;
 
+import fr.openent.presences.common.service.GroupService;
+import fr.openent.presences.common.service.impl.DefaultGroupService;
 import fr.openent.presences.constants.Actions;
 import fr.openent.presences.security.AbsenceWidgetRight;
 import fr.openent.presences.security.CreateEventRight;
@@ -12,6 +14,7 @@ import fr.wseduc.security.SecuredAction;
 import fr.wseduc.webutils.request.RequestUtils;
 import io.vertx.core.eventbus.EventBus;
 import io.vertx.core.http.HttpServerRequest;
+import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import org.entcore.common.controller.ControllerHelper;
 import org.entcore.common.http.filter.ResourceFilter;
@@ -26,11 +29,13 @@ public class AbsenceController extends ControllerHelper {
 
     private EventBus eb;
     private AbsenceService absenceService;
+    private GroupService groupService;
 
     public AbsenceController(EventBus eb) {
         super();
         this.eb = eb;
         this.absenceService = new DefaultAbsenceService(eb);
+        this.groupService = new DefaultGroupService(eb);
 
     }
 
@@ -144,10 +149,11 @@ public class AbsenceController extends ControllerHelper {
     @SecuredAction(value = "", type = ActionType.RESOURCE)
     @ResourceFilter(AbsenceWidgetRight.class)
     public void getAbsences(HttpServerRequest request) {
-        String stucture = request.getParam("structure");
+        String structure = request.getParam("structure");
         String start = request.getParam("start");
         String end = request.getParam("end");
         List<String> students = request.params().getAll("student");
+        List<String> classes = request.params().getAll("classes");
         Boolean justified = request.params().contains("justified") ? Boolean.parseBoolean(request.getParam("justified")) : null;
         Boolean regularized = request.params().contains("regularized") ? Boolean.parseBoolean(request.getParam("regularized")) : null;
         List<Integer> reasons = request.params().getAll("reason")
@@ -155,6 +161,21 @@ public class AbsenceController extends ControllerHelper {
                 .mapToInt(Integer::parseInt)
                 .collect(ArrayList::new, ArrayList::add, ArrayList::addAll);
 
-        absenceService.retrieve(stucture, students, start, end, justified, regularized, reasons, DefaultResponseHandler.arrayResponseHandler(request));
+        groupService.getGroupStudents(classes, resp -> {
+            if (resp.isLeft()) {
+                String message = "[Presences@AbsenceController::getAbsences] Failed to retrieve groupStudents info.";
+                log.error(message);
+                return;
+            }
+
+            JsonArray users = resp.right().getValue();
+
+            for (int i = 0; i < users.size(); i++) {
+                students.add(users.getJsonObject(i).getString("id"));
+            }
+
+            absenceService.retrieve(structure, students, start, end, justified, regularized, reasons, DefaultResponseHandler.arrayResponseHandler(request));
+
+        });
     }
 }

@@ -140,6 +140,7 @@
   "presences.exemptions.noexemptions": "Aucune dispense",
   "presences.exemptions.search.audience": "Rechercher une classe ou un groupe",
   "presences.exemptions.search.student": "Rechercher un élève",
+  "presences.exemptions.search.student.group": "Rechercher un élève ou une classe",
   "presences.exemptions.student": "Elève",
   "presences.exemptions.subject": "Matière",
   "presences.csv.header.student.firstName": "Prénom Élève",

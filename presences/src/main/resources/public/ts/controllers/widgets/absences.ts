@@ -1,31 +1,31 @@
 import {_, moment, ng, notify} from 'entcore';
-import {AbsenceService, ReasonService} from '../../services';
-import {CounsellorAbsence, Reason, Student, Students} from '../../models';
+import {AbsenceService, ReasonService, SearchItem, SearchService} from '../../services';
+import {CounsellorAbsence, Reason, Students} from '../../models';
 import {DateUtils} from '@common/utils/date';
 
 interface ViewModel {
     absences: Array<CounsellorAbsence>
     reasons: Array<Reason>
     students: Students
+    searchResults: SearchItem[];
     params: {
         start: Date,
         end: Date,
-        student: {
-            search: string,
-            selection: Array<Student>
-        }
+        students: Array<SearchItem>,
+        groups: Array<SearchItem>,
+        search: string
     },
     provingReasonMap: any
 
     load(): Promise<void>
 
-    selectStudent(model: Student, option: Student): void
+    searchStudentOrGroup(string: string): Promise<void>
 
-    searchStudent(string: string): void
+    selectStudentOrGroup(model: SearchItem, option: SearchItem): void
 
-    selectStudent(model: Student, option: Student): void
+    removeStudent(student : SearchItem): void
 
-    removeStudent(student: Student): void
+    removeGroup(group : SearchItem): void
 
     setAbsenceRegularisation(absence: CounsellorAbsence): void
 
@@ -36,8 +36,8 @@ interface ViewModel {
 
 declare let window: any;
 
-export const absencesController = ng.controller('AbsenceController', ['$scope', 'AbsenceService', 'ReasonService',
-    function ($scope, AbsenceService: AbsenceService, ReasonService: ReasonService) {
+export const absencesController = ng.controller('AbsenceController', ['$scope', 'AbsenceService', 'ReasonService', 'SearchService',
+    function ($scope, AbsenceService: AbsenceService, ReasonService: ReasonService, SearchService: SearchService) {
         const vm: ViewModel = this;
         vm.absences = [];
         vm.reasons = [];
@@ -45,21 +45,26 @@ export const absencesController = ng.controller('AbsenceController', ['$scope', 
         vm.params = {
             start: moment().add(-5, 'days').toDate(),
             end: new Date(),
-            student: {
-                search: null,
-                selection: []
-            }
+            students: [],
+            groups: [],
+            search: null
         };
 
         vm.students = new Students();
+        vm.searchResults = [];
 
-        vm.load = async function () {
+        /**
+         * Load all absences.
+         */
+        vm.load = async (): Promise<void> => {
             try {
-                let start = moment(vm.params.start).format(DateUtils.FORMAT["YEAR-MONTH-DAY"]);
-                let end = moment(vm.params.end).format(DateUtils.FORMAT["YEAR-MONTH-DAY"]);
-                let students = [];
-                vm.params.student.selection.forEach(student => students.push(student.id));
-                vm.absences = await AbsenceService.getCounsellorAbsence(window.structure.id, students, start, end, null, false, null);
+                let start: string = moment(vm.params.start).format(DateUtils.FORMAT["YEAR-MONTH-DAY"]);
+                let end: string = moment(vm.params.end).format(DateUtils.FORMAT["YEAR-MONTH-DAY"]);
+                let students: string[] = [];
+                let groups: string[] = [];
+                vm.params.students.forEach(student => students.push(student.id));
+                vm.params.groups.forEach(group => groups.push(group.id));
+                vm.absences = await AbsenceService.getCounsellorAbsence(window.structure.id, students, groups, start, end, null, false, null);
                 $scope.safeApply();
             } catch (err) {
                 notify.error('presences.absences.load.failed');
@@ -72,23 +77,48 @@ export const absencesController = ng.controller('AbsenceController', ['$scope', 
             $scope.safeApply();
         }
 
-        vm.searchStudent = async (searchText: string) => {
-            await vm.students.search(window.structure.id, searchText);
+        /**
+         * Retrieve students and groups based on the user query.
+         * @param searchText The user query
+         */
+        vm.searchStudentOrGroup = async (searchText: string): Promise<void> => {
+            vm.searchResults = await SearchService.search(window.structure.id, searchText);
             $scope.safeApply();
         };
 
-        vm.selectStudent = function (model: Student, option: Student) {
-            if (!_.find(option, vm.params.student.selection)) {
-                vm.params.student.selection.push(option);
+
+        /**
+         * Select the item from the absence search results.
+         * @param model The user query
+         * @param option The selected student or group from the search results
+         */
+        vm.selectStudentOrGroup = (model: SearchItem, option: SearchItem): void => {
+            if (!_.find(option, vm.params.students) && option.type === 'USER') {
+                vm.params.students.push(option);
+            } else if (!_.find(option, vm.params.groups) && option.type === 'GROUP') {
+                vm.params.groups.push(option);
             }
 
-            vm.students.all = null;
-            vm.params.student.search = '';
+            vm.searchResults = null;
+            vm.params.search = '';
             vm.load();
         };
 
-        vm.removeStudent = function (student) {
-            vm.params.student.selection = _.without(vm.params.student.selection, student);
+        /**
+         * Remove a student from the search selection.
+         * @param student The student to remove.
+         */
+        vm.removeStudent = (student: SearchItem): void => {
+            vm.params.students = _.without(vm.params.students, student);
+            vm.load();
+        };
+
+        /**
+         * Remove a group from the search selection.
+         * @param group The group to remove.
+         */
+        vm.removeGroup = (group: SearchItem): void => {
+            vm.params.groups = _.without(vm.params.groups, group);
             vm.load();
         };
 
