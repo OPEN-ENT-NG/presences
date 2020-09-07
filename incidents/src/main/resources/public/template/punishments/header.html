@@ -85,6 +85,15 @@
         </div>
     </div>
 
+
+    <!--  Punishments process states (punitions/sanctions) card filtered -->
+    <div class="cell" ng-repeat="punishmentState in vm.filter.punishmentsStates">
+        <div class="card horizontal-margin-small horizontal-spacing" ng-if="punishmentState.isSelected">
+            <span>[[lang.translate(punishmentState.label)]]</span>
+        </div>
+    </div>
+
+
     <!--  Punishments massmaillings filtered  TODO massmailing next feature -->
     <!--    <div class="cell" ng-repeat="massmaillingPunishment in vm.filter.massmaillingsPunishments">-->
     <!--        <div class="card horizontal-margin-small horizontal-spacing" ng-if="massmaillingPunishment.isSelected">-->
