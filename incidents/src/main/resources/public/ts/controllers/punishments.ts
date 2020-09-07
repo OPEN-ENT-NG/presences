@@ -3,7 +3,15 @@ import {moment, ng, notify, toasts, idiom as lang} from 'entcore';
 import {DateUtils, StudentsSearch} from "@common/utils";
 import {GroupsSearch} from "@common/utils/autocomplete/groupsSearch";
 import {PunishmentsUtils} from "@incidents/utilities/punishments";
-import {IPDetentionField, IPunishment, IPunishmentBody, IPunishmentRequest, ISchoolYearPeriod, Punishments} from "@incidents/models";
+import {
+    IPDetentionField,
+    IPExcludeField,
+    IPunishment,
+    IPunishmentBody,
+    IPunishmentRequest,
+    ISchoolYearPeriod,
+    Punishments
+} from "@incidents/models";
 import {
     GroupService,
     IPunishmentService,
@@ -241,17 +249,21 @@ export const punishmentController = ng.controller('PunishmentController',
                         return lang.translate("incidents.punishments.date.for.the") + createdDate;
                     case 2: //DETENTION
                         let startDetentionDate: string = createdDate;
-                        if ("start_at" in punishment.fields) {
+                        if ((<IPDetentionField>punishment.fields).start_at) {
                             startDetentionDate = DateUtils.format((<IPDetentionField>punishment.fields).start_at, DateUtils.FORMAT["DAY-MONTH-YEAR"]);
                         }
                         return lang.translate("incidents.punishments.date.for.the") + startDetentionDate;
                     case 3: //BLAME
                         return lang.translate("incidents.punishments.date.created.on") + createdDate;
                     case 4: // EXCLUSION
-                        if ("start_at" in punishment.fields && "end_at" in punishment.fields) {
-                            let startExcludeDate: string = DateUtils.format((<IPDetentionField>punishment.fields).start_at, DateUtils.FORMAT["DAY-MONTH-YEAR"]);
-                            let endExcludeDate: string = DateUtils.format((<IPDetentionField>punishment.fields).end_at, DateUtils.FORMAT["DAY-MONTH-YEAR"]);
-                            return lang.translate("incidents.punishments.date.from") + startExcludeDate + lang.translate("incidents.punishments.date.to") + endExcludeDate;
+                        if ((<IPDetentionField>punishment.fields).start_at && (<IPDetentionField>punishment.fields).end_at) {
+                            let startExcludeDate: string = DateUtils.format((<IPExcludeField>punishment.fields).start_at, DateUtils.FORMAT["DAY-MONTH-YEAR"]);
+                            let endExcludeDate: string = DateUtils.format((<IPExcludeField>punishment.fields).end_at, DateUtils.FORMAT["DAY-MONTH-YEAR"]);
+                            if (startExcludeDate && endExcludeDate) {
+                                return lang.translate("incidents.punishments.date.from") + startExcludeDate + lang.translate("incidents.punishments.date.to") + endExcludeDate;
+                            } else {
+                                return " ";
+                            }
                         }
                     default:
                         return createdDate;
@@ -260,10 +272,14 @@ export const punishmentController = ng.controller('PunishmentController',
 
             vm.getPunishmentTime = (punishment: IPunishment): string => {
                 if (punishment.type.punishment_category_id == 2) { //DETENTION
-                    if ("start_at" in punishment.fields && "end_at" in punishment.fields) {
+                    if ((<IPDetentionField>punishment.fields).start_at && (<IPDetentionField>punishment.fields).end_at) {
                         let startDetentionDate: string = DateUtils.format((<IPDetentionField>punishment.fields).start_at, DateUtils.FORMAT["HOUR-MIN"]);
                         let endDetentionDate: string = DateUtils.format((<IPDetentionField>punishment.fields).end_at, DateUtils.FORMAT["HOUR-MIN"]);
-                        return startDetentionDate + " - " + endDetentionDate;
+                        if (startDetentionDate && endDetentionDate) {
+                            return startDetentionDate + " - " + endDetentionDate;
+                        } else {
+                            return " ";
+                        }
                     }
                 }
                 return "";
