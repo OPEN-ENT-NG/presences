@@ -3,6 +3,20 @@ $absence-button-width: 20px;
 
 .register {
 
+  .card-slider {
+    max-width: 100%;
+    overflow-x: auto;
+    height: 120px;
+    overflow-y: hidden;
+    display: flex;
+    margin-bottom: 10px;
+
+    .card {
+      min-width: 150px;
+      flex-basis: 150px;
+    }
+  }
+
   .register-header {
     text-align: center;
     background-color: $white;
