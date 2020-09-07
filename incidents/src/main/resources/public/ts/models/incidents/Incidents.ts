@@ -217,8 +217,8 @@ export class Incidents extends LoadingCollection {
         let dateFormat = DateUtils.FORMAT['YEAR-MONTH-DAY'];
 
         let url = `/incidents/incidents/export?structureId=${this.structureId}` +
-            `&startDate=${DateUtils.format(DateUtils.setFirstTime(this.startDate), dateFormat)}` +
-            `&endDate=${DateUtils.format(DateUtils.setLastTime(this.endDate), dateFormat)}`;
+            `&startDate=${DateUtils.format(DateUtils.setFirstTime(this.startDate), dateFormat) + " 00:00:00"}` +
+            `&endDate=${DateUtils.format(DateUtils.setLastTime(this.endDate), dateFormat) + " 23:59:59"}`;
 
         if (this.userId) {
             url += `&userId=${this.userId}`;
