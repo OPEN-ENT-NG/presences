@@ -164,6 +164,7 @@ export const punishmentController = ng.controller('PunishmentController',
                 vm.studentsSearchLightbox.getSelectedStudents().map(student => student.toString = () => student["displayName"]);
                 vm.groupsSearchLightbox.getSelectedGroups().map(group => group.toString = () => group["name"]);
                 vm.filterForm.punishmentsRules = JSON.parse(JSON.stringify(vm.filter.punishmentsRules));
+                vm.filterForm.punishmentsStates = JSON.parse(JSON.stringify(vm.filter.punishmentsStates));
                 vm.filterForm.massmaillingsPunishments = JSON.parse(JSON.stringify(vm.filter.massmaillingsPunishments));
                 initPunishmentTypeFilter();
             };
@@ -320,7 +321,7 @@ export const punishmentController = ng.controller('PunishmentController',
              */
             vm.togglePunishmentState = (punishmentState: { label: string, value: string, isSelected: boolean, type: string }): void => {
                 punishmentState.isSelected = !punishmentState.isSelected;
-                vm.filter.punishmentsStates.filter(state => state.value === punishmentState.value)
+                vm.filterForm.punishmentsStates.filter(state => state.value === punishmentState.value)
                     .forEach(state => state.isSelected = punishmentState.isSelected);
             };
 
@@ -404,6 +405,7 @@ export const punishmentController = ng.controller('PunishmentController',
                 vm.groupsSearch.getSelectedGroups().map(group => group.toString = () => group["name"]);
 
                 vm.filter.punishmentsRules = vm.filterForm.punishmentsRules;
+                vm.filter.punishmentsStates = vm.filterForm.punishmentsStates;
                 vm.filter.massmaillingsPunishments = vm.filterForm.massmaillingsPunishments;
 
                 vm.updateFilter();
