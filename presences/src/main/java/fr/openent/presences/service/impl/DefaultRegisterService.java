@@ -204,7 +204,6 @@ public class DefaultRegisterService implements RegisterService {
     }
 
     private JsonObject absenceToEventStatement(JsonObject register, List<String> users, UserInfos user) {
-        LOGGER.info("[Presences@DefaultRegisterService::matchAbsenceToEvent] Starting to match absence with event ");
         JsonArray params = new JsonArray();
         String query = "WITH absence as (SELECT absence.id, absence.start_date, absence.end_date, absence.student_id, absence.reason_id" +
                 " FROM presences.absence WHERE absence.student_id IN " + Sql.listPrepared(users.toArray()) +
