@@ -164,7 +164,7 @@ public class DefaultRegisterService implements RegisterService {
                             Sql.getInstance().transaction(statements, event -> {
                                 Either<String, JsonObject> result = SqlResult.validUniqueResult(0, event);
                                 if (result.isLeft()) {
-                                    String message = "Failed to create register";
+                                    String message = String.format("Failed to create register: %s", result.left().getValue());
                                     LOGGER.error(message, result.left().getValue());
                                     handler.handle(new Either.Left<>(message));
                                 } else {

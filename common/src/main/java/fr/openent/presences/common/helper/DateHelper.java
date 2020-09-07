@@ -9,10 +9,7 @@ import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.ZoneId;
 import java.time.temporal.TemporalAdjusters;
-import java.util.ArrayList;
-import java.util.Calendar;
-import java.util.Date;
-import java.util.List;
+import java.util.*;
 
 public class DateHelper {
 
@@ -219,9 +216,9 @@ public class DateHelper {
     /**
      * Get Simple date as string, use in case your date format is not standard
      *
-     * @param date          date to format
-     * @param format        the source format
-     * @param wishedFormat  the format wished
+     * @param date         date to format
+     * @param format       the source format
+     * @param wishedFormat the format wished
      * @return Simple date format as string
      */
     public static String getDateString(String date, String format, String wishedFormat) {
@@ -422,8 +419,8 @@ public class DateHelper {
 
     public static String getCurrentTime() {
         Calendar cal = Calendar.getInstance();
-        Date date = cal.getTime();
-        return DateHelper.getDateString(date, DateHelper.HOUR_MINUTES);
+        cal.setTimeZone(TimeZone.getTimeZone("Europe/Paris"));
+        return cal.get(Calendar.HOUR_OF_DAY) + ":" + cal.get(Calendar.MINUTE);
     }
 
     /**
