@@ -141,7 +141,7 @@ public class CalendarController extends ControllerHelper {
                                     }
                                 });
                                 course.setSplitCourses(CourseHelper.splitCoursesWithOneCourse(course, slots));
-                                if (exemptionsMap.containsKey(subjectId)) {
+                                if (exemptionsMap.containsKey(subjectId) && !course.getSubjectId().isEmpty()) {
                                     JsonObject exemption = CalendarHelper.exempted(course, exemptionsMap.getJsonArray(subjectId));
                                     if (exemption != null) {
                                         course.setExempted(true);
