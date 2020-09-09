@@ -18,6 +18,8 @@ interface IViewModel {
     selectTimeSlot(hourPeriod: TimeSlotHourPeriod): void;
 
     changeTimeInput(): void;
+
+    changeDateInput(): void;
 }
 
 export const PunishmentDetentionForm = ng.directive('punishmentDetentionForm', () => {
@@ -37,7 +39,7 @@ export const PunishmentDetentionForm = ng.directive('punishmentDetentionForm', (
                 <div>
                     <i18n>incidents.date</i18n> &#58;&nbsp;
                     <span class="card date-picker">
-                        <date-picker required ng-model="vm.date.date"></date-picker>
+                        <date-picker required ng-model="vm.date.date" ng-change="vm.changeDateInput()"></date-picker>
                     </span>
                 </div>
                 
@@ -219,6 +221,10 @@ export const PunishmentDetentionForm = ng.directive('punishmentDetentionForm', (
             vm.changeTimeInput = (): void => {
                 (<IPDetentionField>vm.form.fields).start_at = DateUtils.getDateFormat(moment(vm.date.date), vm.date.start_time);
                 (<IPDetentionField>vm.form.fields).end_at = DateUtils.getDateFormat(moment(vm.date.date), vm.date.end_time);
+            };
+
+            vm.changeDateInput = (): void => {
+                (<IPDetentionField>vm.form.fields).start_at = DateUtils.getDateFormat(moment(vm.date.date), moment((<IPDetentionField>vm.form.fields).start_at));
             };
         }
     };
