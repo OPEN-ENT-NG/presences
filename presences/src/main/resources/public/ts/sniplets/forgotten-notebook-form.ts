@@ -93,6 +93,7 @@ const vm: ViewModel = {
         if (response.status == 200 || response.status == 201) {
             vm.closeForgottenNotebook();
             toasts.confirm(lang.translate('presences.forgotten.form.create.succeed'));
+            this.opened = false;
         } else {
             toasts.warning(response.data.toString());
         }
