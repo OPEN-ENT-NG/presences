@@ -1,4 +1,4 @@
-import {idiom as lang, toasts} from 'entcore';
+import {angular, idiom as lang, toasts} from 'entcore';
 import {settingsService, Template} from '../../services/';
 
 console.log('massmailing');
@@ -20,7 +20,7 @@ interface ViewModel {
 
     create(type: 'MAIL' | 'SMS' | 'PDF'): Promise<void>
 
-    update(template: Template): Promise<void>
+    update(template: Template, type: 'MAIL' | 'SMS' | 'PDF'): Promise<void>
 
     delete(template: Template): Promise<void>
 
@@ -37,6 +37,8 @@ const vm: ViewModel = {
     resetTemplate: function (type: "MAIL" | "SMS" | "PDF"): void {
         vm[type.toLowerCase()].name = '';
         vm[type.toLowerCase()].content = '';
+        // reset value content from <editor>
+        angular.element(document.querySelector("editor")).scope().value = '';
         mailTemplateForm.that.$apply();
     },
     smsMaxLength: 160,
@@ -66,7 +68,12 @@ const vm: ViewModel = {
             throw e;
         }
     },
-    update: async function (template: Template): Promise<void> {
+    update: async function (template: Template, type: 'MAIL' | 'SMS' | 'PDF'): Promise<void> {
+        // we assign "value" data from ngModel editor
+        // to our template.content (only 'MAIL' from <editor></editor is concerned)
+        if (template.type === 'MAIL') {
+            template.content = angular.element(document.querySelector("editor")).scope().value;
+        }
         try {
             await settingsService.update(template);
             toasts.confirm('massmailing.templates.update.success');
@@ -114,6 +121,9 @@ const vm: ViewModel = {
         }
     },
     openTemplate: function ({id, structure_id, type, name, content}: Template) {
+        // Fix <editor> issues for interacting with ngModel from editor
+        // we get its element and use "value" data instead of our View Model
+        angular.element(document.querySelector("editor")).scope().value = content;
         vm[type.toLowerCase()] = {id, structure_id, type, name, content};
     },
     copyCode: function (code: string, codeTooltip: string) {
@@ -139,17 +149,23 @@ export const mailTemplateForm = {
     public: false,
     that: null,
     controller: {
-        init: function () {
-            function load() {
-                vm.syncTemplates('MAIL');
-                vm.syncTemplates('SMS');
-            }
-
+        init: function (): void {
             this.vm = vm;
+            this.setHandler();
             mailTemplateForm.that = this;
-            load();
-            this.$on('reload', load);
-            this.$watch(() => window.model.vieScolaire.structure, load);
+            this.load();
+        },
+        load: function (): void {
+            vm.syncTemplates('MAIL');
+            vm.syncTemplates('SMS');
+        },
+        setHandler: function (): void {
+            this.$on('reload', this.load);
+            this.$on('$destroy', () => {
+                vm.mail = {name: '', content: ''};
+                vm.sms = {name: '', content: ''}
+            });
+            this.$watch(() => window.model.vieScolaire.structure, this.load);
             this.$watch(() => vm.sms.content, (newVal, oldVal) => {
                 if (newVal.length > vm.smsMaxLength && typeof oldVal === "string") {
                     vm.sms.content = oldVal;
