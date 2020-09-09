@@ -790,7 +790,10 @@ export const registersController = ng.controller('RegistersController',
 
             /* events handler */
 
-            $scope.$on(SNIPLET_FORM_EMIT_EVENTS.FILTER, startAction);
+            $scope.$on(SNIPLET_FORM_EMIT_EVENTS.FILTER, () => {
+                startAction();
+                vm.closePanel();
+            });
             $scope.$on(SNIPLET_FORM_EMIT_EVENTS.EDIT, startAction);
             $scope.$on(SNIPLET_FORM_EMIT_EVENTS.DELETE, startAction);
 
