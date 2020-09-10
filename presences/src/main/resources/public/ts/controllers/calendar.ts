@@ -93,7 +93,7 @@ interface ViewModel {
 }
 
 interface CalendarScope extends Scope {
-    hoverExemption($event, exemption: { start_date: string, end_date: string }): void;
+    hoverExemption($event, course: any): void;
 
     hoverOutExemption(): void;
 
@@ -370,12 +370,23 @@ export const calendarController = ng.controller('CalendarController',
                 $scope.safeApply();
             }
 
-            $scope.hoverExemption = function ($event, exemption: { end_date: string, start_date: string }) {
-                const {width, height} = getComputedStyle(hover);
-                let {x, y} = $event.target.closest('.exemption-label').getBoundingClientRect();
+            $scope.hoverExemption = ($event, course: any) => {
+                const {width, height}: any = getComputedStyle(hover);
+
+                let exemption: { end_date: string, start_date: string } = {end_date: null, start_date: null};
+
+                if(!course.exemption) {
+                    exemption.start_date = course.startDate;
+                    exemption.end_date = course.endDate;
+                } else {
+                    exemption = course.exemption;
+                }
+
+                const {x, y}: any   = $event.target.closest('.exemption-label').getBoundingClientRect();
                 hover.style.top = `${y - parseInt(height)}px`;
                 hover.style.left = `${x - (parseInt(width) / 4)}px`;
                 hover.style.display = 'flex';
+
                 vm.show.exemption = exemption;
                 $scope.safeApply();
             };
