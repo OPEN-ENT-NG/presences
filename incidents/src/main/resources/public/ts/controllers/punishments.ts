@@ -4,7 +4,7 @@ import {DateUtils, StudentsSearch} from "@common/utils";
 import {GroupsSearch} from "@common/utils/autocomplete/groupsSearch";
 import {PunishmentsUtils} from "@incidents/utilities/punishments";
 import {
-    IPDetentionField,
+    IPDetentionField, IPDutyField,
     IPExcludeField,
     IPunishment,
     IPunishmentBody,
@@ -246,7 +246,11 @@ export const punishmentController = ng.controller('PunishmentController',
                 let createdDate: string = DateUtils.format(punishment.created_at, DateUtils.FORMAT["DAY-MONTH-YEAR"]);
                 switch(punishment.type.punishment_category_id) {
                     case 1: //DUTY
-                        return lang.translate("incidents.punishments.date.for.the") + createdDate;
+                        let dutyDate: string = createdDate;
+                        if ((<IPDutyField>punishment.fields).delay_at) {
+                            dutyDate = DateUtils.format((<IPDutyField>punishment.fields).delay_at, DateUtils.FORMAT["DAY-MONTH-YEAR"]);
+                        }
+                        return lang.translate("incidents.punishments.date.for.the") + dutyDate;
                     case 2: //DETENTION
                         let startDetentionDate: string = createdDate;
                         if ((<IPDetentionField>punishment.fields).start_at) {
