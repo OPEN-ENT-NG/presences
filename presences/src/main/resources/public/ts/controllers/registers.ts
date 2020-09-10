@@ -248,7 +248,7 @@ export const registersController = ng.controller('RegistersController',
                     teachers: extractSelectedTeacherIds(),
                     groups: extractSelectedGroupsName(),
                     forgottenRegister: vm.filter.forgotten,
-                    multipleSlot: vm.filter.multipleSlot,
+                    multipleSlot: $scope.isTeacher() ? registerTimeSlot.multipleSlot : false,
                     offset: vm.filter.offset,
                     limit: vm.filter.limit
                 };
@@ -287,7 +287,7 @@ export const registersController = ng.controller('RegistersController',
                     classes: [],
                     registerTeacher: undefined
                 },
-                multipleSlot: registerTimeSlot.multipleSlot,
+                multipleSlot: $scope.isTeacher() ? registerTimeSlot.multipleSlot : false,
             };
 
             vm.changeFiltersDate = async function () {
@@ -697,8 +697,9 @@ export const registersController = ng.controller('RegistersController',
                                              end_date: string = DateUtils.format(vm.filter.end_date, DateUtils.FORMAT["YEAR-MONTH-DAY"]),
                                              forgotten_registers: boolean = vm.filter.forgotten,
                                              multipleSlot: boolean = vm.filter.multipleSlot, limit?: number): Promise<void> {
+                // until MA-601 is solved, we keep it false instead of true
                 if (model.me.profiles.some(profile => profile === "Personnel")) {
-                    multipleSlot = true;
+                    multipleSlot = false;
                 }
 
                 if (vm.filter.offset === 0) {
