@@ -20,17 +20,21 @@ public interface CourseService {
     /**
      * List courses
      *
-     * @param structureId       Structure identifier
-     * @param teachersList      Teachers list identifiers
-     * @param groupsList        Groups list identifiers
-     * @param start             Start date
-     * @param end               End date
-     * @param forgottenFilter   forgottenFilter
-     * @param multipleSlot      allow split courses
-     * @param userDate
-     * @param handler           Function handler returning data
+     * @param structureId     Structure identifier
+     * @param teachersList    Teachers list identifiers
+     * @param groupsList      Groups list identifiers
+     * @param start           Start date
+     * @param end             End date
+     * @param forgottenFilter forgottenFilter
+     * @param multipleSlot    allow split courses
+     * @param userDate        current time where we make request
+     * @param handler         Function handler returning data
      */
     void listCourses(String structureId, List<String> teachersList, List<String> groupsList,
                              String start, String end, String startTime, String endTime, boolean forgottenFilter, boolean multipleSlot, String userDate,
                              Handler<Either<String, JsonArray>> handler);
+
+    void listCourses(String structureId, List<String> teachersList, List<String> groupsList,
+                     String start, String end, String startTime, String endTime, boolean forgottenFilter, boolean multipleSlot, String userDate,
+                     String limit, String offset, String descendingDate, Handler<Either<String, JsonArray>> handler);
 }

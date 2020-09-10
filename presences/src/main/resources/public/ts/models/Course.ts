@@ -1,4 +1,4 @@
-import http from 'axios';
+import http, {AxiosResponse} from 'axios';
 import {_, moment} from 'entcore';
 import {Mix} from 'entcore-toolkit';
 import {LoadingCollection} from '@common/model/LoadingCollection'
@@ -27,44 +27,54 @@ export class Course {
 
 export class Courses extends LoadingCollection {
     all: Course[];
-    map: any;
-    keysOrder: string[];
+    map: Map<number, Course[]>;
+    keysOrder: number[];
 
     constructor() {
         super();
         this.all = [];
-        this.map = {};
+        this.map = new Map<number, Course[]>();
         this.keysOrder = [];
     }
 
 
     async sync(teachers: string[] = null, groups: string[], structure: string, start: string, end: string,
-               forgottenRegisters: boolean = false, multipleSlot: boolean = false, limit?: number) {
+               forgottenRegisters: boolean = false, multipleSlot: boolean = false, limit?: number, offset?: number) {
         if (this.loading) return;
         this.loading = true;
         try {
             let teacherFilter = '';
             let groupFilter = '';
             if (teachers && teachers.length > 0) {
-                teachers.map((teacher) => teacherFilter += `teacher=${teacher}&`);
+                teachers.map((teacher: string) => teacherFilter += `teacher=${teacher}&`);
             }
             if (groups && groups.length > 0) {
-                groups.map((group) => groupFilter += `group=${group}&`);
+                groups.map((group: string) => groupFilter += `group=${group}&`);
             }
 
-            const forgottenRegisterParam = `&forgotten_registers=${forgottenRegisters}`;
-            const multipleSlotParam = `&multiple_slot=${multipleSlot}`;
-            const limitPatam = limit ? `&limit=${limit}` : '';
-            const {data} = await http.get(`/presences/courses?${teacherFilter}${groupFilter}structure=${structure}&start=${start}&end=${end}${forgottenRegisterParam}${multipleSlotParam}&_t=${moment().format(DateUtils.FORMAT["YEAR-MONTH-DAY-HOUR-MIN-SEC"])}${limitPatam}`);
-            this.all = Mix.castArrayAs(Course, data);
-            this.all.map((course: Course) => course.timestamp = moment(course.startDate).valueOf());
-            this.all = _.sortBy(this.all, 'timestamp');
+            const time: string = `&_t=${moment().format(DateUtils.FORMAT["YEAR-MONTH-DAY-HOUR-MIN-SEC"])}`;
+            const forgottenRegisterParam: string = `&forgotten_registers=${forgottenRegisters}`;
+            const multipleSlotParam: string = `&multiple_slot=${multipleSlot}`;
+            const limitParam: string = limit || limit === 0 ? `&limit=${limit}` : '';
+            const offsetParam: string = offset || offset === 0 ? `&offset=${limit * offset}` : '';
+            const orderParam: string = `&descendingDate=true`;
+            const urlParams: string = `${forgottenRegisterParam}${multipleSlotParam}${time}${limitParam}${offsetParam}`;
+
+            const {data}: AxiosResponse = await http.get(
+                `/presences/courses?${teacherFilter}${groupFilter}structure=${structure}&start=${start}&end=${end}${urlParams}${orderParam}`
+            );
+
+            let dataCourses: Course[] = Mix.castArrayAs(Course, data);
+            dataCourses.map((course: Course) => course.timestamp = moment(course.startDate).valueOf());
+            dataCourses = _.sortBy(dataCourses, 'timestamp');
+            this.all = this.all.concat(dataCourses);
             this.map = this.groupByDate();
-            this.keysOrder = Object.keys(this.map).reverse();
+            this.keysOrder = Array.from(this.map.keys()).reverse();
         } catch (err) {
             throw err;
+        } finally {
+            this.loading = false;
         }
-        this.loading = false;
     }
 
     export(teachers: string[] = null, groups: string[], structure: string, start: string, end: string, forgottenRegisters: boolean = false) {
@@ -81,21 +91,21 @@ export class Courses extends LoadingCollection {
     }
 
     groupByDate() {
-        const map = {};
+        const map: Map<number, Course[]> = new Map<number, Course[]>();
         for (let i = 0; i < this.all.length; i++) {
-            const course = this.all[i];
-            const start = moment(course.startDate).startOf('day').valueOf();
-            if (!(start in map)) {
-                map[start] = [];
+            const course: Course = this.all[i];
+            const start: number = moment(course.startDate).startOf('day').valueOf();
+            if (!map.has(start)) {
+                map.set(start, []);
             }
-
-            map[start].push(course);
+            map.get(start).push(course);
         }
-
         return map;
     }
 
     clear(): void {
         this.all = [];
+        this.map = new Map<number, Course[]>();
+        this.keysOrder = [];
     }
 }

@@ -69,9 +69,7 @@
     </div>
 </div>
 <div class="row card-slider">
-    <loader ng-show="vm.courses.loading"
-            title="lang.translate('presences.register.loading.text')"
-            min-height="'250px'"/>
+    <!-- empty case -->
     <div class="nine empty-content" data-ng-show="vm.courses.all.length === 0 &amp;&amp; !vm.courses.loading">
         <div class="eight description">
             <span class="red-bar bar"></span>
@@ -80,10 +78,16 @@
         </div>
         <img data-ng-src="/presences/public/img/registers_empty.svg" class="four">
     </div>
-    <div class="row" ng-repeat="date in vm.courses.keysOrder"
-         ng-if="vm.courses.all.length > 0">
+    <!-- loading -->
+    <loader ng-show="vm.courses.loading"
+            title="lang.translate('presences.register.loading.text')"
+            min-height="'250px'"/>
+
+    <!-- content table -->
+    <!--    <div class="row" ng-repeat="date in vm.courses.keysOrder" ng-if="vm.courses.all.length > 0">-->
+    <div class="row" ng-repeat="date in vm.courses.keysOrder" ng-if="vm.courses.all.length > 0">
         <h2 class="capitalized">[[::vm.formatDayDate(date)]]</h2>
-        <div class="card cell" ng-repeat="course in vm.courses.map[date]|orderBy:'timestamp'"
+        <div class="card cell" ng-repeat="course in vm.courses.map.get(date)"
              data-ng-click="vm.openRegister(course, $event)"
              ng-class="{active: vm.isCurrentRegister(course), disabled: vm.isFuturCourse(course)}">
             <div ng-if="hasSearchRight()" class="row has-search-right">
@@ -112,3 +116,4 @@
         </div>
     </div>
 </div>
+<infinite-scroll scrolled="vm.onScroll()"></infinite-scroll>

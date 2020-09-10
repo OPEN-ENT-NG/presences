@@ -52,13 +52,21 @@ public class DefaultCourseService implements CourseService {
         MongoDb.getInstance().findOne("courses", courseQuery, message -> handler.handle(MongoDbResult.validResult(message)));
     }
 
-
     @Override
     public void listCourses(String structureId, List<String> teachersList, List<String> groupsList,
                             String start, String end, String startTime, String endTime,
                             boolean forgottenFilter, boolean multipleSlot, String userDate,
                             Handler<Either<String, JsonArray>> handler) {
-        courseHelper.getCourses(structureId, teachersList, groupsList, start, end, startTime, endTime, event -> {
+        this.listCourses(structureId, teachersList, groupsList, start, end, startTime, endTime,
+                forgottenFilter, multipleSlot, userDate, null, null, null, handler);
+    }
+
+    @Override
+    public void listCourses(String structureId, List<String> teachersList, List<String> groupsList,
+                            String start, String end, String startTime, String endTime,
+                            boolean forgottenFilter, boolean multipleSlot, String userDate,
+                            String limit, String offset, String descendingDate, Handler<Either<String, JsonArray>> handler) {
+        courseHelper.getCourses(structureId, teachersList, groupsList, start, end, startTime, endTime, limit, offset, descendingDate, event -> {
             if (event.isLeft()) {
                 handler.handle(new Either.Left<>(event.left().getValue()));
                 return;

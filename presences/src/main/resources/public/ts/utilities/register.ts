@@ -1,6 +1,7 @@
-import {Course, Register, RegisterStudent} from "../models";
-import {model} from "entcore";
+import {Course, Courses, Register, RegisterStudent} from "../models";
+import {_, model, moment} from "entcore";
 import rights from "../rights";
+import {Mix} from "entcore-toolkit";
 
 export class RegisterUtils {
 
@@ -52,6 +53,40 @@ export class RegisterUtils {
             subjectName: "",
             teachers: []
         }
+    }
+
+    static appendCoursesMap = function (extraCourses: Course[], currentCourses: Courses): void {
+        let dataCourses: Course[] = Mix.castArrayAs(Course, extraCourses);
+        dataCourses.forEach((course: Course) => course.timestamp = moment(course.startDate).valueOf());
+        dataCourses = _.sortBy(dataCourses, 'timestamp');
+        currentCourses.all = currentCourses.all.concat(dataCourses);
+
+
+        const map: Map<number, Course[]> = RegisterUtils.formatMapCourseByDate(dataCourses);
+        const keyOrders: number[] = Array.from(map.keys()).reverse();
+        currentCourses.keysOrder = currentCourses.keysOrder.concat(keyOrders);
+
+        // remove potential duplicate data
+        currentCourses.keysOrder = currentCourses.keysOrder.filter((item: number, index: number) => {
+            return (currentCourses.keysOrder.indexOf(item) == index)
+        })
+
+        // append map we created with the current courses map
+        currentCourses.map = new Map([...Array.from(currentCourses.map.entries()), ...Array.from(map.entries())]);
+
+    }
+
+    static formatMapCourseByDate = function (courses: Course[]): Map<number, Course[]> {
+        const map: Map<number, Course[]> = new Map<number, Course[]>();
+        for (let i = 0; i < courses.length; i++) {
+            const course: Course = courses[i];
+            const start: number = moment(course.startDate).startOf('day').valueOf();
+            if (!map.has(start)) {
+                map.set(start, []);
+            }
+            map.get(start).push(course);
+        }
+        return map;
     }
 
 }

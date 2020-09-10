@@ -69,7 +69,8 @@ public class CourseController extends ControllerHelper {
         Integer limit = params.contains("limit") ? Integer.parseInt(request.getParam("limit")) : null;
 
         courseService.listCourses(params.get("structure"), params.getAll("teacher"), params.getAll("group"),
-                params.get("start"), params.get("end"), null, null, forgottenFilter, multipleSlot, userDate, event -> {
+                params.get("start"), params.get("end"), null, null, forgottenFilter, multipleSlot, userDate,
+                params.get("limit"), params.get("offset"), request.getParam("descendingDate"), event -> {
                     if (event.isLeft()) {
                         renderError(request);
                     } else {
@@ -77,7 +78,7 @@ public class CourseController extends ControllerHelper {
                         courses.sort(Comparator.comparing(Course::getTimestamp));
                         Collections.reverse(courses);
                         // second ternary checks if we choose limit or our courses size
-                        renderJson(request, limit != null ? new JsonArray(courses.subList(0, courses.size() < limit ? courses.size() : limit)) : new JsonArray(courses));
+                        renderJson(request, new JsonArray(courses));
                     }
                 });
     }

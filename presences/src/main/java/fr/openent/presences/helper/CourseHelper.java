@@ -131,6 +131,12 @@ public class CourseHelper {
 
     public void getCourses(String structure, List<String> teachers, List<String> groups, String start,
                            String end, String startTime, String endTime, Handler<Either<String, JsonArray>> handler) {
+        this.getCourses(structure, teachers, groups, start, end, startTime, endTime, null, null, null, handler);
+    }
+
+    public void getCourses(String structure, List<String> teachers, List<String> groups, String start,
+                           String end, String startTime, String endTime, String limit, String offset,
+                           String descendingDate, Handler<Either<String, JsonArray>> handler) {
         JsonObject action = new JsonObject()
                 .put("action", "course.getCoursesOccurences")
                 .put("structureId", structure)
@@ -139,7 +145,10 @@ public class CourseHelper {
                 .put("begin", start)
                 .put("end", end)
                 .put("startTime", startTime)
-                .put("endTime", endTime);
+                .put("endTime", endTime)
+                .put("limit", limit)
+                .put("offset", offset)
+                .put("descendingDate", descendingDate);
 
         eb.send("viescolaire", action, event -> {
             if (event.failed() || event.result() == null || "error".equals(((JsonObject) event.result().body()).getString("status"))) {
