@@ -102,20 +102,11 @@ public class DefaultExemptionService extends SqlCrudService implements Exemption
         if (databaseTable.equals(DATABASE_TABLE_VIEW)) {
             query.append(" AND recursive_id IS NULL");
         }
-        query.append(" AND (" + " (start_date >= '")
-                .append(start_date)
-                .append("' AND start_date <= '")
+        query.append(" AND (" + " (start_date <= '")
                 .append(end_date)
                 .append("')")
-                .append(" OR (end_date >= '")
+                .append(" AND (end_date >= '")
                 .append(start_date)
-                .append("' AND end_date <= '")
-                .append(end_date)
-                .append("')")
-                .append(" OR (start_date >= '")
-                .append(start_date)
-                .append("' AND end_date <= '")
-                .append(end_date)
                 .append("')")
                 .append(")");
 
