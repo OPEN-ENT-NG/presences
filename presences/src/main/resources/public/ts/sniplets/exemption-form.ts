@@ -217,8 +217,16 @@ const vm: ViewModel = {
     },
 
     saveExemption: async () => {
-        console.log("vm.form: ", vm.form);
+        if (vm.typeExemptionSelected.type === EXEMPTION_TYPE.RECURSIVE) {
+            vm.form.startDate = DateUtils.getDateFormat(new Date(vm.form.startDate),
+                DateUtils.getTimeFormatDate(vm.form.timeSlotTimePeriod.start.startHour));
 
+            vm.form.endDate = DateUtils.getDateFormat(new Date(vm.form.endDate),
+                DateUtils.getTimeFormatDate(vm.form.timeSlotTimePeriod.end.endHour));
+
+            vm.form.startDateRecursive = vm.form.startDate;
+            vm.form.endDateRecursive = vm.form.endDate;
+        }
         let response = await vm.form.save();
         if (vm.form.id) {
             vm.updateAfterSaveOrDelete(response, lang.translate('presences.exemptions.form.edit.succeed'));
