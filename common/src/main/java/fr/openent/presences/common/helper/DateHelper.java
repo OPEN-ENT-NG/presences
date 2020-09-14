@@ -447,7 +447,7 @@ public class DateHelper {
 
         // if day is specified, we add day else none
         LocalDate dayOfWeek = day.isEmpty() ? start : start.with(TemporalAdjusters.nextOrSame(DayOfWeek.valueOf(day)));
-        while (dayOfWeek.isBefore(end)) {
+        while (dayOfWeek.isBefore(end) || dayOfWeek.isEqual(end)) {
             dateFromDayOfWeekFetched.add(dayOfWeek);
             // increment by week if we are based to fetch specified day
             if (!day.isEmpty()) {
