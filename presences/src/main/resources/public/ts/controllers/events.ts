@@ -5,6 +5,7 @@ import {GroupService} from "@common/services/GroupService";
 import {actionService, EventRequest, EventService, ReasonService} from "../services";
 import {EventsFilter, EventsUtils} from "../utilities";
 import {Reason} from "@presences/models/Reason";
+import {INFINITE_SCROLL_EVENTER} from "@common/core/enum/infinite-scroll-eventer";
 
 declare let window: any;
 
@@ -20,6 +21,7 @@ interface ViewModel {
     /* Events */
     eventType: number[];
     event: Event;
+    interactedEvent: EventResponse;
     events: Events;
     multipleSelect: Reason;
     provingReasonsMap: any;
@@ -152,6 +154,8 @@ interface ViewModel {
 
     updateDate(): void;
 
+    onScroll(): Promise<void>;
+
     /*  switch event type */
     switchAbsencesFilter(): void;
 
@@ -202,7 +206,8 @@ export const eventsController = ng.controller('EventsController', ['$scope', '$r
             unjustified: true,
             justifiedNotRegularized: true,
             justifiedRegularized: false,
-            noFilter: true
+            noFilter: true,
+            page: 0
         };
         vm.provingReasonsMap = {};
         vm.eventType = [];
@@ -223,6 +228,7 @@ export const eventsController = ng.controller('EventsController', ['$scope', '$r
         vm.classesFilteredLightbox = undefined;
 
         vm.event = new Event(0, "", "", "");
+        vm.interactedEvent = {} as EventResponse;
         vm.events = new Events();
         vm.events.regularized = isWidget ? vm.filter.regularized : null;
         vm.events.eventer.on('loading::true', () => $scope.safeApply());
@@ -318,7 +324,7 @@ export const eventsController = ng.controller('EventsController', ['$scope', '$r
                 // dynamic mode : case if we only interact with action, reason, counsellor regularized...
                 await refreshGetEventWhileAction();
             }
-
+            $scope.$broadcast(INFINITE_SCROLL_EVENTER.UPDATE);
             $scope.safeApply();
         };
 
@@ -351,13 +357,14 @@ export const eventsController = ng.controller('EventsController', ['$scope', '$r
                 regularized: vm.events.regularized,
                 userId: vm.events.userId,
                 classes: vm.events.classes,
-                page: vm.events.page
+                page: vm.interactedEvent.page
             };
             let events = await eventService.get(filter);
 
             vm.events.pageCount = events.pageCount;
             vm.events.events = events.events;
-            vm.events.all = events.all;
+            // replace events list by the event we fetched based on their page for each event
+            vm.events.all = vm.events.all.filter(event => event.page !== vm.interactedEvent.page).concat(events.all);
             filterHistory();
             $scope.safeApply();
         };
@@ -442,6 +449,7 @@ export const eventsController = ng.controller('EventsController', ['$scope', '$r
         vm.doAction = ($event, event, eventParent?): void => {
             $event.stopPropagation();
             vm.lightbox.action = true;
+            vm.interactedEvent = event;
             vm.event = eventParent ? eventParent : event;
             vm.actionForm.owner = model.me.userId;
             if ('id' in event) {
@@ -504,6 +512,7 @@ export const eventsController = ng.controller('EventsController', ['$scope', '$r
         /* Add global reason_id to all events that exist */
         vm.changeAllReason = async (event: EventResponse, studentId: string): Promise<void> => {
             let initialReasonId = event.globalReason;
+            vm.interactedEvent = event;
             let fetchedEvent: Event|EventResponse[] = [];
             if (isWidget) {
                 fetchedEvent.push(event);
@@ -524,6 +533,7 @@ export const eventsController = ng.controller('EventsController', ['$scope', '$r
         /* Change its description reason id */
         vm.changeReason = async (history: Event, event: EventResponse, studentId: string): Promise<void> => {
             let initialReasonId = history.reason ? history.reason.id : history.reason_id;
+            vm.interactedEvent = event;
             let fetchedEvent: Array<Event|EventResponse> = [];
             history.counsellor_regularisation = vm.provingReasonsMap[history.reason_id];
             fetchedEvent.push(history);
@@ -544,6 +554,7 @@ export const eventsController = ng.controller('EventsController', ['$scope', '$r
 
         vm.toggleAllEventsRegularised = async (event: EventResponse, studentId: string): Promise<void> => {
             let initialCounsellorRegularisation = event.globalCounsellorRegularisation;
+            vm.interactedEvent = event;
             let fetchedEvent: Event|EventResponse[] = [];
             EventsUtils.fetchEvents(event, fetchedEvent);
             await vm.events.updateRegularized(fetchedEvent, initialCounsellorRegularisation, studentId, window.structure.id)
@@ -556,6 +567,7 @@ export const eventsController = ng.controller('EventsController', ['$scope', '$r
 
         vm.toggleEventRegularised = async (history: Event, event: EventResponse, studentId: string): Promise<void> => {
             let initialCounsellorRegularisation = history.counsellor_regularisation;
+            vm.interactedEvent = event;
             let fetchedEvent: Array<Event|EventResponse> = [];
             if (history.type === EventsUtils.ALL_EVENTS.event) {
                 fetchedEvent.push(history);
@@ -746,6 +758,8 @@ export const eventsController = ng.controller('EventsController', ['$scope', '$r
             EventsUtils.setStudentToSync(vm.events, vm.filter);
             EventsUtils.setClassToSync(vm.events, vm.filter);
             vm.events.page = 0;
+            vm.filter.page = vm.events.page;
+            $scope.$broadcast(INFINITE_SCROLL_EVENTER.UPDATE);
             $scope.safeApply();
         };
 
@@ -754,6 +768,33 @@ export const eventsController = ng.controller('EventsController', ['$scope', '$r
                 getEvents();
                 $scope.safeApply();
             }
+        };
+
+        vm.onScroll = async (): Promise<void> => {
+            vm.filter.page++;
+            let filter: EventRequest = {
+                structureId: vm.events.structureId,
+                startDate: vm.events.startDate,
+                endDate: vm.events.endDate,
+                noReason: vm.events.noReason,
+                eventType: vm.events.eventType,
+                listReasonIds: vm.events.listReasonIds,
+                regularized: vm.events.regularized,
+                userId: vm.events.userId,
+                classes: vm.events.classes,
+                page: vm.filter.page
+            };
+            eventService
+                .get(filter)
+                .then((events: { pageCount: number, events: EventResponse[], all: EventResponse[] }) => {
+                    if (events.all.length !== 0) {
+                        vm.events.pageCount = vm.filter.page;
+                        vm.events.events = events.events;
+                        vm.events.all = vm.events.all.concat(events.all);
+                        $scope.$broadcast(INFINITE_SCROLL_EVENTER.UPDATE);
+                    }
+                    $scope.safeApply();
+                });
         };
 
         /* ----------------------------
@@ -898,7 +939,11 @@ export const eventsController = ng.controller('EventsController', ['$scope', '$r
             vm.createAction();
         };
 
-        /* on  (watch) */
+        /* ----------------------------
+                Handler events
+         ---------------------------- */
+
+        /* on (watch) */
         $scope.$watch(() => window.structure, async () => {
             if (window.structure) {
                 await loadReasonTypes().then(async () => {
@@ -911,8 +956,17 @@ export const eventsController = ng.controller('EventsController', ['$scope', '$r
             }
         });
 
-        $scope.$watch(() => vm.filter.startDate, async () => vm.updateDate());
-        $scope.$watch(() => vm.filter.endDate, async () => vm.updateDate());
+        $scope.$watch(() => vm.filter.startDate, async () => {
+            if (window.structure) {
+                vm.updateDate();
+            }
+        });
+
+        $scope.$watch(() => vm.filter.endDate, async () => {
+            if (window.structure) {
+                vm.updateDate();
+            }
+        });
 
         /* Destroy directive and scope */
         $scope.$on("$destroy", () => {

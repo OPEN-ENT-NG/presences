@@ -4,7 +4,7 @@ import {ActionBody, EventResponse, Events, IStudentEventRequest, IStudentEventRe
 import {DateUtils} from "@common/utils";
 
 export interface EventService {
-    get(notebook): Promise<{ pageCount: number, events: EventResponse[], all: EventResponse[] }>;
+    get(eventRequest: EventRequest): Promise<{ pageCount: number, events: EventResponse[], all: EventResponse[] }>;
 
     getEventActions(event_id: number): Promise<ActionBody[]>;
 
@@ -49,7 +49,7 @@ export const eventService: EventService = {
             return {
                 pageCount: data.page_count,
                 events: data.all,
-                all: Events.buildEventResponse(data.all)
+                all: Events.buildEventResponse(data.all, eventRequest.page)
             };
         } catch (err) {
             throw err;

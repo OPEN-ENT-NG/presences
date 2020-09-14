@@ -47,6 +47,7 @@ export interface EventResponse {
     actionAbbreviation?: string;
     isAbsence?: boolean;
     isEventAbsence?: any;
+    page?: number;
 }
 
 export class Event {
@@ -136,7 +137,7 @@ export class Events extends LoadingCollection {
         this.events = [];
     }
 
-    static buildEventResponse(data: any[]): EventResponse[] {
+    static buildEventResponse(data: any[], page: number): EventResponse[] {
         let builtEvents = [];
 
         data.forEach(item => {
@@ -208,7 +209,8 @@ export class Events extends LoadingCollection {
                         isGlobalAction: isGlobalAction,
                         type: type,
                         actionAbbreviation: item.actionAbbreviation,
-                        isAbsence: isAbsence
+                        isAbsence: isAbsence,
+                        page: page
                     });
                 }
             }
@@ -257,7 +259,7 @@ export class Events extends LoadingCollection {
             const {data} = await http.get(url);
             this.pageCount = data.page_count;
             this.events = data.all;
-            this.all = Events.buildEventResponse(data.all);
+            this.all = Events.buildEventResponse(data.all, this.page);
         } catch (err) {
             throw err;
         } finally {

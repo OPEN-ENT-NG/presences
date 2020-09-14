@@ -17,7 +17,8 @@ export interface EventsFilter {
     unjustified: boolean,
     justifiedNotRegularized: boolean,
     justifiedRegularized: boolean,
-    noFilter: boolean
+    noFilter: boolean;
+    page: number;
 }
 
 export interface EventsFormFilter {

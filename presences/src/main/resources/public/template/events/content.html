@@ -18,8 +18,5 @@
         <!-- Content Table -->
         <div static-include="/presences/public/template/events/table.html"></div>
     </div>
-    <pagination data-page-count="vm.events.pageCount"
-                data-page-number="vm.events.page"
-                class="pagination">
-    </pagination>
+    <infinite-scroll scrolled="vm.onScroll()"></infinite-scroll>
 </div>
