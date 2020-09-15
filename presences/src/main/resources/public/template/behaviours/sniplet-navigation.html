@@ -74,10 +74,12 @@
                         <h2>
                             <i18n>presences.structures</i18n>
                         </h2>
-                        <div ng-repeat="structure in structures" class="sub-item"
-                             ng-class="{active: menu.structure.id === structure.id}"
-                             data-ng-click="setStructure(structure)">
-                            <i>&nbsp;</i><span>[[structure.name]]</span>
+                        <div class="sub-items-structure">
+                            <div ng-repeat="structure in structures" class="sub-item"
+                                 ng-class="{active: menu.structure.id === structure.id}"
+                                 data-ng-click="setStructure(structure)">
+                                <i>&nbsp;</i><span>[[structure.name]]</span>
+                            </div>
                         </div>
                     </div>
                 </div>
