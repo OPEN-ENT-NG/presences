@@ -39,7 +39,7 @@ export const eventService: EventService = {
             const eventType = `&eventType=${eventRequest.eventType}`;
             const listReasonIds = eventRequest.listReasonIds ? `&reasonIds=${eventRequest.listReasonIds}` : "";
             const userId = eventRequest.userId.length === 0 ? "" : `&userId=${eventRequest.userId}`;
-            const classes = eventRequest.classes.length === 0 ? "" : `&eventType=${eventRequest.classes}`;
+            const classes = eventRequest.classes.length === 0 ? "" : `&classes=${eventRequest.classes}`;
             const regularized = eventRequest.regularized ? `&regularized=${!eventRequest.regularized}` : "";
             const page = `&page=${eventRequest.page}`;
             const urlParams = `${structureId}${startDate}${endDate}${noReason}${eventType}${listReasonIds}${userId}${classes}${regularized}${page}`;
@@ -111,7 +111,7 @@ export const eventService: EventService = {
         const eventType: string = `&eventType=${eventRequest.eventType}`;
         const listReasonIds: string = eventRequest.listReasonIds ? `&reasonIds=${eventRequest.listReasonIds}` : "";
         const userId: string = eventRequest.userId.length === 0 ? "" : `&userId=${eventRequest.userId}`;
-        const classes: string = eventRequest.classes.length === 0 ? "" : `&eventType=${eventRequest.classes}`;
+        const classes: string = eventRequest.classes.length === 0 ? "" : `&classes=${eventRequest.classes}`;
         const regularized: string = eventRequest.regularized ? `&regularized=${!eventRequest.regularized}` : "";
 
         return `${url}${structureId}${startDate}${endDate}${noReason}${eventType}${listReasonIds}${userId}${classes}${regularized}`;
