@@ -63,11 +63,9 @@ export class Courses extends LoadingCollection {
             const {data}: AxiosResponse = await http.get(
                 `/presences/courses?${teacherFilter}${groupFilter}structure=${structure}&start=${start}&end=${end}${urlParams}${orderParam}`
             );
-
-            let dataCourses: Course[] = Mix.castArrayAs(Course, data);
-            dataCourses.map((course: Course) => course.timestamp = moment(course.startDate).valueOf());
-            dataCourses = _.sortBy(dataCourses, 'timestamp');
-            this.all = this.all.concat(dataCourses);
+            this.all = Mix.castArrayAs(Course, data);
+            this.all.map((course: Course) => course.timestamp = moment(course.startDate).valueOf());
+            this.all = _.sortBy(this.all, 'timestamp');
             this.map = this.groupByDate();
             this.keysOrder = Array.from(this.map.keys()).reverse();
         } catch (err) {
