@@ -1,10 +1,12 @@
 package fr.openent.presences.controller;
 
+import fr.openent.presences.Presences;
 import fr.openent.presences.common.service.GroupService;
 import fr.openent.presences.common.service.impl.DefaultGroupService;
 import fr.openent.presences.constants.Actions;
 import fr.openent.presences.constants.Alerts;
 import fr.openent.presences.export.AlertsCSVExport;
+import fr.openent.presences.security.Alert.AlertStudentNumber;
 import fr.openent.presences.security.AlertFilter;
 import fr.openent.presences.security.DeleteAlertFilter;
 import fr.openent.presences.service.AlertService;
@@ -113,7 +115,7 @@ public class AlertController extends ControllerHelper {
 
     @Get("/structures/:id/students/:studentId/alerts")
     @SecuredAction(value = "", type = ActionType.RESOURCE)
-    @ResourceFilter(AlertFilter.class)
+    @ResourceFilter(AlertStudentNumber.class)
     @ApiDoc("Get student alert number by given type with the corresponding threshold")
     public void getStudentAlertNumberWithThreshold(HttpServerRequest request) {
         String type = request.params().get("type");
@@ -160,6 +162,10 @@ public class AlertController extends ControllerHelper {
             ace.setHeader(csvHeader);
             ace.export();
         });
+    }
+
+    @SecuredAction(value = Presences.ALERTS_STUDENT_NUMBER, type = ActionType.WORKFLOW)
+    public void getAlertsStudentsNumberRight(final HttpServerRequest request) {
     }
 }
 
