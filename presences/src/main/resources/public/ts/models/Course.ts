@@ -56,7 +56,7 @@ export class Courses extends LoadingCollection {
             const forgottenRegisterParam: string = `&forgotten_registers=${forgottenRegisters}`;
             const multipleSlotParam: string = `&multiple_slot=${multipleSlot}`;
             const limitParam: string = limit || limit === 0 ? `&limit=${limit}` : '';
-            const offsetParam: string = offset || offset === 0 ? `&offset=${limit * offset}` : '';
+            const offsetParam: string = offset || offset === 0 ? `&offset=${(limit ? limit : 0) * offset}` : '';
             const orderParam: string = `&descendingDate=true`;
             const urlParams: string = `${forgottenRegisterParam}${multipleSlotParam}${time}${limitParam}${offsetParam}`;
 
