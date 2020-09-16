@@ -6,7 +6,7 @@ var revReplace = require("gulp-rev-replace");
 var clean = require('gulp-clean');
 var args = require('yargs').argv;
 
-var apps = ['presences', 'incidents', 'massmailing'];
+var apps = ['presences', 'incidents', 'massmailing', 'statistics-presences'];
 
 if (args.module) {
     apps = [args.module];
