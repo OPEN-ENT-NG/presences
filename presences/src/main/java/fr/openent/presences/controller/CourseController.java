@@ -75,8 +75,6 @@ public class CourseController extends ControllerHelper {
                         renderError(request);
                     } else {
                         List<Course> courses = event.right().getValue().getList();
-                        courses.sort(Comparator.comparing(Course::getTimestamp));
-                        Collections.reverse(courses);
                         // second ternary checks if we choose limit or our courses size
                         renderJson(request, new JsonArray(courses));
                     }
