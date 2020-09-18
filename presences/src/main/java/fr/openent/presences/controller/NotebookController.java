@@ -3,6 +3,7 @@ package fr.openent.presences.controller;
 import fr.openent.presences.Presences;
 import fr.openent.presences.constants.Actions;
 import fr.openent.presences.security.ForgottenNotebook.ForgottenNotebookManageRight;
+import fr.openent.presences.security.StudentEventsViewRight;
 import fr.openent.presences.service.NotebookService;
 import fr.openent.presences.service.impl.DefaultNotebookService;
 import fr.wseduc.rs.*;
@@ -47,7 +48,7 @@ public class NotebookController extends ControllerHelper {
     @Get("/forgotten/notebook/student/:id")
     @ApiDoc("Get forgotten notebook from student")
     @SecuredAction(value = "", type = ActionType.RESOURCE)
-    @ResourceFilter(ForgottenNotebookManageRight.class)
+    @ResourceFilter(StudentEventsViewRight.class)
     public void studentGet(HttpServerRequest request) {
         MultiMap params = request.params();
         if (!params.contains("structure_id")) {
