@@ -24,16 +24,17 @@ public class SquashHelper {
      * @param coursesEvent      Course list
      * @param splitCoursesEvent Course list split
      */
-    public List<Course> squash(List<Course> coursesEvent, List<Course> splitCoursesEvent, JsonArray registerEvent) {
-        List<Course> courses = new ArrayList<>();
+    public List<Course> squash(List<Course> coursesEvent, List<Course> splitCoursesEvent, JsonArray registerEvent, boolean multipleSlot) {
         for (Course course : coursesEvent) {
             course.setSplitSlot(false);
         }
         for (Course course : splitCoursesEvent) {
             course.setSplitSlot(true);
         }
-        courses.addAll(coursesEvent);
-        courses.addAll(splitCoursesEvent);
+        List<Course> courses = new ArrayList<>(coursesEvent);
+        if (multipleSlot) {
+            courses.addAll(splitCoursesEvent);
+        }
         JsonObject registers = groupRegisters(registerEvent);
         for (Course course : courses) {
             boolean found = false;

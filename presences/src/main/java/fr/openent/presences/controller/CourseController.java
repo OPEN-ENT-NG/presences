@@ -66,7 +66,6 @@ public class CourseController extends ControllerHelper {
         String userDate = request.getParam("_t");
         boolean forgottenFilter = params.contains("forgotten_registers") && Boolean.parseBoolean(request.getParam("forgotten_registers"));
         boolean multipleSlot = params.contains("multiple_slot") && Boolean.parseBoolean(request.getParam("multiple_slot"));
-        Integer limit = params.contains("limit") ? Integer.parseInt(request.getParam("limit")) : null;
 
         courseService.listCourses(params.get("structure"), params.getAll("teacher"), params.getAll("group"),
                 params.get("start"), params.get("end"), null, null, forgottenFilter, multipleSlot, userDate,

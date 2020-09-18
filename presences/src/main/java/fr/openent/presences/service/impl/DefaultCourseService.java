@@ -104,7 +104,7 @@ public class DefaultCourseService implements CourseService {
                 List<Course> splitCoursesEvent = CourseHelper.splitCoursesFromSlot(coursesEvent, slots);
 
                 SquashHelper squashHelper = new SquashHelper();
-                List<Course> squashCourses = squashHelper.squash(coursesEvent, splitCoursesEvent, registerEventFuture.result());
+                List<Course> squashCourses = squashHelper.squash(coursesEvent, splitCoursesEvent, registerEventFuture.result(), multipleSlot);
 
                 handler.handle(new Either.Right<>(forgottenFilter ?
                         new JsonArray(filterForgottenCourses(CourseHelper.formatCourses(squashCourses, multipleSlot, slots), userDate)) :
