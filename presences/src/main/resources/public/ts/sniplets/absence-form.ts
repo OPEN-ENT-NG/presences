@@ -38,8 +38,6 @@ interface ViewModel {
 
     isFormValid(): boolean;
 
-    canDeleteEvent(): boolean;
-
     createAbsence(): Promise<void>;
 
     updateAbsence(): Promise<void>;
@@ -164,17 +162,6 @@ const vm: ViewModel = {
             return DateUtils.getDateFormat(vm.form.startDate, vm.form.startDateTime) <= DateUtils.getDateFormat(vm.form.endDate, vm.form.startDateTime);
         }
         return false;
-    },
-
-    canDeleteEvent(): boolean {
-        if (vm.form.absences.length < 0) return true;
-        for (const absence of vm.form.absences) {
-            if (('type' in absence && absence.type === EventsUtils.ALL_EVENTS.absence)
-                || ('counsellor_input' in absence && absence.counsellor_input)) {
-                return false;
-            }
-        }
-        return true;
     },
 
     async createAbsence(): Promise<void> {
