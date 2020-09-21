@@ -105,7 +105,7 @@ public class DefaultMassmailingService implements MassmailingService {
                 contactValue = "r.email";
                 break;
             case SMS:
-                contactValue = "r.mobile , address: r.address";
+                contactValue = "CASE WHEN r.mobilePhone is null THEN r.mobile ELSE r.mobilePhone[0] END, address: r.address";
                 break;
             case PDF:
             default:
