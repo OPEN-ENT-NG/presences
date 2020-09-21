@@ -23,7 +23,6 @@ import org.entcore.common.neo4j.Neo4jResult;
 import org.entcore.common.sql.Sql;
 import org.entcore.common.sql.SqlResult;
 
-import java.lang.reflect.Array;
 import java.text.ParseException;
 import java.util.*;
 
@@ -79,8 +78,8 @@ public abstract class MassMailingProcessor implements Mailing {
             JsonObject events = eventsFuture.result();
             JsonObject hourEvents = hourEventsFuture.result();
             JsonObject relatives = relativeFuture.result();
-            HashMap<String, JsonObject> massmailings = formatData(events, relatives, reasons);
-            HashMap<String, JsonObject> massmailingsHour = formatData(hourEvents, relatives, reasons);
+            HashMap<String, JsonObject> massmailings = formatData(events, relatives.copy(), reasons);
+            HashMap<String, JsonObject> massmailingsHour = formatData(hourEvents, relatives.copy(), reasons);
             JsonArray slots = slotsFutures.result();
             JsonObject settings = settingFutures.result();
             String recoveryMethod = recoveryFuture.result().containsKey("event_recovery_method") ? recoveryFuture.result().getString("event_recovery_method") : "HALF_DAY";
