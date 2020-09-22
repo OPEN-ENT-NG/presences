@@ -16,6 +16,7 @@ interface ViewModel {
     structureTimeSlot: IStructureSlot;
     createAbsenceLightBox: boolean;
     isEventEditable: boolean;
+    updateAbsenceRegularisation: boolean;
     timeSlotHourPeriod: typeof TimeSlotHourPeriod;
     display: any;
     timeSlotTimePeriod?: {
@@ -35,6 +36,10 @@ interface ViewModel {
     editAbsenceForm(obj): void;
 
     editEventAbsenceForm(obj): void;
+
+    toUpdateRegularisation(): void;
+
+    updateRegularisation(): void;
 
     isFormValid(): boolean;
 
@@ -59,6 +64,7 @@ const vm: ViewModel = {
     reasons: null,
     form: Absence,
     isEventEditable: true,
+    updateAbsenceRegularisation: false,
     timeSlotHourPeriod: TimeSlotHourPeriod,
     display: {isFreeSchedule: false},
     structureTimeSlot: {} as IStructureSlot,
@@ -157,6 +163,22 @@ const vm: ViewModel = {
         vm.safeApply();
     },
 
+    toUpdateRegularisation(): void {
+      vm.updateAbsenceRegularisation = !vm.updateAbsenceRegularisation;
+    },
+
+    /**
+     * Update the regularisation state of the absence.
+     */
+    updateRegularisation(): void {
+        if(vm.form && vm.form.absences) {
+            for (const absence of vm.form.absences) {
+                absence.updateAbsenceRegularized([absence.id], absence.counsellor_regularisation);
+            }
+            vm.updateAbsenceRegularisation = false;
+        }
+    },
+
     isFormValid(): boolean {
         if (vm.form) {
             return DateUtils.getDateFormat(vm.form.startDate, vm.form.startDateTime) <= DateUtils.getDateFormat(vm.form.endDate, vm.form.startDateTime);
@@ -203,6 +225,7 @@ const vm: ViewModel = {
         if (failedResponse) {
             toasts.warning(response.data.toString());
         } else {
+            vm.updateRegularisation();
             vm.closeAbsenceLightbox();
             toasts.confirm(lang.translate('presences.absence.form.edit.succeed'));
         }
@@ -234,6 +257,11 @@ const vm: ViewModel = {
 
     closeAbsenceLightbox(): void {
         vm.createAbsenceLightBox = false;
+        if(vm.updateAbsenceRegularisation) {
+            vm.form.absences[0].counsellor_regularisation = !vm.form.absences[0].counsellor_regularisation;
+            vm.updateAbsenceRegularisation = false;
+        }
+
         vm.timeSlotTimePeriod = {
             start: {name: "", startHour: "", endHour: "", id: ""},
             end: {name: "", startHour: "", endHour: "", id: ""}

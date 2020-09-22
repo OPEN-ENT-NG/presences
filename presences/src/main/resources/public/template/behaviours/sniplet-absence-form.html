@@ -85,8 +85,19 @@
                 </label>
             </div>
 
+            <!-- Regularisation -->
+            <div class="presenceLightbox-body-info-choice" ng-if="vm.form.id">
+                <label class="checkbox">
+                    <input type="checkbox"
+                           data-ng-model="vm.form.absences[0].counsellor_regularisation"
+                           data-ng-change="vm.toUpdateRegularisation()"
+                           data-ng-disabled="(vm.form.reason_id == null)"/>
+                    <span class="presenceLightbox-body-info-checkbox">
+                        <i18n>presences.widgets.absences.regularized</i18n>
+                    </span>
+                </label>
+            </div>
         </div>
-
     </section>
 
     <section class="absentLightbox-footer">
