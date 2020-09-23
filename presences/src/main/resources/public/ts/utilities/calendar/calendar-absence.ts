@@ -118,7 +118,7 @@ export class CalendarAbsenceUtils {
                     mdIndex = CalendarAbsenceUtils.findElement(timeSlots, e);
                 }
             }) /* moving current courses on courses if found */
-            .mousemove((e: JQueryMouseEventObject) => {
+            .mouseenter((e: JQueryMouseEventObject) => {
                 if (isClickHold) {
                     CalendarAbsenceUtils.colorTimeSlots(mdIndex, e, timeSlotsFetched, timeSlots);
                 }
