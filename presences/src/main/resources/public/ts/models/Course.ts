@@ -43,6 +43,7 @@ export class Courses extends LoadingCollection {
 
 
     async sync(teachers: string[] = null, groups: string[], structure: string, start: string, end: string,
+               startTime: string, endTime: string,
                forgottenRegisters: boolean = false, multipleSlot: boolean = false, limit?: number, offset?: number,
                descendingDate?: Boolean, disableLoading?: boolean) {
         if (!disableLoading) {
@@ -61,14 +62,14 @@ export class Courses extends LoadingCollection {
                 groups.map((group: string) => groupFilter += `group=${group}&`);
             }
 
-            const time: string = `&_t=${moment().format(DateUtils.FORMAT["YEAR-MONTH-DAY-HOUR-MIN-SEC"])}`;
+            const startTimeParam: string = (startTime !== null && startTime !== undefined) ? `&startTime=${startTime}` : ``;
+            const endTimeParam: string = (endTime !== null && endTime !== undefined) ? `&endTime=${endTime}` : ``;
             const forgottenRegisterParam: string = `&forgotten_registers=${forgottenRegisters}`;
             const multipleSlotParam: string = `&multiple_slot=${multipleSlot}`;
             const limitParam: string = limit || limit === 0 ? `&limit=${limit}` : '';
             const offsetParam: string = offset || offset === 0 ? `&offset=${offset}` : '';
-            // const orderParam: string = (descendingDate !== null && descendingDate !== undefined) ? `&descendingDate=${descendingDate}` : '';
-            const orderParam: string = `&descendingDate=false`;
-            const urlParams: string = `${forgottenRegisterParam}${multipleSlotParam}${time}${limitParam}${offsetParam}${orderParam}`;
+            const orderParam: string = (descendingDate !== null && descendingDate !== undefined) ? `&descendingDate=${descendingDate}` : '';
+            const urlParams: string = `${forgottenRegisterParam}${multipleSlotParam}${startTimeParam}${endTimeParam}${limitParam}${offsetParam}${orderParam}`;
 
             const {data}: AxiosResponse = await http.get(
                 `/presences/courses?${teacherFilter}${groupFilter}structure=${structure}&start=${start}&end=${end}${urlParams}`
@@ -80,7 +81,7 @@ export class Courses extends LoadingCollection {
             this.all = _.sortBy(this.all, 'timestamp');
             this.groupByDate(newCourses);
             this.keysOrder = Array.from(this.map.keys())
-                .sort((timestamp1: number, timestamp2: number) => timestamp2 - timestamp1);
+                .sort((timestamp1: number, timestamp2: number) => timestamp1 - timestamp2);
         } catch (err) {
             throw err;
         } finally {
@@ -112,6 +113,9 @@ export class Courses extends LoadingCollection {
             }
             this.map.get(start).push(course);
         }
+        this.map.forEach((courses: Course[]) => {
+            courses.sort((course1: Course, course2: Course) => course1.timestamp - course2.timestamp)
+        });
     }
 
     clear(): void {

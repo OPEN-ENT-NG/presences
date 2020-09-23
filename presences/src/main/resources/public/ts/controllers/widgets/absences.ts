@@ -146,6 +146,11 @@ export const absencesController = ng.controller('AbsenceController', ['$scope', 
             return result + DateUtils.format(absence.end_date, DateUtils.FORMAT['HOUR-MINUTES']);
         };
 
-        loadReasons();
-        vm.load();
+        /* Events handler */
+        $scope.$watch(() => window.structure, async () => {
+            if (window.structure) {
+                loadReasons();
+                vm.load();
+            }
+        });
     }]);

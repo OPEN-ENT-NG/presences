@@ -45,7 +45,7 @@ export const sideRegisterController = ng.controller('SideRegisterController', ['
                 if (model.me.profiles.some(profile => profile === "Personnel")) {
                     isMultipleSlot = false;
                 }
-                await vm.courses.sync([model.me.userId], [], window.structure.id, start_date, end_date, false, isMultipleSlot);
+                await vm.courses.sync([model.me.userId], [], window.structure.id, start_date, end_date, null, null, false, isMultipleSlot);
                 await loadRegister();
                 $scope.safeApply();
             } catch (err) {
@@ -142,8 +142,14 @@ export const sideRegisterController = ng.controller('SideRegisterController', ['
                 return {};
             }
         }
+        
+        /* Events handler */
+        $scope.$watch(() => window.structure, async () => {
+            if (window.structure) {
+                vm.load();
+            }
+        });
 
-        vm.load();
-
+        /* on (watch) */
         $scope.$on(COURSE_EVENTS.OPEN_REGISTER, (event: IAngularEvent, args) => vm.openRegister(args));
     }]);

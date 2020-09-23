@@ -97,8 +97,10 @@ export interface ViewModel {
 
     closePanel(): void;
 
-    loadCourses(users?: string[], groups?: string[], structure?: string, start_date?: string,
-                end_date?: string, forgotten_registers?: boolean, multipleSlot?: boolean, limit?: number, descendingDate?: boolean): Promise<void>;
+    loadCourses(users?: string[], groups?: string[], structure?: string,
+                start_date?: string, end_date?: string, start_time?: string, end_time?: string,
+                forgotten_registers?: boolean, multipleSlot?: boolean, limit?: number, offset?: number,
+                descendingDate?: boolean): Promise<void>;
 
     isFuturCourse(course: Course): boolean;
 
@@ -177,7 +179,8 @@ export const registersController = ng.controller('RegistersController',
                     }
                     vm.filter.offset = 0;
                     vm.loadCourses(extractSelectedTeacherIds(), extractSelectedGroupsName(),
-                        undefined, undefined, undefined, undefined, undefined, vm.courses.pageSize, true);
+                        undefined, undefined, undefined, undefined, undefined,
+                        undefined, undefined, vm.courses.pageSize, vm.filter.offset, false);
                 },
                 /*  access register id view */
                 getRegister: async ({id}) => {
@@ -204,7 +207,22 @@ export const registersController = ng.controller('RegistersController',
                     }
                 },
                 /* Called from dashboard : 16 correspond to the limit number needed in dashboard */
-                forgottenRegisterWidget: () => vm.loadCourses(extractSelectedTeacherIds(), extractSelectedGroupsName(), undefined, undefined, undefined, undefined, undefined, 15),
+                forgottenRegisterWidget: async () => {
+                    await vm.loadCourses(extractSelectedTeacherIds(), extractSelectedGroupsName(),
+                        undefined, undefined, undefined, undefined, undefined,
+                        undefined, undefined, undefined, undefined, undefined,)
+                    const currentDate: string = DateUtils.format(moment(), DateUtils.FORMAT["YEAR-MONTH-DAY-HOUR-MIN-SEC"]);
+                    let courses: Course[] = []
+                    vm.courses.all
+                        .sort((course1: Course, course2: Course) => course2.timestamp - course1.timestamp)
+                        .map((course: Course) => {
+                            if (moment(currentDate).isAfter(moment(course.startDate).add(14.9, 'minutes')) && courses.length < 16) {
+                                courses.push(course);
+                            }
+                        });
+                    vm.courses.all = courses;
+                    $scope.safeApply();
+                },
             };
 
             const initCourses = async () => {
@@ -218,7 +236,7 @@ export const registersController = ng.controller('RegistersController',
                 }
                 const teachers = vm.filter.course.teachers.length > 0 ? [vm.filter.course.teachers[0].id] : [];
                 await vm.loadCourses(teachers, [], window.structure.id, DateUtils.format(vm.filter.date, DateUtils.FORMAT["YEAR-MONTH-DAY"]),
-                    DateUtils.format(vm.filter.date, DateUtils.FORMAT["YEAR-MONTH-DAY"]), false);
+                    DateUtils.format(vm.filter.date, DateUtils.FORMAT["YEAR-MONTH-DAY"]), null, null, false);
                 $scope.safeApply();
             };
 
@@ -230,11 +248,12 @@ export const registersController = ng.controller('RegistersController',
                     window.structure.id,
                     DateUtils.format(vm.filter.start_date, DateUtils.FORMAT["YEAR-MONTH-DAY"]),
                     DateUtils.format(vm.filter.end_date, DateUtils.FORMAT["YEAR-MONTH-DAY"]),
+                    null, null,
                     vm.filter.forgotten,
                     $scope.isTeacher() ? registerTimeSlot.multipleSlot : false,
                     vm.courses.pageSize,
                     vm.filter.offset,
-                    true,
+                    false,
                     true
                 );
                 $scope.safeApply();
@@ -281,7 +300,8 @@ export const registersController = ng.controller('RegistersController',
             vm.changeFiltersDate = async function () {
                 vm.filter.offset = 0;
                 vm.loadCourses(extractSelectedTeacherIds(), extractSelectedGroupsName(),
-                    undefined, undefined, undefined, undefined, undefined, vm.courses.pageSize, true);
+                    undefined, undefined, undefined, undefined,
+                    undefined, undefined, undefined, vm.courses.pageSize, vm.filter.offset, false);
             };
 
             vm.export = function () {
@@ -293,8 +313,10 @@ export const registersController = ng.controller('RegistersController',
                 vm.filter.date = DateUtils.add(vm.filter.date, step);
                 delete vm.register;
                 vm.filter.offset = 0;
-                await vm.loadCourses(extractSelectedTeacherIds(), [], window.structure.id, DateUtils.format(vm.filter.date, DateUtils.FORMAT["YEAR-MONTH-DAY"]),
-                    DateUtils.format(vm.filter.date, DateUtils.FORMAT["YEAR-MONTH-DAY"]), false, false);
+                await vm.loadCourses(extractSelectedTeacherIds(), [], window.structure.id,
+                    DateUtils.format(vm.filter.date, DateUtils.FORMAT["YEAR-MONTH-DAY"]),
+                    DateUtils.format(vm.filter.date, DateUtils.FORMAT["YEAR-MONTH-DAY"]), undefined, undefined,
+                    false, false);
                 setCurrentRegister();
             };
 
@@ -335,7 +357,8 @@ export const registersController = ng.controller('RegistersController',
                 vm.filter.classes = undefined;
                 vm.filter.offset = 0;
                 vm.loadCourses(extractSelectedTeacherIds(), extractSelectedGroupsName(),
-                    undefined, undefined, undefined, undefined, undefined, vm.courses.pageSize, true);
+                    undefined, undefined, undefined, undefined, undefined,
+                    undefined, undefined, vm.courses.pageSize, vm.filter.offset, false);
                 $scope.safeApply();
             };
 
@@ -381,7 +404,8 @@ export const registersController = ng.controller('RegistersController',
                 vm.filter.teachers = undefined;
                 vm.filter.offset = 0;
                 vm.loadCourses(extractSelectedTeacherIds(), extractSelectedGroupsName(),
-                    undefined, undefined, undefined, undefined, undefined, vm.courses.pageSize, true);
+                    undefined, undefined, undefined, undefined, undefined,
+                    undefined, undefined, vm.courses.pageSize, vm.filter.offset, false);
                 $scope.safeApply();
             };
 
@@ -390,7 +414,8 @@ export const registersController = ng.controller('RegistersController',
                 delete vm.register;
                 vm.filter.offset = 0;
                 vm.loadCourses(extractSelectedTeacherIds(), extractSelectedGroupsName(),
-                    undefined, undefined, undefined, undefined, undefined, vm.courses.pageSize, true);
+                    undefined, undefined, undefined, undefined, undefined,
+                    undefined, undefined, vm.courses.pageSize, vm.filter.offset, false);
                 $scope.safeApply();
             };
 
@@ -688,16 +713,22 @@ export const registersController = ng.controller('RegistersController',
              * @param structure
              * @param start_date
              * @param end_date
+             * @param start_time
+             * @param end_time
              * @param forgotten_registers
              * @param multipleSlot
              * @param limit
+             * @param offset
              * @param descendingDate
              */
             vm.loadCourses = async function (users: string[] = [model.me.userId], groups: string[] = [], structure: string = window.structure.id,
                                              start_date: string = DateUtils.format(vm.filter.start_date, DateUtils.FORMAT["YEAR-MONTH-DAY"]),
                                              end_date: string = DateUtils.format(vm.filter.end_date, DateUtils.FORMAT["YEAR-MONTH-DAY"]),
+                                             start_time: string = null,
+                                             end_time: string = null,
                                              forgotten_registers: boolean = vm.filter.forgotten,
-                                             multipleSlot: boolean = vm.filter.multipleSlot, limit?: number,
+                                             multipleSlot: boolean = vm.filter.multipleSlot,
+                                             limit?: number, offset?: number,
                                              descendingDate?: boolean): Promise<void> {
                 // until MA-601 is solved, we keep it false instead of true
                 if (model.me.profiles.some(profile => profile === "Personnel")) {
@@ -707,7 +738,7 @@ export const registersController = ng.controller('RegistersController',
                 if (vm.filter.offset === 0) {
                     vm.courses.clear();
                 }
-                await vm.courses.sync(users, groups, structure, start_date, end_date, forgotten_registers, multipleSlot, limit, vm.filter.offset, descendingDate);
+                await vm.courses.sync(users, groups, structure, start_date, end_date, start_time, end_time, forgotten_registers, multipleSlot, limit, offset, descendingDate);
                 $scope.$broadcast(INFINITE_SCROLL_EVENTER.UPDATE);
                 $scope.safeApply();
             };
@@ -742,14 +773,15 @@ export const registersController = ng.controller('RegistersController',
                 vm.filter.forgotten = !vm.filter.forgotten;
                 vm.filter.offset = 0;
                 vm.loadCourses(extractSelectedTeacherIds(), extractSelectedGroupsName(),
-                    undefined, undefined, undefined, undefined, undefined, vm.courses.pageSize, true);
+                    undefined, undefined, undefined, undefined, undefined,
+                    undefined, undefined, vm.courses.pageSize, vm.filter.offset, false);
             };
 
             vm.switchRegisterTeacher = function (teacher) {
                 vm.filter.selected.registerTeacher = teacher;
                 vm.filter.offset = 0;
                 vm.courses.sync([teacher.id], [], window.structure.id, DateUtils.format(vm.filter.date, DateUtils.FORMAT["YEAR-MONTH-DAY"]),
-                    DateUtils.format(vm.filter.date, DateUtils.FORMAT["YEAR-MONTH-DAY"]), false, false);
+                    DateUtils.format(vm.filter.date, DateUtils.FORMAT["YEAR-MONTH-DAY"]), null, null, false, false);
             };
 
             vm.formatDayDate = function (timestamp: number): string {

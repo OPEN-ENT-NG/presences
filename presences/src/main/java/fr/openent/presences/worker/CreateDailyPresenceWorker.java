@@ -192,7 +192,7 @@ public class CreateDailyPresenceWorker extends BusModBase implements Handler<Mes
             });
         });
 
-        courseService.listCourses(structureId, new ArrayList<>(), new ArrayList<>(), date, date, startTime, endTime,true, true, null, FutureHelper.handlerJsonArray(courseFuture));
+        courseService.listCourses(structureId, new ArrayList<>(), new ArrayList<>(), date, date, startTime, endTime, true, true, FutureHelper.handlerJsonArray(courseFuture));
         getFirstCounsellorId(structureId, personnelFuture);
     }
 

@@ -1,6 +1,5 @@
 package fr.openent.presences.service.impl;
 
-import fr.openent.presences.common.helper.DateHelper;
 import fr.openent.presences.common.helper.FutureHelper;
 import fr.openent.presences.common.viescolaire.Viescolaire;
 import fr.openent.presences.enums.RegisterStatus;
@@ -21,11 +20,7 @@ import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
 import org.entcore.common.mongodb.MongoDbResult;
 
-import java.text.ParseException;
-import java.time.Instant;
-import java.time.ZoneId;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -55,16 +50,16 @@ public class DefaultCourseService implements CourseService {
     @Override
     public void listCourses(String structureId, List<String> teachersList, List<String> groupsList,
                             String start, String end, String startTime, String endTime,
-                            boolean forgottenFilter, boolean multipleSlot, String userDate,
+                            boolean forgottenFilter, boolean multipleSlot,
                             Handler<Either<String, JsonArray>> handler) {
         this.listCourses(structureId, teachersList, groupsList, start, end, startTime, endTime,
-                forgottenFilter, multipleSlot, userDate, null, null, null, handler);
+                forgottenFilter, multipleSlot, null, null, null, handler);
     }
 
     @Override
     public void listCourses(String structureId, List<String> teachersList, List<String> groupsList,
                             String start, String end, String startTime, String endTime,
-                            boolean forgottenFilter, boolean multipleSlot, String userDate,
+                            boolean forgottenFilter, boolean multipleSlot,
                             String limit, String offset, String descendingDate, Handler<Either<String, JsonArray>> handler) {
         courseHelper.getCourses(structureId, teachersList, groupsList, start, end, startTime, endTime, limit, offset, descendingDate, event -> {
             if (event.isLeft()) {
@@ -107,7 +102,7 @@ public class DefaultCourseService implements CourseService {
                 List<Course> squashCourses = squashHelper.squash(coursesEvent, splitCoursesEvent, registerEventFuture.result(), multipleSlot);
 
                 handler.handle(new Either.Right<>(forgottenFilter ?
-                        new JsonArray(filterForgottenCourses(CourseHelper.formatCourses(squashCourses, multipleSlot, slots), userDate)) :
+                        new JsonArray(filterForgottenCourses(CourseHelper.formatCourses(squashCourses, multipleSlot, slots))) :
                         new JsonArray(CourseHelper.formatCourses(squashCourses, multipleSlot, slots))));
             });
 
@@ -126,38 +121,18 @@ public class DefaultCourseService implements CourseService {
         }
     }
 
-    private List<Course> filterForgottenCourses(List<Course> courses, String userDate) {
+    private List<Course> filterForgottenCourses(List<Course> courses) {
         List<Course> forgottenRegisters = new ArrayList<>();
-        //FIXME Fix timezone trick
-        Date currentDate;
-        try {
-            if (userDate != null) {
-                currentDate = DateHelper.parse(userDate);
-            } else {
-                long timeDifference = ZoneId.of("Europe/Paris").getRules().getOffset(Instant.now()).getTotalSeconds();
-                currentDate = new Date(System.currentTimeMillis() + (timeDifference * 1000));
-            }
-        } catch (ParseException e) {
-            long timeDifference = ZoneId.of("Europe/Paris").getRules().getOffset(Instant.now()).getTotalSeconds();
-            currentDate = new Date(System.currentTimeMillis() + (timeDifference * 1000));
-        }
         for (Course course : courses) {
-            try {
-                Course newCourse = course.clone();
-                Date forgottenStartDateCourse = new Date(DateHelper.parse(newCourse.getStartDate()).getTime() + (15 * 60000));
-                if (currentDate.after(forgottenStartDateCourse)) {
-                    if (newCourse.getRegisterId() == null) {
-                        forgottenRegisters.add(course);
-                        continue;
-                    }
-                    Integer registerState = newCourse.getRegisterStateId();
+            Course newCourse = course.clone();
+            if (newCourse.getRegisterId() == null) {
+                forgottenRegisters.add(course);
+                continue;
+            }
+            Integer registerState = newCourse.getRegisterStateId();
 
-                    if (!registerState.equals(RegisterStatus.DONE.getStatus())) {
-                        forgottenRegisters.add(course);
-                    }
-                }
-            } catch (ParseException e) {
-                LOGGER.error("[Presences@CourseController] Failed to parse date", e);
+            if (!registerState.equals(RegisterStatus.DONE.getStatus())) {
+                forgottenRegisters.add(course);
             }
         }
 

@@ -52,7 +52,7 @@ export const dayCourse = ng.controller('DayCourse', ['$scope', async function ($
         if (model.me.profiles.some(profile => profile === "Personnel")) {
             vm.isMultipleSlot = false;
         }
-        await vm.dayCourse.sync([model.me.userId], [], window.structure.id, start_date, end_date, false, vm.isMultipleSlot);
+        await vm.dayCourse.sync([model.me.userId], [], window.structure.id, start_date, end_date, null, null, false, vm.isMultipleSlot);
         $scope.safeApply();
     };
 
@@ -130,6 +130,11 @@ export const dayCourse = ng.controller('DayCourse', ['$scope', async function ($
     const isForgotten = function (start_date): boolean {
         return moment().isAfter(moment(start_date).add(15, 'm'));
     };
-
-    loadCourses();
+    
+    /* on (watch) */
+    $scope.$watch(() => window.structure, async () => {
+        if (window.structure) {
+            loadCourses();
+        }
+    });
 }]);

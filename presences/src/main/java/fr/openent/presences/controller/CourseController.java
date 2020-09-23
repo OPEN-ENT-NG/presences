@@ -63,12 +63,11 @@ public class CourseController extends ControllerHelper {
             badRequest(request);
             return;
         }
-        String userDate = request.getParam("_t");
         boolean forgottenFilter = params.contains("forgotten_registers") && Boolean.parseBoolean(request.getParam("forgotten_registers"));
         boolean multipleSlot = params.contains("multiple_slot") && Boolean.parseBoolean(request.getParam("multiple_slot"));
 
         courseService.listCourses(params.get("structure"), params.getAll("teacher"), params.getAll("group"),
-                params.get("start"), params.get("end"), null, null, forgottenFilter, multipleSlot, userDate,
+                params.get("start"), params.get("end"), params.get("startTime"), params.get("endTime"), forgottenFilter, multipleSlot,
                 params.get("limit"), params.get("offset"), request.getParam("descendingDate"), event -> {
                     if (event.isLeft()) {
                         renderError(request);
@@ -90,11 +89,10 @@ public class CourseController extends ControllerHelper {
             return;
         }
 
-        String userDate = request.getParam("_t");
         boolean forgottenFilter = params.contains("forgotten_registers") && Boolean.parseBoolean(request.getParam("forgotten_registers"));
         boolean multipleSlot = params.contains("multiple_slot") && Boolean.parseBoolean(request.getParam("multiple_slot"));
         courseService.listCourses(params.get("structure"), params.getAll("teacher"), params.getAll("group"),
-                params.get("start"), params.get("end"), null, null, forgottenFilter, multipleSlot, userDate, event -> {
+                params.get("start"), params.get("end"), null, null, forgottenFilter, multipleSlot, event -> {
                     if (event.isLeft()) {
                         log.error("[Presences@CourseController] Failed to list courses", event.left().getValue());
                         renderError(request);

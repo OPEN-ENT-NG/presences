@@ -1,41 +1,53 @@
 <div class="forgotten-registers-widget registers" ng-controller="RegistersController as vm">
+
     <h2 ng-init="vm.widget.forgottenRegisters = true;">
         <i18n>presences.widgets.day.forgotten.registers</i18n>
     </h2>
-    <div class="row card-slider" ng-show="vm.courses.all.length > 0">
-        <div class="card cell" ng-repeat="course in vm.courses.all|orderBy:'timestamp'"
-             data-ng-click="vm.openRegister(course, $event)"
-             ng-class="{active: vm.isCurrentRegister(course)}">
-            <div ng-if="hasSearchRight()" class="row has-search-right">
-                <div class="row hour">
-                    <span>[[::vm.formatHour(course.startDate)]] - [[::vm.formatHour(course.endDate)]]</span>
-                    <i class="right-magnet notify-bell" ng-if="vm.canNotify(course.startDate, course.register_state_id)"
-                       ng-class="{active: course.notified}">&nbsp;</i>
+
+    <loader data-ng-show="vm.courses.loading" min-height="'0'"/>
+
+    <div data-ng-show="!vm.courses.loading">
+
+        <!-- list of forgotten register(courses) -->
+        <div class="row card-slider" ng-show="vm.courses.all.length > 0">
+            <div class="card cell" ng-repeat="course in vm.courses.all|orderBy:'timestamp'"
+                 data-ng-click="vm.openRegister(course, $event)"
+                 ng-class="{active: vm.isCurrentRegister(course)}">
+                <div ng-if="hasSearchRight()" class="row has-search-right">
+                    <div class="row hour">
+                        <span>[[::vm.formatHour(course.startDate)]] - [[::vm.formatHour(course.endDate)]]</span>
+                        <i class="right-magnet notify-bell"
+                           ng-if="vm.canNotify(course.startDate, course.register_state_id)"
+                           ng-class="{active: course.notified}">&nbsp;</i>
+                    </div>
+                    <div class="row teachers">
+                        <span ng-repeat="teacher in course.teachers">[[::teacher.displayName]]</span>
+                    </div>
+                    <em class="row metadata ellipsis">[[::course.subjectName]]</em>
+                    <div class="classes row ellipsis">
+                        <span ng-repeat="group in ::vm.getGroups(course.classes, course.groups)">[[::group]]</span>
+                    </div>
                 </div>
-                <div class="row teachers">
-                    <span ng-repeat="teacher in course.teachers">[[::teacher.displayName]]</span>
-                </div>
-                <em class="row metadata ellipsis">[[::course.subjectName]]</em>
-                <div class="classes row ellipsis">
-                    <span ng-repeat="group in ::vm.getGroups(course.classes, course.groups)">[[::group]]</span>
+                <div ng-if="!hasSearchRight()" class="row">
+                    <div class="row hour">[[::vm.formatHour(course.startDate)]] -
+                        [[::vm.formatHour(course.endDate)]]
+                    </div>
+                    <div class="row classes ellipsis">
+                        <span ng-repeat="group in ::vm.getGroups(course.classes, course.groups)">[[::group]]</span>
+                    </div>
+                    <div class="row subject ellipsis">[[::course.subjectName]]</div>
                 </div>
             </div>
-            <div ng-if="!hasSearchRight()" class="row">
-                <div class="row hour">[[::vm.formatHour(course.startDate)]] -
-                    [[::vm.formatHour(course.endDate)]]
-                </div>
-                <div class="row classes ellipsis">
-                    <span ng-repeat="group in ::vm.getGroups(course.classes, course.groups)">[[::group]]</span>
-                </div>
-                <div class="row subject ellipsis">[[::course.subjectName]]</div>
+        </div>
+
+        <!-- empty state -->
+        <div class="card-slider empty" ng-show="vm.courses.all.length === 0">
+            <div class="tick-color red">&nbsp;</div>
+            <div class="empty-title">
+                <i18n>presences.widgets.day.forgotten.registers.empty</i18n>
             </div>
+            <div class="tick-color purple">&nbsp;</div>
         </div>
     </div>
-    <div class="card-slider empty" ng-show="vm.courses.all.length === 0">
-        <div class="tick-color red">&nbsp;</div>
-        <div class="empty-title">
-            <i18n>presences.widgets.day.forgotten.registers.empty</i18n>
-        </div>
-        <div class="tick-color purple">&nbsp;</div>
-    </div>
+
 </div>
