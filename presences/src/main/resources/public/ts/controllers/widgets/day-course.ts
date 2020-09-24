@@ -41,7 +41,7 @@ export const dayCourse = ng.controller('DayCourse', ['$scope', async function ($
 
     const initMultipleSlotPreference = async (): Promise<boolean> => {
         await PresencesPreferenceUtils.updatePresencesRegisterPreference(false);
-        return false;
+        return true;
     };
 
     vm.isMultipleSlot = ('multipleSlot' in registerTimeSlot) ? registerTimeSlot.multipleSlot : await initMultipleSlotPreference();
@@ -50,7 +50,7 @@ export const dayCourse = ng.controller('DayCourse', ['$scope', async function ($
         let start_date = DateUtils.format(new Date(), DateUtils.FORMAT["YEAR-MONTH-DAY"]);
         let end_date = DateUtils.format(new Date(), DateUtils.FORMAT["YEAR-MONTH-DAY"]);
         if (model.me.profiles.some(profile => profile === "Personnel")) {
-            vm.isMultipleSlot = false;
+            vm.isMultipleSlot = true
         }
         await vm.dayCourse.sync([model.me.userId], [], window.structure.id, start_date, end_date, null, null, false, vm.isMultipleSlot);
         $scope.safeApply();

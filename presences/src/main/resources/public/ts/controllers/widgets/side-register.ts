@@ -5,7 +5,7 @@ import {CourseUtils, PresencesPreferenceUtils} from "@common/utils";
 import {RegisterUtils} from "../../utilities";
 import {COURSE_EVENTS} from "@common/model";
 import {IAngularEvent} from "angular";
-import http, {AxiosResponse} from "axios";
+import http from "axios";
 
 interface ViewModel {
     courses: Courses;
@@ -43,7 +43,7 @@ export const sideRegisterController = ng.controller('SideRegisterController', ['
                 
                 let isMultipleSlot: boolean = ('multipleSlot' in registerTimeSlot) ? registerTimeSlot.multipleSlot : await initMultipleSlotPreference();
                 if (model.me.profiles.some(profile => profile === "Personnel")) {
-                    isMultipleSlot = false;
+                    isMultipleSlot = true;
                 }
                 await vm.courses.sync([model.me.userId], [], window.structure.id, start_date, end_date, null, null, false, isMultipleSlot);
                 await loadRegister();
@@ -130,17 +130,12 @@ export const sideRegisterController = ng.controller('SideRegisterController', ['
         }
 
         async function initMultipleSlotPreference(): Promise<boolean> {
-            await PresencesPreferenceUtils.updatePresencesRegisterPreference(false);
-            return false;
+            await PresencesPreferenceUtils.updatePresencesRegisterPreference(true);
+            return true;
         }
 
         async function getPreference(): Promise<any> {
-            let response: AxiosResponse = await http.get(`userbook/preference/presences.register`);
-            if (response.status === 200 || response.status === 201) {
-                return JSON.parse(response.data.preference);
-            } else {
-                return {};
-            }
+            return http.get(`userbook/preference/presences.register`);
         }
         
         /* Events handler */
