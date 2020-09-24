@@ -791,6 +791,12 @@ export const eventsController = ng.controller('EventsController', ['$scope', '$r
                         vm.events.pageCount = vm.filter.page;
                         vm.events.events = events.events;
                         vm.events.all = vm.events.all.concat(events.all);
+
+                        //Remove duplicates
+                        vm.events.all = vm.events.all.filter((event: EventResponse, index: number, events: EventResponse[]) =>
+                            events.findIndex((event2: EventResponse) =>
+                                (event2.studentId === event.studentId && event2.date === event.date)) === index);
+
                         $scope.$broadcast(INFINITE_SCROLL_EVENTER.UPDATE);
                     }
                     $scope.safeApply();
