@@ -447,7 +447,7 @@ public class Global extends Indicator {
         return new JsonObject()
                 .put("aggregate", StatisticsPresences.COLLECTION)
                 .put("allowDiskUse", true)
-                .put("cursor", new JsonObject())
+                .put("cursor", new JsonObject().put("batchSize", 2147483647))
                 .put("pipeline", pipeline);
     }
 }
