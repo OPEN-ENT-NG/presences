@@ -294,7 +294,7 @@ export const registersController = ng.controller('RegistersController',
                     classes: [],
                     registerTeacher: undefined
                 },
-                multipleSlot: $scope.isTeacher() ? registerTimeSlot.multipleSlot : false,
+                multipleSlot: registerTimeSlot.multipleSlot,
             };
 
             vm.changeFiltersDate = async function () {
@@ -732,7 +732,7 @@ export const registersController = ng.controller('RegistersController',
                                              descendingDate?: boolean): Promise<void> {
                 // until MA-601 is solved, we keep it false instead of true
                 if (model.me.profiles.some(profile => profile === "Personnel")) {
-                    multipleSlot = false;
+                    multipleSlot = true;
                 }
 
                 if (vm.filter.offset === 0) {

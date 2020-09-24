@@ -40,7 +40,7 @@ export const dayCourse = ng.controller('DayCourse', ['$scope', async function ($
     let registerTimeSlot = await Me.preference(PreferencesUtils.PREFERENCE_KEYS.PRESENCE_REGISTER);
 
     const initMultipleSlotPreference = async (): Promise<boolean> => {
-        await PresencesPreferenceUtils.updatePresencesRegisterPreference(false);
+        await PresencesPreferenceUtils.updatePresencesRegisterPreference(true);
         return true;
     };
 
