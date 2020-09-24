@@ -40,6 +40,7 @@ import java.util.stream.Collectors;
 public class DefaultEventService implements EventService {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(DefaultEventService.class);
+    private static final Integer PAGE_SIZE = 100;
     private static String defaultStartTime = "00:00:00";
     private static String defaultEndTime = "23:59:59";
     private SettingsService settingsService = new DefaultSettingsService();
@@ -293,8 +294,8 @@ public class DefaultEventService implements EventService {
                 "type_id, register_id, counsellor_regularisation, type, register_id ";
         if (page != null) {
             query += "ORDER BY start_date DESC OFFSET ? LIMIT ? ";
-            params.add(Presences.PAGE_SIZE * page);
-            params.add(Presences.PAGE_SIZE);
+            params.add(PAGE_SIZE * page);
+            params.add(PAGE_SIZE);
         } else {
             query += "ORDER BY start_date DESC ";
         }
