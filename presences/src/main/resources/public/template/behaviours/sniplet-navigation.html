@@ -78,6 +78,7 @@
         <!-- all sub nav -->
         <div class="sub-nav" role="navigation" aria-label="sub navigation">
             <div class="items">
+                <!-- structures -->
                 <div class="item structure-choice-item">
                     <div class="sub-items" data-ng-mouseover="hoverIn('STRUCTURES')"
                          data-ng-mouseleave="hoverOut()"
@@ -94,8 +95,14 @@
                         </div>
                     </div>
                 </div>
+
+                <!-- home -->
                 <div class="item"></div>
+
+                <!-- registers -->
                 <div class="item"></div>
+
+                <!-- events-->
                 <div class="item">
                     <div class="sub-items" ng-class="{hovered: menu.hovered === 'ABSENCES'}"
                          data-ng-mouseover="hoverIn('ABSENCES')"
@@ -133,7 +140,10 @@
                         </a>
                     </div>
                 </div>
+
+                <!-- presences -->
                 <div class="item"></div>
+
                 <!-- incidents -->
                 <div class="item">
                     <div class="sub-items" ng-class="{hovered: menu.hovered === 'INCIDENTS'}"
@@ -161,7 +171,11 @@
                         </a>
                     </div>
                 </div>
-                <div class="item"></div>
+                <!-- massmailing -->
+                <div class="item" ng-if="::hasMassmailingRight('access')"></div>
+
+                <!-- statistics -->
+                <div class="item" ng-if="::hasStatisticsRight('access')"></div>
             </div>
         </div>
     </nav>
