@@ -3,6 +3,7 @@ package fr.openent.incidents.model;
 import fr.openent.incidents.Incidents;
 import fr.openent.incidents.enums.WorkflowActions;
 import fr.openent.incidents.model.punishmentCategory.PunishmentCategory;
+import fr.openent.presences.common.helper.DateHelper;
 import fr.openent.presences.common.helper.WorkflowHelper;
 import fr.openent.presences.model.Model;
 import fr.openent.presences.model.Validator;
@@ -106,7 +107,7 @@ public class Punishment extends Model {
     }
 
     private void updateMongo(UserInfos user, String id, Handler<AsyncResult<JsonObject>> handler) {
-        SimpleDateFormat formatter = new SimpleDateFormat("yyyy/MM/dd HH:mm:ss");
+        SimpleDateFormat formatter = new SimpleDateFormat(DateHelper.MONGO_FORMAT);
         String currentDate = formatter.format(new Date());
         String method = "UPDATE";
         JsonObject data = toJsonObject(method);
@@ -153,7 +154,7 @@ public class Punishment extends Model {
                 return;
             }
 
-            SimpleDateFormat formatter = new SimpleDateFormat("yyyy/MM/dd HH:mm:ss");
+            SimpleDateFormat formatter = new SimpleDateFormat(DateHelper.MONGO_FORMAT);
             String currentDate = formatter.format(new Date());
             JsonObject data = toJsonObject();
             data.put("created_at", currentDate);

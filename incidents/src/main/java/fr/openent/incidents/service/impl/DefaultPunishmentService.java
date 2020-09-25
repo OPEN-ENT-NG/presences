@@ -6,6 +6,7 @@ import fr.openent.incidents.enums.PunishmentsProcessState;
 import fr.openent.incidents.enums.WorkflowActions;
 import fr.openent.incidents.model.Punishment;
 import fr.openent.incidents.service.PunishmentService;
+import fr.openent.presences.common.helper.DateHelper;
 import fr.openent.presences.common.helper.WorkflowHelper;
 import fr.openent.presences.common.service.GroupService;
 import fr.openent.presences.common.service.UserService;
@@ -266,13 +267,25 @@ public class DefaultPunishmentService implements PunishmentService {
 
                 if (start_at != null && end_at != null) {
 
+                    //Check date for detentions and exclusions
                     List<BasicDBObject> containDateQueries = new ArrayList<>();
-                    containDateQueries.add(new BasicDBObject("fields.start_at", new BasicDBObject("$lt", end_at)));
-                    containDateQueries.add(new BasicDBObject("fields.end_at", new BasicDBObject("$gt", start_at)));
+                    containDateQueries.add(new BasicDBObject("fields.start_at", new BasicDBObject("$lte", end_at)));
+                    containDateQueries.add(new BasicDBObject("fields.end_at", new BasicDBObject("$gte", start_at)));
                     BasicDBObject containDateQuery = new BasicDBObject("$and", containDateQueries);
-                    BasicDBObject nullDateQuery = new BasicDBObject("created_at", new BasicDBObject("$gt", start_at).append("$lt", end_at));
 
-                    queries.add(new BasicDBObject("$or", Arrays.asList(containDateQuery, nullDateQuery)));
+                    //Check date for duties
+                    List<BasicDBObject> containDateDutyQueries = new ArrayList<>();
+                    containDateDutyQueries.add(new BasicDBObject("fields.delay_at", new BasicDBObject("$lte", end_at)));
+                    containDateDutyQueries.add(new BasicDBObject("fields.delay_at", new BasicDBObject("$gte", start_at)));
+                    BasicDBObject containDutyDateQuery = new BasicDBObject("$and", containDateDutyQueries);
+
+                    //Check creation date
+                    BasicDBObject nullDateQuery = new BasicDBObject("created_at", new BasicDBObject("$gte", start_at).append("$lte", end_at));
+                    //Check for formatted format : YYYY/MM/DD instead of YYYY-MM-DD
+                    BasicDBObject nullDateQuery2 = new BasicDBObject("created_at",
+                            new BasicDBObject("$gte", DateHelper.getDateString(start_at, DateHelper.YEAR_MONTH_DAY_HOUR_MINUTES_SECONDS))
+                                    .append("$lte", DateHelper.getDateString(end_at, DateHelper.YEAR_MONTH_DAY_HOUR_MINUTES_SECONDS)));
+                    queries.add(new BasicDBObject("$or", Arrays.asList(containDateQuery, nullDateQuery, nullDateQuery2, containDutyDateQuery)));
                 }
 
                 if (isStudent) queries.add(new BasicDBObject("student_id", user.getUserId()));
