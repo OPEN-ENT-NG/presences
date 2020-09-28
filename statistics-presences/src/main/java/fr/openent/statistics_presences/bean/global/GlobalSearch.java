@@ -223,11 +223,6 @@ public class GlobalSearch {
             pipeline.add(fromToMatcher());
         }
 
-        if (this.filter().page() != null) {
-            pipeline.add(skip())
-                    .add(limit());
-        }
-
         return pipeline;
     }
 
