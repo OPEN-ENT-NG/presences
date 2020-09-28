@@ -1,5 +1,6 @@
 package fr.openent.presences.common.viescolaire;
 
+import fr.openent.presences.common.helper.DateHelper;
 import fr.openent.presences.common.message.MessageResponseHandler;
 import fr.wseduc.webutils.Either;
 import io.vertx.core.Handler;
@@ -63,6 +64,36 @@ public class Viescolaire {
                 .put("structureId", structureId);
 
         eb.send(address, action, MessageResponseHandler.messageJsonObjectHandler(handler));
+    }
+
+    public void getSlotsFromProfile(String structureId, Handler<Either<String, JsonArray>> handler) {
+        JsonObject action = new JsonObject()
+                .put("action", "timeslot.getSlotProfiles")
+                .put("structureId", structureId);
+
+        eb.send(address, action, MessageResponseHandler.messageJsonObjectHandler(event -> {
+            if (event.isLeft()) {
+                String err = "[Common@ViescolaireHelper::getSlotsFromProfile] Failed to retrieve slots from profile";
+                LOGGER.error(err);
+                handler.handle(new Either.Left<>(event.left().getValue()));
+            } else {
+                // send handler empty array if none data
+                if (event.right().getValue().isEmpty() || (event.right().getValue().containsKey("slots") &&
+                        event.right().getValue().getJsonArray("slots").isEmpty())) {
+                    handler.handle(new Either.Right<>(new JsonArray()));
+                } else {
+                    // change format start and end Hour ( e.g old "08:25" => into now "08:25:00")
+                    event.right().getValue().getJsonArray("slots").forEach(slotObj -> {
+                        JsonObject slot = ((JsonObject) slotObj);
+                        String parsedStartHour = DateHelper.fetchTimeString(slot.getString("startHour"), DateHelper.HOUR_MINUTES);
+                        String parsedEndHour = DateHelper.fetchTimeString(slot.getString("endHour"), DateHelper.HOUR_MINUTES);
+                        slot.put("startHour", parsedStartHour);
+                        slot.put("endHour", parsedEndHour);
+                    });
+                    handler.handle(new Either.Right<>(event.right().getValue().getJsonArray("slots")));
+                }
+            }
+        }));
     }
 
     public void getDefaultSlots(String structureId, Handler<Either<String, JsonArray>> handler) {

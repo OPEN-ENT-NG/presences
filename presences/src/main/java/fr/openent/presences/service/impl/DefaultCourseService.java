@@ -108,7 +108,7 @@ public class DefaultCourseService implements CourseService {
 
             subjectHelper.getSubjects(subjectIds, FutureHelper.handlerJsonArray(subjectsFuture));
             courseHelper.getCourseTeachers(teachersIds, FutureHelper.handlerJsonArray(teachersFuture));
-            Viescolaire.getInstance().getDefaultSlots(structureId, FutureHelper.handlerJsonArray(slotsFuture));
+            Viescolaire.getInstance().getSlotsFromProfile(structureId, FutureHelper.handlerJsonArray(slotsFuture));
             registerService.list(structureId, coursesIds, FutureHelper.handlerJsonArray(registerEventFuture));
         });
     }

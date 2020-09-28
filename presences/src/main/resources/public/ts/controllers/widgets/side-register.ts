@@ -5,7 +5,7 @@ import {CourseUtils, PresencesPreferenceUtils} from "@common/utils";
 import {RegisterUtils} from "../../utilities";
 import {COURSE_EVENTS} from "@common/model";
 import {IAngularEvent} from "angular";
-import http from "axios";
+import http, {AxiosResponse} from "axios";
 
 interface ViewModel {
     courses: Courses;
@@ -135,7 +135,12 @@ export const sideRegisterController = ng.controller('SideRegisterController', ['
         }
 
         async function getPreference(): Promise<any> {
-            return http.get(`userbook/preference/presences.register`);
+            let response: AxiosResponse = await http.get(`userbook/preference/presences.register`);
+            if (response.status === 200 || response.status === 201) {
+                return JSON.parse(response.data.preference);
+            } else {
+                return {};
+            }
         }
         
         /* Events handler */

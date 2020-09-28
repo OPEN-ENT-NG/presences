@@ -23,9 +23,9 @@ public class Slot {
         }
         this.id = slot.getString("id", "");
         this.structureId = slot.getString("structure_id", "");
-        this.name = slot.getString("subjectId", "");
-        this.startHour = slot.getString("start_hour", "");
-        this.endHour = slot.getString("end_hour", "");
+        this.name = slot.getString("name", "");
+        this.startHour = slot.getString("start_hour", slot.getString("startHour", ""));
+        this.endHour = slot.getString("end_hour", slot.getString("endHour", ""));
     }
 
     public Slot(JsonObject slot) {
