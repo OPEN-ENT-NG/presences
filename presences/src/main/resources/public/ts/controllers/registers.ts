@@ -730,7 +730,6 @@ export const registersController = ng.controller('RegistersController',
                                              multipleSlot: boolean = vm.filter.multipleSlot,
                                              limit?: number, offset?: number,
                                              descendingDate?: boolean): Promise<void> {
-                // until MA-601 is solved, we keep it false instead of true
                 if (model.me.profiles.some(profile => profile === "Personnel")) {
                     multipleSlot = true;
                 }
