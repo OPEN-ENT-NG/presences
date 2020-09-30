@@ -234,24 +234,21 @@ public class DefaultRegisterService implements RegisterService {
 
     @Override
     public void get(Integer id, Handler<Either<String, JsonObject>> handler) {
-        String query = "SELECT personnel_id, proof_id, course_id, owner, notified, subject_id, start_date, end_date, structure_id, counsellor_input, state_id, json_agg(\"group\".*) as groups " +
-                "FROM " + Presences.dbSchema + ".register " +
-                "INNER JOIN " + Presences.dbSchema + ".rel_group_register ON (register.id = rel_group_register.register_id) " +
-                "INNER JOIN " + Presences.dbSchema + ".\"group\" ON (rel_group_register.group_id = \"group\".id) " +
-                "WHERE register.id = ? " +
-                "GROUP BY register.id;";
-        JsonArray params = new JsonArray()
-                .add(id);
+        Future<JsonObject> registerFuture = Future.future();
+        Future<JsonObject> registerGroupFuture = Future.future();
 
-        Sql.getInstance().prepared(query, params, SqlResult.validUniqueResultHandler(registerEither -> {
-            if (registerEither.isLeft()) {
+        fetchRegister(id, FutureHelper.handlerJsonObject(registerFuture));
+        fetchGroupRegister(id, FutureHelper.handlerJsonObject(registerGroupFuture));
+
+        CompositeFuture.all(registerFuture, registerGroupFuture).setHandler(registerAsync -> {
+            if (registerAsync.failed()) {
                 String message = "[Presences@DefaultRegisterService::get] Failed to retrieve register " + id;
                 LOGGER.error(message);
                 handler.handle(new Either.Left<>(message));
                 return;
             }
 
-            JsonObject register = registerEither.right().getValue();
+            JsonObject register = registerFuture.result().put("groups", registerGroupFuture.result().getString("groups"));
             if (!register.containsKey("start_date")) {
                 handler.handle(new Either.Left<>("404"));
                 return;
@@ -263,7 +260,7 @@ public class DefaultRegisterService implements RegisterService {
                 handler.handle(new Either.Left<>("[Presences@DefaultRegisterService::get] Failed to parse register date"));
                 return;
             }
-            JsonArray groups = new JsonArray(register.getString("groups"));
+            JsonArray groups = register.getString("groups") != null ? new JsonArray(register.getString("groups")) : new JsonArray();
             getUsers(groups, userEither -> {
                 if (userEither.isLeft()) {
                     LOGGER.error("[Presences@DefaultRegisterService::get] Failed to retrieve users", userEither.left().getValue());
@@ -342,7 +339,25 @@ public class DefaultRegisterService implements RegisterService {
                 registerHelper.getRegisterEventHistory(day, null, new JsonArray(userIds),
                         FutureHelper.handlerJsonArray(registerEventHistoryFuture));
             });
-        }));
+        });
+    }
+
+    private void fetchRegister(Integer id, Handler<Either<String, JsonObject>> handler) {
+        String query = "SELECT personnel_id, proof_id, course_id, owner, notified, subject_id, start_date, end_date, " +
+                "structure_id, counsellor_input, state_id FROM " + Presences.dbSchema + ".register " +
+                "WHERE register.id = ?";
+        JsonArray params = new JsonArray().add(id);
+
+        Sql.getInstance().prepared(query, params, SqlResult.validUniqueResultHandler(handler));
+    }
+
+    private void fetchGroupRegister(Integer id, Handler<Either<String, JsonObject>> handler) {
+        String query = "SELECT json_agg(\"group\".*) as groups FROM " + Presences.dbSchema + ".rel_group_register " +
+                "INNER JOIN presences.\"group\" ON (rel_group_register.group_id = \"group\".id) " +
+                "WHERE rel_group_register.register_id = ?";
+        JsonArray params = new JsonArray().add(id);
+
+        Sql.getInstance().prepared(query, params, SqlResult.validUniqueResultHandler(handler));
     }
 
     private void formatRegister(Integer id, JsonObject register, JsonArray groups, JsonArray users, Future<JsonArray> teachersFuture,
