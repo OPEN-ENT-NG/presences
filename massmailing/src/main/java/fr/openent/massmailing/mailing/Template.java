@@ -173,8 +173,12 @@ public class Template extends BaseServer {
                     for (int i = 0; i < eventsKey.size(); i++) {
                         JsonObject event = eventsKey.getJsonObject(i);
                         try {
-                            String line = "<tr><td>" + DateHelper.getDateString(event.getString("display_start_date"), DateHelper.DAY_MONTH_YEAR) + "</td>";
-                            line += "<td>" + DateHelper.getTimeString(event.getString("display_start_date"), DateHelper.SQL_FORMAT) + " - " + DateHelper.getTimeString(event.getString("display_end_date"), DateHelper.SQL_FORMAT) + "</td>";
+                            String line = "<tr><td>" + DateHelper.getDateString(event.getString("display_start_date",
+                                    event.getString("start_date")), DateHelper.DAY_MONTH_YEAR) + "</td>";
+                            line += "<td>" + DateHelper.getTimeString(event.getString("display_start_date",
+                                    event.getString("start_date")), DateHelper.SQL_FORMAT) + " - " +
+                                    DateHelper.getTimeString(event.getString("display_end_date",
+                                            event.getString("end_date")), DateHelper.SQL_FORMAT) + "</td>";
                             if (!"LATENESS".equals(key)) {
                                 line += "<td>" + getReasonLabel(event) + "</td>";
                                 line += "<td>" + getRegularisedLabel(event) + "</td></tr>";
