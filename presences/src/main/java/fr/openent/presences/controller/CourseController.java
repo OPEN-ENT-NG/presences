@@ -5,7 +5,6 @@ import fr.openent.presences.common.helper.DateHelper;
 import fr.openent.presences.constants.Actions;
 import fr.openent.presences.export.RegisterCSVExport;
 import fr.openent.presences.helper.CourseHelper;
-import fr.openent.presences.helper.SubjectHelper;
 import fr.openent.presences.model.Course;
 import fr.openent.presences.service.CourseService;
 import fr.openent.presences.service.RegisterService;
@@ -39,11 +38,10 @@ import static org.entcore.common.http.response.DefaultResponseHandler.defaultRes
 
 public class CourseController extends ControllerHelper {
 
-    private EventBus eb;
-    private RegisterService registerService;
-    private SubjectHelper subjectHelper;
-    private CourseHelper courseHelper;
-    private CourseService courseService;
+    private final EventBus eb;
+    private final RegisterService registerService;
+    private final CourseHelper courseHelper;
+    private final CourseService courseService;
 
     public CourseController(EventBus eb) {
         super();
@@ -51,7 +49,6 @@ public class CourseController extends ControllerHelper {
         this.registerService = new DefaultRegisterService(eb);
         this.courseHelper = new CourseHelper(eb);
         this.courseService = new DefaultCourseService(eb);
-        this.subjectHelper = new SubjectHelper(eb);
     }
 
     @Get("/courses")
@@ -136,48 +133,36 @@ public class CourseController extends ControllerHelper {
                         log.error("[Presences@CourseController] Failed to retrieve course", either.left().getValue());
                         return;
                     }
-
                     JsonObject course = either.right().getValue();
-                    subjectHelper.getSubjects(new JsonArray().add(course.getString("subjectId")), event -> {
-                        if (event.isLeft()) {
-                            log.error("[Presences@CourseController] Failed to retrieve course subject");
+                    String subjectName = course.getJsonObject("subject", new JsonObject()).getString("name", "");
+                    String startHour = DateHelper.getDateString(start, "kk'h'mm");
+                    String endHour = DateHelper.getDateString(end, "kk'h'mm");
+                    String subjectDate = DateHelper.getDateString(start, "dd/MM");
+                    JsonArray teachers = course.getJsonArray("teacherIds");
+                    String structureName = getStructureName(user, course.getString("structureId"));
+                    String groups = getGroupsName(course.getJsonArray("classes"), course.getJsonArray("groups"));
+                    String subject = I18n.getInstance().translate("presences.register.notify.subject", Renders.getHost(request), I18n.acceptLanguage(request), subjectDate);
+                    String body = I18n.getInstance().translate("presences.register.notify.body", Renders.getHost(request), I18n.acceptLanguage(request), subjectName, groups, startHour, endHour, structureName);
+                    JsonObject message = new JsonObject()
+                            .put("subject", subject)
+                            .put("body", body)
+                            .put("to", teachers);
+
+                    JsonObject action = new JsonObject()
+                            .put("action", "send")
+                            .put("userId", user.getUserId())
+                            .put("username", user.getUsername())
+                            .put("message", message);
+
+                    eb.send("org.entcore.conversation", action, handlerToAsyncHandler(messageEvent -> {
+                        if (!"ok".equals(messageEvent.body().getString("status"))) {
+                            log.error("[Presences@CourseController] Failed to send message", messageEvent.body().getString("error"));
+                            renderError(request);
+                            return;
                         }
-                        JsonArray subjects = event.right().getValue();
-                        String subjectName;
-                        if (subjects.isEmpty()) {
-                            subjectName = course.containsKey("exceptionnal") ? course.getString("exceptionnal") : course.getString("subjectId");
-                        } else {
-                            subjectName = subjects.getJsonObject(0).getString("name");
-                        }
-                        String startHour = DateHelper.getDateString(start, "kk'h'mm");
-                        String endHour = DateHelper.getDateString(end, "kk'h'mm");
-                        String subjectDate = DateHelper.getDateString(start, "dd/MM");
-                        JsonArray teachers = course.getJsonArray("teacherIds");
-                        String structureName = getStructureName(user, course.getString("structureId"));
-                        String groups = getGroupsName(course.getJsonArray("classes"), course.getJsonArray("groups"));
-                        String subject = I18n.getInstance().translate("presences.register.notify.subject", Renders.getHost(request), I18n.acceptLanguage(request), subjectDate);
-                        String body = I18n.getInstance().translate("presences.register.notify.body", Renders.getHost(request), I18n.acceptLanguage(request), subjectName, groups, startHour, endHour, structureName);
-                        JsonObject message = new JsonObject()
-                                .put("subject", subject)
-                                .put("body", body)
-                                .put("to", teachers);
 
-                        JsonObject action = new JsonObject()
-                                .put("action", "send")
-                                .put("userId", user.getUserId())
-                                .put("username", user.getUsername())
-                                .put("message", message);
-
-                        eb.send("org.entcore.conversation", action, handlerToAsyncHandler(messageEvent -> {
-                            if (!"ok".equals(messageEvent.body().getString("status"))) {
-                                log.error("[Presences@CourseController] Failed to send message", messageEvent.body().getString("error"));
-                                renderError(request);
-                                return;
-                            }
-
-                            setRegisterNotified(course, start, end, user, request);
-                        }));
-                    });
+                        setRegisterNotified(course, start, end, user, request);
+                    }));
                 });
             });
         });

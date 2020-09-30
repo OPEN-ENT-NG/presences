@@ -1,11 +1,13 @@
 package fr.openent.presences.helper;
 
 import fr.openent.presences.common.helper.DateHelper;
-import fr.openent.presences.common.helper.FutureHelper;
 import fr.openent.presences.model.Course;
 import fr.openent.presences.model.Slot;
 import fr.wseduc.webutils.Either;
-import io.vertx.core.*;
+import io.vertx.core.AsyncResult;
+import io.vertx.core.Future;
+import io.vertx.core.Handler;
+import io.vertx.core.MultiMap;
 import io.vertx.core.eventbus.EventBus;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
@@ -23,11 +25,9 @@ public class CourseHelper {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(CourseHelper.class);
     private final EventBus eb;
-    private SubjectHelper subjectHelper;
 
     public CourseHelper(EventBus eb) {
         this.eb = eb;
-        this.subjectHelper = new SubjectHelper(eb);
     }
 
     /**
@@ -37,14 +37,10 @@ public class CourseHelper {
      * @return if parameters are valids or not
      */
     public boolean checkParams(MultiMap params) {
-        if (!params.contains("structure")
-                || !params.contains("start") || !params.contains("end")
-                || !params.get("start").matches("\\d{4}-\\d{2}-\\d{2}")
-                || !params.get("end").matches("\\d{4}-\\d{2}-\\d{2}")) {
-            return false;
-        }
-
-        return true;
+        return params.contains("structure")
+                && params.contains("start") && params.contains("end")
+                && params.get("start").matches("\\d{4}-\\d{2}-\\d{2}")
+                && params.get("end").matches("\\d{4}-\\d{2}-\\d{2}");
     }
 
     public void getCoursesList(String structure, List<String> teachers, List<String> groups,
@@ -69,48 +65,36 @@ public class CourseHelper {
                 handler.handle(Future.failedFuture(message + " " + courseResult.left().getValue()));
             } else {
                 JsonArray courses = courseResult.right().getValue();
-                JsonArray subjectIds = new JsonArray();
                 JsonArray teachersIds = new JsonArray();
 
                 for (int i = 0; i < courses.size(); i++) {
                     JsonObject course = courses.getJsonObject(i);
-                    treatSubjectAndTeacherInCourse(subjectIds, teachersIds, course);
+                    treatTeacherInCourse(teachersIds, course);
                 }
 
-                Future<JsonArray> subjectsFuture = Future.future();
-                Future<JsonArray> teachersFuture = Future.future();
-
-                CompositeFuture.all(subjectsFuture, teachersFuture).setHandler(asyncHandler -> {
-                    if (asyncHandler.failed()) {
-                        String message = "[Presences@CourseHelper] Failed to retrieve subjects or teachers info";
+                getCourseTeachers(teachersIds, teachersAsync -> {
+                    if (teachersAsync.isLeft()) {
+                        String message = "[Presences@CourseHelper::getCoursesList] Failed to retrieve teachers info";
                         LOGGER.error(message);
-                        handler.handle(Future.failedFuture(message + " " + asyncHandler.cause().toString()));
+                        handler.handle(Future.failedFuture(message + " " + teachersAsync.left().getValue()));
                         return;
                     }
-                    JsonArray subjects = subjectsFuture.result();
-                    JsonArray teachers = teachersFuture.result();
-                    JsonObject subjectMap = MapHelper.transformToMap(subjects, "id");
+                    JsonArray teachers = teachersAsync.right().getValue();
                     JsonObject teacherMap = MapHelper.transformToMap(teachers, "id");
                     for (int i = 0; i < courses.size(); i++) {
                         JsonObject object = courses.getJsonObject(i);
-                        if (object.containsKey("subjectId")) {
-                            object.put("subjectName", subjectMap.getJsonObject(object.getString("subjectId"), new JsonObject()).getString("name", object.getString("exceptionnal", "")));
+                        if (object.containsKey("subjectId") || object.containsKey("timetableSubjectId")) {
+                            object.put("subjectName", object.getJsonObject("subject", new JsonObject()).getString("name", object.getString("exceptionnal", "")));
                         } else object.put("subjectName", "");
                         setTeacherCourseObject(teacherMap, object);
                     }
                     handler.handle(Future.succeededFuture(CourseHelper.getCourseListFromJsonArray(courses, Course.MANDATORY_ATTRIBUTE)));
                 });
-
-                subjectHelper.getSubjects(subjectIds, FutureHelper.handlerJsonArray(subjectsFuture));
-                getCourseTeachers(teachersIds, FutureHelper.handlerJsonArray(teachersFuture));
             }
         });
     }
 
-    public static void treatSubjectAndTeacherInCourse(JsonArray subjectIds, JsonArray teachersIds, JsonObject course) {
-        if (course.containsKey("subjectId") && !subjectIds.contains(course.getString("subjectId"))) {
-            subjectIds.add(course.getString("subjectId"));
-        }
+    public static void treatTeacherInCourse(JsonArray teachersIds, JsonObject course) {
         JsonArray teachers = course.getJsonArray("teacherIds");
         for (int j = 0; j < teachers.size(); j++) {
             if (!teachersIds.contains(teachers.getString(j))) {
@@ -162,25 +146,22 @@ public class CourseHelper {
     }
 
     /**
-     * Format course fetched (must provide subject and teacher datas)
+     * Format course fetched (must provide teacher data)
      *
      * @param courses    courses JsonArray
-     * @param subjectMap Map of subject fetched
      * @param teacherMap Map of teacher fetched
      * @return new list of courses
      */
-    public static void formatCourse(JsonArray courses, JsonObject subjectMap, JsonObject teacherMap) {
-        JsonObject object;
+    public static void formatCourse(JsonArray courses, JsonObject teacherMap) {
         for (int i = 0; i < courses.size(); i++) {
             try {
-
-                object = courses.getJsonObject(i);
+                JsonObject object = courses.getJsonObject(i);
                 object.remove("startCourse");
                 object.remove("endCourse");
                 object.remove("is_periodic");
                 object.remove("is_recurrent");
-                if (object.containsKey("subjectId")) {
-                    object.put("subjectName", subjectMap.getJsonObject(object.getString("subjectId"), new JsonObject()).getString("name", object.getString("exceptionnal", "")));
+                if (object.containsKey("subjectId") || object.containsKey("timetableSubjectId")) {
+                    object.put("subjectName", object.getJsonObject("subject", new JsonObject()).getString("name", object.getString("exceptionnal", "")));
                 } else object.put("subjectName", "");
                 object.put("timestamp", DateHelper.parse(object.getString("startDate")).getTime());
                 setTeacherCourseObject(teacherMap, object);

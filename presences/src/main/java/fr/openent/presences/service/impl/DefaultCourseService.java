@@ -3,7 +3,10 @@ package fr.openent.presences.service.impl;
 import fr.openent.presences.common.helper.FutureHelper;
 import fr.openent.presences.common.viescolaire.Viescolaire;
 import fr.openent.presences.enums.RegisterStatus;
-import fr.openent.presences.helper.*;
+import fr.openent.presences.helper.CourseHelper;
+import fr.openent.presences.helper.MapHelper;
+import fr.openent.presences.helper.SlotHelper;
+import fr.openent.presences.helper.SquashHelper;
 import fr.openent.presences.model.Course;
 import fr.openent.presences.model.Slot;
 import fr.openent.presences.service.CourseService;
@@ -22,20 +25,20 @@ import org.entcore.common.mongodb.MongoDbResult;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 public class DefaultCourseService implements CourseService {
-
     private static final Logger LOGGER = LoggerFactory.getLogger(DefaultCourseService.class);
-    private EventBus eb;
-    private CourseHelper courseHelper;
-    private SubjectHelper subjectHelper;
-    private RegisterService registerService;
+
+    private final EventBus eb;
+    private final CourseHelper courseHelper;
+    private final RegisterService registerService;
 
     public DefaultCourseService(EventBus eb) {
         this.eb = eb;
         this.courseHelper = new CourseHelper(eb);
-        this.subjectHelper = new SubjectHelper(eb);
         this.registerService = new DefaultRegisterService(eb);
     }
 
@@ -44,7 +47,37 @@ public class DefaultCourseService implements CourseService {
         JsonObject courseQuery = new JsonObject()
                 .put("_id", courseId);
 
-        MongoDb.getInstance().findOne("courses", courseQuery, message -> handler.handle(MongoDbResult.validResult(message)));
+        MongoDb.getInstance().findOne("courses", courseQuery, MongoDbResult.validActionResultHandler(courseAsync -> {
+            if (courseAsync.isLeft()) {
+                LOGGER.error("[Presences@DefaultCourseService::getCourse] Failed to retrieve course ");
+                handler.handle(new Either.Left<>(courseAsync.left().getValue()));
+            } else {
+                JsonObject course = courseAsync.right().getValue().getJsonObject("result");
+                setSubjectToCourse(handler, course);
+            }
+        }));
+    }
+
+    @SuppressWarnings("unchecked")
+    private void setSubjectToCourse(Handler<Either<String, JsonObject>> handler, JsonObject course) {
+        JsonObject action = new JsonObject()
+                .put("action", "matiere.getSubjectsAndTimetableSubjects")
+                .put("idMatieres", new JsonArray()
+                        .add(course.getString("subjectId", course.getString("timetableSubjectId", ""))));
+
+        eb.send("viescolaire", action, subjectsAsync -> {
+            if (subjectsAsync.failed() || subjectsAsync.result() == null ||
+                    "error".equals(((JsonObject) subjectsAsync.result().body()).getString("status"))) {
+                handler.handle(new Either.Left<>(subjectsAsync.cause().getMessage()));
+            } else {
+                JsonArray subjects = ((JsonObject) subjectsAsync.result().body()).getJsonArray("results");
+                Map<String, JsonObject> subjectsMap = ((List<JsonObject>) subjects.getList())
+                        .stream()
+                        .collect(Collectors.toMap(subject -> subject.getString("id"), Function.identity()));
+                course.put("subject", subjectsMap.getOrDefault(course.getString("subjectId", ""), new JsonObject()));
+                handler.handle(new Either.Right<>(course));
+            }
+        });
     }
 
     @Override
@@ -67,32 +100,27 @@ public class DefaultCourseService implements CourseService {
                 return;
             }
             JsonArray courses = event.right().getValue();
-            JsonArray subjectIds = new JsonArray();
             JsonArray teachersIds = new JsonArray();
-            setSubjectsTeachersCourses(courses, subjectIds, teachersIds);
+            setTeachersCourses(courses, teachersIds);
 
             List<String> coursesIds = ((List<JsonObject>) courses.getList())
                     .stream()
                     .map(course -> course.getString("_id")).collect(Collectors.toList());
 
-
-            Future<JsonArray> subjectsFuture = Future.future();
             Future<JsonArray> teachersFuture = Future.future();
             Future<JsonArray> slotsFuture = Future.future();
             Future<JsonArray> registerEventFuture = Future.future();
 
-            CompositeFuture.all(subjectsFuture, teachersFuture, slotsFuture, registerEventFuture).setHandler(asyncHandler -> {
+            CompositeFuture.all(teachersFuture, slotsFuture, registerEventFuture).setHandler(asyncHandler -> {
                 if (asyncHandler.failed()) {
                     handler.handle(new Either.Left<>(asyncHandler.cause().toString()));
                     return;
                 }
 
-                JsonArray subjects = subjectsFuture.result();
                 JsonArray teachers = teachersFuture.result();
-                JsonObject subjectMap = MapHelper.transformToMap(subjects, "id");
                 JsonObject teacherMap = MapHelper.transformToMap(teachers, "id");
 
-                CourseHelper.formatCourse(courses, subjectMap, teacherMap);
+                CourseHelper.formatCourse(courses, teacherMap);
 
                 List<Slot> slots = SlotHelper.getSlotListFromJsonArray(slotsFuture.result(), Slot.MANDATORY_ATTRIBUTE);
                 List<Course> coursesEvent = CourseHelper.getCourseListFromJsonArray(courses, Course.MANDATORY_ATTRIBUTE);
@@ -105,19 +133,16 @@ public class DefaultCourseService implements CourseService {
                         new JsonArray(filterForgottenCourses(CourseHelper.formatCourses(squashCourses, multipleSlot, slots))) :
                         new JsonArray(CourseHelper.formatCourses(squashCourses, multipleSlot, slots))));
             });
-
-            subjectHelper.getSubjects(subjectIds, FutureHelper.handlerJsonArray(subjectsFuture));
             courseHelper.getCourseTeachers(teachersIds, FutureHelper.handlerJsonArray(teachersFuture));
             Viescolaire.getInstance().getSlotsFromProfile(structureId, FutureHelper.handlerJsonArray(slotsFuture));
             registerService.list(structureId, coursesIds, FutureHelper.handlerJsonArray(registerEventFuture));
         });
     }
 
-    private void setSubjectsTeachersCourses(JsonArray courses, JsonArray subjectIds, JsonArray teachersIds) {
-        JsonObject course;
+    private void setTeachersCourses(JsonArray courses, JsonArray teachersIds) {
         for (int i = 0; i < courses.size(); i++) {
-            course = courses.getJsonObject(i);
-            CourseHelper.treatSubjectAndTeacherInCourse(subjectIds, teachersIds, course);
+            JsonObject course = courses.getJsonObject(i);
+            CourseHelper.treatTeacherInCourse(teachersIds, course);
         }
     }
 

@@ -3,6 +3,7 @@ import {_, moment} from 'entcore';
 import {Mix} from 'entcore-toolkit';
 import {LoadingCollection} from '@common/model/LoadingCollection'
 import {DateUtils} from '@common/utils'
+import {ISubject} from "../models/Subject";
 
 export interface Course {
     id: string;
@@ -17,6 +18,7 @@ export interface Course {
     endDate: string;
     registerId?: number;
     timestamp?: number;
+    subject?: ISubject;
     teachers: { id: string, displayName: string }[];
     notified: boolean;
     splitSlot: boolean;
@@ -75,6 +77,7 @@ export class Courses extends LoadingCollection {
                 `/presences/courses?${teacherFilter}${groupFilter}structure=${structure}&start=${start}&end=${end}${urlParams}`
             );
             const newCourses = Mix.castArrayAs(Course, data);
+            newCourses.forEach((course: Course) => course.subject.label = course.subject.name);
             this.hasCourses = newCourses.length > 0;
             this.all = [...this.all, ...newCourses];
             this.all.map((course: Course) => course.timestamp = moment(course.startDate).valueOf());

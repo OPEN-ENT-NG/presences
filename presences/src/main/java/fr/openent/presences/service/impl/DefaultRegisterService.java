@@ -10,7 +10,6 @@ import fr.openent.presences.common.viescolaire.Viescolaire;
 import fr.openent.presences.enums.EventType;
 import fr.openent.presences.enums.GroupType;
 import fr.openent.presences.helper.RegisterPresenceHelper;
-import fr.openent.presences.service.AbsenceService;
 import fr.openent.presences.service.ExemptionService;
 import fr.openent.presences.service.NotebookService;
 import fr.openent.presences.service.RegisterService;
@@ -41,21 +40,17 @@ import java.util.stream.Collectors;
 public class DefaultRegisterService implements RegisterService {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(DefaultRegisterService.class);
-    private GroupService groupService;
-    private ExemptionService exemptionService;
-    private EventBus eb;
-    private RegisterHelper registerHelper;
-    private RegisterPresenceHelper registerPresenceHelper;
-    private AbsenceService absenceService;
-    private NotebookService notebookService;
+    private final GroupService groupService;
+    private final ExemptionService exemptionService;
+    private final RegisterHelper registerHelper;
+    private final RegisterPresenceHelper registerPresenceHelper;
+    private final NotebookService notebookService;
 
     public DefaultRegisterService(EventBus eb) {
-        this.eb = eb;
         this.groupService = new DefaultGroupService(eb);
         this.exemptionService = new DefaultExemptionService(eb);
         this.registerHelper = new RegisterHelper(eb, Presences.dbSchema);
         this.registerPresenceHelper = new RegisterPresenceHelper(eb);
-        this.absenceService = new DefaultAbsenceService(eb);
         this.notebookService = new DefaultNotebookService();
     }
 
@@ -420,7 +415,7 @@ public class DefaultRegisterService implements RegisterService {
             Either<String, JsonObject> either = MongoDbResult.validResult(message);
             if (either.isLeft()) {
                 LOGGER.error("[Presences@DefaultRegisterService] Failed to retrieve course");
-                handler.handle(new Either.Left(either.left().getValue()));
+                handler.handle(new Either.Left<>(either.left().getValue()));
                 return;
             }
 

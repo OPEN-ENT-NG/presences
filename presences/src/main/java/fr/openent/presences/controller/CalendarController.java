@@ -37,19 +37,17 @@ import static org.entcore.common.http.response.DefaultResponseHandler.arrayRespo
 public class CalendarController extends ControllerHelper {
 
     private final EventBus eb;
-    private AbsenceService absenceService;
-    private CourseHelper courseHelper;
-    private SubjectHelper subjectHelper;
-    private EventService eventService;
-    private GroupService groupService;
-    private ExemptionService exemptionService;
+    private final AbsenceService absenceService;
+    private final CourseHelper courseHelper;
+    private final EventService eventService;
+    private final GroupService groupService;
+    private final ExemptionService exemptionService;
 
     public CalendarController(EventBus eb) {
         super();
         this.eb = eb;
         this.absenceService = new DefaultAbsenceService(eb);
         this.courseHelper = new CourseHelper(eb);
-        this.subjectHelper = new SubjectHelper(eb);
         this.eventService = new DefaultEventService(eb);
         this.groupService = new DefaultGroupService(eb);
         this.exemptionService = new DefaultExemptionService(eb);
@@ -91,26 +89,22 @@ public class CalendarController extends ControllerHelper {
                 HashMap<String, Map<String, Course>> eventList = CalendarHelper.hashCourses(courses, slots, subjects);
 
                 List<Integer> eventTypes = Arrays.asList(1, 2, 3, 4);
-                Future<JsonArray> subjectsFuture = Future.future();
                 Future<JsonArray> eventsFuture = Future.future();
                 Future<JsonArray> exemptionsFuture = Future.future();
                 Future<JsonArray> incidentsFuture = Future.future();
                 Future<JsonArray> absentFuture = Future.future();
 
-                CompositeFuture.all(subjectsFuture, eventsFuture, exemptionsFuture, incidentsFuture, absentFuture)
+                CompositeFuture.all(eventsFuture, exemptionsFuture, incidentsFuture, absentFuture)
                         .setHandler(futureEvent -> {
                             if (futureEvent.failed()) {
                                 log.error("[CalendarController@getCalendarCourses] Failed to retrieve information", futureEvent.cause());
                                 renderError(request);
                                 return;
                             }
-                            JsonArray subjectList = subjectsFuture.result();
                             JsonArray events = eventsFuture.result();
                             JsonObject exemptionsMap = MapHelper.transformToMapMultiple(exemptionsFuture.result(), "subject_id");
                             List<ExemptionView> exemptionView = ExemptionHelper.getExemptionListFromJsonArray(exemptionsFuture.result());
-                            JsonObject subjectMap = MapHelper.transformToMap(subjectList, "id");
                             JsonArray incidents = incidentsFuture.result();
-                            JsonArray absents = absentFuture.result();
                             for (int i = 0; i < events.size(); i++) {
                                 JsonObject event = events.getJsonObject(i);
                                 String eventHash = CalendarHelper.hash(event.getString("course_id")
@@ -129,9 +123,7 @@ public class CalendarController extends ControllerHelper {
                                 if (!course.getExceptionnal().isEmpty()) {
                                     course.setSubjectName(course.getExceptionnal());
                                 } else {
-                                    course.setSubjectName(subjectMap.containsKey(subjectId)
-                                            ? subjectMap.getJsonObject(subjectId).getString("name")
-                                            : "");
+                                    course.setSubjectName(course.getSubject().getName());
                                 }
                                 CalendarHelper.formatCourse(course);
                                 String courseHash = CalendarHelper.hash(course.getId() + course.getStartDate() + course.getEndDate());
@@ -164,8 +156,6 @@ public class CalendarController extends ControllerHelper {
                             JsonArray eventsCalendar = new JsonArray().addAll(new JsonArray(courses));
                             renderJson(request, eventsCalendar);
                         });
-
-                getSubjects(subjects, subjectsFuture);
                 getEvents(params.get("structure"), params.get("start") + " 00:00:00", params.get("end") + " 23:59:59", eventTypes, Arrays.asList(params.get("user")), eventsFuture);
                 getExemptions(params.get("structure"), params.get("start") + " 00:00:00", params.get("end") + " 23:59:59", params.get("user"), exemptionsFuture);
                 getIncidents(params.get("structure"), params.get("start") + " 00:00:00", params.get("end") + " 23:59:59", params.get("user"), incidentsFuture);
@@ -198,10 +188,6 @@ public class CalendarController extends ControllerHelper {
 
     private void getExemptions(String structureId, String startDate, String endDate, String users, Future<JsonArray> future) {
         exemptionService.get(structureId, startDate, endDate, users, null, FutureHelper.handlerJsonArray(future));
-    }
-
-    private void getSubjects(List<String> subjects, Future<JsonArray> future) {
-        subjectHelper.getSubjects(subjects, FutureHelper.handlerJsonArray(future));
     }
 
     private void getEvents(String structureId, String startDate, String endDate, List<Integer> eventType, List<String> users, Future<JsonArray> future) {

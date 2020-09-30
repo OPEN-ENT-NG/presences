@@ -1,6 +1,14 @@
 import {_, notify} from 'entcore';
 import http from 'axios';
 
+export interface ISubject {
+    id?: string;
+    externalId?: string;
+    name?: string;
+    label?: string;
+    rank?: number;
+}
+
 export class Subject {
     id: string;
     label: string;

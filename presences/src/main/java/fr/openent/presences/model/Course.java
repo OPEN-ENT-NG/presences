@@ -44,6 +44,7 @@ public class Course implements Cloneable {
     private Boolean notified;
     private Boolean splitSlot;
     private Long timestamp;
+    private Subject subject;
 
     public Course(JsonObject course, List<String> mandatoryAttributes) {
         for (String attribute : mandatoryAttributes) {
@@ -85,6 +86,7 @@ public class Course implements Cloneable {
         this.notified = course.getBoolean("notified", null);
         this.splitSlot = course.getBoolean("split_slot", false);
         this.timestamp = course.getLong("timestamp");
+        this.subject = new Subject(course.getJsonObject("subject", new JsonObject()));
     }
 
     @Override
@@ -126,7 +128,8 @@ public class Course implements Cloneable {
                 .put("is_periodic", this.isPeriodic)
                 .put("subjectName", this.getSubjectName())
                 .put("teachers", this.getTeachers())
-                .put("split_slot", this.splitSlot);
+                .put("split_slot", this.splitSlot)
+                .put("subject", this.subject.toJSON());
         if (this.registerId != null && this.registerStateId != null && this.notified != null) {
             thisJsonObject
                     .put("register_id", this.registerId)
@@ -412,7 +415,19 @@ public class Course implements Cloneable {
         return this.timestamp;
     }
 
+    public void setTimestamp(Long timestamp) {
+        this.timestamp = timestamp;
+    }
+
     public String mapId() {
         return String.format("%s$%s$%s", this.getId(), this.getStartDate(), this.getEndDate());
+    }
+
+    public Subject getSubject() {
+        return subject;
+    }
+
+    public void setSubject(Subject subject) {
+        this.subject = subject;
     }
 }
