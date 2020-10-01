@@ -117,7 +117,9 @@ public class DefaultMailingService implements MailingService {
         String query = "SELECT COUNT(DISTINCT mailing.id) FROM " + Massmailing.dbSchema + ".mailing as mailing" +
                 " INNER JOIN " + Massmailing.dbSchema + ".mailing_event as me on (me.mailing_id = mailing.id)" +
                 " WHERE mailing.structure_id = ? AND (mailing.created >= ? AND mailing.created <= ?) ";
-        params.add(structureId).add(startDate).add(endDate);
+        params.add(structureId)
+                .add(startDate + " " + defaultStartTime)
+                .add(endDate + " " + defaultEndTime);
 
         /* Add mailing types filter */
         if (!mailingTypes.isEmpty()) {

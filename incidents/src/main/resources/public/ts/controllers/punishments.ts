@@ -229,8 +229,8 @@ export const punishmentController = ng.controller('PunishmentController',
 
             const prepareRequest = (): void => {
                 vm.punishmentsRequest.structure_id = vm.punishments.structure_id;
-                vm.punishmentsRequest.start_at = DateUtils.format(vm.filter.start_date, DateUtils.FORMAT['YEAR-MONTH-DAY-HOUR-MIN-SEC']);
-                vm.punishmentsRequest.end_at = DateUtils.format(vm.filter.end_date, DateUtils.FORMAT['YEAR-MONTH-DAY-HOUR-MIN-SEC']);
+                vm.punishmentsRequest.start_at = DateUtils.format(vm.filter.start_date, DateUtils.FORMAT['YEAR-MONTH-DAY']) + ' 00:00:00';
+                vm.punishmentsRequest.end_at = DateUtils.format(vm.filter.end_date, DateUtils.FORMAT['YEAR-MONTH-DAY']) + ' 23:59:59';
                 vm.punishmentsRequest.students_ids = vm.filter.students;
                 vm.punishmentsRequest.groups_ids = vm.filter.groups;
                 vm.punishmentsRequest.type_ids = vm.punishmentsTypes
