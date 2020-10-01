@@ -763,8 +763,10 @@ export const eventsController = ng.controller('EventsController', ['$scope', '$r
             $scope.safeApply();
         };
 
-        vm.updateDate = async () => {
-            if (vm.filter.startDate && vm.filter.endDate) {
+        vm.updateDate = async (): Promise<void> => {
+            if (vm.filter.startDate && vm.filter.endDate &&
+                ((vm.events.startDate !== vm.filter.startDate.toDateString()) ||
+                    (vm.events.endDate !== vm.filter.endDate.toDateString()))) {
                 getEvents();
                 $scope.safeApply();
             }
@@ -959,18 +961,6 @@ export const eventsController = ng.controller('EventsController', ['$scope', '$r
                     getEvents(),
                     getActions(),
                 ]);
-            }
-        });
-
-        $scope.$watch(() => vm.filter.startDate, async () => {
-            if (window.structure) {
-                vm.updateDate();
-            }
-        });
-
-        $scope.$watch(() => vm.filter.endDate, async () => {
-            if (window.structure) {
-                vm.updateDate();
             }
         });
 
