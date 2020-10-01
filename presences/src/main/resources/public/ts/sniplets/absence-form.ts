@@ -39,7 +39,7 @@ interface ViewModel {
 
     toUpdateRegularisation(): void;
 
-    updateRegularisation(): void;
+    updateRegularisation(id?: number): void;
 
     isFormValid(): boolean;
 
@@ -62,7 +62,7 @@ const vm: ViewModel = {
     safeApply: null,
     createAbsenceLightBox: false,
     reasons: null,
-    form: Absence,
+    form: null,
     isEventEditable: true,
     updateAbsenceRegularisation: false,
     timeSlotHourPeriod: TimeSlotHourPeriod,
@@ -170,11 +170,12 @@ const vm: ViewModel = {
     /**
      * Update the regularisation state of the absence.
      */
-    updateRegularisation(): void {
-        if(vm.form && vm.form.absences) {
-            for (const absence of vm.form.absences) {
-                absence.updateAbsenceRegularized([absence.id], absence.counsellor_regularisation);
-            }
+    updateRegularisation(id?: number): void {
+        if (vm.form) {
+            let absence = new Absence(vm.form.register_id, vm.form.student_id, vm.form.start_date, vm.form.end_date);
+            absence.id = id ? id : vm.form.absences[0].id;
+            absence.counsellor_regularisation = vm.form.absences[0].counsellor_regularisation;
+            absence.updateAbsenceRegularized([absence.id], absence.counsellor_regularisation);
             vm.updateAbsenceRegularisation = false;
         }
     },
@@ -193,8 +194,9 @@ const vm: ViewModel = {
         vm.form.end_date = vm.display.isFreeSchedule ?
             DateUtils.getDateFormat(vm.form.endDate, vm.form.endDateTime) :
             DateUtils.getDateFormat(moment(vm.form.endDate), DateUtils.getTimeFormatDate(vm.timeSlotTimePeriod.end.endHour));
-        let response = await vm.form.createAbsence(window.structure.id, vm.form.reason_id, model.me.userId);
+        let response: AxiosResponse = await vm.form.createAbsence(window.structure.id, vm.form.reason_id, model.me.userId);
         if (response.status == 200 || response.status == 201) {
+            vm.updateRegularisation(response.data.events.id);
             vm.closeAbsenceLightbox();
             toasts.confirm(lang.translate('presences.absence.form.create.succeed'));
         } else {
@@ -220,7 +222,7 @@ const vm: ViewModel = {
                 responses.push(await vm.form.updateAbsence(absence.id, window.structure.id, vm.form.reason_id, model.me.userId));
             }
         }
-        let failedResponse = responses.find((response) => response.status != 200 && response.status != 201);
+        let failedResponse: AxiosResponse = responses.find((response) => response.status != 200 && response.status != 201);
 
         if (failedResponse) {
             toasts.warning(response.data.toString());
