@@ -35,10 +35,11 @@ interface ViewModel {
 
 const vm: ViewModel = {
     resetTemplate: function (type: "MAIL" | "SMS" | "PDF"): void {
+        delete vm[type.toLowerCase()].id;
         vm[type.toLowerCase()].name = '';
         vm[type.toLowerCase()].content = '';
         // reset value content from <editor>
-        angular.element(document.querySelector("editor")).scope().value = '';
+        angular.element(document.getElementById("editor-mail")).scope().value = '';
         mailTemplateForm.that.$apply();
     },
     smsMaxLength: 160,
@@ -61,8 +62,7 @@ const vm: ViewModel = {
     },
     syncTemplates: async function (type: 'MAIL' | 'SMS' | 'PDF'): Promise<void> {
         try {
-            const data = await settingsService.get(type, window.model.vieScolaire.structure.id);
-            vm[`${type.toLowerCase()}s`] = data;
+            vm[`${type.toLowerCase()}s`] = await settingsService.get(type, window.model.vieScolaire.structure.id);
             mailTemplateForm.that.$apply();
         } catch (e) {
             throw e;
@@ -72,7 +72,7 @@ const vm: ViewModel = {
         // we assign "value" data from ngModel editor
         // to our template.content (only 'MAIL' from <editor></editor is concerned)
         if (template.type === 'MAIL') {
-            template.content = angular.element(document.querySelector("editor")).scope().value;
+            template.content = angular.element(document.getElementById("editor-mail")).scope().value;
         }
         try {
             await settingsService.update(template);
@@ -100,9 +100,11 @@ const vm: ViewModel = {
         } catch (e) {
             toasts.warning('massmailing.templates.deletion.error');
             throw e;
+        } finally {
+            vm.resetTemplate(template.type);
         }
     },
-    create: async function (type) {
+    create: async function (type: 'MAIL' | 'SMS' | 'PDF') {
         try {
             if (vm[type.toLowerCase()].name.trim() === '' && vm[type.toLowerCase()].content.trim() === '') return;
             vm[type.toLowerCase()] = {
@@ -110,6 +112,11 @@ const vm: ViewModel = {
                 structure_id: window.model.vieScolaire.structure.id,
                 type
             };
+            // we assign "value" data from ngModel editor
+            // to our template(vm[type.toLowerCase()]).content (only 'MAIL' from <editor></editor is concerned)
+            if (vm[type.toLowerCase()].type === 'MAIL') {
+                vm[type.toLowerCase()].content = angular.element(document.getElementById("editor-mail")).scope().value;
+            }
             const data = await settingsService.create(vm[type.toLowerCase()]);
             toasts.confirm('massmailing.templates.creation.success');
             vm[`${type.toLowerCase()}s`].push(data);
@@ -123,7 +130,7 @@ const vm: ViewModel = {
     openTemplate: function ({id, structure_id, type, name, content}: Template) {
         // Fix <editor> issues for interacting with ngModel from editor
         // we get its element and use "value" data instead of our View Model
-        angular.element(document.querySelector("editor")).scope().value = content;
+        angular.element(document.getElementById("editor-mail")).scope().value = content;
         vm[type.toLowerCase()] = {id, structure_id, type, name, content};
     },
     copyCode: function (code: string, codeTooltip: string) {

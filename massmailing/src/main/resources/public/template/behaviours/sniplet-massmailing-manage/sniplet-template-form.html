@@ -26,7 +26,7 @@
                 </div>
                 <div class="sniplet-input-form row vertical-spacing-twice">
                     <div class="cell eight">
-                        <editor ng-model="value"></editor>
+                        <editor id="editor-mail" ng-model="value"></editor>
                         <div class="right-magnet">
                             <button data-ng-click="vm.create('MAIL')"
                                     data-ng-disabled="vm.mail.name.trim() === '' && vm.mail.content.trim() === ''"
