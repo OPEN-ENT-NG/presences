@@ -21,17 +21,15 @@ public class DefaultEventStudentService implements EventStudentService {
     private final String INCIDENT = "INCIDENT";
     private final String PUNISHMENT = "PUNISHMENT";
 
-    private IncidentsService incidentsService;
-    private PunishmentService punishmentService;
+    private final IncidentsService incidentsService;
+    private final PunishmentService punishmentService;
     ProtagonistTypeService protagonistTypeService = new DefaultProtagonistTypeService();
     IncidentsTypeService incidentsTypeService = new DefaultIncidentsTypeService();
-    private EventBus eb;
 
     public DefaultEventStudentService(EventBus eventBus) {
         super();
         incidentsService = new DefaultIncidentsService(eventBus);
         punishmentService = new DefaultPunishmentService(eventBus);
-        eb = eventBus;
     }
 
     @Override
@@ -104,13 +102,14 @@ public class DefaultEventStudentService implements EventStudentService {
                 if (limit == null && offset == null) { // If we get all result, we just need to get array size to get total results
                     future.complete(getTotalsByTypes(types, false, result.result()));
                 } else { // Else, we use same queries with a count result
-                    getSortedEventsByTypes(body, types, structure, student, protagonists, incidentTypes, start, end, null, null, true, resultAllEvents -> {
-                        if (resultAllEvents.failed()) {
-                            handler.handle(Future.failedFuture(resultAllEvents.cause()));
-                            return;
-                        }
-                        future.complete(getTotalsByTypes(types, true, resultAllEvents.result()));
-                    });
+                    getSortedEventsByTypes(body, types, structure, student, protagonists, incidentTypes, start, end, null, null,
+                            true, resultAllEvents -> {
+                                if (resultAllEvents.failed()) {
+                                    handler.handle(Future.failedFuture(resultAllEvents.cause()));
+                                    return;
+                                }
+                                future.complete(getTotalsByTypes(types, true, resultAllEvents.result()));
+                            });
                 }
 
                 CompositeFuture.all(Collections.singletonList(future)).setHandler(resultTotals -> {
@@ -151,8 +150,9 @@ public class DefaultEventStudentService implements EventStudentService {
     // Send request to get each events (thanks the great method corresponding to type {{ INCIDENT / PUNISHMENT }}).
     // Handler will return them mapped by type (with the great protagonist for punishment, and great incident type for incident).
     // If isCountGetter,  result will (still by type) will be the total of date.
-    private void getSortedEventsByTypes(MultiMap body, List<String> types, String structure, String student, Map protagonists, Map incidentTypes, String start, String end,
-                                        String limit, String offset, Boolean isCountGetter, Handler<AsyncResult<JsonObject>> handler) {
+    private void getSortedEventsByTypes(MultiMap body, List<String> types, String structure, String student, Map protagonists,
+                                        Map incidentTypes, String start, String end, String limit, String offset,
+                                        Boolean isCountGetter, Handler<AsyncResult<JsonObject>> handler) {
         List<Future> futures = new ArrayList<>();
         for (String type : types) {
             Future<JsonArray> future = Future.future();
@@ -178,8 +178,8 @@ public class DefaultEventStudentService implements EventStudentService {
     // Send Punishment request to get total result for a student (responding to each filters)
     private void getCountPunishment(MultiMap body, String studentId, Handler<Either<String, JsonArray>> handler) {
         body.add("id", (String) null);
-        body.add("start_at", body.get("start_at").replace('-', '/'));
-        body.add("end_at", body.get("end_at").replace('-', '/'));
+        body.add("start_at", body.get("start_at"));
+        body.add("end_at", body.get("end_at"));
         body.add("limit", "");
         body.add("offset", "");
         UserInfos user = new UserInfos();
@@ -201,8 +201,8 @@ public class DefaultEventStudentService implements EventStudentService {
                 break;
             case PUNISHMENT:
                 body.add("id", (String) null);
-                body.add("start_at", body.get("start_at").replace('-', '/'));
-                body.add("end_at", body.get("end_at").replace('-', '/'));
+                body.add("start_at", body.get("start_at"));
+                body.add("end_at", body.get("end_at"));
                 body.add("limit", limit);
                 body.add("offset", offset);
                 UserInfos user = new UserInfos();
@@ -218,12 +218,13 @@ public class DefaultEventStudentService implements EventStudentService {
                 //There is no default case
                 String message = "There is no case for value: " + type + ".";
                 log.error(message);
-                handler.handle(new Either.Left(message));
+                handler.handle(new Either.Left<>(message));
         }
     }
 
     //Map events result (resultFutures) by types {{ INCIDENT / PUNISHMENT }}
-    private JsonObject getSortedByTypesEventsFromFutures(List<String> types, Map protagonists, Map incidentTypes, List<Future> resultFutures) {
+    private JsonObject getSortedByTypesEventsFromFutures(List<String> types, Map protagonists, Map incidentTypes,
+                                                         List<Future> resultFutures) {
         JsonObject sorted_events = new JsonObject();
         for (int i = 0; i < types.size(); i++) {
             String type = types.get(i);
