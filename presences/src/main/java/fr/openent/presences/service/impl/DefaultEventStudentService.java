@@ -303,33 +303,37 @@ public class DefaultEventStudentService implements EventStudentService {
         String startFirstSlot = slots.getJsonObject(0).getString("startHour");
         String endLastSlot = slots.getJsonObject(slots.size() - 1).getString("endHour");
 
-        long halfTime = DateHelper.parse(halfDay, halfDay.length() > 5 ? DateHelper.HOUR_MINUTES_SECONDS : DateHelper.HOUR_MINUTES).getTime();
-        long startFirstSlotTime = DateHelper.parse(startFirstSlot, startFirstSlot.length() > 5 ? DateHelper.HOUR_MINUTES_SECONDS : DateHelper.HOUR_MINUTES).getTime();
-        long endLastSlotTime = DateHelper.parse(endLastSlot, endLastSlot.length() > 5 ? DateHelper.HOUR_MINUTES_SECONDS : DateHelper.HOUR_MINUTES).getTime();
-
         Date start = DateHelper.parse(eventsData.getString("start_date"), DateHelper.SQL_DATE_FORMAT);
         Date end = DateHelper.parse(eventsData.getString("end_date"), DateHelper.SQL_DATE_FORMAT);
 
+        String startDateResult;
+        String endDateResult;
+
         if (recovery.equals(HALF_DAY)) {
-            // For HALF_DAY morning start_date is start of day and end_date is half day
             if (eventsData.getString("period").equals(MORNING)) {
-                start.setTime(start.getTime() + startFirstSlotTime);
-                end.setTime(end.getTime() + halfTime);
+                startDateResult = formatDateAndTime(start, startFirstSlot);
+                endDateResult = formatDateAndTime(end, halfDay);
             } else { // For afternoon start_date is half day and end_date is end of day
-                start.setTime(start.getTime() + halfTime);
-                end.setTime(end.getTime() + endLastSlotTime);
+                startDateResult = formatDateAndTime(start, halfDay);
+                endDateResult = formatDateAndTime(end, endLastSlot);
             }
-            eventsData.put("start_date", DateHelper.getDateString(start.toInstant().toString(), DateHelper.MONGO_FORMAT));
-            eventsData.put("end_date", DateHelper.getDateString(end.toInstant().toString(), DateHelper.MONGO_FORMAT));
+            eventsData.put("start_date", startDateResult);
+            eventsData.put("end_date", endDateResult);
         } else { // For DAY start_date is start of day and end_date is end of day
-            start.setTime(start.getTime() + startFirstSlotTime);
-            end.setTime(end.getTime() + endLastSlotTime);
-            eventsData.put("start_date", DateHelper.getDateString(start.toInstant().toString(), DateHelper.MONGO_FORMAT));
-            eventsData.put("end_date", DateHelper.getDateString(end.toInstant().toString(), DateHelper.MONGO_FORMAT));
+            startDateResult = formatDateAndTime(start, startFirstSlot);
+            endDateResult = formatDateAndTime(end, endLastSlot);
+
+            eventsData.put("start_date", startDateResult);
+            eventsData.put("end_date", endDateResult);
         }
         addReasonToRecoveredAbsence(eventsData, reasons);
         eventsData.remove("events");
         sorted_events.getJsonArray(type).add(eventsData);
+    }
+
+    private String formatDateAndTime(Date date, String time) throws ParseException {
+        return DateHelper.getDateString(date, DateHelper.YEAR_MONTH_DAY) + " " +
+                DateHelper.getTimeString(time, DateHelper.HOUR_MINUTES);
     }
 
     // Add reasons on justified absences

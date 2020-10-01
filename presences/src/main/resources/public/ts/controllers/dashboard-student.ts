@@ -123,7 +123,8 @@ export const dashboardStudentController = ng.controller('DashboardStudentControl
                 let eventsType: Array<string> = [EVENT_TYPES.UNJUSTIFIED, EVENT_TYPES.JUSTIFIED, EVENT_TYPES.LATENESS, EVENT_TYPES.DEPARTURE];
                 let incidentsEventsType: Array<string> = [EVENT_TYPES.INCIDENT, EVENT_TYPES.PUNISHMENT];
                 promises.push(eventService.getStudentEvent(prepareEventRequest(eventsType, 2, 0)));
-                promises.push(incidentService.getStudentEvents(prepareEventRequest(incidentsEventsType, 2, 0)));
+                promises.push(incidentService.getStudentEvents(prepareEventRequest(incidentsEventsType, 2, 0,
+                    "00:00:00", "23:59:59")));
                 promises.push(forgottenNotebookService.getStudentNotebooks(prepareEventRequest([], 2, 0)));
                 Promise.all(promises)
                     .then((values: any[]) => {
@@ -136,9 +137,19 @@ export const dashboardStudentController = ng.controller('DashboardStudentControl
                 $scope.safeApply();
             };
 
-            const prepareEventRequest = (eventsType: Array<string>, limit: number, offset: number): IStudentEventRequest => {
-                const start: string = moment(vm.filter.selectedPeriod.timestamp_dt).format(DateUtils.FORMAT["YEAR-MONTH-DAY"]);
-                const end: string = moment(vm.filter.selectedPeriod.timestamp_fn).format(DateUtils.FORMAT["YEAR-MONTH-DAY"]);
+            const prepareEventRequest = (eventsType: Array<string>, limit: number, offset: number,
+                                         additionalStartTime?: string, additionalEndTime?: string): IStudentEventRequest => {
+                let startResult: string = moment(vm.filter.selectedPeriod.timestamp_dt).format(DateUtils.FORMAT["YEAR-MONTH-DAY"]);
+                let endResult: string = moment(vm.filter.selectedPeriod.timestamp_fn).format(DateUtils.FORMAT["YEAR-MONTH-DAY"]);
+
+                const start: string = startResult +
+                    ((additionalStartTime !== undefined && additionalStartTime !== null && additionalStartTime !== "")
+                        ? " " + additionalStartTime : "");
+
+                const end: string = endResult +
+                    ((additionalEndTime !== undefined && additionalEndTime !== null && additionalEndTime !== "")
+                        ? " " + additionalEndTime : "");
+
                 return {
                     structure_id: window.structure.id,
                     student_id: vm.filter.selectedChildren.id,
