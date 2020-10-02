@@ -121,7 +121,7 @@ export abstract class Indicator implements IIndicator {
         let url = `/statistics-presences/structures/${window.structure.id}/indicators/${this.name()}/export?`;
         url += `start=${moment(start).format(DateUtils.FORMAT["YEAR-MONTH-DAY-HOUR-MIN-SEC"])}&end=${moment(end).format(DateUtils.FORMAT["YEAR-MONTH-DAY-HOUR-MIN-SEC"])}`;
         users.forEach(user => url += `&users=${user}`);
-        audiences.forEach(audience => url += `&audience=${audience}`);
+        audiences.forEach(audience => url += `&audiences=${audience}`);
         this._filterTypes.forEach(type => type.selected() && (url += `&types=${type.name()}`));
         this._filtersEnabled.forEach((value: FilterValue, key: Filter) => {
             if (value.selected) {
