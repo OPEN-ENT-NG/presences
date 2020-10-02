@@ -33,12 +33,11 @@ public class DefaultEventStudentService implements EventStudentService {
     private final String DAY = "DAY";
 
     private final String AFTERNOON = "AFTERNOON";
-    private final String MORNING = "MORNING";
 
-    private EventService eventService;
-    private ReasonService reasonService = new DefaultReasonService();
-    private SettingsService settingsService = new DefaultSettingsService();
-    private EventBus eb;
+    private final EventService eventService;
+    private final ReasonService reasonService = new DefaultReasonService();
+    private final SettingsService settingsService = new DefaultSettingsService();
+    private final EventBus eb;
 
     public DefaultEventStudentService(EventBus eventBus) {
         super();
@@ -67,52 +66,6 @@ public class DefaultEventStudentService implements EventStudentService {
         Future<JsonObject> settingsFuture = Future.future();
         Future<JsonObject> timeSlotsFuture = Future.future();
 
-        // Get reasons types to map it thanks reason_id on absences justified events results
-        reasonService.fetchReason(structure, resultReason -> {
-            if (resultReason.isLeft()) {
-                String message = "[Presences@DefaultEventStudentService::get] Failed to get structure absence reasons.";
-                reasonFuture.fail(message + " " + resultReason.left().getValue());
-                return;
-            }
-            Map<Integer, JsonObject> reasons = new HashMap<>();
-            for (Object o : resultReason.right().getValue()) {
-                JsonObject reason = (JsonObject) o;
-                reasons.put(reason.getInteger("id"), reason);
-            }
-            reasonFuture.complete(reasons);
-        });
-
-        // Get viscolaire settings to get Half Day Date configured by the current structure
-        //  (if absences events are configured by Half Days).
-        getViscoSettings(structure, viscoResult -> {
-            if (viscoResult.failed()) {
-                viscoSettingsFuture.fail(viscoResult.cause().getMessage());
-                return;
-            }
-
-            viscoSettingsFuture.complete(viscoResult.result());
-        });
-
-        // Get presence settings to get recovery method (for absences events configuration retrieving)
-        settingsService.retrieve(structure, settingsResult -> {
-            if (settingsResult.isLeft()) {
-                settingsFuture.fail(settingsResult.left().getValue());
-                return;
-            }
-            settingsFuture.complete(settingsResult.right().getValue());
-        });
-
-        // Get timeSlots settings configured by the current structure, to configure absences events times
-        // (if they are retrieved by Hald Days or by Days)
-        getTimeSlots(structure, timeslotsResult -> {
-            if (timeslotsResult.failed()) {
-                timeSlotsFuture.fail(timeslotsResult.cause().getMessage());
-                return;
-            }
-
-            timeSlotsFuture.complete(timeslotsResult.result());
-        });
-
         CompositeFuture.all(reasonFuture, viscoSettingsFuture, settingsFuture, timeSlotsFuture).setHandler(settingsResult -> {
             if (settingsResult.failed()) {
                 log.error(settingsResult.cause().getMessage());
@@ -131,17 +84,7 @@ public class DefaultEventStudentService implements EventStudentService {
                 }
 
                 Future<JsonObject> future = Future.future();
-                if (limit == null && offset == null) { // If we get all result, we just need to get array size to get total results
-                    future.complete(getTotalsByTypes(types, result.result()));
-                } else { // Else, we use same queries with a count result
-                    getSortedEventsByTypes(types, structure, student, reasons, settings, start, end, null, null, resultAllEvents -> {
-                        if (resultAllEvents.failed()) {
-                            future.fail(resultAllEvents.cause());
-                            return;
-                        }
-                        future.complete(getTotalsByTypes(types, resultAllEvents.result()));
-                    });
-                }
+                getTotals(student, structure, limit, offset, start, end, types, reasons, settings, result, future);
 
                 CompositeFuture.all(Collections.singletonList(future)).setHandler(resultTotals -> {
                     if (resultTotals.failed()) {
@@ -159,6 +102,81 @@ public class DefaultEventStudentService implements EventStudentService {
                     handler.handle(Future.succeededFuture(response));
                 });
             });
+        });
+
+        // Get reasons types to map it thanks reason_id on absences justified events results
+        getReasons(structure, reasonFuture);
+        // Get viscolaire settings to get Half Day Date configured by the current structure
+        //  (if absences events are configured by Half Days).
+        getHalfDay(structure, viscoSettingsFuture);
+        // Get presence settings to get recovery method (for absences events configuration retrieving)
+        getSettings(structure, settingsFuture);
+        // Get timeSlots settings configured by the current structure, to configure absences events times
+        // (if they are retrieved by Hald Days or by Days)
+        getTimeSlots(structure, timeSlotsFuture);
+    }
+
+    private void getTotals(String student, String structure, String limit, String offset, String start, String end,
+                           List<String> types, Map<Integer, JsonObject> reasons, JsonObject settings,
+                           AsyncResult<JsonObject> result, Future<JsonObject> future) {
+        if (limit == null && offset == null) { // If we get all result, we just need to get array size to get total results
+            future.complete(getTotalsByTypes(types, result.result()));
+        } else { // Else, we use same queries with a count result
+            getSortedEventsByTypes(types, structure, student, reasons, settings, start, end, null, null, resultAllEvents -> {
+                if (resultAllEvents.failed()) {
+                    future.fail(resultAllEvents.cause());
+                    return;
+                }
+                future.complete(getTotalsByTypes(types, resultAllEvents.result()));
+            });
+        }
+    }
+
+    private void getTimeSlots(String structure, Future<JsonObject> timeSlotsFuture) {
+        getTimeSlots(structure, timeslotsResult -> {
+            if (timeslotsResult.failed()) {
+                timeSlotsFuture.fail(timeslotsResult.cause().getMessage());
+                return;
+            }
+
+            timeSlotsFuture.complete(timeslotsResult.result());
+        });
+    }
+
+    private void getSettings(String structure, Future<JsonObject> settingsFuture) {
+        settingsService.retrieve(structure, settingsResult -> {
+            if (settingsResult.isLeft()) {
+                settingsFuture.fail(settingsResult.left().getValue());
+                return;
+            }
+            settingsFuture.complete(settingsResult.right().getValue());
+        });
+    }
+
+    private void getHalfDay(String structure, Future<JsonObject> viscoSettingsFuture) {
+        getViscoSettings(structure, viscoResult -> {
+            if (viscoResult.failed()) {
+                viscoSettingsFuture.fail(viscoResult.cause().getMessage());
+                return;
+            }
+
+            viscoSettingsFuture.complete(viscoResult.result());
+        });
+    }
+
+    private void getReasons(String structure, Future<Map<Integer, JsonObject>> reasonFuture) {
+        reasonService.fetchReason(structure, resultReason -> {
+            if (resultReason.isLeft()) {
+                String message = "[Presences@DefaultEventStudentService::get] Failed to get structure absence reasons.";
+                reasonFuture.fail(message + " " + resultReason.left().getValue());
+                return;
+            }
+            Map<Integer, JsonObject> reasons = new HashMap<>();
+            for (Object o : resultReason.right().getValue()) {
+                JsonObject reason = (JsonObject) o;
+                reasons.put(reason.getInteger("id"), reason);
+            }
+            reasonFuture.complete(reasons);
         });
     }
 
@@ -264,7 +282,8 @@ public class DefaultEventStudentService implements EventStudentService {
     }
 
     //Map events result (resultFutures) by types {{ JUSTIFIED / UNJUSTIFIED / LATENESS / DEPARTURE }}
-    private JsonObject getSortedByTypesEventsFromFutures(List<String> types, Map reasons, JsonObject settings, List<Future> resultFutures, Handler<AsyncResult<JsonObject>> handler) {
+    private JsonObject getSortedByTypesEventsFromFutures(List<String> types, Map reasons, JsonObject settings,
+                                                         List<Future> resultFutures, Handler<AsyncResult<JsonObject>> handler) {
         JsonObject sorted_events = new JsonObject();
         String recovery = settings.getString("event_recovery_method");
         for (int i = 0; i < types.size(); i++) {
@@ -310,6 +329,7 @@ public class DefaultEventStudentService implements EventStudentService {
         String endDateResult;
 
         if (recovery.equals(HALF_DAY)) {
+            String MORNING = "MORNING";
             if (eventsData.getString("period").equals(MORNING)) {
                 startDateResult = formatDateAndTime(start, startFirstSlot);
                 endDateResult = formatDateAndTime(end, halfDay);
