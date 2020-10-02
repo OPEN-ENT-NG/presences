@@ -884,8 +884,12 @@ export const registersController = ng.controller('RegistersController',
 
             $scope.$watch(() => window.structure, (newVal, oldVal) => {
                 if (newVal.id === oldVal.id) return;
-                console.warn(`$scope.$watch window.structure: ${newVal.id}, ${oldVal.id}`);
-                startAction();
+                if ($route.current.action === "getRegister") {
+                    $scope.redirectTo('/registers');
+                } else {
+                    console.warn(`$scope.$watch window.structure: ${newVal.id}, ${oldVal.id}`);
+                    startAction();
+                }
             });
 
             $scope.$watch(() => $route.current.action, (newVal, oldVal) => {
