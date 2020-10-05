@@ -8,7 +8,8 @@ export const InfiniteScroll = ng.directive('infiniteScroll', () => {
     return {
         restrict: 'E',
         scope: {
-            scrolled: '&'
+            scrolled: '&',
+            loading: '='
         },
         link: function ($scope, $element: HTMLDivElement) {
             let currentscrollHeight: number = 0;
@@ -21,8 +22,13 @@ export const InfiniteScroll = ng.directive('infiniteScroll', () => {
                 const isBottom: boolean = scrollHeight - latestHeightBottom < scrollPos;
 
                 if (isBottom && currentscrollHeight < scrollHeight) {
+                    if ($scope.loading !== null && $scope.loading !== undefined) {
+                        $scope.loading = true;
+                    }
                     $scope.$apply($scope.scrolled());
-
+                    if ($scope.loading !== null && $scope.loading !== undefined) {
+                        $scope.loading = false;
+                    }
                     // Storing the latest scroll that has been the longest one in order to not redo the scrolled() each time
                     currentscrollHeight = scrollHeight;
                 }

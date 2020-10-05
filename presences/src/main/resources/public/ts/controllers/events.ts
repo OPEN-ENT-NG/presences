@@ -25,7 +25,7 @@ interface ViewModel {
     events: Events;
     multipleSelect: Reason;
     provingReasonsMap: any;
-    isToto: boolean;
+    isScroll: boolean;
 
     /* Filters and actions lightbox*/
     lightbox: {
@@ -210,6 +210,7 @@ export const eventsController = ng.controller('EventsController', ['$scope', '$r
             page: 0
         };
         vm.provingReasonsMap = {};
+        vm.isScroll = false;
         vm.eventType = [];
         vm.multipleSelect = {
             id: 0,

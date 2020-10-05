@@ -17,6 +17,7 @@
 
         <!-- Content Table -->
         <div static-include="/presences/public/template/events/table.html"></div>
+        <loader data-ng-show="vm.isScroll"/>
     </div>
-    <infinite-scroll scrolled="vm.onScroll()"></infinite-scroll>
+    <infinite-scroll scrolled="vm.onScroll()" loading="vm.isScroll"></infinite-scroll>
 </div>
