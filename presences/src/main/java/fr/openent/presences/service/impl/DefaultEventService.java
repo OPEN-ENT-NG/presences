@@ -9,9 +9,7 @@ import fr.openent.presences.common.service.impl.DefaultGroupService;
 import fr.openent.presences.common.service.impl.DefaultUserService;
 import fr.openent.presences.common.viescolaire.Viescolaire;
 import fr.openent.presences.enums.EventType;
-import fr.openent.presences.enums.Events;
 import fr.openent.presences.enums.WorkflowActions;
-import fr.openent.presences.helper.CalendarHelper;
 import fr.openent.presences.helper.EventHelper;
 import fr.openent.presences.helper.SlotHelper;
 import fr.openent.presences.model.Event.Event;
@@ -81,21 +79,40 @@ public class DefaultEventService implements EventService {
                     return;
                 }
 
+                List<Integer> reasonIds = new ArrayList<>();
+                List<String> studentIds = new ArrayList<>();
+                List<Integer> eventTypeIds = new ArrayList<>();
+
+                for (Event event : events) {
+                    if (!reasonIds.contains(event.getReason().getId())) {
+                        reasonIds.add(event.getReason().getId());
+                    }
+                    if (!studentIds.contains(event.getStudent().getId())) {
+                        studentIds.add(event.getStudent().getId());
+                    }
+                    if (!eventTypeIds.contains(event.getEventType().getId())) {
+                        eventTypeIds.add(event.getEventType().getId());
+                    }
+                }
+
+                // remove null value for each list
+                reasonIds.removeAll(Collections.singletonList(null));
+                studentIds.removeAll(Collections.singletonList(null));
+                eventTypeIds.removeAll(Collections.singletonList(null));
+
                 Future<JsonObject> slotsFuture = Future.future();
                 Future<JsonArray> absencesFuture = Future.future();
-                Future<JsonArray> exclusionDays = Future.future();
-                Future<JsonObject> saturdayCoursesCount = Future.future();
-                Future<JsonObject> sundayCoursesCount = Future.future();
+                Future<JsonObject> reasonFuture = Future.future();
+                Future<JsonObject> eventTypeFuture = Future.future();
 
                 slotHelper.getTimeSlots(structureId, FutureHelper.handlerJsonObject(slotsFuture));
-                CalendarHelper.getWeekEndCourses(structureId, CalendarHelper.SATURDAY_OF_WEEK, FutureHelper.handlerJsonObject(saturdayCoursesCount));
-                CalendarHelper.getWeekEndCourses(structureId, CalendarHelper.SUNDAY_OF_WEEK, FutureHelper.handlerJsonObject(sundayCoursesCount));
-                Viescolaire.getInstance().getExclusionDays(structureId, FutureHelper.handlerJsonArray(exclusionDays));
                 absenceService.get(structureId, startDate, endDate, new ArrayList<>(),
                         FutureHelper.handlerJsonArray(absencesFuture));
+                eventHelper.addReasonsToEvents(events, reasonIds, reasonFuture);
+                eventHelper.addEventTypeToEvents(events, eventTypeIds, eventTypeFuture);
 
-                CompositeFuture.all(slotsFuture, absencesFuture, exclusionDays,
-                        saturdayCoursesCount, sundayCoursesCount).setHandler(asyncResult -> {
+
+                CompositeFuture.all(slotsFuture, absencesFuture, reasonFuture, eventTypeFuture).setHandler(asyncResult -> {
                     if (asyncResult.failed()) {
                         String message = "[Presences@DefaultEventService] Failed to retrieve slotProfile, " +
                                 "absences or exclusions days";
@@ -103,51 +120,26 @@ public class DefaultEventService implements EventService {
                         handler.handle(new Either.Left<>(message));
                     } else {
                         JsonArray absences = absencesFuture.result();
-                        List<Integer> reasonIds = new ArrayList<>();
-                        List<String> studentIds = new ArrayList<>();
-                        List<Integer> eventTypeIds = new ArrayList<>();
 
-                        for (Event event : events) {
-                            if (!reasonIds.contains(event.getReason().getId())) {
-                                reasonIds.add(event.getReason().getId());
-                            }
-                            if (!studentIds.contains(event.getStudent().getId())) {
-                                studentIds.add(event.getStudent().getId());
-                            }
-                            if (!eventTypeIds.contains(event.getEventType().getId())) {
-                                eventTypeIds.add(event.getEventType().getId());
-                            }
-                        }
-
-                        // remove null value for each list
-                        reasonIds.removeAll(Collections.singletonList(null));
-                        studentIds.removeAll(Collections.singletonList(null));
-                        eventTypeIds.removeAll(Collections.singletonList(null));
-
-                        Future<JsonObject> reasonFuture = Future.future();
-                        Future<JsonObject> eventTypeFuture = Future.future();
                         Future<JsonObject> studentFuture = Future.future();
 
-                        eventHelper.addReasonsToEvents(events, reasonIds, reasonFuture);
-                        eventHelper.addEventTypeToEvents(events, eventTypeIds, eventTypeFuture);
+
                         eventHelper.addStudentsToEvents(events, studentIds, startDate, endDate, structureId,
                                 absences, slotsFuture.result(), studentFuture);
 
-                        CompositeFuture.all(reasonFuture, eventTypeFuture, studentFuture).setHandler(addInfoResult -> {
+                        studentFuture.setHandler(addInfoResult -> {
                             if (addInfoResult.failed()) {
                                 String message = "[Presences@DefaultEventService] Failed to retrieve reason, event type or student info";
                                 LOGGER.error(message);
                                 handler.handle(new Either.Left<>(message));
                             } else {
                                 Future<JsonObject> actionFuture = Future.future();
-                                Future<JsonObject> excludeFuture = Future.future();
                                 Future<JsonObject> ownerFuture = Future.future();
 
                                 eventHelper.addLastActionAbbreviation(events, actionFuture);
                                 eventHelper.addOwnerToEvents(events, ownerFuture);
-                                interactExclude(exclusionDays, saturdayCoursesCount, sundayCoursesCount, events, excludeFuture);
 
-                                CompositeFuture.all(actionFuture, excludeFuture, ownerFuture).setHandler(eventResult -> {
+                                CompositeFuture.all(actionFuture, ownerFuture).setHandler(eventResult -> {
                                     if (eventResult.failed()) {
                                         String message = "[Presences@DefaultEventService::get] Failed to retrieve exclude days, owners, " +
                                                 "or add last action abbreviation to existing event";
@@ -163,20 +155,6 @@ public class DefaultEventService implements EventService {
                 });
             }
         });
-    }
-
-    private void interactExclude(Future<JsonArray> exclusionDays, Future<JsonObject> saturdayCoursesCount,
-                                 Future<JsonObject> sundayCoursesCount, List<Event> events, Future<JsonObject> future) {
-        long saturdayCourses = saturdayCoursesCount.result().getLong("count");
-        long sundayCourses = sundayCoursesCount.result().getLong("count");
-        List<Event> absenceExcludeDay = events.stream()
-                .filter(e -> e.getType().toUpperCase().equals(Events.ABSENCE.toString()))
-                .collect(Collectors.toList());
-        for (Event absenceDay : absenceExcludeDay) {
-            CalendarHelper.setExcludeDay(absenceDay, absenceDay.getStartDate(), exclusionDays.result(),
-                    CalendarHelper.SATURDAY_OF_WEEK, saturdayCourses, CalendarHelper.SUNDAY_OF_WEEK, sundayCourses);
-        }
-        future.complete();
     }
 
     private void getEvents(String structureId, String startDate, String endDate,
