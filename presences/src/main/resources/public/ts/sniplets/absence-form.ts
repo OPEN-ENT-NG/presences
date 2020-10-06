@@ -174,7 +174,7 @@ const vm: ViewModel = {
         if (vm.form) {
             let absence = new Absence(vm.form.register_id, vm.form.student_id, vm.form.start_date, vm.form.end_date);
             absence.id = id ? id : vm.form.absences[0].id;
-            absence.counsellor_regularisation = vm.form.absences[0].counsellor_regularisation;
+            absence.counsellor_regularisation = (vm.form.absences && vm.form.absences.length > 0) ? vm.form.absences[0].counsellor_regularisation : false;
             absence.updateAbsenceRegularized([absence.id], absence.counsellor_regularisation);
             vm.updateAbsenceRegularisation = false;
         }
