@@ -1,6 +1,9 @@
 import {ng} from 'entcore';
 import {INFINITE_SCROLL_EVENTER} from "@common/core/enum/infinite-scroll-eventer";
 
+interface IViewModel {
+    loading: boolean;
+}
 /**
  * Nav sub menu component
  */
@@ -9,9 +12,21 @@ export const InfiniteScroll = ng.directive('infiniteScroll', () => {
         restrict: 'E',
         scope: {
             scrolled: '&',
-            loading: '='
+            loadingMode: '='
+        },
+        template: `
+            <div ng-show="vm.loading" style="text-align: center">
+              <loader min-height="'50px'"/>
+            </div>
+        `,
+        controllerAs: 'vm',
+        controller: function () {
+            const vm: IViewModel = <IViewModel>this;
+            vm.loading = false;
         },
         link: function ($scope, $element: HTMLDivElement) {
+            const vm: IViewModel = $scope.vm;
+
             let currentscrollHeight: number = 0;
             // latest height once scroll will reach
             const latestHeightBottom: number = 300;
@@ -22,12 +37,12 @@ export const InfiniteScroll = ng.directive('infiniteScroll', () => {
                 const isBottom: boolean = scrollHeight - latestHeightBottom < scrollPos;
 
                 if (isBottom && currentscrollHeight < scrollHeight) {
-                    if ($scope.loading !== null && $scope.loading !== undefined) {
-                        $scope.loading = true;
+                    if ($scope.loadingMode) {
+                        vm.loading = true;
                     }
                     $scope.$apply($scope.scrolled());
-                    if ($scope.loading !== null && $scope.loading !== undefined) {
-                        $scope.loading = false;
+                    if ($scope.loadingMode) {
+                        vm.loading = false;
                     }
                     // Storing the latest scroll that has been the longest one in order to not redo the scrolled() each time
                     currentscrollHeight = scrollHeight;
