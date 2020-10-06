@@ -5,6 +5,7 @@ import {GroupService} from "@common/services/GroupService";
 import {Indicator, IndicatorFactory} from "../indicator";
 import {INFINITE_SCROLL_EVENTER} from "@common/core/enum/infinite-scroll-eventer";
 import {FilterType} from "../filter";
+import {DateUtils} from "@common/utils";
 
 declare let window: any;
 
@@ -108,8 +109,8 @@ export const mainController = ng.controller('MainController',
             vm.loadData = async function () {
                 if (!window.structure) return;
                 const schoolYear = await ViescolaireService.getSchoolYearDates(window.structure.id);
-                vm.filter.from = moment(schoolYear.start_date).toDate();
-                vm.filter.to = moment(schoolYear.end_date).toDate();
+                vm.filter.from = DateUtils.setFirstTime(moment(schoolYear.start_date).toDate());
+                vm.filter.to = DateUtils.setLastTime(moment(schoolYear.end_date).toDate());
                 vm.reasons = await ReasonService.getReasons(window.structure.id);
                 vm.reasons = vm.reasons.filter(reason => reason.id !== -1);
             };
@@ -174,6 +175,8 @@ export const mainController = ng.controller('MainController',
                 vm.filter.students.map(student => users.push(student.id));
                 vm.filter.audiences.map(audience => audiences.push(audience.id));
                 vm.filter.show = false;
+                vm.filter.from = DateUtils.setFirstTime(vm.filter.from);
+                vm.filter.to = DateUtils.setLastTime(vm.filter.to);
                 template.open('indicator', `indicator/${vm.indicator.name()}`);
                 await vm.indicator.search(vm.filter.from, vm.filter.to, users, audiences);
                 vm.safeApply();
