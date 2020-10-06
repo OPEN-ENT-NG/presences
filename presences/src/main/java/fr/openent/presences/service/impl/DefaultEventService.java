@@ -72,7 +72,7 @@ public class DefaultEventService implements EventService {
 
         CompositeFuture.all(eventsFuture, slotsFuture).setHandler(eventAsyncResult -> {
             if (eventAsyncResult.failed()) {
-                String message = "[Presences@DefaultEventService] Failed to retrieve events info";
+                String message = "[Presences@DefaultEventService] Failed to retrieve events info and slotProfile";
                 LOGGER.error(message);
                 handler.handle(new Either.Left<>(message));
             } else {
@@ -114,8 +114,8 @@ public class DefaultEventService implements EventService {
 
                 CompositeFuture.all(absencesFuture, reasonFuture, eventTypeFuture).setHandler(asyncResult -> {
                     if (asyncResult.failed()) {
-                        String message = "[Presences@DefaultEventService] Failed to retrieve slotProfile, " +
-                                "absences or exclusions days";
+                        String message = "[Presences@DefaultEventService] Failed to retrieve absences, " +
+                                "reason or event type";
                         LOGGER.error(message);
                         handler.handle(new Either.Left<>(message));
                     } else {
@@ -128,7 +128,7 @@ public class DefaultEventService implements EventService {
 
                         studentFuture.setHandler(addInfoResult -> {
                             if (addInfoResult.failed()) {
-                                String message = "[Presences@DefaultEventService] Failed to retrieve reason, event type or student info";
+                                String message = "[Presences@DefaultEventService] Failed to retrieve student info";
                                 LOGGER.error(message);
                                 handler.handle(new Either.Left<>(message));
                             } else {
@@ -140,7 +140,7 @@ public class DefaultEventService implements EventService {
 
                                 CompositeFuture.all(actionFuture, ownerFuture).setHandler(eventResult -> {
                                     if (eventResult.failed()) {
-                                        String message = "[Presences@DefaultEventService::get] Failed to retrieve exclude days, owners, " +
+                                        String message = "[Presences@DefaultEventService::get] Failed to retrieve owners " +
                                                 "or add last action abbreviation to existing event";
                                         LOGGER.error(message);
                                         handler.handle(new Either.Left<>(message));
