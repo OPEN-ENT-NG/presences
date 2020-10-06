@@ -105,7 +105,7 @@ public class CourseHelper {
 
     private static void setTeacherCourseObject(JsonObject teacherMap, JsonObject object) {
         JsonArray courseTeachers = new JsonArray();
-        JsonArray teacherIds = object.getJsonArray("teacherIds");
+        JsonArray teacherIds = object.getJsonArray("teacherIds", new JsonArray());
         for (int j = 0; j < teacherIds.size(); j++) {
             if (!teacherMap.containsKey(teacherIds.getString(j))) continue;
             courseTeachers.add(teacherMap.getJsonObject(teacherIds.getString(j)));
