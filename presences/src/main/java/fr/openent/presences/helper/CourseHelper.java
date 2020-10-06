@@ -95,7 +95,7 @@ public class CourseHelper {
     }
 
     public static void treatTeacherInCourse(JsonArray teachersIds, JsonObject course) {
-        JsonArray teachers = course.getJsonArray("teacherIds");
+        JsonArray teachers = course.getJsonArray("teacherIds", new JsonArray());
         for (int j = 0; j < teachers.size(); j++) {
             if (!teachersIds.contains(teachers.getString(j))) {
                 teachersIds.add(teachers.getString(j));
