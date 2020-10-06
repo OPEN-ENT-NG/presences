@@ -142,7 +142,10 @@ export class Events extends LoadingCollection {
 
         data.forEach(item => {
             /* check if not duplicate dataModel */
-            if (!builtEvents.some(e => (JSON.stringify(e.dayHistory) == JSON.stringify(item.student.dayHistory)))) {
+            if (!builtEvents.some(e =>
+                (e.classId === item.student.classId) &&
+                (e.date === DateUtils.format(item.startDate, DateUtils.FORMAT["YEAR-MONTH-DAY"])) &&
+                (e.studentId === item.student.id))) {
                 /* new dataModel */
                 let eventsFetchedFromHistory = [];
 
@@ -215,6 +218,7 @@ export class Events extends LoadingCollection {
                 }
             }
         });
+
         return builtEvents;
     };
 

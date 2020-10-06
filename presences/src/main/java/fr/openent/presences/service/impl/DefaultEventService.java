@@ -63,10 +63,14 @@ public class DefaultEventService implements EventService {
                     Handler<Either<String, JsonArray>> handler) {
 
         Future<JsonArray> eventsFuture = Future.future();
+        Future<JsonObject> slotsFuture = Future.future();
+
         getEvents(structureId, startDate, endDate, eventType, listReasonIds, noReason, userId, userIdFromClasses, regularized, page,
                 FutureHelper.handlerJsonArray(eventsFuture));
+        slotHelper.getTimeSlots(structureId, FutureHelper.handlerJsonObject(slotsFuture));
 
-        eventsFuture.setHandler(eventAsyncResult -> {
+
+        CompositeFuture.all(eventsFuture, slotsFuture).setHandler(eventAsyncResult -> {
             if (eventAsyncResult.failed()) {
                 String message = "[Presences@DefaultEventService] Failed to retrieve events info";
                 LOGGER.error(message);
@@ -100,19 +104,15 @@ public class DefaultEventService implements EventService {
                 studentIds.removeAll(Collections.singletonList(null));
                 eventTypeIds.removeAll(Collections.singletonList(null));
 
-                Future<JsonObject> slotsFuture = Future.future();
                 Future<JsonArray> absencesFuture = Future.future();
                 Future<JsonObject> reasonFuture = Future.future();
                 Future<JsonObject> eventTypeFuture = Future.future();
 
-                slotHelper.getTimeSlots(structureId, FutureHelper.handlerJsonObject(slotsFuture));
-                absenceService.get(structureId, startDate, endDate, new ArrayList<>(),
-                        FutureHelper.handlerJsonArray(absencesFuture));
+                absenceService.get(structureId, startDate, endDate, studentIds, FutureHelper.handlerJsonArray(absencesFuture));
                 eventHelper.addReasonsToEvents(events, reasonIds, reasonFuture);
                 eventHelper.addEventTypeToEvents(events, eventTypeIds, eventTypeFuture);
 
-
-                CompositeFuture.all(slotsFuture, absencesFuture, reasonFuture, eventTypeFuture).setHandler(asyncResult -> {
+                CompositeFuture.all(absencesFuture, reasonFuture, eventTypeFuture).setHandler(asyncResult -> {
                     if (asyncResult.failed()) {
                         String message = "[Presences@DefaultEventService] Failed to retrieve slotProfile, " +
                                 "absences or exclusions days";
@@ -122,7 +122,6 @@ public class DefaultEventService implements EventService {
                         JsonArray absences = absencesFuture.result();
 
                         Future<JsonObject> studentFuture = Future.future();
-
 
                         eventHelper.addStudentsToEvents(events, studentIds, startDate, endDate, structureId,
                                 absences, slotsFuture.result(), studentFuture);

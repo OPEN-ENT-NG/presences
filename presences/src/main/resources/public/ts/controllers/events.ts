@@ -605,7 +605,6 @@ export const eventsController = ng.controller('EventsController', ['$scope', '$r
                 vm.collapse = true;
                 vm.eventId = event.currentTarget.getAttribute("data-id");
             }
-            $scope.safeApply();
         };
 
         /* Open the concerned event */

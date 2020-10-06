@@ -115,7 +115,7 @@
 
     <!-- description content -->
     <tr data-ng-show="event.events.length !== 0" ng-class="{open: vm.isCollapsibleOpen($parent.$index)}"
-        class="events-table-body-description" ng-repeat="history in event.events | orderBy:'+end_date'">
+        class="events-table-body-description" ng-repeat="history in event.events track by $index | orderBy:'+end_date'">
         <td class="text-center padding-sm" width="54%">&nbsp;</td>
 
         <!-- description under events time report -->
