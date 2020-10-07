@@ -56,7 +56,7 @@ public class CreateDailyPresenceWorker extends BusModBase implements Handler<Mes
         processCreateDailyPresences();
     }
 
-    private void getStructures(JsonArray ids, Future future) {
+    private void getStructures(JsonArray ids, Future<JsonArray> future) {
         String query = "MATCH (s:Structure) WHERE s.id IN {ids} RETURN s.name as name, s.id as id;";
         JsonObject params = new JsonObject().put("ids", ids);
         Neo4j.getInstance().execute(query, params, Neo4jResult.validResultHandler(FutureHelper.handlerJsonArray(future)));
@@ -92,19 +92,7 @@ public class CreateDailyPresenceWorker extends BusModBase implements Handler<Mes
                     String structureId = structureIds.getJsonObject(i).getString("id");
                     Future<JsonObject> future = Future.future();
                     futures.add(future);
-                    createStructureCoursesRegister(structureId, today, startDayTime, currentTime, resultCreations -> {
-                        try {
-                            if (resultCreations.succeeded()) {
-                                result.getJsonObject("structures").put(structureId, resultCreations.result());
-                            } else {
-                                result.getJsonObject("structures").put("errorMessage", resultCreations.cause().getMessage());
-                            }
-                            future.complete();
-                        } catch (Error e) {
-                            log.error(e.getMessage());
-                            future.fail(e.getMessage());
-                        }
-                    });
+                    createStructureCoursesRegisterFuture(today, startDayTime, currentTime, result, structureId, future);
                 }
             }
 
@@ -118,11 +106,29 @@ public class CreateDailyPresenceWorker extends BusModBase implements Handler<Mes
         }));
     }
 
-    private void createStructureCoursesRegister(String structureId, String date, String startTime, String endTime, Handler<AsyncResult<JsonObject>> handler) {
+    private void createStructureCoursesRegisterFuture(String today, String startDayTime, String currentTime, JsonObject result,
+                                                      String structureId, Future<JsonObject> future) {
+        createStructureCoursesRegister(structureId, today, startDayTime, currentTime, resultCreations -> {
+            try {
+                if (resultCreations.succeeded()) {
+                    result.getJsonObject("structures").put(structureId, resultCreations.result());
+                } else {
+                    result.getJsonObject("structures").put("errorMessage", resultCreations.cause().getMessage());
+                }
+                future.complete();
+            } catch (Error e) {
+                log.error(e.getMessage());
+                future.fail(e.getMessage());
+            }
+        });
+    }
+
+    private void createStructureCoursesRegister(String structureId, String date, String startTime, String endTime,
+                                                Handler<AsyncResult<JsonObject>> handler) {
         List<Future> futures = new ArrayList<>();
 
-        Future personnelFuture = Future.future();
-        Future courseFuture = Future.future();
+        Future<String> personnelFuture = Future.future();
+        Future<JsonArray> courseFuture = Future.future();
 
         CompositeFuture.join(personnelFuture, courseFuture).setHandler(asyncResult -> {
             String personnelId = "created by cron";
@@ -140,14 +146,14 @@ public class CreateDailyPresenceWorker extends BusModBase implements Handler<Mes
                     log.error("[Presences@DailyPresencesWorker] Failed to retrieve a valid personnel for course creation");
                 }
             } else {
-                personnelId = (String) personnelFuture.result();
+                personnelId = personnelFuture.result();
             }
 
             JsonObject result = new JsonObject()
                     .put("succeededCoursesNumber", 0)
                     .put("coursesErrors", new JsonObject());
 
-            List<Course> courses = ((JsonArray) courseFuture.result()).getList();
+            List<Course> courses = courseFuture.result().getList();
             for (Course course : courses) {
                 JsonArray teachers = course.getTeachers();
                 Integer registerId = course.getRegisterId();
@@ -168,20 +174,7 @@ public class CreateDailyPresenceWorker extends BusModBase implements Handler<Mes
                 Future<JsonObject> future = Future.future();
                 futures.add(future);
                 String teacherId = teachers.isEmpty() ? personnelId : teachers.getJsonObject(0).getString("id");
-                createRegister(teacherId, register, resultRegister -> {
-                    try {
-                        if (resultRegister.failed()) {
-                            log.error(resultRegister.cause().getMessage());
-                            result.getJsonObject("coursesErrors").put(course.getId(), resultRegister.cause().getMessage());
-                        } else {
-                            result.put("succeededCoursesNumber", result.getInteger("succeededCoursesNumber") + 1);
-                        }
-                        future.complete();
-                    } catch (Error e) {
-                        log.error(e.getMessage());
-                        future.fail(e.getMessage());
-                    }
-                });
+                createRegisterFuture(result, course, register, future, teacherId);
             }
             CompositeFuture.join(futures).setHandler(resultFutures -> {
                 if (resultFutures.succeeded()) {
@@ -194,6 +187,24 @@ public class CreateDailyPresenceWorker extends BusModBase implements Handler<Mes
 
         courseService.listCourses(structureId, new ArrayList<>(), new ArrayList<>(), date, date, startTime, endTime, true, true, FutureHelper.handlerJsonArray(courseFuture));
         getFirstCounsellorId(structureId, personnelFuture);
+    }
+
+    private void createRegisterFuture(JsonObject result, Course course, JsonObject register, Future<JsonObject> future,
+                                      String teacherId) {
+        createRegister(teacherId, register, resultRegister -> {
+            try {
+                if (resultRegister.failed()) {
+                    log.error(resultRegister.cause().getMessage());
+                    result.getJsonObject("coursesErrors").put(course.getId(), resultRegister.cause().getMessage());
+                } else {
+                    result.put("succeededCoursesNumber", result.getInteger("succeededCoursesNumber") + 1);
+                }
+                future.complete();
+            } catch (Error e) {
+                log.error(e.getMessage());
+                future.fail(e.getMessage());
+            }
+        });
     }
 
     private void getFirstCounsellorId(String structureId, Handler<AsyncResult<String>> handler) {
@@ -244,9 +255,7 @@ public class CreateDailyPresenceWorker extends BusModBase implements Handler<Mes
                 return false;
             }
 
-            Iterator<String> structureIds = structures.fieldNames().iterator();
-            while (structureIds.hasNext()) {
-                String structureId = structureIds.next();
+            for (String structureId : structures.fieldNames()) {
                 JsonObject structure = structures.getJsonObject(structureId);
                 String errorStructures = structure.getString("errorMessage", null);
 
