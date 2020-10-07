@@ -26,6 +26,8 @@ interface ViewModel {
 
     form: any;
     reasons: Array<Reason>;
+    selectedReason: Reason;
+    canRegularize: boolean;
 
     openAbsenceLightbox(event: IAngularEvent, args: any): void;
 
@@ -42,6 +44,8 @@ interface ViewModel {
     updateRegularisation(id?: number): void;
 
     isFormValid(): boolean;
+
+    selectReason(): void;
 
     createAbsence(): Promise<void>;
 
@@ -64,6 +68,8 @@ const vm: ViewModel = {
     reasons: null,
     form: null,
     isEventEditable: true,
+    selectedReason: null,
+    canRegularize: false,
     updateAbsenceRegularisation: false,
     timeSlotHourPeriod: TimeSlotHourPeriod,
     display: {isFreeSchedule: false},
@@ -174,7 +180,7 @@ const vm: ViewModel = {
         if (vm.form) {
             let absence = new Absence(vm.form.register_id, vm.form.student_id, vm.form.start_date, vm.form.end_date);
             absence.id = id ? id : vm.form.absences[0].id;
-            absence.counsellor_regularisation = (vm.form.absences && vm.form.absences.length > 0) ? vm.form.absences[0].counsellor_regularisation : false;
+            absence.counsellor_regularisation = (vm.form.absences && vm.form.absences[0]) ? vm.form.absences[0].counsellor_regularisation : false;
             absence.updateAbsenceRegularized([absence.id], absence.counsellor_regularisation);
             vm.updateAbsenceRegularisation = false;
         }
@@ -185,6 +191,11 @@ const vm: ViewModel = {
             return DateUtils.getDateFormat(vm.form.startDate, vm.form.startDateTime) <= DateUtils.getDateFormat(vm.form.endDate, vm.form.startDateTime);
         }
         return false;
+    },
+
+    selectReason(): void {
+        vm.selectedReason = vm.reasons.find(reason => reason.id === vm.form.reason_id);
+        vm.canRegularize = (vm.selectedReason) ? (!vm.selectedReason.proving) : false;
     },
 
     async createAbsence(): Promise<void> {
