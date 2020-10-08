@@ -136,7 +136,7 @@ public class CourseHelper {
 
         eb.send("viescolaire", action, event -> {
             if (event.failed() || event.result() == null || "error".equals(((JsonObject) event.result().body()).getString("status"))) {
-                String err = "[CourseHelper@getCourses] Failed to retrieve courses";
+                String err = "[CourseHelper@getCourses] Failed to retrieve courses " + event.cause().getMessage();
                 LOGGER.error(err);
                 handler.handle(new Either.Left<>(err));
             } else {

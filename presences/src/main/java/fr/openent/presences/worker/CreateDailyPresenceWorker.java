@@ -133,7 +133,8 @@ public class CreateDailyPresenceWorker extends BusModBase implements Handler<Mes
         CompositeFuture.join(personnelFuture, courseFuture).setHandler(asyncResult -> {
             String personnelId = "created by cron";
             if (asyncResult.failed()) {
-                log.error("[Presences@DailyPresencesWorker] Something wrong in createStructureCourseRegister sequence");
+                log.error("[Presences@DailyPresencesWorker::createStructureCoursesRegister] " +
+                        "Something wrong in createStructureCourseRegister sequence " + asyncResult.cause());
                 // If course future failed, then throw an error
                 if (courseFuture.failed()) {
                     log.error("[Presences@DailyPresencesWorkder] Failed to retrieve courses", courseFuture.cause());
