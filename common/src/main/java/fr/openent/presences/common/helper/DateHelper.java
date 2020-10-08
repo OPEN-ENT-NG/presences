@@ -424,6 +424,20 @@ public class DateHelper {
     }
 
     /**
+     * Fetching current date (now())
+     *
+     * @param format format date to format your type of start and end date
+     * @return return current date with the wished format
+     */
+    public static String getCurrentDate(String format) {
+        Calendar calendar = Calendar.getInstance();
+        SimpleDateFormat sdf = new SimpleDateFormat(format);
+        sdf.setTimeZone(TimeZone.getTimeZone("Europe/Paris"));
+        return sdf.format(calendar.getTime());
+    }
+
+
+    /**
      * Fetching a list of date based on two dates
      *
      * @param start_date    start_date defined (Since its localDate, it will only take 'YYYY-MM-DD' in account)
