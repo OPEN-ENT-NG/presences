@@ -320,9 +320,7 @@ export const absenceForm = {
             this.$on(ABSENCE_FORM_EVENTS.OPEN, (event: IAngularEvent, args) => vm.openAbsenceLightbox(event, args));
             this.$on(SNIPLET_FORM_EVENTS.SET_PARAMS, (event: IAngularEvent, arg) => vm.setFormParams(arg));
             this.$watch(() => window.structure, async () => {
-                if (!vm.reasons || vm.reasons.length <= 1) {
-                    vm.reasons = await reasonService.getReasons(window.structure.id);
-                }
+                vm.reasons = await reasonService.getReasons(window.structure.id);
                 this.getStructureTimeSlot();
                 vm.safeApply();
             });
