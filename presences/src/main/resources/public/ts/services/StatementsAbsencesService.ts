@@ -62,15 +62,15 @@ export const statementsAbsencesService: IStatementsAbsencesService = {
     },
 
     validate: async (statementsAbsencesId: number, {isTreated}: IStatementAbsenceBody): Promise<AxiosResponse> => {
-        return http.put(`${statementsAbsencesService.baseUrl}${statementsAbsencesId}/validate`, {is_treated: isTreated});
+        return http.put(`${statementsAbsencesService.baseUrl}/${statementsAbsencesId}/validate`, {is_treated: isTreated});
     },
 
     update: async (statementsAbsencesId: number, statementsAbsences: IStatementAbsenceBody): Promise<AxiosResponse> => {
-        return http.put(`${statementsAbsencesService.baseUrl}${statementsAbsencesId}`, statementsAbsences);
+        return http.put(`${statementsAbsencesService.baseUrl}/${statementsAbsencesId}`, statementsAbsences);
     },
 
     delete: async (statementsAbsencesId: number): Promise<AxiosResponse> => {
-        return http.delete(`${statementsAbsencesService.baseUrl}${statementsAbsencesId}`);
+        return http.delete(`${statementsAbsencesService.baseUrl}/${statementsAbsencesId}`);
     },
 
     export: async (statementsAbsences: IStatementsAbsencesRequest): Promise<void> => {
