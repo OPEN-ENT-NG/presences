@@ -205,12 +205,6 @@ public class DefaultIncidentsService extends SqlCrudService implements Incidents
 
         query += "ORDER BY " + getSqlOrderValue(field) + " " + getSqlReverseString(reverse);
 
-        if (page != null && !paginationMode) {
-            query += " OFFSET ? LIMIT ? ";
-            params.add(Incidents.PAGE_SIZE * Integer.parseInt(page));
-            params.add(Incidents.PAGE_SIZE);
-        }
-
         if (!paginationMode) {
             query += ") SELECT i.*," +
                     "to_json(place) as place, " +
@@ -238,6 +232,12 @@ public class DefaultIncidentsService extends SqlCrudService implements Incidents
             query += "GROUP BY i.id, i.date, i.description, i.processed, i.place_id, i.partner_id, " +
                     "i.type_id, i.seriousness_id, place.id, partner.id, incident_type.id, seriousness.id " +
                     "ORDER BY " + getSqlOrderValue(field) + " " + getSqlReverseString(reverse);
+
+            if (page != null) {
+                query += " OFFSET ? LIMIT ? ";
+                params.add(Incidents.PAGE_SIZE * Integer.parseInt(page));
+                params.add(Incidents.PAGE_SIZE);
+            }
 
         } else {
             query += ") SELECT count(*) from ids";
