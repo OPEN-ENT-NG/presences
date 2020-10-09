@@ -203,32 +203,29 @@ public class DefaultIncidentsService extends SqlCrudService implements Incidents
             params.add(endDate);
         }
 
-        query += "ORDER BY " + getSqlOrderValue(field) + " " + getSqlReverseString(reverse);
+        query += "ORDER BY " + getSqlOrderValue(field) + " " + getSqlReverseString(reverse) + ") ";
 
-        if (!paginationMode) {
-            query += ") SELECT i.*," +
+        // Retrieve number of incidents if in pagination mode
+        if (paginationMode) {
+            query += "SELECT COUNT(*) ";
+        }
+        // Retrieve incidents
+        else {
+            query += "SELECT i.*," +
                     "to_json(place) as place, " +
                     "to_json(partner) as partner, " +
                     "to_json(incident_type) as incident_type, " +
                     "to_json(seriousness) as seriousness, " +
-                    "array_to_json(array_agg(protagonists)) as protagonists " +
-                    "FROM " + Incidents.dbSchema + ".incident i " +
-                    "INNER JOIN ids ON (ids.id = i.id) " +
-                    "INNER JOIN " + Incidents.dbSchema + ".place AS place ON place.id = i.place_id " +
-                    "INNER JOIN " + Incidents.dbSchema + ".partner AS partner ON partner.id = i.partner_id " +
-                    "INNER JOIN " + Incidents.dbSchema + ".incident_type AS incident_type ON incident_type.id = i.type_id " +
-                    "INNER JOIN " + Incidents.dbSchema + ".seriousness AS seriousness ON seriousness.id = i.seriousness_id " +
-                    "INNER JOIN (SELECT pt.*, to_json(protagonist_type) as type FROM incidents.protagonist pt " +
-                    "INNER JOIN " + Incidents.dbSchema + ".protagonist_type ON pt.type_id = protagonist_type.id) " +
-                    "AS protagonists ON (i.id = protagonists.incident_id ";
+                    "array_to_json(array_agg(protagonists)) as protagonists ";
+        }
 
-            if (userId != null && !userId.isEmpty()) {
-                query += " AND protagonists.user_id IN " + Sql.listPrepared(userId.toArray()) + " ) ";
-                params.addAll(new JsonArray(userId));
-            } else {
-                query += ") ";
-            }
+        query += "FROM " + Incidents.dbSchema + ".incident i ";
 
+        //Join results with ids query result
+        query = getJoinIncidents(userId, params, query);
+
+        //For incidents results, order results and limit size according to the page
+        if (!paginationMode) {
             query += "GROUP BY i.id, i.date, i.description, i.processed, i.place_id, i.partner_id, " +
                     "i.type_id, i.seriousness_id, place.id, partner.id, incident_type.id, seriousness.id " +
                     "ORDER BY " + getSqlOrderValue(field) + " " + getSqlReverseString(reverse);
@@ -238,11 +235,27 @@ public class DefaultIncidentsService extends SqlCrudService implements Incidents
                 params.add(Incidents.PAGE_SIZE * Integer.parseInt(page));
                 params.add(Incidents.PAGE_SIZE);
             }
-
-        } else {
-            query += ") SELECT count(*) from ids";
         }
 
+        return query;
+    }
+
+    private String getJoinIncidents(List<String> userId, JsonArray params, String query) {
+        query += "INNER JOIN ids ON (ids.id = i.id) " +
+                "INNER JOIN " + Incidents.dbSchema + ".place AS place ON place.id = i.place_id " +
+                "INNER JOIN " + Incidents.dbSchema + ".partner AS partner ON partner.id = i.partner_id " +
+                "INNER JOIN " + Incidents.dbSchema + ".incident_type AS incident_type ON incident_type.id = i.type_id " +
+                "INNER JOIN " + Incidents.dbSchema + ".seriousness AS seriousness ON seriousness.id = i.seriousness_id " +
+                "INNER JOIN (SELECT pt.*, to_json(protagonist_type) as type FROM incidents.protagonist pt " +
+                "INNER JOIN " + Incidents.dbSchema + ".protagonist_type ON pt.type_id = protagonist_type.id) " +
+                "AS protagonists ON (i.id = protagonists.incident_id ";
+
+        if (userId != null && !userId.isEmpty()) {
+            query += " AND protagonists.user_id IN " + Sql.listPrepared(userId.toArray()) + " ) ";
+            params.addAll(new JsonArray(userId));
+        } else {
+            query += ") ";
+        }
         return query;
     }
 

@@ -90,9 +90,10 @@ public class IncidentsController extends ControllerHelper {
             } else {
                 JsonObject res = new JsonObject()
                         .put("page", Integer.parseInt(page))
-                        .put("page_count", pageNumberFuture.result().getLong("count") / Incidents.PAGE_SIZE)
+                        .put("page_count", (pageNumberFuture.result().getLong("count") <= Incidents.PAGE_SIZE)
+                                ? 0
+                                : (pageNumberFuture.result().getLong("count") / Incidents.PAGE_SIZE) )
                         .put("all", incidentsFuture.result());
-
                 renderJson(request, res);
             }
         });
