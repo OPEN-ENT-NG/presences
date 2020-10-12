@@ -144,7 +144,8 @@ public class EventController extends ControllerHelper {
                                         "presences.exemptions.dates",
                                         "presences.hour",
                                         "presences.exemptions.csv.header.comment",
-                                        "presences.widgets.absences.regularized");
+                                        "presences.widgets.absences.regularized",
+                                        "presences.id");
                                 EventsCSVExport ece = new EventsCSVExport(events);
                                 ece.setRequest(request);
                                 ece.setHeader(csvHeaders);

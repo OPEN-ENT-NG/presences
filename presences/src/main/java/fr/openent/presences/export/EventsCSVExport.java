@@ -37,6 +37,7 @@ public class EventsCSVExport extends CSVExport {
         line += getEventTime(event) + SEPARATOR;
         line += event.getComment() + SEPARATOR;
         line += getCounsellorRegularisationState(event) + SEPARATOR;
+        line += event.getId() + SEPARATOR;
         return line + EOL;
     }
 
