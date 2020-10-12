@@ -263,7 +263,10 @@ public class DefaultAbsenceService implements AbsenceService {
         query += " WHERE id IN " + Sql.listPrepared(absenceBody.getJsonArray("ids").getList());
         params.addAll(absenceBody.getJsonArray("ids"));
         Sql.getInstance().prepared(query, params, SqlResult.validUniqueResultHandler(result -> {
-            List<Long> ids = absenceBody.getJsonArray("ids").stream().map(id -> Long.parseLong((String) id)).collect(Collectors.toList());
+            List<Long> ids = new ArrayList<>();
+            for(int i = 0; i < absenceBody.getJsonArray("ids").size(); i++) {
+                ids.add(Long.parseLong(absenceBody.getJsonArray("ids").getInteger(i).toString()));
+            }
             afterPersistAbsences(ids, handler, result);
         }));
     }
