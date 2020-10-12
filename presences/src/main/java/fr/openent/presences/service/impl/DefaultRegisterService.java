@@ -200,12 +200,14 @@ public class DefaultRegisterService implements RegisterService {
 
     private JsonObject absenceToEventStatement(JsonObject register, List<String> users, UserInfos user) {
         JsonArray params = new JsonArray();
-        String query = "WITH absence as (SELECT absence.id, absence.start_date, absence.end_date, absence.student_id, absence.reason_id" +
+        String query = "WITH absence as (SELECT absence.id, absence.start_date, absence.end_date, " +
+                "absence.student_id, absence.reason_id, absence.counsellor_regularisation" +
                 " FROM presences.absence WHERE absence.student_id IN " + Sql.listPrepared(users.toArray()) +
                 " AND absence.start_date <= ?" +
                 " AND absence.end_date >= ?)" +
-                " INSERT INTO presences.event (start_date, end_date, comment, counsellor_input, student_id, register_id, type_id, reason_id, owner)" +
-                " (SELECT ?, ?, '', ?, absence.student_id, ?, 1, absence.reason_id, ? FROM absence) ";
+                " INSERT INTO presences.event (start_date, end_date, comment, counsellor_input, " +
+                "student_id, register_id, type_id, reason_id, owner, counsellor_regularisation)" +
+                " (SELECT ?, ?, '', ?, absence.student_id, ?, 1, absence.reason_id, ?, absence.counsellor_regularisation FROM absence) ";
 
         params.addAll(new JsonArray(users));
         params.add(register.getString("start_date"));
