@@ -795,9 +795,27 @@ public class DefaultEventService implements EventService {
         periodRange = "HALF_DAY".equals(recoveryMethod) && endTime.equals(defaultEndTime) ? ",'AFTERNOON' as period " : "";
         periodRange = "HALF_DAY".equals(recoveryMethod) && startTime.equals(defaultStartTime) ? ",'MORNING' as period " : periodRange;
         String query = "SELECT event.student_id, event.start_date" + dateCast + ", event.end_date" +
-                dateCast + ", event.type_id, '" + recoveryMethod +
-                "' as recovery_method, json_agg(row_to_json(event)) as events " + periodRange +
-                "FROM " + Presences.dbSchema + ".event INNER JOIN presences.register ON (register.id = event.register_id) " +
+                dateCast + ", event.type_id, '" + recoveryMethod + "' as recovery_method, " +
+                "json_agg(" +
+                "json_build_object('id', event.id, " +
+                "'start_date', event.start_date, " +
+                "'end_date', event.end_date, " +
+                "'comment', event.comment, " +
+                "'counsellor_input', event.counsellor_input, " +
+                "'student_id', event.student_id, " +
+                "'register_id', event.register_id, " +
+                "'type_id', event.type_id, " +
+                "'reason_id', event.reason_id, " +
+                "'owner', event.owner, " +
+                "'created', event.created, " +
+                "'counsellor_regularisation', event.counsellor_regularisation, " +
+                "'massmailed', event.massmailed, " +
+                "'reason', json_build_object('id', reason.id, 'absence_compliance', reason.absence_compliance)" +
+                ")) as events " +
+                periodRange +
+                "FROM " + Presences.dbSchema + ".event " +
+                "INNER JOIN presences.reason ON (reason.id = event.reason_id) " +
+                "INNER JOIN presences.register ON (register.id = event.register_id) " +
                 "WHERE event.start_date" + dateCast + " >= ? " +
                 "AND event.end_date" + dateCast + "<= ? " +
                 "AND register.structure_id = ? " +
