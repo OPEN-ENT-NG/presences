@@ -6,12 +6,322 @@
                 <i18n>massmailing.template.form</i18n>
             </h3>
         </div>
-        <!-- MAIL -->
+
+
+        <!-- PDF -->
         <div>
             <div class="sniplet-input">
                 <div class="sniplet-input-title">
                     <i18n>massmailing.form.description</i18n>
                 </div>
+                <div class="sniplet-input-title">
+                    <i18n>massmailing.template.form.pdf.title</i18n>
+                </div>
+                <div class="sniplet-input-title">
+                    <i18n>massmailing.template.form.mail.description</i18n>
+                </div>
+                <div class="sniplet-input-form">
+                    <div class="cell search-input">
+                        <input type="text" data-ng-model="vm.pdf.name" class="cell ng-pristine ng-touched ng-valid"
+                               i18n-placeholder="massmailing.template.form.pdf.name.placeholder">
+                    </div>
+                </div>
+                <div class="sniplet-input-form row vertical-spacing-twice">
+                    <div class="cell eight">
+                        <editor id="editor-pdf" ng-model="valuePDF"></editor>
+                        <div class="right-magnet">
+                            <button data-ng-click="vm.create('PDF')"
+                                    data-ng-disabled="vm.pdf.name.trim() === '' && vm.pdf.content.trim() === ''"
+                                    data-ng-if="!vm.pdf.id">
+                                <i18n>massmailing.add</i18n>
+                            </button>
+                            <button data-ng-click="vm.update(vm.pdf, 'PDF')" data-ng-if="vm.pdf.id">
+                                <i18n>massmailing.update</i18n>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="cell four horizontal-spacing-twice">
+                        <div class="sniplet-input-title">
+                            <i18n>massmailing.available.code</i18n>
+                            &#58;
+                        </div>
+
+                        <!-- Student name -->
+                        <div>
+                            <div class="codeMassmailing">
+                                <!-- PDF : code -->
+                                <span id="codePDFName"
+                                      data-ng-click="vm.copyCode('codePDFName', 'tooltipPDFName')"
+                                      data-ng-mouseleave="vm.outCopy('tooltipPDFName')">
+                                    <i18n>massmailing.codes.child.name</i18n>
+                                </span>
+                                <!-- PDF : tooltip feedback copy -->
+                                <span id="tooltipPDFName" class="tooltiptext"> <i18n>massmailing.copy</i18n> </span>
+                            </div>
+                            &#58;
+                            <!-- PDF : code description -->
+                            <i18n>massmailing.codes.students.name.label</i18n>
+                        </div>
+
+                        <!-- Class name -->
+                        <div>
+                            <div class="codeMassmailing">
+                                <!-- PDF : code -->
+                                <span id="codePDFClass"
+                                      data-ng-click="vm.copyCode('codePDFClass', 'tooltipPDFClass')"
+                                      data-ng-mouseleave="vm.outCopy('tooltipPDFClass')">
+                                    <i18n>massmailing.codes.class.name</i18n>
+                                </span>
+                                <!-- PDF : tooltip feedback copy -->
+                                <span id="tooltipPDFClass" class="tooltiptext"> <i18n>massmailing.copy</i18n> </span>
+                            </div>
+                            &#58;
+                            <!-- PDF : code description -->
+                            <i18n>massmailing.codes.class.label</i18n>
+                        </div>
+
+                        <!-- Absence number -->
+                        <div>
+                            <div class="codeMassmailing">
+                                <!-- PDF : code -->
+                                <span id="codePDFAbsence"
+                                      data-ng-click="vm.copyCode('codePDFAbsence', 'tooltipPDFAbsence')"
+                                      data-ng-mouseleave="vm.outCopy('tooltipPDFAbsence')">
+                                    <i18n>massmailing.codes.absence.number</i18n>
+                                </span>
+                                <!-- PDF : tooltip feedback copy -->
+                                <span id="tooltipPDFAbsence" class="tooltiptext tooltipDoubleLine"> <i18n>massmailing.copy</i18n> </span>
+                            </div>
+                            &#58;
+                            <!-- PDF : code description -->
+                            <i18n>massmailing.codes.absences.number.label</i18n>
+                        </div>
+
+                        <!-- lateness number -->
+                        <div>
+                            <div class="codeMassmailing">
+                                <!-- PDF : code -->
+                                <span id="codePDFLateness"
+                                      data-ng-click="vm.copyCode('codePDFLateness', 'tooltipPDFLateness')"
+                                      data-ng-mouseleave="vm.outCopy('tooltipMailLateness')">
+                                    <i18n>massmailing.codes.lateness.number</i18n>
+                                </span>
+                                <!-- PDF : tooltip feedback copy -->
+                                <span id="tooltipPDFLateness" class="tooltiptext"> <i18n>massmailing.copy</i18n> </span>
+                            </div>
+                            &#58;
+                            <!-- PDF : code description -->
+                            <i18n>massmailing.codes.lateness.number.label</i18n>
+                        </div>
+
+                        <!-- Summary events -->
+                        <div>
+                            <div class="codeMassmailing">
+                                <!-- PDF : code -->
+                                <span id="codePDFSummary"
+                                      data-ng-click="vm.copyCode('codePDFSummary', 'tooltipPDFSummary')"
+                                      data-ng-mouseleave="vm.outCopy('tooltipMailSummary')">
+                                    <i18n>massmailing.codes.summary</i18n>
+                                </span>
+                                <!-- PDF : tooltip feedback copy -->
+                                <span id="tooltipPDFSummary" class="tooltiptext"> <i18n>massmailing.copy</i18n> </span>
+                            </div>
+                            &#58;
+                            <!-- PDF : code description -->
+                            <i18n>massmailing.codes.summary.label</i18n>
+                        </div>
+
+                        <br>
+                        <!-- Today's date -->
+                        <div>
+                            <div class="codeMassmailing">
+                                <!-- PDF : code -->
+                                <span id="codePDFDate"
+                                      data-ng-click="vm.copyCode('codePDFDate', 'tooltipPDFDate')"
+                                      data-ng-mouseleave="vm.outCopy('tooltipPDFDate')">
+                                    <i18n>massmailing.codes.pdf.today.date</i18n>
+                                </span>
+                                <!-- PDF : tooltip feedback copy -->
+                                <span id="tooltipPDFDate" class="tooltiptext"> <i18n>massmailing.copy</i18n> </span>
+                            </div>
+                            &#58;
+                            <!-- PDF : code description -->
+                            <i18n>massmailing.codes.pdf.today.date.label</i18n>
+                        </div>
+
+                        <!-- Legal reponsible's adress -->
+                        <div>
+                            <div class="codeMassmailing">
+                                <!-- PDF : code -->
+                                <span id="codePDFAdress"
+                                      data-ng-click="vm.copyCode('codePDFAdress', 'tooltipPDFAdress')"
+                                      data-ng-mouseleave="vm.outCopy('tooltipPDFAdress')">
+                                    <i18n>massmailing.codes.pdf.adress.legal.responsible</i18n>
+                                </span>
+                                <!-- PDF : tooltip feedback copy -->
+                                <span id="tooltipPDFAdress" class="tooltiptext"> <i18n>massmailing.copy</i18n> </span>
+                            </div>
+                            &#58;
+                            <!-- PDF : code description -->
+                            <i18n>massmailing.codes.pdf.adress.legal.responsible.label</i18n>
+                        </div>
+
+
+                        <!-- Code Punition/Sanction to uncomment for MA-517 -->
+                        <!--                        <br>-->
+                        <!--                        &lt;!&ndash; Punition type &ndash;&gt;-->
+                        <!--                        <div>-->
+                        <!--                            <div class="codeMassmailing">-->
+                        <!--                                &lt;!&ndash; PDF : code &ndash;&gt;-->
+                        <!--                                <span id="codePDFPunitionType"-->
+                        <!--                                      data-ng-click="vm.copyCode('codePDFPunitionType', 'tooltipPDFPunitionType')"-->
+                        <!--                                      data-ng-mouseleave="vm.outCopy('tooltipPDFPunitionType')">-->
+                        <!--                                    <i18n>massmailing.codes.punition.type</i18n>-->
+                        <!--                                </span>-->
+                        <!--                                &lt;!&ndash; PDF : tooltip feedback copy &ndash;&gt;-->
+                        <!--                                <span id="tooltipPDFPunitionType" class="tooltiptext"> <i18n>massmailing.copy</i18n> </span>-->
+                        <!--                            </div>-->
+                        <!--                            &#58;-->
+                        <!--                            &lt;!&ndash; PDF : code description &ndash;&gt;-->
+                        <!--                            <i18n>massmailing.codes.punition.type.label</i18n>-->
+                        <!--                        </div>-->
+
+                        <!--                        &lt;!&ndash; Responsible &ndash;&gt;-->
+                        <!--                        <div>-->
+                        <!--                            <div class="codeMassmailing">-->
+                        <!--                                &lt;!&ndash; PDF : code &ndash;&gt;-->
+                        <!--                                <span id="codePDFResponsible"-->
+                        <!--                                      data-ng-click="vm.copyCode('codePDFResponsible', 'tooltipPDFResponsible')"-->
+                        <!--                                      data-ng-mouseleave="vm.outCopy('tooltipPDFResponsible')">-->
+                        <!--                                    <i18n>massmailing.codes.punishment.responsible</i18n>-->
+                        <!--                                </span>-->
+                        <!--                                &lt;!&ndash; PDF : tooltip feedback copy &ndash;&gt;-->
+                        <!--                                <span id="tooltipPDFResponsible" class="tooltiptext"> <i18n>massmailing.copy</i18n> </span>-->
+                        <!--                            </div>-->
+                        <!--                            &#58;-->
+                        <!--                            &lt;!&ndash; PDF : code description &ndash;&gt;-->
+                        <!--                            <i18n>massmailing.codes.punishment.responsible.label</i18n>-->
+                        <!--                        </div>-->
+
+                        <!--                        &lt;!&ndash; Sanction type &ndash;&gt;-->
+                        <!--                        <div>-->
+                        <!--                            <div class="codeMassmailing">-->
+                        <!--                                &lt;!&ndash; PDF : code &ndash;&gt;-->
+                        <!--                                <span id="codePDFSanctionType"-->
+                        <!--                                      data-ng-click="vm.copyCode('codePDFSanctionType', 'tooltipPDFSanctionType')"-->
+                        <!--                                      data-ng-mouseleave="vm.outCopy('tooltipPDFSanctionType')">-->
+                        <!--                                    <i18n>massmailing.codes.sanction.type</i18n>-->
+                        <!--                                </span>-->
+                        <!--                                &lt;!&ndash; PDF : tooltip feedback copy &ndash;&gt;-->
+                        <!--                                <span id="tooltipPDFSanctionType" class="tooltiptext"> <i18n>massmailing.copy</i18n> </span>-->
+                        <!--                            </div>-->
+                        <!--                            &#58;-->
+                        <!--                            &lt;!&ndash; PDF : code description &ndash;&gt;-->
+                        <!--                            <i18n>massmailing.codes.sanction.type.label</i18n>-->
+                        <!--                        </div>-->
+
+                        <!--                        &lt;!&ndash; Decription punition/sanction &ndash;&gt;-->
+                        <!--                        <div>-->
+                        <!--                            <div class="codeMassmailing">-->
+                        <!--                                &lt;!&ndash; PDF : code &ndash;&gt;-->
+                        <!--                                <span id="codePDFDescriptionPunishment"-->
+                        <!--                                      data-ng-click="vm.copyCode('codePDFDescriptionPunishment', 'tooltipPDFDescriptionPunishment')"-->
+                        <!--                                      data-ng-mouseleave="vm.outCopy('tooltipPDFDescriptionPunishment')">-->
+                        <!--                                    <i18n>massmailing.codes.punishment.description</i18n>-->
+                        <!--                                </span>-->
+                        <!--                                &lt;!&ndash; PDF : tooltip feedback copy &ndash;&gt;-->
+                        <!--                                <span id="tooltipPDFDescriptionPunishment" class="tooltiptext"> <i18n>massmailing.copy</i18n> </span>-->
+                        <!--                            </div>-->
+                        <!--                            &#58;-->
+                        <!--                            &lt;!&ndash; PDF : code description &ndash;&gt;-->
+                        <!--                            <i18n>massmailing.codes.punishment.description.label</i18n>-->
+                        <!--                        </div>-->
+
+                        <!--                        &lt;!&ndash; Date punition/sanction &ndash;&gt;-->
+                        <!--                        <div>-->
+                        <!--                            <div class="codeMassmailing">-->
+                        <!--                                &lt;!&ndash; PDF : code &ndash;&gt;-->
+                        <!--                                <span id="codePDFDatePunishment"-->
+                        <!--                                      data-ng-click="vm.copyCode('codePDFDatePunishment', 'tooltipPDFDatePunishment')"-->
+                        <!--                                      data-ng-mouseleave="vm.outCopy('tooltipPDFDatePunishment')">-->
+                        <!--                                    <i18n>massmailing.codes.punishment.date</i18n>-->
+                        <!--                                </span>-->
+                        <!--                                &lt;!&ndash; PDF : tooltip feedback copy &ndash;&gt;-->
+                        <!--                                <span id="tooltipPDFDatePunishment" class="tooltiptext"> <i18n>massmailing.copy</i18n> </span>-->
+                        <!--                            </div>-->
+                        <!--                            &#58;-->
+                        <!--                            &lt;!&ndash; PDF : code description &ndash;&gt;-->
+                        <!--                            <i18n>massmailing.codes.punishment.date.label</i18n>-->
+                        <!--                        </div>-->
+
+                        <!--                        &lt;!&ndash; Punishment Day number &ndash;&gt;-->
+                        <!--                        <div>-->
+                        <!--                            <div class="codeMassmailing">-->
+                        <!--                                &lt;!&ndash; PDF : code &ndash;&gt;-->
+                        <!--                                <span id="codePDFPunishmentDayNumber"-->
+                        <!--                                      data-ng-click="vm.copyCode('codePDFPunishmentDayNumber', 'tooltipPDFPunishmentDayNumber')"-->
+                        <!--                                      data-ng-mouseleave="vm.outCopy('tooltipPDFPunishmentDayNumber')">-->
+                        <!--                                    <i18n>massmailing.codes.punishment.day.number</i18n>-->
+                        <!--                                </span>-->
+                        <!--                                &lt;!&ndash; PDF : tooltip feedback copy &ndash;&gt;-->
+                        <!--                                <span id="tooltipPDFPunishmentDayNumber" class="tooltiptext"> <i18n>massmailing.copy</i18n> </span>-->
+                        <!--                            </div>-->
+                        <!--                            &#58;-->
+                        <!--                            &lt;!&ndash; PDF : code description &ndash;&gt;-->
+                        <!--                            <i18n>massmailing.codes.punishment.day.number.label</i18n>-->
+                        <!--                        </div>-->
+
+                        <!--                        &lt;!&ndash; Punishment Summary &ndash;&gt;-->
+                        <!--                        <div>-->
+                        <!--                            <div class="codeMassmailing">-->
+                        <!--                                &lt;!&ndash; PDF : code &ndash;&gt;-->
+                        <!--                                <span id="codePDFSummaryPunishment"-->
+                        <!--                                      data-ng-click="vm.copyCode('codePDFSummaryPunishment', 'tooltipPDFSummaryPunishment')"-->
+                        <!--                                      data-ng-mouseleave="vm.outCopy('tooltipPDFSummaryPunishment')">-->
+                        <!--                                    <i18n>massmailing.codes.punishment.summary</i18n>-->
+                        <!--                                </span>-->
+                        <!--                                &lt;!&ndash; PDF : tooltip feedback copy &ndash;&gt;-->
+                        <!--                                <span id="tooltipPDFSummaryPunishment" class="tooltiptext"> <i18n>massmailing.copy</i18n> </span>-->
+                        <!--                            </div>-->
+                        <!--                            &#58;-->
+                        <!--                            &lt;!&ndash; PDF : code description &ndash;&gt;-->
+                        <!--                            <i18n>massmailing.codes.punishment.summary.label</i18n>-->
+                        <!--                        </div>-->
+
+                    </div>
+                </div>
+            </div>
+            <div class="sniplet-input-form row vertical-spacing-twice">
+                <div class="sniplet-addList">
+                    <div class="sniplet-addList-content" ng-if="vm.pdfs.length > 0">
+                        <div class="sniplet-input-title">
+                            <i18n>massmailing.templates.created</i18n>
+                            &#58;
+                        </div>
+                        <ul class="sniplet-addList-content-list">
+                            <li class="sniplet-addList-content-list-item"
+                                ng-repeat="pdf in vm.pdfs | orderBy:'name'">
+
+                                <div class="sniplet-addList-content-list-item-title">
+                                    <label class="sniplet-addList-content-list-item-title-label"
+                                           data-ng-click="vm.openTemplate(pdf)">[[pdf.name]]</label>
+                                </div>
+
+                                <div class="sniplet-addList-content-list-item-icons">
+                                    <i class="delete"
+                                       ng-click="vm.deletion.template = pdf; vm.deletion.show = true;"></i>
+                                </div>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+
+        <!-- MAIL -->
+        <div>
+            <div class="sniplet-input">
                 <div class="sniplet-input-title">
                     <i18n>massmailing.template.form.mail.title</i18n>
                 </div>
@@ -26,7 +336,7 @@
                 </div>
                 <div class="sniplet-input-form row vertical-spacing-twice">
                     <div class="cell eight">
-                        <editor id="editor-mail" ng-model="value"></editor>
+                        <editor id="editor-mail" ng-model="valueMail"></editor>
                         <div class="right-magnet">
                             <button data-ng-click="vm.create('MAIL')"
                                     data-ng-disabled="vm.mail.name.trim() === '' && vm.mail.content.trim() === ''"
@@ -44,6 +354,7 @@
                             &#58;
                         </div>
 
+                        <!-- Student name -->
                         <div>
                             <div class="codeMassmailing">
                                 <!-- Mail : code -->
@@ -59,6 +370,8 @@
                             <!-- Mail : code description -->
                             <i18n>massmailing.codes.students.name.label</i18n>
                         </div>
+
+                        <!-- Class name -->
                         <div>
                             <div class="codeMassmailing">
                                 <!-- Mail : code -->
@@ -74,6 +387,8 @@
                             <!-- Mail : code description -->
                             <i18n>massmailing.codes.class.label</i18n>
                         </div>
+
+                        <!-- Absence number -->
                         <div>
                             <div class="codeMassmailing">
                                 <!-- Mail : code -->
@@ -89,6 +404,8 @@
                             <!-- Mail : code description -->
                             <i18n>massmailing.codes.absences.number.label</i18n>
                         </div>
+
+                        <!-- lateness number -->
                         <div>
                             <div class="codeMassmailing">
                                 <!-- Mail : code -->
@@ -104,6 +421,8 @@
                             <!-- Mail : code description -->
                             <i18n>massmailing.codes.lateness.number.label</i18n>
                         </div>
+
+                        <!-- Summary events -->
                         <div>
                             <div class="codeMassmailing">
                                 <!-- Mail : code -->
@@ -119,6 +438,128 @@
                             <!-- Mail : code description -->
                             <i18n>massmailing.codes.summary.label</i18n>
                         </div>
+
+                        <!-- Code Punition/Sanction to uncomment for MA-517 -->
+                        <!--                        <br>-->
+                        <!--                        &lt;!&ndash; Punition type &ndash;&gt;-->
+                        <!--                        <div>-->
+                        <!--                            <div class="codeMassmailing">-->
+                        <!--                                &lt;!&ndash; Mail : code &ndash;&gt;-->
+                        <!--                                <span id="codeMailPunitionType"-->
+                        <!--                                      data-ng-click="vm.copyCode('codeMailPunitionType', 'tooltipMailPunitionType')"-->
+                        <!--                                      data-ng-mouseleave="vm.outCopy('tooltipMailPunitionType')">-->
+                        <!--                                    <i18n>massmailing.codes.punition.type</i18n>-->
+                        <!--                                </span>-->
+                        <!--                                &lt;!&ndash; Mail : tooltip feedback copy &ndash;&gt;-->
+                        <!--                                <span id="tooltipMailPunitionType" class="tooltiptext"> <i18n>massmailing.copy</i18n> </span>-->
+                        <!--                            </div>-->
+                        <!--                            &#58;-->
+                        <!--                            &lt;!&ndash; Mail : code description &ndash;&gt;-->
+                        <!--                            <i18n>massmailing.codes.punition.type.label</i18n>-->
+                        <!--                        </div>-->
+
+                        <!--                        &lt;!&ndash; Responsible &ndash;&gt;-->
+                        <!--                        <div>-->
+                        <!--                            <div class="codeMassmailing">-->
+                        <!--                                &lt;!&ndash; Mail : code &ndash;&gt;-->
+                        <!--                                <span id="codeMailResponsible"-->
+                        <!--                                      data-ng-click="vm.copyCode('codeMailResponsible', 'tooltipMailResponsible')"-->
+                        <!--                                      data-ng-mouseleave="vm.outCopy('tooltipMailResponsible')">-->
+                        <!--                                    <i18n>massmailing.codes.punishment.responsible</i18n>-->
+                        <!--                                </span>-->
+                        <!--                                &lt;!&ndash; Mail : tooltip feedback copy &ndash;&gt;-->
+                        <!--                                <span id="tooltipMailResponsible" class="tooltiptext"> <i18n>massmailing.copy</i18n> </span>-->
+                        <!--                            </div>-->
+                        <!--                            &#58;-->
+                        <!--                            &lt;!&ndash; Mail : code description &ndash;&gt;-->
+                        <!--                            <i18n>massmailing.codes.punishment.responsible.label</i18n>-->
+                        <!--                        </div>-->
+
+                        <!--                        &lt;!&ndash; Sanction type &ndash;&gt;-->
+                        <!--                        <div>-->
+                        <!--                            <div class="codeMassmailing">-->
+                        <!--                                &lt;!&ndash; Mail : code &ndash;&gt;-->
+                        <!--                                <span id="codeMailSanctionType"-->
+                        <!--                                      data-ng-click="vm.copyCode('codeMailSanctionType', 'tooltipMailSanctionType')"-->
+                        <!--                                      data-ng-mouseleave="vm.outCopy('tooltipMailSanctionType')">-->
+                        <!--                                    <i18n>massmailing.codes.sanction.type</i18n>-->
+                        <!--                                </span>-->
+                        <!--                                &lt;!&ndash; Mail : tooltip feedback copy &ndash;&gt;-->
+                        <!--                                <span id="tooltipMailSanctionType" class="tooltiptext"> <i18n>massmailing.copy</i18n> </span>-->
+                        <!--                            </div>-->
+                        <!--                            &#58;-->
+                        <!--                            &lt;!&ndash; Mail : code description &ndash;&gt;-->
+                        <!--                            <i18n>massmailing.codes.sanction.type.label</i18n>-->
+                        <!--                        </div>-->
+
+                        <!--                        &lt;!&ndash; Decription punition/sanction &ndash;&gt;-->
+                        <!--                        <div>-->
+                        <!--                            <div class="codeMassmailing">-->
+                        <!--                                &lt;!&ndash; Mail : code &ndash;&gt;-->
+                        <!--                                <span id="codeMailDescriptionPunishment"-->
+                        <!--                                      data-ng-click="vm.copyCode('codeMailDescriptionPunishment', 'tooltipMailDescriptionPunishment')"-->
+                        <!--                                      data-ng-mouseleave="vm.outCopy('tooltipMailDescriptionPunishment')">-->
+                        <!--                                    <i18n>massmailing.codes.punishment.description</i18n>-->
+                        <!--                                </span>-->
+                        <!--                                &lt;!&ndash; Mail : tooltip feedback copy &ndash;&gt;-->
+                        <!--                                <span id="tooltipMailDescriptionPunishment" class="tooltiptext"> <i18n>massmailing.copy</i18n> </span>-->
+                        <!--                            </div>-->
+                        <!--                            &#58;-->
+                        <!--                            &lt;!&ndash; Mail : code description &ndash;&gt;-->
+                        <!--                            <i18n>massmailing.codes.punishment.description.label</i18n>-->
+                        <!--                        </div>-->
+
+                        <!--                        &lt;!&ndash; Date punition/sanction &ndash;&gt;-->
+                        <!--                        <div>-->
+                        <!--                            <div class="codeMassmailing">-->
+                        <!--                                &lt;!&ndash; Mail : code &ndash;&gt;-->
+                        <!--                                <span id="codeMailDatePunishment"-->
+                        <!--                                      data-ng-click="vm.copyCode('codeMailDatePunishment', 'tooltipMailDatePunishment')"-->
+                        <!--                                      data-ng-mouseleave="vm.outCopy('tooltipMailDatePunishment')">-->
+                        <!--                                    <i18n>massmailing.codes.punishment.date</i18n>-->
+                        <!--                                </span>-->
+                        <!--                                &lt;!&ndash; Mail : tooltip feedback copy &ndash;&gt;-->
+                        <!--                                <span id="tooltipMailDatePunishment" class="tooltiptext"> <i18n>massmailing.copy</i18n> </span>-->
+                        <!--                            </div>-->
+                        <!--                            &#58;-->
+                        <!--                            &lt;!&ndash; Mail : code description &ndash;&gt;-->
+                        <!--                            <i18n>massmailing.codes.punishment.date.label</i18n>-->
+                        <!--                        </div>-->
+
+                        <!--                        &lt;!&ndash; Punishment Day number &ndash;&gt;-->
+                        <!--                        <div>-->
+                        <!--                            <div class="codeMassmailing">-->
+                        <!--                                &lt;!&ndash; Mail : code &ndash;&gt;-->
+                        <!--                                <span id="codeMailPunishmentDayNumber"-->
+                        <!--                                      data-ng-click="vm.copyCode('codeMailPunishmentDayNumber', 'tooltipMailPunishmentDayNumber')"-->
+                        <!--                                      data-ng-mouseleave="vm.outCopy('tooltipMailPunishmentDayNumber')">-->
+                        <!--                                    <i18n>massmailing.codes.punishment.day.number</i18n>-->
+                        <!--                                </span>-->
+                        <!--                                &lt;!&ndash; Mail : tooltip feedback copy &ndash;&gt;-->
+                        <!--                                <span id="tooltipMailPunishmentDayNumber" class="tooltiptext"> <i18n>massmailing.copy</i18n> </span>-->
+                        <!--                            </div>-->
+                        <!--                            &#58;-->
+                        <!--                            &lt;!&ndash; Mail : code description &ndash;&gt;-->
+                        <!--                            <i18n>massmailing.codes.punishment.day.number.label</i18n>-->
+                        <!--                        </div>-->
+
+                        <!--                        &lt;!&ndash; Punishment Summary &ndash;&gt;-->
+                        <!--                        <div>-->
+                        <!--                            <div class="codeMassmailing">-->
+                        <!--                                &lt;!&ndash; Mail : code &ndash;&gt;-->
+                        <!--                                <span id="codeMailSummaryPunishment"-->
+                        <!--                                      data-ng-click="vm.copyCode('codeMailSummaryPunishment', 'tooltipMailSummaryPunishment')"-->
+                        <!--                                      data-ng-mouseleave="vm.outCopy('tooltipMailSummaryPunishment')">-->
+                        <!--                                    <i18n>massmailing.codes.punishment.summary</i18n>-->
+                        <!--                                </span>-->
+                        <!--                                &lt;!&ndash; Mail : tooltip feedback copy &ndash;&gt;-->
+                        <!--                                <span id="tooltipMailSummaryPunishment" class="tooltiptext"> <i18n>massmailing.copy</i18n> </span>-->
+                        <!--                            </div>-->
+                        <!--                            &#58;-->
+                        <!--                            &lt;!&ndash; Mail : code description &ndash;&gt;-->
+                        <!--                            <i18n>massmailing.codes.punishment.summary.label</i18n>-->
+                        <!--                        </div>-->
+
                     </div>
                 </div>
             </div>
@@ -127,7 +568,7 @@
                     <div class="sniplet-addList-content" ng-if="vm.mails.length > 0">
                         <div class="sniplet-input-title">
                             <i18n>massmailing.templates.created</i18n>
-                            :
+                            &#58;
                         </div>
                         <ul class="sniplet-addList-content-list">
                             <li class="sniplet-addList-content-list-item"
@@ -148,6 +589,7 @@
                 </div>
             </div>
         </div>
+
         <!-- SMS -->
         <div>
             <div class="sniplet-input">
@@ -274,6 +716,77 @@
                             <!-- SMS : code description -->
                             <i18n>massmailing.codes.last.lateness.label</i18n>
                         </div>
+
+                        <!-- Code Punition/Sanction to uncomment for MA-517 -->
+                        <!--                        <br>-->
+                        <!--                        &lt;!&ndash; Punition type &ndash;&gt;-->
+                        <!--                        <div>-->
+                        <!--                            <div class="codeMassmailing">-->
+                        <!--                                &lt;!&ndash; SMS : code &ndash;&gt;-->
+                        <!--                                <span id="codeSMSPunitionType"-->
+                        <!--                                      data-ng-click="vm.copyCode('codeSMSPunitionType', 'tooltipSMSPunitionType')"-->
+                        <!--                                      data-ng-mouseleave="vm.outCopy('tooltipSMSPunitionType')">-->
+                        <!--                                    <i18n>massmailing.codes.punition.type</i18n>-->
+                        <!--                                </span>-->
+                        <!--                                &lt;!&ndash; SMS : tooltip feedback copy &ndash;&gt;-->
+                        <!--                                <span id="tooltipSMSPunitionType" class="tooltiptext"> <i18n>massmailing.copy</i18n> </span>-->
+                        <!--                            </div>-->
+                        <!--                            &#58;-->
+                        <!--                            &lt;!&ndash; SMS : code description &ndash;&gt;-->
+                        <!--                            <i18n>massmailing.codes.punition.type.label</i18n>-->
+                        <!--                        </div>-->
+
+                        <!--                        &lt;!&ndash; Sanction type &ndash;&gt;-->
+                        <!--                        <div>-->
+                        <!--                            <div class="codeMassmailing">-->
+                        <!--                                &lt;!&ndash; Mail : code &ndash;&gt;-->
+                        <!--                                <span id="codeSMSSanctionType"-->
+                        <!--                                      data-ng-click="vm.copyCode('codeMailSanctionType', 'tooltipSMSSanctionType')"-->
+                        <!--                                      data-ng-mouseleave="vm.outCopy('tooltipMailSanctionType')">-->
+                        <!--                                    <i18n>massmailing.codes.sanction.type</i18n>-->
+                        <!--                                </span>-->
+                        <!--                                &lt;!&ndash; Mail : tooltip feedback copy &ndash;&gt;-->
+                        <!--                                <span id="tooltipSMSSanctionType" class="tooltiptext"> <i18n>massmailing.copy</i18n> </span>-->
+                        <!--                            </div>-->
+                        <!--                            &#58;-->
+                        <!--                            &lt;!&ndash; Mail : code description &ndash;&gt;-->
+                        <!--                            <i18n>massmailing.codes.sanction.type.label</i18n>-->
+                        <!--                        </div>-->
+
+                        <!--                        &lt;!&ndash; Date punition/sanction &ndash;&gt;-->
+                        <!--                        <div>-->
+                        <!--                            <div class="codeMassmailing">-->
+                        <!--                                &lt;!&ndash; SMS : code &ndash;&gt;-->
+                        <!--                                <span id="codeSMSDatePunishment"-->
+                        <!--                                      data-ng-click="vm.copyCode('codeSMSDatePunishment', 'tooltipSMSDatePunishment')"-->
+                        <!--                                      data-ng-mouseleave="vm.outCopy('tooltipSMSDatePunishment')">-->
+                        <!--                                    <i18n>massmailing.codes.punishment.date</i18n>-->
+                        <!--                                </span>-->
+                        <!--                                &lt;!&ndash; SMS : tooltip feedback copy &ndash;&gt;-->
+                        <!--                                <span id="tooltipSMSDatePunishment" class="tooltiptext"> <i18n>massmailing.copy</i18n> </span>-->
+                        <!--                            </div>-->
+                        <!--                            &#58;-->
+                        <!--                            &lt;!&ndash; SMS : code description &ndash;&gt;-->
+                        <!--                            <i18n>massmailing.codes.punishment.date.label</i18n>-->
+                        <!--                        </div>-->
+
+                        <!--                        &lt;!&ndash; Punishment Day number &ndash;&gt;-->
+                        <!--                        <div>-->
+                        <!--                            <div class="codeMassmailing">-->
+                        <!--                                &lt;!&ndash; Mail : code &ndash;&gt;-->
+                        <!--                                <span id="codeSMSPunishmentDayNumber"-->
+                        <!--                                      data-ng-click="vm.copyCode('codeSMSPunishmentDayNumber', 'tooltipSMSPunishmentDayNumber')"-->
+                        <!--                                      data-ng-mouseleave="vm.outCopy('tooltipSMSPunishmentDayNumber')">-->
+                        <!--                                    <i18n>massmailing.codes.punishment.day.number</i18n>-->
+                        <!--                                </span>-->
+                        <!--                                &lt;!&ndash; Mail : tooltip feedback copy &ndash;&gt;-->
+                        <!--                                <span id="tooltipSMSPunishmentDayNumber" class="tooltiptext"> <i18n>massmailing.copy</i18n> </span>-->
+                        <!--                            </div>-->
+                        <!--                            &#58;-->
+                        <!--                            &lt;!&ndash; Mail : code description &ndash;&gt;-->
+                        <!--                            <i18n>massmailing.codes.punishment.day.number.label</i18n>-->
+                        <!--                        </div>-->
+
                     </div>
                 </div>
             </div>

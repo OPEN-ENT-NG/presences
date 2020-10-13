@@ -6,6 +6,8 @@ console.log('massmailing');
 declare let window: any;
 
 interface ViewModel {
+    pdf: Template,
+    pdfs: Template[],
     mail: Template,
     mails: Template[],
     sms: Template,
@@ -39,10 +41,16 @@ const vm: ViewModel = {
         vm[type.toLowerCase()].name = '';
         vm[type.toLowerCase()].content = '';
         // reset value content from <editor>
-        angular.element(document.getElementById("editor-mail")).scope().value = '';
+        angular.element(document.getElementById("editor-mail")).scope().valueMail = '';
+        angular.element(document.getElementById("editor-pdf")).scope().valuePDF = '';
         mailTemplateForm.that.$apply();
     },
     smsMaxLength: 160,
+    pdf: {
+        name: '',
+        content: ''
+    },
+    pdfs: [],
     mail: {
         name: '',
         content: ''
@@ -70,9 +78,11 @@ const vm: ViewModel = {
     },
     update: async function (template: Template, type: 'MAIL' | 'SMS' | 'PDF'): Promise<void> {
         // we assign "value" data from ngModel editor
-        // to our template.content (only 'MAIL' from <editor></editor is concerned)
+        // to our template.content (only 'MAIL' & 'PDF' from <editor></editor is concerned)
         if (template.type === 'MAIL') {
-            template.content = angular.element(document.getElementById("editor-mail")).scope().value;
+            template.content = angular.element(document.getElementById("editor-mail")).scope().valueMail;
+        } else if (template.type === 'PDF') {
+            template.content = angular.element(document.getElementById("editor-pdf")).scope().valuePDF;
         }
         try {
             await settingsService.update(template);
@@ -113,9 +123,11 @@ const vm: ViewModel = {
                 type
             };
             // we assign "value" data from ngModel editor
-            // to our template(vm[type.toLowerCase()]).content (only 'MAIL' from <editor></editor is concerned)
+            // to our template(vm[type.toLowerCase()]).content (only 'MAIL' & 'PDF' from <editor></editor is concerned)
             if (vm[type.toLowerCase()].type === 'MAIL') {
-                vm[type.toLowerCase()].content = angular.element(document.getElementById("editor-mail")).scope().value;
+                vm[type.toLowerCase()].content = angular.element(document.getElementById("editor-mail")).scope().valueMail;
+            } else if (vm[type.toLowerCase()].type === 'PDF') {
+                vm[type.toLowerCase()].content = angular.element(document.getElementById("editor-pdf")).scope().valuePDF;
             }
             const data = await settingsService.create(vm[type.toLowerCase()]);
             toasts.confirm('massmailing.templates.creation.success');
@@ -130,7 +142,8 @@ const vm: ViewModel = {
     openTemplate: function ({id, structure_id, type, name, content}: Template) {
         // Fix <editor> issues for interacting with ngModel from editor
         // we get its element and use "value" data instead of our View Model
-        angular.element(document.getElementById("editor-mail")).scope().value = content;
+        angular.element(document.getElementById("editor-mail")).scope().valueMail = content;
+        angular.element(document.getElementById("editor-pdf")).scope().valuePDF = content;
         vm[type.toLowerCase()] = {id, structure_id, type, name, content};
     },
     copyCode: function (code: string, codeTooltip: string) {
@@ -163,12 +176,14 @@ export const mailTemplateForm = {
             this.load();
         },
         load: function (): void {
+            vm.syncTemplates('PDF');
             vm.syncTemplates('MAIL');
             vm.syncTemplates('SMS');
         },
         setHandler: function (): void {
             this.$on('reload', this.load);
             this.$on('$destroy', () => {
+                vm.pdf = {name: '', content: ''};
                 vm.mail = {name: '', content: ''};
                 vm.sms = {name: '', content: ''}
             });

@@ -36,7 +36,8 @@ public class SettingsController extends ControllerHelper {
         String mailingType = request.getParam("type");
         String structure = request.getParam("structure");
 
-        if (structure == null || !(MailingType.MAIL.toString().equals(mailingType) || MailingType.SMS.toString().equals(mailingType))) {
+        if (structure == null ||
+                !(MailingType.PDF.toString().equals(mailingType) || MailingType.MAIL.toString().equals(mailingType) || MailingType.SMS.toString().equals(mailingType))) {
             badRequest(request);
             return;
         }

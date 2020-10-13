@@ -7,7 +7,17 @@ public enum TemplateCode {
     LATENESS_NUMBER("massmailing.codes.lateness.number"),
     SUMMARY("massmailing.codes.summary"),
     LAST_ABSENCE("massmailing.codes.last.absence"),
-    LAST_LATENESS("massmailing.codes.last.lateness");
+    LAST_LATENESS("massmailing.codes.last.lateness"),
+
+    PUNISHMENT_TYPE("massmailing.codes.punition.type"),
+    RESPONSIBLE("massmailing.codes.punishment.responsible"),
+    SANCTION_TYPE("massmailing.codes.sanction.type"),
+    PUNISHMENT_DESCRIPTION("massmailing.codes.punishment.description"),
+    PUNISHMENT_DATE("massmailing.codes.punishment.date"),
+    DAY_NUMBER("massmailing.codes.punishment.day.number"),
+    PUNISHMENT_SUMMARY("massmailing.codes.punishment.summary"),
+    DATE("massmailing.codes.pdf.today.date"),
+    ADDRESS("massmailing.codes.pdf.adress.legal.responsible");
 
     private final String key;
 
