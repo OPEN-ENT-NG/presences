@@ -174,7 +174,8 @@ public class StatementAbsenceController extends ControllerHelper {
                 String studentName = result.getJsonObject("student").getString("name").replace(" ", "_");
                 String createdAt = DateHelper.getDateString(result.getString("created_at"), DateHelper.YEAR_MONTH_DAY);
                 String name = "Declaration_" + studentName + (createdAt.equals("") ? "" : "_" + createdAt);
-                storage.sendFile(request.getParam("id"), name, request, false, new JsonObject());
+                //  storage.sendFile(request.getParam("id"), name, request, false, new JsonObject()); @todo fix name + extension
+                storage.sendFile(request.getParam("id"), "", request, false, new JsonObject());
             });
         });
     }
