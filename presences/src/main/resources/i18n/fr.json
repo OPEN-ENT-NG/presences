@@ -388,6 +388,7 @@
   "presences.alerts.loading": "Alertes en cours de chargement",
   "presences.absences.load.failed": "Une erreur est survenue lors du chargement des absences à régulariser",
   "presences.absences.update_reason.error": "Une erreur est survenue lors de la modification du motif",
+  "presences.absences.update.error": "Une erreur est survenue lors de la modification de l'absence",
   "presences.absences.update_regularized.error": "Une erreur est survenue lors de la régularisation de l'absence",
   "presences.reasons.init.0": "Absence cantine",
   "presences.reasons.init.1": "CDI",

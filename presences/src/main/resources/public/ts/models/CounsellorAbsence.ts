@@ -1,5 +1,7 @@
 import http from 'axios';
-import {notify} from "entcore";
+import {model, notify} from 'entcore';
+
+declare let window: any;
 
 export class CounsellorAbsence {
     id: number;
@@ -18,6 +20,22 @@ export class CounsellorAbsence {
             await http.put('/presences/absence/reason', {reasonId: this.reason_id, ids: [this.id]});
         } catch (err) {
             notify.error('presences.absences.update_reason.error');
+        }
+    }
+
+    async updateAbsence(): Promise<void> {
+        try {
+            await http.put('/presences/absence/' + this.id,
+                {
+                    end_date: this.end_date,
+                    start_date: this.start_date,
+                    owner: model.me.userId,
+                    reason_id: this.reason_id,
+                    structure_id: window.structure.id,
+                    student_id: this.student_id
+                });
+        } catch (err) {
+            notify.error('presences.absences.update.error');
         }
     }
 

@@ -1,3 +1,8 @@
 {
-  "presences.title": "Presences"
+  "presences.title": "Presences",
+
+  "presences.absences.load.failed": "An error has occurred while loading absences for regularization",
+  "presences.absences.update_reason.error": "An error has occurred while updating the reason for the absence",
+  "presences.absences.update.error": "An error has occurred while updating the absence",
+  "presences.absences.update_regularized.error": "An error has occurred while regularizing the absence"
 }
