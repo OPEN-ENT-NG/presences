@@ -109,7 +109,7 @@ public class StatementAbsenceController extends ControllerHelper {
                 if (!(user.getChildrenIds().contains(request.getFormAttribute("student_id")))) {
                     unauthorized(request);
                 }
-                saveAbsenceStatement(request, null, user.getUserId());
+                saveAbsenceStatement(request, null, null, user.getUserId());
             });
         });
     }
@@ -129,12 +129,13 @@ public class StatementAbsenceController extends ControllerHelper {
                 }
 
                 String file_id = resultUpload.getString("_id");
+                String metadata = resultUpload.getJsonObject("metadata").toString();
                 if (!(user.getChildrenIds().contains(request.getFormAttribute("student_id")))) {
                     deleteFile(file_id);
                     unauthorized(request);
                 }
 
-                saveAbsenceStatement(request, file_id, user.getUserId());
+                saveAbsenceStatement(request, file_id, metadata, user.getUserId());
             });
         });
     }
@@ -169,13 +170,12 @@ public class StatementAbsenceController extends ControllerHelper {
                     notFound(request);
                     return;
                 }
-
                 JsonObject result = resultFile.result();
                 String studentName = result.getJsonObject("student").getString("name").replace(" ", "_");
                 String createdAt = DateHelper.getDateString(result.getString("created_at"), DateHelper.YEAR_MONTH_DAY);
                 String name = "Declaration_" + studentName + (createdAt.equals("") ? "" : "_" + createdAt);
-                //  storage.sendFile(request.getParam("id"), name, request, false, new JsonObject()); @todo fix name + extension
-                storage.sendFile(request.getParam("id"), "", request, false, new JsonObject());
+                JsonObject metadata = result.getString("metadata") != null ? new JsonObject(result.getString("metadata")) : new JsonObject();
+                storage.sendFile(request.getParam("id"), !metadata.isEmpty() ? name : "", request, false, metadata);
             });
         });
     }
@@ -194,9 +194,10 @@ public class StatementAbsenceController extends ControllerHelper {
         });
     }
 
-    private void saveAbsenceStatement(HttpServerRequest request, String file_id, String parent_id) {
+    private void saveAbsenceStatement(HttpServerRequest request, String file_id, String metadata, String parent_id) {
         JsonObject body = new JsonObject();
         body.put("attachment_id", file_id);
+        body.put("metadata", metadata);
         body.put("parent_id", parent_id);
 
         request.formAttributes().entries().forEach(entry -> {

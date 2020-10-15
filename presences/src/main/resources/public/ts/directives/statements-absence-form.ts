@@ -161,6 +161,7 @@ export const StatementsAbsenceForm = ng.directive('statementsAbsenceForm', () =>
                 if (response.status == 200 || response.status == 201) {
                     toasts.confirm(lang.translate('presences.statement.form.create.success'));
                     vm.form.description = "";
+                    vm.form.file = null;
                     $scope.$apply();
                 } else {
                     toasts.warning('presences.statement.form.create.error');
