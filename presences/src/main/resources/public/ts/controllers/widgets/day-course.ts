@@ -52,6 +52,7 @@ export const dayCourse = ng.controller('DayCourse', ['$scope', async function ($
         if (model.me.profiles.some(profile => profile === "Personnel")) {
             vm.isMultipleSlot = true
         }
+        vm.dayCourse.clear();
         await vm.dayCourse.sync([model.me.userId], [], window.structure.id, start_date, end_date, null, null, false, vm.isMultipleSlot);
         $scope.safeApply();
     };
