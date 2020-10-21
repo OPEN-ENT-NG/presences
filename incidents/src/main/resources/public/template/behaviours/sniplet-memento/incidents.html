@@ -1,4 +1,4 @@
-<div class="card vertical-spacing" id="memento-incidents-sniplet">
+<div class="card vertical-spacing margin-bottom-md" id="memento-incidents-sniplet">
 
     <div class="disabled" ng-show="vm.disabled">
         <h4>
@@ -6,11 +6,29 @@
         </h4>
     </div>
 
-    <div class="section-title">
-        <i18n>incidents.memento.punishment.sanction.title</i18n>
+    <div class="incident-flex">
+        <div class="section-title">
+            <i18n>incidents.memento.punishment.sanction.title</i18n>
+        </div>
+
+        <!-- Filters -->
+        <div class="incident-filters">
+            <label class="checkbox">
+                <input type="checkbox" ng-model="vm.filter.incident" ng-change="vm.loadStudentYearIncidents()">
+                <span><i18n><span>incidents.title</span></i18n></span>
+            </label>
+            <label class="checkbox">
+                <input type="checkbox" ng-model="vm.filter.punishment" ng-change="vm.loadStudentYearIncidents()">
+                <span><i18n><span>incidents.punishments</span></i18n></span>
+            </label>
+            <label class="checkbox">
+                <input type="checkbox" ng-model="vm.filter.sanction" ng-change="vm.loadStudentYearIncidents()">
+                <span><i18n><span>incidents.sanctions</span></i18n></span>
+            </label>
+        </div>
     </div>
 
-    <div class="twelve empty-content" ng-show="vm.incidents.all.length === 0 && !vm.disabled">
+    <div class="twelve empty-content" ng-show="vm.mementoIncidents.length === 0 && !vm.disabled">
         <div class="twelve description max-height-80">
             <span class="red-bar bar"></span>
             <i18n>incident.nothing.to.report</i18n>
@@ -18,48 +36,57 @@
         </div>
     </div>
 
-    <div class="content vertical-spacing" ng-show="vm.incidents.all.length > 0">
+    <div class="content vertical-spacing" ng-show="vm.mementoIncidents.length > 0">
         <!-- header -->
         <div class="flex-table">
             <div class="flex-row flex-head row__15">
-                <div class="flex-col col__2 text-center">
+                <div class="flex-col col__3 text-center">
                     <i18n>incidents.csv.header.date</i18n>
                 </div>
-                <div class="flex-col col__2 text-center">
-                    <i18n>incidents.csv.header.type</i18n>
+                <div class="flex-col col__3 text-center">
+                    <i18n>presences.punishments.category.title</i18n>
                 </div>
-                <div class="flex-col col__8 text-center">
-                    <i18n>incidents.informations</i18n>
+                <div class="flex-col col__3 text-center">
+                    <i18n>incidents.type</i18n>
                 </div>
                 <div class="flex-col col__3 text-center">
                     <i18n>incidents.done</i18n>
+                </div>
+                <div class="flex-col col__3 text-center">
+                    <i18n>incidents.link</i18n>
                 </div>
             </div>
 
             <!-- content -->
             <div class="flex-row overflow-y">
-                <div class="flex-body" ng-repeat="incident in vm.incidents.all track by $index">
+                <div class="flex-body" ng-repeat="mementoIncident in vm.mementoIncidents">
                     <div class="flex-content">
                         <div class="flex-row row__15">
                             <!-- date -->
-                            <div class="flex-col col__2 min-height-45">
-                                <span>[[vm.formatIncident(incident.date)]]</span>
+                            <div class="flex-col col__3 min-height-45">
+                                <span>[[vm.formatIncident(mementoIncident.item.date)]]</span>
+                            </div>
+                            <!-- category -->
+                            <div class="flex-col col__3 min-height-45">
+                                <span>[[vm.getType(mementoIncident.type)]]</span>
                             </div>
                             <!-- type -->
-                            <div class="flex-col col__2 min-height-45 background-yellow text-white">
-                                <span><i18n>incidents.incident</i18n></span>
-                            </div>
-                            <!-- information -->
-                            <div class="flex-col col__8 min-height-45">
-                                <span>[[incident.description]]</span>
+                            <div class="flex-col col__3 min-height-45 background-yellow text-white">
+                                <span>[[vm.getLabel(mementoIncident.type, mementoIncident)]]</span>
                             </div>
                             <!-- status -->
-                            <!-- display if punition / sanction -->
-                            <!--                            <div class="flex-col col__3 padding-lg">-->
-                            <!--                                <label class="switch">-->
-                            <!--                                    <input type="checkbox" ng-model="" ng-change="" ng-disabled="ngDisabled">-->
-                            <!--                                </label>-->
-                            <!--                            </div>-->
+                            <div class="flex-col col__3 padding-lg">
+                                <label ng-if="vm.isPunishment(mementoIncident.type)">
+                                    <i ng-class="mementoIncident.item.processed ? 'check-circle' : 'absences'"></i>
+                                </label>
+                            </div>
+                            <!-- link -->
+                            <div class="flex-col col__3 padding-lg">
+                                <label>
+                                    <i class="open-in-new"
+                                       data-ng-click="vm.redirectTo(mementoIncident)"></i>
+                                </label>
+                            </div>
                         </div>
                     </div>
                 </div>

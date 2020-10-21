@@ -46,4 +46,32 @@
     }
   }
 
+  .open-in-new::before {
+    font-size: 25px;
+    margin-right: 0;
+  }
+
+  .incident-flex {
+    display: flex;
+    justify-content: space-between;
+  }
+
+  .incident-filters {
+    font-size: 14px;
+  }
+
+  .checkbox {
+    margin-left: 20px;
+  }
+
+  .check-circle::before {
+    font-size: 25px;
+    color: $incident-light-green;
+  }
+
+  .absences::before {
+    font-size: 25px;
+    color: $incidents-grey-average;
+  }
+
 }

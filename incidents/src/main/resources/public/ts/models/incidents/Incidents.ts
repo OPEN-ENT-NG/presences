@@ -26,8 +26,11 @@ export interface Incident {
     partner: Partner;
     partner_id?: number;
     type_id?: number;
+
     type?: IncidentType;
     incidentType: IncidentType;
+    incident_type?: IncidentType;
+
     seriousness: Seriousness;
     seriousness_id?: number;
 
@@ -38,8 +41,16 @@ export interface Incident {
 
 export interface ProtagonistForm {
     userId: string;
+    user_id?: string;
+    student?: User;
+
     label: string;
+
+    incident_id?: number;
+
     protagonistType: ProtagonistType;
+    type?: ProtagonistType;
+    type_id?: number;
 }
 
 export class Incident {

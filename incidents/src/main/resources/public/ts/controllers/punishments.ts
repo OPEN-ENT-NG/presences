@@ -1,10 +1,11 @@
-import {moment, ng, notify, toasts, idiom as lang} from 'entcore';
+import {idiom as lang, moment, ng, notify, toasts} from 'entcore';
 
 import {DateUtils, StudentsSearch} from "@common/utils";
 import {GroupsSearch} from "@common/utils/autocomplete/groupsSearch";
 import {PunishmentsUtils} from "@incidents/utilities/punishments";
 import {
-    IPDetentionField, IPDutyField,
+    IPDetentionField,
+    IPDutyField,
     IPExcludeField,
     IPunishment,
     IPunishmentBody,
@@ -21,6 +22,7 @@ import {
 } from "@incidents/services";
 import {SNIPLET_FORM_EMIT_PUNISHMENT_EVENTS} from "@common/model";
 import {IPunishmentType} from "@incidents/models/PunishmentType";
+import {User} from "@common/model/User";
 
 declare let window: any;
 
@@ -187,6 +189,8 @@ export const punishmentController = ng.controller('PunishmentController',
                 vm.studentsSearch = new StudentsSearch(window.structure.id, searchService);
                 vm.groupsSearch = new GroupsSearch(window.structure.id, searchService, groupService);
 
+                setDataFromMemento();
+
                 /* Init search bar lightbox */
                 vm.studentsSearchLightbox = new StudentsSearch(window.structure.id, searchService);
                 vm.groupsSearchLightbox = new GroupsSearch(window.structure.id, searchService, groupService);
@@ -217,6 +221,21 @@ export const punishmentController = ng.controller('PunishmentController',
                 vm.punishments.eventer.on('loading::true', () => $scope.safeApply());
                 vm.punishments.eventer.on('loading::false', () => $scope.safeApply());
                 getPunishments();
+            };
+
+            const setDataFromMemento = (): void => {
+                const fetchedParam: { mementoStudentId: string, mementoStudentName: string } = $location.search();
+                // if there is nothing to fetch since this is only from memento
+                if (!fetchedParam.mementoStudentId && !fetchedParam.mementoStudentName) {
+                    return;
+                }
+                let student: User = {
+                    id: fetchedParam.mementoStudentId,
+                    displayName: fetchedParam.mementoStudentName,
+                }
+                vm.filter.students.push(student.id);
+                vm.studentsSearch.selectStudent("", student);
+                $location.search({});
             };
 
             const getPunishments = async (): Promise<void> => {
@@ -564,5 +583,4 @@ export const punishmentController = ng.controller('PunishmentController',
                     load();
                 }
             });
-
         }]);

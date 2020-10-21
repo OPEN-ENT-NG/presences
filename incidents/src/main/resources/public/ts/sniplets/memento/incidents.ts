@@ -1,10 +1,19 @@
-import {angular, moment, toasts} from "entcore";
+import {angular, idiom as lang, moment, toasts} from "entcore";
 import {DateUtils} from "@common/utils";
-import {Incidents, ISchoolYearPeriod} from "@incidents/models";
+import {Incident, IPunishment, IPunishmentRequest, ISchoolYearPeriod, ProtagonistForm} from "@incidents/models";
 import {ViescolaireService} from "@common/services/ViescolaireService";
 import {IAngularEvent} from "angular";
+import {incidentService, punishmentService, punishmentsTypeService} from "@incidents/services";
+import {IPunishmentType} from "@incidents/models/PunishmentType";
+import {EVENT_TYPES} from "@common/model";
+import {User} from "@common/model/User";
 
 declare let window: any;
+
+interface IMementoIncident {
+    type: string,
+    item: Incident | IPunishment
+}
 
 interface IViewModel {
     startDate: Date;
@@ -12,8 +21,12 @@ interface IViewModel {
     schoolYears: Array<any>;
     disabled: boolean,
     student: string,
-    incidents: Incidents;
-    
+    punishments: IPunishment;
+    punishmentsRequest: IPunishmentRequest;
+    punishmentsTypes: Array<IPunishmentType>;
+    mementoIncidents: Array<IMementoIncident>;
+    filter: { incident: boolean, punishment: boolean, sanction: boolean };
+
     apply(): void;
 
     init(student: string): Promise<void>;
@@ -21,6 +34,20 @@ interface IViewModel {
     loadStudentYearIncidents(): Promise<void>;
 
     formatIncident(date: string): void;
+
+    setIPunishmentRequest(): void;
+
+    redirectTo(mementoIncident: IMementoIncident): void;
+
+    isPunishment(type: string): boolean;
+
+    getPunishmentType(): Promise<void>;
+
+    filterPunishments(): Array<number>;
+
+    getType(type: string): string;
+
+    getLabel(type: string, mementoIncident: IMementoIncident): string;
 }
 
 const vm: IViewModel = {
@@ -28,19 +55,18 @@ const vm: IViewModel = {
     endDate: null,
     schoolYears: [],
     student: null,
-    incidents: undefined,
+    punishments: null,
+    punishmentsRequest: {} as IPunishmentRequest,
+    punishmentsTypes: [],
     disabled: false,
-
     apply: null,
+    mementoIncidents: [],
+    filter: {incident: true, punishment: true, sanction: true},
 
     async init(student: string): Promise<void> {
-
         try {
-            vm.incidents = new Incidents();
-            vm.incidents.eventer.on('loading::true', vm.apply);
-            vm.incidents.eventer.on('loading::false', vm.apply);
-            vm.incidents.userId = student;
-            vm.incidents.structureId = window.structure.id;
+            vm.student = student;
+            vm.getPunishmentType();
             const schoolYears: ISchoolYearPeriod = await ViescolaireService.getSchoolYearDates(window.structure.id);
             vm.startDate = moment(schoolYears.start_date);
             vm.endDate = moment(schoolYears.end_date);
@@ -56,21 +82,105 @@ const vm: IViewModel = {
             throw e
         }
     },
+
+    setIPunishmentRequest(): void {
+        vm.punishmentsRequest.structure_id = window.structure.id;
+        vm.punishmentsRequest.start_at = vm.startDate.format(DateUtils.FORMAT["YEAR-MONTH-DAY"]);
+        vm.punishmentsRequest.end_at = vm.endDate.format(DateUtils.FORMAT["YEAR-MONTH-DAY"]);
+        vm.punishmentsRequest.students_ids = [vm.student];
+        vm.punishmentsRequest.groups_ids = null;
+        vm.punishmentsRequest.type_ids = vm.filterPunishments();
+        vm.punishmentsRequest.process_state = null;
+        vm.punishmentsRequest.page = 0;
+    },
+
     async loadStudentYearIncidents(): Promise<void> {
-        try {
-            vm.incidents.startDate = vm.startDate.format(DateUtils.FORMAT["YEAR-MONTH-DAY"]);
-            vm.incidents.endDate = vm.endDate.format(DateUtils.FORMAT["YEAR-MONTH-DAY"]);
-            vm.incidents.page = 0;
-        } catch (err) {
-            throw err;
+        const promises: Promise<any>[] = [];
+        if (vm.filter.incident) {
+            promises.push(incidentService.getStudentIncidentsSummary(vm.student, window.structure.id,
+                vm.startDate.format(DateUtils.FORMAT["YEAR-MONTH-DAY"]), vm.endDate.format(DateUtils.FORMAT["YEAR-MONTH-DAY"])
+            ));
         }
+        if (vm.filter.punishment || vm.filter.sanction) {
+            vm.setIPunishmentRequest();
+            promises.push(punishmentService.get(vm.punishmentsRequest));
+        }
+        vm.mementoIncidents = [];
+        Promise.all(promises).then((mementoResponses: any[]) => {
+            let mementos: any[] = [];
+            mementoResponses.forEach(mementoResponse => mementos = [...mementos, ...mementoResponse.all]);
+            mementos.forEach(memento => {
+                // Case if it's a punishment
+                if ('fields' in memento) {
+                    let punishment: IMementoIncident = {
+                        type: EVENT_TYPES.PUNISHMENT,
+                        item: memento
+                    }
+                    vm.mementoIncidents.push(punishment);
+                } else {
+                    // Case if it's an incident
+                    let incident: IMementoIncident = {type: EVENT_TYPES.INCIDENT, item: memento}
+                    vm.mementoIncidents.push(incident);
+                }
+                vm.apply();
+            });
+        })
     },
 
     formatIncident(date: string): string {
-        return moment(date).format('DD/MM/YYYY');
+        return moment(date).format(DateUtils.FORMAT["DAY-MONTH-YEAR"]);
+    },
+
+    redirectTo(mementoIncident: IMementoIncident): void {
+        if (mementoIncident.type === EVENT_TYPES.INCIDENT) {
+            let protagonists: ProtagonistForm[] = (<Incident>mementoIncident.item).protagonists;
+            const protagonist: ProtagonistForm = protagonists.find(student => student.user_id === vm.student);
+            window.location.href = `/incidents#/incidents?mementoStudentId=${protagonist.userId}&mementoStudentName=${protagonist.student.displayName}`;
+        } else if (mementoIncident.type === (EVENT_TYPES.PUNISHMENT || EVENT_TYPES.SANCTION)) {
+            const student: User = {
+                displayName: (<IPunishment>mementoIncident.item).student.name,
+                id: (<IPunishment>mementoIncident.item).student.id
+            };
+            window.location.href = `/incidents#/punishment/sanction?mementoStudentId=${student.id}&mementoStudentName=${student.displayName}`;
+        }
+    },
+
+    isPunishment(type: string): boolean {
+        return type === (EVENT_TYPES.PUNISHMENT || EVENT_TYPES.SANCTION);
+    },
+
+    async getPunishmentType(): Promise<void> {
+        vm.punishmentsTypes = await punishmentsTypeService.get(window.structure.id);
+    },
+
+    filterPunishments(): Array<number> {
+        if (vm.filter.punishment) {
+            return vm.punishmentsTypes.filter((t: IPunishmentType) => t.type === EVENT_TYPES.PUNISHMENT).map((p: IPunishmentType) => p.id);
+        } else if (vm.filter.sanction) {
+            return vm.punishmentsTypes.filter((t: IPunishmentType) => t.type === EVENT_TYPES.SANCTION).map((p: IPunishmentType) => p.id);
+        }
+    },
+
+    getType(type: string): string {
+        switch (type) {
+            case EVENT_TYPES.INCIDENT:
+                return lang.translate("incidents.incident");
+            case EVENT_TYPES.PUNISHMENT:
+                return lang.translate("presences.punishment");
+            case EVENT_TYPES.SANCTION:
+                return lang.translate("presences.sanction");
+        }
+    },
+
+    getLabel(type: string, mementoIncident: IMementoIncident): string {
+        switch (type) {
+            case EVENT_TYPES.INCIDENT:
+                return (<Incident>mementoIncident.item).incident_type.label;
+            case EVENT_TYPES.PUNISHMENT || EVENT_TYPES.SANCTION:
+                return (<IPunishment>mementoIncident.item).type.label;
+        }
     }
 };
-
 
 export const incidentsMementoWidget = {
     title: 'presences.memento.incidents.title',

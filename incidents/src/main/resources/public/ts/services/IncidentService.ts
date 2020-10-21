@@ -41,7 +41,7 @@ export const incidentService: IncidentService = {
                 url += `&userId=${userId}`;
             }
 
-            url += `&page=${this.page}`;
+            // url += `&page=${this.page}`;
 
             const {data} = await http.get(url);
             return data;

@@ -233,4 +233,14 @@ i {
     font-family: 'material-icons';
     content: '\F054';
   }
+
+  &.open-in-new:before {
+    font-family: 'material-icons';
+    content: '\F3CC';
+  }
+
+  &.check-circle:before {
+    font-family: 'material-icons';
+    content: '\F5E0';
+  }
 }

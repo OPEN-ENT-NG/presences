@@ -17,11 +17,11 @@ interface ViewModel {
     incidentId: number;
     collapse: boolean;
 
-    toggleCollapse(incident, event): void;
+    toggleCollapse(incident: Incident, event): void;
 
     isCollapsibleOpen(id): boolean;
 
-    isProcessed(incident): void;
+    isProcessed(incident: Incident): void;
 
     // CSV
     exportCsv(): void;
@@ -31,7 +31,7 @@ interface ViewModel {
 
     updateDate(): void;
 
-    updateFilter(student?): void;
+    updateFilter(student?: Student): void;
 
     sortField(field: string);
 
@@ -48,8 +48,8 @@ interface ViewModel {
 }
 
 export const incidentsController = ng.controller('IncidentsController',
-    ['$scope', 'IncidentService', 'ViescolaireService',
-        async function ($scope: Scope, IncidentService: IncidentService, viescolaireService: IViescolaireService) {
+    ['$scope', '$location', 'IncidentService', 'ViescolaireService',
+        async function ($scope: Scope, $location, IncidentService: IncidentService, viescolaireService: IViescolaireService) {
             const vm: ViewModel = this;
             vm.notifications = [];
             vm.filter = {
@@ -90,120 +90,136 @@ export const incidentsController = ng.controller('IncidentsController',
                 vm.incidents.startDate = moment(vm.filter.startDate).format(DateUtils.FORMAT["YEAR-MONTH-DAY"]);
                 vm.incidents.endDate = moment(vm.filter.endDate).format(DateUtils.FORMAT["YEAR-MONTH-DAY"]);
 
+                setDataFromMemento();
                 setStudentToSync();
 
                 // "page" uses sync() method at the same time it sets 0 (See LoadingCollection)
                 vm.incidents.page = 0;
                 $scope.safeApply();
             };
-    getIncidents();
+            getIncidents();
 
-    /* CSV  */
-    vm.exportCsv = (): void => {
-        if (vm.incidents.pageCount > 50) {
-            vm.notifications.push(new Toast('incidents.csv.full', 'warning'));
-        } else {
-            if (vm.incidents.all.length === 0) {
-                vm.notifications.push(new Toast('incidents.csv.empty', 'info'));
-            } else {
-                vm.incidents.export();
-            }
-        }
-    };
-
-    /* Filter  */
-    vm.updateFilter = (student?): void => {
-        if (student && !_.find(vm.filter.students, student)) {
-            vm.filter.students.push(student);
-        }
-        setStudentToSync();
-        vm.incidents.page = 0;
-        $scope.safeApply();
-    };
-
-    vm.sortField = async (field) => {
-        switch (field) {
-            case 'date':
-                vm.incidents.order = field;
-                break;
-            case 'time':
-                vm.incidents.order = field;
-                break;
-            case 'place':
-                vm.incidents.order = field;
-                break;
-            case 'type':
-                vm.incidents.order = field;
-                break;
-            case 'seriousness':
-                vm.incidents.order = field;
-                break;
-            case 'treated':
-                vm.incidents.order = field;
-                break;
-            default:
-                vm.incidents.order = 'date';
-        }
-        vm.incidents.reverse = !vm.incidents.reverse;
-        await vm.incidents.syncPagination();
-        $scope.safeApply();
-    };
-
-    vm.searchStudent = async (searchText: string) => {
-        await vm.students.search(window.structure.id, searchText);
-        $scope.safeApply();
-    };
-
-    vm.selectStudents = async (model: Student, option: Student) => {
-        vm.updateFilter(option);
-        vm.filter.student.search = '';
-    };
-
-    vm.removeStudents = (student): void => {
-        vm.filter.students = _.without(vm.filter.students, _.findWhere(vm.filter.students, student));
-        vm.updateFilter();
-    };
-
-    vm.updateDate = async () => {
-        getIncidents();
-        $scope.safeApply();
-    };
-
-    $scope.$on('form:filter', getIncidents);
-
-
-    /* Collapse  */
-    vm.toggleCollapse = (incident, event): void => {
-        if (vm.incidentId == event.currentTarget.getAttribute("data-id")) {
-            vm.collapse = !vm.collapse;
-            if (vm.collapse) {
-                vm.incidentId = event.currentTarget.getAttribute("data-id");
-            } else {
-                vm.incidentId = null;
-            }
-        } else {
-            vm.collapse = true;
-            vm.incidentId = event.currentTarget.getAttribute("data-id");
-        }
-        $scope.safeApply();
-    };
-
-    vm.isCollapsibleOpen = (id): boolean => {
-        return id == vm.incidentId;
-    };
-
-    vm.isProcessed = async function (incident) {
-        try {
-            let response = await incident.update();
-            if (response.status == 200 || response.status == 201) {
-                if (incident.processed) {
-                    vm.notifications.push(new Toast('incident.processed.done', 'confirm'));
+            /* CSV  */
+            vm.exportCsv = (): void => {
+                if (vm.incidents.pageCount > 50) {
+                    vm.notifications.push(new Toast('incidents.csv.full', 'warning'));
                 } else {
-                    vm.notifications.push(new Toast('incident.processed.undone', 'confirm'));
+                    if (vm.incidents.all.length === 0) {
+                        vm.notifications.push(new Toast('incidents.csv.empty', 'info'));
+                    } else {
+                        vm.incidents.export();
+                    }
                 }
-            } else {
-                vm.notifications.push(new Toast('incidents.edit.form.err', 'warning'));
-            }
+            };
+
+            /* Filter  */
+            vm.updateFilter = (student?: Student): void => {
+                if (student && !_.find(vm.filter.students, student)) {
+                    vm.filter.students.push(student);
+                }
+                setStudentToSync();
+                vm.incidents.page = 0;
+                $scope.safeApply();
+            };
+
+            const setDataFromMemento = (): void => {
+                const fetchedParam: { mementoStudentId: string, mementoStudentName: string } = $location.search();
+                // if there is nothing to fetch since this is only from memento
+                console.log("fetchedParam " + fetchedParam.mementoStudentId + ' ' + fetchedParam.mementoStudentName);
+                if (!fetchedParam.mementoStudentId && !fetchedParam.mementoStudentName) {
+                    return;
+                }
+                let student: any = {
+                    id: fetchedParam.mementoStudentId,
+                    displayName: fetchedParam.mementoStudentName,
+                };
+                vm.filter.students.push(student);
+                $location.search({});
+            };
+
+            vm.sortField = async (field: string) => {
+                switch (field) {
+                    case 'date':
+                        vm.incidents.order = field;
+                        break;
+                    case 'time':
+                        vm.incidents.order = field;
+                        break;
+                    case 'place':
+                        vm.incidents.order = field;
+                        break;
+                    case 'type':
+                        vm.incidents.order = field;
+                        break;
+                    case 'seriousness':
+                        vm.incidents.order = field;
+                        break;
+                    case 'treated':
+                        vm.incidents.order = field;
+                        break;
+                    default:
+                        vm.incidents.order = 'date';
+                }
+                vm.incidents.reverse = !vm.incidents.reverse;
+                await vm.incidents.syncPagination();
+                $scope.safeApply();
+            };
+
+            vm.searchStudent = async (searchText: string) => {
+                await vm.students.search(window.structure.id, searchText);
+                $scope.safeApply();
+            };
+
+            vm.selectStudents = (model: Student, option: Student): void => {
+                vm.updateFilter(option);
+                vm.filter.student.search = '';
+            };
+
+            vm.removeStudents = (student: Student): void => {
+                vm.filter.students = _.without(vm.filter.students, _.findWhere(vm.filter.students, student));
+                vm.updateFilter();
+            };
+
+            vm.updateDate = (): void => {
+                getIncidents();
+                $scope.safeApply();
+            };
+
+            $scope.$on('form:filter', getIncidents);
+
+
+            /* Collapse  */
+            vm.toggleCollapse = (incident: Incident, event): void => {
+                if (vm.incidentId == event.currentTarget.getAttribute("data-id")) {
+                    vm.collapse = !vm.collapse;
+                    if (vm.collapse) {
+                        vm.incidentId = event.currentTarget.getAttribute("data-id");
+                    } else {
+                        vm.incidentId = null;
+                    }
+                } else {
+                    vm.collapse = true;
+                    vm.incidentId = event.currentTarget.getAttribute("data-id");
+                }
+                $scope.safeApply();
+            };
+
+            vm.isCollapsibleOpen = (id): boolean => {
+                return id == vm.incidentId;
+            };
+
+            vm.isProcessed = async (incident: Incident): Promise<void> => {
+                try {
+                    let response = await incident.update();
+                    if (response.status == 200 || response.status == 201) {
+                        if (incident.processed) {
+                            vm.notifications.push(new Toast('incident.processed.done', 'confirm'));
+                        } else {
+                            vm.notifications.push(new Toast('incident.processed.undone', 'confirm'));
+                        }
+                    } else {
+                        vm.notifications.push(new Toast('incidents.edit.form.err', 'warning'));
+                    }
             $scope.safeApply();
         } catch (err) {
             notify.error('incidents.edit.form.err');
@@ -214,7 +230,7 @@ export const incidentsController = ng.controller('IncidentsController',
 
     vm.editIncidentLightbox = async function (incident: Incident) {
         $scope.$broadcast(INCIDENTS_FORM_EVENTS.EDIT, incident);
-        $scope.safeApply()
+        $scope.safeApply();
     };
 
     /* on switch (watch) */
