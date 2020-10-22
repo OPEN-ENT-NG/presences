@@ -437,7 +437,7 @@ public class EventHelper {
                 JsonArray history = student.getDayHistory();
                 JsonArray userSlots = clone.copy();
 
-                if (history.size() == 0) {
+                if (history == null || history.size() == 0) {
                     student.setDayHistory(userSlots);
                 } else {
                     List<Absence> filteredAbsenceList = absencesList.stream()
