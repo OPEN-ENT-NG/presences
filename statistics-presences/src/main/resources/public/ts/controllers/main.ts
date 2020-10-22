@@ -109,8 +109,8 @@ export const mainController = ng.controller('MainController',
             vm.loadData = async function () {
                 if (!window.structure) return;
                 const schoolYear = await ViescolaireService.getSchoolYearDates(window.structure.id);
-                vm.filter.from = DateUtils.setFirstTime(moment(schoolYear.start_date).toDate());
-                vm.filter.to = DateUtils.setLastTime(moment(schoolYear.end_date).toDate());
+                vm.filter.from = DateUtils.setFirstTime(new Date());
+                vm.filter.to = DateUtils.setLastTime(new Date());
                 vm.reasons = await ReasonService.getReasons(window.structure.id);
                 vm.reasons = vm.reasons.filter(reason => reason.id !== -1);
             };
