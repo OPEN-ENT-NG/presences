@@ -220,4 +220,29 @@
     }
   }
 
+  editor {
+    lightbox {
+      .flex-row {
+        text-align: unset;
+        width: 80%;
+      }
+
+      .content {
+        padding: 15px;
+      }
+
+      .close-lightbox {
+        color: unset;
+      }
+    }
+
+    .mathjax {
+      lightbox {
+        .close-lightbox {
+          display: none;
+        }
+      }
+    }
+  }
+
 }
