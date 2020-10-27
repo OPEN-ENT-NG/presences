@@ -834,9 +834,7 @@ public class DefaultEventService implements EventService {
             query += " AND student_id IN " + Sql.listPrepared(students);
             params.addAll(new JsonArray(students));
         }
-        if (justified != null) {
-            query += " AND reason_id IS " + (justified ? "NOT" : "") + " NULL ";
-        }
+
         if (!reasonsId.isEmpty()) {
             query += " AND (reason_id IN " + Sql.listPrepared(reasonsId) + (noReasons ? " OR reason_id IS NULL" : "") + ") ";
             params.addAll(new JsonArray(reasonsId));
@@ -846,7 +844,7 @@ public class DefaultEventService implements EventService {
             params.add(massmailed);
         }
 
-        if (regularized != null) {
+        if (regularized != null || justified != null) {
             query += " AND counsellor_regularisation = ?";
             params.add(regularized);
         }

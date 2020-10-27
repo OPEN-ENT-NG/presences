@@ -422,14 +422,7 @@ public class DefaultAbsenceService implements AbsenceService {
             params.addAll(new JsonArray(students));
         }
 
-        if (justified != null && justified && !reasons.isEmpty()) {
-            query += " AND reason_id IN " + Sql.listPrepared(reasons);
-            params.addAll(new JsonArray(reasons));
-        } else if (justified != null && !justified) {
-            query += " AND reason_id IS NULL";
-        }
-
-        if (regularized != null) {
+        if (regularized != null || justified != null) {
             query += " AND counsellor_regularisation = ? ";
             params.add(regularized);
         }
