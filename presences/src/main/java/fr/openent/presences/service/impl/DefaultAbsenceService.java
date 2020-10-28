@@ -424,7 +424,7 @@ public class DefaultAbsenceService implements AbsenceService {
 
         if (regularized != null || justified != null) {
             query += " AND counsellor_regularisation = ? ";
-            params.add(regularized);
+            params.add(regularized ? regularized : justified);
         }
 
         if (start != null) {

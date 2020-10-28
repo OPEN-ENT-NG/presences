@@ -846,7 +846,7 @@ public class DefaultEventService implements EventService {
 
         if (regularized != null || justified != null) {
             query += " AND counsellor_regularisation = ?";
-            params.add(regularized);
+            params.add(regularized ? regularized : justified);
         }
 
         query += " GROUP BY event.start_date" + dateCast + ", event.student_id, event.end_date" + dateCast + ", event.type_id ";
