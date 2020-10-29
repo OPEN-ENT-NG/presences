@@ -88,7 +88,7 @@ export const dayCourse = ng.controller('DayCourse', ['$scope', async function ($
 
     vm.isFutureCourse = (course: Course): boolean => {
         if (!course) return true;
-        return moment().isSameOrBefore(course.startDate);
+        return moment().add(15, 'minutes').isSameOrBefore(course.startDate);
     };
 
     vm.isCurrentCourse = (course: Course): boolean => {

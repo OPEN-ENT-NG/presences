@@ -750,9 +750,9 @@ export const registersController = ng.controller('RegistersController',
                 return (vm.register && vm.register.loading) || vm.courses.loading;
             };
 
-            vm.isFuturCourse = function (course: Course) {
+            vm.isFuturCourse = function (course: Course): boolean {
                 if (!course) return true;
-                return moment().isSameOrBefore(course.startDate);
+                return moment().add(15, 'minutes').isSameOrBefore(course.startDate);
             };
 
             vm.isEmptyDayHistory = function (student) {
