@@ -136,34 +136,51 @@
                         <div>
                             <div class="codeMassmailing">
                                 <!-- PDF : code -->
-                                <span id="codePDFDate"
-                                      data-ng-click="vm.copyCode('codePDFDate', 'tooltipPDFDate')"
-                                      data-ng-mouseleave="vm.outCopy('tooltipPDFDate')">
-                                    <i18n>massmailing.codes.pdf.today.date</i18n>
+                                <span id="codeDate"
+                                      data-ng-click="vm.copyCode('codeDate', 'tooltipDate')"
+                                      data-ng-mouseleave="vm.outCopy('tooltipDate')">
+                                    <i18n>massmailing.codes.today.date</i18n>
                                 </span>
                                 <!-- PDF : tooltip feedback copy -->
-                                <span id="tooltipPDFDate" class="tooltiptext"> <i18n>massmailing.copy</i18n> </span>
+                                <span id="tooltipDate" class="tooltiptext"> <i18n>massmailing.copy</i18n> </span>
                             </div>
                             &#58;
                             <!-- PDF : code description -->
-                            <i18n>massmailing.codes.pdf.today.date.label</i18n>
+                            <i18n>massmailing.codes.today.date.label</i18n>
                         </div>
 
-                        <!-- Legal reponsible's adress -->
+                        <!-- Legal  responsible address -->
                         <div>
                             <div class="codeMassmailing">
                                 <!-- PDF : code -->
-                                <span id="codePDFAdress"
-                                      data-ng-click="vm.copyCode('codePDFAdress', 'tooltipPDFAdress')"
-                                      data-ng-mouseleave="vm.outCopy('tooltipPDFAdress')">
-                                    <i18n>massmailing.codes.pdf.adress.legal.responsible</i18n>
+                                <span id="codeAddress"
+                                      data-ng-click="vm.copyCode('codeAddress', 'tooltipAddress')"
+                                      data-ng-mouseleave="vm.outCopy('tooltipAddress')">
+                                    <i18n>massmailing.codes.address.legal.responsible</i18n>
                                 </span>
                                 <!-- PDF : tooltip feedback copy -->
-                                <span id="tooltipPDFAdress" class="tooltiptext"> <i18n>massmailing.copy</i18n> </span>
+                                <span id="tooltipAddress" class="tooltiptext"> <i18n>massmailing.copy</i18n> </span>
                             </div>
                             &#58;
                             <!-- PDF : code description -->
-                            <i18n>massmailing.codes.pdf.adress.legal.responsible.label</i18n>
+                            <i18n>massmailing.codes.address.legal.responsible.label</i18n>
+                        </div>
+
+                        <!-- Legal  responsible zipcode-city -->
+                        <div>
+                            <div class="codeMassmailing">
+                                <!-- PDF : code -->
+                                <span id="codeZipCity"
+                                      data-ng-click="vm.copyCode('codeZipCity', 'tooltipZipCity')"
+                                      data-ng-mouseleave="vm.outCopy('tooltipZipCity')">
+                                    <i18n>massmailing.codes.zipcode.city.legal.responsible</i18n>
+                                </span>
+                                <!-- PDF : tooltip feedback copy -->
+                                <span id="tooltipZipCity" class="tooltiptext"> <i18n>massmailing.copy</i18n> </span>
+                            </div>
+                            &#58;
+                            <!-- PDF : code description -->
+                            <i18n>massmailing.codes.zipcode.city.legal.responsible.label</i18n>
                         </div>
 
 
