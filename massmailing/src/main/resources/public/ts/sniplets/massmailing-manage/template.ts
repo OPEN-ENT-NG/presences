@@ -41,8 +41,11 @@ const vm: ViewModel = {
         vm[type.toLowerCase()].name = '';
         vm[type.toLowerCase()].content = '';
         // reset value content from <editor>
-        angular.element(document.getElementById("editor-mail")).scope().valueMail = '';
-        angular.element(document.getElementById("editor-pdf")).scope().valuePDF = '';
+        if (vm[type.toLowerCase()].type === 'MAIL') {
+            angular.element(document.getElementById("editor-mail")).scope().valueMail = '';
+        } else if (vm[type.toLowerCase()].type === 'PDF') {
+            angular.element(document.getElementById("editor-pdf")).scope().valuePDF = '';
+        }
         mailTemplateForm.that.$apply();
     },
     smsMaxLength: 160,
@@ -142,8 +145,11 @@ const vm: ViewModel = {
     openTemplate: function ({id, structure_id, type, name, content}: Template) {
         // Fix <editor> issues for interacting with ngModel from editor
         // we get its element and use "value" data instead of our View Model
-        angular.element(document.getElementById("editor-mail")).scope().valueMail = content;
-        angular.element(document.getElementById("editor-pdf")).scope().valuePDF = content;
+        if (type === 'MAIL') {
+            angular.element(document.getElementById("editor-mail")).scope().valueMail = content;
+        } else if (type === 'PDF') {
+            angular.element(document.getElementById("editor-pdf")).scope().valuePDF = content;
+        }
         vm[type.toLowerCase()] = {id, structure_id, type, name, content};
     },
     copyCode: function (code: string, codeTooltip: string) {
@@ -176,8 +182,13 @@ export const mailTemplateForm = {
             this.load();
         },
         load: function (): void {
+            vm.resetTemplate('PDF');
             vm.syncTemplates('PDF');
+
+            vm.resetTemplate('MAIL');
             vm.syncTemplates('MAIL');
+
+            vm.resetTemplate('SMS');
             vm.syncTemplates('SMS');
         },
         setHandler: function (): void {
