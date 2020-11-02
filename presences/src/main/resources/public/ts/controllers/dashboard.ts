@@ -1,12 +1,13 @@
 import {Me, model, moment, ng, toasts} from 'entcore';
-import {Group, GroupService, SearchItem, SearchService} from "../services";
-import {DateUtils, PreferencesUtils} from "@common/utils";
+import {Group, GroupService, SearchItem, SearchService, EventService} from '../services';
+import {DateUtils, PreferencesUtils} from '@common/utils';
 import rights from '../rights';
-import {Course, EventType} from "../models";
-import {alertService} from "../services/AlertService";
-import {IAngularEvent} from "angular";
-import {COURSE_EVENTS} from "@common/model";
-import {Alert} from "@presences/models/Alert";
+import {Course, EventType} from '../models';
+import {alertService} from '../services/AlertService';
+import {IAngularEvent} from 'angular';
+import {COURSE_EVENTS} from '@common/model';
+import {Alert} from '@presences/models/Alert';
+import {EventAbsenceSummary} from '@presences/models/Event/EventAbsenceSummary';
 
 declare let window: any;
 
@@ -27,7 +28,7 @@ interface ViewModel {
     eventType: string[]; /* [0]:ABSENCE, [1]:LATENESS, [2]:INCIDENT, [3]:DEPARTURE */
     alert: Alert;
     course: Course;
-
+    absencesSummary: EventAbsenceSummary;
 
     selectItem(model: any, student: any): void;
 
@@ -42,22 +43,24 @@ interface ViewModel {
     getAlert(): void;
 
     goToAlerts(type: string): void;
+
+    getAbsentsCounts(): void;
 }
 
 export const dashboardController = ng.controller('DashboardController', ['$scope', '$route', '$location',
-    'SearchService', 'GroupService',
-    function ($scope, $route, $location, SearchService: SearchService, GroupService: GroupService) {
+    'SearchService', 'GroupService', 'EventService',
+    function ($scope, $route, $location, SearchService: SearchService, GroupService: GroupService, eventService: EventService) {
         const vm: ViewModel = this;
 
-        const initData = async () => {
+        const initData = async (): Promise<void> => {
             if (!window.structure) {
                 window.structure = await Me.preference(PreferencesUtils.PREFERENCE_KEYS.PRESENCE_STRUCTURE);
             } else {
-                await vm.getAlert();
+                await Promise.all([vm.getAlert(), vm.getAbsentsCounts()]);
             }
         };
 
-        vm.date = DateUtils.format(moment(), DateUtils.FORMAT["DATE-FULL-LETTER"]);
+        vm.date = DateUtils.format(moment(), DateUtils.FORMAT['DATE-FULL-LETTER']);
         vm.filter = {
             search: {
                 item: null,
@@ -75,6 +78,13 @@ export const dashboardController = ng.controller('DashboardController', ['$scope
             EventType[EventType.INCIDENT],
             EventType[EventType.DEPARTURE]
         ];
+
+        vm.absencesSummary = {
+            nb_day_students: 0,
+            nb_absents: 0,
+            nb_presents: 0
+        };
+        
 
         /* Calendar interaction */
         vm.selectItem = function (model, item) {
@@ -150,10 +160,30 @@ export const dashboardController = ng.controller('DashboardController', ['$scope
             });
         };
 
+
+        /**
+         * Get counts for nb of current absent students, absent day students
+         * and nb of present students.
+         */
+        vm.getAbsentsCounts = async (): Promise<void> => {
+            const structureId: string = window.structure.id;
+
+            try {
+                vm.absencesSummary = await eventService.getAbsentsCounts(structureId);
+            } catch (e) {
+                vm.absencesSummary = {
+                    nb_day_students: 0,
+                    nb_absents: 0,
+                    nb_presents: 0
+                };
+            }
+        };
+
+
         /* Event SEND_COURSE sent from register widget */
         $scope.$on(COURSE_EVENTS.SEND_COURSE, (event: IAngularEvent, args) => vm.course = args);
-        $scope.$watch(() => window.structure, async () => {
-            if ($route.current.action === "dashboard") {
+        $scope.$watch(() => window.structure, async (): Promise<void> => {
+            if ($route.current.action === 'dashboard') {
                 await initData();
             } else {
                 $scope.redirectTo('/dashboard');

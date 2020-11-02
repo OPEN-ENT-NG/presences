@@ -119,4 +119,14 @@ public interface AbsenceService {
      * @param handler
      */
     void retrieve(String structure, List<String> students, String start, String end, Boolean justified, Boolean regularized, List<Integer> reasons, Handler<Either<String, JsonArray>> handler);
+
+    /**
+     * Get all student ids for absent students from the structure
+     * in a given period
+     *
+     * @param structureId       structure identifier
+     * @param currentDate       current date and hour
+     * @param handler           function handler returning data
+     */
+    void getAbsentStudentIds(String structureId, String currentDate, Handler<Either<String, JsonArray>> handler);
 }

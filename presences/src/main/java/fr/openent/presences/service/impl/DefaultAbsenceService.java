@@ -471,4 +471,25 @@ public class DefaultAbsenceService implements AbsenceService {
             });
         }));
     }
+
+    @Override
+    public void getAbsentStudentIds(String structureId, String currentDate, Handler<Either<String, JsonArray>> handler) {
+        JsonArray params = new JsonArray()
+                .add(currentDate)
+                .add(currentDate)
+                .add(structureId)
+                .add(currentDate)
+                .add(currentDate);
+
+        String query = "SELECT DISTINCT(ab.student_id) FROM " + Presences.dbSchema +".absence ab" +
+                " FULL OUTER JOIN "+ Presences.dbSchema + ".event ev ON ab.student_id = ev.student_id" +
+                " WHERE (ab.start_date < ?" +
+                " AND ab.end_date > ?" +
+                " AND ab.structure_id = ?) OR" +
+                " (ev.start_date < ?" +
+                " AND ev.end_date > ?" +
+                " AND ev.type_id = 1)";
+
+        Sql.getInstance().prepared(query, params, SqlResult.validResultHandler(handler));
+    }
 }

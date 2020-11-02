@@ -340,6 +340,60 @@ public class DefaultEventService implements EventService {
         return query;
     }
 
+    @Override
+    public void getAbsencesCountSummary(String structureId, String currentDate, Handler<Either<String, JsonObject>> handler) {
+        Future<JsonArray> absentStudentIds = Future.future();
+        Future<JsonArray> studentsWithAccommodation = Future.future();
+
+        CompositeFuture.all(absentStudentIds, studentsWithAccommodation).setHandler(resultFuture -> {
+
+            if (resultFuture.failed()) {
+                String message = "[Presences@DefaultEventService::getAbsencesCountSummary] Failed to retrieve " +
+                        "absent students and all student ids and accommodations";
+                LOGGER.error(message);
+                handler.handle(new Either.Left<>(resultFuture.cause().getMessage()));
+            } else {
+
+                JsonArray absentIds =  absentStudentIds.result();
+                JsonArray studentsAccommodations = studentsWithAccommodation.result();
+
+                int nbDayStudents = 0;
+
+                for (int i = 0; i < studentsAccommodations.size(); i++) {
+                    JsonObject student = studentsAccommodations.getJsonObject(i);
+
+                    if (student != null && student.getString("accommodation") != null &&
+                            student.getString("accommodation").contains("DEMI-PENSIONNAIRE")) {
+
+                        for(int j = 0; j < absentIds.size(); j++) {
+
+                            JsonObject absentStudent = absentIds.getJsonObject(j);
+
+
+                            if (absentStudent != null  &&
+                                    absentStudent.getString("student_id") != null &&
+                                    student.getString("id") != null &&
+                                    absentStudent.getString("student_id").equals(student.getString("id"))) {
+                                nbDayStudents++;
+                            }
+                        }
+                    }
+                }
+
+                JsonObject res = new JsonObject()
+                        .put("nb_absents", absentIds.size())
+                        .put("nb_day_students", nbDayStudents)
+                        .put("nb_presents", studentsAccommodations.size() - absentIds.size());
+
+                handler.handle(new Either.Right<>(res));
+            }
+        });
+
+        absenceService.getAbsentStudentIds(structureId, currentDate, FutureHelper.handlerJsonArray(absentStudentIds));
+        userService.getAllStudentsIdsWithAccommodation(structureId, FutureHelper.handlerJsonArray(studentsWithAccommodation));
+    }
+
+
     private String setParamsForQueryEvents(List<String> userId, Boolean regularized, Boolean noReason, JsonArray userIdFromClasses, JsonArray params) {
         String query = "";
         if (userIdFromClasses != null && !userIdFromClasses.isEmpty()) {

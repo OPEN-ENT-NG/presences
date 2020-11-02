@@ -31,6 +31,18 @@ public class DefaultUserService implements UserService {
     }
 
     @Override
+    public void getAllStudentsIdsWithAccommodation(String structureId,  Handler<Either<String, JsonArray>> handler) {
+        String query = "MATCH (u:User)-[:ADMINISTRATIVE_ATTACHMENT]->(s:Structure)" +
+                " WHERE s.id = {structureId}" +
+                " AND u.accommodation IS NOT NULL " +
+                " RETURN u.id AS id, u.accommodation AS accommodation";
+        JsonObject params = new JsonObject()
+                .put("structureId", structureId);
+
+        Neo4j.getInstance().execute(query, params, Neo4jResult.validResultHandler(handler));
+    }
+
+    @Override
     public void getChildren(String relativeId, final Handler<Either<String, JsonArray>> handler) {
         JsonObject params = new JsonObject().put("id", relativeId);
 

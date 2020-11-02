@@ -287,7 +287,7 @@ public class EventController extends ControllerHelper {
             }
             eventService.createAction(actionBody, either -> {
                 if (either.isLeft()) {
-                    log.error("[Presences@ActionController] failed to create action", either.left().getValue());
+                    log.error("[Presences@EventController::postAction] failed to create action", either.left().getValue());
                     renderError(request);
                 } else {
                     renderJson(request, either.right().getValue());
@@ -301,5 +301,25 @@ public class EventController extends ControllerHelper {
                 !actionBody.containsKey("action_id") &&
                 !actionBody.containsKey("owner") &&
                 !actionBody.containsKey("comment");
+    }
+
+    @Get("/events/absences/summary")
+    @ApiDoc("Get absences counts summary")
+    @ResourceFilter(ActionRight.class)
+    @SecuredAction(Presences.READ_EVENT)
+    public void getAbsentsCounts(final HttpServerRequest request) {
+
+        String structureId = request.getParam("structureId");
+        String currentDate = request.getParam("currentDate");
+
+        eventService.getAbsencesCountSummary(structureId, currentDate, summary -> {
+            if (summary.isLeft()) {
+                log.error("[Presences@EventController::getAbsentsCounts] failed to fetch absences count summary",
+                        summary.left().getValue());
+                renderError(request);
+            } else {
+                renderJson(request, summary.right().getValue());
+            }
+        });
     }
 }

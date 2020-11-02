@@ -82,11 +82,20 @@ public interface EventService {
 
 
     /**
+     * Get absence and absence events counts summary.
+     * @param structureId       structure identifier
+     * @param currentDate       current date
+     * @param handler           function handler returning data
+     */
+    void getAbsencesCountSummary(String structureId, String currentDate, Handler<Either<String, JsonObject>> handler);
+
+
+    /**
      * Create event
      *
-     * @param event   event
-     * @param user    user that create event
-     * @param handler function handler returning data
+     * @param event             event
+     * @param user              user that create event
+     * @param handler           function handler returning data
      */
     void create(JsonObject event, UserInfos user, Handler<Either<String, JsonObject>> handler);
 

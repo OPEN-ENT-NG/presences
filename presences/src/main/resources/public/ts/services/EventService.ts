@@ -1,7 +1,8 @@
-import {ng} from 'entcore'
+import {ng} from 'entcore';
 import http, {AxiosResponse} from 'axios';
-import {ActionBody, EventResponse, Events, IStudentEventRequest, IStudentEventResponse} from "../models";
-import {DateUtils} from "@common/utils";
+import {ActionBody, EventResponse, Events, IStudentEventRequest, IStudentEventResponse} from '../models';
+import {DateUtils} from '@common/utils';
+import {EventAbsenceSummary} from '@presences/models/Event/EventAbsenceSummary';
 
 export interface EventService {
     get(eventRequest: EventRequest): Promise<{ pageCount: number, events: EventResponse[], all: EventResponse[] }>;
@@ -13,6 +14,8 @@ export interface EventService {
     getStudentEvent(studentEventRequest: IStudentEventRequest): Promise<IStudentEventResponse>;
 
     exportCSV(eventRequest: EventRequest): string;
+
+    getAbsentsCounts(structureId: string): Promise<EventAbsenceSummary>;
 }
 
 export interface EventRequest {
@@ -115,8 +118,29 @@ export const eventService: EventService = {
         const regularized: string = eventRequest.regularized ? `&regularized=${!eventRequest.regularized}` : "";
 
         return `${url}${structureId}${startDate}${endDate}${noReason}${eventType}${listReasonIds}${userId}${classes}${regularized}`;
-    }
+    },
 
+
+    /**
+     * Get counts of current absences.
+     *
+     * @param structureId       structure id
+     */
+    async getAbsentsCounts(structureId: string): Promise<EventAbsenceSummary> {
+        try {
+            let url: string = `/presences/events/absences/summary`;
+
+            if (structureId) {
+                url += `?structureId=${structureId}`;
+                url += `&currentDate=${DateUtils.getCurrentDate(DateUtils.FORMAT['YEAR-MONTH-DAY-HOUR-MIN-SEC'])}`;
+            }
+
+            const {data}: AxiosResponse = await http.get(url);
+            return data;
+        } catch (err) {
+            throw err;
+        }
+    }
 };
 
 export const EventService = ng.service('EventService',

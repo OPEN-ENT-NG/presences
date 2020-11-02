@@ -202,6 +202,13 @@ export class DateUtils {
         return new Date(date.year(), date.month(), date.date(), date.hour(), date.minutes(), 0)
     }
 
+    /**
+     * Get current date in specified format
+     */
+    static getCurrentDate(format: string): string {
+        return moment(new Date()).format(format);
+    }
+
     static isBetweenTimeStamp(startDateValue: any, endDateValue: any, startDateToCompare: any, endDateToCompare: any) {
         let aStartTimestamp = this.getDateFromMoment(startDateValue).getTime();
         let aEndTimestamp = this.getDateFromMoment(endDateValue).getTime();
