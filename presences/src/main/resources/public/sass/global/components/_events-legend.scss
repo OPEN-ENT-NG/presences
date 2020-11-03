@@ -1,0 +1,95 @@
+.event-legend {
+  box-sizing: border-box;
+  float: left;
+  display: block;
+  position: relative;
+  border-radius: 5px;
+  background: $white;
+  box-shadow: $box-shadow-1;
+  font-size: 14px;
+  margin-left: 5px;
+  padding-right: 5px;
+  height: fit-content;
+
+  ul {
+    list-style-type: none;
+    display: flex;
+    padding: 0;
+    margin-top: 10px;
+    margin-bottom: 10px;
+
+    > li {
+      padding-left: 30px;
+      position: relative;
+      display: inline-block;
+
+      &.absence-no-reason:before {
+        background-color: $presences-red;
+      }
+
+      &.absence-not-regularized:before {
+        background-color: $presences-pink;
+      }
+
+      &.absence-regularized:before {
+        background-color: $presences-green;
+      }
+
+      &.lateness:before {
+        background-color: $presences-purple;
+      }
+
+      &.departure:before {
+        background-color: $presences-light-pink;
+      }
+
+      &.remark:before {
+        background-color: $presences-remark;
+      }
+
+      &.incident:before {
+        background-color: $presences-grey;
+      }
+
+      &.last-absent {
+        display: inline-flex;
+        padding-left: 8px;
+
+        i {
+          font-size: 20px;
+          padding-right: 4px;
+
+          &:before {
+            color: $presences-red;
+          }
+        }
+      }
+
+      &.forgotten-notebook {
+        display: inline-flex;
+        padding-left: 8px;
+
+        i {
+          font-size: 20px;
+          padding-right: 4px;
+
+          &:before {
+            color: $presences-water-green;
+          }
+        }
+      }
+
+      &:before {
+        content: ' ';
+        width: 17px;
+        height: 17px;
+        display: inline-block;
+        border-radius: 50%;
+        position: absolute;
+        margin-top: -9px;
+        top: 50%;
+        margin-left: -24px;
+      }
+    }
+  }
+}

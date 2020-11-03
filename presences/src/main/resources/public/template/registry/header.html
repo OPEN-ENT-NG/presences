@@ -70,27 +70,9 @@
             <i18n>presences.register.event_type.departure</i18n>
         </label>
     </div>
-
-    <div class="card event-legend radius cell">
-        <ul class="history vertical-spacing-twice">
-            <li class="absence">
-                <i18n>presences.register.event_type.absences</i18n>
-            </li>
-            <li class="absence-reason">
-                <i18n>presences.register.event_type.absences.reasons</i18n>
-            </li>
-            <li class="lateness">
-                <i18n>presences.register.event_type.lateness</i18n>
-            </li>
-            <li class="departure">
-                <i18n>presences.register.event_type.departure</i18n>
-            </li>
-            <li class="forgotten-notebook">
-                <i18n>presences.register.event_type.forgotten.notebook</i18n>
-            </li>
-            <li class="incident">
-                <i18n>presences.register.event_type.incident</i18n>
-            </li>
-        </ul>
+    <!-- EVENT LEGENDS -->
+    <events-legend absence-no-reason="true" absence-not-regularized="true" absence-regularized="true"
+                   lateness="true" departure="true" forgotten-notebook="true" incident="true">
+    </events-legend>
     </div>
 </div>

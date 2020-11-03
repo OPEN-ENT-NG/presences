@@ -25,88 +25,6 @@ $absence-button-width: 20px;
     box-shadow: 0 3px 6px rgba(0, 0, 0, 0.12);
   }
 
-  .event-legend {
-    ul {
-      list-style-type: none;
-      display: flex;
-      padding: 0;
-
-      > li {
-        padding-left: 30px;
-        position: relative;
-        display: inline-block;
-
-        &.absence:before {
-          background-color: $presences-red;
-        }
-
-        &.absence-reason:before {
-          background-color: $presences-pink;
-        }
-
-        &.lateness:before {
-          background-color: $presences-purple;
-        }
-
-        &.departure:before {
-          background-color: $presences-green;
-        }
-
-        //&.forgotten-notebook:before {
-        //  background-color: $presences-water-green;
-        //}
-
-        &.remark:before {
-          background-color: $presences-remark;
-        }
-
-        &.incident:before {
-          background-color: $presences-grey;
-        }
-
-        &.last-absent {
-          display: inline-flex;
-          padding-left: 8px;
-
-          i {
-            font-size: 20px;
-            padding-right: 4px;
-
-            &:before {
-              color: $presences-red;
-            }
-          }
-        }
-
-        &.forgotten-notebook {
-          display: inline-flex;
-          padding-left: 8px;
-
-          i {
-            font-size: 20px;
-            padding-right: 4px;
-
-            &:before {
-              color: $presences-water-green;
-            }
-          }
-        }
-
-        &:before {
-          content: ' ';
-          width: 17px;
-          height: 17px;
-          display: inline-block;
-          border-radius: 50%;
-          position: absolute;
-          margin-top: -9px;
-          top: 50%;
-          margin-left: -24px;
-        }
-      }
-    }
-  }
-
   .settings {
     > div {
       display: inline-block;
@@ -245,7 +163,7 @@ $absence-button-width: 20px;
         }
 
         &.departure {
-          background-color: $presences-green;
+          background-color: $presences-light-pink;
         }
 
         &.remark {
@@ -338,7 +256,7 @@ $absence-button-width: 20px;
         }
 
         &.departure {
-          background-color: $presences-green;
+          background-color: $presences-light-pink;
         }
 
         &.remark {
@@ -409,7 +327,7 @@ $absence-button-width: 20px;
   }
 
   &.departure {
-    background-color: $presences-green;
+    background-color: $presences-light-pink;
   }
 
   &.remark {

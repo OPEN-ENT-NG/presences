@@ -63,9 +63,14 @@
   background: $presences-red;
 }
 
-.period li.justified:before {
+.period li.no-regularized:before {
   border-color: $presences-pink;
   background: $presences-pink;
+}
+
+.period li.regularized:before {
+  border-color: $presences-green;
+  background: $presences-green;
 }
 
 .period li.late:before {
@@ -74,6 +79,6 @@
 }
 
 .period li.departure:before {
-  border-color: $presences-green;
-  background-color: $presences-green;
+  border-color: $presences-light-pink;
+  background-color: $presences-light-pink;
 }

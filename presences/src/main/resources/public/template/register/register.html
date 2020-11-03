@@ -63,30 +63,10 @@
                 [[vm.register.students.length]]
             </div>
         </div>
-        <div class="card event-legend radius cell horizontal-margin">
-            <ul class="vertical-spacing-twice horizontal-margin">
-                <li class="absence">
-                    <i18n>presences.register.event_type.absences</i18n>
-                </li>
-                <li class="lateness">
-                    <i18n>presences.register.event_type.lateness</i18n>
-                </li>
-                <li class="departure">
-                    <i18n>presences.register.event_type.departure</i18n>
-                </li>
-                <li class="remark">
-                    <i18n>presences.register.event_type.remark</i18n>
-                </li>
-                <li class="last-absent">
-                    <i class="last-absent"></i>
-                    <i18n>presences.register.event_type.last.absent</i18n>
-                </li>
-                <li class="forgotten-notebook">
-                    <i class="forgotten-notebook"></i>
-                    <i18n>presences.register.event_type.forgotten.notebook</i18n>
-                </li>
-            </ul>
-        </div>
+        <!-- EVENT LEGENDS -->
+        <events-legend absence="true" lateness="true" departure="true" remark="true" previously-absent="true"
+                       widget-forgotten-notebook="true">
+        </events-legend>
         <button class="right-magnet"
                 data-ng-click="vm.validRegister()"
                 ng-show="vm.register && !vm.register.loading">

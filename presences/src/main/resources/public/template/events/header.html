@@ -113,23 +113,10 @@
             </div>
         </div>
     </div>
-
-    <div class="card event-legend radius cell max-height-40">
-        <ul class="vertical-spacing-twice horizontal-margin">
-            <li class="absence">
-                <i18n>presences.register.event_type.absences</i18n>
-            </li>
-            <li class="absence-reason">
-                <i18n>presences.register.event_type.absences.reasons</i18n>
-            </li>
-            <li class="lateness">
-                <i18n>presences.register.event_type.lateness</i18n>
-            </li>
-            <li class="departure">
-                <i18n>presences.register.event_type.departure.early</i18n>
-            </li>
-        </ul>
-    </div>
+    <!-- EVENT LEGENDS -->
+    <events-legend absence-no-reason="true" absence-not-regularized="true" absence-regularized="true"
+                   lateness="true" departure="true">
+    </events-legend>
 </div>
 
 <lightbox class="filterLightbox" show="vm.lightbox.filter" on-close="vm.lightbox.filter = false">

@@ -407,22 +407,39 @@ export const eventsController = ng.controller('EventsController', ['$scope', '$r
         /* Change CSS class depending on their event_type id */
         vm.eventTypeState = (periods, event): string => {
             if (periods.events.length === 0) return '';
-            const priority = [EventType.ABSENCE, EventType.LATENESS, EventType.DEPARTURE, EventType.REMARK];
-            const className = ['absent', 'late', 'departure', 'remark', 'justified', 'empty'];
-            let index = 4;
+            const priority: number[] = [EventType.ABSENCE, EventType.LATENESS, EventType.DEPARTURE, EventType.REMARK];
+            const className: string[] = ['absent', 'late', 'departure', 'remark', 'no-regularized', 'regularized', 'empty'];
+
+            let index: number = className.indexOf('no-regularized');
+
             for (let i = 0; i < periods.events.length; i++) {
-                if ("type_id" in periods.events[i]) {
-                    if (periods.events[i].type_id === 1) {
-                        index = periods.events[i].reason_id !== null ? 4 : 0;
-                    } else if (periods.events[i].type_id === 2) {
+                if ('type_id' in periods.events[i]) {
+                    if (periods.events[i].type_id === EventType.ABSENCE) {
+
+                        //If absence has a reason
+                        if (periods.events[i].reason_id !== null) {
+                            index = (periods.events[i].counsellor_regularisation === true) ?
+                                className.indexOf('regularized') :
+                                className.indexOf('no-regularized');
+                        } else {
+                            index = className.indexOf('absent')
+                        }
+
+                    } else if (periods.events[i].type_id === EventType.LATENESS) {
                         index = 1;
                     } else {
-                        let arrayIndex = priority.indexOf(periods.events[i].type_id);
+                        let arrayIndex: number = priority.indexOf(periods.events[i].type_id);
                         index = arrayIndex < index ? arrayIndex : index;
                     }
-                } else if ("type" in periods.events[i]) {
+                } else if ('type' in periods.events[i]) {
                     if (periods.events[i].type === 'absence') {
-                        index = periods.events[i].reason_id !== null ? 4 : 0;
+                        if (periods.events[i].reason_id !== null) {
+                            index = (periods.events[i].counsellor_regularisation === true) ?
+                                className.indexOf('regularized') :
+                                className.indexOf('no-regularized');
+                        } else {
+                            index = className.indexOf('absent');
+                        }
                     }
                 }
             }
