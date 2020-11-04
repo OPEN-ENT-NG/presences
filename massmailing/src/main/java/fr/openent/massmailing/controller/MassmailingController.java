@@ -4,10 +4,7 @@ import fr.openent.massmailing.Massmailing;
 import fr.openent.massmailing.actions.Action;
 import fr.openent.massmailing.enums.MailingType;
 import fr.openent.massmailing.enums.MassmailingType;
-import fr.openent.massmailing.mailing.Mail;
-import fr.openent.massmailing.mailing.MassMailingProcessor;
-import fr.openent.massmailing.mailing.Sms;
-import fr.openent.massmailing.mailing.Template;
+import fr.openent.massmailing.mailing.*;
 import fr.openent.massmailing.security.BodyCanAccessMassMailing;
 import fr.openent.massmailing.security.CanAccessMassMailing;
 import fr.openent.massmailing.service.MassmailingService;
@@ -24,10 +21,7 @@ import fr.wseduc.security.SecuredAction;
 import fr.wseduc.webutils.Either;
 import fr.wseduc.webutils.I18n;
 import fr.wseduc.webutils.request.RequestUtils;
-import io.vertx.core.CompositeFuture;
-import io.vertx.core.Future;
-import io.vertx.core.Handler;
-import io.vertx.core.MultiMap;
+import io.vertx.core.*;
 import io.vertx.core.eventbus.EventBus;
 import io.vertx.core.http.HttpServerRequest;
 import io.vertx.core.json.JsonArray;
@@ -43,11 +37,15 @@ import java.util.HashMap;
 import java.util.List;
 
 public class MassmailingController extends ControllerHelper {
-    private GroupService groupService;
-    private MassmailingService massmailingService = new DefaultMassmailingService();
-    private List<MailingType> typesToCheck = Arrays.asList(MailingType.MAIL, MailingType.SMS);
+    private final GroupService groupService;
+    private final JsonObject config;
+    private final Vertx vertx;
+    private final MassmailingService massmailingService = new DefaultMassmailingService();
+    private final List<MailingType> typesToCheck = Arrays.asList(MailingType.MAIL, MailingType.SMS);
 
-    public MassmailingController(EventBus eb) {
+    public MassmailingController(EventBus eb, Vertx vertx, JsonObject config) {
+        this.config = config;
+        this.vertx = vertx;
         this.groupService = new DefaultGroupService(eb);
     }
 
@@ -473,8 +471,8 @@ public class MassmailingController extends ControllerHelper {
     }
 
     private void processRelatives(MailingType mailingType, List<String> students, Handler<Either<String, JsonObject>> handler) {
-        Future anomaliesFuture = Future.future();
-        Future relativesFuture = Future.future();
+        Future<JsonArray> anomaliesFuture = Future.future();
+        Future<JsonArray> relativesFuture = Future.future();
         massmailingService.getAnomalies(mailingType, students, FutureHelper.handlerJsonArray(anomaliesFuture));
         massmailingService.getRelatives(mailingType, students, FutureHelper.handlerJsonArray(relativesFuture));
         CompositeFuture.all(anomaliesFuture, relativesFuture).setHandler(futureEvent -> {
@@ -485,9 +483,9 @@ public class MassmailingController extends ControllerHelper {
                 return;
             }
 
-            List<String> anomalies = getIdsList((JsonArray) anomaliesFuture.result());
+            List<String> anomalies = getIdsList(anomaliesFuture.result());
             JsonObject result = new JsonObject()
-                    .put("values", filterRelatives((JsonArray) relativesFuture.result(), anomalies))
+                    .put("values", filterRelatives(relativesFuture.result(), anomalies))
                     .put("anomalies_count", anomalies.size());
             handler.handle(new Either.Right<>(result));
         });
@@ -569,9 +567,12 @@ public class MassmailingController extends ControllerHelper {
                 case MAIL:
                     mailing = new Mail(structure, template, massmailed, massmailingTypeList, reasons, start, end, noReason, students);
                     break;
-                case PDF:
                 case SMS:
                     mailing = new Sms(eb, structure, template, massmailed, massmailingTypeList, reasons, start, end, noReason, students);
+                    break;
+                case PDF:
+                    mailing = new Pdf(eb, vertx, config, request, structure, template, massmailed, massmailingTypeList,
+                            reasons, start, end, noReason, students);
                     break;
                 default:
                     badRequest(request);
@@ -583,7 +584,9 @@ public class MassmailingController extends ControllerHelper {
                     log.error("[Massmailing@MassmailingController] An error occurred with massmailing", event.left().getValue());
                 else log.info("[Massmailing@MassmailingController] Massmailing completed with success");
             });
-            request.response().setStatusCode(202).end();
+            if (!(mailing instanceof Pdf)) {
+                request.response().setStatusCode(202).end();
+            }
         });
     }
 }

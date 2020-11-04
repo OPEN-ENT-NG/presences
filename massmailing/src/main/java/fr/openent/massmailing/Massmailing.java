@@ -42,7 +42,7 @@ public class Massmailing extends BaseServer {
         types = mailingsConfig();
         emailSender = new EmailFactory(vertx, config).getSender();
         workspaceHelper = new WorkspaceHelper(eb, new StorageFactory(vertx, config).getStorage());
-        addController(new MassmailingController(eb));
+        addController(new MassmailingController(eb, vertx, config));
         addController(new SettingsController(eb));
         addController(new EventBusController());
         addController(new MailingController(eb));

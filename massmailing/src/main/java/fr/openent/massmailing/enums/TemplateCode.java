@@ -2,6 +2,7 @@ package fr.openent.massmailing.enums;
 
 public enum TemplateCode {
     CHILD_NAME("massmailing.codes.child.name"),
+    LEGAL_NAME("massmailing.codes.legal.name"),
     CLASS_NAME("massmailing.codes.class.name"),
     ABSENCE_NUMBER("massmailing.codes.absence.number"),
     LATENESS_NUMBER("massmailing.codes.lateness.number"),

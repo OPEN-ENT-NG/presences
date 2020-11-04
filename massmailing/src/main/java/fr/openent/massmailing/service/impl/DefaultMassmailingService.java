@@ -92,6 +92,9 @@ public class DefaultMassmailingService implements MassmailingService {
                         .put("users", new JsonArray(students));
                 Neo4j.getInstance().execute(query, params, Neo4jResult.validResultHandler(handler));
                 break;
+            case PDF:
+                handler.handle(new Either.Right<>(new JsonArray()));
+                break;
             default:
                 handler.handle(new Either.Left<>("[Massmailing@DefaultMassmailingService] Unknown Mailing type"));
         }
@@ -102,12 +105,12 @@ public class DefaultMassmailingService implements MassmailingService {
         String contactValue;
         switch (type) {
             case MAIL:
+            case PDF:
                 contactValue = "r.email";
                 break;
             case SMS:
                 contactValue = "CASE WHEN r.mobilePhone is null THEN r.mobile ELSE r.mobilePhone[0] END, address: r.address";
                 break;
-            case PDF:
             default:
                 contactValue = "";
         }

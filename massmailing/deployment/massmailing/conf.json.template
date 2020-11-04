@@ -20,6 +20,10 @@
         "MAIL": true,
         "PDF": false,
         "SMS": true
+    },
+    "pdf-generator" : {
+        "url" : "$pdfGeneratorUrl",
+        "auth" : "$pdfGeneratorAuth"
     }
   }
 }

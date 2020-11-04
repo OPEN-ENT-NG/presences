@@ -1,5 +1,7 @@
 <div ng-controller="HomeController as vm">
+    <!--  Header -->
     <div class="row">
+        <!--  Date picker filter -->
         <div class="date-filters cell">
             <span><i18n>massmailing.from</i18n></span>
             <span class="card date-picker">
@@ -12,22 +14,37 @@
                          ng-change="vm.fetchData()"></date-picker>
         </span>
         </div>
+
+        <!--  Button send PDF | SMS | MAIL MODE -->
         <div class="right-magnet">
+            <!--  SMS button send -->
             <button ng-disabled="!vm.canMassmail()" ng-click="vm.prefetch('SMS')" class="vertical-spacing-twice">
                 <i18n>massmailing.massmail.sms</i18n>
             </button>
+
+            <!--  MAIL button send -->
             <button ng-disabled="!vm.canMassmail()" ng-click="vm.prefetch('MAIL')" class="vertical-spacing-twice">
                 <i18n>massmailing.massmail.mail</i18n>
             </button>
+
+            <!--  PDF button send -->
+            <button ng-disabled="!vm.canMassmail()" ng-click="vm.prefetch('PDF')" class="vertical-spacing-twice">
+                <i18n>massmailing.massmail.pdf</i18n>
+            </button>
         </div>
     </div>
+
+    <!-- Filter content -->
     <div class="row vertical-spacing-twice">
+        <!-- Icon to open filters lightbox (...filter.html) -->
         <i class="filter cell" ng-click="vm.openForm()">&nbsp;</i>
         <div class="cell" ng-repeat="(type, val) in vm.filter.status">
             <div class="card horizontal-margin-small horizontal-spacing" ng-if="vm.filter.status[type]">
                 [[lang.translate('massmailing.types.' + type)]]
             </div>
         </div>
+
+        <!--  filter cards to show what filter is activate  -->
         <div class="cell" ng-repeat="(massmailState, val) in vm.filter.massmailing_status">
             <div class="card horizontal-margin-small horizontal-spacing"
                  ng-if="vm.filter.massmailing_status[massmailState]">
@@ -41,6 +58,9 @@
             </div>
         </div>
     </div>
+
+
+    <!--  card content displaying stats of event -->
     <div class="grid horizontal-spacing-twice massmail-status row vertical-spacing-six widget-alerts"
          ng-show="!vm.filterInError()">
         <div ng-repeat="(status, val) in vm.massmailingStatus" class="massmailing-status-alert cell">
@@ -52,6 +72,8 @@
             </div>
         </div>
     </div>
+
+    <!-- empty state of card content displaying stats of event -->
     <div class="empty horizontal-spacing-twice massmail-status row vertical-spacing-six" ng-show="vm.filterInError()">
         <div class="twelve empty-content">
             <div class="description">
@@ -65,6 +87,8 @@
             </div>
         </div>
     </div>
+
+    <!-- table content -->
     <div class="horizontal-spacing-twice massmail-anomalies row vertical-spacing-six">
         <div class="hr">&nbsp;</div>
         <div class="row">
@@ -121,10 +145,14 @@
             </table>
         </div>
     </div>
+
+    <!-- lightbox modal for filters -->
     <lightbox show="vm.lightbox.filter" on-close="vm.lightbox.filter = false" class="massmailing-filters">
-        <div ng-include="'/massmailing/public/template/home_filters.html'"></div>
+        <div ng-include="'/massmailing/public/template/home/home_filters.html'"></div>
     </lightbox>
+
+    <!-- lightbox modal for sending template (PDF | SMS | MAIL) -->
     <lightbox show="vm.lightbox.massmailing" on-close="vm.lightbox.massmailing = false" class="massmailing-prefetch">
-        <div ng-include="'/massmailing/public/template/home_prefetch.html'"></div>
+        <div ng-include="'/massmailing/public/template/home/home_prefetch.html'"></div>
     </lightbox>
 </div>

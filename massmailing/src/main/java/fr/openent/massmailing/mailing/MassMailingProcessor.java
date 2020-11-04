@@ -26,17 +26,19 @@ import org.entcore.common.sql.SqlResult;
 import java.text.ParseException;
 import java.util.*;
 
+import static fr.openent.massmailing.enums.MailingType.PDF;
+
 public abstract class MassMailingProcessor implements Mailing {
     Logger LOGGER = LoggerFactory.getLogger(MassMailingProcessor.class);
-    private MailingType mailingType;
-    private Template template;
-    private Boolean massmailed;
-    private List<MassmailingType> massmailingTypeList;
-    private String structure;
-    private List<Integer> reasons;
-    private String start;
-    private String end;
-    private Boolean noReason;
+    private final MailingType mailingType;
+    private final Template template;
+    private final Boolean massmailed;
+    private final List<MassmailingType> massmailingTypeList;
+    private final String structure;
+    private final List<Integer> reasons;
+    private final String start;
+    private final String end;
+    private final Boolean noReason;
     JsonObject students;
 
     public MassMailingProcessor(MailingType mailingType, String structure, Template template, Boolean massmailed,
@@ -68,7 +70,8 @@ public abstract class MassMailingProcessor implements Mailing {
         Future<JsonObject> settingFutures = Future.future();
         Future<JsonObject> recoveryFuture = Future.future();
 
-        CompositeFuture.all(Arrays.asList(templateFuture, relativeFuture, eventsFuture, reasonsFuture, slotsFutures, settingFutures, recoveryFuture, hourEventsFuture)).setHandler(asyncResult -> {
+        CompositeFuture.all(Arrays.asList(templateFuture, relativeFuture, eventsFuture, reasonsFuture, slotsFutures,
+                settingFutures, recoveryFuture, hourEventsFuture)).setHandler(asyncResult -> {
             if (asyncResult.failed()) {
                 LOGGER.error("[Massmailing@MassMailingProcessor] Failed to process", asyncResult.cause());
                 handler.handle(new Either.Left<>(asyncResult.cause().toString()));
@@ -88,33 +91,7 @@ public abstract class MassMailingProcessor implements Mailing {
             for (String key : massmailings.keySet()) {
                 result.add(massmailings.get(key));
                 JsonObject massmailing = formatMassmailingBasedOnRecoveryMethod(massmailings.get(key), slots, recoveryMethod, settings.getString("end_of_half_day"));
-
-                HashMap<TemplateCode, Object> codeValues = new HashMap<>();
-                codeValues.put(TemplateCode.CHILD_NAME, massmailing.getString("studentDisplayName", ""));
-                codeValues.put(TemplateCode.CLASS_NAME, massmailing.getString("className", ""));
-
-                JsonObject massmailingHour = formatMassmailingBasedOnRecoveryMethod(massmailingsHour.get(key), slots, "hour", settings.getString("end_of_half_day"));
-                JsonArray absencesHour = massmailingHour.getJsonObject("events", new JsonObject()).getJsonArray(EventType.ABSENCE.name(), new JsonArray());
-                JsonArray latenessesHour = massmailingHour.getJsonObject("events", new JsonObject()).getJsonArray(EventType.LATENESS.name(), new JsonArray());
-
-                JsonArray absences = massmailing.getJsonObject("events", new JsonObject()).getJsonArray(EventType.ABSENCE.name(), new JsonArray());
-                codeValues.put(TemplateCode.ABSENCE_NUMBER, absences.size() + " " + getTranslatedUnit(recoveryMethod));
-                codeValues.put(TemplateCode.LATENESS_NUMBER, latenessesHour.size());
-
-
-                if (mailingType.equals(MailingType.SMS)) {
-                    JsonObject absence = null;
-                    JsonObject lateness = null;
-                    if (absencesHour.size() > 0) absence = absencesHour.getJsonObject(absencesHour.size() - 1);
-                    codeValues.put(TemplateCode.LAST_ABSENCE, absence);
-
-                    if (latenessesHour.size() > 0) lateness = latenessesHour.getJsonObject(latenessesHour.size() - 1);
-                    codeValues.put(TemplateCode.LAST_LATENESS, lateness);
-                } else {
-                    codeValues.put(TemplateCode.SUMMARY, massmailingHour.getJsonObject("events", new JsonObject()));
-                }
-
-                massmailing.put("message", template.process(codeValues));
+                setCodeValues(massmailingsHour, slots, settings, recoveryMethod, key, massmailing);
             }
             handler.handle(new Either.Right<>(result));
         });
@@ -129,6 +106,44 @@ public abstract class MassMailingProcessor implements Mailing {
         Presences.getInstance().getSettings(this.structure, FutureHelper.handlerJsonObject(recoveryFuture));
     }
 
+    private void setCodeValues(HashMap<String, JsonObject> massmailingsHour, JsonArray slots, JsonObject settings,
+                               String recoveryMethod, String key, JsonObject massmailing) {
+        HashMap<TemplateCode, Object> codeValues = new HashMap<>();
+
+        // Child Name code implemented
+        codeValues.put(TemplateCode.CHILD_NAME, massmailing.getString("studentDisplayName", ""));
+        // Legal Name code implemented
+        codeValues.put(TemplateCode.LEGAL_NAME, massmailingsHour.get(key).getString("displayName", ""));
+        // Class Name code implemented
+        codeValues.put(TemplateCode.CLASS_NAME, massmailing.getString("className", ""));
+        // Date code implemented
+        codeValues.put(TemplateCode.DATE, DateHelper.getCurrentDate(DateHelper.DAY_MONTH_YEAR));
+        // Zipcode code implemented
+        codeValues.put(TemplateCode.ZIPCODE_CITY, massmailingsHour.get(key).getString("zipcodeCity", ""));
+        // Address code implemented
+        codeValues.put(TemplateCode.ADDRESS, massmailingsHour.get(key).getString("address", ""));
+
+        JsonObject massmailingHour = formatMassmailingBasedOnRecoveryMethod(massmailingsHour.get(key), slots, "hour", settings.getString("end_of_half_day"));
+        JsonArray absencesHour = massmailingHour.getJsonObject("events", new JsonObject()).getJsonArray(EventType.ABSENCE.name(), new JsonArray());
+        JsonArray latenessesHour = massmailingHour.getJsonObject("events", new JsonObject()).getJsonArray(EventType.LATENESS.name(), new JsonArray());
+
+        JsonArray absences = massmailing.getJsonObject("events", new JsonObject()).getJsonArray(EventType.ABSENCE.name(), new JsonArray());
+        codeValues.put(TemplateCode.ABSENCE_NUMBER, absences.size() + " " + getTranslatedUnit(recoveryMethod));
+        codeValues.put(TemplateCode.LATENESS_NUMBER, latenessesHour.size());
+
+        if (mailingType.equals(MailingType.SMS)) {
+            JsonObject absence = null;
+            JsonObject lateness = null;
+            if (absencesHour.size() > 0) absence = absencesHour.getJsonObject(absencesHour.size() - 1);
+            codeValues.put(TemplateCode.LAST_ABSENCE, absence);
+
+            if (latenessesHour.size() > 0) lateness = latenessesHour.getJsonObject(latenessesHour.size() - 1);
+            codeValues.put(TemplateCode.LAST_LATENESS, lateness);
+        } else {
+            codeValues.put(TemplateCode.SUMMARY, massmailingHour.getJsonObject("events", new JsonObject()));
+        }
+        massmailing.put("message", template.process(codeValues));
+    }
 
     private String transformDate(String date, String slotHour) {
         try {
@@ -228,14 +243,56 @@ public abstract class MassMailingProcessor implements Mailing {
 
     private HashMap<String, JsonObject> formatData(JsonObject events, JsonObject relatives, JsonObject reasons) {
         HashMap<String, JsonObject> data = new HashMap<>();
+
         List<String> relativeIdentifiers = new ArrayList<>(relatives.getMap().keySet());
+        Map<String, JsonObject> duplicatedData = new HashMap<>();
+
         for (String relativeId : relativeIdentifiers) {
             JsonObject relative = relatives.getJsonObject(relativeId);
             relative.put("events", groupEvents(events.getJsonArray(relative.getString("student_id")), reasons));
-            data.put(relative.getString("id"), relative);
+
+            // if student_id is not seen first time
+            if (!duplicatedData.containsKey(relative.getString("student_id"))) {
+                duplicatedData.put(relative.getString("student_id"), relative);
+                data.put(relative.getString("id"), relative);
+            } else {
+                // case we already seen student_id
+                proceedOnDuplicate(data, duplicatedData, relative);
+            }
         }
 
         return data;
+    }
+
+    private void proceedOnDuplicate(HashMap<String, JsonObject> data, Map<String, JsonObject> duplicatedData, JsonObject relative) {
+
+        String duplicatedDataContact = this.mailingType.equals(PDF) ? getAddressAndZipCodeValue(duplicatedData, relative)
+                : duplicatedData.get(relative.getString("student_id")).getString("contact");
+        String relativeContact = this.mailingType.equals(PDF) ? getAddressAndZipCodeValue(relative) : relative.getString("contact");
+
+        // first check if has contact or if it is null
+        if (duplicatedDataContact == null) {
+            // case it is null or non existing, we then add new relative object
+            data.put(relative.getString("id"), relative);
+        } else if (duplicatedDataContact.equals(relativeContact)) {
+            // case it is not null and they are also EQUAL, we then modify the data already
+            // set with displayName that will concat with another relative displayName
+            data.get(duplicatedData.get(relative.getString("student_id")).getString("id"))
+                    .put("displayName", data.get(duplicatedData.get(relative.getString("student_id")).getString("id"))
+                            .getString("displayName") + ", " + relative.getString("displayName"));
+        } else {
+            // case there is no match, we add new relative object
+            data.put(relative.getString("id"), relative);
+        }
+    }
+
+    private String getAddressAndZipCodeValue(Map<String, JsonObject> duplicatedData, JsonObject relative) {
+        return duplicatedData.get(relative.getString("student_id")).getString("address") + ", " +
+                duplicatedData.get(relative.getString("student_id")).getString("zipcodeCity");
+    }
+
+    private String getAddressAndZipCodeValue(JsonObject relative) {
+        return relative.getString("address") + ", " + relative.getString("zipcodeCity");
     }
 
     private JsonObject groupEvents(JsonArray events, JsonObject reasons) {
@@ -359,11 +416,12 @@ public abstract class MassMailingProcessor implements Mailing {
                 break;
             case PDF:
             default:
-                contactValue = "";
+                contactValue = "null";
         }
 
         String query = "MATCH (u:User)-[:RELATED]->(r:User) WHERE u.id IN {students} AND r.id IN {relatives} RETURN DISTINCT r.id as id, " +
-                "(r.lastName + ' ' + r.firstName) as displayName, " + contactValue + " as contact, u.id as student_id, " +
+                "(r.lastName + ' ' + r.firstName) as displayName, " + contactValue + " as contact, r.address as address, " +
+                "(r.zipCode + ' ' + r.city) as zipcodeCity, u.id as student_id, " +
                 "(u.lastName + ' ' + u.firstName) as studentDisplayName, split(u.classes[0],'$')[1] as className";
         JsonObject params = new JsonObject()
                 .put("students", new JsonArray(studentsList))

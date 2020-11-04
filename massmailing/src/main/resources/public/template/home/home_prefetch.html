@@ -1,24 +1,41 @@
+<!-- lightbox modal for sending template (PDF | SMS | MAIL) -->
+
+<!-- Header title -->
 <section class="head massmailing-lightbox-header">
     <h3>
-        <i18n>massmailing.prefetch.title.MAIL</i18n>
+        [[vm.getPrefetchTitle(vm.massmailing.type)]]
     </h3>
 </section>
+
+<!-- Content -->
 <section class="massmailing-lightbox-body body lightbox-form">
+
+    <!-- counters card event -->
     <div class="row vertical-spacing massmailing-counters">
-        <div class="card cell horizontal-spacing counter">
+
+        <!-- number of type massmailing to send -->
+        <div class="card cell horizontal-spacing counter"
+             ng-show="vm.massmailing.type !== vm.mailingType[vm.mailingType.PDF]">
             <span class="number">[[vm.massmailing.counts.massmailing]]</span>
             <span>[[lang.translate('massmailing.prefetch.' + vm.massmailing.type + '.count')]]</span>
         </div>
+
+        <!-- number of students -->
         <div class="card cell horizontal-spacing counter">
             <span class="number">[[vm.massmailing.counts.students]]</span>
             <i18n>massmailing.prefetch.students.count</i18n>
         </div>
-        <div class="card cell horizontal-spacing counter">
+
+        <!-- number of anomalies -->
+        <div class="card cell horizontal-spacing counter"
+             ng-show="vm.massmailing.type !== vm.mailingType[vm.mailingType.PDF]">
             <i class="incident">&nbsp;</i>
             <span class="number">[[vm.massmailing.counts.anomalies]]</span>
             <span>[[lang.translate('massmailing.prefetch.anomalies.' + vm.massmailing.type + '.count')]]</span>
         </div>
     </div>
+
+    <!-- Select template of type we prefetched -->
     <div class="row vertical-spacing">
         <div class="row">
             <div class="cell">
@@ -28,8 +45,11 @@
         </div>
         <div bind-html="vm.massmailing.template.content" class="row template-preview"></div>
     </div>
+
+    <!-- Table -->
     <div class="massmail-anomalies row vertical-spacing-six">
         <div class="row vertical-spacing">
+            <!-- title -->
             <table class="head-table">
                 <thead>
                 <th width="5%">&nbsp;</th>
@@ -47,6 +67,7 @@
                 </th>
                 </thead>
             </table>
+            <!-- content -->
             <div class="students">
                 <table class="list-table">
                     <tbody ng-repeat="student in vm.massmailing.students">
@@ -97,6 +118,8 @@
         </div>
     </div>
 </section>
+
+<!-- Button action -->
 <section class="massmailing-lightbox-footer">
     <div class="row horizontal-spacing">
         <div class="massmailing-lightbox-footer-submit twelve cell">

@@ -1,7 +1,7 @@
 import {_, idiom as lang, Me, ng, toasts} from 'entcore';
 import {ReasonService} from '@presences/services/ReasonService';
 import {GroupService, SearchService, SettingsService, Template} from '../services';
-import {Massmailing, MassmailingAnomaliesResponse, MassmailingStatusResponse} from "../model";
+import {MailingType, Massmailing, MassmailingAnomaliesResponse, MassmailingStatusResponse} from "../model";
 import {Reason} from "@presences/models/Reason";
 import {MassmailingPreferenceUtils, PresencesPreferenceUtils} from "@common/utils";
 import {HomeUtils} from "../utilities";
@@ -52,6 +52,7 @@ interface ViewModel {
         STATUS: boolean
     }
     massmailing: Massmailing;
+    mailingType: typeof MailingType;
     lightbox: {
         filter: boolean,
         massmailing: boolean
@@ -94,6 +95,8 @@ interface ViewModel {
 
     prefetch(type: "MAIL" | "PDF" | "SMS"): Promise<void>;
 
+    getPrefetchTitle(type: "MAIL" | "PDF" | "SMS"): string;
+
     massmail(): Promise<void>;
 
     toggleStudent(student): void;
@@ -107,7 +110,8 @@ declare let window: any;
 
 export const homeController = ng.controller('HomeController', ['$scope', 'route', 'MassmailingService', 'ReasonService',
     'SearchService', 'GroupService', 'SettingsService',
-    function ($scope, route, MassmailingService, ReasonService: ReasonService, SearchService: SearchService, GroupService: GroupService, SettingsService: SettingsService) {
+    function ($scope, route, MassmailingService, ReasonService: ReasonService, SearchService: SearchService,
+              GroupService: GroupService, SettingsService: SettingsService) {
         const vm: ViewModel = this;
         vm.massmailingStatus = {};
         vm.templates = [];
@@ -150,6 +154,7 @@ export const homeController = ng.controller('HomeController', ['$scope', 'route'
                 SMS: true
             }
         };
+        vm.mailingType = MailingType;
 
         vm.massmailingCount = {
             MAIL: 0
@@ -393,7 +398,7 @@ export const homeController = ng.controller('HomeController', ['$scope', 'route'
             return message
         };
 
-        vm.canMassmail = function () {
+        vm.canMassmail = function (): boolean {
             for (let key in vm.massmailingStatus) {
                 if (vm.massmailingStatus[key]) return true;
             }
@@ -414,8 +419,11 @@ export const homeController = ng.controller('HomeController', ['$scope', 'route'
                 const students = [], groups = [];
                 vm.filter.selected.students.forEach(({id}) => students.push(id));
                 vm.filter.selected.groups.forEach(({id}) => groups.push(id));
-                const settings = SettingsService.get(type, window.structure.id);
-                const prefetch = MassmailingService.prefetch(type, window.structure.id, massmailedParameter(), reasons, vm.filter.start_at, vm.filter.start_date, vm.filter.end_date, groups, students, types, vm.filter.noReasons);
+                const settings: Promise<any> = SettingsService.get(type, window.structure.id);
+                const prefetch: Promise<Massmailing> = MassmailingService.prefetch(
+                    type, window.structure.id, massmailedParameter(), reasons, vm.filter.start_at,
+                    vm.filter.start_date, vm.filter.end_date, groups, students, types, vm.filter.noReasons
+                );
                 vm.lightbox.massmailing = true;
                 const data = await Promise.all([settings, prefetch]);
                 vm.massmailing = data[1];
@@ -428,6 +436,19 @@ export const homeController = ng.controller('HomeController', ['$scope', 'route'
                 throw e;
             } finally {
                 $scope.safeApply();
+            }
+        };
+
+        vm.getPrefetchTitle = (type: "MAIL" | "PDF" | "SMS"): string => {
+            switch (type) {
+                case vm.mailingType[vm.mailingType.PDF]:
+                    return lang.translate("massmailing.prefetch.title.PDF");
+                case vm.mailingType[vm.mailingType.SMS]:
+                    return lang.translate("massmailing.prefetch.title.SMS");
+                case vm.mailingType[vm.mailingType.MAIL]:
+                    return lang.translate("massmailing.prefetch.title.MAIL");
+                default:
+                    return "";
             }
         };
 

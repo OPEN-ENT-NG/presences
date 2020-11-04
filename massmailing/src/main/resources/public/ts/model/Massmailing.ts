@@ -1,6 +1,8 @@
 import {Template} from '../services/SettingsService';
-import http from 'axios';
+import http, {AxiosRequestConfig, AxiosResponse} from 'axios';
 import {DateUtils} from "@common/utils";
+import {MailingType} from "../model/Mailing";
+import {BlobUtil} from "@common/utils/blob";
 
 export interface IMassmailingFilterPreferences {
     start_at: number;
@@ -22,6 +24,14 @@ export interface IMassmailingFilterPreferences {
     }
 }
 
+export interface IRelative {
+    id: string,
+    displayName: string,
+    contact: string,
+    selected: boolean,
+    address: string
+}
+
 interface MassmailingStudent {
     id: string,
     selected: boolean,
@@ -35,13 +45,7 @@ interface MassmailingStudent {
         PUNISHMENT?: number,
         SANCTION?: number
     },
-    relative: {
-        id: string,
-        displayName: string,
-        contact: string,
-        selected: boolean,
-        address: string
-    }[]
+    relative: IRelative[]
 }
 
 declare const window: any;
@@ -62,21 +66,22 @@ export class Massmailing {
         this.counts = counts;
         this.students = students;
         this.students.forEach((student: MassmailingStudent) => {
-            student.relative.forEach(relative => {
+            student.relative.forEach((relative: IRelative) => {
                 if (student.relative.length > 1) {
                     if (relative.address && (student.relative[0].address == student.relative[1].address)) {
                         student.relative[0].selected = (student.relative[0].contact !== null && student.relative[0].contact.trim() !== '')
+                            || this.type === MailingType[MailingType.PDF]
                     } else {
-                        relative.selected = (relative.contact !== null && relative.contact.trim() !== '');
+                        relative.selected = (relative.contact !== null && relative.contact.trim() !== '') || this.type === MailingType[MailingType.PDF];
                     }
                 } else {
-                    relative.selected = (relative.contact !== null && relative.contact.trim() !== '');
+                    relative.selected = (relative.contact !== null && relative.contact.trim() !== '') || this.type === MailingType[MailingType.PDF];
                 }
                 if (!relative.selected) this.counts.massmailing--;
             });
             let shouldSelect = false;
             student.relative.map(relative => (shouldSelect = (shouldSelect || relative.selected)));
-            if (student.relative.length > 0 && shouldSelect) {
+            if ((student.relative.length > 0 && shouldSelect) || this.type === MailingType[MailingType.PDF]) {
                 student.selected = true;
             }
             student.opened = false;
@@ -129,9 +134,26 @@ export class Massmailing {
             massmailed: this.massmailed()
         }
     }
-
+    
     async process(): Promise<void> {
-        await http.post(`/massmailing/massmailings/${this.type}`, this.toJson());
+        if (this.type === MailingType[MailingType.PDF]) {
+            const config: AxiosRequestConfig = {
+                responseType: 'arraybuffer',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/pdf'
+                }
+            };
+            http.post(`/massmailing/massmailings/${this.type}`, this.toJson(), config)
+                .then((resp: AxiosResponse) => new BlobUtil(
+                    BlobUtil.getFileNameByContentDisposition(resp.headers['content-disposition']),
+                    [resp.data],
+                    {type: 'application/pdf'})
+                    .downloadPdf("massmailing.pdf.error.download"));
+
+        } else {
+            await http.post(`/massmailing/massmailings/${this.type}`, this.toJson());
+        }
     }
 
     getRelativeCheckedCount(student: MassmailingStudent): number {

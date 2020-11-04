@@ -183,6 +183,23 @@
                             <i18n>massmailing.codes.zipcode.city.legal.responsible.label</i18n>
                         </div>
 
+                        <!-- Legal  responsible name -->
+                        <div>
+                            <div class="codeMassmailing">
+                                <!-- PDF : code -->
+                                <span id="codeResponsibleName"
+                                      data-ng-click="vm.copyCode('codeResponsibleName', 'tooltipResponsibleName')"
+                                      data-ng-mouseleave="vm.outCopy('tooltipResponsibleName')">
+                                    <i18n>massmailing.codes.legal.name</i18n>
+                                </span>
+                                <!-- PDF : tooltip feedback copy -->
+                                <span id="tooltipResponsibleName" class="tooltiptext"> <i18n>massmailing.copy</i18n> </span>
+                            </div>
+                            &#58;
+                            <!-- PDF : code description -->
+                            <i18n>massmailing.codes.legal.name.label</i18n>
+                        </div>
+
 
                         <!-- Code Punition/Sanction to uncomment for MA-517 -->
                         <!--                        <br>-->
