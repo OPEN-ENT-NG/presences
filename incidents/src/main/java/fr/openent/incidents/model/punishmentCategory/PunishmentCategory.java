@@ -10,10 +10,10 @@ import org.entcore.common.sql.Sql;
 import org.entcore.common.sql.SqlResult;
 
 public abstract class PunishmentCategory extends Model {
-    public static final String DUTY = "Devoir supplémentaire";
-    public static final String EXCLUDE = "Exclusion";
-    public static final String DETENTION = "Retenue";
-    public static final String BLAME = "Blâme";
+    public static final String DUTY = "Modèle 1";
+    public static final String EXCLUDE = "Modèle 4";
+    public static final String DETENTION = "Modèle 2";
+    public static final String BLAME = "Modèle 3";
 
     public static void getSpecifiedCategoryFromType(Long type_id, String structure_id, JsonObject body, Handler<AsyncResult<PunishmentCategory>> handler) {
         String query = "SELECT c.label AS label " +
