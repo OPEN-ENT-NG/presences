@@ -179,7 +179,8 @@ public class DefaultPunishmentService implements PunishmentService {
                     } else {
                         JsonObject finalResult = new JsonObject();
                         if (finalPage != null) {
-                            Long pageCount = countFuture.result() / Incidents.PAGE_SIZE;
+                            Long pageCount = countFuture.result() <= Incidents.PAGE_SIZE ?
+                                    0 : (long) Math.ceil(countFuture.result() / (double) Incidents.PAGE_SIZE);
                             finalResult
                                     .put("page", finalPage)
                                     .put("page_count", pageCount);
