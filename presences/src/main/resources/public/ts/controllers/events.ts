@@ -407,43 +407,49 @@ export const eventsController = ng.controller('EventsController', ['$scope', '$r
         /* Change CSS class depending on their event_type id */
         vm.eventTypeState = (periods, event): string => {
             if (periods.events.length === 0) return '';
-            const priority: number[] = [EventType.ABSENCE, EventType.LATENESS, EventType.DEPARTURE, EventType.REMARK];
-            const className: string[] = ['absent', 'late', 'departure', 'remark', 'no-regularized', 'regularized', 'empty'];
 
-            let index: number = className.indexOf('no-regularized');
+            const className: string[] = ['empty', 'remark', 'departure', 'late', 'absent', 'no-regularized', 'regularized'];
 
+            let indexes: Array<number> = [className.indexOf('empty')];
+
+            // We store every type of events in indexes and we prioritize the largest value (according to classNames)
             for (let i = 0; i < periods.events.length; i++) {
                 if ('type_id' in periods.events[i]) {
-                    if (periods.events[i].type_id === EventType.ABSENCE) {
-
-                        //If absence has a reason
-                        if (periods.events[i].reason_id !== null) {
-                            index = (periods.events[i].counsellor_regularisation === true) ?
-                                className.indexOf('regularized') :
-                                className.indexOf('no-regularized');
-                        } else {
-                            index = className.indexOf('absent')
-                        }
-
-                    } else if (periods.events[i].type_id === EventType.LATENESS) {
-                        index = 1;
-                    } else {
-                        let arrayIndex: number = priority.indexOf(periods.events[i].type_id);
-                        index = arrayIndex < index ? arrayIndex : index;
+                    switch (periods.events[i].type_id) {
+                        case (EventType.ABSENCE):
+                            //If absence has a reason
+                            if (periods.events[i].reason_id !== null) {
+                                (periods.events[i].counsellor_regularisation === true) ?
+                                    indexes.push(className.indexOf('regularized')) :
+                                    indexes.push(className.indexOf('no-regularized'));
+                            } else {
+                                indexes.push(className.indexOf('absent'))
+                            }
+                            break;
+                        case (EventType.LATENESS):
+                            indexes.push(className.indexOf('late'));
+                            break;
+                        case (EventType.DEPARTURE):
+                            indexes.push(className.indexOf('departure'));
+                            break;
+                        case (EventType.REMARK):
+                            indexes.push(className.indexOf('remark'));
+                            break;
                     }
                 } else if ('type' in periods.events[i]) {
                     if (periods.events[i].type === 'absence') {
                         if (periods.events[i].reason_id !== null) {
-                            index = (periods.events[i].counsellor_regularisation === true) ?
-                                className.indexOf('regularized') :
-                                className.indexOf('no-regularized');
+                            (periods.events[i].counsellor_regularisation === true) ?
+                                indexes.push(className.indexOf('regularized')) :
+                                indexes.push(className.indexOf('no-regularized'));
                         } else {
-                            index = className.indexOf('absent');
+                            indexes.push(className.indexOf('absent'));
                         }
                     }
                 }
             }
-            return className[index] || '';
+            // get the largest value
+            return className[Math.max(...indexes)] || '';
         };
 
         vm.reasonSelect = ($event): void => {

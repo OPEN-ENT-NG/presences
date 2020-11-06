@@ -137,6 +137,7 @@ export class CalendarUtils {
         let absenceItem = {
             is_periodic: false,
             absence: true,
+            counsellor_regularisation: absence.counsellor_regularisation,
             locked: true,
             absenceId: absence.id,
             absenceReason: absence.reason_id ? absence.reason_id : 0,
@@ -189,7 +190,8 @@ export class CalendarUtils {
         timeslotByAbsences.forEach((timeslot: ITimeSlotWithAbsence, i: number) => {
             let height = timeSlotHeight;
             let top = 0;
-            let color = timeslot.absence.absenceReason === 0 ? "#e61610" : "#ff8a84";
+            let color = timeslot.absence.absenceReason === 0 ? "#e61610" :
+                timeslot.absence.counsellor_regularisation ? "#72bb53" : "#ff8a84";
 
             let style = "" +
                 "background-color: " + color + " !important; " +
