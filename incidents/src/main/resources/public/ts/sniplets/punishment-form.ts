@@ -298,7 +298,6 @@ export const punishmentForm = {
         setHandler: function () {
             this.$on(SNIPLET_FORM_EMIT_PUNISHMENT_EVENTS.OPEN, (event: IAngularEvent, punishment) => vm.editPunishmentForm(punishment));
             this.$on("$destroy", () => {
-                console.log("leaving");
                 delete window.alerts_item;
             });
             this.$watch(() => window.structure, async () => {

@@ -125,7 +125,6 @@ export const incidentsController = ng.controller('IncidentsController',
             const setDataFromMemento = (): void => {
                 const fetchedParam: { mementoStudentId: string, mementoStudentName: string } = $location.search();
                 // if there is nothing to fetch since this is only from memento
-                console.log("fetchedParam " + fetchedParam.mementoStudentId + ' ' + fetchedParam.mementoStudentName);
                 if (!fetchedParam.mementoStudentId && !fetchedParam.mementoStudentName) {
                     return;
                 }

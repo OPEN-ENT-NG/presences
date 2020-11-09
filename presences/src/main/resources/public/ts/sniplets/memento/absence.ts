@@ -171,7 +171,6 @@ function transformGraphSummaryToChartData(): void {
             }
         ]
     };
-    console.log(options);
     if (vm.chart) {
         vm.chart.updateSeries(series, true);
         vm.chart.updateOptions(options, true);

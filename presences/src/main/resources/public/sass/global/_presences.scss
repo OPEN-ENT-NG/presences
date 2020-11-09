@@ -201,6 +201,11 @@ body.presences, .sniplet.presences {
     padding-bottom: 0 !important;;
   }
 
+  .vertical-spacing {
+    margin-top: 20px !important;
+    margin-bottom: 20px !important;
+  }
+
   .search-input {
     background: $presences-white;
     padding: 7px;

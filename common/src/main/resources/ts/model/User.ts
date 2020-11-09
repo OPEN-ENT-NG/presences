@@ -3,6 +3,7 @@ export interface User {
     firstName?: string;
     lastName?: string;
     id?: string;
+    idEleve?: string;
     groupId?: string;
     groupName?: string;
     info?: string;

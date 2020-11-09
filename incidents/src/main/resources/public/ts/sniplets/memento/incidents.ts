@@ -8,6 +8,8 @@ import {IPunishmentType} from "@incidents/models/PunishmentType";
 import {EVENT_TYPES} from "@common/model";
 import {User} from "@common/model/User";
 
+console.log("memento incidents/punishment");
+
 declare let window: any;
 
 interface IMementoIncident {
@@ -85,8 +87,8 @@ const vm: IViewModel = {
 
     setIPunishmentRequest(): void {
         vm.punishmentsRequest.structure_id = window.structure.id;
-        vm.punishmentsRequest.start_at = vm.startDate.format(DateUtils.FORMAT["YEAR-MONTH-DAY"]);
-        vm.punishmentsRequest.end_at = vm.endDate.format(DateUtils.FORMAT["YEAR-MONTH-DAY"]);
+        vm.punishmentsRequest.start_at = vm.startDate.format(DateUtils.FORMAT["YEAR-MONTH-DAY"]) + ' 00:00:00';
+        vm.punishmentsRequest.end_at = vm.endDate.format(DateUtils.FORMAT["YEAR-MONTH-DAY"]) + ' 23:59:59';
         vm.punishmentsRequest.students_ids = [vm.student];
         vm.punishmentsRequest.groups_ids = null;
         vm.punishmentsRequest.type_ids = vm.filterPunishments();
@@ -105,9 +107,14 @@ const vm: IViewModel = {
             vm.setIPunishmentRequest();
             promises.push(punishmentService.get(vm.punishmentsRequest));
         }
-        vm.mementoIncidents = [];
+        if (promises.length === 0) {
+            vm.mementoIncidents = [];
+        }
         Promise.all(promises).then((mementoResponses: any[]) => {
             let mementos: any[] = [];
+
+            let mementoIncidents: Array<IMementoIncident> = [];
+
             mementoResponses.forEach(mementoResponse => mementos = [...mementos, ...mementoResponse.all]);
             mementos.forEach(memento => {
                 // Case if it's a punishment
@@ -116,14 +123,15 @@ const vm: IViewModel = {
                         type: EVENT_TYPES.PUNISHMENT,
                         item: memento
                     }
-                    vm.mementoIncidents.push(punishment);
+                    mementoIncidents.push(punishment);
                 } else {
                     // Case if it's an incident
                     let incident: IMementoIncident = {type: EVENT_TYPES.INCIDENT, item: memento}
-                    vm.mementoIncidents.push(incident);
+                    mementoIncidents.push(incident);
                 }
-                vm.apply();
             });
+            vm.mementoIncidents = mementoIncidents;
+            vm.apply();
         })
     },
 
@@ -135,7 +143,7 @@ const vm: IViewModel = {
         if (mementoIncident.type === EVENT_TYPES.INCIDENT) {
             let protagonists: ProtagonistForm[] = (<Incident>mementoIncident.item).protagonists;
             const protagonist: ProtagonistForm = protagonists.find(student => student.user_id === vm.student);
-            window.location.href = `/incidents#/incidents?mementoStudentId=${protagonist.userId}&mementoStudentName=${protagonist.student.displayName}`;
+            window.location.href = `/incidents#/incidents?mementoStudentId=${protagonist.student.idEleve}&mementoStudentName=${protagonist.student.displayName}`;
         } else if (mementoIncident.type === (EVENT_TYPES.PUNISHMENT || EVENT_TYPES.SANCTION)) {
             const student: User = {
                 displayName: (<IPunishment>mementoIncident.item).student.name,
@@ -143,6 +151,8 @@ const vm: IViewModel = {
             };
             window.location.href = `/incidents#/punishment/sanction?mementoStudentId=${student.id}&mementoStudentName=${student.displayName}`;
         }
+        window.memento.close();
+        vm.apply();
     },
 
     isPunishment(type: string): boolean {
