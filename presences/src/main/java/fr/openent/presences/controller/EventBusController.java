@@ -18,9 +18,9 @@ import java.util.List;
 
 public class EventBusController extends ControllerHelper {
 
-    private EventService eventService;
-    private ReasonService reasonService = new DefaultReasonService();
-    private SettingsService settingsService = new DefaultSettingsService();
+    private final EventService eventService;
+    private final ReasonService reasonService = new DefaultReasonService();
+    private final SettingsService settingsService = new DefaultSettingsService();
 
     public EventBusController(EventBus eb) {
         this.eventService = new DefaultEventService(eb);
@@ -54,7 +54,10 @@ public class EventBusController extends ControllerHelper {
                 startDate = body.getString("startDate");
                 endDate = body.getString("endDate");
                 noReasons = body.getBoolean("noReasons");
-                this.eventService.getCountEventByStudent(eventType, students, structure, justified, startAt, reasonsId, massmailed, startDate, endDate, noReasons, BusResponseHandler.busArrayHandler(message));
+                recoveryMethod = body.getString("recoveryMethod");
+                regularized = body.getBoolean("regularized");
+                this.eventService.getCountEventByStudent(eventType, students, structure, justified, startAt, reasonsId,
+                        massmailed, startDate, endDate, noReasons, recoveryMethod, regularized, BusResponseHandler.busArrayHandler(message));
                 break;
             case "get-events-by-student":
                 eventType = body.getInteger("eventType");

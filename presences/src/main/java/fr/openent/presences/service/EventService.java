@@ -149,20 +149,24 @@ public interface EventService {
     /**
      * Get count event type group by user
      *
-     * @param eventType  EVent type
-     * @param students   Student list. Contains every students identifiers
-     * @param structure  Structure identifier
-     * @param justified  Justified events or not ? Can be null if justified event needs to be excluded
-     * @param startAt    Start count at. Minimal number that student is retrieved
-     * @param massmailed Massmailed ? Use by massmailing module. When null, column is excluded
-     * @param startDate  Range start date
-     * @param endDate    Range end date
-     * @param reasonsId  Reasons identifiers. Can be sorted by reasons identifiers
-     * @param noReasons  Should retrieve no reasons event
-     * @param handler    Function handler returning data
+     * @param eventType      Event type
+     * @param students       Student list. Contains every students identifiers
+     * @param structure      Structure identifier
+     * @param justified      Justified events or not ? Can be null if justified event needs to be excluded (DEPRECATED, MUST USE REGULARIZED)
+     * @param startAt        Start count at. Minimal number that student is retrieved
+     * @param massmailed     Massmailed ? Use by massmailing module. When null, column is excluded
+     * @param startDate      Range start date
+     * @param endDate        Range end date
+     * @param reasonsId      Reasons identifiers. Can be sorted by reasons identifiers
+     * @param noReasons      Should retrieve no reasons event
+     * @param recoveryMethod recovery method to fetch data used
+     * @param regularized    filter regularized (replace justified)
+     * @param handler        Function handler returning data
      */
-    void getCountEventByStudent(Integer eventType, List<String> students, String structure, Boolean justified, Integer startAt, List<Integer> reasonsId, Boolean massmailed,
-                                String startDate, String endDate, boolean noReasons, Handler<Either<String, JsonArray>> handler);
+    void getCountEventByStudent(Integer eventType, List<String> students, String structure, Boolean justified,
+                                Integer startAt, List<Integer> reasonsId, Boolean massmailed, String startDate,
+                                String endDate, boolean noReasons, String recoveryMethod, Boolean regularized,
+                                Handler<Either<String, JsonArray>> handler);
 
     /**
      * Retrieve events by student

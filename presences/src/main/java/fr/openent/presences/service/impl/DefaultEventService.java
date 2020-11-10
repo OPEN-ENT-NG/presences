@@ -865,19 +865,20 @@ public class DefaultEventService implements EventService {
     @Override
     public void getCountEventByStudent(Integer eventType, List<String> students, String structure, Boolean justified,
                                        Integer startAt, List<Integer> reasonsId, Boolean massmailed, String startDate,
-                                       String endDate, boolean noReasons, Handler<Either<String, JsonArray>> handler) {
+                                       String endDate, boolean noReasons, String recoveryMethodUsed, Boolean regularized,
+                                       Handler<Either<String, JsonArray>> handler) {
         settingsService.retrieve(structure, event -> {
             if (event.isLeft()) {
                 handler.handle(new Either.Left<>(event.left().getValue()));
                 return;
             }
             JsonObject settings = event.right().getValue();
-            String recoveryMethod = settings.getString("event_recovery_method");
+            String recoveryMethod = recoveryMethodUsed != null ? recoveryMethodUsed : settings.getString("event_recovery_method");
             switch (recoveryMethod) {
                 case "DAY":
                 case "HOUR": {
                     JsonObject eventsQuery = getEventQuery(eventType, students, structure, justified, reasonsId,
-                            massmailed, startDate, endDate, noReasons, recoveryMethod, null, null, null, null, true, null);
+                            massmailed, startDate, endDate, noReasons, recoveryMethod, null, null, null, null, true, regularized);
                     String query = "WITH count_by_user AS (WITH events as (" + eventsQuery.getString("query") + ") " +
                             "SELECT count(*), student_id FROM events GROUP BY student_id) SELECT * FROM count_by_user WHERE count >= " + startAt;
                     Sql.getInstance().prepared(query, eventsQuery.getJsonArray("params"), SqlResult.validResultHandler(handler));
@@ -896,9 +897,9 @@ public class DefaultEventService implements EventService {
                         if (slotSetting.containsKey("end_of_half_day") && slotSetting.getString("end_of_half_day") != null) {
                             String halfOfDay = slotSetting.getString("end_of_half_day");
                             JsonObject morningQuery = getEventQuery(eventType, students, structure, justified,
-                                    reasonsId, massmailed, startDate, endDate, noReasons, recoveryMethod, defaultStartTime, halfOfDay, null, null, true, null);
+                                    reasonsId, massmailed, startDate, endDate, noReasons, recoveryMethod, defaultStartTime, halfOfDay, null, null, true, regularized);
                             JsonObject afternoonQuery = getEventQuery(eventType, students, structure, justified,
-                                    reasonsId, massmailed, startDate, endDate, noReasons, recoveryMethod, halfOfDay, defaultEndTime, null, null, true, null);
+                                    reasonsId, massmailed, startDate, endDate, noReasons, recoveryMethod, halfOfDay, defaultEndTime, null, null, true, regularized);
                             String query = "WITH count_by_user AS (WITH events as (" + morningQuery.getString("query") + " UNION ALL " + afternoonQuery.getString("query") + ") " +
                                     "SELECT count(*), student_id FROM events GROUP BY student_id) SELECT * FROM count_by_user WHERE count >= " + startAt;
                             JsonArray params = new JsonArray()
