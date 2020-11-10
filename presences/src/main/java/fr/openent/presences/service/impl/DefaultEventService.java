@@ -350,23 +350,23 @@ public class DefaultEventService implements EventService {
 
     @Override
     public void getAbsencesCountSummary(String structureId, String currentDate, Handler<Either<String, JsonObject>> handler) {
-        Future<JsonArray> absentStudentIds = Future.future();
-        Future<JsonArray> studentsWithAccommodation = Future.future();
-        Future<JsonArray> countCurrentStudents = Future.future();
+        Future<JsonArray> absentStudentIdsFuture = Future.future();
+        Future<JsonArray> studentsWithAccommodationFuture = Future.future();
+        Future<JsonArray> countCurrentStudentsFuture = Future.future();
 
         String currentDateDay = DateHelper.getDateString(currentDate, DateHelper.MONGO_FORMAT, DateHelper.YEAR_MONTH_DAY);
         String currentDateTime = DateHelper.fetchTimeString(currentDate, DateHelper.MONGO_FORMAT);
 
-        CompositeFuture.all(absentStudentIds, studentsWithAccommodation, countCurrentStudents).setHandler(resultFuture -> {
+        CompositeFuture.all(absentStudentIdsFuture, studentsWithAccommodationFuture, countCurrentStudentsFuture).setHandler(resultFuture -> {
             if (resultFuture.failed()) {
                 String message = "[Presences@DefaultEventService::getAbsencesCountSummary] Failed to retrieve " +
                         "absent students, student ids and accommodations and current student counts";
                 LOGGER.error(message);
                 handler.handle(new Either.Left<>(resultFuture.cause().getMessage()));
             } else {
-                JsonArray absentIds = absentStudentIds.result();
-                JsonArray studentsAccommodations = studentsWithAccommodation.result();
-                JsonArray countStudents = countCurrentStudents.result();
+                JsonArray absentStudentIds = absentStudentIdsFuture.result();
+                JsonArray studentsAccommodations = studentsWithAccommodationFuture.result();
+                JsonArray countStudents = countCurrentStudentsFuture.result();
 
                 int nbCurrentStudents = countStudents.getJsonObject(0).getInteger("nbStudents") +
                         countStudents.getJsonObject(1).getInteger("nbStudents") +
@@ -374,14 +374,20 @@ public class DefaultEventService implements EventService {
 
                 int nbDayStudents = 0;
 
+                @SuppressWarnings("unchecked")
+                long countAbsentIds = ((List<JsonObject>) absentStudentIds.getList())
+                        .stream()
+                        .filter(student -> student.getString("student_id") != null).count();
+
                 for (int i = 0; i < studentsAccommodations.size(); i++) {
                     JsonObject student = studentsAccommodations.getJsonObject(i);
 
                     if (student != null && student.getString("accommodation") != null &&
                             student.getString("accommodation").contains("DEMI-PENSIONNAIRE")) {
 
-                        for (int j = 0; j < absentIds.size(); j++) {
-                            JsonObject absentStudent = absentIds.getJsonObject(j);
+                        // Counting the number of absent day students
+                        for (int j = 0; j < absentStudentIds.size(); j++) {
+                            JsonObject absentStudent = absentStudentIds.getJsonObject(j);
                             if (absentStudent != null &&
                                     absentStudent.getString("student_id") != null &&
                                     student.getString("id") != null &&
@@ -393,16 +399,17 @@ public class DefaultEventService implements EventService {
                 }
 
                 JsonObject res = new JsonObject()
-                        .put("nb_absents", absentIds.size())
-                        .put("nb_day_students", nbDayStudents)
-                        .put("nb_presents", nbCurrentStudents - absentIds.size());
+                        .put("nb_absents", countAbsentIds > 0 ? countAbsentIds : 0)
+                        .put("nb_day_students", nbDayStudents > 0 ? nbDayStudents : 0)
+                        .put("nb_presents", (nbCurrentStudents - countAbsentIds) > 0 ?
+                                (nbCurrentStudents - countAbsentIds) : 0);
 
                 handler.handle(new Either.Right<>(res));
             }
         });
-        absenceService.getAbsentStudentIds(structureId, currentDate, FutureHelper.handlerJsonArray(absentStudentIds));
-        userService.getAllStudentsIdsWithAccommodation(structureId, FutureHelper.handlerJsonArray(studentsWithAccommodation));
-        this.getCoursesStudentCount(structureId, currentDateDay, currentDateTime,FutureHelper.handlerJsonArray(countCurrentStudents));
+        absenceService.getAbsentStudentIds(structureId, currentDate, FutureHelper.handlerJsonArray(absentStudentIdsFuture));
+        userService.getAllStudentsIdsWithAccommodation(structureId, FutureHelper.handlerJsonArray(studentsWithAccommodationFuture));
+        this.getCoursesStudentCount(structureId, currentDateDay, currentDateTime,FutureHelper.handlerJsonArray(countCurrentStudentsFuture));
     }
 
 
