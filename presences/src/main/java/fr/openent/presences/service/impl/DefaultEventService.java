@@ -1,6 +1,7 @@
 package fr.openent.presences.service.impl;
 
 import fr.openent.presences.Presences;
+import fr.openent.presences.common.helper.DateHelper;
 import fr.openent.presences.common.helper.FutureHelper;
 import fr.openent.presences.common.helper.WorkflowHelper;
 import fr.openent.presences.common.service.GroupService;
@@ -10,6 +11,7 @@ import fr.openent.presences.common.service.impl.DefaultUserService;
 import fr.openent.presences.common.viescolaire.Viescolaire;
 import fr.openent.presences.enums.EventType;
 import fr.openent.presences.enums.WorkflowActions;
+import fr.openent.presences.helper.CourseHelper;
 import fr.openent.presences.helper.EventHelper;
 import fr.openent.presences.helper.SlotHelper;
 import fr.openent.presences.model.Event.Event;
@@ -26,6 +28,8 @@ import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
+import org.entcore.common.neo4j.Neo4j;
+import org.entcore.common.neo4j.Neo4jResult;
 import org.entcore.common.sql.Sql;
 import org.entcore.common.sql.SqlResult;
 import org.entcore.common.user.UserInfos;
@@ -38,6 +42,7 @@ import java.util.stream.Collectors;
 public class DefaultEventService implements EventService {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(DefaultEventService.class);
+    private final EventBus eb;
     private static final Integer PAGE_SIZE = 100;
     private static final String defaultStartTime = "00:00:00";
     private static final String defaultEndTime = "23:59:59";
@@ -45,11 +50,14 @@ public class DefaultEventService implements EventService {
     private final AbsenceService absenceService;
     private final GroupService groupService;
     private final EventHelper eventHelper;
+    private final CourseHelper courseHelper;
     private final SlotHelper slotHelper;
     private final UserService userService;
 
     public DefaultEventService(EventBus eb) {
+        this.eb = eb;
         this.eventHelper = new EventHelper(eb);
+        this.courseHelper = new CourseHelper(eb);
         this.slotHelper = new SlotHelper(eb);
         this.absenceService = new DefaultAbsenceService(eb);
         this.groupService = new DefaultGroupService(eb);
@@ -344,18 +352,25 @@ public class DefaultEventService implements EventService {
     public void getAbsencesCountSummary(String structureId, String currentDate, Handler<Either<String, JsonObject>> handler) {
         Future<JsonArray> absentStudentIds = Future.future();
         Future<JsonArray> studentsWithAccommodation = Future.future();
+        Future<JsonArray> countCurrentStudents = Future.future();
 
-        CompositeFuture.all(absentStudentIds, studentsWithAccommodation).setHandler(resultFuture -> {
+        String currentDateDay = DateHelper.getDateString(currentDate, DateHelper.MONGO_FORMAT, DateHelper.YEAR_MONTH_DAY);
+        String currentDateTime = DateHelper.fetchTimeString(currentDate, DateHelper.MONGO_FORMAT);
 
+        CompositeFuture.all(absentStudentIds, studentsWithAccommodation, countCurrentStudents).setHandler(resultFuture -> {
             if (resultFuture.failed()) {
                 String message = "[Presences@DefaultEventService::getAbsencesCountSummary] Failed to retrieve " +
-                        "absent students and all student ids and accommodations";
+                        "absent students, student ids and accommodations and current student counts";
                 LOGGER.error(message);
                 handler.handle(new Either.Left<>(resultFuture.cause().getMessage()));
             } else {
-
-                JsonArray absentIds =  absentStudentIds.result();
+                JsonArray absentIds = absentStudentIds.result();
                 JsonArray studentsAccommodations = studentsWithAccommodation.result();
+                JsonArray countStudents = countCurrentStudents.result();
+
+                int nbCurrentStudents = countStudents.getJsonObject(0).getInteger("nbStudents") +
+                        countStudents.getJsonObject(1).getInteger("nbStudents") +
+                        countStudents.getJsonObject(2).getInteger("nbStudents");
 
                 int nbDayStudents = 0;
 
@@ -365,12 +380,9 @@ public class DefaultEventService implements EventService {
                     if (student != null && student.getString("accommodation") != null &&
                             student.getString("accommodation").contains("DEMI-PENSIONNAIRE")) {
 
-                        for(int j = 0; j < absentIds.size(); j++) {
-
+                        for (int j = 0; j < absentIds.size(); j++) {
                             JsonObject absentStudent = absentIds.getJsonObject(j);
-
-
-                            if (absentStudent != null  &&
+                            if (absentStudent != null &&
                                     absentStudent.getString("student_id") != null &&
                                     student.getString("id") != null &&
                                     absentStudent.getString("student_id").equals(student.getString("id"))) {
@@ -383,14 +395,70 @@ public class DefaultEventService implements EventService {
                 JsonObject res = new JsonObject()
                         .put("nb_absents", absentIds.size())
                         .put("nb_day_students", nbDayStudents)
-                        .put("nb_presents", studentsAccommodations.size() - absentIds.size());
+                        .put("nb_presents", nbCurrentStudents - absentIds.size());
 
                 handler.handle(new Either.Right<>(res));
             }
         });
-
         absenceService.getAbsentStudentIds(structureId, currentDate, FutureHelper.handlerJsonArray(absentStudentIds));
         userService.getAllStudentsIdsWithAccommodation(structureId, FutureHelper.handlerJsonArray(studentsWithAccommodation));
+        this.getCoursesStudentCount(structureId, currentDateDay, currentDateTime,FutureHelper.handlerJsonArray(countCurrentStudents));
+    }
+
+
+    /**
+     * Get number of students in all occurring courses during the specified date.
+     * @param structureId    structure identifier
+     * @param date           a date (format yyyy-MM-dd)
+     * @param time           an hour (format HH:mm:ss)
+     * @param handler        Function handler returning data
+     */
+    private void getCoursesStudentCount(String structureId, String date, String time,
+                                        Handler<Either<String, JsonArray>> handler) {
+        courseHelper.getCourses(structureId, date, date, time, time, "true", event -> {
+            if (event.isLeft()) {
+                handler.handle(new Either.Left<>(event.left().getValue()));
+                return;
+            }
+
+            ArrayList<String> classesName = new ArrayList<>();
+            ArrayList<String> groupsName = new ArrayList<>();
+
+            JsonArray courses = event.right().getValue();
+
+            for(int i = 0 ; i < courses.size() ; i++) {
+                JsonObject course = courses.getJsonObject(i);
+                JsonArray classNames = course.getJsonArray("classes");
+                JsonArray groupsNames = course.getJsonArray("groups");
+
+                for(int classIndex = 0; classIndex < classNames.size(); classIndex++) {
+                    classesName.add(classNames.getString(classIndex));
+                }
+                for(int groupIndex = 0; groupIndex < groupsNames.size(); groupIndex++) {
+                    groupsName.add(groupsNames.getString(groupIndex));
+                }
+            }
+
+            String query = "MATCH" +
+                    " (c:Class)<-[:DEPENDS]-(:ProfileGroup)<-[:IN]-(u:User {profiles: ['Student']})-[:ADMINISTRATIVE_ATTACHMENT]->(s:Structure {id:{structureId}})" +
+                    " WHERE c.name IN {classesName}" +
+                    " RETURN COUNT(DISTINCT(u)) AS nbStudents" +
+                    " UNION ALL" +
+                    " MATCH (fg:FunctionalGroup)<-[:IN]-(u:User {profiles:['Student']})-[:ADMINISTRATIVE_ATTACHMENT]->(s:Structure {id:{structureId}})" +
+                    " WHERE fg.name IN {groupsName}" +
+                    " RETURN COUNT(DISTINCT(u)) AS nbStudents" +
+                    " UNION ALL" +
+                    " MATCH (mg:ManualGroup)<-[:IN]-(u:User {profiles:['Student']})-[:ADMINISTRATIVE_ATTACHMENT]->(s:Structure {id:{structureId}})" +
+                    " WHERE mg.name IN {groupsName}" +
+                    " RETURN COUNT(DISTINCT(u)) AS nbStudents";
+
+
+            JsonObject params = new JsonObject()
+                    .put("classesName", new JsonArray(classesName))
+                    .put("groupsName", new JsonArray(groupsName))
+                    .put("structureId", structureId);
+            Neo4j.getInstance().execute(query, params, Neo4jResult.validResultHandler(handler));
+        });
     }
 
 

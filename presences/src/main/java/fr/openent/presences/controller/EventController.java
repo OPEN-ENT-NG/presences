@@ -305,8 +305,8 @@ public class EventController extends ControllerHelper {
 
     @Get("/events/absences/summary")
     @ApiDoc("Get absences counts summary")
-    @ResourceFilter(ActionRight.class)
-    @SecuredAction(Presences.READ_EVENT)
+    @ResourceFilter(EventReadRight.class)
+    @SecuredAction(value = "", type = ActionType.RESOURCE)
     public void getAbsentsCounts(final HttpServerRequest request) {
 
         String structureId = request.getParam("structureId");

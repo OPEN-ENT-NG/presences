@@ -6,6 +6,7 @@ const rights = {
         readRegistry: 'fr.openent.presences.controller.RegistryController|getRegistry',
         readEvent: 'fr.openent.presences.controller.EventController|getEvents',
         createEvent: 'fr.openent.presences.controller.EventController|postEvent',
+        readAbsentsCounts: 'fr.openent.presences.controller.EventController|getEvents',
         search: 'fr.openent.presences.controller.SearchController|searchUsers',
         searchStudents: 'fr.openent.presences.controller.SearchController|search',
         export: 'fr.openent.presences.controller.CourseController|exportCourses',

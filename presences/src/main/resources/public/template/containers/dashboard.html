@@ -39,7 +39,7 @@
     <h2 class="current-date" ng-bind="::vm.date"></h2>
 
     <!--COUNTS OF CURRENT PRESENCES IN STRUCTURE-->
-    <div class="dashboard-absences-counts">
+    <div workflow="presences.readAbsentsCounts" class="dashboard-absences-counts">
         <div class="card">
             <i18n>presences.absence.number.total</i18n> &#58; <b>[[vm.absencesSummary.nb_absents]]</b>
         </div>

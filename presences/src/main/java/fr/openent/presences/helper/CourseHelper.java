@@ -145,6 +145,30 @@ public class CourseHelper {
         });
     }
 
+    public void getCourses(String structure, String start, String end, String startTime, String endTime,
+                           String crossDateFilter, Handler<Either<String, JsonArray>> handler) {
+        JsonObject action = new JsonObject()
+                .put("action", "course.getCoursesOccurences")
+                .put("structureId", structure)
+                .put("teacherId", new JsonArray())
+                .put("group", new JsonArray())
+                .put("begin", start)
+                .put("end", end)
+                .put("startTime", startTime)
+                .put("endTime", endTime)
+                .put("crossDateFilter", crossDateFilter);
+
+        eb.send("viescolaire", action, event -> {
+            if (event.failed() || event.result() == null || "error".equals(((JsonObject) event.result().body()).getString("status"))) {
+                String err = "[CourseHelper@getCourses] Failed to retrieve courses " + event.cause().getMessage();
+                LOGGER.error(err);
+                handler.handle(new Either.Left<>(err));
+            } else {
+                handler.handle(new Either.Right<>(((JsonObject) event.result().body()).getJsonArray("results")));
+            }
+        });
+    }
+
     /**
      * Format course fetched (must provide teacher data)
      *

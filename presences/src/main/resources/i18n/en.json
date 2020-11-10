@@ -38,7 +38,7 @@
   "presences.absence.unjustified": "Absences sans motif",
   "presences.absence.lateness": "Retards",
   "presences.absence.no.reason": "Sans motif",
-  "presences.absence.number.total": "Number of current absents students",
+  "presences.absence.number.total": "Number of absents",
   "presences.absence.number.day.student": "Number of absent day students",
   "presences.absence.number.presents": "Number of current present students",
   "presences.absence.period": "Période",

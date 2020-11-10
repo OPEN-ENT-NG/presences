@@ -1,5 +1,5 @@
 import {Me, model, moment, ng, toasts} from 'entcore';
-import {Group, GroupService, SearchItem, SearchService, EventService} from '../services';
+import {EventService, Group, GroupService, SearchItem, SearchService} from '../services';
 import {DateUtils, PreferencesUtils} from '@common/utils';
 import rights from '../rights';
 import {Course, EventType} from '../models';
@@ -40,11 +40,11 @@ interface ViewModel {
 
     getSubSize(): string;
 
-    getAlert(): void;
+    getAlert(): Promise<void>;
 
     goToAlerts(type: string): void;
 
-    getAbsentsCounts(): void;
+    getAbsentsCounts(): Promise<void>;
 }
 
 export const dashboardController = ng.controller('DashboardController', ['$scope', '$route', '$location',
@@ -58,6 +58,7 @@ export const dashboardController = ng.controller('DashboardController', ['$scope
             } else {
                 await Promise.all([vm.getAlert(), vm.getAbsentsCounts()]);
             }
+            $scope.safeApply();
         };
 
         vm.date = DateUtils.format(moment(), DateUtils.FORMAT['DATE-FULL-LETTER']);
@@ -135,7 +136,7 @@ export const dashboardController = ng.controller('DashboardController', ['$scope
             + (hasAbsencesWidget ? SIDE_HEIGHT : 0)}px)`;
         };
 
-        vm.getAlert = async () => {
+        vm.getAlert = async (): Promise<void> => {
             const hasAlertWidget = model.me.hasWorkflow(rights.workflow.widget_alerts);
             try {
                 let defaultAlert = {
@@ -145,7 +146,7 @@ export const dashboardController = ng.controller('DashboardController', ['$scope
                     FORGOTTEN_NOTEBOOK: 0
                 };
                 if (hasAlertWidget) {
-                    let structureAlert: any = await alertService.getAlerts(window.structure.id);
+                    let structureAlert: Alert = await alertService.getAlerts(window.structure.id);
                     vm.alert = {...defaultAlert, ...structureAlert};
                 }
             } catch (e) {
@@ -167,9 +168,11 @@ export const dashboardController = ng.controller('DashboardController', ['$scope
          */
         vm.getAbsentsCounts = async (): Promise<void> => {
             const structureId: string = window.structure.id;
-
+            const canReadAbsentsCounts: boolean = model.me.hasWorkflow(rights.workflow.readAbsentsCounts);
             try {
-                vm.absencesSummary = await eventService.getAbsentsCounts(structureId);
+                if (canReadAbsentsCounts) {
+                    vm.absencesSummary = await eventService.getAbsentsCounts(structureId);
+                }
             } catch (e) {
                 vm.absencesSummary = {
                     nb_day_students: 0,
