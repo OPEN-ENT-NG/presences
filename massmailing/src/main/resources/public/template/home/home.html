@@ -61,10 +61,10 @@
 
 
     <!--  card content displaying stats of event -->
-    <div class="grid horizontal-spacing-twice massmail-status row vertical-spacing-six widget-alerts"
+    <div class="grid horizontal-spacing-twice massmail-status row vertical-spacing-six massmailing-card-stats"
          ng-show="!vm.filterInError()">
-        <div ng-repeat="(status, val) in vm.massmailingStatus" class="massmailing-status-alert cell">
-            <div class="card [[status]] widget-alert">
+        <div ng-repeat="(status, val) in vm.massmailingStatus" class="cell">
+            <div class="card [[status]] massmailing-card-stats-item">
                 <span class="value">[[val]]</span>
                 <p class="subtitle">
                     [[lang.translate('massmailing.alerts.' + status + '.text')]]

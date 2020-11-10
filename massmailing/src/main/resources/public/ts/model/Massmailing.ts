@@ -1,51 +1,51 @@
 import {Template} from '../services/SettingsService';
 import http, {AxiosRequestConfig, AxiosResponse} from 'axios';
-import {DateUtils} from "@common/utils";
-import {MailingType} from "../model/Mailing";
-import {BlobUtil} from "@common/utils/blob";
+import {DateUtils} from '@common/utils';
+import {MailingType} from '../model/Mailing';
+import {BlobUtil} from '@common/utils/blob';
 
 export interface IMassmailingFilterPreferences {
     start_at: number;
     status: {
-        JUSTIFIED: boolean
-        UNJUSTIFIED: boolean
+        REGULARIZED: boolean
+        UNREGULARIZED: boolean
         LATENESS: boolean
-    },
+    };
     massmailing_status: {
         mailed: boolean,
         waiting: boolean
-    },
-    allReasons: boolean,
-    noReasons: boolean,
-    reasons: any,
+    };
+    allReasons: boolean;
+    noReasons: boolean;
+    reasons: any;
     anomalies: {
         MAIL: boolean,
         SMS: boolean
-    }
+    };
 }
 
 export interface IRelative {
-    id: string,
-    displayName: string,
-    contact: string,
-    selected: boolean,
-    address: string
+    id: string;
+    displayName: string;
+    contact: string;
+    selected: boolean;
+    address: string;
 }
 
 interface MassmailingStudent {
-    id: string,
-    selected: boolean,
-    opened: boolean,
-    displayName: string,
-    className: string,
+    id: string;
+    selected: boolean;
+    opened: boolean;
+    displayName: string;
+    className: string;
     events: {
-        JUSTIFIED?: number,
-        UNJUSTIFIED?: number,
+        REGULARIZED?: number,
+        UNREGULARIZED?: number,
         LATENESS?: number,
         PUNISHMENT?: number,
         SANCTION?: number
-    },
-    relative: IRelative[]
+    };
+    relative: IRelative[];
 }
 
 declare const window: any;
@@ -70,7 +70,7 @@ export class Massmailing {
                 if (student.relative.length > 1) {
                     if (relative.address && (student.relative[0].address == student.relative[1].address)) {
                         student.relative[0].selected = (student.relative[0].contact !== null && student.relative[0].contact.trim() !== '')
-                            || this.type === MailingType[MailingType.PDF]
+                            || this.type === MailingType[MailingType.PDF];
                     } else {
                         relative.selected = (relative.contact !== null && relative.contact.trim() !== '') || this.type === MailingType[MailingType.PDF];
                     }
@@ -117,7 +117,7 @@ export class Massmailing {
         const event_types = Object.keys(this.filter.status).filter(type => this.filter.status[type]);
         const reasons = [];
         Object.keys(this.filter.reasons).forEach((reason) => {
-            if (this.filter.reasons[reason]) reasons.push(reason)
+            if (this.filter.reasons[reason]) reasons.push(reason);
         });
 
 
@@ -128,11 +128,11 @@ export class Massmailing {
             no_reason: this.filter.noReasons,
             start_at: this.filter.start_at,
             reasons,
-            start: DateUtils.format(this.filter.start_date, DateUtils.FORMAT["YEAR-MONTH-DAY"]),
-            end: DateUtils.format(this.filter.end_date, DateUtils.FORMAT["YEAR-MONTH-DAY"]),
+            start: DateUtils.format(this.filter.start_date, DateUtils.FORMAT['YEAR-MONTH-DAY']),
+            end: DateUtils.format(this.filter.end_date, DateUtils.FORMAT['YEAR-MONTH-DAY']),
             students: this.getStudents(),
             massmailed: this.massmailed()
-        }
+        };
     }
     
     async process(): Promise<void> {
@@ -149,7 +149,7 @@ export class Massmailing {
                     BlobUtil.getFileNameByContentDisposition(resp.headers['content-disposition']),
                     [resp.data],
                     {type: 'application/pdf'})
-                    .downloadPdf("massmailing.pdf.error.download"));
+                    .downloadPdf('massmailing.pdf.error.download'));
 
         } else {
             await http.post(`/massmailing/massmailings/${this.type}`, this.toJson());

@@ -54,13 +54,13 @@
             <i18n>massmailing.filters.type</i18n>
         </h4>
         <div class="chips">
-            <div class="chip" ng-class="{ selected: vm.formFilter.status.JUSTIFIED }"
+            <div class="chip" ng-class="{ selected: vm.formFilter.status.REGULARIZED }"
                  data-ng-click="vm.switchToJustifiedAbsences()">
-                <i18n>massmailing.types.JUSTIFIED</i18n>
+                <i18n>massmailing.types.REGULARIZED</i18n>
             </div>
-            <div class="chip" ng-class="{ selected: vm.formFilter.status.UNJUSTIFIED }"
+            <div class="chip" ng-class="{ selected: vm.formFilter.status.UNREGULARIZED }"
                  data-ng-click="vm.switchToUnjustifiedAbsences()">
-                <i18n>massmailing.types.UNJUSTIFIED</i18n>
+                <i18n>massmailing.types.UNREGULARIZED</i18n>
             </div>
             <div class="chip" ng-class="{ selected: vm.formFilter.status.LATENESS }"
                  data-ng-click="vm.formFilter.status.LATENESS = !vm.formFilter.status.LATENESS">
@@ -83,7 +83,7 @@
             </div>
         </div>
     </div>
-    <div class="row vertical-spacing" ng-show="vm.formFilter.status.JUSTIFIED || vm.formFilter.status.UNJUSTIFIED">
+    <div class="row vertical-spacing" ng-show="vm.formFilter.status.REGULARIZED || vm.formFilter.status.UNREGULARIZED">
         <h4 class="row">
             <i18n class="cell">massmailing.filters.reasons</i18n>
             <div class="horizontal-spacing card cell horizontal-margin">
@@ -94,11 +94,11 @@
             <div class="chip" ng-class="{selected: vm.formFilter.allReasons}" data-ng-click="vm.switchAllReasons()">
                 <i18n>massmailing.all.none</i18n>
             </div>
-            <div class="chip" ng-class="{selected: vm.formFilter.noReasons}" ng-show="vm.formFilter.status.UNJUSTIFIED"
+            <div class="chip" ng-class="{selected: vm.formFilter.noReasons}" ng-show="vm.formFilter.status.UNREGULARIZED"
                  data-ng-click="vm.formFilter.noReasons = !vm.formFilter.noReasons">
                 <i18n>massmailing.no.reasons</i18n>
             </div>
-            <div class="chip" ng-show="vm.formFilter.status.JUSTIFIED"
+            <div class="chip" ng-show="vm.formFilter.status.REGULARIZED"
                  ng-repeat="reason in vm.reasons track by $index|orderBy:'label'"
                  ng-class="{ selected: vm.formFilter.reasons[reason.id]}"
                  data-ng-click="vm.formFilter.reasons[reason.id] = !vm.formFilter.reasons[reason.id]">

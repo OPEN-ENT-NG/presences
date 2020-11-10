@@ -80,11 +80,11 @@ body.massmailing {
         justify-content: center;
         color: $white;
 
-        &.JUSTIFIED {
+        &.REGULARIZED {
           background: $presences-pink;
         }
 
-        &.UNJUSTIFIED {
+        &.UNREGULARIZED {
           background: $presences-red;
         }
 

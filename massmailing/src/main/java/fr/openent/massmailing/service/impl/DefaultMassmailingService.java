@@ -50,18 +50,30 @@ public class DefaultMassmailingService implements MassmailingService {
     public void getCountEventByStudent(String structure, MassmailingType type, Boolean massmailed, List<Integer> reasons, Integer startAt, String startDate,
                                        String endDate, List<String> students, boolean noReasons, Handler<Either<String, JsonArray>> handler) {
         switch (type) {
-            case JUSTIFIED:
-                Presences.getInstance().getCountEventByStudent(EventType.ABSENCE.getType(), students, structure, true, startAt,
-                        reasons, massmailed, startDate, endDate, noReasons, null, handler);
+            case REGULARIZED:
+                Presences.getInstance().getCountEventByStudent(EventType.ABSENCE.getType(), students, structure, null, startAt,
+                        reasons, massmailed, startDate, endDate, noReasons, true, handler);
                 break;
-            case UNJUSTIFIED:
-                Presences.getInstance().getCountEventByStudent(EventType.ABSENCE.getType(), students, structure, false, startAt,
-                        reasons, massmailed, startDate, endDate, noReasons, null, handler);
+            case UNREGULARIZED:
+                Presences.getInstance().getCountEventByStudent(EventType.ABSENCE.getType(), students, structure, null, startAt,
+                        reasons, massmailed, startDate, endDate, noReasons, false, handler);
                 break;
             case LATENESS:
                 Presences.getInstance().getCountEventByStudent(EventType.LATENESS.getType(), students, structure, null, startAt,
                         new ArrayList<>(), massmailed, startDate, endDate, noReasons, null, handler);
                 break;
+//            case PUNISHMENT:
+//                handler.handle(new Either.Right<>(new JsonArray()
+//                        .add(new JsonObject()
+//                                .put("count",5)
+//                                .put("student_id", "testid"))));
+//                break;
+//            case SANCTION:
+//                handler.handle(new Either.Right<>(new JsonArray()
+//                        .add(new JsonObject()
+//                                .put("count",4)
+//                                .put("student_id", "testid2"))));
+//                break;
             default:
                 handler.handle(new Either.Left<>("[Massmailing@DefaultMassmailingService] Unknown Massmailing type"));
         }

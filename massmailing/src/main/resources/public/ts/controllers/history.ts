@@ -116,10 +116,10 @@ export const historyController = ng.controller('HistoryController',
             /* init event type lightbox to interact */
             const initEventTypes = (): Array<{ label: string, value: string, isSelected: boolean }> => {
                 let eventTypes = [];
-                // looping only key string (in our case JUSTIFIED, UNJUSTIFIED, LATENESS...)
+                // looping only key string (in our case REGULARIZED, UNREGULARIZED, LATENESS...)
                 Object.keys(MassmailingStatus).filter(type => !parseInt(type) && type !== '0').forEach(mailingType => {
                     switch (mailingType) {
-                        case MassmailingStatus[MassmailingStatus.UNJUSTIFIED]: {
+                        case MassmailingStatus[MassmailingStatus.UNREGULARIZED]: {
                             let i18n = 'massmailing.summary.ABSENCE';
                             eventTypes.push({label: i18n, value: EventType[EventType.ABSENCE], isSelected: true});
                             break;

@@ -1,63 +1,63 @@
 import {_, idiom as lang, Me, ng, toasts} from 'entcore';
 import {ReasonService} from '@presences/services/ReasonService';
 import {GroupService, SearchService, SettingsService, Template} from '../services';
-import {MailingType, Massmailing, MassmailingAnomaliesResponse, MassmailingStatusResponse} from "../model";
-import {Reason} from "@presences/models/Reason";
-import {MassmailingPreferenceUtils, PresencesPreferenceUtils} from "@common/utils";
-import {HomeUtils} from "../utilities";
+import {MailingType, Massmailing, MassmailingAnomaliesResponse, MassmailingStatusResponse} from '../model';
+import {Reason} from '@presences/models/Reason';
+import {MassmailingPreferenceUtils, PresencesPreferenceUtils} from '@common/utils';
+import {HomeUtils} from '../utilities';
 
 interface Filter {
-    start_date: Date
-    end_date: Date
-    start_at: number
+    start_date: Date;
+    end_date: Date;
+    start_at: number;
     status: {
-        JUSTIFIED: boolean
-        UNJUSTIFIED: boolean
+        REGULARIZED: boolean,
+        UNREGULARIZED: boolean,
         LATENESS: boolean
-    },
+    };
     massmailing_status: {
         mailed: boolean,
         waiting: boolean
-    },
-    allReasons: boolean,
-    reasons: any,
-    noReasons: boolean,
-    student: any,
-    students: any[],
-    group: any,
-    groups: any[],
+    };
+    allReasons: boolean;
+    reasons: any;
+    noReasons: boolean;
+    student: any;
+    students: any[];
+    group: any;
+    groups: any[];
     selected: {
         students: any[],
         groups: any[]
-    },
+    };
     anomalies: {
         MAIL: boolean,
         SMS: boolean
-    }
+    };
 }
 
 interface ViewModel {
-    filter: Filter
+    filter: Filter;
     formFilter: any;
-    reasons: Array<Reason>
-    massmailingStatus: MassmailingStatusResponse
-    massmailingAnomalies: MassmailingAnomaliesResponse[]
+    reasons: Array<Reason>;
+    massmailingStatus: MassmailingStatusResponse;
+    massmailingAnomalies: MassmailingAnomaliesResponse[];
     massmailingCount: {
         MAIL?: number,
         SMS?: number
-    }
+    };
     errors: {
         TYPE: boolean,
         REASONS: boolean,
         STATUS: boolean
-    }
+    };
     massmailing: Massmailing;
     mailingType: typeof MailingType;
     lightbox: {
         filter: boolean,
         massmailing: boolean
-    }
-    templates: Template[]
+    };
+    templates: Template[];
 
     fetchData(): void;
 
@@ -130,8 +130,8 @@ export const homeController = ng.controller('HomeController', ['$scope', 'route'
             end_date: new Date(),
             start_at: 1,
             status: {
-                JUSTIFIED: false,
-                UNJUSTIFIED: true,
+                REGULARIZED: false,
+                UNREGULARIZED: true,
                 LATENESS: false
             },
             massmailing_status: {
@@ -142,8 +142,8 @@ export const homeController = ng.controller('HomeController', ['$scope', 'route'
             noReasons: true,
             reasons: {},
             students: undefined,
-            student: "",
-            group: "",
+            student: '',
+            group: '',
             groups: undefined,
             selected: {
                 students: [],
@@ -188,7 +188,7 @@ export const homeController = ng.controller('HomeController', ['$scope', 'route'
             if (!window.structure) return;
             await loadFormFilter();
             vm.reasons = await ReasonService.getReasons(window.structure.id);
-            vm.reasons.map((reason: Reason) => vm.filter.reasons[reason.id] = vm.filter.status.JUSTIFIED);
+            vm.reasons.map((reason: Reason) => vm.filter.reasons[reason.id] = vm.filter.status.REGULARIZED);
             vm.fetchData();
             $scope.$apply();
         };
@@ -324,15 +324,15 @@ export const homeController = ng.controller('HomeController', ['$scope', 'route'
         vm.getKeys = (object) => Object.keys(object);
 
         vm.switchToJustifiedAbsences = function () {
-            vm.formFilter.status.JUSTIFIED = !vm.formFilter.status.JUSTIFIED;
+            vm.formFilter.status.REGULARIZED = !vm.formFilter.status.REGULARIZED;
             vm.reasons.forEach(function (reason: Reason) {
-                vm.formFilter.reasons[reason.id] = vm.formFilter.status.JUSTIFIED;
+                vm.formFilter.reasons[reason.id] = vm.formFilter.status.REGULARIZED;
             });
         };
 
         vm.switchToUnjustifiedAbsences = function () {
-            vm.formFilter.status.UNJUSTIFIED = !vm.formFilter.status.UNJUSTIFIED;
-            vm.formFilter.noReasons = vm.formFilter.status.UNJUSTIFIED;
+            vm.formFilter.status.UNREGULARIZED = !vm.formFilter.status.UNREGULARIZED;
+            vm.formFilter.noReasons = vm.formFilter.status.UNREGULARIZED;
         };
 
         function checkFilter() {
@@ -345,9 +345,9 @@ export const homeController = ng.controller('HomeController', ['$scope', 'route'
             }
 
             const {noReasons, massmailing_status, status, reasons} = vm.filter;
-            const reasonCheck = (!status.UNJUSTIFIED && !status.JUSTIFIED && status.LATENESS) ? false : (allIsFalse(reasons) && !noReasons);
-            const massmailingStatusCheck = allIsFalse(massmailing_status);
-            const statusCheck = allIsFalse(status);
+            const reasonCheck: boolean = (!status.UNREGULARIZED && !status.REGULARIZED && status.LATENESS) ? false : (allIsFalse(reasons) && !noReasons);
+            const massmailingStatusCheck: boolean = allIsFalse(massmailing_status);
+            const statusCheck: boolean = allIsFalse(status);
 
             vm.errors = {
                 REASONS: reasonCheck,
@@ -360,16 +360,19 @@ export const homeController = ng.controller('HomeController', ['$scope', 'route'
         }
 
         const loadFormFilter = async (): Promise<void> => {
-            let formFilters = await Me.preference(PresencesPreferenceUtils.PREFERENCE_KEYS.MASSMAILING_FILTER);
-            formFilters = formFilters ? formFilters[window.structure.id] : null;
+            let formFiltersPreferences = await Me.preference(PresencesPreferenceUtils.PREFERENCE_KEYS.MASSMAILING_FILTER);
+            let formFilters = formFiltersPreferences ? formFiltersPreferences[window.structure.id] : null;
             if (formFilters) {
                 let {...toMergeFilters} = formFilters;
                 vm.filter = {...vm.filter, ...toMergeFilters};
+                vm.filter.status = {REGULARIZED: formFilters.status.JUSTIFIED ? formFilters.status.JUSTIFIED : formFilters.status.REGULARIZED,
+                    UNREGULARIZED: formFilters.status.UNJUSTIFIED ? formFilters.status.UNJUSTIFIED : formFilters.status.UNREGULARIZED,
+                    LATENESS: formFilters.status.LATENESS};
             } else {
                 vm.filter = {
                     ...vm.filter, ...{
                         start_at: 1,
-                        status: {JUSTIFIED: false, UNJUSTIFIED: true, LATENESS: false},
+                        status: {REGULARIZED: false, UNREGULARIZED: true, LATENESS: false},
                         massmailing_status: {mailed: false, waiting: true},
                         allReasons: true,
                         noReasons: true,

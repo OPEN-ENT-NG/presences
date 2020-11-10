@@ -34,3 +34,64 @@
     }
   }
 }
+
+.massmailing-card-stats {
+  .grid {
+    display: grid;
+    grid-template-columns: auto auto auto auto;
+    grid-column-gap: 25px;
+    grid-template-rows: 117px;
+  }
+
+  &-item {
+    border-radius: 7px;
+    background-color: $white;
+    position: relative;
+    box-shadow: $massmailing-card-shadow;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-around;
+    align-items: center;
+    width: 260px;
+
+    &:after {
+      content: ' ';
+      width: 100%;
+      height: 10px;
+      position: absolute;
+      border-bottom-left-radius: 7px;
+      border-bottom-right-radius: 7px;
+      display: block;
+      bottom: 0;
+      right: 0;
+    }
+
+    &.absences:after, &.UNREGULARIZED:after, &.ABSENCE:after {
+      background-color: $presences-red;
+    }
+
+    &.REGULARIZED:after {
+      background-color: $presences-green;
+    }
+
+    &.lateness:after, &.LATENESS:after {
+      background-color: $presences-purple;
+    }
+
+    &.bold {
+      font-weight: bold;
+    }
+
+    .value {
+      color: $black;
+      font-size: 33px;
+      font-weight: bold;
+      margin-top: 20px;
+    }
+
+    .subtitle {
+      font-size: 14px;
+      margin-bottom: 10px;
+    }
+  }
+}

@@ -1,8 +1,8 @@
 package fr.openent.massmailing.enums;
 
 public enum MassmailingType {
-    JUSTIFIED,
-    UNJUSTIFIED,
+    REGULARIZED,
+    UNREGULARIZED,
     LATENESS,
     PUNISHMENT,
     SANCTION

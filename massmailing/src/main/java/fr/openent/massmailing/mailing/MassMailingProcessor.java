@@ -298,7 +298,7 @@ public abstract class MassMailingProcessor implements Mailing {
     private JsonObject groupEvents(JsonArray events, JsonObject reasons) {
         JsonObject res = new JsonObject();
         for (MassmailingType type : massmailingTypeList) {
-            if (type.equals(MassmailingType.JUSTIFIED) || type.equals(MassmailingType.UNJUSTIFIED)) {
+            if (type.equals(MassmailingType.REGULARIZED) || type.equals(MassmailingType.UNREGULARIZED)) {
                 res.put(EventType.ABSENCE.name(), new JsonArray());
             } else {
                 res.put(type.name(), new JsonArray());
@@ -343,8 +343,8 @@ public abstract class MassMailingProcessor implements Mailing {
         List<Integer> res = new ArrayList<>();
         for (MassmailingType type : massmailingTypeList) {
             switch (type) {
-                case JUSTIFIED:
-                case UNJUSTIFIED:
+                case REGULARIZED:
+                case UNREGULARIZED:
                     res.add(EventType.ABSENCE.getType());
                     break;
                 case LATENESS:
@@ -359,8 +359,8 @@ public abstract class MassMailingProcessor implements Mailing {
     private Integer getEventTypeCode(MassmailingType mailingType) {
         Integer code = null;
         switch (mailingType) {
-            case JUSTIFIED:
-            case UNJUSTIFIED:
+            case REGULARIZED:
+            case UNREGULARIZED:
                 code = EventType.ABSENCE.getType();
                 break;
             case LATENESS:
@@ -373,20 +373,20 @@ public abstract class MassMailingProcessor implements Mailing {
 
     /**
      * Check if massmailing is justified or not.
-     * If massmailingTypeList contains JUSTIFIED then the massmailing is justified
-     * If massmailingTypeList contains UNJUSTIFIED then the massmailing is not justified
-     * If massmailingTypeList contains JUSTIFIED _AND_ UNJUSTIFIED then the massmailing is null
+     * If massmailingTypeList contains REGULARIZED then the massmailing is justified
+     * If massmailingTypeList contains UNREGULARIZED then the massmailing is not justified
+     * If massmailingTypeList contains REGULARIZED _AND_ UNREGULARIZED then the massmailing is null
      *
      * @return justified status
      */
     private Boolean isJustified(MassmailingType type) {
         Boolean justified = null;
         switch (type) {
-            case JUSTIFIED:
+            case REGULARIZED:
                 justified = true;
                 break;
             case LATENESS:
-            case UNJUSTIFIED:
+            case UNREGULARIZED:
                 justified = false;
                 break;
         }
