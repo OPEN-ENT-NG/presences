@@ -478,17 +478,19 @@ public class DefaultAbsenceService implements AbsenceService {
                 .add(currentDate)
                 .add(currentDate)
                 .add(structureId)
+                .add(structureId)
                 .add(currentDate)
                 .add(currentDate);
 
-        String query = "SELECT DISTINCT(ab.student_id) FROM " + Presences.dbSchema +".absence ab" +
-                " FULL OUTER JOIN "+ Presences.dbSchema + ".event ev ON ab.student_id = ev.student_id" +
-                " WHERE (ab.start_date < ?" +
-                " AND ab.end_date > ?" +
-                " AND ab.structure_id = ?) OR" +
-                " (ev.start_date < ?" +
-                " AND ev.end_date > ?" +
-                " AND ev.type_id = 1)";
+        String query = "SELECT ab.student_id FROM "+ Presences.dbSchema +".absence ab" +
+                        " WHERE (ab.start_date < ?" +
+                        " AND ab.end_date > ?" +
+                        " AND ab.structure_id = ?)" +
+                        " UNION" +
+                        " SELECT ev.student_id FROM "+ Presences.dbSchema + ".event ev" +
+                        " INNER JOIN " + Presences.dbSchema+ ".register AS r" +
+                        " ON (r.id = ev.register_id AND r.structure_id = ?)" +
+                        " WHERE (ev.start_date < ? AND ev.end_date > ?)";
 
         Sql.getInstance().prepared(query, params, SqlResult.validResultHandler(handler));
     }
