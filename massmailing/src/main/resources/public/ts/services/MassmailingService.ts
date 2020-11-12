@@ -1,7 +1,7 @@
 import {moment, ng} from 'entcore';
 import http from 'axios';
 import {Massmailing, MassmailingAnomaliesResponse, MassmailingStatusResponse} from '../model';
-import {DateUtils} from "@common/utils";
+import {DateUtils} from '@common/utils';
 
 export interface MassmailingService {
     getStatus(structure: string, massmailed: boolean, reasons: Array<number>, start_at: number, start_date: Date, end_date: Date, groups: Array<string>, students: Array<string>, types: Array<String>, noReasons: boolean): Promise<MassmailingStatusResponse>;
@@ -13,12 +13,12 @@ export interface MassmailingService {
 
 function formatParameters(url: string, structure: string, massmailed: boolean, reasons: Array<number>, start_at: number,
                           start_date: Date, end_date: Date, groups: Array<string>, students: Array<string>, types: Array<String>, noReasons: boolean): string {
-    const startDate: string = DateUtils.format(start_date, DateUtils.FORMAT["YEAR-MONTH-DAY"]);
-    const endDate: string = DateUtils.format(moment(end_date).add(1, 'd'), DateUtils.FORMAT["YEAR-MONTH-DAY"]);
+    const startDate: string = DateUtils.format(start_date, DateUtils.FORMAT['YEAR-MONTH-DAY']);
+    const endDate: string = DateUtils.format(end_date, DateUtils.FORMAT['YEAR-MONTH-DAY']);
 
-    let address = `${url}?structure=${structure}&start_at=${start_at}&start_date=${startDate}&end_date=${endDate}&no_reasons=${noReasons}`;
-    const mapFilters = function (objects: Array<any>, parameter: string): string {
-        let filter = '';
+    let address: string = `${url}?structure=${structure}&start_at=${start_at}&start_date=${startDate}&end_date=${endDate}&no_reasons=${noReasons}`;
+    const mapFilters = (objects: Array<any>, parameter: string): string => {
+        let filter: string = '';
         objects.map((object) => filter += `${parameter}=${object}&`);
         return filter.substr(0, filter.length - 1);
     };

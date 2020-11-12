@@ -4,7 +4,7 @@ $status-max-width: 250px;
 .massmail-status {
   &.grid {
     display: grid;
-    grid-template-columns: repeat(3, minmax(auto, $status-max-width));
+    grid-template-columns: repeat(4, minmax(auto, $status-max-width));
     grid-column-gap: 25px;
     grid-template-rows: $status-height;
 

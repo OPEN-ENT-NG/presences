@@ -119,7 +119,7 @@ export const historyController = ng.controller('HistoryController',
                 // looping only key string (in our case REGULARIZED, UNREGULARIZED, LATENESS...)
                 Object.keys(MassmailingStatus).filter(type => !parseInt(type) && type !== '0').forEach(mailingType => {
                     switch (mailingType) {
-                        case MassmailingStatus[MassmailingStatus.UNREGULARIZED]: {
+                        case MassmailingStatus[MassmailingStatus.NO_REASON]: {
                             let i18n = 'massmailing.summary.ABSENCE';
                             eventTypes.push({label: i18n, value: EventType[EventType.ABSENCE], isSelected: true});
                             break;

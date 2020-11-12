@@ -27,6 +27,7 @@ import java.text.ParseException;
 import java.util.*;
 
 import static fr.openent.massmailing.enums.MailingType.PDF;
+import static fr.openent.massmailing.enums.MassmailingType.NO_REASON;
 
 public abstract class MassMailingProcessor implements Mailing {
     Logger LOGGER = LoggerFactory.getLogger(MassMailingProcessor.class);
@@ -248,17 +249,23 @@ public abstract class MassMailingProcessor implements Mailing {
         Map<String, JsonObject> duplicatedData = new HashMap<>();
 
         for (String relativeId : relativeIdentifiers) {
-            JsonObject relative = relatives.getJsonObject(relativeId);
-            relative.put("events", groupEvents(events.getJsonArray(relative.getString("student_id")), reasons));
 
-            // if student_id is not seen first time
-            if (!duplicatedData.containsKey(relative.getString("student_id"))) {
-                duplicatedData.put(relative.getString("student_id"), relative);
-                data.put(relative.getString("id"), relative);
-            } else {
-                // case we already seen student_id
-                proceedOnDuplicate(data, duplicatedData, relative);
+            JsonObject relative = relatives.getJsonObject(relativeId);
+
+            if (events.getJsonArray(relative.getString("student_id")) != null) {
+
+                relative.put("events", groupEvents(events.getJsonArray(relative.getString("student_id")), reasons));
+
+                // if student_id is not seen first time
+                if (!duplicatedData.containsKey(relative.getString("student_id"))) {
+                    duplicatedData.put(relative.getString("student_id"), relative);
+                    data.put(relative.getString("id"), relative);
+                } else {
+                    // case we already seen student_id
+                    proceedOnDuplicate(data, duplicatedData, relative);
+                }
             }
+
         }
 
         return data;
@@ -298,7 +305,9 @@ public abstract class MassMailingProcessor implements Mailing {
     private JsonObject groupEvents(JsonArray events, JsonObject reasons) {
         JsonObject res = new JsonObject();
         for (MassmailingType type : massmailingTypeList) {
-            if (type.equals(MassmailingType.REGULARIZED) || type.equals(MassmailingType.UNREGULARIZED)) {
+            if (type.equals(MassmailingType.REGULARIZED) || type.equals(MassmailingType.UNREGULARIZED)
+                    || type.equals(NO_REASON)
+                            ) {
                 res.put(EventType.ABSENCE.name(), new JsonArray());
             } else {
                 res.put(type.name(), new JsonArray());
@@ -345,6 +354,7 @@ public abstract class MassMailingProcessor implements Mailing {
             switch (type) {
                 case REGULARIZED:
                 case UNREGULARIZED:
+                case NO_REASON:
                     res.add(EventType.ABSENCE.getType());
                     break;
                 case LATENESS:
@@ -361,6 +371,7 @@ public abstract class MassMailingProcessor implements Mailing {
         switch (mailingType) {
             case REGULARIZED:
             case UNREGULARIZED:
+            case NO_REASON:
                 code = EventType.ABSENCE.getType();
                 break;
             case LATENESS:
@@ -374,7 +385,7 @@ public abstract class MassMailingProcessor implements Mailing {
     /**
      * Check if massmailing is justified or not.
      * If massmailingTypeList contains REGULARIZED then the massmailing is justified
-     * If massmailingTypeList contains UNREGULARIZED then the massmailing is not justified
+     * If massmailingTypeList contains UNREGULARIZED or NO_REASON then the massmailing is not justified
      * If massmailingTypeList contains REGULARIZED _AND_ UNREGULARIZED then the massmailing is null
      *
      * @return justified status
@@ -387,6 +398,7 @@ public abstract class MassMailingProcessor implements Mailing {
                 break;
             case LATENESS:
             case UNREGULARIZED:
+            case NO_REASON:
                 justified = false;
                 break;
         }
@@ -453,7 +465,9 @@ public abstract class MassMailingProcessor implements Mailing {
         List<Future> futures = new ArrayList<>();
         for (MassmailingType type : massmailingTypeList) {
             Future<JsonArray> future = Future.future();
-            Presences.getInstance().getEventsByStudent(getEventTypeCode(type), getStudentsList(), structure, isJustified(type), reasons, massmailed, start, end, noReason, recoveryMethod, FutureHelper.handlerJsonArray(future));
+            Presences.getInstance().getEventsByStudent(getEventTypeCode(type), getStudentsList(), structure, null,
+                    (type.equals(NO_REASON) ? new ArrayList<>() : reasons), massmailed, start, end, type.equals(NO_REASON),
+                    recoveryMethod, isJustified(type), FutureHelper.handlerJsonArray(future));
             futures.add(future);
         }
 

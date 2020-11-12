@@ -9,7 +9,8 @@ export interface IMassmailingFilterPreferences {
     status: {
         REGULARIZED: boolean
         UNREGULARIZED: boolean
-        LATENESS: boolean
+        LATENESS: boolean,
+        NO_REASON: boolean
     };
     massmailing_status: {
         mailed: boolean,
@@ -42,6 +43,7 @@ interface MassmailingStudent {
         REGULARIZED?: number,
         UNREGULARIZED?: number,
         LATENESS?: number,
+        NO_REASON?: number,
         PUNISHMENT?: number,
         SANCTION?: number
     };

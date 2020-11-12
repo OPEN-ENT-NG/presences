@@ -13,6 +13,7 @@ interface Filter {
     status: {
         REGULARIZED: boolean,
         UNREGULARIZED: boolean,
+        NO_REASON: boolean,
         LATENESS: boolean
     };
     massmailing_status: {
@@ -81,11 +82,13 @@ interface ViewModel {
 
     validForm(): void;
 
-    getKeys(object): string[]
+    getKeys(object): string[];
 
-    switchToJustifiedAbsences(): void;
+    switchToRegularizedAbsences(): void;
 
-    switchToUnjustifiedAbsences(): void;
+    switchToUnregularizedAbsences(): void;
+
+    switchToAbsencesWithoutReason(): void;
 
     filterInError(): boolean;
 
@@ -131,7 +134,8 @@ export const homeController = ng.controller('HomeController', ['$scope', 'route'
             start_at: 1,
             status: {
                 REGULARIZED: false,
-                UNREGULARIZED: true,
+                UNREGULARIZED: false,
+                NO_REASON: true,
                 LATENESS: false
             },
             massmailing_status: {
@@ -323,15 +327,22 @@ export const homeController = ng.controller('HomeController', ['$scope', 'route'
 
         vm.getKeys = (object) => Object.keys(object);
 
-        vm.switchToJustifiedAbsences = function () {
+        vm.switchToRegularizedAbsences = (): void => {
             vm.formFilter.status.REGULARIZED = !vm.formFilter.status.REGULARIZED;
-            vm.reasons.forEach(function (reason: Reason) {
+            vm.reasons.forEach((reason: Reason) => {
                 vm.formFilter.reasons[reason.id] = vm.formFilter.status.REGULARIZED;
             });
         };
 
-        vm.switchToUnjustifiedAbsences = function () {
+        vm.switchToUnregularizedAbsences = (): void => {
             vm.formFilter.status.UNREGULARIZED = !vm.formFilter.status.UNREGULARIZED;
+            vm.reasons.forEach((reason: Reason) => {
+                vm.formFilter.reasons[reason.id] = vm.formFilter.status.UNREGULARIZED;
+            });
+        };
+
+        vm.switchToAbsencesWithoutReason = (): void => {
+            vm.formFilter.status.NO_REASON = !vm.formFilter.status.NO_REASON;
             vm.formFilter.noReasons = vm.formFilter.status.UNREGULARIZED;
         };
 
@@ -345,7 +356,7 @@ export const homeController = ng.controller('HomeController', ['$scope', 'route'
             }
 
             const {noReasons, massmailing_status, status, reasons} = vm.filter;
-            const reasonCheck: boolean = (!status.UNREGULARIZED && !status.REGULARIZED && status.LATENESS) ? false : (allIsFalse(reasons) && !noReasons);
+            const reasonCheck: boolean = (!status.UNREGULARIZED && !status.REGULARIZED && (status.LATENESS || status.NO_REASON)) ? false : (allIsFalse(reasons) && !noReasons);
             const massmailingStatusCheck: boolean = allIsFalse(massmailing_status);
             const statusCheck: boolean = allIsFalse(status);
 
@@ -367,12 +378,12 @@ export const homeController = ng.controller('HomeController', ['$scope', 'route'
                 vm.filter = {...vm.filter, ...toMergeFilters};
                 vm.filter.status = {REGULARIZED: formFilters.status.JUSTIFIED ? formFilters.status.JUSTIFIED : formFilters.status.REGULARIZED,
                     UNREGULARIZED: formFilters.status.UNJUSTIFIED ? formFilters.status.UNJUSTIFIED : formFilters.status.UNREGULARIZED,
-                    LATENESS: formFilters.status.LATENESS};
+                    LATENESS: formFilters.status.LATENESS, NO_REASON: formFilters.status.NO_REASON};
             } else {
                 vm.filter = {
                     ...vm.filter, ...{
                         start_at: 1,
-                        status: {REGULARIZED: false, UNREGULARIZED: true, LATENESS: false},
+                        status: {NO_REASON: true, REGULARIZED: false, UNREGULARIZED: false, LATENESS: false},
                         massmailing_status: {mailed: false, waiting: true},
                         allReasons: true,
                         noReasons: true,

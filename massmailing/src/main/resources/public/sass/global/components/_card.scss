@@ -36,14 +36,9 @@
 }
 
 .massmailing-card-stats {
-  .grid {
-    display: grid;
-    grid-template-columns: auto auto auto auto;
-    grid-column-gap: 25px;
-    grid-template-rows: 117px;
-  }
 
   &-item {
+    height: 120px;
     border-radius: 7px;
     background-color: $white;
     position: relative;
@@ -52,7 +47,6 @@
     flex-direction: column;
     justify-content: space-around;
     align-items: center;
-    width: 260px;
 
     &:after {
       content: ' ';
@@ -66,12 +60,16 @@
       right: 0;
     }
 
-    &.absences:after, &.UNREGULARIZED:after, &.ABSENCE:after {
+    &.absences:after, &.NO_REASON:after, &.ABSENCE:after {
       background-color: $presences-red;
     }
 
     &.REGULARIZED:after {
       background-color: $presences-green;
+    }
+
+    &.UNREGULARIZED:after {
+      background-color: $presences-pink;
     }
 
     &.lateness:after, &.LATENESS:after {
@@ -91,7 +89,8 @@
 
     .subtitle {
       font-size: 14px;
-      margin-bottom: 10px;
+      margin: 8px 0;
+      text-align: center;
     }
   }
 }

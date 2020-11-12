@@ -5,5 +5,6 @@ public enum MassmailingType {
     UNREGULARIZED,
     LATENESS,
     PUNISHMENT,
-    SANCTION
+    SANCTION,
+    NO_REASON
 }

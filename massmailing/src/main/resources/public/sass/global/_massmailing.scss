@@ -81,10 +81,14 @@ body.massmailing {
         color: $white;
 
         &.REGULARIZED {
-          background: $presences-pink;
+          background: $presences-green;
         }
 
         &.UNREGULARIZED {
+          background: $presences-pink;
+        }
+
+        &.NO_REASON {
           background: $presences-red;
         }
 

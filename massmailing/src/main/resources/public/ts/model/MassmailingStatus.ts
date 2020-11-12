@@ -3,12 +3,14 @@ export enum MassmailingStatus {
     UNREGULARIZED,
     LATENESS,
     PUNISHMENT,
-    SANCTION
+    SANCTION,
+    NO_REASON
 }
 
 export interface MassmailingStatusResponse {
     REGULARIZED?: number;
     UNREGULARIZED?: number;
+    NO_REASON?: number;
     LATENESS?: number;
     PUNISHMENT?: number;
     SANCTION?: number;

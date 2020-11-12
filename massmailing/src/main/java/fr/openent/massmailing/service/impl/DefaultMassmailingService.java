@@ -52,11 +52,15 @@ public class DefaultMassmailingService implements MassmailingService {
         switch (type) {
             case REGULARIZED:
                 Presences.getInstance().getCountEventByStudent(EventType.ABSENCE.getType(), students, structure, null, startAt,
-                        reasons, massmailed, startDate, endDate, noReasons, true, handler);
+                        reasons, massmailed, startDate, endDate, false, true, handler);
                 break;
             case UNREGULARIZED:
                 Presences.getInstance().getCountEventByStudent(EventType.ABSENCE.getType(), students, structure, null, startAt,
-                        reasons, massmailed, startDate, endDate, noReasons, false, handler);
+                        reasons, massmailed, startDate, endDate, false, false, handler);
+                break;
+            case NO_REASON:
+                Presences.getInstance().getCountEventByStudent(EventType.ABSENCE.getType(), students, structure, null, startAt,
+                        new ArrayList<>(), massmailed, startDate, endDate, true, null, handler);
                 break;
             case LATENESS:
                 Presences.getInstance().getCountEventByStudent(EventType.LATENESS.getType(), students, structure, null, startAt,

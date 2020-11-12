@@ -178,8 +178,9 @@ public class Template extends BaseServer {
                             line += "<td>" + DateHelper.getTimeString(event.getString("display_start_date",
                                     event.getString("start_date")), DateHelper.SQL_FORMAT) + " - " +
                                     DateHelper.getTimeString(event.getString("display_end_date",
-                                            event.getString("end_date")), DateHelper.SQL_FORMAT) + "</td>";
-                            if (!"LATENESS".equals(key)) {
+                                            event.getString
+                                                    ("end_date")), DateHelper.SQL_FORMAT) + "</td>";
+                            if (!"LATENESS".equals(key) && eventContainsReason(event)) {
                                 line += "<td>" + getReasonLabel(event) + "</td>";
                                 line += "<td>" + getRegularisedLabel(event) + "</td></tr>";
                             }
@@ -212,6 +213,17 @@ public class Template extends BaseServer {
         }
 
         return summary;
+    }
+
+    private boolean eventContainsReason(JsonObject event) {
+        List<Integer> reasonIds = new ArrayList<>();
+        JsonArray events = event.getJsonArray("events", new JsonArray());
+        for (int i = 0; i < events.size(); i++) {
+            if (events.getJsonObject(i).getInteger("reason_id") != null) {
+                reasonIds.add(events.getJsonObject(i).getInteger("reason_id"));
+            }
+        }
+        return reasonIds.size() != 0;
     }
 
     public String processLastEvent(HashMap<TemplateCode, Object> codeValues, TemplateCode key) {
