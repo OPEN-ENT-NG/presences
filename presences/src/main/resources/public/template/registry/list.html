@@ -39,8 +39,12 @@
                      data-ng-show="vm.hasEventType(day.eventsDisplay, vm.eventType[0])">
                     &nbsp;
                 </div>
-                <div class="absent-reason h[[day.eventsDisplay.length + (day.forgottenNotebook ? 1 : 0)]]"
-                     data-ng-show="vm.isAbsenceReason(day.eventsDisplay)">
+                <div class="absent-reason-unregularized h[[day.eventsDisplay.length + (day.forgottenNotebook ? 1 : 0)]]"
+                     data-ng-show="!vm.isAbsenceRegularized(day.eventsDisplay) && day.eventsDisplay.length > 0">
+                    &nbsp;
+                </div>
+                <div class="absent-reason-regularized h[[day.eventsDisplay.length + (day.forgottenNotebook ? 1 : 0)]]"
+                     data-ng-show="vm.isAbsenceRegularized(day.eventsDisplay)  && day.eventsDisplay.length > 0">
                     &nbsp;
                 </div>
                 <div class="lateness h[[day.eventsDisplay.length + (day.forgottenNotebook ? 1 : 0)]]"

@@ -121,8 +121,12 @@ ul {
           background-color: $presences-red;
         }
 
-        .absent-reason {
+        .absent-reason-unregularized {
           background-color: $presences-pink;
+        }
+
+        .absent-reason-regularized {
+          background-color: $presences-green;
         }
 
         .lateness {

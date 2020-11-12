@@ -182,7 +182,8 @@ public class DefaultEventService implements EventService {
                 .addAll(new JsonArray(eventType))
                 .addAll(new JsonArray(users));
 
-        String query = "SELECT start_date, end_date, student_id, type_id, reason_id, reason.label as reason " +
+        String query = "SELECT start_date, end_date, student_id, type_id, " +
+                "counsellor_regularisation, reason_id, reason.label as reason " +
                 "FROM " + Presences.dbSchema + ".event " +
                 "LEFT JOIN " + Presences.dbSchema + ".reason ON (event.reason_id = reason.id) " +
                 "WHERE start_date >= ? " +
