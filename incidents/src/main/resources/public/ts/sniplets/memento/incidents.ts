@@ -47,9 +47,9 @@ interface IViewModel {
 
     filterPunishments(): Array<number>;
 
-    getType(type: string): string;
+    getCategory(type: string, mementoIncident: IMementoIncident): string;
 
-    getLabel(type: string, mementoIncident: IMementoIncident): string;
+    getType(type: string, mementoIncident: IMementoIncident): string;
 }
 
 const vm: IViewModel = {
@@ -164,25 +164,31 @@ const vm: IViewModel = {
     },
 
     filterPunishments(): Array<number> {
+        let punishment: Array<number> = [];
+        let sanction: Array<number> = [];
         if (vm.filter.punishment) {
-            return vm.punishmentsTypes.filter((t: IPunishmentType) => t.type === EVENT_TYPES.PUNISHMENT).map((p: IPunishmentType) => p.id);
-        } else if (vm.filter.sanction) {
-            return vm.punishmentsTypes.filter((t: IPunishmentType) => t.type === EVENT_TYPES.SANCTION).map((p: IPunishmentType) => p.id);
+            punishment = vm.punishmentsTypes.filter((t: IPunishmentType) => t.type === EVENT_TYPES.PUNISHMENT).map((p: IPunishmentType) => p.id);
         }
+        if (vm.filter.sanction) {
+            sanction = vm.punishmentsTypes.filter((t: IPunishmentType) => t.type === EVENT_TYPES.SANCTION).map((p: IPunishmentType) => p.id);
+        }
+        return [...punishment, ...sanction];
     },
 
-    getType(type: string): string {
-        switch (type) {
-            case EVENT_TYPES.INCIDENT:
-                return lang.translate("incidents.incident");
-            case EVENT_TYPES.PUNISHMENT:
+    getCategory(type: string, mementoIncident: IMementoIncident): string {
+        if (type === EVENT_TYPES.INCIDENT) {
+            return lang.translate("incidents.incident");
+        } else if (type === EVENT_TYPES.PUNISHMENT) {
+            if ((<IPunishment>mementoIncident.item).type.type === EVENT_TYPES.PUNISHMENT) {
                 return lang.translate("presences.punishment");
-            case EVENT_TYPES.SANCTION:
+            }
+            if ((<IPunishment>mementoIncident.item).type.type === EVENT_TYPES.SANCTION) {
                 return lang.translate("presences.sanction");
+            }
         }
     },
 
-    getLabel(type: string, mementoIncident: IMementoIncident): string {
+    getType(type: string, mementoIncident: IMementoIncident): string {
         switch (type) {
             case EVENT_TYPES.INCIDENT:
                 return (<Incident>mementoIncident.item).incident_type.label;
