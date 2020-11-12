@@ -945,7 +945,7 @@ public class DefaultEventService implements EventService {
                 ")) as events " +
                 periodRange +
                 "FROM " + Presences.dbSchema + ".event " +
-                "INNER JOIN presences.reason ON (reason.id = event.reason_id) " +
+                "LEFT JOIN presences.reason ON (reason.id = event.reason_id) " +
                 "INNER JOIN presences.register ON (register.id = event.register_id) " +
                 "WHERE event.start_date" + dateCast + " >= ? " +
                 "AND event.end_date" + dateCast + "<= ? " +
@@ -966,10 +966,23 @@ public class DefaultEventService implements EventService {
             params.addAll(new JsonArray(students));
         }
 
+        // If we want to fetch events WITH reasonId, array reasonIds fetched is not empty 
+        // (optional if we wish noReason fetched at same time then noReason is TRUE)
         if (!reasonsId.isEmpty()) {
             query += " AND (reason_id IN " + Sql.listPrepared(reasonsId) + (noReasons ? " OR reason_id IS NULL" : "") + ") ";
             params.addAll(new JsonArray(reasonsId));
         }
+
+        // If we want to fetch events with NO reasonId, array reasonIds fetched is empty 
+        // AND noReason is TRUE
+        if (reasonsId.isEmpty() && noReasons) {
+            query += " AND reason_id IS NULL ";
+        } else {
+            // this case occurs if you wish not to set noReason to true but want to FALSE,
+            // then there is no need to fetch reasonIds from above
+            query += " AND reason_id IS NOT NULL ";
+        }
+
         if (massmailed != null) {
             query += " AND massmailed = ? ";
             params.add(massmailed);

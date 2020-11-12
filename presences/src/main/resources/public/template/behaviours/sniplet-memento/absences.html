@@ -21,7 +21,7 @@
                 <div class="summary flex">
                     <div class="UNJUSTIFIED">
                         <div class="centered-text">
-                            <div ng-bind="vm.summary.UNJUSTIFIED" class="number"></div>
+                            <div ng-bind="vm.summary.NO_REASON" class="number"></div>
                             <div>
                                 <i18n>presences.memento.absence.type.without.motif</i18n>
                             </div>
@@ -29,9 +29,17 @@
                     </div>
                     <div class="JUSTIFIED">
                         <div class="centered-text">
-                            <div ng-bind="vm.summary.JUSTIFIED" class="number"></div>
+                            <div ng-bind="vm.summary.UNREGULARIZED" class="number"></div>
                             <div>
                                 <i18n>presences.memento.absence.type.motif</i18n>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="REGULARIZED">
+                        <div class="centered-text">
+                            <div ng-bind="vm.summary.REGULARIZED" class="number"></div>
+                            <div>
+                                <i18n>presences.memento.absence.type.REGULARIZED</i18n>
                             </div>
                         </div>
                     </div>
@@ -40,14 +48,6 @@
                             <div ng-bind="vm.summary.LATENESS" class="number"></div>
                             <div>
                                 <i18n>presences.memento.absence.type.LATENESS</i18n>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="DEPARTURE">
-                        <div class="centered-text">
-                            <div ng-bind="vm.summary.DEPARTURE" class="number"></div>
-                            <div>
-                                <i18n>presences.memento.absence.type.DEPARTURE</i18n>
                             </div>
                         </div>
                     </div>

@@ -60,6 +60,10 @@
           background-color: $presences-pink;
         }
 
+        &.REGULARIZED:after {
+          background-color: $presences-green;
+        }
+
         &.LATENESS:after {
           background-color: $presences-purple;
         }

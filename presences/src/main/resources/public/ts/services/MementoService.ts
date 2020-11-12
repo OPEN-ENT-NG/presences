@@ -8,8 +8,9 @@ export interface IPeriodSummary {
 export interface IEventSummary {
     month: number,
     types: {
-        UNJUSTIFIED?: number,
-        JUSTIFIED?: number,
+        UNREGULARIZED?: number,
+        REGULARIZED?: number,
+        NO_REASON?: number,
         LATENESS?: number,
         DEPARTURE?: number
     }

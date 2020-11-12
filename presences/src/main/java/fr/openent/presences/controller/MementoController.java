@@ -3,7 +3,9 @@ package fr.openent.presences.controller;
 import fr.openent.presences.common.helper.DateHelper;
 import fr.openent.presences.common.helper.FutureHelper;
 import fr.openent.presences.service.EventService;
+import fr.openent.presences.service.ReasonService;
 import fr.openent.presences.service.impl.DefaultEventService;
+import fr.openent.presences.service.impl.DefaultReasonService;
 import fr.wseduc.rs.ApiDoc;
 import fr.wseduc.rs.Get;
 import fr.wseduc.security.ActionType;
@@ -18,15 +20,18 @@ import org.entcore.common.controller.ControllerHelper;
 
 import java.text.ParseException;
 import java.util.*;
+import java.util.stream.Collectors;
 
 public class MementoController extends ControllerHelper {
 
-    private final String JUSTIFIED = "JUSTIFIED";
-    private final String UNJUSTIFIED = "UNJUSTIFIED";
+    private final String REGULARIZED = "REGULARIZED";
+    private final String UNREGULARIZED = "UNREGULARIZED";
     private final String LATENESS = "LATENESS";
     private final String DEPARTURE = "DEPARTURE";
+    private final String NO_REASON = "NO_REASON";
 
-    private EventService eventService;
+    private final EventService eventService;
+    private final ReasonService reasonService = new DefaultReasonService();
 
     public MementoController(EventBus eventBus) {
         super();
@@ -37,10 +42,11 @@ public class MementoController extends ControllerHelper {
         boolean valid = true;
         for (String type : types) {
             switch (type) {
-                case JUSTIFIED:
-                case UNJUSTIFIED:
+                case REGULARIZED:
+                case UNREGULARIZED:
                 case LATENESS:
                 case DEPARTURE:
+                case NO_REASON:
                     valid = true;
                     break;
                 default:
@@ -66,63 +72,79 @@ public class MementoController extends ControllerHelper {
             return;
         }
 
-        List<Future> futures = new ArrayList<>();
-        for (String type : types) {
-            Future<JsonArray> future = Future.future();
-            switch (type) {
-                case UNJUSTIFIED:
-                    eventService.getEventsByStudent(1, Collections.singletonList(student), structure, false, new ArrayList<>(), null, start, end, true, null, null, FutureHelper.handlerJsonArray(future));
-                    break;
-                case JUSTIFIED:
-                    eventService.getEventsByStudent(1, Collections.singletonList(student), structure, true, new ArrayList<>(), null, start, end, true, null, null, FutureHelper.handlerJsonArray(future));
-                    break;
-                case LATENESS:
-                    eventService.getEventsByStudent(2, Collections.singletonList(student), structure, null, new ArrayList<>(), null, start, end, true, null, null, FutureHelper.handlerJsonArray(future));
-                    break;
-                case DEPARTURE:
-                    eventService.getEventsByStudent(3, Collections.singletonList(student), structure, null, new ArrayList<>(), null, start, end, true, null, null, FutureHelper.handlerJsonArray(future));
-                    break;
-                default:
-                    //There is no default case
-                    log.error("There is no case for value: " + type);
-            }
-            futures.add(future);
-        }
+        reasonService.fetchReason(structure, eventAsync -> {
+            if (eventAsync.isLeft()) {
+                log.error("[Presences@MementoController::getAbsenceSummary] failed to fetch reasons for getting our events " + eventAsync.left().getValue());
+                badRequest(request);
+            } else {
 
-        Future<JsonObject> absenceRateFuture = Future.future();
-        eventService.getAbsenceRate(student, structure, start, end, FutureHelper.handlerJsonObject(absenceRateFuture));
-        futures.add(absenceRateFuture);
+                List<Integer> reasonIds = ((List<JsonObject>) eventAsync.right().getValue().getList())
+                        .stream()
+                        .map(reason -> reason.getLong("id").intValue())
+                        .collect(Collectors.toList());
 
-        CompositeFuture.all(futures).setHandler(res -> {
-            if (res.failed()) {
-                renderError(request);
-                return;
-            }
-
-            Map<Integer, JsonObject> months = generateMonthMap(types, getPeriodRange(start, end));
-
-            for (int i = 0; i < types.size(); i++) {
-                String type = types.get(i);
-                JsonArray values = (JsonArray) futures.get(i).result();
-                if (values.isEmpty()) continue;
-                ((List<JsonObject>) values.getList()).forEach(event -> {
-                    try {
-                        Date evtStartDate = DateHelper.parse(event.getString("start_date"));
-                        JsonObject monthTypes = months.get(DateHelper.getMonthNumber(evtStartDate))
-                                .getJsonObject("types");
-                        monthTypes.put(type, monthTypes.getInteger(type) + 1);
-                    } catch (ParseException e) {
-                        log.error("[Presences@MementoController] Failed to parse date: " + event.getString("start_date"), e);
+                List<Future> futures = new ArrayList<>();
+                for (String type : types) {
+                    Future<JsonArray> future = Future.future();
+                    switch (type) {
+                        case UNREGULARIZED:
+                            eventService.getEventsByStudent(1, Collections.singletonList(student), structure, null, reasonIds, null, start, end, false, null, false, FutureHelper.handlerJsonArray(future));
+                            break;
+                        case REGULARIZED:
+                            eventService.getEventsByStudent(1, Collections.singletonList(student), structure, null, reasonIds, null, start, end, false, null, true, FutureHelper.handlerJsonArray(future));
+                            break;
+                        case NO_REASON:
+                            eventService.getEventsByStudent(1, Collections.singletonList(student), structure, null, new ArrayList<>(), null, start, end, true, null, false, FutureHelper.handlerJsonArray(future));
+                            break;
+                        case LATENESS:
+                            eventService.getEventsByStudent(2, Collections.singletonList(student), structure, null, new ArrayList<>(), null, start, end, true, null, null, FutureHelper.handlerJsonArray(future));
+                            break;
+                        case DEPARTURE:
+                            eventService.getEventsByStudent(3, Collections.singletonList(student), structure, null, new ArrayList<>(), null, start, end, true, null, null, FutureHelper.handlerJsonArray(future));
+                            break;
+                        default:
+                            //There is no default case
+                            log.error("[Presences@MementoController::getAbsenceSummary] There is no case for value: " + type);
                     }
+                    futures.add(future);
+                }
+
+                Future<JsonObject> absenceRateFuture = Future.future();
+                eventService.getAbsenceRate(student, structure, start, end, FutureHelper.handlerJsonObject(absenceRateFuture));
+                futures.add(absenceRateFuture);
+
+                CompositeFuture.all(futures).setHandler(res -> {
+                    if (res.failed()) {
+                        renderError(request);
+                        return;
+                    }
+
+                    Map<Integer, JsonObject> months = generateMonthMap(types, getPeriodRange(start, end));
+
+                    for (int i = 0; i < types.size(); i++) {
+                        String type = types.get(i);
+                        JsonArray values = (JsonArray) futures.get(i).result();
+                        if (values.isEmpty()) continue;
+                        ((List<JsonObject>) values.getList()).forEach(event -> {
+                            try {
+                                Date evtStartDate = DateHelper.parse(event.getString("start_date"));
+                                JsonObject monthTypes = months.get(DateHelper.getMonthNumber(evtStartDate))
+                                        .getJsonObject("types");
+                                monthTypes.put(type, monthTypes.getInteger(type) + 1);
+                            } catch (ParseException e) {
+                                log.error("[Presences@MementoController] Failed to parse date: " + event.getString("start_date"), e);
+                            }
+                        });
+                    }
+
+                    JsonArray result = new JsonArray();
+                    months.keySet().forEach(key -> result.add(months.get(key)));
+                    JsonObject response = new JsonObject()
+                            .put("months", result)
+                            .put("absence_rate", absenceRateFuture.result().getValue("absence_rate"));
+                    renderJson(request, response);
                 });
             }
-
-            JsonArray result = new JsonArray();
-            months.keySet().forEach(key -> result.add(months.get(key)));
-            JsonObject response = new JsonObject()
-                    .put("months", result)
-                    .put("absence_rate", absenceRateFuture.result().getValue("absence_rate"));
-            renderJson(request, response);
         });
     }
 

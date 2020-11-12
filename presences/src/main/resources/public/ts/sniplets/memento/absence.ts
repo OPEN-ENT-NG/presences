@@ -6,16 +6,18 @@ import * as ApexCharts from 'apexcharts';
 import ApexOptions = ApexCharts.ApexOptions;
 
 enum EVENT_TYPES {
-    UNJUSTIFIED = "UNJUSTIFIED",
-    JUSTIFIED = "JUSTIFIED",
+    UNREGULARIZED = "UNREGULARIZED",
+    REGULARIZED = "REGULARIZED",
+    NO_REASON = "NO_REASON",
     LATENESS = "LATENESS",
     DEPARTURE = "DEPARTURE"
 }
 
 
 interface ISummary {
-    UNJUSTIFIED: number
-    JUSTIFIED: number
+    UNREGULARIZED: number
+    REGULARIZED: number
+    NO_REASON: number
     LATENESS: number
     DEPARTURE: number
 }
@@ -48,8 +50,9 @@ function translatePeriods(periods: Array<IPeriod>) {
 
 function countSummary() {
     vm.periodSummary.months.forEach(month => {
-        vm.summary.UNJUSTIFIED = vm.summary.UNJUSTIFIED += month.types.UNJUSTIFIED;
-        vm.summary.JUSTIFIED = vm.summary.JUSTIFIED += month.types.JUSTIFIED;
+        vm.summary.UNREGULARIZED = vm.summary.UNREGULARIZED += month.types.UNREGULARIZED;
+        vm.summary.REGULARIZED = vm.summary.REGULARIZED += month.types.REGULARIZED;
+        vm.summary.NO_REASON = vm.summary.NO_REASON += month.types.NO_REASON;
         vm.summary.DEPARTURE = vm.summary.DEPARTURE += month.types.DEPARTURE;
         vm.summary.LATENESS = vm.summary.LATENESS += month.types.LATENESS;
     });
@@ -57,8 +60,9 @@ function countSummary() {
 
 function getDefaultSummary() {
     return {
-        UNJUSTIFIED: 0,
-        JUSTIFIED: 0,
+        UNREGULARIZED: 0,
+        REGULARIZED: 0,
+        NO_REASON: 0,
         LATENESS: 0,
         DEPARTURE: 0
     }
@@ -68,7 +72,7 @@ async function loadYearEvents(): Promise<IPeriodSummary> {
     try {
         const start: string = moment(vm.periods[0].timestamp_dt).format(DateUtils.FORMAT["YEAR-MONTH-DAY"]);
         const end: string = moment(vm.periods[vm.periods.length - 1].timestamp_fn).format(DateUtils.FORMAT["YEAR-MONTH-DAY"]);
-        const types: Array<string> = [EVENT_TYPES.UNJUSTIFIED, EVENT_TYPES.JUSTIFIED, EVENT_TYPES.LATENESS, EVENT_TYPES.DEPARTURE];
+        const types: Array<string> = [EVENT_TYPES.UNREGULARIZED, EVENT_TYPES.REGULARIZED, EVENT_TYPES.NO_REASON, EVENT_TYPES.LATENESS];
         return await MementoService.getStudentEventsSummary(vm.student, window.structure.id, start, end, types);
     } catch (err) {
         throw err;
@@ -79,7 +83,7 @@ async function loadPeriodEvents(): Promise<IPeriodSummary> {
     try {
         const start: string = moment(vm.selected.period.timestamp_dt).format(DateUtils.FORMAT["YEAR-MONTH-DAY"]);
         const end: string = moment(vm.selected.period.timestamp_fn).format(DateUtils.FORMAT["YEAR-MONTH-DAY"]);
-        const types: Array<string> = [EVENT_TYPES.UNJUSTIFIED, EVENT_TYPES.JUSTIFIED, EVENT_TYPES.LATENESS, EVENT_TYPES.DEPARTURE];
+        const types: Array<string> = [EVENT_TYPES.UNREGULARIZED, EVENT_TYPES.REGULARIZED, EVENT_TYPES.NO_REASON, EVENT_TYPES.LATENESS];
         return await MementoService.getStudentEventsSummary(vm.student, window.structure.id, start, end, types);
     } catch (err) {
         throw err;
@@ -132,8 +136,9 @@ function getCurrentPeriod(periods: Array<IPeriod> ): IPeriod {
 
 function transformGraphSummaryToChartData(): void {
     const colors = {
-        JUSTIFIED: '#ff8a84',
-        UNJUSTIFIED: '#e61610',
+        UNREGULARIZED: '#ff8a84',
+        REGULARIZED: '#72bb53',
+        NO_REASON: '#e61610',
         LATENESS: '#9c29b7',
         DEPARTURE: '#24a1ac'
     };
