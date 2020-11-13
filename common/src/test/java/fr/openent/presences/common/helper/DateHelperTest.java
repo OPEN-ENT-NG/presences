@@ -41,7 +41,7 @@ public class DateHelperTest {
     @Test(expected = ParseException.class)
     @DisplayName("DateHelper.isAfter should throws ParseException")
     public void isAfter_should_throws_ParseException() throws ParseException {
-        DateHelper.isAfter(MONGO_SECOND_DATE, MONGO_FIRST_DATE);
+        DateHelper.isAfter(MONGO_SECOND_DATE, THROW_DATE);
     }
 
     @Test
@@ -53,6 +53,6 @@ public class DateHelperTest {
     @Test(expected = ParseException.class)
     @DisplayName("DateHelper.isBefore should throws ParseException")
     public void isBefore_should_throws_ParseException() throws ParseException {
-        DateHelper.isBefore(MONGO_SECOND_DATE, MONGO_FIRST_DATE);
+        DateHelper.isBefore(MONGO_SECOND_DATE, THROW_DATE);
     }
 }

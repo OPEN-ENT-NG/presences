@@ -58,8 +58,10 @@ subprojects {
     }
     dependencies {
         compileOnly "io.vertx:vertx-core:$vertxVersion"
+        testCompile "io.vertx:vertx-unit:$vertxVersion"
         testCompile "io.vertx:vertx-core:$vertxVersion"
         testCompile "org.junit.jupiter:junit-jupiter-engine:$junitVersion"
+        testCompile "org.mockito:mockito-core:$mockitoVersion"
         compile "fr.wseduc:vertx-cron-timer:$vertxCronTimer"
         testCompile "io.vertx:testtools:$toolsVersion"
     }
