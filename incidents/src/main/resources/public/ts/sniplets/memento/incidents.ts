@@ -151,6 +151,9 @@ const vm: IViewModel = {
             };
             window.location.href = `/incidents#/punishment/sanction?mementoStudentId=${student.id}&mementoStudentName=${student.displayName}`;
         }
+        if (window.location.href === `/incidents#/incidents` || `/incidents#/punishment/sanction`) {
+            window.location.reload();
+        }
         window.memento.close();
         vm.apply();
     },
