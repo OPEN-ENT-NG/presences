@@ -64,7 +64,7 @@ public class DefaultMassmailingService implements MassmailingService {
                 break;
             case LATENESS:
                 Presences.getInstance().getCountEventByStudent(EventType.LATENESS.getType(), students, structure, null, startAt,
-                        new ArrayList<>(), massmailed, startDate, endDate, noReasons, null, handler);
+                        new ArrayList<>(), massmailed, startDate, endDate, noReasons, "HOUR", null, handler);
                 break;
 //            case PUNISHMENT:
 //                handler.handle(new Either.Right<>(new JsonArray()

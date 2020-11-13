@@ -136,13 +136,13 @@ public class Global extends IndicatorWorker {
                 future = retrieveEventCount(structureId, studentId, 2);
                 break;
             case UNJUSTIFIED_ABSENCE:
-                future = fetchEventCountFromPresences(structureId, studentId, false, true, false);
+                future = fetchEventCountFromPresences(structureId, studentId, null, true, false);
                 break;
             case JUSTIFIED_UNREGULARIZED_ABSENCE:
-                future = fetchEventCountFromPresences(structureId, studentId, true, false, false);
+                future = fetchEventCountFromPresences(structureId, studentId, null, false, false);
                 break;
             case REGULARIZED_ABSENCE:
-                future = fetchEventCountFromPresences(structureId, studentId, true, false, true);
+                future = fetchEventCountFromPresences(structureId, studentId, null, false, true);
                 break;
             default:
                 future = Future.failedFuture(new RuntimeException("Unrecognized event type"));

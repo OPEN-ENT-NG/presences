@@ -25,7 +25,7 @@ public class Presences {
     }
 
     public void getCountEventByStudent(Integer eventType, List<String> students, String structure, Boolean justified, Integer startAt, List<Integer> reasonsId, Boolean massmailed,
-                                       String startDate, String endDate, boolean noReasons, Boolean regularized, Handler<Either<String, JsonArray>> handler) {
+                                       String startDate, String endDate, boolean noReasons, String recoveryMethod, Boolean regularized, Handler<Either<String, JsonArray>> handler) {
         JsonObject action = new JsonObject()
                 .put("eventType", eventType)
                 .put("justified", justified)
@@ -38,8 +38,15 @@ public class Presences {
                 .put("endDate", endDate)
                 .put("regularized", regularized)
                 .put("noReasons", noReasons)
+                .put("recoveryMethod", recoveryMethod)
                 .put("action", "get-count-event-by-student");
         eb.send(address, action, MessageResponseHandler.messageJsonArrayHandler(handler));
+    }
+
+    public void getCountEventByStudent(Integer eventType, List<String> students, String structure, Boolean justified, Integer startAt, List<Integer> reasonsId, Boolean massmailed,
+                                       String startDate, String endDate, boolean noReasons, Boolean regularized, Handler<Either<String, JsonArray>> handler) {
+        getCountEventByStudent(eventType, students, structure, justified, startAt, reasonsId, massmailed,
+                startDate, endDate, noReasons, null, regularized, handler);
     }
 
     public void getEventsByStudent(Integer eventType, List<String> students, String structure, Boolean justified, List<Integer> reasonsId, Boolean massmailed,
