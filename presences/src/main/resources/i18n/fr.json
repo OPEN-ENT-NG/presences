@@ -372,7 +372,7 @@
   "sniplet.navigation.title": "Navigation",
   "presences.memento.absence.title": "Absences",
   "presences.memento.absence.init.failed": "Une erreur est survenue lors du chargement du widget absence",
-  "presences.memento.absence.type.motif": "avec motif",
+  "presences.memento.absence.type.motif": "non régularisées",
   "presences.memento.absence.type.without.motif": "sans motif",
   "presences.memento.absence.type.REGULARIZED": "régularisées",
   "presences.memento.absence.type.UNREGULARIZED": "non régularisées",
