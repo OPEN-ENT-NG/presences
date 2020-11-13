@@ -68,6 +68,8 @@ interface ViewModel {
 
     getActivatedReasonsCount(): number;
 
+    getReasonsCount(): number;
+
     searchStudent(value: string): void;
 
     selectStudent(model: any, teacher: any): void;
@@ -192,7 +194,7 @@ export const homeController = ng.controller('HomeController', ['$scope', 'route'
             if (!window.structure) return;
             await loadFormFilter();
             vm.reasons = await ReasonService.getReasons(window.structure.id);
-            vm.reasons.map((reason: Reason) => vm.filter.reasons[reason.id] = vm.filter.status.REGULARIZED);
+            vm.reasons.map((reason: Reason) => vm.filter.reasons[reason.id] = (vm.filter.status.REGULARIZED || vm.filter.status.UNREGULARIZED));
             vm.fetchData();
             $scope.$apply();
         };
@@ -206,13 +208,17 @@ export const homeController = ng.controller('HomeController', ['$scope', 'route'
         };
 
 
-        vm.getActivatedReasonsCount = function () {
-            let count = 0;
+        vm.getActivatedReasonsCount = (): number => {
+            let count: number = 0;
             for (let reason in vm.formFilter.reasons) {
                 count += vm.formFilter.reasons[reason];
             }
 
             return count;
+        };
+
+        vm.getReasonsCount = (): number => {
+            return Object.keys(vm.formFilter.reasons).length;
         };
 
         // If mailed AND waiting, return null. Empty massmailed parameter = non parameter filter.
