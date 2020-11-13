@@ -36,15 +36,18 @@
                 ng-class="{'day-off': day.exclude }"
                 data-ng-click="vm.openEventCard($event, studentEvent.displayName, day, day.events)">
                 <div class="absent h[[day.eventsDisplay.length + (day.forgottenNotebook ? 1 : 0)]]"
-                     data-ng-show="vm.hasEventType(day.eventsDisplay, vm.eventType[0])">
+                     data-ng-show="day.eventsDisplay.length > 0 && vm.hasEventType(day.eventsDisplay, vm.eventType[0])
+                                    && !vm.hasReason(day.eventsDisplay)">
                     &nbsp;
                 </div>
                 <div class="absent-reason-unregularized h[[day.eventsDisplay.length + (day.forgottenNotebook ? 1 : 0)]]"
-                     data-ng-show="!vm.isAbsenceRegularized(day.eventsDisplay) && day.eventsDisplay.length > 0">
+                     data-ng-show="!vm.isAbsenceRegularized(day.eventsDisplay) && vm.hasReason(day.eventsDisplay)
+                                && day.eventsDisplay.length > 0 && vm.hasEventType(day.eventsDisplay, vm.eventType[0])">
                     &nbsp;
                 </div>
                 <div class="absent-reason-regularized h[[day.eventsDisplay.length + (day.forgottenNotebook ? 1 : 0)]]"
-                     data-ng-show="vm.isAbsenceRegularized(day.eventsDisplay)  && day.eventsDisplay.length > 0">
+                     data-ng-show="vm.isAbsenceRegularized(day.eventsDisplay) && vm.hasReason(day.eventsDisplay)
+                                    && day.eventsDisplay.length > 0 && vm.hasEventType(day.eventsDisplay, vm.eventType[0])">
                     &nbsp;
                 </div>
                 <div class="lateness h[[day.eventsDisplay.length + (day.forgottenNotebook ? 1 : 0)]]"

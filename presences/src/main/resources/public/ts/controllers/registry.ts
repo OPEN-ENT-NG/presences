@@ -69,6 +69,8 @@ interface ViewModel {
 
     hasEventType(event: RegistryEvent[], eventTypeName: string): boolean;
 
+    hasReason(event: RegistryEvent[]): boolean;
+
     isAbsenceRegularized(event: RegistryEvent[]): boolean;
 
     openEventCard($event, student: string, day: RegistryDays, events: RegistryEvent[]): void;
@@ -290,14 +292,21 @@ export const registryController = ng.controller('RegistryController', ['$scope',
             if (event.length === 0) {
                 return false;
             }
-            return event.some(event => event.type === eventTypeName && !event.hasOwnProperty('reason_id'));
+            return event.some((event: RegistryEvent) => event.type === eventTypeName);
+        };
+
+        vm.hasReason = (event: RegistryEvent[]): boolean => {
+            if (event.length === 0) {
+                return false;
+            }
+            return event.some((event: RegistryEvent) => event.hasOwnProperty('reason_id'));
         };
 
         vm.isAbsenceRegularized = (event: RegistryEvent[]): boolean => {
             if (event.length === 0) {
                 return false;
             }
-            return !event.some(event => event.hasOwnProperty('reason_id') && event.counsellor_regularisation === false);
+            return !event.some((event: RegistryEvent) => event.counsellor_regularisation === false);
         };
 
         vm.openEventCard = ($event, student: string, day: RegistryDays, events: RegistryEvent[]): void => {
