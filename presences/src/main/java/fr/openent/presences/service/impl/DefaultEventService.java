@@ -751,7 +751,7 @@ public class DefaultEventService implements EventService {
                             } else {
                                 createAbsence.put("id", resultCreate.right().getValue().getInteger("id"));
                                 // Here we update twice because of 013-MA-403-sync-absence-with-events.sql trigger.
-                                updateRegularizationAbsence(createAbsence, finalPackEvents);
+                                updateRegularizationAbsence(createAbsence, user, finalPackEvents);
                             }
                         });
 
@@ -773,7 +773,7 @@ public class DefaultEventService implements EventService {
                         } else {
                             createAbsence.put("id", resultCreate.right().getValue().getInteger("id"));
                             // Here we update twice because of 013-MA-403-sync-absence-with-events.sql trigger.
-                            updateRegularizationAbsence(createAbsence, finalPackEvents);
+                            updateRegularizationAbsence(createAbsence, user, finalPackEvents);
                         }
                     });
                 }
@@ -800,7 +800,7 @@ public class DefaultEventService implements EventService {
             });
         }
         // Here we update twice because of 013-MA-403-sync-absence-with-events.sql trigger.
-        updateRegularizationAbsence(absence, events);
+        updateRegularizationAbsence(absence, user, events);
     }
 
     private Integer getAbsenceReasonId(ArrayList<Event> events) {
@@ -814,14 +814,14 @@ public class DefaultEventService implements EventService {
         return null;
     }
 
-    private void updateRegularizationAbsence(JsonObject absence, ArrayList<Event> events) {
+    private void updateRegularizationAbsence(JsonObject absence, UserInfos user, ArrayList<Event> events) {
         long countUnregularized = events.stream().filter(event -> !event.isCounsellorRegularisation()).count();
         boolean absenceRegularization = countUnregularized == 0;
         if (absence.getBoolean("counsellor_regularisation", false) != absenceRegularization) {
 
             absence.put("regularized", absenceRegularization);
             absence.put("ids", (new JsonArray()).add(absence.getInteger("id")));
-            absenceService.changeRegularizedAbsences(absence, resultUpdate -> {
+            absenceService.changeRegularizedAbsences(absence, user, resultUpdate -> {
                 if (resultUpdate.isLeft()) {
                     String message = "[Presences@DefaultEventService::editCorrespondingAbsences] Failed to update absence";
                     LOGGER.error(message);

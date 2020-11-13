@@ -72,18 +72,20 @@ public interface AbsenceService {
      *
      * @param absence Absence object from client to update absence reasons
      *                JsonObject : {Ids: JsonArray, reasonId: Integer}
+     * @param user        userInfo
      * @param handler Function handler returning data
      */
-    void changeReasonAbsences(JsonObject absence, Handler<Either<String, JsonObject>> handler);
+    void changeReasonAbsences(JsonObject absence, UserInfos user, Handler<Either<String, JsonObject>> handler);
 
     /**
      * update absence regularisation
      *
      * @param absence Absence object from client to update absence regularized
      *                JsonObject : {Ids: JsonArray, regularized: Boolean}
+     * @param user        userInfo
      * @param handler Function handler returning data
      */
-    void changeRegularizedAbsences(JsonObject absence, Handler<Either<String, JsonObject>> handler);
+    void changeRegularizedAbsences(JsonObject absence, UserInfos user, Handler<Either<String, JsonObject>> handler);
 
     /**
      * delete absence

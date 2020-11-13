@@ -170,7 +170,7 @@ const vm: ViewModel = {
     },
 
     toUpdateRegularisation(): void {
-      vm.updateAbsenceRegularisation = !vm.updateAbsenceRegularisation;
+        vm.updateAbsenceRegularisation = !vm.updateAbsenceRegularisation;
     },
 
     /**
@@ -196,6 +196,9 @@ const vm: ViewModel = {
     selectReason(): void {
         vm.selectedReason = vm.reasons.find(reason => reason.id === vm.form.reason_id);
         vm.canRegularize = (vm.selectedReason) ? (!vm.selectedReason.proving) : false;
+        vm.updateAbsenceRegularisation = vm.selectedReason.proving;
+        if (vm.form.absences) vm.form.absences[0].counsellor_regularisation = vm.selectedReason.proving;
+        else vm.form.absences = [{counsellor_regularisation: vm.selectedReason.proving}];
     },
 
     async createAbsence(): Promise<void> {
@@ -270,7 +273,7 @@ const vm: ViewModel = {
 
     closeAbsenceLightbox(): void {
         vm.createAbsenceLightBox = false;
-        if(vm.updateAbsenceRegularisation) {
+        if (vm.updateAbsenceRegularisation) {
             vm.form.absences[0].counsellor_regularisation = !vm.form.absences[0].counsellor_regularisation;
             vm.updateAbsenceRegularisation = false;
         }
