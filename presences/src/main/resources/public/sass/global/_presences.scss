@@ -283,12 +283,16 @@ body.presences, .sniplet.presences {
     display: inline-block;
     border-radius: 50%;
 
-    &.absence {
+    &.absence-no-reason {
       background-color: $presences-red;
     }
 
-    &.absence-reason {
+    &.absence-unregularized {
       background-color: $presences-pink;
+    }
+
+    &.absence-regularized {
+      background-color: $presences-green;
     }
 
     &.lateness {
