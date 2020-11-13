@@ -11,15 +11,17 @@ export interface IStudentEventRequest {
 }
 
 export interface IStudentEvents {
-    JUSTIFIED: Array<Event>;
-    UNJUSTIFIED: Array<Event>;
+    NO_REASON: Array<Event>;
+    UNREGULARIZED: Array<Event>;
+    REGULARIZED: Array<Event>;
     LATENESS: Array<Event>;
     DEPARTURE: Array<Event>;
 }
 
 export interface IStudentEventsTotal {
-    JUSTIFIED: number;
-    UNJUSTIFIED: number;
+    NO_REASON: number;
+    UNREGULARIZED: number;
+    REGULARIZED: number;
     LATENESS: number;
     DEPARTURE: number;
 }

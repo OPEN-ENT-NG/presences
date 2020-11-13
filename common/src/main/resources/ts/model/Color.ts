@@ -4,6 +4,7 @@ export interface IColor {
     purple: string,
     yellow: string,
     turquoise: string,
-    blue: string,
+    lightpurple: string,
+    green: string,
     grey: string,
 }

@@ -89,7 +89,12 @@
             color: $presences-water-green;
           }
 
-          &.blue-event::before {
+          &.lightpurple-event::before {
+            @include listStyleSquare();
+            color: $presences-light-purple;
+          }
+
+          &.green-event::before {
             @include listStyleSquare();
             color: $presences-green;
           }
@@ -172,7 +177,11 @@
       background-color: $presences-water-green;
     }
 
-    &.blue-event {
+    &.lightpurple-event {
+      background-color: $presences-light-purple;
+    }
+
+    &.green-event {
       background-color: $presences-green;
     }
 

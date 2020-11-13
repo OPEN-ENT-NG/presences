@@ -26,8 +26,9 @@ import {MobileUtils} from "@common/utils/mobile";
 declare let window: any;
 
 interface IEvent {
-    absencesUnjustified: string;
-    absencesJustified: string;
+    absencesNoReason: string;
+    absencesUnregularized: string;
+    absencesRegularized: string;
     lateness: string;
     incidents: string;
     punishments: string;
@@ -103,8 +104,9 @@ export const dashboardStudentController = ng.controller('DashboardStudentControl
             vm.types = EVENT_TYPES;
 
             vm.eventsTitle = {
-                absencesUnjustified: `${idiom.translate(`presences.absence.unjustified`).toUpperCase()}`,
-                absencesJustified: `${idiom.translate(`presences.absence.justified`).toUpperCase()}`,
+                absencesNoReason: `${idiom.translate(`presences.absence.unjustified`).toUpperCase()}`,
+                absencesUnregularized: `${idiom.translate(`presences.absence.types.justified.not.regularized`).toUpperCase()}`,
+                absencesRegularized: `${idiom.translate(`presences.absence.types.justified.regularized`).toUpperCase()}`,
                 departure: `${idiom.translate(`presences.register.event_type.departure.early`).toUpperCase()}`,
                 forgottenNotebook: `${idiom.translate(`presences.forgotten.notebook`).toUpperCase()}`,
                 incidents: `${idiom.translate(`presences.alerts.type.INCIDENT`).toUpperCase()}`,
@@ -120,7 +122,7 @@ export const dashboardStudentController = ng.controller('DashboardStudentControl
             const loadEvents = () => {
                 vm.isLoading = true;
                 const promises: Promise<any>[] = [];
-                let eventsType: Array<string> = [EVENT_TYPES.UNJUSTIFIED, EVENT_TYPES.JUSTIFIED, EVENT_TYPES.LATENESS, EVENT_TYPES.DEPARTURE];
+                let eventsType: Array<string> = [EVENT_TYPES.NO_REASON, EVENT_TYPES.UNREGULARIZED, EVENT_TYPES.REGULARIZED, EVENT_TYPES.LATENESS, EVENT_TYPES.DEPARTURE];
                 let incidentsEventsType: Array<string> = [EVENT_TYPES.INCIDENT, EVENT_TYPES.PUNISHMENT];
                 promises.push(eventService.getStudentEvent(prepareEventRequest(eventsType, 2, 0)));
                 promises.push(incidentService.getStudentEvents(prepareEventRequest(incidentsEventsType, 2, 0,
@@ -214,8 +216,9 @@ export const dashboardStudentController = ng.controller('DashboardStudentControl
 
             const reloadType = (type: string): void => {
                 switch (type) {
-                    case EVENT_TYPES.JUSTIFIED:
-                    case EVENT_TYPES.UNJUSTIFIED:
+                    case EVENT_TYPES.NO_REASON:
+                    case EVENT_TYPES.UNREGULARIZED:
+                    case EVENT_TYPES.REGULARIZED:
                     case EVENT_TYPES.LATENESS:
                     case EVENT_TYPES.DEPARTURE: {
                         eventService.getStudentEvent(prepareEventRequest([type], 0, 0))

@@ -120,8 +120,10 @@ export const EventsCard = ng.directive('eventsCard', () => {
                         return 'yellow-event';
                     case COLOR_TYPE.turquoise:
                         return 'turquoise-event';
-                    case COLOR_TYPE.blue:
-                        return 'blue-event';
+                    case COLOR_TYPE.lightpurple:
+                        return 'lightpurple-event';
+                    case COLOR_TYPE.green:
+                        return 'green-event';
                     case COLOR_TYPE.grey:
                         return 'grey-event';
                 }
@@ -130,8 +132,9 @@ export const EventsCard = ng.directive('eventsCard', () => {
             vm.setCorrectFormatEvent = (event: Event | Incident | IPunishment | Notebook): string => {
                 if (event) {
                     switch (vm.type) {
-                        case EVENT_TYPES.JUSTIFIED:
-                        case EVENT_TYPES.UNJUSTIFIED: {
+                        case EVENT_TYPES.NO_REASON:
+                        case EVENT_TYPES.UNREGULARIZED:
+                        case EVENT_TYPES.REGULARIZED: {
                             const date = `<span><b>${formatDayDate((<Event>event).start_date)}</b></span>`;
                             const startTime = `<span>${formatHour((<Event>event).start_date)}</span>`;
                             const endTime = `<span>${formatHour((<Event>event).end_date)}</span>`;

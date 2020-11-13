@@ -16,27 +16,39 @@
     </div>
 
     <div>
-        <!-- absences -->
-        <events-card event-title="vm.eventsTitle.absencesUnjustified"
+        <!-- absences noreason -->
+        <events-card event-title="vm.eventsTitle.absencesNoReason"
                      student="vm.filter.selectedChildren"
                      period="vm.filter.selectedPeriod"
-                     events="vm.presenceEvents.all.UNJUSTIFIED"
-                     type="vm.types.UNJUSTIFIED"
-                     event-count="vm.presenceEvents.totals.UNJUSTIFIED"
+                     events="vm.presenceEvents.all.NO_REASON"
+                     type="vm.types.NO_REASON"
+                     event-count="vm.presenceEvents.totals.NO_REASON"
                      recovery-method="vm.getRecoveryMethodLabel(vm.presenceEvents.recovery_method)"
                      color="vm.color.red">
         </events-card>
 
-        <!-- justified absence -->
-        <events-card event-title="vm.eventsTitle.absencesJustified"
+        <!-- absences unregularized -->
+        <events-card event-title="vm.eventsTitle.absencesUnregularized"
                      student="vm.filter.selectedChildren"
                      period="vm.filter.selectedPeriod"
                      class="top20"
-                     events="vm.presenceEvents.all.JUSTIFIED"
-                     type="vm.types.JUSTIFIED"
-                     event-count="vm.presenceEvents.totals.JUSTIFIED"
+                     events="vm.presenceEvents.all.UNREGULARIZED"
+                     type="vm.types.UNREGULARIZED"
+                     event-count="vm.presenceEvents.totals.UNREGULARIZED"
                      recovery-method="vm.getRecoveryMethodLabel(vm.presenceEvents.recovery_method)"
                      color="vm.color.pink">
+        </events-card>
+
+        <!-- absences regularized -->
+        <events-card event-title="vm.eventsTitle.absencesRegularized"
+                     student="vm.filter.selectedChildren"
+                     period="vm.filter.selectedPeriod"
+                     class="top20"
+                     events="vm.presenceEvents.all.REGULARIZED"
+                     type="vm.types.REGULARIZED"
+                     event-count="vm.presenceEvents.totals.REGULARIZED"
+                     recovery-method="vm.getRecoveryMethodLabel(vm.presenceEvents.recovery_method)"
+                     color="vm.color.green">
         </events-card>
 
         <!-- lateness -->
@@ -91,7 +103,7 @@
                      type="vm.types.DEPARTURE"
                      events="vm.presenceEvents.all.DEPARTURE"
                      event-count="vm.presenceEvents.totals.DEPARTURE"
-                     color="vm.color.blue">
+                     color="vm.color.lightpurple">
         </events-card>
     </div>
 </div>

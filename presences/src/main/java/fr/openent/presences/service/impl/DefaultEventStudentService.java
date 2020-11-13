@@ -23,8 +23,9 @@ public class DefaultEventStudentService implements EventStudentService {
 
     private static final Logger log = LoggerFactory.getLogger(DefaultEventStudentService.class);
 
-    private final String JUSTIFIED = "JUSTIFIED";
-    private final String UNJUSTIFIED = "UNJUSTIFIED";
+    private final String NO_REASON = "NO_REASON";
+    private final String UNREGULARIZED = "UNREGULARIZED";
+    private final String REGULARIZED = "REGULARIZED";
     private final String LATENESS = "LATENESS";
     private final String DEPARTURE = "DEPARTURE";
 
@@ -77,7 +78,7 @@ public class DefaultEventStudentService implements EventStudentService {
             settings.mergeIn(settingsFuture.result());
             settings.mergeIn(timeSlotsFuture.result());
 
-            getSortedEventsByTypes(types, structure, student, reasons, settings, start, end, limit, offset, result -> {
+            getEvents(types, structure, student, reasons, settings, start, end, limit, offset, result -> {
                 if (result.failed()) {
                     handler.handle(Future.failedFuture(result.cause()));
                     return;
@@ -122,7 +123,7 @@ public class DefaultEventStudentService implements EventStudentService {
         if (limit == null && offset == null) { // If we get all result, we just need to get array size to get total results
             future.complete(getTotalsByTypes(types, result.result()));
         } else { // Else, we use same queries with a count result
-            getSortedEventsByTypes(types, structure, student, reasons, settings, start, end, null, null, resultAllEvents -> {
+            getEvents(types, structure, student, reasons, settings, start, end, null, null, resultAllEvents -> {
                 if (resultAllEvents.failed()) {
                     future.fail(resultAllEvents.cause());
                     return;
@@ -180,13 +181,14 @@ public class DefaultEventStudentService implements EventStudentService {
         });
     }
 
-    // check if types are in {{ JUSTIFIED / UNJUSTIFIED / LATENESS / DEPARTURE }}
+    // check if types are in {{ NO_REASON / UNREGULARIZED / REGULARIZED / LATENESS / DEPARTURE }}
     private boolean validTypes(List<String> types) {
         boolean valid = true;
         for (String type : types) {
             switch (type) {
-                case JUSTIFIED:
-                case UNJUSTIFIED:
+                case NO_REASON:
+                case UNREGULARIZED:
+                case REGULARIZED:
                 case LATENESS:
                 case DEPARTURE:
                     valid = true;
@@ -232,58 +234,65 @@ public class DefaultEventStudentService implements EventStudentService {
     }
 
 
-    // Send request to get each events (thanks the great method corresponding to type {{ JUSTIFIED / UNJUSTIFIED / LATENESS / DEPARTURE }}).
+    // Send request to get each events (thanks the great method corresponding to type {{ NO_REASON / UNREGULARIZED / REGULARIZED / LATENESS / DEPARTURE }}).
     // Handler will return them mapped by type.
-    private void getSortedEventsByTypes(List<String> types, String structure, String student, Map reasons, JsonObject settings, String start, String end,
-                                        String limit, String offset, Handler<AsyncResult<JsonObject>> handler) {
+    private void getEvents(List<String> types, String structure, String student, Map reasons, JsonObject settings,
+                           String start, String end, String limit, String offset, Handler<AsyncResult<JsonObject>> handler) {
         List<Future> futures = new ArrayList<>();
         for (String type : types) {
             Future<JsonArray> future = Future.future();
             futures.add(future);
-            getTypedEventsByStudent(type, structure, student, start, end, limit, offset, FutureHelper.handlerJsonArray(future));
+            getEventsByStudent(type, structure, student, start, end, limit, offset, FutureHelper.handlerJsonArray(future));
         }
 
         CompositeFuture.all(futures).setHandler(result -> {
             if (result.failed()) {
-                String message = "[Presences@DefaultEventStudentService::getSortedEventsByTypes] Failed to retrieve events info.";
+                String message = "[Presences@DefaultEventStudentService::getEvents] Failed to retrieve events info.";
                 handler.handle(Future.failedFuture(message + " " + result.cause()));
                 return;
             }
 
-            handler.handle(Future.succeededFuture(getSortedByTypesEventsFromFutures(types, reasons, settings, futures, handler)));
+            handler.handle(Future.succeededFuture(getEventsFromFutures(types, reasons, settings, futures, handler)));
         });
     }
 
     // Get events for a student, corresponding to the type mentioned
-    private void getTypedEventsByStudent(String type, String structureId, String studentId, String start, String end, String limit, String offset, Handler<Either<String, JsonArray>> handler) {
+    private void getEventsByStudent(String type, String structureId, String studentId, String start, String end, String limit,
+                                    String offset, Handler<Either<String, JsonArray>> handler) {
         switch (type) {
-            case UNJUSTIFIED:
-                eventService.getEventsByStudent(1, Collections.singletonList(studentId), structureId,
-                        false, new ArrayList<>(), null, start, end, true, null, limit, offset, null, handler);
+            case NO_REASON:
+                eventService.getEventsByStudent(1, Collections.singletonList(studentId), structureId, null,
+                        new ArrayList<>(), null, start, end, true, null, false, handler);
                 break;
-            case JUSTIFIED:
-                eventService.getEventsByStudent(1, Collections.singletonList(studentId), structureId,
-                        true, new ArrayList<>(), null, start, end, true, null, limit, offset, null, handler);
+            case UNREGULARIZED:
+                eventService.getEventsByStudent(1, Collections.singletonList(studentId), structureId, null,
+                        new ArrayList<>(), null, start, end, false, null, false, handler);
+                break;
+            case REGULARIZED:
+                eventService.getEventsByStudent(1, Collections.singletonList(studentId), structureId, null,
+                        new ArrayList<>(), null, start, end, false, null, true, handler);
                 break;
             case LATENESS:
                 eventService.getEventsByStudent(2, Collections.singletonList(studentId), structureId,
-                        null, new ArrayList<>(), null, start, end, true, null, limit, offset, null, handler);
+                        null, new ArrayList<>(), null, start, end, true, null,
+                        limit, offset, null, handler);
                 break;
             case DEPARTURE:
                 eventService.getEventsByStudent(3, Collections.singletonList(studentId), structureId,
-                        null, new ArrayList<>(), null, start, end, true, null, limit, offset, null, handler);
+                        null, new ArrayList<>(), null, start, end, true, null,
+                        limit, offset, null, handler);
                 break;
             default:
                 //There is no default case
                 String message = "There is no case for value: " + type + ".";
                 log.error(message);
-                handler.handle(new Either.Left(message));
+                handler.handle(new Either.Left<>(message));
         }
     }
 
-    //Map events result (resultFutures) by types {{ JUSTIFIED / UNJUSTIFIED / LATENESS / DEPARTURE }}
-    private JsonObject getSortedByTypesEventsFromFutures(List<String> types, Map reasons, JsonObject settings,
-                                                         List<Future> resultFutures, Handler<AsyncResult<JsonObject>> handler) {
+    //Map events result (resultFutures) by types {{ NO_REASON / UNREGULARIZED / REGULARIZED / LATENESS / DEPARTURE }}
+    private JsonObject getEventsFromFutures(List<String> types, Map reasons, JsonObject settings,
+                                            List<Future> resultFutures, Handler<AsyncResult<JsonObject>> handler) {
         JsonObject sorted_events = new JsonObject();
         String recovery = settings.getString("event_recovery_method");
         for (int i = 0; i < types.size(); i++) {
@@ -375,9 +384,9 @@ public class DefaultEventStudentService implements EventStudentService {
         return totals;
     }
 
-    // Absence are events {{JUSTIFIED}} and {{UNJUSTIFIED}}
+    // Absence are events {{NO_REASON}} {{REGULARIZED}} and {{UNREGULARIZED}}
     private Boolean isAbsence(String type) {
-        return type.equals(JUSTIFIED) || type.equals(UNJUSTIFIED);
+        return type.equals(NO_REASON) || type.equals(REGULARIZED) || type.equals(UNREGULARIZED);
     }
 
 }

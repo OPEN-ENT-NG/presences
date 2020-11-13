@@ -9,6 +9,7 @@ export const COLOR_TYPE: IColor = {
     purple: 'PURPLE',
     yellow: 'YELLOW',
     turquoise: 'TURQUOISE',
-    blue: 'BLUE',
+    lightpurple: 'LIGHTPURPLE',
+    green: 'GREEN',
     grey: 'GREY'
 };

@@ -3,8 +3,8 @@ $presences-main: #ffb600;
 $presences-orange: #FF8500;
 $presences-red: #e61610;
 $presences-pink: #ff8a84;
-$presences-light-pink: #f2c9fb;
 $presences-beige-light: #fff8eb;
+$presences-light-purple: #f2c9fb;
 $presences-purple: #9c29b7;
 $presences-green: #72bb53;
 $presences-water-green: #b0ead5;
@@ -306,7 +306,7 @@ body.presences, .sniplet.presences {
     }
 
     &.departure {
-      background-color: $presences-light-pink;
+      background-color: $presences-light-purple;
     }
 
     &.remark {
