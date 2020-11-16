@@ -563,19 +563,18 @@ public class DefaultEventService implements EventService {
         } else {
             params.addNull();
         }
-        query += " WHERE id IN " + Sql.listPrepared(ids) + " AND type_id = 1";
+        query += " WHERE id IN " + Sql.listPrepared(ids) + " AND type_id = 1 RETURNING *";
         params.addAll(new JsonArray(ids));
-        Sql.getInstance().prepared(query, params, SqlResult.validUniqueResultHandler(eventEither -> {
-            if (eventEither.isLeft()) {
+        Sql.getInstance().prepared(query, params, SqlResult.validResultHandler(result -> {
+            if (result.isLeft()) {
                 String message = "[Presences@DefaultEventService] Failed to edit reason on events";
                 LOGGER.error(message);
                 handler.handle(new Either.Left<>(message));
                 return;
             }
-
-            handler.handle(new Either.Right<>(eventEither.right().getValue()));
-            // User don't need to know that absences will be treated, so we can already return result for events
-            editCorrespondingAbsences(events, user, eventBody.getString("student_id"), eventBody.getString("structure_id"));
+            editCorrespondingAbsences(events, user, eventBody.getString("student_id"), eventBody.getString("structure_id"),
+                    result.right().getValue().getJsonObject(0).getBoolean("counsellor_regularisation"),
+                    eventBody.getInteger("reasonId"), handler);
         }));
     }
 
@@ -605,14 +604,13 @@ public class DefaultEventService implements EventService {
                 return;
             }
 
-            handler.handle(new Either.Right<>(eventEither.right().getValue()));
-            // User don't need to know that absences will be treated, so we can already return result for events
-            editCorrespondingAbsences(events, user, eventBody.getString("student_id"), eventBody.getString("structure_id"));
+            editCorrespondingAbsences(events, user, eventBody.getString("student_id"), eventBody.getString("structure_id"),
+                    eventBody.getBoolean("regularized"), handler);
         }));
     }
 
-    private void editCorrespondingAbsences(List<Event> editedEvents, UserInfos user, String studentId, String structureId) {
-        LOGGER.info("[Presences@DefaultEventService::editCorrespondingAbsences] Starting to manage corresponding absences ");
+    private void editCorrespondingAbsences(List<Event> editedEvents, UserInfos user, String studentId, String structureId,
+                                           Boolean regularized, Integer reason_id, Handler<Either<String, JsonObject>> handler) {
         SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss");
         Date startDate = editedEvents.stream().map(event -> {
             try {
@@ -680,18 +678,40 @@ public class DefaultEventService implements EventService {
                     return absence.getInteger("id") != null;
                 }).map(oAbsence -> (JsonObject) oAbsence).collect(Collectors.toList());
 
+                List<Future> futures = new ArrayList<>();
+                
                 if (nullAbsenceEvents != null) {
-                    createAbsencesFromEvents(nullAbsenceEvents, absencesWithEvents, user, studentId, structureId, formatter);
+                    Future<JsonObject> future = Future.future();
+                    futures.add(future);
+                    createAbsencesFromEvents(nullAbsenceEvents, absencesWithEvents, regularized, reason_id, user, studentId, structureId, formatter, future);
                 }
 
                 for (JsonObject absence : absencesWithEvents) {
-                    updateAbsenceFromEvents(absence, user);
+                    Future<JsonObject> future = Future.future();
+                    updateAbsenceFromEvents(absence, regularized, reason_id, user, future);
                 }
+
+                CompositeFuture.all(futures).setHandler(event -> {
+                    if (event.failed()) {
+                        LOGGER.info("[Presences@DefaultEventService::editCorrespondingAbsences::CompositeFuture]: " +
+                                "An error has occured)");
+                        handler.handle(new Either.Left<>(event.cause().getMessage()));
+                    } else {
+                        handler.handle(new Either.Right<>(new JsonObject().put("status", "ok")));
+                    }
+                });
             }
         }));
     }
 
-    private void createAbsencesFromEvents(JsonObject nullAbsenceEvents, List<JsonObject> absencesWithEvents, UserInfos user, String studentId, String structureId, SimpleDateFormat formatter) {
+    private void editCorrespondingAbsences(List<Event> editedEvents, UserInfos user, String studentId, String structureId,
+                                           Boolean regularized, Handler<Either<String, JsonObject>> handler) {
+        editCorrespondingAbsences(editedEvents, user, studentId, structureId, regularized, null, handler);
+    }
+
+
+    private void createAbsencesFromEvents(JsonObject nullAbsenceEvents, List<JsonObject> absencesWithEvents, Boolean regularized, Integer reason_id,
+                                          UserInfos user, String studentId, String structureId, SimpleDateFormat formatter, Future<JsonObject> future) {
         ArrayList<Event> independentEvents = (ArrayList<Event>) new JsonArray(nullAbsenceEvents.getString("events"))
                 .stream()
                 .map((oEvent) -> new Event((JsonObject) oEvent, new ArrayList<>()))
@@ -742,7 +762,7 @@ public class DefaultEventService implements EventService {
                     if (absencesBeforeCount > 0) {
                         createAbsence.put("start_date", startAbsenceDate.toString());
                         createAbsence.put("end_date", endAbsenceDate.toString());
-                        createAbsence.put("reason_id", getAbsenceReasonId(packEvents));
+                        createAbsence.put("reason_id", reason_id != null ? reason_id : getAbsenceReasonId(packEvents));
                         ArrayList<Event> finalPackEvents = packEvents;
                         absenceService.create(createAbsence, user, false, resultCreate -> {
                             if (resultCreate.isLeft()) {
@@ -751,7 +771,7 @@ public class DefaultEventService implements EventService {
                             } else {
                                 createAbsence.put("id", resultCreate.right().getValue().getInteger("id"));
                                 // Here we update twice because of 013-MA-403-sync-absence-with-events.sql trigger.
-                                updateRegularizationAbsence(createAbsence, user, finalPackEvents);
+                                updateRegularizationAbsence(createAbsence, regularized, user, finalPackEvents, future);
                             }
                         });
 
@@ -764,7 +784,7 @@ public class DefaultEventService implements EventService {
                 } else {
                     createAbsence.put("start_date", startAbsenceDate.toString());
                     createAbsence.put("end_date", endAbsenceDate.toString());
-                    createAbsence.put("reason_id", getAbsenceReasonId(packEvents));
+                    createAbsence.put("reason_id", reason_id != null ? reason_id : getAbsenceReasonId(packEvents));
                     ArrayList<Event> finalPackEvents = packEvents;
                     absenceService.create(createAbsence, user, false, resultCreate -> {
                         if (resultCreate.isLeft()) {
@@ -773,7 +793,7 @@ public class DefaultEventService implements EventService {
                         } else {
                             createAbsence.put("id", resultCreate.right().getValue().getInteger("id"));
                             // Here we update twice because of 013-MA-403-sync-absence-with-events.sql trigger.
-                            updateRegularizationAbsence(createAbsence, user, finalPackEvents);
+                            updateRegularizationAbsence(createAbsence, regularized, user, finalPackEvents, future);
                         }
                     });
                 }
@@ -783,24 +803,24 @@ public class DefaultEventService implements EventService {
         }
     }
 
-    private void updateAbsenceFromEvents(JsonObject absence, UserInfos user) {
+    private void updateAbsenceFromEvents(JsonObject absence, Boolean regularized, Integer reason_id, UserInfos user, Future<JsonObject> future) {
         ArrayList<Event> events = (ArrayList<Event>) new JsonArray(absence.getString("events"))
                 .stream()
                 .map((oEvent) -> new Event((JsonObject) oEvent, new ArrayList<>()))
                 .collect(Collectors.toList());
 
         Integer newReasonId = getAbsenceReasonId(events);
-        if (absence.getInteger("reason_id") != newReasonId) {
-            absence.put("reason_id", newReasonId);
-            absenceService.update(absence.getLong("id"), absence, user, false, resultUpdate -> {
-                if (resultUpdate.isLeft()) {
-                    String message = "[Presences@DefaultEventService::editCorrespondingAbsences] Failed to update absence";
-                    LOGGER.error(message);
-                }
-            });
-        }
-        // Here we update twice because of 013-MA-403-sync-absence-with-events.sql trigger.
-        updateRegularizationAbsence(absence, user, events);
+
+        absence.put("reason_id", reason_id != null ? reason_id : newReasonId);
+        absenceService.update(absence.getLong("id"), absence, user, false, resultUpdate -> {
+            if (resultUpdate.isLeft()) {
+                String message = "[Presences@DefaultEventService::editCorrespondingAbsences] Failed to update absence";
+                LOGGER.error(message);
+            } else {
+                // Here we update twice because of 013-MA-403-sync-absence-with-events.sql trigger.
+                updateRegularizationAbsence(absence, regularized, user, events, future);
+            }
+        });
     }
 
     private Integer getAbsenceReasonId(ArrayList<Event> events) {
@@ -814,19 +834,24 @@ public class DefaultEventService implements EventService {
         return null;
     }
 
-    private void updateRegularizationAbsence(JsonObject absence, UserInfos user, ArrayList<Event> events) {
-        long countUnregularized = events.stream().filter(event -> !event.isCounsellorRegularisation()).count();
-        boolean absenceRegularization = countUnregularized == 0;
-        if (absence.getBoolean("counsellor_regularisation", false) != absenceRegularization) {
-
-            absence.put("regularized", absenceRegularization);
+    private void updateRegularizationAbsence(JsonObject absence, Boolean regularized, UserInfos user, ArrayList<Event> events, Future<JsonObject> future) {
+        // long countUnregularized = events.stream().filter(event -> !event.isCounsellorRegularisation()).count();
+        // boolean absenceRegularization = countUnregularized == 0;
+        // if (absence.getBoolean("counsellor_regularisation", false) != absenceRegularization)
+        if (regularized != null) {
+            absence.put("regularized", regularized);
             absence.put("ids", (new JsonArray()).add(absence.getInteger("id")));
-            absenceService.changeRegularizedAbsences(absence, user, resultUpdate -> {
+            absenceService.changeRegularizedAbsences(absence, user, false, resultUpdate -> {
                 if (resultUpdate.isLeft()) {
                     String message = "[Presences@DefaultEventService::editCorrespondingAbsences] Failed to update absence";
                     LOGGER.error(message);
+                    future.fail(resultUpdate.left().getValue());
+                } else {
+                    future.complete();
                 }
             });
+        } else {
+            future.complete();
         }
     }
 

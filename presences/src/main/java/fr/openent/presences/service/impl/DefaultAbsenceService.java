@@ -174,14 +174,13 @@ public class DefaultAbsenceService implements AbsenceService {
         }
     }
 
-    private void afterPersistAbsences(List<Long> absenceIds, String userInfoId, Handler<Either<String, JsonObject>> handler, Either<String, JsonObject> absencesResult) {
+    private void afterPersistAbsences(List<Long> absenceIds, String userInfoId, boolean editEvents, Handler<Either<String, JsonObject>> handler,
+                                      Either<String, JsonObject> absencesResult) {
         if (absencesResult.isLeft()) {
             String message = "[Presences@DefaultAbsenceService] failed to update absence";
             LOGGER.error(message, absencesResult.left().getValue());
             handler.handle(new Either.Left<>(message));
         } else {
-            handler.handle(new Either.Right<>(absencesResult.right().getValue()));
-
             String query = " SELECT * " +
                     " FROM " + Presences.dbSchema + ".absence " +
                     " WHERE id IN " + Sql.listPrepared(absenceIds);
@@ -194,13 +193,29 @@ public class DefaultAbsenceService implements AbsenceService {
                     String message = "[Presences@DefaultAbsenceService::afterPersistAbsences] Failed to retrieve absences from list of ids";
                     LOGGER.error(message);
                     handler.handle(new Either.Left<>(message));
-                } else {
+                } else if (editEvents) {
                     JsonArray absences = result.right().getValue();
 
+                    List<Future> futures = new ArrayList<>();
+
                     absences.forEach(oAbsence -> {
+                        Future<JsonObject> future = Future.future();
+                        futures.add(future);
                         JsonObject absence = (JsonObject) oAbsence;
-                        interactingEvents(absence, userInfoId, handler);
+                        interactingEvents(absence, userInfoId, future);
                     });
+
+                    CompositeFuture.all(futures).setHandler(event -> {
+                        if (event.failed()) {
+                            LOGGER.info("[Presences@DefaultAbsenceService::afterPersistAbsences::CompositeFuture]: " +
+                                    "An error has occured)");
+                            handler.handle(new Either.Left<>(event.cause().getMessage()));
+                        } else {
+                            handler.handle(new Either.Right<>(new JsonObject().put("status", "ok")));
+                        }
+                    });
+                } else {
+                    handler.handle(new Either.Right<>(new JsonObject().put("status", "ok")));
                 }
             }));
         }
@@ -211,7 +226,7 @@ public class DefaultAbsenceService implements AbsenceService {
         users.add(absenceBody.getString("student_id"));
         groupService.getUserGroups(users, absenceBody.getString("structure_id"), groupEvent -> {
             if (groupEvent.isLeft()) {
-                String message = "[Presences@DefaultAbsenceService] failed to retrieve user info";
+                String message = "[Presences@DefaultAbsenceService::interactingEvents] failed to retrieve user info";
                 LOGGER.error(message, groupEvent.left().getValue());
                 handler.handle(new Either.Left<>(message));
             } else {
@@ -222,6 +237,10 @@ public class DefaultAbsenceService implements AbsenceService {
                 matchEventsWithAbsents(absenceBody, groupIds, userInfoId, handler);
             }
         });
+    }
+
+    private void interactingEvents(JsonObject absenceBody, String userInfoId, Future<JsonObject> future) {
+        interactingEvents(absenceBody, userInfoId, FutureHelper.handlerJsonObject(future));
     }
 
     private void matchEventsWithAbsents(JsonObject absenceBody, List<String> groupIds, String userInfoId, Handler<Either<String, JsonObject>> handler) {
@@ -268,16 +287,16 @@ public class DefaultAbsenceService implements AbsenceService {
             for(int i = 0; i < absenceBody.getJsonArray("ids").size(); i++) {
                 ids.add(Long.parseLong(absenceBody.getJsonArray("ids").getInteger(i).toString()));
             }
-            afterPersistAbsences(ids, user.getUserId(), handler, result);
+            afterPersistAbsences(ids, user.getUserId(), true, handler, result);
         }));
     }
 
     @Override
-    public void changeRegularizedAbsences(JsonObject absenceBody, UserInfos user, Handler<Either<String, JsonObject>> handler) {
+    public void changeRegularizedAbsences(JsonObject absenceBody, UserInfos user, boolean editEvents, Handler<Either<String, JsonObject>> handler) {
         Boolean isRegularized = absenceBody.getBoolean("regularized");
         JsonArray ids = absenceBody.getJsonArray("ids");
         JsonArray params = new JsonArray();
-        if(isRegularized == null || ids == null || ids.isEmpty()) {
+        if (isRegularized == null || ids == null || ids.isEmpty()) {
             String message = "[Presences@DefaultAbsenceService::changeRegularizedAbsences] some fields are null or empty.";
             LOGGER.error(message);
             handler.handle(new Either.Left<>(message));
@@ -290,8 +309,13 @@ public class DefaultAbsenceService implements AbsenceService {
         params.addAll(ids);
         Sql.getInstance().prepared(query, params, SqlResult.validUniqueResultHandler(result -> {
             List<Long> resultIds = absenceBody.getJsonArray("ids").stream().map(id -> Long.parseLong(id.toString())).collect(Collectors.toList());
-            afterPersistAbsences(resultIds, user.getUserId(), handler, result);
+            afterPersistAbsences(resultIds, user.getUserId(), editEvents, handler, result);
         }));
+    }
+
+    @Override
+    public void changeRegularizedAbsences(JsonObject absenceBody, UserInfos user, Handler<Either<String, JsonObject>> handler) {
+        changeRegularizedAbsences(absenceBody, user, true, handler);
     }
 
     private void createEventsWithAbsents(JsonObject absenceBody, List<String> groupIds, String ownerId, Handler<Either<String, JsonArray>> handler) {

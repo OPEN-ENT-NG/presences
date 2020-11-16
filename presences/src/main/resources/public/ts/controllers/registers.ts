@@ -149,7 +149,7 @@ export interface ViewModel {
 }
 
 export const registersController = ng.controller('RegistersController',
-    ['$scope', '$timeout', '$route', '$location', '$rootScope', 'RegisterService', 'SearchService', 'GroupService', 'ReasonService',
+    ['$scope', '$timeout', '$route', '$location', '$rootScope', 'SearchService', 'GroupService', 'ReasonService',
         async function ($scope: Scope, $timeout, $route, $location, $rootScope,
                         SearchService: SearchService, GroupService: GroupService, ReasonService: ReasonService) {
             const vm: ViewModel = this;

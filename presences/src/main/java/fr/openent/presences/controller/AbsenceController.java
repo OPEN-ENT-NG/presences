@@ -110,10 +110,6 @@ public class AbsenceController extends ControllerHelper {
     @Trace(Actions.ABSENCE_UPDATE_SET_REASON)
     public void changeReasonAbsence(HttpServerRequest request) {
         RequestUtils.bodyToJson(request, absence -> {
-            if (!isAbsenceBodyValid(absence)) {
-                badRequest(request);
-                return;
-            }
             UserUtils.getUserInfos(eb, request, user ->
                     absenceService.changeReasonAbsences(absence, user, DefaultResponseHandler.defaultResponseHandler(request))
             );
@@ -127,10 +123,6 @@ public class AbsenceController extends ControllerHelper {
     @Trace(Actions.ABSENCE_REGULARISATION)
     public void regularizedAbsences(HttpServerRequest request) {
         RequestUtils.bodyToJson(request, absence -> {
-            if (!isAbsenceBodyValid(absence)) {
-                badRequest(request);
-                return;
-            }
             UserUtils.getUserInfos(eb, request, user ->
                     absenceService.changeRegularizedAbsences(absence, user, DefaultResponseHandler.defaultResponseHandler(request))
             );

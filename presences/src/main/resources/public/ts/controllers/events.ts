@@ -185,9 +185,9 @@ interface ViewModel {
     exportCsv(): void;
 }
 
-export const eventsController = ng.controller('EventsController', ['$scope', '$route', '$location',
+export const eventsController = ng.controller('EventsController', ['$scope', '$route', '$location', '$timeout',
     'GroupService', 'ReasonService', 'EventService',
-    function ($scope, $route, $location, GroupService: GroupService, ReasonService: ReasonService, eventService: EventService) {
+    function ($scope, $route, $location, $timeout, GroupService: GroupService, ReasonService: ReasonService, eventService: EventService) {
         const isWidget = $route.current.action === 'dashboard';
         const vm: ViewModel = this;
         vm.filter = {
@@ -418,7 +418,7 @@ export const eventsController = ng.controller('EventsController', ['$scope', '$r
                     switch (periods.events[i].type_id) {
                         case (EventType.ABSENCE):
                             //If absence has a reason
-                            if (periods.events[i].reason_id !== null) {
+                            if (periods.events[i].reason_id !== null && periods.events[i].reason_id !== -1) {
                                 (periods.events[i].counsellor_regularisation === true) ?
                                     indexes.push(className.indexOf('regularized')) :
                                     indexes.push(className.indexOf('no-regularized'));
@@ -438,7 +438,7 @@ export const eventsController = ng.controller('EventsController', ['$scope', '$r
                     }
                 } else if ('type' in periods.events[i]) {
                     if (periods.events[i].type === 'absence') {
-                        if (periods.events[i].reason_id !== null) {
+                        if (periods.events[i].reason_id !== null && periods.events[i].reason_id !== -1) {
                             (periods.events[i].counsellor_regularisation === true) ?
                                 indexes.push(className.indexOf('regularized')) :
                                 indexes.push(className.indexOf('no-regularized'));
@@ -579,12 +579,17 @@ export const eventsController = ng.controller('EventsController', ['$scope', '$r
         vm.toggleAllEventsRegularised = async (event: EventResponse, studentId: string): Promise<void> => {
             let initialCounsellorRegularisation = event.globalCounsellorRegularisation;
             vm.interactedEvent = event;
-            let fetchedEvent: Event|EventResponse[] = [];
+            let fetchedEvent: Event | EventResponse[] = [];
             EventsUtils.fetchEvents(event, fetchedEvent);
-            await vm.events.updateRegularized(fetchedEvent, initialCounsellorRegularisation, studentId, window.structure.id)
-                .then(() => {
-                    getEvents(true);
-                    vm.eventId = null;
+            vm.events.updateRegularized(fetchedEvent, initialCounsellorRegularisation, studentId, window.structure.id)
+                .then(async () => {
+                    $timeout(async () => {
+                        // we use $timeout trick since we figured that updateRegularized was too fast to handle our data for our getEvent
+                        // some data might not be updated at this time then we use timeout
+                        await getEvents(true);
+                        vm.eventId = null;
+                        $scope.safeApply();
+                    }, 500)
                 });
             $scope.safeApply();
         };

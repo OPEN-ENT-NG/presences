@@ -82,10 +82,12 @@ public interface AbsenceService {
      *
      * @param absence Absence object from client to update absence regularized
      *                JsonObject : {Ids: JsonArray, regularized: Boolean}
-     * @param user        userInfo
+     * @param user    userInfo
      * @param handler Function handler returning data
      */
     void changeRegularizedAbsences(JsonObject absence, UserInfos user, Handler<Either<String, JsonObject>> handler);
+
+    void changeRegularizedAbsences(JsonObject absence, UserInfos user, boolean editEvents, Handler<Either<String, JsonObject>> handler);
 
     /**
      * delete absence
