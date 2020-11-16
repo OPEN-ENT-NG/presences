@@ -96,26 +96,28 @@ public class DefaultSearchService implements SearchService {
 
     private void searchManualGroup(String query, String structureId, Handler<Either<String, JsonArray>> handler) {
         String searchQuery = "MATCH (User {profiles:['Student']})-[:IN]->(g:ManualGroup)-[:BELONGS|:DEPENDS]->(s:Structure {id: {structureId}}) " +
-                "WHERE toLower(g.name) CONTAINS '" + query.toLowerCase() + "' " +
+                "WHERE toLower(g.name) CONTAINS {query} " +
                 "RETURN DISTINCT g.id as id, g.name as displayName, 'GROUP' as type, g.id as groupId, g.name as groupName ";
 
-        JsonObject params = new JsonObject().put("structureId", structureId);
+        JsonObject params = new JsonObject().put("structureId", structureId).put("query", query);
         Neo4j.getInstance().execute(searchQuery, params, Neo4jResult.validResultHandler(handler));
     }
 
     private void searchUserAndGroup(String query, String structureId, Handler<Either<String, JsonArray>> handler) {
         String searchQuery = "MATCH (u:User {profiles: ['Student']})-[:IN]->(:ProfileGroup)-[:DEPENDS]->(c:Class)-[:BELONGS]->(s:Structure {id:{structureId}}) " +
-                "WHERE toLower(u.firstName) CONTAINS '" + query.toLowerCase() + "' " +
-                "OR toLower(u.lastName) CONTAINS '" + query.toLowerCase() + "' " +
+                "WHERE toLower(u.firstName) CONTAINS {query} " +
+                "OR toLower(u.lastName) CONTAINS {query} " +
                 "RETURN distinct u.id as id, (u.lastName + ' ' + u.firstName) as displayName, 'USER' as type, c.id as groupId, c.name as groupName " +
                 "UNION " +
                 // MATCHING Functional Group
                 "MATCH (g)-[:BELONGS|:DEPENDS]->(s:Structure {id:{structureId}}) " +
-                "WHERE toLower(g.name) CONTAINS '" + query.toLowerCase() + "' " +
+                "WHERE toLower(g.name) CONTAINS {query} " +
                 "AND (g:Class OR g:FunctionalGroup) " +
                 "RETURN g.id as id, g.name as displayName, 'GROUP' as type, g.id as groupId, g.name as groupName ";
 
-        JsonObject params = new JsonObject().put("structureId", structureId);
+        JsonObject params = new JsonObject()
+                .put("structureId", structureId)
+                .put("query", query);
         Neo4j.getInstance().execute(searchQuery, params, Neo4jResult.validResultHandler(handler));
     }
 }
