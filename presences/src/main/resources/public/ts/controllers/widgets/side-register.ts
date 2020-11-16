@@ -1,16 +1,15 @@
 import {model, ng, notify, toasts} from 'entcore';
 import {Absence, Course, Courses, Register, RegisterStatus, RegisterStudent} from '../../models';
 import {DateUtils} from '@common/utils/date';
-import {CourseUtils, PresencesPreferenceUtils} from "@common/utils";
-import {RegisterUtils} from "../../utilities";
-import {COURSE_EVENTS} from "@common/model";
-import {IAngularEvent} from "angular";
-import http, {AxiosResponse} from "axios";
+import {CourseUtils, PresencesPreferenceUtils} from '@common/utils';
+import {RegisterUtils} from '../../utilities';
+import {COURSE_EVENTS} from '@common/model';
+import {IAngularEvent} from 'angular';
+import http, {AxiosResponse} from 'axios';
 
 interface ViewModel {
     courses: Courses;
     register: Register;
-    RegisterStatus: any;
 
     load(): Promise<void>;
 
@@ -27,13 +26,12 @@ interface ViewModel {
 
 declare let window: any;
 
-export const sideRegisterController = ng.controller('SideRegisterController', ['$scope',
+export const sideRegisterController = ng.controller('SideRegisterController', ['$scope', 'RegisterService',
     function ($scope) {
         const vm: ViewModel = this;
 
         vm.courses = new Courses();
         vm.register = undefined;
-        vm.RegisterStatus = RegisterStatus;
 
         vm.load = async function (): Promise<void> {
             try {
@@ -65,13 +63,8 @@ export const sideRegisterController = ng.controller('SideRegisterController', ['
             return RegisterUtils.isAbsenceDisabled(student, vm.register);
         };
 
-        vm.validRegister = async function () {
-            try {
-                vm.register.setStatus(vm.RegisterStatus.DONE);
-                toasts.confirm('presences.register.validation.success');
-            } catch (err) {
-                toasts.warning('presences.register.validation.error');
-            }
+        vm.validRegister = async (): Promise<void> => {
+            await vm.register.setStatus(RegisterStatus.DONE);
         };
 
         vm.openRegister = async function (course: Course) {
@@ -115,7 +108,7 @@ export const sideRegisterController = ng.controller('SideRegisterController', ['
                 }
                 delete student[event];
             } else {
-                let o;
+                let o: Absence;
                 o = new Absence(vm.register.id, student.id, start_date, end_date);
                 student[event] = o;
                 try {
@@ -125,7 +118,7 @@ export const sideRegisterController = ng.controller('SideRegisterController', ['
                     throw err;
                 }
             }
-            vm.register.setStatus(RegisterStatus.IN_PROGRESS);
+            await vm.register.setStatus(RegisterStatus.IN_PROGRESS);
             $scope.safeApply();
         }
 

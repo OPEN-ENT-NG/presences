@@ -5,6 +5,7 @@ export * from '@common/services/UserService';
 export * from './CalendarService';
 export * from './ReasonService';
 export * from './RegistryService';
+export * from './RegisterService';
 export * from './ForgottenNotebookService';
 export * from './SettingsService';
 export * from './AlertService';
@@ -14,6 +15,6 @@ export * from './DisciplineService';
 export * from './PresenceService';
 export * from './AbsenceService';
 export * from './PeriodService';
-export * from "@incidents/services/IncidentService";
+export * from '@incidents/services/IncidentService';
 
 export * from './StatementsAbsencesService';

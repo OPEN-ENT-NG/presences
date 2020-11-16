@@ -1,4 +1,4 @@
-import {_, idiom as lang, Me, model, moment, ng, notify, template, toasts} from 'entcore';
+import {_, idiom as lang, Me, model, moment, ng, notify, template} from 'entcore';
 import {
     Absence,
     Course,
@@ -14,14 +14,14 @@ import {
     Remark
 } from '../models';
 import {GroupService, ReasonService, SearchService} from '../services';
-import {CourseUtils, DateUtils, PreferencesUtils} from '@common/utils'
+import {CourseUtils, DateUtils, PreferencesUtils} from '@common/utils';
 import rights from '../rights';
 import {Scope} from './main';
 import http from 'axios';
-import {EventsUtils, RegisterUtils, StudentsSearch} from "../utilities";
-import {Reason} from "@presences/models/Reason";
-import {SNIPLET_FORM_EMIT_EVENTS, SNIPLET_FORM_EVENTS} from "@common/model";
-import {INFINITE_SCROLL_EVENTER} from "@common/core/enum/infinite-scroll-eventer";
+import {EventsUtils, RegisterUtils, StudentsSearch} from '../utilities';
+import {Reason} from '@presences/models/Reason';
+import {SNIPLET_FORM_EMIT_EVENTS, SNIPLET_FORM_EVENTS} from '@common/model';
+import {INFINITE_SCROLL_EVENTER} from '@common/core/enum/infinite-scroll-eventer';
 
 declare let window: any;
 
@@ -47,7 +47,6 @@ export interface ViewModel {
     register: Register;
     courses: Courses;
     filter: Filter;
-    RegisterStatus: any;
     studentsSearch: StudentsSearch;
     presences: Presences;
     reasons: Reason[];
@@ -116,7 +115,7 @@ export interface ViewModel {
 
     isLoading(): boolean;
 
-    isEmptyGroupRegister(): boolean
+    isEmptyGroupRegister(): boolean;
 
     isEmptyDayHistory(student): boolean;
 
@@ -150,7 +149,7 @@ export interface ViewModel {
 }
 
 export const registersController = ng.controller('RegistersController',
-    ['$scope', '$timeout', '$route', '$location', '$rootScope', 'SearchService', 'GroupService', 'ReasonService',
+    ['$scope', '$timeout', '$route', '$location', '$rootScope', 'RegisterService', 'SearchService', 'GroupService', 'ReasonService',
         async function ($scope: Scope, $timeout, $route, $location, $rootScope,
                         SearchService: SearchService, GroupService: GroupService, ReasonService: ReasonService) {
             const vm: ViewModel = this;
@@ -273,7 +272,6 @@ export const registersController = ng.controller('RegistersController',
             vm.courses = new Courses();
             vm.courses.eventer.on('loading::true', () => $scope.safeApply());
             vm.courses.eventer.on('loading::false', () => $scope.safeApply());
-            vm.RegisterStatus = RegisterStatus;
 
             let registerTimeSlot = await Me.preference(PreferencesUtils.PREFERENCE_KEYS.PRESENCE_REGISTER);
 
@@ -512,7 +510,7 @@ export const registersController = ng.controller('RegistersController',
                 }
             };
 
-            const toggleEvent = async function (student, event, start_date, end_date) {
+            const toggleEvent = async (student: any, event: string, start_date: string, end_date: string): Promise<void> => {
                 if (student[event]) {
                     try {
                         await student[event].delete();
@@ -530,7 +528,7 @@ export const registersController = ng.controller('RegistersController',
                     });
                     if (event === 'absence') vm.register.absenceCounter--;
                 } else {
-                    let o;
+                    let o: Lateness | Departure | Absence;
                     switch (event) {
                         case 'lateness': {
                             o = new Lateness(vm.register.id, student.id, start_date, end_date);
@@ -560,7 +558,7 @@ export const registersController = ng.controller('RegistersController',
                     });
                     if (event === 'absence') vm.register.absenceCounter++;
                 }
-                vm.register.setStatus(RegisterStatus.IN_PROGRESS);
+                await vm.register.setStatus(RegisterStatus.IN_PROGRESS);
                 if (student.absence && event === 'lateness') {
                     await toggleEvent(student, 'absence', start_date, end_date);
                 }
@@ -844,13 +842,8 @@ export const registersController = ng.controller('RegistersController',
                 return [...classes, ...groups];
             };
 
-            vm.validRegister = async function () {
-                try {
-                    vm.register.setStatus(vm.RegisterStatus.DONE);
-                    toasts.confirm('presences.register.validation.success');
-                } catch (err) {
-                    toasts.warning('presences.register.validation.error');
-                }
+            vm.validRegister = async (): Promise<void> => {
+                await vm.register.setStatus(RegisterStatus.DONE);
             };
 
             function startAction() {

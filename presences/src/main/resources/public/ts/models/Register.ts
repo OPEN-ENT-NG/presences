@@ -1,31 +1,32 @@
-import http from 'axios';
-import {_, moment} from 'entcore'
-import {Mix} from 'entcore-toolkit'
-import {Event, EventType, Remark} from './index'
-import {LoadingCollection} from "@common/model"
+import http, {AxiosResponse} from 'axios';
+import {_, moment, toasts} from 'entcore';
+import {Mix} from 'entcore-toolkit';
+import {Event, EventType, RegisterStatus, Remark} from './index';
+import {LoadingCollection} from '@common/model';
+import {registerService} from '../services';
 
 export interface RegisterStudent {
-    id: string,
-    name: string,
-    group: string,
-    events: any[],
-    day_history: any[],
-    group_name: string,
-    absence?: Event,
+    id: string;
+    name: string;
+    group: string;
+    events: any[];
+    day_history: any[];
+    group_name: string;
+    absence?: Event;
     departure?: Event;
-    lateness?: Event,
-    remark?: Event,
+    lateness?: Event;
+    remark?: Event;
     exempted?: boolean;
     exemption_attendance?: boolean;
     exempted_subjectId?: string;
     exemption_recursive_id?: number;
-    birth_date: string
+    birth_date: string;
 }
 
 interface Teacher {
     id: string;
     displayName: string;
-    functions: string[]
+    functions: string[];
 }
 
 export interface Register {
@@ -64,7 +65,7 @@ export class Register extends LoadingCollection {
             groups: this.groups,
             split_slot: this.splitSlot,
             classes: this.classes
-        }
+        };
     }
 
     async create() {
@@ -148,10 +149,19 @@ export class Register extends LoadingCollection {
         this.loading = false;
     }
 
-    async setStatus(state_id: number) {
+    async setStatus(state_id: number): Promise<void> {
         try {
-            await http.put(`/presences/registers/${this.id}/status`, {state_id});
-            this.state_id = state_id;
+            let response: AxiosResponse = await registerService.setStatus(this, state_id);
+
+            // Prevent displaying toasts when selecting students in register.
+            if (state_id !== RegisterStatus.DONE) {
+                return;
+            }
+            if (response.status === 200 || response.status === 201 || response.status === 204) {
+                toasts.confirm('presences.register.validation.success');
+            } else {
+                toasts.warning('presences.register.validation.error');
+            }
         } catch (err) {
             throw err;
         }
