@@ -164,6 +164,10 @@ const vm: ViewModel = {
         vm.form.student_id = data.studentId;
         vm.form.reason_id = data.reason_id ? data.reason_id : vm.form.absences
             .find(a => 'type' in a || 'type_id' in a).reason_id;
+        
+        vm.selectedReason = vm.reasons.find(reason => reason.id === vm.form.reason_id);
+        vm.canRegularize = (vm.selectedReason) ? (!vm.selectedReason.proving) : false;
+
         vm.form.type = data.eventType;
         vm.setFormDateParams(vm.form, vm.form.start_date, vm.form.end_date);
         vm.safeApply();
