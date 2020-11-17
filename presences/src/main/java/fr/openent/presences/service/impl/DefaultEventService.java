@@ -1002,10 +1002,6 @@ public class DefaultEventService implements EventService {
         // AND noReason is TRUE
         if (reasonsId.isEmpty() && noReasons) {
             query += " AND reason_id IS NULL ";
-        } else {
-            // this case occurs if you wish not to set noReason to true but want to FALSE,
-            // then there is no need to fetch reasonIds from above
-            query += " AND reason_id IS NOT NULL ";
         }
 
         if (massmailed != null) {
