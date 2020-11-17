@@ -6,6 +6,7 @@ import fr.openent.presences.common.service.GroupService;
 import fr.openent.presences.common.service.UserService;
 import fr.openent.presences.common.service.impl.DefaultGroupService;
 import fr.openent.presences.common.service.impl.DefaultUserService;
+import fr.openent.presences.model.Event.Event;
 import fr.openent.presences.service.AbsenceService;
 import fr.wseduc.webutils.Either;
 import io.vertx.core.CompositeFuture;
@@ -247,8 +248,9 @@ public class DefaultAbsenceService implements AbsenceService {
         Future<JsonArray> createEventsFuture = Future.future();
         Future<JsonArray> updateEventsFuture = Future.future();
 
-        createEventsWithAbsents(absenceBody, groupIds, userInfoId, FutureHelper.handlerJsonArray(createEventsFuture));
-        updateEventsWithAbsents(absenceBody, groupIds, FutureHelper.handlerJsonArray(updateEventsFuture));
+        Boolean isRegularized = absenceBody.getBoolean("counsellor_regularisation");
+        createEventsWithAbsents(absenceBody, isRegularized, groupIds, userInfoId, FutureHelper.handlerJsonArray(createEventsFuture));
+        updateEventsWithAbsents(absenceBody, isRegularized, groupIds, FutureHelper.handlerJsonArray(updateEventsFuture));
 
         CompositeFuture.all(createEventsFuture, updateEventsFuture).setHandler(event -> {
             if (event.failed()) {
@@ -259,10 +261,10 @@ public class DefaultAbsenceService implements AbsenceService {
                 List<Long> updatedRegisterId = new ArrayList<>();
                 List<Long> createdRegisterId = new ArrayList<>();
                 for (int i = 0; i < updateEventsFuture.result().size(); i++) {
-                    updatedRegisterId.add(updateEventsFuture.result().getJsonObject(i).getLong("updated_register_id"));
+                    updatedRegisterId.add(updateEventsFuture.result().getJsonObject(i).getLong("register_id"));
                 }
                 for (int j = 0; j < createEventsFuture.result().size(); j++) {
-                    createdRegisterId.add(createEventsFuture.result().getJsonObject(j).getLong("created_register_id"));
+                    createdRegisterId.add(createEventsFuture.result().getJsonObject(j).getLong("register_id"));
                 }
                 handler.handle(new Either.Right<>(new JsonObject()
                         .put("updatedRegisterId", updatedRegisterId)
@@ -284,7 +286,7 @@ public class DefaultAbsenceService implements AbsenceService {
         params.addAll(absenceBody.getJsonArray("ids"));
         Sql.getInstance().prepared(query, params, SqlResult.validUniqueResultHandler(result -> {
             List<Long> ids = new ArrayList<>();
-            for(int i = 0; i < absenceBody.getJsonArray("ids").size(); i++) {
+            for (int i = 0; i < absenceBody.getJsonArray("ids").size(); i++) {
                 ids.add(Long.parseLong(absenceBody.getJsonArray("ids").getInteger(i).toString()));
             }
             afterPersistAbsences(ids, user.getUserId(), true, handler, result);
@@ -318,7 +320,7 @@ public class DefaultAbsenceService implements AbsenceService {
         changeRegularizedAbsences(absenceBody, user, true, handler);
     }
 
-    private void createEventsWithAbsents(JsonObject absenceBody, List<String> groupIds, String ownerId, Handler<Either<String, JsonArray>> handler) {
+    private void createEventsWithAbsents(JsonObject absenceBody, Boolean isRegularized, List<String> groupIds, String ownerId, Handler<Either<String, JsonArray>> handler) {
         String query = "WITH register as " +
                 "(" +
                 "SELECT register.id, register.start_date, register.end_date FROM " + Presences.dbSchema + ".register " +
@@ -334,7 +336,7 @@ public class DefaultAbsenceService implements AbsenceService {
                 "INSERT INTO presences.event (start_date, end_date, comment, counsellor_input, student_id, register_id, type_id, reason_id, owner)" +
                 "(SELECT register.start_date, register.end_date, '', true, ?," +
                 "register.id, 1, ?, ? FROM register) " +
-                "returning register_id AS created_register_id";
+                "RETURNING *";
 
         JsonArray values = new JsonArray()
                 .addAll(new JsonArray(groupIds))
@@ -349,10 +351,20 @@ public class DefaultAbsenceService implements AbsenceService {
             values.addNull();
         }
         values.add(ownerId);
-        Sql.getInstance().prepared(query, values, SqlResult.validResultHandler(handler));
+        Sql.getInstance().prepared(query, values, SqlResult.validResultHandler(result -> {
+            if (result.isLeft()) {
+                String message = "[Presences@DefaultAbsenceService::createEventsWithAbsents] Failed to create events from absent.";
+                LOGGER.error(message + " " + result.left().getValue());
+                handler.handle(new Either.Left<>(message));
+                return;
+            }
+
+            JsonArray events = result.right().getValue();
+            regularizeEventsFromAbsence(events, isRegularized, handler);
+        }));
     }
 
-    private void updateEventsWithAbsents(JsonObject absenceBody, List<String> groupIds, Handler<Either<String, JsonArray>> handler) {
+    private void updateEventsWithAbsents(JsonObject absenceBody, Boolean isRegularized, List<String> groupIds, Handler<Either<String, JsonArray>> handler) {
         String query = "WITH register as " +
                 "(" +
                 "SELECT register.id, register.start_date, register.end_date FROM " + Presences.dbSchema + ".register " +
@@ -366,7 +378,7 @@ public class DefaultAbsenceService implements AbsenceService {
                 ") " +
                 ") " +
                 "UPDATE " + Presences.dbSchema + ".event SET reason_id = ? WHERE register_id IN (SELECT id FROM register) AND student_id = ? " +
-                "returning register_id AS updated_register_id";
+                "RETURNING *";
         JsonArray values = new JsonArray()
                 .addAll(new JsonArray(groupIds))
                 .add(absenceBody.getString("start_date"))
@@ -380,7 +392,54 @@ public class DefaultAbsenceService implements AbsenceService {
         }
 
         values.add(absenceBody.getString("student_id"));
-        Sql.getInstance().prepared(query, values, SqlResult.validResultHandler(handler));
+        Sql.getInstance().prepared(query, values, SqlResult.validResultHandler(result -> {
+            if (result.isLeft()) {
+                String message = "[Presences@DefaultAbsenceService::updateEventsWithAbsents] Failed to update events from absent.";
+                LOGGER.error(message + " " + result.left().getValue());
+                handler.handle(new Either.Left<>(message));
+                return;
+            }
+
+            JsonArray events = result.right().getValue();
+            regularizeEventsFromAbsence(events, isRegularized, handler);
+        }));
+    }
+
+    private void regularizeEventsFromAbsence(JsonArray events, Boolean isRegularized, Handler<Either<String, JsonArray>> handler) {
+        if (isRegularized != null) {
+            changeRegularizedEvents(events, isRegularized, result -> {
+                if (result.isLeft()) {
+                    String message = "[Presences@DefaultAbsenceService::regularizeEventsFromAbsence] Failed to regularize absence linked events.";
+                    LOGGER.error(message + " " + result.left().getValue());
+                    handler.handle(new Either.Left<>(message));
+                    return;
+                }
+                handler.handle(new Either.Right<>(events));
+            });
+        } else {
+            handler.handle(new Either.Right<>(events));
+        }
+    }
+
+    // same function that in DefaultEventService. we so it there, because we cannot cross service instances
+    private void changeRegularizedEvents(JsonArray events, Boolean regularized, Handler<Either<String, JsonObject>> handler) {
+        List<Integer> ids = new ArrayList<>();
+        for (int i = 0; i < events.size(); i++) {
+            Event event = new Event(events.getJsonObject(i), new ArrayList<>());
+            ids.add(event.getId());
+        }
+
+        if (ids.size() > 0) {
+            JsonArray params = new JsonArray();
+            String query = "UPDATE " + Presences.dbSchema + ".event SET counsellor_regularisation = ? ";
+            params.add(regularized);
+
+            query += " WHERE id IN " + Sql.listPrepared(ids) + " AND type_id = 1";
+            params.addAll(new JsonArray(ids));
+            Sql.getInstance().prepared(query, params, SqlResult.validUniqueResultHandler(handler));
+            return;
+        }
+        handler.handle(new Either.Right<>(new JsonObject().put("status", "ok")));
     }
 
     @Override
@@ -515,15 +574,15 @@ public class DefaultAbsenceService implements AbsenceService {
                 .add(currentDate)
                 .add(currentDate);
 
-        String query = "SELECT ab.student_id FROM "+ Presences.dbSchema +".absence ab" +
-                        " WHERE (ab.start_date < ?" +
-                        " AND ab.end_date > ?" +
-                        " AND ab.structure_id = ?)" +
-                        " UNION" +
-                        " SELECT ev.student_id FROM "+ Presences.dbSchema + ".event ev" +
-                        " INNER JOIN " + Presences.dbSchema+ ".register AS r" +
-                        " ON (r.id = ev.register_id AND r.structure_id = ?)" +
-                        " WHERE (ev.start_date < ? AND ev.end_date > ?)";
+        String query = "SELECT ab.student_id FROM " + Presences.dbSchema + ".absence ab" +
+                " WHERE (ab.start_date < ?" +
+                " AND ab.end_date > ?" +
+                " AND ab.structure_id = ?)" +
+                " UNION" +
+                " SELECT ev.student_id FROM " + Presences.dbSchema + ".event ev" +
+                " INNER JOIN " + Presences.dbSchema + ".register AS r" +
+                " ON (r.id = ev.register_id AND r.structure_id = ?)" +
+                " WHERE (ev.start_date < ? AND ev.end_date > ?)";
 
         Sql.getInstance().prepared(query, params, SqlResult.validResultHandler(handler));
     }
