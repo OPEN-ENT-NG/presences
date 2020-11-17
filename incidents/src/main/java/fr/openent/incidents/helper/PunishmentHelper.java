@@ -200,7 +200,9 @@ public class PunishmentHelper {
                 .add(new JsonObject().put("$project", addProject()));
 
         pipeline.add(new JsonObject().put("$skip", offset));
-        pipeline.add(new JsonObject().put("$limit", limit));
+        if (limit > 0) {
+            pipeline.add(new JsonObject().put("$limit", limit));
+        }
 
         return pipeline;
     }
@@ -214,12 +216,12 @@ public class PunishmentHelper {
                                         getDate("$fields.delay_at")
                                 ),
                                 getCase(
-                                        new JsonObject().put("$gt", new JsonArray(Arrays.asList("$fields.end_at", null))),
-                                        getDate("$fields.end_at")
-                                ),
-                                getCase(
                                         new JsonObject().put("$gt", new JsonArray(Arrays.asList("$fields.start_at", null))),
                                         getDate("$fields.start_at")
+                                ),
+                                getCase(
+                                        new JsonObject().put("$gt", new JsonArray(Arrays.asList("$fields.end_at", null))),
+                                        getDate("$fields.end_at")
                                 )
                         )))
                                 .put("default", getDate("$created_at"))
