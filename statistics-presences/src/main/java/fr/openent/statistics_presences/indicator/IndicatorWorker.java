@@ -19,7 +19,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 
 public abstract class IndicatorWorker extends AbstractVerticle {
     protected final Logger log = LoggerFactory.getLogger(IndicatorWorker.class);
@@ -29,7 +28,8 @@ public abstract class IndicatorWorker extends AbstractVerticle {
     @Override
     public void start() throws Exception {
         log.info(String.format("Launching worker %s", Global.class.getName()));
-        initNeo4j();
+
+        // initNeo4j();
         this.report = new Report(this.indicatorName()).start();
         JsonObject structures = config().getJsonObject("structures");
         List<Future> futures = new ArrayList<>();
@@ -40,6 +40,9 @@ public abstract class IndicatorWorker extends AbstractVerticle {
         CompositeFuture.join(futures).setHandler(this::sendSigTerm);
     }
 
+    // initNeo4j() was used to instance neo4j for each verticle in order to prevent warning compilation for preprod/prod
+    // by removing this function we will make warning for our compilation in preprod/prod but our local/dev
+    // platform will remain stable
     private void initNeo4j() {
         String neo4jConfig = (String) vertx.sharedData().getLocalMap("server").get("neo4jConfig");
         Neo4j.getInstance().init(vertx, new JsonObject(neo4jConfig));
@@ -53,26 +56,31 @@ public abstract class IndicatorWorker extends AbstractVerticle {
         return config().getString("endpoint");
     }
 
-    protected void save(List<JsonObject> values, Handler<AsyncResult<Void>> handler) {
+    protected void save(String id, JsonArray students, List<JsonObject> values, Handler<AsyncResult<Void>> handler) {
         if (values.isEmpty()) {
-            handler.handle(Future.succeededFuture());
+            deleteOldValues(id, students, values).setHandler(event -> {
+                if (event.failed()) {
+                    handler.handle(Future.failedFuture(event.cause()));
+                } else {
+                    handler.handle(Future.succeededFuture());
+                }
+            });
             return;
         }
 
-        deleteOldValues(values)
+        deleteOldValues(id, students, values)
                 .compose(this::storeValues)
                 .setHandler(handler);
     }
 
-    private Future<List<JsonObject>> deleteOldValues(List<JsonObject> values) {
+    private Future<List<JsonObject>> deleteOldValues(String id, JsonArray students, List<JsonObject> values) {
         Future<List<JsonObject>> future = Future.future();
-        List<String> students = values.stream().map(value -> value.getString("user")).collect(Collectors.toList());
         JsonObject $in = new JsonObject()
-                .put("$in", new JsonArray(students));
+                .put("$in", students);
         JsonObject selector = new JsonObject()
                 .put("indicator", this.indicatorName())
+                .put("structure", id)
                 .put("user", $in);
-
         MongoDb.getInstance().delete(StatisticsPresences.COLLECTION, selector, MongoDbResult.validResultHandler(either -> {
             if (either.isLeft()) {
                 log.error(String.format("Failed to remove old statistics for indicator %s", this.indicatorName()));
@@ -146,7 +154,7 @@ public abstract class IndicatorWorker extends AbstractVerticle {
                         stats.addAll(handler.result());
                     }
 
-                    save(stats, saveAr -> {
+                    save(id, students, stats, saveAr -> {
                         if (saveAr.failed()) {
                             report.failOnSave();
                             future.fail(saveAr.cause());
