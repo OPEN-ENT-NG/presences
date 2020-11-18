@@ -107,8 +107,8 @@ public class DefaultAbsenceService implements AbsenceService {
 
     @Override
     public void create(JsonObject absenceBody, UserInfos user, boolean editEvents, Handler<Either<String, JsonObject>> handler) {
-        String query = "INSERT INTO " + Presences.dbSchema + ".absence(structure_id, start_date, end_date, student_id, reason_id) " +
-                "VALUES (?, ?, ?, ?, ?) RETURNING id;";
+        String query = "INSERT INTO " + Presences.dbSchema + ".absence(structure_id, start_date, end_date, student_id, owner, reason_id) " +
+                "VALUES (?, ?, ?, ?, ?, ?) RETURNING id;";
         JsonArray params = new JsonArray()
                 .add(absenceBody.getString("structure_id"))
                 .add(absenceBody.getString("start_date"))
@@ -333,7 +333,7 @@ public class DefaultAbsenceService implements AbsenceService {
                 "  WHERE event.type_id = 1 and event.register_id = register.id and event.student_id = ?" +
                 ")" +
                 ") " +
-                "INSERT INTO presences.event (start_date, end_date, comment, counsellor_input, student_id, register_id, type_id, reason_id, owner)" +
+                "INSERT INTO " + Presences.dbSchema + ".event (start_date, end_date, comment, counsellor_input, student_id, register_id, type_id, reason_id, owner)" +
                 "(SELECT register.start_date, register.end_date, '', true, ?," +
                 "register.id, 1, ?, ? FROM register) " +
                 "RETURNING *";
@@ -350,7 +350,7 @@ public class DefaultAbsenceService implements AbsenceService {
         } else {
             values.addNull();
         }
-        values.add(ownerId);
+        values.add((absenceBody.getString("owner") != null) ? absenceBody.getString("owner") : ownerId);
         Sql.getInstance().prepared(query, values, SqlResult.validResultHandler(result -> {
             if (result.isLeft()) {
                 String message = "[Presences@DefaultAbsenceService::createEventsWithAbsents] Failed to create events from absent.";
