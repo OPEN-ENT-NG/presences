@@ -58,17 +58,17 @@
   cursor: not-allowed;
 }
 
-.period li.absent:before {
+.period li.absent:before, .period li.event-absent:before {
   border-color: $presences-red;
   background: $presences-red;
 }
 
-.period li.no-regularized:before {
+.period li.no-regularized:before, .period li.absent-no-regularized:before {
   border-color: $presences-pink;
   background: $presences-pink;
 }
 
-.period li.regularized:before {
+.period li.regularized:before, .period li.absent-regularized:before {
   border-color: $presences-green;
   background: $presences-green;
 }

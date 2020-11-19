@@ -306,14 +306,8 @@ export const eventsController = ng.controller('EventsController', ['$scope', '$r
                     vm.eventType.push(EventType.DEPARTURE);
                 }
             }
+
             vm.events.eventType = vm.eventType.toString();
-
-            if (vm.filter.unjustified) {
-                vm.eventReasonsId = [];
-                vm.filter.noReasons = true;
-                vm.events.noReason = vm.filter.noReasons;
-            }
-
 
             EventsUtils.setStudentToSync(vm.events, vm.filter);
             EventsUtils.setClassToSync(vm.events, vm.filter);
@@ -348,18 +342,21 @@ export const eventsController = ng.controller('EventsController', ['$scope', '$r
         };
 
         const refreshGetEventWhileAction = async (): Promise<void> => {
-            let filter = {
+            let filter: EventRequest = {
                 structureId: vm.events.structureId,
                 startDate: vm.events.startDate,
                 endDate: vm.events.endDate,
                 noReason: vm.events.noReason,
                 eventType: vm.events.eventType,
-                listReasonIds: vm.events.listReasonIds,
-                regularized: vm.events.regularized,
+                listReasonIds: (canFilterNoReasonAndRegularized() || canFilterRegularized() || canFilterUnjustified()) ? "" : vm.eventReasonsId.toString(),
                 userId: vm.events.userId,
                 classes: vm.events.classes,
                 page: vm.interactedEvent.page
             };
+
+            if (!vm.events.regularizedNotregularized) {
+                filter.regularized = !vm.events.regularized;
+            }
             let events = await eventService.get(filter);
 
             vm.events.pageCount = events.pageCount;
@@ -408,7 +405,8 @@ export const eventsController = ng.controller('EventsController', ['$scope', '$r
         vm.eventTypeState = (periods, event): string => {
             if (periods.events.length === 0) return '';
 
-            const className: string[] = ['empty', 'remark', 'departure', 'late', 'absent', 'no-regularized', 'regularized'];
+            const className: string[] = ['empty', 'remark', 'departure', 'late', 'absent', 'absent-no-regularized',
+                'absent-regularized', 'event-absent', 'no-regularized', 'regularized'];
 
             let indexes: Array<number> = [className.indexOf('empty')];
 
@@ -423,7 +421,7 @@ export const eventsController = ng.controller('EventsController', ['$scope', '$r
                                     indexes.push(className.indexOf('regularized')) :
                                     indexes.push(className.indexOf('no-regularized'));
                             } else {
-                                indexes.push(className.indexOf('absent'))
+                                indexes.push(className.indexOf('event-absent'))
                             }
                             break;
                         case (EventType.LATENESS):
@@ -440,8 +438,8 @@ export const eventsController = ng.controller('EventsController', ['$scope', '$r
                     if (periods.events[i].type === 'absence') {
                         if (periods.events[i].reason_id !== null && periods.events[i].reason_id !== -1) {
                             (periods.events[i].counsellor_regularisation === true) ?
-                                indexes.push(className.indexOf('regularized')) :
-                                indexes.push(className.indexOf('no-regularized'));
+                                indexes.push(className.indexOf('absent-regularized')) :
+                                indexes.push(className.indexOf('absent-no-regularized'));
                         } else {
                             indexes.push(className.indexOf('absent'));
                         }
@@ -488,21 +486,6 @@ export const eventsController = ng.controller('EventsController', ['$scope', '$r
             vm.actionForm.actionId = null;
             vm.actionForm.comment = "";
             getEventActions();
-        };
-
-        vm.switchAbsencesFilter = function () {
-            vm.formFilter.absences = !vm.formFilter.absences;
-            if (vm.formFilter.absences) {
-                if (!vm.eventType.some(e => e == EventType.ABSENCE)) {
-                    vm.eventType.push(EventType.ABSENCE);
-                }
-            } else {
-                vm.eventType = _.without(vm.eventType, EventType.ABSENCE);
-                vm.formFilter.unjustified = false;
-                vm.formFilter.justifiedNotRegularized = false;
-                vm.formFilter.justifiedRegularized = false;
-            }
-            vm.adaptReason();
         };
 
         vm.showHistory = function () {
@@ -742,6 +725,10 @@ export const eventsController = ng.controller('EventsController', ['$scope', '$r
           update filter methods
         ---------------------------- */
         vm.updateFilter = (student?, audience?) => {
+
+            const cannotFilterReason: boolean = canFilterNoReasonAndRegularized() || canFilterRegularized() ||
+                canFilterUnjustified() || (!(<any>vm.eventType).includes(1));
+
             if (audience && !_.find(vm.filter.classes, audience)) {
                 vm.filter.classes.push(audience);
             }
@@ -760,12 +747,6 @@ export const eventsController = ng.controller('EventsController', ['$scope', '$r
                 });
             }
 
-            /* Delete eventReasonId */
-            if (vm.filter.unjustified && (!vm.filter.justifiedNotRegularized && !vm.filter.justifiedRegularized) ||
-                (!vm.filter.unjustified && !vm.filter.justifiedNotRegularized && !vm.filter.justifiedRegularized)) {
-                vm.eventReasonsId = [];
-            }
-
             /* Manage state unjustified */
             vm.filter.noReasons = vm.filter.unjustified;
 
@@ -777,11 +758,11 @@ export const eventsController = ng.controller('EventsController', ['$scope', '$r
             vm.filter.noFilter = !(vm.filter.unjustified && vm.filter.justifiedNotRegularized && vm.filter.justifiedRegularized);
 
             vm.events.eventType = vm.eventType.toString();
-            vm.events.listReasonIds = vm.eventReasonsId.toString();
+            vm.events.listReasonIds = (cannotFilterReason) ? "" : vm.eventReasonsId.toString();
             vm.events.noReason = vm.filter.noReasons;
-            vm.events.regularized = vm.filter.regularized;
+            vm.events.regularized = (!(<any>vm.eventType).includes(1)) ? null : vm.filter.regularized;
             vm.events.noFilter = vm.filter.noFilter;
-            vm.events.regularizedNotregularized = vm.filter.regularizedNotregularized;
+            vm.events.regularizedNotregularized = (!(<any>vm.eventType).includes(1)) ? true : vm.filter.regularizedNotregularized;
 
             EventsUtils.setStudentToSync(vm.events, vm.filter);
             EventsUtils.setClassToSync(vm.events, vm.filter);
@@ -789,6 +770,21 @@ export const eventsController = ng.controller('EventsController', ['$scope', '$r
             vm.filter.page = vm.events.page;
             $scope.$broadcast(INFINITE_SCROLL_EVENTER.UPDATE);
             $scope.safeApply();
+        };
+
+        const canFilterNoReasonAndRegularized = (): boolean => {
+            return vm.filter.unjustified && !vm.filter.justifiedNotRegularized
+                && vm.filter.justifiedRegularized;
+        };
+
+        const canFilterRegularized = (): boolean => {
+            return !vm.filter.unjustified && !vm.filter.justifiedNotRegularized
+                && vm.filter.justifiedRegularized;
+        };
+
+        const canFilterUnjustified = (): boolean => {
+            return vm.filter.unjustified && !vm.filter.justifiedNotRegularized
+                && !vm.filter.justifiedRegularized;
         };
 
         vm.updateDate = async (): Promise<void> => {
@@ -808,12 +804,14 @@ export const eventsController = ng.controller('EventsController', ['$scope', '$r
                 endDate: vm.events.endDate,
                 noReason: vm.events.noReason,
                 eventType: vm.events.eventType,
-                listReasonIds: vm.events.listReasonIds,
-                regularized: vm.events.regularized,
+                listReasonIds: (canFilterNoReasonAndRegularized() || canFilterRegularized() || canFilterUnjustified()) ? "" : vm.eventReasonsId.toString(),
                 userId: vm.events.userId,
                 classes: vm.events.classes,
                 page: vm.filter.page
             };
+            if (!vm.events.regularizedNotregularized) {
+                filter.regularized = !vm.events.regularized;
+            }
             eventService
                 .get(filter)
                 .then((events: { pageCount: number, events: EventResponse[], all: EventResponse[] }) => {
@@ -874,6 +872,7 @@ export const eventsController = ng.controller('EventsController', ['$scope', '$r
             vm.adaptReason();
         };
 
+
         vm.switchLateFilter = function () {
             vm.formFilter.late = !vm.formFilter.late;
             if (vm.formFilter.late) {
@@ -902,6 +901,7 @@ export const eventsController = ng.controller('EventsController', ['$scope', '$r
 
         vm.switchjustifiedNotRegularizedFilter = function () {
             vm.formFilter.justifiedNotRegularized = !vm.formFilter.justifiedNotRegularized;
+
         };
 
         vm.switchjustifiedRegularizedFilter = function () {

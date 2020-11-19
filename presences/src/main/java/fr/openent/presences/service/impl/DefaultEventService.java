@@ -255,7 +255,7 @@ public class DefaultEventService implements EventService {
     }
 
     /**
-     * GET query to fetch incidents
+     * GET query to fetch events
      *
      * @param structureId       structure identifier
      * @param startDate         start date
@@ -289,13 +289,8 @@ public class DefaultEventService implements EventService {
         query += "WHERE e.start_date > ? AND e.end_date < ? ";
         params.add(startDate + " " + defaultStartTime);
         params.add(endDate + " " + defaultEndTime);
-        if (listReasonIds != null && !listReasonIds.isEmpty() && noReason != null) {
-            query += " AND (reason_id IN " + Sql.listPrepared(listReasonIds) + (noReason ? " OR reason_id IS NULL" : "") + ") ";
-            params.addAll(new JsonArray(listReasonIds));
-        } else if (noReason != null) {
-            query += (noReason ? " AND reason_id IS NULL" : "");
-        }
-        query += setParamsForQueryEvents(userId, regularized, noReason, userIdFromClasses, params);
+
+        query += setParamsForQueryEvents(listReasonIds, userId, regularized, noReason, userIdFromClasses, params);
         query += ") SELECT * FROM allevents " +
                 "GROUP BY id, start_date, end_date, created, comment, student_id, reason_id, owner," +
                 "type_id, register_id, counsellor_regularisation, type, register_id ";
@@ -317,7 +312,6 @@ public class DefaultEventService implements EventService {
         Sql.getInstance().prepared(this.getEventsQueryPagination(structureId, startDate, endDate, eventType,
                 userId, listReasonIds, noReason, regularized, userIdFromClasses, params),
                 params, SqlResult.validUniqueResultHandler(handler));
-
     }
 
     private String getEventsQueryPagination(String structureId, String startDate, String endDate, List<String> eventType,
@@ -338,14 +332,47 @@ public class DefaultEventService implements EventService {
         params.add(startDate + " " + defaultStartTime);
         params.add(endDate + " " + defaultEndTime);
 
-        if (listReasonIds != null && !listReasonIds.isEmpty() && noReason != null) {
+        query += setParamsForQueryEvents(listReasonIds, userId, regularized, noReason, userIdFromClasses, params);
+        query += " ) AS events ";
+        return query;
+    }
+
+    private String setParamsForQueryEvents(List<String> listReasonIds, List<String> userId, Boolean regularized,
+                                           Boolean noReason, JsonArray userIdFromClasses, JsonArray params) {
+        String query = "";
+
+        if (userIdFromClasses != null && !userIdFromClasses.isEmpty()) {
+            query += " AND student_id IN " + Sql.listPrepared(userIdFromClasses.getList());
+            for (int i = 0; i < userIdFromClasses.size(); i++) {
+                params.add(userIdFromClasses.getJsonObject(i).getString("studentId"));
+            }
+        }
+        if (userId != null && !userId.isEmpty()) {
+            query += " AND student_id IN " + Sql.listPrepared(userId.toArray());
+            params.addAll(new JsonArray(userId));
+        }
+
+        // If we want to fetch events WITH reasonId, array reasonIds fetched is not empty
+        // (optional if we wish noReason fetched at same time then noReason is TRUE)
+        if (!listReasonIds.isEmpty()) {
             query += " AND (reason_id IN " + Sql.listPrepared(listReasonIds) + (noReason ? " OR reason_id IS NULL" : "") + ") ";
             params.addAll(new JsonArray(listReasonIds));
-        } else if (noReason != null) {
-            query += (noReason ? " AND reason_id IS NULL" : "");
         }
-        query += setParamsForQueryEvents(userId, regularized, noReason, userIdFromClasses, params);
-        query += " ) AS events ";
+
+        // If we want to fetch events with NO reasonId, array reasonIds fetched is empty
+        // AND noReason is TRUE
+        if (listReasonIds.isEmpty() && noReason) {
+            query += " AND (reason_id IS NULL " + (regularized ? " OR counsellor_regularisation = " + regularized + "" : "") + ") ";
+        }
+
+        if (!noReason && (regularized != null && regularized)) {
+            query += " AND counsellor_regularisation = " + regularized + " ";
+        }
+
+        if (!noReason && (regularized != null && !regularized)) {
+            query += " AND counsellor_regularisation = " + regularized + " ";
+        }
+
         return query;
     }
 
@@ -410,16 +437,17 @@ public class DefaultEventService implements EventService {
         });
         absenceService.getAbsentStudentIds(structureId, currentDate, FutureHelper.handlerJsonArray(absentStudentIdsFuture));
         userService.getAllStudentsIdsWithAccommodation(structureId, FutureHelper.handlerJsonArray(studentsWithAccommodationFuture));
-        this.getCoursesStudentCount(structureId, currentDateDay, currentDateTime,FutureHelper.handlerJsonArray(countCurrentStudentsFuture));
+        this.getCoursesStudentCount(structureId, currentDateDay, currentDateTime, FutureHelper.handlerJsonArray(countCurrentStudentsFuture));
     }
 
 
     /**
      * Get number of students in all occurring courses during the specified date.
-     * @param structureId    structure identifier
-     * @param date           a date (format yyyy-MM-dd)
-     * @param time           an hour (format HH:mm:ss)
-     * @param handler        Function handler returning data
+     *
+     * @param structureId structure identifier
+     * @param date        a date (format yyyy-MM-dd)
+     * @param time        an hour (format HH:mm:ss)
+     * @param handler     Function handler returning data
      */
     private void getCoursesStudentCount(String structureId, String date, String time,
                                         Handler<Either<String, JsonArray>> handler) {
@@ -434,15 +462,15 @@ public class DefaultEventService implements EventService {
 
             JsonArray courses = event.right().getValue();
 
-            for(int i = 0 ; i < courses.size() ; i++) {
+            for (int i = 0; i < courses.size(); i++) {
                 JsonObject course = courses.getJsonObject(i);
                 JsonArray classNames = course.getJsonArray("classes");
                 JsonArray groupsNames = course.getJsonArray("groups");
 
-                for(int classIndex = 0; classIndex < classNames.size(); classIndex++) {
+                for (int classIndex = 0; classIndex < classNames.size(); classIndex++) {
                     classesName.add(classNames.getString(classIndex));
                 }
-                for(int groupIndex = 0; groupIndex < groupsNames.size(); groupIndex++) {
+                for (int groupIndex = 0; groupIndex < groupsNames.size(); groupIndex++) {
                     groupsName.add(groupsNames.getString(groupIndex));
                 }
             }
@@ -467,28 +495,6 @@ public class DefaultEventService implements EventService {
                     .put("structureId", structureId);
             Neo4j.getInstance().execute(query, params, Neo4jResult.validResultHandler(handler));
         });
-    }
-
-
-    private String setParamsForQueryEvents(List<String> userId, Boolean regularized, Boolean noReason, JsonArray userIdFromClasses, JsonArray params) {
-        String query = "";
-        if (userIdFromClasses != null && !userIdFromClasses.isEmpty()) {
-            query += " AND student_id IN " + Sql.listPrepared(userIdFromClasses.getList());
-            for (int i = 0; i < userIdFromClasses.size(); i++) {
-                params.add(userIdFromClasses.getJsonObject(i).getString("studentId"));
-            }
-        }
-        if (userId != null && !userId.isEmpty()) {
-            query += " AND student_id IN " + Sql.listPrepared(userId.toArray());
-            params.addAll(new JsonArray(userId));
-        }
-
-        if (regularized != null && regularized && noReason) {
-            query += " AND counsellor_regularisation = " + regularized + " OR reason_id IS NULL";
-        } else if (regularized != null) {
-            query += " AND counsellor_regularisation = " + regularized + " ";
-        }
-        return query;
     }
 
     @Override
@@ -679,7 +685,7 @@ public class DefaultEventService implements EventService {
                 }).map(oAbsence -> (JsonObject) oAbsence).collect(Collectors.toList());
 
                 List<Future> futures = new ArrayList<>();
-                
+
                 if (nullAbsenceEvents != null) {
                     Future<JsonObject> future = Future.future();
                     futures.add(future);

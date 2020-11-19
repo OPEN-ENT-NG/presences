@@ -25,7 +25,7 @@ export interface EventRequest {
     noReason: boolean;
     eventType: string;
     listReasonIds: string;
-    regularized: boolean;
+    regularized?: boolean;
     userId: string;
     classes: string;
     page?: number;
@@ -43,7 +43,8 @@ export const eventService: EventService = {
             const listReasonIds = eventRequest.listReasonIds ? `&reasonIds=${eventRequest.listReasonIds}` : "";
             const userId = eventRequest.userId.length === 0 ? "" : `&userId=${eventRequest.userId}`;
             const classes = eventRequest.classes.length === 0 ? "" : `&classes=${eventRequest.classes}`;
-            const regularized = eventRequest.regularized ? `&regularized=${!eventRequest.regularized}` : "";
+            const regularized = (eventRequest.regularized !== undefined && eventRequest.regularized !== null)
+                ? `&regularized=${eventRequest.regularized}` : "";
             const page = `&page=${eventRequest.page}`;
             const urlParams = `${structureId}${startDate}${endDate}${noReason}${eventType}${listReasonIds}${userId}${classes}${regularized}${page}`;
 

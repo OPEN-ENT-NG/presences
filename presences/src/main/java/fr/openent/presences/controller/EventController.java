@@ -31,6 +31,7 @@ import org.entcore.common.neo4j.Neo4j;
 import org.entcore.common.neo4j.Neo4jResult;
 import org.entcore.common.user.UserUtils;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
@@ -54,7 +55,7 @@ public class EventController extends ControllerHelper {
         String endDate = request.getParam("endDate");
 
         List<String> eventType = request.getParam("eventType") != null ? Arrays.asList(request.getParam("eventType").split("\\s*,\\s*")) : null;
-        List<String> reasonIds = request.getParam("reasonIds") != null ? Arrays.asList(request.getParam("reasonIds").split("\\s*,\\s*")) : null;
+        List<String> reasonIds = request.getParam("reasonIds") != null ? Arrays.asList(request.getParam("reasonIds").split("\\s*,\\s*")) : new ArrayList<>();
         Boolean noReason = request.params().contains("noReason") ? Boolean.parseBoolean(request.getParam("noReason")) : false;
         List<String> userId = request.getParam("userId") != null ? Arrays.asList(request.getParam("userId").split("\\s*,\\s*")) : null;
         List<String> classes = request.getParam("classes") != null ? Arrays.asList(request.getParam("classes").split("\\s*,\\s*")) : null;
