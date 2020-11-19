@@ -1,11 +1,13 @@
 package fr.openent.presences.service.impl;
 
 import fr.openent.presences.Presences;
+import fr.openent.presences.common.helper.DateHelper;
 import fr.openent.presences.common.helper.FutureHelper;
 import fr.openent.presences.common.service.GroupService;
 import fr.openent.presences.common.service.UserService;
 import fr.openent.presences.common.service.impl.DefaultGroupService;
 import fr.openent.presences.common.service.impl.DefaultUserService;
+import fr.openent.presences.enums.EventType;
 import fr.openent.presences.model.Event.Event;
 import fr.openent.presences.service.AbsenceService;
 import fr.wseduc.webutils.Either;
@@ -21,6 +23,7 @@ import org.entcore.common.sql.Sql;
 import org.entcore.common.sql.SqlResult;
 import org.entcore.common.user.UserInfos;
 
+import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -125,6 +128,7 @@ public class DefaultAbsenceService implements AbsenceService {
             afterPersistAbsence(
                     absenceResult.isRight() ? absenceResult.right().getValue().getLong("id") : null,
                     absenceBody,
+                    null,
                     editEvents,
                     user.getUserId(),
                     handler,
@@ -135,33 +139,44 @@ public class DefaultAbsenceService implements AbsenceService {
 
     @Override
     public void update(Long absenceId, JsonObject absenceBody, UserInfos user, boolean editEvents, Handler<Either<String, JsonObject>> handler) {
-        String query = "UPDATE " + Presences.dbSchema + ".absence " +
-                "SET structure_id = ?, start_date = ?, end_date = ?, student_id = ?, reason_id = ? WHERE id = ?";
+        String beforeUpdateAbsenceQuery = "SELECT * FROM " + Presences.dbSchema + ".absence WHERE id = ?";
+        Sql.getInstance().prepared(beforeUpdateAbsenceQuery, new JsonArray().add(absenceId), SqlResult.validUniqueResultHandler(oldAbsenceResult -> {
+            if (oldAbsenceResult.isLeft()) {
+                String message = "[Presences@DefaultAbsenceService::update] failed to retrieve absence";
+                LOGGER.error(message, oldAbsenceResult.left().getValue());
+                handler.handle(new Either.Left<>(message));
+                return;
+            }
+            JsonObject oldAbsence = oldAbsenceResult.right().getValue();
 
-        JsonArray values = new JsonArray()
-                .add(absenceBody.getString("structure_id"))
-                .add(absenceBody.getString("start_date"))
-                .add(absenceBody.getString("end_date"))
-                .add(absenceBody.getString("student_id"));
-        if (absenceBody.getInteger("reason_id") != null) {
-            values.add(absenceBody.getInteger("reason_id"));
-        } else {
-            values.addNull();
-        }
-        values.add(absenceId);
+            String query = "UPDATE " + Presences.dbSchema + ".absence " +
+                    "SET structure_id = ?, start_date = ?, end_date = ?, student_id = ?, reason_id = ? WHERE id = ?";
 
-        Sql.getInstance().prepared(query, values, SqlResult.validUniqueResultHandler(absenceResult -> {
-            afterPersistAbsence(absenceId, absenceBody, editEvents, user.getUserId(), handler, absenceResult);
+            JsonArray values = new JsonArray()
+                    .add(absenceBody.getString("structure_id"))
+                    .add(absenceBody.getString("start_date"))
+                    .add(absenceBody.getString("end_date"))
+                    .add(absenceBody.getString("student_id"));
+            if (absenceBody.getInteger("reason_id") != null) {
+                values.add(absenceBody.getInteger("reason_id"));
+            } else {
+                values.addNull();
+            }
+            values.add(absenceId);
+
+            Sql.getInstance().prepared(query, values, SqlResult.validUniqueResultHandler(absenceResult -> {
+                afterPersistAbsence(absenceId, absenceBody, oldAbsence, editEvents, user.getUserId(), handler, absenceResult);
+            }));
         }));
     }
 
-    private void afterPersistAbsence(Long absenceId, JsonObject absenceBody, boolean editEvents, String userInfoId, Handler<Either<String, JsonObject>> handler, Either<String, JsonObject> absenceResult) {
+    private void afterPersistAbsence(Long absenceId, JsonObject absenceBody, JsonObject oldAbsence, boolean editEvents, String userInfoId, Handler<Either<String, JsonObject>> handler, Either<String, JsonObject> absenceResult) {
         if (absenceResult.isLeft()) {
             String message = "[Presences@DefaultAbsenceService] failed to update absence";
             LOGGER.error(message, absenceResult.left().getValue());
             handler.handle(new Either.Left<>(message));
         } else if (editEvents) {
-            interactingEvents(absenceBody, userInfoId, event -> {
+            interactingEvents(absenceBody, oldAbsence, userInfoId, event -> {
                 if (event.isLeft()) {
                     String message = "[Presences@DefaultAbsenceService] failed to interact with events while updating absence";
                     LOGGER.error(message, absenceResult.left().getValue());
@@ -223,7 +238,7 @@ public class DefaultAbsenceService implements AbsenceService {
         }
     }
 
-    private void interactingEvents(JsonObject absenceBody, String userInfoId, Handler<Either<String, JsonObject>> handler) {
+    private void interactingEvents(JsonObject absenceBody, JsonObject oldAbsence, String userInfoId, Handler<Either<String, JsonObject>> handler) {
         List<String> users = new ArrayList<>();
         users.add(absenceBody.getString("student_id"));
         groupService.getUserGroups(users, absenceBody.getString("structure_id"), groupEvent -> {
@@ -236,24 +251,27 @@ public class DefaultAbsenceService implements AbsenceService {
                 for (int i = 0; i < groupEvent.right().getValue().size(); i++) {
                     groupIds.add(groupEvent.right().getValue().getJsonObject(i).getString("id"));
                 }
-                matchEventsWithAbsents(absenceBody, groupIds, userInfoId, handler);
+                matchEventsWithAbsents(absenceBody, oldAbsence, groupIds, userInfoId, handler);
             }
         });
     }
 
     private void interactingEvents(JsonObject absenceBody, String userInfoId, Future<JsonObject> future) {
-        interactingEvents(absenceBody, userInfoId, FutureHelper.handlerJsonObject(future));
+        interactingEvents(absenceBody, null, userInfoId, FutureHelper.handlerJsonObject(future));
     }
 
-    private void matchEventsWithAbsents(JsonObject absenceBody, List<String> groupIds, String userInfoId, Handler<Either<String, JsonObject>> handler) {
+    private void matchEventsWithAbsents(JsonObject absenceBody, JsonObject oldAbsence, List<String> groupIds, String userInfoId, Handler<Either<String, JsonObject>> handler) {
         Future<JsonArray> createEventsFuture = Future.future();
         Future<JsonArray> updateEventsFuture = Future.future();
+        Future<JsonObject> deleteEventsFuture = Future.future();
 
         Boolean isRegularized = absenceBody.getBoolean("counsellor_regularisation");
         createEventsWithAbsents(absenceBody, isRegularized, groupIds, userInfoId, FutureHelper.handlerJsonArray(createEventsFuture));
         updateEventsWithAbsents(absenceBody, isRegularized, groupIds, FutureHelper.handlerJsonArray(updateEventsFuture));
+        deleteEventsFromAbsence(absenceBody, oldAbsence, FutureHelper.handlerJsonObject(deleteEventsFuture));
 
-        CompositeFuture.all(createEventsFuture, updateEventsFuture).setHandler(event -> {
+
+        CompositeFuture.all(createEventsFuture, updateEventsFuture, deleteEventsFuture).setHandler(event -> {
             if (event.failed()) {
                 String message = "[Presences@DefaultAbsenceService] Failed to create or update events from absent";
                 LOGGER.error(message);
@@ -422,6 +440,62 @@ public class DefaultAbsenceService implements AbsenceService {
         }
     }
 
+    private void deleteEventsFromAbsence(JsonObject newAbsence, JsonObject oldAbsence, Handler<Either<String, JsonObject>> handler) {
+        if (oldAbsence == null) {
+            handler.handle(new Either.Right<>(new JsonObject().put("status", "ok")));
+            return;
+        }
+
+        Future<JsonObject> beforeEventsRemovanceFuture = Future.future();
+        Future<JsonObject> afterEventsRemovanceFuture = Future.future();
+
+        // Here if the new period start later than the oldest one, we remove events corresponding to the period it no longer covers
+        // so we check if oldAbsence.start_date < (plus tôt que..) newAbsence.start_date
+        removeEventsIfDateBefore(
+                oldAbsence.getString("start_date"),
+                newAbsence.getString("start_date"),
+                oldAbsence.getString("student_id"),
+                FutureHelper.handlerJsonObject(beforeEventsRemovanceFuture)
+        );
+
+        // Here if the new period start later than the oldest one, we remove events corresponding to the period it no longer covers
+        // so we check if newAbsence.end_date < (plus tôt que..) oldAbsence.end_date
+        removeEventsIfDateBefore(
+                newAbsence.getString("end_date"),
+                oldAbsence.getString("end_date"),
+                oldAbsence.getString("student_id"),
+                FutureHelper.handlerJsonObject(afterEventsRemovanceFuture)
+        );
+
+        CompositeFuture.all(beforeEventsRemovanceFuture, afterEventsRemovanceFuture).setHandler(event -> {
+            if (event.failed()) {
+                String message = "[Presences@DefaultAbsenceService::deleteEventsFromAbsence] Failed to delete events";
+                LOGGER.error(message);
+                handler.handle(new Either.Left<>(message));
+            } else {
+                handler.handle(new Either.Right<>(new JsonObject().put("status", "ok")));
+            }
+        });
+    }
+
+    private void removeEventsIfDateBefore(String date1, String date2, String student_id, Handler<Either<String, JsonObject>> handler) {
+        try {
+            if (DateHelper.isBefore(date1, date2)) {
+                JsonObject deleteData = new JsonObject()
+                        .put("start_date", date1)
+                        .put("end_date", date2)
+                        .put("student_id", student_id);
+                deleteEventsOnDelete(deleteData, handler);
+            } else {
+                handler.handle(new Either.Right<>(new JsonObject().put("status", "ok")));
+            }
+        } catch (ParseException e) {
+            String message = "[Presences@DefaultAbsenceService::removeEventsIfDateBefore] An error occurred while parsing dates";
+            LOGGER.error(message, e.getCause().getMessage());
+            handler.handle(new Either.Left<>(message));
+        }
+    }
+
     // same function that in DefaultEventService. we so it there, because we cannot cross service instances
     private void changeRegularizedEvents(JsonArray events, Boolean regularized, Handler<Either<String, JsonObject>> handler) {
         List<Integer> ids = new ArrayList<>();
@@ -475,7 +549,9 @@ public class DefaultAbsenceService implements AbsenceService {
 
     private void deleteEventsOnDelete(JsonObject absenceResult, Handler<Either<String, JsonObject>> handler) {
         String query = "DELETE FROM " + Presences.dbSchema + ".event" +
-                " WHERE student_id = ? AND start_date >= ? AND end_date <= ? AND counsellor_input = true";
+                " WHERE student_id = ? AND start_date >= ? AND end_date <= ? AND counsellor_input = true AND type_id = "
+                + EventType.ABSENCE.getType();
+
         JsonArray params = new JsonArray()
                 .add(absenceResult.getString("student_id"))
                 .add(absenceResult.getString("start_date"))
@@ -485,7 +561,9 @@ public class DefaultAbsenceService implements AbsenceService {
 
     private void resetEventsOnDelete(JsonObject absenceResult, Handler<Either<String, JsonObject>> handler) {
         String query = "UPDATE " + Presences.dbSchema + ".event SET reason_id = null " +
-                "WHERE student_id = ? AND start_date >= ? AND end_date <= ? AND counsellor_input = false";
+                "WHERE student_id = ? AND start_date >= ? AND end_date <= ? AND counsellor_input = false AND type_id = "
+                + EventType.ABSENCE.getType();
+
         JsonArray params = new JsonArray()
                 .add(absenceResult.getString("student_id"))
                 .add(absenceResult.getString("start_date"))

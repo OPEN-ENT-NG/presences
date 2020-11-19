@@ -9,13 +9,13 @@ public enum EventType {
     FORGOTTEN_NOTEBOOK(6);
 
 
-    private final Integer status;
+    private final Integer type_id;
 
-    EventType(Integer status) {
-        this.status = status;
+    EventType(Integer type_id) {
+        this.type_id = type_id;
     }
 
     public Integer getType() {
-        return this.status;
+        return this.type_id;
     }
 }
