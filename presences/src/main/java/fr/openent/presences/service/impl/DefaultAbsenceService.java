@@ -113,7 +113,8 @@ public class DefaultAbsenceService implements AbsenceService {
                 .add(absenceBody.getString("structure_id"))
                 .add(absenceBody.getString("start_date"))
                 .add(absenceBody.getString("end_date"))
-                .add(absenceBody.getString("student_id"));
+                .add(absenceBody.getString("student_id"))
+                .add(user.getUserId());
         if (absenceBody.getInteger("reason_id") != null) {
             params.add(absenceBody.getInteger("reason_id"));
         } else {

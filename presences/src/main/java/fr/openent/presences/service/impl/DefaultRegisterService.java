@@ -207,7 +207,8 @@ public class DefaultRegisterService implements RegisterService {
                 " AND absence.end_date >= ?)" +
                 " INSERT INTO presences.event (start_date, end_date, comment, counsellor_input, " +
                 "student_id, register_id, type_id, reason_id, owner, counsellor_regularisation)" +
-                " (SELECT ?, ?, '', ?, absence.student_id, ?, 1, absence.reason_id, absence.owner, absence.counsellor_regularisation FROM absence) ";
+                " (SELECT ?, ?, '', ?, absence.student_id, ?, 1, absence.reason_id, CASE WHEN absence.owner " +
+                " IS NULL THEN '' ELSE absence.owner END, absence.counsellor_regularisation FROM absence) ";
 
         params.addAll(new JsonArray(users));
         params.add(register.getString("start_date"));
@@ -222,6 +223,7 @@ public class DefaultRegisterService implements RegisterService {
                 .put("values", params)
                 .put("action", "prepared");
     }
+
 
     @Override
     public void updateStatus(Integer registerId, Integer status, Handler<Either<String, JsonObject>> handler) {
