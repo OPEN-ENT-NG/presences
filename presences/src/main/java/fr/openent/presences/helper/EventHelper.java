@@ -370,12 +370,13 @@ public class EventHelper {
             owners.forEach(owner -> userMap.put(owner.getId(), owner));
             events.forEach(event -> {
                 if (!event.getType().toUpperCase().equals(Events.ABSENCE.toString())) {
-                    event.setOwner(userMap.getOrDefault(event.getOwner().getId(), null));
+                    event.setOwner(userMap.getOrDefault(event.getOwner().getId(), new User(event.getOwner().getId())));
                 }
                 ((List<JsonObject>) event.getStudent().getDayHistory().getList()).forEach(dayHistory ->
                         ((List<JsonObject>) dayHistory.getJsonArray("events").getList()).forEach(eventHistory -> {
                             if (!eventHistory.getString("type").toUpperCase().equals(Events.ABSENCE.toString()) && eventHistory.getValue("owner") instanceof String) {
-                                eventHistory.put("owner", userMap.getOrDefault(eventHistory.getString("owner"), null).toJSON());
+                                JsonObject owner = userMap.getOrDefault(eventHistory.getString("owner"), new User(eventHistory.getString("owner"))).toJSON();
+                                eventHistory.put("owner", owner);
                             }
                         }));
             });
