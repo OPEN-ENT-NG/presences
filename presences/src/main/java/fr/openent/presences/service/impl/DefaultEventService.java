@@ -352,25 +352,34 @@ public class DefaultEventService implements EventService {
             params.addAll(new JsonArray(userId));
         }
 
-        // If we want to fetch events WITH reasonId, array reasonIds fetched is not empty
-        // (optional if we wish noReason fetched at same time then noReason is TRUE)
-        if (!listReasonIds.isEmpty()) {
-            query += " AND (reason_id IN " + Sql.listPrepared(listReasonIds) + (noReason ? " OR reason_id IS NULL" : "") + ") ";
-            params.addAll(new JsonArray(listReasonIds));
-        }
+        // this condition occurs when we want to filter no reason and regularized event at the same time
+        if ((noReason != null && noReason) && (regularized != null && regularized)) {
+            if (!listReasonIds.isEmpty()) {
+                query += " AND (reason_id IN " + Sql.listPrepared(listReasonIds) + (" OR reason_id IS NULL");
+                params.addAll(new JsonArray(listReasonIds));
+            } else {
+                query += "  AND (reason_id IS NULL ";
+            }
+            query += " OR counsellor_regularisation = " + regularized + " )";
 
-        // If we want to fetch events with NO reasonId, array reasonIds fetched is empty
-        // AND noReason is TRUE
-        if (listReasonIds.isEmpty() && noReason) {
-            query += " AND (reason_id IS NULL " + (regularized ? " OR counsellor_regularisation = " + regularized + "" : "") + ") ";
-        }
+            // else is default condition
+        } else {
+            // If we want to fetch events WITH reasonId, array reasonIds fetched is not empty
+            // (optional if we wish noReason fetched at same time then noReason is TRUE)
+            if (!listReasonIds.isEmpty()) {
+                query += " AND (reason_id IN " + Sql.listPrepared(listReasonIds) + (noReason != null && noReason ? " OR reason_id IS NULL" : "") + ") ";
+                params.addAll(new JsonArray(listReasonIds));
+            }
 
-        if (!noReason && (regularized != null && regularized)) {
-            query += " AND counsellor_regularisation = " + regularized + " ";
-        }
+            // If we want to fetch events with NO reasonId, array reasonIds fetched is empty
+            // AND noReason is TRUE
+            if (listReasonIds.isEmpty() && (noReason != null && noReason)) {
+                query += " AND (reason_id IS NULL " + (regularized != null ? " OR counsellor_regularisation = " + regularized + "" : "") + ") ";
+            }
 
-        if (!noReason && (regularized != null && !regularized)) {
-            query += " AND counsellor_regularisation = " + regularized + " ";
+            if (regularized != null) {
+                query += " AND counsellor_regularisation = " + regularized + " ";
+            }
         }
 
         return query;

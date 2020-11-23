@@ -348,15 +348,12 @@ export const eventsController = ng.controller('EventsController', ['$scope', '$r
                 endDate: vm.events.endDate,
                 noReason: vm.events.noReason,
                 eventType: vm.events.eventType,
-                listReasonIds: (canFilterNoReasonAndRegularized() || canFilterRegularized() || canFilterUnjustified()) ? "" : vm.eventReasonsId.toString(),
+                listReasonIds: (vm.filter.justifiedRegularized || vm.filter.justifiedNotRegularized) ? vm.eventReasonsId.toString() : "",
                 userId: vm.events.userId,
                 classes: vm.events.classes,
                 page: vm.interactedEvent.page
             };
-
-            if (!vm.events.regularizedNotregularized) {
-                filter.regularized = !vm.events.regularized;
-            }
+            filter.regularized = (!(<any>vm.eventType).includes(1)) ? null : vm.filter.regularized;
             let events = await eventService.get(filter);
 
             vm.events.pageCount = events.pageCount;
@@ -726,9 +723,6 @@ export const eventsController = ng.controller('EventsController', ['$scope', '$r
         ---------------------------- */
         vm.updateFilter = (student?, audience?) => {
 
-            const cannotFilterReason: boolean = canFilterNoReasonAndRegularized() || canFilterRegularized() ||
-                canFilterUnjustified() || (!(<any>vm.eventType).includes(1));
-
             if (audience && !_.find(vm.filter.classes, audience)) {
                 vm.filter.classes.push(audience);
             }
@@ -751,18 +745,13 @@ export const eventsController = ng.controller('EventsController', ['$scope', '$r
             vm.filter.noReasons = vm.filter.unjustified;
 
             /* Manage state regularized */
-            vm.filter.regularized = !vm.filter.justifiedRegularized;
-            vm.filter.regularizedNotregularized = vm.filter.justifiedRegularized && vm.filter.justifiedNotRegularized;
-
-            /* Manage no filter */
-            vm.filter.noFilter = !(vm.filter.unjustified && vm.filter.justifiedNotRegularized && vm.filter.justifiedRegularized);
+            vm.filter.regularized = (vm.filter.unjustified && !vm.filter.justifiedRegularized && !vm.filter.justifiedNotRegularized) ||
+            (vm.filter.justifiedRegularized && vm.filter.justifiedNotRegularized) ? null : vm.filter.justifiedRegularized;
 
             vm.events.eventType = vm.eventType.toString();
-            vm.events.listReasonIds = (cannotFilterReason) ? "" : vm.eventReasonsId.toString();
+            vm.events.listReasonIds = (vm.filter.justifiedRegularized || vm.filter.justifiedNotRegularized) ? vm.eventReasonsId.toString() : "";
             vm.events.noReason = vm.filter.noReasons;
             vm.events.regularized = (!(<any>vm.eventType).includes(1)) ? null : vm.filter.regularized;
-            vm.events.noFilter = vm.filter.noFilter;
-            vm.events.regularizedNotregularized = (!(<any>vm.eventType).includes(1)) ? true : vm.filter.regularizedNotregularized;
 
             EventsUtils.setStudentToSync(vm.events, vm.filter);
             EventsUtils.setClassToSync(vm.events, vm.filter);
@@ -770,21 +759,6 @@ export const eventsController = ng.controller('EventsController', ['$scope', '$r
             vm.filter.page = vm.events.page;
             $scope.$broadcast(INFINITE_SCROLL_EVENTER.UPDATE);
             $scope.safeApply();
-        };
-
-        const canFilterNoReasonAndRegularized = (): boolean => {
-            return vm.filter.unjustified && !vm.filter.justifiedNotRegularized
-                && vm.filter.justifiedRegularized;
-        };
-
-        const canFilterRegularized = (): boolean => {
-            return !vm.filter.unjustified && !vm.filter.justifiedNotRegularized
-                && vm.filter.justifiedRegularized;
-        };
-
-        const canFilterUnjustified = (): boolean => {
-            return vm.filter.unjustified && !vm.filter.justifiedNotRegularized
-                && !vm.filter.justifiedRegularized;
         };
 
         vm.updateDate = async (): Promise<void> => {
@@ -804,14 +778,12 @@ export const eventsController = ng.controller('EventsController', ['$scope', '$r
                 endDate: vm.events.endDate,
                 noReason: vm.events.noReason,
                 eventType: vm.events.eventType,
-                listReasonIds: (canFilterNoReasonAndRegularized() || canFilterRegularized() || canFilterUnjustified()) ? "" : vm.eventReasonsId.toString(),
+                listReasonIds: (vm.filter.justifiedRegularized || vm.filter.justifiedNotRegularized) ? vm.eventReasonsId.toString() : "",
                 userId: vm.events.userId,
                 classes: vm.events.classes,
                 page: vm.filter.page
             };
-            if (!vm.events.regularizedNotregularized) {
-                filter.regularized = !vm.events.regularized;
-            }
+            filter.regularized = (!(<any>vm.eventType).includes(1)) ? null : vm.filter.regularized;
             eventService
                 .get(filter)
                 .then((events: { pageCount: number, events: EventResponse[], all: EventResponse[] }) => {
