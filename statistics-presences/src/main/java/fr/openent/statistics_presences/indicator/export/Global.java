@@ -39,6 +39,7 @@ public class Global extends IndicatorExport {
         List<String> exportHeaders = new ArrayList<>();
         exportHeaders.add("statistics-presences.classes");
         exportHeaders.add("statistics-presences.students");
+        exportHeaders.add(String.format(HEADER_FORMATTER, "ABSENCE_TOTAL"));
         for (String type : types) {
             exportHeaders.add(String.format(HEADER_FORMATTER, type));
             if (Boolean.TRUE.equals(filter.hourDetail()) && isAbsenceType(type)) {
@@ -55,6 +56,8 @@ public class Global extends IndicatorExport {
                 .append(value.getString("name")).append(SEPARATOR);
 
         JsonObject statistics = value.getJsonObject("statistics", new JsonObject());
+        line.append(statistics.getJsonObject("ABSENCE_TOTAL", new JsonObject())
+                .getInteger("count", 0)).append(SEPARATOR);
         for (String type : filter.types()) {
             JsonObject statType = statistics.getJsonObject(type, new JsonObject());
             line.append(statType.getInteger("count", 0)).append(SEPARATOR);
