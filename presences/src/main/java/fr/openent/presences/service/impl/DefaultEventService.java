@@ -354,13 +354,14 @@ public class DefaultEventService implements EventService {
 
         // this condition occurs when we want to filter no reason and regularized event at the same time
         if ((noReason != null && noReason) && (regularized != null && regularized)) {
+            query += "AND (reason_id IS NULL OR (reason_id IS NOT NULL AND counsellor_regularisation = true)";
+
             if (!listReasonIds.isEmpty()) {
-                query += " AND (reason_id IN " + Sql.listPrepared(listReasonIds) + (" OR reason_id IS NULL");
+                query += " AND reason_id IN " + Sql.listPrepared(listReasonIds) + ")";
                 params.addAll(new JsonArray(listReasonIds));
             } else {
-                query += "  AND (reason_id IS NULL ";
+                query += ")";
             }
-            query += " OR counsellor_regularisation = " + regularized + " )";
 
             // else is default condition
         } else {
