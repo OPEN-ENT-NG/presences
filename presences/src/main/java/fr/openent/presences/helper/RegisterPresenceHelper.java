@@ -82,7 +82,8 @@ public class RegisterPresenceHelper {
                     ((List<JsonObject>) student.getJsonArray("day_history").getList()).forEach(dayHistory ->
                             ((List<JsonObject>) dayHistory.getJsonArray("events").getList()).forEach(event -> {
                                 if (!event.getString("type").toUpperCase().equals(Events.ABSENCE.toString()) && event.getValue("owner") instanceof String) {
-                                    event.put("owner", userMap.getOrDefault(event.getString("owner"), null).toJSON());
+                                    JsonObject owner = userMap.getOrDefault(event.getString("owner"), new User(event.getString("owner"))).toJSON();
+                                    event.put("owner", owner);
                                 }
                             })
                     )
