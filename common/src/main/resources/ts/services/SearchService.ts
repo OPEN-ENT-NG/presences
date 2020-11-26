@@ -21,6 +21,7 @@ export interface SearchService {
 export const SearchService: SearchService = {
     search: async (structureId: string, value: string) => {
         try {
+            value = value.replace("\\s", "").toLowerCase();
             const {data} = await http.get(`/presences/search?structureId=${structureId}&q=${value}`);
             data.forEach((item) => {
                 if (item.type == "USER") {
@@ -38,6 +39,7 @@ export const SearchService: SearchService = {
     /* Profile = ["Student", "Teacher", Personnel"] */
     searchUser: async (structureId: string, value: string, profile: string) => {
         try {
+            value = value.replace("\\s", "").toLowerCase();
             const {data} = await http.get(`/presences/search/users?structureId=${structureId}&profile=${profile}&q=${value}&field=firstName&field=lastName`);
             data.forEach((user) => {
                 if (user.idClasse && user.idClasse != null) {
@@ -55,6 +57,7 @@ export const SearchService: SearchService = {
 
     searchStudents: async (structureId: string, value: string) => {
         try {
+            value = value.replace("\\s", "").toLowerCase();
             const {data} = await http.get(`/presences/search/students?structureId=${structureId}&q=${value}&field=firstName&field=lastName`);
             data.forEach((user) => {
                 if (user.idClasse && user.idClasse != null) {

@@ -19,13 +19,14 @@ export interface GroupService {
 export const GroupService: GroupService = {
     search: async (structureId: string, value: string) => {
         try {
+            value = value.replace("\\s", "").toLowerCase();
             const {data} = await http.get(`/presences/search/groups?structureId=${structureId}&q=${value}&field=name`);
             return data;
         } catch (err) {
             throw err;
         }
     },
-    getGroupUsers: async (id, profile) => {
+    getGroupUsers: async (id: string, profile: string) => {
         try {
             const {data} = await http.get(`/viescolaire/groupe/enseignement/users/${id}?type=${profile}`);
             data.map((user: User) => user.displayName = `${user.firstName} ${user.lastName}`);
