@@ -27,6 +27,7 @@ import java.text.ParseException;
 import java.util.*;
 
 import static fr.openent.massmailing.enums.MailingType.PDF;
+import static fr.openent.massmailing.enums.MassmailingType.LATENESS;
 import static fr.openent.massmailing.enums.MassmailingType.NO_REASON;
 
 public abstract class MassMailingProcessor implements Mailing {
@@ -466,8 +467,8 @@ public abstract class MassMailingProcessor implements Mailing {
         for (MassmailingType type : massmailingTypeList) {
             Future<JsonArray> future = Future.future();
             Presences.getInstance().getEventsByStudent(getEventTypeCode(type), getStudentsList(), structure, null,
-                    (type.equals(NO_REASON) ? new ArrayList<>() : reasons), massmailed, start, end, type.equals(NO_REASON),
-                    recoveryMethod, isJustified(type), FutureHelper.handlerJsonArray(future));
+                    (type.equals(NO_REASON) || type.equals(LATENESS) ? new ArrayList<>() : reasons), massmailed, start, end,
+                    type.equals(NO_REASON) || type.equals(LATENESS), recoveryMethod, isJustified(type), FutureHelper.handlerJsonArray(future));
             futures.add(future);
         }
 
