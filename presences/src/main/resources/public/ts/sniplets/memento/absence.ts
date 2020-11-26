@@ -26,7 +26,7 @@ interface IViewModel {
     that: any;
     disabled: boolean,
     student: string,
-    group: string,
+    group: Array<string>,
     periods: Array<IPeriod>;
     graphSummary: IPeriodSummary;
     periodSummary: IPeriodSummary;
@@ -37,7 +37,7 @@ interface IViewModel {
 
     apply(): void;
 
-    init(student: string, group: string): Promise<void>;
+    init(student: string, group: Array<string>): Promise<void>;
 
     loadPeriodData(): Promise<void>;
 }
@@ -202,12 +202,12 @@ const vm: IViewModel = {
     $eval: null,
     chart: null,
     summary: getDefaultSummary(),
-    async init(student: string, group: string): Promise<void> {
+    async init(student: string, group: Array<string>): Promise<void> {
         try {
             vm.student = student;
             vm.group = group;
             vm.summary = getDefaultSummary();
-            vm.periods = await PeriodService.get(window.structure.id, group);
+            vm.periods = await PeriodService.getPeriods(window.structure.id, group);
             if (vm.periods.length === 0) {
                 vm.disabled = true;
                 vm.apply();
