@@ -54,7 +54,7 @@
   "massmailing.no.reasons": "Sans motif",
   "massmailing.filters.display.from": "Afficher à partir de",
   "massmailing.filter.display.absences.lateness": "absence(s) ou retard(s)",
-  "massmailing.alerts.NO_REASON.text": "absences sans motif",
+  "massmailing.alerts.NO_REASON.text": "absences sans motif à publiposter",
   "massmailing.alerts.UNREGULARIZED.text": "absences non régularisées à publiposter",
   "massmailing.alerts.REGULARIZED.text": "absences régularisées à publiposter",
   "massmailing.alerts.LATENESS.text": "retards à publiposter",
