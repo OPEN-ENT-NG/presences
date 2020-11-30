@@ -634,7 +634,7 @@ public class DefaultAbsenceService implements AbsenceService {
                 JsonArray result = users.right().getValue();
                 Map<String, JsonObject> studentMap = ((List<JsonObject>) result.getList())
                         .stream()
-                        .collect(Collectors.toMap(user -> user.getString("id"), Function.identity()));
+                        .collect(Collectors.toMap(user -> user.getString("id"), Function.identity(), (student1, student2) -> student1));
 
                 ((List<JsonObject>) absences.getList())
                         .forEach(absence -> absence.put("student", studentMap.get(absence.getString("student_id"))));
