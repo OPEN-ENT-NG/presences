@@ -45,6 +45,8 @@ public class Presences extends BaseServer {
 
     public static final String ALERTS_STUDENT_NUMBER = "presences.alerts.students.number";
 
+    public static final String READ_OWN_INFO = "presences.read.own.info";
+
 
     // Widget rights
     public static final String ALERTS_WIDGET = "presences.widget.alerts";

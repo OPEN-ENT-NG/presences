@@ -1,11 +1,15 @@
-import {ng} from 'entcore'
-import {ISchoolYearPeriod, IStructureSlot} from "../model";
+import {model, ng} from 'entcore'
+import {ISchoolYearPeriod, IStructure, IStructureSlot} from "../model";
 import http from "axios";
+
+declare let window: any;
 
 export interface IViescolaireService {
     getSchoolYearDates(structureId): Promise<ISchoolYearPeriod>;
 
-    getSlotProfile(structureId: string): Promise<IStructureSlot>
+    getSlotProfile(structureId: string): Promise<IStructureSlot>;
+
+    getBuildOwnStructure(): Array<IStructure>;
 }
 
 export const ViescolaireService: IViescolaireService = {
@@ -21,6 +25,15 @@ export const ViescolaireService: IViescolaireService = {
         } catch (err) {
             throw err;
         }
+    },
+
+    getBuildOwnStructure: (): Array<IStructure> => {
+        const {structures, structureNames} = model.me;
+        const values: Array<IStructure> = [];
+        for (let i = 0; i < structures.length; i++) {
+            values.push({id: structures[i], name: structureNames[i]});
+        }
+        return values;
     }
 };
 

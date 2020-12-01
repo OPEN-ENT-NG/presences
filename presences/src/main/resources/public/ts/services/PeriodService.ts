@@ -37,7 +37,7 @@ export const PeriodService: IPeriodService = {
             let idGroups: string = '';
             if (group) {
                 group.forEach((g: string) => {
-                    idGroups = `&idGroupe=${g}`;
+                    idGroups += `&idGroupe=${g}`;
                 });
             }
             const {data} = await http.get(`/viescolaire/periodes?idEtablissement=${structure}${idGroups}`);

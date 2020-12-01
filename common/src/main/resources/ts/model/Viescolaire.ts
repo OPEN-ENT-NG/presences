@@ -1,3 +1,5 @@
+import {IAudience} from "@common/model/Audience";
+
 export interface ISchoolYearPeriod {
     id: number
     start_date: string;
@@ -25,4 +27,10 @@ export interface ITimeSlot {
 export enum TimeSlotHourPeriod {
     START_HOUR = 'startHour',
     END_HOUR = 'endHour'
+}
+
+export interface IStructure {
+    id: string;
+    name: string;
+    classes?: Array<IAudience>;
 }

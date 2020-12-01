@@ -19,11 +19,13 @@ import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import org.entcore.common.controller.ControllerHelper;
 import org.entcore.common.http.filter.ResourceFilter;
+import org.entcore.common.user.UserUtils;
 
 import java.util.List;
 
 import static fr.wseduc.webutils.Utils.handlerToAsyncHandler;
 import static org.entcore.common.http.response.DefaultResponseHandler.arrayResponseHandler;
+import static org.entcore.common.http.response.DefaultResponseHandler.defaultResponseHandler;
 
 public class SearchController extends ControllerHelper {
 
@@ -139,6 +141,21 @@ public class SearchController extends ControllerHelper {
             log.error("[Presences@SearchController::getChildren] Failed to get children, probably no relativeId given");
             badRequest(request);
         }
+    }
+
+    @Get("/user/:id/child")
+    @ApiDoc("get info as user info")
+    @SecuredAction(Presences.READ_OWN_INFO)
+    public void getChildUser(HttpServerRequest request) {
+        UserUtils.getUserInfos(eb, request, user -> {
+            if (request.params().contains("id") && user.getUserId().equals(request.getParam("id"))) {
+                userService.getChildInfo(request.getParam("id"), defaultResponseHandler(request));
+            } else {
+                log.error("[Presences@SearchController::getChildUser] Failed to get child own info, " +
+                        "probably no id given or no match with user id");
+                badRequest(request);
+            }
+        });
     }
 
     private void callViescolaireEventBus(JsonObject action, HttpServerRequest request) {

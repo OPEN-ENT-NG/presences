@@ -13,6 +13,7 @@ import {
     EVENT_TYPES,
     IForgottenNotebookResponse,
     ISchoolYearPeriod,
+    IStructure,
     IStructureSlot,
     IStudentEventRequest,
     IStudentEventResponse,
@@ -22,6 +23,7 @@ import {EVENT_RECOVERY_METHOD} from "@common/core/enum/event-recovery-method";
 import {IRouting} from "@common/model/Route";
 import {ROUTING_KEYS} from "@common/core/enum/routing-keys";
 import {MobileUtils} from "@common/utils/mobile";
+import {UPDATE_STUDENTS_EVENTS} from "@common/core/enum/select-children-events";
 
 declare let window: any;
 
@@ -41,6 +43,7 @@ interface IFilter {
     selectedChildren: Student;
     periods: Array<IPeriod>;
     selectedPeriod: IPeriod;
+    selectedStructure: IStructure;
 }
 
 interface IViewModel {
@@ -64,8 +67,6 @@ interface IViewModel {
 
     isRelative(): boolean;
 
-    switchChild(): void;
-
     switchPeriod(): void;
 
     isLoading: boolean;
@@ -83,7 +84,8 @@ export const dashboardStudentController = ng.controller('DashboardStudentControl
                 children: [],
                 selectedChildren: null,
                 periods: [],
-                selectedPeriod: null
+                selectedPeriod: null,
+                selectedStructure: null
             };
 
             /* Mobile featuring only */
@@ -153,7 +155,7 @@ export const dashboardStudentController = ng.controller('DashboardStudentControl
                         ? " " + additionalEndTime : "");
 
                 return {
-                    structure_id: window.structure.id,
+                    structure_id: vm.filter.selectedChildren.structure.id,
                     student_id: vm.filter.selectedChildren.id,
                     start_at: start,
                     end_at: end,
@@ -166,23 +168,20 @@ export const dashboardStudentController = ng.controller('DashboardStudentControl
             const getChildrenData = async (): Promise<void> => {
                 if (vm.isRelative() && vm.filter.children.length === 0) {
                     vm.filter.children = await userService.getChildrenUser(model.me.userId);
+                    vm.filter.children.forEach((child: Student) => child.structure = child.structures[0]);
                     vm.filter.selectedChildren = vm.filter.children[0];
                 } else {
                     /* Set student info */
-                    vm.filter.selectedChildren = new Student({
-                        idEleve: model.me.userId,
-                        idClasse: model.me.classes[0],
-                        classId: model.me.classes[0],
-                        displayName: model.me.username ? model.me.username : model.me.lastName + " " + model.me.firstName
-                    });
+                    vm.filter.selectedChildren = await userService.getChildUser(model.me.userId);
+                    vm.filter.selectedChildren.structure = vm.filter.selectedChildren.structures[0];
                 }
             };
 
             const getPeriods = (): Promise<void> => {
                 return new Promise((resolve) => {
                     Promise.all([
-                        periodService.get(window.structure.id, vm.filter.selectedChildren.classId),
-                        viescolaireService.getSchoolYearDates(window.structure.id)
+                        periodService.get(vm.filter.selectedChildren.structure.id, vm.filter.selectedChildren.structure.classes[0].id),
+                        viescolaireService.getSchoolYearDates(vm.filter.selectedChildren.structure.id)
                     ]).then((values: any[]) => {
                         let periods: Array<IPeriod> = (<Array<IPeriod>>values[0]);
                         let schoolyear: ISchoolYearPeriod = (<ISchoolYearPeriod>values[1]);
@@ -192,7 +191,7 @@ export const dashboardStudentController = ng.controller('DashboardStudentControl
                                 period.label = `${idiom.translate(`viescolaire.periode.${period.type}`)}  ${period.ordre}`
                             });
                             vm.filter.periods = periods;
-                            let currentPeriod = periods.find((period: IPeriod) =>
+                            let currentPeriod: IPeriod = periods.find((period: IPeriod) =>
                                 moment().isBetween(period.timestamp_dt, period.timestamp_fn)
                             );
                             vm.filter.selectedPeriod = currentPeriod != undefined ? currentPeriod : vm.filter.periods[0];
@@ -276,11 +275,6 @@ export const dashboardStudentController = ng.controller('DashboardStudentControl
                 return UserUtils.isChild(model.me.type);
             };
 
-            vm.switchChild = (): void => {
-                getPeriods();
-                loadEvents();
-            };
-
             vm.switchPeriod = (): void => {
                 loadEvents();
             };
@@ -299,5 +293,11 @@ export const dashboardStudentController = ng.controller('DashboardStudentControl
                 if (!isToggleOnce) {
                     reloadType(type);
                 }
+            });
+
+            $scope.$on(UPDATE_STUDENTS_EVENTS.UPDATE, (event: IAngularEvent, child: Student) => {
+                vm.filter.selectedChildren = child;
+                getPeriods();
+                loadEvents();
             });
         }]);

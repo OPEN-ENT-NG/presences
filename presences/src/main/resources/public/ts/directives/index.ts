@@ -18,3 +18,4 @@ export * from '@common/directives/presences-nav-bar';
 export * from '@common/directives/upload-file-change';
 export * from './events-legend'
 export * from './widgets';
+export * from '@common/directives/select-children';

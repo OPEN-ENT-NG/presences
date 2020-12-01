@@ -4,6 +4,8 @@ import {Student} from "@common/model/Student";
 
 export interface IUserService {
     getChildrenUser(relativeId: string): Promise<Array<Student>>;
+
+    getChildUser(childId: string): Promise<Student>;
 }
 
 export const UserService: IUserService = {
@@ -15,6 +17,16 @@ export const UserService: IUserService = {
             throw err;
         }
     },
+    // @Get("/user/:id/child")
+    getChildUser: async (childId: string): Promise<Student> => {
+        try {
+            const {data} = await http.get(`/presences/user/${childId}/child`);
+            return data;
+        } catch (err) {
+            throw err;
+        }
+    }
 };
 
 export const userService = ng.service('UserService', (): IUserService => UserService);
+

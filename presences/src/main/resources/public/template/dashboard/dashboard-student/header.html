@@ -12,14 +12,5 @@
         </h1>
     </app-title>
 
-    <!-- select children (relative's feat) -->
-    <div class="dashboard-student-main-header-selectChild" data-ng-if="vm.isRelative()">
-        <label>
-            <select class="card" required
-                    data-ng-change="vm.switchChild()"
-                    data-ng-model="vm.filter.selectedChildren"
-                    data-ng-options="child as child.displayName for child in vm.filter.children">
-            </select>
-        </label>
-    </div>
+    <select-children child="vm.filter.selectedChildren" children="vm.filter.children"></select-children>
 </div>

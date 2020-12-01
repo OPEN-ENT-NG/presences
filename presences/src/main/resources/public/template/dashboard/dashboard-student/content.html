@@ -4,6 +4,17 @@
         <i18n>presences.student.historic</i18n>&nbsp;[[vm.filter.selectedChildren.displayName]]
     </div>
 
+    <!-- select structure -->
+    <div class="dashboard-student-main-header-selectChild" ng-if="model.me.structures.length > 1">
+        <label>
+            <select class="card" required
+                    data-ng-change="vm.switchStructure()"
+                    data-ng-model="model.me.structureNames"
+                    data-ng-options="structure as structureNames for structure in model.me.structureNames">
+            </select>
+        </label>
+    </div>
+
     <!-- select period (select current based on datenow() period by default) -->
     <div class="dashboard-student-content-selectPeriod margin-bottom-md" ng-if="vm.filter.periods.length !== 0">
         <label>

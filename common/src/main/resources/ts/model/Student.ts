@@ -1,5 +1,6 @@
 import {_, notify} from 'entcore';
 import http from 'axios';
+import {IStructure} from "@common/model/Viescolaire";
 
 export class Student {
     id: string;
@@ -11,7 +12,11 @@ export class Student {
     displayName: string;
     classeName?: any;
     className?: string;
+    classesNames?: Array<string>;
+    classesIds?: Array<string>;
     birth?: string;
+    structures?: Array<IStructure>;
+    structure?: IStructure;
 
     constructor(o?: any) {
         if (o && typeof o === 'object') {

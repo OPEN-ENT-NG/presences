@@ -8,7 +8,11 @@ import io.vertx.core.json.JsonObject;
 import org.entcore.common.neo4j.Neo4j;
 import org.entcore.common.neo4j.Neo4jResult;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+
+import static fr.openent.presences.model.Model.log;
 
 public class DefaultUserService implements UserService {
 
@@ -31,7 +35,7 @@ public class DefaultUserService implements UserService {
     }
 
     @Override
-    public void getAllStudentsIdsWithAccommodation(String structureId,  Handler<Either<String, JsonArray>> handler) {
+    public void getAllStudentsIdsWithAccommodation(String structureId, Handler<Either<String, JsonArray>> handler) {
         String query = "MATCH (u:User)-[:ADMINISTRATIVE_ATTACHMENT]->(s:Structure)" +
                 " WHERE s.id = {structureId}" +
                 " AND u.accommodation IS NOT NULL " +
@@ -42,15 +46,86 @@ public class DefaultUserService implements UserService {
         Neo4j.getInstance().execute(query, params, Neo4jResult.validResultHandler(handler));
     }
 
+
+    /**
+     * Might change neo4j to adapt personal/teacher info (can current fetch relative and children data)
+     */
+    public String getUserQueryNeo4j(Boolean isRelative, Boolean student) {
+        String relativeQuery = "(:User {id: {id} })<-[RELATED]-(u:User)-";
+        String userQuery = "(u:User {id: {id} })-";
+
+        return "MATCH " + (isRelative != null && isRelative ? relativeQuery : userQuery) + "[:IN]->(g:ProfileGroup)-[:DEPENDS]->(s:Structure) " +
+                "MATCH (u)--(m:Group " + (student != null && student ? "{filter:'Student'}" : "") + ")--(c:Class)-[:BELONGS]->(ss:Structure) " +
+                "WITH u, c, s, ss, collect(DISTINCT({id: c.id, name: c.name})) as classes " +
+                "RETURN u.id as id, u.firstName as firstName, u.lastName as lastName, u.displayName as displayName, u.birthDate as birth, " +
+                "collect(DISTINCT({id: c.id, name: c.name, structure: ss.id})) as classesList, " +
+                "collect(DISTINCT({id: ss.id, name: ss.name})) as structures;";
+    }
+
     @Override
+    @SuppressWarnings("unchecked")
     public void getChildren(String relativeId, final Handler<Either<String, JsonArray>> handler) {
-        JsonObject params = new JsonObject().put("id", relativeId);
+        Neo4j.getInstance().execute(getUserQueryNeo4j(true, true), new JsonObject().put("id", relativeId),
+                Neo4jResult.validResultHandler(event -> {
+                    if (event.isLeft()) {
+                        log.error("[Presences@DefaultUserService::getChildren] Failed to retrieve own info " + event.left().getValue());
+                        handler.handle(new Either.Left<>(event.left().getValue()));
+                    } else {
+                        JsonArray childrenData = event.right().getValue();
+                        // We handler childrenData as empty
+                        if (childrenData.isEmpty()) {
+                            handler.handle(new Either.Right<>(childrenData));
+                        } else {
+                            ((List<JsonObject>) childrenData.getList()).forEach(this::setClassesToStructures);
+                            handler.handle(new Either.Right<>(childrenData));
+                        }
+                    }
+                }));
+    }
 
-        String query = "MATCH (n:User {id : {id}}) WHERE HAS(n.login) " +
-                "MATCH n<-[:RELATED]-(child:User) MATCH child-[:IN]->(gp:Group) " +
-                "MATCH gp-[:DEPENDS]->(c:Class) RETURN distinct " +
-                "child.id as id, child.displayName as displayName, c.id as classId, c.name as className, child.birthDate as birth";
+    @Override
+    public void getChildInfo(String id, Handler<Either<String, JsonObject>> handler) {
+        Neo4j.getInstance().execute(getUserQueryNeo4j(null, true), new JsonObject().put("id", id),
+                Neo4jResult.validUniqueResultHandler(event -> {
+                    if (event.isLeft()) {
+                        log.error("[Presences@DefaultUserService::getChildrenInfo] Failed to retrieve own info " + event.left().getValue());
+                        handler.handle(new Either.Left<>(event.left().getValue()));
+                    } else {
+                        JsonObject childData = event.right().getValue();
+                        if (childData.isEmpty()) {
+                            handler.handle(new Either.Right<>(childData));
+                        } else {
+                            setClassesToStructures(childData);
+                            handler.handle(new Either.Right<>(childData));
+                        }
+                    }
+                }));
+    }
 
-        Neo4j.getInstance().execute(query, params, Neo4jResult.validResultHandler(handler));
+    private void setClassesToStructures(JsonObject child) {
+        Map<String, JsonArray> structureClassesMap = formatMapClasses(child.getJsonArray("classesList"));
+        for (int i = 0; i < child.getJsonArray("structures").size(); i++) {
+            JsonObject structure = child.getJsonArray("structures").getJsonObject(i);
+            structure.put("classes", new JsonArray());
+            structureClassesMap.forEach((s, entries) -> {
+                if (s.contains(structure.getString("id"))) {
+                    structure.getJsonArray("classes").addAll(entries);
+                }
+            });
+        }
+        child.remove("classesList");
+    }
+
+    private HashMap<String, JsonArray> formatMapClasses(JsonArray classesList) {
+        HashMap<String, JsonArray> map = new HashMap<>();
+        for (int i = 0; i < classesList.size(); i++) {
+            JsonObject classe = classesList.getJsonObject(i);
+            if (!map.containsKey(classe.getString("structure"))) {
+                map.put(classe.getString("structure"), new JsonArray().add(classe));
+            } else {
+                map.get(classe.getString("structure")).add(classe);
+            }
+        }
+        return map;
     }
 }
