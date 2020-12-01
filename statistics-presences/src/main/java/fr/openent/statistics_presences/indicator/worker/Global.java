@@ -60,6 +60,7 @@ public class Global extends IndicatorWorker {
         - incident count
      */
     @Override
+    @SuppressWarnings("unchecked")
     protected Future<List<JsonObject>> processStudent(String structureId, String studentId) {
         Future<List<JsonObject>> future = Future.future();
         List<Future> futures = new ArrayList<>();
@@ -90,7 +91,7 @@ public class Global extends IndicatorWorker {
                     stats.forEach(stat -> {
                         stat.setUser(studentId)
                                 .setName(student.getString("name"))
-                                .setClassName(student.getString("className"))
+                                .setClassName(String.join(",", student.getJsonArray("className").getList()))
                                 .setType(type)
                                 .setStructure(structureId)
                                 .setAudiences(audienceFuture.result());
@@ -222,7 +223,8 @@ public class Global extends IndicatorWorker {
 
     private Future<JsonObject> retrieveUser(String structureId, String studentId) {
         Future<JsonObject> future = Future.future();
-        String query = "MATCH (s:Structure {id:{structureId}})<-[:BELONGS]-(c:Class)<-[:DEPENDS]-(:ProfileGroup)<-[:IN]-(u:User {id: {studentId}}) RETURN (u.lastName + ' ' + u.firstName) as name, c.name as className";
+        String query = "MATCH (s:Structure {id:{structureId}})<-[:BELONGS]-(c:Class)<-[:DEPENDS]-(:ProfileGroup)<-[:IN]-" +
+                "(u:User {id: {studentId}}) RETURN (u.lastName + ' ' + u.firstName) as name, collect(c.name) as className";
         JsonObject params = new JsonObject()
                 .put("structureId", structureId)
                 .put("studentId", studentId);

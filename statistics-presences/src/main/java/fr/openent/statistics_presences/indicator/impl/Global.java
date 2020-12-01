@@ -326,7 +326,6 @@ public class Global extends Indicator {
                 GlobalValue userStat = new GlobalValue();
                 statistics.get(user.id()).forEach(stat -> {
                     String type = stat.getString("type");
-                    stat.remove("type");
                     userStat.setValue(type, stat);
                 });
 
