@@ -1,7 +1,9 @@
 import {Incident, ProtagonistForm, Student, Students} from "../models";
-import {IncidentParameterType, incidentService, Partner} from "../services";
-import {_, idiom as lang, moment, notify, toasts} from "entcore";
+import {IncidentParameterType, incidentService, Partner, SearchService} from "../services";
+import {_, idiom as lang, model, moment, notify, toasts} from "entcore";
 import {SNIPLET_FORM_EMIT_EVENTS, SNIPLET_FORM_EVENTS} from '@common/model'
+import {User} from "@common/model/User";
+import {UsersSearch} from "@common/utils";
 
 declare let window: any;
 
@@ -19,6 +21,8 @@ interface ViewModel {
     incidentParameterType: IncidentParameterType;
     isLightboxActive: boolean;
     emptyParameter: Partner;
+    usersSearch: UsersSearch;
+    ownerSearch: string;
 
     safeApply(fn?: () => void): void;
 
@@ -47,6 +51,12 @@ interface ViewModel {
     searchIncidentStudentForm(string): void;
 
     getButtonLabel(): string;
+
+    searchOwner(value: string): Promise<void>;
+
+    selectOwner(model, owner: User): void;
+
+    getDisplayOwnerName(): string;
 }
 
 const vm: ViewModel = {
@@ -61,8 +71,11 @@ const vm: ViewModel = {
     incidentParameterType: null,
     isLightboxActive: false,
     emptyParameter: null,
+    usersSearch: null,
+    ownerSearch: null,
 
     createIncidentLightbox: async function () {
+        vm.usersSearch = new UsersSearch(window.structure.id, SearchService);
         vm.isLightboxActive = true;
         vm.lightbox.createMode = true;
         if (!vm.incidentParameterType) {
@@ -74,6 +87,7 @@ const vm: ViewModel = {
         vm.checkOptionState();
         vm.incidentForm = new Incident(window.structure.id);
         vm.incidentStudentsForm = new Students();
+        vm.incidentForm.owner = model.me;
 
         incidentForm.that.$emit(SNIPLET_FORM_EMIT_EVENTS.CREATION);
         vm.safeApply();
@@ -224,6 +238,7 @@ const vm: ViewModel = {
     },
 
     editIncidentLightbox: async function (incident: Incident) {
+        vm.usersSearch = new UsersSearch(window.structure.id, SearchService);
         vm.isLightboxActive = true;
         vm.lightbox.editMode = true;
         if (!vm.incidentParameterType) {
@@ -240,9 +255,25 @@ const vm: ViewModel = {
         vm.incidentForm.date = new Date(incident.date);
         vm.incidentForm.dateTime = new Date(incident.date);
         vm.incidentForm.protagonists = JSON.parse(JSON.stringify(incident.protagonists));
+        vm.incidentForm.owner = incident.owner;
         vm.safeApply()
     },
-    getButtonLabel: () => lang.translate(`incidents${vm.isCalendar ? '.calendar' : ''}.create`)
+    getButtonLabel: () => lang.translate(`incidents${vm.isCalendar ? '.calendar' : ''}.create`),
+
+    getDisplayOwnerName: (): string => {
+        return vm.incidentForm.owner.displayName || vm.incidentForm.owner.lastName + " " + vm.incidentForm.owner.firstName;
+    },
+
+    searchOwner: async (value: string): Promise<void> => {
+        await vm.usersSearch.searchUsers(value);
+        vm.safeApply();
+    },
+
+    selectOwner: (model, owner: User): void => {
+        vm.incidentForm.owner = owner;
+        vm.ownerSearch = '';
+        vm.safeApply();
+    },
 };
 
 export const incidentForm = {

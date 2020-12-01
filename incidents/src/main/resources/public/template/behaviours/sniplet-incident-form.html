@@ -97,6 +97,24 @@
             </label>
         </div>
 
+        <!-- owner -->
+        <label>
+            <i18n>presences.responsible</i18n>
+            <div class="search-input">
+                <async-autocomplete data-ng-disabled="false"
+                                    data-ng-model="vm.ownerSearch"
+                                    data-ng-change="vm.selectOwner"
+                                    data-on-search="vm.searchOwner"
+                                    data-options="vm.usersSearch.users"
+                                    data-placeholder="incidents.search.personal"
+                                    data-search="vm.ownerSearch">
+                </async-autocomplete>
+            </div>
+            <div ng-show="vm.incidentForm.owner" class="margin-top-sm">
+                <span class="font-bold">[[vm.getDisplayOwnerName()]]</span>
+            </div>
+        </label>
+
         <!-- description & treated -->
         <div class="incident-lightbox-body-descriptionTreated row spacing">
             <div class="twelve cell twelve-mobile">

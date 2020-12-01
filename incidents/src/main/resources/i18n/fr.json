@@ -132,6 +132,7 @@
   "incidents.punishment.edit.form.err": "Une erreur est survenue lors de la modification d'une punition ou sanction",
   "incidents.sanctions": "Sanctions",
   "incidents.search.student": "Rechercher un élève",
+  "incidents.search.personal": "Rechercher un personnel",
   "incidents.seriousness": "Gravité",
   "incidents.state": "État",
   "incidents.state.processed": "Effectuées",

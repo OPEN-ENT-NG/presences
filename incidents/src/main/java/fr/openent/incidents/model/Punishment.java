@@ -44,7 +44,7 @@ public class Punishment extends Model {
         fillables.put("processed", Collections.singletonList("UPDATE"));
         fillables.put("incident_id", Collections.singletonList("CREATE"));
         fillables.put("type_id", Arrays.asList("CREATE", "UPDATE", "mandatory"));
-        fillables.put("owner_id", Arrays.asList("CREATE", "mandatory"));
+        fillables.put("owner_id", Arrays.asList("CREATE", "UPDATE", "mandatory"));
         fillables.put("structure_id", Arrays.asList("CREATE", "mandatory"));
         fillables.put("student_id", Arrays.asList("CREATE", "mandatory"));
         fillables.put("fields", Arrays.asList("CREATE", "UPDATE"));
@@ -100,7 +100,6 @@ public class Punishment extends Model {
                     if (getId() != null) {
                         updateMongo(user, getId(), handler);
                     } else {
-                        setOwnerId(user.getUserId());
                         createMongo(user, handler);
                     }
                 });
@@ -120,8 +119,7 @@ public class Punishment extends Model {
         }
 
         JsonObject criteria = new JsonObject()
-                .put("_id", id)
-                .put("owner_id", this.owner_id.isEmpty() ? user.getUserId() : this.owner_id);
+                .put("_id", id);
         JsonObject returnFields = new JsonObject().put("_id", id);
 
         JsonObject set = new JsonObject().put("$set", data);

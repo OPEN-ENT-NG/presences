@@ -127,7 +127,6 @@ const vm: ViewModel = {
     preparePunishmentForm: (): void => {
         if (vm.punishment.id) {
             vm.form.student_id = vm.punishment.student.id;
-            vm.form.owner_id = vm.punishment.owner.id;
             // todo edit incident for next feature
             vm.form.incident_id = null;
         } else {
