@@ -31,6 +31,13 @@
         box-shadow: none;
         color: unset;
       }
+      a {
+        //color: $presences-black;
+        color: $dark-grey;
+        &:hover {
+          color: $presences-main
+        }
+      }
     }
   }
 }

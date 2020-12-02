@@ -21,6 +21,7 @@ import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import org.entcore.common.controller.ControllerHelper;
 import org.entcore.common.http.filter.ResourceFilter;
+import org.entcore.common.storage.Storage;
 
 import java.util.List;
 
@@ -28,10 +29,12 @@ import java.util.List;
 public class MailingController extends ControllerHelper {
     private MailingService mailingService;
     private GroupService groupService;
+    private Storage storage;
 
-    public MailingController(EventBus eb) {
+    public MailingController(EventBus eb, Storage storage) {
         this.mailingService = new DefaultMailingService();
         this.groupService = new DefaultGroupService(eb);
+        this.storage = storage;
     }
 
     @Get("/mailings")
@@ -118,5 +121,27 @@ public class MailingController extends ControllerHelper {
             }
         }
         return true;
+    }
+
+
+    @Get("/mailings/:idMailing/file/:id")
+    @ApiDoc("Get file when mailing is pdf type")
+    @ResourceFilter(CanAccessMassMailing.class)
+    @SecuredAction(value = "", type = ActionType.RESOURCE)
+    public void getFileMailing(HttpServerRequest request) {
+        mailingService.getMailing(
+                request.getParam("structure"),
+                Long.parseLong(request.getParam("idMailing")),
+                request.getParam("id"),
+                result -> {
+                    if (result.failed()) {
+                        renderError(request);
+                        return;
+                    }
+
+                    JsonObject mailing = result.result();
+                    JsonObject metadata = mailing.getString("metadata") != null ? new JsonObject(mailing.getString("metadata")) : null;
+                    storage.sendFile(mailing.getString("file_id"), metadata != null ? metadata.getString("filename") : "", request, false, metadata);
+                });
     }
 }

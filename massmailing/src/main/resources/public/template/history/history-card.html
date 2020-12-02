@@ -1,13 +1,19 @@
 <div class="massmailing-card">
     <!-- title section -->
     <section class="massmailing-card-header">
-       <span class="massmailing-card-header-title">
+       <span ng-if="!vm.isSelectedMailingPdf()" class="massmailing-card-header-title">
            [[lang.translate(vm.getMailingTypeText(vm.selectedMailing))]]&nbsp;[[vm.selectedMailing.recipient.info]]
+       </span>
+        <span ng-if="vm.isSelectedMailingPdf()" class="massmailing-card-header-title">
+           [[lang.translate('massmailing.pdf.generated')]]
        </span>
     </section>
 
     <!-- body section -->
     <section class="massmailing-card-body">
-        <span class="massmailing-card-body-descriptionHTML" ng-bind-html="vm.selectedMailing.content"></span>
+        <span ng-if="!vm.isSelectedMailingPdf()" class="massmailing-card-body-descriptionHTML" ng-bind-html="vm.selectedMailing.content"></span>
+        <span ng-if="vm.isSelectedMailingPdf()" class="massmailing-card-body-descriptionHTML">
+            <a ng-click="vm.downloadSelectedMailingFile()"><i class="pdf"></i>[[vm.selectedMailing.metadata.filename]]</a>
+        </span>
     </section>
 </div>

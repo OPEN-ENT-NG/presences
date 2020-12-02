@@ -2,6 +2,7 @@ import {LoadingCollection} from "@common/model";
 import {_, moment} from "entcore";
 import {Student} from "@common/model/Student";
 import {User} from "@common/model/User";
+import {IMetadata} from "@common/model/Metadata";
 
 export enum MailingType {
     PDF,
@@ -27,6 +28,8 @@ export interface Mailing {
     created: string;
     timestamp?: number;
     isSelected?: boolean;
+    file_id?: string;
+    metadata?: IMetadata
 }
 
 export interface MailingRequest {

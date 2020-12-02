@@ -1,5 +1,6 @@
 package fr.openent.massmailing.model.Mailing;
 
+import fr.openent.presences.model.Person.Metadata;
 import fr.openent.presences.model.Person.Student;
 import fr.openent.presences.model.Person.User;
 import io.vertx.core.json.JsonObject;
@@ -13,6 +14,8 @@ public class Mailing implements Cloneable {
     private String structureId;
     private String type;
     private String content;
+    private String fileId;
+    private Metadata metadata;
     private String created;
 
     public Mailing(JsonObject mailing) {
@@ -23,6 +26,8 @@ public class Mailing implements Cloneable {
         this.structureId = mailing.getString("structure_id", null);
         this.type = mailing.getString("type", null);
         this.content = mailing.getString("content", null);
+        this.fileId = mailing.getString("file_id", null);
+        this.metadata = new Metadata(mailing.getString("metadata"));
         this.created = mailing.getString("created", null);
     }
 
@@ -35,6 +40,8 @@ public class Mailing implements Cloneable {
                 .put("structure_id", this.structureId)
                 .put("type", this.type)
                 .put("content", this.content)
+                .put("file_id", this.fileId)
+                .put("metadata", this.metadata.toJsonObject())
                 .put("created", created);
     }
 

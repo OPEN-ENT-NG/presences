@@ -80,6 +80,7 @@
   "massmailing.filter.empty.no.filter": "Aucun filtre",
   "massmailing.filter.empty.selected": "n'est sélectionné. Activez en au moins un pour afficher des absences à publiposter.",
   "massmailing.pdf.error.download": "Une erreur est survenue lors du publipostage pdf",
+  "massmailing.pdf.generated": "Pdf généré",
   "massmailing.prefetch.error": "Une erreur est survenue lors du calcul du publipostage",
   "massmailing.prefetch.title.MAIL": "Envoyer un mail",
   "massmailing.prefetch.title.SMS": "Envoyer un SMS",

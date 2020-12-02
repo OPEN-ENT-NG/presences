@@ -29,6 +29,7 @@ import io.vertx.core.json.JsonObject;
 import org.entcore.common.controller.ControllerHelper;
 import org.entcore.common.http.filter.ResourceFilter;
 import org.entcore.common.http.filter.Trace;
+import org.entcore.common.storage.Storage;
 import org.entcore.common.user.UserUtils;
 
 import java.util.ArrayList;
@@ -40,13 +41,15 @@ public class MassmailingController extends ControllerHelper {
     private final GroupService groupService;
     private final JsonObject config;
     private final Vertx vertx;
+    private final Storage storage;
     private final MassmailingService massmailingService = new DefaultMassmailingService();
     private final List<MailingType> typesToCheck = Arrays.asList(MailingType.MAIL, MailingType.SMS);
 
-    public MassmailingController(EventBus eb, Vertx vertx, JsonObject config) {
+    public MassmailingController(EventBus eb, Vertx vertx, JsonObject config, Storage storage) {
         this.config = config;
         this.vertx = vertx;
         this.groupService = new DefaultGroupService(eb);
+        this.storage = storage;
     }
 
     @Get("")
@@ -597,7 +600,7 @@ public class MassmailingController extends ControllerHelper {
                             sanctionsTypes, start, end, noReason, students);
                     break;
                 case PDF:
-                    mailing = new Pdf(eb, vertx, config, request, structure, template, massmailed, massmailingTypeList,
+                    mailing = new Pdf(eb, vertx, storage, config, request, structure, template, massmailed, massmailingTypeList,
                             reasons, punishmentsTypes, sanctionsTypes, start, end, noReason, students);
                     break;
                 default:

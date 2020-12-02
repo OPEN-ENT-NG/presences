@@ -4,6 +4,7 @@ import fr.openent.massmailing.Massmailing;
 import fr.openent.massmailing.helper.MailingHelper;
 import fr.openent.massmailing.model.Mailing.Mailing;
 import fr.openent.massmailing.service.MailingService;
+import fr.openent.presences.common.helper.FutureHelper;
 import fr.wseduc.webutils.Either;
 import io.vertx.core.AsyncResult;
 import io.vertx.core.CompositeFuture;
@@ -38,6 +39,7 @@ public class DefaultMailingService implements MailingService {
                 String message = "[Massmailing@DefaultMailingService] Failed to retrieve mailings history";
                 LOGGER.error(message);
                 handler.handle(new Either.Left<>(message + " " + mailingAsync.cause()));
+                return;
             }
             List<Mailing> mailings = mailingAsync.result();
 
@@ -70,7 +72,7 @@ public class DefaultMailingService implements MailingService {
     private void fetchMailings(String structureId, String startDate, String endDate, List<String> mailingTypes, List<String> eventTypes,
                                List<String> studentsIds, Integer page, Handler<AsyncResult<List<Mailing>>> handler) {
         JsonArray params = new JsonArray();
-        String query = "SELECT DISTINCT ON (mailing.*) mailing.*, to_json(me) as mailing_event FROM " + Massmailing.dbSchema + ".mailing as mailing" +
+        String query = "SELECT DISTINCT ON (mailing.id, mailing.created) mailing.*, to_json(me) as mailing_event FROM " + Massmailing.dbSchema + ".mailing as mailing" +
                 " INNER JOIN " + Massmailing.dbSchema + ".mailing_event as me on (me.mailing_id = mailing.id)" +
                 " WHERE mailing.structure_id = ? AND (mailing.created >= ? AND mailing.created <= ?) ";
         params.add(structureId)
@@ -95,7 +97,7 @@ public class DefaultMailingService implements MailingService {
             params.addAll(new JsonArray(studentsIds));
         }
 
-        query += " GROUP BY mailing.id, me.id, mailing.created ORDER BY mailing.* DESC OFFSET ? LIMIT ? ";
+        query += " GROUP BY mailing.id, me.id, mailing.created ORDER BY mailing.created DESC OFFSET ? LIMIT ? ";
         params.add(Massmailing.PAGE_SIZE * page);
         params.add(Massmailing.PAGE_SIZE);
 
@@ -140,4 +142,35 @@ public class DefaultMailingService implements MailingService {
         }
         Sql.getInstance().prepared(query, params, SqlResult.validUniqueResultHandler(handler));
     }
+
+    @Override
+    public void getMailing(String structureId, Long id, String file_id, Handler<AsyncResult<JsonObject>> handler) {
+        JsonArray params = new JsonArray();
+        String query = getMailingQuery(structureId, id, file_id, params);
+        Sql.getInstance().prepared(query, params, SqlResult.validUniqueResultHandler(result -> {
+                if (result.isLeft()) {
+                    String message = "[Massmailing@DefaultMailingService::getMailing] Failed to get mailing: ";
+                    LOGGER.error(message);
+                    handler.handle(Future.failedFuture(message + result.left().getValue()));
+                    return;
+                }
+                handler.handle(Future.succeededFuture(result.right().getValue()));
+        }));
+
+    }
+
+    private String getMailingQuery(String structureId, Long id, String file_id, JsonArray params) {
+        String query = " SELECT * " +
+                " FROM " + Massmailing.dbSchema + ".mailing " +
+                " WHERE id = ? AND structure_id = ? ";
+
+        params.add(id).add(structureId);
+
+        if (file_id != null) {
+            query += " AND file_id = ?";
+            params.add(file_id);
+        }
+        return query;
+    }
+
 }

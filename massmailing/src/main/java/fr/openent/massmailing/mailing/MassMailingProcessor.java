@@ -707,16 +707,30 @@ public abstract class MassMailingProcessor implements Mailing {
     }
 
     private JsonObject getMailingSavingStatement(Integer id, JsonObject mailing) {
-        String query = "INSERT INTO " + Massmailing.dbSchema + ".mailing(id, student_id, structure_id, type, content, recipient_id, recipient) " +
-                "VALUES (?, ?, ?, ?, ?, ?, ?);";
+        String query = "INSERT INTO " + Massmailing.dbSchema + ".mailing(id, student_id, structure_id, type, content, " +
+                "recipient_id, recipient, file_id, metadata) " +
+                "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?);";
         JsonArray params = new JsonArray()
                 .add(id)
                 .add(mailing.getString("student_id"))
                 .add(structure)
                 .add(mailingType.name())
                 .add(mailing.getString("message"))
-                .add(mailing.getString("id"))
-                .add(mailing.getString("contact"));
+                .add(mailing.getString("id"));
+
+        String contact = mailing.getString("contact");
+        String file_id = mailing.getString("file_id");
+        String metadata = mailing.getString("metadata");
+
+        if (contact != null) params.add(contact);
+        else params.addNull();
+
+        if (file_id != null) params.add(file_id);
+        else params.addNull();
+
+        if (metadata != null) params.add(metadata);
+        else params.addNull();
+
         return new JsonObject()
                 .put("statement", query)
                 .put("values", params)

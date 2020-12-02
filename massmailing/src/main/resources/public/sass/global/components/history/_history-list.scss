@@ -12,7 +12,9 @@
   align-items: start;
 
   &-history {
-    padding-right: 16px;
+    margin-right: 16px;
+    flex: 1 0 auto;
+    width: 60em !important;
 
     &.flex-table {
       background-color: $presences-white;
@@ -44,6 +46,9 @@
   // side card
   &-card {
     padding-left: 16px;
+    display: flex;
+    flex: 0 1 auto;
+    width: 100%;
 
     &-clickDisplay {
       display: flex;

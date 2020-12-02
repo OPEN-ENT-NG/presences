@@ -16,6 +16,7 @@ import io.vertx.core.shareddata.LocalMap;
 import org.entcore.common.bus.WorkspaceHelper;
 import org.entcore.common.email.EmailFactory;
 import org.entcore.common.http.BaseServer;
+import org.entcore.common.storage.Storage;
 import org.entcore.common.storage.StorageFactory;
 
 import java.util.HashMap;
@@ -40,13 +41,14 @@ public class Massmailing extends BaseServer {
     public void start() throws Exception {
         super.start();
         EventBus eb = getEventBus(vertx);
+        Storage storage = new StorageFactory(vertx, config).getStorage();
         types = mailingsConfig();
         emailSender = new EmailFactory(vertx, config).getSender();
-        workspaceHelper = new WorkspaceHelper(eb, new StorageFactory(vertx, config).getStorage());
-        addController(new MassmailingController(eb, vertx, config));
+        workspaceHelper = new WorkspaceHelper(eb, storage);
+        addController(new MassmailingController(eb, vertx, config, storage));
         addController(new SettingsController(eb));
         addController(new EventBusController());
-        addController(new MailingController(eb));
+        addController(new MailingController(eb, storage));
 
         Presences.getInstance().init(eb);
         Incidents.getInstance().init(eb);

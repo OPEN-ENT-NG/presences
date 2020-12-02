@@ -89,6 +89,10 @@ interface ViewModel {
     removeSelectedGroupsLightbox(groupItem): void;
 
     startSidebarAnimation(): void;
+
+    isSelectedMailingPdf(): boolean;
+
+    downloadSelectedMailingFile(): void;
 }
 
 export const historyController = ng.controller('HistoryController',
@@ -236,6 +240,12 @@ export const historyController = ng.controller('HistoryController',
                         return '';
                 }
             };
+
+            vm.downloadSelectedMailingFile = (): void => {
+                mailingService.downloadFile(vm.selectedMailing);
+            };
+
+            vm.isSelectedMailingPdf = (): boolean => vm.selectedMailing && vm.selectedMailing.type === MailingType[MailingType.PDF];
 
             vm.changePagination = async (): Promise<void> => {
                 vm.filter.page = vm.mailings.mailingResponse.page;

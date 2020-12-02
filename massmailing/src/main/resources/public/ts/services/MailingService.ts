@@ -1,6 +1,6 @@
 import {ng} from 'entcore'
 import http from 'axios';
-import {MailingRequest, MailingResponse} from "../model";
+import {Mailing, MailingRequest, MailingResponse} from "../model";
 
 export interface MailingService {
     /**
@@ -8,6 +8,8 @@ export interface MailingService {
      * @param mailingRequest MailingRequest param data
      */
     get(mailingRequest: MailingRequest): Promise<MailingResponse>;
+    
+    downloadFile(mailing: Mailing): void;
 }
 
 export const mailingService: MailingService = {
@@ -56,6 +58,13 @@ export const mailingService: MailingService = {
             throw err;
         }
     },
+
+    downloadFile(mailing: Mailing): void {
+        const basicUrl: string = `/massmailing/mailings/`; //mailings/:idMailing/file/:id
+        const urlFetchingData: string = `${mailing.id}/file/${mailing.file_id}`;
+        const structure_id: string = `?structure=${mailing.structure_id}`;
+        window.open(`${basicUrl}${urlFetchingData}${structure_id}`);
+    }
 };
 
 export const MailingService = ng.service('MailingService', (): MailingService => mailingService);
