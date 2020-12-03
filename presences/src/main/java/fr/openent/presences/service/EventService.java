@@ -108,6 +108,7 @@ public interface EventService {
      */
     void update(Integer id, JsonObject event, Handler<Either<String, JsonObject>> handler);
 
+    void updateEvent(Integer id, JsonObject event, Handler<Either<String, JsonObject>> handler);
 
     /**
      * Update reason for each event

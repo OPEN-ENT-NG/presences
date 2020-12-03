@@ -4,6 +4,8 @@ import fr.openent.presences.common.incidents.Incidents;
 import fr.openent.presences.common.massmailing.Massmailing;
 import fr.openent.presences.common.viescolaire.Viescolaire;
 import fr.openent.presences.controller.*;
+import fr.openent.presences.controller.EventController.EventController;
+import fr.openent.presences.controller.EventController.LatenessEventController;
 import fr.openent.presences.cron.CreateDailyRegistersTask;
 import fr.openent.presences.worker.CreateDailyPresenceWorker;
 import fr.wseduc.cron.CronTrigger;
@@ -75,6 +77,7 @@ public class Presences extends BaseServer {
         addController(new RegisterController(eb));
         addController(new AbsenceController(eb));
         addController(new EventController(eb));
+        addController(new LatenessEventController(eb));
         addController(new ExemptionController(eb));
         addController(new SearchController(eb));
         addController(new CalendarController(eb));

@@ -562,6 +562,34 @@ public class DefaultEventService implements EventService {
     }
 
     @Override
+    public void updateEvent(Integer id, JsonObject event, Handler<Either<String, JsonObject>> handler) {
+        JsonArray params = new JsonArray();
+        String query = "UPDATE " + Presences.dbSchema + ".event SET start_date = ?, end_date = ?, comment = ?, counsellor_input = ? " +
+                " student_id = ?, register_id = ?, reason_id = ?, owner = ?, counsellor_regularisation = ?" +
+                " WHERE id = ?";
+
+        params.add(event.getString("start_date"));
+        params.add(event.getString("end_date"));
+        params.add(event.getString("comment"));
+        params.add(event.getBoolean("counsellor_input"));
+        params.add(event.getString("student_id"));
+        params.add(event.getInteger("register_id"));
+        params.add(event.getInteger("reason_id") != null ? event.getInteger("reason_id") : params.addNull());
+        params.add(event.getString("owner"));
+        params.add(event.getBoolean("counsellor_regularisation"));
+        params.add(id);
+
+        Sql.getInstance().prepared(query, params, message -> {
+            Either<String, JsonObject> either = SqlResult.validUniqueResult(message);
+            if (either.isLeft()) {
+                String err = "[Presences@DefaultEventService] Failed to update event " + id;
+                LOGGER.error(err, either.left().getValue());
+            }
+            handler.handle(either);
+        });
+    }
+
+    @Override
     public void changeReasonEvents(JsonObject eventBody, UserInfos user, Handler<Either<String, JsonObject>> handler) {
         List<Event> events = new ArrayList<>();
         List<Integer> ids = new ArrayList<>();

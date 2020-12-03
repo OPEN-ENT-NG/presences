@@ -1,4 +1,4 @@
-package fr.openent.presences.controller;
+package fr.openent.presences.controller.EventController;
 
 import fr.openent.presences.Presences;
 import fr.openent.presences.common.helper.FutureHelper;

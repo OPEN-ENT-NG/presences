@@ -1,3 +1,10 @@
+<!-- Button to access absence mode -->
+<button class="right-magnet"
+        data-ng-click="vm.openAbsenceLightbox()">
+    <i18n>presences.register.event_type.absences</i18n>
+</button>
+
+<!-- Button to access lateness mode -->
 <button class="right-magnet"
         data-ng-click="vm.openAbsenceLightbox()">
     <i18n>presences.register.event_type.absences</i18n>
@@ -5,13 +12,19 @@
 
 <lightbox class="absentLightbox" show="vm.createAbsenceLightBox" on-close="vm.closeAbsenceLightbox()">
     <section class="absentLightbox-head head">
-        <h3 ng-if="!vm.form.id"><i18n>presences.absence.create</i18n></h3>
-        <h3 ng-if="vm.form.id"><i18n>presences.absence.edit</i18n></h3>
+        <h3 ng-if="!vm.form.id">
+            <i18n>presences.absence.create</i18n>
+        </h3>
+        <h3 ng-if="vm.form.id">
+            <i18n>presences.absence.edit</i18n>
+        </h3>
     </section>
 
     <section class="absentLightbox-body body lightbox-form">
 
-        <h3 class="absentLightbox-body-title row spacing"><i18n>presences.absence.form.title</i18n></h3>
+        <h3 class="absentLightbox-body-title row spacing">
+            <i18n>presences.absence.form.title</i18n>
+        </h3>
 
         <!-- Info Date/reason -->
         <div class="absentLightbox-body-info row spacing">
