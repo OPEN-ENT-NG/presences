@@ -6,6 +6,7 @@ $status-max-width: 250px;
     display: grid;
     grid-template-columns: repeat(4, minmax(auto, $status-max-width));
     grid-column-gap: 25px;
+    grid-gap: 16px;
     grid-template-rows: $status-height;
 
     .widget-alert {

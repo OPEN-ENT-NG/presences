@@ -21,6 +21,12 @@
     "reasons": {
       "type": "array"
     },
+    "punishmentsTypes": {
+      "type": "array"
+    },
+    "sanctionsTypes": {
+      "type": "array"
+    },
     "start_at": {
       "type": "number"
     },

@@ -3,6 +3,7 @@ package fr.openent.massmailing.service.impl;
 import fr.openent.massmailing.enums.MailingType;
 import fr.openent.massmailing.enums.MassmailingType;
 import fr.openent.massmailing.service.MassmailingService;
+import fr.openent.presences.common.incidents.Incidents;
 import fr.openent.presences.common.presences.Presences;
 import fr.openent.presences.enums.EventType;
 import fr.wseduc.webutils.Either;
@@ -23,8 +24,10 @@ public class DefaultMassmailingService implements MassmailingService {
 
 
     @Override
-    public void getStatus(String structure, MassmailingType type, Boolean massmailed, List<Integer> reasons, Integer startAt, String startDate,
-                          String endDate, List<String> students, boolean noReasons, Handler<Either<String, JsonObject>> handler) {
+    public void getStatus(String structure, MassmailingType type, Boolean massmailed, List<Integer> reasons,
+                          List<Integer> punishmentsTypes, List<Integer> sanctionsTypes, Integer startAt, String startDate,
+                          String endDate, List<String> students, boolean noReasons,
+                          Handler<Either<String, JsonObject>> handler) {
         Handler<Either<String, JsonArray>> callback = event -> {
             if (event.isLeft()) {
                 String message = "[Massmailing@DefaultMassmailingService] Failed to retrieve massmailing count events";
@@ -43,12 +46,14 @@ public class DefaultMassmailingService implements MassmailingService {
             handler.handle(new Either.Right<>(new JsonObject().put("status", count)));
         };
 
-        getCountEventByStudent(structure, type, massmailed, reasons, startAt, startDate, endDate, students, noReasons, callback);
+        getCountEventByStudent(structure, type, massmailed, reasons, punishmentsTypes, sanctionsTypes, startAt, startDate, endDate, students, noReasons, callback);
     }
 
     @Override
-    public void getCountEventByStudent(String structure, MassmailingType type, Boolean massmailed, List<Integer> reasons, Integer startAt, String startDate,
-                                       String endDate, List<String> students, boolean noReasons, Handler<Either<String, JsonArray>> handler) {
+    public void getCountEventByStudent(String structure, MassmailingType type, Boolean massmailed, List<Integer> reasons,
+                                       List<Integer> punishmentsTypes, List<Integer> sanctionsTypes,
+                                       Integer startAt, String startDate, String endDate, List<String> students,
+                                       boolean noReasons, Handler<Either<String, JsonArray>> handler) {
         switch (type) {
             case REGULARIZED:
                 Presences.getInstance().getCountEventByStudent(EventType.ABSENCE.getType(), students, structure, null, startAt,
@@ -66,18 +71,14 @@ public class DefaultMassmailingService implements MassmailingService {
                 Presences.getInstance().getCountEventByStudent(EventType.LATENESS.getType(), students, structure, null, startAt,
                         new ArrayList<>(), massmailed, startDate, endDate, noReasons, "HOUR", null, handler);
                 break;
-//            case PUNISHMENT:
-//                handler.handle(new Either.Right<>(new JsonArray()
-//                        .add(new JsonObject()
-//                                .put("count",5)
-//                                .put("student_id", "testid"))));
-//                break;
-//            case SANCTION:
-//                handler.handle(new Either.Right<>(new JsonArray()
-//                        .add(new JsonObject()
-//                                .put("count",4)
-//                                .put("student_id", "testid2"))));
-//                break;
+            case PUNISHMENT:
+                Incidents.getInstance().getPunishmentsCountByStudent(structure, startDate + " 00:00:00", endDate + " 23:59:59",
+                        students, punishmentsTypes, null, massmailed, handler);
+                break;
+            case SANCTION:
+                Incidents.getInstance().getPunishmentsCountByStudent(structure, startDate + " 00:00:00", endDate + " 23:59:59",
+                        students, sanctionsTypes, null, massmailed, handler);
+                break;
             default:
                 handler.handle(new Either.Left<>("[Massmailing@DefaultMassmailingService] Unknown Massmailing type"));
         }
@@ -141,7 +142,9 @@ public class DefaultMassmailingService implements MassmailingService {
     }
 
     @Override
-    public void getStatus(String structure, MassmailingType type, boolean massmailed, List<Integer> reasons, Integer startAt, String startDate, String endDate, boolean noReasons, Handler<Either<String, JsonObject>> handler) {
-        getStatus(structure, type, massmailed, reasons, startAt, startDate, endDate, new ArrayList<>(), noReasons, handler);
+    public void getStatus(String structure, MassmailingType type, boolean massmailed, List<Integer> reasons,
+                          List<Integer> punishmentsTypes, List<Integer> sanctionsTypes, Integer startAt, String startDate,
+                          String endDate, boolean noReasons, Handler<Either<String, JsonObject>> handler) {
+        getStatus(structure, type, massmailed, reasons, punishmentsTypes, sanctionsTypes, startAt, startDate, endDate, new ArrayList<>(), noReasons, handler);
     }
 }

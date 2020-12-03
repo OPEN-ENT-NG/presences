@@ -3,6 +3,8 @@ import http, {AxiosRequestConfig, AxiosResponse} from 'axios';
 import {DateUtils} from '@common/utils';
 import {MailingType} from '../model/Mailing';
 import {BlobUtil} from '@common/utils/blob';
+import {IPunishmentType} from "@incidents/models/PunishmentType";
+import {EVENT_TYPES} from "@common/model";
 
 export interface IMassmailingFilterPreferences {
     start_at: number;
@@ -19,6 +21,8 @@ export interface IMassmailingFilterPreferences {
     allReasons: boolean;
     noReasons: boolean;
     reasons: any;
+    punishments: any;
+    punishmentTypes: IPunishmentType[];
     anomalies: {
         MAIL: boolean,
         SMS: boolean
@@ -31,6 +35,21 @@ export interface IRelative {
     contact: string;
     selected: boolean;
     address: string;
+}
+
+export interface IMassmailingBody {
+    event_types: Array<string>,
+    template: number,
+    structure: string,
+    no_reason: boolean,
+    start_at: number,
+    reasons: Array<string>,
+    punishmentsTypes: Array<number>,
+    sanctionsTypes: Array<number>,
+    start: string,
+    end: string,
+    students: {},
+    massmailed: boolean
 }
 
 interface MassmailingStudent {
@@ -115,13 +134,20 @@ export class Massmailing {
         return mailed;
     }
 
-    toJson() {
+    toJson(): IMassmailingBody {
         const event_types = Object.keys(this.filter.status).filter(type => this.filter.status[type]);
         const reasons = [];
         Object.keys(this.filter.reasons).forEach((reason) => {
             if (this.filter.reasons[reason]) reasons.push(reason);
         });
 
+        const punishmentsTypes: Array<number> = this.filter.punishments
+            .filter((punishmentType: IPunishmentType) => punishmentType.type === EVENT_TYPES.PUNISHMENT)
+            .map((punishmentType: IPunishmentType) => punishmentType.id);
+
+        const sanctionsTypes: Array<number> = this.filter.punishments
+            .filter((punishmentType: IPunishmentType) => punishmentType.type === EVENT_TYPES.SANCTION)
+            .map((punishmentType: IPunishmentType) => punishmentType.id);
 
         return {
             event_types,
@@ -130,6 +156,8 @@ export class Massmailing {
             no_reason: this.filter.noReasons,
             start_at: this.filter.start_at,
             reasons,
+            punishmentsTypes,
+            sanctionsTypes,
             start: DateUtils.format(this.filter.start_date, DateUtils.FORMAT['YEAR-MONTH-DAY']),
             end: DateUtils.format(this.filter.end_date, DateUtils.FORMAT['YEAR-MONTH-DAY']),
             students: this.getStudents(),

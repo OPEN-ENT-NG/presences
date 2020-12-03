@@ -26,8 +26,8 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 public class PunishmentHelper {
-    private GroupService groupService;
-    private UserService userService;
+    private final GroupService groupService;
+    private final UserService userService;
 
     private static final Logger log = LoggerFactory.getLogger(PunishmentHelper.class);
 
@@ -134,6 +134,38 @@ public class PunishmentHelper {
         });
     }
 
+    /**
+     * get JsonObject that will query the matching date
+     *
+     * @param start_at start date string
+     * @param end_at   end date string
+     */
+    public JsonObject getPunishmentMatchingDate(String start_at, String end_at) {
+        // Check date for detentions and exclusions
+        JsonArray containDateQueries = new JsonArray(Arrays.asList(
+                new JsonObject().put("fields.start_at", new JsonObject().put("$lte", end_at)),
+                new JsonObject().put("fields.end_at", new JsonObject().put("$gte", start_at))
+        ));
+        JsonObject containDateQuery = new JsonObject().put("$and", containDateQueries);
+
+        // Check date for duties
+        JsonArray containDateDutyQueries = new JsonArray(Arrays.asList(
+                new JsonObject().put("fields.delay_at", new JsonObject().put("$lte", end_at)),
+                new JsonObject().put("fields.delay_at", new JsonObject().put("$gte", start_at))
+        ));
+        JsonObject containDutyDateQuery = new JsonObject().put("$and", containDateDutyQueries);
+
+        // Check creation date
+        JsonObject nullDateQuery = new JsonObject().put("created_at", new JsonObject().put("$gte", start_at).put("$lte", end_at));
+
+        // Check for formatted format : YYYY/MM/DD instead of YYYY-MM-DD
+        JsonObject nullDateQuery2 = new JsonObject().put("created_at", new JsonObject()
+                .put("$gte", DateHelper.getDateString(start_at, DateHelper.YEAR_MONTH_DAY_HOUR_MINUTES_SECONDS))
+                .put("$lte", DateHelper.getDateString(end_at, DateHelper.YEAR_MONTH_DAY_HOUR_MINUTES_SECONDS)));
+
+        return new JsonObject().put("$or", new JsonArray(Arrays.asList(containDateQuery, nullDateQuery, nullDateQuery2, containDutyDateQuery)));
+    }
+
     /* REQUEST MONGODB PART */
 
     public void getPunishment(String tableName, JsonObject query, Handler<AsyncResult<JsonObject>> handler) {
@@ -176,6 +208,24 @@ public class PunishmentHelper {
                     handler.handle(Future.succeededFuture(mapResult.result()));
                 }
             });
+        }));
+    }
+
+    public void getPunishmentsCommand(String tableName, JsonArray query, Handler<AsyncResult<JsonArray>> handler) {
+        JsonObject command = new JsonObject()
+                .put("aggregate", tableName)
+                .put("allowDiskUse", true)
+                .put("cursor", getCursor())
+                .put("pipeline", query);
+
+        MongoDb.getInstance().command(command.toString(), MongoDbResult.validResultHandler(either -> {
+            if (either.isLeft()) {
+                log.error("[Incidents@PunishmentHelper::getPunishmentsCommand] An error has occured while running command.", either.left().getValue());
+                handler.handle(Future.failedFuture(either.left().getValue()));
+                return;
+            }
+            JsonArray result = either.right().getValue().getJsonObject("cursor", new JsonObject()).getJsonArray("firstBatch", new JsonArray());
+            handler.handle(Future.succeededFuture(result));
         }));
     }
 

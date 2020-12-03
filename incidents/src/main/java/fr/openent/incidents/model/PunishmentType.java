@@ -3,7 +3,7 @@ package fr.openent.incidents.model;
 import fr.openent.presences.model.Model;
 import io.vertx.core.json.JsonObject;
 
-public class PunishmentType extends Model {
+public class PunishmentType extends Model implements Cloneable {
 
     private Integer id;
     private String structure_id;
@@ -40,6 +40,15 @@ public class PunishmentType extends Model {
                 .put("punishment_category_id", this.punishment_category_id)
                 .put("used", this.isUsed)
                 .put("hidden", this.isHidden);
+    }
+
+    @Override
+    public PunishmentType clone() {
+        try {
+            return (PunishmentType) super.clone();
+        } catch (CloneNotSupportedException e) {
+            return this;
+        }
     }
 
     public Integer getId() {

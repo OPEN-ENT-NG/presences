@@ -6,7 +6,9 @@ public enum EventType {
     DEPARTURE(3),
     REMARK(4),
     INCIDENT(5),
-    FORGOTTEN_NOTEBOOK(6);
+    FORGOTTEN_NOTEBOOK(6),
+    PUNISHMENT(7),
+    SANCTION(8);
 
 
     private final Integer type_id;

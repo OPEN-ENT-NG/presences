@@ -48,6 +48,19 @@ public class DateHelper {
     }
 
     /**
+     * Return the number of days between 2 dates.
+     *
+     * @param date1 First date
+     * @param date2 Second date
+     * @return Difference time
+     * @throws ParseException
+     */
+    public static long getDayDiff(String date1, String date2) throws ParseException {
+        long diffInMilis = getTimeDiff(date1, date2);
+        return (diffInMilis / 1000 / (60 * 60) / 24) + 1;
+    }
+
+    /**
      * Return time difference between 2 dates as an absolute value
      *
      * @param date1 First date

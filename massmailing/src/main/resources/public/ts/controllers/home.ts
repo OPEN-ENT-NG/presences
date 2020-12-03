@@ -5,6 +5,9 @@ import {MailingType, Massmailing, MassmailingAnomaliesResponse, MassmailingStatu
 import {Reason} from '@presences/models/Reason';
 import {MassmailingPreferenceUtils, PresencesPreferenceUtils} from '@common/utils';
 import {HomeUtils} from '../utilities';
+import {IPunishmentService, IPunishmentsTypeService} from "@incidents/services";
+import {IPunishmentType} from "@incidents/models/PunishmentType";
+import {EVENT_TYPES} from "@common/model";
 
 interface Filter {
     start_date: Date;
@@ -14,14 +17,18 @@ interface Filter {
         REGULARIZED: boolean,
         UNREGULARIZED: boolean,
         NO_REASON: boolean,
-        LATENESS: boolean
+        LATENESS: boolean,
+        PUNISHMENT: boolean,
+        SANCTION: boolean
     };
     massmailing_status: {
         mailed: boolean,
         waiting: boolean
     };
     allReasons: boolean;
+    allPunishments: boolean;
     reasons: any;
+    punishments: Array<IPunishmentType>;
     noReasons: boolean;
     student: any;
     students: any[];
@@ -60,13 +67,23 @@ interface ViewModel {
     };
     templates: Template[];
 
+    punishmentsTypes: IPunishmentType[];
+
     fetchData(): void;
 
     loadData(): Promise<void>;
 
     switchAllReasons(): void;
 
+    switchAllPunishmentTypes(): void;
+
+    togglePunishmentSanctionFormFilter(punishmentType: string): void
+
+    setSelectedPunishmentType(punishmentType: IPunishmentType): void;
+
     getActivatedReasonsCount(): number;
+
+    getActivatedPunishmentTypes(): number;
 
     getReasonsCount(): number;
 
@@ -114,9 +131,10 @@ interface ViewModel {
 declare let window: any;
 
 export const homeController = ng.controller('HomeController', ['$scope', 'route', 'MassmailingService', 'ReasonService',
-    'SearchService', 'GroupService', 'SettingsService',
-    function ($scope, route, MassmailingService, ReasonService: ReasonService, SearchService: SearchService,
-              GroupService: GroupService, SettingsService: SettingsService) {
+    'SearchService', 'GroupService', 'SettingsService', 'PunishmentService', 'PunishmentsTypeService',
+    function ($scope, route, MassmailingService, reasonService: ReasonService, SearchService: SearchService,
+              GroupService: GroupService, SettingsService: SettingsService, punishmentService: IPunishmentService,
+              punishmentTypeService: IPunishmentsTypeService) {
         const vm: ViewModel = this;
         vm.massmailingStatus = {};
         vm.templates = [];
@@ -138,15 +156,19 @@ export const homeController = ng.controller('HomeController', ['$scope', 'route'
                 REGULARIZED: false,
                 UNREGULARIZED: false,
                 NO_REASON: true,
-                LATENESS: false
+                LATENESS: false,
+                PUNISHMENT: false,
+                SANCTION: false
             },
             massmailing_status: {
                 mailed: false,
                 waiting: true
             },
             allReasons: true,
+            allPunishments: true,
             noReasons: true,
             reasons: {},
+            punishments: [],
             students: undefined,
             student: '',
             group: '',
@@ -166,6 +188,8 @@ export const homeController = ng.controller('HomeController', ['$scope', 'route'
             MAIL: 0
         };
 
+        vm.punishmentsTypes = [];
+
         vm.fetchData = function () {
             fetchMassmailingAnomalies();
             fetchMassmailingStatus();
@@ -179,6 +203,7 @@ export const homeController = ng.controller('HomeController', ['$scope', 'route'
         };
 
         vm.validForm = async function () {
+            vm.formFilter.punishments = vm.punishmentsTypes.filter((punishmentType: IPunishmentType) => punishmentType.isSelected);
             const {start_date, end_date} = vm.filter;
             vm.filter = {...vm.formFilter, start_date, end_date};
             await MassmailingPreferenceUtils.updatePresencesMassmailingFilter(
@@ -190,13 +215,46 @@ export const homeController = ng.controller('HomeController', ['$scope', 'route'
             vm.lightbox.filter = false;
         };
 
-        vm.loadData = async function () {
+        vm.loadData = async function (): Promise<void> {
             if (!window.structure) return;
             await loadFormFilter();
-            vm.reasons = await ReasonService.getReasons(window.structure.id);
-            vm.reasons.map((reason: Reason) => vm.filter.reasons[reason.id] = (vm.filter.status.REGULARIZED || vm.filter.status.UNREGULARIZED));
+            await Promise.all([getReasons(), getPunishmentTypes()]);
             vm.fetchData();
             $scope.$apply();
+        };
+
+        const getReasons = (): Promise<void> => {
+            return new Promise((resolve) => {
+                reasonService.getReasons(window.structure.id)
+                    .then((reasons: Reason[]) => {
+                        reasons.forEach((reason: Reason) => vm.filter.reasons[reason.id] = (vm.filter.status.REGULARIZED || vm.filter.status.UNREGULARIZED));
+                        vm.reasons = reasons;
+                        $scope.$apply();
+                        resolve(undefined);
+                    });
+            });
+        };
+
+        const getPunishmentTypes = (): Promise<void> => {
+            return new Promise((resolve) => {
+                punishmentTypeService.get(window.structure.id)
+                    .then((punishmentTypes: IPunishmentType[]) => {
+                        punishmentTypes.forEach((punishmentType: IPunishmentType) => punishmentType.isSelected = false);
+
+                        const fetchedPunishmentTypePreference: Map<number, IPunishmentType> = HomeUtils.getPunishmentTypePreferenceMap(vm.filter.punishments);
+
+                        vm.punishmentsTypes = punishmentTypes;
+
+                        vm.punishmentsTypes.forEach((punishmentType: IPunishmentType) => {
+                            if (fetchedPunishmentTypePreference.has(punishmentType.id)) {
+                                punishmentType.isSelected = fetchedPunishmentTypePreference.get(punishmentType.id).isSelected;
+                            }
+                        });
+
+                        $scope.$apply();
+                        resolve(undefined);
+                    });
+            });
         };
 
         vm.switchAllReasons = function () {
@@ -207,18 +265,71 @@ export const homeController = ng.controller('HomeController', ['$scope', 'route'
             }
         };
 
+        vm.switchAllPunishmentTypes = (): void => {
+            vm.formFilter.allPunishments = !vm.formFilter.allPunishments;
+            vm.punishmentsTypes.forEach((punishmentType: IPunishmentType) => punishmentType.isSelected = vm.formFilter.allPunishments);
+        };
+
+        /**
+         * toggle punishmentType status
+         *
+         * @param type        punishmentType ('PUNISHMENT' or 'SANCTION')
+         */
+        vm.togglePunishmentSanctionFormFilter = (type: string): void => {
+            vm.formFilter.status[type] = !vm.formFilter.status[type];
+            vm.punishmentsTypes
+                .filter((punishmentType: IPunishmentType) => punishmentType.type === type)
+                .forEach((punishmentType: IPunishmentType) => punishmentType.isSelected = vm.formFilter.status[type]);
+        };
+
+        vm.setSelectedPunishmentType = (punishmentType: IPunishmentType): void => {
+            punishmentType.isSelected = !punishmentType.isSelected;
+
+            // toggle allPunishment on what punishmentType is selected
+            vm.formFilter.allPunishments = vm.getActivatedPunishmentTypes() === vm.punishmentsTypes.length;
+
+            // toggle punishment status if all selected punishment type 'PUNISHMENT' are empty
+            vm.formFilter.status.PUNISHMENT = updatePunishmentRule(EVENT_TYPES.PUNISHMENT)
+
+            // toggle punishment status if all selected punishment type 'SANCTION' are empty
+            vm.formFilter.status.SANCTION = updatePunishmentRule(EVENT_TYPES.SANCTION)
+        };
+
+        const updatePunishmentRule = (punishmentTypeRule: string): boolean => {
+            let isAllSelected: boolean = false;
+            vm.punishmentsTypes
+                .filter(punishmentType => punishmentType.type === punishmentTypeRule)
+                .forEach(punishmentType => {
+                    if (punishmentType.isSelected) {
+                        isAllSelected = true;
+                    }
+                });
+            return isAllSelected;
+        };
+
 
         vm.getActivatedReasonsCount = (): number => {
             let count: number = 0;
             for (let reason in vm.formFilter.reasons) {
                 count += vm.formFilter.reasons[reason];
             }
-
             return count;
         };
 
+        vm.getActivatedPunishmentTypes = (): number => {
+            if (vm.punishmentsTypes) {
+                return vm.punishmentsTypes.filter((punishmentType: IPunishmentType) => punishmentType.isSelected).length;
+            } else {
+                return 0;
+            }
+        };
+
         vm.getReasonsCount = (): number => {
-            return Object.keys(vm.formFilter.reasons).length;
+            if (vm.formFilter.reasons) {
+                return Object.keys(vm.formFilter.reasons).length;
+            } else {
+                return 0;
+            }
         };
 
         // If mailed AND waiting, return null. Empty massmailed parameter = non parameter filter.
@@ -239,13 +350,22 @@ export const homeController = ng.controller('HomeController', ['$scope', 'route'
 
             const reasons: Array<Number> = [];
             const types: Array<String> = [];
+
+            const punishmentTypes: Array<Number> = vm.punishmentsTypes
+                .filter((punishmentType: IPunishmentType) => punishmentType.isSelected && punishmentType.type === EVENT_TYPES.PUNISHMENT)
+                .map((punishmentType: IPunishmentType) => punishmentType.id);
+
+            const sanctionsTypes: Array<Number> = vm.punishmentsTypes
+                .filter((punishmentType: IPunishmentType) => punishmentType.isSelected && punishmentType.type === EVENT_TYPES.SANCTION)
+                .map((punishmentType: IPunishmentType) => punishmentType.id);
+
             for (let i = 0; i < vm.reasons.length; i++) if (vm.filter.reasons[vm.reasons[i].id]) reasons.push(vm.reasons[i].id);
             for (let status in vm.filter.status) if (vm.filter.status[status]) types.push(status);
             const students = [], groups = [];
             vm.filter.selected.students.forEach(({id}) => students.push(id));
             vm.filter.selected.groups.forEach(({id}) => groups.push(id));
-            const data = await MassmailingService[`get${type}`](window.structure.id, massmailedParameter(), reasons, vm.filter.start_at, vm.filter.start_date, vm.filter.end_date, groups, students, types, vm.filter.noReasons);
-            return data;
+            return await MassmailingService[`get${type}`](window.structure.id, massmailedParameter(), reasons, punishmentTypes,
+                sanctionsTypes, vm.filter.start_at, vm.filter.start_date, vm.filter.end_date, groups, students, types, vm.filter.noReasons);
         }
 
         function fetchMassmailingStatus() {
@@ -352,7 +472,7 @@ export const homeController = ng.controller('HomeController', ['$scope', 'route'
             vm.formFilter.noReasons = vm.formFilter.status.UNREGULARIZED;
         };
 
-        function checkFilter() {
+        function checkFilter(): boolean {
             function allIsFalse(map): boolean {
                 let bool = false;
                 const keys = Object.keys(map);
@@ -379,21 +499,30 @@ export const homeController = ng.controller('HomeController', ['$scope', 'route'
         const loadFormFilter = async (): Promise<void> => {
             let formFiltersPreferences = await Me.preference(PresencesPreferenceUtils.PREFERENCE_KEYS.MASSMAILING_FILTER);
             let formFilters = formFiltersPreferences ? formFiltersPreferences[window.structure.id] : null;
-            if (formFilters) {
+            if (formFilters && Object.keys(formFilters).length !== 0) {
                 let {...toMergeFilters} = formFilters;
                 vm.filter = {...vm.filter, ...toMergeFilters};
-                vm.filter.status = {REGULARIZED: formFilters.status.JUSTIFIED ? formFilters.status.JUSTIFIED : formFilters.status.REGULARIZED,
-                    UNREGULARIZED: formFilters.status.UNJUSTIFIED ? formFilters.status.UNJUSTIFIED : formFilters.status.UNREGULARIZED,
-                    LATENESS: formFilters.status.LATENESS, NO_REASON: formFilters.status.NO_REASON};
+                vm.filter.status = {
+                    REGULARIZED: formFilters.status["JUSTIFIED"] ? formFilters.status["JUSTIFIED"] : formFilters.status.REGULARIZED,
+                    UNREGULARIZED: formFilters.status["UNJUSTIFIED"] ? formFilters.status["UNJUSTIFIED"] : formFilters.status.UNREGULARIZED,
+                    LATENESS: formFilters.status.LATENESS,
+                    NO_REASON: formFilters.status.NO_REASON,
+                    PUNISHMENT: formFilters.status.PUNISHMENT,
+                    SANCTION: formFilters.status.SANCTION
+                };
             } else {
                 vm.filter = {
                     ...vm.filter, ...{
                         start_at: 1,
-                        status: {NO_REASON: true, REGULARIZED: false, UNREGULARIZED: false, LATENESS: false},
+                        status: {
+                            NO_REASON: true, REGULARIZED: false, UNREGULARIZED: false, LATENESS: false,
+                            PUNISHMENT: false, SANCTION: false
+                        },
                         massmailing_status: {mailed: false, waiting: true},
                         allReasons: true,
                         noReasons: true,
                         reasons: {},
+                        punishments: [],
                         anomalies: {MAIL: true, SMS: true}
                     }
                 };
@@ -433,6 +562,14 @@ export const homeController = ng.controller('HomeController', ['$scope', 'route'
                 }
 
                 const reasons: Array<Number> = [];
+
+                const punishmentTypes: Array<Number> = vm.punishmentsTypes
+                    .filter((punishmentType: IPunishmentType) => punishmentType.isSelected && punishmentType.type === EVENT_TYPES.PUNISHMENT)
+                    .map((punishmentType: IPunishmentType) => punishmentType.id);
+
+                const sanctionsTypes: Array<Number> = vm.punishmentsTypes
+                    .filter((punishmentType: IPunishmentType) => punishmentType.isSelected && punishmentType.type === EVENT_TYPES.SANCTION)
+                    .map((punishmentType: IPunishmentType) => punishmentType.id);
                 const types: Array<String> = [];
                 for (let i = 0; i < vm.reasons.length; i++) if (vm.filter.reasons[vm.reasons[i].id]) reasons.push(vm.reasons[i].id);
                 for (let status in vm.filter.status) if (vm.filter.status[status]) types.push(status);
@@ -441,8 +578,8 @@ export const homeController = ng.controller('HomeController', ['$scope', 'route'
                 vm.filter.selected.groups.forEach(({id}) => groups.push(id));
                 const settings: Promise<any> = SettingsService.get(type, window.structure.id);
                 const prefetch: Promise<Massmailing> = MassmailingService.prefetch(
-                    type, window.structure.id, massmailedParameter(), reasons, vm.filter.start_at,
-                    vm.filter.start_date, vm.filter.end_date, groups, students, types, vm.filter.noReasons
+                    type, window.structure.id, massmailedParameter(), reasons, punishmentTypes, sanctionsTypes,
+                    vm.filter.start_at, vm.filter.start_date, vm.filter.end_date, groups, students, types, vm.filter.noReasons
                 );
                 vm.lightbox.massmailing = true;
                 const data = await Promise.all([settings, prefetch]);

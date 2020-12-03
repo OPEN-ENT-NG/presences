@@ -10,7 +10,7 @@ import io.vertx.core.json.JsonObject;
 import java.util.List;
 
 public class Incidents {
-    private String address = "fr.openent.incidents";
+    private final String address = "fr.openent.incidents";
     private EventBus eb;
 
     private Incidents() {
@@ -88,6 +88,45 @@ public class Incidents {
                 .put("structure", structure);
 
         eb.send(address, action, MessageResponseHandler.messageJsonObjectHandler(handler));
+    }
+
+    /**
+     * Retrieve punishments data
+     */
+
+    public void getPunishmentType(String structure, Handler<Either<String, JsonArray>> handler) {
+        JsonObject action = new JsonObject()
+                .put("action", "get-punishment-type")
+                .put("structure", structure);
+        eb.send(address, action, MessageResponseHandler.messageJsonArrayHandler(handler));
+    }
+
+    public void getPunishmentsCountByStudent(String structure, String start_at, String end_at, List<String> students, List<Integer> type_id,
+                                             Boolean processed, Boolean massmailed, Handler<Either<String, JsonArray>> handler) {
+        JsonObject action = new JsonObject()
+                .put("structure", structure)
+                .put("start_at", start_at)
+                .put("end_at", end_at)
+                .put("studentIds", students)
+                .put("punishmentTypeIds", type_id)
+                .put("processed", processed)
+                .put("massmailed", massmailed)
+                .put("action", "get-count-punishment-by-student");
+        eb.send(address, action, MessageResponseHandler.messageJsonArrayHandler(handler));
+    }
+
+    public void getPunishmentsByStudent(String structure, String start_at, String end_at, List<String> students, List<Integer> type_id,
+                                        Boolean processed, Boolean massmailed, Handler<Either<String, JsonArray>> handler) {
+        JsonObject action = new JsonObject()
+                .put("structure", structure)
+                .put("start_at", start_at)
+                .put("end_at", end_at)
+                .put("studentIds", students)
+                .put("punishmentTypeIds", type_id)
+                .put("processed", processed)
+                .put("massmailed", massmailed)
+                .put("action", "get-punishment-by-student");
+        eb.send(address, action, MessageResponseHandler.messageJsonArrayHandler(handler));
     }
 
     private static class IncidentsHolder {

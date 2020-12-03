@@ -2,11 +2,16 @@ package fr.openent.incidents.controller;
 
 import fr.openent.incidents.service.IncidentsService;
 import fr.openent.incidents.service.InitService;
+import fr.openent.incidents.service.PunishmentService;
+import fr.openent.incidents.service.PunishmentTypeService;
 import fr.openent.incidents.service.impl.DefaultIncidentsService;
 import fr.openent.incidents.service.impl.DefaultInitService;
+import fr.openent.incidents.service.impl.DefaultPunishmentService;
+import fr.openent.incidents.service.impl.DefaultPunishmentTypeService;
 import fr.wseduc.bus.BusAddress;
 import io.vertx.core.eventbus.EventBus;
 import io.vertx.core.eventbus.Message;
+import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import org.entcore.common.bus.BusResponseHandler;
 import org.entcore.common.controller.ControllerHelper;
@@ -15,17 +20,27 @@ import org.entcore.common.http.request.JsonHttpServerRequest;
 import java.util.List;
 
 public class EventBusController extends ControllerHelper {
-    private IncidentsService incidentsService;
-    private InitService initService = new DefaultInitService();
+    private final IncidentsService incidentsService;
+    private final InitService initService = new DefaultInitService();
+    private final PunishmentTypeService punishmentTypeService = new DefaultPunishmentTypeService();
+    private final PunishmentService punishmentService;
 
     public EventBusController(EventBus eb) {
         incidentsService = new DefaultIncidentsService(eb);
+        punishmentService = new DefaultPunishmentService(eb);
     }
 
     @BusAddress("fr.openent.incidents")
     public void bus(final Message<JsonObject> message) {
         JsonObject body = message.body();
         String action = body.getString("action");
+        String startAt;
+        String endAt;
+        List<String> studentIds;
+        List<Integer> punishmentTypeIds;
+        Boolean processed;
+        Boolean massmailed;
+        String structure;
         switch (action) {
             case "get-incidents-users-range":
                 String startDate = body.getString("startDate");
@@ -50,6 +65,32 @@ public class EventBusController extends ControllerHelper {
                 break;
             case "init-get-incident-punishment-type":
                 initService.getInitIncidentPunishmentType(new JsonHttpServerRequest(body.getJsonObject("request", new JsonObject())), body.getString("structure"), BusResponseHandler.busResponseHandler(message));
+                break;
+            case "get-count-punishment-by-student":
+                structure = body.getString("structure");
+                startAt = body.getString("start_at");
+                endAt = body.getString("end_at");
+                studentIds = body.getJsonArray("students", new JsonArray()).getList();
+                punishmentTypeIds = body.getJsonArray("punishmentTypeIds", new JsonArray()).getList();
+                processed = body.getBoolean("processed");
+                massmailed = body.getBoolean("massmailed");
+                this.punishmentService.getPunishmentCountByStudent(structure, startAt, endAt, studentIds, punishmentTypeIds,
+                        processed, massmailed, BusResponseHandler.busArrayHandler(message));
+                break;
+            case "get-punishment-by-student":
+                structure = body.getString("structure");
+                startAt = body.getString("start_at");
+                endAt = body.getString("end_at");
+                studentIds = body.getJsonArray("students", new JsonArray()).getList();
+                punishmentTypeIds = body.getJsonArray("punishmentTypeIds", new JsonArray()).getList();
+                processed = body.getBoolean("processed");
+                massmailed = body.getBoolean("massmailed");
+                this.punishmentService.getPunishmentByStudents(structure, startAt, endAt, studentIds, punishmentTypeIds,
+                        processed, massmailed, BusResponseHandler.busArrayHandler(message));
+                break;
+            case "get-punishment-type":
+                structure = body.getString("structure");
+                this.punishmentTypeService.get(structure, BusResponseHandler.busArrayHandler(message));
                 break;
             default:
                 message.reply(new JsonObject()

@@ -68,6 +68,10 @@
       background-color: $presences-green;
     }
 
+    &.PUNISHMENT:after, &.SANCTION:after {
+      background-color: $presences-main;
+    }
+
     &.UNREGULARIZED:after {
       background-color: $presences-pink;
     }

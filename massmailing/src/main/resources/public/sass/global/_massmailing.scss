@@ -88,6 +88,10 @@ body.massmailing, .sniplet.presences {
           background: $presences-pink;
         }
 
+        &.PUNISHMENT, &.SANCTION {
+          background: $presences-main;
+        }
+
         &.NO_REASON {
           background: $presences-red;
         }

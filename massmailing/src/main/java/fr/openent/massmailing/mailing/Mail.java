@@ -19,9 +19,11 @@ public class Mail extends MassMailingProcessor {
     private EmailSender emailSender = Massmailing.emailSender;
 
     public Mail(String structure, Template template, Boolean massmailed,
-                List<MassmailingType> massmailingTypeList, List<Integer> reasons, String start, String end,
+                List<MassmailingType> massmailingTypeList, List<Integer> reasons, List<Integer> punishmentsTypes,
+                List<Integer> sanctionsTypes, String start, String end,
                 Boolean noReason, JsonObject students) {
-        super(MailingType.MAIL, structure, template, massmailed, massmailingTypeList, reasons, start, end, noReason, students);
+        super(MailingType.MAIL, structure, template, massmailed, massmailingTypeList, reasons, punishmentsTypes, sanctionsTypes,
+                start, end, noReason, students);
     }
 
     @Override

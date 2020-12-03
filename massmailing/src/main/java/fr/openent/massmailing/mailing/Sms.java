@@ -20,8 +20,11 @@ import static fr.wseduc.webutils.Utils.handlerToAsyncHandler;
 public class Sms extends MassMailingProcessor {
     private EventBus eventBus;
 
-    public Sms(EventBus eb, String structure, Template template, Boolean massmailed, List<MassmailingType> massmailingTypeList, List<Integer> reasons, String start, String end, Boolean noReason, JsonObject students) {
-        super(MailingType.SMS, structure, template, massmailed, massmailingTypeList, reasons, start, end, noReason, students);
+    public Sms(EventBus eb, String structure, Template template, Boolean massmailed, List<MassmailingType> massmailingTypeList,
+               List<Integer> reasons, List<Integer> punishmentsTypes, List<Integer> sanctionsTypes, String start, String end,
+               Boolean noReason, JsonObject students) {
+        super(MailingType.SMS, structure, template, massmailed, massmailingTypeList, reasons, punishmentsTypes, sanctionsTypes,
+                start, end, noReason, students);
         this.eventBus = eb;
     }
 

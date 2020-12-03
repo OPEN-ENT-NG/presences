@@ -153,6 +153,19 @@ public class MassmailingController extends ControllerHelper {
         return values;
     }
 
+    private List<Integer> parsePunishmentsTypes(List<String> punishmentsTypes) {
+        List<Integer> values = new ArrayList<>();
+        for (String punishmentType : punishmentsTypes) {
+            try {
+                values.add(Integer.parseInt(punishmentType));
+            } catch (NumberFormatException e) {
+                continue;
+            }
+        }
+
+        return values;
+    }
+
     /**
      * Process mailing status
      *
@@ -165,6 +178,8 @@ public class MassmailingController extends ControllerHelper {
         String structure = request.getParam("structure");
         Boolean massmailed = request.params().contains("massmailed") ? Boolean.parseBoolean(request.getParam("massmailed")) : null;
         List<Integer> reasons = parseReasons(request.params().getAll("reason"));
+        List<Integer> punishmentsTypes = parsePunishmentsTypes(request.params().getAll("punishmentType"));
+        List<Integer> sanctionsTypes = parsePunishmentsTypes(request.params().getAll("sanctionType"));
         boolean noReasons = !request.params().contains("no_reason") || Boolean.parseBoolean(request.getParam("no_reasons"));
         Integer startAt;
         try {
@@ -178,7 +193,8 @@ public class MassmailingController extends ControllerHelper {
         for (MassmailingType type : types) {
             Future<JsonObject> future = Future.future();
             futures.add(future);
-            massmailingService.getStatus(structure, type, massmailed, reasons, startAt, startDate, endDate, students, noReasons, FutureHelper.handlerJsonObject(future));
+            massmailingService.getStatus(structure, type, massmailed, reasons, punishmentsTypes, sanctionsTypes, startAt, startDate,
+                    endDate, students, noReasons, FutureHelper.handlerJsonObject(future));
         }
 
         CompositeFuture.all(futures).setHandler(event -> {
@@ -246,6 +262,8 @@ public class MassmailingController extends ControllerHelper {
             String structure = request.getParam("structure");
             Boolean massmailed = request.params().contains("massmailed") ? Boolean.parseBoolean(request.getParam("massmailed")) : null;
             List<Integer> reasons = parseReasons(request.params().getAll("reason"));
+            List<Integer> punishmentsTypes = parsePunishmentsTypes(request.params().getAll("punishmentType"));
+            List<Integer> sanctionsTypes = parsePunishmentsTypes(request.params().getAll("sanctionType"));
             boolean noReasons = !request.params().contains("no_reason") || Boolean.parseBoolean(request.getParam("no_reasons"));
             Integer startAt;
             try {
@@ -259,7 +277,8 @@ public class MassmailingController extends ControllerHelper {
             for (MassmailingType type : types) {
                 Future<JsonArray> future = Future.future();
                 futures.add(future);
-                massmailingService.getCountEventByStudent(structure, type, massmailed, reasons, startAt, startDate, endDate, students, noReasons, FutureHelper.handlerJsonArray(future));
+                massmailingService.getCountEventByStudent(structure, type, massmailed, reasons, punishmentsTypes, sanctionsTypes,
+                        startAt, startDate, endDate, students, noReasons, FutureHelper.handlerJsonArray(future));
             }
 
             CompositeFuture.all(futures).setHandler(compositeEvent -> {
@@ -385,6 +404,8 @@ public class MassmailingController extends ControllerHelper {
             String structure = request.getParam("structure");
             Boolean massmailed = request.params().contains("massmailed") ? Boolean.parseBoolean(request.getParam("massmailed")) : null;
             List<Integer> reasons = parseReasons(request.params().getAll("reason"));
+            List<Integer> punishmentsTypes = parsePunishmentsTypes(request.params().getAll("punishmentType"));
+            List<Integer> sanctionsTypes = parsePunishmentsTypes(request.params().getAll("sanctionType"));
             boolean noReasons = !request.params().contains("no_reason") || Boolean.parseBoolean(request.getParam("no_reasons"));
             Integer startAt;
             try {
@@ -398,7 +419,8 @@ public class MassmailingController extends ControllerHelper {
             for (MassmailingType type : types) {
                 Future<JsonArray> future = Future.future();
                 futures.add(future);
-                massmailingService.getCountEventByStudent(structure, type, massmailed, reasons, startAt, startDate, endDate, students, noReasons, FutureHelper.handlerJsonArray(future));
+                massmailingService.getCountEventByStudent(structure, type, massmailed, reasons, punishmentsTypes, sanctionsTypes,
+                        startAt, startDate, endDate, students, noReasons, FutureHelper.handlerJsonArray(future));
             }
 
             CompositeFuture.all(futures).setHandler(compositeEvent -> {
@@ -555,6 +577,8 @@ public class MassmailingController extends ControllerHelper {
             Boolean massmailed = body.containsKey("massmailed") ? body.getBoolean("massmailed") : null;
             List<MassmailingType> massmailingTypeList = getMassMailingTypes(body.getJsonArray("event_types").getList());
             List<Integer> reasons = body.getJsonArray("reasons").getList();
+            List<Integer> punishmentsTypes = body.getJsonArray("punishmentsTypes").getList();
+            List<Integer> sanctionsTypes = body.getJsonArray("sanctionsTypes").getList();
             String start = body.getString("start");
             String end = body.getString("end");
             Boolean noReason = body.getBoolean("no_reason", true);
@@ -565,14 +589,16 @@ public class MassmailingController extends ControllerHelper {
             MassMailingProcessor mailing;
             switch (mailingType) {
                 case MAIL:
-                    mailing = new Mail(structure, template, massmailed, massmailingTypeList, reasons, start, end, noReason, students);
+                    mailing = new Mail(structure, template, massmailed, massmailingTypeList, reasons, punishmentsTypes,
+                            sanctionsTypes, start, end, noReason, students);
                     break;
                 case SMS:
-                    mailing = new Sms(eb, structure, template, massmailed, massmailingTypeList, reasons, start, end, noReason, students);
+                    mailing = new Sms(eb, structure, template, massmailed, massmailingTypeList, reasons, punishmentsTypes,
+                            sanctionsTypes, start, end, noReason, students);
                     break;
                 case PDF:
                     mailing = new Pdf(eb, vertx, config, request, structure, template, massmailed, massmailingTypeList,
-                            reasons, start, end, noReason, students);
+                            reasons, punishmentsTypes, sanctionsTypes, start, end, noReason, students);
                     break;
                 default:
                     badRequest(request);

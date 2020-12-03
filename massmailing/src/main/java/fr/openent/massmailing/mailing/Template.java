@@ -6,6 +6,7 @@ import fr.openent.massmailing.enums.TemplateCode;
 import fr.openent.massmailing.service.SettingsService;
 import fr.openent.massmailing.service.impl.DefaultSettingsService;
 import fr.openent.presences.common.helper.DateHelper;
+import fr.openent.presences.enums.EventType;
 import fr.wseduc.webutils.Either;
 import fr.wseduc.webutils.I18n;
 import io.vertx.core.CompositeFuture;
@@ -129,32 +130,43 @@ public class Template extends BaseServer {
         String value = this.content;
         List<TemplateCode> codes = new ArrayList<>(codeValues.keySet());
         for (TemplateCode code : codes) {
-            if (TemplateCode.SUMMARY.equals(code) || TemplateCode.LAST_ABSENCE.equals(code) || TemplateCode.LAST_LATENESS.equals(code))
+            if (TemplateCode.SUMMARY.equals(code) || TemplateCode.PUNISHMENT_SUMMARY.equals(code) ||
+                    TemplateCode.LAST_ABSENCE.equals(code) || TemplateCode.LAST_LATENESS.equals(code))
                 continue;
             try {
-                value = value.replaceAll(Pattern.quote(systemCodes.get(code)), codeValues.get(code).toString());
+                if (systemCodes.containsKey(code)) {
+                    value = value.replaceAll(Pattern.quote(systemCodes.get(code)), codeValues.get(code).toString());
+                }
             } catch (Exception e) {
                 LOGGER.error("[Massmailing@Template] Failed to replace code for code : " + code);
             }
         }
 
         if (codes.contains(TemplateCode.SUMMARY)) {
-            value = value.replaceAll(Pattern.quote(systemCodes.get(TemplateCode.SUMMARY)), processSummary(codeValues));
+            value = value.replaceAll(Pattern.quote(systemCodes.get(TemplateCode.SUMMARY)),
+                    processSummary(codeValues, TemplateCode.SUMMARY));
+        }
+
+        if (codes.contains(TemplateCode.PUNISHMENT_SUMMARY)) {
+            value = value.replaceAll(Pattern.quote(systemCodes.get(TemplateCode.PUNISHMENT_SUMMARY)),
+                    processSummary(codeValues, TemplateCode.PUNISHMENT_SUMMARY));
         }
 
         if (codes.contains(TemplateCode.LAST_ABSENCE)) {
-            value = value.replaceAll(Pattern.quote(systemCodes.get(TemplateCode.LAST_ABSENCE)), processLastEvent(codeValues, TemplateCode.LAST_ABSENCE));
+            value = value.replaceAll(Pattern.quote(systemCodes.get(TemplateCode.LAST_ABSENCE)),
+                    processLastEvent(codeValues, TemplateCode.LAST_ABSENCE));
         }
 
         if (codes.contains(TemplateCode.LAST_LATENESS)) {
-            value = value.replaceAll(Pattern.quote(systemCodes.get(TemplateCode.LAST_LATENESS)), processLastEvent(codeValues, TemplateCode.LAST_LATENESS));
+            value = value.replaceAll(Pattern.quote(systemCodes.get(TemplateCode.LAST_LATENESS)),
+                    processLastEvent(codeValues, TemplateCode.LAST_LATENESS));
         }
 
         return value;
     }
 
-    public String processSummary(HashMap<TemplateCode, Object> codeValues) {
-        JsonObject events = (JsonObject) codeValues.get(TemplateCode.SUMMARY);
+    public String processSummary(HashMap<TemplateCode, Object> codeValues, TemplateCode summaryCode) {
+        JsonObject events = (JsonObject) codeValues.get(summaryCode);
         List<String> keys;
         String summary = "";
         switch (mailingType) {
@@ -164,7 +176,7 @@ public class Template extends BaseServer {
                 keys = new ArrayList<>(events.fieldNames());
                 for (String key : keys) {
                     JsonArray eventsKey = events.getJsonArray(key);
-                    if (eventsKey.isEmpty()) continue;
+                    if (eventsKey == null || eventsKey.isEmpty()) continue;
                     summary += getCSSStyle();
                     summary += "<div>" + I18n.getInstance().translate("massmailing.summary." + key, domain, locale) + ":</div>";
                     summary += "<table>";
@@ -173,24 +185,14 @@ public class Template extends BaseServer {
                     for (int i = 0; i < eventsKey.size(); i++) {
                         JsonObject event = eventsKey.getJsonObject(i);
                         try {
-                            String line = "<tr><td>" + DateHelper.getDateString(event.getString("display_start_date",
-                                    event.getString("start_date")), DateHelper.DAY_MONTH_YEAR) + "</td>";
-                            line += "<td>" + DateHelper.getTimeString(event.getString("display_start_date",
-                                    event.getString("start_date")), DateHelper.SQL_FORMAT) + " - " +
-                                    DateHelper.getTimeString(event.getString("display_end_date",
-                                            event.getString
-                                                    ("end_date")), DateHelper.SQL_FORMAT) + "</td>";
-                            if (!"LATENESS".equals(key) && eventContainsReason(event)) {
-                                line += "<td>" + getReasonLabel(event) + "</td>";
-                                line += "<td>" + getRegularisedLabel(event) + "</td></tr>";
-                            }
+                            String line = getHTMLBody(key, event);
                             summary += line;
                         } catch (ParseException | NullPointerException e) {
                             LOGGER.error("[Massmailing@Template] Failed to generate table line", e, event.toString());
                         }
                     }
-                    summary += "</tbody>";
-                    summary += "</table>";
+                    summary += "</tbody>" +
+                            "</table>";
                 }
                 summary += "</div>";
                 break;
@@ -253,6 +255,7 @@ public class Template extends BaseServer {
         JsonArray events = event.getJsonArray("events", new JsonArray());
         // Trick. In case of lateness event, event does not contains events array. In this case, we use event as an array of itself.
         if (events.isEmpty()) events = new JsonArray().add(event);
+        if (!eventContainsReason(event)) return noneValue;
         List<String> reasons = new ArrayList<>();
         for (int i = 0; i < events.size(); i++) {
             reasons.add(events.getJsonObject(i).getString("reason"));
@@ -267,11 +270,10 @@ public class Template extends BaseServer {
         String noLabel = I18n.getInstance().translate("massmailing.false", domain, locale);
         String unnecessaryLabel = I18n.getInstance().translate("massmailing.unnecessary", domain, locale);
         JsonArray events = event.getJsonArray("events", new JsonArray().add(event));
-        if (!allContainsReasons(events)) return noLabel;
+        if (!allContainsReasons(events) || !allRegularized(events)) return noLabel;
         if (allRegularized(events)) return yesLabel;
-        if (allProving(events)) return unnecessaryLabel;
-        if (allContainsReasons(events) && !allRegularized(events)) return noLabel;
-        return "";
+        if (eventContainsReason(event) && allProving(events)) return unnecessaryLabel;
+        return noLabel;
     }
 
     private boolean allRegularized(JsonArray events) {
@@ -310,18 +312,157 @@ public class Template extends BaseServer {
     }
 
     private String getCSSStyle() {
-        return "<style>table{border-collapse:collapse}table thead tr{background:#fff;box-shadow:0 4px 6px rgba(0,0,0,.12);border-bottom:none}td{padding:5px 15px}tr{border-bottom:1px solid #ccc;background:0 0}</style>";
+        return "<style>" +
+                    "table{border-collapse:collapse}" +
+                    "table thead " +
+                    "tr{background:#fff;box-shadow:0 4px 6px rgba(0,0,0,.12);border-bottom:none}" +
+                    "td{padding:5px 15px}" +
+                    "tr{border-bottom:1px solid #ccc;background:0 0}" +
+                "</style>";
     }
 
     private String getHTMLHeader(String type) {
         String dateLabel = I18n.getInstance().translate("massmailing.date", domain, locale);
         String hoursLabel = I18n.getInstance().translate("massmailing.hours", domain, locale);
         String reasonHeader = "";
-        if (!"LATENESS".equals(type)) {
-            String reasonLabel = I18n.getInstance().translate("massmailing.reason", domain, locale);
-            reasonHeader = "<td>" + reasonLabel + "</td>";
+        String regularizedHeader = "";
+        String hoursHeader = "";
+        switch (type) {
+            case "ABSENCE":
+                String reasonLabel = I18n.getInstance().translate("massmailing.reason", domain, locale);
+                String regularizedLabel = I18n.getInstance().translate("massmailing.regularized", domain, locale);
+                reasonHeader = "<td>" + reasonLabel + "</td>";
+                regularizedHeader = "<td>" + regularizedLabel + "</td>";
+            case "LATENESS":
+
+                return "<thead>" +
+                            "<tr>" +
+                                "<td>" + dateLabel + "</td>" +
+                                "<td>" + hoursLabel + "</td>" +
+                                reasonHeader +
+                                regularizedHeader +
+                            "</tr>" +
+                        "</thead>";
+            case "PUNISHMENT":
+                hoursHeader = "<td>" + hoursLabel + "</td>";
+            case "SANCTION":
+                String punishmentTypeLabel = I18n.getInstance().translate("massmailing.punishment.type", domain, locale);
+                String punishmentDescriptionLabel = I18n.getInstance().translate("massmailing.punishment.description", domain, locale);
+                String punishmentOwnerLabel = I18n.getInstance().translate("massmailing.punishment.owner", domain, locale);
+
+                return "<thead>" +
+                            "<tr>" +
+                                "<td>" + dateLabel + "</td>" +
+                                hoursHeader +
+                                "<td>" + punishmentTypeLabel + "</td>" +
+                                "<td>" + punishmentDescriptionLabel + "</td>" +
+                                "<td>" + punishmentOwnerLabel + "</td>" +
+                            "</tr>" +
+                        "</thead>";
+            default:
+                return "";
         }
-        String regularizedLabel = I18n.getInstance().translate("massmailing.regularized", domain, locale);
-        return "<thead><tr><td>" + dateLabel + "</td><td>" + hoursLabel + "</td>" + reasonHeader + "<td>" + regularizedLabel + "</td></tr></thead>";
+    }
+
+    private String getDateLabel(String type, JsonObject event) {
+        String dateLabel = "";
+
+        switch (type) {
+            case "ABSENCE":
+            case "LATENESS":
+                dateLabel = DateHelper.getDateString(event.getString("display_start_date",
+                        event.getString("start_date")), DateHelper.DAY_MONTH_YEAR);
+                break;
+            case "PUNISHMENT":
+                if (event.containsKey("fields") && !event.getJsonObject("fields").isEmpty()){
+                    if (event.getJsonObject("fields").getString("delay_at") != null) {
+                        dateLabel = DateHelper.getDateString(event.getJsonObject("fields")
+                                .getString("delay_at"), DateHelper.DAY_MONTH_YEAR);
+                    } else if (event.getJsonObject("fields").getString("start_at") != null) {
+                        dateLabel = DateHelper.getDateString(event.getJsonObject("fields")
+                                .getString("start_at"), DateHelper.DAY_MONTH_YEAR);
+                    }
+                } else {
+                    dateLabel = DateHelper.getDateString(event.getString("created_at"), DateHelper.DAY_MONTH_YEAR);
+                }
+                break;
+            case "SANCTION":
+                dateLabel = DateHelper.getDateString(event.getString("created_at"), DateHelper.DAY_MONTH_YEAR);
+                break;
+        }
+
+        return dateLabel;
+    }
+
+    private String getTimeLabel(String type, JsonObject event) throws ParseException {
+        String timeLabel = "";
+
+        switch (type) {
+            case "ABSENCE":
+            case "LATENESS":
+                timeLabel = DateHelper.getTimeString(event.getString("display_start_date",
+                        event.getString("start_date")), DateHelper.SQL_FORMAT) + " - " +
+                        DateHelper.getTimeString(event.getString("display_end_date",
+                                event.getString("end_date")), DateHelper.SQL_FORMAT);
+                break;
+            case "PUNISHMENT":
+                if (event.containsKey("fields")
+                        && event.getJsonObject("fields").getString("start_at") != null
+                        && event.getJsonObject("fields").getString("end_at") != null) {
+
+                    timeLabel = DateHelper.getTimeString(event.getJsonObject("fields")
+                            .getString("start_at"), DateHelper.MONGO_FORMAT) + " - " +
+                            DateHelper.getTimeString(event.getJsonObject("fields")
+                                    .getString("end_at"), DateHelper.MONGO_FORMAT);
+
+                }
+                break;
+        }
+
+        return timeLabel;
+    }
+
+    private String getHTMLBody(String type, JsonObject event) throws ParseException {
+        String line = "<tr>";
+        String reasonRow = "";
+        String regularisedRow = "";
+        String hoursRow = "";
+
+        switch (type) {
+            case "ABSENCE":
+                reasonRow = "<td>" + getReasonLabel(event) + "</td>";
+                regularisedRow = "<td>" + getRegularisedLabel(event) + "</td>";
+            case "LATENESS":
+                line += "<td>" + getDateLabel(type, event) + "</td>";
+                line += "<td>" + getTimeLabel(type, event) + "</td>";
+                line += reasonRow + regularisedRow;
+
+                break;
+            case "PUNISHMENT":
+                hoursRow = "<td>" + getTimeLabel(type, event) + "</td>";
+            case "SANCTION":
+                line += "<td>" + getDateLabel(type, event) +"</td>";
+                line += hoursRow;
+
+                if (event.containsKey("type") && event.getJsonObject("type").getString("label") != null) {
+                    line += "<td>"+ event.getJsonObject("type").getString("label","") +"</td>";
+                } else {
+                    line += "<td></td>";
+                }
+
+                line += "<td>" + ((event.getString("description") != null) ?
+                        event.getString("description","") : "") +"</td>";
+
+                if (event.containsKey("owner") && event.getJsonObject("owner").getString("displayName") != null) {
+                    line += "<td>" + event.getJsonObject("owner").getString("displayName","") + "</td>";
+                } else {
+                    line += "<td></td>";
+                }
+
+                break;
+        }
+
+        line += "</tr>";
+        return line;
     }
 }

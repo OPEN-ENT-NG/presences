@@ -6,6 +6,7 @@ import fr.openent.massmailing.enums.MassmailingType;
 import fr.openent.massmailing.enums.TemplateCode;
 import fr.openent.presences.common.helper.DateHelper;
 import fr.openent.presences.common.helper.FutureHelper;
+import fr.openent.presences.common.incidents.Incidents;
 import fr.openent.presences.common.presences.Presences;
 import fr.openent.presences.common.viescolaire.Viescolaire;
 import fr.openent.presences.enums.EventType;
@@ -27,8 +28,7 @@ import java.text.ParseException;
 import java.util.*;
 
 import static fr.openent.massmailing.enums.MailingType.PDF;
-import static fr.openent.massmailing.enums.MassmailingType.LATENESS;
-import static fr.openent.massmailing.enums.MassmailingType.NO_REASON;
+import static fr.openent.massmailing.enums.MassmailingType.*;
 
 public abstract class MassMailingProcessor implements Mailing {
     Logger LOGGER = LoggerFactory.getLogger(MassMailingProcessor.class);
@@ -38,19 +38,23 @@ public abstract class MassMailingProcessor implements Mailing {
     private final List<MassmailingType> massmailingTypeList;
     private final String structure;
     private final List<Integer> reasons;
+    private final List<Integer> punishmentsTypes;
+    private final List<Integer> sanctionsTypes;
     private final String start;
     private final String end;
     private final Boolean noReason;
     JsonObject students;
 
     public MassMailingProcessor(MailingType mailingType, String structure, Template template, Boolean massmailed,
-                                List<MassmailingType> massmailingTypeList, List<Integer> reasons, String start, String end,
-                                Boolean noReason, JsonObject students) {
+                                List<MassmailingType> massmailingTypeList, List<Integer> reasons, List<Integer> punishmentsTypes,
+                                List<Integer> sanctionsTypes, String start, String end, Boolean noReason, JsonObject students) {
         this.mailingType = mailingType;
         this.structure = structure;
         this.template = template;
         this.massmailingTypeList = massmailingTypeList;
         this.reasons = reasons;
+        this.punishmentsTypes = punishmentsTypes;
+        this.sanctionsTypes = sanctionsTypes;
         this.massmailed = massmailed;
         this.start = start;
         this.end = end;
@@ -75,7 +79,7 @@ public abstract class MassMailingProcessor implements Mailing {
         CompositeFuture.all(Arrays.asList(templateFuture, relativeFuture, eventsFuture, reasonsFuture, slotsFutures,
                 settingFutures, recoveryFuture, hourEventsFuture)).setHandler(asyncResult -> {
             if (asyncResult.failed()) {
-                LOGGER.error("[Massmailing@MassMailingProcessor] Failed to process", asyncResult.cause());
+                LOGGER.error("[Massmailing@MassMailingProcessor::process] Failed to process", asyncResult.cause());
                 handler.handle(new Either.Left<>(asyncResult.cause().toString()));
             }
 
@@ -112,6 +116,32 @@ public abstract class MassMailingProcessor implements Mailing {
                                String recoveryMethod, String key, JsonObject massmailing) {
         HashMap<TemplateCode, Object> codeValues = new HashMap<>();
 
+        /* --- Initialize massmailing event objects --- */
+        JsonObject massmailingEvents = massmailing.getJsonObject("events", new JsonObject());
+        JsonObject massmailingHour = formatMassmailingBasedOnRecoveryMethod(
+                massmailingsHour.get(key), slots, "hour", settings.getString("end_of_half_day"));
+        JsonObject massmailingHourEvents = massmailingHour.getJsonObject("events", new JsonObject());
+
+        JsonArray absences = massmailingEvents.getJsonArray(EventType.ABSENCE.name(), new JsonArray());
+        JsonArray punishments = massmailingEvents.getJsonArray(EventType.PUNISHMENT.name(), new JsonArray());
+        JsonArray sanctions = massmailingEvents.getJsonArray(EventType.SANCTION.name(), new JsonArray());
+        JsonArray absencesHour = massmailingHourEvents.getJsonArray(EventType.ABSENCE.name(), new JsonArray());
+        JsonArray latenessesHour = massmailingHourEvents.getJsonArray(EventType.LATENESS.name(), new JsonArray());
+
+        // First punishment
+        JsonObject punishment = new JsonObject();
+        if (punishments.size() > 0 && punishments.getJsonObject(0).getJsonArray("punishments").size() > 0) {
+            punishment = punishments.getJsonObject(0).getJsonArray("punishments").getJsonObject(0);
+        }
+
+        // First sanction
+        JsonObject sanction = new JsonObject();
+        if (sanctions.size() > 0 && sanctions.getJsonObject(0).getJsonArray("punishments").size() > 0) {
+            sanction = sanctions.getJsonObject(0).getJsonArray("punishments").getJsonObject(0);
+        }
+
+        /* --- Adding codes --- */
+
         // Child Name code implemented
         codeValues.put(TemplateCode.CHILD_NAME, massmailing.getString("studentDisplayName", ""));
         // Legal Name code implemented
@@ -121,30 +151,133 @@ public abstract class MassMailingProcessor implements Mailing {
         // Date code implemented
         codeValues.put(TemplateCode.DATE, DateHelper.getCurrentDate(DateHelper.DAY_MONTH_YEAR));
         // Zipcode code implemented
-        codeValues.put(TemplateCode.ZIPCODE_CITY, massmailingsHour.get(key).getString("zipcodeCity", ""));
+        codeValues.put(TemplateCode.ZIPCODE_CITY, (massmailingsHour.get(key).containsKey("zipcodeCity")) ?
+                massmailingsHour.get(key).getString("zipcodeCity", "") : "");
         // Address code implemented
-        codeValues.put(TemplateCode.ADDRESS, massmailingsHour.get(key).getString("address", ""));
-
-        JsonObject massmailingHour = formatMassmailingBasedOnRecoveryMethod(massmailingsHour.get(key), slots, "hour", settings.getString("end_of_half_day"));
-        JsonArray absencesHour = massmailingHour.getJsonObject("events", new JsonObject()).getJsonArray(EventType.ABSENCE.name(), new JsonArray());
-        JsonArray latenessesHour = massmailingHour.getJsonObject("events", new JsonObject()).getJsonArray(EventType.LATENESS.name(), new JsonArray());
-
-        JsonArray absences = massmailing.getJsonObject("events", new JsonObject()).getJsonArray(EventType.ABSENCE.name(), new JsonArray());
+        codeValues.put(TemplateCode.ADDRESS, (massmailingsHour.get(key).containsKey("address")) ?
+                massmailingsHour.get(key).getString("address", "") : "");
+        // Number of absences code implemented
         codeValues.put(TemplateCode.ABSENCE_NUMBER, absences.size() + " " + getTranslatedUnit(recoveryMethod));
+        // Number of lateness code implemented
         codeValues.put(TemplateCode.LATENESS_NUMBER, latenessesHour.size());
 
-        if (mailingType.equals(MailingType.SMS)) {
-            JsonObject absence = null;
-            JsonObject lateness = null;
-            if (absencesHour.size() > 0) absence = absencesHour.getJsonObject(absencesHour.size() - 1);
-            codeValues.put(TemplateCode.LAST_ABSENCE, absence);
-
-            if (latenessesHour.size() > 0) lateness = latenessesHour.getJsonObject(latenessesHour.size() - 1);
-            codeValues.put(TemplateCode.LAST_LATENESS, lateness);
-        } else {
-            codeValues.put(TemplateCode.SUMMARY, massmailingHour.getJsonObject("events", new JsonObject()));
+        // Punishment codes
+        if (!punishment.isEmpty()) {
+            // Punishment type code implemented
+            codeValues.put(TemplateCode.PUNISHMENT_TYPE, punishment.getJsonObject("type").getString("label",""));
+            // Responsible code implemented
+            codeValues.put(TemplateCode.RESPONSIBLE, punishment.getJsonObject("owner").getString("displayName",""));
+            // Punishment description code implemented
+            codeValues.put(TemplateCode.PUNISHMENT_DESCRIPTION, (punishment.getString("description") != null) ?
+                    punishment.getString("description","") : "");
+            // Punishment number of days code implemented
+            codeValues.put(TemplateCode.DAY_NUMBER, String.valueOf(getDayNumber(punishment)));
+            // Punishment date code implemented
+            codeValues.put(TemplateCode.PUNISHMENT_DATE, getPunishmentDate(punishment));
         }
+
+        // Sanction codes
+        if (!sanction.isEmpty()) {
+            // Sanction type code implemented
+            codeValues.put(TemplateCode.SANCTION_TYPE, sanction.getJsonObject("type").getString("label",""));
+            // Responsible code implemented
+            codeValues.put(TemplateCode.RESPONSIBLE, sanction.getJsonObject("owner").getString("displayName",""));
+            // Punishment description code implemented
+            codeValues.put(TemplateCode.PUNISHMENT_DESCRIPTION, (sanction.getString("description") != null) ?
+                    sanction.getString("description","") : "");
+            // Punishment number of days code implemented
+            codeValues.put(TemplateCode.DAY_NUMBER, String.valueOf(getDayNumber(sanction)));
+            // Punishment date code implemented
+            codeValues.put(TemplateCode.PUNISHMENT_DATE, getPunishmentDate(sanction));
+        }
+
+        // Codes depending on mailing type
+        switch(mailingType) {
+
+            case SMS:
+                // Last absence code implemented
+                codeValues.put(TemplateCode.LAST_ABSENCE, (absencesHour.size() > 0) ? absencesHour.getJsonObject(absencesHour.size() - 1) : null);
+                // Last lateness code implemented
+                codeValues.put(TemplateCode.LAST_LATENESS, (latenessesHour.size() > 0) ? latenessesHour.getJsonObject(latenessesHour.size() - 1) : null);
+                break;
+
+            case PDF:
+            case MAIL:
+                formatPunishmentEvents(massmailingHourEvents);
+
+                JsonObject absencesLatenessEvents =  new JsonObject()
+                        .put(EventType.ABSENCE.name(), massmailingHourEvents.getJsonArray(EventType.ABSENCE.name()))
+                        .put(EventType.LATENESS.name(), massmailingHourEvents.getJsonArray(EventType.LATENESS.name()));
+                JsonObject punishmentEvents =  new JsonObject()
+                        .put(EventType.PUNISHMENT.name(), massmailingHourEvents.getJsonArray(EventType.PUNISHMENT.name()))
+                        .put(EventType.SANCTION.name(), massmailingHourEvents.getJsonArray(EventType.SANCTION.name()));
+
+
+                // Absence and lateness summary code implemented
+                codeValues.put(TemplateCode.SUMMARY, absencesLatenessEvents);
+                // Punishment and sanction summary code implemented
+                codeValues.put(TemplateCode.PUNISHMENT_SUMMARY, punishmentEvents);
+                break;
+        }
+
         massmailing.put("message", template.process(codeValues));
+    }
+
+    private void formatPunishmentEvents(JsonObject massmailingHourEvents) {
+        if (massmailingHourEvents.containsKey(EventType.PUNISHMENT.name()) &&
+                massmailingHourEvents.getJsonArray(EventType.PUNISHMENT.name()).size() > 0) {
+            JsonArray punishmentArray = massmailingHourEvents.getJsonArray(EventType.PUNISHMENT.name())
+                    .getJsonObject(0).getJsonArray("punishments");
+
+            massmailingHourEvents.put(EventType.PUNISHMENT.name(), punishmentArray);
+        }
+        if (massmailingHourEvents.containsKey(EventType.SANCTION.name()) &&
+                massmailingHourEvents.getJsonArray(EventType.SANCTION.name()).size() > 0) {
+            JsonArray sanctionArray = massmailingHourEvents.getJsonArray(EventType.SANCTION.name())
+                    .getJsonObject(0).getJsonArray("punishments");
+
+            massmailingHourEvents.put(EventType.SANCTION.name(), sanctionArray);
+        }
+    }
+
+    /**
+     * Get the punishment/sanction date string
+     * @param punishment the punishment/sanction event
+     * @return
+     */
+    private String getPunishmentDate(JsonObject punishment) {
+        String punishmentDate = "";
+        if (punishment.getString("created_at") != null) {
+            punishmentDate = punishment.getString("created_at");
+        } else if (punishment.getJsonObject("fields").getString("start_at") != null) {
+            punishmentDate = punishment.getJsonObject("fields").getString("start_at");
+        } else if (punishment.getJsonObject("fields").getString("delay_at") != null) {
+            punishmentDate = punishment.getJsonObject("fields").getString("delay_at");
+        }
+        return DateHelper.getDateString(punishmentDate, DateHelper.DAY_MONTH_YEAR);
+    }
+
+    /**
+     * Get the number of days for the punishment event
+     * @param event the event
+     * @return the number of days
+     */
+    private long getDayNumber(JsonObject event) {
+        try {
+            if (event.containsKey("fields") && (event.getJsonObject("fields").getString("start_at") != null) &&
+                    (event.getJsonObject("fields").getString("end_at") != null)){
+
+                String startDate = DateHelper.getDateString(event.getJsonObject("fields").getString("start_at"), DateHelper.SQL_FORMAT);
+                String endDate = DateHelper.getDateString(event.getJsonObject("fields").getString("end_at"), DateHelper.SQL_FORMAT);
+
+                return DateHelper.getDayDiff(startDate, endDate);
+            }
+            return 1;
+        } catch (ParseException e) {
+            LOGGER.error("[Massmailing@MassMailingProcessor::getDayNumber] Failed to parse date", e);
+            return 0;
+        }
+
     }
 
     private String transformDate(String date, String slotHour) {
@@ -306,33 +439,49 @@ public abstract class MassMailingProcessor implements Mailing {
     private JsonObject groupEvents(JsonArray events, JsonObject reasons) {
         JsonObject res = new JsonObject();
         for (MassmailingType type : massmailingTypeList) {
-            if (type.equals(MassmailingType.REGULARIZED) || type.equals(MassmailingType.UNREGULARIZED)
-                    || type.equals(NO_REASON)
-                            ) {
+            if (type.equals(REGULARIZED) || type.equals(UNREGULARIZED) || type.equals(NO_REASON)) {
                 res.put(EventType.ABSENCE.name(), new JsonArray());
             } else {
                 res.put(type.name(), new JsonArray());
             }
         }
 
-        List<EventType> EventTypeDescriptor = Arrays.asList(EventType.ABSENCE, EventType.LATENESS);
+        List<EventType> EventTypeDescriptor = Arrays.asList(EventType.ABSENCE, EventType.LATENESS, EventType.PUNISHMENT, EventType.SANCTION);
         for (int i = 0; i < events.size(); i++) {
             JsonObject event = events.getJsonObject(i);
-            JsonArray eventEvts = event.getJsonArray("events");
-            for (int j = 0; j < eventEvts.size(); j++) {
-                JsonObject evt = eventEvts.getJsonObject(j);
-                Integer reasonId = evt.getInteger("reason_id");
-                if (reasonId != null) {
-                    evt.put("reason", reasons.getJsonObject(reasonId.toString()).getString("label"));
-                    evt.put("proving", reasons.getJsonObject(reasonId.toString()).getBoolean("proving"));
+
+            /* Case we find events for its treatment */
+            if (event.containsKey("events")) {
+                JsonArray eventEvts = event.getJsonArray("events");
+                for (int j = 0; j < eventEvts.size(); j++) {
+                    JsonObject evt = eventEvts.getJsonObject(j);
+                    Integer reasonId = evt.getInteger("reason_id");
+                    if (reasonId != null) {
+                        evt.put("reason", reasons.getJsonObject(reasonId.toString()).getString("label"));
+                        evt.put("proving", reasons.getJsonObject(reasonId.toString()).getBoolean("proving"));
+                    }
                 }
             }
 
-            EventType evtType = EventTypeDescriptor.get(event.getInteger("type_id") - 1);
+            EventType evtType = getEventType(EventTypeDescriptor, event);
             res.getJsonArray(evtType.name()).add(event);
         }
 
         return res;
+    }
+
+    /**
+     * Retrieve EventType reference on event fetched
+     *
+     * @return EventType number
+     */
+    private EventType getEventType(List<EventType> EventTypeDescriptor, JsonObject event) {
+        /* Case we find events for its treatment */
+        if (event.containsKey("events")) {
+            return EventTypeDescriptor.get(event.getInteger("type_id") - 1);
+        } else {
+            return event.getString("type").equals(EventType.PUNISHMENT.toString()) ? EventTypeDescriptor.get(2) : EventTypeDescriptor.get(3);
+        }
     }
 
     /**
@@ -466,10 +615,11 @@ public abstract class MassMailingProcessor implements Mailing {
         List<Future> futures = new ArrayList<>();
         for (MassmailingType type : massmailingTypeList) {
             Future<JsonArray> future = Future.future();
-            Presences.getInstance().getEventsByStudent(getEventTypeCode(type), getStudentsList(), structure, null,
-                    (type.equals(NO_REASON) || type.equals(LATENESS) ? new ArrayList<>() : reasons), massmailed, start, end,
-                    type.equals(NO_REASON) || type.equals(LATENESS), recoveryMethod, isJustified(type), FutureHelper.handlerJsonArray(future));
+//            Presences.getInstance().getEventsByStudent(getEventTypeCode(type), getStudentsList(), structure, null,
+//                    (type.equals(NO_REASON) || type.equals(LATENESS) ? new ArrayList<>() : reasons), massmailed, start, end,
+//                    type.equals(NO_REASON) || type.equals(LATENESS), recoveryMethod, isJustified(type), FutureHelper.handlerJsonArray(future));
             futures.add(future);
+            getEventsByStudent(type, recoveryMethod, FutureHelper.handlerJsonArray(future));
         }
 
         CompositeFuture.all(futures).setHandler(result -> {
@@ -492,6 +642,31 @@ public abstract class MassMailingProcessor implements Mailing {
 
             handler.handle(new Either.Right<>(res));
         });
+    }
+
+    private void getEventsByStudent(MassmailingType type, String recoveryMethod, Handler<Either<String, JsonArray>> handler) {
+        switch (type) {
+            case REGULARIZED:
+            case UNREGULARIZED:
+                Presences.getInstance().getEventsByStudent(getEventTypeCode(type), getStudentsList(), structure, null,
+                        reasons, massmailed, start, end, false, recoveryMethod, isJustified(type), handler);
+                break;
+            case NO_REASON:
+            case LATENESS:
+                Presences.getInstance().getEventsByStudent(getEventTypeCode(type), getStudentsList(), structure, null,
+                        new ArrayList<>(), massmailed, start, end, true, recoveryMethod, isJustified(type), handler);
+                break;
+            case PUNISHMENT:
+                Incidents.getInstance().getPunishmentsByStudent(structure, start + " 00:00:00", end + " 23:59:59",
+                        getStudentsList(), punishmentsTypes, null, massmailed, handler);
+                break;
+            case SANCTION:
+                Incidents.getInstance().getPunishmentsByStudent(structure, start + " 00:00:00", end + " 23:59:59",
+                        getStudentsList(), sanctionsTypes, null, massmailed, handler);
+                break;
+            default:
+                handler.handle(new Either.Left<>("[Massmailing@MassMailingProcessor::getEventsByStudent] Unknown Massmailing type"));
+        }
     }
 
     void saveMassmailing(JsonObject mailing, Handler<Either<String, JsonObject>> handler) {
