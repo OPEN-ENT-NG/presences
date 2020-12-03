@@ -1,0 +1,67 @@
+<!-- SMS -->
+<div class="massmailing-type-content">
+    <div class="sniplet-input">
+        <div class="sniplet-input-title-large margin-top-md margin-bottom-md">
+            <i18n>massmailing.template.form.sms.title</i18n>
+        </div>
+        <div class="margin-top-md margin-bottom-lg">
+            <i18n>massmailing.template.form.sms.description</i18n>
+        </div>
+        <div class="sniplet-input-form">
+            <div class="cell search-input">
+                <input type="text" data-ng-model="vm.sms.name" class="cell ng-pristine ng-touched ng-valid"
+                       i18n-placeholder="massmailing.template.form.sms.name.placeholder">
+            </div>
+        </div>
+        <div class="massmailing margin-top-lg">
+
+            <!-- editor form -->
+            <div class="massmailing-editor">
+                <div class="massmailing-editor-textarea">
+                    <textarea ng-model="vm.sms.content" cols="30" rows="10"></textarea>
+                    <span> [[vm.sms.content.length]] / [[ vm.smsMaxLength ]] </span>
+                </div>
+                <div class="right-magnet">
+                    <button data-ng-click="vm.create('SMS')"
+                            data-ng-disabled="vm.sms.name.trim() === '' && vm.sms.content.trim() === ''"
+                            data-ng-if="!vm.sms.id">
+                        <i18n>massmailing.add</i18n>
+                    </button>
+                    <button data-ng-click="vm.update(vm.sms, 'SMS')" data-ng-if="vm.sms.id">
+                        <i18n>massmailing.update</i18n>
+                    </button>
+                </div>
+            </div>
+
+            <!--  SMS codes -->
+            <div class="massmailing-codes" ng-include="'/massmailing/public/template/behaviours/sniplet-massmailing-manage' +
+            '/sniplet-massmailing-manage-sms/sniplet-template-form-sms-codes.html'"></div>
+
+        </div>
+    </div>
+
+    <!--  list of SMS templates -->
+    <div class="sniplet-input-form row vertical-spacing-twice">
+        <div class="sniplet-addList">
+            <div class="sniplet-addList-content" ng-if="vm.smss.length > 0">
+                <div class="sniplet-input-title">
+                    <i18n>massmailing.templates.created</i18n>&#58;
+                </div>
+                <ul class="sniplet-addList-content-list">
+                    <li class="sniplet-addList-content-list-item" ng-repeat="sms in vm.smss | orderBy:'name'">
+
+                        <div class="sniplet-addList-content-list-item-title">
+                            <label class="sniplet-addList-content-list-item-title-label"
+                                   data-ng-click="vm.openTemplate(sms)">[[sms.name]]</label>
+                        </div>
+
+                        <div class="sniplet-addList-content-list-item-icons">
+                            <i class="delete" ng-click="vm.deletion.template = sms; vm.deletion.show = true;"></i>
+                        </div>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+</div>

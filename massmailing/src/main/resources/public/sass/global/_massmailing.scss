@@ -4,7 +4,7 @@ $massmailing-main: #ffb600;
 $massmailing-bgcolor: rgba(255, 255, 255, 0.6);
 $massmailing-grey: #c0c0c0;
 
-body.massmailing {
+body.massmailing, .sniplet.presences {
   @import "components/index";
 
   .text-align-left {

@@ -20,7 +20,7 @@ interface ViewModel {
 
     safeApply(fn?: () => void): void;
 
-    scrollToElement($element): void;
+    scrollToElement($element, option?: string): void;
 
     sendEvent(event, data): void;
 
@@ -67,9 +67,16 @@ const vm: ViewModel = {
             throw err;
         }
     },
-    scrollToElement(target): void {
+
+    /**
+     * Scroll To Element
+     *
+     * @param target    $element html
+     * @param option    string optional parameter that will change block position
+     */
+    scrollToElement(target, option?: ScrollLogicalPosition): void {
         let element = document.getElementById(target);
-        element.scrollIntoView({behavior: "smooth", block: "center", inline: "nearest"});
+        element.scrollIntoView({behavior: "smooth", block: option ? option : "center", inline: "nearest"});
         vm.safeApply();
     },
 

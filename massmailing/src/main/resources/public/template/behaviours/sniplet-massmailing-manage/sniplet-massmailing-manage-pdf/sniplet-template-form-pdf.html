@@ -1,0 +1,61 @@
+<!-- PDF -->
+<div class="massmailing-type-content">
+    <div class="sniplet-input">
+        <div class="sniplet-input-title-large margin-top-lg margin-bottom-lg">
+            <i18n>massmailing.template.form.pdf.title</i18n>
+        </div>
+        <div class="margin-top-md margin-bottom-lg">
+            <i18n>massmailing.template.form.mail.description</i18n>
+        </div>
+        <div class="sniplet-input-form">
+            <div class="cell search-input">
+                <input type="text" data-ng-model="vm.pdf.name" class="cell ng-pristine ng-touched ng-valid"
+                       i18n-placeholder="massmailing.template.form.pdf.name.placeholder">
+            </div>
+        </div>
+        <div class="massmailing margin-top-lg">
+
+            <!-- editor form -->
+            <div class="massmailing-editor massmailing-editor">
+                <editor id="editor-pdf" ng-model="valuePDF"></editor>
+                <div class="right-magnet">
+                    <button data-ng-click="vm.create('PDF')"
+                            data-ng-disabled="vm.pdf.name.trim() === '' && vm.pdf.content.trim() === ''"
+                            data-ng-if="!vm.pdf.id">
+                        <i18n>massmailing.add</i18n>
+                    </button>
+                    <button data-ng-click="vm.update(vm.pdf, 'PDF')" data-ng-if="vm.pdf.id">
+                        <i18n>massmailing.update</i18n>
+                    </button>
+                </div>
+            </div>
+
+            <!--  PDF codes -->
+            <div class="massmailing-codes" ng-include="'/massmailing/public/template/behaviours/sniplet-massmailing-manage' +
+            '/sniplet-massmailing-manage-pdf/sniplet-template-form-pdf-codes.html'"></div>
+
+        </div>
+    </div>
+    <div class="sniplet-input-form row vertical-spacing-twice">
+        <div class="sniplet-addList">
+            <div class="sniplet-addList-content" ng-if="vm.pdfs.length > 0">
+                <div class="sniplet-input-title">
+                    <i18n>massmailing.templates.created</i18n>&#58;
+                </div>
+                <ul class="sniplet-addList-content-list">
+                    <li class="sniplet-addList-content-list-item" ng-repeat="pdf in vm.pdfs | orderBy:'name'">
+
+                        <div class="sniplet-addList-content-list-item-title">
+                            <label class="sniplet-addList-content-list-item-title-label"
+                                   data-ng-click="vm.openTemplate(pdf)">[[pdf.name]]</label>
+                        </div>
+
+                        <div class="sniplet-addList-content-list-item-icons">
+                            <i class="delete" ng-click="vm.deletion.template = pdf; vm.deletion.show = true;"></i>
+                        </div>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
