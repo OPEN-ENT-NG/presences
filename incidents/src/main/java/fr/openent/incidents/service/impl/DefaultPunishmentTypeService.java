@@ -72,7 +72,7 @@ public class DefaultPunishmentTypeService implements PunishmentTypeService {
 
     private void findPunishmentTypeIdIfExist(String structure_id, Integer punishmentId, Handler<Either<String, JsonObject>> handler) {
         JsonObject query = new JsonObject().put("type_id", punishmentId).put("structure_id", structure_id);
-        MongoDb.getInstance().findOne("punishment", query, message -> handler.handle(MongoDbResult.validResult(message)));
+        MongoDb.getInstance().findOne("presences.punishments", query, message -> handler.handle(MongoDbResult.validResult(message)));
     }
 
     private void fetchPunishmentsType(String structureId, Handler<Either<String, JsonArray>> handler) {
