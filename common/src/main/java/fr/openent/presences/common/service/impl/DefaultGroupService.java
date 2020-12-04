@@ -82,9 +82,12 @@ public class DefaultGroupService implements GroupService {
 
     @Override
     public void getUserGroups(List<String> users, String structureId, Handler<Either<String, JsonArray>> handler) {
-        String query = "MATCH (u:User)-[:IN]->(g:FunctionalGroup)-[:DEPENDS]->(s:Structure {id:{structureId}}) WHERE u.id IN {users} return g.id as id, g.name as name" +
-                " UNION " +
-                "MATCH (u:User)-[:IN]->(g:Group)-[:DEPENDS]->(c:Class)-[:BELONGS]->(s:Structure {id:{structureId}}) WHERE u.id IN {users} return c.id as id, c.name as name";
+        String query = "MATCH (u:User)-[:IN]->(g:FunctionalGroup)-[:DEPENDS]->(s:Structure {id:{structureId}}) " +
+                "WHERE u.id IN {users} return g.id as id, g.name as name " +
+                "UNION MATCH (u:User)-[:IN]->(g:Group)-[:DEPENDS]->(c:Class)-[:BELONGS]->(s:Structure {id:{structureId}}) " +
+                "WHERE u.id IN {users} RETURN c.id as id, c.name as name " +
+                "UNION MATCH (u:User)-[:IN]->(g:ManualGroup)-[:DEPENDS]->(s:Structure {id:{structureId}}) " +
+                "WHERE u.id IN {users} RETURN g.id as id, g.name as name";
         JsonObject params = new JsonObject()
                 .put("users", users)
                 .put("structureId", structureId);
