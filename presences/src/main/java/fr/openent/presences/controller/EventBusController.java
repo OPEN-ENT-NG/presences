@@ -37,6 +37,7 @@ public class EventBusController extends ControllerHelper {
         Integer startAt;
         List<Integer> reasonsId;
         Boolean massmailed;
+        Boolean compliance;
         String startDate;
         String endDate;
         boolean noReasons;
@@ -66,12 +67,13 @@ public class EventBusController extends ControllerHelper {
                 structure = body.getString("structure");
                 reasonsId = body.getJsonArray("reasonsId", new JsonArray()).getList();
                 massmailed = body.getBoolean("massmailed");
+                compliance = body.getBoolean("compliance");
                 startDate = body.getString("startDate");
                 endDate = body.getString("endDate");
                 noReasons = body.getBoolean("noReasons");
                 recoveryMethod = body.getString("recoveryMethod");
                 regularized = body.getBoolean("regularized");
-                this.eventService.getEventsByStudent(eventType, students, structure, justified, reasonsId, massmailed, startDate, endDate, noReasons, recoveryMethod, regularized, BusResponseHandler.busArrayHandler(message));
+                this.eventService.getEventsByStudent(eventType, students, structure, justified, reasonsId, massmailed, compliance, startDate, endDate, noReasons, recoveryMethod, regularized, BusResponseHandler.busArrayHandler(message));
                 break;
             case "get-reasons":
                 structure = body.getString("structure");
