@@ -119,17 +119,27 @@ export const historyController = ng.controller('HistoryController',
 
             /* init event type lightbox to interact */
             const initEventTypes = (): Array<{ label: string, value: string, isSelected: boolean }> => {
-                let eventTypes = [];
+                let eventTypes: Array<{ label: string, value: string, isSelected: boolean }> = [];
                 // looping only key string (in our case REGULARIZED, UNREGULARIZED, LATENESS...)
-                Object.keys(MassmailingStatus).filter(type => !parseInt(type) && type !== '0').forEach(mailingType => {
+                Object.keys(MassmailingStatus).filter((type: string) => !parseInt(type) && type !== '0').forEach(mailingType => {
                     switch (mailingType) {
                         case MassmailingStatus[MassmailingStatus.NO_REASON]: {
-                            let i18n = 'massmailing.summary.ABSENCE';
+                            let i18n: string = 'massmailing.summary.ABSENCE';
                             eventTypes.push({label: i18n, value: EventType[EventType.ABSENCE], isSelected: true});
                             break;
                         }
                         case MassmailingStatus[MassmailingStatus.LATENESS]: {
-                            let i18n = 'massmailing.types.LATENESS';
+                            let i18n: string = 'massmailing.types.LATENESS';
+                            eventTypes.push({label: i18n, value: mailingType, isSelected: true});
+                            break;
+                        }
+                        case MassmailingStatus[MassmailingStatus.PUNISHMENT]: {
+                            let i18n: string = 'massmailing.types.PUNISHMENT';
+                            eventTypes.push({label: i18n, value: mailingType, isSelected: true});
+                            break;
+                        }
+                        case MassmailingStatus[MassmailingStatus.SANCTION]: {
+                            let i18n: string = 'massmailing.types.SANCTION';
                             eventTypes.push({label: i18n, value: mailingType, isSelected: true});
                             break;
                         }
