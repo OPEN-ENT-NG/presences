@@ -22,6 +22,10 @@
 
     &-form {
       padding: $spacing-M 0;
+      &-custom-fields {
+        display: flex;
+        flex-direction: column;
+      }
     }
   }
 

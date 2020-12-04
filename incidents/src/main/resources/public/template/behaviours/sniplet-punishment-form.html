@@ -61,12 +61,14 @@
         <div class="punishment-form-lightbox-body-form">
             <!-- devoir supplémentaire // EXTRA_DUTY form -->
             <punishment-duty-form ng-if="vm.form.category_id === vm.punishmentCategoriesType.EXTRA_DUTY"
+                                  class="punishment-form-lightbox-body-form-custom-fields"
                                   form="vm.form"
                                   punishment="vm.punishment">
             </punishment-duty-form>
 
             <!-- Retenue // DETENTION form -->
             <punishment-detention-form ng-if="vm.form.category_id === vm.punishmentCategoriesType.DETENTION"
+                                       class="punishment-form-lightbox-body-form-custom-fields"
                                        form="vm.form"
                                        punishment="vm.punishment"
                                        time-slots="vm.structureTimeSlot.slots">
@@ -74,12 +76,14 @@
 
             <!-- Blame // BLAME form -->
             <punishment-blame-form ng-if="vm.form.category_id === vm.punishmentCategoriesType.BLAME"
+                                   class="punishment-form-lightbox-body-form-custom-fields"
                                    form="vm.form"
                                    punishment="vm.punishment">
             </punishment-blame-form>
 
             <!-- Exclusion // EXCLUSION form -->
             <punishment-exclude-form ng-if="vm.form.category_id === vm.punishmentCategoriesType.EXCLUSION"
+                                     class="punishment-form-lightbox-body-form-custom-fields"
                                      punishment="vm.punishment"
                                      form="vm.form">
             </punishment-exclude-form>

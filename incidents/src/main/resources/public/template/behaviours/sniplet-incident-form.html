@@ -55,7 +55,7 @@
         <!-- Incident parameter type -->
         <div class="incident-lightbox-body-parameter row spacing">
             <label class="twelve cell twelve-mobile">
-                <div class="twelve margin-bottom-md">
+                <div class="twelve">
                     <i18n>incidents.type</i18n>
                 </div>
                 <select class="card" required
@@ -69,7 +69,7 @@
             </label>
 
             <label class="twelve cell twelve-mobile">
-                <div class="twelve margin-bottom-md">
+                <div class="twelve">
                     <i18n>incidents.seriousness</i18n>
                 </div>
                 <select class="card" required
@@ -83,7 +83,7 @@
             </label>
 
             <label class="twelve cell twelve-mobile">
-                <div class="twelve margin-bottom-md">
+                <div class="twelve">
                     <i18n>incidents.partner</i18n>
                 </div>
                 <select class="card" required
@@ -98,22 +98,28 @@
         </div>
 
         <!-- owner -->
-        <label>
-            <i18n>presences.responsible</i18n>
-            <div class="search-input">
-                <async-autocomplete data-ng-disabled="false"
-                                    data-ng-model="vm.ownerSearch"
-                                    data-ng-change="vm.selectOwner"
-                                    data-on-search="vm.searchOwner"
-                                    data-options="vm.usersSearch.users"
-                                    data-placeholder="incidents.search.personal"
-                                    data-search="vm.ownerSearch">
-                </async-autocomplete>
-            </div>
-            <div ng-show="vm.incidentForm.owner" class="margin-top-sm">
-                <span class="font-bold">[[vm.getDisplayOwnerName()]]</span>
-            </div>
-        </label>
+        <div class="incident-lightbox-body-responsible row spacing">
+            <label class="twelve cell twelve-mobile">
+                <div class="two cell twelve-mobile">
+                    <i18n>presences.responsible</i18n>:
+                </div>
+                <div class="seven cell twelve-mobile">
+                    <div class="incident-lightbox-body-responsible-autocomplete search-input">
+                        <async-autocomplete data-ng-disabled="false"
+                                            data-ng-model="vm.ownerSearch"
+                                            data-ng-change="vm.selectOwner"
+                                            data-on-search="vm.searchOwner"
+                                            data-options="vm.usersSearch.users"
+                                            data-placeholder="incidents.search.personal"
+                                            data-search="vm.ownerSearch">
+                        </async-autocomplete>
+                    </div>
+                    <div ng-show="vm.incidentForm.owner" class="margin-top-sm">
+                        <span class="font-bold">[[vm.getDisplayOwnerName()]]</span>
+                    </div>
+                </div>
+            </label>
+        </div>
 
         <!-- description & treated -->
         <div class="incident-lightbox-body-descriptionTreated row spacing">
@@ -207,13 +213,13 @@
                     <i18n>incidents.form.delete</i18n>
                 </button>
 
-<!--                <button class="right-magnet forbidden" disabled>-->
-<!--                    <i18n>incidents.create.sanction</i18n>-->
-<!--                </button>-->
+                <!--                <button class="right-magnet forbidden" disabled>-->
+                <!--                    <i18n>incidents.create.sanction</i18n>-->
+                <!--                </button>-->
 
-<!--                <button class="right-magnet forbidden" disabled>-->
-<!--                    <i18n>incidents.create.punishment</i18n>-->
-<!--                </button>-->
+                <!--                <button class="right-magnet forbidden" disabled>-->
+                <!--                    <i18n>incidents.create.punishment</i18n>-->
+                <!--                </button>-->
 
                 <button class="right-magnet cancel" data-ng-click="vm.closeIncidentLightbox()">
                     <i18n>incidents.form.cancel</i18n>

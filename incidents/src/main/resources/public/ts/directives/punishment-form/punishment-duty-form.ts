@@ -50,20 +50,24 @@ export const PunishmentDutyForm = ng.directive('punishmentDutyForm', ['SearchSer
             </div>
                 
             <!-- responsible -->
-            <label>
-                <i18n>presences.responsible</i18n>
-                <div class="search-input">
-                    <async-autocomplete data-ng-disabled="false"
+            <label class="twelve cell twelve-mobile">
+                <div class="two cell twelve-mobile">
+                    <i18n>presences.responsible</i18n>:
+                </div>
+                <div class="seven cell twelve-mobile">
+                    <div class="incident-lightbox-body-responsible-autocomplete search-input">
+                        <async-autocomplete data-ng-disabled="false"
                                         data-ng-model="vm.ownerSearch"
                                         data-ng-change="vm.selectOwner"
                                         data-on-search="vm.searchOwner"
                                         data-options="vm.usersSearch.users"
                                         data-placeholder="incidents.search.personal"
                                         data-search="vm.ownerSearch">
-                    </async-autocomplete>
-                </div>
-                <div ng-show="vm.owner" class="margin-top-sm">
-                    <span class="font-bold">[[vm.getDisplayOwnerName()]]</span>
+                        </async-autocomplete>
+                    </div>
+                    <div ng-show="vm.owner" class="margin-top-sm">
+                        <span class="font-bold">[[vm.getDisplayOwnerName()]]</span>
+                    </div>
                 </div>
             </label>
         </div>
