@@ -311,18 +311,21 @@ export const calendarController = ng.controller('CalendarController',
             vm.getEventType = (event: CourseEvent): string => {
                 switch (event.type_id) {
                     case EventType.LATENESS:
-                        return lang.translate("presences.register.event_type.lateness");
+                        return lang.translate('presences.register.event_type.lateness');
                     case EventType.DEPARTURE:
-                        return lang.translate("presences.register.event_type.departure");
+                        return lang.translate('presences.register.event_type.departure');
+                    case EventType.REMARK:
+                        return lang.translate('presences.register.event_type.remark');
                 }
             };
 
             vm.getEventTypeDate = (event: CourseEvent): string => {
                 switch (event.type_id) {
                     case EventType.LATENESS:
-                        return DateUtils.format(event.end_date, DateUtils.FORMAT["HOUR-MINUTES"]);
+                        return DateUtils.format(event.end_date, DateUtils.FORMAT['HOUR-MINUTES']);
                     case EventType.DEPARTURE:
-                        return DateUtils.format(event.start_date, DateUtils.FORMAT["HOUR-MINUTES"]);
+                    case EventType.REMARK:
+                        return DateUtils.format(event.start_date, DateUtils.FORMAT['HOUR-MINUTES']);
                 }
             };
 
