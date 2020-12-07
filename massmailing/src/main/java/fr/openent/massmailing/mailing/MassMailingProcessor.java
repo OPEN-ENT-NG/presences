@@ -695,7 +695,7 @@ public abstract class MassMailingProcessor implements Mailing {
             JsonArray list = events.getJsonArray(key);
             for (int i = 0; i < list.size(); i++) {
                 JsonObject item = list.getJsonObject(i);
-                JsonArray embedEvts = item.getJsonArray("events", new JsonArray().add(item));
+                JsonArray embedEvts = getEmbedEventType(item);
                 for (int j = 0; j < embedEvts.size(); j++) {
                     JsonObject evt = embedEvts.getJsonObject(j);
                     evts.add(new JsonObject().put("id", evt.getInteger("id")).put("type", key));
@@ -704,6 +704,15 @@ public abstract class MassMailingProcessor implements Mailing {
         }
 
         return evts;
+    }
+
+    private JsonArray getEmbedEventType(JsonObject item) {
+        // for punishments events, events are recovered from "punishments" field.
+        if (item.containsKey("punishments") && !item.getJsonArray("punishments").isEmpty()) {
+            return item.getJsonArray("punishments");
+        }
+
+        return item.getJsonArray("events", new JsonArray().add(item));
     }
 
     private JsonObject getMailingSavingStatement(Integer id, JsonObject mailing) {

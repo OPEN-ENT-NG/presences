@@ -149,7 +149,6 @@ public class DefaultPunishmentService implements PunishmentService {
     }
 
     @Override
-    @SuppressWarnings("unchecked")
     public void getPunishmentByStudents(String structure, String start_at, String end_at, List<String> students,
                                         List<Integer> type_id, Boolean processed, Boolean massmailed,
                                         Handler<Either<String, JsonArray>> handler) {
@@ -269,6 +268,7 @@ public class DefaultPunishmentService implements PunishmentService {
                                 .put("_id", "$student_id")
                                 .put("punishments", new JsonObject()
                                         .put("$push", new JsonObject()
+                                                .put("id", "$_id")
                                                 .put("created_at", "$created_at")
                                                 .put("type_id", "$type_id")
                                                 .put("owner_id", "$owner_id")

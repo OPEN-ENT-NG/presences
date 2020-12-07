@@ -24,7 +24,7 @@ import java.util.UUID;
 public class Pdf extends MassMailingProcessor {
     private final ExportPDFService exportPDFService;
     private final HttpServerRequest request;
-    private Storage storage;
+    private final Storage storage;
     private final EventBus eb;
 
     public Pdf(EventBus eb, Vertx vertx, Storage storage, JsonObject config, HttpServerRequest request, String structure, Template template,
