@@ -708,9 +708,9 @@ public abstract class MassMailingProcessor implements Mailing {
 
     private JsonArray getEmbedEventType(JsonObject item) {
         // for punishments events, events are recovered from "punishments" field.
-        if (item.containsKey("punishments") && !item.getJsonArray("punishments").isEmpty()) {
-            return item.getJsonArray("punishments");
-        }
+//        if (item.containsKey("punishments") && !item.getJsonArray("punishments").isEmpty()) {
+//            return item.getJsonArray("punishments");
+//        }
 
         return item.getJsonArray("events", new JsonArray().add(item));
     }
