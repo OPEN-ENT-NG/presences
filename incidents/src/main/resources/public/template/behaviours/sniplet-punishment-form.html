@@ -50,8 +50,7 @@
                         data-ng-model="vm.form.type"
                         data-ng-change="vm.setCategory()"
                         ng-options="punishmentType.label group by vm.selectPunishmentGroupBy(punishmentType)
-                        for punishmentType in vm.punishmentTypes track by punishmentType.id"
-                        options-disabled="punishmentType.hidden for punishmentType in vm.punishmentTypes">
+                        for punishmentType in vm.punishmentTypes track by punishmentType.id">
                     <option value=""></option>
                 </select>
             </label>

@@ -288,6 +288,7 @@ export const punishmentForm = {
                 vm.punishmentTypes = vm.punishmentTypes.filter((punishmentType: IPunishmentType) =>
                     punishmentType.type === PunishmentsUtils.RULES.punishment);
             }
+            vm.punishmentTypes = vm.punishmentTypes.filter(punishmentType => !punishmentType.hidden);
         },
         async getTimeSlots(structure_id: string): Promise<void> {
             if (!vm.structureTimeSlot || !('slots' in vm.structureTimeSlot)) {
