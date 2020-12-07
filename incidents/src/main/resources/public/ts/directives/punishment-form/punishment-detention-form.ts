@@ -109,8 +109,8 @@ export const PunishmentDetentionForm = ng.directive('punishmentDetentionForm', [
            <label class="checkbox">
                 <input type="checkbox" data-ng-model="vm.date.isFree"/>
                 <span></span>
+                <i18n>incidents.choice.time.slot</i18n>
             </label>&nbsp;
-            <i18n>incidents.choice.time.slot</i18n>
            
             <!-- place -->
             <div class="punishment-detention-form-place">
