@@ -108,6 +108,7 @@ $calendar-user-card-height: 56px;
 
       .next-timeslots, .previous-timeslots {
         margin-bottom: 0;
+        z-index: 500 !important;
 
         &::before {
           @include fonticon();
