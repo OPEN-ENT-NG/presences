@@ -472,17 +472,19 @@ export const homeController = ng.controller('HomeController', ['$scope', 'route'
             vm.formFilter.noReasons = vm.formFilter.status.UNREGULARIZED;
         };
 
-        function checkFilter(): boolean {
+        const checkFilter = (): boolean => {
             function allIsFalse(map): boolean {
                 let bool = false;
                 const keys = Object.keys(map);
-                keys.forEach((key) => bool = bool || map[key]);
+                keys.forEach((key: string) => bool = bool || map[key]);
 
                 return !bool;
             }
 
             const {noReasons, massmailing_status, status, reasons} = vm.filter;
-            const reasonCheck: boolean = (!status.UNREGULARIZED && !status.REGULARIZED && (status.LATENESS || status.NO_REASON)) ? false : (allIsFalse(reasons) && !noReasons);
+            const reasonCheck: boolean = (!status.UNREGULARIZED && !status.REGULARIZED &&
+                (status.LATENESS || status.NO_REASON || status.PUNISHMENT || status.SANCTION))
+                ? false : (allIsFalse(reasons) && !noReasons);
             const massmailingStatusCheck: boolean = allIsFalse(massmailing_status);
             const statusCheck: boolean = allIsFalse(status);
 
@@ -492,9 +494,8 @@ export const homeController = ng.controller('HomeController', ['$scope', 'route'
                 TYPE: statusCheck
             };
 
-
             return !(reasonCheck || massmailingStatusCheck || statusCheck);
-        }
+        };
 
         const loadFormFilter = async (): Promise<void> => {
             let formFiltersPreferences = await Me.preference(PresencesPreferenceUtils.PREFERENCE_KEYS.MASSMAILING_FILTER);
