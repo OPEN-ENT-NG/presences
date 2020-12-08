@@ -66,6 +66,13 @@
         width: $select-size;
       }
     }
+
+    &-responsible-autocomplete {
+      label {
+        overflow: inherit;
+      }
+    }
+
     &-descriptionTreated {
       &-content {
         margin-top: $spacing-XLXS;

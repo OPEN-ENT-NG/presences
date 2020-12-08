@@ -1,5 +1,4 @@
 .punishment-form-lightbox {
-
   /* Body part */
   &-body {
     padding: $spacing-M;
@@ -22,9 +21,14 @@
 
     &-form {
       padding: $spacing-M 0;
+
       &-custom-fields {
         display: flex;
         flex-direction: column;
+
+        label {
+          overflow: inherit;
+        }
       }
     }
   }
