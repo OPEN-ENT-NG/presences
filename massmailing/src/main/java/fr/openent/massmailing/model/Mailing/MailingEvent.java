@@ -6,13 +6,13 @@ public class MailingEvent implements Cloneable {
 
     private Integer id;
     private Integer mailingId;
-    private Integer eventId;
+    private String eventId;
     private String eventType;
 
     public MailingEvent(JsonObject mailingEvent) {
         this.id = mailingEvent.getInteger("id", null);
         this.mailingId = mailingEvent.getInteger("mailing_id", null);
-        this.eventId = mailingEvent.getInteger("event_id", null);
+        this.eventId = mailingEvent.getString("event_id", null);
         this.eventType = mailingEvent.getString("event_type", null);
     }
 
@@ -49,11 +49,11 @@ public class MailingEvent implements Cloneable {
         this.mailingId = mailingId;
     }
 
-    public Integer getEventId() {
+    public String getEventId() {
         return eventId;
     }
 
-    public void setEventId(Integer eventId) {
+    public void setEventId(String eventId) {
         this.eventId = eventId;
     }
 

@@ -129,6 +129,15 @@ public class Incidents {
         eb.send(address, action, MessageResponseHandler.messageJsonArrayHandler(handler));
     }
 
+    public void updatePunishmentMassmailing(List<String> punishmentsIds, Boolean isMassmailed, Handler<Either<String, JsonObject>> handler) {
+        JsonObject action = new JsonObject()
+                .put("punishmentsIds", punishmentsIds)
+                .put("massmailed", isMassmailed)
+                .put("action", "update-punishments-massmailing");
+        eb.send(address, action, MessageResponseHandler.messageJsonObjectHandler(handler));
+    }
+
+
     private static class IncidentsHolder {
         private static final Incidents instance = new Incidents();
 

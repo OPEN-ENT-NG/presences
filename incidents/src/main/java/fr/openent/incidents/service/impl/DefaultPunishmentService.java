@@ -350,9 +350,20 @@ public class DefaultPunishmentService implements PunishmentService {
     }
 
     @Override
+    public void updatePunishmentMassmailing(List<String> punishmentsIds, Boolean isMassmailed, Handler<Either<String, JsonObject>> handler) {
+
+        JsonObject selectIds = new JsonObject()
+                .put("_id", new JsonObject().put("$in", new JsonArray(punishmentsIds)));
+
+        JsonObject updatedPunishment = new JsonObject().put("$set", new JsonObject().put("massmailed", true));
+
+        MongoDb.getInstance().update(punishment.getTable(), selectIds, updatedPunishment, MongoDbResult.validResultHandler(handler));
+    }
+
+    @Override
     public void count(UserInfos user, MultiMap body, boolean isStudent, Handler<AsyncResult<Long>> handler) {
         punishmentHelper.getQuery(user, body, isStudent, result -> {
-            if(result.failed()) {
+            if (result.failed()) {
                 handler.handle(Future.failedFuture(result.cause().getMessage()));
                 return;
             }

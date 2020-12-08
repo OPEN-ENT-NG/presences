@@ -684,8 +684,32 @@ public abstract class MassMailingProcessor implements Mailing {
                     .add(getMailingSavingStatement(id, mailing))
                     .add(getMailingEventSavingStatement(id, eventsToSave));
 
-            Sql.getInstance().transaction(statements, SqlResult.validUniqueResultHandler(handler));
+            Sql.getInstance().transaction(statements, SqlResult.validUniqueResultHandler(event -> {
+                if (event.isLeft()) {
+                    LOGGER.error("[Massmailing@MassMailingProcessor::saveMassmailing] Failed to save massmailing");
+                    handler.handle(new Either.Left<>(event.left().getValue()));
+                } else {
+                    savePunishmentsMassmailing(eventsToSave, event.right().getValue(), handler);
+                }
+            }));
         }));
+    }
+
+    void savePunishmentsMassmailing(List<JsonObject> savedEvents, JsonObject eventEither, Handler<Either<String, JsonObject>> handler) {
+
+        ArrayList<String> punishmentsIds = new ArrayList<>();
+
+        for (JsonObject event : savedEvents) {
+            if (event.getString("type").equals(EventType.SANCTION.name())
+                    || event.getString("type").equals(EventType.PUNISHMENT.name())) {
+                punishmentsIds.add(event.getString("id"));
+            }
+        }
+        if (!punishmentsIds.isEmpty()) {
+            Incidents.getInstance().updatePunishmentMassmailing(punishmentsIds, true, handler);
+        } else {
+            handler.handle(new Either.Right<>(eventEither));
+        }
     }
 
     private List<JsonObject> getEventsToSave(JsonObject events) {
@@ -696,9 +720,10 @@ public abstract class MassMailingProcessor implements Mailing {
             for (int i = 0; i < list.size(); i++) {
                 JsonObject item = list.getJsonObject(i);
                 JsonArray embedEvts = getEmbedEventType(item);
+
                 for (int j = 0; j < embedEvts.size(); j++) {
                     JsonObject evt = embedEvts.getJsonObject(j);
-                    evts.add(new JsonObject().put("id", evt.getInteger("id")).put("type", key));
+                    addEventObject(evts, key, evt);
                 }
             }
         }
@@ -706,11 +731,21 @@ public abstract class MassMailingProcessor implements Mailing {
         return evts;
     }
 
+    private void addEventObject(List<JsonObject> evts, String key, JsonObject evt) {
+        // Case EVENT data
+        if (evt.containsKey("reason_id")) {
+            evts.add(new JsonObject().put("id", evt.getInteger("id").toString()).put("type", key));
+        } else {
+            // Case PUNISHMENT/SANCTION data
+            evts.add(new JsonObject().put("id", evt.getString("id")).put("type", key));
+        }
+    }
+
     private JsonArray getEmbedEventType(JsonObject item) {
         // for punishments events, events are recovered from "punishments" field.
-//        if (item.containsKey("punishments") && !item.getJsonArray("punishments").isEmpty()) {
-//            return item.getJsonArray("punishments");
-//        }
+        if (item.containsKey("punishments") && !item.getJsonArray("punishments").isEmpty()) {
+            return item.getJsonArray("punishments");
+        }
 
         return item.getJsonArray("events", new JsonArray().add(item));
     }
@@ -751,11 +786,11 @@ public abstract class MassMailingProcessor implements Mailing {
         JsonArray params = new JsonArray();
         for (JsonObject event : events) {
             query.append("(?, ?, ?),");
-            params.add(mailingId).add(event.getInteger("id")).add(event.getString("type"));
+            params.add(mailingId).add(event.getString("id")).add(event.getString("type"));
         }
 
         return new JsonObject()
-                .put("statement", query.toString().substring(0, query.toString().length() - 1))
+                .put("statement", query.substring(0, query.toString().length() - 1))
                 .put("values", params)
                 .put("action", "prepared");
     }

@@ -1,8 +1,8 @@
-import {LoadingCollection} from "@common/model";
-import {_, moment} from "entcore";
-import {Student} from "@common/model/Student";
-import {User} from "@common/model/User";
-import {IMetadata} from "@common/model/Metadata";
+import {LoadingCollection} from '@common/model';
+import {_, moment} from 'entcore';
+import {Student} from '@common/model/Student';
+import {User} from '@common/model/User';
+import {IMetadata} from '@common/model/Metadata';
 
 export enum MailingType {
     PDF,
@@ -13,14 +13,14 @@ export enum MailingType {
 export interface MailingEvent {
     id: number;
     mailing_id: number;
-    event_id: number;
+    event_id: string;
     event_type: string;
 }
 
 export interface Mailing {
     id: number;
     student: Student;
-    mailing_event: MailingEvent
+    mailing_event: MailingEvent;
     recipient: User;
     structure_id: string;
     type: string;
@@ -29,7 +29,7 @@ export interface Mailing {
     timestamp?: number;
     isSelected?: boolean;
     file_id?: string;
-    metadata?: IMetadata
+    metadata?: IMetadata;
 }
 
 export interface MailingRequest {

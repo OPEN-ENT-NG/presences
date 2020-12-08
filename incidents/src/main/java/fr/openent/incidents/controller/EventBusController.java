@@ -37,6 +37,7 @@ public class EventBusController extends ControllerHelper {
         String startAt;
         String endAt;
         List<String> studentIds;
+        List<String> punishmentsIds;
         List<Integer> punishmentTypeIds;
         Boolean processed;
         Boolean massmailed;
@@ -87,6 +88,11 @@ public class EventBusController extends ControllerHelper {
                 massmailed = body.getBoolean("massmailed");
                 this.punishmentService.getPunishmentByStudents(structure, startAt, endAt, studentIds, punishmentTypeIds,
                         processed, massmailed, BusResponseHandler.busArrayHandler(message));
+                break;
+            case "update-punishments-massmailing":
+                punishmentsIds = body.getJsonArray("punishmentsIds", new JsonArray()).getList();
+                massmailed = body.getBoolean("massmailed");
+                this.punishmentService.updatePunishmentMassmailing(punishmentsIds, massmailed, BusResponseHandler.busResponseHandler(message));
                 break;
             case "get-punishment-type":
                 structure = body.getString("structure");

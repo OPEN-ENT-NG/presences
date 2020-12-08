@@ -52,6 +52,16 @@ public interface PunishmentService {
     void getPunishmentCountByStudent(String structure, String start_at, String end_at, List<String> students, List<Integer> type_id,
                                      Boolean processed, Boolean massmailed, Handler<Either<String, JsonArray>> handler);
 
+
+    /**
+     * update punishment massmailing
+     *
+     * @param punishmentsIds List of punishment identifier
+     * @param isMassmailed   value massmailing to update for each punishment identifier
+     * @param handler        Function handler returning data
+     */
+    void updatePunishmentMassmailing(List<String> punishmentsIds, Boolean isMassmailed, Handler<Either<String, JsonObject>> handler);
+
     /**
      * get punishment
      *
