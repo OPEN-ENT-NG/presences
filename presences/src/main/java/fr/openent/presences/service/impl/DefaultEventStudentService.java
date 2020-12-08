@@ -236,13 +236,14 @@ public class DefaultEventStudentService implements EventStudentService {
 
     // Send request to get each events (thanks the great method corresponding to type {{ NO_REASON / UNREGULARIZED / REGULARIZED / LATENESS / DEPARTURE }}).
     // Handler will return them mapped by type.
-    private void getEvents(List<String> types, String structure, String student, Map reasons, JsonObject settings,
+    private void getEvents(List<String> types, String structure, String student, Map<Integer, JsonObject> reasons, JsonObject settings,
                            String start, String end, String limit, String offset, Handler<AsyncResult<JsonObject>> handler) {
+        List<Integer> reasonsIds = new ArrayList<>(reasons.keySet());
         List<Future> futures = new ArrayList<>();
         for (String type : types) {
             Future<JsonArray> future = Future.future();
             futures.add(future);
-            getEventsByStudent(type, structure, student, start, end, limit, offset, FutureHelper.handlerJsonArray(future));
+            getEventsByStudent(type, structure, reasonsIds, student, start, end, limit, offset, FutureHelper.handlerJsonArray(future));
         }
 
         CompositeFuture.all(futures).setHandler(result -> {
@@ -257,7 +258,7 @@ public class DefaultEventStudentService implements EventStudentService {
     }
 
     // Get events for a student, corresponding to the type mentioned
-    private void getEventsByStudent(String type, String structureId, String studentId, String start, String end, String limit,
+    private void getEventsByStudent(String type, String structureId, List<Integer> reasonsIds, String studentId, String start, String end, String limit,
                                     String offset, Handler<Either<String, JsonArray>> handler) {
         switch (type) {
             case NO_REASON:
@@ -266,11 +267,11 @@ public class DefaultEventStudentService implements EventStudentService {
                 break;
             case UNREGULARIZED:
                 eventService.getEventsByStudent(1, Collections.singletonList(studentId), structureId, null,
-                        new ArrayList<>(), null, start, end, false, null, false, handler);
+                        reasonsIds, null, start, end, false, null, false, handler);
                 break;
             case REGULARIZED:
                 eventService.getEventsByStudent(1, Collections.singletonList(studentId), structureId, null,
-                        new ArrayList<>(), null, start, end, false, null, true, handler);
+                        reasonsIds, null, start, end, false, null, true, handler);
                 break;
             case LATENESS:
                 eventService.getEventsByStudent(2, Collections.singletonList(studentId), structureId,

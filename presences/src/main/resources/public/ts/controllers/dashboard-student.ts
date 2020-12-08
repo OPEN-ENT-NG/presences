@@ -295,9 +295,9 @@ export const dashboardStudentController = ng.controller('DashboardStudentControl
                 }
             });
 
-            $scope.$on(UPDATE_STUDENTS_EVENTS.UPDATE, (event: IAngularEvent, child: Student) => {
+            $scope.$on(UPDATE_STUDENTS_EVENTS.UPDATE, async (event: IAngularEvent, child: Student) => {
                 vm.filter.selectedChildren = child;
-                getPeriods();
-                loadEvents();
+                await getPeriods();
+                await loadEvents();
             });
         }]);
