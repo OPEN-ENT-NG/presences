@@ -1,5 +1,5 @@
 package fr.openent.presences.enums;
 
 public enum GroupType {
-    CLASS, GROUP
+    CLASS, GROUP, MANUAL_GROUP
 }

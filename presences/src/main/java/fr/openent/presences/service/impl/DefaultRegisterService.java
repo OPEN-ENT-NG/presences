@@ -110,27 +110,29 @@ public class DefaultRegisterService implements RegisterService {
 
                 try {
                     Number id = idEvent.right().getValue().getInteger("id");
-                    groupService.getGroupsId(register.getString("structure_id"), register.getJsonArray("groups"), register.getJsonArray("classes"), groupsEvent -> {
-                        if (groupsEvent.isLeft()) {
-                            String message = "[Presences@DefaultRegisterService] Failed to retrieve group identifiers";
-                            LOGGER.error(message, groupsEvent.left().getValue());
-                            handler.handle(new Either.Left<>(message));
-                            return;
-                        }
+                    groupService.getGroupsId(register.getString("structure_id"), register.getJsonArray("groups"),
+                            register.getJsonArray("classes"), groupsEvent -> {
+                                if (groupsEvent.isLeft()) {
+                                    String message = "[Presences@DefaultRegisterService] Failed to retrieve group identifiers";
+                                    LOGGER.error(message, groupsEvent.left().getValue());
+                                    handler.handle(new Either.Left<>(message));
+                                    return;
+                                }
 
-                        JsonArray classes = groupsEvent.right().getValue().getJsonArray("classes");
-                        JsonArray groups = groupsEvent.right().getValue().getJsonArray("groups");
-                        JsonArray audiences = new JsonArray().addAll(classes).addAll(groups);
+                                JsonArray classes = groupsEvent.right().getValue().getJsonArray("classes");
+                                JsonArray groups = groupsEvent.right().getValue().getJsonArray("groups");
+                                JsonArray manualGroups = groupsEvent.right().getValue().getJsonArray("manualGroups");
+                                JsonArray audiences = new JsonArray().addAll(classes).addAll(groups);
 
-                        List<String> audienceIds = ((List<JsonObject>) audiences.getList())
-                                .stream()
-                                .map(audience -> audience.getString("id"))
-                                .filter(Objects::nonNull)
-                                .collect(Collectors.toList());
+                                List<String> audienceIds = ((List<JsonObject>) audiences.getList())
+                                        .stream()
+                                        .map(audience -> audience.getString("id"))
+                                        .filter(Objects::nonNull)
+                                        .collect(Collectors.toList());
 
-                        groupService.getGroupStudents(audienceIds, studentsEvt -> {
-                            if (studentsEvt.isLeft()) {
-                                LOGGER.error("[Presences@DefaultRegisterService::create] Failed to retrieve student groups for ids: "
+                                groupService.getGroupStudents(audienceIds, studentsEvt -> {
+                                    if (studentsEvt.isLeft()) {
+                                        LOGGER.error("[Presences@DefaultRegisterService::create] Failed to retrieve student groups for ids: "
                                         + new JsonArray(audienceIds).encode(), studentsEvt.left().getValue());
                                 handler.handle(new Either.Left<>(studentsEvt.left().getValue()));
                                 return;
@@ -144,21 +146,27 @@ public class DefaultRegisterService implements RegisterService {
                                 statements.add(getRelRegisterGroupStatement(id, classId));
                             }
 
-                            for (int i = 0; i < groups.size(); i++) {
-                                String groupId = groups.getJsonObject(i).getString("id");
-                                statements.add(getGroupCreationStatement(groupId, GroupType.GROUP));
-                                statements.add(getRelRegisterGroupStatement(id, groupId));
-                            }
+                                    for (int i = 0; i < groups.size(); i++) {
+                                        String groupId = groups.getJsonObject(i).getString("id");
+                                        statements.add(getGroupCreationStatement(groupId, GroupType.GROUP));
+                                        statements.add(getRelRegisterGroupStatement(id, groupId));
+                                    }
 
-                            List<String> students = extractStudentIdentifiers(studentsEvt.right().getValue());
-                            if (!students.isEmpty()) {
-                                register.put("id", id);
-                                statements.add(absenceToEventStatement(register, students, user));
-                            }
+                                    for (int i = 0; i < manualGroups.size(); i++) {
+                                        String manualGroupId = manualGroups.getJsonObject(i).getString("id");
+                                        statements.add(getGroupCreationStatement(manualGroupId, GroupType.MANUAL_GROUP));
+                                        statements.add(getRelRegisterGroupStatement(id, manualGroupId));
+                                    }
 
-                            Sql.getInstance().transaction(statements, event -> {
-                                Either<String, JsonObject> result = SqlResult.validUniqueResult(0, event);
-                                if (result.isLeft()) {
+                                    List<String> students = extractStudentIdentifiers(studentsEvt.right().getValue());
+                                    if (!students.isEmpty()) {
+                                        register.put("id", id);
+                                        statements.add(absenceToEventStatement(register, students, user));
+                                    }
+
+                                    Sql.getInstance().transaction(statements, event -> {
+                                        Either<String, JsonObject> result = SqlResult.validUniqueResult(0, event);
+                                        if (result.isLeft()) {
                                     String message = String.format("Failed to create register: %s", result.left().getValue());
                                     LOGGER.error(message, result.left().getValue());
                                     handler.handle(new Either.Left<>(message));

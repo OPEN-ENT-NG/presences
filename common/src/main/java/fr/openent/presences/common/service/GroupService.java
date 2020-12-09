@@ -13,10 +13,10 @@ public interface GroupService {
     /**
      * Get all group identifiers
      *
-     * @param structureId structure identifier
-     * @param groups      group list
-     * @param classes     class list
-     * @param handler     Function handler returning data
+     * @param structureId  structure identifier
+     * @param groups       group list
+     * @param classes      class list
+     * @param handler      Function handler returning data
      */
     void getGroupsId(String structureId, JsonArray groups, JsonArray classes, Handler<Either<String, JsonObject>> handler);
 

@@ -29,23 +29,26 @@ public class DefaultGroupService implements GroupService {
 
 
     @Override
-    public void getGroupsId(String structureId, JsonArray groups, JsonArray classes, Handler<Either<String, JsonObject>> handler) {
+    public void getGroupsId(String structureId, JsonArray groups, JsonArray classes,
+                            Handler<Either<String, JsonObject>> handler) {
         Future<JsonArray> groupFuture = Future.future();
         Future<JsonArray> classFuture = Future.future();
-        CompositeFuture.all(groupFuture, classFuture).setHandler(event -> {
+        Future<JsonArray> manualGroupFuture = Future.future();
+        CompositeFuture.all(groupFuture, classFuture, manualGroupFuture).setHandler(event -> {
             if (event.failed()) {
                 LOGGER.error(event.cause());
                 handler.handle(new Either.Left<>(event.cause().toString()));
             } else {
                 JsonObject res = new JsonObject()
                         .put("classes", classFuture.result())
-                        .put("groups", groupFuture.result());
-
+                        .put("groups", groupFuture.result())
+                        .put("manualGroups", manualGroupFuture.result());
                 handler.handle(new Either.Right<>(res));
             }
         });
         getIdsFromClassOrGroups(structureId, groups, GroupType.GROUP, FutureHelper.handlerJsonArray(groupFuture));
         getIdsFromClassOrGroups(structureId, classes, GroupType.CLASS, FutureHelper.handlerJsonArray(classFuture));
+        getIdsFromClassOrGroups(structureId, groups, GroupType.MANUAL_GROUP, FutureHelper.handlerJsonArray(manualGroupFuture));
     }
 
     @Override
@@ -151,13 +154,31 @@ public class DefaultGroupService implements GroupService {
      * @param handler     Function handler returning data
      */
     private void getIdsFromClassOrGroups(String structureId, JsonArray objects, GroupType type, Handler<Either<String, JsonArray>> handler) {
-        String query = type.equals(GroupType.GROUP)
-                ? "MATCH (s:Structure {id:{structureId}})<-[:DEPENDS]-(c:Group) WHERE c.name IN {objects} RETURN c.id as id"
-                : "MATCH (s:Structure {id:{structureId}})<-[:BELONGS]-(c:Class) WHERE c.name IN {objects} RETURN c.id as id";
+        String query;
         JsonObject params = new JsonObject()
                 .put("structureId", structureId)
                 .put("objects", objects);
 
+        switch (type) {
+            case GROUP: {
+                query = "MATCH (s:Structure {id:{structureId}})<-[:DEPENDS]-(g:Group) WHERE g.name IN {objects} RETURN g.id as id";
+                break;
+            }
+            case CLASS: {
+                query = "MATCH (s:Structure {id:{structureId}})<-[:BELONGS]-(c:Class) WHERE c.name IN {objects} RETURN c.id as id";
+                break;
+            }
+            case MANUAL_GROUP: {
+                query = "MATCH (s:Structure {id:{structureId}})<-[:BELONGS]-(mg:ManualGroup) WHERE mg.name IN {objects} RETURN mg.id as id";
+                break;
+            }
+            default: {
+                String message = "[Presences@DefaultGroupService::getIdsFromClassOrGroups] Unknown group type";
+                LOGGER.error(message);
+                handler.handle(new Either.Left<>(message));
+                return;
+            }
+        }
         Neo4j.getInstance().execute(query, params, Neo4jResult.validResultHandler(handler));
     }
 }
