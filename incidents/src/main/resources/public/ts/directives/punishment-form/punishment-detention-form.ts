@@ -258,7 +258,10 @@ export const PunishmentDetentionForm = ng.directive('punishmentDetentionForm', [
                 };
 
                 vm.getDisplayOwnerName = (): string => {
-                    return vm.owner.displayName || vm.owner.lastName + " " + vm.owner.firstName;
+                    if (vm && vm.owner) {
+                        return vm.owner.displayName || vm.owner.lastName + " " + vm.owner.firstName;
+                    }
+                    return "";
                 };
 
                 vm.searchOwner = async (value: string): Promise<void> => {

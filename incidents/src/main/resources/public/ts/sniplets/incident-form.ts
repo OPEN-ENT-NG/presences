@@ -261,7 +261,10 @@ const vm: ViewModel = {
     getButtonLabel: () => lang.translate(`incidents${vm.isCalendar ? '.calendar' : ''}.create`),
 
     getDisplayOwnerName: (): string => {
-        return vm.incidentForm.owner.displayName || vm.incidentForm.owner.lastName + " " + vm.incidentForm.owner.firstName;
+        if (vm && vm.incidentForm) {
+            return vm.incidentForm.owner.displayName || vm.incidentForm.owner.lastName + " " + vm.incidentForm.owner.firstName;
+        }
+        return "";
     },
 
     searchOwner: async (value: string): Promise<void> => {

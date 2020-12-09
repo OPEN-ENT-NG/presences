@@ -107,7 +107,10 @@ export const PunishmentDutyForm = ng.directive('punishmentDutyForm', ['SearchSer
                 };
 
                 vm.getDisplayOwnerName = (): string => {
-                    return vm.owner.displayName || vm.owner.lastName + " " + vm.owner.firstName;
+                    if (vm && vm.owner) {
+                        return vm.owner.displayName || vm.owner.lastName + " " + vm.owner.firstName;
+                    }
+                    return "";
                 };
 
                 vm.searchOwner = async (value: string): Promise<void> => {
