@@ -48,6 +48,37 @@ public class DateHelper {
     }
 
     /**
+     * Assign time (hh, mm, dd => from chosen format) to a given date
+     *
+     * @param dateString Date to get assigned by time
+     * @param timeString Time to assign to date
+     * @param timeFormat Initial time format
+     * @param wishedFormat Format string expected to be return
+     * @return String corresponding to date with new time
+     */
+    public static String setTimeToDate(String dateString, String timeString, String timeFormat, String wishedFormat) {
+        Calendar date = Calendar.getInstance();
+        Calendar time = Calendar.getInstance();
+        SimpleDateFormat sdf = new SimpleDateFormat(wishedFormat);
+
+        try {
+        if (dateString != null) date.setTime(parse(dateString));
+        if (timeString != null) time.setTime(parse(timeString, timeFormat));
+
+        time.set(date.get(Calendar.YEAR), date.get(Calendar.MONTH), date.get(Calendar.DATE));
+
+        } catch (ParseException e) {
+            LOGGER.error("[Presence@DateHelper::setTimeToDate] Error when casting date: ", e);
+        }
+
+        return sdf.format(time.getTime());
+    }
+
+    public static String setTimeToNow(String timeString, String timeFormat, String wishedFormat) {
+        return setTimeToDate(null, timeString, timeFormat, wishedFormat);
+    }
+
+    /**
      * Return the number of days between 2 dates.
      *
      * @param date1 First date
@@ -131,6 +162,26 @@ public class DateHelper {
         Date secondDate = parse(date2);
 
         return firstDate.before(secondDate);
+    }
+
+    /**
+     * Same that isBefore, but without try / catch
+     *
+     * @param date1 First date
+     * @param date2 Second date
+     * @return Boolean that match if the first date is before the second date
+     */
+    public static boolean isDateBeforeOrEqual(String date1, String date2) {
+        Date firstDate = new Date();
+        Date secondDate = new Date();
+        try {
+            firstDate = parse(date1);
+            secondDate = parse(date2);
+        } catch (ParseException e) {
+            LOGGER.error("[Presence@DateHelper::isDateBeforeOrEqual] Error when casting date: ", e);
+        }
+
+        return firstDate.before(secondDate) || firstDate.equals(secondDate);
     }
 
     /**
@@ -227,7 +278,7 @@ public class DateHelper {
             return date;
         }
     }
-    
+
     /**
      * Get Simple date as string, use in case your date format is not standard
      *

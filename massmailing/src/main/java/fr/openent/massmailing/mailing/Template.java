@@ -6,7 +6,6 @@ import fr.openent.massmailing.enums.TemplateCode;
 import fr.openent.massmailing.service.SettingsService;
 import fr.openent.massmailing.service.impl.DefaultSettingsService;
 import fr.openent.presences.common.helper.DateHelper;
-import fr.openent.presences.enums.EventType;
 import fr.wseduc.webutils.Either;
 import fr.wseduc.webutils.I18n;
 import io.vertx.core.CompositeFuture;
@@ -126,7 +125,7 @@ public class Template extends BaseServer {
         return this.domain;
     }
 
-    public String process(HashMap<TemplateCode, Object> codeValues) {
+    public String process(HashMap<TemplateCode, Object> codeValues, String halfDay) {
         String value = this.content;
         List<TemplateCode> codes = new ArrayList<>(codeValues.keySet());
         for (TemplateCode code : codes) {
@@ -144,12 +143,12 @@ public class Template extends BaseServer {
 
         if (codes.contains(TemplateCode.SUMMARY)) {
             value = value.replaceAll(Pattern.quote(systemCodes.get(TemplateCode.SUMMARY)),
-                    processSummary(codeValues, TemplateCode.SUMMARY));
+                    processSummary(codeValues, TemplateCode.SUMMARY, halfDay));
         }
 
         if (codes.contains(TemplateCode.PUNISHMENT_SUMMARY)) {
             value = value.replaceAll(Pattern.quote(systemCodes.get(TemplateCode.PUNISHMENT_SUMMARY)),
-                    processSummary(codeValues, TemplateCode.PUNISHMENT_SUMMARY));
+                    processSummary(codeValues, TemplateCode.PUNISHMENT_SUMMARY, null));
         }
 
         if (codes.contains(TemplateCode.LAST_ABSENCE)) {
@@ -165,7 +164,7 @@ public class Template extends BaseServer {
         return value;
     }
 
-    public String processSummary(HashMap<TemplateCode, Object> codeValues, TemplateCode summaryCode) {
+    public String processSummary(HashMap<TemplateCode, Object> codeValues, TemplateCode summaryCode, String halfDay) {
         JsonObject events = (JsonObject) codeValues.get(summaryCode);
         List<String> keys;
         String summary = "";
@@ -175,7 +174,7 @@ public class Template extends BaseServer {
                 summary += "<div>";
                 keys = new ArrayList<>(events.fieldNames());
                 for (String key : keys) {
-                    JsonArray eventsKey = events.getJsonArray(key);
+                    JsonArray eventsKey = mergeEventsByDates(events.getJsonArray(key), halfDay);
                     if (eventsKey == null || eventsKey.isEmpty()) continue;
                     summary += getCSSStyle();
                     summary += "<div>" + I18n.getInstance().translate("massmailing.summary." + key, domain, locale) + ":</div>";
@@ -215,6 +214,64 @@ public class Template extends BaseServer {
         }
 
         return summary;
+    }
+
+    private JsonArray mergeEventsByDates(JsonArray events, String halfDay) {
+        if (halfDay == null || events == null) {
+            return events;
+        }
+
+        JsonArray newEvents = new JsonArray();
+        Map<String, List<JsonObject>> dateGroupedEvents = addGroupEventsByDateAndHalfday(events, halfDay);
+
+        dateGroupedEvents.forEach((key, groupEvents) -> {
+            JsonObject earliestEvent = groupEvents.stream().min((eventA, eventB) ->
+                    DateHelper.isDateBeforeOrEqual(eventB.getString("start_date"), eventA.getString("start_date")) ? 1 : -1
+            ).orElse(null);
+
+            JsonObject latestEvent = groupEvents.stream().max((eventA, eventB) ->
+                    DateHelper.isDateBeforeOrEqual(eventB.getString("start_date"), eventA.getString("start_date")) ? 1 : -1
+            ).orElse(null);
+
+            // we set new Event start date with the earliest events start_date and end date with the latest events end_date
+            if (earliestEvent != null && latestEvent != null)
+                newEvents.add(setGroupedEvent(groupEvents, earliestEvent.getString("start_date"), latestEvent.getString("end_date")));
+        });
+
+        return newEvents;
+    }
+
+    private Map<String, List<JsonObject>> addGroupEventsByDateAndHalfday(JsonArray events, String halfDay) {
+        Map<String, List<JsonObject>> dateGroupedEvents = new HashMap<>();
+
+        for (Object o : events) {
+            JsonObject event = (JsonObject) o;
+            String eventStartDate = event.getString("start_date");
+            String eventHalfDay = DateHelper.setTimeToDate(eventStartDate, halfDay, DateHelper.HOUR_MINUTES_SECONDS, DateHelper.SQL_FORMAT);
+            // We group events by day and if start event date is before halfDay (yyyy-MM-dd_<true|false>)
+            String groupKey =
+                    DateHelper.getDateString(eventStartDate, DateHelper.SQL_FORMAT, DateHelper.YEAR_MONTH_DAY)
+                            + "_" + DateHelper.isDateBeforeOrEqual(eventStartDate, eventHalfDay);
+
+            if (dateGroupedEvents.containsKey(groupKey)) dateGroupedEvents.get(groupKey).add(event);
+            else dateGroupedEvents.put(groupKey, new ArrayList<>(Collections.singletonList(event)));
+        }
+
+        return dateGroupedEvents;
+    }
+
+    private JsonObject setGroupedEvent(List<JsonObject> events, String startDate, String endDate) {
+        JsonObject newEvent = events.get(0).copy();
+        JsonArray individualEvents = new JsonArray();
+
+        events.forEach(event -> individualEvents.addAll(event.getJsonArray("events")));
+        newEvent.put("events", individualEvents);
+        newEvent.put("start_date", startDate);
+        newEvent.put("display_start_date", startDate);
+        newEvent.put("end_date", endDate);
+        newEvent.put("display_end_date", endDate);
+
+        return newEvent;
     }
 
     private boolean eventContainsReason(JsonObject event) {
@@ -313,11 +370,11 @@ public class Template extends BaseServer {
 
     private String getCSSStyle() {
         return "<style>" +
-                    "table{border-collapse:collapse}" +
-                    "table thead " +
-                    "tr{background:#fff;box-shadow:0 4px 6px rgba(0,0,0,.12);border-bottom:none}" +
-                    "td{padding:5px 15px}" +
-                    "tr{border-bottom:1px solid #ccc;background:0 0}" +
+                "table{border-collapse:collapse}" +
+                "table thead " +
+                "tr{background:#fff;box-shadow:0 4px 6px rgba(0,0,0,.12);border-bottom:none}" +
+                "td{padding:5px 15px}" +
+                "tr{border-bottom:1px solid #ccc;background:0 0}" +
                 "</style>";
     }
 
@@ -336,12 +393,12 @@ public class Template extends BaseServer {
             case "LATENESS":
 
                 return "<thead>" +
-                            "<tr>" +
-                                "<td>" + dateLabel + "</td>" +
-                                "<td>" + hoursLabel + "</td>" +
-                                reasonHeader +
-                                regularizedHeader +
-                            "</tr>" +
+                        "<tr>" +
+                        "<td>" + dateLabel + "</td>" +
+                        "<td>" + hoursLabel + "</td>" +
+                        reasonHeader +
+                        regularizedHeader +
+                        "</tr>" +
                         "</thead>";
             case "PUNISHMENT":
                 hoursHeader = "<td>" + hoursLabel + "</td>";
@@ -351,13 +408,13 @@ public class Template extends BaseServer {
                 String punishmentOwnerLabel = I18n.getInstance().translate("massmailing.punishment.owner", domain, locale);
 
                 return "<thead>" +
-                            "<tr>" +
-                                "<td>" + dateLabel + "</td>" +
-                                hoursHeader +
-                                "<td>" + punishmentTypeLabel + "</td>" +
-                                "<td>" + punishmentDescriptionLabel + "</td>" +
-                                "<td>" + punishmentOwnerLabel + "</td>" +
-                            "</tr>" +
+                        "<tr>" +
+                        "<td>" + dateLabel + "</td>" +
+                        hoursHeader +
+                        "<td>" + punishmentTypeLabel + "</td>" +
+                        "<td>" + punishmentDescriptionLabel + "</td>" +
+                        "<td>" + punishmentOwnerLabel + "</td>" +
+                        "</tr>" +
                         "</thead>";
             default:
                 return "";
@@ -374,7 +431,7 @@ public class Template extends BaseServer {
                         event.getString("start_date")), DateHelper.DAY_MONTH_YEAR);
                 break;
             case "PUNISHMENT":
-                if (event.containsKey("fields") && !event.getJsonObject("fields").isEmpty()){
+                if (event.containsKey("fields") && !event.getJsonObject("fields").isEmpty()) {
                     if (event.getJsonObject("fields").getString("delay_at") != null) {
                         dateLabel = DateHelper.getDateString(event.getJsonObject("fields")
                                 .getString("delay_at"), DateHelper.DAY_MONTH_YEAR);
@@ -441,20 +498,20 @@ public class Template extends BaseServer {
             case "PUNISHMENT":
                 hoursRow = "<td>" + getTimeLabel(type, event) + "</td>";
             case "SANCTION":
-                line += "<td>" + getDateLabel(type, event) +"</td>";
+                line += "<td>" + getDateLabel(type, event) + "</td>";
                 line += hoursRow;
 
                 if (event.containsKey("type") && event.getJsonObject("type").getString("label") != null) {
-                    line += "<td>"+ event.getJsonObject("type").getString("label","") +"</td>";
+                    line += "<td>" + event.getJsonObject("type").getString("label", "") + "</td>";
                 } else {
                     line += "<td></td>";
                 }
 
                 line += "<td>" + ((event.getString("description") != null) ?
-                        event.getString("description","") : "") +"</td>";
+                        event.getString("description", "") : "") + "</td>";
 
                 if (event.containsKey("owner") && event.getJsonObject("owner").getString("displayName") != null) {
-                    line += "<td>" + event.getJsonObject("owner").getString("displayName","") + "</td>";
+                    line += "<td>" + event.getJsonObject("owner").getString("displayName", "") + "</td>";
                 } else {
                     line += "<td></td>";
                 }

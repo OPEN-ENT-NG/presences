@@ -220,7 +220,7 @@ public abstract class MassMailingProcessor implements Mailing {
                 break;
         }
 
-        massmailing.put("message", template.process(codeValues));
+        massmailing.put("message", template.process(codeValues, settings.getString("end_of_half_day")));
     }
 
     private void formatPunishmentEvents(JsonObject massmailingHourEvents) {
