@@ -22,6 +22,7 @@ import java.text.ParseException;
 import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 public class Template extends BaseServer {
     private Logger LOGGER = LoggerFactory.getLogger(Template.class);
@@ -221,7 +222,7 @@ public class Template extends BaseServer {
             return events;
         }
 
-        JsonArray newEvents = new JsonArray();
+        List<JsonObject> newEvents = new ArrayList<>();
         Map<String, List<JsonObject>> dateGroupedEvents = addGroupEventsByDateAndHalfday(events, halfDay);
 
         dateGroupedEvents.forEach((key, groupEvents) -> {
@@ -238,7 +239,12 @@ public class Template extends BaseServer {
                 newEvents.add(setGroupedEvent(groupEvents, earliestEvent.getString("start_date"), latestEvent.getString("end_date")));
         });
 
-        return newEvents;
+        // return events sorted by date desc
+        return new JsonArray(
+                newEvents.stream().sorted((JsonObject eventA, JsonObject eventB) ->
+                        DateHelper.isDateBeforeOrEqual(eventB.getString("start_date"), eventA.getString("start_date")) ? -1 : 1
+                ).collect(Collectors.toList())
+        );
     }
 
     private Map<String, List<JsonObject>> addGroupEventsByDateAndHalfday(JsonArray events, String halfDay) {
