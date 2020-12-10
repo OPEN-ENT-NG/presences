@@ -1,4 +1,4 @@
-package fr.openent.presences.controller.EventController;
+package fr.openent.presences.controller.events;
 
 import fr.openent.presences.constants.Actions;
 import fr.openent.presences.enums.EventType;
@@ -29,23 +29,23 @@ public class LatenessEventController extends ControllerHelper {
         this.latenessService = new DefaultLatenessEventService(eb);
     }
 
-    @Post("/events/lateness")
-    @ApiDoc("Create event action")
+    @Post("/events/:structureId/lateness")
+    @ApiDoc("Create lateness event")
     @ResourceFilter(CreateEventRight.class)
     @SecuredAction(value = "", type = ActionType.RESOURCE)
     @Trace(Actions.EVENT_CREATION)
     public void createLatenessEvent(final HttpServerRequest request) {
+        String structureId = request.getParam("structureId");
         UserUtils.getUserInfos(eb, request, user -> {
             RequestUtils.bodyToJson(request, pathPrefix + "event", event -> {
                 EventBody eventBody = new EventBody(event);
-                this.latenessService.create(eventBody, user, DefaultResponseHandler.defaultResponseHandler(request));
+                this.latenessService.create(eventBody, user, structureId, DefaultResponseHandler.defaultResponseHandler(request));
             });
         });
-
     }
 
     @Put("/events/:id/lateness")
-    @ApiDoc("Get given structure")
+    @ApiDoc("Update lateness event")
     @ResourceFilter(CreateEventRight.class)
     @SecuredAction(value = "", type = ActionType.RESOURCE)
     @Trace(Actions.EVENT_UPDATE)
@@ -54,7 +54,7 @@ public class LatenessEventController extends ControllerHelper {
             Integer eventId = Integer.parseInt(request.getParam("id"));
             RequestUtils.bodyToJson(request, pathPrefix + "event", event -> {
                 EventBody eventBody = new EventBody(event);
-                if (!EventType.DEPARTURE.getType().equals(eventBody.getTypeId())) {
+                if (!EventType.LATENESS.getType().equals(eventBody.getTypeId())) {
                     badRequest(request);
                     return;
                 }
@@ -65,5 +65,4 @@ public class LatenessEventController extends ControllerHelper {
             badRequest(request);
         }
     }
-
 }

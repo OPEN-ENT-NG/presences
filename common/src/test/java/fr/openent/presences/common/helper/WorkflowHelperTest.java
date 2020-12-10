@@ -22,7 +22,7 @@ public class WorkflowHelperTest {
         List<UserInfos.Action> actions = new ArrayList<>();
         UserInfos.Action action = new UserInfos.Action();
         action.setDisplayName(truthyActionDisplayName);
-        action.setName("fr.openent.presences.controller.EventController|postEvent");
+        action.setName("fr.openent.presences.controller.events.EventController|postEvent");
         action.setType("SECURED_ACTION_WORKFLOW");
         actions.add(action);
         user.setAuthorizedActions(actions);

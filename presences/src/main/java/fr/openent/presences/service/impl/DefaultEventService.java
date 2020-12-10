@@ -564,8 +564,8 @@ public class DefaultEventService implements EventService {
     @Override
     public void updateEvent(Integer id, JsonObject event, Handler<Either<String, JsonObject>> handler) {
         JsonArray params = new JsonArray();
-        String query = "UPDATE " + Presences.dbSchema + ".event SET start_date = ?, end_date = ?, comment = ?, counsellor_input = ? " +
-                " student_id = ?, register_id = ?, reason_id = ?, owner = ?, counsellor_regularisation = ?" +
+        String query = "UPDATE " + Presences.dbSchema + ".event SET start_date = ?, end_date = ?, comment = ?, counsellor_input = ?, " +
+                " student_id = ?, register_id = ?, reason_id = ?, counsellor_regularisation = ?" +
                 " WHERE id = ?";
 
         params.add(event.getString("start_date"));
@@ -574,8 +574,11 @@ public class DefaultEventService implements EventService {
         params.add(event.getBoolean("counsellor_input"));
         params.add(event.getString("student_id"));
         params.add(event.getInteger("register_id"));
-        params.add(event.getInteger("reason_id") != null ? event.getInteger("reason_id") : params.addNull());
-        params.add(event.getString("owner"));
+        if ((event.getInteger("reason_id") != null && event.getInteger("reason_id") != -1)) {
+            params.add(event.getInteger("reason_id"));
+        } else {
+            params.addNull();
+        }
         params.add(event.getBoolean("counsellor_regularisation"));
         params.add(id);
 

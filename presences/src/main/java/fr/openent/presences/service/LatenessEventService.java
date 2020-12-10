@@ -13,9 +13,10 @@ public interface LatenessEventService {
      *
      * @param eventBody Event Body (using JsonObject to model)
      * @param userInfos userInfo
+     * @param structureId Structure identifier
      * @param handler   function handler returning data JsonObject type
      */
-    void create(EventBody eventBody, UserInfos userInfos, Handler<Either<String, JsonObject>> handler);
+    void create(EventBody eventBody, UserInfos userInfos, String structureId, Handler<Either<String, JsonObject>> handler);
 
     /**
      * delete lateness event
