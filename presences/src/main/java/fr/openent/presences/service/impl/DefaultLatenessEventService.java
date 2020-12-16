@@ -23,6 +23,7 @@ import org.entcore.common.user.UserInfos;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 public class DefaultLatenessEventService implements LatenessEventService {
 
@@ -39,6 +40,7 @@ public class DefaultLatenessEventService implements LatenessEventService {
     }
 
     @Override
+    @SuppressWarnings("unchecked")
     public void create(EventBody eventBody, UserInfos userInfos, String structureId, Handler<Either<String, JsonObject>> handler) {
 
         if (eventBody.getRegisterId() != -1) return;
@@ -54,8 +56,22 @@ public class DefaultLatenessEventService implements LatenessEventService {
                 .setHandler(ar -> {
                     if (ar.failed()) {
                         LOGGER.error("[Presences@LatenessEventService::create] Failed to fetch register id", ar.cause());
+                        handler.handle(new Either.Left<>("Failed to fetch register id"));
                     } else {
-                        createEventsFromRegisterIds(eventBody, userInfos, handler, ar.result());
+                        if (ar.result().isEmpty()) {
+                            handler.handle(new Either.Left<>("No register id(s) fetched, sending error"));
+                        } else {
+                            List<Integer> registerIds = ((List<JsonObject>) ar.result().getList())
+                                    .stream()
+                                    .filter(registerId -> registerId.getInteger("id") != -1)
+                                    .map(registerId -> registerId.getInteger("id"))
+                                    .collect(Collectors.toList());
+                            if (registerIds.isEmpty()) {
+                                handler.handle(new Either.Left<>("No register id(s) fetched, sending error"));
+                            } else {
+                                createEventsFromRegisterIds(eventBody, userInfos, handler, registerIds);
+                            }
+                        }
                     }
                 });
     }
@@ -97,16 +113,19 @@ public class DefaultLatenessEventService implements LatenessEventService {
         JsonObject res = registerProcess.getJsonObject("res");
 
         String startDate = DateHelper.getDateString(body.getString("start_date"), DateHelper.YEAR_MONTH_DAY);
-        String startTime = DateHelper.fetchTimeString(body.getString("start_date"), DateHelper.SQL_FORMAT);
+        String startTime = DateHelper.fetchTimeString(body.getString("start_date"), DateHelper.MONGO_FORMAT);
 
         courseHelper.getCourses(body.getString("structure_id"), new ArrayList<>(),
                 (List<String>) res.getJsonArray("groupNames").getList(), startDate, startDate, startTime, startTime,
                 "true", courses -> {
 
-                    if (courses.isLeft() || courses.right().getValue().isEmpty()) {
+                    if (courses.isLeft()) {
                         LOGGER.error("[Presences@LatenessEventService::getCourseIdsFromGroups] " +
                                 "Failed to fetch course ids", courses.left().getValue());
                         future.fail(courses.left().getValue());
+                    } else if (courses.right().getValue().isEmpty()) {
+                        future.fail("[Presences@LatenessEventService::getCourseIdsFromGroups] " +
+                                "Student group has no courses");
                     } else {
                         JsonArray courseIds = new JsonArray();
 
@@ -148,16 +167,16 @@ public class DefaultLatenessEventService implements LatenessEventService {
     }
 
 
-    private void createEventsFromRegisterIds(EventBody eventBody, UserInfos userInfos, Handler<Either<String, JsonObject>> handler, JsonArray registerIds) {
+    private void createEventsFromRegisterIds(EventBody eventBody, UserInfos userInfos, Handler<Either<String, JsonObject>> handler, List<Integer> registerIds) {
 
         List<Future<JsonObject>> futures = new ArrayList<>();
 
-        for (int i = 0; i < registerIds.size(); i++) {
+        for (Integer id : registerIds) {
 
             Future<JsonObject> eventFuture = Future.future();
             futures.add(eventFuture);
 
-            eventBody.setRegisterId(registerIds.getJsonObject(i).getInteger("id"));
+            eventBody.setRegisterId(id);
             eventService.create(eventBody.toJSON(), userInfos, FutureHelper.handlerJsonObject(eventFuture));
         }
 

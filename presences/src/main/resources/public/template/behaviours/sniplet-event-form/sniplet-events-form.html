@@ -1,0 +1,89 @@
+<!-- Button to access absence mode -->
+<button class="right-magnet"
+        data-ng-click="vm.openEventLightbox('ABSENCE')">
+    <i18n>presences.register.event_type.absences</i18n>
+</button>
+
+<!-- Button to access lateness mode -->
+<button class="right-magnet"
+        data-ng-click="vm.openEventLightbox('LATENESS')">
+    <i18n>presences.register.event_type.lateness</i18n>
+</button>
+
+<lightbox class="eventFormLightBox" show="vm.createEventLightBox" on-close="vm.closeEventLightbox()">
+
+    <!-- TITLE CONTENT -->
+    <section class="eventFormLightBox-head head">
+        <h3 ng-if="!vm.form.id">
+            <i18n>presences.event.calendar.title</i18n>
+        </h3>
+        <h3 ng-if="vm.form.id">
+            <i18n>presences.event.calendar.title.edit</i18n>
+        </h3>
+    </section>
+
+    <!-- Subitle CONTENT -->
+    <section class="eventFormLightBox-subHead">
+        <h3 class="eventFormLightBox-body-title row spacing">
+            <i18n>presences.events.form.title</i18n>
+        </h3>
+    </section>
+
+    <!-- Toggle event type form -->
+    <section class="eventFormLightBox-eventsTypeRadio">
+        <!-- Event types loop -->
+        <div class="md-radio md-radio-inline" ng-repeat="eventType in vm.eventsTypes">
+            <input id="[[eventType]]" data-ng-model="vm.selectedEventType"
+                   ng-value="eventType"
+                   ng-disabled="vm.form.id"
+                   data-ng-click="vm.switchEventTypeForm(eventType)" type="radio">
+            <label for="[[eventType]]">[[lang.translate(vm.getEventTypeLabel(eventType))]]</label>
+        </div>
+    </section>
+
+    <!-- Content different form (current "absence" and "lateness") -->
+    <section>
+        <!-- ABSENCE FORM -->
+        <div data-ng-if="vm.selectedEventType === 'ABSENCE'"
+             ng-include="'/presences/public/template/behaviours/sniplet-event-form/sniplet-events-absence-form.html'"></div>
+        <!-- LATENESS FORM -->
+        <div data-ng-if="vm.selectedEventType === 'LATENESS'"
+             ng-include="'/presences/public/template/behaviours/sniplet-event-form/sniplet-events-lateness-form.html'"></div>
+    </section>
+
+    <!-- Footer part -->
+    <section class="eventFormLightBox-footer">
+        <!-- Button/submit -->
+        <div class="eventFormLightBox-footer-button row">
+
+            <!-- Submit mode -->
+            <button class="right-magnet"
+                    ng-if="!vm.form.id"
+                    data-ng-click="vm.submitEvent(vm.selectedEventType)"
+                    data-ng-disabled="!vm.isFormValid(vm.selectedEventType)">
+                <i18n>presences.absence.form.create</i18n>
+            </button>
+
+            <!-- Edit mode  -->
+            <button class="right-magnet"
+                    ng-if="vm.form.id"
+                    data-ng-click="vm.editEvent(vm.selectedEventType)"
+                    data-ng-disabled="!vm.isFormValid(vm.selectedEventType)">
+                <i18n>presences.absence.form.edit</i18n>
+            </button>
+
+            <!-- Cancel mode  -->
+            <button class="right-magnet cancel" data-ng-click="vm.closeEventLightbox()">
+                <i18n>presences.exemptions.form.cancel</i18n>
+            </button>
+
+            <!-- Delete mode  -->
+            <button ng-if="vm.form.id"
+                    data-ng-click="vm.deleteEvent(vm.selectedEventType)">
+                <i18n>presences.exemptions.form.delete</i18n>
+            </button>
+        </div>
+    </section>
+
+
+</lightbox>

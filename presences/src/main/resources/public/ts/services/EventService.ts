@@ -1,6 +1,6 @@
 import {ng} from 'entcore';
 import http, {AxiosResponse} from 'axios';
-import {ActionBody, EventResponse, Events, IStudentEventRequest, IStudentEventResponse} from '../models';
+import {ActionBody, EventResponse, Events, IEventBody, IStudentEventRequest, IStudentEventResponse} from '../models';
 import {DateUtils} from '@common/utils';
 import {EventAbsenceSummary} from '@presences/models/Event/EventAbsenceSummary';
 
@@ -16,6 +16,12 @@ export interface EventService {
     exportCSV(eventRequest: EventRequest): string;
 
     getAbsentsCounts(structureId: string): Promise<EventAbsenceSummary>;
+
+    createLatenessEvent(eventBody: IEventBody, structureId: string): Promise<AxiosResponse>;
+
+    updateEvent(eventId: number, eventBody: IEventBody): Promise<AxiosResponse>;
+
+    deleteEvent(eventId: number): Promise<AxiosResponse>;
 }
 
 export interface EventRequest {
@@ -141,8 +147,36 @@ export const eventService: EventService = {
         } catch (err) {
             throw err;
         }
+    },
+
+    /**
+     * Create Lateness Event (special treatment (see API)
+     *
+     * @param eventBody     eventBody
+     * @param structureId   structure identifier
+     */
+    createLatenessEvent(eventBody: IEventBody, structureId: string): Promise<AxiosResponse> {
+        return http.post(`/presences/events/${structureId}/lateness`, eventBody);
+    },
+
+    /**
+     * Update Event
+     *
+     * @param eventId       event identifier
+     * @param eventBody     eventBody
+     */
+    updateEvent(eventId: number, eventBody: IEventBody): Promise<AxiosResponse> {
+        return http.put(`/presences/events/${eventId}`, eventBody);
+    },
+
+    /**
+     * Delete Event
+     *
+     * @param eventId       event identifier
+     */
+    deleteEvent(eventId: number): Promise<AxiosResponse> {
+        return http.delete(`/presences/events/${eventId}`);
     }
 };
 
-export const EventService = ng.service('EventService',
-    (): EventService => eventService);
+export const EventService = ng.service('EventService', (): EventService => eventService);

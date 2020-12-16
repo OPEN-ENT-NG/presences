@@ -29,3 +29,8 @@ export enum ABSENCE_FORM_EVENTS {
     OPEN = 'absence-form:open',
     EDIT_EVENT = 'event-form:edit'
 }
+
+export enum LATENESS_FORM_EVENTS {
+    EDIT = 'lateness-form:edit',
+    OPEN = 'lateness-form:open'
+}

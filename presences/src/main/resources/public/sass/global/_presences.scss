@@ -77,7 +77,7 @@ body.presences, .sniplet.presences {
   }
 
   .toasts {
-    z-index: 90001;
+    z-index: 99999;
 
     .toast-content {
       box-shadow: 0 2px 5px rgba(0, 0, 0, 0.26);
@@ -363,5 +363,21 @@ body.presences, .sniplet.presences {
 
   .margin-right-lg {
     margin-right: 24px;
+  }
+
+  .margin-right-sm {
+    margin-right: 5px;
+  }
+
+  .margin-left-lg {
+    margin-left: 24px;
+  }
+
+  .margin-left-md {
+    margin-left: 10px;
+  }
+
+  .margin-left-sm {
+    margin-left: 5px;
   }
 }

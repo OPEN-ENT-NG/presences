@@ -1,8 +1,8 @@
 import {Behaviours} from 'entcore';
 import {
-    absenceForm,
     absenceMementoWidget,
     disciplineManage,
+    eventsForm,
     exemptionForm,
     forgottenNotebookForm,
     navigation,
@@ -23,7 +23,7 @@ Behaviours.register('presences', {
     sniplets: {
         navigation,
         'exemption-form': exemptionForm,
-        'absence-form': absenceForm,
+        'event-form/sniplet-events-form': eventsForm,
         'forgotten-notebook-form': forgottenNotebookForm,
         'presences-manage': presencesManage,
         'presences-manage/reason-manage/sniplet-presences-reason-manage': presencesReasonManage,

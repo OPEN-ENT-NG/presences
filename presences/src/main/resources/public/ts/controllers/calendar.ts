@@ -16,11 +16,11 @@ import {
 import {Scope} from './main';
 import {Absence, EventType, ICalendarItems, ITimeSlot, Presence, Presences, Reason, User} from '../models';
 import {DateUtils} from '@common/utils';
-import {SNIPLET_FORM_EMIT_EVENTS, SNIPLET_FORM_EVENTS} from "@common/model";
-import {NOTEBOOK_FORM_EVENTS} from "../sniplets";
-import {CalendarAbsenceUtils, CalendarUtils, EventsUtils} from "../utilities";
-import {ABSENCE_FORM_EVENTS} from "@common/core/enum/presences-event";
-import {IAngularEvent} from "angular";
+import {SNIPLET_FORM_EMIT_EVENTS, SNIPLET_FORM_EVENTS} from '@common/model';
+import {NOTEBOOK_FORM_EVENTS} from '../sniplets';
+import {CalendarAbsenceUtils, CalendarUtils, EventsUtils} from '../utilities';
+import {ABSENCE_FORM_EVENTS, LATENESS_FORM_EVENTS} from '@common/core/enum/presences-event';
+import {IAngularEvent} from 'angular';
 
 declare let window: any;
 
@@ -84,7 +84,7 @@ interface ViewModel {
 
     canDisplayReasonInEvent(course: Course): boolean;
 
-    actionAbsenceForm(item: Course, items): void;
+    actionEventForm(item: Course): void;
 
     editForgottenNotebook($item): void;
 
@@ -224,14 +224,6 @@ export const calendarController = ng.controller('CalendarController',
                 onClickLegend(legends, notebooks);
             };
 
-            $scope.$on(SNIPLET_FORM_EMIT_EVENTS.CREATION, () => {
-                $scope.$broadcast(SNIPLET_FORM_EVENTS.SET_PARAMS, {
-                    student: window.item,
-                    start_date: moment(),
-                    end_date: moment()
-                });
-            });
-
             vm.selectItem = function (model, item) {
                 const needsToLoadGroup = (window.item.groupId !== item.groupId) || item.type === 'GROUP';
                 window.item = item;
@@ -264,13 +256,18 @@ export const calendarController = ng.controller('CalendarController',
                 return item.absence && item.absenceReason > 0;
             };
 
-            vm.actionAbsenceForm = function (item: Course, items): void {
-                if (item.absences.length > 0) {
-                    if (item.absences[0].type_id) {
-                        $scope.$broadcast(ABSENCE_FORM_EVENTS.EDIT_EVENT, formatAbsenceForm(item));
-                    } else $scope.$broadcast(ABSENCE_FORM_EVENTS.EDIT, formatAbsenceForm(item));
+            vm.actionEventForm = (item: Course): void => {
+                if (item.absences.length > 0) { // ABSENCE
+                    $scope.$broadcast(item.absences[0].type_id ? ABSENCE_FORM_EVENTS.EDIT_EVENT : ABSENCE_FORM_EVENTS.EDIT,
+                        formatEventForm(item, EventType.ABSENCE));
+                } else if (item.events.length > 0 && item.events[0].type_id) { // OTHER EVENTS (LATENESS, REMARK...)
+                    switch (item.events[0].type_id) {
+                        case EventType.LATENESS:
+                            $scope.$broadcast(LATENESS_FORM_EVENTS.EDIT, formatEventForm(item, EventType.LATENESS));
+                            break;
+                    }
                 } else {
-                    $scope.$broadcast(ABSENCE_FORM_EVENTS.OPEN, formatAbsenceForm(item));
+                    $scope.$broadcast(ABSENCE_FORM_EVENTS.OPEN, formatEventForm(item, EventType.ABSENCE));
                 }
             };
 
@@ -338,23 +335,36 @@ export const calendarController = ng.controller('CalendarController',
                 return (hasPresence && (course.absences.length > 0 || course.events.length > 0));
             };
 
-            function formatAbsenceForm(itemCourse) {
-                let startDate = moment(itemCourse.startDate).toDate();
-                let endDate = moment(itemCourse.endDate).toDate();
-                if (itemCourse.absences.length === 1) {
-                    startDate = moment(itemCourse.absences[0].start_date).toDate();
-                    endDate = moment(itemCourse.absences[0].end_date).toDate();
+            const formatEventForm = (itemCourse: Course, type_id: number): any => {
+
+                switch (type_id) {
+                    case EventType.ABSENCE:
+                    case EventType.LATENESS:
+                        let startDate: Date = moment(itemCourse.startDate).toDate();
+                        let endDate: Date = moment(itemCourse.endDate).toDate();
+
+                        if (itemCourse.events.length === 1) {
+                            startDate = moment(itemCourse.events[0].start_date).toDate();
+                            endDate = moment(itemCourse.events[0].end_date).toDate();
+                        }
+
+                        if (itemCourse.absences.length === 1) {
+                            startDate = moment(itemCourse.absences[0].start_date).toDate();
+                            endDate = moment(itemCourse.absences[0].end_date).toDate();
+                        }
+                        return {
+                            id: itemCourse.events.length > 0 ? itemCourse.events[0].id : null,
+                            startDate: startDate,
+                            endDate: endDate,
+                            startTime: startDate,
+                            endTime: endDate,
+                            comment: itemCourse.events.length > 0 ? itemCourse.events[0].comment : null,
+                            studentId: window.item.id,
+                            eventType: ('subjectId' in itemCourse) ? EventsUtils.ALL_EVENTS.event : EventsUtils.ALL_EVENTS.absence,
+                            absences: itemCourse.absences
+                        };
                 }
-                return {
-                    startDate: startDate,
-                    endDate: endDate,
-                    startTime: startDate,
-                    endTime: endDate,
-                    studentId: window.item.id,
-                    eventType: ('subjectId' in itemCourse) ? EventsUtils.ALL_EVENTS.event : EventsUtils.ALL_EVENTS.absence,
-                    absences: itemCourse.absences
-                };
-            }
+            };
 
             function onClickLegend(legends: NodeList, notebooks: Notebook[]) {
                 Array.from(legends).forEach((legend: HTMLElement) => {
@@ -465,6 +475,15 @@ export const calendarController = ng.controller('CalendarController',
                 initActionAbsence();
                 vm.show.loader = false;
             };
+
+            // on opening event "event" form
+            $scope.$on(SNIPLET_FORM_EMIT_EVENTS.CREATION, () => {
+                $scope.$broadcast(SNIPLET_FORM_EVENTS.SET_PARAMS, {
+                    student: window.item,
+                    start_date: moment(),
+                    end_date: moment()
+                });
+            });
 
             // watching our vm.courses from initCalendar methods
             $scope.$watch(() => vm.absences.list, () => {

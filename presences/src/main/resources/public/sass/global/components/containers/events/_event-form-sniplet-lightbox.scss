@@ -1,16 +1,38 @@
-.absentLightbox {
+$textAreaHeight: 50px;
+
+.eventFormLightBox {
 
   /* Header part */
   &-head {
+    h3 {
+      margin-left: 5px;
+    }
+  }
 
+  /* SubHeader part */
+  &-subHead {
+    background: $presences-grey-smoke;
+    padding: 8px 20px;
+
+    h3 {
+      margin: 0;
+    }
+  }
+
+  /* toggle event type radio part */
+  &-eventsTypeRadio {
+    background: $presences-grey-smoke;
+    padding: 8px 8px 16px 20px;
   }
 
   /* Body part */
   &-body {
     background: $presences-grey-smoke;
+
     &-title {
       color: $black;
     }
+
     &-info {
 
       &-startDate {
@@ -28,6 +50,8 @@
       }
 
       &-reason {
+        padding-left: 0 !important;
+
         select {
           border: unset !important;
         }
@@ -47,6 +71,28 @@
 
         &-bottom {
           margin-bottom: 7px;
+        }
+      }
+    }
+
+    &-timepicker {
+      display: inline-block;
+    }
+
+    &-description {
+      background: $white;
+
+      .latenessText {
+        display: flex;
+        padding: calc(#{$textAreaHeight} - 20px) 0 0 0;
+        height: $textAreaHeight;
+        resize: none;
+        border: none;
+
+        border-bottom: 1px solid $presences-grey-incident;
+
+        &::placeholder {
+          color: $presences-grey-incident
         }
       }
     }

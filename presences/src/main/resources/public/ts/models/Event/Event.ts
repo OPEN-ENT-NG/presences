@@ -1,11 +1,11 @@
 import http, {AxiosResponse} from 'axios';
 import {_, moment} from 'entcore';
-import {DateUtils} from '@common/utils'
-import {EventType, LoadingCollection} from "@common/model";
-import {Reason} from "@presences/models/Reason";
-import {EventsUtils} from "../../utilities";
-import {User} from "@common/model/User";
-import {Course} from "@presences/services";
+import {DateUtils} from '@common/utils';
+import {EventType, LoadingCollection} from '@common/model';
+import {Reason} from '@presences/models/Reason';
+import {EventsUtils} from '../../utilities';
+import {User} from '@common/model/User';
+import {Course} from '@presences/services';
 
 export interface Event {
     id: number;
@@ -28,6 +28,7 @@ export interface Event {
     events?: any[];
     exclude?: boolean;
     reasonId: number;
+    async
 }
 
 export interface EventResponse {
@@ -48,6 +49,20 @@ export interface EventResponse {
     isAbsence?: boolean;
     isEventAbsence?: any;
     page?: number;
+}
+
+export interface IEventBody {
+    id?: number;
+    start_date: string;
+    end_date: string;
+    comment?: string;
+    counsellor_input?: boolean;
+    counsellor_regularisation?: boolean;
+    type_id?: number;
+    reason_id: number;
+    register_id: number;
+    student_id: string;
+    type?: string;
 }
 
 export class Event {
@@ -300,7 +315,7 @@ export class Absence extends Event {
             ...(this.student_id ? {student_id: this.student_id} : {}),
             ...(this.start_date ? {start_date: this.start_date} : {}),
             ...(this.end_date ? {end_date: this.end_date} : {})
-        }
+        };
     }
 
     async getAbsence(absenceId: number): Promise<AxiosResponse> {

@@ -1,0 +1,70 @@
+<section class="eventFormLightBox-body body lightbox-form">
+
+    <!-- Info -->
+    <div class="eventFormLightBox-body-info row spacing">
+
+        <!-- date -->
+        <div class="twelve eventFormLightBox-body-timeslot-margin-bottom">
+            <i18n class="margin-right-sm">presences.from</i18n>
+
+            <span class="card date-picker margin-right-sm">
+                <date-picker required ng-model="vm.form.startDate"
+                             data-ng-change="vm.selectDatePicker(vm.form.startDate, 'LATENESS')"
+                             ng-disabled="vm.form.id"></date-picker>
+            </span>
+
+            <label class="eventFormLightBox-body-timeslot">
+                <label class="timeslot-select">
+                    <i class="time-picker"></i>
+                    <select data-ng-model="vm.timeSlotTimePeriod.start"
+                            data-ng-change="vm.selectTimeSlot(vm.timeSlotHourPeriod.START_HOUR, 'LATENESS')"
+                            ng-disabled="vm.form.id"
+                            ng-options="item.name + ' : ' + item.startHour for item in vm.structureTimeSlot.slots
+                                    | orderBy:vm.timeSlotHourPeriod.START_HOUR">
+                        <option value="">[[lang.translate('presences.pick.timeslot')]]</option>
+                    </select>
+                </label>
+            </label>
+
+            <i18n class="margin-right-sm">presences.to</i18n>
+            <span class="card date-picker margin-right-sm">
+                <date-picker required ng-model="vm.form.endDate"
+                             data-ng-change="vm.selectDatePicker(vm.form.endDate, 'LATENESS')"
+                             ng-disabled="vm.form.id"></date-picker>
+            </span>
+
+            <label class="eventFormLightBox-body-timeslot">
+                <label class="timeslot-select">
+                    <i class="time-picker"></i>
+                    <select data-ng-model="vm.timeSlotTimePeriod.end"
+                            data-ng-change="vm.selectTimeSlot(vm.timeSlotHourPeriod.END_HOUR, 'LATENESS')"
+                            ng-disabled="vm.form.id"
+                            ng-options="item.name + ' : ' + item.endHour for item in vm.structureTimeSlot.slots
+                                | orderBy:vm.timeSlotHourPeriod.END_HOUR">
+                        <option value="">[[lang.translate('presences.pick.timeslot')]]</option>
+                    </select>
+                </label>
+            </label>
+        </div>
+
+        <!-- time picker -->
+        <div class="presenceLightbox-body-info-choice margin-top-md">
+            <i18n>presences.registry.csv.lateness.time</i18n>&#58;
+            <span class="card eventFormLightBox-body-timepicker margin-left-md">
+                <time-picker required ng-model="vm.form.endDateTime"></time-picker>
+            </span>
+        </div>
+
+        <!--description-->
+        <div class="eventFormLightBox-body-description twelve cell margin-bottom-xmd">
+            <div class="twelve">
+                <div class="margin-top-sm">
+                    <i18n>presences.lateness.reason</i18n>
+                </div>
+                <textarea class="latenessText" type="text" data-ng-model="vm.form.comment"
+                          i18n-placeholder="presences.exemptions.form.defautValue.comment.2">
+                </textarea>
+            </div>
+        </div>
+    </div>
+</section>

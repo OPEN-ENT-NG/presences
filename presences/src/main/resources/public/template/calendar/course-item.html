@@ -1,5 +1,5 @@
 <div class="course-item-container" id="[[item.id]]"
-     data-ng-click="vm.actionAbsenceForm(item, items)"
+     data-ng-click="vm.actionEventForm(item)"
      data-ng-mouseenter="hoverEvents($event, item)" data-ng-mouseleave="hoverOutEvents()">
     <!-- ^ hovering events absence ^ -->
 
@@ -32,7 +32,7 @@
         <div class="events">
             <i ng-if="item.incident" class="report incident"></i>
 
-            <div class="event event-type-[[event.type_id]]" ng-repeat="event in item.events">&nbsp;
+            <div class="event event-type-[[event.type_id]]" ng-repeat="event in item.events" ng-click="actionEventForm(event)">&nbsp;
                 <!-- hovering events (late, departure) -->
                 <span class="tooltip-top">
                     <span>[[vm.getEventType(event)]]</span> <br>
