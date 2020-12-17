@@ -32,10 +32,10 @@
     <!-- Toggle event type form -->
     <section class="eventFormLightBox-eventsTypeRadio">
         <!-- Event types loop -->
-        <div class="md-radio md-radio-inline" ng-repeat="eventType in vm.eventsTypes">
+        <div class="md-radio md-radio-inline" ng-repeat="eventType in vm.eventsTypes"
+             ng-show="vm.canSwitchEventTypeForm(eventType)">
             <input id="[[eventType]]" data-ng-model="vm.selectedEventType"
                    ng-value="eventType"
-                   ng-disabled="vm.form.id"
                    data-ng-click="vm.switchEventTypeForm(eventType)" type="radio">
             <label for="[[eventType]]">[[lang.translate(vm.getEventTypeLabel(eventType))]]</label>
         </div>
@@ -79,7 +79,7 @@
 
             <!-- Delete mode  -->
             <button ng-if="vm.form.id"
-                    data-ng-click="vm.deleteEvent(vm.selectedEventType)">
+                    data-ng-click="vm.deleteEvent(vm.selectedEventType, true)">
                 <i18n>presences.exemptions.form.delete</i18n>
             </button>
         </div>

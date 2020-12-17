@@ -14,7 +14,7 @@ declare let window: any;
 
 type TEventType = 'ABSENCE' | 'LATENESS';
 
-export interface IFormData {
+interface IFormData {
     id?: number;
     startDate: Date;
     endDate: Date;
@@ -25,7 +25,9 @@ export interface IFormData {
     student_id: string;
     absences?: Array<IAbsence>;
     comment?: string;
+    type_id?: number;
     type?: string;
+    eventType?: TEventType;
 
     timeSlotTimePeriod?: {
         start: ITimeSlot;
@@ -92,7 +94,9 @@ interface ViewModel {
 
     editEvent(eventType: TEventType): void;
 
-    deleteEvent(eventType: TEventType): void;
+    canSwitchEventTypeForm(eventType: TEventType): boolean;
+
+    deleteEvent(eventType: TEventType, canReload: boolean): void;
 
     prepareAbsenceBody(): void;
 
@@ -116,7 +120,7 @@ interface ViewModel {
 
     updateAbsence(): Promise<void>;
 
-    deleteAbsence(): Promise<void>;
+    deleteAbsence(canReload: boolean): Promise<void>;
 
     /* Lateness part methods */
 
@@ -126,7 +130,7 @@ interface ViewModel {
 
     updateLateness(): Promise<void>;
 
-    deleteLateness(): Promise<void>;
+    deleteLateness(canReload: boolean): Promise<void>;
 
     editEventForm(eventType: TEventType, obj): void;
 
@@ -245,7 +249,7 @@ const vm: ViewModel = {
         } else {
             vm.form.startDateTime = moment(new Date()).set({second: 0, millisecond: 0}).toDate();
         }
-        vm.form.endDateTime = moment(new Date().setHours(17)).set({minute: 0, second: 0, millisecond: 0}).toDate();
+        vm.form.endDateTime = moment(new Date()).set({minute: 0, second: 0, millisecond: 0}).toDate();
     },
 
     setFormEventType: (eventType: TEventType): void => {
@@ -274,6 +278,8 @@ const vm: ViewModel = {
             vm.form.endDate = response.data.end_date;
             vm.form.student_id = response.data.student_id;
             vm.form.reason_id = response.data.reason_id;
+            vm.form.type_id = EventType.ABSENCE;
+            vm.form.eventType = "ABSENCE";
             vm.setFormDateParams(vm.form.startDate, vm.form.endDate);
             vm.setTimeSlot();
         } else {
@@ -293,6 +299,8 @@ const vm: ViewModel = {
             case 'LATENESS':
                 vm.form.startDate = data.startDate;
                 vm.form.endDate = data.endDate;
+                vm.form.type_id = EventType.LATENESS;
+                vm.form.eventType = "LATENESS";
                 vm.setFormDateParams(vm.form.startDate, vm.form.endDate);
                 break;
         }
@@ -313,6 +321,8 @@ const vm: ViewModel = {
         vm.form.startDate = data.startDate;
         vm.form.endDate = data.endDate;
         vm.form.student_id = data.studentId;
+        vm.form.type_id = EventType.ABSENCE;
+        vm.form.eventType = "ABSENCE";
         vm.form.reason_id = data.reason_id ? data.reason_id : vm.form.absences
             .find(a => 'type' in a || 'type_id' in a).reason_id;
 
@@ -388,21 +398,51 @@ const vm: ViewModel = {
     editEvent(eventType: TEventType): void {
         switch (eventType) {
             case 'ABSENCE':
-                vm.updateAbsence();
+                if (vm.form.eventType !== 'ABSENCE') {
+                    vm.deleteEvent(vm.form.eventType, false);
+                    vm.createAbsence();
+                } else {
+                    vm.updateAbsence();
+                }
                 break;
             case 'LATENESS':
-                vm.updateLateness();
+                if (vm.form.eventType !== 'LATENESS') {
+                    if (vm.form.eventType === 'ABSENCE') {
+                        vm.event = new Absence(null, null, null, null);
+                    }
+                    vm.deleteEvent(vm.form.eventType, false);
+                    vm.createLateness();
+                } else {
+                    vm.updateLateness();
+                }
                 break;
         }
     },
 
-    deleteEvent(eventType: TEventType): void {
+    canSwitchEventTypeForm(eventType: TEventType): boolean {
         switch (eventType) {
             case 'ABSENCE':
-                vm.deleteAbsence();
+                return true;
+            case 'LATENESS':
+                if (vm.form.eventType === 'ABSENCE') {
+                    let startDate: string = DateUtils.format(vm.form.startDate.toDateString(), DateUtils.FORMAT["YEAR-MONTH-DAY"]);
+                    let endDate: string = DateUtils.format(vm.form.endDate.toDateString(), DateUtils.FORMAT["YEAR-MONTH-DAY"])
+                    return startDate === endDate
+                        && vm.timeSlotTimePeriod.start.name === vm.timeSlotTimePeriod.end.name
+                        && !vm.display.isFreeSchedule;
+                }
+                return true;
+        }
+        return false;
+    },
+
+    deleteEvent(eventType: TEventType, canReload: boolean): void {
+        switch (eventType) {
+            case 'ABSENCE':
+                vm.deleteAbsence(canReload);
                 break;
             case 'LATENESS':
-                vm.deleteLateness();
+                vm.deleteLateness(canReload);
                 break;
         }
     },
@@ -466,13 +506,13 @@ const vm: ViewModel = {
         vm.safeApply();
     },
 
-    async deleteAbsence(): Promise<void> {
+    async deleteAbsence(canReload: boolean): Promise<void> {
         let responses: Array<AxiosResponse> = [];
         for (const absence of vm.form.absences) {
             if ('type' in absence && absence.type === EventsUtils.ALL_EVENTS.absence) {
-                responses.push(await (<Absence> vm.event).deleteAbsence(absence.id));
+                responses.push(await (<Absence>vm.event).deleteAbsence(absence.id));
             } else {
-                responses.push(await (<Absence> vm.event).deleteEventAbsence(absence.id));
+                responses.push(await (<Absence>vm.event).deleteEventAbsence(absence.id));
             }
         }
 
@@ -483,7 +523,9 @@ const vm: ViewModel = {
             vm.closeEventLightbox();
             toasts.confirm(lang.translate('presences.absence.form.delete.succeed'));
         }
-        eventsForm.that.$emit(SNIPLET_FORM_EMIT_EVENTS.DELETE);
+        if (canReload) {
+            eventsForm.that.$emit(SNIPLET_FORM_EMIT_EVENTS.DELETE);
+        }
         vm.safeApply();
     },
 
@@ -533,13 +575,15 @@ const vm: ViewModel = {
             });
     },
 
-    async deleteLateness(): Promise<void> {
+    async deleteLateness(canReload: boolean): Promise<void> {
         eventService.deleteEvent(vm.form.id)
             .then((response: AxiosResponse) => {
                 if (response.status === 200 || response.status === 201) {
                     vm.closeEventLightbox();
                     toasts.confirm(lang.translate('presences.lateness.form.delete.succeed'));
-                    eventsForm.that.$emit(SNIPLET_FORM_EMIT_EVENTS.DELETE);
+                    if (canReload) {
+                        eventsForm.that.$emit(SNIPLET_FORM_EMIT_EVENTS.DELETE);
+                    }
                     vm.safeApply();
                 } else {
                     toasts.warning(lang.translate('presences.lateness.form.delete.error'));
