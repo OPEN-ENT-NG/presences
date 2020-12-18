@@ -14,6 +14,7 @@ export interface CourseEvent {
     type_id: number;
     reason_id?: number;
     counsellor_input?: boolean;
+    counsellor_regularisation?: boolean;
     comment?: string;
 }
 

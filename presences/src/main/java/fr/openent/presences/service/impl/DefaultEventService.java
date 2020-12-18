@@ -916,7 +916,7 @@ public class DefaultEventService implements EventService {
     public void list(String structureId, String startDate, String endDate, List<Integer> eventType,
                      List<String> userId, Handler<Either<String, JsonArray>> handler) {
         String query = "SELECT event.id, event.start_date, event.end_date, event.type_id, event.reason_id, " +
-                "event.counsellor_input, event.comment, " +
+                "event.counsellor_input, event.counsellor_regularisation, event.comment, " +
                 "to_char(register.start_date, 'YYYY-MM-DD HH24:MI:SS') as course_start_date, " +
                 "to_char(register.end_date, 'YYYY-MM-DD HH24:MI:SS') as course_end_date, register.course_id " +
                 "FROM  " + Presences.dbSchema + ".event " +

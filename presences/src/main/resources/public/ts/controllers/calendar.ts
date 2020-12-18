@@ -342,16 +342,20 @@ export const calendarController = ng.controller('CalendarController',
                     case EventType.LATENESS:
                         let startDate: Date = moment(itemCourse.startDate).toDate();
                         let endDate: Date = moment(itemCourse.endDate).toDate();
+                        let counsellor_regularisation: boolean;
 
                         if (itemCourse.events.length === 1) {
                             startDate = moment(itemCourse.events[0].start_date).toDate();
                             endDate = moment(itemCourse.events[0].end_date).toDate();
+                            counsellor_regularisation = itemCourse.events[0].counsellor_regularisation;
                         }
 
                         if (itemCourse.absences.length === 1) {
                             startDate = moment(itemCourse.absences[0].start_date).toDate();
                             endDate = moment(itemCourse.absences[0].end_date).toDate();
+                            counsellor_regularisation = itemCourse.absences[0].counsellor_regularisation;
                         }
+
                         return {
                             id: itemCourse.events.length > 0 ? itemCourse.events[0].id : null,
                             startDate: startDate,
@@ -361,7 +365,8 @@ export const calendarController = ng.controller('CalendarController',
                             comment: itemCourse.events.length > 0 ? itemCourse.events[0].comment : null,
                             studentId: window.item.id,
                             eventType: ('subjectId' in itemCourse) ? EventsUtils.ALL_EVENTS.event : EventsUtils.ALL_EVENTS.absence,
-                            absences: itemCourse.absences
+                            absences: itemCourse.absences,
+                            counsellor_regularisation: counsellor_regularisation
                         };
                 }
             };

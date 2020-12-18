@@ -28,6 +28,7 @@ interface IFormData {
     type_id?: number;
     type?: string;
     eventType?: TEventType;
+    counsellor_regularisation?: boolean;
 
     timeSlotTimePeriod?: {
         start: ITimeSlot;
@@ -174,6 +175,7 @@ const vm: ViewModel = {
                 break;
             case 'LATENESS':
                 vm.selectedEventType = 'LATENESS';
+                vm.form.endDateTime = moment(new Date()).set({second: 0, millisecond: 0}).toDate();
                 break;
         }
         vm.setFormEventType(eventType);
@@ -197,9 +199,9 @@ const vm: ViewModel = {
     openEventLightbox(eventType: TEventType, event?: IAngularEvent, args?: any): void {
         vm.createEventLightBox = true;
         vm.display.isFreeSchedule = false;
+        vm.form = {} as IFormData;
         vm.setFormEventType(eventType);
         vm.switchEventTypeForm(eventType);
-        vm.form = {} as IFormData;
         eventsForm.that.$emit(SNIPLET_FORM_EMIT_EVENTS.CREATION);
         if (event) {
             vm.form.startDate = args.startDate;
@@ -249,7 +251,7 @@ const vm: ViewModel = {
         } else {
             vm.form.startDateTime = moment(new Date()).set({second: 0, millisecond: 0}).toDate();
         }
-        vm.form.endDateTime = moment(new Date()).set({minute: 0, second: 0, millisecond: 0}).toDate();
+        vm.form.endDateTime = moment(new Date()).set({second: 0, millisecond: 0}).toDate();
     },
 
     setFormEventType: (eventType: TEventType): void => {
@@ -278,6 +280,7 @@ const vm: ViewModel = {
             vm.form.endDate = response.data.end_date;
             vm.form.student_id = response.data.student_id;
             vm.form.reason_id = response.data.reason_id;
+            vm.form.counsellor_regularisation = response.data.counsellor_regularisation;
             vm.form.type_id = EventType.ABSENCE;
             vm.form.eventType = "ABSENCE";
             vm.setFormDateParams(vm.form.startDate, vm.form.endDate);
@@ -327,24 +330,13 @@ const vm: ViewModel = {
             .find(a => 'type' in a || 'type_id' in a).reason_id;
 
         vm.selectedReason = vm.reasons.find(reason => reason.id === vm.form.reason_id);
+        vm.form.counsellor_regularisation = data.counsellor_regularisation;
+
         vm.canRegularize = (vm.selectedReason) ? (!vm.selectedReason.proving) : false;
 
         vm.form.type = data.eventType;
         vm.setFormDateParams(vm.form.startDate, vm.form.endDate);
         vm.safeApply();
-    },
-
-    /**
-     * Update the regularisation state of the absence.
-     */
-    updateRegularisation(id?: number): void {
-        if (vm.eventBody && vm.form) {
-            let absence: Absence = new Absence(vm.eventBody.register_id, vm.eventBody.student_id, null, null);
-            absence.id = id ? id : vm.form.absences[0].id;
-            absence.counsellor_regularisation = (vm.form.absences && vm.form.absences[0]) ? vm.form.absences[0].counsellor_regularisation : false;
-            absence.updateAbsenceRegularized([absence.id], absence.counsellor_regularisation);
-            vm.updateAbsenceRegularisation = false;
-        }
     },
 
     /**
@@ -359,7 +351,7 @@ const vm: ViewModel = {
                 }
                 return false;
             case 'LATENESS':
-                if (vm.form && vm.form.startDate && vm.form.endDate
+                if (vm.form && vm.form.startDate && vm.form.endDate && vm.timeSlotTimePeriod
                     && vm.timeSlotTimePeriod.start && vm.timeSlotTimePeriod.start.startHour
                     && vm.timeSlotTimePeriod.end && vm.timeSlotTimePeriod.end.endHour && vm.form.endDateTime) {
                     return (DateUtils.getDateFormat(vm.form.startDate, DateUtils.getTimeFormatDate(vm.timeSlotTimePeriod.start.startHour)) <=
@@ -376,11 +368,10 @@ const vm: ViewModel = {
     selectReason(): void {
         vm.selectedReason = vm.reasons.find(reason => reason.id === vm.form.reason_id);
         vm.canRegularize = (vm.selectedReason) ? (!vm.selectedReason.proving) : false;
-        vm.updateAbsenceRegularisation = vm.selectedReason.proving;
+        vm.updateAbsenceRegularisation = vm.selectedReason ? vm.selectedReason.proving : false;
+        vm.form.counsellor_regularisation = vm.selectedReason ? vm.selectedReason.proving : false;
         if (vm.form.absences) {
-            vm.form.absences[0].counsellor_regularisation = vm.selectedReason.proving;
-        } else {
-            vm.form.absences.forEach((absence: IAbsence) => absence.counsellor_regularisation = vm.selectedReason.proving);
+            vm.form.absences.forEach((absence: IAbsence) => absence.counsellor_regularisation = vm.selectedReason ? vm.selectedReason.proving : false);
         }
     },
 
@@ -424,7 +415,7 @@ const vm: ViewModel = {
             case 'ABSENCE':
                 return true;
             case 'LATENESS':
-                if (vm.form.eventType === 'ABSENCE') {
+                if (vm.form && vm.form.eventType === 'ABSENCE') {
                     let startDate: string = DateUtils.format(vm.form.startDate.toDateString(), DateUtils.FORMAT["YEAR-MONTH-DAY"]);
                     let endDate: string = DateUtils.format(vm.form.endDate.toDateString(), DateUtils.FORMAT["YEAR-MONTH-DAY"])
                     return startDate === endDate
@@ -459,6 +450,7 @@ const vm: ViewModel = {
         vm.eventBody.register_id = vm.form.register_id ? vm.form.register_id : null;
         vm.eventBody.student_id = vm.form.student_id ? vm.form.student_id : null;
         vm.eventBody.type = vm.form.type ? vm.form.type : null;
+        vm.eventBody.counsellor_regularisation = vm.form.counsellor_regularisation ? vm.form.counsellor_regularisation : false;
     },
 
     setEventModel(event: Absence | Lateness): void {
@@ -490,7 +482,7 @@ const vm: ViewModel = {
             responses = [await (<Absence> vm.event).createAbsence(window.structure.id, vm.eventBody.reason_id, model.me.userId)];
         } else {
             for (const absence of vm.form.absences) {
-                responses.push(await (<Absence> vm.event).updateAbsence(absence.id, window.structure.id, vm.eventBody.reason_id, model.me.userId));
+                responses.push(await (<Absence>vm.event).updateAbsence(absence.id, window.structure.id, vm.eventBody.reason_id, model.me.userId));
             }
         }
         let failedResponse: AxiosResponse = responses.find((response: AxiosResponse) => response.status != 200 && response.status != 201);
@@ -504,6 +496,19 @@ const vm: ViewModel = {
         }
         eventsForm.that.$emit(SNIPLET_FORM_EMIT_EVENTS.EDIT);
         vm.safeApply();
+    },
+
+    /**
+     * Update the regularisation state of the absence.
+     */
+    updateRegularisation(id?: number): void {
+        if (vm.eventBody && vm.form) {
+            let absence: Absence = new Absence(vm.eventBody.register_id, vm.eventBody.student_id, null, null);
+            absence.id = id ? id : vm.form.absences[0].id;
+            absence.counsellor_regularisation = vm.eventBody.counsellor_regularisation;
+            absence.updateAbsenceRegularized([absence.id], absence.counsellor_regularisation);
+            vm.updateAbsenceRegularisation = false;
+        }
     },
 
     async deleteAbsence(canReload: boolean): Promise<void> {
