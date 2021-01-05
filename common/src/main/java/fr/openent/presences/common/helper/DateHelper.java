@@ -502,6 +502,25 @@ public class DateHelper {
         return sdf.format(calendar.getTime());
     }
 
+    /**
+     * Fetching current date (now())
+     * <p>
+     * Possibility to modify value in this calendar method
+     *
+     * @param format        format date to format your type of start and end date
+     * @param calendarValue Calendar.HOUR, Calendar.MINUTE etc...
+     * @param value         value amount on calendarValue
+     * @return return       current date with the wished format
+     */
+    public static String getCurrentDate(String format, int calendarValue, int value) {
+        Calendar calendar = Calendar.getInstance();
+        SimpleDateFormat sdf = new SimpleDateFormat(format);
+        sdf.setTimeZone(TimeZone.getTimeZone("Europe/Paris"));
+        
+        calendar.add(calendarValue, value);
+        return sdf.format(calendar.getTime());
+    }
+
 
     /**
      * Fetching a list of date based on two dates

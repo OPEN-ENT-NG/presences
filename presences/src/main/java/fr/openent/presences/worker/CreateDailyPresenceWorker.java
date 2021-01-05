@@ -27,10 +27,7 @@ import org.entcore.common.sql.SqlResult;
 import org.entcore.common.user.UserInfos;
 import org.vertx.java.busmods.BusModBase;
 
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 
 public class CreateDailyPresenceWorker extends BusModBase implements Handler<Message<JsonObject>> {
@@ -65,7 +62,7 @@ public class CreateDailyPresenceWorker extends BusModBase implements Handler<Mes
     private void processCreateDailyPresences() {
         String today = DateHelper.getCurrentDay();
         String startDayTime = "00:00";
-        String currentTime = DateHelper.getCurrentDate(DateHelper.HOUR_MINUTES);
+        String currentTime = DateHelper.getCurrentDate(DateHelper.HOUR_MINUTES, Calendar.HOUR, 2);
 
         String queryStructures = "SELECT id_etablissement as id FROM " + Presences.dbSchema + " .etablissements_actifs";
 
