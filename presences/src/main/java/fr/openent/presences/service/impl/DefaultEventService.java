@@ -86,7 +86,7 @@ public class DefaultEventService implements EventService {
             } else {
                 List<Event> events = EventHelper.getEventListFromJsonArray(eventsFuture.result(), Event.MANDATORY_ATTRIBUTE);
 
-                if (events.isEmpty()) { //no need to proceed treatment if no events
+                if (events != null && events.isEmpty()) { //no need to proceed treatment if no events
                     handler.handle(new Either.Right<>(new JsonArray(events)));
                     return;
                 }
@@ -356,7 +356,7 @@ public class DefaultEventService implements EventService {
         if ((noReason != null && noReason) && (regularized != null && regularized)) {
             query += "AND (reason_id IS NULL OR (reason_id IS NOT NULL AND counsellor_regularisation = true)";
 
-            if (!listReasonIds.isEmpty()) {
+            if (listReasonIds != null && !listReasonIds.isEmpty()) {
                 query += " AND reason_id IN " + Sql.listPrepared(listReasonIds) + ")";
                 params.addAll(new JsonArray(listReasonIds));
             } else {
@@ -367,14 +367,14 @@ public class DefaultEventService implements EventService {
         } else {
             // If we want to fetch events WITH reasonId, array reasonIds fetched is not empty
             // (optional if we wish noReason fetched at same time then noReason is TRUE)
-            if (!listReasonIds.isEmpty()) {
+            if (listReasonIds != null && !listReasonIds.isEmpty()) {
                 query += " AND (reason_id IN " + Sql.listPrepared(listReasonIds) + (noReason != null && noReason ? " OR reason_id IS NULL" : "") + ") ";
                 params.addAll(new JsonArray(listReasonIds));
             }
 
             // If we want to fetch events with NO reasonId, array reasonIds fetched is empty
             // AND noReason is TRUE
-            if (listReasonIds.isEmpty() && (noReason != null && noReason)) {
+            if (listReasonIds != null && listReasonIds.isEmpty() && (noReason != null && noReason)) {
                 query += " AND (reason_id IS NULL " + (regularized != null ? " OR counsellor_regularisation = " + regularized + "" : "") + ") ";
             }
 
@@ -1038,21 +1038,21 @@ public class DefaultEventService implements EventService {
             query += " AND event.start_date::time >= '" + startTime + "' AND event.start_date::time <= '" + endTime + "'";
         }
 
-        if (!students.isEmpty()) {
+        if (students != null && !students.isEmpty()) {
             query += " AND student_id IN " + Sql.listPrepared(students);
             params.addAll(new JsonArray(students));
         }
 
         // If we want to fetch events WITH reasonId, array reasonIds fetched is not empty 
         // (optional if we wish noReason fetched at same time then noReason is TRUE)
-        if (!reasonsId.isEmpty()) {
+        if (reasonsId != null && !reasonsId.isEmpty()) {
             query += " AND (reason_id IN " + Sql.listPrepared(reasonsId) + (noReasons ? " OR reason_id IS NULL" : "") + ") ";
             params.addAll(new JsonArray(reasonsId));
         }
 
         // If we want to fetch events with NO reasonId, array reasonIds fetched is empty 
         // AND noReason is TRUE
-        if (reasonsId.isEmpty() && noReasons) {
+        if (reasonsId != null && reasonsId.isEmpty() && noReasons) {
             query += " AND reason_id IS NULL ";
         }
 
