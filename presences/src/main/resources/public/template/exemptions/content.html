@@ -46,8 +46,9 @@
             <tr ng-disabled="hasRight('manageExemption') != true"
                 data-ng-repeat="exemption in vm.exemptions.all">
                 <th class="uppercase flex-th">
-                    <span class="avatar" ng-click="vm.editExemption(exemption)"
-                          ng-style="{'background-image': 'url(/viescolaire/structures/' + exemption.structureId + '/students/' + exemption.studentId + '/picture)'}">&nbsp;</span>
+                    <img class="avatar"
+                         ng-click="vm.editExemption(exemption)"
+                         ng-src="/viescolaire/structures/[[exemption.structureId]]/students/[[exemption.studentId]]/picture">
                     <span><student-name name="exemption.student.lastName + ' ' + exemption.student.firstName"
                                         id="exemption.student.idEleve"/></span>
                 </th>
