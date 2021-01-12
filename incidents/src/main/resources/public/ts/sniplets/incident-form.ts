@@ -74,7 +74,7 @@ const vm: ViewModel = {
     usersSearch: null,
     ownerSearch: null,
 
-    createIncidentLightbox: async function () {
+    createIncidentLightbox: async () => {
         vm.usersSearch = new UsersSearch(window.structure.id, SearchService);
         vm.isLightboxActive = true;
         vm.lightbox.createMode = true;
@@ -87,7 +87,11 @@ const vm: ViewModel = {
         vm.checkOptionState();
         vm.incidentForm = new Incident(window.structure.id);
         vm.incidentStudentsForm = new Students();
-        vm.incidentForm.owner = model.me;
+        vm.incidentForm.owner = {
+            id: model.me.userId,
+            firstName: model.me.firstName,
+            lastName: model.me.lastName
+        };
 
         incidentForm.that.$emit(SNIPLET_FORM_EMIT_EVENTS.CREATION);
         vm.safeApply();
