@@ -98,8 +98,12 @@ export class Exemption extends ExemptionView {
         let exemp = {
             "structure_id": this.structureId,
             "subject_id": this.subject.id,
-            "start_date": moment(this.startDate).format('YYYY-MM-DD'),
-            "end_date": moment(this.endDate).format('YYYY-MM-DD'),
+            "start_date": moment(this.startDate)
+                .set({hour:0,minute:0,second:0})
+                .format(DateUtils.FORMAT['YEAR-MONTH-DAY-HOUR-MIN-SEC']),
+            "end_date": moment(this.endDate)
+                .set({hour:23,minute:59,second:59})
+                .format(DateUtils.FORMAT['YEAR-MONTH-DAY-HOUR-MIN-SEC']),
             "attendance": this.attendance,
             "comment": this.comment
         };
