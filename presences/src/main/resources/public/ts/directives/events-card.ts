@@ -4,8 +4,15 @@ import {DASHBOARD_STUDENT_EVENTS} from "../core/enum/dashboard-student-events";
 import {Student} from "@common/model/Student";
 import {IPeriod, Notebook} from "../services";
 import {Event, EVENT_TYPES} from "../models";
-import {Incident, IPunishment} from "@incidents/models";
+import {
+    Incident,
+    IPunishment,
+    IPDetentionField,
+    IPDutyField,
+    IPExcludeField
+} from "@incidents/models";
 import {DateUtils} from "@common/utils";
+import {idiom as lang} from "entcore";
 
 interface IViewModel {
     title: string;
@@ -29,6 +36,8 @@ interface IViewModel {
         Array<Event> | Array<Incident> | Array<IPunishment> | Array<Notebook>;
 
     setCorrectFormatEvent(event: Event | Incident | IPunishment | Notebook): string;
+
+    getPunishmentDate(punishment: IPunishment): string;
 
     hasOnlyTwoEvents(): boolean;
 
@@ -151,7 +160,7 @@ export const EventsCard = ng.directive('eventsCard', () => {
                             return formatDayDate((<Event>event).start_date) + ' - ' + formatHour((<Event>event).start_date);
                         }
                         case EVENT_TYPES.PUNISHMENT:
-                            return (<IPunishment>event).type.label + ' - ' + formatDate((<IPunishment>event).created_at);
+                            return (<IPunishment>event).type.label + ' - ' + vm.getPunishmentDate(<IPunishment>event);
                         case EVENT_TYPES.INCIDENT:
                             return (<Incident>event).type.label + ' - ' + formatDate((<Incident>event).date.toString()) + ' - ' +
                                 (<Incident>event).protagonist.label;
@@ -162,6 +171,39 @@ export const EventsCard = ng.directive('eventsCard', () => {
                     }
                 } else {
                     return '';
+                }
+            };
+
+            vm.getPunishmentDate = (punishment: IPunishment): string => {
+                let createdDate: string = DateUtils.format(punishment.created_at, DateUtils.FORMAT["DAY-MONTH-YEAR"]);
+                switch (punishment.type.punishment_category_id) {
+                    case 1: //DUTY
+                        let dutyDate: string = createdDate;
+                        if ((<IPDutyField>punishment.fields).delay_at) {
+                            dutyDate = DateUtils.format((<IPDutyField>punishment.fields).delay_at, DateUtils.FORMAT["DAY-MONTH-YEAR"]);
+                        }
+                        return lang.translate("incidents.punishments.date.for.the") + dutyDate;
+                    case 2: //DETENTION
+                        let startDetentionDate: string = createdDate;
+                        if ((<IPDetentionField>punishment.fields).start_at) {
+                            startDetentionDate = DateUtils.format((<IPDetentionField>punishment.fields).start_at, DateUtils.FORMAT["DAY-MONTH-YEAR"]);
+                        }
+                        return lang.translate("incidents.punishments.date.for.the") + startDetentionDate;
+                    case 3: //BLAME
+                        return lang.translate("incidents.punishments.date.created.on") + createdDate;
+                    case 4: // EXCLUSION
+                        if ((<IPDetentionField>punishment.fields).start_at && (<IPDetentionField>punishment.fields).end_at) {
+                            let startExcludeDate: string = DateUtils.format((<IPExcludeField>punishment.fields).start_at, DateUtils.FORMAT["DAY-MONTH-YEAR"]);
+                            let endExcludeDate: string = DateUtils.format((<IPExcludeField>punishment.fields).end_at, DateUtils.FORMAT["DAY-MONTH-YEAR"]);
+                            if (startExcludeDate && endExcludeDate) {
+                                return startExcludeDate === endExcludeDate ? startExcludeDate :
+                                    lang.translate("incidents.punishments.date.from") + startExcludeDate + lang.translate("incidents.punishments.date.to") + endExcludeDate;
+                            } else {
+                                return " ";
+                            }
+                        }
+                    default:
+                        return createdDate;
                 }
             };
 
