@@ -67,7 +67,7 @@
     <!-- Button menu -->
     <div class="four cell">
         <sniplet workflow="presences.createPresences" template="presence-form" application="presences"></sniplet>
-        <button class="right-magnet forbidden" disabled>
+        <button class="right-magnet" ng-click="vm.exportCsv()">
             <i18n>presences.export.tocsv</i18n>
         </button>
     </div>

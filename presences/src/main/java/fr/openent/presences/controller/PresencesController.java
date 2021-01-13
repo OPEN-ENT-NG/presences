@@ -4,13 +4,16 @@ import fr.openent.presences.Presences;
 import fr.openent.presences.common.helper.WorkflowHelper;
 import fr.openent.presences.constants.Actions;
 import fr.openent.presences.enums.WorkflowActions;
+import fr.openent.presences.export.PresencesCSVExport;
 import fr.openent.presences.security.presence.ManagePresenceRight;
 import fr.openent.presences.service.PresenceService;
 import fr.openent.presences.service.impl.DefaultPresenceService;
 import fr.wseduc.rs.*;
 import fr.wseduc.security.ActionType;
 import fr.wseduc.security.SecuredAction;
+import fr.wseduc.webutils.Either;
 import fr.wseduc.webutils.request.RequestUtils;
+import io.vertx.core.Handler;
 import io.vertx.core.MultiMap;
 import io.vertx.core.eventbus.EventBus;
 import io.vertx.core.http.HttpServerRequest;
@@ -24,6 +27,8 @@ import org.entcore.common.http.filter.Trace;
 import org.entcore.common.http.response.DefaultResponseHandler;
 import org.entcore.common.user.UserUtils;
 
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
@@ -65,23 +70,7 @@ public class PresencesController extends ControllerHelper {
     @ApiDoc("Retrieve presences")
     @SecuredAction(Presences.READ_PRESENCE)
     public void getPresences(final HttpServerRequest request) {
-        UserUtils.getUserInfos(eb, request, user -> {
-            MultiMap params = request.params();
-            String structureId = params.get("structureId");
-            String startDate = params.get("startDate");
-            String endDate = params.get("endDate");
-            List<String> userIds = params.getAll("studentId");
-            List<String> ownerIds = params.getAll("ownerId");
-            ownerIds = WorkflowHelper.hasRight(user, WorkflowActions.SEARCH.toString()) ? ownerIds :
-                    Collections.singletonList(user.getUserId());
-
-            if (!request.params().contains("structureId") || !request.params().contains("startDate") ||
-                    !request.params().contains("endDate")) {
-                badRequest(request);
-                return;
-            }
-            presencesService.get(structureId, startDate, endDate, userIds, ownerIds, DefaultResponseHandler.arrayResponseHandler(request));
-        });
+        get(request, DefaultResponseHandler.arrayResponseHandler(request));
     }
 
     @Post("/presence")
@@ -134,4 +123,53 @@ public class PresencesController extends ControllerHelper {
         String presenceId = request.getParam("id");
         presencesService.delete(presenceId, DefaultResponseHandler.defaultResponseHandler(request));
     }
+
+    @Get("/presences/export")
+    @ApiDoc("Export presences")
+    @SecuredAction(Presences.READ_PRESENCE)
+    public void exportPresences(final HttpServerRequest request) {
+        get(request, result -> {
+            if (result.isLeft()) {
+                log.error("[PresencesController@exportPresences] Failed to export Presences", result.left());
+                renderError(request);
+                return;
+            }
+            JsonArray presences = result.right().getValue();
+
+            List<String> csvHeaders = new ArrayList<>(Arrays.asList(
+                    "presences.presences.csv.header.owner",
+                    "presences.presences.csv.header.discipline",
+                    "presences.presences.csv.header.date",
+                    "presences.presences.csv.header.start.time",
+                    "presences.presences.csv.header.end.time",
+                    "presences.presences.csv.header.student.number"));
+
+            PresencesCSVExport pce = new PresencesCSVExport(presences);
+            pce.setRequest(request);
+            pce.setHeader(csvHeaders);
+            pce.export();
+        });
+    }
+
+    private void get(final HttpServerRequest request, Handler<Either<String, JsonArray>> handler) {
+        UserUtils.getUserInfos(eb, request, user -> {
+            MultiMap params = request.params();
+            String structureId = params.get("structureId");
+            String startDate = params.get("startDate");
+            String endDate = params.get("endDate");
+            List<String> userIds = params.getAll("studentId");
+            List<String> ownerIds = params.getAll("ownerId");
+            ownerIds = WorkflowHelper.hasRight(user, WorkflowActions.SEARCH.toString()) ? ownerIds :
+                    Collections.singletonList(user.getUserId());
+
+            if (!request.params().contains("structureId") || !request.params().contains("startDate") ||
+                    !request.params().contains("endDate")) {
+                badRequest(request);
+                return;
+            }
+            presencesService.get(structureId, startDate, endDate, userIds, ownerIds, handler);
+
+        });
+    }
+
 }

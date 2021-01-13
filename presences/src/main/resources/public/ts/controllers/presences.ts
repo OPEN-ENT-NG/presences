@@ -1,4 +1,4 @@
-import {model, moment, ng} from 'entcore';
+import {model, moment, ng, toasts} from 'entcore';
 import {Presence, PresenceRequest, Presences} from "../models";
 import {DateUtils} from "@common/utils";
 import {StudentsSearch, UsersSearch} from "../utilities";
@@ -51,6 +51,9 @@ interface ViewModel {
     selectStudent(valueInput, studentItem): void;
 
     removeSelectedStudents(studentItem): void;
+
+    // CSV
+    exportCsv(): void;
 }
 
 export const presencesController = ng.controller('PresencesController',
@@ -190,6 +193,19 @@ export const presencesController = ng.controller('PresencesController',
             vm.removeSelectedStudents = (studentItem): void => {
                 vm.studentsSearch.removeSelectedStudents(studentItem);
                 vm.updateFilter();
+            };
+
+            /* CSV  */
+            vm.exportCsv = (): void => {
+                if (vm.presences.all.length > 1000) {
+                    toasts.warning('presences.presences.csv.full');
+                } else {
+                    if (vm.presences.all.length === 0) {
+                        toasts.info('presences.presences.csv.empty');
+                    } else {
+                        presenceService.exportCSV(vm.presencesRequest);
+                    }
+                }
             };
 
             $scope.$on(SNIPLET_FORM_EMIT_EVENTS.CREATION, startAction);
