@@ -28,12 +28,14 @@ export interface EventRequest {
     structureId: string;
     startDate: string;
     endDate: string;
-    noReason: boolean;
+    noReason?: boolean;
     eventType: string;
-    listReasonIds: string;
+    listReasonIds?: string;
     regularized?: boolean;
-    userId: string;
-    classes: string;
+    userId?: string;
+    userIds?: string[];
+    classes?: string;
+    classesIds?: string[];
     page?: number;
 }
 
@@ -41,20 +43,34 @@ export const eventService: EventService = {
     get: async (eventRequest: EventRequest): Promise<{ pageCount: number, events: EventResponse[], all: EventResponse[] }> => {
         let dateFormat = DateUtils.FORMAT['YEAR-MONTH-DAY'];
         try {
-            const structureId = `?structureId=${eventRequest.structureId}`;
-            const startDate = `&startDate=${DateUtils.format(eventRequest.startDate, dateFormat)}`;
-            const endDate = `&endDate=${DateUtils.format(eventRequest.endDate, dateFormat)}`;
-            const noReason = eventRequest.noReason ? `&noReason=${eventRequest.noReason}` : "";
-            const eventType = `&eventType=${eventRequest.eventType}`;
-            const listReasonIds = eventRequest.listReasonIds ? `&reasonIds=${eventRequest.listReasonIds}` : "";
-            const userId = eventRequest.userId.length === 0 ? "" : `&userId=${eventRequest.userId}`;
-            const classes = eventRequest.classes.length === 0 ? "" : `&classes=${eventRequest.classes}`;
-            const regularized = (eventRequest.regularized !== undefined && eventRequest.regularized !== null)
-                ? `&regularized=${eventRequest.regularized}` : "";
-            const page = `&page=${eventRequest.page}`;
-            const urlParams = `${structureId}${startDate}${endDate}${noReason}${eventType}${listReasonIds}${userId}${classes}${regularized}${page}`;
+            const structureId: string = `?structureId=${eventRequest.structureId}`;
+            const startDate: string = `&startDate=${DateUtils.format(eventRequest.startDate, dateFormat)}`;
+            const endDate: string = `&endDate=${DateUtils.format(eventRequest.endDate, dateFormat)}`;
+            const noReason: string = eventRequest.noReason ? `&noReason=${eventRequest.noReason}` : '';
+            const eventType: string = eventRequest.eventType ? `&eventType=${eventRequest.eventType}` : '';
+            const listReasonIds: string = eventRequest.listReasonIds ? `&reasonIds=${eventRequest.listReasonIds}` : '';
+            const userId: string = eventRequest.userId && eventRequest.userId.length > 0 ? `&userId=${eventRequest.userId}` : '';
 
-            const {data} = await http.get(`/presences/events${urlParams}`);
+            let userIds: string = '';
+            if (eventRequest.userIds && eventRequest.userIds.length > 0) {
+                eventRequest.userIds.forEach(userId => userIds += `&userId=${userId}`);
+            }
+
+            const classes: string = eventRequest.classes && eventRequest.classes.length > 0 ? `&classes=${eventRequest.classes}` : '';
+
+            let classesIds: string = '';
+            if (eventRequest.classesIds && eventRequest.classesIds.length > 0) {
+                eventRequest.classesIds.forEach(classId => classesIds += `&classes=${classId}`);
+            }
+            const regularized: string = (eventRequest.regularized !== undefined && eventRequest.regularized !== null)
+                ? `&regularized=${eventRequest.regularized}` : '';
+            const page: string = eventRequest.page ? `&page=${eventRequest.page}` : '';
+
+
+            const urlParams: string = `${structureId}${startDate}${endDate}${noReason}${eventType}${listReasonIds}
+            ${userId}${userIds}${classes}${classesIds}${regularized}${page}`;
+
+            const {data}: AxiosResponse = await http.get(`/presences/events${urlParams}`);
 
             return {
                 pageCount: data.page_count,

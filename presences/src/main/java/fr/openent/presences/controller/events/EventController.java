@@ -63,7 +63,7 @@ public class EventController extends ControllerHelper {
         Integer page = request.getParam("page") != null ? Integer.parseInt(request.getParam("page")) : 0;
 
         if (!request.params().contains("structureId") || !request.params().contains("startDate") ||
-                !request.params().contains("endDate") || !request.params().contains("page")) {
+                !request.params().contains("endDate")) {
             badRequest(request);
             return;
         }

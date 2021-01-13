@@ -46,7 +46,7 @@
         </div>
     </div>
     <div class="absence-list" ng-show="vm.absences.length > 0">
-        <div ng-repeat="absence in vm.absences" class="event">
+        <div ng-repeat="absence in vm.absences | orderBy:['student.name', 'start_date']" class="event">
             <div>
                 <div>
                     <div>[[absence.student.name]]</div>
@@ -54,7 +54,7 @@
                 </div>
                 <div>
                     <select data-ng-model="absence.reason_id"
-                            data-ng-change="absence.updateAbsence(); vm.setAbsenceRegularisation(absence)"
+                            data-ng-change="vm.updateReasonAbsenceEvent(absence); vm.setAbsenceRegularisation(absence)"
                             ng-options="reason.id as reason.label for reason in vm.reasons"
                             options-disabled="reason.hidden for reason in vm.reasons">
                         <option value="" label="[[lang.translate('presences.absence.select.empty')]]">
@@ -72,7 +72,7 @@
                     <label class="checkbox">
                         <input type="checkbox" data-ng-model="absence.counsellor_regularisation"
                                ng-disabled="!(absence.reason_id !== null && !vm.provingReasonsMap[absence.reason_id])"
-                               data-ng-change="absence.updateRegularisation(); vm.regularizeAbsence(absence)">
+                               data-ng-change="vm.updateRegularisationAbsenceEvent(absence); vm.regularizeAbsence(absence)">
                         <span ng-style="{cursor: absence.reason_id !== null && !vm.provingReasonsMap[absence.reason_id] ? 'pointer' : 'default'}"></span>
                     </label>
                 </div>

@@ -28,7 +28,25 @@ export interface Event {
     events?: any[];
     exclude?: boolean;
     reasonId: number;
-    async
+}
+
+export interface IEvent {
+    id: number;
+    start_date?: string;
+    end_date?: string;
+    comment?: string;
+    counsellor_input?: boolean;
+    counsellor_regularisation: boolean;
+    reason_id?: number;
+    student_id: string;
+    register_id?: number;
+    type_id?: number;
+    owner?: User;
+    course?: Course;
+    event_type?: { id: number, label: string };
+    student?: {id: string, name: string, className: string};
+    type?: string;
+    exclude?: boolean;
 }
 
 export interface EventResponse {

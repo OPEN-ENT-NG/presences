@@ -12,7 +12,8 @@ export class CounsellorAbsence {
     counsellor_regularisation: boolean;
     student: {
         id: string,
-        displayName: string
+        displayName: string,
+        className: string
     };
 
     async updateReason() {

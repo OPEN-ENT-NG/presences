@@ -1,12 +1,15 @@
 import {_, moment, ng, notify} from 'entcore';
-import {AbsenceService, ReasonService, SearchItem, SearchService} from '../../services';
-import {CounsellorAbsence, Reason, Students} from '../../models';
+import {AbsenceService, EventRequest, EventService, IViescolaireService, ReasonService,
+    SearchItem, SearchService} from '../../services';
+import {CounsellorAbsence, EventResponse, Events, ITimeSlot, Reason, Students, IEvent} from '../../models';
 import {DateUtils} from '@common/utils/date';
+import {IStructureSlot} from '@common/model/Viescolaire';
 
 interface ViewModel {
-    absences: Array<CounsellorAbsence>
-    reasons: Array<Reason>
-    students: Students
+    absences: Array<CounsellorAbsence | IEvent>;
+    reasons: Array<Reason>;
+    timeSlots: ITimeSlot[];
+    students: Students;
     searchResults: SearchItem[];
     params: {
         start: Date,
@@ -14,33 +17,47 @@ interface ViewModel {
         students: Array<SearchItem>,
         groups: Array<SearchItem>,
         search: string
-    },
-    provingReasonMap: any
+    };
+    provingReasonMap: any;
 
-    load(): Promise<void>
+    load(): Promise<void>;
 
-    searchStudentOrGroup(string: string): Promise<void>
+    searchStudentOrGroup(searchText: string): Promise<void>;
 
-    selectStudentOrGroup(model: SearchItem, option: SearchItem): void
+    selectStudentOrGroup(model: SearchItem, option: SearchItem): void;
 
-    removeStudent(student : SearchItem): void
+    removeStudent(student: SearchItem): void;
 
-    removeGroup(group : SearchItem): void
+    removeGroup(group: SearchItem): void;
 
-    setAbsenceRegularisation(absence: CounsellorAbsence): void
+    setAbsenceRegularisation(absence: CounsellorAbsence): void;
 
-    regularizeAbsence(absence): void
+    regularizeAbsence(absence: CounsellorAbsence | IEvent): void;
 
-    showAbsenceRange(absence: CounsellorAbsence): String
+    showAbsenceRange(absence: CounsellorAbsence): String;
+
+    getAbsenceEvents(structureId: string, students: string[], classesIds: string[], startDate: string,
+                     endDate: string): Promise<Array<IEvent>>;
+
+    updateReasonAbsenceEvent(absence: CounsellorAbsence | any): void;
+
+    updateRegularisationAbsenceEvent(absence: CounsellorAbsence | any): void;
+
+    isOnMultipleSlots(absence: CounsellorAbsence | IEvent): boolean;
+
+    getTimeSlots(): Promise<void>;
 }
 
 declare let window: any;
 
-export const absencesController = ng.controller('AbsenceController', ['$scope', 'AbsenceService', 'ReasonService', 'SearchService',
-    function ($scope, AbsenceService: AbsenceService, ReasonService: ReasonService, SearchService: SearchService) {
+export const absencesController = ng.controller('AbsenceController', ['$scope', 'AbsenceService', 
+    'EventService', 'ReasonService', 'SearchService', 'ViescolaireService',
+    function ($scope, AbsenceService: AbsenceService, eventService: EventService, ReasonService: ReasonService,
+              SearchService: SearchService, viescolaireService: IViescolaireService) {
         const vm: ViewModel = this;
         vm.absences = [];
         vm.reasons = [];
+        vm.timeSlots = [];
         vm.provingReasonMap = {};
         vm.params = {
             start: moment().add(-5, 'days').toDate(),
@@ -58,13 +75,22 @@ export const absencesController = ng.controller('AbsenceController', ['$scope', 
          */
         vm.load = async (): Promise<void> => {
             try {
-                let start: string = moment(vm.params.start).format(DateUtils.FORMAT["YEAR-MONTH-DAY"]);
-                let end: string = moment(vm.params.end).format(DateUtils.FORMAT["YEAR-MONTH-DAY"]);
+                let start: string = moment(vm.params.start).format(DateUtils.FORMAT['YEAR-MONTH-DAY']);
+                let end: string = moment(vm.params.end).format(DateUtils.FORMAT['YEAR-MONTH-DAY']);
                 let students: string[] = [];
                 let groups: string[] = [];
                 vm.params.students.forEach(student => students.push(student.id));
                 vm.params.groups.forEach(group => groups.push(group.id));
-                vm.absences = await AbsenceService.getCounsellorAbsence(window.structure.id, students, groups, start, end, null, false, null);
+                await vm.getTimeSlots();
+
+                vm.absences = await AbsenceService.getCounsellorAbsence(window.structure.id, students, groups, start,
+                    end, null, false, null);
+
+                let absenceEvents: IEvent[] = await vm.getAbsenceEvents(window.structure.id, students, groups,
+                    start, end);
+
+                // Merge absences with absence events.
+                vm.absences = vm.absences.concat(absenceEvents);
                 $scope.safeApply();
             } catch (err) {
                 notify.error('presences.absences.load.failed');
@@ -122,13 +148,21 @@ export const absencesController = ng.controller('AbsenceController', ['$scope', 
             vm.load();
         };
 
-        vm.setAbsenceRegularisation = function (absence) {
+        /**
+         * Set regularisation state based on the reason.
+         * @param absence
+         */
+        vm.setAbsenceRegularisation = (absence: CounsellorAbsence | IEvent) => {
             absence.counsellor_regularisation = vm.provingReasonMap[absence.reason_id];
             vm.regularizeAbsence(absence);
             $scope.safeApply();
         };
 
-        vm.regularizeAbsence = function (absence) {
+        /**
+         * Remove absence from list when regularized.
+         * @param absence
+         */
+        vm.regularizeAbsence = (absence: CounsellorAbsence | IEvent) => {
             if (absence.counsellor_regularisation) {
                 vm.absences = vm.absences.filter(abs => abs.id !== absence.id);
                 $scope.safeApply();
@@ -144,6 +178,108 @@ export const absencesController = ng.controller('AbsenceController', ['$scope', 
                 result += "-";
 
             return result + DateUtils.format(absence.end_date, DateUtils.FORMAT['HOUR-MINUTES']);
+        };
+
+        /**
+         * Get events with absence type.
+         */
+        vm.getAbsenceEvents = async (structureId: string, students: string[], classesIds: string[], startDate: string,
+                               endDate: string): Promise<Array<IEvent>> => {
+
+            let absenceEvents: IEvent[] = [];
+
+            let eventRequest: EventRequest = {
+                structureId: structureId,
+                startDate: startDate,
+                endDate: endDate,
+                eventType: '1',
+                userIds: students,
+                classesIds: classesIds,
+                regularized: false
+            };
+
+            await eventService.get(eventRequest).then(
+                (res: { pageCount: number, events: EventResponse[], all: EventResponse[] }) => {
+                    res.all.forEach((student: EventResponse) => {
+
+                        student.events.forEach((event: IEvent) => {
+                            let absenceEvent: IEvent = {
+                                id: event.id,
+                                start_date: event.start_date,
+                                end_date: event.end_date,
+                                student_id: student.studentId,
+                                reason_id: event.reason_id,
+                                counsellor_regularisation: event.counsellor_regularisation,
+                                student: {id: student.studentId, name: student.displayName, className: student.className}
+                            };
+
+                            /* Check if absence on a unique slot and remove duplicates */
+                            if (!vm.isOnMultipleSlots(absenceEvent) &&
+                                !absenceEvent.reason_id &&
+                                vm.absences.indexOf(vm.absences.find(
+                                    (abs: CounsellorAbsence) => {
+                                        return (DateUtils.isBetween(abs.start_date, abs.end_date,
+                                            absenceEvent.start_date, absenceEvent.end_date) &&
+                                            (abs.student.id === absenceEvent.student_id));
+                                    })) === -1) {
+                                absenceEvents.push(absenceEvent);
+                            }
+                        });
+                    });
+                }
+            );
+            return absenceEvents;
+        };
+
+        /**
+         * Update the absence reason
+         * @param absence an absence, can be an absence event.
+         */
+        vm.updateReasonAbsenceEvent = async (absence: CounsellorAbsence | IEvent): Promise<void> => {
+            if (absence instanceof CounsellorAbsence) {
+                await absence.updateAbsence();
+            } else {
+                await new Events().updateReason([absence], absence.reason_id, absence.student.id, window.structure.id);
+            }
+        };
+
+        /**
+         * Regularize th absence
+         * @param absence absence an absence, can be an absence event.
+         */
+        vm.updateRegularisationAbsenceEvent = async (absence: CounsellorAbsence | IEvent): Promise<void> => {
+            if (absence instanceof CounsellorAbsence) {
+                await absence.updateRegularisation();
+            } else {
+                await new Events().updateRegularized([absence], absence.counsellor_regularisation, absence.student.id, window.structure.id);
+            }
+        };
+
+        /**
+         * Retrieve the structure time slots.
+         */
+        vm.getTimeSlots = async (): Promise<void> => {
+            await viescolaireService.getSlotProfile(window.structure.id).then((structureSlot: IStructureSlot) => {
+                vm.timeSlots = structureSlot.slots;
+            });
+        };
+
+        /**
+         * Check if the absence is on multiple time slots
+         * @param absence the absence
+         */
+        vm.isOnMultipleSlots = (absence: CounsellorAbsence | IEvent): boolean => {
+            let startHour: string = DateUtils.format(absence.start_date, DateUtils.FORMAT['HOUR-MIN']);
+            let endHour: string = DateUtils.format(absence.end_date, DateUtils.FORMAT['HOUR-MIN']);
+
+            for (let i = 0; i < vm.timeSlots.length; i++) {
+                let slot: ITimeSlot = vm.timeSlots[i];
+                if (slot.startHour === startHour) {
+                    return slot.endHour !== endHour;
+                }
+            }
+
+            return true;
         };
 
         /* Events handler */
