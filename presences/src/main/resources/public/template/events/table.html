@@ -3,7 +3,7 @@
     <!-- main title -->
     <thead>
     <tr>
-        <th width="54%">
+        <th width="50%">
             <i18n>presences.exemptions.student</i18n>
         </th>
         <th width="22%">
@@ -23,6 +23,9 @@
         </th>
         <th width="4%">
             <i18n>presences.absence.regularise</i18n>
+        </th>
+        <th width="4%">
+            <i18n>presences.absence.massmailed</i18n>
         </th>
     </tr>
     </thead>
@@ -109,13 +112,21 @@
                 <span></span>
             </label>
         </th>
+
+        <!-- Absence massmailed -->
+        <th class="text-center">
+            <label>
+                <i class="massmail-status"
+                   ng-class="event.globalMassmailed ? 'check-circle' : 'cross-circle'"></i>
+            </label>
+        </th>
     </tr>
 
 
     <!-- description content -->
     <tr data-ng-show="event.events.length !== 0" ng-class="{open: vm.isCollapsibleOpen($parent.$index)}"
         class="events-table-body-description" ng-repeat="history in event.events track by $index | orderBy:'+end_date'">
-        <td class="text-center padding-sm" width="54%">&nbsp;</td>
+        <td class="text-center padding-sm" width="50%">&nbsp;</td>
 
         <!-- description under events time report -->
         <td class="events-table-body-date uppercase text-center" width="22%">
@@ -165,6 +176,15 @@
                        ng-disabled="!(history.reason_id !== null && !vm.provingReasonsMap[history.reason_id]) && history.counsellor_regularisation"
                        data-ng-change="vm.toggleEventRegularised(history, event, event.studentId)">
                 <span ng-style="{cursor: history.reason_id !== null && !vm.provingReasonsMap[history.reason_id] ? 'pointer' : 'default'}"></span>
+            </label>
+        </td>
+
+
+        <!-- description under events massmailed -->
+        <td class="text-center padding-sm" width="4%">
+            <label>
+                <i class="massmail-status"
+                   ng-class="history.massmailed ? 'check-circle' : 'cross-circle'"></i>
             </label>
         </td>
     </tr>

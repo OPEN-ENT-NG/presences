@@ -42,6 +42,7 @@ export interface EventResponse {
     events: any[];
     globalReason?: number;
     globalCounsellorRegularisation?: boolean;
+    globalMassmailed?: boolean;
     isGlobalAction?: boolean;
     exclude?: boolean;
     type?: { event: string, event_type: string, id: number };
@@ -58,6 +59,7 @@ export interface IEventBody {
     comment?: string;
     counsellor_input?: boolean;
     counsellor_regularisation?: boolean;
+    massmailed?: boolean;
     type_id?: number;
     reason_id: number;
     register_id: number;
@@ -157,7 +159,7 @@ export class Events extends LoadingCollection {
             /* check if not duplicate dataModel */
             if (!builtEvents.some(e =>
                 (e.classId === item.student.classId) &&
-                (e.date === DateUtils.format(item.startDate, DateUtils.FORMAT["YEAR-MONTH-DAY"])) &&
+                (e.date === DateUtils.format(item.startDate, DateUtils.FORMAT['YEAR-MONTH-DAY'])) &&
                 (e.studentId === item.student.id))) {
                 /* new dataModel */
                 let eventsFetchedFromHistory = [];
@@ -166,22 +168,27 @@ export class Events extends LoadingCollection {
                 let reasonIds = [];
                 let regularizedEvents = [];
                 let actions = [];
+                let massmailedEvents = [];
 
                 /* build our eventsResponse array to affect our attribute "events" (see below dataModel.push) */
                 item.student.dayHistory.forEach(eventsHistory => {
                     eventsHistory.events.forEach(event => {
                         if (event.type === EventsUtils.ALL_EVENTS.event) {
-                            if (!eventsFetchedFromHistory.some(element => element.id == event.id)) {
+                            if (!eventsFetchedFromHistory.some(element => element.id === event.id)) {
                                 eventsFetchedFromHistory.push(event);
                             }
-                            if ("reason_id" in event && event.type_id === 1) {
+                            if ('reason_id' in event && event.type_id === 1) {
                                 reasonIds.push(event.reason_id);
                             }
-                            if ("counsellor_regularisation" in event && event.type_id === 1) {
+                            if ('counsellor_regularisation' in event && event.type_id === 1) {
                                 regularizedEvents.push(event.counsellor_regularisation);
                             }
-                            if ("actionAbbreviation" in event) {
+                            if ('actionAbbreviation' in event) {
                                 actions.push(event.actionAbbreviation);
+                            }
+
+                            if ('massmailed' in event) {
+                                massmailedEvents.push(event.massmailed);
                             }
                         }
                     });
@@ -200,14 +207,19 @@ export class Events extends LoadingCollection {
                     }
                 }
                 /* check all events regularized in this event to display the global regularized value */
-                let globalCounsellorRegularisation = regularizedEvents.length === 0 ? false
+                let globalCounsellorRegularisation: boolean = regularizedEvents.length === 0 ? false
                     : regularizedEvents.reduce((accumulator, currentValue) => accumulator && currentValue);
+
+                /* check all events massmailed in this event to display the global massmailed value */
+                let globalMassmailed: boolean = massmailedEvents.length === 0 ? false
+                    : massmailedEvents.reduce((accumulator, currentValue) => accumulator && currentValue);
+
                 let type = {event: item.type, event_type: item.eventType.label, id: item.id};
 
                 /* check if there are differents actions */
                 let isGlobalAction = new Set(actions).size === 1;
 
-                let isAbsence = item.eventType.id === 1;
+                let isAbsence: boolean = item.eventType.id === 1;
 
                 /* We build our event based on information stored above */
                 if (item.type === EventsUtils.ALL_EVENTS.event) {
@@ -216,12 +228,13 @@ export class Events extends LoadingCollection {
                         displayName: item.student.name,
                         className: item.student.className,
                         classId: item.student.classId,
-                        date: moment(item.startDate).format(DateUtils.FORMAT["YEAR-MONTH-DAY"]),
+                        date: moment(item.startDate).format(DateUtils.FORMAT['YEAR-MONTH-DAY']),
                         dayHistory: item.student.dayHistory,
                         events: eventsFetchedFromHistory,
                         exclude: item.exclude ? item.exclude : false,
                         globalReason: globalReason,
                         globalCounsellorRegularisation: globalCounsellorRegularisation,
+                        globalMassmailed: globalMassmailed,
                         isGlobalAction: isGlobalAction,
                         type: type,
                         actionAbbreviation: item.actionAbbreviation,
@@ -233,7 +246,7 @@ export class Events extends LoadingCollection {
         });
 
         return builtEvents;
-    };
+    }
 
     async syncPagination() {
         this.loading = true;
