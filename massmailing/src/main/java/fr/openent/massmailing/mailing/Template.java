@@ -270,7 +270,7 @@ public class Template extends BaseServer {
         JsonObject newEvent = events.get(0).copy();
         JsonArray individualEvents = new JsonArray();
 
-        events.forEach(event -> individualEvents.addAll(event.getJsonArray("events")));
+        events.forEach(event -> individualEvents.addAll(event.getJsonArray("events", new JsonArray())));
         newEvent.put("events", individualEvents);
         newEvent.put("start_date", startDate);
         newEvent.put("display_start_date", startDate);
@@ -321,7 +321,12 @@ public class Template extends BaseServer {
         if (!eventContainsReason(event)) return noneValue;
         List<String> reasons = new ArrayList<>();
         for (int i = 0; i < events.size(); i++) {
-            reasons.add(events.getJsonObject(i).getString("reason"));
+            JsonObject currentEvent = events.getJsonObject(i);
+            if (currentEvent.getInteger("reason_id") == null) {
+                reasons.add(noneValue);
+            } else {
+                reasons.add(events.getJsonObject(i).getString("reason"));
+            }
         }
 
         Set<String> values = new HashSet<>(reasons);
