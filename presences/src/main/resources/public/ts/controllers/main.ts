@@ -1,8 +1,8 @@
 import {idiom, model, ng, template} from 'entcore';
-import rights from '../rights'
-import {Idiom, Template} from '@common/interfaces'
-import {IRootScopeService} from "angular";
-import {UserUtils} from "@common/utils";
+import rights from '../rights';
+import {Idiom, Template} from '@common/interfaces';
+import {IRootScopeService} from 'angular';
+import {UserUtils} from '@common/utils';
 
 declare let window: any;
 
@@ -96,12 +96,12 @@ export const mainController = ng.controller('MainController', ['$scope', 'route'
                     template.open('main', `containers/alerts`);
                 }
             },
-            'group-absences': () => {
+            'collective-absences': () => {
                 /* Handle redirect URL as child/relative user */
                 if ($scope.isChild() || $scope.isRelative()) {
                     template.open('main', `containers/dashboard-student`);
                 } else {
-                    template.open('main', `containers/group-absences`);
+                    template.open('main', `containers/collective-absences`);
                 }
             },
             exemptions: () => {

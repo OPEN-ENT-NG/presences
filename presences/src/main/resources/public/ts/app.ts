@@ -1,9 +1,9 @@
 import {model, ng, routes} from 'entcore';
-import rights from './rights'
+import rights from './rights';
 import * as controllers from './controllers';
 import * as directives from './directives';
 import * as services from './services';
-import {DependencyManager} from '@common/manager'
+import {DependencyManager} from '@common/manager';
 
 new DependencyManager().load();
 
@@ -27,9 +27,9 @@ routes.define(function ($routeProvider) {
         .when('/events', {
             action: 'events'
         })
-        // .when('/group-absences', {
-        //     action: 'group-absences'
-        // })
+        .when('/collective-absences', {
+            action: 'collective-absences'
+        })
         .otherwise({
             redirectTo: '/dashboard'
         });
@@ -37,7 +37,7 @@ routes.define(function ($routeProvider) {
     if (model.me.hasWorkflow(rights.workflow.widget_alerts)) {
         $routeProvider.when('/alerts', {
             action: 'alerts'
-        })
+        });
     }
 
     if (model.me.hasWorkflow(rights.workflow.readRegister)) {
@@ -46,29 +46,29 @@ routes.define(function ($routeProvider) {
                 action: 'registers'
             })
             .when('/registers/:id', {
-                action: "getRegister"
-            })
+                action: 'getRegister'
+            });
     }
 
     if (model.me.hasWorkflow(rights.workflow.readRegistry)) {
         $routeProvider
             .when('/registry', {
                 action: 'registry'
-            })
+            });
     }
 
     if (model.me.hasWorkflow(rights.workflow.search)) {
         $routeProvider
             .when('/registry', {
                 action: 'registry'
-            })
+            });
     }
 
     if (model.me.hasWorkflow(rights.workflow.search)) {
         $routeProvider
             .when('/calendar/:studentId', {
                 action: 'calendar'
-            })
+            });
     }
 
     if (model.me.hasWorkflow(rights.workflow.readExemption)) {
@@ -81,13 +81,13 @@ routes.define(function ($routeProvider) {
         $routeProvider
             .when('/presences', {
                 action: 'presences'
-            })
+            });
     }
 
     if (model.me.hasWorkflow(rights.workflow.manageStatementAbsences)) {
         $routeProvider
             .when('/statements-absences', {
                 action: 'statements-absences'
-            })
+            });
     }
 });

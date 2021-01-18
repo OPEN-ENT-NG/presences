@@ -1,0 +1,80 @@
+<div class="collective-absences-content row top5">
+    <div class="nine empty-content"
+         data-ng-show="vm.collectiveAbsences.length === 0 && vm.collectivesLoaded">
+        <img data-ng-src="/presences/public/img/collective-absences_empty.svg" alt="" class="four">
+        <div class="eight description">
+            <span class="red-bar bar"></span>
+            <i18n>presences.collective.absences.empty</i18n>
+            <span class="purple-bar bar"></span>
+        </div>
+    </div>
+    <div ng-show="vm.collectiveAbsences.length > 0" class="collective-absences-content-list twelve">
+        <table class="table table-hover">
+            <thead>
+            <tr>
+                <th style="width: 20%">
+                    <i18n>presences.collective.absences.audience</i18n>
+                </th>
+                <th style="width: 5%">
+                    <i18n>presences.collective.absences.total.number</i18n>
+                </th>
+                <th style="width: 20%">
+                    <i18n>presences.collective.absences.dates</i18n>
+                </th>
+                <th style="width: 25%">
+                    <i18n>presences.collective.absences.reason</i18n>
+                </th>
+                <th style="width: 30%">
+                    <i18n>presences.collective.absences.comment</i18n>
+                </th>
+            </tr>
+            </thead>
+
+            <tbody>
+            <tr data-ng-repeat="collectiveAbsence in vm.collectiveAbsences">
+
+                <!-- AUDIENCE -->
+                <th class="uppercase text-center" data-ng-click="vm.openEditCollectiveAbsence(collectiveAbsence.id)">
+                    <span ng-repeat="audience in collectiveAbsence.audiences">
+                        [[audience.name]]
+                        <span ng-if="$index < collectiveAbsence.audiences.length - 1">,</span>
+                    </span>
+                </th>
+                <!-- TOTAL NUMBER -->
+                <th class="text-center" data-ng-click="vm.openEditCollectiveAbsence(collectiveAbsence.id)">
+                    [[collectiveAbsence.countStudent]]
+                </th>
+
+                <!-- DATES -->
+                <th class="highlight text-center" data-ng-click="vm.openEditCollectiveAbsence(collectiveAbsence.id)">
+                    <span class="half">
+                        [[vm.formatDateDisplay(collectiveAbsence.startDate)]]
+                    </span>
+                    &nbsp;&nbsp;
+                    <span class="half" data-ng-click="vm.openEditCollectiveAbsence(collectiveAbsence.id)">
+                        [[vm.formatDateDisplay(collectiveAbsence.endDate)]]
+                    </span>
+                </th>
+
+                <!-- REASON -->
+                <th class="text-center" data-ng-click="vm.openEditCollectiveAbsence(collectiveAbsence.id)">
+                    [[collectiveAbsence.reason.label]]
+                </th>
+
+                <!-- COMMENT -->
+                <th class="text-center ellipsis"
+                    data-ng-click="vm.openEditCollectiveAbsence(collectiveAbsence.id)"
+                    ng-class="{'collective-comment-large': collectiveAbsence.comment.length > 50}">
+                    [[collectiveAbsence.comment]]
+                </th>
+            </tr>
+            </tbody>
+        </table>
+        <pagination data-page-count="vm.pageCount"
+                    data-page-number="vm.filter.page"
+                    data-ng-click="vm.changePagination()"
+                    class="pagination"
+        ></pagination>
+    </div>
+
+</div>

@@ -5,6 +5,7 @@ import {
     eventsForm,
     exemptionForm,
     forgottenNotebookForm,
+    collectiveAbsenceForm,
     navigation,
     presenceForm,
     presencesActionManage,
@@ -13,7 +14,7 @@ import {
     presencesManageLightbox,
     presencesReasonManage,
     statisticsManage
-} from './sniplets'
+} from './sniplets';
 import rights from './rights';
 import incidentsRights from '@incidents/rights';
 
@@ -25,6 +26,7 @@ Behaviours.register('presences', {
         'exemption-form': exemptionForm,
         'event-form/sniplet-events-form': eventsForm,
         'forgotten-notebook-form': forgottenNotebookForm,
+        'collective-absence-form/sniplet-collective-absence-form': collectiveAbsenceForm,
         'presences-manage': presencesManage,
         'presences-manage/reason-manage/sniplet-presences-reason-manage': presencesReasonManage,
         'presences-manage/statistics-manage/sniplet-statistics-manage': statisticsManage,

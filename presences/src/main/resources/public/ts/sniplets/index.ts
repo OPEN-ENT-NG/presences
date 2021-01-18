@@ -6,3 +6,4 @@ export * from './presences-manage';
 export * from './presences-manage/index';
 export * from './presence-form';
 export * from './memento';
+export * from './collective-absence-form';

@@ -1,0 +1,12 @@
+.collective-absences-content {
+  &-list {
+    tbody tr {
+      line-height: 50px;
+    }
+
+    .collective-comment-large {
+      position: absolute;
+      max-width: 28%;
+    }
+  }
+}

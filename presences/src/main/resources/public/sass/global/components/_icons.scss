@@ -24,7 +24,7 @@ i {
     content: "\F005";
   }
 
-  &.group-absence::before {
+  &.collective-absences::before {
     font-family: 'material-icons';
     content: "\e7fb";
   }
@@ -64,7 +64,7 @@ i {
     content: "\f362";
   }
 
-  &.group-absence::before {
+  &.collective-absences::before {
     font-family: 'material-icons';
     content: "\fb34";
   }
@@ -247,5 +247,25 @@ i {
   &.cross-circle:before {
     font-family: 'material-icons';
     content: '\F15A';
+  }
+
+  &.chevron-right:before {
+    font-family: 'material-icons';
+    content: '\F142';
+  }
+
+  &.chevron-left:before {
+    font-family: 'material-icons';
+    content: '\F141';
+  }
+
+  &.chevron-up:before {
+    font-family: 'material-icons';
+    content: '\F143';
+  }
+
+  &.chevron-down:before {
+    font-family: 'material-icons';
+    content: '\F140';
   }
 }

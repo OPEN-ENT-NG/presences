@@ -1,0 +1,61 @@
+<div class="row">
+    <!--Title-->
+    <h1 class="cell paddingRight">
+        <i18n>presences.collective.absences</i18n>
+    </h1>
+
+    <!-- Group search bar -->
+    <div class="cell four paddingLeft">
+        <div class="cell twelve search-input">
+            <async-autocomplete data-ng-disabled="false"
+                                data-ng-model="vm.groupsSearch.group"
+                                data-ng-change="vm.selectGroup"
+                                data-on-search="vm.searchGroup"
+                                data-options="vm.groupsSearch.groups"
+                                data-placeholder="presences.collective.absences.search.audience"
+                                data-search="vm.groupsSearch.group">
+            </async-autocomplete>
+        </div>
+        <div class="cell twelve">
+            <ul class="cell twelve search-input-ul">
+                <li ng-repeat="group in vm.groupsSearch.selectedGroups">
+                    [[group.toString()]] <i class="close"
+                                               data-ng-click="vm.removeSelectedGroups(group)"></i>
+                </li>
+            </ul>
+        </div>
+    </div>
+</div>
+
+<!-- Date filter -->
+<div class="row top5">
+    <div class="cell eight">
+        <i18n>presences.from</i18n>&#58;
+        <span class="card date-picker">
+             <date-picker ng-change="vm.updateFilter()" ng-model="vm.filter.startDate"></date-picker>
+        </span>
+        <i18n class="paddingLeft">presences.to</i18n>&#58;
+        <span class="card date-picker">
+            <date-picker ng-change="vm.updateFilter()" ng-model="vm.filter.endDate"></date-picker>
+        </span>
+    </div>
+
+    <!-- Button menu -->
+    <div class="four cell">
+
+        <!-- Button to access lightbox -->
+        <button class="right-magnet"
+                data-ng-click="vm.openCreateCollectiveAbsence()">
+            <i18n>presences.collective.absences.button.form</i18n>
+        </button>
+
+        <!-- export csv button -->
+        <button class="right-magnet"
+                data-ng-click="vm.exportCsv()">
+            <i18n>presences.export.tocsv</i18n>
+        </button>
+
+        <!-- Collective create/update/delete form -->
+        <sniplet template="collective-absence-form/sniplet-collective-absence-form" application="presences"></sniplet>
+    </div>
+</div>

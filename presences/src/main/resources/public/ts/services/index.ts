@@ -14,7 +14,7 @@ export * from './ActionService';
 export * from './DisciplineService';
 export * from './PresenceService';
 export * from './AbsenceService';
+export * from './CollectiveAbsenceService'
 export * from './PeriodService';
 export * from '@incidents/services/IncidentService';
-
 export * from './StatementsAbsencesService';

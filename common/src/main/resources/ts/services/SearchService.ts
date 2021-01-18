@@ -1,11 +1,14 @@
-import {ng} from 'entcore'
+import {ng} from 'entcore';
 import http from 'axios';
 import {User} from '@common/model/User';
 
 export interface SearchItem {
     id: string;
     displayName: string;
+    firstName?: string;
+    lastName?: string;
     type: string;
+    groupId?: string;
     groupName?: string;
     className?: string;
 }

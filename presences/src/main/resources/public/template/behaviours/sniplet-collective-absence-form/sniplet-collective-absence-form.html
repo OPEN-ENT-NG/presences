@@ -1,0 +1,257 @@
+<lightbox show="vm.openCollectiveAbsenceLightBox"
+          class="collectiveAbsencesLightbox"
+          on-close="vm.closeCollectiveLightBox()">
+
+    <!-- Lightbox title -->
+    <section class="head">
+        <h3 ng-if="!vm.form.id && !vm.display.confirmDeletion">
+            <i18n>presences.collective.absences.create</i18n>
+        </h3>
+        <h3 ng-if="vm.form.id && !vm.display.confirmDeletion">
+            <i18n>presences.collective.absences.edit</i18n>
+        </h3>
+        <h3 ng-if="vm.form.id && vm.display.confirmDeletion">
+            <i18n>presences.collective.absences.delete</i18n>
+        </h3>
+    </section>
+
+    <!-- Confirm deletion body text -->
+    <section ng-if="vm.form.id && vm.display.confirmDeletion" class="confirm-context">
+
+        <div class="confirm-context-text">
+            <i18n>presences.collective.absences.form.delete.confirm.1</i18n>
+            <span class="nb-absences">[[vm.getListStudentIds().length]]</span>
+            <i18n>presences.collective.absences.form.delete.confirm.2</i18n>
+        </div>
+
+    </section>
+
+    <!-- Confirm edit/create body text -->
+    <section ng-if="vm.display.confirmValidation" class="confirm-context">
+
+        <div class="confirm-context-text">
+            <i18n>presences.collective.absences.form.create.edit.confirm.1</i18n>
+            <span class="nb-issues">[[vm.getNbStudentIssues()]]</span>
+            <i18n>presences.collective.absences.form.create.edit.confirm.2</i18n>
+            <br><br>
+            <i18n>presences.collective.absences.form.create.edit.confirm.3</i18n>
+        </div>
+
+    </section>
+
+    <!-- Context section -->
+    <section ng-if="!vm.display.confirmDeletion && !vm.display.confirmValidation" class="body form-context">
+
+        <h3>
+            <i18n>presences.collective.absences.form.context</i18n>
+        </h3>
+
+        <!-- Date/reason/comment -->
+        <div class="row spacing">
+
+            <!-- date -->
+            <div class="twelve timeslots">
+                <i18n class="margin-right-sm">presences.from</i18n>
+                <span class="card date-picker margin-right-sm">
+                <date-picker required ng-change="vm.updateData()" ng-model="vm.date.startDate"></date-picker>
+            </span>
+
+                <span ng-show="vm.display.isFreeSchedule"
+                      class="card margin-left-10">
+                <time-picker required ng-change="vm.updateData()" ng-model="vm.date.startTime"></time-picker>
+            </span>
+
+                <label ng-show="!vm.display.isFreeSchedule">
+                    <label class="timeslot-select">
+                        <i class="time-picker"></i>
+                        <select data-ng-model="vm.form.timeSlotTimePeriod.start"
+                                data-ng-change="vm.selectTimeSlot(vm.form.timeSlotHourPeriod.START_HOUR); vm.updateData()"
+                                ng-options="item.name + ' : ' + item.startHour for item in vm.structureTimeSlot.slots
+                                    | orderBy:vm.form.timeSlotHourPeriod.START_HOUR">
+                            <option value="">[[lang.translate('presences.pick.timeslot')]]</option>
+                        </select>
+                    </label>
+                </label>
+
+                <i18n class="margin-right-sm">presences.to</i18n>
+                <span class="card date-picker margin-right-sm">
+                <date-picker required ng-change="vm.updateData()" ng-model="vm.date.endDate"></date-picker>
+            </span>
+
+                <span ng-show="vm.display.isFreeSchedule"
+                      class="card">
+                <time-picker required ng-change="vm.updateData()" ng-model="vm.date.endTime"></time-picker>
+            </span>
+
+                <label ng-show="!vm.display.isFreeSchedule">
+                    <label class="timeslot-select">
+                        <i class="time-picker"></i>
+                        <select data-ng-model="vm.form.timeSlotTimePeriod.end"
+                                data-ng-change="vm.selectTimeSlot(vm.form.timeSlotHourPeriod.END_HOUR); vm.updateData()"
+                                ng-options="item.name + ' : ' + item.endHour for item in vm.structureTimeSlot.slots
+                                | orderBy:vm.form.timeSlotHourPeriod.END_HOUR">
+                            <option value="">[[lang.translate('presences.pick.timeslot')]]</option>
+                        </select>
+                    </label>
+                </label>
+            </div>
+
+
+            <div class="form-row-2">
+                <div class="margin-bottom-md six form-row-2-col-1">
+
+                    <!-- Time slot choice -->
+                    <div class="timeslot-choice">
+                        <label class="checkbox">
+                            <input type="checkbox" ng-change="vm.updateData()" ng-model="vm.display.isFreeSchedule"/>
+                            <span>
+                            <i18n>presences.collective.absences.form.choice.time.slot</i18n>
+                        </span>
+                        </label>
+                    </div>
+
+                    <!-- Reason -->
+                    <div class="table-reason eight">
+                        <label>
+                            <select data-ng-model="vm.form.reasonId"
+                                    data-ng-change="vm.selectReason()"
+                                    ng-options="reason.id as reason.label for reason in vm.reasons"
+                                    options-disabled="reason.hidden for reason in vm.reasons">
+                                <option value="">[[lang.translate('presences.absence.select.empty')]]</option>
+                            </select>
+                        </label>
+                    </div>
+                    <!-- Regularisation -->
+                    <div class="regularisation-check">
+                        <label class="checkbox">
+                            <input type="checkbox"
+                                   data-ng-model="vm.form.counsellorRegularisation"
+                                   data-ng-change="vm.updateAbsenceRegularisation = !vm.updateAbsenceRegularisation"
+                                   data-ng-disabled="(vm.form.reasonId == null || !vm.canRegularize)"/>
+                            <span class="presenceLightbox-body-info-checkbox">
+                    <i18n>presences.collective.absences.form.regularized</i18n>
+                </span>
+                        </label>
+                    </div>
+                </div>
+
+                <!-- Comment -->
+                <div class="form-row-2-col-2 seven">
+            <span class="comment-info">
+                <i18n>presences.collective.absences.form.comment</i18n>
+            </span>
+                    <input class="comment-input"
+                           type="text"
+                           data-ng-model="vm.form.comment"
+                           ng-change="vm.updateData()"
+                           i18n-placeholder="presences.collective.absences.form.defautValue.comment">
+                </div>
+            </div>
+
+        </div>
+    </section>
+
+    <!-- Absents section -->
+    <section ng-if="!vm.display.confirmDeletion && !vm.display.confirmValidation" class="body form-absents">
+
+        <div class="form-absents-header">
+            <h3>
+                <i18n>presences.collective.absences.form.absents</i18n>
+            </h3>
+
+            <div class="cell twelve search-input">
+                <async-autocomplete data-ng-disabled="false"
+                                    data-ng-model="vm.globalSearch.search"
+                                    data-ng-change="vm.selectItem"
+                                    data-on-search="vm.searchStudentsOrGroups"
+                                    data-options="vm.globalSearch.searchItems"
+                                    data-placeholder="presences.collective.absences.search.global"
+                                    data-search="vm.globalSearch.search">
+                </async-autocomplete>
+            </div>
+
+        </div>
+
+        <span ng-if="vm.getNbStudentIssues() > 1" class="count-issues">
+            [[vm.getNbStudentIssues()]]
+            <i18n>presences.collective.absences.form.anomalies</i18n>
+        </span>
+        <span ng-if="vm.getNbStudentIssues() === 1" class="count-issues">
+            [[vm.getNbStudentIssues()]]
+            <i18n>presences.collective.absences.form.anomalie</i18n>
+        </span>
+        <!-- Student Table -->
+        <div static-include="/presences/public/template/behaviours/sniplet-collective-absence-form/sniplet-collective-absence-form-table.html"></div>
+    </section>
+
+    <!-- Footer/buttons -->
+    <section class="body row">
+
+        <!-- Confirm buttons -->
+        <div class="confirm-buttons" ng-if="vm.display.confirmDeletion || vm.display.confirmValidation">
+
+            <!--create-->
+            <button ng-if="!vm.form.id && vm.display.confirmValidation"
+                    data-ng-click="vm.createCollectiveAbsence()"
+                    class="right-magnet">
+                <i18n>presences.collective.absences.form.submit</i18n>
+            </button>
+
+            <!--update-->
+            <button ng-if="vm.form.id && vm.display.confirmValidation"
+                    data-ng-click="vm.updateCollectiveAbsence()"
+                    class="right-magnet">
+                <i18n>presences.collective.absences.form.submit</i18n>
+            </button>
+
+            <!--delete-->
+            <button ng-if="vm.display.confirmDeletion"
+                    data-ng-click="vm.deleteCollectiveAbsence()"
+                    class="right-magnet">
+                <i18n>presences.collective.absences.form.delete</i18n>
+            </button>
+            <button data-ng-click="vm.display.confirmDeletion = false; vm.display.confirmValidation = false"
+                    class="right-magnet">
+                <i18n>presences.collective.absences.form.cancel</i18n>
+            </button>
+        </div>
+
+        <!-- Create/Delete/Edit buttons-->
+        <div class="create-edit-buttons"
+             ng-if="!vm.display.confirmDeletion && !vm.display.confirmValidation">
+
+            <div class="delete-button" ng-if="vm.form.id">
+                <button data-ng-click="vm.display.confirmDeletion = true;">
+                    <i18n>presences.collective.absences.form.delete</i18n>
+                </button>
+            </div>
+
+            <div class="submit-button">
+                <!-- submit create -->
+                <button ng-if="!vm.form.id"
+                        class="right-magnet"
+                        data-ng-click="(vm.getNbStudentIssues() === 0) ? vm.createCollectiveAbsence() : vm.display.confirmValidation = true"
+                        ng-disabled="!vm.isFormValid()">
+                    <i18n>presences.collective.absences.form.submit</i18n>
+                </button>
+
+                <!-- submit update -->
+                <button ng-if="vm.form.id"
+                        class="right-magnet"
+                        data-ng-click="(vm.getNbStudentIssues() === 0) ? vm.updateCollectiveAbsence() : vm.display.confirmValidation = true"
+                        ng-disabled="!vm.isFormValid()">
+                    <i18n>presences.collective.absences.form.submit</i18n>
+                </button>
+            </div>
+            <span class="nb-students"
+                  ng-if="vm.getNbStudentsSubmit() === 1">
+            [[vm.getNbStudentsSubmit()]] <i18n>presences.student</i18n>
+            </span>
+
+            <span class="nb-students"
+                  ng-if="vm.getNbStudentsSubmit() > 1">
+            [[vm.getNbStudentsSubmit()]] <i18n>presences.students</i18n>
+            </span>
+        </div>
+    </section>
+</lightbox>

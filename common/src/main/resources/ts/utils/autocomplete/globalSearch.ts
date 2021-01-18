@@ -1,6 +1,6 @@
-import {SearchItem, SearchService} from "@common/services/SearchService";
-import {GroupService} from "@common/services";
-import {AutoCompleteUtils} from "./auto-complete";
+import {SearchItem, SearchService} from '@common/services/SearchService';
+import {GroupService} from '@common/services';
+import {AutoCompleteUtils} from './auto-complete';
 
 /**
  * ⚠ This class is used for the directive async-autocomplete
@@ -59,10 +59,15 @@ export class GlobalSearch extends AutoCompleteUtils {
 
     public selectItems(valueInput, item) {
         if (!this.selectedItems) this.selectedItems = [];
-        if (this.selectedItems.find(i => i["id"] === item.id) === undefined) {
+        if (this.selectedItems.find(i => i['id'] === item.id) === undefined) {
             this.selectedItems.push(item);
         }
-    };
+    }
+
+    public selectItem(valueInput, item) {
+        this.selectedItems = [];
+        this.selectedItems.push(item);
+    }
 
     public async searchStudentsOrGroups(valueInput: string) {
         try {
@@ -71,7 +76,7 @@ export class GlobalSearch extends AutoCompleteUtils {
             this.searchItems = [];
             throw err;
         }
-    };
+    }
 
     public async getStudentsFromGroup(id: string, type: string) {
         try {

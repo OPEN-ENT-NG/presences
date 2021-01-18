@@ -18,4 +18,5 @@ export * from './CounsellorAbsence';
 export * from './Reason';
 export * from './StatementAbsence';
 export * from './ForgottenNotebook';
-export * from "@incidents/models/incidents/StudentIncident";
+export * from '@incidents/models/incidents/StudentIncident';
+export * from './CollectiveAbsence';

@@ -1,0 +1,67 @@
+<!-- board -->
+<div class="flex-table">
+
+    <!-- List audiences -->
+    <div class="flex-row list-audiences" ng-show="vm.form.audiences.length > 0">
+        <div class="flex-body list-audiences-item" ng-repeat="audience in vm.form.audiences track by $index">
+
+            <div class="flex-content list-audiences-item-audience">
+
+                <!-- Audience item line -->
+                <div class="list-audiences-item-audience-header flex-row row__13"
+                    data-ng-click="vm.toggleAudienceDisplay(audience)">
+                    <div class="audience-collapse-icon flex-col col__1">
+                        <i ng-class="audience.isDisplayed ? 'chevron-down' : 'chevron-right'"></i>
+                    </div>
+                    <div class="audience-name flex-col col__2">
+                        [[audience.name]]
+                    </div>
+                    <div class="flex-col col__7">
+
+                    </div>
+                    <div class="audience-counts flex-col col__2">
+                        [[audience.students.length]]/[[audience.countStudents]]
+                    </div>
+                    <!-- remove audience -->
+                    <div class="audience-remove flex-col col__1" data-ng-click="vm.removeAudience(audience.id)">
+                        <i class="delete"></i>
+                    </div>
+                </div>
+
+
+                <!-- List students -->
+                <div class="flex-row row__15 list-audiences-item-audience-student"
+                     ng-repeat="student in audience.students track by $index"
+                     ng-class="vm.isMultiple(audience.id, student.id) ? 'student-row-inactive' : 'student-row-active'"
+                     ng-show="audience.isDisplayed">
+                    <!-- student picture -->
+                    <div class="student-photo lex-col col__1">
+                        <img ng-src="/viescolaire/structures/[[structure.id]]/students/[[student.id]]/picture"
+                             height="30" width="30"
+                             onerror="this.src='/assets/themes/cg77/skins/default/../..//img/illustrations/no-avatar.svg';">
+                    </div>
+                    <!-- student info -->
+                    <div class="student-displayName ellipsis flex-col col__5">
+                        <span>[[student.displayName]]</span>
+                    </div>
+                    <!-- student className -->
+                    <div class="student-className flex-col col__3">[[audience.name]]</div>
+                    <!-- student issue -->
+                    <div ng-if="!vm.isMultiple(audience.id, student.id)" class="student-issue flex-col col__5">
+                        [[vm.getStudentIssue(student)]]
+                    </div>
+
+                    <div ng-if="vm.isMultiple(audience.id, student.id)" class="flex-col col__5">
+                        <i18n>presences.collective.absences.already.taken.into.account</i18n>
+                    </div>
+                    <!-- remove student -->
+                    <div ng-if="!vm.isMultiple(audience.id, student.id)"
+                         class="student-remove flex-col col__1"
+                         data-ng-click="vm.removeStudent(audience.id, student.id)">
+                        <i class="delete"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

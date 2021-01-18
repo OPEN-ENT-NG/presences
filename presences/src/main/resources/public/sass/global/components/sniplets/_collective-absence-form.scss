@@ -1,0 +1,195 @@
+.collectiveAbsencesLightbox {
+
+  .content {
+
+    width: 750px;
+
+    .body {
+      h3 {
+        color: $presences-heavy-black;
+      }
+    }
+
+    .form-context {
+      background: $presences-grey-smoke;
+
+      .timeslots {
+        margin-bottom: 7px;
+
+        time-picker {
+          background-color: $presences-white;
+          display: inline-block;
+        }
+
+        select {
+          border: none;
+          box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        }
+      }
+
+      .form-row-2 {
+
+        display: flex;
+        flex-direction: row;
+
+        &-col-1 {
+
+          padding-left: 0 !important;
+
+          .timeslot-choice {
+            margin-bottom: 16px;
+          }
+
+          .table-reason {
+            background: $presences-white;
+            margin-bottom: 16px;
+
+            select {
+              border: none;
+              height: 30px;
+            }
+          }
+
+          .regularisation-check {
+            margin-bottom: 16px;
+          }
+        }
+
+        &-col-2 {
+
+          display: flex;
+          flex-direction: column;
+          margin-top: 5px;
+
+          .comment-info {
+            margin-bottom: 12px;
+          }
+
+          .comment-input {
+            height: 40px;
+            background: $presences-white;
+          }
+        }
+      }
+    }
+
+    .form-absents {
+
+      min-height: 155px;
+
+      &-header {
+        display: flex;
+        flex-direction: row;
+
+        h3 {
+          margin-right: 30px;
+        }
+
+      }
+
+      .count-issues {
+        color: $presences-red;
+        float: right;
+        margin-bottom: 5px;
+      }
+
+      .list-audiences {
+        max-height: 185px;
+        overflow-y: auto;
+
+        &-item {
+
+
+          &-audience {
+
+            &-header {
+
+              .audience-collapse-icon {
+                font-size: 20pt;
+              }
+
+              .audience-name {
+                font-weight: bold;
+                text-align: center;
+              }
+
+              .audience-counts {
+                font-weight: bold;
+              }
+            }
+
+            &-student {
+              background-color: $presences-grey-smoke !important;
+              align-items: center;
+
+              .student-photo {
+                margin-right: 5px;
+                img {
+                  border-radius: 50%;
+                }
+              }
+
+              .student-issue {
+                color: $presences-red;
+              }
+
+              .flex-col {
+                padding: 0;
+              }
+
+            }
+
+            .flex-row {
+              width: 98%;
+              height: 40px;
+              line-height: 40px;
+              padding: 0 5px;
+              background-color: $presences-white;
+              white-space: nowrap;
+              overflow: hidden;
+
+              > div {
+                display: inline-block;
+              }
+            }
+
+            .student-row {
+
+              &-active {
+                &:hover {
+                  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.26);
+                  background-color: $presences-grey-clear;
+                  font-weight: bold;
+                }
+              }
+
+              &-inactive {
+                background-color: $presences-grey-light !important;
+              }
+            }
+          }
+        }
+      }
+    }
+    .nb-students {
+      float: right;
+      margin: 10px 15px 10px 0;
+      font-weight: bold;
+    }
+  }
+
+  .confirm-context {
+    padding: 40px 20px;
+
+    &-text {
+      .nb-absences {
+        font-weight: bold;
+      }
+
+      .nb-issues {
+        font-weight: bold;
+      }
+    }
+  }
+
+}
