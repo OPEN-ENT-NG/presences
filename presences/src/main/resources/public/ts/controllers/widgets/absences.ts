@@ -202,29 +202,37 @@ export const absencesController = ng.controller('AbsenceController', ['$scope', 
                 (res: { pageCount: number, events: EventResponse[], all: EventResponse[] }) => {
                     res.all.forEach((student: EventResponse) => {
 
-                        student.events.forEach((event: IEvent) => {
-                            let absenceEvent: IEvent = {
-                                id: event.id,
-                                start_date: event.start_date,
-                                end_date: event.end_date,
-                                student_id: student.studentId,
-                                reason_id: event.reason_id,
-                                counsellor_regularisation: event.counsellor_regularisation,
-                                student: {id: student.studentId, name: student.displayName, className: student.className}
-                            };
+                        for (let i = 0; i < student.events.length ; i++) {
+                            let event: IEvent = student.events[i];
+                            let previousEvent: IEvent = (i > 0) ? student.events[i - 1] : null;
+                            let nextEvent: IEvent = (i < (student.events.length - 1)) ? student.events[i + 1] : null;
 
-                            /* Check if absence on a unique slot and remove duplicates */
-                            if (!vm.isOnMultipleSlots(absenceEvent) &&
-                                !absenceEvent.reason_id &&
-                                vm.absences.indexOf(vm.absences.find(
-                                    (abs: CounsellorAbsence) => {
-                                        return (DateUtils.isBetween(abs.start_date, abs.end_date,
-                                            absenceEvent.start_date, absenceEvent.end_date) &&
-                                            (abs.student.id === absenceEvent.student_id));
-                                    })) === -1) {
-                                absenceEvents.push(absenceEvent);
+                            // Checking if events not following on multiple slots
+                            if (((previousEvent !== null && event.start_date !== previousEvent.end_date) || previousEvent == null) &&
+                                ((nextEvent !== null && event.end_date !== nextEvent.start_date) || nextEvent == null)) {
+                                let absenceEvent: IEvent = {
+                                    id: event.id,
+                                    start_date: event.start_date,
+                                    end_date: event.end_date,
+                                    student_id: student.studentId,
+                                    reason_id: event.reason_id,
+                                    counsellor_regularisation: event.counsellor_regularisation,
+                                    student: {id: student.studentId, name: student.displayName, className: student.className}
+                                };
+
+                                /* Check if absence on a unique slot and remove duplicates */
+                                if (!vm.isOnMultipleSlots(absenceEvent) &&
+                                    !absenceEvent.reason_id &&
+                                    vm.absences.indexOf(vm.absences.find(
+                                        (abs: CounsellorAbsence) => {
+                                            return (DateUtils.isBetween(abs.start_date, abs.end_date,
+                                                absenceEvent.start_date, absenceEvent.end_date) &&
+                                                (abs.student.id === absenceEvent.student_id));
+                                        })) === -1) {
+                                    absenceEvents.push(absenceEvent);
+                                }
                             }
-                        });
+                        }
                     });
                 }
             );
