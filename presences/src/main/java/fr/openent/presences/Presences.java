@@ -7,11 +7,15 @@ import fr.openent.presences.controller.*;
 import fr.openent.presences.controller.events.EventController;
 import fr.openent.presences.controller.events.LatenessEventController;
 import fr.openent.presences.cron.CreateDailyRegistersTask;
+import fr.openent.presences.db.DB;
 import fr.openent.presences.worker.CreateDailyPresenceWorker;
 import fr.wseduc.cron.CronTrigger;
+import fr.wseduc.mongodb.MongoDb;
 import io.vertx.core.DeploymentOptions;
 import io.vertx.core.eventbus.EventBus;
 import org.entcore.common.http.BaseServer;
+import org.entcore.common.neo4j.Neo4j;
+import org.entcore.common.sql.Sql;
 import org.entcore.common.storage.Storage;
 import org.entcore.common.storage.StorageFactory;
 
@@ -44,6 +48,7 @@ public class Presences extends BaseServer {
     public static final String MANAGE_ABSENCE_STATEMENTS = "presences.manage.absence.statements";
     public static final String ABSENCE_STATEMENTS_CREATE = "presences.absence.statements.create";
     public static final String MANAGE_FORGOTTEN_NOTEBOOK = "presences.manage.forgotten.notebook";
+    public static final String MANAGE_COLLECTIVE_ABSENCES = "presences.manage.collective.absences";
 
     public static final String ALERTS_STUDENT_NUMBER = "presences.alerts.students.number";
 
@@ -71,6 +76,7 @@ public class Presences extends BaseServer {
         Storage storage = new StorageFactory(vertx, config).getStorage();
 //        final String exportCron = config.getString("export-cron");
 
+        DB.getInstance().init(Neo4j.getInstance(), Sql.getInstance(), MongoDb.getInstance());
 
         addController(new PresencesController());
         addController(new CourseController(eb));
@@ -93,6 +99,7 @@ public class Presences extends BaseServer {
         addController(new InitController(eb));
         addController(new StudentController(eb));
         addController(new StatementAbsenceController(eb, storage));
+        addController(new CollectiveAbsenceController());
 
         // Controller that create fake rights for widgets
         addController(new FakeRight());

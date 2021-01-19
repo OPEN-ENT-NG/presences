@@ -77,4 +77,10 @@ public class Actions {
     public static final String ABSENCE_STATEMENT_CREATION = "ABSENCE_STATEMENT_CREATION";
     // A user validate an absence statement
     public static final String ABSENCE_STATEMENT_VALIDATE = "ABSENCE_STATEMENT_VALIDATE";
+    // A user creates a collective absence
+    public static final String COLLECTIVE_ABSENCE_CREATION = "COLLECTIVE_ABSENCE_CREATION";
+    // A user update a collective absence
+    public static final String COLLECTIVE_ABSENCE_UPDATE = "COLLECTIVE_ABSENCE_UPDATE";
+    // A user deletes an absence
+    public static final String COLLECTIVE_ABSENCE_DELETION = "COLLECTIVE_ABSENCE_DELETION";
 }

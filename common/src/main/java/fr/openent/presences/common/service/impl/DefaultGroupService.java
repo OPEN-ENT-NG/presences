@@ -2,8 +2,10 @@ package fr.openent.presences.common.service.impl;
 
 import fr.openent.presences.common.helper.FutureHelper;
 import fr.openent.presences.common.service.GroupService;
+import fr.openent.presences.db.DBService;
 import fr.openent.presences.enums.GroupType;
 import fr.wseduc.webutils.Either;
+import io.vertx.core.AsyncResult;
 import io.vertx.core.CompositeFuture;
 import io.vertx.core.Future;
 import io.vertx.core.Handler;
@@ -15,10 +17,11 @@ import io.vertx.core.logging.LoggerFactory;
 import org.entcore.common.neo4j.Neo4j;
 import org.entcore.common.neo4j.Neo4jResult;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-public class DefaultGroupService implements GroupService {
+public class DefaultGroupService extends DBService implements GroupService {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(DefaultGroupService.class);
     private EventBus eb;
@@ -121,6 +124,56 @@ public class DefaultGroupService implements GroupService {
                 .put("ids", new JsonArray(groups));
 
         Neo4j.getInstance().execute(query, params, Neo4jResult.validResultHandler(handler));
+    }
+
+    @Override
+    public void getAudiences(String structureId, List<String> audienceIds, Handler<AsyncResult<JsonArray>> handler) {
+        String query =  "MATCH (s:Structure {id: {structureId}}) " +
+                "MATCH (s)<-[:BELONGS|DEPENDS]-(g:Group)<-[:IN]-(u:User {profiles:['Student']}) " +
+                "WHERE g.id IN {audienceIds} " +
+                "RETURN g.id as id, g.name as name, count(DISTINCT u) as countStudents " +
+                "ORDER BY name " +
+                "UNION " +
+                "MATCH(s)<-[:BELONGS|DEPENDS]-(c:Class)<-[:DEPENDS]-(:ProfileGroup)<-[:IN]-(u:User {profiles:['Student']}) " +
+                "WHERE c.id IN {audienceIds} " +
+                "RETURN c.id as id, c.name as name, count(DISTINCT u) as countStudents " +
+                "ORDER BY name " +
+                "UNION " +
+                "MATCH(s)<-[:BELONGS|DEPENDS]-(m:ManualGroup)<-[:IN]-(u:User {profiles:['Student']}) " +
+                "WHERE m.id IN {audienceIds} " +
+                "RETURN m.id as id, m.name as name, count(DISTINCT u) as countStudents " +
+                "ORDER BY name";
+
+        JsonObject params = new JsonObject()
+                .put("structureId", structureId)
+                .put("audienceIds", new JsonArray(audienceIds != null ? audienceIds : new ArrayList<String>()));
+
+        neo4j.execute(query, params, Neo4jResult.validResultHandler(FutureHelper.handlerJsonArray(handler)));
+    }
+
+    @Override
+    public void getAudiencesFromNames(String structureId, List<String> audienceNames, Handler<AsyncResult<JsonArray>> handler) {
+        String query =  "MATCH (s:Structure {id: {structureId}})<-[:BELONGS|DEPENDS]-(g:Group) " +
+                "WHERE g.name IN {audienceNames} " +
+                "RETURN g.id as id, g.name as name " +
+                "ORDER BY name " +
+                "UNION " +
+                "MATCH(s:Structure {id: {structureId}})<-[:BELONGS|DEPENDS]-(c:Class) " +
+                "WHERE c.name IN {audienceNames} " +
+                "RETURN c.id as id, c.name as name " +
+                "ORDER BY name " +
+                "UNION " +
+                "MATCH(s:Structure {id: {structureId}})<-[:BELONGS|DEPENDS]-(m:ManualGroup) " +
+                "WHERE m.name IN {audienceNames} " +
+                "RETURN m.id as id, m.name as name " +
+                "ORDER BY name";
+
+
+        JsonObject params = new JsonObject()
+                .put("structureId", structureId)
+                .put("audienceNames", new JsonArray(audienceNames != null ? audienceNames : new ArrayList<String>()));
+
+        neo4j.execute(query, params, Neo4jResult.validResultHandler(FutureHelper.handlerJsonArray(handler)));
     }
 
     @Override

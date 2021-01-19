@@ -7,10 +7,12 @@ import fr.openent.presences.common.service.GroupService;
 import fr.openent.presences.common.service.UserService;
 import fr.openent.presences.common.service.impl.DefaultGroupService;
 import fr.openent.presences.common.service.impl.DefaultUserService;
+import fr.openent.presences.db.DBService;
 import fr.openent.presences.enums.EventType;
 import fr.openent.presences.model.Event.Event;
 import fr.openent.presences.service.AbsenceService;
 import fr.wseduc.webutils.Either;
+import io.vertx.core.AsyncResult;
 import io.vertx.core.CompositeFuture;
 import io.vertx.core.Future;
 import io.vertx.core.Handler;
@@ -30,7 +32,7 @@ import java.util.Map;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
-public class DefaultAbsenceService implements AbsenceService {
+public class DefaultAbsenceService extends DBService implements AbsenceService {
     private static final Logger LOGGER = LoggerFactory.getLogger(DefaultAbsenceService.class);
     private static String defaultStartTime = "00:00:00";
     private static String defaultEndTime = "23:59:59";
@@ -109,6 +111,100 @@ public class DefaultAbsenceService implements AbsenceService {
     }
 
     @Override
+    public void getAbsencesBetweenDates(String startDate, String endDate, List<String> users, Handler<Either<String, JsonArray>> handler) {
+        JsonArray params = new JsonArray();
+        String query = "SELECT * FROM " + Presences.dbSchema + ".absence" +
+                " WHERE student_id IN " + Sql.listPrepared(users.toArray()) +
+                " AND ? < end_date" +
+                " AND start_date < ? ";
+
+        params.addAll(new JsonArray(users));
+        params.add(startDate);
+        params.add(endDate);
+
+        sql.prepared(query, params, SqlResult.validResultHandler(handler));
+    }
+
+    @Override
+    public void getAbsencesFromCollective(String structureId, Long collectiveId, Handler<Either<String, JsonArray>> handler) {
+        String query = "SELECT * FROM " + Presences.dbSchema + ".absence " +
+                " WHERE structure_id = ? AND collective_id = ? ";
+
+        JsonArray params = new JsonArray().add(structureId);
+        params.add(collectiveId);
+
+        sql.prepared(query, params, SqlResult.validResultHandler(handler));
+    }
+
+    @Override
+    public void create(JsonObject absenceBody, List<String> studentIds, UserInfos user, Long collectiveId, Handler<AsyncResult<JsonArray>> handler) {
+        if (studentIds.isEmpty()) {
+            handler.handle(Future.succeededFuture(new JsonArray()));
+            return;
+        }
+
+        JsonArray statements = new JsonArray();
+        for (String studentId : studentIds) {
+            statements.add(insertStatement(absenceBody, studentId, user, collectiveId));
+        }
+        sql.transaction(statements, SqlResult.validResultHandler(result -> {
+            if (result.isLeft()) {
+                String message = "[Presences@DefaultAbsenceService::create] failed to create absences from collective";
+                LOGGER.error(message, result.left().getValue());
+                handler.handle(Future.failedFuture(message));
+                return;
+            }
+
+            if (Boolean.TRUE.equals(absenceBody.getBoolean("counsellor_regularisation", false)))
+                regularizeAfterCollectiveCreate(collectiveId, handler);
+            else handler.handle(Future.succeededFuture(result.right().getValue()));
+        }));
+    }
+
+    private JsonObject insertStatement(JsonObject absenceBody, String studentId, UserInfos user, Long collectiveId) {
+        String query = "INSERT INTO " + Presences.dbSchema + ".absence(structure_id, student_id, start_date, end_date, owner, reason_id, " +
+                " collective_id) " +
+                " SELECT ?, ?, ?, ?, ?, ?, ? ";
+
+        JsonArray params = new JsonArray()
+                .add(absenceBody.getString("structure_id"))
+                .add(studentId)
+                .add(absenceBody.getString("start_date"))
+                .add(absenceBody.getString("end_date"))
+                .add(user.getUserId());
+
+        if (absenceBody.getLong("reason_id") != null) params.add(absenceBody.getLong("reason_id"));
+        else params.addNull();
+
+        if (collectiveId != null) {
+            params.add(collectiveId);
+            query += " WHERE NOT EXISTS " +
+                    "        ( "  +
+                    "            SELECT id "  +
+                    "            FROM presences.absence "  +
+                    "                WHERE collective_id = ? "  +
+                    "                AND student_id = ? "  +
+                    "        ) ";
+            params.add(collectiveId)
+                    .add(studentId);
+        } else params.addNull();
+
+        return new JsonObject()
+                .put("action", "prepared")
+                .put("statement", query)
+                .put("values", params);
+    }
+
+    private void regularizeAfterCollectiveCreate(Long collectiveId, Handler<AsyncResult<JsonArray>> handler) {
+        String query = "UPDATE " + Presences.dbSchema + ".absence " +
+                "SET counsellor_regularisation = ? WHERE collective_id = ?";
+        JsonArray params = new JsonArray()
+                .add(true)
+                .add(collectiveId);
+        sql.prepared(query, params, SqlResult.validResultHandler(FutureHelper.handlerJsonArray(handler)));
+    }
+
+    @Override
     public void create(JsonObject absenceBody, UserInfos user, boolean editEvents, Handler<Either<String, JsonObject>> handler) {
         String query = "INSERT INTO " + Presences.dbSchema + ".absence(structure_id, start_date, end_date, student_id, owner, reason_id) " +
                 "VALUES (?, ?, ?, ?, ?, ?) RETURNING id;";
@@ -170,6 +266,58 @@ public class DefaultAbsenceService implements AbsenceService {
         }));
     }
 
+    @Override
+    @SuppressWarnings("unchecked")
+    public void updateFromCollective(JsonObject absenceBody, UserInfos user, Long collectiveId, boolean editEvents, Handler<AsyncResult<JsonObject>> handler) {
+        String beforeUpdateAbsenceQuery = "SELECT * FROM " + Presences.dbSchema + ".absence WHERE collective_id = ?";
+        sql.prepared(beforeUpdateAbsenceQuery, new JsonArray().add(collectiveId), SqlResult.validResultHandler(oldAbsenceResult -> {
+            if (oldAbsenceResult.isLeft()) {
+                String message = "[Presences@DefaultAbsenceService::update] failed to retrieve absences";
+                LOGGER.error(message, oldAbsenceResult.left().getValue());
+                handler.handle(Future.failedFuture(message));
+                return;
+            }
+            List<JsonObject> oldAbsences = oldAbsenceResult.right().getValue().getList();
+
+            String query = "UPDATE " + Presences.dbSchema + ".absence " +
+                    "SET start_date = ?, end_date = ?, reason_id = ? WHERE collective_id = ? AND structure_id = ?";
+
+            JsonArray values = new JsonArray()
+                    .add(absenceBody.getString("start_date"))
+                    .add(absenceBody.getString("end_date"));
+            if (absenceBody.getInteger("reason_id") != null) {
+                values.add(absenceBody.getInteger("reason_id"));
+            } else {
+                values.addNull();
+            }
+
+            values.add(collectiveId)
+                    .add(absenceBody.getString("structure_id"));
+
+            sql.prepared(query, values, SqlResult.validUniqueResultHandler(absenceResult -> {
+                List<Future<JsonObject>> futures = new ArrayList<>();
+
+                for (JsonObject oldAbsence : oldAbsences) {
+                    Future<JsonObject> future = Future.future();
+                    futures.add(future);
+
+                    absenceBody.put("student_id", oldAbsence.getString("student_id"));
+
+                    afterPersistAbsence(oldAbsence.getLong("id"), absenceBody, oldAbsence, editEvents, user.getUserId(),
+                            FutureHelper.handlerJsonObject(future), absenceResult);
+                }
+
+                FutureHelper.all(futures).setHandler(result -> {
+                    if (result.failed()) {
+                        handler.handle(Future.failedFuture(result.cause().getMessage()));
+                        return;
+                    }
+                    handler.handle(Future.succeededFuture(new JsonObject().put("success", "ok")));
+                });
+            }));
+        }));
+    }
+
     private void afterPersistAbsence(Long absenceId, JsonObject absenceBody, JsonObject oldAbsence, boolean editEvents, String userInfoId, Handler<Either<String, JsonObject>> handler, Either<String, JsonObject> absenceResult) {
         if (absenceResult.isLeft()) {
             String message = "[Presences@DefaultAbsenceService] failed to update absence";
@@ -179,7 +327,7 @@ public class DefaultAbsenceService implements AbsenceService {
             interactingEvents(absenceBody, oldAbsence, userInfoId, event -> {
                 if (event.isLeft()) {
                     String message = "[Presences@DefaultAbsenceService] failed to interact with events while updating absence";
-                    LOGGER.error(message, absenceResult.left().getValue());
+                    LOGGER.error(message, event.left().getValue());
                     handler.handle(new Either.Left<>(message));
                 } else {
                     handler.handle(new Either.Right<>(event.right().getValue()
@@ -205,37 +353,51 @@ public class DefaultAbsenceService implements AbsenceService {
             JsonArray params = new JsonArray();
             params.addAll(new JsonArray(absenceIds));
 
-            Sql.getInstance().prepared(query, params, SqlResult.validResultHandler(result -> {
-                if (result.isLeft()) {
-                    String message = "[Presences@DefaultAbsenceService::afterPersistAbsences] Failed to retrieve absences from list of ids";
-                    LOGGER.error(message);
-                    handler.handle(new Either.Left<>(message));
-                } else if (editEvents) {
-                    JsonArray absences = result.right().getValue();
-
-                    List<Future> futures = new ArrayList<>();
-
-                    absences.forEach(oAbsence -> {
-                        Future<JsonObject> future = Future.future();
-                        futures.add(future);
-                        JsonObject absence = (JsonObject) oAbsence;
-                        interactingEvents(absence, userInfoId, future);
-                    });
-
-                    CompositeFuture.all(futures).setHandler(event -> {
-                        if (event.failed()) {
-                            LOGGER.info("[Presences@DefaultAbsenceService::afterPersistAbsences::CompositeFuture]: " +
-                                    "An error has occured)");
-                            handler.handle(new Either.Left<>(event.cause().getMessage()));
-                        } else {
-                            handler.handle(new Either.Right<>(new JsonObject().put("status", "ok")));
-                        }
-                    });
-                } else {
-                    handler.handle(new Either.Right<>(new JsonObject().put("status", "ok")));
-                }
-            }));
+            afterPersistAbsence(query, params, userInfoId, editEvents, handler);
         }
+    }
+
+    @Override
+    public void afterPersistCollective(Long collectiveId, String structureId, String userInfoId, boolean editEvents, Handler<AsyncResult<JsonObject>> handler) {
+        String query = " SELECT * " +
+                " FROM " + Presences.dbSchema + ".absence " +
+                " WHERE collective_id = ? AND structure_id = ?";
+
+        JsonArray params = new JsonArray().add(collectiveId).add(structureId);
+        afterPersistAbsence(query, params, userInfoId, editEvents, FutureHelper.handlerJsonObject(handler));
+    }
+
+    private void afterPersistAbsence(String getAbsencesQuery, JsonArray params, String userInfoId, boolean editEvents, Handler<Either<String, JsonObject>> handler) {
+        Sql.getInstance().prepared(getAbsencesQuery, params, SqlResult.validResultHandler(result -> {
+            if (result.isLeft()) {
+                String message = "[Presences@DefaultAbsenceService::afterPersistAbsences] Failed to retrieve absences";
+                LOGGER.error(message);
+                handler.handle(new Either.Left<>(message));
+            } else if (editEvents) {
+                JsonArray absences = result.right().getValue();
+
+                List<Future> futures = new ArrayList<>();
+
+                absences.forEach(oAbsence -> {
+                    Future<JsonObject> future = Future.future();
+                    futures.add(future);
+                    JsonObject absence = (JsonObject) oAbsence;
+                    interactingEvents(absence, userInfoId, future);
+                });
+
+                CompositeFuture.all(futures).setHandler(event -> {
+                    if (event.failed()) {
+                        LOGGER.info("[Presences@DefaultAbsenceService::afterPersistAbsences::CompositeFuture]: " +
+                                "An error has occured)");
+                        handler.handle(new Either.Left<>(event.cause().getMessage()));
+                    } else {
+                        handler.handle(new Either.Right<>(new JsonObject().put("status", "ok")));
+                    }
+                });
+            } else {
+                handler.handle(new Either.Right<>(new JsonObject().put("status", "ok")));
+            }
+        }));
     }
 
     private void interactingEvents(JsonObject absenceBody, JsonObject oldAbsence, String userInfoId, Handler<Either<String, JsonObject>> handler) {

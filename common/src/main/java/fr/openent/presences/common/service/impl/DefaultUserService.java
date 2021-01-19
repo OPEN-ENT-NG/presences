@@ -1,7 +1,10 @@
 package fr.openent.presences.common.service.impl;
 
+import fr.openent.presences.common.helper.FutureHelper;
 import fr.openent.presences.common.service.UserService;
+import fr.openent.presences.db.DBService;
 import fr.wseduc.webutils.Either;
+import io.vertx.core.AsyncResult;
 import io.vertx.core.Handler;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
@@ -14,7 +17,7 @@ import java.util.Map;
 
 import static fr.openent.presences.model.Model.log;
 
-public class DefaultUserService implements UserService {
+public class DefaultUserService extends DBService implements UserService {
 
     @Override
     public void getUsers(List<String> userIds, Handler<Either<String, JsonArray>> handler) {
@@ -32,6 +35,23 @@ public class DefaultUserService implements UserService {
         JsonObject params = new JsonObject().put("userIds", students);
 
         Neo4j.getInstance().execute(query, params, Neo4jResult.validResultHandler(handler));
+    }
+
+    @Override
+    public void getStudentsWithAudiences(String structureId, List<String> studentIds, Handler<AsyncResult<JsonArray>> handler) {
+        String query = "MATCH (u:User {profiles:['Student']}) " +
+                "WHERE u.id IN {studentIds} " +
+                "OPTIONAL MATCH (s:Structure {id: {structureId}})<-[:BELONGS|DEPENDS]-(g:Group)<-[:IN]-(u) " +
+                "OPTIONAL MATCH (s:Structure {id: {structureId}})<-[:BELONGS|DEPENDS]-(c:Class)<-[:DEPENDS]-(:ProfileGroup)<-[:IN]-(u) " +
+                "OPTIONAL MATCH (s:Structure {id: {structureId}})<-[:BELONGS|DEPENDS]-(mg:ManualGroup)<-[:IN]-(u) " +
+                "RETURN u.id as id, u.lastName + ' ' + u.firstName as displayName, u.lastName as lastName, u.firstName as firstName," +
+                "collect(DISTINCT({id: g.id, name: g.name, type: 'GROUP'})) + " +
+                "collect(DISTINCT({id: c.id, name: c.name, type: 'CLASS'})) + " +
+                "collect(DISTINCT({id: mg.id, name: mg.name, type: 'MANUAL_GROUP'})) as audiences";
+
+        JsonObject params = new JsonObject().put("structureId", structureId).put("studentIds", studentIds);
+
+        neo4j.execute(query, params, Neo4jResult.validResultHandler(FutureHelper.handlerJsonArray(handler)));
     }
 
     @Override

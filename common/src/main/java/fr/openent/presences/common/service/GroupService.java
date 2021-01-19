@@ -2,6 +2,7 @@ package fr.openent.presences.common.service;
 
 import fr.openent.presences.enums.GroupType;
 import fr.wseduc.webutils.Either;
+import io.vertx.core.AsyncResult;
 import io.vertx.core.Handler;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
@@ -53,6 +54,10 @@ public interface GroupService {
      * @param handler FUnction handler returning data
      */
     void getGroupStudents(List<String> groups, Handler<Either<String, JsonArray>> handler);
+
+
+    void getAudiences(String structureId, List<String> audienceIds, Handler<AsyncResult<JsonArray>> handler);
+    void getAudiencesFromNames(String structureId, List<String> audienceNames, Handler<AsyncResult<JsonArray>> handler);
 
     // Define this new service to fix some performance issues. Maybe refactor later ?
     void getFunctionalAndManualGroupsStudents(List<String> groups, Handler<Either<String, JsonArray>> handler);

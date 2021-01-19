@@ -1,0 +1,33 @@
+{
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "id": "http://jsonschema.net",
+  "type": "object",
+  "properties": {
+    "audiences": {
+      "type": [
+        "array",
+        "string"
+      ]
+    },
+    "startDate": {
+      "type": "string"
+    },
+    "endDate": {
+      "type": "string"
+    },
+    "reasonId": {
+      "type": ["number", "null"]
+    },
+    "counsellorRegularisation": {
+      "type": ["boolean", "null"]
+    },
+    "comment": {
+      "type": ["string", "null"]
+    }
+  },
+  "required": [
+    "audiences",
+    "startDate",
+    "endDate"
+  ]
+}

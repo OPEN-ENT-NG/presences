@@ -31,6 +31,17 @@ public class FutureHelper {
         };
     }
 
+    public static Handler<Either<String, JsonArray>> handlerJsonArray(Handler<AsyncResult<JsonArray>> handler) {
+        return event -> {
+            if (event.isRight()) {
+                handler.handle(Future.succeededFuture(event.right().getValue()));
+            } else {
+                LOGGER.error(event.left().getValue());
+                handler.handle(Future.failedFuture(event.left().getValue()));
+            }
+        };
+    }
+
     public static Handler<AsyncResult<JsonArray>> handlerAsyncJsonArray(Future<JsonArray> future) {
         return event -> {
             if (event.succeeded()) {
@@ -49,6 +60,17 @@ public class FutureHelper {
             } else {
                 LOGGER.error(event.left().getValue());
                 future.fail(event.left().getValue());
+            }
+        };
+    }
+
+    public static Handler<Either<String, JsonObject>> handlerJsonObject(Handler<AsyncResult<JsonObject>> handler) {
+        return event -> {
+            if (event.isRight()) {
+                handler.handle(Future.succeededFuture(event.right().getValue()));
+            } else {
+                LOGGER.error(event.left().getValue());
+                handler.handle(Future.failedFuture(event.left().getValue()));
             }
         };
     }

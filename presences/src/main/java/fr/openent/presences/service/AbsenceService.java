@@ -1,6 +1,7 @@
 package fr.openent.presences.service;
 
 import fr.wseduc.webutils.Either;
+import io.vertx.core.AsyncResult;
 import io.vertx.core.Handler;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
@@ -48,15 +49,30 @@ public interface AbsenceService {
      * @param handler Function handler returning data
      */
     void getAbsencesBetween(String startDate, String endDate, List<String> users, Handler<Either<String, JsonArray>> handler);
+    void getAbsencesBetweenDates(String startDate, String endDate, List<String> users, Handler<Either<String, JsonArray>> handler);
+
+    void getAbsencesFromCollective(String structureId, Long collectiveId, Handler<Either<String, JsonArray>> handler);
 
     /**
      * create absence
      *
-     * @param absenceBody absenceBody fetched
-     * @param user        userInfo
-     * @param handler     Function handler returning data
+     * @param absenceBody   absenceBody fetched
+     * @param user          userInfo
+     * @param collectiveId  absence collective identifier (nullable)
+     * @param handler       Function handler returning data
      */
+    void create(JsonObject absenceBody, List<String> studentIds, UserInfos user, Long collectiveId, Handler<AsyncResult<JsonArray>> handler);
     void create(JsonObject absenceBody, UserInfos user, boolean editEvents, Handler<Either<String, JsonObject>> handler);
+
+    /**
+     *
+     * @param collectiveId collective absence identifier
+     * @param structureId  structure identifier
+     * @param userInfoId   user logged identifier
+     * @param editEvents   if events corresponding to absences have to be edited
+     * @param handler      response handler
+     */
+    void afterPersistCollective(Long collectiveId, String structureId, String userInfoId, boolean editEvents, Handler<AsyncResult<JsonObject>> handler);
 
     /**
      * update absence
@@ -66,6 +82,7 @@ public interface AbsenceService {
      * @param handler     Function handler returning data
      */
     void update(Long absenceId, JsonObject absenceBody, UserInfos user, boolean editEvents, Handler<Either<String, JsonObject>> handler);
+    void updateFromCollective(JsonObject absenceBody, UserInfos user, Long collectiveId, boolean editEvents, Handler<AsyncResult<JsonObject>> handler);
 
     /**
      * update absence reason

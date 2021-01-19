@@ -7,7 +7,9 @@ import fr.openent.presences.security.AbsenceWidgetRight;
 import fr.openent.presences.security.CreateEventRight;
 import fr.openent.presences.security.Manage;
 import fr.openent.presences.service.AbsenceService;
+import fr.openent.presences.service.CollectiveAbsenceService;
 import fr.openent.presences.service.impl.DefaultAbsenceService;
+import fr.openent.presences.service.impl.DefaultCollectiveAbsenceService;
 import fr.wseduc.rs.*;
 import fr.wseduc.security.ActionType;
 import fr.wseduc.security.SecuredAction;
@@ -30,17 +32,19 @@ public class AbsenceController extends ControllerHelper {
     private EventBus eb;
     private AbsenceService absenceService;
     private GroupService groupService;
+    private CollectiveAbsenceService collectiveService;
 
     public AbsenceController(EventBus eb) {
         super();
         this.eb = eb;
         this.absenceService = new DefaultAbsenceService(eb);
         this.groupService = new DefaultGroupService(eb);
+        this.collectiveService = new DefaultCollectiveAbsenceService(eb);
 
     }
 
     @Get("/absence/:id")
-    @ApiDoc("Delete absence")
+    @ApiDoc("Get absence from id")
     @ResourceFilter(Manage.class)
     @SecuredAction(value = "", type = ActionType.RESOURCE)
     public void getAbsenceId(final HttpServerRequest request) {
@@ -145,7 +149,39 @@ public class AbsenceController extends ControllerHelper {
             return;
         }
         Integer absenceId = Integer.parseInt(request.getParam("id"));
-        absenceService.delete(absenceId, DefaultResponseHandler.defaultResponseHandler(request));
+        collectiveService.getCollectiveFromAbsence(Long.valueOf(absenceId), colleciveResult -> {
+            if (colleciveResult.failed()) {
+                String message = "[Presences@AbsenceController::delete] Failed to retrieve collective from absence.";
+                log.error(message);
+                renderError(request);
+                return;
+            }
+            Long collectiveId = colleciveResult.result().getLong("id");
+            String structureId = colleciveResult.result().getString("structure_id");
+            absenceService.delete(absenceId, deleteResult -> {
+                if (colleciveResult.failed()) {
+                    String message = "[Presences@AbsenceController::delete] Failed to delete absence.";
+                    log.error(message);
+                    renderError(request);
+                    return;
+                }
+
+                if(collectiveId != null) {
+                    collectiveService.removeAudiencesRelation(structureId, collectiveId , audienceResult -> {
+                        if (audienceResult.failed()) {
+                            String message = "[Presences@AbsenceController::delete] Failed to delete collectives audiences.";
+                            log.error(message);
+                            renderError(request);
+                            return;
+                        }
+                        renderJson(request, new JsonObject().put("success", "ok"));
+                    });
+                    return;
+                }
+
+                renderJson(request, new JsonObject().put("success", "ok"));
+            });
+        });
     }
 
     @Get("/absences")

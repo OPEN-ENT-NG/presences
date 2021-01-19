@@ -1,6 +1,7 @@
 package fr.openent.presences.common.service;
 
 import fr.wseduc.webutils.Either;
+import io.vertx.core.AsyncResult;
 import io.vertx.core.Handler;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
@@ -18,6 +19,8 @@ public interface UserService {
     void getUsers(List<String> userIds, Handler<Either<String, JsonArray>> handler);
 
     void getStudents(List<String> students, Handler<Either<String, JsonArray>> handler);
+
+    void getStudentsWithAudiences(String structureId, List<String> studentIds, Handler<AsyncResult<JsonArray>> handler);
 
     /**
      * Get every student ids from the structure with their accommodation.
