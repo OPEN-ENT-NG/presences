@@ -72,7 +72,7 @@ public class Presences extends BaseServer {
 //        final String exportCron = config.getString("export-cron");
 
 
-        addController(new PresencesController(eb));
+        addController(new PresencesController());
         addController(new CourseController(eb));
         addController(new RegisterController(eb));
         addController(new AbsenceController(eb));

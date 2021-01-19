@@ -15,7 +15,6 @@ import fr.wseduc.webutils.Either;
 import fr.wseduc.webutils.request.RequestUtils;
 import io.vertx.core.Handler;
 import io.vertx.core.MultiMap;
-import io.vertx.core.eventbus.EventBus;
 import io.vertx.core.http.HttpServerRequest;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
@@ -27,19 +26,19 @@ import org.entcore.common.http.filter.Trace;
 import org.entcore.common.http.response.DefaultResponseHandler;
 import org.entcore.common.user.UserUtils;
 
-import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
 public class PresencesController extends ControllerHelper {
 
-    private EventBus eb;
+    private static final String END_DATE = "endDate";
+    private static final String START_DATE = "startDate";
+    private static final String STRUCTURE_ID = "structureId";
+
     private PresenceService presencesService;
     private EventStore eventStore;
 
-    public PresencesController(EventBus eb) {
-        this.eb = eb;
+    public PresencesController() {
         this.presencesService = new DefaultPresenceService();
         this.eventStore = EventStoreFactory.getFactory().getEventStore(Presences.class.getSimpleName());
     }
@@ -102,10 +101,10 @@ public class PresencesController extends ControllerHelper {
         });
     }
 
-    private Boolean isValidBody(JsonObject presence) {
-        return presence.containsKey("structureId") &&
-                presence.containsKey("startDate") &&
-                presence.containsKey("endDate") &&
+    private boolean isValidBody(JsonObject presence) {
+        return presence.containsKey(STRUCTURE_ID) &&
+                presence.containsKey(START_DATE) &&
+                presence.containsKey(END_DATE) &&
                 presence.containsKey("markedStudents") &&
                 !presence.getJsonArray("markedStudents").isEmpty();
     }
@@ -136,17 +135,8 @@ public class PresencesController extends ControllerHelper {
             }
             JsonArray presences = result.right().getValue();
 
-            List<String> csvHeaders = new ArrayList<>(Arrays.asList(
-                    "presences.presences.csv.header.owner",
-                    "presences.presences.csv.header.discipline",
-                    "presences.presences.csv.header.date",
-                    "presences.presences.csv.header.start.time",
-                    "presences.presences.csv.header.end.time",
-                    "presences.presences.csv.header.student.number"));
-
             PresencesCSVExport pce = new PresencesCSVExport(presences);
             pce.setRequest(request);
-            pce.setHeader(csvHeaders);
             pce.export();
         });
     }
@@ -154,16 +144,16 @@ public class PresencesController extends ControllerHelper {
     private void get(final HttpServerRequest request, Handler<Either<String, JsonArray>> handler) {
         UserUtils.getUserInfos(eb, request, user -> {
             MultiMap params = request.params();
-            String structureId = params.get("structureId");
-            String startDate = params.get("startDate");
-            String endDate = params.get("endDate");
+            String structureId = params.get(STRUCTURE_ID);
+            String startDate = params.get(START_DATE);
+            String endDate = params.get(END_DATE);
             List<String> userIds = params.getAll("studentId");
             List<String> ownerIds = params.getAll("ownerId");
             ownerIds = WorkflowHelper.hasRight(user, WorkflowActions.SEARCH.toString()) ? ownerIds :
                     Collections.singletonList(user.getUserId());
 
-            if (!request.params().contains("structureId") || !request.params().contains("startDate") ||
-                    !request.params().contains("endDate")) {
+            if (!request.params().contains(STRUCTURE_ID) || !request.params().contains(START_DATE) ||
+                    !request.params().contains(END_DATE)) {
                 badRequest(request);
                 return;
             }
