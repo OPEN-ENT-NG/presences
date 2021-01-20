@@ -23,6 +23,9 @@ export class DateUtils {
         'MINUTES': 'mm'
     };
 
+    static START_DAY_TIME = "00:00:00";
+    static END_DAY_TIME = "23:59:59";
+
     /**
      * Format date based on given format using moment
      * @param date date to format

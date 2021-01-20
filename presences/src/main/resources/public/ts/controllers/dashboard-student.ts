@@ -128,13 +128,13 @@ export const dashboardStudentController = ng.controller('DashboardStudentControl
                 let incidentsEventsType: Array<string> = [EVENT_TYPES.INCIDENT, EVENT_TYPES.PUNISHMENT];
                 promises.push(eventService.getStudentEvent(prepareEventRequest(eventsType, 2, 0)));
                 promises.push(incidentService.getStudentEvents(prepareEventRequest(incidentsEventsType, 2, 0,
-                    "00:00:00", "23:59:59")));
+                    DateUtils.START_DAY_TIME, DateUtils.END_DAY_TIME)));
                 promises.push(forgottenNotebookService.getStudentNotebooks(prepareEventRequest([], 2, 0)));
                 Promise.all(promises)
                     .then((values: any[]) => {
                         vm.presenceEvents = (<IStudentEventResponse>values[0]); // presences events
-                        vm.incidentsEvents = (<IStudentIncidentResponse>values[1]) // incidents events
-                        vm.forgottenNotebook = (<IForgottenNotebookResponse>values[2]) // forgotten notebook events
+                        vm.incidentsEvents = (<IStudentIncidentResponse>values[1]); // incidents events
+                        vm.forgottenNotebook = (<IForgottenNotebookResponse>values[2]); // forgotten notebook events
                         vm.isLoading = false;
                         $scope.safeApply();
                     });
@@ -236,7 +236,8 @@ export const dashboardStudentController = ng.controller('DashboardStudentControl
                         break;
                     case EVENT_TYPES.PUNISHMENT:
                     case EVENT_TYPES.INCIDENT:
-                        incidentService.getStudentEvents(prepareEventRequest([type], 0, 0))
+                        incidentService.getStudentEvents(prepareEventRequest([type], 0, 0,
+                            DateUtils.START_DAY_TIME, DateUtils.END_DAY_TIME))
                             .then((value) => {
                                 vm.incidentsEvents.all[type] = value.all[type];
                                 $scope.safeApply();
