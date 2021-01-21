@@ -249,11 +249,31 @@ public abstract class MassMailingProcessor implements Mailing {
         String punishmentDate = "";
         if (punishment.getString("created_at") != null) {
             punishmentDate = punishment.getString("created_at");
-        } else if (punishment.getJsonObject("fields").getString("start_at") != null) {
-            punishmentDate = punishment.getJsonObject("fields").getString("start_at");
-        } else if (punishment.getJsonObject("fields").getString("delay_at") != null) {
-            punishmentDate = punishment.getJsonObject("fields").getString("delay_at");
         }
+
+        if((punishment.getJsonObject("type") != null) &&
+                (punishment.getJsonObject("type").getInteger("punishment_category_id") != null)) {
+
+            JsonObject fields = punishment.getJsonObject("fields");
+
+            switch (punishment.getJsonObject("type").getInteger("punishment_category_id")) {
+                case 1: //DUTY
+                    if (fields.getString("delay_at") != null) {
+                        punishmentDate = fields.getString("delay_at");
+                    }
+                    break;
+                case 2: // DETENTION
+                case 3: // BLAME
+                    if (fields.getString("start_at") != null) {
+                        punishmentDate = fields.getString("start_at");
+                    }
+                    break;
+                case 4: // EXCLUSION
+                default:
+                    break;
+            }
+        }
+
         return DateHelper.getDateString(punishmentDate, DateHelper.DAY_MONTH_YEAR);
     }
 
