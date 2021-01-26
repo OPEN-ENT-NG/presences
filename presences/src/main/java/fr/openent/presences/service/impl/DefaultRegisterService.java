@@ -154,7 +154,7 @@ public class DefaultRegisterService implements RegisterService {
 
                                     for (int i = 0; i < manualGroups.size(); i++) {
                                         String manualGroupId = manualGroups.getJsonObject(i).getString("id");
-                                        statements.add(getGroupCreationStatement(manualGroupId, GroupType.MANUAL_GROUP));
+                                        statements.add(getGroupCreationStatement(manualGroupId, GroupType.GROUP));
                                         statements.add(getRelRegisterGroupStatement(id, manualGroupId));
                                     }
 
