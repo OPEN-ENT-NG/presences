@@ -195,11 +195,13 @@ public class DefaultRegisterService implements RegisterService {
                                      Either<String, JsonObject> result) {
         JsonArray params = new JsonArray();
         String query = "UPDATE presences.event SET counsellor_regularisation = (" +
-                " SELECT absence.counsellor_regularisation FROM presences.absence WHERE absence.student_id = event.student_id" +
+                " SELECT absence.counsellor_regularisation FROM presences.absence WHERE absence.structure_id = ? " +
+                " AND absence.student_id = event.student_id" +
                 " AND absence.start_date <= ? AND absence.end_date >= ? LIMIT 1" +
                 ")" +
                 "WHERE register_id = ? AND event.student_id IN " + Sql.listPrepared(students.toArray()) + "";
 
+        params.add(register.getString("structure_id"));
         params.add(register.getString("start_date"));
         params.add(register.getString("end_date"));
         params.add(register.getLong("id"));
@@ -242,7 +244,7 @@ public class DefaultRegisterService implements RegisterService {
         JsonArray params = new JsonArray();
         String query = "WITH absence as (SELECT absence.id, absence.start_date, absence.end_date, " +
                 "absence.student_id, absence.reason_id, absence.owner, absence.counsellor_regularisation" +
-                " FROM presences.absence WHERE absence.student_id IN " + Sql.listPrepared(users.toArray()) +
+                " FROM presences.absence WHERE absence.structure_id = ? AND absence.student_id IN " + Sql.listPrepared(users.toArray()) +
                 " AND absence.start_date <= ?" +
                 " AND absence.end_date >= ?)" +
                 " INSERT INTO presences.event (start_date, end_date, comment, counsellor_input, " +
@@ -250,6 +252,7 @@ public class DefaultRegisterService implements RegisterService {
                 " (SELECT ?, ?, '', ?, absence.student_id, ?, 1, absence.reason_id, CASE WHEN absence.owner " +
                 " IS NULL THEN '' ELSE absence.owner END, absence.counsellor_regularisation FROM absence) ";
 
+        params.add(register.getString("structure_id"));
         params.addAll(new JsonArray(users));
         params.add(register.getString("start_date"));
         params.add(register.getString("end_date"));
@@ -379,7 +382,7 @@ public class DefaultRegisterService implements RegisterService {
                 notebookService.get(userIds, day, day, FutureHelper.handlerJsonArray(forgottenNotebookFuture));
                 getGroupsName(groups, FutureHelper.handlerJsonArray(groupsNameFuture));
                 getCourseTeachers(register.getString("course_id"), FutureHelper.handlerJsonArray(teachersFuture));
-                registerHelper.getRegisterEventHistory(day, null, new JsonArray(userIds),
+                registerHelper.getRegisterEventHistory(register.getString("structure_id"), day, null, new JsonArray(userIds),
                         FutureHelper.handlerJsonArray(registerEventHistoryFuture));
             });
         });

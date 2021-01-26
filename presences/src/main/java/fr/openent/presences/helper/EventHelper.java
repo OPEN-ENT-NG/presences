@@ -282,7 +282,7 @@ public class EventHelper {
         Future<JsonArray> registerEventFuture = Future.future();
         Future<JsonArray> studentsInfosFuture = Future.future();
 
-        registerHelper.getRegisterEventHistory(startDate, endDate, new JsonArray(studentIds),
+        registerHelper.getRegisterEventHistory(structureId, startDate, endDate, new JsonArray(studentIds),
                 FutureHelper.handlerJsonArray(registerEventFuture));
         personHelper.getStudentsInfo(structureId, studentIds, FutureHelper.handlerJsonArray(studentsInfosFuture));
 

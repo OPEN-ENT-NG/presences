@@ -32,12 +32,13 @@ public class RegisterHelper {
     /**
      * Get register event history. From the register users list, it retrieve all day events
      *
+     * @param structureId   Structure identifier
      * @param registerDate  Register date
      * @param endDate       endDate optional parameter which is end_date
      * @param registerUsers Register users list
      * @param handler       Function handler returning data
      */
-    public void getRegisterEventHistory(String registerDate, String endDate, JsonArray registerUsers, Handler<Either<String, JsonArray>> handler) {
+    public void getRegisterEventHistory(String structureId, String registerDate, String endDate, JsonArray registerUsers, Handler<Either<String, JsonArray>> handler) {
         if (registerUsers.isEmpty()) {
             handler.handle(new Either.Right<>(new JsonArray()));
             return;
@@ -47,13 +48,14 @@ public class RegisterHelper {
                 " event.type_id, 'start_date', event.start_date, 'end_date', event.end_date," +
                 " 'comment', event.comment, 'owner', event.owner, 'register_id', register.id, 'reason_id', reason_id)) as events " +
                 "FROM " + presenceDbSchema + ".event " +
-                "INNER JOIN " + presenceDbSchema + ".register ON (register.id = event.register_id) " +
+                "INNER JOIN " + presenceDbSchema + ".register ON (register.id = event.register_id AND register.structure_id = ?) " +
                 "WHERE student_id IN " + Sql.listPrepared(registerUsers.getList()) +
                 " AND register.start_date > ? " +
                 "AND register.end_date < ? " +
                 "GROUP BY student_id;";
 
         JsonArray params = new JsonArray()
+                .add(structureId)
                 .addAll(registerUsers);
 
         if (endDate != null && !endDate.isEmpty()) {
@@ -63,18 +65,6 @@ public class RegisterHelper {
         }
 
         Sql.getInstance().prepared(query, params, SqlResult.validResultHandler(handler));
-    }
-
-    /**
-     * Future way to get register event history. From the register users list, it retrieve all day events
-     *
-     * @param registerDate  Register date
-     * @param endDate       endDate optional parameter which is end_date
-     * @param registerUsers Register users list
-     * @param future        Function handler returning data
-     */
-    public void getRegisterEventHistory(String registerDate, String endDate, JsonArray registerUsers, Future<JsonArray> future) {
-        getRegisterEventHistory(registerDate, endDate, registerUsers, FutureHelper.handlerJsonArray(future));
     }
 
     /**
