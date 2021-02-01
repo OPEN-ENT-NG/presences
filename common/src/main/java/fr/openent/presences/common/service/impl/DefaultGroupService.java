@@ -169,7 +169,7 @@ public class DefaultGroupService implements GroupService {
                 break;
             }
             case MANUAL_GROUP: {
-                query = "MATCH (s:Structure {id:{structureId}})<-[:BELONGS|DEPENDS]-(mg:ManualGroup) WHERE mg.name IN {objects} RETURN mg.id as id";
+                query = "MATCH (s:Structure {id:{structureId}})<-[:BELONGS*0..1]-()<-[:DEPENDS]-(mg:ManualGroup) WHERE mg.name IN {objects} RETURN mg.id as id";
                 break;
             }
             default: {
