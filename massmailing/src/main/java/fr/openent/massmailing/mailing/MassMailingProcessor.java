@@ -68,7 +68,7 @@ public abstract class MassMailingProcessor implements Mailing {
 
     public void process(Handler<Either<String, List<JsonObject>>> handler) {
         Future<JsonObject> templateFuture = Future.future();
-        Future<JsonObject> relativeFuture = Future.future();
+        Future<JsonArray> relativeFuture = Future.future();
         Future<JsonObject> eventsFuture = Future.future();
         Future<JsonObject> hourEventsFuture = Future.future();
         Future<JsonObject> reasonsFuture = Future.future();
@@ -86,7 +86,7 @@ public abstract class MassMailingProcessor implements Mailing {
             JsonObject reasons = reasonsFuture.result();
             JsonObject events = eventsFuture.result();
             JsonObject hourEvents = hourEventsFuture.result();
-            JsonObject relatives = relativeFuture.result();
+            JsonArray relatives = relativeFuture.result();
             HashMap<String, JsonObject> massmailings = formatData(events, relatives.copy(), reasons);
             HashMap<String, JsonObject> massmailingsHour = formatData(hourEvents, relatives.copy(), reasons);
             JsonArray slots = slotsFutures.result();
@@ -104,7 +104,7 @@ public abstract class MassMailingProcessor implements Mailing {
 
         retrieveEvents(null, FutureHelper.handlerJsonObject(eventsFuture));
         retrieveEvents("HOUR", FutureHelper.handlerJsonObject(hourEventsFuture));
-        retrieveRelatives(FutureHelper.handlerJsonObject(relativeFuture));
+        retrieveRelatives(FutureHelper.handlerJsonArray(relativeFuture));
         template.init(FutureHelper.handlerJsonObject(templateFuture));
         fetchReasons(FutureHelper.handlerJsonObject(reasonsFuture));
         Viescolaire.getInstance().getDefaultSlots(this.structure, FutureHelper.handlerJsonArray(slotsFutures));
@@ -164,12 +164,12 @@ public abstract class MassMailingProcessor implements Mailing {
         // Punishment codes
         if (!punishment.isEmpty()) {
             // Punishment type code implemented
-            codeValues.put(TemplateCode.PUNISHMENT_TYPE, punishment.getJsonObject("type").getString("label",""));
+            codeValues.put(TemplateCode.PUNISHMENT_TYPE, punishment.getJsonObject("type").getString("label", ""));
             // Responsible code implemented
-            codeValues.put(TemplateCode.RESPONSIBLE, punishment.getJsonObject("owner").getString("displayName",""));
+            codeValues.put(TemplateCode.RESPONSIBLE, punishment.getJsonObject("owner").getString("displayName", ""));
             // Punishment description code implemented
             codeValues.put(TemplateCode.PUNISHMENT_DESCRIPTION, (punishment.getString("description") != null) ?
-                    punishment.getString("description","") : "");
+                    punishment.getString("description", "") : "");
             // Punishment number of days code implemented
             codeValues.put(TemplateCode.DAY_NUMBER, String.valueOf(getDayNumber(punishment)));
             // Punishment date code implemented
@@ -179,12 +179,12 @@ public abstract class MassMailingProcessor implements Mailing {
         // Sanction codes
         if (!sanction.isEmpty()) {
             // Sanction type code implemented
-            codeValues.put(TemplateCode.SANCTION_TYPE, sanction.getJsonObject("type").getString("label",""));
+            codeValues.put(TemplateCode.SANCTION_TYPE, sanction.getJsonObject("type").getString("label", ""));
             // Responsible code implemented
-            codeValues.put(TemplateCode.RESPONSIBLE, sanction.getJsonObject("owner").getString("displayName",""));
+            codeValues.put(TemplateCode.RESPONSIBLE, sanction.getJsonObject("owner").getString("displayName", ""));
             // Punishment description code implemented
             codeValues.put(TemplateCode.PUNISHMENT_DESCRIPTION, (sanction.getString("description") != null) ?
-                    sanction.getString("description","") : "");
+                    sanction.getString("description", "") : "");
             // Punishment number of days code implemented
             codeValues.put(TemplateCode.DAY_NUMBER, String.valueOf(getDayNumber(sanction)));
             // Punishment date code implemented
@@ -192,7 +192,7 @@ public abstract class MassMailingProcessor implements Mailing {
         }
 
         // Codes depending on mailing type
-        switch(mailingType) {
+        switch (mailingType) {
 
             case SMS:
                 // Last absence code implemented
@@ -205,10 +205,10 @@ public abstract class MassMailingProcessor implements Mailing {
             case MAIL:
                 formatPunishmentEvents(massmailingHourEvents);
 
-                JsonObject absencesLatenessEvents =  new JsonObject()
+                JsonObject absencesLatenessEvents = new JsonObject()
                         .put(EventType.ABSENCE.name(), massmailingHourEvents.getJsonArray(EventType.ABSENCE.name()))
                         .put(EventType.LATENESS.name(), massmailingHourEvents.getJsonArray(EventType.LATENESS.name()));
-                JsonObject punishmentEvents =  new JsonObject()
+                JsonObject punishmentEvents = new JsonObject()
                         .put(EventType.PUNISHMENT.name(), massmailingHourEvents.getJsonArray(EventType.PUNISHMENT.name()))
                         .put(EventType.SANCTION.name(), massmailingHourEvents.getJsonArray(EventType.SANCTION.name()));
 
@@ -242,6 +242,7 @@ public abstract class MassMailingProcessor implements Mailing {
 
     /**
      * Get the punishment/sanction date string
+     *
      * @param punishment the punishment/sanction event
      * @return
      */
@@ -251,7 +252,7 @@ public abstract class MassMailingProcessor implements Mailing {
             punishmentDate = punishment.getString("created_at");
         }
 
-        if((punishment.getJsonObject("type") != null) &&
+        if ((punishment.getJsonObject("type") != null) &&
                 (punishment.getJsonObject("type").getInteger("punishment_category_id") != null)) {
 
             JsonObject fields = punishment.getJsonObject("fields");
@@ -279,13 +280,14 @@ public abstract class MassMailingProcessor implements Mailing {
 
     /**
      * Get the number of days for the punishment event
+     *
      * @param event the event
      * @return the number of days
      */
     private long getDayNumber(JsonObject event) {
         try {
             if (event.containsKey("fields") && (event.getJsonObject("fields").getString("start_at") != null) &&
-                    (event.getJsonObject("fields").getString("end_at") != null)){
+                    (event.getJsonObject("fields").getString("end_at") != null)) {
 
                 String startDate = DateHelper.getDateString(event.getJsonObject("fields").getString("start_at"), DateHelper.SQL_FORMAT);
                 String endDate = DateHelper.getDateString(event.getJsonObject("fields").getString("end_at"), DateHelper.SQL_FORMAT);
@@ -396,15 +398,12 @@ public abstract class MassMailingProcessor implements Mailing {
         });
     }
 
-    private HashMap<String, JsonObject> formatData(JsonObject events, JsonObject relatives, JsonObject reasons) {
+    private HashMap<String, JsonObject> formatData(JsonObject events, JsonArray relatives, JsonObject reasons) {
         HashMap<String, JsonObject> data = new HashMap<>();
-
-        List<String> relativeIdentifiers = new ArrayList<>(relatives.getMap().keySet());
         Map<String, JsonObject> duplicatedData = new HashMap<>();
 
-        for (String relativeId : relativeIdentifiers) {
-
-            JsonObject relative = relatives.getJsonObject(relativeId);
+        for (Object o : relatives) {
+            JsonObject relative = (JsonObject) o;
 
             if (events.getJsonArray(relative.getString("student_id")) != null) {
 
@@ -413,7 +412,7 @@ public abstract class MassMailingProcessor implements Mailing {
                 // if student_id is not seen first time
                 if (!duplicatedData.containsKey(relative.getString("student_id"))) {
                     duplicatedData.put(relative.getString("student_id"), relative);
-                    data.put(relative.getString("id"), relative);
+                    data.put(relative.getString("id") + relative.getString("student_id"), relative);
                 } else {
                     // case we already seen student_id
                     proceedOnDuplicate(data, duplicatedData, relative);
@@ -431,19 +430,22 @@ public abstract class MassMailingProcessor implements Mailing {
                 : duplicatedData.get(relative.getString("student_id")).getString("contact");
         String relativeContact = this.mailingType.equals(PDF) ? getAddressAndZipCodeValue(relative) : relative.getString("contact");
 
+        String mapKey = relative.getString("id") + relative.getString("student_id");
         // first check if has contact or if it is null
         if (duplicatedDataContact == null) {
             // case it is null or non existing, we then add new relative object
-            data.put(relative.getString("id"), relative);
+            data.put(mapKey, relative);
         } else if (duplicatedDataContact.equals(relativeContact)) {
             // case it is not null and they are also EQUAL, we then modify the data already
             // set with displayName that will concat with another relative displayName
-            data.get(duplicatedData.get(relative.getString("student_id")).getString("id"))
-                    .put("displayName", data.get(duplicatedData.get(relative.getString("student_id")).getString("id"))
+            JsonObject duplicatedContact = duplicatedData.get(relative.getString("student_id"));
+            String duplicatedContactKey = duplicatedContact.getString("id") + duplicatedContact.getString("student_id");
+            data.get(duplicatedContactKey)
+                    .put("displayName", data.get(duplicatedContactKey)
                             .getString("displayName") + ", " + relative.getString("displayName"));
         } else {
             // case there is no match, we add new relative object
-            data.put(relative.getString("id"), relative);
+            data.put(mapKey, relative);
         }
     }
 
@@ -581,7 +583,7 @@ public abstract class MassMailingProcessor implements Mailing {
      *
      * @param handler Function handler returning data
      */
-    private void retrieveRelatives(Handler<Either<String, JsonObject>> handler) {
+    private void retrieveRelatives(Handler<Either<String, JsonArray>> handler) {
         List<String> studentsList = getStudentsList();
         JsonArray relativeIdentifiers = new JsonArray();
         for (String student : studentsList) {
@@ -613,15 +615,7 @@ public abstract class MassMailingProcessor implements Mailing {
                 handler.handle(new Either.Left<>(event.left().getValue()));
                 return;
             }
-
-            JsonObject result = new JsonObject();
-            JsonArray relatives = event.right().getValue();
-            for (int i = 0; i < relatives.size(); i++) {
-                JsonObject relative = relatives.getJsonObject(i);
-                result.put(relative.getString("id"), relative);
-            }
-
-            handler.handle(new Either.Right<>(result));
+            handler.handle(new Either.Right<>(event.right().getValue()));
         }));
     }
 
