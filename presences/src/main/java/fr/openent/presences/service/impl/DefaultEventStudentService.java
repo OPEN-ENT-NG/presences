@@ -1,6 +1,7 @@
 package fr.openent.presences.service.impl;
 
 import fr.openent.presences.common.helper.DateHelper;
+import fr.openent.presences.common.helper.EventsHelper;
 import fr.openent.presences.common.helper.FutureHelper;
 import fr.openent.presences.service.EventService;
 import fr.openent.presences.service.EventStudentService;
@@ -78,7 +79,7 @@ public class DefaultEventStudentService implements EventStudentService {
             settings.mergeIn(settingsFuture.result());
             settings.mergeIn(timeSlotsFuture.result());
 
-            getEvents(types, structure, student, reasons, settings, start, end, limit, offset, result -> {
+            getEvents(types, structure, student, reasons, settings, start, end, "HOUR", limit, offset, result -> {
                 if (result.failed()) {
                     handler.handle(Future.failedFuture(result.cause()));
                     return;
@@ -87,7 +88,7 @@ public class DefaultEventStudentService implements EventStudentService {
                 Future<JsonObject> future = Future.future();
                 getTotals(student, structure, limit, offset, start, end, types, reasons, settings, result, future);
 
-                CompositeFuture.all(Collections.singletonList(future)).setHandler(resultTotals -> {
+                future.setHandler(resultTotals -> {
                     if (resultTotals.failed()) {
                         String message = "[Presences@DefaultEventStudentService::get] Failed to get totals from events.";
                         handler.handle(Future.failedFuture(message + " " + resultTotals.cause()));
@@ -123,7 +124,7 @@ public class DefaultEventStudentService implements EventStudentService {
         if (limit == null && offset == null) { // If we get all result, we just need to get array size to get total results
             future.complete(getTotalsByTypes(types, result.result()));
         } else { // Else, we use same queries with a count result
-            getEvents(types, structure, student, reasons, settings, start, end, null, null, resultAllEvents -> {
+            getEvents(types, structure, student, reasons, settings, start, end, null, null, null, resultAllEvents -> {
                 if (resultAllEvents.failed()) {
                     future.fail(resultAllEvents.cause());
                     return;
@@ -237,13 +238,13 @@ public class DefaultEventStudentService implements EventStudentService {
     // Send request to get each events (thanks the great method corresponding to type {{ NO_REASON / UNREGULARIZED / REGULARIZED / LATENESS / DEPARTURE }}).
     // Handler will return them mapped by type.
     private void getEvents(List<String> types, String structure, String student, Map<Integer, JsonObject> reasons, JsonObject settings,
-                           String start, String end, String limit, String offset, Handler<AsyncResult<JsonObject>> handler) {
+                           String start, String end, String recovery, String limit, String offset, Handler<AsyncResult<JsonObject>> handler) {
         List<Integer> reasonsIds = new ArrayList<>(reasons.keySet());
         List<Future> futures = new ArrayList<>();
         for (String type : types) {
             Future<JsonArray> future = Future.future();
             futures.add(future);
-            getEventsByStudent(type, structure, reasonsIds, student, start, end, limit, offset, FutureHelper.handlerJsonArray(future));
+            getEventsByStudent(type, structure, reasonsIds, student, start, end, recovery, limit, offset, FutureHelper.handlerJsonArray(future));
         }
 
         CompositeFuture.all(futures).setHandler(result -> {
@@ -253,25 +254,28 @@ public class DefaultEventStudentService implements EventStudentService {
                 return;
             }
 
-            handler.handle(Future.succeededFuture(getEventsFromFutures(types, reasons, settings, futures, handler)));
+            JsonObject sortedEvents = getEventsFromFutures(types, reasons, settings, recovery, futures, handler);
+            if (sortedEvents != null) {
+                handler.handle(Future.succeededFuture(sortedEvents));
+            }
         });
     }
 
     // Get events for a student, corresponding to the type mentioned
-    private void getEventsByStudent(String type, String structureId, List<Integer> reasonsIds, String studentId, String start, String end, String limit,
-                                    String offset, Handler<Either<String, JsonArray>> handler) {
+    private void getEventsByStudent(String type, String structureId, List<Integer> reasonsIds, String studentId, String start, String end,
+                                    String recovery, String limit, String offset, Handler<Either<String, JsonArray>> handler) {
         switch (type) {
             case NO_REASON:
                 eventService.getEventsByStudent(1, Collections.singletonList(studentId), structureId, null,
-                        new ArrayList<>(), null, start, end, true, null, false, handler);
+                        new ArrayList<>(), null, start, end, true, recovery, false, handler);
                 break;
             case UNREGULARIZED:
                 eventService.getEventsByStudent(1, Collections.singletonList(studentId), structureId, null,
-                        reasonsIds, null, start, end, false, null, false, handler);
+                        reasonsIds, null, start, end, false, recovery, false, handler);
                 break;
             case REGULARIZED:
                 eventService.getEventsByStudent(1, Collections.singletonList(studentId), structureId, null,
-                        reasonsIds, null, start, end, false, null, true, handler);
+                        reasonsIds, null, start, end, false, recovery, true, handler);
                 break;
             case LATENESS:
                 eventService.getEventsByStudent(2, Collections.singletonList(studentId), structureId,
@@ -292,33 +296,39 @@ public class DefaultEventStudentService implements EventStudentService {
     }
 
     //Map events result (resultFutures) by types {{ NO_REASON / UNREGULARIZED / REGULARIZED / LATENESS / DEPARTURE }}
-    private JsonObject getEventsFromFutures(List<String> types, Map reasons, JsonObject settings,
+    @SuppressWarnings("unchecked")
+    private JsonObject getEventsFromFutures(List<String> types, Map reasons, JsonObject settings, String recoveryRequired,
                                             List<Future> resultFutures, Handler<AsyncResult<JsonObject>> handler) {
         JsonObject sorted_events = new JsonObject();
-        String recovery = settings.getString("event_recovery_method");
+        String recovery = recoveryRequired != null ? recoveryRequired : settings.getString("event_recovery_method");
         for (int i = 0; i < types.size(); i++) {
             String type = types.get(i);
             sorted_events.put(type, new JsonArray());
 
-            JsonArray values = (JsonArray) resultFutures.get(i).result();
+            List<JsonObject> values = ((JsonArray) resultFutures.get(i).result()).getList();
             if (values.isEmpty()) continue;
-            ((List<JsonObject>) values.getList()).forEach(dataType -> {
-                if (isAbsence(type) && (recovery.equals(HALF_DAY) || recovery.equals(DAY))) {
+
+            if (Boolean.TRUE.equals(isAbsence(type)) && (recovery.equals(HALF_DAY) || recovery.equals(DAY))) {
+                for (JsonObject dataType : values) {
                     try {
                         addAbsencesByRecovery(sorted_events, dataType, settings, type, recovery, reasons);
                     } catch (ParseException e) {
                         handler.handle(Future.failedFuture(e.getMessage()));
+                        return null;
                     }
-                } else {
-                    dataType.getJsonArray("events").forEach(o -> {
-                        JsonObject event = (JsonObject) o;
-                        event.put("reason", reasons.get(event.getInteger("reason_id")));
-                        sorted_events.getJsonArray(type).add(event);
-                    });
                 }
+            } else {
+                List<JsonObject> events = (List<JsonObject>) values.stream()
+                        .flatMap(dataType -> dataType.getJsonArray("events").getList().stream())
+                        .collect(Collectors.toList());
 
-
-            });
+                EventsHelper.mergeEventsByDates(new JsonArray(events), settings.getString("end_of_half_day"))
+                        .forEach(o -> {
+                            JsonObject event = (JsonObject) o;
+                            event.put("reason", reasons.get(event.getInteger("reason_id")));
+                            sorted_events.getJsonArray(type).add(event);
+                        });
+            }
         }
         return sorted_events;
     }
