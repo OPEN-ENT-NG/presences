@@ -1,11 +1,14 @@
 import {_, angular, idiom as lang, Me, model, moment, ng} from 'entcore';
-import {Action, ActionBody, Event, EventResponse, Events, EventType, Student, Students} from "../models";
-import {DateUtils, PresencesPreferenceUtils} from "@common/utils";
-import {GroupService} from "@common/services/GroupService";
-import {actionService, EventRequest, EventService, ReasonService} from "../services";
-import {EventsFilter, EventsUtils} from "../utilities";
-import {Reason} from "@presences/models/Reason";
-import {INFINITE_SCROLL_EVENTER} from "@common/core/enum/infinite-scroll-eventer";
+import {Action, ActionBody, Event, EventResponse, Events, EventType, IEventFormBody, Student, Students} from '../models';
+import {DateUtils, PresencesPreferenceUtils} from '@common/utils';
+import {GroupService} from '@common/services/GroupService';
+import {actionService, EventRequest, EventService, ReasonService} from '../services';
+import {EventsFilter, EventsUtils} from '../utilities';
+import {Reason} from '@presences/models/Reason';
+import {INFINITE_SCROLL_EVENTER} from '@common/core/enum/infinite-scroll-eventer';
+import {ABSENCE_FORM_EVENTS, LATENESS_FORM_EVENTS} from '@common/core/enum/presences-event';
+import {SNIPLET_FORM_EMIT_EVENTS} from '@common/model';
+import {IEventSlot} from '@presences/models/Event';
 
 declare let window: any;
 
@@ -31,7 +34,7 @@ interface ViewModel {
     lightbox: {
         filter: boolean;
         action: boolean;
-    }
+    };
 
     /* Get actions type */
     actionType: Action[];
@@ -43,7 +46,16 @@ interface ViewModel {
         seeAll: boolean;
     };
 
-    eventTypeState(periods, event): string;
+    /* Action drag parameters */
+    actionDrag: {
+        slot: IEventSlot;
+        indexEvent: number;
+        slotStartIndex: number;
+        slotEndIndex: number;
+        mouseHold: boolean;
+    };
+
+    eventTypeState(periods: IEventSlot, index: number, indexSlot: number): string;
 
     editPeriod($event, event): void;
 
@@ -102,9 +114,21 @@ interface ViewModel {
     eventId: number;
     collapse: boolean;
 
-    toggleCollapse(event): void;
+    toggleCollapse(event: BaseJQueryEventObject): void;
 
-    isCollapsibleOpen($index): boolean;
+    openEventForm(event: MouseEvent, slot: IEventSlot, studentId: string): void;
+
+    formatEventForm(slot: IEventSlot, studentId: string, typeId: number): IEventFormBody;
+
+    preventCollapse($event: MouseEvent): void;
+
+    isCollapsibleOpen($index: number): boolean;
+
+    dragSlotStart($event: MouseEvent, slot: IEventSlot, studentId: string, index: number, indexSlot: number): void;
+
+    dragSlotMove($event: MouseEvent, index: number, indexSlot: number): void;
+
+    dragSlotEnd($event: MouseEvent, slot: IEventSlot, studentId: string, index: number): void;
 
     /* Students */
     studentSearchInput: string;
@@ -191,8 +215,8 @@ export const eventsController = ng.controller('EventsController', ['$scope', '$r
         const isWidget = $route.current.action === 'dashboard';
         const vm: ViewModel = this;
         vm.filter = {
-            startDate: isWidget ? DateUtils.add(new Date(), -5, "d") : DateUtils.add(new Date(), -7, "d"),
-            endDate: isWidget ? DateUtils.add(new Date(), -1, "d") : moment().endOf('day').toDate(),
+            startDate: isWidget ? DateUtils.add(new Date(), -5, 'd') : DateUtils.add(new Date(), -7, 'd'),
+            endDate: isWidget ? DateUtils.add(new Date(), -1, 'd') : moment().endOf('day').toDate(),
             students: [],
             classes: [],
             absences: true,
@@ -214,9 +238,9 @@ export const eventsController = ng.controller('EventsController', ['$scope', '$r
         vm.eventType = [];
         vm.multipleSelect = {
             id: 0,
-            label: lang.translate("presences.absence.select.multiple"),
-            structure_id: "",
-            comment: "",
+            label: lang.translate('presences.absence.select.multiple'),
+            structure_id: '',
+            comment: '',
             default: false,
             proving: false,
             group: false
@@ -246,6 +270,14 @@ export const eventsController = ng.controller('EventsController', ['$scope', '$r
         vm.actionForm = {} as ActionBody;
         vm.action = {
             seeAll: false
+        };
+
+        vm.actionDrag = {
+            mouseHold: false,
+            slot: null,
+            indexEvent: null,
+            slotEndIndex: null,
+            slotStartIndex: null
         };
 
         const loadFormFilter = async (): Promise<void> => {
@@ -399,50 +431,58 @@ export const eventsController = ng.controller('EventsController', ['$scope', '$r
         };
 
         /* Change CSS class depending on their event_type id */
-        vm.eventTypeState = (periods, event): string => {
-            if (periods.events.length === 0) return '';
+        vm.eventTypeState = (periods: IEventSlot, index: number, indexSlot: number): string => {
 
             const className: string[] = ['empty', 'remark', 'departure', 'late', 'absent', 'absent-no-regularized',
-                'absent-regularized', 'event-absent', 'no-regularized', 'regularized'];
-
+                'absent-regularized', 'event-absent', 'no-regularized', 'regularized', 'action-drag-event'];
             let indexes: Array<number> = [className.indexOf('empty')];
 
-            // We store every type of events in indexes and we prioritize the largest value (according to classNames)
-            for (let i = 0; i < periods.events.length; i++) {
-                if ('type_id' in periods.events[i]) {
-                    switch (periods.events[i].type_id) {
-                        case (EventType.ABSENCE):
-                            //If absence has a reason
+            // Check if drag on the event line. Coloring items between the first clicked on and the one below the pointer
+            if (vm.actionDrag.mouseHold && (vm.actionDrag.indexEvent === index) &&
+                (((indexSlot >= vm.actionDrag.slotStartIndex) && (indexSlot <= vm.actionDrag.slotEndIndex)) ||
+                ((indexSlot <= vm.actionDrag.slotStartIndex) && (indexSlot >= vm.actionDrag.slotEndIndex)))) {
+                indexes.push(className.indexOf('action-drag-event'));
+            } else if (periods.events.length === 0) {
+                return '';
+            } else {
+                // We store every type of events in indexes and we prioritize the largest value (according to classNames)
+                for (let i = 0; i < periods.events.length; i++) {
+                    if ('type_id' in periods.events[i]) {
+                        switch (periods.events[i].type_id) {
+                            case (EventType.ABSENCE):
+                                // If absence has a reason
+                                if (periods.events[i].reason_id !== null && periods.events[i].reason_id !== -1) {
+                                    (periods.events[i].counsellor_regularisation === true) ?
+                                        indexes.push(className.indexOf('regularized')) :
+                                        indexes.push(className.indexOf('no-regularized'));
+                                } else {
+                                    indexes.push(className.indexOf('event-absent'));
+                                }
+                                break;
+                            case (EventType.LATENESS):
+                                indexes.push(className.indexOf('late'));
+                                break;
+                            case (EventType.DEPARTURE):
+                                indexes.push(className.indexOf('departure'));
+                                break;
+                            case (EventType.REMARK):
+                                indexes.push(className.indexOf('remark'));
+                                break;
+                        }
+                    } else if ('type' in periods.events[i]) {
+                        if (periods.events[i].type === 'absence') {
                             if (periods.events[i].reason_id !== null && periods.events[i].reason_id !== -1) {
                                 (periods.events[i].counsellor_regularisation === true) ?
-                                    indexes.push(className.indexOf('regularized')) :
-                                    indexes.push(className.indexOf('no-regularized'));
+                                    indexes.push(className.indexOf('absent-regularized')) :
+                                    indexes.push(className.indexOf('absent-no-regularized'));
                             } else {
-                                indexes.push(className.indexOf('event-absent'))
+                                indexes.push(className.indexOf('absent'));
                             }
-                            break;
-                        case (EventType.LATENESS):
-                            indexes.push(className.indexOf('late'));
-                            break;
-                        case (EventType.DEPARTURE):
-                            indexes.push(className.indexOf('departure'));
-                            break;
-                        case (EventType.REMARK):
-                            indexes.push(className.indexOf('remark'));
-                            break;
-                    }
-                } else if ('type' in periods.events[i]) {
-                    if (periods.events[i].type === 'absence') {
-                        if (periods.events[i].reason_id !== null && periods.events[i].reason_id !== -1) {
-                            (periods.events[i].counsellor_regularisation === true) ?
-                                indexes.push(className.indexOf('absent-regularized')) :
-                                indexes.push(className.indexOf('absent-no-regularized'));
-                        } else {
-                            indexes.push(className.indexOf('absent'));
                         }
                     }
                 }
             }
+
             // get the largest value
             return className[Math.max(...indexes)] || '';
         };
@@ -601,23 +641,106 @@ export const eventsController = ng.controller('EventsController', ['$scope', '$r
         };
 
         /* Toggle Collapse */
-        vm.toggleCollapse = (event): void => {
-            if (vm.eventId == event.currentTarget.getAttribute("data-id")) {
+        vm.toggleCollapse = (event: BaseJQueryEventObject): void => {
+            if (vm.actionDrag.mouseHold) return;
+            let data: string = event.currentTarget.getAttribute('data-id');
+            if ((vm.eventId !== null) && (vm.eventId.toString() === data)) {
                 vm.collapse = !vm.collapse;
-                if (vm.collapse) {
-                    vm.eventId = event.currentTarget.getAttribute("data-id");
-                } else {
-                    vm.eventId = null;
-                }
+                vm.eventId = vm.collapse ? +data : null;
             } else {
                 vm.collapse = true;
-                vm.eventId = event.currentTarget.getAttribute("data-id");
+                vm.eventId = +data;
             }
         };
 
+        vm.openEventForm = ($event: MouseEvent, slot: IEventSlot, studentId: string): void => {
+            if (vm.actionDrag.mouseHold) return;
+
+            if (slot.events.length > 0) {
+                if (slot.events[0].type === 'absence') {
+                    $scope.$broadcast(ABSENCE_FORM_EVENTS.EDIT_EVENT, vm.formatEventForm(slot, studentId, EventType.ABSENCE));
+                } else {
+                    switch (slot.events[0].type_id) {
+                        case EventType.ABSENCE:
+                            $scope.$broadcast(ABSENCE_FORM_EVENTS.EDIT_EVENT, vm.formatEventForm(slot, studentId, EventType.ABSENCE));
+                            break;
+                        case EventType.LATENESS:
+                            $scope.$broadcast(LATENESS_FORM_EVENTS.EDIT, vm.formatEventForm(slot, studentId, EventType.LATENESS));
+                            break;
+                    }
+                }
+            } else {
+                $scope.$broadcast(ABSENCE_FORM_EVENTS.OPEN, vm.formatEventForm(slot, studentId, EventType.ABSENCE));
+            }
+        };
+
+        vm.formatEventForm = (slot: IEventSlot, studentId: string, typeId: number): IEventFormBody => {
+
+            switch (typeId) {
+                case EventType.ABSENCE:
+                case EventType.LATENESS:
+                    let startDate: Date = moment(slot.start).toDate();
+                    let endDate: Date = moment(slot.end).toDate();
+                    let counsellor_regularisation: boolean = false;
+
+                    if (slot.events && slot.events.length === 1) { // only absence event
+                        startDate = moment(slot.events[0].start_date).toDate();
+                        endDate = moment(slot.events[0].end_date).toDate();
+                        counsellor_regularisation = slot.events[0].counsellor_regularisation;
+                    } else if (slot.events && slot.events.length > 1) { // with absence
+                        startDate = moment(slot.events[1].start_date).toDate();
+                        endDate = moment(slot.events[1].end_date).toDate();
+                        counsellor_regularisation = slot.events[0].counsellor_regularisation;
+                    }
+                    return {
+                        id: (slot.events && slot.events.length > 0) ? slot.events[0].id : null,
+                        startDate: (startDate < endDate) ? startDate : endDate,
+                        endDate: (startDate < endDate) ? endDate : startDate,
+                        startTime: (startDate < endDate) ? startDate : endDate,
+                        endTime: (startDate < endDate) ? endDate : startDate,
+                        comment: (slot.events && slot.events.length > 0) ? slot.events[0].comment : null,
+                        studentId: studentId,
+                        eventType: EventsUtils.ALL_EVENTS.absence,
+                        counsellor_regularisation: counsellor_regularisation
+                    };
+            }
+        };
+
+        /* As we drag the nodes, preventing our event to collapse */
+        vm.preventCollapse = ($event: MouseEvent): void => {
+            $event.stopPropagation();
+        };
+
         /* Open the concerned event */
-        vm.isCollapsibleOpen = ($index): boolean => {
-            return $index == vm.eventId
+        vm.isCollapsibleOpen = ($index: number): boolean => {
+            return $index === vm.eventId;
+        };
+
+        vm.dragSlotStart = ($event: MouseEvent, slot: IEventSlot, studentId: string, index: number, indexSlot: number): void => {
+            if (vm.actionDrag.mouseHold) return;
+            vm.actionDrag.mouseHold = (indexSlot !== vm.actionDrag.slotStartIndex);
+            vm.actionDrag.slot = {start: slot.start, end: slot.end};
+            vm.actionDrag.slotStartIndex = indexSlot;
+            vm.actionDrag.slotEndIndex = indexSlot;
+            vm.actionDrag.indexEvent = index;
+        };
+
+        vm.dragSlotMove = ($event: MouseEvent, index: number, indexSlot: number): void => {
+            if (vm.actionDrag.mouseHold && index === vm.actionDrag.indexEvent) {
+                vm.actionDrag.slotEndIndex = indexSlot;
+            }
+        };
+
+        vm.dragSlotEnd = ($event: MouseEvent, slot: IEventSlot, studentId: string, index: number): void => {
+            vm.actionDrag.mouseHold = false;
+            vm.actionDrag.slotStartIndex = null;
+            vm.actionDrag.slotEndIndex = null;
+            if (index === vm.actionDrag.indexEvent) {
+                vm.actionDrag.slot.end = slot.end;
+                $scope.$broadcast(ABSENCE_FORM_EVENTS.OPEN, vm.formatEventForm(vm.actionDrag.slot, studentId, EventType.ABSENCE));
+                vm.actionDrag.slot = {};
+                $scope.safeApply();
+            }
         };
 
         /* ----------------------------
@@ -959,7 +1082,7 @@ export const eventsController = ng.controller('EventsController', ['$scope', '$r
                 });
                 await Promise.all([
                     getEvents(),
-                    getActions(),
+                    getActions()
                 ]);
             }
         });
@@ -970,4 +1093,8 @@ export const eventsController = ng.controller('EventsController', ['$scope', '$r
             angular.element(document.querySelectorAll(".datepicker")).remove();
             angular.element(document.querySelectorAll(".tooltip")).remove();
         });
+
+        $scope.$on(SNIPLET_FORM_EMIT_EVENTS.FILTER, async () => { await getEvents(); });
+        $scope.$on(SNIPLET_FORM_EMIT_EVENTS.EDIT, async () => { await getEvents(); });
+        $scope.$on(SNIPLET_FORM_EMIT_EVENTS.DELETE, async () => { await getEvents(); });
     }]);

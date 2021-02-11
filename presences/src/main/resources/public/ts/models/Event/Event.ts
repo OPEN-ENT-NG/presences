@@ -6,6 +6,7 @@ import {Reason} from '@presences/models/Reason';
 import {EventsUtils} from '../../utilities';
 import {User} from '@common/model/User';
 import {Course} from '@presences/services';
+import {IAbsence} from '@presences/models';
 
 export interface Event {
     id: number;
@@ -47,6 +48,8 @@ export interface IEvent {
     student?: {id: string, name: string, className: string};
     type?: string;
     exclude?: boolean;
+    actionAbbreviation?: string;
+    massmailed?: boolean;
 }
 
 export interface EventResponse {
@@ -56,7 +59,7 @@ export interface EventResponse {
     displayName: string;
     className: string;
     date: string;
-    dayHistory: any[];
+    dayHistory: Array<IEventSlot>;
     events: any[];
     globalReason?: number;
     globalCounsellorRegularisation?: boolean;
@@ -83,6 +86,28 @@ export interface IEventBody {
     register_id: number;
     student_id: string;
     type?: string;
+}
+
+export interface IEventFormBody {
+    id?: number;
+    startDate: Date;
+    endDate: Date;
+    startTime: Date;
+    endTime: Date;
+    comment?: string;
+    studentId: string;
+    eventType: string;
+    absences?: IAbsence[];
+    reason_id?: number;
+    absenceId?: number;
+    counsellor_regularisation?: boolean;
+}
+
+export interface IEventSlot {
+    events?: Array<IEvent>;
+    start?: string;
+    end?: string;
+    name?: string;
 }
 
 export class Event {
@@ -189,8 +214,8 @@ export class Events extends LoadingCollection {
                 let massmailedEvents = [];
 
                 /* build our eventsResponse array to affect our attribute "events" (see below dataModel.push) */
-                item.student.dayHistory.forEach(eventsHistory => {
-                    eventsHistory.events.forEach(event => {
+                item.student.dayHistory.forEach((eventsHistory: IEventSlot) => {
+                    eventsHistory.events.forEach((event: IEvent) => {
                         if (event.type === EventsUtils.ALL_EVENTS.event) {
                             if (!eventsFetchedFromHistory.some(element => element.id === event.id)) {
                                 eventsFetchedFromHistory.push(event);

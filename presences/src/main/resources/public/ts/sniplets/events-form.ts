@@ -1,5 +1,5 @@
 import {IStructureSlot, ITimeSlot, SNIPLET_FORM_EMIT_EVENTS, SNIPLET_FORM_EVENTS} from '@common/model';
-import {Absence, EventType, IAbsence, IEventBody, Lateness, Reason, TimeSlotHourPeriod} from '../models';
+import {Absence, EventType, IAbsence, IEventBody, IEventFormBody, Lateness, Reason, TimeSlotHourPeriod} from '../models';
 import {idiom as lang, model, moment, toasts} from 'entcore';
 import {eventService, reasonService, ViescolaireService} from '../services';
 import {IAngularEvent} from 'angular';
@@ -73,13 +73,15 @@ interface ViewModel {
         end: ITimeSlot;
     };
 
+    isButtonAllowed: boolean;
+
     /* interact lightbox part methods */
 
     switchEventTypeForm(eventType: TEventType): void;
 
     getEventTypeLabel(eventType: TEventType): string;
 
-    openEventLightbox(eventType: TEventType, event?: IAngularEvent, args?: any): void;
+    openEventLightbox(eventType: TEventType, event?: IAngularEvent, args?: IEventFormBody): void;
 
     closeEventLightbox(): void;
 
@@ -107,9 +109,9 @@ interface ViewModel {
 
     /* Absence part methods */
 
-    editAbsenceForm(eventType: TEventType, obj): void;
+    editAbsenceForm(eventType: TEventType, obj: IEventFormBody): void;
 
-    editEventAbsenceForm(eventType: TEventType, obj): void;
+    editEventAbsenceForm(eventType: TEventType, obj: IEventFormBody): void;
 
     toUpdateRegularisation(): void;
 
@@ -133,7 +135,7 @@ interface ViewModel {
 
     deleteLateness(canReload: boolean): Promise<void>;
 
-    editEventForm(eventType: TEventType, obj): void;
+    editEventForm(eventType: TEventType, obj: IEventFormBody): void;
 
     /* Date / Time slots part methods */
     selectDatePicker(startDate: Date, eventType: TEventType): void;
@@ -167,6 +169,7 @@ const vm: ViewModel = {
     timeSlotHourPeriod: TimeSlotHourPeriod,
     display: {isFreeSchedule: false},
     structureTimeSlot: {} as IStructureSlot,
+    isButtonAllowed: true,
 
     switchEventTypeForm: (eventType: TEventType): void => {
         switch (eventType) {
@@ -196,7 +199,7 @@ const vm: ViewModel = {
         return i18n;
     },
 
-    openEventLightbox(eventType: TEventType, event?: IAngularEvent, args?: any): void {
+    openEventLightbox(eventType: TEventType, event?: IAngularEvent, args?: IEventFormBody): void {
         vm.createEventLightBox = true;
         vm.display.isFreeSchedule = false;
         vm.form = {} as IFormData;
@@ -208,6 +211,9 @@ const vm: ViewModel = {
             vm.form.endDate = args.endDate;
             vm.form.startDateTime = args.startTime;
             vm.form.endDateTime = args.endTime;
+            if (!vm.form.student_id) {
+                vm.form.student_id = args.studentId;
+            }
             vm.setTimeSlot();
         }
         vm.form.reason_id = null;
@@ -257,20 +263,20 @@ const vm: ViewModel = {
     setFormEventType: (eventType: TEventType): void => {
         switch (eventType) {
             case 'ABSENCE':
-                (<Absence>vm.event) = new Absence(null, null, null, null);
+                (<Absence> vm.event) = new Absence(null, null, null, null);
                 break;
             case 'LATENESS':
-                (<Lateness>vm.event) = new Lateness(null, null, null, null);
+                (<Lateness> vm.event) = new Lateness(null, null, null, null);
                 break;
         }
     },
 
-    async editAbsenceForm(eventType: TEventType, obj): Promise<void> {
+    async editAbsenceForm(eventType: TEventType, obj: IEventFormBody): Promise<void> {
         vm.createEventLightBox = true;
         vm.form = {} as IFormData;
         vm.event = new Absence(null, null, null, null);
         vm.switchEventTypeForm(eventType);
-        let response: AxiosResponse = await (<Absence>vm.event).getAbsence(obj.absenceId);
+        let response: AxiosResponse = await (<Absence> vm.event).getAbsence(obj.absenceId);
         if (response.status === 200 || response.status === 201) {
             /* Assign response data to form edited */
             vm.form.absences = [response.data];
@@ -282,7 +288,7 @@ const vm: ViewModel = {
             vm.form.reason_id = response.data.reason_id;
             vm.form.counsellor_regularisation = response.data.counsellor_regularisation;
             vm.form.type_id = EventType.ABSENCE;
-            vm.form.eventType = "ABSENCE";
+            vm.form.eventType = 'ABSENCE';
             vm.setFormDateParams(vm.form.startDate, vm.form.endDate);
             vm.setTimeSlot();
         } else {
@@ -291,7 +297,7 @@ const vm: ViewModel = {
         vm.safeApply();
     },
 
-    editEventForm(eventType: TEventType, data: any): void {
+    editEventForm(eventType: TEventType, data: IEventFormBody): void {
         vm.createEventLightBox = true;
         vm.form = {} as IFormData;
         vm.switchEventTypeForm(eventType);
@@ -303,7 +309,7 @@ const vm: ViewModel = {
                 vm.form.startDate = data.startDate;
                 vm.form.endDate = data.endDate;
                 vm.form.type_id = EventType.LATENESS;
-                vm.form.eventType = "LATENESS";
+                vm.form.eventType = 'LATENESS';
                 vm.setFormDateParams(vm.form.startDate, vm.form.endDate);
                 break;
         }
@@ -314,7 +320,7 @@ const vm: ViewModel = {
         vm.updateAbsenceRegularisation = !vm.updateAbsenceRegularisation;
     },
 
-    editEventAbsenceForm(eventType: TEventType, data: any): void {
+    editEventAbsenceForm(eventType: TEventType, data: IEventFormBody): void {
         vm.createEventLightBox = true;
         vm.form = {} as IFormData;
         vm.event = new Absence(null, null, null, null);
@@ -325,7 +331,7 @@ const vm: ViewModel = {
         vm.form.endDate = data.endDate;
         vm.form.student_id = data.studentId;
         vm.form.type_id = EventType.ABSENCE;
-        vm.form.eventType = "ABSENCE";
+        vm.form.eventType = 'ABSENCE';
         vm.form.reason_id = data.reason_id ? data.reason_id : vm.form.absences
             .find(a => 'type' in a || 'type_id' in a).reason_id;
 
@@ -694,6 +700,7 @@ export const eventsForm = {
             this.vm = vm;
             this.setHandler();
             eventsForm.that = this;
+            this.setButton();
             vm.safeApply = this.safeApply;
         },
         async getStructureTimeSlot(): Promise<void> {
@@ -702,13 +709,13 @@ export const eventsForm = {
         setHandler: async function () {
 
             /* Absence event */
-            this.$on(ABSENCE_FORM_EVENTS.OPEN, (event: IAngularEvent, args) => vm.openEventLightbox('ABSENCE', event, args));
-            this.$on(ABSENCE_FORM_EVENTS.EDIT, (event: IAngularEvent, args) => vm.editAbsenceForm('ABSENCE', args));
-            this.$on(ABSENCE_FORM_EVENTS.EDIT_EVENT, (event: IAngularEvent, args) => vm.editEventAbsenceForm('ABSENCE', args));
+            this.$on(ABSENCE_FORM_EVENTS.OPEN, (event: IAngularEvent, args: IEventFormBody) => vm.openEventLightbox('ABSENCE', event, args));
+            this.$on(ABSENCE_FORM_EVENTS.EDIT, (event: IAngularEvent, args: IEventFormBody) => vm.editAbsenceForm('ABSENCE', args));
+            this.$on(ABSENCE_FORM_EVENTS.EDIT_EVENT, (event: IAngularEvent, args: IEventFormBody) => vm.editEventAbsenceForm('ABSENCE', args));
 
             /* Lateness event */
-            this.$on(LATENESS_FORM_EVENTS.OPEN, (event: IAngularEvent, args) => vm.openEventLightbox('LATENESS', event, args));
-            this.$on(LATENESS_FORM_EVENTS.EDIT, (event: IAngularEvent, args) => vm.editEventForm('LATENESS', args));
+            this.$on(LATENESS_FORM_EVENTS.OPEN, (event: IAngularEvent, args: IEventFormBody) => vm.openEventLightbox('LATENESS', event, args));
+            this.$on(LATENESS_FORM_EVENTS.EDIT, (event: IAngularEvent, args: IEventFormBody) => vm.editEventForm('LATENESS', args));
 
 
             /* setFormData FROM calendar view (event sent from SNIPLET_FORM_EMIT_EVENTS.CREATION) */
@@ -719,6 +726,17 @@ export const eventsForm = {
                 this.getStructureTimeSlot();
                 vm.safeApply();
             });
+        },
+        setButton: function () {
+            switch (window.location.hash) {
+                case '#/events': {
+                    vm.isButtonAllowed = false;
+                    break;
+                }
+                default:
+                    vm.isButtonAllowed = true;
+                    break;
+            }
         }
     }
 };

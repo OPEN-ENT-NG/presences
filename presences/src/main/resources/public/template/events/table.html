@@ -48,10 +48,14 @@
 
         <!-- Period -->
         <th class="events-table-body-period text-center">
-            <ul class="period">
+            <ul class="period" ng-click="vm.preventCollapse($event)">
                 <!-- planning  -->
                 <li ng-repeat="periods in event.dayHistory track by $index"
-                    class="[[vm.eventTypeState(periods, event)]]">
+                    class="[[vm.eventTypeState(periods, $parent.$index, $index)]]"
+                    data-ng-click="vm.openEventForm($event, periods, event.studentId)"
+                    data-ng-mousedown="vm.dragSlotStart($event, periods, event.studentId, $parent.$index, $index)"
+                    data-ng-mouseup="vm.dragSlotEnd($event, periods, event.studentId, $parent.$index)"
+                    data-ng-mouseenter="vm.dragSlotMove($event, $parent.$index, $index)">
                     <!-- tooltip hovered -->
                     <span class="tooltip-top"
                           ng-if="vm.findEvent(periods.events) != undefined">
@@ -189,4 +193,7 @@
         </td>
     </tr>
     </tbody>
+
+    <sniplet workflow="presences.createEvent" template="event-form/sniplet-events-form"
+             application="presences"></sniplet>
 </table>

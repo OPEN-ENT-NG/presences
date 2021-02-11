@@ -82,3 +82,8 @@
   border-color: $presences-light-purple;
   background-color: $presences-light-purple;
 }
+
+.period li.action-drag-event:before {
+  border-color: $presences-heavy-pink;
+  background: $presences-heavy-pink;
+}

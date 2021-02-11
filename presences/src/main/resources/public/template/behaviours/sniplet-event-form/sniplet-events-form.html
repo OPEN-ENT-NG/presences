@@ -1,11 +1,13 @@
 <!-- Button to access absence mode -->
 <button class="right-magnet"
+        data-ng-if="vm.isButtonAllowed"
         data-ng-click="vm.openEventLightbox('ABSENCE')">
     <i18n>presences.register.event_type.absences</i18n>
 </button>
 
 <!-- Button to access lateness mode -->
 <button class="right-magnet"
+        data-ng-if="vm.isButtonAllowed"
         data-ng-click="vm.openEventLightbox('LATENESS')">
     <i18n>presences.register.event_type.lateness</i18n>
 </button>

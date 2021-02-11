@@ -603,13 +603,13 @@ public class DefaultAbsenceService extends DBService implements AbsenceService {
     }
 
     private void deleteEventsFromAbsence(JsonObject newAbsence, JsonObject oldAbsence, Handler<Either<String, JsonObject>> handler) {
-        if (oldAbsence == null) {
+        if (oldAbsence == null || oldAbsence.isEmpty()) {
             handler.handle(new Either.Right<>(new JsonObject().put("status", "ok")));
             return;
         }
 
-        Future<JsonObject> beforeEventsRemovanceFuture = Future.future();
-        Future<JsonObject> afterEventsRemovanceFuture = Future.future();
+        Future<JsonObject> beforeEventsRemovalFuture = Future.future();
+        Future<JsonObject> afterEventsRemovalFuture = Future.future();
 
         // Here if the new period start later than the oldest one, we remove events corresponding to the period it no longer covers
         // so we check if oldAbsence.start_date < (plus tôt que..) newAbsence.start_date
@@ -617,7 +617,7 @@ public class DefaultAbsenceService extends DBService implements AbsenceService {
                 oldAbsence.getString("start_date"),
                 newAbsence.getString("start_date"),
                 oldAbsence.getString("student_id"),
-                FutureHelper.handlerJsonObject(beforeEventsRemovanceFuture)
+                FutureHelper.handlerJsonObject(beforeEventsRemovalFuture)
         );
 
         // Here if the new period start later than the oldest one, we remove events corresponding to the period it no longer covers
@@ -626,10 +626,10 @@ public class DefaultAbsenceService extends DBService implements AbsenceService {
                 newAbsence.getString("end_date"),
                 oldAbsence.getString("end_date"),
                 oldAbsence.getString("student_id"),
-                FutureHelper.handlerJsonObject(afterEventsRemovanceFuture)
+                FutureHelper.handlerJsonObject(afterEventsRemovalFuture)
         );
 
-        CompositeFuture.all(beforeEventsRemovanceFuture, afterEventsRemovanceFuture).setHandler(event -> {
+        CompositeFuture.all(beforeEventsRemovalFuture, afterEventsRemovalFuture).setHandler(event -> {
             if (event.failed()) {
                 String message = "[Presences@DefaultAbsenceService::deleteEventsFromAbsence] Failed to delete events";
                 LOGGER.error(message);
