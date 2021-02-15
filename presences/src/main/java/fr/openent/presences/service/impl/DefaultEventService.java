@@ -995,9 +995,9 @@ public class DefaultEventService implements EventService {
                                      boolean noReasons, String recoveryMethod, String startTime, String endTime,
                                      String limit, String offset, boolean isCount, Boolean regularized) {
         String dateCast = !"HOUR".equals(recoveryMethod) ? "::date" : "";
-        String periodRange;
-        periodRange = "HALF_DAY".equals(recoveryMethod) && endTime.equals(defaultEndTime) ? ",'AFTERNOON' as period " : "";
-        periodRange = "HALF_DAY".equals(recoveryMethod) && startTime.equals(defaultStartTime) ? ",'MORNING' as period " : periodRange;
+        String periodRangeName = "HALF_DAY".equals(recoveryMethod) && endTime.equals(defaultEndTime) ? "AFTERNOON" : "";
+        periodRangeName = "HALF_DAY".equals(recoveryMethod) && startTime.equals(defaultStartTime) ? "MORNING" : periodRangeName;
+        String periodRange = periodRangeName.length() != 0 ? ",'" + periodRangeName + "' as period " : "";
         String query = "SELECT event.student_id, event.start_date" + dateCast + ", event.end_date" +
                 dateCast + ", event.type_id, '" + recoveryMethod + "' as recovery_method, " +
                 "json_agg(" +
@@ -1035,7 +1035,8 @@ public class DefaultEventService implements EventService {
         }
 
         if ("HALF_DAY".equals(recoveryMethod)) {
-            query += " AND event.start_date::time >= '" + startTime + "' AND event.start_date::time <= '" + endTime + "'";
+            String dateEquality = "AFTERNOON".equals(periodRangeName) ? "=" : "";
+            query += " AND event.start_date::time >" + dateEquality + " '" + startTime + "' AND event.start_date::time <" + dateEquality + " '" + endTime + "'";
         }
 
         if (students != null && !students.isEmpty()) {
