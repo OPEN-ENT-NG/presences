@@ -55,7 +55,7 @@ public class EventsHelper {
             // We group events by day and if start event date is before halfDay (yyyy-MM-dd_<true|false>)
             String groupKey =
                     DateHelper.getDateString(eventStartDate, DateHelper.SQL_FORMAT, DateHelper.YEAR_MONTH_DAY)
-                            + "_" + DateHelper.isDateBeforeOrEqual(eventStartDate, eventHalfDay);
+                            + "_" + DateHelper.isDateBefore(eventStartDate, eventHalfDay);
 
             if (dateGroupedEvents.containsKey(groupKey)) dateGroupedEvents.get(groupKey).add(event);
             else dateGroupedEvents.put(groupKey, new ArrayList<>(Collections.singletonList(event)));

@@ -171,6 +171,27 @@ public class DateHelper {
      * @param date2 Second date
      * @return Boolean that match if the first date is before the second date
      */
+    public static boolean isDateBefore(String date1, String date2) {
+        Date firstDate = new Date();
+        Date secondDate = new Date();
+        try {
+            firstDate = parse(date1);
+            secondDate = parse(date2);
+        } catch (ParseException e) {
+            LOGGER.error("[Presence@DateHelper::isDateBefore] Error when casting date: ", e);
+        }
+
+        return firstDate.before(secondDate);
+    }
+
+
+    /**
+     * Same that isBeforeOrEquals, but without try / catch
+     *
+     * @param date1 First date
+     * @param date2 Second date
+     * @return Boolean that match if the first date is before the second date
+     */
     public static boolean isDateBeforeOrEqual(String date1, String date2) {
         Date firstDate = new Date();
         Date secondDate = new Date();
