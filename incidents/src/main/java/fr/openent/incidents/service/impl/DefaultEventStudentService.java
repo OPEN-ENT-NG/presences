@@ -231,7 +231,7 @@ public class DefaultEventStudentService implements EventStudentService {
             sorted_events.put(type, new JsonArray());
 
             JsonArray values = (JsonArray) resultFutures.get(i).result();
-            if (values.isEmpty()) continue;
+            if (values == null || values.isEmpty()) continue;
             ((List<JsonObject>) values.getList()).forEach(event -> {
                 event.put("protagonist", protagonists.get(event.getInteger("protagonist_type_id")));
                 if (type.equals(INCIDENT)) {
