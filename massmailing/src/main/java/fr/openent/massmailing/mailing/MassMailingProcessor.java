@@ -244,7 +244,7 @@ public abstract class MassMailingProcessor implements Mailing {
      * Get the punishment/sanction date string
      *
      * @param punishment the punishment/sanction event
-     * @return
+     * @return the date string value
      */
     private String getPunishmentDate(JsonObject punishment) {
         String punishmentDate = "";
@@ -265,11 +265,11 @@ public abstract class MassMailingProcessor implements Mailing {
                     break;
                 case 2: // DETENTION
                 case 3: // BLAME
+                case 4: // EXCLUSION
                     if (fields.getString("start_at") != null) {
                         punishmentDate = fields.getString("start_at");
                     }
                     break;
-                case 4: // EXCLUSION
                 default:
                     break;
             }

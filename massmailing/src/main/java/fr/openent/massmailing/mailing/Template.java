@@ -380,6 +380,7 @@ public class Template extends BaseServer {
                         event.getString("start_date")), DateHelper.DAY_MONTH_YEAR);
                 break;
             case "PUNISHMENT":
+            case "SANCTION":
                 if (event.containsKey("fields") && !event.getJsonObject("fields").isEmpty()) {
                     if (event.getJsonObject("fields").getString("delay_at") != null) {
                         dateLabel = DateHelper.getDateString(event.getJsonObject("fields")
@@ -391,9 +392,6 @@ public class Template extends BaseServer {
                 } else {
                     dateLabel = DateHelper.getDateString(event.getString("created_at"), DateHelper.DAY_MONTH_YEAR);
                 }
-                break;
-            case "SANCTION":
-                dateLabel = DateHelper.getDateString(event.getString("created_at"), DateHelper.DAY_MONTH_YEAR);
                 break;
         }
 
