@@ -28,6 +28,8 @@
                 </a>
                 <div role="menuitem" class="item"
                      ng-class="{active: getCurrentState() === 'exemptions'}"
+                     ng-if="hasRight('readEvent') || hasRight('widget_alerts') || hasRight('manageStatementAbsences') ||
+                        hasRight('readExemption') || hasRight('manageCollectiveAbsences')"
                      data-ng-click="hoverIn('ABSENCES')"
                      data-ng-mouseover="hoverIn('ABSENCES')"
                      data-ng-mouseleave="hoverOut()">
@@ -103,7 +105,8 @@
                 <div class="item"></div>
 
                 <!-- events-->
-                <div class="item">
+                <div class="item" ng-if="hasRight('readEvent') || hasRight('widget_alerts') || hasRight('manageStatementAbsences') ||
+                        hasRight('readExemption') || hasRight('manageCollectiveAbsences')">
                     <div class="sub-items" ng-class="{hovered: menu.hovered === 'ABSENCES'}"
                          data-ng-mouseover="hoverIn('ABSENCES')"
                          data-ng-mouseleave="hoverOut()">
@@ -134,7 +137,7 @@
                             <span><i18n>presences.navigation.exemption</i18n></span>
                         </a>
                         <a href="/presences#/collective-absences"
-                           ng-if="::hasRight('readEvent')"
+                           ng-if="::hasRight('manageCollectiveAbsences')"
                            ng-class="{active: getCurrentState() === 'collective-absences'}"
                            class="sub-item">
                             <i class="collective-absences" aria-hidden="true"></i>

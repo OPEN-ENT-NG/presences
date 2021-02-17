@@ -5,6 +5,7 @@ const rights = {
         createRegister: 'fr.openent.presences.controller.RegisterController|postRegister',
         readRegistry: 'fr.openent.presences.controller.RegistryController|getRegistry',
         readEvent: 'fr.openent.presences.controller.events.EventController|getEvents',
+        manageCollectiveAbsences: 'fr.openent.presences.controller.CollectiveAbsenceController|manageCollectiveAbsences',
         createEvent: 'fr.openent.presences.controller.events.EventController|postEvent',
         readAbsentsCounts: 'fr.openent.presences.controller.events.EventController|getEvents',
         search: 'fr.openent.presences.controller.SearchController|searchUsers',
