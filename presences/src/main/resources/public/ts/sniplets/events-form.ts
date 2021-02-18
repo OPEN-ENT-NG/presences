@@ -325,7 +325,7 @@ const vm: ViewModel = {
         vm.form = {} as IFormData;
         vm.event = new Absence(null, null, null, null);
         vm.switchEventTypeForm(eventType);
-        vm.form.absences = data.absences;
+        vm.form.absences = <IAbsence[]> data.absences;
         vm.form.id = 1; // tricks to force our form want to update an "absence" whereas is it actually an event
         vm.form.startDate = data.startDate;
         vm.form.endDate = data.endDate;

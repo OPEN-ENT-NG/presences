@@ -97,7 +97,7 @@ export interface IEventFormBody {
     comment?: string;
     studentId: string;
     eventType: string;
-    absences?: IAbsence[];
+    absences?: IAbsence[] | IEvent[];
     reason_id?: number;
     absenceId?: number;
     counsellor_regularisation?: boolean;

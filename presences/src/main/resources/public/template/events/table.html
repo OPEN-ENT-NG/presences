@@ -3,28 +3,28 @@
     <!-- main title -->
     <thead>
     <tr>
-        <th width="50%">
+        <th style="width: 50%">
             <i18n>presences.exemptions.student</i18n>
         </th>
-        <th width="22%">
+        <th style="width: 22%">
             <i18n>presences.exemptions.dates</i18n>
         </th>
-        <th width="4%">
+        <th style="width:4%">
             <i18n>presences.absence.period</i18n>
         </th>
-        <th width="8%">
+        <th style="width: 8%">
             <i18n>presences.absence.reason</i18n>
         </th>
-        <th width="4%">
+        <th style="width: 4%">
             <i18n>presences.absence.file</i18n>
         </th>
-        <th width="4%">
+        <th style="width: 4%">
             <i18n>presences.absence.action</i18n>
         </th>
-        <th width="4%">
+        <th style="width: 4%">
             <i18n>presences.absence.regularise</i18n>
         </th>
-        <th width="4%">
+        <th style="width: 4%">
             <i18n>presences.absence.massmailed</i18n>
         </th>
     </tr>
@@ -130,15 +130,15 @@
     <!-- description content -->
     <tr data-ng-show="event.events.length !== 0" ng-class="{open: vm.isCollapsibleOpen($parent.$index)}"
         class="events-table-body-description" ng-repeat="history in event.events track by $index | orderBy:'+end_date'">
-        <td class="text-center padding-sm" width="50%">&nbsp;</td>
+        <td class="text-center padding-sm" style="width: 50%">&nbsp;</td>
 
         <!-- description under events time report -->
-        <td class="events-table-body-date uppercase text-center" width="22%">
+        <td class="events-table-body-date uppercase text-center" style="width: 22%">
             [[history.start_date | date:'HH:mm']] - [[history.end_date | date:'HH:mm']]
         </td>
 
         <!-- description under events owner -->
-        <td class="text-center padding-sm" width="4%">
+        <td class="text-center padding-sm" style="width: 4%">
             <span>
                 <i class="account"></i>
                 <span>[[lang.translate('presences.created.by')]] [[history.owner.displayName]]</span>
@@ -146,7 +146,7 @@
         </td>
 
         <!-- description under events select reason -->
-        <td class="text-center padding-sm" width="8%">
+        <td class="text-center padding-sm" style="width: 8%">
             <span class="events-table-body-description-content-select table-reason">
                  <label ng-if="history.type_id == 1">
                     <select data-ng-model="history.reason_id"
@@ -158,9 +158,9 @@
                 </label>
             </span>
         </td>
-        <td class="text-center padding-sm" width="4%">&nbsp</td>
+        <td class="text-center padding-sm" style="width: 4%">&nbsp</td>
         <!-- description under events action abbreviation -->
-        <td class="text-center padding-sm" width="4%">
+        <td class="text-center padding-sm" style="width: 4%">
             <i ng-class="{add : history.actionAbbreviation == null}"
                data-ng-click="vm.doAction($event, history)">
             </i>
@@ -170,7 +170,7 @@
         </td>
 
         <!-- description under events regularized -->
-        <td class="text-center padding-sm" width="4%">
+        <td class="text-center padding-sm" style="width: 4%">
             <label class="events-table-body-description-content-checkbox checkbox"
                    ng-style="{
                       opacity: !vm.provingReasonsMap[history.reason_id] && history.reason_id !== null ? 1 : 0,
@@ -185,7 +185,7 @@
 
 
         <!-- description under events massmailed -->
-        <td class="text-center padding-sm" width="4%">
+        <td class="text-center padding-sm" style="width: 4%">
             <label>
                 <i class="massmail-status"
                    ng-class="history.massmailed ? 'check-circle' : 'cross-circle'"></i>

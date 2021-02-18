@@ -1,12 +1,4 @@
 .events-table {
-  thead {
-    tr {
-      th:nth-child(2) {
-        text-align: right;
-      }
-    }
-  }
-
   &-body {
     border-bottom: 1px solid $presences-grey-light;
 

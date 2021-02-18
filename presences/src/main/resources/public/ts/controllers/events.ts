@@ -701,7 +701,8 @@ export const eventsController = ng.controller('EventsController', ['$scope', '$r
                         comment: (slot.events && slot.events.length > 0) ? slot.events[0].comment : null,
                         studentId: studentId,
                         eventType: EventsUtils.ALL_EVENTS.absence,
-                        counsellor_regularisation: counsellor_regularisation
+                        counsellor_regularisation: counsellor_regularisation,
+                        absences: slot.events
                     };
             }
         };
