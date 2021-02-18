@@ -71,7 +71,7 @@ public class EventBusController extends ControllerHelper {
                 structure = body.getString("structure");
                 startAt = body.getString("start_at");
                 endAt = body.getString("end_at");
-                studentIds = body.getJsonArray("students", new JsonArray()).getList();
+                studentIds = body.getJsonArray("studentIds", new JsonArray()).getList();
                 punishmentTypeIds = body.getJsonArray("punishmentTypeIds", new JsonArray()).getList();
                 processed = body.getBoolean("processed");
                 massmailed = body.getBoolean("massmailed");
