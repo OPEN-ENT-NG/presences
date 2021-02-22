@@ -1,4 +1,4 @@
-import http, {AxiosResponse} from 'axios';
+import http, {AxiosError, AxiosResponse} from 'axios';
 import {_, moment, toasts} from 'entcore';
 import {Mix} from 'entcore-toolkit';
 import {Event, EventType, RegisterStatus, Remark} from './index';
@@ -150,23 +150,22 @@ export class Register extends LoadingCollection {
     }
 
     async setStatus(state_id: number): Promise<void> {
-        try {
-            let response: AxiosResponse = await registerService.setStatus(this, state_id);
-
-            // Prevent displaying toasts when selecting students in register.
-            if (state_id !== RegisterStatus.DONE) {
-                return;
-            }
-            if (response.status === 200 || response.status === 201 || response.status === 204) {
-                toasts.confirm('presences.register.validation.success');
-            } else {
+        registerService.setStatus(this.id, state_id)
+            .then((response: AxiosResponse) => {
+                // Prevent displaying toasts when selecting students in register.
+                if (state_id !== RegisterStatus.DONE) {
+                    return;
+                }
+                if (response.status === 200 || response.status === 201 || response.status === 204) {
+                    toasts.confirm('presences.register.validation.success');
+                } else {
+                    toasts.warning('presences.register.validation.error');
+                }
+            })
+            .catch((_: AxiosError) => {
                 toasts.warning('presences.register.validation.error');
-            }
-        } catch (err) {
-            throw err;
-        }
+            });
     }
-
 }
 
 export class Registers extends LoadingCollection {

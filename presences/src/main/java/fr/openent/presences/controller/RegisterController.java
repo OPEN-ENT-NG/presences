@@ -94,14 +94,15 @@ public class RegisterController extends ControllerHelper {
                 Integer state = body.getInteger("state_id");
                 registerService.updateStatus(registerId, state, either -> {
                     if (either.isLeft()) {
-                        log.error("[Presences@RegisterController] Failed to update register status for register " + registerId, either.left().getValue());
+                        log.error("[Presences@RegisterController::updateStatus] Failed to update register status for register "
+                                + registerId, either.left().getValue());
                         renderError(request);
                     } else {
                         noContent(request);
                     }
                 });
-            } catch (ClassCastException e) {
-                log.error("[Presences@RegisterController] Failed to parse register identifier", e);
+            } catch (ClassCastException | NumberFormatException e) {
+                log.error("[Presences@RegisterController::updateStatus] Failed to parse register identifier", e);
                 renderError(request);
             }
         });

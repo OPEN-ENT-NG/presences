@@ -191,7 +191,7 @@ export const registersController = ng.controller('RegistersController',
                     template.open('register', 'register/list-view');
                     template.open('register-panel', 'register/panel');
                     getReasons();
-                    if (vm.register !== undefined) {
+                    if (vm.register !== undefined && vm.register.id !== undefined) {
                         await vm.register.sync();
                         await initCourses();
                         if (vm.register.teachers.length > 0) vm.filter.selected.registerTeacher = vm.register.teachers[0];
@@ -843,7 +843,11 @@ export const registersController = ng.controller('RegistersController',
             };
 
             vm.validRegister = async (): Promise<void> => {
-                await vm.register.setStatus(RegisterStatus.DONE);
+                if (vm.register.id) {
+                    await vm.register.setStatus(RegisterStatus.DONE);
+                } else {
+                    notify.error('presences.register.validation.error');
+                }
             };
 
             function startAction() {

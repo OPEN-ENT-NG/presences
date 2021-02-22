@@ -1,4 +1,4 @@
-import {model, ng, notify, toasts} from 'entcore';
+import {model, ng, notify} from 'entcore';
 import {Absence, Course, Courses, Register, RegisterStatus, RegisterStudent} from '../../models';
 import {DateUtils} from '@common/utils/date';
 import {CourseUtils, PresencesPreferenceUtils} from '@common/utils';
@@ -64,7 +64,11 @@ export const sideRegisterController = ng.controller('SideRegisterController', ['
         };
 
         vm.validRegister = async (): Promise<void> => {
-            await vm.register.setStatus(RegisterStatus.DONE);
+            if (vm.register.id) {
+                await vm.register.setStatus(RegisterStatus.DONE);
+            } else {
+                notify.error('presences.register.validation.error');
+            }
         };
 
         vm.openRegister = async function (course: Course) {
@@ -95,7 +99,7 @@ export const sideRegisterController = ng.controller('SideRegisterController', ['
         }
 
         vm.isEmpty = function (): boolean {
-            return vm.register === undefined;
+            return vm.register === undefined || vm.register.id === undefined;
         };
 
         async function toggleEvent(student, event, start_date, end_date) {
