@@ -3,11 +3,15 @@ package fr.openent.massmailing.service.impl;
 import fr.openent.massmailing.enums.MailingType;
 import fr.openent.massmailing.enums.MassmailingType;
 import fr.openent.massmailing.service.MassmailingService;
+import fr.openent.presences.common.helper.FutureHelper;
 import fr.openent.presences.common.incidents.Incidents;
 import fr.openent.presences.common.presences.Presences;
 import fr.openent.presences.enums.EventType;
 import fr.wseduc.webutils.Either;
+import io.vertx.core.CompositeFuture;
+import io.vertx.core.Future;
 import io.vertx.core.Handler;
+import io.vertx.core.eventbus.EventBus;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import io.vertx.core.logging.Logger;
@@ -22,6 +26,12 @@ public class DefaultMassmailingService implements MassmailingService {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(DefaultMassmailingService.class);
 
+    private final EventBus eb;
+
+
+    public DefaultMassmailingService(EventBus eb) {
+        this.eb = eb;
+    }
 
     @Override
     public void getStatus(String structure, MassmailingType type, Boolean massmailed, List<Integer> reasons,
@@ -119,6 +129,51 @@ public class DefaultMassmailingService implements MassmailingService {
 
     @Override
     public void getRelatives(MailingType type, List<String> students, Handler<Either<String, JsonArray>> handler) {
+
+        Future<JsonArray> relativesFuture = Future.future();
+        Future<JsonArray> relativesIdsFuture = Future.future();
+
+        CompositeFuture.all(relativesFuture, relativesIdsFuture).setHandler(asyncHandler -> {
+
+            if (asyncHandler.failed()) {
+                handler.handle(new Either.Left<>(asyncHandler.cause().toString()));
+                return;
+            }
+
+            JsonArray studentsRelatives = relativesFuture.result();
+            JsonArray studentPrimaryRelatives = relativesIdsFuture.result();
+
+            for (int i = 0; i < studentsRelatives.size(); i++) {
+                JsonObject student = studentsRelatives.getJsonObject(i);
+                JsonArray relatives = student.getJsonArray("relative");
+                JsonArray primaryRelativesIds = getRelativeIdsFromList(student.getString("id"), studentPrimaryRelatives);
+
+                if (relatives != null) {
+
+                    for (int j = 0; j < relatives.size(); j++) {
+                        JsonObject relative = relatives.getJsonObject(j);
+                        boolean primary = false;
+
+                        for (int k = 0; k < primaryRelativesIds.size(); k++) {
+                            if (primaryRelativesIds.getString(k).equals(relative.getString("id"))) {
+                                primary = true;
+                                break;
+                            }
+                        }
+
+                        relative.put("primary", primary);
+                    }
+                }
+            }
+            handler.handle(new Either.Right<>(studentsRelatives));
+        });
+
+        getStudentRelatives(type, students, FutureHelper.handlerJsonArray(relativesFuture));
+        getStudentsPrimaryRelativesIds(students, FutureHelper.handlerJsonArray(relativesIdsFuture));
+    }
+
+
+    private void getStudentRelatives(MailingType type, List<String> students, Handler<Either<String, JsonArray>> handler) {
         String contactValue;
         switch (type) {
             case MAIL:
@@ -133,13 +188,51 @@ public class DefaultMassmailingService implements MassmailingService {
         }
 
         String query = "MATCH (u:User)-[:RELATED]->(r:User) WHERE u.id IN {students} RETURN u.id as id, " +
-                "(u.lastName + ' ' + u.firstName) as displayName, split(u.classes[0],'$')[1] as className, " +
-                "collect({id: r.id, displayName: (r.lastName + ' ' + r.firstName), contact: " + contactValue + "}) as relative";
+                "(u.lastName + ' ' + u.firstName) AS displayName, split(u.classes[0],'$')[1] AS className, " +
+                "collect({id: r.id, displayName: (r.lastName + ' ' + r.firstName), " +
+                "contact: " + contactValue + "}) AS relative";
         JsonObject params = new JsonObject()
                 .put("students", new JsonArray(students));
-        Neo4j.getInstance().execute(query, params, Neo4jResult.validResultHandler(handler));
 
+        Neo4j.getInstance().execute(query, params, res -> {
+            Either<String, JsonArray> resHandler = Neo4jResult.validResult(res);
+
+            if (resHandler.isLeft()) {
+                handler.handle(new Either.Left<>("[Massmailing@DefaultMassmailingService::getStudentRelatives] Error fetching " +
+                        "student relatives"));
+            } else {
+                handler.handle(new Either.Right<>(resHandler.right().getValue()));
+            }
+        });
     }
+
+    private void getStudentsPrimaryRelativesIds(List<String> students, Handler<Either<String, JsonArray>> handler) {
+
+        JsonObject action = new JsonObject()
+                .put("action", "eleve.getPrimaryRelatives")
+                .put("studentIds", students);
+
+        eb.send("viescolaire", action, relativeRes -> {
+            if (relativeRes.failed() || relativeRes.result() == null ||
+                    "error".equals(((JsonObject) relativeRes.result().body()).getString("status"))) {
+                handler.handle(new Either.Left<>(relativeRes.cause().getMessage()));
+            } else {
+                handler.handle(new Either.Right<>(((JsonObject) relativeRes.result().body()).getJsonArray("results", new JsonArray())));
+            }
+        });
+    }
+
+    private JsonArray getRelativeIdsFromList(String studentId, JsonArray studentsRelativeIds) {
+        if (studentsRelativeIds != null) {
+            for (int i = 0; i < studentsRelativeIds.size(); i++) {
+                if (studentsRelativeIds.getJsonObject(i).getString("id").equals(studentId)) {
+                    return studentsRelativeIds.getJsonObject(i).getJsonArray("primaryRelatives");
+                }
+            }
+        }
+        return new JsonArray();
+    }
+
 
     @Override
     public void getStatus(String structure, MassmailingType type, boolean massmailed, List<Integer> reasons,

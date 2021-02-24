@@ -1,10 +1,10 @@
-import {Template} from '../services/SettingsService';
+import {Template} from '@massmailing/services';
 import http, {AxiosRequestConfig, AxiosResponse} from 'axios';
 import {DateUtils} from '@common/utils';
 import {MailingType} from '../model/Mailing';
 import {BlobUtil} from '@common/utils/blob';
-import {IPunishmentType} from "@incidents/models/PunishmentType";
-import {EVENT_TYPES} from "@common/model";
+import {IPunishmentType} from '@incidents/models/PunishmentType';
+import {EVENT_TYPES} from '@common/model';
 
 export interface IMassmailingFilterPreferences {
     start_at: number;
@@ -35,24 +35,25 @@ export interface IRelative {
     contact: string;
     selected: boolean;
     address: string;
+    primary: boolean;
 }
 
 export interface IMassmailingBody {
-    event_types: Array<string>,
-    template: number,
-    structure: string,
-    no_reason: boolean,
-    start_at: number,
-    reasons: Array<string>,
-    punishmentsTypes: Array<number>,
-    sanctionsTypes: Array<number>,
-    start: string,
-    end: string,
-    students: {},
-    massmailed: boolean
+    event_types: Array<string>;
+    template: number;
+    structure: string;
+    no_reason: boolean;
+    start_at: number;
+    reasons: Array<string>;
+    punishmentsTypes: Array<number>;
+    sanctionsTypes: Array<number>;
+    start: string;
+    end: string;
+    students: {};
+    massmailed: boolean;
 }
 
-interface MassmailingStudent {
+export interface MassmailingStudent {
     id: string;
     selected: boolean;
     opened: boolean;
@@ -69,27 +70,34 @@ interface MassmailingStudent {
     relative: IRelative[];
 }
 
+export interface IMassmailingCounts {
+    massmailing: number;
+    students: number;
+    anomalies: number;
+}
+
 declare const window: any;
 
 export class Massmailing {
     type: string;
-    counts: {
-        massmailing: number,
-        students: number,
-        anomalies: number
-    };
+    counts: IMassmailingCounts;
     students: MassmailingStudent[];
     filter: any;
     template: Template;
 
-    constructor(type, counts, students) {
+    constructor(type: string, counts: IMassmailingCounts, students: MassmailingStudent[]) {
         this.type = type;
         this.counts = counts;
         this.students = students;
         this.students.forEach((student: MassmailingStudent) => {
+            let primaryRelative: boolean = (student.relative
+                .find((relative: IRelative) => relative.primary === true)) !== undefined;
+
             student.relative.forEach((relative: IRelative) => {
-                if (student.relative.length > 1) {
-                    if (relative.address && (student.relative[0].address == student.relative[1].address)) {
+                if (relative.primary !== undefined && relative.primary !== null && (primaryRelative === true) ) {
+                    relative.selected = relative.primary;
+                } else if (student.relative.length > 1) {
+                    if (relative.address && (student.relative[0].address === student.relative[1].address)) {
                         student.relative[0].selected = (student.relative[0].contact !== null && student.relative[0].contact.trim() !== '')
                             || this.type === MailingType[MailingType.PDF];
                     } else {
@@ -100,8 +108,8 @@ export class Massmailing {
                 }
                 if (!relative.selected) this.counts.massmailing--;
             });
-            let shouldSelect = false;
-            student.relative.map(relative => (shouldSelect = (shouldSelect || relative.selected)));
+            let shouldSelect: boolean = false;
+            student.relative.forEach((relative: IRelative) => (shouldSelect = (shouldSelect || relative.selected)));
             if ((student.relative.length > 0 && shouldSelect) || this.type === MailingType[MailingType.PDF]) {
                 student.selected = true;
             }
@@ -111,33 +119,32 @@ export class Massmailing {
 
     private getStudents() {
         const students = {};
-        this.students.forEach(function ({id, relative}) {
+        this.students.forEach(({id, relative}) => {
             students[id] = [];
-            relative.forEach(function (relative) {
+            relative.forEach((relative: IRelative) => {
                 if (relative.selected) students[id].push(relative.id);
             });
         });
 
-        Object.keys(students).forEach(id => {
+        Object.keys(students).forEach((id: string) => {
             if (students[id].length === 0) delete students[id];
         });
 
         return students;
     }
 
-    private massmailed() {
-        const {waiting, mailed} = this.filter.massmailing_status;
+    private massmailed(): boolean {
+        const {waiting, mailed}: {waiting: boolean, mailed: boolean} = this.filter.massmailing_status;
         if (mailed && waiting) {
             return null;
         }
-
         return mailed;
     }
 
     toJson(): IMassmailingBody {
         const event_types = Object.keys(this.filter.status).filter(type => this.filter.status[type]);
-        const reasons = [];
-        Object.keys(this.filter.reasons).forEach((reason) => {
+        const reasons: Array<string> = [];
+        Object.keys(this.filter.reasons).forEach((reason: string) => {
             if (this.filter.reasons[reason]) reasons.push(reason);
         });
 
@@ -187,8 +194,8 @@ export class Massmailing {
     }
 
     getRelativeCheckedCount(student: MassmailingStudent): number {
-        let count = 0;
-        student.relative.forEach(relative => (count += relative.selected ? 1 : 0));
+        let count: number = 0;
+        student.relative.forEach((relative: IRelative) => (count += relative.selected ? 1 : 0));
         return count;
     }
 }

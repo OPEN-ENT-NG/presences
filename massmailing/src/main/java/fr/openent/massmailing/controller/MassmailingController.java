@@ -42,13 +42,14 @@ public class MassmailingController extends ControllerHelper {
     private final JsonObject config;
     private final Vertx vertx;
     private final Storage storage;
-    private final MassmailingService massmailingService = new DefaultMassmailingService();
+    private final MassmailingService massmailingService;
     private final List<MailingType> typesToCheck = Arrays.asList(MailingType.MAIL, MailingType.SMS);
 
     public MassmailingController(EventBus eb, Vertx vertx, JsonObject config, Storage storage) {
         this.config = config;
         this.vertx = vertx;
         this.groupService = new DefaultGroupService(eb);
+        this.massmailingService = new DefaultMassmailingService(eb);
         this.storage = storage;
     }
 
