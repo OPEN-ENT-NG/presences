@@ -9,6 +9,7 @@ import {PunishmentCategoryType} from "@incidents/models/PunishmentCategory";
 import {IPunishmentType} from "@incidents/models/PunishmentType";
 import {User} from "@common/model/User";
 import {PunishmentsUtils} from "@incidents/utilities/punishments";
+import {AxiosResponse} from "axios";
 
 declare let window: any;
 
@@ -201,7 +202,7 @@ const vm: ViewModel = {
 
     async delete(): Promise<void> {
         vm.preparePunishmentForm();
-        let response = await punishmentService.delete(vm.form.id);
+        let response: AxiosResponse = await punishmentService.delete(vm.form.id, window.structure.id);
         if (response.status == 200 || response.status == 201) {
             vm.closePunishmentLightbox();
             toasts.confirm(lang.translate('incidents.punishment.delete.succeed'));

@@ -11,16 +11,40 @@
     padding: $spacing-LXS 0 $spacing-L 0;
     display: inline-flex;
     align-items: center;
+  }
 
-    switch {
-      .switch {
-        input[type=checkbox]:checked + .tick {
-          background: $green;
-        }
+  &-absence {
+    display: inline-flex;
+    align-items: center;
+    margin-bottom: $spacing-L;
 
-        input[type=checkbox]:checked + .tick:before {
-          background: $deep-green;
-        }
+    &.add-absence {
+      margin-bottom: $spacing-XXS;
+    }
+
+  }
+
+  &-absence-anomaly {
+    color: $deep-red;
+    span {
+      font-weight: bold;
+      color: $dark-red;
+    }
+  }
+
+  &-absence-reason {
+    margin-top: $spacing-LXS;
+    margin-bottom: $spacing-L;
+  }
+
+  switch {
+    .switch {
+      input[type=checkbox]:checked + .tick {
+        background: $green;
+      }
+
+      input[type=checkbox]:checked + .tick:before {
+        background: $deep-green;
       }
     }
   }

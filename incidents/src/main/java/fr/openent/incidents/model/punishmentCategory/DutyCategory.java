@@ -10,4 +10,8 @@ public class DutyCategory extends PunishmentCategory {
         fillables.put("delay_at", Arrays.asList("CREATE", "UPDATE"));
         fillables.put("instruction", Arrays.asList("CREATE", "UPDATE"));
     }
+
+    public void formatDates() {
+        delay_at = delay_at.replace("/", "-");
+    }
 }

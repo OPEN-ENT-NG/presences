@@ -5,9 +5,13 @@ import fr.openent.incidents.helper.PunishmentHelper;
 import fr.openent.incidents.helper.PunishmentTypeHelper;
 import fr.openent.incidents.model.Punishment;
 import fr.openent.incidents.model.PunishmentType;
+import fr.openent.incidents.model.punishmentCategory.ExcludeCategory;
+import fr.openent.incidents.model.punishmentCategory.PunishmentCategory;
 import fr.openent.incidents.service.PunishmentService;
 import fr.openent.incidents.service.PunishmentTypeService;
+import fr.openent.presences.common.helper.DateHelper;
 import fr.openent.presences.common.helper.FutureHelper;
+import fr.openent.presences.common.presences.Presences;
 import fr.openent.presences.common.service.UserService;
 import fr.openent.presences.common.service.impl.DefaultUserService;
 import fr.openent.presences.enums.EventType;
@@ -22,9 +26,7 @@ import io.vertx.core.logging.LoggerFactory;
 import org.entcore.common.mongodb.MongoDbResult;
 import org.entcore.common.user.UserInfos;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -43,7 +45,24 @@ public class DefaultPunishmentService implements PunishmentService {
 
     @Override
     public void create(UserInfos user, JsonObject body, Handler<AsyncResult<JsonArray>> handler) {
+        Punishment createPunishment = new Punishment();
+        createPunishment.setFromJson(body);
 
+        Future<JsonObject> punishmentsFuture = Future.future();
+        Future<JsonObject> absencesFuture = Future.future();
+        createPunishments(user, body, punishmentsFuture);
+        createRelativeAbsences(user, body, createPunishment, absencesFuture);
+
+        FutureHelper.all(Arrays.asList(punishmentsFuture, absencesFuture)).setHandler(event -> {
+            if (event.failed()) {
+                handler.handle(Future.failedFuture(event.cause().toString()));
+                return;
+            }
+            handler.handle(Future.succeededFuture(punishmentsFuture.result().getJsonArray("all", new JsonArray())));
+        });
+    }
+
+    private void createPunishments(UserInfos user, JsonObject body, Handler<AsyncResult<JsonObject>> handler) {
         JsonArray student_ids = body.getJsonArray("student_ids");
         JsonArray results = new JsonArray();
         List<Future> futures = new ArrayList<>();
@@ -71,14 +90,88 @@ public class DefaultPunishmentService implements PunishmentService {
                 handler.handle(Future.failedFuture(event.cause().toString()));
                 return;
             }
-            handler.handle(Future.succeededFuture(results));
+            handler.handle(Future.succeededFuture(new JsonObject().put("all", results)));
         });
+    }
+
+    private void createRelativeAbsences(UserInfos user, JsonObject body, Punishment punishment, Handler<AsyncResult<JsonObject>> handler) {
+        PunishmentCategory.getCategoryLabelFromType(punishment.getTypeId(), punishment.getStructureId(), label -> {
+            if (!label.result().equals(PunishmentCategory.EXCLUDE) || !body.containsKey("absence")) {
+                handler.handle(Future.succeededFuture(new JsonObject()));
+                return;
+            }
+            JsonObject fields = body.getJsonObject("fields", new JsonObject());
+            Long reasonId = body.getJsonObject("absence").getLong("reason_id");
+            String startAt = fields.getString("start_at").replace("/", "-");
+            String endAt = fields.getString("end_at").replace("/", "-");
+
+            getStudentsWithoutAbsences(body, startAt, endAt).setHandler(studentIds ->
+                    Presences.getInstance()
+                            .createAbsences(punishment.getStructureId(), studentIds.result(), user.getUserId(), reasonId, startAt, endAt, true, handler));
+        });
+    }
+
+    @SuppressWarnings("unchecked")
+    private Future<List<String>> getStudentsWithoutAbsences(JsonObject body, String startAt, String endAt) {
+        Future<List<String>> future = Future.future();
+        if (startAt == null || endAt == null) {
+            future.fail("[Incidents@DefaultPunishmentService::getStudentsWithoutAbsences] Missing period dates to retrieve absences");
+            return future;
+        }
+
+        getAbsencesByStudentIds(body.getJsonArray("student_ids").getList(), startAt, endAt, absencesByStudentIds -> {
+            if (absencesByStudentIds.failed()) {
+                future.fail(absencesByStudentIds.cause().getMessage());
+                return;
+            }
+            future.complete(
+                    absencesByStudentIds.result()
+                            .entrySet().stream()
+                            .filter(absences -> absences.getValue().isEmpty())
+                            .map(Map.Entry::getKey)
+                            .collect(Collectors.toList())
+            );
+        });
+
+        return future;
     }
 
     @Override
     public void update(UserInfos user, JsonObject body, Handler<AsyncResult<JsonObject>> handler) {
         Punishment updatePunishment = new Punishment();
         updatePunishment.setFromJson(body);
+        get(user, updatePunishment.getId(), updatePunishment.getStructureId(), null, null,
+                null, null, null, null, false, null, null, null, punishmentResult -> {
+                    if (punishmentResult.failed()) {
+                        handler.handle(Future.failedFuture(punishmentResult.cause().getMessage()));
+                    }
+
+                    String studentId = punishmentResult.result().getJsonObject("student", new JsonObject()).getString("id");
+                    Punishment oldPunishment = new Punishment();
+                    oldPunishment.setFromJson(punishmentResult.result());
+
+                    update(user, body, updatePunishment, oldPunishment, studentId, handler);
+                });
+    }
+
+    public void update(UserInfos user, JsonObject body, Punishment updatePunishment, Punishment oldPunishment, String studentId,
+                       Handler<AsyncResult<JsonObject>> handler) {
+        Future<JsonObject> punishmentFuture = Future.future();
+        Future<JsonObject> absencesFuture = Future.future();
+
+        updatePunishment(user, updatePunishment, punishmentFuture);
+        updateRelativeAbsence(user, body, studentId, oldPunishment, updatePunishment, absencesFuture);
+
+        FutureHelper.all(Arrays.asList(punishmentFuture, absencesFuture)).setHandler(event -> {
+            if (event.failed()) {
+                handler.handle(Future.failedFuture(event.cause().toString()));
+                return;
+            }
+            handler.handle(Future.succeededFuture(punishmentFuture.result()));
+        });
+    }
+
+    private void updatePunishment(UserInfos user, Punishment updatePunishment, Handler<AsyncResult<JsonObject>> handler) {
         updatePunishment.persistMongo(user, result -> {
             if (result.failed()) {
                 handler.handle(Future.failedFuture(result.cause().getMessage()));
@@ -88,15 +181,119 @@ public class DefaultPunishmentService implements PunishmentService {
         });
     }
 
+    private void updateRelativeAbsence(UserInfos user, JsonObject body, String studentId, Punishment oldPunishment,
+                                       Punishment updatePunishment, Handler<AsyncResult<JsonObject>> handler) {
+        if (!body.containsKey("absence")) {
+            handler.handle(Future.succeededFuture(new JsonObject()));
+            return;
+        }
+
+        getCategoryLabel(updatePunishment, labelResult -> {
+            if (labelResult.failed()) {
+                handler.handle(Future.failedFuture(labelResult.cause().getMessage()));
+                return;
+            }
+
+            String label = labelResult.result().getString("label", "");
+            if (!label.equals(PunishmentCategory.EXCLUDE)) {
+                handler.handle(Future.succeededFuture(new JsonObject()));
+                return;
+            }
+
+            ExcludeCategory oldCategory = new ExcludeCategory();
+            oldCategory.setFromJson(oldPunishment.getFields());
+            oldCategory.formatDates();
+
+            ExcludeCategory category = new ExcludeCategory();
+            category.setFromJson(updatePunishment.getFields());
+            category.formatDates();
+
+            Long reasonId = body.getJsonObject("absence").getLong("reason_id");
+
+            getStudentAbsences(studentId, oldCategory.getStartAt(), oldCategory.getEndAt()).setHandler(absencesResult -> {
+                if (absencesResult.failed()) {
+                    handler.handle(Future.failedFuture(absencesResult.cause().getMessage()));
+                    return;
+                }
+
+                List<JsonObject> absences = absencesResult.result();
+                if (absences.isEmpty()) {
+                    Presences.getInstance()
+                            .createAbsences(updatePunishment.getStructureId(), Collections.singletonList(studentId),
+                                    user.getUserId(), reasonId, category.getStartAt(), category.getEndAt(), true, handler);
+                } else if (absences.size() == 1 && areAbsenceDatesCorresponding(absences.get(0), oldCategory.getStartAt(), oldCategory.getEndAt())) {
+                    Presences.getInstance()
+                            .updateAbsence(updatePunishment.getStructureId(), absences.get(0).getLong("id"),
+                                    user.getUserId(), reasonId, studentId, category.getStartAt(), category.getEndAt(), true, handler);
+                } else {
+                    handler.handle(Future.succeededFuture(new JsonObject()));
+                }
+            });
+
+        });
+    }
+
+    private void getCategoryLabel(Punishment punishment, Handler<AsyncResult<JsonObject>> handler) {
+        PunishmentCategory.getCategoryLabelFromType(punishment.getTypeId(), punishment.getStructureId(), label -> {
+            if (label.failed()) {
+                handler.handle(Future.failedFuture(label.cause().getMessage()));
+                return;
+            }
+            handler.handle(Future.succeededFuture(new JsonObject().put("label", label.result())));
+        });
+    }
+
+    @SuppressWarnings("unchecked")
+    private Future<List<JsonObject>> getStudentAbsences(String studentId, String startAt, String endAt) {
+        Future<List<JsonObject>> future = Future.future();
+        if (startAt == null || endAt == null) {
+            future.fail("[Incidents@DefaultPunishmentService::getStudentAbsences] Missing period dates to retrieve absences");
+            return future;
+        }
+
+        getAbsencesByStudentIds(Collections.singletonList(studentId), startAt, endAt, absencesByStudentIdsResult -> {
+            if (absencesByStudentIdsResult.failed()) {
+                future.fail(absencesByStudentIdsResult.cause().getMessage());
+                return;
+            }
+
+            List<JsonObject> absences = absencesByStudentIdsResult.result().getOrDefault(studentId, new ArrayList<>());
+
+            future.complete(absences);
+        });
+
+        return future;
+    }
+
+    private boolean areAbsenceDatesCorresponding(JsonObject absence, String startAt, String endAt) {
+        return DateHelper.isDateEqual(absence.getString("start_date"), startAt) && DateHelper.isDateEqual(absence.getString("end_date"), endAt);
+    }
+
     @Override
     public void get(UserInfos user, MultiMap body, boolean isStudent, Handler<AsyncResult<JsonObject>> handler) {
-        punishmentHelper.getQuery(user, body, isStudent, queryResult -> {
+        String id = body.get("id");
+        String structureId = body.get("structure_id");
+        String startAt = body.get("start_at");
+        String endAt = body.get("end_at");
+        List<String> studentIds = body.getAll("student_id");
+        List<String> groupIds = body.getAll("group_id");
+        List<String> typeIds = body.getAll("type_id");
+        List<String> processStates = body.getAll("process");
+        String page = body.get("page");
+        String limit = body.get("limit");
+        String offset = body.get("offset");
+        get(user, id, structureId, startAt, endAt, studentIds, groupIds, typeIds, processStates, isStudent, page, limit, offset, handler);
+    }
+
+    @Override
+    public void get(UserInfos user, String id, String structureId, String startAt, String endAt, List<String> studentIds, List<String> groupIds,
+                    List<String> typeIds, List<String> processStates, boolean isStudent, String pageString, String limitString, String offsetString,
+                    Handler<AsyncResult<JsonObject>> handler) {
+        punishmentHelper.getQuery(user, id, structureId, startAt, endAt, studentIds, groupIds, typeIds, processStates, isStudent, queryResult -> {
             if (queryResult.failed()) {
                 handler.handle(Future.failedFuture(queryResult.cause().getMessage()));
                 return;
             }
-
-            String id = body.get("id");
 
             if (id != null && !id.equals("")) {
                 punishmentHelper.getPunishment(punishment.getTable(), queryResult.result(), handler);
@@ -105,9 +302,6 @@ public class DefaultPunishmentService implements PunishmentService {
                 Future<JsonArray> findFuture = Future.future();
 
                 /* PAGINATE QUERY PUNISHMENTS */
-                String pageString = body.get("page");
-                String limitString = body.get("limit");
-                String offsetString = body.get("offset");
                 Integer limit, offset, page = null;
                 int aPageNumber = Incidents.PAGE_SIZE;
 
@@ -373,16 +567,106 @@ public class DefaultPunishmentService implements PunishmentService {
 
     @Override
     public void delete(UserInfos user, MultiMap body, Handler<AsyncResult<JsonObject>> handler) {
+        get(user, body.get("id"), body.get("structureId"), null, null,
+                null, null, null, null, false, null, null, null, punishmentResult -> {
+                    if (punishmentResult.failed()) {
+                        handler.handle(Future.failedFuture(punishmentResult.cause().getMessage()));
+                    }
+
+                    Punishment deletePunishment = new Punishment();
+                    deletePunishment.setFromJson(punishmentResult.result());
+                    String studentId = punishmentResult.result().getJsonObject("student", new JsonObject()).getString("id");
+                    delete(body, deletePunishment, studentId, handler);
+                });
+    }
+
+    public void delete(MultiMap body, Punishment deletePunishment, String studentId, Handler<AsyncResult<JsonObject>> handler) {
+        Future<JsonObject> punishmentFuture = Future.future();
+        Future<JsonObject> absenceFuture = Future.future();
+
+        deletePunishment(body, punishmentFuture);
+        deleteRelativeAbsence(deletePunishment, studentId, absenceFuture);
+        FutureHelper.all(Arrays.asList(punishmentFuture, absenceFuture)).setHandler(event -> {
+            if (event.failed()) {
+                handler.handle(Future.failedFuture(event.cause().toString()));
+                return;
+            }
+            handler.handle(Future.succeededFuture(punishmentFuture.result()));
+        });
+    }
+
+    private void deletePunishment(MultiMap body, Handler<AsyncResult<JsonObject>> handler) {
         JsonObject query = new JsonObject()
                 .put("_id", body.get("id"));
         MongoDb.getInstance().delete(punishment.getTable(), query, message -> {
             Either<String, JsonObject> messageCheck = MongoDbResult.validResult(message);
             if (messageCheck.isLeft()) {
-                handler.handle(Future.failedFuture("[Incidents@Punishment::persistMongo] Failed to delete punishment"));
+                handler.handle(Future.failedFuture("[Incidents@Punishment::deletePunishment] Failed to delete punishment"));
             } else {
                 JsonObject result = messageCheck.right().getValue();
                 handler.handle(Future.succeededFuture(result));
             }
+        });
+    }
+
+    private void deleteRelativeAbsence(Punishment deletePunishment, String studentId, Handler<AsyncResult<JsonObject>> handler) {
+        getCategoryLabel(deletePunishment, labelResult -> {
+            if (labelResult.failed()) {
+                handler.handle(Future.failedFuture(labelResult.cause().getMessage()));
+                return;
+            }
+
+            String label = labelResult.result().getString("label", "");
+            if (!label.equals(PunishmentCategory.EXCLUDE)) {
+                handler.handle(Future.succeededFuture(new JsonObject()));
+                return;
+            }
+
+            ExcludeCategory category = new ExcludeCategory();
+            category.setFromJson(deletePunishment.getFields());
+            category.formatDates();
+
+            getStudentAbsences(studentId, category.getStartAt(), category.getEndAt()).setHandler(absencesResult -> {
+                if (absencesResult.failed()) {
+                    handler.handle(Future.failedFuture(absencesResult.cause().getMessage()));
+                    return;
+                }
+
+                List<JsonObject> absences = absencesResult.result();
+                if (absences.size() == 1 && areAbsenceDatesCorresponding(absences.get(0), category.getStartAt(), category.getEndAt())) {
+                    Presences.getInstance()
+                            .deleteAbsence(absences.get(0).getLong("id"), handler);
+                    return;
+                }
+                handler.handle(Future.succeededFuture(new JsonObject()));
+            });
+
+        });
+    }
+
+
+    @Override
+    @SuppressWarnings("unchecked")
+    public void getAbsencesByStudentIds(List<String> studentIds, String starDate, String endDate, Handler<AsyncResult<Map<String, List<JsonObject>>>> handler) {
+        if (studentIds.isEmpty()) {
+            handler.handle(Future.succeededFuture(new HashMap<>()));
+            return;
+        }
+        Presences.getInstance().getAbsences(studentIds, starDate, endDate, result -> {
+            if (result.failed()) {
+                String message = "[Incidents@DefaultPunishmentService::getAbsencesByStudentIds] failed to retrieve absences";
+                LOGGER.error(message, result.cause().getMessage());
+                handler.handle(Future.failedFuture(message));
+                return;
+            }
+
+            List<JsonObject> absences = result.result().getList();
+            Map<String, List<JsonObject>> absencesByStudentIds = studentIds.stream().collect(Collectors.toMap(
+                    studentId -> studentId,
+                    studentId -> absences.stream().filter(absence -> absence.getString("student_id").equals(studentId)).collect(Collectors.toList())
+            ));
+
+            handler.handle(Future.succeededFuture(absencesByStudentIds));
         });
     }
 }

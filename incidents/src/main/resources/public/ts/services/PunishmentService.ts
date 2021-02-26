@@ -1,6 +1,8 @@
 import {ng} from 'entcore'
-import http, {AxiosResponse} from 'axios';
-import {IPunishmentBody, IPunishmentRequest, IPunishmentResponse,} from "@incidents/models";
+import http, {AxiosError, AxiosResponse} from 'axios';
+import {IPunishmentAbsenceRequest, IPunishmentBody, IPunishmentRequest, IPunishmentResponse} from "@incidents/models";
+import {IAbsence} from '@presences/models/Event/Absence';
+import {User} from "@common/model/User";
 
 export interface IPunishmentService {
     get(punishmentRequest: IPunishmentRequest): Promise<IPunishmentResponse>;
@@ -9,9 +11,11 @@ export interface IPunishmentService {
 
     update(punishmentBody: IPunishmentBody): Promise<AxiosResponse>;
 
-    delete(punishmentId: string): Promise<AxiosResponse>;
+    delete(punishmentId: string, structureId: string): Promise<AxiosResponse>;
 
     exportCSV(punishmentRequest: IPunishmentRequest): void;
+
+    getStudentsAbsences(students: User[], startAt: string, endAt: string): Promise<Map<string, Array<IAbsence>>>;
 }
 
 export const punishmentService: IPunishmentService = {
@@ -66,8 +70,8 @@ export const punishmentService: IPunishmentService = {
         return http.put(`/incidents/punishments`, punishmentBody);
     },
 
-    async delete(punishmentId: string): Promise<AxiosResponse> {
-        return http.delete(`/incidents/punishments?id=${punishmentId}`);
+    async delete(punishmentId: string, structureId: string): Promise<AxiosResponse> {
+        return http.delete(`/incidents/punishments?id=${punishmentId}&structureId=${structureId}`);
     },
 
 
@@ -100,6 +104,16 @@ export const punishmentService: IPunishmentService = {
             `&end_at=${punishmentRequest.end_at}` + filterParams;
 
         window.open(url);
+    },
+
+    getStudentsAbsences(students: User[], startAt: string, endAt: string): Promise<Map<string, Array<IAbsence>>> {
+        return http.post(`/incidents/punishments/students/absences`, {
+            studentIds: students.map((student: User) => student.id),
+            startAt: startAt,
+            endAt: endAt
+        } as IPunishmentAbsenceRequest)
+            .then((res: AxiosResponse) => res.data.all || [])
+            .catch((err: AxiosError) => Promise.reject(err))
     }
 };
 

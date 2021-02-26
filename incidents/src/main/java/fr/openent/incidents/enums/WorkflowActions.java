@@ -8,7 +8,8 @@ public enum WorkflowActions {
     PUNISHMENT_CREATE(Incidents.PUNISHMENT_CREATE),
     PUNISHMENTS_VIEW(Incidents.PUNISHMENTS_VIEW),
     SANCTIONS_VIEW(Incidents.SANCTIONS_VIEW),
-    STUDENT_EVENTS_VIEW(Incidents.STUDENT_EVENTS_VIEW);
+    STUDENT_EVENTS_VIEW(Incidents.STUDENT_EVENTS_VIEW),
+    MANAGE(Incidents.MANAGE);
 
     private final String actionName;
 

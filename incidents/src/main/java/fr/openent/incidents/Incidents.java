@@ -1,6 +1,7 @@
 package fr.openent.incidents;
 
 import fr.openent.incidents.controller.*;
+import fr.openent.presences.common.presences.Presences;
 import io.vertx.core.eventbus.EventBus;
 import org.entcore.common.http.BaseServer;
 
@@ -15,6 +16,7 @@ public class Incidents extends BaseServer {
     public static final String PUNISHMENTS_VIEW = "incidents.punishments.view";
     public static final String SANCTIONS_VIEW = "incidents.sanction.view";
     public static final String STUDENT_EVENTS_VIEW = "presences.student.events.view";
+    public static final String MANAGE = "presences.manage";
 
     public static Integer PAGE_SIZE = 20;
 
@@ -23,9 +25,12 @@ public class Incidents extends BaseServer {
 
         super.start();
         dbSchema = config.getString("db-schema");
-
         final EventBus eb = getEventBus(vertx);
+
+        Presences.getInstance().init(eb);
+
         addController(new IncidentsController(eb));
+        addController(new PresencesController());
         addController(new IncidentsTypeController());
         addController(new PartnerController());
         addController(new PlaceController());

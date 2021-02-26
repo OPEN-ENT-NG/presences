@@ -12,4 +12,9 @@ public class DetentionCategory extends PunishmentCategory {
         fillables.put("end_at", Arrays.asList("CREATE", "UPDATE"));
         fillables.put("place", Arrays.asList("CREATE", "UPDATE"));
     }
+
+    public void formatDates() {
+        start_at = start_at.replace("/", "-");
+        end_at = end_at.replace("/", "-");
+    }
 }

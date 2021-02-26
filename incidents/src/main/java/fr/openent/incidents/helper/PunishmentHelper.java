@@ -37,10 +37,23 @@ public class PunishmentHelper {
     }
 
     /* QUERY CONSTRUCTION PART */
-
     public void getQuery(UserInfos user, MultiMap body, boolean isStudent, Handler<AsyncResult<JsonObject>> handler) {
         String id = body.get("id");
-        JsonObject query = new JsonObject().put("structure_id", body.get("structure_id"));
+        String structureId = body.get("structure_id");
+        String startAt = body.get("start_at");
+        String endAt = body.get("end_at");
+        List<String> studentIds = body.getAll("student_id");
+        List<String> groupIds = body.getAll("group_id");
+        List<String> typeIds = body.getAll("type_id");
+        List<String> processStates = body.getAll("process");
+        getQuery(user, id, structureId, startAt, endAt, studentIds, groupIds, typeIds, processStates, isStudent, handler);
+
+    }
+
+    public void getQuery(UserInfos user, String id, String structureId, String startAt, String endAt, List<String> studentIds,
+                         List<String> groupIds, List<String> typeIds, List<String> processStates, boolean isStudent,
+                         Handler<AsyncResult<JsonObject>> handler) {
+        JsonObject query = new JsonObject().put("structure_id", structureId);
 
         if (!isStudent && (!WorkflowHelper.hasRight(user, WorkflowActions.PUNISHMENTS_VIEW.toString()) || !WorkflowHelper.hasRight(user, WorkflowActions.SANCTIONS_VIEW.toString()))) {
             query.put("owner_id", user.getUserId());
@@ -52,14 +65,7 @@ public class PunishmentHelper {
             query.put("_id", id);
             handler.handle(Future.succeededFuture(query));
         } else {
-            String start_at = body.get("start_at");
-            String end_at = body.get("end_at");
-            List<String> student_ids = body.getAll("student_id");
-            List<String> group_ids = body.getAll("group_id");
-            List<String> type_ids = body.getAll("type_id");
-            List<String> process_states = body.getAll("process");
-
-            getManyPunishmentsQuery(query, start_at, end_at, student_ids, group_ids, type_ids, process_states, isStudent, handler);
+            getManyPunishmentsQuery(query, startAt, endAt, studentIds, groupIds, typeIds, processStates, isStudent, handler);
         }
     }
 

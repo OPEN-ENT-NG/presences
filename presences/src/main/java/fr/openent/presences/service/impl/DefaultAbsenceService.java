@@ -138,6 +138,11 @@ public class DefaultAbsenceService extends DBService implements AbsenceService {
 
     @Override
     public void create(JsonObject absenceBody, List<String> studentIds, UserInfos user, Long collectiveId, Handler<AsyncResult<JsonArray>> handler) {
+        create(absenceBody, studentIds, user.getUserId(), collectiveId, handler);
+    }
+
+    @Override
+    public void create(JsonObject absenceBody, List<String> studentIds, String userId, Long collectiveId, Handler<AsyncResult<JsonArray>> handler) {
         if (studentIds.isEmpty()) {
             handler.handle(Future.succeededFuture(new JsonArray()));
             return;
@@ -145,7 +150,7 @@ public class DefaultAbsenceService extends DBService implements AbsenceService {
 
         JsonArray statements = new JsonArray();
         for (String studentId : studentIds) {
-            statements.add(insertStatement(absenceBody, studentId, user, collectiveId));
+            statements.add(insertStatement(absenceBody, studentId, userId, collectiveId));
         }
         sql.transaction(statements, SqlResult.validResultHandler(result -> {
             if (result.isLeft()) {
@@ -161,7 +166,7 @@ public class DefaultAbsenceService extends DBService implements AbsenceService {
         }));
     }
 
-    private JsonObject insertStatement(JsonObject absenceBody, String studentId, UserInfos user, Long collectiveId) {
+    private JsonObject insertStatement(JsonObject absenceBody, String studentId, String userId, Long collectiveId) {
         String query = "INSERT INTO " + Presences.dbSchema + ".absence(structure_id, student_id, start_date, end_date, owner, reason_id, " +
                 " collective_id) " +
                 " SELECT ?, ?, ?, ?, ?, ?, ? ";
@@ -171,7 +176,7 @@ public class DefaultAbsenceService extends DBService implements AbsenceService {
                 .add(studentId)
                 .add(absenceBody.getString("start_date"))
                 .add(absenceBody.getString("end_date"))
-                .add(user.getUserId());
+                .add(userId);
 
         if (absenceBody.getLong("reason_id") != null) params.add(absenceBody.getLong("reason_id"));
         else params.addNull();
@@ -179,11 +184,11 @@ public class DefaultAbsenceService extends DBService implements AbsenceService {
         if (collectiveId != null) {
             params.add(collectiveId);
             query += " WHERE NOT EXISTS " +
-                    "        ( "  +
-                    "            SELECT id "  +
-                    "            FROM presences.absence "  +
-                    "                WHERE collective_id = ? "  +
-                    "                AND student_id = ? "  +
+                    "        ( " +
+                    "            SELECT id " +
+                    "            FROM presences.absence " +
+                    "                WHERE collective_id = ? " +
+                    "                AND student_id = ? " +
                     "        ) ";
             params.add(collectiveId)
                     .add(studentId);
@@ -235,6 +240,11 @@ public class DefaultAbsenceService extends DBService implements AbsenceService {
 
     @Override
     public void update(Long absenceId, JsonObject absenceBody, UserInfos user, boolean editEvents, Handler<Either<String, JsonObject>> handler) {
+        update(absenceId, absenceBody, user.getUserId(), editEvents, handler);
+    }
+
+    @Override
+    public void update(Long absenceId, JsonObject absenceBody, String userInfoId, boolean editEvents, Handler<Either<String, JsonObject>> handler) {
         String beforeUpdateAbsenceQuery = "SELECT * FROM " + Presences.dbSchema + ".absence WHERE id = ?";
         Sql.getInstance().prepared(beforeUpdateAbsenceQuery, new JsonArray().add(absenceId), SqlResult.validUniqueResultHandler(oldAbsenceResult -> {
             if (oldAbsenceResult.isLeft()) {
@@ -261,13 +271,13 @@ public class DefaultAbsenceService extends DBService implements AbsenceService {
             values.add(absenceId);
 
             Sql.getInstance().prepared(query, values, SqlResult.validUniqueResultHandler(absenceResult -> {
-                afterPersistAbsence(absenceId, absenceBody, oldAbsence, editEvents, user.getUserId(), handler, absenceResult);
+                afterPersistAbsence(absenceId, absenceBody, oldAbsence, editEvents, userInfoId, handler, absenceResult);
             }));
         }));
     }
 
     @Override
-    @SuppressWarnings("unchecked")
+    @SuppressWarnings("Unchecked")
     public void updateFromCollective(JsonObject absenceBody, UserInfos user, Long collectiveId, boolean editEvents, Handler<AsyncResult<JsonObject>> handler) {
         String beforeUpdateAbsenceQuery = "SELECT * FROM " + Presences.dbSchema + ".absence WHERE collective_id = ?";
         sql.prepared(beforeUpdateAbsenceQuery, new JsonArray().add(collectiveId), SqlResult.validResultHandler(oldAbsenceResult -> {
@@ -364,6 +374,22 @@ public class DefaultAbsenceService extends DBService implements AbsenceService {
                 " WHERE collective_id = ? AND structure_id = ?";
 
         JsonArray params = new JsonArray().add(collectiveId).add(structureId);
+        afterPersistAbsence(query, params, userInfoId, editEvents, FutureHelper.handlerJsonObject(handler));
+    }
+
+    @Override
+    public void afterPersist(List<String> studentIds, String structureId, String startDate, String endDate, String userInfoId, boolean editEvents, Handler<AsyncResult<JsonObject>> handler) {
+        String query = "SELECT * FROM " + Presences.dbSchema + ".absence " +
+                " WHERE student_id IN " + Sql.listPrepared(studentIds.toArray()) +
+                " AND start_date = ? " +
+                " AND end_date = ? " +
+                " AND structure_id = ? ";
+
+        JsonArray params = new JsonArray()
+                .addAll(new JsonArray(studentIds))
+                .add(startDate)
+                .add(endDate)
+                .add(structureId);
         afterPersistAbsence(query, params, userInfoId, editEvents, FutureHelper.handlerJsonObject(handler));
     }
 

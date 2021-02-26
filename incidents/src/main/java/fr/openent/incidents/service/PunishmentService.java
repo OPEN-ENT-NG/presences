@@ -9,6 +9,7 @@ import io.vertx.core.json.JsonObject;
 import org.entcore.common.user.UserInfos;
 
 import java.util.List;
+import java.util.Map;
 
 public interface PunishmentService {
 
@@ -21,6 +22,9 @@ public interface PunishmentService {
      * @param handler   Function handler returning data
      */
     void get(UserInfos user, MultiMap body, boolean isStudent, Handler<AsyncResult<JsonObject>> handler);
+    void get(UserInfos user, String id, String structureId, String startAt, String endAt, List<String> studentIds, List<String> groupIds,
+        List<String> typeIds, List<String> processStates, boolean isStudent, String pageString, String limitString, String offsetString,
+        Handler<AsyncResult<JsonObject>> handler);
 
     /**
      * get Sanctions/Punishments by students
@@ -97,4 +101,13 @@ public interface PunishmentService {
      * @param handler          Function handler returning data
      */
     void delete(UserInfos user, MultiMap body, Handler<AsyncResult<JsonObject>> handler);
+
+    /**
+     * get absences by students
+     *
+     * @param studentIds    student list identifiers
+     * @param starDate      start period to get
+     * @param endDate       end period to get
+     */
+    void getAbsencesByStudentIds(List<String> studentIds, String starDate, String endDate, Handler<AsyncResult<Map<String, List<JsonObject>>>> handler);
 }

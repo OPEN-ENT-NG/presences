@@ -32,6 +32,7 @@ public class Punishment extends Model {
     private String structure_id;
     private String student_id;
     private JsonObject fields;
+    private JsonObject type;
     private String created_at;
     private String updated_at;
 
@@ -48,6 +49,7 @@ public class Punishment extends Model {
         fillables.put("structure_id", Arrays.asList("CREATE", "mandatory"));
         fillables.put("student_id", Arrays.asList("CREATE", "mandatory"));
         fillables.put("fields", Arrays.asList("CREATE", "UPDATE"));
+        fillables.put("type", Collections.emptyList());
         fillables.put("created_at", Collections.emptyList());
         fillables.put("updated_at", Collections.emptyList());
     }
@@ -57,7 +59,7 @@ public class Punishment extends Model {
     }
 
     public Long getTypeId() {
-        return type_id;
+        return type != null ? type.getLong("id") : type_id;
     }
 
     public String getStructureId() {

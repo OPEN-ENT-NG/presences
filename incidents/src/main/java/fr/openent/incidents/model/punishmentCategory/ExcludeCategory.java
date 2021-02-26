@@ -12,4 +12,17 @@ public class ExcludeCategory extends PunishmentCategory {
         fillables.put("end_at", Arrays.asList("CREATE", "UPDATE"));
         fillables.put("mandatory_presence", Arrays.asList("CREATE", "UPDATE"));
     }
+
+    public void formatDates() {
+        start_at = start_at.replace("/", "-");
+        end_at = end_at.replace("/", "-");
+    }
+
+    public String getStartAt() {
+        return start_at;
+    }
+
+    public String getEndAt() {
+        return end_at;
+    }
 }

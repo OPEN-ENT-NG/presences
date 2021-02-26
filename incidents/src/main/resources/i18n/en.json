@@ -1,4 +1,7 @@
 {
   "incidents.title": "Incidents",
-  "incidents.search.personal": "Search personal"
+  "incidents.search.personal": "Search personal",
+  "incidents.punishment.declare.absence": "Declare an absence during this period",
+  "incidents.punishment.declare.absence.anomaly": "Some students present anomalies during this period, no absence will be created or updated for them",
+  "incidents.absence.select.empty": "No reason"
 }

@@ -1,0 +1,28 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema",
+  "type": "object",
+  "title": "Punishment Absence schema",
+  "properties": {
+    "studentIds": {
+      "type": "array",
+      "items": {
+        "anyOf": [
+          {
+            "type": "string"
+          }
+        ]
+      }
+    },
+    "startAt": {
+      "type": "string"
+    },
+    "endAt": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "studentIds",
+    "startAt",
+    "endAt"
+  ]
+}

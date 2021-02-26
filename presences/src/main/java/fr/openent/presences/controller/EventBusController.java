@@ -1,8 +1,11 @@
 package fr.openent.presences.controller;
 
+import fr.openent.presences.common.bus.BusResultHandler;
+import fr.openent.presences.service.AbsenceService;
 import fr.openent.presences.service.EventService;
 import fr.openent.presences.service.ReasonService;
 import fr.openent.presences.service.SettingsService;
+import fr.openent.presences.service.impl.DefaultAbsenceService;
 import fr.openent.presences.service.impl.DefaultEventService;
 import fr.openent.presences.service.impl.DefaultReasonService;
 import fr.openent.presences.service.impl.DefaultSettingsService;
@@ -13,6 +16,7 @@ import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import org.entcore.common.bus.BusResponseHandler;
 import org.entcore.common.controller.ControllerHelper;
+import org.entcore.common.user.UserInfos;
 
 import java.util.List;
 
@@ -21,15 +25,19 @@ public class EventBusController extends ControllerHelper {
     private final EventService eventService;
     private final ReasonService reasonService = new DefaultReasonService();
     private final SettingsService settingsService = new DefaultSettingsService();
+    private final AbsenceService absenceService;
+    private UserInfos user;
 
     public EventBusController(EventBus eb) {
         this.eventService = new DefaultEventService(eb);
+        this.absenceService = new DefaultAbsenceService(eb);
     }
 
     @BusAddress("fr.openent.presences")
     public void bus(final Message<JsonObject> message) {
         JsonObject body = message.body();
         String action = body.getString("action");
+        String userId;
         Integer eventType;
         Boolean justified;
         List<String> students;
@@ -74,6 +82,36 @@ public class EventBusController extends ControllerHelper {
                 recoveryMethod = body.getString("recoveryMethod");
                 regularized = body.getBoolean("regularized");
                 this.eventService.getEventsByStudent(eventType, students, structure, justified, reasonsId, massmailed, compliance, startDate, endDate, noReasons, recoveryMethod, regularized, BusResponseHandler.busArrayHandler(message));
+                break;
+            case "get-absences":
+                students = body.getJsonArray("studentIds", new JsonArray()).getList();
+                startDate = body.getString("startDate");
+                endDate = body.getString("endDate");
+                absenceService.getAbsencesBetweenDates(startDate, endDate, students, BusResponseHandler.busArrayHandler(message));
+                break;
+            case "create-absences":
+                students = body.getJsonArray("studentIds", new JsonArray()).getList();
+                startDate = body.getString("start_date");
+                endDate = body.getString("end_date");
+                userId = body.getString("userId");
+                absenceService.create(body, students, userId, null, result -> {
+                    if (result.failed()) {
+                        message.reply(new JsonObject()
+                                .put("status", "error")
+                                .put("message", result.cause().getMessage()));
+                        return;
+                    }
+                    absenceService.afterPersist(students, body.getString("structure_id"), startDate, endDate, userId,
+                            body.getBoolean("editEvents", false), BusResultHandler.busResponseHandler(message));
+                });
+                break;
+            case "update-absence":
+                userId = body.getString("userId");
+                absenceService.update(body.getLong("absenceId"), body, userId, body.getBoolean("editEvents", false),
+                        BusResponseHandler.busResponseHandler(message));
+                break;
+            case "delete-absence":
+                absenceService.delete(body.getInteger("absenceId"), BusResponseHandler.busResponseHandler(message));
                 break;
             case "get-reasons":
                 structure = body.getString("structure");

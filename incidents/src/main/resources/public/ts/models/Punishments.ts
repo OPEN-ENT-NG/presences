@@ -30,6 +30,16 @@ export interface IPunishmentRequest {
     page: number;
 }
 
+export interface IPunishmentAbsence {
+    reason_id: number
+}
+
+export interface IPunishmentAbsenceRequest {
+    studentIds: Array<string>;
+    startAt: string;
+    endAt: string;
+}
+
 export interface IPunishmentBody {
     id?: string;
     structure_id?: string;
@@ -43,6 +53,7 @@ export interface IPunishmentBody {
     processed?: boolean;
     student_id?: string,
     description?: string,
+    absence?: IPunishmentAbsence,
 }
 
 export interface IPunishmentResponse {

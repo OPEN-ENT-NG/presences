@@ -49,7 +49,8 @@ public abstract class Validator {
 
         boolean failed = failures.size() > 0;
         if(failed) {
-            log.error("Validation mandatory failed for the following fields: ", failures);
+            log.error("Validation mandatory failed for the following fields: ",
+                    failures.entrySet().stream().map(failure -> failure.getKey()).collect(Collectors.toList()).toString());
         }
         return !failed;
     }

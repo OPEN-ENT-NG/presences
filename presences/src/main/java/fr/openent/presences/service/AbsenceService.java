@@ -62,6 +62,7 @@ public interface AbsenceService {
      * @param handler       Function handler returning data
      */
     void create(JsonObject absenceBody, List<String> studentIds, UserInfos user, Long collectiveId, Handler<AsyncResult<JsonArray>> handler);
+    void create(JsonObject absenceBody, List<String> studentIds, String userId, Long collectiveId, Handler<AsyncResult<JsonArray>> handler);
     void create(JsonObject absenceBody, UserInfos user, boolean editEvents, Handler<Either<String, JsonObject>> handler);
 
     /**
@@ -73,6 +74,7 @@ public interface AbsenceService {
      * @param handler      response handler
      */
     void afterPersistCollective(Long collectiveId, String structureId, String userInfoId, boolean editEvents, Handler<AsyncResult<JsonObject>> handler);
+    void afterPersist(List<String> studentIds, String structureId, String startDate, String endDate, String userInfoId, boolean editEvents, Handler<AsyncResult<JsonObject>> handler);
 
     /**
      * update absence
@@ -82,6 +84,7 @@ public interface AbsenceService {
      * @param handler     Function handler returning data
      */
     void update(Long absenceId, JsonObject absenceBody, UserInfos user, boolean editEvents, Handler<Either<String, JsonObject>> handler);
+    void update(Long absenceId, JsonObject absenceBody, String userInfoId, boolean editEvents, Handler<Either<String, JsonObject>> handler);
     void updateFromCollective(JsonObject absenceBody, UserInfos user, Long collectiveId, boolean editEvents, Handler<AsyncResult<JsonObject>> handler);
 
     /**
