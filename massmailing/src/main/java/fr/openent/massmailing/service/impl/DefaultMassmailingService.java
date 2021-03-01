@@ -213,9 +213,12 @@ public class DefaultMassmailingService implements MassmailingService {
                 .put("studentIds", students);
 
         eb.send("viescolaire", action, relativeRes -> {
-            if (relativeRes.failed() || relativeRes.result() == null ||
-                    "error".equals(((JsonObject) relativeRes.result().body()).getString("status"))) {
-                handler.handle(new Either.Left<>(relativeRes.cause().getMessage()));
+
+            JsonObject body = (JsonObject) relativeRes.result().body();
+
+            if (relativeRes.failed() || "error".equals(body.getString("status"))) {
+                handler.handle(new Either.Left<>("[Massmailing@DefaultMassmailingService::getStudentsPrimaryRelativesIds] " +
+                        "Error fetching students primary relatives identifiers"));
             } else {
                 handler.handle(new Either.Right<>(((JsonObject) relativeRes.result().body()).getJsonArray("results", new JsonArray())));
             }
