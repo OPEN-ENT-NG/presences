@@ -125,7 +125,7 @@
   "incidents.punishments.button.title": "Saisir une punition ou une sanction",
   "incidents.punishment.create.succeed": "Punition ou sanction créée avec succès.",
   "incidents.punishment.declare.absence": "Déclarer une absence sur cette période",
-  "incidents.punishment.declare.absence.anomaly": "Certains élèves présentent des anomalies sur cette période, aucune absence ne sera ajoutée ou modifiée pour eux",
+  "incidents.punishment.declare.absence.anomaly": "Certains élèves sont déjà absents sur cette période, aucune absence ne sera ajoutée ou modifiée pour eux",
   "incidents.punishment.or.sanction": "Punitions ou sanctions",
   "incidents.punishment.processed.done": "La punition ou sanction a été effectuée",
   "incidents.punishment.processed.undone": "La punition ou sanction n'a pas été effectuée",

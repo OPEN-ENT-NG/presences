@@ -95,7 +95,7 @@ export const PunishmentExcludeForm = ng.directive('punishmentExcludeForm', ['Sea
             
             <div class="punishment-exclude-form-absence-anomaly" ng-show="vm.getAnomalyStudents().length > 0 && (vm.punishment.id || vm.isAddingAbsence)">
                     [[vm.lang.translate('incidents.punishment.declare.absence.anomaly')]]: 
-                    <span ng-repeat="student in vm.getAnomalyStudents()">[[student.displayName + (!$last ? ', ' : '')]]</span>
+                    <span ng-repeat="student in vm.getAnomalyStudents()">[[(student.displayName || student.name) + (!$last ? ', ' : '')]]</span>
             </div>
             
             <!-- absence reason -->
@@ -203,6 +203,7 @@ export const PunishmentExcludeForm = ng.directive('punishmentExcludeForm', ['Sea
                     vm.form.absence = null;
                     if (vm.isAddingAbsence || vm.punishment.id) {
                         vm.form.absence = {reason_id: null} as IPunishmentAbsence
+                        if (vm.isAddingAbsence && !vm.punishment.id) await vm.getStudentsAbsences();
                         if (vm.punishment.id && vm.punishment.student && vm.absencesByStudentIds && vm.start_date && vm.end_date) {
                             if (vm.isStudentAnomaly(vm.punishment.student.id)) {
                                 vm.isAddingAbsence = false; // we can't check because of the absence not matching, so we force it to keep unchecked
@@ -240,7 +241,7 @@ export const PunishmentExcludeForm = ng.directive('punishmentExcludeForm', ['Sea
                 };
 
                 vm.isStudentAnomaly = function (studentId: string): boolean {
-                    return !!vm.getAnomalyStudents()[studentId];
+                    return vm.getAnomalyStudents().map((student: Student) => student.id).indexOf(studentId) >= 0;
                 }
 
                 vm.getStudentsAbsences = async function (): Promise<void> {

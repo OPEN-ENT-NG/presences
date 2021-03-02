@@ -51,7 +51,7 @@ public class DefaultPunishmentService implements PunishmentService {
         Future<JsonObject> punishmentsFuture = Future.future();
         Future<JsonObject> absencesFuture = Future.future();
         createPunishments(user, body, punishmentsFuture);
-        createRelativeAbsences(user, body, createPunishment, absencesFuture);
+        createRelatedAbsences(user, body, createPunishment, absencesFuture);
 
         FutureHelper.all(Arrays.asList(punishmentsFuture, absencesFuture)).setHandler(event -> {
             if (event.failed()) {
@@ -94,7 +94,7 @@ public class DefaultPunishmentService implements PunishmentService {
         });
     }
 
-    private void createRelativeAbsences(UserInfos user, JsonObject body, Punishment punishment, Handler<AsyncResult<JsonObject>> handler) {
+    private void createRelatedAbsences(UserInfos user, JsonObject body, Punishment punishment, Handler<AsyncResult<JsonObject>> handler) {
         PunishmentCategory.getCategoryLabelFromType(punishment.getTypeId(), punishment.getStructureId(), label -> {
             if (!label.result().equals(PunishmentCategory.EXCLUDE) || !body.containsKey("absence")) {
                 handler.handle(Future.succeededFuture(new JsonObject()));
@@ -105,9 +105,19 @@ public class DefaultPunishmentService implements PunishmentService {
             String startAt = fields.getString("start_at").replace("/", "-");
             String endAt = fields.getString("end_at").replace("/", "-");
 
-            getStudentsWithoutAbsences(body, startAt, endAt).setHandler(studentIds ->
-                    Presences.getInstance()
-                            .createAbsences(punishment.getStructureId(), studentIds.result(), user.getUserId(), reasonId, startAt, endAt, true, handler));
+            getStudentsWithoutAbsences(body, startAt, endAt).setHandler(resultStudentIds -> {
+                if (resultStudentIds.failed()) {
+                    handler.handle(Future.failedFuture(resultStudentIds.cause().getMessage()));
+                    return;
+                }
+                List<String> studentIds = resultStudentIds.result();
+                if (studentIds == null || studentIds.isEmpty()) {
+                    handler.handle(Future.succeededFuture(new JsonObject()));
+                    return;
+                }
+                Presences.getInstance()
+                        .createAbsences(punishment.getStructureId(), studentIds, user.getUserId(), reasonId, startAt, endAt, true, handler);
+            });
         });
     }
 
@@ -160,7 +170,7 @@ public class DefaultPunishmentService implements PunishmentService {
         Future<JsonObject> absencesFuture = Future.future();
 
         updatePunishment(user, updatePunishment, punishmentFuture);
-        updateRelativeAbsence(user, body, studentId, oldPunishment, updatePunishment, absencesFuture);
+        updateRelatedAbsence(user, body, studentId, oldPunishment, updatePunishment, absencesFuture);
 
         FutureHelper.all(Arrays.asList(punishmentFuture, absencesFuture)).setHandler(event -> {
             if (event.failed()) {
@@ -181,8 +191,8 @@ public class DefaultPunishmentService implements PunishmentService {
         });
     }
 
-    private void updateRelativeAbsence(UserInfos user, JsonObject body, String studentId, Punishment oldPunishment,
-                                       Punishment updatePunishment, Handler<AsyncResult<JsonObject>> handler) {
+    private void updateRelatedAbsence(UserInfos user, JsonObject body, String studentId, Punishment oldPunishment,
+                                      Punishment updatePunishment, Handler<AsyncResult<JsonObject>> handler) {
         if (!body.containsKey("absence")) {
             handler.handle(Future.succeededFuture(new JsonObject()));
             return;
@@ -585,7 +595,7 @@ public class DefaultPunishmentService implements PunishmentService {
         Future<JsonObject> absenceFuture = Future.future();
 
         deletePunishment(body, punishmentFuture);
-        deleteRelativeAbsence(deletePunishment, studentId, absenceFuture);
+        deleteRelatedAbsence(deletePunishment, studentId, absenceFuture);
         FutureHelper.all(Arrays.asList(punishmentFuture, absenceFuture)).setHandler(event -> {
             if (event.failed()) {
                 handler.handle(Future.failedFuture(event.cause().toString()));
@@ -609,7 +619,7 @@ public class DefaultPunishmentService implements PunishmentService {
         });
     }
 
-    private void deleteRelativeAbsence(Punishment deletePunishment, String studentId, Handler<AsyncResult<JsonObject>> handler) {
+    private void deleteRelatedAbsence(Punishment deletePunishment, String studentId, Handler<AsyncResult<JsonObject>> handler) {
         getCategoryLabel(deletePunishment, labelResult -> {
             if (labelResult.failed()) {
                 handler.handle(Future.failedFuture(labelResult.cause().getMessage()));
