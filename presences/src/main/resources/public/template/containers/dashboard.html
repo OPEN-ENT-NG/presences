@@ -51,8 +51,11 @@
         </div>
     </div>
 
+    <!-- Alerts -->
     <div ng-include="'/presences/public/template/widgets/alerts.html'" class="vertical-spacing-six"
          ng-if="::hasRight('widget_alerts')" workflow="presences.widget_alerts"></div>
+
+    <!-- forgotten register -->
     <div ng-include="'/presences/public/template/widgets/forgotten_registers.html'" class="vertical-spacing-six"
          ng-if="::hasRight('widget_forgotten_registers')" workflow="presences.widget_forgotten_registers"></div>
 

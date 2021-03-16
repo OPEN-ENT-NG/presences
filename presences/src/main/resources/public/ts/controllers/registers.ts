@@ -44,6 +44,10 @@ interface Filter {
 }
 
 export interface ViewModel {
+    $onInit(): any;
+
+    $onDestroy(): any;
+
     widget: { forgottenRegisters: boolean };
     register: Register;
     courses: Courses;
@@ -155,12 +159,66 @@ export interface ViewModel {
 
 export const registersController = ng.controller('RegistersController',
     ['$scope', '$timeout', '$route', '$location', '$rootScope', 'SearchService', 'GroupService', 'ReasonService',
-        async function ($scope: Scope, $timeout, $route, $location, $rootScope,
-                        SearchService: SearchService, GroupService: GroupService, ReasonService: ReasonService) {
+        function ($scope: Scope, $timeout, $route, $location, $rootScope,
+                  SearchService: SearchService, GroupService: GroupService, ReasonService: ReasonService) {
             const vm: ViewModel = this;
-            vm.widget = {
-                forgottenRegisters: false,
+
+            let registerTimeSlot: any;
+
+            vm.$onInit = async () => {
+                vm.widget = {
+                    forgottenRegisters: false,
+                };
+
+                vm.register = undefined;
+                vm.courses = new Courses();
+                vm.courses.eventer.on('loading::true', () => $scope.safeApply());
+                vm.courses.eventer.on('loading::false', () => $scope.safeApply());
+
+                registerTimeSlot = await Me.preference(PreferencesUtils.PREFERENCE_KEYS.PRESENCE_REGISTER);
+
+                vm.filter = {
+                    date: new Date(),
+                    start_date: new Date(),
+                    end_date: new Date(),
+                    offset: 0,
+                    student: undefined,
+                    teacher: "",
+                    teachers: undefined,
+                    class: "",
+                    classes: undefined,
+                    forgotten: true,
+                    course: undefined,
+                    selected: {
+                        teachers: [],
+                        classes: [],
+                        registerTeacher: undefined
+                    },
+                    multipleSlot: registerTimeSlot.multipleSlot,
+                };
+
+                startAction();
+                setHandler();
             };
+
+            const startAction = () => {
+                switch ($route.current.action) {
+                    case 'getRegister':
+                    case 'registers': {
+                        actions[$route.current.action]($route.current.params);
+                        break;
+                    }
+                    case 'dashboard': {
+                        if (vm.widget.forgottenRegisters) {
+                            actions.forgottenRegisterWidget();
+                        }
+                        break;
+                    }
+                    default:
+                        return;
+                }
+            };
+
             const actions = {
                 /* access list of registers */
                 registers: () => {
@@ -261,34 +319,6 @@ export const registersController = ng.controller('RegistersController',
                 if (model.me.profiles.some(profile => profile === "Personnel")) {
                     vm.reasons = await ReasonService.getReasons(window.structure.id);
                 }
-            };
-
-            vm.register = undefined;
-            vm.courses = new Courses();
-            vm.courses.eventer.on('loading::true', () => $scope.safeApply());
-            vm.courses.eventer.on('loading::false', () => $scope.safeApply());
-
-            let registerTimeSlot = await Me.preference(PreferencesUtils.PREFERENCE_KEYS.PRESENCE_REGISTER);
-
-            vm.filter = {
-                date: new Date(),
-                start_date: new Date(),
-                end_date: new Date(),
-                offset: 0,
-                student: undefined,
-                teacher: "",
-                teachers: undefined,
-                class: "",
-                classes: undefined,
-                forgotten: true,
-                course: undefined,
-                disableWithoutTeacher: false,
-                selected: {
-                    teachers: [],
-                    classes: [],
-                    registerTeacher: undefined
-                },
-                multipleSlot: registerTimeSlot.multipleSlot,
             };
 
             vm.changeFiltersDate = async function () {
@@ -871,66 +901,49 @@ export const registersController = ng.controller('RegistersController',
                 }
             };
 
-            function startAction() {
-                switch ($route.current.action) {
-                    case 'getRegister':
-                    case 'registers': {
-                        actions[$route.current.action]($route.current.params);
-                        break;
-                    }
-                    case 'dashboard': {
-                        if (vm.widget.forgottenRegisters) {
-                            actions.forgottenRegisterWidget();
-                        }
-                        break;
-                    }
-                    default:
-                        return;
-                }
-            }
-
-            startAction();
-
             /* events handler */
 
-            $scope.$on(SNIPLET_FORM_EMIT_EVENTS.FILTER, () => {
-                startAction();
-                vm.closePanel();
-            });
-            $scope.$on(SNIPLET_FORM_EMIT_EVENTS.EDIT, startAction);
-            $scope.$on(SNIPLET_FORM_EMIT_EVENTS.DELETE, startAction);
+            const setHandler = () => {
 
-            $scope.$watch(() => window.structure, (newVal, oldVal) => {
-                if (newVal.id === oldVal.id) return;
-                if ($route.current.action === "getRegister") {
-                    $scope.redirectTo('/registers');
-                } else {
-                    console.warn(`$scope.$watch window.structure: ${newVal.id}, ${oldVal.id}`);
+                $scope.$on(SNIPLET_FORM_EMIT_EVENTS.FILTER, () => {
                     startAction();
-                }
-            });
-
-            $scope.$watch(() => $route.current.action, (newVal, oldVal) => {
-                if (
-                    (newVal === oldVal && !(newVal === 'dashboard' && oldVal === 'dashboard'))
-                    || (newVal === 'registers' && oldVal === 'dashboard')
-                    || (newVal === 'getRegister' && oldVal === 'dashboard')
-                ) return;
-                console.warn(`$scope.$watch $route.current.action: ${newVal}, ${oldVal}`);
-                startAction();
-            });
-
-            $scope.$on(SNIPLET_FORM_EMIT_EVENTS.CREATION, () => {
-                $scope.$broadcast(SNIPLET_FORM_EVENTS.SET_PARAMS, {
-                    student: vm.filter.student,
-                    date: vm.filter.date
+                    vm.closePanel();
                 });
-            });
 
-            /* Destroy */
-            $scope.$on("$destroy", () => {
+                $scope.$on(SNIPLET_FORM_EMIT_EVENTS.EDIT, startAction);
+                $scope.$on(SNIPLET_FORM_EMIT_EVENTS.DELETE, startAction);
+
+                $scope.$watch(() => window.structure, (newVal, oldVal) => {
+                    if (newVal.id === oldVal.id) return;
+                    if ($route.current.action === "getRegister") {
+                        $scope.redirectTo('/registers');
+                    } else {
+                        console.warn(`$scope.$watch window.structure: ${newVal.id}, ${oldVal.id}`);
+                        startAction();
+                    }
+                });
+
+                $scope.$watch(() => $route.current.action, (newVal, oldVal) => {
+                    if (
+                        (newVal === oldVal && !(newVal === 'dashboard' && oldVal === 'dashboard'))
+                        || (newVal === 'registers' && oldVal === 'dashboard')
+                        || (newVal === 'getRegister' && oldVal === 'dashboard')
+                    ) return;
+                    console.warn(`$scope.$watch $route.current.action: ${newVal}, ${oldVal}`);
+                    startAction();
+                });
+
+                $scope.$on(SNIPLET_FORM_EMIT_EVENTS.CREATION, () => {
+                    $scope.$broadcast(SNIPLET_FORM_EVENTS.SET_PARAMS, {
+                        student: vm.filter.student,
+                        date: vm.filter.date
+                    });
+                });
+            };
+
+            vm.$onDestroy = () => {
                 if ($route.current.action === "dashboard") {
                     window.filter = {};
                 }
-            });
+            };
         }]);

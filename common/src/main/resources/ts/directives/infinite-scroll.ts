@@ -16,7 +16,7 @@ export const InfiniteScroll = ng.directive('infiniteScroll', () => {
         },
         template: `
             <div ng-show="vm.loading" style="text-align: center">
-              <loader min-height="'50px'"/>
+              <loader min-height="'50px'"></loader>
             </div>
         `,
         controllerAs: 'vm',

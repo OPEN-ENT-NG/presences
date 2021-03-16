@@ -6,6 +6,10 @@ import http from "axios";
 import rights from "../../rights";
 
 interface ViewModel {
+    $onInit(): any;
+
+    $onDestroy(): any;
+
     isMultipleSlot: boolean;
     dayCourse: Courses;
     register: Register;
@@ -31,20 +35,28 @@ interface ViewModel {
 
 declare let window: any;
 
-export const dayCourse = ng.controller('DayCourse', ['$scope', async function ($scope) {
+export const dayCourse = ng.controller('DayCourse', ['$scope', function ($scope) {
     const vm: ViewModel = this;
 
-    vm.dayCourse = new Courses();
-    vm.register = new Register();
+    vm.$onInit = async () => {
+        vm.dayCourse = new Courses();
+        vm.register = new Register();
+        let registerTimeSlot: any = await Me.preference(PreferencesUtils.PREFERENCE_KEYS.PRESENCE_REGISTER);
+        vm.isMultipleSlot = ('multipleSlot' in registerTimeSlot) ? registerTimeSlot.multipleSlot : await initMultipleSlotPreference();
 
-    let registerTimeSlot = await Me.preference(PreferencesUtils.PREFERENCE_KEYS.PRESENCE_REGISTER);
+        /* on (watch) */
+        $scope.$watch(() => window.structure, async () => {
+            if (window.structure) {
+                loadCourses();
+            }
+        });
+
+    };
 
     const initMultipleSlotPreference = async (): Promise<boolean> => {
         await PresencesPreferenceUtils.updatePresencesRegisterPreference(true);
         return true;
     };
-
-    vm.isMultipleSlot = ('multipleSlot' in registerTimeSlot) ? registerTimeSlot.multipleSlot : await initMultipleSlotPreference();
 
     const loadCourses = async (): Promise<void> => {
         let start_date = DateUtils.format(new Date(), DateUtils.FORMAT["YEAR-MONTH-DAY"]);
@@ -131,11 +143,7 @@ export const dayCourse = ng.controller('DayCourse', ['$scope', async function ($
     const isForgotten = function (start_date): boolean {
         return moment().isAfter(moment(start_date).add(15, 'm'));
     };
-    
-    /* on (watch) */
-    $scope.$watch(() => window.structure, async () => {
-        if (window.structure) {
-            loadCourses();
-        }
-    });
+
+    vm.$onDestroy = () => {
+    };
 }]);

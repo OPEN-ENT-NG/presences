@@ -6,6 +6,10 @@ import {DateUtils} from "@common/utils";
 declare let window: any;
 
 interface IViewModel {
+    $onInit(): any;
+
+    $onDestroy(): any;
+
     statementsAbsences: StatementsAbsences;
     filter: IStatementsAbsencesRequest;
 
@@ -78,8 +82,17 @@ export const WidgetStatementsAbsences = ng.directive('widgetStatementsAbsences',
                 controllerAs: 'vm',
                 bindToController: true,
                 replace: true,
-                controller: async function ($scope) {
+                controller: function ($scope) {
                     const vm: IViewModel = <IViewModel>this;
+
+                    vm.$onInit = () => {
+                        /* on  (watch) */
+                        $scope.$watch(() => window.structure, () => {
+                            if ('structure' in window) {
+                                load();
+                            }
+                        });
+                    };
 
                     const load = async (): Promise<void> => {
                         vm.statementsAbsences = new StatementsAbsences(window.structure.id);
@@ -94,12 +107,6 @@ export const WidgetStatementsAbsences = ng.directive('widgetStatementsAbsences',
                         $scope.$apply();
                     }
 
-                    /* on  (watch) */
-                    $scope.$watch(() => window.structure, () => {
-                        if ('structure' in window) {
-                            load();
-                        }
-                    });
                 },
                 link: function ($scope, $element: HTMLDivElement) {
                     const vm: IViewModel = $scope.vm;
