@@ -49,7 +49,7 @@ interface ViewModel {
 
 export const incidentsController = ng.controller('IncidentsController',
     ['$scope', '$location', 'IncidentService', 'ViescolaireService',
-        async function ($scope: Scope, $location, IncidentService: IncidentService, viescolaireService: IViescolaireService) {
+        function ($scope: Scope, $location, IncidentService: IncidentService, viescolaireService: IViescolaireService) {
             const vm: ViewModel = this;
             vm.notifications = [];
             vm.filter = {
