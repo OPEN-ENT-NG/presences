@@ -1,4 +1,4 @@
-import {ng, idiom as lang} from 'entcore';
+import {idiom as lang, ng} from 'entcore';
 
 interface EventLegend {
     canShow: boolean;
@@ -8,6 +8,10 @@ interface EventLegend {
 }
 
 interface IViewModel {
+    $onInit(): any;
+
+    $onDestroy(): any;
+
     absence: boolean,
     absenceNoReason: boolean,
     absenceNotRegularized: boolean,
@@ -58,7 +62,9 @@ export const EventsLegend = ng.directive('eventsLegend', () => {
         replace: true,
         controller: function () {
             const vm: IViewModel = <IViewModel>this;
-            vm.eventsLegend = [
+
+            vm.$onInit = () => {
+                vm.eventsLegend = [
                 {canShow: vm.absence, style: "absence-no-reason", legendTitle: "presences.register.event_type.absences"},
                 {canShow: vm.absenceNoReason, style: "absence-no-reason", legendTitle: "presences.register.event_type.abs.without.reasons"},
                 {canShow: vm.absenceNotRegularized, style: "absence-not-regularized", legendTitle: "presences.register.event_type.abs.not.regularized"},
@@ -72,6 +78,8 @@ export const EventsLegend = ng.directive('eventsLegend', () => {
                 {canShow: vm.widgetForgottenNotebook, style: "forgotten-notebook", legendTitle: "presences.register.event_type.forgotten.notebook", widget: "forgotten-notebook"},
                 {canShow: vm.incident, style: "incident", legendTitle: "presences.register.event_type.incident"},
             ];
+
+            };
 
             vm.getLegendTitle = (legend: string): string => {
                 return lang.translate(legend);
