@@ -7,6 +7,10 @@ import {SearchService} from "@common/services";
 declare let window: any;
 
 interface IViewModel {
+    $onInit(): any;
+
+    $onDestroy(): any;
+
     form: IPunishmentBody;
     punishment: IPunishment;
     usersSearch: UsersSearch;
@@ -77,26 +81,28 @@ export const PunishmentDutyForm = ng.directive('punishmentDutyForm', ['SearchSer
             replace: true,
             controller: function () {
                 const vm: IViewModel = <IViewModel>this;
-                if (!vm.punishment.id) {
-                    vm.form.owner_id = model.me.userId;
-                    vm.date = moment().startOf('day');
-                    vm.form.fields = {
-                        delay_at: DateUtils.format(vm.date, DateUtils.FORMAT["YEAR-MONTH-DAY-HOUR-MIN-SEC"]),
-                        instruction: ""
-                    } as IPDutyField;
-                    vm.owner = model.me;
-                } else {
-                    vm.form.owner_id = vm.punishment.owner.id;
-                    vm.form.fields = vm.punishment.fields;
-                    if (!(Object.keys(vm.form.fields).length > 0)) {
+                vm.$onInit = () => {
+                    if (!vm.punishment || !vm.punishment.id) {
+                        vm.form.owner_id = model.me.userId;
+                        vm.date = moment().startOf('day');
                         vm.form.fields = {
                             delay_at: DateUtils.format(vm.date, DateUtils.FORMAT["YEAR-MONTH-DAY-HOUR-MIN-SEC"]),
                             instruction: ""
                         } as IPDutyField;
+                        vm.owner = model.me;
+                    } else {
+                        vm.form.owner_id = vm.punishment.owner.id;
+                        vm.form.fields = vm.punishment.fields;
+                        if (!(Object.keys(vm.form.fields).length > 0)) {
+                            vm.form.fields = {
+                                delay_at: DateUtils.format(vm.date, DateUtils.FORMAT["YEAR-MONTH-DAY-HOUR-MIN-SEC"]),
+                                instruction: ""
+                            } as IPDutyField;
+                        }
+                        vm.date = moment((<IPDutyField>vm.form.fields).delay_at);
+                        vm.owner = vm.punishment.owner;
                     }
-                    vm.date = moment((<IPDutyField>vm.form.fields).delay_at);
-                    vm.owner = vm.punishment.owner;
-                }
+                };
             },
             link: function ($scope, $element: HTMLDivElement) {
                 const vm: IViewModel = $scope.vm;
@@ -127,11 +133,11 @@ export const PunishmentDutyForm = ng.directive('punishmentDutyForm', ['SearchSer
 
                 $scope.$watch(() => vm.date, () => vm.formatDate());
 
-                $scope.$on('$destroy', () => {
+                vm.$onDestroy = () => {
                     vm.form = {} as IPunishmentBody;
                     vm.owner = null;
                     vm.ownerSearch = '';
-                });
+                };
             }
         };
     }]);

@@ -7,6 +7,10 @@ import {UsersSearch} from "@common/utils";
 declare let window: any;
 
 interface IViewModel {
+    $onInit(): any;
+
+    $onDestroy(): any;
+
     form: IPunishmentBody;
     punishment: IPunishment;
     usersSearch: UsersSearch;
@@ -57,15 +61,18 @@ export const PunishmentBlameForm = ng.directive('punishmentBlameForm', ['SearchS
             replace: false,
             controller: function () {
                 const vm: IViewModel = <IViewModel>this;
-                if (!vm.punishment.id) {
-                    vm.form.owner_id = model.me.userId;
-                    vm.owner = model.me;
-                    vm.form.fields = {} as IPBlameField;
-                } else {
-                    vm.form.owner_id = vm.punishment.owner.id;
-                    vm.owner = vm.punishment.owner;
-                    vm.form.fields = {} as IPBlameField;
-                }
+                vm.$onInit = () => {
+                    if (!vm.punishment || !vm.punishment.id) {
+                        vm.form.owner_id = model.me.userId;
+                        vm.owner = model.me;
+                        vm.form.fields = {} as IPBlameField;
+                    } else {
+                        vm.form.owner_id = vm.punishment.owner.id;
+                        vm.owner = vm.punishment.owner;
+                        vm.form.fields = {} as IPBlameField;
+                    }
+                };
+
             },
             link: function ($scope, $element: HTMLDivElement) {
                 const vm: IViewModel = $scope.vm;
@@ -90,11 +97,11 @@ export const PunishmentBlameForm = ng.directive('punishmentBlameForm', ['SearchS
                     $scope.$apply();
                 };
 
-                $scope.$on('$destroy', () => {
+                vm.$onDestroy = () => {
                     vm.form = {} as IPunishmentBody;
                     vm.owner = null;
                     vm.ownerSearch = '';
-                });
+                };
             }
         };
     }]);

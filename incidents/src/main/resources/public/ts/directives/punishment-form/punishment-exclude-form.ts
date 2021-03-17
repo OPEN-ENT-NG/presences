@@ -12,6 +12,10 @@ import {Idiom} from "@common/interfaces";
 declare let window: any;
 
 interface IViewModel {
+    $onInit(): any;
+
+    $onDestroy(): any;
+
     form: IPunishmentBody;
     punishment: IPunishment;
     students: Array<Student>;
@@ -146,35 +150,37 @@ export const PunishmentExcludeForm = ng.directive('punishmentExcludeForm', ['Sea
             replace: true,
             controller: function () {
                 const vm: IViewModel = <IViewModel>this;
-                vm.lang = idiom;
-                vm.isAddingAbsence = false;
-                if (!vm.punishment.id) {
-                    vm.form.owner_id = model.me.userId;
-                    vm.start_date = moment().startOf('day');
-                    vm.end_date = moment().endOf('day');
-                    vm.form.fields = {
-                        start_date: DateUtils.format(vm.start_date, DateUtils.FORMAT["YEAR-MONTH-DAY-HOUR-MIN-SEC"]),
-                        end_date: DateUtils.format(vm.end_date, DateUtils.FORMAT["YEAR-MONTH-DAY-HOUR-MIN-SEC"]),
-                        mandatory_presence: false,
-                    } as IPExcludeField;
-                    vm.owner = model.me;
-                } else {
-                    vm.form.owner_id = vm.punishment.owner.id;
-                    vm.form.fields = vm.punishment.fields;
-                    if (!(Object.keys(vm.form.fields).length > 0)) {
+                vm.$onInit = () => {
+                    vm.lang = idiom;
+                    vm.isAddingAbsence = false;
+                    if (!vm.punishment || !vm.punishment.id) {
+                        vm.form.owner_id = model.me.userId;
+                        vm.start_date = moment().startOf('day');
+                        vm.end_date = moment().endOf('day');
                         vm.form.fields = {
                             start_date: DateUtils.format(vm.start_date, DateUtils.FORMAT["YEAR-MONTH-DAY-HOUR-MIN-SEC"]),
                             end_date: DateUtils.format(vm.end_date, DateUtils.FORMAT["YEAR-MONTH-DAY-HOUR-MIN-SEC"]),
                             mandatory_presence: false,
                         } as IPExcludeField;
+                        vm.owner = model.me;
+                    } else {
+                        vm.form.owner_id = vm.punishment.owner.id;
+                        vm.form.fields = vm.punishment.fields;
+                        if (!(Object.keys(vm.form.fields).length > 0)) {
+                            vm.form.fields = {
+                                start_date: DateUtils.format(vm.start_date, DateUtils.FORMAT["YEAR-MONTH-DAY-HOUR-MIN-SEC"]),
+                                end_date: DateUtils.format(vm.end_date, DateUtils.FORMAT["YEAR-MONTH-DAY-HOUR-MIN-SEC"]),
+                                mandatory_presence: false,
+                            } as IPExcludeField;
+                        }
+                        vm.start_date = moment((<IPExcludeField>vm.form.fields).start_at).startOf('day');
+                        vm.end_date = moment((<IPExcludeField>vm.form.fields).end_at).endOf('day');
+                        vm.owner = vm.punishment.owner;
                     }
-                    vm.start_date = moment((<IPExcludeField>vm.form.fields).start_at).startOf('day');
-                    vm.end_date = moment((<IPExcludeField>vm.form.fields).end_at).endOf('day');
-                    vm.owner = vm.punishment.owner;
-                }
 
-                vm.oldStartAt = moment(vm.start_date);
-                vm.oldEndAt = vm.end_date;
+                    vm.oldStartAt = moment(vm.start_date);
+                    vm.oldEndAt = vm.end_date;
+                };
             },
             link: function ($scope, $element: HTMLDivElement) {
                 const vm: IViewModel = $scope.vm;
@@ -308,12 +314,12 @@ export const PunishmentExcludeForm = ng.directive('punishmentExcludeForm', ['Sea
                     }
                 });
 
-                $scope.$on('$destroy', () => {
+                vm.$onDestroy = () => {
                     vm.form = {} as IPunishmentBody;
                     vm.owner = null;
                     vm.ownerSearch = '';
                     vm.absencesByStudentIds = null;
-                });
+                };
             }
         };
     }]);

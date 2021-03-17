@@ -7,6 +7,10 @@ import {SearchService} from "@common/services";
 declare let window: any;
 
 interface IViewModel {
+    $onInit(): any;
+
+    $onDestroy(): any;
+
     form: IPunishmentBody;
     punishment: IPunishment;
     usersSearch: UsersSearch;
@@ -146,81 +150,84 @@ export const PunishmentDetentionForm = ng.directive('punishmentDetentionForm', [
             replace: true,
             controller: function () {
                 const vm: IViewModel = <IViewModel>this;
-                vm.timeSlotHourPeriod = TimeSlotHourPeriod;
-                vm.selectTimeSlotText = lang.translate('presences.pick.timeslot');
 
-                const setTimeSlot = () => {
-                    let start = DateUtils.format((<IPDetentionField>vm.form.fields).start_at, DateUtils.FORMAT["HOUR-MINUTES"]);
-                    let end = DateUtils.format((<IPDetentionField>vm.form.fields).end_at, DateUtils.FORMAT["HOUR-MINUTES"]);
-                    vm.timeSlotTimePeriod = {
-                        start: {endHour: "", id: "", name: "", startHour: ""},
-                        end: {endHour: "", id: "", name: "", startHour: ""}
-                    };
-                    vm.timeSlots.forEach((slot: ITimeSlot) => {
-                        if (slot.startHour === start) {
-                            vm.timeSlotTimePeriod.start = slot;
+                vm.$onInit = () => {
+                    vm.timeSlotHourPeriod = TimeSlotHourPeriod;
+                    vm.selectTimeSlotText = lang.translate('presences.pick.timeslot');
+
+                    const setTimeSlot = () => {
+                        let start = DateUtils.format((<IPDetentionField>vm.form.fields).start_at, DateUtils.FORMAT["HOUR-MINUTES"]);
+                        let end = DateUtils.format((<IPDetentionField>vm.form.fields).end_at, DateUtils.FORMAT["HOUR-MINUTES"]);
+                        vm.timeSlotTimePeriod = {
+                            start: {endHour: "", id: "", name: "", startHour: ""},
+                            end: {endHour: "", id: "", name: "", startHour: ""}
+                        };
+                        vm.timeSlots.forEach((slot: ITimeSlot) => {
+                            if (slot.startHour === start) {
+                                vm.timeSlotTimePeriod.start = slot;
+                            }
+                            if (slot.endHour === end) {
+                                vm.timeSlotTimePeriod.end = slot;
+                            }
+                        });
+                        if (vm.timeSlotTimePeriod.start.startHour !== "" && vm.timeSlotTimePeriod.end.endHour !== "") {
+                            vm.date.isFree = false;
                         }
-                        if (slot.endHour === end) {
-                            vm.timeSlotTimePeriod.end = slot;
-                        }
-                    });
-                    if (vm.timeSlotTimePeriod.start.startHour !== "" && vm.timeSlotTimePeriod.end.endHour !== "") {
-                        vm.date.isFree = false;
-                    }
-                };
+                    };
 
-                // if edit mode
-                if (!vm.punishment.id) {
-                    vm.form.owner_id = model.me.userId;
-                    vm.date = {
-                        date: moment(),
-                        start_time: moment().set({second: 0, millisecond: 0}).toDate(),
-                        end_time: moment().add(1, 'h').set({second: 0, millisecond: 0}).toDate(),
-                        isFree: false
-                    };
-                    vm.timeSlotTimePeriod = {
-                        start: null,
-                        end: null
-                    };
-                    vm.form.fields = {
-                        start_at: DateUtils.format(vm.date.start_time, DateUtils.FORMAT["YEAR-MONTH-DAY-HOUR-MIN-SEC"]),
-                        end_at: DateUtils.format(vm.date.end_time, DateUtils.FORMAT["YEAR-MONTH-DAY-HOUR-MIN-SEC"]),
-                        place: ""
-                    } as IPDetentionField;
-                    vm.owner = model.me;
-                } else {
-                    // create mode
-                    vm.form.owner_id = vm.punishment.owner.id;
-                    vm.form.fields = vm.punishment.fields;
-
-                    vm.date = {
-                        date: moment((<IPDetentionField>vm.form.fields).start_at),
-                        start_time: moment((<IPDetentionField>vm.form.fields).start_at).set({
-                            second: 0,
-                            millisecond: 0
-                        }).toDate(),
-                        end_time: moment((<IPDetentionField>vm.form.fields).end_at).set({
-                            second: 0,
-                            millisecond: 0
-                        }).toDate(),
-                        isFree: true
-                    };
-                    setTimeSlot();
-                    // on switch category (in case we reset)
-                    if (!(Object.keys(vm.form.fields).length > 0)) {
+                    // if edit mode
+                    if (!vm.punishment || !vm.punishment.id) {
+                        vm.form.owner_id = model.me.userId;
+                        vm.date = {
+                            date: moment(),
+                            start_time: moment().set({second: 0, millisecond: 0}).toDate(),
+                            end_time: moment().add(1, 'h').set({second: 0, millisecond: 0}).toDate(),
+                            isFree: false
+                        };
+                        vm.timeSlotTimePeriod = {
+                            start: null,
+                            end: null
+                        };
                         vm.form.fields = {
                             start_at: DateUtils.format(vm.date.start_time, DateUtils.FORMAT["YEAR-MONTH-DAY-HOUR-MIN-SEC"]),
                             end_at: DateUtils.format(vm.date.end_time, DateUtils.FORMAT["YEAR-MONTH-DAY-HOUR-MIN-SEC"]),
                             place: ""
                         } as IPDetentionField;
-                        vm.date.isFree = false;
-                        vm.timeSlotTimePeriod = {
-                            start: null,
-                            end: null
+                        vm.owner = model.me;
+                    } else {
+                        // create mode
+                        vm.form.owner_id = vm.punishment.owner.id;
+                        vm.form.fields = vm.punishment.fields;
+
+                        vm.date = {
+                            date: moment((<IPDetentionField>vm.form.fields).start_at),
+                            start_time: moment((<IPDetentionField>vm.form.fields).start_at).set({
+                                second: 0,
+                                millisecond: 0
+                            }).toDate(),
+                            end_time: moment((<IPDetentionField>vm.form.fields).end_at).set({
+                                second: 0,
+                                millisecond: 0
+                            }).toDate(),
+                            isFree: true
                         };
+                        setTimeSlot();
+                        // on switch category (in case we reset)
+                        if (!(Object.keys(vm.form.fields).length > 0)) {
+                            vm.form.fields = {
+                                start_at: DateUtils.format(vm.date.start_time, DateUtils.FORMAT["YEAR-MONTH-DAY-HOUR-MIN-SEC"]),
+                                end_at: DateUtils.format(vm.date.end_time, DateUtils.FORMAT["YEAR-MONTH-DAY-HOUR-MIN-SEC"]),
+                                place: ""
+                            } as IPDetentionField;
+                            vm.date.isFree = false;
+                            vm.timeSlotTimePeriod = {
+                                start: null,
+                                end: null
+                            };
+                        }
+                        vm.owner = vm.punishment.owner;
                     }
-                    vm.owner = vm.punishment.owner;
-                }
+                };
             },
             link: function ($scope, $element: HTMLDivElement) {
                 const vm: IViewModel = $scope.vm;
@@ -276,11 +283,11 @@ export const PunishmentDetentionForm = ng.directive('punishmentDetentionForm', [
                     $scope.$apply();
                 };
 
-                $scope.$on('$destroy', () => {
+                vm.$onDestroy = () => {
                     vm.form = {} as IPunishmentBody;
                     vm.owner = null;
                     vm.ownerSearch = '';
-                });
+                };
             }
         };
     }]);
