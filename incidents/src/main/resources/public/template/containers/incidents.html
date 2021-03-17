@@ -1,5 +1,7 @@
 <div class="exemptions" ng-controller="IncidentsController as vm">
     <toasts notifications="vm.notifications"></toasts>
-    <div static-include="/incidents/public/template/incidents/incidentFilters.html"></div>
-    <div static-include="/incidents/public/template/incidents/incidentContent.html"></div>
+    <!-- Header / Filters / Search bar -->
+    <div ng-include="'/incidents/public/template/incidents/incidentFilters.html'"></div>
+    <!-- Incidents Content -->
+    <div ng-include="'/incidents/public/template/incidents/incidentContent.html'"></div>
 </div>

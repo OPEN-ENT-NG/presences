@@ -1,6 +1,9 @@
 <div class="exemptions" ng-controller="ExemptionsController as vm">
     <toasts notifications="vm.notifications"></toasts>
-    <div static-include="/presences/public/template/exemptions/filters.html"></div>
-    <div static-include="/presences/public/template/exemptions/actions.html"></div>
-    <div static-include="/presences/public/template/exemptions/content.html"></div>
+    <!-- Header / search bar -->
+    <div ng-include="'/presences/public/template/exemptions/filters.html'"></div>
+    <!-- Header / Filter -->
+    <div ng-include="'/presences/public/template/exemptions/actions.html'"></div>
+    <!-- Content Exemptions -->
+    <div ng-include="'/presences/public/template/exemptions/content.html'"></div>
 </div>

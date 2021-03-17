@@ -1,5 +1,8 @@
 <div class="alerts" ng-controller="AlertsController as vm">
-    <div static-include="/presences/public/template/alerts/header.html"></div>
-    <div static-include="/presences/public/template/alerts/content.html"></div>
-    <div static-include="/presences/public/template/alerts/table.html"></div>
+    <!-- Header -->
+    <div ng-include="'/presences/public/template/alerts/header.html'"></div>
+    <!-- Content alerts (empty state included only) -->
+    <div ng-include="'/presences/public/template/alerts/content.html'"></div>
+    <!-- Content alerts -->
+    <div ng-include="'/presences/public/template/alerts/table.html'"></div>
 </div>
