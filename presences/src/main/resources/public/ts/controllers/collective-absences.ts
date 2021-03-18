@@ -5,8 +5,10 @@ import {ICollectiveAbsence, ICollectiveAbsenceBody, ICollectiveAbsencesResponse}
 import {CollectiveAbsenceService} from '@presences/services/CollectiveAbsenceService';
 import {GroupsSearch} from '@common/utils/autocomplete/groupsSearch';
 import {Group, GroupService} from '@common/services';
-import {COLLECTIVE_ABSENCE_FORM_EVENTS} from '../core/enum/collective-absences-events';
-import {SNIPLET_FORM_EMIT_COLLECTIVE_ABSENCES_EVENTS} from '../core/enum/collective-absences-events';
+import {
+    COLLECTIVE_ABSENCE_FORM_EVENTS,
+    SNIPLET_FORM_EMIT_COLLECTIVE_ABSENCES_EVENTS
+} from '../core/enum/collective-absences-events';
 
 
 declare let window: any;
@@ -49,8 +51,8 @@ interface IViewModel {
 
 export const collectiveAbsencesController = ng.controller('CollectiveAbsencesController',
     ['$scope', 'route', '$location', 'CollectiveAbsenceService', 'SearchService', 'GroupService',
-        async function ($scope, route, $location, collectiveAbsenceService: CollectiveAbsenceService,
-                        searchService: SearchService, groupService: GroupService) {
+        function ($scope, route, $location, collectiveAbsenceService: CollectiveAbsenceService,
+                  searchService: SearchService, groupService: GroupService) {
             const vm: IViewModel = this;
 
             vm.filter = {

@@ -57,8 +57,8 @@ interface IViewModel {
 
 export const statementsAbsencesController = ng.controller('StatementsAbsencesController',
     ['$scope', 'route', '$location', 'SearchService', 'StatementsAbsencesService', 'ViescolaireService',
-        async function ($scope, route, $location, searchService: SearchService,
-                        statementAbsenceService: IStatementsAbsencesService, viescolaireService: IViescolaireService) {
+        function ($scope, route, $location, searchService: SearchService,
+                  statementAbsenceService: IStatementsAbsencesService, viescolaireService: IViescolaireService) {
 
             const vm: IViewModel = this;
 
