@@ -136,7 +136,7 @@
                 <i18n>presences.all.none</i18n>
             </label>
             <label class="chip"
-                   ng-repeat="reason in vm.eventReasonsType track by $index|orderBy: 'label'"
+                   ng-repeat="reason in vm.eventReasonsType track by $index"
                    ng-class="{ selected: reason.isSelected &&
                    (!vm.formFilter.unjustified ||
                    (vm.formFilter.unjustified &&
