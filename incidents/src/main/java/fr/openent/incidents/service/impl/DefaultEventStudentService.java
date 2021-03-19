@@ -177,9 +177,6 @@ public class DefaultEventStudentService implements EventStudentService {
 
     // Send Punishment request to get total result for a student (responding to each filters)
     private void getCountPunishment(MultiMap body, String studentId, Handler<Either<String, JsonArray>> handler) {
-        body.add("id", (String) null);
-        body.add("start_at", body.get("start_at"));
-        body.add("end_at", body.get("end_at"));
         body.add("limit", "");
         body.add("offset", "");
         UserInfos user = new UserInfos();
@@ -200,11 +197,8 @@ public class DefaultEventStudentService implements EventStudentService {
                 incidentsService.get(structureId, start, end, studentId, limit, offset, handler);
                 break;
             case PUNISHMENT:
-                body.add("id", (String) null);
-                body.add("start_at", body.get("start_at"));
-                body.add("end_at", body.get("end_at"));
-                body.add("limit", limit);
-                body.add("offset", offset);
+                body.add("limit", limit != null ? limit : "");
+                body.add("offset", offset != null ? offset : "");
                 UserInfos user = new UserInfos();
                 user.setUserId(studentId);
                 punishmentService.get(user, body, true, result -> {
