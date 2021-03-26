@@ -50,7 +50,7 @@
                          ng-click="vm.editExemption(exemption)"
                          ng-src="/viescolaire/structures/[[exemption.structureId]]/students/[[exemption.studentId]]/picture">
                     <span><student-name name="exemption.student.lastName + ' ' + exemption.student.firstName"
-                                        id="exemption.student.idEleve"/></span>
+                                        id="exemption.student.idEleve"></student-name></span>
                 </th>
                 <th class="uppercase playdown text-center" ng-click="vm.editExemption(exemption)">
                     [[exemption.student.classeName]]
