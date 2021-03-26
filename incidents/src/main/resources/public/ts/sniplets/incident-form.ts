@@ -150,7 +150,7 @@ const vm: ViewModel = {
 
     createIncident: async function () {
         try {
-            if (!vm.incidentForm.partner.hasOwnProperty('id')) {
+            if (!vm.incidentForm.partner || !vm.incidentForm.partner.hasOwnProperty('id')) {
                 vm.incidentForm.partner = vm.emptyParameter;
             }
             let response = await vm.incidentForm.create();

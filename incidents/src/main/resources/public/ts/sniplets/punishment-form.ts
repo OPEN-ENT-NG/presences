@@ -86,7 +86,7 @@ const vm: ViewModel = {
     openPunishmentLightbox(): void {
         vm.studentsSearch = new StudentsSearch(window.structure.id, SearchService);
         vm.form = {} as IPunishmentBody;
-        vm.form.type = {} as IPunishmentType;
+        vm.form.type = null as IPunishmentType;
         vm.getStudentsFromView();
         vm.punishment = {} as IPunishment;
         // check if add empty state

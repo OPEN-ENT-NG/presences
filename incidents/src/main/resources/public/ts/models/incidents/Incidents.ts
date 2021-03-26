@@ -70,10 +70,10 @@ export class Incident {
         this.description = "";
         this.processed = false;
 
-        this.place = {} as Place;
-        this.partner = {} as Partner;
-        this.incidentType = {} as IncidentType;
-        this.seriousness = {} as Seriousness;
+        this.place = null as Place;
+        this.partner = null as Partner;
+        this.incidentType = null as IncidentType;
+        this.seriousness = null as Seriousness;
 
         this.protagonists = new Array<ProtagonistForm>();
     }
@@ -112,10 +112,10 @@ export class Incident {
 
     isIncidentFormValid(): boolean {
         // set empty object on undefined while selecting default value
-        this.place = this.place == undefined ? {} as Place : this.place;
-        this.partner = this.partner == undefined ? {} as Partner : this.partner;
-        this.incidentType = this.incidentType == undefined ? {} as IncidentType : this.incidentType;
-        this.seriousness = this.seriousness == undefined ? {} as Seriousness : this.seriousness;
+        this.place = this.place == undefined ? null as Place : this.place;
+        this.partner = this.partner == undefined ? null as Partner : this.partner;
+        this.incidentType = this.incidentType == undefined ? null as IncidentType : this.incidentType;
+        this.seriousness = this.seriousness == undefined ? null as Seriousness : this.seriousness;
 
         return this.owner
             && this.description
