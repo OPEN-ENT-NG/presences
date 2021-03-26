@@ -177,7 +177,7 @@ const vm: ViewModel = {
         vm.presence.owner.displayName = model.me.username;
         vm.presence.owner.id = model.me.userId;
         vm.presence.structureId = window.structure.id;
-        vm.presence.discipline = {id: 0} as Discipline;
+        vm.presence.discipline = {id: null} as Discipline;
         vm.presence.markedStudents = [];
     },
 
