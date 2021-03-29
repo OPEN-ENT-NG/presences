@@ -287,8 +287,8 @@ const vm: ViewModel = {
     closePresenceLightbox(): void {
         vm.createPresenceLightBox = false;
         vm.timeSlotTimePeriod = {
-            start: {name: "", startHour: "", endHour: "", id: ""},
-            end: {name: "", startHour: "", endHour: "", id: ""}
+            start: null,
+            end: null
         };
     },
 
