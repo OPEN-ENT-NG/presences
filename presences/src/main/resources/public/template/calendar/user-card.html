@@ -2,11 +2,8 @@
     <div class="calendar-user-card-container">
         <div class="user-cards">
             <div class="user-card">
-                <div class="avatar"
-                     ng-style="{'background-image': 'url(/viescolaire/structures/' + vm.presences.structureId + '/students/' +
-                     vm.filter.student.id + '/picture)'}">
-                    &nbsp;
-                </div>
+                <img class="avatar" ng-src="[[ vm.getStudentPicture(vm.presences.structureId, vm.filter.student.id) ]]"
+                     alt="">
                 <div>
                     <h2 class="ng-binding">
                         <student-name name="vm.filter.student.displayName" id="vm.filter.student.id"></student-name>
@@ -23,10 +20,7 @@
             <div class="student" ng-click="vm.reloadCalendarByStudent(student); userCard.show = false;"
                  ng-repeat="student in vm.filter.students"
                  ng-show="userCard.show">
-                <div class="avatar" ng-style="{'background-image': 'url(/viescolaire/structures/'
-                 + vm.presences.structureId + /students/ + vm.filter.student.id + '/picture)'}">
-                    &nbsp;
-                </div>
+                <img class="avatar" ng-src="[[vm.getStudentPicture(vm.presences.structureId, student.id)]]" alt="">
                 <div>
                     [[student.displayName]]
                 </div>

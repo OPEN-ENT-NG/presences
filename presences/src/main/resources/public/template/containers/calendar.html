@@ -29,7 +29,10 @@
             </div>
         </div>
     </div>
+
+    <!-- User panel -->
     <div ng-include="'/presences/public/template/calendar/user-card.html'"></div>
+
     <div class="calendar-container row">
         <!--        item-tooltip-template="calendar/course-tooltip"-->
         <calendar enable-display-modes="true"
@@ -38,7 +41,7 @@
                   items="vm.courses.list"
                   slots="vm.slots.list"
                   show-quarter-hours="true"
-                  show-next-previous-button="true"/>
+                  show-next-previous-button="true"></calendar>
         <loader ng-show="vm.show.loader" title="lang.translate('presences.register.loading.text')"></loader>
     </div>
 

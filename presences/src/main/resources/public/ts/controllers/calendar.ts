@@ -74,6 +74,8 @@ interface ViewModel {
 
     formatExemptionDate(date: any): string;
 
+    getStudentPicture(structure: string, studentId: string): string;
+
     getEventType(event: CourseEvent): string;
 
     getEventTypeDate(event: CourseEvent): string;
@@ -282,6 +284,10 @@ export const calendarController = ng.controller('CalendarController',
 
             vm.formatExemptionDate = function (date) {
                 return DateUtils.format(date, DateUtils.FORMAT["DAY-MONTH-YEAR"]);
+            };
+
+            vm.getStudentPicture = (structure: string, studentId: string): string => {
+                return '/viescolaire/structures/' + structure + '/students/' + studentId + '/picture';
             };
 
             vm.formatPresenceDate = function (date: string): string {
