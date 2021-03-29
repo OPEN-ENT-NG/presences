@@ -177,6 +177,7 @@ export const PunishmentDetentionForm = ng.directive('punishmentDetentionForm', [
 
                     // if edit mode
                     if (!vm.punishment || !vm.punishment.id) {
+                        vm.form = {} as IPunishmentBody;
                         vm.form.owner_id = model.me.userId;
                         vm.date = {
                             date: moment(),

@@ -153,6 +153,7 @@ export const PunishmentExcludeForm = ng.directive('punishmentExcludeForm', ['Sea
                 vm.$onInit = () => {
                     vm.lang = idiom;
                     vm.isAddingAbsence = false;
+                    vm.form = {} as IPunishmentBody;
                     if (!vm.punishment || !vm.punishment.id) {
                         vm.form.owner_id = model.me.userId;
                         vm.start_date = moment().startOf('day');
@@ -241,11 +242,11 @@ export const PunishmentExcludeForm = ng.directive('punishmentExcludeForm', ['Sea
                 }
 
                 vm.getAnomalyStudents = function (): Array<Student> {
-                    if (vm.punishment.id) {
+                    if (vm.punishment && vm.punishment.id) {
                         let absences: Array<IAbsence> = vm.punishment.student && vm.absencesByStudentIds ?
                             vm.absencesByStudentIds[vm.punishment.student.id] : [];
-                            // get element when get more than 1 absence or absences dates are not matching initial excluded dates
-                        if(absences.length > 1 || (absences[0] && !vm.isAbsenceMatchingExcludedDates(absences[0], vm.oldStartAt, vm.oldEndAt))) {
+                        // get element when get more than 1 absence or absences dates are not matching initial excluded dates
+                        if (absences.length > 1 || (absences[0] && !vm.isAbsenceMatchingExcludedDates(absences[0], vm.oldStartAt, vm.oldEndAt))) {
                             return [vm.punishment.student];
                         }
                         return [];
@@ -281,7 +282,7 @@ export const PunishmentExcludeForm = ng.directive('punishmentExcludeForm', ['Sea
                 }
 
                 vm.disableAbsence = function (): boolean {
-                    return !!vm.punishment.id && (vm.isStudentAnomaly(vm.punishment.student.id) || !!vm.getUpdateMatchingAbsence(vm.punishment.student.id));
+                    return (vm.punishment && !!vm.punishment.id) && (vm.isStudentAnomaly(vm.punishment.student.id) || !!vm.getUpdateMatchingAbsence(vm.punishment.student.id));
                 }
 
                 $scope.$watch(() => vm.start_date, async () => {
