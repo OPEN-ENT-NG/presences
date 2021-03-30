@@ -52,13 +52,16 @@ public class DefaultReasonService implements ReasonService {
     }
 
     private void fetchUsedReason(String structureId, Handler<Either<String, JsonArray>> handler) {
-        String query = "WITH ids AS (" +
-                "SELECT r.id, r.label FROM " + Presences.dbSchema + ".reason r " +
-                "WHERE structure_id = '" + structureId +
-                "' OR structure_id = '-1') " +
-                "SELECT DISTINCT i.id, i.label FROM ids i " +
-                "WHERE (i.id IN (SELECT reason_id FROM " + Presences.dbSchema + ".event))" +
-                "OR (i.id IN (SELECT reason_id FROM " + Presences.dbSchema + ".absence)) ORDER BY label ASC";
+        String query = " SELECT DISTINCT r.id, r.label " +
+                " FROM " + Presences.dbSchema + ".reason r " +
+                " INNER JOIN " + Presences.dbSchema + ".event e on r.id = e.reason_id " +
+                " WHERE r.structure_id = '" + structureId + "' OR r.structure_id = '-1' " +
+                " UNION " +
+                " SELECT DISTINCT r.id, r.label " +
+                " FROM " + Presences.dbSchema + ".reason r " +
+                " INNER JOIN " + Presences.dbSchema + ".absence a on r.id = a.reason_id " +
+                " WHERE r.structure_id = '" + structureId + "' OR r.structure_id = '-1'; ";
+
         Sql.getInstance().raw(query, SqlResult.validResultHandler(handler));
     }
 
