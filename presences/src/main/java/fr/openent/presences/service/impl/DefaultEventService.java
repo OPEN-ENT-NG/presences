@@ -1119,7 +1119,7 @@ public class DefaultEventService implements EventService {
             }
 
             JsonObject settings = event.right().getValue();
-            String recoveryMethod = recoveryMethodUsed != null ? recoveryMethodUsed : settings.getString("event_recovery_method");
+            String recoveryMethod = recoveryMethodUsed != null ? recoveryMethodUsed : settings.getString("event_recovery_method", "");
             switch (recoveryMethod) {
                 case "DAY":
                 case "HOUR": {
