@@ -38,7 +38,7 @@ public class RegistryController extends ControllerHelper {
         String monthParams = params.contains("month") ? params.get("month") : "";
         Matcher m = p.matcher(monthParams);
         if (!params.contains("structureId") || !params.contains("month") ||
-                !params.contains("group") || !params.contains("type") || !m.matches()) {
+                !params.contains("group") || (!params.contains("type") && !params.contains("forgottenNotebook")) || !m.matches()) {
             badRequest(request);
             return;
         }

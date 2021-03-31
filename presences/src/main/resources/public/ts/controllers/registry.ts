@@ -202,65 +202,45 @@ export const registryController = ng.controller('RegistryController', ['$scope',
             return emptyState;
         };
 
-        vm.removeGroup = (item: Group) => {
+        vm.removeGroup = async (item: Group): Promise<void> => {
             vm.filter.groups = vm.filter.groups.filter(element => element.id !== item.id);
             updateGroup();
-            $location.search(vm.params);
-            if (vm.params.type.length === 0 || vm.params.group.length === 0) {
-                vm.registries = [];
-                vm.monthLength = [];
-                vm.emptyState = setEmptyState();
-                $scope.safeApply();
-                return;
-            }
-            getRegisterSummary();
+            await resetRegistries()
         };
 
-        vm.updateMonth = () => {
-            $location.search(vm.params);
-            if (vm.params.type.length === 0 || vm.params.group.length === 0) {
-                vm.registries = [];
-                vm.monthLength = [];
-                vm.emptyState = setEmptyState();
-                $scope.safeApply();
-                return;
-            }
-            getRegisterSummary();
+        vm.updateMonth = async (): Promise<void> => {
+            await resetRegistries()
         };
 
         vm.isFilterActive = (typeName: string) => {
             return vm.params.type.some(type => type === typeName);
         };
 
-        vm.toggleFilter = (typeName: string) => {
+        vm.toggleFilter = async (typeName: string): Promise<void> => {
             if (vm.params.type.indexOf(typeName) > -1) {
                 vm.params.type = vm.params.type.filter(item => item !== typeName)
             } else {
                 vm.params.type.push(typeName);
             }
-            $location.search(vm.params);
-            if (vm.params.type.length === 0 || vm.params.group.length === 0) {
-                vm.registries = [];
-                vm.monthLength = [];
-                vm.emptyState = setEmptyState();
-                $scope.safeApply();
-                return;
-            }
-            getRegisterSummary();
+            await resetRegistries()
         };
 
-        vm.toggleForgottenNotebookFilter = () => {
+        vm.toggleForgottenNotebookFilter = async (): Promise<void> => {
             vm.params.forgottenNotebook = !vm.params.forgottenNotebook;
+            await resetRegistries()
+        };
+
+        const resetRegistries = async (): Promise<void> => {
             $location.search(vm.params);
-            if (vm.params.type.length === 0 || vm.params.group.length === 0) {
+            if ((vm.params.type.length === 0 && !vm.params.forgottenNotebook) || vm.params.group.length === 0) {
                 vm.registries = [];
                 vm.monthLength = [];
                 vm.emptyState = setEmptyState();
                 $scope.safeApply();
                 return;
             }
-            getRegisterSummary();
-        };
+            await getRegisterSummary();
+        }
 
         /* Groups interaction */
         vm.selectGroup = (model, item: Group) => {
