@@ -719,20 +719,22 @@ export const registersController = ng.controller('RegistersController',
              * @param offset
              * @param descendingDate
              */
-            vm.loadCourses = async function (users: string[] = [model.me.userId], groups: string[] = [], structure: string = window.structure.id,
-                                             start_date: string = DateUtils.format(vm.filter.start_date, DateUtils.FORMAT["YEAR-MONTH-DAY"]),
-                                             end_date: string = DateUtils.format(vm.filter.end_date, DateUtils.FORMAT["YEAR-MONTH-DAY"]),
-                                             start_time: string = null,
-                                             end_time: string = null,
-                                             forgotten_registers: boolean = vm.filter.forgotten,
-                                             multipleSlot: boolean = vm.filter.multipleSlot,
-                                             limit?: number, offset?: number,
-                                             descendingDate?: boolean): Promise<void> {
-                if (model.me.profiles.some(profile => profile === "Personnel")) {
+            vm.loadCourses = async (users: Array<string> = [model.me.userId],
+                                    groups: Array<string> = [],
+                                    structure: string = window.structure.id,
+                                    start_date: string = DateUtils.format(vm.filter.start_date, DateUtils.FORMAT["YEAR-MONTH-DAY"]),
+                                    end_date: string = DateUtils.format(vm.filter.end_date, DateUtils.FORMAT["YEAR-MONTH-DAY"]),
+                                    start_time: string = null,
+                                    end_time: string = null,
+                                    forgotten_registers: boolean = vm.filter.forgotten,
+                                    multipleSlot: boolean = vm.filter.multipleSlot,
+                                    limit?: number, offset?: number,
+                                    descendingDate?: boolean): Promise<void> => {
+                if (model.me.profiles.some((profile: string) => profile === 'Personnel')) {
                     multipleSlot = true;
                 }
 
-                if (vm.filter.offset === 0) {
+                if ($route.current.action === 'getRegister' || vm.filter.offset === 0) {
                     vm.courses.clear();
                 }
                 await vm.courses.sync(users, groups, structure, start_date, end_date, start_time, end_time, forgotten_registers, multipleSlot, limit, offset, descendingDate);
