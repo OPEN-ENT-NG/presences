@@ -161,7 +161,7 @@ public class DefaultAbsenceService extends DBService implements AbsenceService {
             }
 
             if (Boolean.TRUE.equals(absenceBody.getBoolean("counsellor_regularisation", false)))
-                regularizeAfterCollectiveCreate(collectiveId, handler);
+                regularizeAfterCollectivePersist(collectiveId, handler);
             else handler.handle(Future.succeededFuture(result.right().getValue()));
         }));
     }
@@ -200,7 +200,7 @@ public class DefaultAbsenceService extends DBService implements AbsenceService {
                 .put("values", params);
     }
 
-    private void regularizeAfterCollectiveCreate(Long collectiveId, Handler<AsyncResult<JsonArray>> handler) {
+    private void regularizeAfterCollectivePersist(Long collectiveId, Handler<AsyncResult<JsonArray>> handler) {
         String query = "UPDATE " + Presences.dbSchema + ".absence " +
                 "SET counsellor_regularisation = ? WHERE collective_id = ?";
         JsonArray params = new JsonArray()
@@ -290,42 +290,70 @@ public class DefaultAbsenceService extends DBService implements AbsenceService {
             List<JsonObject> oldAbsences = oldAbsenceResult.right().getValue().getList();
 
             String query = "UPDATE " + Presences.dbSchema + ".absence " +
-                    "SET start_date = ?, end_date = ?, reason_id = ? WHERE collective_id = ? AND structure_id = ?";
+                    "SET start_date = ?, end_date = ?";
 
             JsonArray values = new JsonArray()
                     .add(absenceBody.getString("start_date"))
                     .add(absenceBody.getString("end_date"));
-            if (absenceBody.getInteger("reason_id") != null) {
-                values.add(absenceBody.getInteger("reason_id"));
-            } else {
-                values.addNull();
+
+            Integer reasonId = absenceBody.getInteger("reason_id");
+            if (reasonId != null) {
+                query += ", reason_id = ?";
+                values.add(reasonId);
             }
 
+            if (absenceBody.getBoolean("counsellor_regularisation") != null) {
+                query += ", counsellor_regularisation = ?";
+                values.add(absenceBody.getBoolean("counsellor_regularisation"));
+            }
+
+            query += " WHERE collective_id = ? AND structure_id = ?";
             values.add(collectiveId)
                     .add(absenceBody.getString("structure_id"));
 
             sql.prepared(query, values, SqlResult.validUniqueResultHandler(absenceResult -> {
-                List<Future<JsonObject>> futures = new ArrayList<>();
-
-                for (JsonObject oldAbsence : oldAbsences) {
-                    Future<JsonObject> future = Future.future();
-                    futures.add(future);
-
-                    absenceBody.put("student_id", oldAbsence.getString("student_id"));
-
-                    afterPersistAbsence(oldAbsence.getLong("id"), absenceBody, oldAbsence, editEvents, user.getUserId(),
-                            FutureHelper.handlerJsonObject(future), absenceResult);
+                if (absenceResult.isLeft()) {
+                    String message = "[Presences@DefaultAbsenceService::updateFromCollective] failed to update absence";
+                    LOGGER.error(message, absenceResult.left().getValue());
+                    handler.handle(Future.failedFuture(message));
+                    return;
                 }
 
-                FutureHelper.all(futures).setHandler(result -> {
-                    if (result.failed()) {
-                        handler.handle(Future.failedFuture(result.cause().getMessage()));
+                regularizedFromCollective(collectiveId, absenceBody.getBoolean("counsellor_regularisation", false), regularizeResult -> {
+                    if (regularizeResult.failed()) {
+                        String message = "[Presences@DefaultAbsenceService::updateFromCollective] failed to regularize absences";
+                        LOGGER.error(message, regularizeResult.cause().getMessage());
+                        handler.handle(Future.failedFuture(regularizeResult.cause().getMessage()));
                         return;
                     }
-                    handler.handle(Future.succeededFuture(new JsonObject().put("success", "ok")));
+                    List<Future<JsonObject>> futures = new ArrayList<>();
+
+                    for (JsonObject oldAbsence : oldAbsences) {
+                        Future<JsonObject> future = Future.future();
+                        futures.add(future);
+
+                        absenceBody.put("student_id", oldAbsence.getString("student_id"));
+
+                        afterPersistAbsence(oldAbsence.getLong("id"), absenceBody, oldAbsence, editEvents, user.getUserId(),
+                                FutureHelper.handlerJsonObject(future), absenceResult);
+                    }
+
+                    FutureHelper.all(futures).setHandler(result -> {
+                        if (result.failed()) {
+                            handler.handle(Future.failedFuture(result.cause().getMessage()));
+                            return;
+                        }
+                        handler.handle(Future.succeededFuture(new JsonObject().put("success", "ok")));
+                    });
                 });
             }));
         }));
+    }
+
+    private void regularizedFromCollective(Long collectiveId, Boolean regularize, Handler<AsyncResult<JsonArray>> handler) {
+        if (Boolean.TRUE.equals(regularize))
+            regularizeAfterCollectivePersist(collectiveId, handler);
+        else handler.handle(Future.succeededFuture(new JsonArray()));
     }
 
     private void afterPersistAbsence(Long absenceId, JsonObject absenceBody, JsonObject oldAbsence, boolean editEvents, String userInfoId, Handler<Either<String, JsonObject>> handler, Either<String, JsonObject> absenceResult) {
