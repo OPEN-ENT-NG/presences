@@ -3,16 +3,16 @@
     <!-- main title -->
     <thead>
     <tr>
-        <th style="width: 50%">
+        <th style="width: 20%">
             <i18n>presences.exemptions.student</i18n>
         </th>
-        <th style="width: 22%">
+        <th style="width: 10%">
             <i18n>presences.exemptions.dates</i18n>
         </th>
-        <th style="width:4%">
+        <th style="width:15%">
             <i18n>presences.absence.period</i18n>
         </th>
-        <th style="width: 8%">
+        <th style="width: 18%">
             <i18n>presences.absence.reason</i18n>
         </th>
         <th style="width: 4%">
@@ -130,15 +130,15 @@
     <!-- description content -->
     <tr data-ng-show="event.events.length !== 0" ng-class="{open: vm.isCollapsibleOpen($parent.$index)}"
         class="events-table-body-description" ng-repeat="history in event.events track by $index | orderBy:'+end_date'">
-        <td class="text-center padding-sm" style="width: 50%">&nbsp;</td>
+        <td class="text-center padding-sm" style="width: 20%">&nbsp;</td>
 
         <!-- description under events time report -->
-        <td class="events-table-body-date uppercase text-center" style="width: 22%">
+        <td class="events-table-body-date uppercase text-center" style="width: 10%">
             [[history.start_date | date:'HH:mm']] - [[history.end_date | date:'HH:mm']]
         </td>
 
         <!-- description under events owner -->
-        <td class="text-center padding-sm" style="width: 4%">
+        <td class="text-center padding-sm" style="width: 15%">
             <span>
                 <i class="account"></i>
                 <span>[[lang.translate('presences.created.by')]] [[history.owner.displayName]]</span>
@@ -146,7 +146,7 @@
         </td>
 
         <!-- description under events select reason -->
-        <td class="text-center padding-sm" style="width: 8%">
+        <td class="text-center padding-sm" style="width: 18%">
             <span class="events-table-body-description-content-select table-reason">
                  <label ng-if="history.type_id == 1">
                     <select data-ng-model="history.reason_id"
