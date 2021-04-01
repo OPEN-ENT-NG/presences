@@ -675,7 +675,6 @@ export const eventsController = ng.controller('EventsController', ['$scope', '$r
         };
 
         vm.formatEventForm = (slot: IEventSlot, studentId: string, typeId: number): IEventFormBody => {
-
             switch (typeId) {
                 case EventType.ABSENCE:
                 case EventType.LATENESS:
@@ -688,8 +687,8 @@ export const eventsController = ng.controller('EventsController', ['$scope', '$r
                         endDate = moment(slot.events[0].end_date).toDate();
                         counsellor_regularisation = slot.events[0].counsellor_regularisation;
                     } else if (slot.events && slot.events.length > 1) { // with absence
-                        startDate = moment(slot.events[1].start_date).toDate();
-                        endDate = moment(slot.events[1].end_date).toDate();
+                        startDate = moment(slot.events[slot.events.length - 1].start_date).toDate();
+                        endDate = moment(slot.events[slot.events.length - 1].end_date).toDate();
                         counsellor_regularisation = slot.events[0].counsellor_regularisation;
                     }
                     return {
@@ -736,7 +735,9 @@ export const eventsController = ng.controller('EventsController', ['$scope', '$r
             vm.actionDrag.mouseHold = false;
             vm.actionDrag.slotStartIndex = null;
             vm.actionDrag.slotEndIndex = null;
-            if (index === vm.actionDrag.indexEvent) {
+
+            if (index === vm.actionDrag.indexEvent &&
+                (((slot.events.length > 0) && (slot.start !== vm.actionDrag.slot.start)) || (slot.events.length === 0))) {
                 vm.actionDrag.slot.end = slot.end;
                 $scope.$broadcast(ABSENCE_FORM_EVENTS.OPEN, vm.formatEventForm(vm.actionDrag.slot, studentId, EventType.ABSENCE));
                 vm.actionDrag.slot = {};
