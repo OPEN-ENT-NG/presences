@@ -16,7 +16,7 @@ import {
 import {Scope} from './main';
 import {Absence, EventType, ICalendarItems, ITimeSlot, Presence, Presences, Reason, User} from '../models';
 import {DateUtils} from '@common/utils';
-import {SNIPLET_FORM_EMIT_EVENTS, SNIPLET_FORM_EVENTS} from '@common/model';
+import {SNIPLET_FORM_EMIT_EVENTS, SNIPLET_FORM_EMIT_PUNISHMENT_EVENTS, SNIPLET_FORM_EVENTS} from '@common/model';
 import {NOTEBOOK_FORM_EVENTS} from '../sniplets';
 import {CalendarAbsenceUtils, CalendarUtils, EventsUtils} from '../utilities';
 import {ABSENCE_FORM_EVENTS, LATENESS_FORM_EVENTS} from '@common/core/enum/presences-event';
@@ -466,6 +466,9 @@ export const calendarController = ng.controller('CalendarController',
             $scope.$on(SNIPLET_FORM_EMIT_EVENTS.FILTER, initCalendar);
             $scope.$on(SNIPLET_FORM_EMIT_EVENTS.EDIT, initCalendar);
             $scope.$on(SNIPLET_FORM_EMIT_EVENTS.DELETE, initCalendar);
+            $scope.$on(SNIPLET_FORM_EMIT_PUNISHMENT_EVENTS.CREATION, initCalendar);
+            $scope.$on(SNIPLET_FORM_EMIT_PUNISHMENT_EVENTS.EDIT, initCalendar);
+            $scope.$on(SNIPLET_FORM_EMIT_PUNISHMENT_EVENTS.DELETE, initCalendar);
 
             vm.absenceEvents = function (course: Course): CourseEvent[] {
                 return CalendarUtils.absenceEvents(course);
