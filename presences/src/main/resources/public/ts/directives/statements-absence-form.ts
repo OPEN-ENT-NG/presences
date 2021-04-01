@@ -173,9 +173,12 @@ export const StatementsAbsenceForm = ng.directive('statementsAbsenceForm', () =>
             };
 
             vm.isFormValid = (): boolean => {
+                let current_date: string = moment().startOf('day');
                 return vm.form.start_at
                     && vm.form.end_at
-                    && vm.form.start_at <= vm.form.end_at;
+                    && vm.form.start_at <= vm.form.end_at
+                    && current_date <= vm.form.start_at
+                    && current_date <= vm.form.end_at;
             };
 
             const setCorrectDateFormat = (): { start: string, end: string } => {
