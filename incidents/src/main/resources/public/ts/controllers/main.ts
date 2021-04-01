@@ -1,11 +1,13 @@
-import {idiom, ng, template} from 'entcore';
+import {idiom, model, ng, template} from 'entcore';
 import {Idiom, Template} from '@common/interfaces'
-
-import {IRootScopeService} from "angular";
+import {IRootScopeService} from 'angular';
+import rights from '@incidents/rights';
 
 export interface Scope extends IRootScopeService {
     lang: Idiom;
     template: Template;
+
+    hasRight(right: string): boolean;
 
     safeApply(fn?: () => void): void;
 }
@@ -39,5 +41,9 @@ export const mainController = ng.controller('MainController', ['$scope', 'route'
             } else {
                 $scope.$apply(fn);
             }
+        };
+
+        $scope.hasRight = (right: string): boolean => {
+            return model.me.hasWorkflow(rights.workflow[right]);
         };
     }]);

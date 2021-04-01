@@ -351,7 +351,11 @@ export const punishmentController = ng.controller('PunishmentController',
             };
 
             vm.openPunishment = (punishment: IPunishment): void => {
-                $scope.$broadcast(SNIPLET_FORM_EMIT_PUNISHMENT_EVENTS.OPEN, JSON.parse(JSON.stringify(punishment)));
+                if (punishment.type &&
+                    ((punishment.type.type === PunishmentsUtils.RULES.sanction) && $scope.hasRight('createSanction')) ||
+                    ((punishment.type.type === PunishmentsUtils.RULES.punishment) && $scope.hasRight('createPunishment'))) {
+                        $scope.$broadcast(SNIPLET_FORM_EMIT_PUNISHMENT_EVENTS.OPEN, JSON.parse(JSON.stringify(punishment)));
+                }
             };
 
             vm.changePagination = async (): Promise<void> => {

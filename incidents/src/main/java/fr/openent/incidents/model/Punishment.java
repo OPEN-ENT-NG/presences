@@ -99,15 +99,21 @@ public class Punishment extends Model {
                     PunishmentCategory category = result.result();
                     setFields(category.toJsonObject());
 
-                    if (getId() != null) {
-                        updateMongo(user, getId(), handler);
-                    } else {
-                        createMongo(user, handler);
-                    }
+                    checkUserRight(user, resRight -> {
+                        if (resRight.succeeded()) {
+                            if (getId() != null) {
+                                updateMongo(getId(), handler);
+                            } else {
+                                createMongo(handler);
+                            }
+                        } else {
+                            handler.handle(Future.failedFuture(resRight.cause().getMessage()));
+                        }
+                    });
                 });
     }
 
-    private void updateMongo(UserInfos user, String id, Handler<AsyncResult<JsonObject>> handler) {
+    private void updateMongo(String id, Handler<AsyncResult<JsonObject>> handler) {
         SimpleDateFormat formatter = new SimpleDateFormat(DateHelper.MONGO_FORMAT);
         String currentDate = formatter.format(new Date());
         String method = "UPDATE";
@@ -116,10 +122,9 @@ public class Punishment extends Model {
         data.remove("id");
 
         if (!Validator.validate(this, method)) {
-            handler.handle(Future.failedFuture("[Common@Model::create] Validation failed."));
+            handler.handle(Future.failedFuture("[Incidents@Punishment::updateMongo] Validation failed."));
             return;
         }
-
         JsonObject criteria = new JsonObject()
                 .put("_id", id);
         JsonObject returnFields = new JsonObject().put("_id", id);
@@ -128,14 +133,36 @@ public class Punishment extends Model {
 
         MongoDb.getInstance().findAndModify(table, criteria, set, new JsonObject(), returnFields, false, true, false, event -> {
             if (event.body().isEmpty() || event.body().getString("status").equals("error")) {
-                handler.handle(Future.failedFuture("[Incidents@Punishment::persistMongo] Failed to persist in mongoDb."));
+                handler.handle(Future.failedFuture("[Incidents@Punishment::updateMongo] Failed to persist in mongoDb."));
             } else {
                 handler.handle(Future.succeededFuture(event.body().getJsonObject("result")));
             }
         });
     }
 
-    private void createMongo(UserInfos user, Handler<AsyncResult<JsonObject>> handler) {
+    private void createMongo(Handler<AsyncResult<JsonObject>> handler) {
+
+        SimpleDateFormat formatter = new SimpleDateFormat(DateHelper.MONGO_FORMAT);
+        String currentDate = formatter.format(new Date());
+        JsonObject data = toJsonObject();
+        data.put("created_at", currentDate);
+        data.remove("id");
+
+        if (!Validator.validate(this, "CREATE")) {
+            handler.handle(Future.failedFuture("[Common@Model::create] Validation failed."));
+            return;
+        }
+
+        MongoDb.getInstance().save(table, data, event -> {
+            if (event.body().isEmpty() || event.body().getString("status").equals("error")) {
+                handler.handle(Future.failedFuture("[Incidents@Punishment::persistMongo] Failed to persist in mongoDb."));
+            } else {
+                handler.handle(Future.succeededFuture(event.body()));
+            }
+        });
+    }
+
+    private void checkUserRight(UserInfos user, Handler<AsyncResult<JsonObject>> handler) {
         String query = "SELECT type FROM " + Incidents.dbSchema + ".punishment_type where id = " + getTypeId() +
                 " AND structure_id = '" + getStructureId() + "'";
         Sql.getInstance().raw(query, SqlResult.validUniqueResultHandler(result -> {
@@ -144,36 +171,17 @@ public class Punishment extends Model {
                 handler.handle(Future.failedFuture(message + " " + result.left().getValue()));
                 return;
             }
-            String type = result.right().getValue().getString("type");
 
-            if (type.equals("PUNITION") && !WorkflowHelper.hasRight(user, WorkflowActions.PUNISHMENT_CREATE.toString())) {
+            String resType = result.right().getValue().getString("type");
+
+            if (resType.equals("PUNITION") && !WorkflowHelper.hasRight(user, WorkflowActions.PUNISHMENT_CREATE.toString())) {
                 handler.handle(Future.failedFuture("[Incidents@Punishment::createMongo] This user have not the right to create Punishment."));
                 return;
-            } else if(type.equals("SANCTION") && !WorkflowHelper.hasRight(user, WorkflowActions.SANCTION_CREATE.toString())) {
+            } else if(resType.equals("SANCTION") && !WorkflowHelper.hasRight(user, WorkflowActions.SANCTION_CREATE.toString())) {
                 handler.handle(Future.failedFuture("[Incidents@Punishment::createMongo] This user have not the right to create Sanction."));
                 return;
             }
-
-            SimpleDateFormat formatter = new SimpleDateFormat(DateHelper.MONGO_FORMAT);
-            String currentDate = formatter.format(new Date());
-            JsonObject data = toJsonObject();
-            data.put("created_at", currentDate);
-
-            data.remove("id");
-
-            if (!Validator.validate(this, "CREATE")) {
-                handler.handle(Future.failedFuture("[Common@Model::create] Validation failed."));
-                return;
-            }
-
-            MongoDb.getInstance().save(table, data, event -> {
-                if (event.body().isEmpty() || event.body().getString("status").equals("error")) {
-                    handler.handle(Future.failedFuture("[Incidents@Punishment::persistMongo] Failed to persist in mongoDb."));
-                } else {
-                    handler.handle(Future.succeededFuture(event.body()));
-                }
-            });
-
+            handler.handle(Future.succeededFuture());
         }));
     }
 }

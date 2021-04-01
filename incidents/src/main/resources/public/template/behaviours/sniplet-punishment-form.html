@@ -1,5 +1,5 @@
 <!-- Button to access lightbox -->
-<button class="right-magnet" data-ng-click="vm.openPunishmentLightbox()">
+<button ng-if="hasRight('createPunishment') || hasRight('createSanction')" class="right-magnet" data-ng-click="vm.openPunishmentLightbox()">
     <i18n>incidents.punishments.button.form</i18n>
 </button>
 
