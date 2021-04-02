@@ -106,7 +106,7 @@ const DEFAULT_CHART_OPTIONS: ApexOptions = {
     },
     plotOptions: {
         bar: {
-            endingShape: 'rounded',
+            borderRadius: 10,
             columnWidth: '70%',
             barHeight: '70%'
         }
