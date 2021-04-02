@@ -182,12 +182,14 @@ export const mainController = ng.controller('MainController',
                 vm.safeApply();
             }
 
-            vm.resetIndicator = function () {
+            vm.resetIndicator = (): void => {
                 vm.indicator.page = 0;
-                vm.indicator.resetValues();
-                vm.indicator.setFilterTypes(vm.filter.filterTypes);
-                $scope.$broadcast(INFINITE_SCROLL_EVENTER.UPDATE);
-                vm.launchResearch();
+                if (!vm.indicator.isEmpty()) {
+                    vm.indicator.resetValues();
+                    vm.indicator.setFilterTypes(vm.filter.filterTypes);
+                    $scope.$broadcast(INFINITE_SCROLL_EVENTER.UPDATE);
+                    vm.launchResearch();
+                }
             }
 
             vm.openFilter = function () {
