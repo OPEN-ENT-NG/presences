@@ -218,8 +218,12 @@ $calendar-user-card-height: 56px;
             background-color: $presences-red !important;
           }
 
-          &.absent-justified {
+          &.absent-not-regularized {
             background-color: $presences-pink !important;
+          }
+
+          &.absent-regularized {
+            background-color: $presences-green !important;
           }
         }
 

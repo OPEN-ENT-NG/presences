@@ -78,7 +78,7 @@ interface ViewModel {
 
     formatPresenceDate(date: string): string;
 
-    hasEventAbsenceJustified(course: Course): boolean;
+    hasEventAbsenceRegularized(course: Course): boolean;
 
     canDisplayPresence(course: Course): boolean;
 
@@ -279,16 +279,16 @@ export const calendarController = ng.controller('CalendarController',
                 return DateUtils.format(date, DateUtils.FORMAT["HOUR-MINUTES"]);
             };
 
-            vm.hasEventAbsenceJustified = (course: Course): boolean => {
+            vm.hasEventAbsenceRegularized = (course: Course): boolean => {
                 if (course.events.length === 0 && course.absences.length === 0) return false;
                 let isFound: boolean = false;
                 course.events.forEach((event: CourseEvent) => {
-                    if (event.type_id === EventType.ABSENCE && event.reason_id) {
+                    if (event.type_id === EventType.ABSENCE && event.counsellor_regularisation === true) {
                         isFound = true;
                     }
                 });
                 course.absences.forEach((absence: Absence) => {
-                    if (absence.type_id === EventType.ABSENCE && absence.reason_id) {
+                    if (absence.type_id === EventType.ABSENCE && absence.counsellor_regularisation === true) {
                         isFound = true;
                     }
                 });
@@ -443,7 +443,7 @@ export const calendarController = ng.controller('CalendarController',
             };
 
             $scope.hoverEvents = ($event, course: Course) => {
-                if (!vm.hasEventAbsenceJustified(course)) return;
+                if (!vm.hasEventAbsenceRegularized(course)) return;
                 const hover = document.getElementById('event-absence-hover');
                 const {minWidth, minHeight} = getComputedStyle(hover);
                 let {x, y} = $event.target.closest('.course-item-container').getBoundingClientRect();
