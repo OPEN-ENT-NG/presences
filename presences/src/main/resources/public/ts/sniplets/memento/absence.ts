@@ -106,7 +106,7 @@ const DEFAULT_CHART_OPTIONS: ApexOptions = {
     },
     plotOptions: {
         bar: {
-            borderRadius: 10,
+            borderRadius: 2,
             columnWidth: '70%',
             barHeight: '70%'
         }
