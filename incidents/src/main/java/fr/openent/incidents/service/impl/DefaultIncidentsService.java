@@ -60,11 +60,11 @@ public class DefaultIncidentsService extends SqlCrudService implements Incidents
                 setOwners(arrayIncidents, ownersFuture);
 
                 CompositeFuture.all(protagonistsFuture, ownersFuture).setHandler(resultUsers -> {
-                   if (resultUsers.failed()) {
-                       handler.handle(new Either.Left<>(resultUsers.cause().getMessage()));
-                       return;
-                   }
-                   handler.handle(new Either.Right<>(arrayIncidents));
+                    if (resultUsers.failed()) {
+                        handler.handle(new Either.Left<>(resultUsers.cause().getMessage()));
+                        return;
+                    }
+                    handler.handle(new Either.Right<>(arrayIncidents));
                 });
             } else {
                 handler.handle(new Either.Left<>(result.left().getValue()));
@@ -192,18 +192,8 @@ public class DefaultIncidentsService extends SqlCrudService implements Incidents
      */
     private String getQuery(String structureId, String startDate, String endDate,
                             List<String> userId, String page, JsonArray params, boolean paginationMode, String field, boolean reverse) {
-        String query = "WITH ids AS (SELECT id FROM " + Incidents.dbSchema + ".incident i ";
 
-        query += "WHERE i.structure_id = ? ";
-        params.add(structureId);
-
-        if (startDate != null && endDate != null) {
-            query += "AND i.date BETWEEN ? AND ? ";
-            params.add(startDate);
-            params.add(endDate);
-        }
-
-        query += "ORDER BY " + getSqlOrderValue(field) + " " + getSqlReverseString(reverse) + ") ";
+        String query = setIncidentIdsCTE(params, structureId, startDate, endDate, field, reverse) + ", " + setProtagonistsCTE();
 
         // Retrieve number of incidents if in pagination mode
         if (paginationMode) {
@@ -240,22 +230,42 @@ public class DefaultIncidentsService extends SqlCrudService implements Incidents
         return query;
     }
 
+    private String setIncidentIdsCTE(JsonArray params, String structureId, String startDate, String endDate, String field, boolean reverse) {
+        String query = "WITH ids AS (SELECT id FROM " + Incidents.dbSchema + ".incident i "
+                + " WHERE i.structure_id = ? ";
+
+        params.add(structureId);
+
+        if (startDate != null && endDate != null) {
+            query += " AND i.date BETWEEN ? AND ? ";
+            params.add(startDate);
+            params.add(endDate);
+        }
+        return query + " ORDER BY " + getSqlOrderValue(field) + " " + getSqlReverseString(reverse) + ") ";
+    }
+
+    private String setProtagonistsCTE() {
+        return " protagonists AS ( " +
+                " SELECT pt.*, to_json(protagonist_type) as type " +
+                " FROM incidents.protagonist pt " +
+                " INNER JOIN incidents.protagonist_type ON pt.type_id = protagonist_type.id " +
+                " )";
+    }
+
     private String getJoinIncidents(List<String> userId, JsonArray params, String query) {
         query += "INNER JOIN ids ON (ids.id = i.id) " +
                 "INNER JOIN " + Incidents.dbSchema + ".place AS place ON place.id = i.place_id " +
                 "INNER JOIN " + Incidents.dbSchema + ".partner AS partner ON partner.id = i.partner_id " +
                 "INNER JOIN " + Incidents.dbSchema + ".incident_type AS incident_type ON incident_type.id = i.type_id " +
                 "INNER JOIN " + Incidents.dbSchema + ".seriousness AS seriousness ON seriousness.id = i.seriousness_id " +
-                "INNER JOIN (SELECT pt.*, to_json(protagonist_type) as type FROM incidents.protagonist pt " +
-                "INNER JOIN " + Incidents.dbSchema + ".protagonist_type ON pt.type_id = protagonist_type.id) " +
-                "AS protagonists ON (i.id = protagonists.incident_id ";
+                "INNER JOIN protagonists ON (i.id = protagonists.incident_id) ";
 
         if (userId != null && !userId.isEmpty()) {
-            query += " AND protagonists.user_id IN " + Sql.listPrepared(userId.toArray()) + " ) ";
+            query += "WHERE EXISTS(SELECT * FROM protagonists WHERE user_id IN " + Sql.listPrepared(userId.toArray()) +
+                    " AND i.id = protagonists.incident_id)";
             params.addAll(new JsonArray(userId));
-        } else {
-            query += ") ";
         }
+
         return query;
     }
 
@@ -264,7 +274,7 @@ public class DefaultIncidentsService extends SqlCrudService implements Incidents
      * Get user infos from neo4j
      *
      * @param arrayIncidents incidents []
-     * @param future        future
+     * @param future         future
      */
     private void setProtagonists(JsonArray arrayIncidents, Future<JsonArray> future) {
         JsonArray protagonists = new JsonArray();
