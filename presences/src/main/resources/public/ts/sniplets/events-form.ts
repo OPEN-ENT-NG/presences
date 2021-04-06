@@ -1,5 +1,14 @@
 import {IStructureSlot, ITimeSlot, SNIPLET_FORM_EMIT_EVENTS, SNIPLET_FORM_EVENTS} from '@common/model';
-import {Absence, EventType, IAbsence, IEventBody, IEventFormBody, Lateness, Reason, TimeSlotHourPeriod} from '../models';
+import {
+    Absence,
+    EventType,
+    IAbsence,
+    IEventBody,
+    IEventFormBody,
+    Lateness,
+    Reason,
+    TimeSlotHourPeriod
+} from '../models';
 import {idiom as lang, model, moment, toasts} from 'entcore';
 import {eventService, reasonService, ViescolaireService} from '../services';
 import {IAngularEvent} from 'angular';
@@ -484,8 +493,12 @@ const vm: ViewModel = {
         vm.prepareAbsenceBody();
         vm.setEventModel(vm.event);
         let responses: AxiosResponse[] = [];
-        if (vm.eventBody.type === EventsUtils.ALL_EVENTS.event && !vm.form.absences.find((absence: IAbsence) => 'type' in absence)) {
-            responses = [await (<Absence> vm.event).createAbsence(window.structure.id, vm.eventBody.reason_id, model.me.userId)];
+        // In this const, we consider vm.form.absences without field "type" can be an event (on calendar view logical)
+        // but sometimes we might have type field equal to events (seen on event list) so we double check
+        const isEventTypeToInteract: boolean = !vm.form.absences.find((absence: IAbsence) => 'type' in absence) ||
+            vm.form.absences.find((absence: IAbsence) => absence.type === EventsUtils.ALL_EVENTS.event) !== undefined;
+        if (vm.eventBody.type === EventsUtils.ALL_EVENTS.event && isEventTypeToInteract) {
+            responses = [await (<Absence>vm.event).createAbsence(window.structure.id, vm.eventBody.reason_id, model.me.userId)];
         } else {
             for (const absence of vm.form.absences) {
                 responses.push(await (<Absence>vm.event).updateAbsence(absence.id, window.structure.id, vm.eventBody.reason_id, model.me.userId));

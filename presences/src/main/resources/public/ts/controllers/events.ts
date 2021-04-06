@@ -1,5 +1,15 @@
 import {_, angular, idiom as lang, Me, model, moment, ng} from 'entcore';
-import {Action, ActionBody, Event, EventResponse, Events, EventType, IEventFormBody, Student, Students} from '../models';
+import {
+    Action,
+    ActionBody,
+    Event,
+    EventResponse,
+    Events,
+    EventType,
+    IEventFormBody,
+    Student,
+    Students
+} from '../models';
 import {DateUtils, PresencesPreferenceUtils} from '@common/utils';
 import {GroupService} from '@common/services/GroupService';
 import {actionService, EventRequest, EventService, ReasonService} from '../services';
@@ -699,7 +709,7 @@ export const eventsController = ng.controller('EventsController', ['$scope', '$r
                         endTime: (startDate < endDate) ? endDate : startDate,
                         comment: (slot.events && slot.events.length > 0) ? slot.events[0].comment : null,
                         studentId: studentId,
-                        eventType: EventsUtils.ALL_EVENTS.absence,
+                        eventType: EventsUtils.ALL_EVENTS.event,
                         counsellor_regularisation: counsellor_regularisation,
                         absences: slot.events
                     };
