@@ -12,11 +12,8 @@
         <th style="width:15%">
             <i18n>presences.absence.period</i18n>
         </th>
-        <th style="width: 18%">
+        <th style="width: 22%">
             <i18n>presences.absence.reason</i18n>
-        </th>
-        <th style="width: 4%">
-            <i18n>presences.absence.file</i18n>
         </th>
         <th style="width: 4%">
             <i18n>presences.absence.action</i18n>
@@ -80,12 +77,6 @@
                 </select>
             </label>
         </th>
-
-        <!-- Download file-->
-        <th class="events-table-body-file text-center">
-            <i class="attach forbidden" data-ng-click="vm.downloadFile($event)"></i>
-        </th>
-
         <!-- Action -->
         <th class="text-center">
             <!-- Display simple add and doAction open lightbox if only one event -->
@@ -158,7 +149,6 @@
                 </label>
             </span>
         </td>
-        <td class="text-center padding-sm" style="width: 4%">&nbsp</td>
         <!-- description under events action abbreviation -->
         <td class="text-center padding-sm" style="width: 4%">
             <i ng-class="{add : history.actionAbbreviation == null}"
