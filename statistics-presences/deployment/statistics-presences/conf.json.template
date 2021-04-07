@@ -1,5 +1,5 @@
     {
-      "name": "fr.openent~statistics-presences~0.17.2",
+      "name": "fr.openent~statistics-presences~0.17-SNAPSHOT",
       "config": {
         "main" : "fr.openent.statistics_presences.StatisticsPresences",
         "port" : 8066,
