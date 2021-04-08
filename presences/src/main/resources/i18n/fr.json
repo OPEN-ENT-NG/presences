@@ -327,6 +327,7 @@
   "presences.register.event_type.lateness": "Retard",
   "presences.register.event_type.remark": "Observation",
   "presences.register.forgotten": "Appels oubliés",
+  "presences.register.disable.without.teacher": "Appels sans enseignant",
   "presences.register.legend.history": "Historique du jour",
   "presences.register.legend.state": "Etat",
   "presences.register.legend.student": "Elève",

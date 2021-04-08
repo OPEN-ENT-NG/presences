@@ -66,6 +66,10 @@
                data-ng-click="vm.switchForgottenFilter()">
             <i18n>presences.register.forgotten</i18n>
         </label>
+        <label class="chip" ng-class="{selected: !vm.filter.disableWithoutTeacher}"
+               data-ng-click="vm.switchDisableWithoutTeacherFilter()">
+            <i18n>presences.register.disable.without.teacher</i18n>
+        </label>
     </div>
 </div>
 <div class="row card-slider">

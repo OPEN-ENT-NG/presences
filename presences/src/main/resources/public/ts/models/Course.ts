@@ -43,11 +43,10 @@ export class Courses extends LoadingCollection {
         this.hasCourses = true;
     }
 
-
     async sync(teachers: string[] = null, groups: string[], structure: string, start: string, end: string,
                startTime: string, endTime: string,
                forgottenRegisters: boolean = false, multipleSlot: boolean = false, limit?: number, offset?: number,
-               descendingDate?: Boolean, disableLoading?: boolean) {
+               descendingDate?: Boolean, disableLoading?: boolean, disableWithoutTeacher?: boolean): Promise<void> {
         if (!disableLoading) {
             if (this.loading) return;
         }
@@ -71,8 +70,9 @@ export class Courses extends LoadingCollection {
             const limitParam: string = limit || limit === 0 ? `&limit=${limit}` : '';
             const offsetParam: string = offset || offset === 0 ? `&offset=${offset}` : '';
             const orderParam: string = (descendingDate !== null && descendingDate !== undefined) ? `&descendingDate=${descendingDate}` : '';
-            const urlParams: string = `${forgottenRegisterParam}${multipleSlotParam}${startTimeParam}${endTimeParam}${limitParam}${offsetParam}${orderParam}`;
-
+            const withoutTeacher: string = disableWithoutTeacher ? `&disableWithoutTeacher=${disableWithoutTeacher}` : '';
+            const urlParams: string = `${forgottenRegisterParam}${multipleSlotParam}${startTimeParam}${endTimeParam}`
+                +`${limitParam}${offsetParam}${orderParam}${withoutTeacher}`;
             const {data}: AxiosResponse = await http.get(
                 `/presences/courses?${teacherFilter}${groupFilter}structure=${structure}&start=${start}&end=${end}${urlParams}`
             );
