@@ -293,14 +293,14 @@ public class DefaultEventService implements EventService {
         query += setParamsForQueryEvents(listReasonIds, userId, regularized, noReason, userIdFromClasses, params);
         query += ") SELECT * FROM allevents " +
                 "GROUP BY id, start_date, end_date, created, comment, student_id, reason_id, owner," +
-                "type_id, register_id, counsellor_regularisation, type, register_id ";
+                "type_id, register_id, counsellor_regularisation, type, register_id " +
+                " ORDER BY start_date DESC, id DESC";
         if (page != null) {
-            query += "ORDER BY start_date DESC OFFSET ? LIMIT ? ";
+            query += " OFFSET ? LIMIT ? ";
             params.add(PAGE_SIZE * page);
             params.add(PAGE_SIZE);
-        } else {
-            query += "ORDER BY start_date DESC ";
         }
+
         return query;
     }
 
