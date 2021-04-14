@@ -1,13 +1,20 @@
 import {_, idiom as lang, Me, ng, toasts} from 'entcore';
 import {ReasonService} from '@presences/services/ReasonService';
 import {GroupService, SearchService, SettingsService, Template} from '../services';
-import {MailingType, Massmailing, MassmailingAnomaliesResponse, MassmailingStatusResponse} from '../model';
+import {
+    IMassmailingFilterPreferences,
+    MailingType,
+    Massmailing,
+    MassmailingAnomaliesResponse,
+    MassmailingStatusResponse
+} from '../model';
 import {Reason} from '@presences/models/Reason';
 import {MassmailingPreferenceUtils, PresencesPreferenceUtils} from '@common/utils';
 import {HomeUtils} from '../utilities';
 import {IPunishmentService, IPunishmentsTypeService} from "@incidents/services";
 import {IPunishmentType} from "@incidents/models/PunishmentType";
 import {EVENT_TYPES} from "@common/model";
+import {MassmailingFilters} from "@massmailing/model/Preferences";
 
 interface Filter {
     start_date: Date;
@@ -498,36 +505,38 @@ export const homeController = ng.controller('HomeController', ['$scope', 'route'
         };
 
         const loadFormFilter = async (): Promise<void> => {
-            let formFiltersPreferences = await Me.preference(PresencesPreferenceUtils.PREFERENCE_KEYS.MASSMAILING_FILTER);
-            let formFilters = formFiltersPreferences ? formFiltersPreferences[window.structure.id] : null;
-            if (formFilters && Object.keys(formFilters).length !== 0) {
-                let {...toMergeFilters} = formFilters;
-                vm.filter = {...vm.filter, ...toMergeFilters};
-                vm.filter.status = {
-                    REGULARIZED: formFilters.status["JUSTIFIED"] ? formFilters.status["JUSTIFIED"] : formFilters.status.REGULARIZED,
-                    UNREGULARIZED: formFilters.status["UNJUSTIFIED"] ? formFilters.status["UNJUSTIFIED"] : formFilters.status.UNREGULARIZED,
-                    LATENESS: formFilters.status.LATENESS,
-                    NO_REASON: formFilters.status.NO_REASON,
-                    PUNISHMENT: formFilters.status.PUNISHMENT,
-                    SANCTION: formFilters.status.SANCTION
-                };
-            } else {
-                vm.filter = {
-                    ...vm.filter, ...{
-                        start_at: 1,
-                        status: {
-                            NO_REASON: true, REGULARIZED: false, UNREGULARIZED: false, LATENESS: false,
-                            PUNISHMENT: false, SANCTION: false
-                        },
-                        massmailing_status: {mailed: false, waiting: true},
-                        allReasons: true,
-                        noReasons: true,
-                        reasons: {},
-                        punishments: [],
-                        anomalies: {MAIL: true, SMS: true}
-                    }
-                };
+            let formFiltersPreferences: MassmailingFilters = await Me.preference(PresencesPreferenceUtils.PREFERENCE_KEYS.MASSMAILING_FILTER);
+            let formFilters: IMassmailingFilterPreferences = formFiltersPreferences ? formFiltersPreferences[window.structure.id] : null;
+            let defaultFilters: IMassmailingFilterPreferences = {
+                start_at: 1,
+                status: {
+                    NO_REASON: true, REGULARIZED: false, UNREGULARIZED: false, LATENESS: false,
+                    PUNISHMENT: false, SANCTION: false
+                },
+                massmailing_status: {mailed: false, waiting: true},
+                allReasons: true,
+                noReasons: true,
+                reasons: {},
+                punishments: [],
+                anomalies: {MAIL: true, SMS: true}
             }
+            if (formFilters) {
+                Object.keys(formFilters)
+                    .forEach((key: string) => {
+                        if (formFilters[key] === null || formFilters[key] === undefined) delete formFilters[key]
+                    });
+            }
+            let filter: IMassmailingFilterPreferences = {...defaultFilters, ...formFilters}
+            let {...toMergeFilters} = filter;
+            vm.filter = {...vm.filter, ...toMergeFilters};
+            vm.filter.status = {
+                REGULARIZED: filter.status["JUSTIFIED"] ? filter.status["JUSTIFIED"] : filter.status.REGULARIZED,
+                UNREGULARIZED: filter.status["UNJUSTIFIED"] ? filter.status["UNJUSTIFIED"] : filter.status.UNREGULARIZED,
+                LATENESS: filter.status.LATENESS,
+                NO_REASON: filter.status.NO_REASON,
+                PUNISHMENT: filter.status.PUNISHMENT,
+                SANCTION: filter.status.SANCTION
+            };
         };
 
         vm.filterInError = function () {

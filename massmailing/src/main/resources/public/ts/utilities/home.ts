@@ -1,20 +1,11 @@
-import {IMassmailingFilterPreferences} from "../model";
 import {IPunishmentType} from "@incidents/models/PunishmentType";
+import {IMassmailingFilterPreferences} from "@massmailing/model";
 
 export class HomeUtils {
 
+
     static buildFilteredMassmailingPreference = (filteredMassmailingPreference: any): IMassmailingFilterPreferences => {
-        return {
-            start_at: filteredMassmailingPreference.start_at,
-            allReasons: filteredMassmailingPreference.allReasons,
-            anomalies: filteredMassmailingPreference.anomalies,
-            massmailing_status: filteredMassmailingPreference.massmailing_status,
-            noReasons: filteredMassmailingPreference.noReasons,
-            reasons: filteredMassmailingPreference.reasons,
-            punishments: filteredMassmailingPreference.punishments,
-            punishmentTypes: filteredMassmailingPreference.punishmentTypes,
-            status: filteredMassmailingPreference.status
-        } as IMassmailingFilterPreferences;
+        return {...filteredMassmailingPreference} as IMassmailingFilterPreferences;
     };
 
     static getPunishmentTypePreferenceMap = (punishmentsTypes: Array<IPunishmentType>): Map<number, IPunishmentType> => {

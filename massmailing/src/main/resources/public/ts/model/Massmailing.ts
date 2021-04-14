@@ -13,6 +13,8 @@ export interface IMassmailingFilterPreferences {
         UNREGULARIZED: boolean
         LATENESS: boolean,
         NO_REASON: boolean
+        PUNISHMENT: boolean,
+        SANCTION: boolean
     };
     massmailing_status: {
         mailed: boolean,
@@ -20,9 +22,8 @@ export interface IMassmailingFilterPreferences {
     };
     allReasons: boolean;
     noReasons: boolean;
-    reasons: any;
-    punishments: any;
-    punishmentTypes: IPunishmentType[];
+    reasons: { [id: number]: boolean };
+    punishments: IPunishmentType[];
     anomalies: {
         MAIL: boolean,
         SMS: boolean
