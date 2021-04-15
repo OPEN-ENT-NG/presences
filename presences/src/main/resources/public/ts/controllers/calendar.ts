@@ -1,4 +1,4 @@
-import {idiom as lang, model, moment, ng} from 'entcore';
+import {idiom as lang, Me, model, moment, ng} from 'entcore';
 import {
     CalendarService,
     Course,
@@ -15,7 +15,7 @@ import {
 } from '../services';
 import {Scope} from './main';
 import {Absence, EventType, ICalendarItems, ITimeSlot, Presence, Presences, Reason, User} from '../models';
-import {DateUtils} from '@common/utils';
+import {DateUtils, PreferencesUtils, PresencesPreferenceUtils} from '@common/utils';
 import {SNIPLET_FORM_EMIT_EVENTS, SNIPLET_FORM_EMIT_PUNISHMENT_EVENTS, SNIPLET_FORM_EVENTS} from '@common/model';
 import {NOTEBOOK_FORM_EVENTS} from '../sniplets';
 import {CalendarAbsenceUtils, CalendarUtils, EventsUtils} from '../utilities';
@@ -107,10 +107,10 @@ interface CalendarScope extends Scope {
 }
 
 export const calendarController = ng.controller('CalendarController',
-    ['$scope', '$timeout', 'route', '$location', 'CalendarService',
+    ['$scope', '$timeout', '$route', '$location', 'CalendarService',
         'GroupService', 'SearchService', 'ForgottenNotebookService', 'ReasonService',
         'ViescolaireService',
-        function ($scope: CalendarScope, $timeout, route, $location,
+        function ($scope: CalendarScope, $timeout, $route, $location,
                   CalendarService: CalendarService,
                   GroupService: GroupService,
                   SearchService: SearchService,
@@ -393,14 +393,14 @@ export const calendarController = ng.controller('CalendarController',
 
                 let exemption: { end_date: string, start_date: string } = {end_date: null, start_date: null};
 
-                if(!course.exemption) {
+                if (!course.exemption) {
                     exemption.start_date = course.startDate;
                     exemption.end_date = course.endDate;
                 } else {
                     exemption = course.exemption;
                 }
 
-                const {x, y}: any   = $event.target.closest('.exemption-label').getBoundingClientRect();
+                const {x, y}: any = $event.target.closest('.exemption-label').getBoundingClientRect();
                 hover.style.top = `${y - parseInt(height)}px`;
                 hover.style.left = `${x - (parseInt(width) / 4)}px`;
                 hover.style.display = 'flex';
@@ -461,7 +461,13 @@ export const calendarController = ng.controller('CalendarController',
 
             model.calendar.on('date-change', initCalendar);
 
-            $scope.$on('$destroy', () => model.calendar.callbacks['date-change'] = []);
+            $scope.$on('$destroy', () => {
+                const key: string = PreferencesUtils.PREFERENCE_KEYS.PRESENCE_EVENT_LIST_CALENDAR_FILTER
+                if (Me.preferences[key] && $route.current.action != 'events') {
+                    PreferencesUtils.resetPreference(key);
+                }
+                model.calendar.callbacks['date-change'] = []
+            });
 
             $scope.$on(SNIPLET_FORM_EMIT_EVENTS.FILTER, initCalendar);
             $scope.$on(SNIPLET_FORM_EMIT_EVENTS.EDIT, initCalendar);
@@ -502,8 +508,10 @@ export const calendarController = ng.controller('CalendarController',
             });
 
 
-            $scope.$watch(() => window.structure, async () => {
+            $scope.$watch(() => window.structure, async (newVal, oldVal) => {
                 const structure_slots = await viescolaireService.getSlotProfile(window.structure.id);
+                if (oldVal !== newVal)
+                    await PreferencesUtils.resetPreference(PreferencesUtils.PREFERENCE_KEYS.PRESENCE_EVENT_LIST_CALENDAR_FILTER);
                 if (Object.keys(structure_slots).length > 0) vm.slots.list = structure_slots.slots;
                 else vm.slots.list = null;
                 $scope.safeApply();

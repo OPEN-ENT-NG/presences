@@ -2,7 +2,7 @@ import {_, angular, idiom as lang, Me, model, moment, ng} from 'entcore';
 import {
     Action,
     ActionBody,
-    Event,
+    Event, EventListCalendarFilter,
     EventResponse,
     Events,
     EventType,
@@ -10,7 +10,7 @@ import {
     Student,
     Students
 } from '../models';
-import {DateUtils, PresencesPreferenceUtils} from '@common/utils';
+import {DateUtils, PreferencesUtils, PresencesPreferenceUtils} from '@common/utils';
 import {GroupService} from '@common/services/GroupService';
 import {actionService, EventRequest, EventService, ReasonService} from '../services';
 import {EventsFilter, EventsUtils} from '../utilities';
@@ -67,7 +67,7 @@ interface ViewModel {
 
     eventTypeState(periods: IEventSlot, index: number, indexSlot: number): string;
 
-    editPeriod($event, event): void;
+    editPeriod($event, event): Promise<void>;
 
     reasonSelect($event): void;
 
@@ -332,7 +332,6 @@ export const eventsController = ng.controller('EventsController', ['$scope', '$r
             vm.events.startDate = vm.filter.startDate.toDateString();
             vm.events.endDate = vm.filter.endDate.toDateString();
             vm.events.regularized = vm.filter.regularized;
-
             if (vm.filter.absences) {
                 if (!vm.eventType.some(e => e == EventType.ABSENCE)) {
                     vm.eventType.push(EventType.ABSENCE);
@@ -356,6 +355,7 @@ export const eventsController = ng.controller('EventsController', ['$scope', '$r
             // actionMode to define if we display the loading icon mode while changing filter, date etc...
             if (!actionMode) {
                 // "page" uses sync() method at the same time it sets 0 (See LoadingCollection Class)
+                await updateListEventCalendarFilter();
                 vm.updateFilter();
             } else {
                 // dynamic mode : case if we only interact with action, reason, counsellor regularized...
@@ -364,6 +364,24 @@ export const eventsController = ng.controller('EventsController', ['$scope', '$r
             $scope.$broadcast(INFINITE_SCROLL_EVENTER.UPDATE);
             $scope.safeApply();
         };
+
+        const updateListEventCalendarFilter = async (): Promise<void> => {
+            const calendarFilterKey: string = PresencesPreferenceUtils.PREFERENCE_KEYS.PRESENCE_EVENT_LIST_CALENDAR_FILTER
+            let calendarFilter: EventListCalendarFilter = Me.preferences[calendarFilterKey];
+            if (calendarFilter && Object.keys(calendarFilter).length !== 0) {
+                if (calendarFilter.startDate) {
+                    vm.filter.startDate = calendarFilter.startDate;
+                    vm.events.startDate = vm.filter.startDate.toDateString();
+                }
+                if (calendarFilter.endDate) {
+                    vm.filter.endDate = calendarFilter.endDate;
+                    vm.events.startDate = vm.filter.startDate.toDateString();
+                }
+                if (calendarFilter.students) vm.filter.students = calendarFilter.students;
+                if (calendarFilter.classes) vm.filter.classes = calendarFilter.classes;
+                await PreferencesUtils.resetPreference(calendarFilterKey);
+            }
+        }
 
         // Events actions
         const getActions = async (): Promise<void> => {
@@ -423,7 +441,7 @@ export const eventsController = ng.controller('EventsController', ['$scope', '$r
             getEvents(true);
         };
 
-        vm.editPeriod = ($event, {studentId, date, displayName, className, classId}): void => {
+        vm.editPeriod = async ($event, {studentId, date, displayName, className, classId}): Promise<void> => {
             $event.stopPropagation();
             window.item = {
                 id: studentId,
@@ -436,6 +454,13 @@ export const eventsController = ng.controller('EventsController', ['$scope', '$r
                     return this.displayName;
                 }
             };
+            let filter: EventListCalendarFilter = {
+                startDate: vm.filter.startDate,
+                endDate: vm.filter.endDate,
+                students: vm.filter.students,
+                classes: vm.filter.classes
+            }
+            PresencesPreferenceUtils.updatePresencesEventListCalendarFilter(filter);
             $location.path(`/calendar/${studentId}?date=${date}`);
             $scope.safeApply();
         };
@@ -450,7 +475,7 @@ export const eventsController = ng.controller('EventsController', ['$scope', '$r
             // Check if drag on the event line. Coloring items between the first clicked on and the one below the pointer
             if (vm.actionDrag.mouseHold && (vm.actionDrag.indexEvent === index) &&
                 (((indexSlot >= vm.actionDrag.slotStartIndex) && (indexSlot <= vm.actionDrag.slotEndIndex)) ||
-                ((indexSlot <= vm.actionDrag.slotStartIndex) && (indexSlot >= vm.actionDrag.slotEndIndex)))) {
+                    ((indexSlot <= vm.actionDrag.slotStartIndex) && (indexSlot >= vm.actionDrag.slotEndIndex)))) {
                 indexes.push(className.indexOf('action-drag-event'));
             } else if (periods.events.length === 0) {
                 return '';
@@ -567,7 +592,7 @@ export const eventsController = ng.controller('EventsController', ['$scope', '$r
         vm.changeAllReason = async (event: EventResponse, studentId: string): Promise<void> => {
             let initialReasonId = event.globalReason;
             vm.interactedEvent = event;
-            let fetchedEvent: Event|EventResponse[] = [];
+            let fetchedEvent: Event | EventResponse[] = [];
             if (isWidget) {
                 fetchedEvent.push(event);
             } else {
@@ -588,7 +613,7 @@ export const eventsController = ng.controller('EventsController', ['$scope', '$r
         vm.changeReason = async (history: Event, event: EventResponse, studentId: string): Promise<void> => {
             let initialReasonId = history.reason ? history.reason.id : history.reason_id;
             vm.interactedEvent = event;
-            let fetchedEvent: Array<Event|EventResponse> = [];
+            let fetchedEvent: Array<Event | EventResponse> = [];
             history.counsellor_regularisation = vm.provingReasonsMap[history.reason_id];
             fetchedEvent.push(history);
             event.globalReason = EventsUtils.initGlobalReason(event);
@@ -627,7 +652,7 @@ export const eventsController = ng.controller('EventsController', ['$scope', '$r
         vm.toggleEventRegularised = async (history: Event, event: EventResponse, studentId: string): Promise<void> => {
             let initialCounsellorRegularisation = history.counsellor_regularisation;
             vm.interactedEvent = event;
-            let fetchedEvent: Array<Event|EventResponse> = [];
+            let fetchedEvent: Array<Event | EventResponse> = [];
             if (history.type === EventsUtils.ALL_EVENTS.event) {
                 fetchedEvent.push(history);
             }
@@ -857,7 +882,6 @@ export const eventsController = ng.controller('EventsController', ['$scope', '$r
           update filter methods
         ---------------------------- */
         vm.updateFilter = (student?, audience?) => {
-
             if (audience && !_.find(vm.filter.classes, audience)) {
                 vm.filter.classes.push(audience);
             }
@@ -1089,6 +1113,7 @@ export const eventsController = ng.controller('EventsController', ['$scope', '$r
         /* on (watch) */
         $scope.$watch(() => window.structure, async () => {
             if (window.structure) {
+                this.filter.students = [];
                 await loadReasonTypes().then(async () => {
                     await loadFormFilter();
                 });
@@ -1106,7 +1131,7 @@ export const eventsController = ng.controller('EventsController', ['$scope', '$r
             angular.element(document.querySelectorAll(".tooltip")).remove();
         });
 
-        $scope.$on(SNIPLET_FORM_EMIT_EVENTS.FILTER, async () => { await getEvents(); });
-        $scope.$on(SNIPLET_FORM_EMIT_EVENTS.EDIT, async () => { await getEvents(); });
-        $scope.$on(SNIPLET_FORM_EMIT_EVENTS.DELETE, async () => { await getEvents(); });
+        $scope.$on(SNIPLET_FORM_EMIT_EVENTS.FILTER, async () => await getEvents());
+        $scope.$on(SNIPLET_FORM_EMIT_EVENTS.EDIT, async () => await getEvents());
+        $scope.$on(SNIPLET_FORM_EMIT_EVENTS.DELETE, async () => await getEvents());
     }]);

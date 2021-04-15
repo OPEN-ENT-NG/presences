@@ -1,5 +1,6 @@
 import {Me} from "entcore";
 import {EventsFormFilter} from "@presences/utilities/events";
+import {EventListCalendarFilter} from "@presences/models";
 import {PreferencesUtils} from "./preferences";
 
 /* ----------------------------
@@ -32,4 +33,14 @@ export class PresencesPreferenceUtils extends PreferencesUtils {
         await Me.savePreference(this.PREFERENCE_KEYS.PRESENCE_EVENT_LIST_FILTER);
     }
 
+    /**
+     * Update EventList Filter (dates / students) when we move to Calendar view
+     *
+     * @param filter    EventListCalendarFilter, containing dates and students
+     */
+    static async updatePresencesEventListCalendarFilter(filter: EventListCalendarFilter): Promise<void> {
+        const key: string = this.PREFERENCE_KEYS.PRESENCE_EVENT_LIST_CALENDAR_FILTER
+        Me.preferences[key] = filter;
+        await Me.savePreference(key);
+    }
 }
