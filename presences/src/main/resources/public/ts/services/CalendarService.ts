@@ -1,6 +1,7 @@
 import {moment, ng} from 'entcore'
 import http from 'axios';
 import {Absence, EventType, PresenceRequest, Presences} from '../models';
+import {IPunishment} from '@incidents/models';
 import {User} from '@common/model/User'
 import {DateUtils} from "@common/utils";
 import {presenceService} from "../services/PresenceService";
@@ -16,6 +17,11 @@ export interface CourseEvent {
     counsellor_input?: boolean;
     counsellor_regularisation?: boolean;
     comment?: string;
+}
+
+export interface CourseIncident {
+    description: string;
+    date: Date;
 }
 
 export interface Course {
@@ -38,6 +44,8 @@ export interface Course {
     hash?: string;
     absence?: boolean;
     absences?: Array<Absence>;
+    incident?: CourseIncident;
+    punishments?: IPunishment[];
     absenceId?: string;
     absenceReason?: number;
     eventId?: number;

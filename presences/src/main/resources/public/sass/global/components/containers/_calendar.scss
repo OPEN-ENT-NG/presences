@@ -333,30 +333,16 @@ $calendar-user-card-height: 56px;
               }
             }
 
-            > div {
-              width: 20%;
-              height: 12px;
-              border-radius: 6px;
+            i.punishment-calendar {
               margin-right: 3px;
 
-              &.event-type {
-                &-1 {
-                  display: none;
-                }
-
-                &-2 {
-                  background-color: $presences-purple;
-                }
-
-                &-3 {
-                  background-color: $presences-light-purple;
-                }
-
-                &-4 {
-                  background-color: $presences-remark;
-                }
+              &:before {
+                font-size: 20px;
+                color: $presences-main;
               }
+            }
 
+            > div {
               &:hover .tooltip-top {
                 @include tooltipVisible();
               }
@@ -365,15 +351,49 @@ $calendar-user-card-height: 56px;
                 @include tooltipTemplate();
                 max-width: 115px;
                 padding: 5px !important;
-                width: 90px;
-                bottom: 21px;
-                margin-left: -4px;
+                width: 100px;
+                bottom: 30px;
+                margin-left: -33px;
                 line-height: 16px;
+                @-moz-document url-prefix() {
+                  margin-left: -12px;
+                }
 
                 &:after {
                   @include tooltipBottomArrow();
                   top: 100%;
                   left: 15%;
+                }
+              }
+
+              &.event {
+                width: 20%;
+                height: 12px;
+                border-radius: 6px;
+                margin-right: 3px;
+
+                .tooltip-top {
+                  width: 90px;
+                  bottom: 21px;
+                  margin-left: -4px;
+                }
+
+                &.event-type {
+                  &-1 {
+                    display: none;
+                  }
+
+                  &-2 {
+                    background-color: $presences-purple;
+                  }
+
+                  &-3 {
+                    background-color: $presences-light-purple;
+                  }
+
+                  &-4 {
+                    background-color: $presences-remark;
+                  }
                 }
               }
             }

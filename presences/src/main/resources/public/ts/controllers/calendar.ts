@@ -15,6 +15,7 @@ import {
 } from '../services';
 import {Scope} from './main';
 import {Absence, EventType, ICalendarItems, ITimeSlot, Presence, Presences, Reason, User} from '../models';
+import {Punishments} from '@incidents/models';
 import {DateUtils, PreferencesUtils, PresencesPreferenceUtils} from '@common/utils';
 import {SNIPLET_FORM_EMIT_EVENTS, SNIPLET_FORM_EMIT_PUNISHMENT_EVENTS, SNIPLET_FORM_EVENTS} from '@common/model';
 import {NOTEBOOK_FORM_EVENTS} from '../sniplets';
@@ -55,6 +56,7 @@ interface ViewModel {
     absences: {
         list: Array<Absence>
     };
+    punishments: Punishments;
 
     selectItem(model: any, student: any): void;
 

@@ -131,7 +131,7 @@ public class CalendarHelper {
             }
             return coursesAdded;
         } catch (ParseException e) {
-            LOGGER.error("[CalendarController@absent] Failed to parse date", e);
+            LOGGER.error("[CalendarHelper@absent] Failed to parse date", e);
             return new JsonArray();
         }
     }
@@ -145,11 +145,52 @@ public class CalendarHelper {
                     return incident;
                 }
             } catch (ParseException e) {
-                LOGGER.error("[CalendarController@incident] Failed to parse date", e);
+                LOGGER.error("[CalendarHelper@incident] Failed to parse date", e);
             }
         }
 
         return null;
+    }
+
+    @SuppressWarnings("unchecked")
+    public static List<JsonObject> getMatchingPunishments(Course course, List<JsonObject> punishments) {
+        return punishments.stream()
+                .filter(punishment -> {
+                    try {
+                        return punishmentMatchesDates(course, punishment);
+                    } catch (ParseException e) {
+                        return false;
+                    }
+                }).collect(Collectors.toList());
+    }
+
+    private static boolean punishmentMatchesDates(Course course, JsonObject punishment) throws ParseException {
+        if ((punishment.getJsonObject("type") != null) &&
+                (punishment.getJsonObject("type").getInteger("punishment_category_id") != null)) {
+            JsonObject fields = punishment.getJsonObject("fields");
+
+            switch (punishment.getJsonObject("type").getInteger("punishment_category_id")) {
+                case 2: // DETENTION
+                case 4: // EXCLUSION
+                    String startAt = fields.getString("start_at");
+                    String endAt = fields.getString("end_at");
+                    if (startAt != null || endAt != null) {
+                        return DateHelper.isBefore(course.getStartDate(), endAt)
+                                && DateHelper.isAfter(course.getEndDate(), startAt);
+                    }
+                    break;
+                case 3: // BLAME
+                    String createdAt = punishment.getString("created_at");
+                    if (createdAt != null) {
+                        return DateHelper.isBeforeOrEquals(course.getStartDate(), createdAt)
+                                && DateHelper.isAfterOrEquals(course.getEndDate(), createdAt);
+                    }
+                    break;
+                default:
+                    break;
+            }
+        }
+        return false;
     }
 
     public static JsonObject exempted(Course course, JsonArray exemptions) {

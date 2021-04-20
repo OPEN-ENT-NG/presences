@@ -323,6 +323,8 @@
   "presences.register.event_type.forgotten.notebook": "Carnet oublié",
   "presences.register.event_type.forgotten.notebooks": "Carnets oubliés",
   "presences.register.event_type.incident": "Incident",
+  "presences.register.event_type.punishment": "Punition/Sanction",
+  "presences.register.event_type.punishment.type": "Type",
   "presences.register.event_type.last.absent": "Absent la dernière fois",
   "presences.register.event_type.lateness": "Retard",
   "presences.register.event_type.remark": "Observation",

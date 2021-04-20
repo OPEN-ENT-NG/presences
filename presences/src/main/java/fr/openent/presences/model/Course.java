@@ -21,6 +21,7 @@ public class Course implements Cloneable {
     private Boolean exempted;
     private JsonObject exemption;
     private JsonObject incident;
+    private JsonArray punishments;
     private Integer dayOfWeek;
     private Boolean manual;
     private Boolean locked;
@@ -63,6 +64,7 @@ public class Course implements Cloneable {
         this.exempted = course.getBoolean("exempted", null);
         this.exemption = course.getJsonObject("exemption", null);
         this.incident = course.getJsonObject("incident", null);
+        this.punishments = course.getJsonArray("punishments", new JsonArray());
         this.dayOfWeek = course.getInteger("dayOfWeek", null);
         this.manual = course.getBoolean("manual", null);
         this.locked = course.getBoolean("locked", null);
@@ -401,6 +403,14 @@ public class Course implements Cloneable {
 
     public void setIncident(JsonObject incident) {
         this.incident = incident;
+    }
+
+    public JsonArray getPunishments() {
+        return punishments;
+    }
+
+    public void setPunishments(JsonArray punishments) {
+        this.punishments = punishments;
     }
 
     public List<Course> getSplitCourses() {

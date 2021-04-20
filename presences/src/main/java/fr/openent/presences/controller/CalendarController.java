@@ -30,6 +30,7 @@ import org.entcore.common.controller.ControllerHelper;
 import org.entcore.common.http.filter.ResourceFilter;
 
 import java.util.*;
+import java.util.stream.Collectors;
 
 import static fr.wseduc.webutils.Utils.handlerToAsyncHandler;
 import static org.entcore.common.http.response.DefaultResponseHandler.arrayResponseHandler;
@@ -57,6 +58,7 @@ public class CalendarController extends ControllerHelper {
     @ApiDoc("Retrieve all courses and events")
     @SecuredAction(value = "", type = ActionType.RESOURCE)
     @ResourceFilter(SearchRight.class)
+    @SuppressWarnings("unchecked")
     public void getCalendarCourses(HttpServerRequest request) {
         MultiMap params = request.params();
         if (!courseHelper.checkParams(params)) {
@@ -65,7 +67,10 @@ public class CalendarController extends ControllerHelper {
         }
 
         List<String> users = params.getAll("user");
+        String user = params.get("user");
         String structure = params.get("structure");
+        String start = params.get("start");
+        String end = params.get("end");
         groupService.getUserGroups(users, structure, groupEvent -> {
             if (groupEvent.isLeft()) {
                 log.error("[CalendarController@getCalendarCourses] Failed to retrieve users groups", groupEvent.left().getValue());
@@ -92,79 +97,116 @@ public class CalendarController extends ControllerHelper {
                 Future<JsonArray> eventsFuture = Future.future();
                 Future<JsonArray> exemptionsFuture = Future.future();
                 Future<JsonArray> incidentsFuture = Future.future();
+                Future<JsonArray> punishmentsFuture = Future.future();
                 Future<JsonArray> absentFuture = Future.future();
 
-                CompositeFuture.all(eventsFuture, exemptionsFuture, incidentsFuture, absentFuture)
+                CompositeFuture.all(eventsFuture, exemptionsFuture, incidentsFuture, punishmentsFuture, absentFuture)
                         .setHandler(futureEvent -> {
                             if (futureEvent.failed()) {
                                 log.error("[CalendarController@getCalendarCourses] Failed to retrieve information", futureEvent.cause());
                                 renderError(request);
                                 return;
                             }
-                            JsonArray events = eventsFuture.result();
-                            JsonObject exemptionsMap = MapHelper.transformToMapMultiple(exemptionsFuture.result(), "subject_id");
-                            List<ExemptionView> exemptionView = ExemptionHelper.getExemptionListFromJsonArray(exemptionsFuture.result());
-                            JsonArray incidents = incidentsFuture.result();
-                            for (int i = 0; i < events.size(); i++) {
-                                JsonObject event = events.getJsonObject(i);
-                                String eventHash = CalendarHelper.hash(event.getString("course_id")
-                                        + event.getString("course_start_date")
-                                        + event.getString("course_end_date"));
-                                if (eventList.containsKey(eventHash)) {
-                                    event.remove("course_id");
-                                    event.remove("course_start_date");
-                                    event.remove("course_end_date");
-                                    eventList.get(eventHash).entrySet().iterator().next().getValue().getEvents().add(event);
-                                }
-                            }
 
-                            for (Course course : courses) {
-                                String subjectId = course.getSubjectId();
-                                if (!course.getExceptionnal().isEmpty()) {
-                                    course.setSubjectName(course.getExceptionnal());
-                                } else {
-                                    course.setSubjectName(course.getSubject().getName());
-                                }
-                                CalendarHelper.formatCourse(course);
-                                String courseHash = CalendarHelper.hash(course.getId() + course.getStartDate() + course.getEndDate());
-                                eventList.forEach((key, map) -> {
-                                    if (map.containsKey(courseHash)) {
-                                        course.setEvents(map.get(courseHash).getEvents());
-                                    }
-                                });
-                                course.setSplitCourses(CourseHelper.splitCoursesWithOneCourse(course, slots));
-                                if (exemptionsMap.containsKey(subjectId) && !course.getSubjectId().isEmpty()) {
-                                    JsonObject exemption = CalendarHelper.exempted(course, exemptionsMap.getJsonArray(subjectId));
-                                    if (exemption != null) {
-                                        course.setExempted(true);
-                                        course.setExemption(new JsonObject()
-                                                .put("start_date", exemption.getString("start_date"))
-                                                .put("end_date", exemption.getString("end_date"))
-                                                .put("attendance", exemption.getBoolean("attendance")));
-                                    } else {
-                                        course.setExempted(false);
-                                    }
-                                } else {
-                                    course.setExempted(CalendarHelper.isExemptionRecursiveExempted(course, exemptionView));
-                                }
+                            JsonArray punishmentsResult = punishmentsFuture.result() != null ? punishmentsFuture.result() : new JsonArray();
+                            List<JsonObject> punishments = (List<JsonObject>) ((List<JsonObject>) punishmentsResult.getList()).stream()
+                                    .flatMap(punishment -> punishment.getJsonArray("punishments").getList().stream())
+                                    .collect(Collectors.toList());
 
-                                JsonObject incident = CalendarHelper.incident(course, incidents);
-                                if (incident != null) {
-                                    course.setIncident(new JsonObject().put("description", incident.getString("description")).put("date", incident.getString("date")));
-                                }
-                            }
-                            JsonArray eventsCalendar = new JsonArray().addAll(new JsonArray(courses));
-                            renderJson(request, eventsCalendar);
+                            renderJson(request, formatCalendar(punishments, eventsFuture.result().getList(), eventList, courses,
+                                    exemptionsFuture.result(), slots, incidentsFuture.result())
+                            );
                         });
-                getEvents(params.get("structure"), params.get("start") + " 00:00:00", params.get("end") + " 23:59:59", eventTypes, Arrays.asList(params.get("user")), eventsFuture);
-                getExemptions(params.get("structure"), params.get("start") + " 00:00:00", params.get("end") + " 23:59:59", params.get("user"), exemptionsFuture);
-                getIncidents(params.get("structure"), params.get("start") + " 00:00:00", params.get("end") + " 23:59:59", params.get("user"), incidentsFuture);
-                getAbsences(params.get("start"), params.get("end"), params.get("user"), absentFuture);
+
+                String startTime = " 00:00:00";
+                String endTime = " 23:59:59";
+                getEvents(structure, start + startTime, end + endTime, eventTypes, users, eventsFuture);
+                getExemptions(structure, start + startTime, end + endTime, user, exemptionsFuture);
+                getIncidents(structure, start + startTime, end + endTime, user, incidentsFuture);
+                getPunishments(structure, start + startTime, end + endTime, users, punishmentsFuture);
+                getAbsences(start, end, user, absentFuture);
             });
             courseHelper.getCoursesList(structure, params.getAll("teacher"), groups,
-                    params.get("start"), params.get("end"), coursesFuture);
+                    start, end, coursesFuture);
             Viescolaire.getInstance().getDefaultSlots(structure, FutureHelper.handlerJsonArray(slotsFuture));
         });
+    }
+
+    private JsonArray formatCalendar(List<JsonObject> punishments, List<JsonObject> events, HashMap<String, Map<String, Course>> eventList,
+                                     List<Course> courses, JsonArray exemptions, List<Slot> slots, JsonArray incidents) {
+        for (JsonObject event : events) {
+            groupHashedEvents(event, eventList);
+        }
+
+        for (Course course : courses) {
+            formatCourse(course, eventList, exemptions, slots, incidents, punishments);
+        }
+        return new JsonArray().addAll(new JsonArray(courses));
+    }
+
+    private void groupHashedEvents(JsonObject event, HashMap<String, Map<String, Course>> eventList) {
+        String eventHash = CalendarHelper.hash(event.getString("course_id")
+                + event.getString("course_start_date")
+                + event.getString("course_end_date"));
+        if (eventList.containsKey(eventHash)) {
+            event.remove("course_id");
+            event.remove("course_start_date");
+            event.remove("course_end_date");
+            eventList.get(eventHash).entrySet().iterator().next().getValue().getEvents().add(event);
+        }
+    }
+
+    private void formatCourse(Course course, HashMap<String, Map<String, Course>> eventList, JsonArray exemptions,
+                              List<Slot> slots, JsonArray incidents, List<JsonObject> punishments) {
+        setCourseSubjectLabel(course);
+        CalendarHelper.formatCourse(course);
+        setEvents(course, eventList);
+        course.setSplitCourses(CourseHelper.splitCoursesWithOneCourse(course, slots));
+        setCourseExempted(course, exemptions);
+        setIncident(course, incidents);
+        course.setPunishments(new JsonArray(CalendarHelper.getMatchingPunishments(course, punishments)));
+    }
+
+    private void setCourseSubjectLabel(Course course) {
+        if (!course.getExceptionnal().isEmpty()) course.setSubjectName(course.getExceptionnal());
+        else course.setSubjectName(course.getSubject().getName());
+    }
+
+    private void setEvents(Course course, HashMap<String, Map<String, Course>> eventList) {
+        String courseHash = CalendarHelper.hash(course.getId() + course.getStartDate() + course.getEndDate());
+        eventList.forEach((key, map) -> {
+            if (map.containsKey(courseHash)) {
+                course.setEvents(map.get(courseHash).getEvents());
+            }
+        });
+    }
+
+    private void setCourseExempted(Course course, JsonArray exemptions) {
+        JsonObject exemptionsMap = MapHelper.transformToMapMultiple(exemptions, "subject_id");
+        List<ExemptionView> exemptionView = ExemptionHelper.getExemptionListFromJsonArray(exemptions);
+        String subjectId = course.getSubjectId();
+
+        if (exemptionsMap.containsKey(subjectId) && !course.getSubjectId().isEmpty()) {
+            JsonObject exemption = CalendarHelper.exempted(course, exemptionsMap.getJsonArray(subjectId));
+            if (exemption != null) {
+                course.setExempted(true);
+                course.setExemption(new JsonObject()
+                        .put("start_date", exemption.getString("start_date"))
+                        .put("end_date", exemption.getString("end_date"))
+                        .put("attendance", exemption.getBoolean("attendance")));
+            } else {
+                course.setExempted(false);
+            }
+        } else {
+            course.setExempted(CalendarHelper.isExemptionRecursiveExempted(course, exemptionView));
+        }
+    }
+
+    private void setIncident(Course course, JsonArray incidents) {
+        JsonObject incident = CalendarHelper.incident(course, incidents);
+        if (incident != null) {
+            course.setIncident(new JsonObject().put("description", incident.getString("description")).put("date", incident.getString("date")));
+        }
     }
 
     private void getIncidents(String structureId, String startDate, String endDate, String userId, Future<JsonArray> future) {
@@ -183,6 +225,25 @@ public class CalendarController extends ControllerHelper {
             }
 
             future.complete(event.body().getJsonArray("results"));
+        }));
+    }
+
+    private void getPunishments(String structureId, String startDate, String endDate, List<String> students, Future<JsonArray> future) {
+        JsonObject action = new JsonObject()
+                .put("action", "get-punishment-by-student")
+                .put("structure", structureId)
+                .put("students", students)
+                .put("start_at", startDate)
+                .put("end_at", endDate);
+
+        eb.send("fr.openent.incidents", action, handlerToAsyncHandler(event -> {
+            if (!"ok".equals(event.body().getString("status"))) {
+                log.error("[Presences@CalendarController] Failed to retrieve punishments", event.body().getString("error"));
+                future.fail(event.body().getString("error"));
+                return;
+            }
+
+            future.complete(event.body().getJsonArray("result"));
         }));
     }
 
