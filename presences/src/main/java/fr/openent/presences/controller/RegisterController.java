@@ -6,28 +6,26 @@ import fr.openent.presences.enums.RegisterStatus;
 import fr.openent.presences.security.CreateRegisterRight;
 import fr.openent.presences.service.RegisterService;
 import fr.openent.presences.service.impl.DefaultRegisterService;
-import fr.openent.presences.worker.CreateDailyPresenceWorker;
 import fr.wseduc.rs.ApiDoc;
 import fr.wseduc.rs.Get;
 import fr.wseduc.rs.Post;
 import fr.wseduc.rs.Put;
 import fr.wseduc.security.ActionType;
 import fr.wseduc.security.SecuredAction;
-import fr.wseduc.webutils.Utils;
 import fr.wseduc.webutils.request.RequestUtils;
-import io.vertx.core.eventbus.DeliveryOptions;
 import io.vertx.core.eventbus.EventBus;
 import io.vertx.core.http.HttpServerRequest;
-import io.vertx.core.json.JsonObject;
 import org.entcore.common.controller.ControllerHelper;
 import org.entcore.common.http.filter.ResourceFilter;
 import org.entcore.common.http.filter.Trace;
 import org.entcore.common.user.UserUtils;
 
+import java.util.*;
+
 public class RegisterController extends ControllerHelper {
 
-    private RegisterService registerService;
-    private EventBus eb;
+    private final RegisterService registerService;
+    private final EventBus eb;
 
     public RegisterController(EventBus eb) {
         super();
@@ -104,6 +102,32 @@ public class RegisterController extends ControllerHelper {
             } catch (ClassCastException | NumberFormatException e) {
                 log.error("[Presences@RegisterController::updateStatus] Failed to parse register identifier", e);
                 renderError(request);
+            }
+        });
+    }
+
+    @Get("/structures/:structureId/registers/forgotten")
+    @ApiDoc("Get last forgotten registers of the current day")
+    @SecuredAction(value = "", type = ActionType.AUTHENTICATED)
+    public void getLastForgottenRegisters(HttpServerRequest request) {
+
+        if (!request.params().contains("startDate") || !request.params().contains("endDate")) {
+            badRequest(request);
+            return;
+        }
+
+        String structureId = request.getParam("structureId");
+        String startDate = request.getParam("startDate");
+        String endDate = request.getParam("endDate");
+        List<String> groupNames = request.params().getAll("groupName");
+        List<String> teacherIds = request.params().getAll("teacherId");
+
+        registerService.getLastForgottenRegistersCourses(structureId, teacherIds, groupNames, startDate, endDate, either -> {
+            if (either.failed()) {
+                log.error("[Presences@CourseController::getLastForgottenRegisters] Failed to retrieve last forgotten course registers");
+                renderError(request);
+            } else {
+                renderJson(request, either.result());
             }
         });
     }

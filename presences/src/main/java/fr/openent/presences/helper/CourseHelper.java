@@ -1,13 +1,10 @@
 package fr.openent.presences.helper;
 
-import fr.openent.presences.common.helper.DateHelper;
+import fr.openent.presences.common.helper.*;
 import fr.openent.presences.model.Course;
 import fr.openent.presences.model.Slot;
 import fr.wseduc.webutils.Either;
-import io.vertx.core.AsyncResult;
-import io.vertx.core.Future;
-import io.vertx.core.Handler;
-import io.vertx.core.MultiMap;
+import io.vertx.core.*;
 import io.vertx.core.eventbus.EventBus;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
@@ -103,6 +100,13 @@ public class CourseHelper {
         }
     }
 
+    public static void setTeachersCourses(JsonArray courses, JsonArray teachersIds) {
+        for (int i = 0; i < courses.size(); i++) {
+            JsonObject course = courses.getJsonObject(i);
+            CourseHelper.treatTeacherInCourse(teachersIds, course);
+        }
+    }
+
     private static void setTeacherCourseObject(JsonObject teacherMap, JsonObject object) {
         JsonArray courseTeachers = new JsonArray();
         JsonArray teacherIds = object.getJsonArray("teacherIds", new JsonArray());
@@ -181,6 +185,23 @@ public class CourseHelper {
                 handler.handle(new Either.Left<>(err));
             } else {
                 handler.handle(new Either.Right<>(((JsonObject) event.result().body()).getJsonArray("results")));
+            }
+        });
+    }
+
+    public void getCoursesByIds(JsonArray courseIds, Handler<Either<String, JsonArray>> handler) {
+        JsonObject action = new JsonObject()
+                .put("action", "course.getCoursesByIds")
+                .put("courseIds", courseIds);
+
+        eb.send("viescolaire", action, courseAsync -> {
+            if (courseAsync.failed() || courseAsync.result() == null ||
+                    "error".equals(((JsonObject) courseAsync.result().body()).getString("status"))) {
+
+                String message = "[CourseHelper@getCoursesByIds] Failed to retrieve courses by ids.";
+                handler.handle(new Either.Left<>(message));
+            } else {
+                handler.handle(new Either.Right<>(((JsonObject) courseAsync.result().body()).getJsonArray("result")));
             }
         });
     }

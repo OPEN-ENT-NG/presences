@@ -1,7 +1,7 @@
 package fr.openent.presences.service;
 
 import fr.wseduc.webutils.Either;
-import io.vertx.core.Handler;
+import io.vertx.core.*;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import org.entcore.common.user.UserInfos;
@@ -65,4 +65,16 @@ public interface RegisterService {
      * @param handler    Function handler returning data
      */
     void setNotified(Long registerId, Handler<Either<String, JsonObject>> handler);
+
+    /**
+     * List the last 16 courses with forgotten registers before the given date.
+     * @param structureId       Structure identifier
+     * @param teacherIds        Teacher identifiers
+     * @param groupNames        Group names
+     * @param startDate         Start date
+     * @param endDate           End date
+     * @param handler           Function handler returning data
+     */
+    void getLastForgottenRegistersCourses(String structureId, List<String> teacherIds, List<String> groupNames,
+                                          String startDate, String endDate, Handler<AsyncResult<JsonArray>> handler);
 }

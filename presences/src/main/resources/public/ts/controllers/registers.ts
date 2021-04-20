@@ -13,7 +13,7 @@ import {
     RegisterStatus,
     Remark
 } from '../models';
-import {GroupService, ReasonService, SearchService} from '../services';
+import {GroupService, ReasonService, registerService, SearchService} from '../services';
 import {CourseUtils, DateUtils, PreferencesUtils} from '@common/utils';
 import rights from '../rights';
 import {Scope} from './main';
@@ -101,6 +101,8 @@ export interface ViewModel {
                 start_date?: string, end_date?: string, start_time?: string, end_time?: string,
                 forgotten_registers?: boolean, multipleSlot?: boolean, limit?: number, offset?: number,
                 descendingDate?: boolean, disableWithoutTeacher?: boolean): Promise<void>;
+
+    loadCoursesWithForgottenRegisters(users?: Array<string>, groups?: Array<string>): Promise<void>;
 
     isFuturCourse(course: Course): boolean;
 
@@ -211,20 +213,7 @@ export const registersController = ng.controller('RegistersController',
                 },
                 /* Called from dashboard : 16 correspond to the limit number needed in dashboard */
                 forgottenRegisterWidget: async (): Promise<void> => {
-                    await vm.loadCourses(extractSelectedTeacherIds(), extractSelectedGroupsName(),
-                        undefined, undefined, undefined, undefined, undefined,
-                        undefined, undefined, undefined, undefined, undefined,
-                        true)
-                    const currentDate: string = DateUtils.format(moment(), DateUtils.FORMAT["YEAR-MONTH-DAY-HOUR-MIN-SEC"]);
-                    let courses: Course[] = []
-                    vm.courses.all
-                        .sort((course1: Course, course2: Course) => course2.timestamp - course1.timestamp)
-                        .map((course: Course) => {
-                            if (moment(currentDate).isAfter(moment(course.startDate).add(14.9, 'minutes')) && courses.length < 16) {
-                                courses.push(course);
-                            }
-                        });
-                    vm.courses.all = courses;
+                    await vm.loadCoursesWithForgottenRegisters(extractSelectedTeacherIds(), extractSelectedGroupsName());
                     $scope.safeApply();
                 },
             };
@@ -751,6 +740,17 @@ export const registersController = ng.controller('RegistersController',
                 $scope.$broadcast(INFINITE_SCROLL_EVENTER.UPDATE);
                 $scope.safeApply();
             };
+
+
+            vm.loadCoursesWithForgottenRegisters = async (users?: Array<string>, groups?: Array<string>): Promise<void> => {
+
+                const currentDate: string = DateUtils.format(moment(), DateUtils.FORMAT["YEAR-MONTH-DAY-HOUR-MIN-SEC"]);
+                let startDate: string = DateUtils.format(DateUtils.setFirstTime(moment(currentDate)), DateUtils.FORMAT["YEAR-MONTH-DAY-HOUR-MIN-SEC"]);
+                let endDate: string = DateUtils.format(moment(currentDate).add(-14.9, 'minutes'), DateUtils.FORMAT["YEAR-MONTH-DAY-HOUR-MIN-SEC"]);
+                vm.courses.all = await registerService.getLastForgottenRegisterCourses(window.structure.id, startDate, endDate, users, groups);
+            };
+
+
 
             vm.isEmptyGroupRegister = function () {
                 return !vm.register || vm.register.students.length === 0;

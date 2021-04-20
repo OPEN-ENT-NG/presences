@@ -111,7 +111,7 @@ public class DefaultCourseService implements CourseService {
             }
             JsonArray courses = event.right().getValue();
             JsonArray teachersIds = new JsonArray();
-            setTeachersCourses(courses, teachersIds);
+            CourseHelper.setTeachersCourses(courses, teachersIds);
 
             List<String> coursesIds = ((List<JsonObject>) courses.getList())
                     .stream()
@@ -147,13 +147,6 @@ public class DefaultCourseService implements CourseService {
             Viescolaire.getInstance().getSlotsFromProfile(structureId, FutureHelper.handlerJsonArray(slotsFuture));
             registerService.list(structureId, coursesIds, FutureHelper.handlerJsonArray(registerEventFuture));
         });
-    }
-
-    private void setTeachersCourses(JsonArray courses, JsonArray teachersIds) {
-        for (int i = 0; i < courses.size(); i++) {
-            JsonObject course = courses.getJsonObject(i);
-            CourseHelper.treatTeacherInCourse(teachersIds, course);
-        }
     }
 
     private List<Course> filterForgottenCourses(List<Course> courses) {

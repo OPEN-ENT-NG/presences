@@ -77,8 +77,8 @@ public class SquashHelper {
     private boolean isMatchRegisterCourse(Course course, JsonObject register) {
         boolean isMatch = false;
         try {
-            Date courseStartDate = DateHelper.parse(course.getStartDate(), DateHelper.MONGO_FORMAT);
-            Date courseEndDate = DateHelper.parse(course.getEndDate(), DateHelper.MONGO_FORMAT);
+            Date courseStartDate = DateHelper.parse(course.getStartDate());
+            Date courseEndDate = DateHelper.parse(course.getEndDate());
             Date registerStartDate = DateHelper.parse(register.getString("start_date"), DateHelper.SQL_FORMAT);
             Date registerEndDate = DateHelper.parse(register.getString("end_date"), DateHelper.SQL_FORMAT);
             if ((courseStartDate.equals(registerStartDate) && courseEndDate.equals(registerEndDate))

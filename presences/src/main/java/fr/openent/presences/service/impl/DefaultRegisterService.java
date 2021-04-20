@@ -7,17 +7,15 @@ import fr.openent.presences.common.helper.RegisterHelper;
 import fr.openent.presences.common.service.GroupService;
 import fr.openent.presences.common.service.impl.DefaultGroupService;
 import fr.openent.presences.common.viescolaire.Viescolaire;
+import fr.openent.presences.db.*;
 import fr.openent.presences.enums.EventType;
 import fr.openent.presences.enums.GroupType;
-import fr.openent.presences.helper.RegisterPresenceHelper;
-import fr.openent.presences.service.ExemptionService;
-import fr.openent.presences.service.NotebookService;
-import fr.openent.presences.service.RegisterService;
+import fr.openent.presences.helper.*;
+import fr.openent.presences.model.*;
+import fr.openent.presences.service.*;
 import fr.wseduc.mongodb.MongoDb;
 import fr.wseduc.webutils.Either;
-import io.vertx.core.CompositeFuture;
-import io.vertx.core.Future;
-import io.vertx.core.Handler;
+import io.vertx.core.*;
 import io.vertx.core.eventbus.EventBus;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
@@ -37,20 +35,24 @@ import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
 
-public class DefaultRegisterService implements RegisterService {
+public class DefaultRegisterService extends DBService implements RegisterService {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(DefaultRegisterService.class);
+    private final EventBus eb;
     private final GroupService groupService;
     private final ExemptionService exemptionService;
     private final RegisterHelper registerHelper;
+    private final CourseHelper courseHelper;
     private final RegisterPresenceHelper registerPresenceHelper;
     private final NotebookService notebookService;
 
     public DefaultRegisterService(EventBus eb) {
+        this.eb = eb;
         this.groupService = new DefaultGroupService(eb);
         this.exemptionService = new DefaultExemptionService(eb);
         this.registerHelper = new RegisterHelper(eb, Presences.dbSchema);
         this.registerPresenceHelper = new RegisterPresenceHelper(eb);
+        this.courseHelper = new CourseHelper(eb);
         this.notebookService = new DefaultNotebookService();
     }
 
@@ -821,4 +823,145 @@ public class DefaultRegisterService implements RegisterService {
                 .put("action", "prepared");
     }
 
+    @Override
+    public void getLastForgottenRegistersCourses(String structureId, List<String> teacherIds, List<String> groupNames,
+                                                 String startDate, String endDate, Handler<AsyncResult<JsonArray>> handler) {
+
+        getLastForgottenRegisters(structureId, startDate, endDate)
+                .compose(registers -> getCoursesFromRegisters(structureId, registers, teacherIds, groupNames))
+                .setHandler(ar -> {
+                    if (ar.failed()) {
+                        String message = "[Presences@DefaultCourseService::getLastForgottenRegistersCourses] " +
+                                "Error fetching courses with last forgotten registers";
+                        LOGGER.error(message);
+                        handler.handle(Future.failedFuture(message));
+                    } else {
+                        handler.handle(Future.succeededFuture(ar.result()));
+                    }
+                });
+    }
+
+    private Future<JsonArray> getLastForgottenRegisters(String structureId, String startDate, String endDate) {
+        Future<JsonArray> future = Future.future();
+        String query = "SELECT id, start_date, end_date, course_id, state_id, notified, split_slot FROM "
+                + Presences.dbSchema + ".register WHERE structure_id = ? AND state_id != 3 " +
+                "AND start_date > ? AND start_date < ? ORDER BY start_date DESC";
+
+        JsonArray params = new JsonArray();
+        params.add(structureId)
+                .add(startDate)
+                .add(endDate);
+        sql.prepared(query, params, SqlResult.validResultHandler(result -> {
+            if (result.isLeft()) {
+                String message = "[Presences@DefaultCourseService::getLastForgottenRegisters] Failed to get " +
+                        "last forgotten registers.";
+                LOGGER.error(message, result.left().getValue());
+                future.fail(result.left().getValue());
+
+            } else {
+                future.complete(result.right().getValue());
+            }
+        }));
+
+        return future;
+    }
+
+    @SuppressWarnings("unchecked")
+    private Future<JsonArray> getCoursesFromRegisters(String structureId, JsonArray registers, List<String> teacherIds, List<String> groupNames) {
+        Future<JsonArray> future = Future.future();
+
+        JsonArray courseIds = new JsonArray();
+
+        for (int i = 0; i < registers.size(); i++) {
+            courseIds.add(registers.getJsonObject(i).getString("course_id"));
+        }
+
+        courseHelper.getCoursesByIds(courseIds, res -> {
+            if (res.isLeft()) {
+                future.fail(res.left().getValue());
+            } else {
+                JsonArray courses = res.right().getValue();
+                List<String> coursesIds = ((List<JsonObject>) courses.getList())
+                        .stream()
+                        .map(course -> course.getString("_id")).collect(Collectors.toList());
+
+                Future<JsonArray> teachersFuture = Future.future();
+                Future<JsonArray> registerEventFuture = Future.future();
+
+                CompositeFuture.all(teachersFuture, registerEventFuture).setHandler(asyncHandler -> {
+                    if (asyncHandler.failed()) {
+                        future.fail(asyncHandler.cause().getMessage());
+                        return;
+                    }
+
+                    List<Course> coursesEvent = CourseHelper.getCourseListFromJsonArray(courses, Course.MANDATORY_ATTRIBUTE);
+
+                    SquashHelper squashHelper = new SquashHelper();
+                    List<Course> squashCourses = squashHelper.squash(coursesEvent, new ArrayList<>(),
+                            registerEventFuture.result(), false);
+
+                    future.complete(filterLastForgottenRegisterCourses(squashCourses, teacherIds, groupNames));
+                });
+
+                formatCourseTeachersAndSubjects(courses, FutureHelper.handlerJsonArray(teachersFuture));
+                list(structureId, coursesIds, FutureHelper.handlerJsonArray(registerEventFuture));
+            }
+        });
+
+        return future;
+    }
+
+
+    private void formatCourseTeachersAndSubjects(JsonArray courses, Handler<Either<String, JsonArray>> handler) {
+        JsonArray teachersIds = new JsonArray();
+        CourseHelper.setTeachersCourses(courses, teachersIds);
+
+        courseHelper.getCourseTeachers(teachersIds, teachRes -> {
+            if (teachRes.isLeft()) {
+                String message = "[Presences@DefaultCourseService::getCoursesFromRegisters] " +
+                        "Failed to get course teachers.";
+                handler.handle(new Either.Left<>(message));
+            }
+            JsonArray teachers = teachRes.right().getValue();
+            JsonObject teacherMap = MapHelper.transformToMap(teachers, "id");
+
+            CourseHelper.formatCourse(courses, teacherMap);
+            handler.handle(new Either.Right<>(courses));
+        });
+    }
+
+    private JsonArray filterLastForgottenRegisterCourses(List<Course> courses, List<String> teacherIds, List<String> groupNames) {
+        final int numberRegisters = 16;
+        courses = courses.stream().filter(course -> (teacherIds.isEmpty() || courseHasTeacherOfId(course.toJSON(), teacherIds)) &&
+                (groupNames.isEmpty() || courseHasClassOrGroupName(course.toJSON(), groupNames)) && !course.getTeachers().isEmpty())
+                .sorted((o1, o2) -> o2.getStartDate().compareToIgnoreCase(o1.getStartDate()))
+                .limit(numberRegisters)
+                .sorted((o1, o2) -> o1.getStartDate().compareToIgnoreCase(o2.getStartDate()))
+                .collect(Collectors.toList());
+
+        return new JsonArray(courses);
+    }
+
+
+    /**
+     * Checks if course object contains a teacher w/ an id in teacherIds array.
+     * @param course        the course object
+     * @param teacherIds    lit of teacher identifiers
+     */
+    @SuppressWarnings("unchecked")
+    private boolean courseHasTeacherOfId(JsonObject course, List<String> teacherIds) {
+        JsonArray teachers = course.getJsonArray("teachers", new JsonArray());
+        return ((List<JsonObject>) teachers.getList())
+                .stream()
+                .map(teacher -> teacher.getString("id"))
+                .anyMatch(teacherIds::contains);
+    }
+
+    @SuppressWarnings("unchecked")
+    private boolean courseHasClassOrGroupName(JsonObject course, List<String> groupNames) {
+        JsonArray classes = course.getJsonArray("classes", new JsonArray());
+        JsonArray groups = course.getJsonArray("groups", new JsonArray());
+        return  ((List<String>) classes.getList()).stream().anyMatch(groupNames::contains) ||
+                ((List<String>) groups.getList()).stream().anyMatch(groupNames::contains);
+    }
 }
