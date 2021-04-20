@@ -20,7 +20,7 @@ import org.entcore.common.http.filter.ResourceFilter;
 import org.entcore.common.http.filter.Trace;
 import org.entcore.common.user.UserUtils;
 
-import java.util.*;
+import java.util.List;
 
 public class RegisterController extends ControllerHelper {
 
@@ -124,7 +124,7 @@ public class RegisterController extends ControllerHelper {
 
         registerService.getLastForgottenRegistersCourses(structureId, teacherIds, groupNames, startDate, endDate, either -> {
             if (either.failed()) {
-                log.error("[Presences@CourseController::getLastForgottenRegisters] Failed to retrieve last forgotten course registers");
+                log.error("[Presences@CourseController::getLastForgottenRegisters] Failed to retrieve last forgotten course registers: " + either.cause().getMessage());
                 renderError(request);
             } else {
                 renderJson(request, either.result());

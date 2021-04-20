@@ -7,15 +7,23 @@ import fr.openent.presences.common.helper.RegisterHelper;
 import fr.openent.presences.common.service.GroupService;
 import fr.openent.presences.common.service.impl.DefaultGroupService;
 import fr.openent.presences.common.viescolaire.Viescolaire;
-import fr.openent.presences.db.*;
+import fr.openent.presences.db.DBService;
 import fr.openent.presences.enums.EventType;
 import fr.openent.presences.enums.GroupType;
-import fr.openent.presences.helper.*;
-import fr.openent.presences.model.*;
-import fr.openent.presences.service.*;
+import fr.openent.presences.helper.CourseHelper;
+import fr.openent.presences.helper.MapHelper;
+import fr.openent.presences.helper.RegisterPresenceHelper;
+import fr.openent.presences.helper.SquashHelper;
+import fr.openent.presences.model.Course;
+import fr.openent.presences.service.ExemptionService;
+import fr.openent.presences.service.NotebookService;
+import fr.openent.presences.service.RegisterService;
 import fr.wseduc.mongodb.MongoDb;
 import fr.wseduc.webutils.Either;
-import io.vertx.core.*;
+import io.vertx.core.AsyncResult;
+import io.vertx.core.CompositeFuture;
+import io.vertx.core.Future;
+import io.vertx.core.Handler;
 import io.vertx.core.eventbus.EventBus;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
@@ -832,7 +840,7 @@ public class DefaultRegisterService extends DBService implements RegisterService
                 .setHandler(ar -> {
                     if (ar.failed()) {
                         String message = "[Presences@DefaultCourseService::getLastForgottenRegistersCourses] " +
-                                "Error fetching courses with last forgotten registers";
+                                "Error fetching courses with last forgotten registers: " + ar.cause().getMessage();
                         LOGGER.error(message);
                         handler.handle(Future.failedFuture(message));
                     } else {

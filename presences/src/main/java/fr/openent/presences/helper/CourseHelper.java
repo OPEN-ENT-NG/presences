@@ -1,10 +1,13 @@
 package fr.openent.presences.helper;
 
-import fr.openent.presences.common.helper.*;
+import fr.openent.presences.common.helper.DateHelper;
 import fr.openent.presences.model.Course;
 import fr.openent.presences.model.Slot;
 import fr.wseduc.webutils.Either;
-import io.vertx.core.*;
+import io.vertx.core.AsyncResult;
+import io.vertx.core.Future;
+import io.vertx.core.Handler;
+import io.vertx.core.MultiMap;
 import io.vertx.core.eventbus.EventBus;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
@@ -195,10 +198,8 @@ public class CourseHelper {
                 .put("courseIds", courseIds);
 
         eb.send("viescolaire", action, courseAsync -> {
-            if (courseAsync.failed() || courseAsync.result() == null ||
-                    "error".equals(((JsonObject) courseAsync.result().body()).getString("status"))) {
-
-                String message = "[CourseHelper@getCoursesByIds] Failed to retrieve courses by ids.";
+            if (courseAsync.failed() || courseAsync.result() == null || "error".equals(((JsonObject) courseAsync.result().body()).getString("status"))) {
+                String message = "[CourseHelper@getCoursesByIds] Failed to retrieve courses by ids: " + courseAsync.cause().getMessage();
                 handler.handle(new Either.Left<>(message));
             } else {
                 handler.handle(new Either.Right<>(((JsonObject) courseAsync.result().body()).getJsonArray("result")));
