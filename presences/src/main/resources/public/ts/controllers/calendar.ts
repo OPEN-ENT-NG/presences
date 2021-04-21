@@ -16,7 +16,7 @@ import {
 import {Scope} from './main';
 import {Absence, EventType, ICalendarItems, ITimeSlot, Presence, Presences, Reason, User} from '../models';
 import {Punishments} from '@incidents/models';
-import {DateUtils, PreferencesUtils, PresencesPreferenceUtils} from '@common/utils';
+import {DateUtils, PreferencesUtils} from '@common/utils';
 import {SNIPLET_FORM_EMIT_EVENTS, SNIPLET_FORM_EMIT_PUNISHMENT_EVENTS, SNIPLET_FORM_EVENTS} from '@common/model';
 import {NOTEBOOK_FORM_EVENTS} from '../sniplets';
 import {CalendarAbsenceUtils, CalendarUtils, EventsUtils} from '../utilities';
@@ -79,6 +79,8 @@ interface ViewModel {
     getEventTypeDate(event: CourseEvent): string;
 
     formatPresenceDate(date: string): string;
+
+    hasEventAbsenceWithReason(course: Course): boolean;
 
     hasEventAbsenceRegularized(course: Course): boolean;
 
@@ -281,20 +283,38 @@ export const calendarController = ng.controller('CalendarController',
                 return DateUtils.format(date, DateUtils.FORMAT["HOUR-MINUTES"]);
             };
 
-            vm.hasEventAbsenceRegularized = (course: Course): boolean => {
+            /**
+             * Determine in course if they have at least one event/absence with reason
+             *
+             * @param course Course object
+             */
+            vm.hasEventAbsenceWithReason = (course: Course): boolean => {
                 if (course.events.length === 0 && course.absences.length === 0) return false;
                 let isFound: boolean = false;
                 course.events.forEach((event: CourseEvent) => {
-                    if (event.type_id === EventType.ABSENCE && event.counsellor_regularisation === true) {
+                    if (event.type_id === EventType.ABSENCE && event.reason_id) {
                         isFound = true;
                     }
                 });
                 course.absences.forEach((absence: Absence) => {
-                    if (absence.type_id === EventType.ABSENCE && absence.counsellor_regularisation === true) {
+                    if (absence.type_id === EventType.ABSENCE && absence.reason_id) {
                         isFound = true;
                     }
                 });
                 return isFound;
+            };
+
+            /**
+             * Determine in course if they have at least one event/absence with counsellor_regularisation
+             *
+             * @param course Course object
+             */
+            vm.hasEventAbsenceRegularized = (course: Course): boolean => {
+                if (course.events.length === 0 && course.absences.length === 0) return false;
+                return !!course.events
+                        .find((event: CourseEvent) => event.type_id === EventType.ABSENCE && event.reason_id !== null) ||
+                    !!course.absences
+                        .find((absence: Absence) => absence.type_id === EventType.ABSENCE && absence.reason_id != null);
             };
 
             const findEventAbsenceJustified = (course: Course): CourseEvent | Absence => {
@@ -445,7 +465,7 @@ export const calendarController = ng.controller('CalendarController',
             };
 
             $scope.hoverEvents = ($event, course: Course) => {
-                if (!vm.hasEventAbsenceRegularized(course)) return;
+                if (!vm.hasEventAbsenceWithReason(course)) return;
                 const hover = document.getElementById('event-absence-hover');
                 const {minWidth, minHeight} = getComputedStyle(hover);
                 let {x, y} = $event.target.closest('.course-item-container').getBoundingClientRect();
