@@ -50,9 +50,9 @@ public class DateHelper {
     /**
      * Assign time (hh, mm, dd => from chosen format) to a given date
      *
-     * @param dateString Date to get assigned by time
-     * @param timeString Time to assign to date
-     * @param timeFormat Initial time format
+     * @param dateString   Date to get assigned by time
+     * @param timeString   Time to assign to date
+     * @param timeFormat   Initial time format
      * @param wishedFormat Format string expected to be return
      * @return String corresponding to date with new time
      */
@@ -62,10 +62,10 @@ public class DateHelper {
         SimpleDateFormat sdf = new SimpleDateFormat(wishedFormat);
 
         try {
-        if (dateString != null) date.setTime(parse(dateString));
-        if (timeString != null) time.setTime(parse(timeString, timeFormat));
+            if (dateString != null) date.setTime(parse(dateString));
+            if (timeString != null) time.setTime(parse(timeString, timeFormat));
 
-        time.set(date.get(Calendar.YEAR), date.get(Calendar.MONTH), date.get(Calendar.DATE));
+            time.set(date.get(Calendar.YEAR), date.get(Calendar.MONTH), date.get(Calendar.DATE));
 
         } catch (ParseException e) {
             LOGGER.error("[Presence@DateHelper::setTimeToDate] Error when casting date: ", e);
@@ -131,9 +131,35 @@ public class DateHelper {
         return date.contains("T") ? ssdf.parse(date) : msdf.parse(date);
     }
 
+    public static Date parseDate(String dateString) {
+        Date date = new Date();
+        SimpleDateFormat ssdf = DateHelper.getPsqlSimpleDateFormat();
+        SimpleDateFormat msdf = DateHelper.getMongoSimpleDateFormat();
+        try {
+            date = dateString.contains("T") ? ssdf.parse(dateString) : msdf.parse(dateString);
+        } catch (ParseException e) {
+            LOGGER.error("[Presence@DateHelper::parseDate] Error when casting date: ", e);
+        }
+
+        return date;
+    }
+
     public static Date parse(String date, String format) throws ParseException {
         SimpleDateFormat sdf = new SimpleDateFormat(format);
         return sdf.parse(date);
+    }
+
+    public static Date parseDate(String dateString, String format) {
+        Date date = new Date();
+
+        SimpleDateFormat sdf = new SimpleDateFormat(format);
+        try {
+            date = sdf.parse(dateString);
+        } catch (ParseException e) {
+            LOGGER.error("[Presence@DateHelper::parseDate] Error when casting date: ", e);
+        }
+
+        return date;
     }
 
     /**
@@ -148,6 +174,40 @@ public class DateHelper {
         Date secondDate = parse(date2);
 
         return firstDate.after(secondDate);
+    }
+
+    /**
+     * Same that isAfter, but from a given format and without try / catch
+     *
+     * @param date1 First hour
+     * @param date2 Second hour
+     * @param format base dates format
+     * @return Boolean that match if the first date is before the second date
+     */
+    public static boolean isDateFormatAfter(String date1, String date2, String format) {
+        Date firstHour = new Date();
+        Date secondHour = new Date();
+        SimpleDateFormat sdft = new SimpleDateFormat(format);
+        try {
+            firstHour = sdft.parse(date1);
+            secondHour = sdft.parse(date2);
+        } catch (ParseException e) {
+            LOGGER.error("[Presence@DateHelper::isHourAfter] Error when casting hour: ", e);
+        }
+
+        return firstHour.after(secondHour);
+    }
+
+    /**
+     * Same that isAfter, but from a given format and without try / catch
+     *
+     * @param date1 First hour
+     * @param date2 Second hour
+     * @param format base dates format
+     * @return Boolean that match if the first date is before the second date
+     */
+    public static boolean isHourAfterOrEqual(String date1, String date2, String format) {
+        return isDateFormatAfter(date1, date2, format) || isDateFormatEqual(date1, date2, format);
     }
 
     /**
@@ -185,6 +245,29 @@ public class DateHelper {
     }
 
     /**
+     * Test if 2 hours are equals from a given format, but without try / catch
+     *
+     * @param date1 First hour
+     * @param date2 Second hour
+     * @param format base dates format
+     * @return Boolean that match if the first hour is before the second hour
+     */
+    public static boolean isDateFormatEqual(String date1, String date2, String format) {
+        Date firstDate = new Date();
+        Date secondDate = new Date();
+        SimpleDateFormat sdft = new SimpleDateFormat(format);
+
+        try {
+            firstDate = sdft.parse(date1);
+            secondDate = sdft.parse(date2);
+        } catch (ParseException e) {
+            LOGGER.error("[Presence@DateHelper::isHourEqual] Error when casting hour: ", e);
+        }
+
+        return firstDate.equals(secondDate);
+    }
+
+    /**
      * Same that isBefore, but without try / catch
      *
      * @param date1 First date
@@ -202,6 +285,28 @@ public class DateHelper {
         }
 
         return firstDate.before(secondDate);
+    }
+
+    /**
+     * Same that isDateBefore, but from a given format
+     *
+     * @param date1 First date
+     * @param date2 Second date
+     * @param format base dates format
+     * @return Boolean that match if the first date is before the second date
+     */
+    public static boolean isDateFormatBefore(String date1, String date2, String format) {
+        Date firstHour = new Date();
+        Date secondHour = new Date();
+        SimpleDateFormat sdft = new SimpleDateFormat(format);
+        try {
+            firstHour = sdft.parse(date1);
+            secondHour = sdft.parse(date2);
+        } catch (ParseException e) {
+            LOGGER.error("[Presence@DateHelper::isHourBefore] Error when casting hour: ", e);
+        }
+
+        return firstHour.before(secondHour);
     }
 
 
@@ -557,7 +662,7 @@ public class DateHelper {
         Calendar calendar = Calendar.getInstance();
         SimpleDateFormat sdf = new SimpleDateFormat(format);
         sdf.setTimeZone(TimeZone.getTimeZone("Europe/Paris"));
-        
+
         calendar.add(calendarValue, value);
         return sdf.format(calendar.getTime());
     }

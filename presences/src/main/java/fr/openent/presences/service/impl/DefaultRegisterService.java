@@ -59,7 +59,7 @@ public class DefaultRegisterService extends DBService implements RegisterService
         this.groupService = new DefaultGroupService(eb);
         this.exemptionService = new DefaultExemptionService(eb);
         this.registerHelper = new RegisterHelper(eb, Presences.dbSchema);
-        this.registerPresenceHelper = new RegisterPresenceHelper(eb);
+        this.registerPresenceHelper = new RegisterPresenceHelper();
         this.courseHelper = new CourseHelper(eb);
         this.notebookService = new DefaultNotebookService();
     }

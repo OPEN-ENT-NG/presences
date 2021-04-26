@@ -209,17 +209,11 @@ export class Events extends LoadingCollection {
             /* check if not duplicate dataModel */
             if (!builtEvents.some(e =>
                 (e.classId === item.student.classId) &&
-                (e.date === DateUtils.format(item.startDate, DateUtils.FORMAT['YEAR-MONTH-DAY'])) &&
+                (e.date === DateUtils.format(item.date, DateUtils.FORMAT['YEAR-MONTH-DAY'])) &&
                 (e.studentId === item.student.id))) {
                 /* new dataModel */
                 let eventsFetchedFromHistory = [];
-
-                /* array declared and used for managing global Reasons and CounsellorRegularization */
-                let reasonIds: number[] = [];
-                let regularizedEvents: boolean[] = [];
-                let followedEvents: boolean[] = [];
                 let actions: string[] = [];
-                let massmailedEvents: boolean[] = [];
 
                 /* build our eventsResponse array to affect our attribute "events" (see below dataModel.push) */
                 item.student.dayHistory.forEach((eventsHistory: IEventSlot) => {
@@ -228,48 +222,12 @@ export class Events extends LoadingCollection {
                             if (!eventsFetchedFromHistory.some(element => element.id === event.id)) {
                                 eventsFetchedFromHistory.push(event);
                             }
-                            if ('reason_id' in event && event.type_id === 1) {
-                                reasonIds.push(event.reason_id);
-                            }
-                            if ('counsellor_regularisation' in event && event.type_id === 1) {
-                                regularizedEvents.push(event.counsellor_regularisation);
-                            }
-                            if ('followed' in event && event.type_id === 1) {
-                                followedEvents.push(event.followed);
-                            }
                             if ('actionAbbreviation' in event) {
                                 actions.push(event.actionAbbreviation);
-                            }
-
-                            if ('massmailed' in event) {
-                                massmailedEvents.push(event.massmailed);
                             }
                         }
                     });
                 });
-
-                /* store all reason id in an array and check if they are all
-                the same to display multiple select or unique */
-                let globalReason: number;
-                if (!reasonIds.every((val, i: number, arr: any[]) => val === arr[0])) {
-                    /* all events will have different reason id */
-                    globalReason = 0;
-                } else {
-                    globalReason = parseInt(_.uniq(reasonIds));
-                    if (isNaN(globalReason)) {
-                        globalReason = null;
-                    }
-                }
-                /* check all events regularized in this event to display the global regularized value */
-                let globalCounsellorRegularisation: boolean = regularizedEvents.length === 0 ? false
-                    : regularizedEvents.reduce((accumulator: boolean, currentValue: boolean) => accumulator && currentValue);
-
-                let globalFollowed: boolean = followedEvents.length === 0 ? false
-                    : followedEvents.reduce((accumulator: boolean, currentValue: boolean) => accumulator && currentValue);
-
-                /* check all events massmailed in this event to display the global massmailed value */
-                let globalMassmailed: boolean = massmailedEvents.length === 0 ? false
-                    : massmailedEvents.reduce((accumulator: boolean, currentValue: boolean) => accumulator && currentValue);
 
                 let type = {event: item.type, event_type: item.eventType.label, id: item.id};
 
@@ -285,14 +243,14 @@ export class Events extends LoadingCollection {
                         displayName: item.student.name,
                         className: item.student.className,
                         classId: item.student.classId,
-                        date: moment(item.startDate).format(DateUtils.FORMAT['YEAR-MONTH-DAY']),
+                        date: moment(item.date).format(DateUtils.FORMAT['YEAR-MONTH-DAY']),
                         dayHistory: item.student.dayHistory,
                         events: eventsFetchedFromHistory,
                         exclude: item.exclude ? item.exclude : false,
-                        globalReason: globalReason,
-                        globalCounsellorRegularisation: globalCounsellorRegularisation,
-                        globalFollowed: globalFollowed,
-                        globalMassmailed: globalMassmailed,
+                        globalReason: item.reason ? item.reason.id : null,
+                        globalCounsellorRegularisation: item.counsellor_regularisation ? item.counsellor_regularisation : false,
+                        globalFollowed: item.followed ? item.followed : false,
+                        globalMassmailed: item.massmailed ? item.massmailed : false,
                         isGlobalAction: isGlobalAction,
                         type: type,
                         actionAbbreviation: item.actionAbbreviation,

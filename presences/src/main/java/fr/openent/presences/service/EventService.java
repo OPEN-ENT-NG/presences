@@ -22,16 +22,18 @@ public interface EventService {
      * @param listReasonIds     reasonId reason_id
      * @param noReason          noReason filter
      * @param userId            userId userId neo4j
-     * @param userIdFromClasses userId fetched from classes neo4j
-     * @param classes           classes list
      * @param regularized       regularized filter
      * @param followed          followed filter
      * @param page              page
      * @param handler           function handler returning data
      */
-    void get(String structureId, String startDate, String endDate,
-             List<String> eventType, List<String> listReasonIds, Boolean noReason, List<String> userId, JsonArray userIdFromClasses,
-             List<String> classes, Boolean regularized, Boolean followed, Integer page, Handler<Either<String, JsonArray>> handler);
+    void get(String structureId, String startDate, String endDate, String startTime, String endTime,
+             List<String> eventType, List<String> listReasonIds, Boolean noReason, List<String> userId,
+             Boolean regularized, Boolean followed, Integer page, Handler<AsyncResult<JsonArray>> handler);
+
+    void getDayMainEvents(String structureId, String startDate, String endDate, String startTime, String endTime,
+                          List<String> studentIds, List<String> typeIds, List<String> reasonIds, Boolean noReason,
+                          Boolean regularized, Boolean followed, Integer page, Handler<AsyncResult<JsonArray>> handler);
 
     /**
      * Get events. Non paginated version. Used to display summary page
@@ -76,12 +78,11 @@ public interface EventService {
      * @param userId            userId userId neo4j
      * @param regularized       filter regularized absence
      * @param followed          filter followed absence
-     * @param userIdFromClasses userId fetched from classes neo4j
      * @param handler           function handler returning data
      */
-    void getPageNumber(String structureId, String startDate, String endDate, List<String> eventType,
-                       List<String> listReasonIds, Boolean noReason, List<String> userId, Boolean regularized, Boolean followed,
-                       JsonArray userIdFromClasses, Handler<Either<String, JsonObject>> handler);
+    void getPageNumber(String structureId, String startDate, String endDate, String startTime, String endTime,
+                       List<String> eventType, List<String> listReasonIds, Boolean noReason, List<String> userId,
+                       Boolean regularized, Boolean followed, Handler<Either<String, JsonObject>> handler);
 
 
     /**

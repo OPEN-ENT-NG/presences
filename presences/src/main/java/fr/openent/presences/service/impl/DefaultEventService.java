@@ -14,8 +14,10 @@ import fr.openent.presences.enums.EventType;
 import fr.openent.presences.enums.WorkflowActions;
 import fr.openent.presences.helper.CourseHelper;
 import fr.openent.presences.helper.EventHelper;
+import fr.openent.presences.helper.EventQueryHelper;
 import fr.openent.presences.helper.SlotHelper;
 import fr.openent.presences.model.Event.Event;
+import fr.openent.presences.model.Slot;
 import fr.openent.presences.service.AbsenceService;
 import fr.openent.presences.service.EventService;
 import fr.openent.presences.service.SettingsService;
@@ -35,8 +37,6 @@ import org.entcore.common.sql.Sql;
 import org.entcore.common.sql.SqlResult;
 import org.entcore.common.user.UserInfos;
 
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -44,7 +44,6 @@ public class DefaultEventService extends DBService implements EventService {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(DefaultEventService.class);
     private final EventBus eb;
-    private static final Integer PAGE_SIZE = 100;
     private static final String defaultStartTime = "00:00:00";
     private static final String defaultEndTime = "23:59:59";
     private final SettingsService settingsService = new DefaultSettingsService();
@@ -66,80 +65,64 @@ public class DefaultEventService extends DBService implements EventService {
     }
 
     @Override
-    public void get(String structureId, String startDate, String endDate,
+    public void get(String structureId, String startDate, String endDate, String startTime, String endTime,
                     List<String> eventType, List<String> listReasonIds, Boolean noReason, List<String> userId,
-                    JsonArray userIdFromClasses, List<String> classes, Boolean regularized, Boolean followed,
-                    Integer page, Handler<Either<String, JsonArray>> handler) {
+                    Boolean regularized, Boolean followed, Integer page, Handler<AsyncResult<JsonArray>> handler) {
 
         Future<JsonArray> eventsFuture = Future.future();
         Future<JsonObject> slotsFuture = Future.future();
 
-        getEvents(structureId, startDate, endDate, eventType, listReasonIds, noReason, userId, userIdFromClasses, regularized,
-                followed, page, FutureHelper.handlerJsonArray(eventsFuture));
+        getDayMainEvents(structureId, startDate, endDate, startTime, endTime, userId, eventType, listReasonIds, noReason, regularized,
+                followed, page, eventsFuture);
         slotHelper.getTimeSlots(structureId, FutureHelper.handlerJsonObject(slotsFuture));
 
 
         CompositeFuture.all(eventsFuture, slotsFuture).setHandler(eventAsyncResult -> {
             if (eventAsyncResult.failed()) {
                 String message = "[Presences@DefaultEventService] Failed to retrieve events info and slotProfile";
-                LOGGER.error(message);
-                handler.handle(new Either.Left<>(message));
+                LOGGER.error(message + eventAsyncResult.cause().getMessage());
+                handler.handle(Future.failedFuture(message));
             } else {
                 List<Event> events = EventHelper.getEventListFromJsonArray(eventsFuture.result(), Event.MANDATORY_ATTRIBUTE);
 
-                if (events != null && events.isEmpty()) { //no need to proceed treatment if no events
-                    handler.handle(new Either.Right<>(new JsonArray(events)));
+                if (events.isEmpty()) { //no need to proceed treatment if no events
+                    handler.handle(Future.succeededFuture(new JsonArray(events)));
                     return;
                 }
 
-                List<Integer> reasonIds = new ArrayList<>();
-                List<String> studentIds = new ArrayList<>();
-                List<Integer> eventTypeIds = new ArrayList<>();
-
-                for (Event event : events) {
-                    if (!reasonIds.contains(event.getReason().getId())) {
-                        reasonIds.add(event.getReason().getId());
-                    }
-                    if (!studentIds.contains(event.getStudent().getId())) {
-                        studentIds.add(event.getStudent().getId());
-                    }
-                    if (!eventTypeIds.contains(event.getEventType().getId())) {
-                        eventTypeIds.add(event.getEventType().getId());
-                    }
-                }
+                List<Integer> reasonIds = events.stream().map(event -> event.getReason().getId()).collect(Collectors.toList());
+                List<String> studentIds = events.stream().map(event -> event.getStudent().getId()).collect(Collectors.toList());
 
                 // remove null value for each list
                 reasonIds.removeAll(Collections.singletonList(null));
                 studentIds.removeAll(Collections.singletonList(null));
-                eventTypeIds.removeAll(Collections.singletonList(null));
 
                 Future<JsonArray> absencesFuture = Future.future();
                 Future<JsonObject> reasonFuture = Future.future();
-                Future<JsonObject> eventTypeFuture = Future.future();
 
                 absenceService.get(structureId, startDate, endDate, studentIds, FutureHelper.handlerJsonArray(absencesFuture));
                 eventHelper.addReasonsToEvents(events, reasonIds, reasonFuture);
-                eventHelper.addEventTypeToEvents(events, eventTypeIds, eventTypeFuture);
 
-                CompositeFuture.all(absencesFuture, reasonFuture, eventTypeFuture).setHandler(asyncResult -> {
+                CompositeFuture.all(absencesFuture, reasonFuture).setHandler(asyncResult -> {
                     if (asyncResult.failed()) {
                         String message = "[Presences@DefaultEventService] Failed to retrieve absences, " +
                                 "reason or event type";
                         LOGGER.error(message);
-                        handler.handle(new Either.Left<>(message));
+                        handler.handle(Future.failedFuture(message));
                     } else {
                         JsonArray absences = absencesFuture.result();
 
                         Future<JsonObject> studentFuture = Future.future();
 
-                        eventHelper.addStudentsToEvents(events, studentIds, startDate, endDate, structureId,
-                                absences, slotsFuture.result(), studentFuture);
+                        eventHelper.addStudentsToEvents(structureId, events, studentIds, startDate, endDate, startTime,
+                                endTime, eventType, listReasonIds, noReason, regularized, followed, absences,
+                                slotsFuture.result(), studentFuture);
 
                         studentFuture.setHandler(addInfoResult -> {
                             if (addInfoResult.failed()) {
                                 String message = "[Presences@DefaultEventService] Failed to retrieve student info";
                                 LOGGER.error(message);
-                                handler.handle(new Either.Left<>(message));
+                                handler.handle(Future.failedFuture(message));
                             } else {
                                 Future<JsonObject> actionFuture = Future.future();
                                 Future<JsonObject> ownerFuture = Future.future();
@@ -152,9 +135,9 @@ public class DefaultEventService extends DBService implements EventService {
                                         String message = "[Presences@DefaultEventService::get] Failed to retrieve owners " +
                                                 "or add last action abbreviation to existing event";
                                         LOGGER.error(message);
-                                        handler.handle(new Either.Left<>(message));
+                                        handler.handle(Future.failedFuture(message));
                                     } else {
-                                        handler.handle(new Either.Right<>(new JsonArray(events)));
+                                        handler.handle(Future.succeededFuture(EventHelper.getMainEventsJsonArrayFromEventList(events)));
                                     }
                                 });
                             }
@@ -163,6 +146,49 @@ public class DefaultEventService extends DBService implements EventService {
                 });
             }
         });
+    }
+
+    @Override
+    public void getDayMainEvents(String structureId, String startDate, String endDate, String startTime, String endTime,
+                                 List<String> studentIds, List<String> typeIds, List<String> reasonIds, Boolean noReason,
+                                 Boolean regularized, Boolean followed, Integer page, Handler<AsyncResult<JsonArray>> handler) {
+        JsonArray params = new JsonArray();
+        String query = getDayMainEventsQuery(structureId, startDate, endDate, startTime,
+                endTime, studentIds, typeIds, reasonIds, noReason, regularized, followed, params) +
+                " ORDER BY date DESC, created DESC, student_id " +
+                " OFFSET ? LIMIT ? ";
+
+        params.add(Presences.PAGE_SIZE * page);
+        params.add(Presences.PAGE_SIZE);
+        sql.prepared(query, params, SqlResult.validResultHandler(FutureHelper.handlerJsonArray(handler)));
+    }
+
+    private String getDayMainEventsQuery(String structureId, String startDate, String endDate, String startTime, String endTime,
+                                         List<String> studentIds, List<String> typeIds, List<String> reasonIds, Boolean noReason,
+                                         Boolean regularized, Boolean followed, JsonArray params) {
+        return "SELECT e.student_id AS student_id, " +
+                " e.start_date::date AS date, " +
+                " 'event'::text AS TYPE, " +
+                " MAX(e.created) AS created, " +
+                EventQueryHelper.addMainReasonEvent() +
+                EventQueryHelper.MAIN_COUNSELLOR_REGULARIZED_QUERY +
+                EventQueryHelper.MAIN_MASSMAILED_QUERY +
+                " FROM presences.event e " +
+                EventQueryHelper.joinRegister(structureId, params) +
+                EventQueryHelper.joinEventType(typeIds, params) +
+                EventQueryHelper.filterDates(startDate, endDate, params) +
+                EventQueryHelper.filterTimes(startTime, endTime, params) +
+                EventQueryHelper.filterStudentIds(studentIds, params) +
+                EventQueryHelper.filterFollowed(followed, params) +
+                EventQueryHelper.filterReasons(reasonIds, noReason, regularized, params) +
+                " GROUP BY student_id, date ";
+    }
+
+    // *Swa = students_with_actions
+    private String getDayMainEventQueryFromSwaCte() {
+        return " SELECT DISTINCT swa.* " +
+                " FROM presences.event e " +
+                " INNER JOIN students_with_actions swa ON swa.student_id = e.student_id AND swa.date = e.start_date::date ";
     }
 
     private void getEvents(String structureId, String startDate, String endDate,
@@ -200,7 +226,7 @@ public class DefaultEventService extends DBService implements EventService {
                            List<String> listReasonIds, Boolean noReason, List<String> userId, JsonArray userIdFromClasses,
                            List<String> classes, Boolean regularized, Boolean followed, Handler<AsyncResult<List<Event>>> handler) {
         getEvents(structureId, startDate, endDate, eventType, listReasonIds, noReason, userId, userIdFromClasses,
-                regularized, followed,null, eventHandler -> {
+                regularized, followed, null, eventHandler -> {
                     if (eventHandler.isLeft()) {
                         String err = "[Presences@DefaultEventService::getCsvData] Failed to fetch events";
                         LOGGER.error(err, eventHandler.left().getValue());
@@ -298,44 +324,33 @@ public class DefaultEventService extends DBService implements EventService {
                 " ORDER BY start_date DESC, id DESC";
         if (page != null) {
             query += " OFFSET ? LIMIT ? ";
-            params.add(PAGE_SIZE * page);
-            params.add(PAGE_SIZE);
+            params.add(Presences.PAGE_SIZE * page);
+            params.add(Presences.PAGE_SIZE);
         }
 
         return query;
     }
 
     @Override
-    public void getPageNumber(String structureId, String startDate, String endDate, List<String> eventType,
-                              List<String> listReasonIds, Boolean noReason, List<String> userId, Boolean regularized,
-                              Boolean followed, JsonArray userIdFromClasses, Handler<Either<String, JsonObject>> handler) {
+    public void getPageNumber(String structureId, String startDate, String endDate, String startTime, String endTime,
+                              List<String> eventType, List<String> listReasonIds, Boolean noReason, List<String> userId,
+                              Boolean regularized, Boolean followed, Handler<Either<String, JsonObject>> handler) {
         JsonArray params = new JsonArray();
-        Sql.getInstance().prepared(this.getEventsQueryPagination(structureId, startDate, endDate, eventType,
-                userId, listReasonIds, noReason, regularized, followed, userIdFromClasses, params),
-                params, SqlResult.validUniqueResultHandler(handler));
+        Sql.getInstance().prepared(this.getEventsQueryPagination(structureId, startDate, endDate, startTime, endTime, eventType,
+                userId, listReasonIds, noReason, regularized, followed, params), params, SqlResult.validUniqueResultHandler(handler));
     }
 
-    private String getEventsQueryPagination(String structureId, String startDate, String endDate, List<String> eventType,
-                                            List<String> userId, List<String> listReasonIds, Boolean noReason, Boolean regularized,
-                                            Boolean followed, JsonArray userIdFromClasses, JsonArray params) {
-
-        String query = "SELECT (" +
-                " SELECT COUNT(DISTINCT (to_char(e.start_date, 'DD/MM/YYYY'), e.student_id))" +
-                " FROM " + Presences.dbSchema + ".event e " +
-                " INNER JOIN presences.register AS r ON (r.id = e.register_id AND r.structure_id = ?)";
-        params.add(structureId);
-        if (eventType != null && !eventType.isEmpty()) {
-            query += "INNER JOIN presences.event_type AS event_type ON (event_type.id = e.type_id  AND e.type_id IN "
-                    + Sql.listPrepared(eventType.toArray()) + ") ";
-            params.addAll(new JsonArray(eventType));
-        }
-        query += "WHERE e.start_date > ? AND e.end_date < ? ";
-        params.add(startDate + " " + defaultStartTime);
-        params.add(endDate + " " + defaultEndTime);
-
-        query += setParamsForQueryEvents(listReasonIds, userId, regularized, followed, noReason, userIdFromClasses, params);
-        query += " ) AS events ";
-        return query;
+    private String getEventsQueryPagination(String structureId, String startDate, String endDate, String startTime, String endTime,
+                                            List<String> eventType, List<String> userId, List<String> listReasonIds, Boolean noReason,
+                                            Boolean regularized, Boolean followed, JsonArray params) {
+        return " SELECT count(DISTINCT (e.student_id, e.start_date::date)) FROM " + Presences.dbSchema + ".event e " +
+                EventQueryHelper.joinRegister(structureId, params) +
+                EventQueryHelper.joinEventType(eventType, params) +
+                EventQueryHelper.filterDates(startDate, endDate, params) +
+                EventQueryHelper.filterTimes(startTime, endTime, params) +
+                EventQueryHelper.filterReasons(listReasonIds, noReason, regularized, params) +
+                EventQueryHelper.filterStudentIds(userId, params) +
+                EventQueryHelper.filterFollowed(followed, params);
     }
 
     private String setParamsForQueryEvents(List<String> listReasonIds, List<String> userId, Boolean regularized,
@@ -577,7 +592,7 @@ public class DefaultEventService extends DBService implements EventService {
         params.add(event.getString("end_date"));
         params.add(event.getString("comment"));
         params.add((event.getBoolean("counsellor_input") != null) ?
-                event.getBoolean("counsellor_input",false) : false);
+                event.getBoolean("counsellor_input", false) : false);
         params.add(event.getString("student_id"));
         if ((event.getInteger("reason_id") != null && event.getInteger("reason_id") != -1)) {
             params.add(event.getInteger("reason_id"));
@@ -662,24 +677,78 @@ public class DefaultEventService extends DBService implements EventService {
         }));
     }
 
+    @SuppressWarnings("unchecked")
     private void editCorrespondingAbsences(List<Event> editedEvents, UserInfos user, String studentId, String structureId,
-                                           Boolean regularized, Integer reason_id, Handler<Either<String, JsonObject>> handler) {
-        SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss");
-        Date startDate = editedEvents.stream().map(event -> {
-            try {
-                return formatter.parse(event.getStartDate());
-            } catch (ParseException e) {
-                throw new RuntimeException("Parse Date failed", e);
-            }
-        }).min(Date::compareTo).get();
+                                           Boolean regularized, Integer reasonId, Handler<Either<String, JsonObject>> handler) {
+        Future<JsonArray> slotsFuture = Future.future();
+        Future<JsonArray> absencesFuture = Future.future();
 
-        Date endDate = editedEvents.stream().map(event -> {
-            try {
-                return formatter.parse(event.getEndDate());
-            } catch (ParseException e) {
-                throw new RuntimeException("Parse Date failed", e);
+        getAbsenceWithEvents(editedEvents, studentId, absencesFuture);
+        getTimeSlots(structureId, slotsFuture);
+
+        FutureHelper.all(Arrays.asList(slotsFuture, absencesFuture)).setHandler(result -> {
+            if (result.failed()) {
+                String message = "[Presences@DefaultEventService::editCorrespondingAbsences] Failed to retrieve data";
+                LOGGER.error(message, result.cause().getMessage());
+                handler.handle(new Either.Left<>(message));
+                return;
             }
-        }).max(Date::compareTo).get();
+
+            JsonArray absences = absencesFuture.result();
+            List<Slot> slots = SlotHelper.getSlotListFromJsonArray(slotsFuture.result());
+
+            JsonObject nullAbsenceEvents = ((List<JsonObject>) absences.getList()).stream()
+                    .filter(absence -> absence.getInteger("id") == null)
+                    .findFirst()
+                    .orElse(null);
+
+            List<JsonObject> absencesWithEvents = ((List<JsonObject>) absences.getList()).stream()
+                    .filter(absence -> absence.getInteger("id") != null)
+                    .collect(Collectors.toList());
+
+            List<Future<JsonObject>> futures = new ArrayList<>();
+
+            if (nullAbsenceEvents != null) {
+                Future<JsonObject> future = Future.future();
+                futures.add(future);
+                createAbsencesFromEvents(slots, nullAbsenceEvents, regularized, reasonId, user, studentId, structureId, future);
+            }
+
+            for (JsonObject absence : absencesWithEvents) {
+                Future<JsonObject> future = Future.future();
+                updateAbsenceFromEvents(absence, regularized, reasonId, user, future);
+            }
+
+            FutureHelper.all(futures).setHandler(event -> {
+                if (event.failed()) {
+                    LOGGER.info("[Presences@DefaultEventService::editCorrespondingAbsences::CompositeFuture]: " +
+                            "An error has occured)");
+                    handler.handle(new Either.Left<>(event.cause().getMessage()));
+                } else {
+                    handler.handle(new Either.Right<>(new JsonObject().put("status", "ok")));
+                }
+            });
+
+        });
+    }
+
+    private void getAbsenceWithEvents(List<Event> editedEvents, String studentId, Handler<AsyncResult<JsonArray>> handler) {
+        Date startDate = editedEvents.stream()
+                .map(event -> DateHelper.parseDate(event.getStartDate()))
+                .min(Date::compareTo)
+                .orElse(null);
+
+        Date endDate = editedEvents.stream()
+                .map(event -> DateHelper.parseDate(event.getEndDate()))
+                .max(Date::compareTo)
+                .orElse(null);
+
+        if (startDate == null || endDate == null) {
+            String message = "[Presences@DefaultEventService::getAbsenceWithEvents] Failed to get date range";
+            LOGGER.error(message);
+            handler.handle(Future.failedFuture(message));
+            return;
+        }
 
         String query = "SELECT a.id, " +
                 "       a.student_id, " +
@@ -714,47 +783,18 @@ public class DefaultEventService extends DBService implements EventService {
         params.add(startDate.toString());
         params.add(endDate.toString());
         params.add(studentId);
-        Sql.getInstance().prepared(query, params, SqlResult.validResultHandler(result -> {
+
+        sql.prepared(query, params, SqlResult.validResultHandler(FutureHelper.handlerJsonArray(handler)));
+    }
+
+    private void getTimeSlots(String structureId, Handler<AsyncResult<JsonArray>> handler) {
+        slotHelper.getTimeSlots(structureId, result -> {
             if (result.isLeft()) {
-                String message = "[Presences@DefaultEventService::editCorrespondingAbsences] Failed to retrieve absences from list events";
-                LOGGER.error(message);
-            } else {
-                JsonArray absences = result.right().getValue();
-
-                JsonObject nullAbsenceEvents = (JsonObject) absences.stream().filter(oAbsence -> {
-                    JsonObject absence = (JsonObject) oAbsence;
-                    return absence.getInteger("id") == null;
-                }).findFirst().orElse(null);
-
-                List<JsonObject> absencesWithEvents = absences.stream().filter(oAbsence -> {
-                    JsonObject absence = (JsonObject) oAbsence;
-                    return absence.getInteger("id") != null;
-                }).map(oAbsence -> (JsonObject) oAbsence).collect(Collectors.toList());
-
-                List<Future> futures = new ArrayList<>();
-
-                if (nullAbsenceEvents != null) {
-                    Future<JsonObject> future = Future.future();
-                    futures.add(future);
-                    createAbsencesFromEvents(nullAbsenceEvents, absencesWithEvents, regularized, reason_id, user, studentId, structureId, formatter, future);
-                }
-
-                for (JsonObject absence : absencesWithEvents) {
-                    Future<JsonObject> future = Future.future();
-                    updateAbsenceFromEvents(absence, regularized, reason_id, user, future);
-                }
-
-                CompositeFuture.all(futures).setHandler(event -> {
-                    if (event.failed()) {
-                        LOGGER.info("[Presences@DefaultEventService::editCorrespondingAbsences::CompositeFuture]: " +
-                                "An error has occured)");
-                        handler.handle(new Either.Left<>(event.cause().getMessage()));
-                    } else {
-                        handler.handle(new Either.Right<>(new JsonObject().put("status", "ok")));
-                    }
-                });
+                handler.handle(Future.failedFuture(result.left().getValue()));
+                return;
             }
-        }));
+            handler.handle(Future.succeededFuture(result.right().getValue().getJsonArray("slots", new JsonArray())));
+        });
     }
 
     private void editCorrespondingAbsences(List<Event> editedEvents, UserInfos user, String studentId, String structureId,
@@ -762,98 +802,128 @@ public class DefaultEventService extends DBService implements EventService {
         editCorrespondingAbsences(editedEvents, user, studentId, structureId, regularized, null, handler);
     }
 
+    @SuppressWarnings("unchecked")
+    private void createAbsencesFromEvents(List<Slot> slots, JsonObject nullAbsenceEvents, Boolean regularized, Integer reasonId,
+                                          UserInfos user, String studentId, String structureId, Future<JsonObject> future) {
 
-    private void createAbsencesFromEvents(JsonObject nullAbsenceEvents, List<JsonObject> absencesWithEvents, Boolean regularized, Integer reason_id,
-                                          UserInfos user, String studentId, String structureId, SimpleDateFormat formatter, Future<JsonObject> future) {
         ArrayList<Event> independentEvents = (ArrayList<Event>) new JsonArray(nullAbsenceEvents.getString("events"))
                 .stream()
-                .map((oEvent) -> new Event((JsonObject) oEvent, new ArrayList<>()))
+                .map(oEvent -> new Event((JsonObject) oEvent, new ArrayList<>()))
                 .collect(Collectors.toList());
 
-        independentEvents = (ArrayList<Event>) independentEvents.stream().sorted((eventA, eventB) -> {
-            try {
-                Date dateA = formatter.parse(eventA.getStartDate());
-                Date dateB = formatter.parse(eventB.getStartDate());
-                return dateA.compareTo(dateB);
-            } catch (ParseException e) {
-                throw new RuntimeException("Parse Date failed", e);
+        //This list will contained Maps of eventId -> event. Each Map represent an absence to create.
+        List<Map<Integer, Event>> listChainedEvents = new ArrayList<>();
+
+        for (Event event : independentEvents) {
+            Event nextEvent = getNextEvent(event, independentEvents);
+            if (nextEvent == null) {
+                addEventsToNewChainedMap(listChainedEvents, Collections.singletonList(event));
+                continue;
             }
-        }).collect(Collectors.toList());
 
-        try {
-            Date startAbsenceDate = null;
-            Date endAbsenceDate = null;
-            JsonObject createAbsence = new JsonObject();
-            createAbsence
-                    .put("student_id", studentId)
-                    .put("structure_id", structureId);
-
-            ArrayList<Event> packEvents = null;
-            for (int i = 0; i < independentEvents.size(); i++) {
-                Event event = independentEvents.get(i);
-
-                if (startAbsenceDate == null) {
-                    startAbsenceDate = formatter.parse(event.getStartDate());
-                    endAbsenceDate = formatter.parse(event.getEndDate());
-                    packEvents = new ArrayList<>();
-                    packEvents.add(event);
-                }
-
-                if (i + 1 < independentEvents.size()) {
-                    Event nextEvent = independentEvents.get(i + 1);
-                    Date nextEventStartDate = formatter.parse(nextEvent.getStartDate());
-                    Date finalEndAbsenceDate = endAbsenceDate;
-
-                    long absencesBeforeCount = absencesWithEvents.stream().filter(absence -> {
-                        try {
-                            Date absenceStartDate = formatter.parse(absence.getString("start_date"));
-                            return (finalEndAbsenceDate.before(absenceStartDate) || finalEndAbsenceDate.equals(absenceStartDate)) && absenceStartDate.before(nextEventStartDate);
-                        } catch (ParseException e) {
-                            throw new RuntimeException("Parse Date failed", e);
-                        }
-                    }).count();
-                    if (absencesBeforeCount > 0) {
-                        createAbsence.put("start_date", startAbsenceDate.toString());
-                        createAbsence.put("end_date", endAbsenceDate.toString());
-                        createAbsence.put("reason_id", reason_id != null ? reason_id : getAbsenceReasonId(packEvents));
-                        ArrayList<Event> finalPackEvents = packEvents;
-                        absenceService.create(createAbsence, user, false, resultCreate -> {
-                            if (resultCreate.isLeft()) {
-                                String message = "[Presences@DefaultEventService::editCorrespondingAbsences] Failed to create absence";
-                                LOGGER.error(message);
-                            } else {
-                                createAbsence.put("id", resultCreate.right().getValue().getInteger("id"));
-                                // Here we update twice because of 013-MA-403-sync-absence-with-events.sql trigger.
-                                updateRegularizationAbsence(createAbsence, regularized, user, finalPackEvents, future);
-                            }
-                        });
-
-                        startAbsenceDate = null;
-                        endAbsenceDate = null;
-                    } else {
-                        endAbsenceDate = formatter.parse(nextEvent.getEndDate());
-                        packEvents.add(nextEvent);
-                    }
-                } else {
-                    createAbsence.put("start_date", startAbsenceDate.toString());
-                    createAbsence.put("end_date", endAbsenceDate.toString());
-                    createAbsence.put("reason_id", reason_id != null ? reason_id : getAbsenceReasonId(packEvents));
-                    ArrayList<Event> finalPackEvents = packEvents;
-                    absenceService.create(createAbsence, user, false, resultCreate -> {
-                        if (resultCreate.isLeft()) {
-                            String message = "[Presences@DefaultEventService::editCorrespondingAbsences] Failed to create absence";
-                            LOGGER.error(message);
-                        } else {
-                            createAbsence.put("id", resultCreate.right().getValue().getInteger("id"));
-                            // Here we update twice because of 013-MA-403-sync-absence-with-events.sql trigger.
-                            updateRegularizationAbsence(createAbsence, regularized, user, finalPackEvents, future);
-                        }
-                    });
-                }
+            Slot currentSlot = SlotHelper.getCurrentSlot(event.getEndDate(), slots);
+            if (currentSlot == null) {
+                addEventsToNewChainedMap(listChainedEvents, Collections.singletonList(event));
+                continue;
             }
-        } catch (ParseException e) {
-            throw new RuntimeException("Parse Date failed", e);
+
+            Slot nextSlot = SlotHelper.getNextTimeSlot(currentSlot, slots);
+            if (nextSlot == null) {
+                addEventsToNewChainedMap(listChainedEvents, Collections.singletonList(event));
+                continue;
+            }
+
+            String nextEventStartTime = DateHelper.fetchTimeString(nextEvent.getStartDate(), DateHelper.SQL_FORMAT);
+
+            //Check if next event time (from the current event) correspond to the next slot (from the current slot,
+            // himself based on the current event).
+            if (DateHelper.isHourAfterOrEqual(nextEventStartTime, nextSlot.getStartHour(), DateHelper.HOUR_MINUTES)
+                    && DateHelper.isDateFormatBefore(nextEventStartTime, nextSlot.getEndHour(), DateHelper.HOUR_MINUTES))
+                addEventsToNewChainedMap(listChainedEvents, Arrays.asList(event, nextEvent));
+            else
+                addEventsToNewChainedMap(listChainedEvents, Collections.singletonList(event));
         }
+
+        createAbsencesFromChainedEvents(listChainedEvents, regularized, reasonId,
+                user, studentId, structureId, future);
+    }
+
+    private Event getNextEvent(Event event, List<Event> independentEvents) {
+        long currentEventEndDate = DateHelper.parseDate(event.getEndDate()).getTime();
+        return independentEvents
+                .stream()
+                .filter(afterEvent -> DateHelper.parseDate(afterEvent.getStartDate()).getTime() - currentEventEndDate > 0)
+                .min((eventA, eventB) -> {
+                    long dateA = DateHelper.parseDate(eventA.getStartDate()).getTime() - currentEventEndDate;
+                    long dateB = DateHelper.parseDate(eventB.getStartDate()).getTime() - currentEventEndDate;
+                    return Long.compare(dateA, dateB);
+                }).orElse(null);
+    }
+
+    private void addEventsToNewChainedMap(List<Map<Integer, Event>> listChainedEvents, List<Event> events) {
+        Map<Integer, Event> map = listChainedEvents.stream()
+                .filter(toto -> events.stream().anyMatch(event -> toto.containsKey(event.getId())))
+                .findFirst()
+                .orElse(new HashMap<>());
+
+        if (map.isEmpty()) listChainedEvents.add(map);
+        for (Event event : events) map.put(event.getId(), event);
+    }
+
+    private void createAbsencesFromChainedEvents(List<Map<Integer, Event>> listChainedEvents, Boolean regularized,
+                                                 Integer reasonId, UserInfos user, String studentId, String structureId,
+                                                 Future<JsonObject> future) {
+        List<Future<JsonObject>> absencesFutures = new ArrayList<>();
+        for (Map<Integer, Event> eventsMap : listChainedEvents) {
+            List<Event> events = new ArrayList<>(eventsMap.values());
+            Future<JsonObject> absenceFuture = Future.future();
+            absencesFutures.add(absenceFuture);
+            Date startDate = events.stream()
+                    .map(event -> DateHelper.parseDate(event.getStartDate()))
+                    .min(Date::compareTo)
+                    .orElse(null);
+
+            Date endDate = events.stream()
+                    .map(event -> DateHelper.parseDate(event.getEndDate()))
+                    .max(Date::compareTo)
+                    .orElse(null);
+
+            if (startDate == null || endDate == null) {
+                String message = "[Presences@DefaultEventService::editCorrespondingAbsences] Failed to get absence date range";
+                LOGGER.error(message);
+                absenceFuture.fail(message);
+                continue;
+            }
+
+            JsonObject createAbsence = new JsonObject()
+                    .put("student_id", studentId)
+                    .put("structure_id", structureId)
+                    .put("reason_id", reasonId != null ? reasonId : getAbsenceReasonId(events))
+                    .put("start_date", startDate.toString())
+                    .put("end_date", endDate.toString());
+
+            absenceService.create(createAbsence, user, false, resultCreate -> {
+                if (resultCreate.isLeft()) {
+                    String message = "[Presences@DefaultEventService::editCorrespondingAbsences] Failed to create absence";
+                    absenceFuture.fail(message);
+                    LOGGER.error(message);
+                    return;
+                }
+                createAbsence.put("id", resultCreate.right().getValue().getInteger("id"));
+                // Here we update twice because of 013-MA-403-sync-absence-with-events.sql trigger.
+                updateRegularizationAbsence(createAbsence, regularized, user, absenceFuture);
+            });
+        }
+
+        FutureHelper.all(absencesFutures).setHandler(result -> {
+            if (result.failed()) {
+                String message = "[Presences@DefaultEventService::editCorrespondingAbsences] Failed to create absences";
+                LOGGER.error(message + " " + result.cause().getMessage());
+                future.fail(message);
+                return;
+            }
+            future.complete(new JsonObject().put("success", "ok"));
+        });
     }
 
     private void updateAbsenceFromEvents(JsonObject absence, Boolean regularized, Integer reason_id, UserInfos user, Future<JsonObject> future) {
@@ -871,13 +941,13 @@ public class DefaultEventService extends DBService implements EventService {
                 LOGGER.error(message);
             } else {
                 // Here we update twice because of 013-MA-403-sync-absence-with-events.sql trigger.
-                updateRegularizationAbsence(absence, regularized, user, events, future);
+                updateRegularizationAbsence(absence, regularized, user, future);
             }
         });
     }
 
-    private Integer getAbsenceReasonId(ArrayList<Event> events) {
-        ArrayList<Integer> distinctReasons = (ArrayList<Integer>) events.stream().map(event -> event.getReason().getId()).distinct().collect(Collectors.toList());
+    private Integer getAbsenceReasonId(List<Event> events) {
+        List<Integer> distinctReasons = events.stream().map(event -> event.getReason().getId()).distinct().collect(Collectors.toList());
 
         if (distinctReasons.size() > 1) {
             return -1;
@@ -887,10 +957,7 @@ public class DefaultEventService extends DBService implements EventService {
         return null;
     }
 
-    private void updateRegularizationAbsence(JsonObject absence, Boolean regularized, UserInfos user, ArrayList<Event> events, Future<JsonObject> future) {
-        // long countUnregularized = events.stream().filter(event -> !event.isCounsellorRegularisation()).count();
-        // boolean absenceRegularization = countUnregularized == 0;
-        // if (absence.getBoolean("counsellor_regularisation", false) != absenceRegularization)
+    private void updateRegularizationAbsence(JsonObject absence, Boolean regularized, UserInfos user, Future<JsonObject> future) {
         if (regularized != null) {
             absence.put("regularized", regularized);
             absence.put("ids", (new JsonArray()).add(absence.getInteger("id")));

@@ -15,6 +15,7 @@ public class Event {
     private Integer id;
     private String startDate;
     private String endDate;
+    private String date;
 
     private String comment;
     private Boolean counsellorInput;
@@ -40,6 +41,7 @@ public class Event {
         this.id = event.getInteger("id", null);
         this.startDate = event.getString("start_date", null);
         this.endDate = event.getString("end_date", null);
+        this.date = event.getString("date", null);
         this.comment = event.getString("comment", null);
         this.counsellorInput = event.getBoolean("counsellor_input", false);
         this.student = new Student(event.getString("student_id", null));
@@ -70,6 +72,7 @@ public class Event {
                 .put("id", this.id)
                 .put("start_date", this.startDate)
                 .put("end_date", this.endDate)
+                .put("date", this.date)
                 .put("comment", this.comment)
                 .put("counsellor_input", this.counsellorInput)
                 .put("student", this.student.toJSON())
@@ -109,6 +112,14 @@ public class Event {
 
     public void setEndDate(String endDate) {
         this.endDate = endDate;
+    }
+
+    public String getDate() {
+        return date;
+    }
+
+    public void setDate(String date) {
+        this.date = date;
     }
 
     public String getComment() {

@@ -1,5 +1,7 @@
 package fr.openent.presences.helper;
 
+import fr.openent.presences.Presences;
+import fr.openent.presences.common.helper.FutureHelper;
 import fr.openent.presences.common.helper.PersonHelper;
 import fr.openent.presences.common.service.UserService;
 import fr.openent.presences.common.service.impl.DefaultUserService;
@@ -10,11 +12,12 @@ import fr.openent.presences.model.Register;
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Future;
 import io.vertx.core.Handler;
-import io.vertx.core.eventbus.EventBus;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
+import org.entcore.common.sql.Sql;
+import org.entcore.common.sql.SqlResult;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -23,12 +26,10 @@ import java.util.Map;
 
 public class RegisterPresenceHelper {
     private static final Logger LOGGER = LoggerFactory.getLogger(RegisterPresenceHelper.class);
-    private CourseHelper courseHelper;
-    private UserService userService;
-    private PersonHelper personHelper;
+    private final UserService userService;
+    private final PersonHelper personHelper;
 
-    public RegisterPresenceHelper(EventBus eb) {
-        this.courseHelper = new CourseHelper(eb);
+    public RegisterPresenceHelper() {
         this.userService = new DefaultUserService();
         this.personHelper = new PersonHelper();
     }
@@ -105,5 +106,69 @@ public class RegisterPresenceHelper {
                 )
         );
         return userIds;
+    }
+
+    public static void getEventHistory(String structureId, String startDate, String endDate, String startTime, String endTime,
+                                 List<String> registerUsers, List<String> typeIds, List<String> reasonIds, Boolean noReason,
+                                 Boolean regularized, Boolean followed, Handler<AsyncResult<JsonArray>> handler) {
+
+        if (registerUsers.isEmpty()) {
+            handler.handle(Future.succeededFuture(new JsonArray()));
+            return;
+        }
+        JsonArray params = new JsonArray();
+
+        String query = "SELECT student_id, json_agg(jsonb_build_object( " +
+                " 'id', e.id, 'counsellor_input', e.counsellor_input, 'counsellor_regularisation', e.counsellor_regularisation, " +
+                " 'followed', e.followed, 'massmailed', e.massmailed, 'type_id', " +
+                " e.type_id, 'start_date', e.start_date, 'end_date', e.end_date, " +
+                " 'comment', e.comment, 'owner', e.owner, 'register_id', r.id, 'reason_id', e.reason_id)) as events " +
+                " FROM " + Presences.dbSchema + ".event as e " +
+                EventQueryHelper.joinRegister(structureId, params) +
+                filterDates(startDate, endDate, params) +
+                filterTimes(startTime, endTime, params) +
+                EventQueryHelper.filterStudentIds(registerUsers, params) +
+                EventQueryHelper.filterReasons(reasonIds, noReason, regularized, params) +
+                EventQueryHelper.filterFollowed(followed, params) +
+                filterTypes(typeIds, params) +
+                " GROUP BY student_id; ";
+
+        Sql.getInstance().prepared(query, params, SqlResult.validResultHandler(FutureHelper.handlerJsonArray(handler)));
+    }
+
+    private static String filterDates(String startDate, String endDate, JsonArray params) {
+        if (endDate != null && !endDate.isEmpty())
+            params.add(startDate + " " + EventQueryHelper.DEFAULT_START_TIME)
+                    .add(endDate + " " + EventQueryHelper.DEFAULT_END_TIME);
+        else
+            params.add(startDate + " " + EventQueryHelper.DEFAULT_START_TIME)
+                    .add(startDate + " " + EventQueryHelper.DEFAULT_END_TIME);
+        return " WHERE r.start_date > ? " +
+                " AND r.end_date < ? ";
+    }
+
+    private static String filterTypes(List<String> typeIds, JsonArray params) {
+        if (typeIds != null && !typeIds.isEmpty()) {
+            params.addAll(new JsonArray(typeIds));
+            return " AND e.type_id IN "
+                    + Sql.listPrepared(typeIds.toArray());
+        }
+        return "";
+    }
+
+    public static String filterTimes(String startTime, String endTime, JsonArray params) {
+        String query = "";
+
+        if (endTime != null) {
+            query += " AND r.start_date::time < ? ";
+            params.add(endTime);
+        }
+
+        if (startTime != null) {
+            query += " r.end_date::time > ? ";
+            params.add(startTime);
+        }
+
+        return query;
     }
 }

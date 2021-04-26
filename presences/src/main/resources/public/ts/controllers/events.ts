@@ -1105,11 +1105,8 @@ export const eventsController = ng.controller('EventsController', ['$scope', '$r
             }
         };
 
-        vm.hideGlobalCheckbox = function (event) {
-            const {events} = event;
-            const isProving = (evt) => evt.reason_id === null || vm.provingReasonsMap[evt.reason_id];
-
-            return events.every(isProving);
+        vm.hideGlobalCheckbox = (event) => {
+            return event.globalReason === null || vm.provingReasonsMap[event.globalReason];
         };
 
         /* Form filter */

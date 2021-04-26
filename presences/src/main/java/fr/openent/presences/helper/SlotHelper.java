@@ -1,5 +1,6 @@
 package fr.openent.presences.helper;
 
+import fr.openent.presences.common.helper.DateHelper;
 import fr.openent.presences.common.message.MessageResponseHandler;
 import fr.openent.presences.model.Slot;
 import fr.wseduc.webutils.Either;
@@ -58,6 +59,48 @@ public class SlotHelper {
                 .put("structureId", structureId);
 
         eb.send("viescolaire", action, MessageResponseHandler.messageJsonObjectHandler(handler));
+    }
+
+    /**
+     * get the current slot from a given SQL_FORMAT date (matching the closest slot endHour)
+     *
+     * @param date  corresponding to the wanted slot
+     * @param slots list containing all slots
+     * @return {Slot}
+     */
+    public static Slot getCurrentSlot(String date, List<Slot> slots) {
+        long currentEventEndTime = DateHelper.parseDate(
+                DateHelper.fetchTimeString(date, DateHelper.SQL_FORMAT),
+                DateHelper.HOUR_MINUTES
+        ).getTime();
+
+        return slots
+                .stream()
+                .filter(slot -> DateHelper.parseDate(slot.getEndHour(), DateHelper.HOUR_MINUTES).getTime() - currentEventEndTime >= 0)
+                .min((slotA, slotB) -> {
+                    long dateA = DateHelper.parseDate(slotA.getEndHour(), DateHelper.HOUR_MINUTES).getTime() - currentEventEndTime;
+                    long dateB = DateHelper.parseDate(slotB.getEndHour(), DateHelper.HOUR_MINUTES).getTime() - currentEventEndTime;
+                    return Long.compare(dateA, dateB);
+                }).orElse(null);
+    }
+
+    /**
+     * get the closest next slot from a given date
+     *
+     * @param currentSlot   slot we based on to get the next one
+     * @param slots         list containing all slots
+     * @return {Slot}
+     */
+    public static Slot getNextTimeSlot(Slot currentSlot, List<Slot> slots) {
+        long currentSlotEndHour = DateHelper.parseDate(currentSlot.getEndHour(), DateHelper.HOUR_MINUTES).getTime();
+        return slots
+                .stream()
+                .filter(slot -> DateHelper.parseDate(slot.getStartHour(), DateHelper.HOUR_MINUTES).getTime() - currentSlotEndHour >= 0)
+                .min((slotA, slotB) -> {
+                    long dateA = DateHelper.parseDate(slotA.getStartHour(), DateHelper.HOUR_MINUTES).getTime() - currentSlotEndHour;
+                    long dateB = DateHelper.parseDate(slotB.getStartHour(), DateHelper.HOUR_MINUTES).getTime() - currentSlotEndHour;
+                    return Long.compare(dateA, dateB);
+                }).orElse(null);
     }
 
 }

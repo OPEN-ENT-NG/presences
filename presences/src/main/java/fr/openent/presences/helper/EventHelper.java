@@ -36,14 +36,14 @@ import java.util.stream.Collectors;
 
 public class EventHelper {
     private static final Logger LOGGER = LoggerFactory.getLogger(EventHelper.class);
-    private static String defaultStartTime = "00:00:00";
-    private static String defaultEndTime = "23:59:59";
-    private EventTypeHelper eventTypeHelper;
-    private ReasonService reasonService;
-    private RegisterHelper registerHelper;
-    private PersonHelper personHelper;
-    private ActionService actionService;
-    private UserService userService;
+    private static final String DEFAULT_START_TIME = "00:00:00";
+    private static final String DEFAULT_END_TIME = "23:59:59";
+    private final EventTypeHelper eventTypeHelper;
+    private final ReasonService reasonService;
+    private final RegisterHelper registerHelper;
+    private final PersonHelper personHelper;
+    private final ActionService actionService;
+    private final UserService userService;
 
     public EventHelper(EventBus eb) {
         this.eventTypeHelper = new EventTypeHelper();
@@ -54,6 +54,7 @@ public class EventHelper {
         this.userService = new DefaultUserService();
     }
 
+    @SuppressWarnings("unchecked")
     public void addLastActionAbbreviation(List<Event> events, Future<JsonObject> future) {
         List<Integer> ids = this.getAllEventsIds(events);
         actionService.getLastAbbreviations(ids, res -> {
@@ -63,31 +64,43 @@ public class EventHelper {
             }
 
             JsonArray result = res.right().getValue();
-            Map<Integer, String> map = new HashMap<>();
-            ((List<JsonObject>) result.getList()).forEach(abbr -> map.put(abbr.getInteger("event_id"), abbr.getString("abbreviation")));
+            Map<Integer, String> map = ((List<JsonObject>) result.getList())
+                    .stream()
+                    .collect(Collectors.toMap(abbr -> abbr.getInteger("event_id"), abbr -> abbr.getString("abbreviation")));
+
+
             events.forEach(event -> {
-                if (map.containsKey(event.getId())) {
-                    event.setActionAbbreviation(map.get(event.getId()));
-                }
-                ((List<JsonObject>) event.getStudent().getDayHistory().getList()).forEach(dayHistory ->
-                        ((List<JsonObject>) dayHistory.getJsonArray("events").getList()).forEach(eventHistory ->
+                List<JsonObject> dayHistory = event.getStudent().getDayHistory().getList();
+                dayHistory.forEach(slot ->
+                        ((List<JsonObject>) slot.getJsonArray("events").getList()).forEach(eventHistory ->
                                 eventHistory.put("actionAbbreviation", map.getOrDefault(eventHistory.getInteger("id"), null))
                         )
                 );
+
+                List<String> actionAbbreviations = dayHistory.stream()
+                        .flatMap(slot -> ((List<JsonObject>) slot.getJsonArray("events").getList())
+                                .stream()
+                                .map(eventHistory -> eventHistory.getString("actionAbbreviation"))
+                        )
+                        .filter(Objects::nonNull)
+                        .distinct()
+                        .collect(Collectors.toList());
+
+                if (actionAbbreviations.size() == 1) event.setActionAbbreviation(actionAbbreviations.get(0));
+                else if (actionAbbreviations.size() > 1) event.setActionAbbreviation("MULTIPLES");
+
             });
             future.complete();
         });
     }
 
+    @SuppressWarnings("unchecked")
     private List<Integer> getAllEventsIds(List<Event> events) {
         List<Integer> ids = new ArrayList<>();
         events.forEach(event -> {
-            if (!event.getType().toUpperCase().equals(Events.ABSENCE.toString())) {
-                ids.add(event.getId());
-            }
             ((List<JsonObject>) event.getStudent().getDayHistory().getList()).forEach(dayHistory ->
                     ((List<JsonObject>) dayHistory.getJsonArray("events").getList()).forEach(eventHistory -> {
-                        if (!eventHistory.getString("type").toUpperCase().equals(Events.ABSENCE.toString())) {
+                        if (!eventHistory.getString("type").equalsIgnoreCase(Events.ABSENCE.toString())) {
                             ids.add(eventHistory.getInteger("id"));
                         }
                     })
@@ -170,8 +183,8 @@ public class EventHelper {
                 return DateHelper.isBetween(
                         e.getStartDate(),
                         e.getEndDate(),
-                        startDate + "T" + defaultStartTime,
-                        endDate + "T" + defaultEndTime);
+                        startDate + "T" + DEFAULT_START_TIME,
+                        endDate + "T" + DEFAULT_END_TIME);
             } catch (ParseException ex) {
                 ex.printStackTrace();
                 return false;
@@ -223,25 +236,43 @@ public class EventHelper {
         return eventList;
     }
 
+    public static JsonArray getMainEventsJsonArrayFromEventList(List<Event> events) {
+        return new JsonArray(events.stream()
+                .map(event -> new JsonObject()
+                        .put("date", event.getDate())
+                        .put("student", event.getStudent().toJSON())
+                        .put("reason", event.getReason().toJSON())
+                        .put("created", event.getCreated())
+                        .put("counsellor_regularisation", event.isCounsellorRegularisation())
+                        .put("massmailed", event.isMassmailed())
+                        .put("type", event.getType())
+                        .put("action_abbreviation", event.getActionAbbreviation()))
+                .collect(Collectors.toList()));
+    }
+
+    @SuppressWarnings("unchecked")
     public void addReasonsToEvents(List<Event> events, List<Integer> reasonIds, Future<JsonObject> future) {
-        if (reasonIds.size() == 0) {
+        if (reasonIds.isEmpty()) {
             future.complete();
             return;
         }
         reasonService.getReasons(reasonIds, reasonsResult -> {
             if (reasonsResult.isRight()) {
-                JsonArray formatReasonsResult = new JsonArray();
-                for (int i = 0; i < reasonsResult.right().getValue().size(); i++) {
-                    formatReasonsResult.add(new JsonObject(reasonsResult.right().getValue().getJsonObject(i).getString("reason")));
-                }
-                List<Reason> reasons = ReasonHelper.getReasonListFromJsonArray(formatReasonsResult, Reason.MANDATORY_ATTRIBUTE);
+                List<Reason> reasons = ReasonHelper.getReasonListFromJsonArray(
+                        new JsonArray(((List<JsonObject>) reasonsResult.right().getValue().getList()).stream()
+                                .map(reason -> new JsonObject(reason.getString("reason")))
+                                .collect(Collectors.toList())),
+                        Reason.MANDATORY_ATTRIBUTE
+                );
+
                 for (Event event : events) {
-                    for (Reason reason : reasons) {
-                        if (event.getReason().getId() != null) {
-                            if (event.getReason().getId().equals(reason.getId())) {
-                                event.setReason(reason);
-                            }
-                        }
+                    if (event.getReason().getId() != null) {
+                        event.setReason(
+                                reasons.stream()
+                                        .filter(reason -> event.getReason().getId().equals(reason.getId()))
+                                        .findFirst()
+                                        .orElse(null)
+                        );
                     }
                 }
                 future.complete();
@@ -252,7 +283,7 @@ public class EventHelper {
     }
 
     public void addEventTypeToEvents(List<Event> events, List<Integer> eventTypeIds, Future<JsonObject> eventTypeFuture) {
-        if (eventTypeIds.size() == 0) {
+        if (eventTypeIds.isEmpty()) {
             eventTypeFuture.complete();
             return;
         }
@@ -260,13 +291,15 @@ public class EventHelper {
             if (eventTypeResult.isRight()) {
                 List<EventType> eventTypes = EventTypeHelper
                         .getEventTypeListFromJsonArray(eventTypeResult.right().getValue(), Reason.MANDATORY_ATTRIBUTE);
+
                 for (Event event : events) {
-                    for (EventType eventType : eventTypes) {
-                        if (event.getEventType().getId() != null) {
-                            if (event.getEventType().getId().equals(eventType.getId())) {
-                                event.setEventType(eventType);
-                            }
-                        }
+                    if (event.getEventType().getId() != null) {
+                        event.setEventType(
+                                eventTypes.stream()
+                                        .filter(eventType -> event.getEventType().getId().equals(eventType.getId()))
+                                        .findFirst()
+                                        .orElse(null)
+                        );
                     }
                 }
                 eventTypeFuture.complete();
@@ -276,14 +309,18 @@ public class EventHelper {
         });
     }
 
-    public void addStudentsToEvents(List<Event> events, List<String> studentIds, String startDate, String endDate,
-                                    String structureId, JsonArray absences, JsonObject slots, Future<JsonObject> studentFuture) {
+    public void addStudentsToEvents(String structureId, List<Event> events, List<String> studentIds, String startDate, String endDate,
+                                    String startTime, String endTime, List<String> typeIds, List<String> reasonIds,
+                                    Boolean noReason, Boolean regularized, Boolean followed, JsonArray absences,
+                                    JsonObject slots, Future<JsonObject> studentFuture) {
 
         Future<JsonArray> registerEventFuture = Future.future();
         Future<JsonArray> studentsInfosFuture = Future.future();
 
-        registerHelper.getRegisterEventHistory(structureId, startDate, endDate, new JsonArray(studentIds),
-                FutureHelper.handlerJsonArray(registerEventFuture));
+        RegisterPresenceHelper.getEventHistory(structureId, startDate, endDate, startTime, endTime,
+                studentIds, typeIds, reasonIds, noReason, regularized,
+                followed, registerEventFuture);
+
         personHelper.getStudentsInfo(structureId, studentIds, FutureHelper.handlerJsonArray(studentsInfosFuture));
 
         CompositeFuture.all(registerEventFuture, studentsInfosFuture).setHandler(eventResult -> {
@@ -306,7 +343,7 @@ public class EventHelper {
                     // add dayHistory to student
                     for (RegisterEvent register : registerEvents) {
                         if (register.getStudentId().equals(event.getStudent().getId())) {
-                            event.getStudent().setDayHistory(filterEvents(register.getEvents(), event.getStartDate()));
+                            event.getStudent().setDayHistory(filterEvents(register.getEvents(), event.getDate()));
                         }
                     }
                 }
@@ -369,9 +406,6 @@ public class EventHelper {
             Map<String, User> userMap = new HashMap<>();
             owners.forEach(owner -> userMap.put(owner.getId(), owner));
             events.forEach(event -> {
-                if (!event.getType().toUpperCase().equals(Events.ABSENCE.toString())) {
-                    event.setOwner(userMap.getOrDefault(event.getOwner().getId(), new User(event.getOwner().getId())));
-                }
                 ((List<JsonObject>) event.getStudent().getDayHistory().getList()).forEach(dayHistory ->
                         ((List<JsonObject>) dayHistory.getJsonArray("events").getList()).forEach(eventHistory -> {
                             if (!eventHistory.getString("type").toUpperCase().equals(Events.ABSENCE.toString()) && eventHistory.getValue("owner") instanceof String) {
@@ -433,7 +467,8 @@ public class EventHelper {
         List<Absence> absencesList = AbsenceHelper.getAbsenceListFromJsonArray(absences, Absence.MANDATORY_ATTRIBUTE);
         for (Event event : events) {
             try {
-                JsonArray clone = registerHelper.cloneSlots(SlotHelper.getSlotJsonArrayFromList(slots), event.getStartDate());
+                String eventDate = DateHelper.getDateString(event.getDate(), DateHelper.SQL_DATE_FORMAT, DateHelper.SQL_FORMAT);
+                JsonArray clone = registerHelper.cloneSlots(SlotHelper.getSlotJsonArrayFromList(slots), eventDate);
                 Student student = event.getStudent();
                 JsonArray history = student.getDayHistory();
                 JsonArray userSlots = clone.copy();

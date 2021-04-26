@@ -65,7 +65,7 @@ public class Presences extends BaseServer {
     public static final String CURRENT_COURSE_WIDGET = "presences.widget.current_course";
     public static final String DAY_PRESENCES_WIDGET = "presences.widget.day_presences";
 
-    public static Integer PAGE_SIZE = 20;
+    public static final Integer PAGE_SIZE = 20;
 
     @Override
     public void start() throws Exception {

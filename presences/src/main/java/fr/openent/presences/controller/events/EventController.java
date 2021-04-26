@@ -34,6 +34,7 @@ import org.entcore.common.user.UserUtils;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import static org.entcore.common.http.response.DefaultResponseHandler.defaultResponseHandler;
 
@@ -49,15 +50,18 @@ public class EventController extends ControllerHelper {
     @Get("/events")
     @ApiDoc("get events")
     @SecuredAction(Presences.READ_EVENT)
+    @SuppressWarnings("unchecked")
     public void getEvents(HttpServerRequest request) {
         String structureId = request.getParam("structureId");
         String startDate = request.getParam("startDate");
         String endDate = request.getParam("endDate");
+        String startTime = request.getParam("startTime");
+        String endTime = request.getParam("endTime");
 
         List<String> eventType = request.getParam("eventType") != null ? Arrays.asList(request.getParam("eventType").split("\\s*,\\s*")) : null;
         List<String> reasonIds = request.getParam("reasonIds") != null ? Arrays.asList(request.getParam("reasonIds").split("\\s*,\\s*")) : new ArrayList<>();
-        Boolean noReason = request.params().contains("noReason") ? Boolean.parseBoolean(request.getParam("noReason")) : false;
-        List<String> userId = request.getParam("userId") != null ? Arrays.asList(request.getParam("userId").split("\\s*,\\s*")) : null;
+        Boolean noReason = request.params().contains("noReason") && Boolean.parseBoolean(request.getParam("noReason"));
+        List<String> userIds = request.getParam("userId") != null ? Arrays.asList(request.getParam("userId").split("\\s*,\\s*")) : new ArrayList<>();
         List<String> classes = request.getParam("classes") != null ? Arrays.asList(request.getParam("classes").split("\\s*,\\s*")) : null;
         Boolean regularized = request.params().contains("regularized") ? Boolean.parseBoolean(request.getParam("regularized")) : null;
         Boolean followed = request.params().contains("followed") ? Boolean.parseBoolean(request.getParam("followed")) : null;
@@ -74,29 +78,41 @@ public class EventController extends ControllerHelper {
                 renderError(request, JsonObject.mapFrom(event.left().getValue()));
                 return;
             }
-            JsonArray userIdFromClasses = event.right().getValue();
+            JsonArray userFromClasses = event.right().getValue();
+            if (userFromClasses != null && !userFromClasses.isEmpty()) {
+                List<String> studentIds = ((List<JsonObject>) userFromClasses.getList()).stream()
+                        .map(user -> user.getString("studentId"))
+                        .collect(Collectors.toList());
+                userIds.addAll(studentIds);
+            }
+
+
             Future<JsonArray> eventsFuture = Future.future();
             Future<JsonObject> pageNumberFuture = Future.future();
 
             CompositeFuture.all(eventsFuture, pageNumberFuture).setHandler(resultFuture -> {
+
                 if (resultFuture.failed()) {
                     renderError(request, JsonObject.mapFrom(resultFuture.cause()));
                 } else {
                     // set 0 if count.equal Presences.PAGE_SIZE (20 === 20) else set > 0
-                    Integer pageCount = pageNumberFuture.result().getInteger("events").equals(Presences.PAGE_SIZE) ? 0
-                            : pageNumberFuture.result().getInteger("events") / Presences.PAGE_SIZE;
+                    Integer pageCount = pageNumberFuture.result().getInteger("count", 0).equals(Presences.PAGE_SIZE) ? 0
+                            : pageNumberFuture.result().getInteger("count", 0) / Presences.PAGE_SIZE;
                     JsonObject res = new JsonObject()
                             .put("page", page)
                             .put("page_count", pageCount)
                             .put("all", eventsFuture.result());
 
                     renderJson(request, res);
+
                 }
             });
-            eventService.get(structureId, startDate, endDate, eventType, reasonIds, noReason, userId, userIdFromClasses,
-                    classes, regularized, followed, page, FutureHelper.handlerJsonArray(eventsFuture));
-            eventService.getPageNumber(structureId, startDate, endDate, eventType, reasonIds, noReason, userId,
-                    regularized, followed, userIdFromClasses, FutureHelper.handlerJsonObject(pageNumberFuture));
+
+            eventService.get(structureId, startDate, endDate, startTime, endTime, eventType,
+                    reasonIds, noReason, userIds, regularized, followed, page, eventsFuture);
+            eventService.getPageNumber(structureId, startDate, endDate, startTime, endTime, eventType, reasonIds, noReason, userIds,
+                    regularized, followed, FutureHelper.handlerJsonObject(pageNumberFuture));
+
         });
     }
 
