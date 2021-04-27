@@ -80,6 +80,14 @@
 
     <div class="cell six vertical-spacing-twice">
         <i class="filter cell" ng-click="vm.openForm()">&nbsp;</i>
+        <!-- Display selected slots -->
+        <div class="cell" ng-show="vm.filter.timeslots.start.startHour && vm.filter.timeslots.end.endHour">
+            <div class="card horizontal-margin-small horizontal-spacing margin-bottom-md">
+                [[vm.filter.timeslots.start.startHour]]
+                &nbsp;-&nbsp;
+                [[vm.filter.timeslots.end.endHour]]
+            </div>
+        </div>
         <!-- Display selected events -->
         <div class="cell" ng-show="vm.filter.absences">
             <div class="card horizontal-margin-small horizontal-spacing margin-bottom-md">

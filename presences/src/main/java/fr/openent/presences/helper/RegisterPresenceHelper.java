@@ -165,7 +165,7 @@ public class RegisterPresenceHelper {
         }
 
         if (startTime != null) {
-            query += " r.end_date::time > ? ";
+            query += " AND r.end_date::time > ? ";
             params.add(startTime);
         }
 

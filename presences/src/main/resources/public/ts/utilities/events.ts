@@ -1,4 +1,4 @@
-import {EventResponse, Events, EventType, IEvent} from "../models";
+import {EventResponse, Events, EventType, IEvent, ITimeSlot} from "../models";
 import {Reason} from "@presences/models/Reason";
 
 export interface EventsFilter {
@@ -15,6 +15,10 @@ export interface EventsFilter {
     noReasons?: boolean,
     reasons?: Reason,
     reasonIds?: number[],
+    timeslots?: {
+        start: ITimeSlot;
+        end: ITimeSlot;
+    },
     unjustified?: boolean,
     justifiedNotRegularized?: boolean,
     justifiedRegularized?: boolean,
@@ -36,8 +40,12 @@ export interface EventsFormFilter {
     followed?: boolean,
     notFollowed?: boolean,
     allReasons?: boolean,
-    noReasons?: boolean;
-    reasonIds?: number[]
+    noReasons?: boolean,
+    reasonIds?: number[],
+    timeslots?: {
+        start: ITimeSlot;
+        end: ITimeSlot;
+    }
 }
 
 export class EventsUtils {

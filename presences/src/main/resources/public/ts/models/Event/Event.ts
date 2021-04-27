@@ -195,6 +195,8 @@ export class Events extends LoadingCollection {
     structureId: string;
     startDate: string;
     endDate: string;
+    startTime?: string;
+    endTime?: string;
     userId: string;
     classes: string;
 
@@ -236,6 +238,14 @@ export class Events extends LoadingCollection {
                 `/presences/events?structureId=${this.structureId}` +
                 `&startDate=${DateUtils.format(this.startDate, dateFormat)}` +
                 `&endDate=${DateUtils.format(this.endDate, dateFormat)}`;
+
+
+            if (this.startTime) {
+                url += `&startTime=${this.startTime}`;
+            }
+            if (this.endTime) {
+                url += `&endTime=${this.endTime}`;
+            }
 
             if (this.listReasonIds) {
                 url += `&reasonIds=${this.listReasonIds}`;

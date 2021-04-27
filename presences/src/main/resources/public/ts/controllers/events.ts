@@ -8,13 +8,14 @@ import {
     Events,
     EventType,
     IEvent,
-    IEventFormBody,
+    IEventFormBody, IStructureSlot, ITimeSlot,
     Student,
-    Students
+    Students,
+    TimeSlotHourPeriod
 } from '../models';
 import {DateUtils, PreferencesUtils, PresencesPreferenceUtils} from '@common/utils';
 import {GroupService} from '@common/services/GroupService';
-import {actionService, EventRequest, EventService, ReasonService} from '../services';
+import {actionService, EventRequest, EventService, ReasonService, ViescolaireService} from '../services';
 import {EventsFilter, EventsFormFilter, EventsUtils} from '../utilities';
 import {Reason} from '@presences/models/Reason';
 import {INFINITE_SCROLL_EVENTER} from '@common/core/enum/infinite-scroll-eventer';
@@ -67,6 +68,9 @@ interface ViewModel {
         mouseHold: boolean;
     };
 
+    structureTimeSlot: IStructureSlot;
+    timeSlotHourPeriod: typeof TimeSlotHourPeriod;
+
     eventTypeState(periods: IEventSlot, index: number, indexSlot: number): string;
 
     editPeriod($event, event): Promise<void>;
@@ -76,6 +80,8 @@ interface ViewModel {
     getRegularizedValue(event): boolean;
 
     filterSelect(options: Reason[], event): Reason[];
+
+    updateFilterSlot(hourPeriod: TimeSlotHourPeriod): void;
 
     downloadFile($event): void;
 
@@ -235,6 +241,10 @@ export const eventsController = ng.controller('EventsController', ['$scope', '$r
         vm.filter = {
             startDate: isWidget ? DateUtils.add(new Date(), -5, 'd') : DateUtils.add(new Date(), -7, 'd'),
             endDate: isWidget ? DateUtils.add(new Date(), -1, 'd') : moment().endOf('day').toDate(),
+            timeslots: {
+                start: {name: '', startHour: '', endHour: '', id: ''},
+                end: {name: '', startHour: '', endHour: '', id: ''}
+            },
             students: [],
             classes: [],
             absences: true,
@@ -299,6 +309,9 @@ export const eventsController = ng.controller('EventsController', ['$scope', '$r
             slotStartIndex: null
         };
 
+        vm.structureTimeSlot = {} as IStructureSlot;
+        vm.timeSlotHourPeriod = TimeSlotHourPeriod;
+
         const loadFormFilter = async (): Promise<void> => {
             let formFilters = await Me.preference(PresencesPreferenceUtils.PREFERENCE_KEYS.PRESENCE_EVENT_LIST_FILTER);
             formFilters = formFilters ? formFilters[window.structure.id] : null;
@@ -342,6 +355,8 @@ export const eventsController = ng.controller('EventsController', ['$scope', '$r
             vm.events.structureId = window.structure.id;
             vm.events.startDate = vm.filter.startDate.toDateString();
             vm.events.endDate = vm.filter.endDate.toDateString();
+            vm.events.startTime = vm.filter.timeslots.start ? vm.filter.timeslots.start.startHour : null;
+            vm.events.endTime = vm.filter.timeslots.end ? vm.filter.timeslots.end.endHour : null;
             vm.events.regularized = vm.filter.regularized;
             if (vm.filter.absences) {
                 if (!vm.eventType.some(e => e == EventType.ABSENCE)) {
@@ -409,6 +424,8 @@ export const eventsController = ng.controller('EventsController', ['$scope', '$r
                 structureId: vm.events.structureId,
                 startDate: vm.events.startDate,
                 endDate: vm.events.endDate,
+                startTime: vm.events.startTime,
+                endTime: vm.events.endTime,
                 noReason: vm.events.noReason,
                 eventType: vm.events.eventType,
                 listReasonIds: (vm.filter.justifiedRegularized || vm.filter.justifiedNotRegularized) ? vm.eventReasonsId.toString() : '',
@@ -428,6 +445,10 @@ export const eventsController = ng.controller('EventsController', ['$scope', '$r
             vm.events.all = EventsUtils.interactiveConcat(vm.events.all, events.all, vm.interactedEvent.page);
 
             $scope.safeApply();
+        };
+
+        const getStructureTimeSlots = async () : Promise<void> => {
+            vm.structureTimeSlot = await ViescolaireService.getSlotProfile(window.structure.id);
         };
 
         vm.formatMainDate = (date: string): string => DateUtils.format(date, DateUtils.FORMAT["DAY-MONTH-YEAR"]);
@@ -545,6 +566,21 @@ export const eventsController = ng.controller('EventsController', ['$scope', '$r
                 return options.filter(option => option.id !== 0);
             }
             return options;
+        };
+
+        vm.updateFilterSlot = (hourPeriod: TimeSlotHourPeriod): void => {
+            if (!vm.formFilter.timeslots.start || !vm.formFilter.timeslots.end) {
+                switch (hourPeriod) {
+                    case TimeSlotHourPeriod.START_HOUR:
+                        vm.formFilter.timeslots.end = vm.formFilter.timeslots.start;
+                        break;
+                    case TimeSlotHourPeriod.END_HOUR:
+                        vm.formFilter.timeslots.start = vm.formFilter.timeslots.end;
+                        break;
+                    default:
+                        return;
+                }
+            }
         };
 
         vm.downloadFile = ($event): void => {
@@ -921,6 +957,8 @@ export const eventsController = ng.controller('EventsController', ['$scope', '$r
             vm.events.followed = vm.filter.followed;
             vm.events.notFollowed = vm.filter.notFollowed;
             vm.events.regularized = (!(<any>vm.eventType).includes(1)) ? null : vm.filter.regularized;
+            vm.events.startTime = vm.filter.timeslots.start ? vm.filter.timeslots.start.startHour : null;
+            vm.events.endTime = vm.filter.timeslots.end ? vm.filter.timeslots.end.endHour : null;
 
             EventsUtils.setStudentToSync(vm.events, vm.filter);
             EventsUtils.setClassToSync(vm.events, vm.filter);
@@ -945,6 +983,8 @@ export const eventsController = ng.controller('EventsController', ['$scope', '$r
                 structureId: vm.events.structureId,
                 startDate: vm.events.startDate,
                 endDate: vm.events.endDate,
+                startTime: vm.events.startTime,
+                endTime: vm.events.endTime,
                 noReason: vm.events.noReason,
                 eventType: vm.events.eventType,
                 listReasonIds: (vm.filter.justifiedRegularized || vm.filter.justifiedNotRegularized) ? vm.eventReasonsId.toString() : "",
@@ -979,6 +1019,8 @@ export const eventsController = ng.controller('EventsController', ['$scope', '$r
                 structureId: vm.events.structureId,
                 startDate: vm.events.startDate,
                 endDate: vm.events.endDate,
+                startTime: vm.events.startTime,
+                endTime: vm.events.endTime,
                 noReason: vm.events.noReason,
                 eventType: vm.events.eventType,
                 listReasonIds: vm.events.listReasonIds,
@@ -1094,6 +1136,14 @@ export const eventsController = ng.controller('EventsController', ['$scope', '$r
         vm.openForm = function () {
             vm.lightbox.filter = true;
             vm.formFilter = JSON.parse(JSON.stringify(vm.filter));
+            if (vm.formFilter.timeslots && vm.formFilter.timeslots.start && vm.formFilter.timeslots.end) {
+                vm.formFilter.timeslots = {
+                    start: vm.structureTimeSlot.slots.find((slot: ITimeSlot) =>
+                        slot._id === vm.formFilter.timeslots.start._id),
+                    end: vm.structureTimeSlot.slots.find((slot: ITimeSlot) =>
+                        slot._id === vm.formFilter.timeslots.end._id)
+                };
+            }
         };
 
         vm.validForm = async function () {
@@ -1107,6 +1157,7 @@ export const eventsController = ng.controller('EventsController', ['$scope', '$r
                 followed: vm.formFilter.followed,
                 notFollowed: vm.formFilter.notFollowed,
                 allReasons: vm.formFilter.allReasons,
+                timeslots: vm.formFilter.timeslots,
                 reasonIds: []
             };
             let selectedReasons: Reason[] = vm.eventReasonsType.filter((r: Reason) => r.isSelected);
@@ -1138,7 +1189,8 @@ export const eventsController = ng.controller('EventsController', ['$scope', '$r
                 });
                 await Promise.all([
                     getEvents(),
-                    getActions()
+                    getActions(),
+                    getStructureTimeSlots()
                 ]);
             }
         });

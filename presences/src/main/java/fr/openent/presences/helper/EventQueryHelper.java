@@ -148,7 +148,7 @@ public class EventQueryHelper {
         }
 
         if (startTime != null) {
-            query += " e.end_date::time > ? ";
+            query += " AND e.end_date::time > ? ";
             params.add(startTime);
         }
 
