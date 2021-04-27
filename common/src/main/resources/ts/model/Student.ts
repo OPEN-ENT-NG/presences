@@ -1,8 +1,11 @@
 import {_, notify} from 'entcore';
 import http from 'axios';
 import {IStructure} from "@common/model/Viescolaire";
+import {IAudience} from "@common/model/Audience";
 
 export class Student {
+    audiences?: Array<IAudience>;
+
     id: string;
     firstName: string;
     lastName: string;

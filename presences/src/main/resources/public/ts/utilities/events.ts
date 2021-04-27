@@ -1,4 +1,4 @@
-import {Event, EventResponse, Events} from "../models";
+import {EventResponse, Events, EventType, IEvent} from "../models";
 import {Reason} from "@presences/models/Reason";
 
 export interface EventsFilter {
@@ -47,11 +47,10 @@ export class EventsUtils {
         absence: 'absence'
     };
 
-    public static addEventsArray = function (item: Event, events: Array<Event | EventResponse>): void {
-        if (item.type === EventsUtils.ALL_EVENTS.event && item.type_id === 1) {
-            if (events.map(event => event.id).indexOf(item.id) === -1) {
-                events.push(item);
-            }
+    public static addEventsArray = (item: IEvent, events: Array<IEvent | EventResponse>): void => {
+        if (item.type === EventsUtils.ALL_EVENTS.event && item.type_id === 1
+            && events.map((event: IEvent) => event.id).indexOf(item.id) === -1) {
+            events.push(item);
         }
     };
 
@@ -72,14 +71,9 @@ export class EventsUtils {
      * Method to fetch all ids in the concerned dayHistory and events
      * from one student's event.all
      */
-    public static fetchEvents(event: EventResponse, fetchedEvents: Array<Event | EventResponse>) {
-        event.events.forEach(event => {
+    public static fetchEvents(event: EventResponse, fetchedEvents: Array<IEvent | EventResponse>) {
+        event.events.forEach((event: IEvent) => {
             EventsUtils.addEventsArray(event, fetchedEvents);
-            if ('events' in event) {
-                event.events.forEach(ee => {
-                    EventsUtils.addEventsArray(ee, fetchedEvents);
-                });
-            }
         });
     }
 
@@ -105,16 +99,34 @@ export class EventsUtils {
             .toString() : '';
     };
 
+    /**
+     * Refresh one page of the events list data with the provided pageEvents data.
+     * @param events        the event list
+     * @param pageEvents    the new data to apply
+     * @param page          the new data page number
+     */
+    public static interactiveConcat = (events: EventResponse[], pageEvents: EventResponse[], page: number): EventResponse[] => {
+
+        if (events.length === 0 || pageEvents.length === 0)
+            return events;
+
+        const beforePage: EventResponse[] = events.slice(0, events.findIndex((event: EventResponse) => event.page === page));
+        const afterPage: EventResponse[] = events.findIndex((event: EventResponse) => event.page > page) != -1 ?
+            events.slice(events.findIndex((event: EventResponse) => event.page > page), events.length) : [];
+
+        return beforePage.concat(pageEvents).concat(afterPage);
+    };
+
     /* ----------------------------
     counsellor regularisation methods
     ---------------------------- */
-    public static hasSameEventsCounsellor = (events: Event[]): boolean => {
+    public static hasSameEventsCounsellor = (events: IEvent[]): boolean => {
         let counsellorArray: Array<boolean> = events.map(event => event.counsellor_regularisation);
         return new Set(counsellorArray).size === 1;
     };
 
-    public static isEachEventsCounsellorRegularized = (events: Event[]): boolean => {
-        return events.every(event => event.counsellor_regularisation);
+    public static isEachEventsCounsellorRegularized = (events: IEvent[]): boolean => {
+        return events.every((event: IEvent) => event.counsellor_regularisation);
     };
 
     public static initGlobalCounsellor = (event: EventResponse): boolean => {
@@ -125,14 +137,14 @@ export class EventsUtils {
     /* ----------------------------
     reasons methods
     ---------------------------- */
-    public static hasSameEventsReason = (events: Event[]): boolean => {
-        let reasonArray: Array<number> = events.map(event => event.reason_id);
+    public static hasSameEventsReason = (events: IEvent[]): boolean => {
+        let reasonArray: Array<number> = events.map((event: IEvent) => event.reason_id);
         return new Set(reasonArray).size === 1;
     };
 
     public static initGlobalReason = (event: EventResponse): number => {
         let reasonArray: Array<number> = event.events.map(event => event.reason_id);
-        /* reasonArray[0] corresponds all same reasonId, 0 if they are differents */
+        /* reasonArray[0] corresponds all same reasonId, 0 if they are different */
         return new Set(reasonArray).size === 1 ? reasonArray[0] : 0;
     };
 
@@ -141,14 +153,8 @@ export class EventsUtils {
     ---------------------------- */
 
     /* As at least a event where type is absence*/
-    public static hasTypeEventAbsence = (events: Event[]): boolean => {
-        let hasEventTypeAbsence: boolean = false;
-        events.forEach(elem => {
-            if (elem.type_id === 1) {
-                hasEventTypeAbsence = true;
-            }
-        });
-        return hasEventTypeAbsence;
+    public static hasTypeEventAbsence = (events: Array<IEvent>): boolean => {
+        return events.some((event: IEvent) => event.type_id === EventType.ABSENCE);
     }
 
 }

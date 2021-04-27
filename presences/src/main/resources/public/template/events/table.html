@@ -33,25 +33,26 @@
 
         <!-- Profile -->
         <th class="events-table-body-student">
-            <img ng-src="/viescolaire/structures/[[vm.events.structureId]]/students/[[event.studentId]]/picture" height="43" width="43">
+            <img ng-src="/viescolaire/structures/[[vm.events.structureId]]/students/[[event.student.id]]/picture"
+                 height="43" width="43">
             <div class="events-table-body-student-content">
-                <student-name name="event.displayName" id="event.studentId"/>
-                <span class="class-name">[[event.className]]</span>
+                <student-name name="event.student.displayName" id="event.student.id"/>
+                <span class="class-name">[[event.student.classeName]]</span>
             </div>
         </th>
 
         <!-- Date -->
-        <th class="events-table-body-date uppercase text-center">[[event.date | date: 'dd/MM/yyyy']]</th>
+        <th class="events-table-body-date uppercase text-center">[[vm.formatMainDate(event.date)]]</th>
 
         <!-- Period -->
         <th class="events-table-body-period text-center">
             <ul class="period" ng-click="vm.preventCollapse($event)">
                 <!-- planning  -->
-                <li ng-repeat="periods in event.dayHistory track by $index"
+                <li ng-repeat="periods in event.student.day_history track by $index"
                     class="[[vm.eventTypeState(periods, $parent.$index, $index)]]"
-                    data-ng-click="vm.openEventForm($event, periods, event.studentId)"
-                    data-ng-mousedown="vm.dragSlotStart($event, periods, event.studentId, $parent.$index, $index)"
-                    data-ng-mouseup="vm.dragSlotEnd($event, periods, event.studentId, $parent.$index)"
+                    data-ng-click="vm.openEventForm($event, periods, event.student.id)"
+                    data-ng-mousedown="vm.dragSlotStart($event, periods, event.student.id, $parent.$index, $index)"
+                    data-ng-mouseup="vm.dragSlotEnd($event, periods, event.student.id, $parent.$index)"
                     data-ng-mouseenter="vm.dragSlotMove($event, $parent.$index, $index)">
                     <!-- tooltip hovered -->
                     <span class="tooltip-top"
@@ -67,10 +68,10 @@
 
         <!-- Select reason-->
         <th class="table-reason text-center">
-            <label ng-if="event.isAbsence || vm.isEachEventAbsence(event)">
-                <select data-ng-model="event.globalReason"
+            <label ng-if="vm.isEachEventAbsence(event)">
+                <select data-ng-model="event.reason.id"
                         data-ng-click="vm.reasonSelect($event)"
-                        data-ng-change="vm.changeAllReason(event, event.studentId)"
+                        data-ng-change="vm.changeAllReason(event, event.student.id)"
                         ng-options="reason.id as reason.label for reason in vm.filterSelect(vm.eventReasonsType, event)"
                         options-disabled="reason.hidden for reason in vm.eventReasonsType">
                     <option value="">[[lang.translate('presences.absence.select.empty')]]</option>
@@ -80,16 +81,14 @@
         <!-- Action -->
         <th class="text-center">
             <!-- Display simple add and doAction open lightbox if only one event -->
-            <i ng-show="event.actionAbbreviation == null && event.isGlobalAction" class="add"
-               data-ng-click="vm.doAction($event, event)">
-            </i>
+            <i ng-show="event.action_abbreviation == null" class="add" data-ng-click="vm.doAction($event, event)"></i>
             <!-- Display multiple add if has different actions (doAction do not open lightbox, only show details)  -->
-            <i ng-show="!event.isGlobalAction && event.events.length > 0"
-               class="addMultiple"></i>
+            <i ng-show="event.action_abbreviation === 'MULTIPLES'" class="addMultiple"></i>
             <!-- Display last action abbreviation if only one event or has multiple events and they all have same actions (doAction open lightbox)  -->
-            <span ng-show="event.isGlobalAction" class="events-table-body-color"
+            <span ng-show="event.action_abbreviation && event.action_abbreviation !== 'MULTIPLES'"
+                  class="events-table-body-color"
                   data-ng-click="vm.doAction($event, event)">
-                [[event.actionAbbreviation]]
+                [[event.action_abbreviation]]
             </span>
         </th>
 
@@ -102,8 +101,8 @@
                     }"
                    ng-class="{half: vm.regularizedChecked(event)}"
                    data-ng-click="vm.stopAbsencePropagation($event)">
-                <input type="checkbox" data-ng-model="event.globalCounsellorRegularisation"
-                       data-ng-change="vm.toggleAllEventsRegularised(event, event.studentId)">
+                <input type="checkbox" data-ng-model="event.counsellor_regularisation"
+                       data-ng-change="vm.toggleAllEventsRegularised(event, event.student.id)">
                 <span></span>
             </label>
         </th>
@@ -111,12 +110,10 @@
         <!-- Absence massmailed -->
         <th class="text-center">
             <label>
-                <i class="massmail-status"
-                   ng-class="event.globalMassmailed ? 'check-circle' : 'cross-circle'"></i>
+                <i class="massmail-status" ng-class="event.massmailed ? 'check-circle' : 'cross-circle'"></i>
             </label>
         </th>
     </tr>
-
 
     <!-- description content -->
     <tr data-ng-show="event.events.length !== 0" ng-class="{open: vm.isCollapsibleOpen($parent.$index)}"
@@ -141,7 +138,7 @@
             <span class="events-table-body-description-content-select table-reason">
                  <label ng-if="history.type_id == 1">
                     <select data-ng-model="history.reason_id"
-                            data-ng-change="vm.changeReason(history, event, event.studentId)"
+                            data-ng-change="vm.changeReason(history, event, event.student.id)"
                             ng-options="reason.id as reason.label for reason in vm.eventReasonsTypeDescription"
                             options-disabled="reason.hidden for reason in vm.eventReasonsType">
                         <option value="">[[lang.translate('presences.absence.select.empty')]]</option>
@@ -168,7 +165,7 @@
                    }">
                 <input type="checkbox" data-ng-model="history.counsellor_regularisation"
                        ng-disabled="!(history.reason_id !== null && !vm.provingReasonsMap[history.reason_id]) && history.counsellor_regularisation"
-                       data-ng-change="vm.toggleEventRegularised(history, event, event.studentId)">
+                       data-ng-change="vm.toggleEventRegularised(history, event, event.student.id)">
                 <span ng-style="{cursor: history.reason_id !== null && !vm.provingReasonsMap[history.reason_id] ? 'pointer' : 'default'}"></span>
             </label>
         </td>

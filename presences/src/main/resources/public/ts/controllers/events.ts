@@ -50,7 +50,7 @@ interface ViewModel {
 
     /* Get actions type */
     actionType: Action[];
-    actionAbbreviation: string;
+    action_abbreviation: string;
     actionEvent: ActionBody[];
     actionForm: ActionBody;
     action_typeId: string;
@@ -95,6 +95,8 @@ interface ViewModel {
 
     hideGlobalCheckbox(event): boolean;
 
+    formatMainDate(date: string): string;
+
     formatDate(date: string): string;
 
     /* tooltip */
@@ -105,7 +107,7 @@ interface ViewModel {
     isEachEventAbsence(event: EventResponse): boolean;
 
     /* Action */
-    doAction($event, event, eventParent?): void;
+    doAction($event: MouseEvent, event: any): void;
 
     getLastAction(): void;
 
@@ -190,7 +192,7 @@ interface ViewModel {
 
     updateDate(): void;
 
-    onScroll(): Promise<void>;
+    onScroll(): void;
 
     /*  switch event type */
     switchAbsencesFilter(): void;
@@ -276,7 +278,6 @@ export const eventsController = ng.controller('EventsController', ['$scope', '$r
         vm.events.regularized = isWidget ? vm.filter.regularized : null;
         vm.events.eventer.on('loading::true', () => $scope.safeApply());
         vm.events.eventer.on('loading::false', () => {
-            filterHistory();
             vm.eventId = null;
             $scope.safeApply();
         });
@@ -403,14 +404,6 @@ export const eventsController = ng.controller('EventsController', ['$scope', '$r
             $scope.safeApply();
         };
 
-        const filterHistory = (): void => {
-            vm.events.all = vm.events.all.filter(e => e.exclude !== true)
-                .sort((a: EventResponse, b: EventResponse) =>
-                    moment(b.date).format(DateUtils.FORMAT["YEARMONTHDAY"]) -
-                    moment(a.date).format(DateUtils.FORMAT["YEARMONTHDAY"])
-                )
-        };
-
         const refreshGetEventWhileAction = async (): Promise<void> => {
             let filter: EventRequest = {
                 structureId: vm.events.structureId,
@@ -430,11 +423,14 @@ export const eventsController = ng.controller('EventsController', ['$scope', '$r
 
             vm.events.pageCount = events.pageCount;
             vm.events.events = events.events;
+
             // replace events list by the event we fetched based on their page for each event
-            vm.events.all = vm.events.all.filter(event => event.page !== vm.interactedEvent.page).concat(events.all);
-            filterHistory();
+            vm.events.all = EventsUtils.interactiveConcat(vm.events.all, events.all, vm.interactedEvent.page);
+
             $scope.safeApply();
         };
+
+        vm.formatMainDate = (date: string): string => DateUtils.format(date, DateUtils.FORMAT["DAY-MONTH-YEAR"]);
 
         vm.formatDate = function (date: string) {
             return DateUtils.format(date, DateUtils.FORMAT["DAY-MONTH-HALFYEAR"]);
@@ -453,16 +449,16 @@ export const eventsController = ng.controller('EventsController', ['$scope', '$r
             getEvents(true);
         };
 
-        vm.editPeriod = async ($event, {studentId, date, displayName, className, classId}): Promise<void> => {
+        vm.editPeriod = async ($event, {student, date}): Promise<void> => {
             $event.stopPropagation();
             window.item = {
-                id: studentId,
+                id: student.id,
                 date,
-                displayName,
+                displayName: student.displayName,
                 type: 'USER',
-                groupName: className,
-                groupId: classId,
-                toString: function () {
+                groupName: student.classeName,
+                groupId: student.classId,
+                toString: function (): string {
                     return this.displayName;
                 }
             };
@@ -473,7 +469,7 @@ export const eventsController = ng.controller('EventsController', ['$scope', '$r
                 classes: vm.filter.classes
             }
             PresencesPreferenceUtils.updatePresencesEventListCalendarFilter(filter);
-            $location.path(`/calendar/${studentId}?date=${date}`);
+            $location.path(`/calendar/${student.id}?date=${date}`);
             $scope.safeApply();
         };
 
@@ -556,23 +552,22 @@ export const eventsController = ng.controller('EventsController', ['$scope', '$r
             console.log("downloading File");
         };
 
-        vm.doAction = ($event, event, eventParent?): void => {
+        vm.doAction = ($event: MouseEvent, event: any): void => {
             $event.stopPropagation();
             vm.lightbox.action = true;
             vm.interactedEvent = event;
-            vm.event = eventParent ? eventParent : event;
+            vm.event = event;
             vm.actionForm.owner = model.me.userId;
-            if ('id' in event) {
-                vm.actionForm.eventId = [event.id];
-            } else {
-                /* global action case */
-                vm.actionForm.eventId = [event.type.id];
-                event.events.forEach(event => {
+            vm.actionForm.eventId = [];
+            if (event.id) { // if action on sub-line
+                vm.actionForm.eventId.push(event.id);
+            } else if (event.events) { // if action on global line
+                event.events.forEach((event: IEvent) => {
                     if (vm.actionForm.eventId.indexOf(event.id) === -1) vm.actionForm.eventId.push(event.id)
                 });
             }
             vm.actionForm.actionId = null;
-            vm.actionForm.comment = "";
+            vm.actionForm.comment = '';
             getEventActions();
         };
 
@@ -585,28 +580,21 @@ export const eventsController = ng.controller('EventsController', ['$scope', '$r
         };
 
         vm.regularizedChecked = (event: EventResponse): boolean => {
-            let regularized = [];
-            event.events.forEach((elem) => {
+            let regularized: Array<boolean> = [];
+            event.events.forEach((elem: IEvent) => {
                 regularized.push(elem.reason_id && elem.counsellor_regularisation &&
                     (elem.type === EventsUtils.ALL_EVENTS.absence || elem.type_id === 1));
-                if ('events' in elem && elem.events.length > 0) {
-                    elem.events.forEach(itemEvent => {
-                        regularized.push(itemEvent.counsellor_regularisation);
-                    });
-                }
             });
-            return !event.globalCounsellorRegularisation && regularized.filter((r) => r === true).length > 0;
+            return !event.counsellor_regularisation && regularized.some((r: boolean) => r === true);
         };
 
         vm.isEachEventAbsence = (event: EventResponse): boolean => {
-            if (EventsUtils.hasTypeEventAbsence(event.events)) {
-                return true;
-            }
+            return event.events && EventsUtils.hasTypeEventAbsence(event.events);
         };
 
         /* Add global reason_id to all events that exist */
         vm.changeAllReason = async (event: EventResponse, studentId: string): Promise<void> => {
-            let initialReasonId = event.globalReason;
+            let initialReasonId: number = event.reason.id;
             vm.interactedEvent = event;
             let fetchedEvent: Event | EventResponse[] = [];
             if (isWidget) {
@@ -632,7 +620,7 @@ export const eventsController = ng.controller('EventsController', ['$scope', '$r
             let fetchedEvent: Array<Event | EventResponse> = [];
             history.counsellor_regularisation = vm.provingReasonsMap[history.reason_id];
             fetchedEvent.push(history);
-            event.globalReason = EventsUtils.initGlobalReason(event);
+            event.reason.id = EventsUtils.initGlobalReason(event);
             await vm.events.updateReason(fetchedEvent, initialReasonId, studentId, window.structure.id)
                 .then(() => {
 
@@ -648,9 +636,9 @@ export const eventsController = ng.controller('EventsController', ['$scope', '$r
         };
 
         vm.toggleAllEventsRegularised = async (event: EventResponse, studentId: string): Promise<void> => {
-            let initialCounsellorRegularisation = event.globalCounsellorRegularisation;
+            let initialCounsellorRegularisation = event.counsellor_regularisation;
             vm.interactedEvent = event;
-            let fetchedEvent: Event | EventResponse[] = [];
+            let fetchedEvent: IEvent | Array<EventResponse> = [];
             EventsUtils.fetchEvents(event, fetchedEvent);
             vm.events.updateRegularized(fetchedEvent, initialCounsellorRegularisation, studentId, window.structure.id)
                 .then(async () => {
@@ -666,13 +654,13 @@ export const eventsController = ng.controller('EventsController', ['$scope', '$r
         };
 
         vm.toggleEventRegularised = async (history: Event, event: EventResponse, studentId: string): Promise<void> => {
-            let initialCounsellorRegularisation = history.counsellor_regularisation;
+            let initialCounsellorRegularisation: boolean = history.counsellor_regularisation;
             vm.interactedEvent = event;
             let fetchedEvent: Array<Event | EventResponse> = [];
             if (history.type === EventsUtils.ALL_EVENTS.event) {
                 fetchedEvent.push(history);
             }
-            event.globalCounsellorRegularisation = EventsUtils.initGlobalCounsellor(event);
+            event.counsellor_regularisation = EventsUtils.initGlobalCounsellor(event);
             await vm.events.updateRegularized(fetchedEvent, initialCounsellorRegularisation, studentId, window.structure.id)
                 .then(() => {
                     if (!isWidget) {
@@ -951,7 +939,7 @@ export const eventsController = ng.controller('EventsController', ['$scope', '$r
             }
         };
 
-        vm.onScroll = async (): Promise<void> => {
+        vm.onScroll = (): void => {
             vm.filter.page++;
             let filter: EventRequest = {
                 structureId: vm.events.structureId,
@@ -971,16 +959,9 @@ export const eventsController = ng.controller('EventsController', ['$scope', '$r
                 .get(filter)
                 .then((events: { pageCount: number, events: EventResponse[], all: EventResponse[] }) => {
                     if (events.all.length !== 0) {
-                        vm.events.pageCount = vm.filter.page;
+                        vm.events.pageCount = events.pageCount;
                         vm.events.events = events.events;
                         vm.events.all = vm.events.all.concat(events.all);
-
-                        //Remove duplicates
-                        vm.events.all = vm.events.all.filter((event: EventResponse, index: number, events: EventResponse[]) =>
-                            events.findIndex((event2: EventResponse) =>
-                                (event2.studentId === event.studentId && event2.date === event.date)) === index);
-
-                        $scope.$broadcast(INFINITE_SCROLL_EVENTER.UPDATE);
                     }
                     $scope.safeApply();
                 });
@@ -1105,8 +1086,8 @@ export const eventsController = ng.controller('EventsController', ['$scope', '$r
             }
         };
 
-        vm.hideGlobalCheckbox = (event) => {
-            return event.globalReason === null || vm.provingReasonsMap[event.globalReason];
+        vm.hideGlobalCheckbox = (event: EventResponse): boolean => {
+            return event.reason === null || event.reason.id === null || vm.provingReasonsMap[event.reason.id];
         };
 
         /* Form filter */

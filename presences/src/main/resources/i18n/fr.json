@@ -166,6 +166,7 @@
   "presences.event.deletion.err": "Une erreur est survenue lors de la suppression de l'événement",
   "presences.event.empty": "Aucun événement sur cette période",
   "presences.event.title": "Liste des événements",
+  "presences.event.end.results" : "Fin des résultats",
   "presences.event.type": "Type d'événement",
   "presences.every.15.days": "Tous les 15 jours",
   "presences.exemption": "Dispense",

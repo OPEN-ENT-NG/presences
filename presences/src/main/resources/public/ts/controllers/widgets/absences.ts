@@ -214,10 +214,10 @@ export const absencesController = ng.controller('AbsenceController', ['$scope', 
                                     id: event.id,
                                     start_date: event.start_date,
                                     end_date: event.end_date,
-                                    student_id: student.studentId,
+                                    student_id: student.student.id,
                                     reason_id: event.reason_id,
                                     counsellor_regularisation: event.counsellor_regularisation,
-                                    student: {id: student.studentId, name: student.displayName, className: student.className}
+                                    student: {id: student.student.id, name: student.student.displayName, className: student.student.classeName}
                                 };
 
                                 /* Check if absence on a unique slot and remove duplicates */

@@ -20,4 +20,8 @@
 
     </div>
     <infinite-scroll scrolled="vm.onScroll()" loading-mode="true"></infinite-scroll>
+
+    <span class="events-content-end" data-ng-show="!vm.events.loading && (vm.filter.page !== 0) && (vm.filter.page > vm.events.pageCount)">
+        -&nbsp;[[lang.translate('presences.event.end.results')]]&nbsp;-
+    </span>
 </div>

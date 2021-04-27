@@ -7,7 +7,10 @@
 
     <section class="body lightbox-form">
         <h4 class="row spacing">
-            [[vm.formatDate(vm.event.date)]] - [[vm.event.displayName]]
+            [[vm.formatDate(vm.event.date)]] -
+            [[vm.event.student.displayName ?
+            vm.event.student.displayName :
+            vm.events.all[vm.eventId].student.displayName]]
         </h4>
 
         <div class="row spacing">

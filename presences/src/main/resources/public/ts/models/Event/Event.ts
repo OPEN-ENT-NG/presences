@@ -1,5 +1,5 @@
 import http, {AxiosResponse} from 'axios';
-import {_, moment} from 'entcore';
+import {moment} from 'entcore';
 import {DateUtils} from '@common/utils';
 import {EventType, LoadingCollection} from '@common/model';
 import {Reason} from '@presences/models/Reason';
@@ -7,6 +7,21 @@ import {EventsUtils} from '../../utilities';
 import {User} from '@common/model/User';
 import {Course} from '@presences/services';
 import {IAbsence} from '@presences/models';
+import {IAudience} from "@common/model/Audience";
+
+export type StudentEvent = {
+    id?: string;
+    audiences?: Array<IAudience>;
+    classId: string;
+    className?: string;
+    classeName?: string;
+    day_history: Array<IEventSlot>;
+    displayName: string;
+    email?: string;
+    firstName: string;
+    lastName: string;
+    name?: string;
+}
 
 export interface Event {
     id: number;
@@ -47,32 +62,25 @@ export interface IEvent {
     owner?: User;
     course?: Course;
     event_type?: { id: number, label: string };
-    student?: {id: string, name: string, className: string};
+    student?: { id: string, name: string, className: string };
     type?: string;
     exclude?: boolean;
     actionAbbreviation?: string;
     massmailed?: boolean;
+    page?: number;
 }
 
 export interface EventResponse {
-    id: number;
-    reason_id: number;
-    studentId: string;
-    displayName: string;
-    className: string;
+    action_abbreviation: string;
+    counsellor_regularisation: boolean;
+    created: string;
     date: string;
-    dayHistory: Array<IEventSlot>;
-    events: any[];
-    globalReason?: number;
-    globalCounsellorRegularisation?: boolean;
-    globalMassmailed?: boolean;
-    isGlobalAction?: boolean;
-    exclude?: boolean;
-    type?: { event: string, event_type: string, id: number };
-    actionAbbreviation?: string;
-    isAbsence?: boolean;
-    isEventAbsence?: any;
-    page?: number;
+    massmailed: boolean
+    reason: Reason;
+    student: StudentEvent;
+    events?: Array<IEvent>;
+    page: number;
+    type: string; // ('event' | 'absence')
 }
 
 export interface IEventBody {
@@ -202,66 +210,22 @@ export class Events extends LoadingCollection {
         this.events = [];
     }
 
-    static buildEventResponse(data: any[], page: number): EventResponse[] {
-        let builtEvents = [];
+    static buildEventResponse(data: Array<EventResponse>, page: number): EventResponse[] {
+        return data.map((eventResponse: EventResponse) => {
+            eventResponse.page = page;
+            eventResponse.events = [];
 
-        data.forEach(item => {
-            /* check if not duplicate dataModel */
-            if (!builtEvents.some(e =>
-                (e.classId === item.student.classId) &&
-                (e.date === DateUtils.format(item.date, DateUtils.FORMAT['YEAR-MONTH-DAY'])) &&
-                (e.studentId === item.student.id))) {
-                /* new dataModel */
-                let eventsFetchedFromHistory = [];
-                let actions: string[] = [];
-
-                /* build our eventsResponse array to affect our attribute "events" (see below dataModel.push) */
-                item.student.dayHistory.forEach((eventsHistory: IEventSlot) => {
-                    eventsHistory.events.forEach((event: IEvent) => {
-                        if (event.type === EventsUtils.ALL_EVENTS.event) {
-                            if (!eventsFetchedFromHistory.some(element => element.id === event.id)) {
-                                eventsFetchedFromHistory.push(event);
-                            }
-                            if ('actionAbbreviation' in event) {
-                                actions.push(event.actionAbbreviation);
-                            }
-                        }
-                    });
+            eventResponse.student.day_history.forEach((eventsHistory: IEventSlot) => {
+                eventsHistory.events.forEach((event: IEvent) => {
+                    // filter on 'event' data and check potential duplicate event (by checking its id's index)
+                    if (event.type === EventsUtils.ALL_EVENTS.event && !eventResponse.events.some(element => element.id === event.id)) {
+                        event.page = page;
+                        eventResponse.events.push(event);
+                    }
                 });
-
-                let type = {event: item.type, event_type: item.eventType.label, id: item.id};
-
-                /* check if there are differents actions */
-                let isGlobalAction = new Set(actions).size === 1;
-
-                let isAbsence: boolean = item.eventType.id === 1;
-
-                /* We build our event based on information stored above */
-                if (item.type === EventsUtils.ALL_EVENTS.event) {
-                    builtEvents.push({
-                        studentId: item.student.id,
-                        displayName: item.student.name,
-                        className: item.student.className,
-                        classId: item.student.classId,
-                        date: moment(item.date).format(DateUtils.FORMAT['YEAR-MONTH-DAY']),
-                        dayHistory: item.student.dayHistory,
-                        events: eventsFetchedFromHistory,
-                        exclude: item.exclude ? item.exclude : false,
-                        globalReason: item.reason ? item.reason.id : null,
-                        globalCounsellorRegularisation: item.counsellor_regularisation ? item.counsellor_regularisation : false,
-                        globalFollowed: item.followed ? item.followed : false,
-                        globalMassmailed: item.massmailed ? item.massmailed : false,
-                        isGlobalAction: isGlobalAction,
-                        type: type,
-                        actionAbbreviation: item.actionAbbreviation,
-                        isAbsence: isAbsence,
-                        page: page
-                    });
-                }
-            }
+            });
+            return eventResponse;
         });
-
-        return builtEvents;
     }
 
     async syncPagination(): Promise<void> {
