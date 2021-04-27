@@ -31,7 +31,8 @@ export interface IPunishmentRequest {
 }
 
 export interface IPunishmentAbsence {
-    reason_id: number
+    reason_id: number,
+    followed: boolean
 }
 
 export interface IPunishmentAbsenceRequest {

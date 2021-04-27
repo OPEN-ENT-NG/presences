@@ -90,7 +90,7 @@ public class DefaultAbsenceService extends DBService implements AbsenceService {
     @Override
     public void getAbsenceId(Integer absenceId, Handler<Either<String, JsonObject>> handler) {
         String query = "SELECT * FROM " + Presences.dbSchema + ".absence WHERE id = " + absenceId;
-        Sql.getInstance().raw(query, SqlResult.validUniqueResultHandler(handler));
+        sql.raw(query, SqlResult.validUniqueResultHandler(handler));
     }
 
     @Override
@@ -167,9 +167,10 @@ public class DefaultAbsenceService extends DBService implements AbsenceService {
     }
 
     private JsonObject insertStatement(JsonObject absenceBody, String studentId, String userId, Long collectiveId) {
-        String query = "INSERT INTO " + Presences.dbSchema + ".absence(structure_id, student_id, start_date, end_date, owner, reason_id, " +
+        String query = "INSERT INTO " + Presences.dbSchema + ".absence(structure_id, student_id, start_date, " +
+                "end_date, owner, reason_id, followed," +
                 " collective_id) " +
-                " SELECT ?, ?, ?, ?, ?, ?, ? ";
+                " SELECT ?, ?, ?, ?, ?, ?, ?, ? ";
 
         JsonArray params = new JsonArray()
                 .add(absenceBody.getString("structure_id"))
@@ -180,6 +181,8 @@ public class DefaultAbsenceService extends DBService implements AbsenceService {
 
         if (absenceBody.getLong("reason_id") != null) params.add(absenceBody.getLong("reason_id"));
         else params.addNull();
+
+        params.add(absenceBody.getBoolean("followed", false));
 
         if (collectiveId != null) {
             params.add(collectiveId);
@@ -481,7 +484,7 @@ public class DefaultAbsenceService extends DBService implements AbsenceService {
         Future<JsonArray> updateEventsFuture = Future.future();
         Future<JsonObject> deleteEventsFuture = Future.future();
 
-        Boolean isRegularized = absenceBody.getBoolean("counsellor_regularisation");
+        Boolean isRegularized = absenceBody.getBoolean("counsellor_regularisation", false);
         createEventsWithAbsents(absenceBody, isRegularized, groupIds, userInfoId, FutureHelper.handlerJsonArray(createEventsFuture));
         updateEventsWithAbsents(absenceBody, isRegularized, groupIds, FutureHelper.handlerJsonArray(updateEventsFuture));
         deleteEventsFromAbsence(absenceBody, oldAbsence, FutureHelper.handlerJsonObject(deleteEventsFuture));
@@ -568,8 +571,8 @@ public class DefaultAbsenceService extends DBService implements AbsenceService {
                 "  WHERE event.type_id = 1 and event.register_id = register.id and event.student_id = ?" +
                 ")" +
                 ") " +
-                "INSERT INTO " + Presences.dbSchema + ".event (start_date, end_date, comment, counsellor_input, student_id, register_id, type_id, reason_id, owner)" +
-                "(SELECT register.start_date, register.end_date, '', true, ?," +
+                "INSERT INTO " + Presences.dbSchema + ".event (start_date, end_date, comment, counsellor_input, followed, student_id, register_id, type_id, reason_id, owner)" +
+                "(SELECT register.start_date, register.end_date, '', true, ?, ?," +
                 "register.id, 1, ?, ? FROM register) " +
                 "RETURNING *";
 
@@ -577,7 +580,8 @@ public class DefaultAbsenceService extends DBService implements AbsenceService {
                 .addAll(new JsonArray(groupIds))
                 .add(absenceBody.getString("start_date"))
                 .add(absenceBody.getString("end_date"))
-                .add(absenceBody.getString("student_id"));
+                .add(absenceBody.getString("student_id"))
+                .add(absenceBody.getBoolean("followed", false));
         values.add(absenceBody.getString("student_id"));
 
         if (absenceBody.getInteger("reason_id") != null) {
@@ -586,7 +590,7 @@ public class DefaultAbsenceService extends DBService implements AbsenceService {
             values.addNull();
         }
         values.add((absenceBody.getString("owner") != null) ? absenceBody.getString("owner") : ownerId);
-        Sql.getInstance().prepared(query, values, SqlResult.validResultHandler(result -> {
+        sql.prepared(query, values, SqlResult.validResultHandler(result -> {
             if (result.isLeft()) {
                 String message = "[Presences@DefaultAbsenceService::createEventsWithAbsents] Failed to create events from absent.";
                 LOGGER.error(message + " " + result.left().getValue());
@@ -612,7 +616,7 @@ public class DefaultAbsenceService extends DBService implements AbsenceService {
                 "  WHERE event.type_id = 1 and event.register_id = register.id and event.student_id = ?" +
                 ") " +
                 ") " +
-                "UPDATE " + Presences.dbSchema + ".event SET reason_id = ? WHERE register_id IN (SELECT id FROM register) AND student_id = ? " +
+                "UPDATE " + Presences.dbSchema + ".event SET reason_id = ?, followed = ? WHERE register_id IN (SELECT id FROM register) AND student_id = ? " +
                 "RETURNING *";
         JsonArray values = new JsonArray()
                 .addAll(new JsonArray(groupIds))
@@ -626,8 +630,10 @@ public class DefaultAbsenceService extends DBService implements AbsenceService {
             values.addNull();
         }
 
+        values.add(absenceBody.getBoolean("followed", false));
+
         values.add(absenceBody.getString("student_id"));
-        Sql.getInstance().prepared(query, values, SqlResult.validResultHandler(result -> {
+        sql.prepared(query, values, SqlResult.validResultHandler(result -> {
             if (result.isLeft()) {
                 String message = "[Presences@DefaultAbsenceService::updateEventsWithAbsents] Failed to update events from absent.";
                 LOGGER.error(message + " " + result.left().getValue());
@@ -644,7 +650,7 @@ public class DefaultAbsenceService extends DBService implements AbsenceService {
         if (isRegularized != null) {
             changeRegularizedEvents(events, isRegularized, result -> {
                 if (result.isLeft()) {
-                    String message = "[Presences@DefaultAbsenceService::regularizeEventsFromAbsence] Failed to regularize absence linked events.";
+                    String message = "[Presences@DefaultAbsenceService::regularizeEventsFromAbsence] Failed to regularize or follow absence linked events.";
                     LOGGER.error(message + " " + result.left().getValue());
                     handler.handle(new Either.Left<>(message));
                     return;
@@ -720,17 +726,27 @@ public class DefaultAbsenceService extends DBService implements AbsenceService {
             ids.add(event.getId());
         }
 
-        if (ids.size() > 0) {
+        if (!ids.isEmpty()) {
             JsonArray params = new JsonArray();
             String query = "UPDATE " + Presences.dbSchema + ".event SET counsellor_regularisation = ? ";
             params.add(regularized);
 
             query += " WHERE id IN " + Sql.listPrepared(ids) + " AND type_id = 1";
             params.addAll(new JsonArray(ids));
-            Sql.getInstance().prepared(query, params, SqlResult.validUniqueResultHandler(handler));
+            sql.prepared(query, params, SqlResult.validUniqueResultHandler(handler));
             return;
         }
         handler.handle(new Either.Right<>(new JsonObject().put("status", "ok")));
+    }
+
+    @Override
+    public void followAbsence(JsonArray absenceIds, Boolean followed, Handler<Either<String, JsonObject>> handler) {
+        JsonArray params = new JsonArray();
+        String query = "UPDATE " + Presences.dbSchema + ".absence SET followed = ? WHERE id IN " + Sql.listPrepared(absenceIds);
+        params.add(followed)
+                .addAll(absenceIds);
+
+        sql.prepared(query, params, SqlResult.validUniqueResultHandler(handler));
     }
 
     @Override
@@ -776,7 +792,7 @@ public class DefaultAbsenceService extends DBService implements AbsenceService {
     }
 
     private void resetEventsOnDelete(JsonObject absenceResult, Handler<Either<String, JsonObject>> handler) {
-        String query = "UPDATE " + Presences.dbSchema + ".event SET reason_id = null " +
+        String query = "UPDATE " + Presences.dbSchema + ".event SET reason_id = null, followed = false " +
                 "WHERE student_id = ? AND start_date >= ? AND end_date <= ? AND counsellor_input = false AND type_id = "
                 + EventType.ABSENCE.getType();
 
@@ -784,7 +800,7 @@ public class DefaultAbsenceService extends DBService implements AbsenceService {
                 .add(absenceResult.getString("student_id"))
                 .add(absenceResult.getString("start_date"))
                 .add(absenceResult.getString("end_date"));
-        Sql.getInstance().prepared(query, params, SqlResult.validUniqueResultHandler(handler));
+        sql.prepared(query, params, SqlResult.validUniqueResultHandler(handler));
     }
 
     private void deleteAbsence(Integer absenceId, Handler<Either<String, JsonObject>> handler) {
@@ -801,7 +817,7 @@ public class DefaultAbsenceService extends DBService implements AbsenceService {
     @Override
     public void retrieve(String structure, List<String> students, String start, String end, Boolean justified, Boolean regularized, List<Integer> reasons, Handler<Either<String, JsonArray>> handler) {
         JsonArray params = new JsonArray().add(structure);
-        String query = "SELECT id, start_date, end_date, student_id, reason_id, counsellor_regularisation " +
+        String query = "SELECT id, start_date, end_date, student_id, reason_id, counsellor_regularisation, followed " +
                 "FROM " + Presences.dbSchema + ".absence " +
                 "WHERE structure_id = ? ";
         if (!students.isEmpty()) {
@@ -826,7 +842,7 @@ public class DefaultAbsenceService extends DBService implements AbsenceService {
 
         query += " ORDER BY start_date DESC";
 
-        Sql.getInstance().prepared(query, params, SqlResult.validResultHandler(res -> {
+        sql.prepared(query, params, SqlResult.validResultHandler(res -> {
             if (res.isLeft()) {
                 LOGGER.error("[Presences@DefaultAbsenceService] Failed to retrieve absences", res.left().getValue());
                 handler.handle(res.left());

@@ -4,32 +4,40 @@ import {Reason} from "@presences/models/Reason";
 export interface EventsFilter {
     startDate: Date;
     endDate: Date;
-    students: any;
-    classes: any;
-    absences: boolean;
-    late: boolean;
-    departure: boolean;
-    regularized: boolean;
-    regularizedNotregularized: boolean;
-    allReasons: boolean,
-    noReasons: boolean,
-    reasons: Reason,
-    unjustified: boolean,
-    justifiedNotRegularized: boolean,
-    justifiedRegularized: boolean,
-    noFilter: boolean;
-    page: number;
+    students?: any;
+    classes?: any;
+    absences?: boolean;
+    late?: boolean;
+    departure?: boolean;
+    regularized?: boolean;
+    regularizedNotregularized?: boolean;
+    allReasons?: boolean,
+    noReasons?: boolean,
+    reasons?: Reason,
+    reasonIds?: number[],
+    unjustified?: boolean,
+    justifiedNotRegularized?: boolean,
+    justifiedRegularized?: boolean,
+    followed?: boolean,
+    notFollowed?: boolean,
+    noFilter?: boolean;
+    page?: number;
 }
 
 export interface EventsFormFilter {
-    absences: boolean,
-    late: boolean,
-    departure: boolean,
-    unjustified: boolean,
-    justifiedNotRegularized: boolean,
-    justifiedRegularized: boolean,
-    allReasons: boolean,
-    reasonIds: number[]
+    classes?: any;
+    students?: any;
+    absences?: boolean,
+    late?: boolean,
+    departure?: boolean,
+    unjustified?: boolean,
+    justifiedNotRegularized?: boolean,
+    justifiedRegularized?: boolean,
+    followed?: boolean,
+    notFollowed?: boolean,
+    allReasons?: boolean,
+    noReasons?: boolean;
+    reasonIds?: number[]
 }
 
 export class EventsUtils {

@@ -24,6 +24,7 @@ public class Event {
     private Reason reason;
     private User owner;
     private String created;
+    private Boolean followed;
     private Boolean counsellorRegularisation;
     private Boolean massmailed;
     private String type;
@@ -53,6 +54,7 @@ public class Event {
                 new User(event.getJsonObject("owner", new JsonObject()));
         this.created = event.getString("created", null);
         this.counsellorRegularisation = event.getBoolean("counsellor_regularisation", false);
+        this.followed = event.getBoolean("followed", false);
         this.massmailed = event.getBoolean("massmailed", false);
         this.type = event.getString("type", null);
         this.isExclude = event.getBoolean("exclude", null);
@@ -77,6 +79,7 @@ public class Event {
                 .put("owner", this.owner.toJSON())
                 .put("created", this.created)
                 .put("counsellor_regularisation", this.counsellorRegularisation)
+                .put("followed", this.followed)
                 .put("massmailed", this.massmailed)
                 .put("type", this.type)
                 .put("action_abbreviation", this.actionAbbreviation)
@@ -122,6 +125,14 @@ public class Event {
 
     public void setCounsellorInput(boolean counsellorInput) {
         this.counsellorInput = counsellorInput;
+    }
+
+    public boolean isFollowed() {
+        return followed;
+    }
+
+    public void setFollowed(boolean followed) {
+        this.followed = followed;
     }
 
     public Student getStudent() {

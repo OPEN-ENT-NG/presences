@@ -15,6 +15,7 @@ public class EventBody {
     private String owner;
     private String created;
     private Boolean counsellor_regularisation;
+    private Boolean followed;
     private Boolean massmailed;
 
     public EventBody(JsonObject eventBody) {
@@ -29,6 +30,7 @@ public class EventBody {
         this.owner = eventBody.getString("owner", null);
         this.created = eventBody.getString("created", null);
         this.counsellor_regularisation = eventBody.getBoolean("counsellor_regularisation", null);
+        this.followed = eventBody.getBoolean("followed", false);
         this.massmailed = eventBody.getBoolean("massmailed", null);
     }
 
@@ -45,6 +47,7 @@ public class EventBody {
                 .put("owner", this.owner)
                 .put("created", this.created)
                 .put("counsellor_regularisation", this.counsellor_regularisation)
+                .put("followed", this.followed)
                 .put("massmailed", this.massmailed);
     }
 
@@ -134,6 +137,14 @@ public class EventBody {
 
     public void setCounsellorRegularisation(Boolean counsellor_regularisation) {
         this.counsellor_regularisation = counsellor_regularisation;
+    }
+
+    public Boolean isFollowed() {
+        return followed;
+    }
+
+    public void setFollowed(Boolean followed) {
+        this.followed = followed;
     }
 
     public Boolean isMassmailed() {

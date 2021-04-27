@@ -35,6 +35,10 @@
   &-absence-reason {
     margin-top: $spacing-LXS;
     margin-bottom: $spacing-L;
+
+    &-follow {
+      padding-left: $spacing-M;
+    }
   }
 
   switch {

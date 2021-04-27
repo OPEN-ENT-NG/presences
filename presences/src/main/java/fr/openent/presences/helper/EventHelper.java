@@ -482,6 +482,7 @@ public class EventHelper {
                         .put("end_date", event.getEndDate())
                         .put("reason_id", event.getReason().getId())
                         .put("counsellor_regularisation", event.isCounsellorRegularisation())
+                        .put("followed", event.isFollowed())
                         .put("type", event.getType());
                 if (!containsId(history.getJsonArray("events"), absenceEvent)) {
                     history.getJsonArray("events").add(absenceEvent);

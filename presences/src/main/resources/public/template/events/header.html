@@ -112,9 +112,19 @@
                 <i18n ng-show="vm.filter.justifiedRegularized">presences.absence.types.justified.regularized</i18n>
             </div>
         </div>
+        <div class="cell" ng-show="vm.filter.followed">
+            <div class="card horizontal-margin-small horizontal-spacing margin-bottom-md">
+                <i18n ng-show="vm.filter.followed">presences.absence.types.followed</i18n>
+            </div>
+        </div>
+        <div class="cell" ng-show="vm.filter.notFollowed">
+            <div class="card horizontal-margin-small horizontal-spacing margin-bottom-md">
+                <i18n ng-show="vm.filter.notFollowed">presences.absence.types.not.followed</i18n>
+            </div>
+        </div>
     </div>
     <!-- EVENT LEGENDS -->
-    <events-legend absence-no-reason="true" absence-not-regularized="true" absence-regularized="true"
+    <events-legend absence-no-reason="true" absence-not-regularized="true" absence-regularized="true" absence-followed="true"
                    lateness="true" departure="true">
     </events-legend>
 </div>

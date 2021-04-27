@@ -303,6 +303,10 @@ body.presences, .sniplet.presences {
       background-color: $presences-green;
     }
 
+    &.absence-followed {
+      background-color: $presences-heavy-black;
+    }
+
     &.lateness {
       background-color: $presences-purple;
     }

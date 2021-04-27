@@ -225,6 +225,10 @@ $calendar-user-card-height: 56px;
           &.absent-regularized {
             background-color: $presences-green !important;
           }
+
+          &.contains-followed-absence {
+            background-color: $presences-black !important;
+          }
         }
 
         .course-item-container {
@@ -294,6 +298,11 @@ $calendar-user-card-height: 56px;
 
           &.contains-absence, &.contains-absenceReason {
             background-color: rgba(0, 0, 0, 0.2) !important;
+            color: $white !important;
+          }
+
+          &.contains-followed-absence {
+            background-color: $presences-black !important;
             color: $white !important;
           }
 

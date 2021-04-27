@@ -72,7 +72,7 @@
             </label>
         </div>
 
-        <!-- Regularisation -->
+        <!-- Regularisation and follow checkboxes -->
         <div class="presenceLightbox-body-info-choice">
             <label class="checkbox">
                 <input type="checkbox"
@@ -81,6 +81,15 @@
                        data-ng-disabled="(vm.form.reason_id == null || !vm.canRegularize)"/>
                 <span class="presenceLightbox-body-info-checkbox">
                     <i18n>presences.widgets.absences.regularized</i18n>
+                </span>
+            </label>
+
+
+            <label class="checkbox follow-checkbox">
+                <input type="checkbox"
+                       data-ng-model="vm.form.followed"/>
+                <span class="presenceLightbox-body-info-checkbox">
+                    <i18n>presences.widgets.absences.followed</i18n>
                 </span>
             </label>
         </div>

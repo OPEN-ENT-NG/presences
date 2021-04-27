@@ -84,7 +84,8 @@ public class Presences {
         eb.send(address, action, MessageResponseHandler.messageJsonArrayHandler(FutureHelper.handlerJsonArray(handler)));
     }
 
-    public void createAbsences(String structureId, List<String> studentIds, String userInfoId, Long reasonId, String startDate, String endDate, boolean editEvents,
+    public void createAbsences(String structureId, List<String> studentIds, String userInfoId, Long reasonId, String startDate,
+                               String endDate, boolean editEvents, boolean followed,
                                Handler<AsyncResult<JsonObject>> handler) {
         JsonObject action = new JsonObject()
                 .put("structure_id", structureId)
@@ -94,6 +95,7 @@ public class Presences {
                 .put("userId", userInfoId)
                 .put("studentIds", studentIds)
                 .put("editEvents", editEvents)
+                .put("followed", followed)
                 .put("action", "create-absences");
         eb.send(address, action, MessageResponseHandler.messageJsonObjectHandler(FutureHelper.handlerJsonObject(handler)));
     }

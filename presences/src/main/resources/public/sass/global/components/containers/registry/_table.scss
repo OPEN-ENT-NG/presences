@@ -117,6 +117,10 @@ ul {
           border: none;
         }
 
+        .absent-followed {
+          background-color: $presences-heavy-black;
+        }
+
         .absent {
           background-color: $presences-red;
         }

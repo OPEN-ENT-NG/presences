@@ -73,6 +73,8 @@ interface ViewModel {
 
     isAbsenceRegularized(event: RegistryEvent[]): boolean;
 
+    isAbsenceFollowed(event: RegistryEvent[]): boolean;
+
     openEventCard($event, student: string, day: RegistryDays, events: RegistryEvent[]): void;
 
     formatDate(date: string): string;
@@ -289,6 +291,13 @@ export const registryController = ng.controller('RegistryController', ['$scope',
             return !event.some((event: RegistryEvent) => event.counsellor_regularisation === false);
         };
 
+        vm.isAbsenceFollowed = (event: RegistryEvent[]): boolean => {
+            if (event.length === 0) {
+                return false;
+            }
+            return !event.some((event: RegistryEvent) => event.followed === false);
+        };
+
         vm.openEventCard = ($event, student: string, day: RegistryDays, events: RegistryEvent[]): void => {
             if (events.length === 0 && !day.forgottenNotebook) {
                 return;
@@ -313,7 +322,6 @@ export const registryController = ng.controller('RegistryController', ['$scope',
                 hover.style.left = `${x + (widthEventCard / 100)}px`;
             }
             hover.style.display = 'flex';
-            console.log('eventCard: ', vm.eventCardData);
             $scope.safeApply();
         };
 

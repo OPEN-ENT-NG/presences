@@ -106,6 +106,16 @@ export const PunishmentExcludeForm = ng.directive('punishmentExcludeForm', ['Sea
                         options-disabled="reason.hidden for reason in vm.reasons">
                     <option value="">[[vm.lang.translate('incidents.absence.select.empty')]]</option>
                 </select>
+                
+                <!-- follow event area -->
+                <label class="checkbox punishment-exclude-form-absence-reason-follow">
+                    <input type="checkbox"
+                       data-ng-model="vm.form.absence.followed"/>
+                    <span class="presenceLightbox-body-info-checkbox">
+                        <i18n>incidents.punishment.declare.absence.followed</i18n>
+                    </span>
+                </label>
+               
             </div>
             
             <!-- responsible -->
@@ -202,7 +212,7 @@ export const PunishmentExcludeForm = ng.directive('punishmentExcludeForm', ['Sea
                 vm.addAbsence = async function (): Promise<void> {
                     vm.form.absence = null;
                     if (vm.isAddingAbsence || vm.punishment.id) {
-                        vm.form.absence = {reason_id: null} as IPunishmentAbsence
+                        vm.form.absence = {reason_id: null, followed: true} as IPunishmentAbsence
                         if (vm.isAddingAbsence && !vm.punishment.id) await vm.getStudentsAbsences();
                         if (vm.punishment.id && vm.punishment.student && vm.absencesByStudentIds && vm.start_date && vm.end_date) {
                             if (vm.isStudentAnomaly(vm.punishment.student.id)) {
@@ -213,6 +223,7 @@ export const PunishmentExcludeForm = ng.directive('punishmentExcludeForm', ['Sea
                                 if (absence) {
                                     vm.isAddingAbsence = true; // if we found absence matching, we can't uncheck, so we force it to keep checked
                                     vm.form.absence.reason_id = absence.reason_id;
+                                    vm.form.absence.followed = absence.followed;
                                 }
                             }
                         }

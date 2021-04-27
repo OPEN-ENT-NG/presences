@@ -22,9 +22,12 @@
                 <div class="registry-event-card-body-description">
                     <div class="legends"
                          ng-class="{
-                           'absence-no-reason': event.type === vm.eventType[0] && !event.reason && !event.counsellor_regularisation,
-                           'absence-regularized': event.type === vm.eventType[0] && event.reason && event.counsellor_regularisation,
+                           'absence-no-reason': event.type === vm.eventType[0] && !event.reason
+                           && !event.counsellor_regularisation && !event.followed,
+                           'absence-regularized': event.type === vm.eventType[0] && event.reason
+                           && event.counsellor_regularisation && !event.followed,
                            'absence-unregularized': event.type === vm.eventType[0] && event.reason && !event.counsellor_regularisation,
+                           'absence-followed': event.type === vm.eventType[0] && event.followed,
                            'lateness': event.type === vm.eventType[1],
                            'incident': event.type === vm.eventType[2],
                            'departure': event.type === vm.eventType[3]

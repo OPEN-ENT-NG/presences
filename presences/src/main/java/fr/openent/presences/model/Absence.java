@@ -15,6 +15,7 @@ public class Absence implements Cloneable {
     private String startDate;
     private String endDate;
     private Boolean counsellorRegularisation;
+    private Boolean followed;
 
     public Absence(JsonObject absence, List<String> mandatoryAttributes) {
         for (String attribute : mandatoryAttributes) {
@@ -29,6 +30,7 @@ public class Absence implements Cloneable {
         this.startDate = absence.getString("start_date", "");
         this.endDate = absence.getString("end_date", "");
         this.counsellorRegularisation = absence.getBoolean("counsellor_regularisation", false);
+        this.followed = absence.getBoolean("followed", false);
     }
 
     @Override
@@ -49,6 +51,7 @@ public class Absence implements Cloneable {
                 .put("start_date", this.startDate)
                 .put("end_date", this.endDate)
                 .put("counsellor_regularisation", this.counsellorRegularisation)
+                .put("followed", this.followed)
                 .put("type", "absence");
     }
 
@@ -108,4 +111,11 @@ public class Absence implements Cloneable {
         this.counsellorRegularisation = counsellorRegularisation;
     }
 
+    public Boolean isFollowed() {
+        return followed;
+    }
+
+    public void setFollowed(Boolean followed) {
+        this.followed = followed;
+    }
 }

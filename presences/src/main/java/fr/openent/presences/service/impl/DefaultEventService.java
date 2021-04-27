@@ -9,6 +9,7 @@ import fr.openent.presences.common.service.UserService;
 import fr.openent.presences.common.service.impl.DefaultGroupService;
 import fr.openent.presences.common.service.impl.DefaultUserService;
 import fr.openent.presences.common.viescolaire.Viescolaire;
+import fr.openent.presences.db.DBService;
 import fr.openent.presences.enums.EventType;
 import fr.openent.presences.enums.WorkflowActions;
 import fr.openent.presences.helper.CourseHelper;
@@ -39,7 +40,7 @@ import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.stream.Collectors;
 
-public class DefaultEventService implements EventService {
+public class DefaultEventService extends DBService implements EventService {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(DefaultEventService.class);
     private final EventBus eb;
@@ -67,14 +68,14 @@ public class DefaultEventService implements EventService {
     @Override
     public void get(String structureId, String startDate, String endDate,
                     List<String> eventType, List<String> listReasonIds, Boolean noReason, List<String> userId,
-                    JsonArray userIdFromClasses, List<String> classes, Boolean regularized, Integer page,
-                    Handler<Either<String, JsonArray>> handler) {
+                    JsonArray userIdFromClasses, List<String> classes, Boolean regularized, Boolean followed,
+                    Integer page, Handler<Either<String, JsonArray>> handler) {
 
         Future<JsonArray> eventsFuture = Future.future();
         Future<JsonObject> slotsFuture = Future.future();
 
-        getEvents(structureId, startDate, endDate, eventType, listReasonIds, noReason, userId, userIdFromClasses, regularized, page,
-                FutureHelper.handlerJsonArray(eventsFuture));
+        getEvents(structureId, startDate, endDate, eventType, listReasonIds, noReason, userId, userIdFromClasses, regularized,
+                followed, page, FutureHelper.handlerJsonArray(eventsFuture));
         slotHelper.getTimeSlots(structureId, FutureHelper.handlerJsonObject(slotsFuture));
 
 
@@ -166,10 +167,10 @@ public class DefaultEventService implements EventService {
 
     private void getEvents(String structureId, String startDate, String endDate,
                            List<String> eventType, List<String> listReasonIds, Boolean noReason, List<String> userId, JsonArray userIdFromClasses,
-                           Boolean regularized, Integer page, Handler<Either<String, JsonArray>> handler) {
+                           Boolean regularized, Boolean followed, Integer page, Handler<Either<String, JsonArray>> handler) {
         JsonArray params = new JsonArray();
-        Sql.getInstance().prepared(this.getEventsQuery(structureId, startDate, endDate,
-                eventType, listReasonIds, noReason, regularized, userId, userIdFromClasses, page, params),
+        sql.prepared(this.getEventsQuery(structureId, startDate, endDate,
+                eventType, listReasonIds, noReason, regularized, followed, userId, userIdFromClasses, page, params),
                 params, SqlResult.validResultHandler(handler));
     }
 
@@ -183,7 +184,7 @@ public class DefaultEventService implements EventService {
                 .addAll(new JsonArray(users));
 
         String query = "SELECT start_date, end_date, student_id, type_id, " +
-                "counsellor_regularisation, reason_id, reason.label as reason " +
+                "counsellor_regularisation, followed, reason_id, reason.label as reason " +
                 "FROM " + Presences.dbSchema + ".event " +
                 "LEFT JOIN " + Presences.dbSchema + ".reason ON (event.reason_id = reason.id) " +
                 "WHERE start_date >= ? " +
@@ -197,9 +198,9 @@ public class DefaultEventService implements EventService {
     @Override
     public void getCsvData(String structureId, String startDate, String endDate, List<String> eventType,
                            List<String> listReasonIds, Boolean noReason, List<String> userId, JsonArray userIdFromClasses,
-                           List<String> classes, Boolean regularized, Handler<AsyncResult<List<Event>>> handler) {
+                           List<String> classes, Boolean regularized, Boolean followed, Handler<AsyncResult<List<Event>>> handler) {
         getEvents(structureId, startDate, endDate, eventType, listReasonIds, noReason, userId, userIdFromClasses,
-                regularized, null, eventHandler -> {
+                regularized, followed,null, eventHandler -> {
                     if (eventHandler.isLeft()) {
                         String err = "[Presences@DefaultEventService::getCsvData] Failed to fetch events";
                         LOGGER.error(err, eventHandler.left().getValue());
@@ -266,14 +267,14 @@ public class DefaultEventService implements EventService {
      * @param params            Json params
      */
     private String getEventsQuery(String structureId, String startDate, String endDate, List<String> eventType,
-                                  List<String> listReasonIds, Boolean noReason, Boolean regularized, List<String> userId,
-                                  JsonArray userIdFromClasses, Integer page, JsonArray params) {
+                                  List<String> listReasonIds, Boolean noReason, Boolean regularized, Boolean followed,
+                                  List<String> userId, JsonArray userIdFromClasses, Integer page, JsonArray params) {
 
         String query = "WITH allevents AS (" +
                 "  SELECT e.id AS id, e.start_date AS start_date, e.end_date AS end_date, " +
                 "  e.created AS created, e.comment AS comment, e.student_id AS student_id," +
                 "  e.reason_id AS reason_id, e.owner AS owner, e.register_id AS register_id, " +
-                "  e.counsellor_regularisation AS counsellor_regularisation," +
+                "  e.counsellor_regularisation AS counsellor_regularisation, e.followed AS followed, " +
                 "  e.type_id AS type_id, 'event'::text AS type" +
                 "  FROM " + Presences.dbSchema + ".event e" +
                 "  INNER JOIN presences.register AS r " +
@@ -290,10 +291,10 @@ public class DefaultEventService implements EventService {
         params.add(startDate + " " + defaultStartTime);
         params.add(endDate + " " + defaultEndTime);
 
-        query += setParamsForQueryEvents(listReasonIds, userId, regularized, noReason, userIdFromClasses, params);
+        query += setParamsForQueryEvents(listReasonIds, userId, regularized, followed, noReason, userIdFromClasses, params);
         query += ") SELECT * FROM allevents " +
                 "GROUP BY id, start_date, end_date, created, comment, student_id, reason_id, owner," +
-                "type_id, register_id, counsellor_regularisation, type, register_id " +
+                "type_id, register_id, counsellor_regularisation, followed, type, register_id " +
                 " ORDER BY start_date DESC, id DESC";
         if (page != null) {
             query += " OFFSET ? LIMIT ? ";
@@ -307,16 +308,16 @@ public class DefaultEventService implements EventService {
     @Override
     public void getPageNumber(String structureId, String startDate, String endDate, List<String> eventType,
                               List<String> listReasonIds, Boolean noReason, List<String> userId, Boolean regularized,
-                              JsonArray userIdFromClasses, Handler<Either<String, JsonObject>> handler) {
+                              Boolean followed, JsonArray userIdFromClasses, Handler<Either<String, JsonObject>> handler) {
         JsonArray params = new JsonArray();
         Sql.getInstance().prepared(this.getEventsQueryPagination(structureId, startDate, endDate, eventType,
-                userId, listReasonIds, noReason, regularized, userIdFromClasses, params),
+                userId, listReasonIds, noReason, regularized, followed, userIdFromClasses, params),
                 params, SqlResult.validUniqueResultHandler(handler));
     }
 
     private String getEventsQueryPagination(String structureId, String startDate, String endDate, List<String> eventType,
                                             List<String> userId, List<String> listReasonIds, Boolean noReason, Boolean regularized,
-                                            JsonArray userIdFromClasses, JsonArray params) {
+                                            Boolean followed, JsonArray userIdFromClasses, JsonArray params) {
 
         String query = "SELECT (" +
                 " SELECT COUNT(DISTINCT (to_char(e.start_date, 'DD/MM/YYYY'), e.student_id))" +
@@ -332,13 +333,13 @@ public class DefaultEventService implements EventService {
         params.add(startDate + " " + defaultStartTime);
         params.add(endDate + " " + defaultEndTime);
 
-        query += setParamsForQueryEvents(listReasonIds, userId, regularized, noReason, userIdFromClasses, params);
+        query += setParamsForQueryEvents(listReasonIds, userId, regularized, followed, noReason, userIdFromClasses, params);
         query += " ) AS events ";
         return query;
     }
 
     private String setParamsForQueryEvents(List<String> listReasonIds, List<String> userId, Boolean regularized,
-                                           Boolean noReason, JsonArray userIdFromClasses, JsonArray params) {
+                                           Boolean followed, Boolean noReason, JsonArray userIdFromClasses, JsonArray params) {
         String query = "";
 
         if (userIdFromClasses != null && !userIdFromClasses.isEmpty()) {
@@ -381,6 +382,10 @@ public class DefaultEventService implements EventService {
             if (regularized != null) {
                 query += " AND counsellor_regularisation = " + regularized + " ";
             }
+        }
+
+        if (followed != null) {
+            query += " AND followed = " + followed + " ";
         }
 
         return query;
@@ -916,7 +921,7 @@ public class DefaultEventService implements EventService {
     public void list(String structureId, String startDate, String endDate, List<Integer> eventType,
                      List<String> userId, Handler<Either<String, JsonArray>> handler) {
         String query = "SELECT event.id, event.start_date, event.end_date, event.type_id, event.reason_id, " +
-                "event.counsellor_input, event.counsellor_regularisation, event.comment, " +
+                "event.counsellor_input, event.counsellor_regularisation, event.followed, event.comment, " +
                 "to_char(register.start_date, 'YYYY-MM-DD HH24:MI:SS') as course_start_date, " +
                 "to_char(register.end_date, 'YYYY-MM-DD HH24:MI:SS') as course_end_date, register.course_id " +
                 "FROM  " + Presences.dbSchema + ".event " +
@@ -1013,6 +1018,7 @@ public class DefaultEventService implements EventService {
                 "'owner', event.owner, " +
                 "'created', event.created, " +
                 "'counsellor_regularisation', event.counsellor_regularisation, " +
+                "'followed', event.followed, " +
                 "'massmailed', event.massmailed, " +
                 "'reason', json_build_object('id', reason.id, 'absence_compliance', reason.absence_compliance)" +
                 ")) as events " +

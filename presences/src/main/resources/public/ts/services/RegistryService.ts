@@ -22,6 +22,7 @@ export interface RegistryEvent {
     endDate: string;
     student_id: string;
     counsellor_regularisation: boolean;
+    followed: boolean;
 
     /* incidents properties */
     incident_type?: string;

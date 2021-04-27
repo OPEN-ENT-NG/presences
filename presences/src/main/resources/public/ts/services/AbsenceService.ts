@@ -6,6 +6,7 @@ import {Absence, CounsellorAbsence} from '../models'
 export interface AbsenceService {
     getAbsence(structure: string, students: string[], start: string, end: string, justified: boolean, regularized: boolean, reasons: number[]): Promise<Absence[]>;
     getCounsellorAbsence(structure: string, students: string[], groups: string[], start: string, end: string, justified: boolean, regularized: boolean, reasons: number[]): Promise<CounsellorAbsence[]>;
+    updateFollowed(ids: number[], followed: boolean): Promise<AxiosResponse>;
 }
 
 async function retrieve(structure: string, students: string[], groups: string[], start: string, end: string, justified: boolean, regularized: boolean, reasons: number[]): Promise<any[]> {
@@ -30,6 +31,10 @@ export const absenceService: AbsenceService = {
 
     async getCounsellorAbsence(structure: string, students: string[], groups: string[], start: string, end: string, justified: boolean, regularized: boolean, reasons: number[]): Promise<CounsellorAbsence[]> {
         return Mix.castArrayAs(CounsellorAbsence, await retrieve(structure, students, groups, start, end, justified, regularized, reasons));
+    },
+
+    async updateFollowed(ids: number[], followed: boolean): Promise<AxiosResponse> {
+        return http.put(`/presences/absences/follow`, {absenceIds: ids, followed: followed});
     }
 };
 

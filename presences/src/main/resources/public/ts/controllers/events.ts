@@ -2,10 +2,12 @@ import {_, angular, idiom as lang, Me, model, moment, ng} from 'entcore';
 import {
     Action,
     ActionBody,
-    Event, EventListCalendarFilter,
+    Event,
+    EventListCalendarFilter,
     EventResponse,
     Events,
     EventType,
+    IEvent,
     IEventFormBody,
     Student,
     Students
@@ -13,7 +15,7 @@ import {
 import {DateUtils, PreferencesUtils, PresencesPreferenceUtils} from '@common/utils';
 import {GroupService} from '@common/services/GroupService';
 import {actionService, EventRequest, EventService, ReasonService} from '../services';
-import {EventsFilter, EventsUtils} from '../utilities';
+import {EventsFilter, EventsFormFilter, EventsUtils} from '../utilities';
 import {Reason} from '@presences/models/Reason';
 import {INFINITE_SCROLL_EVENTER} from '@common/core/enum/infinite-scroll-eventer';
 import {ABSENCE_FORM_EVENTS, LATENESS_FORM_EVENTS} from '@common/core/enum/presences-event';
@@ -24,7 +26,7 @@ declare let window: any;
 
 interface ViewModel {
     filter: EventsFilter;
-    formFilter: any;
+    formFilter: EventsFormFilter;
 
     /* Get reasons type */
     eventReasonsType: Reason[];
@@ -197,6 +199,10 @@ interface ViewModel {
 
     switchDepartureFilter(): void;
 
+    switchFollowedFilter(): void;
+
+    switchNotFollowedFilter(): void;
+
     /*  switch reasons */
     switchReason(reason: Reason): void;
 
@@ -240,6 +246,8 @@ export const eventsController = ng.controller('EventsController', ['$scope', '$r
             unjustified: true,
             justifiedNotRegularized: true,
             justifiedRegularized: false,
+            followed: true,
+            notFollowed: true,
             noFilter: true,
             page: 0
         };
@@ -310,7 +318,9 @@ export const eventsController = ng.controller('EventsController', ['$scope', '$r
                         allReasons: true,
                         unjustified: true,
                         justifiedNotRegularized: true,
-                        justifiedRegularized: false
+                        justifiedRegularized: false,
+                        followed: true,
+                        notFollowed: true
                     }
                 };
             }
@@ -408,12 +418,14 @@ export const eventsController = ng.controller('EventsController', ['$scope', '$r
                 endDate: vm.events.endDate,
                 noReason: vm.events.noReason,
                 eventType: vm.events.eventType,
-                listReasonIds: (vm.filter.justifiedRegularized || vm.filter.justifiedNotRegularized) ? vm.eventReasonsId.toString() : "",
+                listReasonIds: (vm.filter.justifiedRegularized || vm.filter.justifiedNotRegularized) ? vm.eventReasonsId.toString() : '',
                 userId: vm.events.userId,
                 classes: vm.events.classes,
                 page: vm.interactedEvent.page
             };
             filter.regularized = (!(<any>vm.eventType).includes(1)) ? null : vm.filter.regularized;
+            filter.followed = (!(<any>vm.eventType).includes(1)) ? null : vm.filter.followed;
+            filter.notFollowed = (!(<any>vm.eventType).includes(1)) ? null : vm.filter.notFollowed;
             let events = await eventService.get(filter);
 
             vm.events.pageCount = events.pageCount;
@@ -467,9 +479,8 @@ export const eventsController = ng.controller('EventsController', ['$scope', '$r
 
         /* Change CSS class depending on their event_type id */
         vm.eventTypeState = (periods: IEventSlot, index: number, indexSlot: number): string => {
-
             const className: string[] = ['empty', 'remark', 'departure', 'late', 'absent', 'absent-no-regularized',
-                'absent-regularized', 'event-absent', 'no-regularized', 'regularized', 'action-drag-event'];
+                'absent-regularized', 'event-absent', 'no-regularized', 'regularized', 'absent-followed', 'action-drag-event'];
             let indexes: Array<number> = [className.indexOf('empty')];
 
             // Check if drag on the event line. Coloring items between the first clicked on and the one below the pointer
@@ -486,6 +497,9 @@ export const eventsController = ng.controller('EventsController', ['$scope', '$r
                         switch (periods.events[i].type_id) {
                             case (EventType.ABSENCE):
                                 // If absence has a reason
+                                if (periods.events[i].followed === true) {
+                                    indexes.push(className.indexOf('absent-followed'));
+                                }
                                 if (periods.events[i].reason_id !== null && periods.events[i].reason_id !== -1) {
                                     (periods.events[i].counsellor_regularisation === true) ?
                                         indexes.push(className.indexOf('regularized')) :
@@ -506,7 +520,9 @@ export const eventsController = ng.controller('EventsController', ['$scope', '$r
                         }
                     } else if ('type' in periods.events[i]) {
                         if (periods.events[i].type === 'absence') {
-                            if (periods.events[i].reason_id !== null && periods.events[i].reason_id !== -1) {
+                            if (periods.events[i].followed === true) {
+                                indexes.push(className.indexOf('absent-followed'));
+                            } else if (periods.events[i].reason_id !== null && periods.events[i].reason_id !== -1) {
                                 (periods.events[i].counsellor_regularisation === true) ?
                                     indexes.push(className.indexOf('absent-regularized')) :
                                     indexes.push(className.indexOf('absent-no-regularized'));
@@ -692,7 +708,7 @@ export const eventsController = ng.controller('EventsController', ['$scope', '$r
             if (vm.actionDrag.mouseHold) return;
 
             if (slot.events.length > 0) {
-                if (slot.events[0].type === 'absence') {
+                if (slot.events[0].type === EventsUtils.ALL_EVENTS.absence) {
                     $scope.$broadcast(ABSENCE_FORM_EVENTS.EDIT_EVENT, vm.formatEventForm(slot, studentId, EventType.ABSENCE));
                 } else {
                     switch (slot.events[0].type_id) {
@@ -716,15 +732,18 @@ export const eventsController = ng.controller('EventsController', ['$scope', '$r
                     let startDate: Date = moment(slot.start).toDate();
                     let endDate: Date = moment(slot.end).toDate();
                     let counsellor_regularisation: boolean = false;
+                    let followed: boolean = false;
 
                     if (slot.events && slot.events.length === 1) { // only absence event
                         startDate = moment(slot.events[0].start_date).toDate();
                         endDate = moment(slot.events[0].end_date).toDate();
                         counsellor_regularisation = slot.events[0].counsellor_regularisation;
+                        followed = !!slot.events.find((e: IEvent) => e.followed); // find at least one followed true at same time slot
                     } else if (slot.events && slot.events.length > 1) { // with absence
                         startDate = moment(slot.events[slot.events.length - 1].start_date).toDate();
                         endDate = moment(slot.events[slot.events.length - 1].end_date).toDate();
                         counsellor_regularisation = slot.events[0].counsellor_regularisation;
+                        followed = !!slot.events.find((e: IEvent) => e.followed); // find at least one followed true at same time slot
                     }
                     return {
                         id: (slot.events && slot.events.length > 0) ? slot.events[0].id : null,
@@ -736,6 +755,7 @@ export const eventsController = ng.controller('EventsController', ['$scope', '$r
                         studentId: studentId,
                         eventType: EventsUtils.ALL_EVENTS.event,
                         counsellor_regularisation: counsellor_regularisation,
+                        followed: followed,
                         absences: slot.events
                     };
             }
@@ -910,6 +930,8 @@ export const eventsController = ng.controller('EventsController', ['$scope', '$r
             vm.events.eventType = vm.eventType.toString();
             vm.events.listReasonIds = (vm.filter.justifiedRegularized || vm.filter.justifiedNotRegularized) ? vm.eventReasonsId.toString() : "";
             vm.events.noReason = vm.filter.noReasons;
+            vm.events.followed = vm.filter.followed;
+            vm.events.notFollowed = vm.filter.notFollowed;
             vm.events.regularized = (!(<any>vm.eventType).includes(1)) ? null : vm.filter.regularized;
 
             EventsUtils.setStudentToSync(vm.events, vm.filter);
@@ -938,6 +960,8 @@ export const eventsController = ng.controller('EventsController', ['$scope', '$r
                 noReason: vm.events.noReason,
                 eventType: vm.events.eventType,
                 listReasonIds: (vm.filter.justifiedRegularized || vm.filter.justifiedNotRegularized) ? vm.eventReasonsId.toString() : "",
+                followed: vm.events.followed,
+                notFollowed: vm.events.notFollowed,
                 userId: vm.events.userId,
                 classes: vm.events.classes,
                 page: vm.filter.page
@@ -988,7 +1012,7 @@ export const eventsController = ng.controller('EventsController', ['$scope', '$r
          Switch type methods
         ---------------------------- */
 
-        vm.switchAbsencesFilter = function () {
+        vm.switchAbsencesFilter = (): void => {
             vm.formFilter.absences = !vm.formFilter.absences;
             if (vm.formFilter.absences) {
                 if (!vm.eventType.some(e => e == EventType.ABSENCE)) {
@@ -1004,7 +1028,7 @@ export const eventsController = ng.controller('EventsController', ['$scope', '$r
         };
 
 
-        vm.switchLateFilter = function () {
+        vm.switchLateFilter = (): void => {
             vm.formFilter.late = !vm.formFilter.late;
             if (vm.formFilter.late) {
                 if (!vm.eventType.some(e => e == EventType.LATENESS)) {
@@ -1015,7 +1039,7 @@ export const eventsController = ng.controller('EventsController', ['$scope', '$r
             }
         };
 
-        vm.switchDepartureFilter = function () {
+        vm.switchDepartureFilter = (): void => {
             vm.formFilter.departure = !vm.formFilter.departure;
             if (vm.formFilter.departure) {
                 if (!vm.eventType.some(e => e == EventType.DEPARTURE)) {
@@ -1026,17 +1050,31 @@ export const eventsController = ng.controller('EventsController', ['$scope', '$r
             }
         };
 
-        vm.switchUnjustifiedFilter = function () {
+        vm.switchUnjustifiedFilter = (): void => {
             vm.formFilter.unjustified = !vm.formFilter.unjustified;
         };
 
-        vm.switchjustifiedNotRegularizedFilter = function () {
+        vm.switchjustifiedNotRegularizedFilter = (): void => {
             vm.formFilter.justifiedNotRegularized = !vm.formFilter.justifiedNotRegularized;
 
         };
 
-        vm.switchjustifiedRegularizedFilter = function () {
+        vm.switchjustifiedRegularizedFilter = (): void => {
             vm.formFilter.justifiedRegularized = !vm.formFilter.justifiedRegularized;
+        };
+
+        vm.switchFollowedFilter = (): void => {
+            if (vm.formFilter.followed === true) {
+                vm.formFilter.notFollowed = true;
+            }
+            vm.formFilter.followed = !vm.formFilter.followed;
+        };
+
+        vm.switchNotFollowedFilter = (): void => {
+            if (vm.formFilter.notFollowed === true) {
+                vm.formFilter.followed = true;
+            }
+            vm.formFilter.notFollowed = !vm.formFilter.notFollowed;
         };
 
         vm.switchReason = async function (reason: Reason) {
@@ -1050,7 +1088,8 @@ export const eventsController = ng.controller('EventsController', ['$scope', '$r
         };
 
         vm.adaptEvent = function () {
-            if (!vm.formFilter.unjustified && !vm.formFilter.justifiedNotRegularized && !vm.formFilter.justifiedRegularized) {
+            if (!vm.formFilter.unjustified && !vm.formFilter.justifiedNotRegularized
+                && !vm.formFilter.justifiedRegularized && !vm.formFilter.followed && !vm.formFilter.notFollowed) {
                 vm.switchAbsencesFilter();
             }
         };
@@ -1080,18 +1119,20 @@ export const eventsController = ng.controller('EventsController', ['$scope', '$r
         };
 
         vm.validForm = async function () {
-            let formFilter = {
+            let formFilter: EventsFormFilter = {
                 absences: vm.formFilter.absences,
                 late: vm.formFilter.late,
                 departure: vm.formFilter.departure,
                 unjustified: vm.formFilter.unjustified,
                 justifiedNotRegularized: vm.formFilter.justifiedNotRegularized,
                 justifiedRegularized: vm.formFilter.justifiedRegularized,
+                followed: vm.formFilter.followed,
+                notFollowed: vm.formFilter.notFollowed,
                 allReasons: vm.formFilter.allReasons,
                 reasonIds: []
             };
-            let selectedReasons = vm.eventReasonsType.filter((r) => r.isSelected);
-            formFilter.reasonIds = selectedReasons.map((r) => r.id);
+            let selectedReasons: Reason[] = vm.eventReasonsType.filter((r: Reason) => r.isSelected);
+            formFilter.reasonIds = selectedReasons.map((r: Reason) => r.id);
             await PresencesPreferenceUtils.updatePresencesEventListFilter(formFilter, window.structure.id);
             const {startDate, endDate} = vm.filter;
             vm.filter = {...vm.formFilter, startDate, endDate};

@@ -1,8 +1,9 @@
 import {Course, CourseEvent, Notebook} from "../../services";
 import {angular, moment} from "entcore";
 import {DateUtils} from "@common/utils";
-import {Absence, EventType, ITimeSlotWithAbsence} from "../../models";
+import {Absence, EventType, ITimeSlotAbsence, ITimeSlotWithAbsence} from "../../models";
 import {ABSENCE_FORM_EVENTS} from "@common/core/enum/presences-event";
+import {Moment} from "moment";
 
 export class CalendarUtils {
 
@@ -120,24 +121,25 @@ export class CalendarUtils {
     }
 
 
-    public static addTimeslotMappedToAbsence(timeslotsByAbsences: Map<number, Array<ITimeSlotWithAbsence>>, absence: Absence, slot, structureId: string) {
+    public static addTimeslotMappedToAbsence = (timeslotsByAbsences: Map<number, Array<ITimeSlotWithAbsence>>, absence: Absence, slot, structureId: string): void => {
         let elemSlot = angular.element(slot).scope();
-        let tsStartTime = CalendarUtils.getSlotYMDMomentFormat(elemSlot, elemSlot.timeslot.start, elemSlot.timeslot.startMinutes);
-        let tsEndTime = CalendarUtils.getSlotYMDMomentFormat(elemSlot, elemSlot.timeslot.end, elemSlot.timeslot.endMinutes);
+        let tsStartTime: Moment = CalendarUtils.getSlotYMDMomentFormat(elemSlot, elemSlot.timeslot.start, elemSlot.timeslot.startMinutes);
+        let tsEndTime: Moment = CalendarUtils.getSlotYMDMomentFormat(elemSlot, elemSlot.timeslot.end, elemSlot.timeslot.endMinutes);
 
-        let tsStartTimestamp = DateUtils.getDateFromMoment(tsStartTime).getTime();
-        let tsEndTimestamp = DateUtils.getDateFromMoment(tsEndTime).getTime();
+        let tsStartTimestamp: number = DateUtils.getDateFromMoment(tsStartTime).getTime();
+        let tsEndTimestamp: number = DateUtils.getDateFromMoment(tsEndTime).getTime();
 
-        let startMoment = moment(absence.start_date).format(DateUtils.FORMAT["HOUR-MIN-SEC"]);
-        let startMomentTime = startMoment ? startMoment : "00:00:00";
-        let endMoment = moment(absence.end_date).format(DateUtils.FORMAT["HOUR-MIN-SEC"]);
-        let endMomentTime = endMoment ? endMoment : "23:59:59";
+        let startMoment: string = moment(absence.start_date).format(DateUtils.FORMAT["HOUR-MIN-SEC"]);
+        let startMomentTime: string = startMoment ? startMoment : "00:00:00";
+        let endMoment: string = moment(absence.end_date).format(DateUtils.FORMAT["HOUR-MIN-SEC"]);
+        let endMomentTime: string = endMoment ? endMoment : "23:59:59";
 
 
-        let absenceItem = {
+        let absenceItem: ITimeSlotAbsence = {
             is_periodic: false,
             absence: true,
             counsellor_regularisation: absence.counsellor_regularisation,
+            followed: absence.followed,
             locked: true,
             absenceId: absence.id,
             absenceReason: absence.reason_id ? absence.reason_id : 0,
@@ -151,7 +153,7 @@ export class CalendarUtils {
             endMomentTime,
             endTimestamp: DateUtils.getDateFromMoment(moment(absence.end_date)).getTime()
         };
-        let timeslotInfos = {
+        let timeslotInfos: ITimeSlotWithAbsence = {
             absence: absenceItem, // Info utils for edit modal.
             slotElement: slot, // Element dom concerning the slot
             tsStartMoment: tsStartTime, // Start date of the slot (moment typed)
@@ -178,22 +180,22 @@ export class CalendarUtils {
         });
     }
 
-    public static setTimeSlotsStyleByAbsence(timeslotByAbsences: Array<ITimeSlotWithAbsence>, timeSlotHeight: any, $scope) {
-        let tsMinutesDurationStart = Math.floor((((timeslotByAbsences[0].tsEndTimestamp - timeslotByAbsences[0].tsStartTimestamp) / 1000) / 60));
-        let deltaFirstHeight = CalendarUtils.getDeltaPX(moment(timeslotByAbsences[0].absence.startDate), timeslotByAbsences[0].tsStartMoment, tsMinutesDurationStart, timeSlotHeight);
+    public static setTimeSlotsStyleByAbsence = (timeslotByAbsences: Array<ITimeSlotWithAbsence>, timeSlotHeight: number, $scope): void => {
+        let tsMinutesDurationStart: number = Math.floor((((timeslotByAbsences[0].tsEndTimestamp - timeslotByAbsences[0].tsStartTimestamp) / 1000) / 60));
+        let deltaFirstHeight: number = CalendarUtils.getDeltaPX(moment(timeslotByAbsences[0].absence.startDate), timeslotByAbsences[0].tsStartMoment, tsMinutesDurationStart, timeSlotHeight);
 
-        let lastAbsenceSlot = timeslotByAbsences[timeslotByAbsences.length - 1];
-        let tsMinutesDurationEnd = Math.floor((((lastAbsenceSlot.tsEndTimestamp - lastAbsenceSlot.tsStartTimestamp) / 1000) / 60));
-        let deltaLastHeight = CalendarUtils.getDeltaPX(moment(lastAbsenceSlot.absence.endDate), lastAbsenceSlot.tsEndMoment, tsMinutesDurationEnd, timeSlotHeight);
+        let lastAbsenceSlot: ITimeSlotWithAbsence = timeslotByAbsences[timeslotByAbsences.length - 1];
+        let tsMinutesDurationEnd: number = Math.floor((((lastAbsenceSlot.tsEndTimestamp - lastAbsenceSlot.tsStartTimestamp) / 1000) / 60));
+        let deltaLastHeight: number = CalendarUtils.getDeltaPX(moment(lastAbsenceSlot.absence.endDate), lastAbsenceSlot.tsEndMoment, tsMinutesDurationEnd, timeSlotHeight);
 
         // Set timeslot style
         timeslotByAbsences.forEach((timeslot: ITimeSlotWithAbsence, i: number) => {
-            let height = timeSlotHeight;
-            let top = 0;
-            let color = timeslot.absence.absenceReason === 0 ? "#e61610" :
+            let height: number = timeSlotHeight;
+            let top: number = 0;
+            let color: string = timeslot.absence.followed ? "#000000" : timeslot.absence.absenceReason === 0 ? "#e61610" :
                 timeslot.absence.counsellor_regularisation ? "#72bb53" : "#ff8a84";
 
-            let style = "" +
+            let style: string = "" +
                 "background-color: " + color + " !important; " +
                 "border-bottom: solid 1px " + color + " !important;";
 
@@ -212,7 +214,7 @@ export class CalendarUtils {
             style += "height: " + height + "px; " +
                 "margin-top: " + top + "px; ";
 
-            let div = document.createElement("div");
+            let div: HTMLDivElement = document.createElement("div");
 
             div.setAttribute("style", style);
 

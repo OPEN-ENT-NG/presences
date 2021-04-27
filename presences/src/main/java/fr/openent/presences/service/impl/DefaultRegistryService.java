@@ -328,6 +328,7 @@ public class DefaultRegistryService implements RegistryService {
                     .put("student_id", e.getString("student_id"))
                     .put("start_date", e.getString("start_date", ""))
                     .put("end_date", e.getString("end_date", ""))
+                    .put("followed", e.getBoolean("followed", false))
                     .put("counsellor_regularisation", e.getBoolean("counsellor_regularisation", false))
                     .put("type", getEventTypeName(e.getInteger("type_id")));
             if (getEventTypeName(e.getInteger("type_id")).equals(Events.ABSENCE.toString())

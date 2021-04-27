@@ -102,6 +102,7 @@ public class DefaultPunishmentService implements PunishmentService {
             }
             JsonObject fields = body.getJsonObject("fields", new JsonObject());
             Long reasonId = body.getJsonObject("absence").getLong("reason_id");
+            Boolean followed = body.getJsonObject("absence").getBoolean("followed", false);
             String startAt = fields.getString("start_at").replace("/", "-");
             String endAt = fields.getString("end_at").replace("/", "-");
 
@@ -116,7 +117,8 @@ public class DefaultPunishmentService implements PunishmentService {
                     return;
                 }
                 Presences.getInstance()
-                        .createAbsences(punishment.getStructureId(), studentIds, user.getUserId(), reasonId, startAt, endAt, true, handler);
+                        .createAbsences(punishment.getStructureId(), studentIds, user.getUserId(), reasonId, startAt,
+                                endAt, true, followed, handler);
             });
         });
     }
@@ -230,7 +232,7 @@ public class DefaultPunishmentService implements PunishmentService {
                 if (absences.isEmpty()) {
                     Presences.getInstance()
                             .createAbsences(updatePunishment.getStructureId(), Collections.singletonList(studentId),
-                                    user.getUserId(), reasonId, category.getStartAt(), category.getEndAt(), true, handler);
+                                    user.getUserId(), reasonId, category.getStartAt(), category.getEndAt(), true, true, handler);
                 } else if (absences.size() == 1 && areAbsenceDatesCorresponding(absences.get(0), oldCategory.getStartAt(), oldCategory.getEndAt())) {
                     Presences.getInstance()
                             .updateAbsence(updatePunishment.getStructureId(), absences.get(0).getLong("id"),

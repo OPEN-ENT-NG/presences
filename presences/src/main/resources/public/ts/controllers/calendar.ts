@@ -62,11 +62,11 @@ interface ViewModel {
 
     searchItem(value: string): void;
 
-    changeAbsence(item: Course): void;
+    isAbsenceOnly(item: Course): boolean;
 
-    isAbsenceOnly(item): boolean;
+    isAbsenceJustifiedOnly(item: Course): boolean;
 
-    isAbsenceJustifiedOnly(item): boolean;
+    hasFollowedAbsence(item: Course): boolean;
 
     reloadCalendarByStudent(): void;
 
@@ -252,12 +252,17 @@ export const calendarController = ng.controller('CalendarController',
                 }
             };
 
-            vm.isAbsenceOnly = function (item): boolean {
+            vm.isAbsenceOnly = (item: Course): boolean => {
                 return item.absence && item.absenceReason === 0;
             };
 
-            vm.isAbsenceJustifiedOnly = function (item): boolean {
+            vm.isAbsenceJustifiedOnly = (item: Course): boolean => {
                 return item.absence && item.absenceReason > 0;
+            };
+
+            vm.hasFollowedAbsence = (item: Course): boolean => {
+                return (item.events.findIndex((event: CourseEvent) => event.followed === true) !== -1) ||
+                    (item.absences.findIndex((absence: Absence) => absence.followed) !== -1);
             };
 
             vm.actionEventForm = (item: Course): void => {
@@ -290,18 +295,10 @@ export const calendarController = ng.controller('CalendarController',
              */
             vm.hasEventAbsenceWithReason = (course: Course): boolean => {
                 if (course.events.length === 0 && course.absences.length === 0) return false;
-                let isFound: boolean = false;
-                course.events.forEach((event: CourseEvent) => {
-                    if (event.type_id === EventType.ABSENCE && event.reason_id) {
-                        isFound = true;
-                    }
-                });
-                course.absences.forEach((absence: Absence) => {
-                    if (absence.type_id === EventType.ABSENCE && absence.reason_id) {
-                        isFound = true;
-                    }
-                });
-                return isFound;
+                return !!course.events
+                        .find((event: CourseEvent) => event.type_id === EventType.ABSENCE && event.reason_id !== null) ||
+                    !!course.absences
+                        .find((absence: Absence) => absence.type_id === EventType.ABSENCE && absence.reason_id != null);
             };
 
             /**
@@ -312,9 +309,9 @@ export const calendarController = ng.controller('CalendarController',
             vm.hasEventAbsenceRegularized = (course: Course): boolean => {
                 if (course.events.length === 0 && course.absences.length === 0) return false;
                 return !!course.events
-                        .find((event: CourseEvent) => event.type_id === EventType.ABSENCE && event.reason_id !== null) ||
+                        .find((event: CourseEvent) => event.type_id === EventType.ABSENCE && event.counsellor_regularisation === true) ||
                     !!course.absences
-                        .find((absence: Absence) => absence.type_id === EventType.ABSENCE && absence.reason_id != null);
+                        .find((absence: Absence) => absence.type_id === EventType.ABSENCE && absence.counsellor_regularisation === true);
             };
 
             const findEventAbsenceJustified = (course: Course): CourseEvent | Absence => {
@@ -365,17 +362,20 @@ export const calendarController = ng.controller('CalendarController',
                         let startDate: Date = moment(itemCourse.startDate).toDate();
                         let endDate: Date = moment(itemCourse.endDate).toDate();
                         let counsellor_regularisation: boolean;
+                        let followed: boolean;
 
                         if (itemCourse.events.length === 1) {
                             startDate = moment(itemCourse.events[0].start_date).toDate();
                             endDate = moment(itemCourse.events[0].end_date).toDate();
                             counsellor_regularisation = itemCourse.events[0].counsellor_regularisation;
+                            followed = itemCourse.events[0].followed;
                         }
 
                         if (itemCourse.absences.length === 1) {
                             startDate = moment(itemCourse.absences[0].start_date).toDate();
                             endDate = moment(itemCourse.absences[0].end_date).toDate();
                             counsellor_regularisation = itemCourse.absences[0].counsellor_regularisation;
+                            followed = itemCourse.absences[0].followed;
                         }
 
                         return {
@@ -388,7 +388,8 @@ export const calendarController = ng.controller('CalendarController',
                             studentId: window.item.id,
                             eventType: ('subjectId' in itemCourse) ? EventsUtils.ALL_EVENTS.event : EventsUtils.ALL_EVENTS.absence,
                             absences: itemCourse.absences,
-                            counsellor_regularisation: counsellor_regularisation
+                            counsellor_regularisation: counsellor_regularisation,
+                            followed: followed
                         };
                 }
             };

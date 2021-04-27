@@ -133,6 +133,23 @@ public class AbsenceController extends ControllerHelper {
         });
     }
 
+    @Put("/absences/follow")
+    @ApiDoc("Update absence follow state")
+    @ResourceFilter(Manage.class)
+    @SecuredAction(value = "", type = ActionType.RESOURCE)
+    @Trace(Actions.ABSENCE_FOLLOWED)
+    public void followAbsence(HttpServerRequest request) {
+        RequestUtils.bodyToJson(request, pathPrefix + "absenceFollow", event -> {
+            Boolean followed = event.getBoolean("followed", false);
+            JsonArray absenceIds = event.getJsonArray("absenceIds", new JsonArray());
+            if (absenceIds.size() == 0) {
+                badRequest(request);
+                return;
+            }
+            absenceService.followAbsence(absenceIds, followed, DefaultResponseHandler.defaultResponseHandler(request));
+        });
+    }
+
 
     private Boolean isAbsenceBodyValid(JsonObject absence) {
         return absence.containsKey("start_date") && absence.containsKey("end_date") && absence.containsKey("student_id");

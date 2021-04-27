@@ -60,6 +60,7 @@ public class EventController extends ControllerHelper {
         List<String> userId = request.getParam("userId") != null ? Arrays.asList(request.getParam("userId").split("\\s*,\\s*")) : null;
         List<String> classes = request.getParam("classes") != null ? Arrays.asList(request.getParam("classes").split("\\s*,\\s*")) : null;
         Boolean regularized = request.params().contains("regularized") ? Boolean.parseBoolean(request.getParam("regularized")) : null;
+        Boolean followed = request.params().contains("followed") ? Boolean.parseBoolean(request.getParam("followed")) : null;
         Integer page = request.getParam("page") != null ? Integer.parseInt(request.getParam("page")) : 0;
 
         if (!request.params().contains("structureId") || !request.params().contains("startDate") ||
@@ -93,9 +94,9 @@ public class EventController extends ControllerHelper {
                 }
             });
             eventService.get(structureId, startDate, endDate, eventType, reasonIds, noReason, userId, userIdFromClasses,
-                    classes, regularized, page, FutureHelper.handlerJsonArray(eventsFuture));
+                    classes, regularized, followed, page, FutureHelper.handlerJsonArray(eventsFuture));
             eventService.getPageNumber(structureId, startDate, endDate, eventType, reasonIds, noReason, userId,
-                    regularized, userIdFromClasses, FutureHelper.handlerJsonObject(pageNumberFuture));
+                    regularized, followed, userIdFromClasses, FutureHelper.handlerJsonObject(pageNumberFuture));
         });
     }
 
@@ -114,7 +115,7 @@ public class EventController extends ControllerHelper {
         List<String> userId = request.getParam("userId") != null ? Arrays.asList(request.getParam("userId").split("\\s*,\\s*")) : null;
         List<String> classes = request.getParam("classes") != null ? Arrays.asList(request.getParam("classes").split("\\s*,\\s*")) : null;
         Boolean regularized = request.params().contains("regularized") ? Boolean.parseBoolean(request.getParam("regularized")) : null;
-
+        Boolean followed = request.params().contains("followed") ? Boolean.parseBoolean(request.getParam("followed")) : null;
         if (!request.params().contains("structureId") || !request.params().contains("startDate") ||
                 !request.params().contains("endDate")) {
             badRequest(request);
@@ -127,7 +128,7 @@ public class EventController extends ControllerHelper {
             } else {
                 JsonArray userIdFromClasses = userResponse.right().getValue();
                 eventService.getCsvData(structureId, startDate, endDate, eventType, reasonIds, noReason, userId, userIdFromClasses,
-                        classes, regularized, event -> {
+                        classes, regularized, followed, event -> {
                             if (event.failed()) {
                                 log.error("[Presences@EventController::exportEvents] Something went wrong while getting CSV data",
                                         event.cause().getMessage());

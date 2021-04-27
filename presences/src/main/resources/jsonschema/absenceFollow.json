@@ -1,0 +1,22 @@
+{
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "id": "http://jsonschema.net",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "absenceIds": {
+      "type": [
+        "array",
+        "number"
+      ]
+
+    },
+    "followed": {
+      "type": "boolean"
+    }
+  },
+  "required": [
+    "followed",
+    "absenceIds"
+  ]
+}

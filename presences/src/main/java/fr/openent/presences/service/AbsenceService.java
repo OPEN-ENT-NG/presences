@@ -109,6 +109,15 @@ public interface AbsenceService {
 
     void changeRegularizedAbsences(JsonObject absence, UserInfos user, boolean editEvents, Handler<Either<String, JsonObject>> handler);
 
+
+    /**
+     * Update absence followed state
+     * @param absenceIds    absences identifiers
+     * @param followed      followed status
+     * @param handler       Function handler returning data
+     */
+    void followAbsence(JsonArray absenceIds, Boolean followed, Handler<Either<String, JsonObject>> handler);
+
     /**
      * delete absence
      *

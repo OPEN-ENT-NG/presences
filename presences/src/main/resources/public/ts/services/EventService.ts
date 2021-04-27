@@ -32,6 +32,8 @@ export interface EventRequest {
     eventType: string;
     listReasonIds?: string;
     regularized?: boolean;
+    followed?: boolean;
+    notFollowed?: boolean;
     userId?: string;
     userIds?: string[];
     classes?: string;
@@ -64,11 +66,15 @@ export const eventService: EventService = {
             }
             const regularized: string = (eventRequest.regularized !== undefined && eventRequest.regularized !== null)
                 ? `&regularized=${eventRequest.regularized}` : '';
+
+            const followed: string = (eventRequest.followed != null || eventRequest.notFollowed != null)
+                    && (eventRequest.followed === !eventRequest.notFollowed) ? `&followed=${eventRequest.followed}` : '';
+
             const page: string = eventRequest.page ? `&page=${eventRequest.page}` : '';
 
 
             const urlParams: string = `${structureId}${startDate}${endDate}${noReason}${eventType}${listReasonIds}
-            ${userId}${userIds}${classes}${classesIds}${regularized}${page}`;
+            ${userId}${userIds}${classes}${classesIds}${regularized}${followed}${page}`;
 
             const {data}: AxiosResponse = await http.get(`/presences/events${urlParams}`);
 

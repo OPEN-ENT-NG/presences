@@ -31,6 +31,10 @@
         background-color: $presences-pink;
       }
 
+      &.absence-followed:before {
+        background-color: $presences-heavy-black;
+      }
+
       &.absence-regularized:before {
         background-color: $presences-green;
       }

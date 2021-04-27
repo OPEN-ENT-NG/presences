@@ -17,6 +17,7 @@ export interface Event {
     comment?: string;
     counsellor_input: boolean;
     counsellor_regularisation: boolean;
+    followed?: boolean;
     reason?: Reason;
     reason_id?: number;
     student_id: string;
@@ -38,6 +39,7 @@ export interface IEvent {
     comment?: string;
     counsellor_input?: boolean;
     counsellor_regularisation: boolean;
+    followed?: boolean;
     reason_id?: number;
     student_id: string;
     register_id?: number;
@@ -80,6 +82,7 @@ export interface IEventBody {
     comment?: string;
     counsellor_input?: boolean;
     counsellor_regularisation?: boolean;
+    followed?: boolean;
     massmailed?: boolean;
     type_id?: number;
     reason_id: number;
@@ -101,6 +104,7 @@ export interface IEventFormBody {
     reason_id?: number;
     absenceId?: number;
     counsellor_regularisation?: boolean;
+    followed?: boolean;
 }
 
 export interface IEventSlot {
@@ -123,6 +127,7 @@ export class Event {
         return {
             register_id: parseInt(this.register_id.toString()),
             counsellor_regularisation: this.counsellor_regularisation,
+            followed: this.followed,
             type_id: this.type_id,
             ...(this.student_id ? {student_id: this.student_id} : {}),
             ...(this.start_date ? {start_date: this.start_date} : {}),
@@ -188,6 +193,8 @@ export class Events extends LoadingCollection {
     eventType: string;
     listReasonIds: string;
     regularized: boolean;
+    followed: boolean;
+    notFollowed: boolean;
     noReason: boolean;
 
     constructor() {
@@ -208,10 +215,11 @@ export class Events extends LoadingCollection {
                 let eventsFetchedFromHistory = [];
 
                 /* array declared and used for managing global Reasons and CounsellorRegularization */
-                let reasonIds = [];
-                let regularizedEvents = [];
-                let actions = [];
-                let massmailedEvents = [];
+                let reasonIds: number[] = [];
+                let regularizedEvents: boolean[] = [];
+                let followedEvents: boolean[] = [];
+                let actions: string[] = [];
+                let massmailedEvents: boolean[] = [];
 
                 /* build our eventsResponse array to affect our attribute "events" (see below dataModel.push) */
                 item.student.dayHistory.forEach((eventsHistory: IEventSlot) => {
@@ -225,6 +233,9 @@ export class Events extends LoadingCollection {
                             }
                             if ('counsellor_regularisation' in event && event.type_id === 1) {
                                 regularizedEvents.push(event.counsellor_regularisation);
+                            }
+                            if ('followed' in event && event.type_id === 1) {
+                                followedEvents.push(event.followed);
                             }
                             if ('actionAbbreviation' in event) {
                                 actions.push(event.actionAbbreviation);
@@ -251,11 +262,14 @@ export class Events extends LoadingCollection {
                 }
                 /* check all events regularized in this event to display the global regularized value */
                 let globalCounsellorRegularisation: boolean = regularizedEvents.length === 0 ? false
-                    : regularizedEvents.reduce((accumulator, currentValue) => accumulator && currentValue);
+                    : regularizedEvents.reduce((accumulator: boolean, currentValue: boolean) => accumulator && currentValue);
+
+                let globalFollowed: boolean = followedEvents.length === 0 ? false
+                    : followedEvents.reduce((accumulator: boolean, currentValue: boolean) => accumulator && currentValue);
 
                 /* check all events massmailed in this event to display the global massmailed value */
                 let globalMassmailed: boolean = massmailedEvents.length === 0 ? false
-                    : massmailedEvents.reduce((accumulator, currentValue) => accumulator && currentValue);
+                    : massmailedEvents.reduce((accumulator: boolean, currentValue: boolean) => accumulator && currentValue);
 
                 let type = {event: item.type, event_type: item.eventType.label, id: item.id};
 
@@ -277,6 +291,7 @@ export class Events extends LoadingCollection {
                         exclude: item.exclude ? item.exclude : false,
                         globalReason: globalReason,
                         globalCounsellorRegularisation: globalCounsellorRegularisation,
+                        globalFollowed: globalFollowed,
                         globalMassmailed: globalMassmailed,
                         isGlobalAction: isGlobalAction,
                         type: type,
@@ -291,11 +306,11 @@ export class Events extends LoadingCollection {
         return builtEvents;
     }
 
-    async syncPagination() {
+    async syncPagination(): Promise<void> {
         this.loading = true;
-        let dateFormat = DateUtils.FORMAT['YEAR-MONTH-DAY'];
+        let dateFormat: string = DateUtils.FORMAT['YEAR-MONTH-DAY'];
         try {
-            let url =
+            let url: string =
                 `/presences/events?structureId=${this.structureId}` +
                 `&startDate=${DateUtils.format(this.startDate, dateFormat)}` +
                 `&endDate=${DateUtils.format(this.endDate, dateFormat)}`;
@@ -310,6 +325,14 @@ export class Events extends LoadingCollection {
 
             if (this.regularized != null) {
                 url += `&regularized=${this.regularized}`;
+            }
+
+
+            // Add followed filter only if filter values are opposite
+            if (this.followed != null || this.notFollowed != null) {
+                if (this.followed === !this.notFollowed) {
+                    url += `&followed=${this.followed}`
+                }
             }
 
             if (this.eventType) {

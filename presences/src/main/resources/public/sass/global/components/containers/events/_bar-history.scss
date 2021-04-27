@@ -58,6 +58,11 @@
   cursor: not-allowed;
 }
 
+.period li.absent-followed:before {
+  border-color: $presences-heavy-black;
+  background: $presences-heavy-black;
+}
+
 .period li.absent:before, .period li.event-absent:before {
   border-color: $presences-red;
   background: $presences-red;

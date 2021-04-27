@@ -7,7 +7,8 @@
     <div class="exemption" ng-if="item.exempted" ng-class="{
      'absent': item.absences.length > 0 || vm.absenceEvents(item).length > 0,
      'absent-not-regularized': (!item.containsAbsence && item.containsReasonAbsence) && !vm.hasEventAbsenceRegularized(item),
-     'absent-regularized': (!item.containsAbsence && item.containsReasonAbsence) && vm.hasEventAbsenceRegularized(item)
+     'absent-regularized': vm.hasEventAbsenceRegularized(item),
+     'contains-followed-absence': vm.hasFollowedAbsence(item),
     }">&nbsp;
     </div>
     <div class="globalAbsence" ng-if="vm.isGlobalAbsence(item)">&nbsp;</div>
@@ -18,7 +19,8 @@
     <div class="course-item"
          data-ng-attr-id="[[vm.isAbsenceOnly(item) || vm.isAbsenceJustifiedOnly(item) ? 'absent' + item.dayOfWeek + '-' + item.hash : null]]"
          ng-class="{
-         'contains-absence': item.absences.length > 0 || vm.absenceEvents(item).length > 0,
+         'contains-followed-absence':  (item.absences.length > 0 || vm.absenceEvents(item).length > 0) && vm.hasFollowedAbsence(item),
+         'contains-absence': (item.absences.length > 0 || vm.absenceEvents(item).length > 0) && !vm.hasFollowedAbsence(item),
          'contains-absenceReason': !item.containsAbsence && item.containsReasonAbsence,
          'contains-events': item.events.length > 0 || item.exempted,
          'is-absence': item.hasOwnProperty('hash')

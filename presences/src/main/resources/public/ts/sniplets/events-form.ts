@@ -1,6 +1,7 @@
 import {IStructureSlot, ITimeSlot, SNIPLET_FORM_EMIT_EVENTS, SNIPLET_FORM_EVENTS} from '@common/model';
 import {
     Absence,
+    AbsenceEventResponse,
     EventType,
     IAbsence,
     IEventBody,
@@ -10,7 +11,7 @@ import {
     TimeSlotHourPeriod
 } from '../models';
 import {idiom as lang, model, moment, toasts} from 'entcore';
-import {eventService, reasonService, ViescolaireService} from '../services';
+import {absenceService, eventService, reasonService, ViescolaireService} from '../services';
 import {IAngularEvent} from 'angular';
 import {DateUtils} from '@common/utils';
 import {ABSENCE_FORM_EVENTS, LATENESS_FORM_EVENTS} from '@common/core/enum/presences-event';
@@ -38,6 +39,7 @@ interface IFormData {
     type?: string;
     eventType?: TEventType;
     counsellor_regularisation?: boolean;
+    followed?: boolean;
 
     timeSlotTimePeriod?: {
         start: ITimeSlot;
@@ -124,7 +126,9 @@ interface ViewModel {
 
     toUpdateRegularisation(): void;
 
-    updateRegularisation(id?: number): void;
+    updateRegularisation(id?: number): Promise<void>;
+
+    updateFollowed(id?: number): Promise<void>;
 
     selectReason(): void;
 
@@ -295,6 +299,7 @@ const vm: ViewModel = {
             vm.form.endDate = response.data.end_date;
             vm.form.student_id = response.data.student_id;
             vm.form.reason_id = response.data.reason_id;
+            vm.form.followed = response.data.followed;
             vm.form.counsellor_regularisation = response.data.counsellor_regularisation;
             vm.form.type_id = EventType.ABSENCE;
             vm.form.eventType = 'ABSENCE';
@@ -346,6 +351,7 @@ const vm: ViewModel = {
 
         vm.selectedReason = vm.reasons.find(reason => reason.id === vm.form.reason_id);
         vm.form.counsellor_regularisation = data.counsellor_regularisation;
+        vm.form.followed = data.followed;
 
         vm.canRegularize = (vm.selectedReason) ? (!vm.selectedReason.proving) : false;
 
@@ -466,6 +472,7 @@ const vm: ViewModel = {
         vm.eventBody.student_id = vm.form.student_id ? vm.form.student_id : null;
         vm.eventBody.type = vm.form.type ? vm.form.type : null;
         vm.eventBody.counsellor_regularisation = vm.form.counsellor_regularisation ? vm.form.counsellor_regularisation : false;
+        vm.eventBody.followed = vm.form.followed ? vm.form.followed : false;
     },
 
     setEventModel(event: Absence | Lateness): void {
@@ -479,7 +486,8 @@ const vm: ViewModel = {
         vm.setEventModel(vm.event);
         let response: AxiosResponse = await (<Absence> vm.event).createAbsence(window.structure.id, vm.eventBody.reason_id, model.me.userId);
         if (response.status === 200 || response.status === 201) {
-            vm.updateRegularisation(response.data.events.id);
+            await vm.updateFollowed(response.data.events.id);
+            await vm.updateRegularisation(response.data.events.id);
             vm.closeEventLightbox();
             toasts.confirm(lang.translate('presences.absence.form.create.succeed'));
         } else {
@@ -497,36 +505,75 @@ const vm: ViewModel = {
         // but sometimes we might have type field equal to events (seen on event list) so we double check
         const isEventTypeToInteract: boolean = !vm.form.absences.find((absence: IAbsence) => 'type' in absence) ||
             vm.form.absences.find((absence: IAbsence) => absence.type === EventsUtils.ALL_EVENTS.event) !== undefined;
-        if (vm.eventBody.type === EventsUtils.ALL_EVENTS.event && isEventTypeToInteract) {
+        const containsAbsenceEvent: boolean = vm.form.absences.find((absence: IAbsence) => absence.type === EventsUtils.ALL_EVENTS.absence) !== undefined;
+        if (vm.eventBody.type === EventsUtils.ALL_EVENTS.event && isEventTypeToInteract && !containsAbsenceEvent) {
             responses = [await (<Absence>vm.event).createAbsence(window.structure.id, vm.eventBody.reason_id, model.me.userId)];
         } else {
             for (const absence of vm.form.absences) {
-                responses.push(await (<Absence>vm.event).updateAbsence(absence.id, window.structure.id, vm.eventBody.reason_id, model.me.userId));
+                if (absence.type === EventsUtils.ALL_EVENTS.absence) {
+                    responses.push(await (<Absence>vm.event).updateAbsence(absence.id, window.structure.id, vm.eventBody.reason_id, model.me.userId));
+                }
             }
         }
-        let failedResponse: AxiosResponse = responses.find((response: AxiosResponse) => response.status != 200 && response.status != 201);
 
-        if (failedResponse) {
-            toasts.warning(failedResponse.data.toString());
-        } else {
-            vm.updateRegularisation();
-            vm.closeEventLightbox();
-            toasts.confirm(lang.translate('presences.absence.form.edit.succeed'));
+        // we check if dataResponse contain 'events' field that represents the `createAbsence`'s API response
+        // else we use the dataResponse itself as it is the `updateAbsence`'s API response
+        const dataResponse: any = responses
+            .find((response: AxiosResponse) => response.status === 200 || response.status === 201).data;
+
+        let dataAbsenceEventResponse: AbsenceEventResponse;
+        // we remain undefined if dataResponse has not found any response
+        if (dataResponse) {
+            dataAbsenceEventResponse = 'events' in dataResponse ? dataResponse.events : dataResponse;
         }
+
+        // Follow then regularize (with event updating)
+        await vm.updateFollowed(dataAbsenceEventResponse ? dataAbsenceEventResponse.id : undefined);
+        await vm.updateRegularisation(dataAbsenceEventResponse ? dataAbsenceEventResponse.id : undefined);
+
+        vm.closeEventLightbox();
+        toasts.confirm(lang.translate('presences.absence.form.edit.succeed'));
+
         eventsForm.that.$emit(SNIPLET_FORM_EMIT_EVENTS.EDIT);
         vm.safeApply();
     },
 
+
     /**
      * Update the regularisation state of the absence.
      */
-    updateRegularisation(id?: number): void {
+    async updateRegularisation(id?: number): Promise<void> {
         if (vm.eventBody && vm.form) {
             let absence: Absence = new Absence(vm.eventBody.register_id, vm.eventBody.student_id, null, null);
-            absence.id = id ? id : vm.form.absences[0].id;
+
+            // case id parameter is not assigned in this method
+            const absenceFound: IAbsence = vm.form.absences ? vm.form.absences.find(
+                (absence: IAbsence) => (absence.type === EventsUtils.ALL_EVENTS.absence)) : undefined;
+            const absenceFoundId: number = absenceFound !== undefined ? absenceFound.id : null;
+            absence.id = id ? id : absenceFoundId;
             absence.counsellor_regularisation = vm.eventBody.counsellor_regularisation;
-            absence.updateAbsenceRegularized([absence.id], absence.counsellor_regularisation);
+            if (absence.id) {
+                absence.updateAbsenceRegularized([absence.id], absence.counsellor_regularisation);
+            }
             vm.updateAbsenceRegularisation = false;
+        }
+    },
+
+    /**
+     * Update the followed state of the absence.
+     */
+    async updateFollowed(id?: number): Promise<void> {
+        if (vm.eventBody && vm.form) {
+            let absenceIds: Array<number> = [];
+
+            if (vm.form.absences) {
+                for (const absence of vm.form.absences) {
+                    if ('type' in absence && absence.type === EventsUtils.ALL_EVENTS.absence) {
+                        absenceIds.push(absence.id);
+                    }
+                }
+            }
+            await absenceService.updateFollowed(id ? [id] : absenceIds, vm.eventBody.followed);
         }
     },
 
