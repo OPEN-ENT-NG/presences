@@ -78,7 +78,7 @@ public class Presences extends BaseServer {
 
         DB.getInstance().init(Neo4j.getInstance(), Sql.getInstance(), MongoDb.getInstance());
 
-        addController(new PresencesController());
+        addController(new PresencesController(eb));
         addController(new CourseController(eb));
         addController(new RegisterController(eb));
         addController(new AbsenceController(eb));

@@ -18,10 +18,11 @@ public interface PresenceService {
      * @param endDate     end date
      * @param userIds     userId neo
      * @param ownerIds    ownerIds (teacher...personal..)
+     * @param audienceIds audience identifiers
      * @param handler     function handler returning data
      */
     void get(String structureId, String startDate, String endDate, List<String> userIds,
-             List<String> ownerIds, Handler<Either<String, JsonArray>> handler);
+             List<String> ownerIds, List<String> audienceIds, Handler<Either<String, JsonArray>> handler);
 
     /**
      * Create presence

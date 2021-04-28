@@ -5,7 +5,7 @@
     </h1>
 
     <!-- Personnal search bar -->
-    <div class="cell four paddingLeft" workflow="presences.search">
+    <div class="cell three paddingLeft" workflow="presences.search">
         <div class="cell twelve search-input">
             <async-autocomplete data-ng-disabled="false"
                                 data-ng-model="vm.usersSearch.user"
@@ -27,7 +27,7 @@
     </div>
 
     <!-- Students search bar -->
-    <div class="cell four paddingLeft" workflow="presences.searchStudents">
+    <div class="cell three paddingLeft" workflow="presences.searchStudents">
         <div class="cell twelve search-input">
             <async-autocomplete data-ng-disabled="false"
                                 data-ng-model="vm.studentsSearch.student"
@@ -43,6 +43,27 @@
                 <li ng-repeat="student in vm.studentsSearch.selectedStudents">
                     [[student.displayName]] <i class="close"
                                                data-ng-click="vm.removeSelectedStudents(student)"></i>
+                </li>
+            </ul>
+        </div>
+    </div>
+
+    <!-- Audience search bar -->
+    <div class="cell three paddingLeft" workflow="presences.searchStudents">
+        <div class="cell twelve search-input">
+            <async-autocomplete data-ng-disabled="false"
+                                data-ng-model="vm.groupsSearch.group"
+                                data-ng-change="vm.selectGroup"
+                                data-on-search="vm.searchGroup"
+                                data-options="vm.groupsSearch.groups"
+                                data-placeholder="presences.exemptions.search.audience"
+                                data-search="vm.groupsSearch.group">
+            </async-autocomplete>
+        </div>
+        <div class="cell twelve">
+            <ul class="cell twelve search-input-ul">
+                <li ng-repeat="group in vm.groupsSearch.selectedGroups" data-ng-show="vm.groupsSearch.selectedGroups.length > 0">
+                    [[group.toString()]] <i class="close" data-ng-click="vm.removeSelectedGroups(group)"></i>
                 </li>
             </ul>
         </div>

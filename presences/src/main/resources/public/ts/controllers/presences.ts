@@ -2,8 +2,9 @@ import {model, moment, ng, toasts} from 'entcore';
 import {Presence, PresenceRequest, Presences} from "../models";
 import {DateUtils} from "@common/utils";
 import {StudentsSearch, UsersSearch} from "../utilities";
-import {PresenceService, SearchService} from "../services";
+import {Group, GroupService, PresenceService, SearchService} from "../services";
 import {SNIPLET_FORM_EMIT_EVENTS, SNIPLET_FORM_EVENTS} from "@common/model";
+import {GroupsSearch} from "@common/utils/autocomplete/groupsSearch";
 
 declare let window: any;
 
@@ -16,6 +17,7 @@ interface Filter {
     endDate: string;
     personalIds: Array<String>;
     studentsIds: Array<String>;
+    audiencesIds: Array<String>;
     presencesFilter: PresencesFilter;
 }
 
@@ -28,6 +30,7 @@ interface ViewModel {
     presencesFilter: Array<String>;
     studentsSearch: StudentsSearch;
     usersSearch: UsersSearch;
+    groupsSearch: GroupsSearch;
 
     updateFilter(): Promise<void>;
 
@@ -52,13 +55,19 @@ interface ViewModel {
 
     removeSelectedStudents(studentItem): void;
 
+    searchGroup(groupForm: string): Promise<void>;
+
+    selectGroup(valueInput: string, groupItem: Group): void;
+
+    removeSelectedGroups(groupItem: Group): void;
+
     // CSV
     exportCsv(): void;
 }
 
 export const presencesController = ng.controller('PresencesController',
-    ['$scope', '$route', '$location', 'SearchService', 'PresenceService',
-        function ($scope, $route, $location, searchService: SearchService, presenceService: PresenceService) {
+    ['$scope', '$route', '$location', 'SearchService', 'PresenceService', 'GroupService',
+        function ($scope, $route, $location, searchService: SearchService, presenceService: PresenceService, groupService: GroupService) {
             const vm: ViewModel = this;
 
             /* Init filter */
@@ -67,6 +76,7 @@ export const presencesController = ng.controller('PresencesController',
                 endDate: moment().endOf('day'),
                 personalIds: [],
                 studentsIds: [],
+                audiencesIds: [],
                 presencesFilter: {
                     mine: false
                 }
@@ -78,6 +88,7 @@ export const presencesController = ng.controller('PresencesController',
             /* Init search bar */
             vm.studentsSearch = undefined;
             vm.usersSearch = undefined;
+            vm.groupsSearch = undefined;
 
             /* presenceFilter keys dynamically : [mine] */
             vm.presencesFilter = Object.keys(vm.filter.presencesFilter);
@@ -86,6 +97,7 @@ export const presencesController = ng.controller('PresencesController',
                 vm.presences = new Presences(window.structure.id);
                 vm.studentsSearch = new StudentsSearch(window.structure.id, searchService);
                 vm.usersSearch = new UsersSearch(window.structure.id, searchService);
+                vm.groupsSearch = new GroupsSearch(window.structure.id, searchService, groupService);
 
                 /* event */
                 vm.presences.eventer.on('loading::true', () => $scope.safeApply());
@@ -134,6 +146,7 @@ export const presencesController = ng.controller('PresencesController',
                 vm.presencesRequest.endDate = DateUtils.format(vm.filter.endDate, DateUtils.FORMAT["YEAR-MONTH-DAY"]);
                 vm.presencesRequest.studentIds = vm.filter.studentsIds;
                 vm.presencesRequest.ownerIds = vm.filter.personalIds;
+                vm.presencesRequest.audienceIds = vm.filter.audiencesIds;
                 if (vm.filter.presencesFilter.mine) {
                     if (vm.presencesRequest.ownerIds.indexOf(model.me.userId) === -1) {
                         vm.presencesRequest.ownerIds.push(model.me.userId);
@@ -143,8 +156,9 @@ export const presencesController = ng.controller('PresencesController',
 
             vm.updateFilter = async (): Promise<void> => {
                 /* get our search bar info */
-                vm.filter.studentsIds = vm.studentsSearch.getSelectedStudents().map(student => student["id"]);
-                vm.filter.personalIds = vm.usersSearch.getSelectedUsers().map(user => user["id"]);
+                vm.filter.studentsIds = vm.studentsSearch.getSelectedStudents().map(student => student['id']);
+                vm.filter.personalIds = vm.usersSearch.getSelectedUsers().map(user => user['id']);
+                vm.filter.audiencesIds = vm.groupsSearch.getSelectedGroups().map(group => group['id']);
 
                 await getPresences();
             };
@@ -192,6 +206,25 @@ export const presencesController = ng.controller('PresencesController',
 
             vm.removeSelectedStudents = (studentItem): void => {
                 vm.studentsSearch.removeSelectedStudents(studentItem);
+                vm.updateFilter();
+            };
+
+            /* Search bar groups section */
+            vm.searchGroup = async (groupForm: string): Promise<void> => {
+                await vm.groupsSearch.searchGroups(groupForm);
+                $scope.safeApply();
+            };
+
+            vm.selectGroup = (valueInput: string, groupItem: Group): void => {
+                vm.groupsSearch.selectGroups(valueInput, groupItem);
+                vm.filter.audiencesIds = vm.groupsSearch.getSelectedGroups().map(group => group['id']);
+                vm.groupsSearch.group = '';
+                vm.updateFilter();
+            };
+
+            vm.removeSelectedGroups = (groupItem: Group): void => {
+                vm.groupsSearch.removeSelectedGroups(groupItem);
+                vm.filter.audiencesIds = vm.groupsSearch.getSelectedGroups().map(group => group['id']);
                 vm.updateFilter();
             };
 

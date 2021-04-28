@@ -123,7 +123,7 @@ public class DefaultGroupService extends DBService implements GroupService {
         JsonObject params = new JsonObject()
                 .put("ids", new JsonArray(groups));
 
-        Neo4j.getInstance().execute(query, params, Neo4jResult.validResultHandler(handler));
+        neo4j.execute(query, params, Neo4jResult.validResultHandler(handler));
     }
 
     @Override

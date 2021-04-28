@@ -22,6 +22,7 @@ export interface PresenceRequest {
     endDate: string;
     studentIds?: Array<String>;
     ownerIds?: Array<String>;
+    audienceIds?: Array<String>;
 }
 
 export interface PresenceBody {

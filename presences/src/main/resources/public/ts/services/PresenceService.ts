@@ -31,9 +31,16 @@ function filterUrl(presenceRequest: PresenceRequest): string {
         });
     }
 
+    let audienceParams: string = '';
+    if (presenceRequest.audienceIds) {
+        presenceRequest.audienceIds.forEach((audienceId: string) => {
+            audienceParams += `&audienceId=${audienceId}`;
+        });
+    }
+
     const structureUrl: string = `?structureId=${presenceRequest.structureId}`;
     const dateUrl: string = `&startDate=${presenceRequest.startDate}&endDate=${presenceRequest.endDate}`;
-    const urlParams: string = `${studentParams}${ownerParams}`;
+    const urlParams: string = `${studentParams}${ownerParams}${audienceParams}`;
     return `${structureUrl}${dateUrl}${urlParams}`;
 }
 

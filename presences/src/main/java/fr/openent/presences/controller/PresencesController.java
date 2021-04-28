@@ -15,6 +15,7 @@ import fr.wseduc.webutils.Either;
 import fr.wseduc.webutils.request.RequestUtils;
 import io.vertx.core.Handler;
 import io.vertx.core.MultiMap;
+import io.vertx.core.eventbus.*;
 import io.vertx.core.http.HttpServerRequest;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
@@ -24,6 +25,7 @@ import org.entcore.common.events.EventStoreFactory;
 import org.entcore.common.http.filter.ResourceFilter;
 import org.entcore.common.http.filter.Trace;
 import org.entcore.common.http.response.DefaultResponseHandler;
+import org.entcore.common.neo4j.*;
 import org.entcore.common.user.UserUtils;
 
 import java.util.Collections;
@@ -38,8 +40,8 @@ public class PresencesController extends ControllerHelper {
     private PresenceService presencesService;
     private EventStore eventStore;
 
-    public PresencesController() {
-        this.presencesService = new DefaultPresenceService();
+    public PresencesController(EventBus eb) {
+        this.presencesService = new DefaultPresenceService(eb);
         this.eventStore = EventStoreFactory.getFactory().getEventStore(Presences.class.getSimpleName());
     }
 
@@ -148,6 +150,7 @@ public class PresencesController extends ControllerHelper {
             String startDate = params.get(START_DATE);
             String endDate = params.get(END_DATE);
             List<String> userIds = params.getAll("studentId");
+            List<String> audienceIds = params.getAll("audienceId");
             List<String> ownerIds = params.getAll("ownerId");
             ownerIds = WorkflowHelper.hasRight(user, WorkflowActions.SEARCH.toString()) ? ownerIds :
                     Collections.singletonList(user.getUserId());
@@ -157,7 +160,9 @@ public class PresencesController extends ControllerHelper {
                 badRequest(request);
                 return;
             }
-            presencesService.get(structureId, startDate, endDate, userIds, ownerIds, handler);
+
+
+            presencesService.get(structureId, startDate, endDate, userIds, ownerIds, audienceIds, handler);
 
         });
     }

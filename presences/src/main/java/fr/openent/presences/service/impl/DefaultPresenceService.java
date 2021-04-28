@@ -3,8 +3,9 @@ package fr.openent.presences.service.impl;
 import fr.openent.presences.Presences;
 import fr.openent.presences.common.helper.FutureHelper;
 import fr.openent.presences.common.helper.PersonHelper;
-import fr.openent.presences.common.service.UserService;
-import fr.openent.presences.common.service.impl.DefaultUserService;
+import fr.openent.presences.common.service.*;
+import fr.openent.presences.common.service.impl.*;
+import fr.openent.presences.db.*;
 import fr.openent.presences.helper.DisciplineHelper;
 import fr.openent.presences.helper.PresenceHelper;
 import fr.openent.presences.model.Discipline;
@@ -19,18 +20,21 @@ import io.vertx.core.AsyncResult;
 import io.vertx.core.CompositeFuture;
 import io.vertx.core.Future;
 import io.vertx.core.Handler;
+import io.vertx.core.eventbus.*;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
+import org.entcore.common.neo4j.*;
 import org.entcore.common.sql.Sql;
 import org.entcore.common.sql.SqlResult;
 import org.entcore.common.user.UserInfos;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.*;
 
-public class DefaultPresenceService implements PresenceService {
+public class DefaultPresenceService extends DBService implements PresenceService {
     private static final Logger LOGGER = LoggerFactory.getLogger(DefaultPresenceService.class);
     private static final String defaultStartTime = "00:00:00";
     private static final String defaultEndTime = "23:59:59";
@@ -39,17 +43,19 @@ public class DefaultPresenceService implements PresenceService {
     private PersonHelper personHelper;
     private PresenceHelper presenceHelper;
     private UserService userService;
+    private GroupService groupService;
 
-    public DefaultPresenceService() {
+    public DefaultPresenceService(EventBus eb) {
         this.disciplineService = new DefaultDisciplineService();
         this.personHelper = new PersonHelper();
         this.presenceHelper = new PresenceHelper();
         this.userService = new DefaultUserService();
+        this.groupService = new DefaultGroupService(eb);
     }
 
     @Override
     public void get(String structureId, String startDate, String endDate, List<String> userId,
-                    List<String> ownerIds, Handler<Either<String, JsonArray>> handler) {
+                    List<String> ownerIds, List<String> audienceIds, Handler<Either<String, JsonArray>> handler) {
 
         Future<JsonArray> presencesFuture = Future.future();
         Future<JsonArray> disciplinesFuture = Future.future();
@@ -88,7 +94,7 @@ public class DefaultPresenceService implements PresenceService {
                 presenceHelper.addDisciplineToPresence(presences, disciplines, disciplineActionFuture);
             }
         });
-        fetchPresence(structureId, startDate, endDate, userId, ownerIds, FutureHelper.handlerJsonArray(presencesFuture));
+        fetchPresence(structureId, startDate, endDate, userId, ownerIds, audienceIds, FutureHelper.handlerJsonArray(presencesFuture));
         disciplineService.get(structureId, FutureHelper.handlerJsonArray(disciplinesFuture));
     }
 
@@ -133,29 +139,43 @@ public class DefaultPresenceService implements PresenceService {
     }
 
     private void fetchPresence(String structureId, String startDate, String endDate, List<String> userId,
-                               List<String> ownerIds, Handler<Either<String, JsonArray>> handler) {
+                               List<String> ownerIds, List<String> audienceIds, Handler<Either<String, JsonArray>> handler) {
 
-        JsonArray params = new JsonArray();
-        String query = "SELECT * FROM " + Presences.dbSchema + ".presence WHERE structure_id = ? " +
-                "AND (start_date > ? AND end_date < ?) ";
-        params.add(structureId).add(startDate + " " + defaultStartTime).add(endDate + " " + defaultEndTime);
+        this.groupService.getGroupStudents(audienceIds, event -> {
+            if (event.isLeft()) {
+                handler.handle(new Either.Left<>("[Presences@DefaultPresenceService::fetchPresence] Error " +
+                        "fetching student ids from audience id" + event.left().getValue()));
+            }
 
-        /* filtering owner ids fetched */
-        if (!ownerIds.isEmpty()) {
-            query += " AND owner IN " + Sql.listPrepared(ownerIds) + " ";
-            params.addAll(new JsonArray(ownerIds));
-        }
+            JsonArray userIdFromClasses = event.right().getValue();
+            List<String> listStudentIds = userIdFromClasses.stream()
+                    .map(audience -> ((JsonObject) audience).getString("id")).collect(Collectors.toList());
 
-        /* filtering user ids fetched */
-        if (!userId.isEmpty()) {
-            query += " AND EXISTS (" +
-                    " SELECT * FROM presences.presence_student ps" +
-                    " WHERE ps.presence_id = presence.id" +
-                    " AND ps.student_id IN " + Sql.listPrepared(userId) + " )";
-            params.addAll(new JsonArray(userId));
-        }
+            userId.addAll(listStudentIds);
 
-        Sql.getInstance().prepared(query, params, SqlResult.validResultHandler(handler));
+            JsonArray params = new JsonArray();
+            String query = "SELECT * FROM " + Presences.dbSchema + ".presence WHERE structure_id = ? " +
+                    "AND (start_date > ? AND end_date < ?) ";
+            params.add(structureId).add(startDate + " " + defaultStartTime).add(endDate + " " + defaultEndTime);
+
+            /* filtering owner ids fetched */
+            if (!ownerIds.isEmpty()) {
+                query += " AND owner IN " + Sql.listPrepared(ownerIds) + " ";
+                params.addAll(new JsonArray(ownerIds));
+            }
+
+            /* filtering user ids fetched */
+            if (!userId.isEmpty()) {
+                query += " AND EXISTS (" +
+                        " SELECT * FROM presences.presence_student ps" +
+                        " WHERE ps.presence_id = presence.id" +
+                        " AND ps.student_id IN " + Sql.listPrepared(userId) + " )";
+                params.addAll(new JsonArray(userId));
+            }
+
+            sql.prepared(query, params, SqlResult.validResultHandler(handler));
+
+        });
     }
 
     private void fetchPresenceStudents(String structureId, List<Integer> presenceIds,
@@ -166,7 +186,7 @@ public class DefaultPresenceService implements PresenceService {
         JsonArray params = new JsonArray().addAll(new JsonArray(presenceIds));
 
         /* Query presence_students */
-        Sql.getInstance().prepared(query, params, presenceStudentsAsync -> {
+        sql.prepared(query, params, presenceStudentsAsync -> {
             Either<String, JsonArray> result = SqlResult.validResult(presenceStudentsAsync);
             if (result.isLeft()) {
                 String message = "[Presences@DefaultPresenceService] Failed to fetch presences students";
