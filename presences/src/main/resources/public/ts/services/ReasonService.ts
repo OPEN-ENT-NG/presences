@@ -16,7 +16,7 @@ export const reasonService: ReasonService = {
     getReasons: async (structureId: string): Promise<Reason[]> => {
         try {
             const {data} = await http.get(`/presences/reasons?structureId=${structureId}`);
-            data.map((reason) => {
+            data.map((reason: Reason) => {
                 if (reason.id === -1) {
                     reason.label = lang.translate(reason.label);
                     reason.hidden = true;

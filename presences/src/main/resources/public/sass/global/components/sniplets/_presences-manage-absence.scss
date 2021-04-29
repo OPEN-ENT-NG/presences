@@ -88,6 +88,10 @@
             line-height: 25px;
             justify-content: space-between;
 
+            &-icon {
+              color: $presences-orange;
+            }
+
             &-title {
               align-self: center;
               display: flex;
@@ -106,6 +110,7 @@
               &-color {
                 margin: 0 8px;
               }
+
             }
 
             &-icons {

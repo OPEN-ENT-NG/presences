@@ -89,15 +89,23 @@
             <div class="sniplet-addList-content" ng-if="vm.hasReasons()">
                 <i18n>presence.existed.reasons</i18n>
                 <ul class="sniplet-addList-content-list">
+
+                    <!-- Reason item -->
                     <li class="sniplet-addList-content-list-item"
-                        ng-repeat="reason in vm.reasons | orderBy:'id'">
+                        ng-repeat="reason in vm.reasons | orderBy:['!proving','absence_compliance', 'label']">
 
                         <div class="sniplet-addList-content-list-item-title">
-                            <label class="sniplet-addList-content-list-item-title-label">[[reason.label]]</label>
-                            <i class="file-checked" data-ng-show="reason.regularisable"></i>
+                            <label class="sniplet-addList-content-list-item-title-label">[[reason.label]]&nbsp;</label>
+
+                            <i title="[[lang.translate('presences.absence.reason.regularisation.necessary')]]" class="sniplet-addList-content-list-item-icon file-checked"
+                               data-ng-show="!reason.proving"></i>
+                            <i title="[[lang.translate('presences.absence.reason.notebook.into.account')]]"
+                               class="sniplet-addList-content-list-item-icon alert-octagon"
+                               data-ng-show="reason.absence_compliance"></i>
                             <i class="presence-edit" data-ng-click="vm.openReasonLightbox(reason)"></i>
                         </div>
 
+                        <!-- Visibility icons + delete -->
                         <div class="sniplet-addList-content-list-item-icons">
                             <i class="visible" data-ng-show="reason.used && !reason.hidden"
                                data-ng-click="vm.toggleVisibility(reason)"></i>
@@ -107,6 +115,7 @@
                                data-ng-click="vm.deleteReason(reason)"></i>
                         </div>
                     </li>
+
                 </ul>
             </div>
         </div>

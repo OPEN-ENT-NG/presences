@@ -48,6 +48,8 @@
   "presences.absence.reason.absence": "Motifs d'absence",
   "presences.absence.reason.form.title": "Motifs d'absences individuelles",
   "presences.absence.reason.title": "Motifs d'absences individuelles",
+  "presences.absence.reason.regularisation.necessary": "Régularisation nécessaire",
+  "presences.absence.reason.notebook.into.account": "Pris en compte bulletin",
   "presences.absence.regularise": "Régul.",
   "presences.absence.select.empty": "Sans motif",
   "presences.absence.select.multiple": "Motifs multiples",

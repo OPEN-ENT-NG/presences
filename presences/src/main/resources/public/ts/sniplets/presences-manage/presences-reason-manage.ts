@@ -89,8 +89,8 @@ const vm: ViewModel = {
     },
 
     async getReasons(): Promise<void> {
-        let reasons = await reasonService.getReasons(window.model.vieScolaire.structure.id);
-        vm.reasons = reasons.filter(reason => reason.id != -1);
+        let reasons: Reason[] = await reasonService.getReasons(window.model.vieScolaire.structure.id);
+        vm.reasons = reasons.filter((reason: Reason) => reason.id != -1);
         vm.safeApply();
     },
 
