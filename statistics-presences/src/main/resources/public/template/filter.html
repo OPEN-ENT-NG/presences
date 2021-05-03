@@ -1,10 +1,11 @@
 <lightbox show="vm.filter.show" on-close="vm.filter.show = false">
     <section class="head massmailing-lightbox-header">
-        <h3>
-            <i18n>statistics-presences.parameters</i18n>
-        </h3>
+        <h3><i18n>statistics-presences.parameters</i18n></h3>
     </section>
+
     <section class="massmailing-lightbox-body body lightbox-form statistics-presences-filters">
+
+        <!-- Types -->
         <div class="row vertical-spacing">
             <h4>
                 <i18n>statistics-presences.filters.types</i18n>
@@ -17,6 +18,8 @@
                 </div>
             </div>
         </div>
+
+        <!-- Absence reasons -->
         <div class="row vertical-spacing">
             <h4 class="row">
                 <i18n class="cell">massmailing.filters.reasons</i18n>
@@ -30,6 +33,25 @@
                 </div>
             </div>
         </div>
+
+        <!-- Punishment/sanction types -->
+        <div class="row vertical-spacing">
+            <h4 class="row">
+                <i18n class="cell">massmailing.filters.punishment.types</i18n>
+            </h4>
+            <div class="chips">
+                <div class="chip"
+                     ng-repeat="type in vm.punishmentTypes track by $index|orderBy:'label'"
+                     ng-class="{ selected: vm.indicator._factoryFilter.punishmentTypesMap[type.id] }"
+                     data-ng-click="vm.indicator._factoryFilter.punishmentTypesMap[type.id]  =
+                     !vm.indicator._factoryFilter.punishmentTypesMap[type.id]">
+                    <span class="no-style">[[type.label]]</span>
+                </div>
+            </div>
+        </div>
+
+
+        <!-- Minimum number of events filter -->
         <div class="row vertical-spacing" ng-if="vm.indicator.filterEnabled('FROM') !== null">
             <h4 ng-class="{disabled: !vm.indicator.filter('FROM').selected}">
                 <label class="checkbox">
@@ -42,6 +64,7 @@
             </h4>
         </div>
 
+        <!-- Maximum number of events filter -->
         <div class="row vertical-spacing" ng-if="vm.indicator.filterEnabled('TO') !== null">
             <h4 ng-class="{disabled: !vm.indicator.filter('TO').selected}">
                 <label class="checkbox">
@@ -54,6 +77,7 @@
             </h4>
         </div>
 
+        <!-- Display slot hour details -->
         <div class="row vertical-spacing" ng-if="vm.indicator.filterEnabled('HOUR_DETAIL') !== null">
             <h4 ng-class="{disabled: !vm.indicator.filter('HOUR_DETAIL').selected}">
                 <label class="checkbox">
@@ -63,6 +87,8 @@
             </h4>
         </div>
     </section>
+
+    <!-- Cancel and submit buttons -->
     <section class="massmailing-lightbox-footer">
         <div class="row horizontal-spacing">
             <div class="massmailing-lightbox-footer-submit twelve cell">

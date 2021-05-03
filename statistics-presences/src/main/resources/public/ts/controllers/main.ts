@@ -1,11 +1,15 @@
-import {_, idiom, moment, ng, template} from 'entcore';
+import {_, idiom, ng, template} from 'entcore';
 import {Reason} from "@presences/models";
-import {IViescolaireService, ReasonService, SearchService, ViescolaireService} from "../services";
-import {GroupService} from "@common/services/GroupService";
-import {Indicator, IndicatorFactory} from "../indicator";
-import {INFINITE_SCROLL_EVENTER} from "@common/core/enum/infinite-scroll-eventer";
-import {FilterType} from "../filter";
-import {DateUtils} from "@common/utils";
+import {
+    IViescolaireService, ReasonService, SearchService,
+    ViescolaireService, IPunishmentsTypeService
+} from '../services';
+import {GroupService} from '@common/services/GroupService';
+import {IPunishmentType} from '@incidents/models/PunishmentType';
+import {Indicator, IndicatorFactory} from '../indicator';
+import {INFINITE_SCROLL_EVENTER} from '@common/core/enum/infinite-scroll-eventer';
+import {FilterType} from '../filter';
+import {DateUtils} from '@common/utils';
 
 declare let window: any;
 
@@ -30,27 +34,28 @@ interface Filter {
 }
 
 interface ViewModel {
-    search: Search
-    filter: Filter
-    reasons: Array<Reason>
-    indicator: Indicator
-    indicators: Array<Indicator>
+    search: Search;
+    filter: Filter;
+    reasons: Array<Reason>;
+    punishmentTypes: Array<IPunishmentType>;
+    indicator: Indicator;
+    indicators: Array<Indicator>;
 
-    safeApply(fn?: () => void): void
+    safeApply(fn?: () => void): void;
 
-    loadData(): Promise<void>
+    loadData(): Promise<void>;
 
-    searchStudent(value: string): void
+    searchStudent(value: string): void;
 
-    selectStudent(model: any, teacher: any): void
+    selectStudent(model: any, teacher: any): void;
 
-    searchAudience(value: string): Promise<void>
+    searchAudience(value: string): Promise<void>;
 
-    selectAudience(model: any, audience: any): void
+    selectAudience(model: any, audience: any): void;
 
-    removeSelection(type: any, value: any): void
+    removeSelection(type: any, value: any): void;
 
-    launchResearch(): void
+    launchResearch(): void;
 
     resetIndicator(): void;
 
@@ -60,16 +65,18 @@ interface ViewModel {
 }
 
 export const mainController = ng.controller('MainController',
-    ['$scope', 'route', 'ReasonService', 'SearchService', 'GroupService', 'ViescolaireService',
-        function ($scope, route, ReasonService: ReasonService, SearchService: SearchService, GroupService: GroupService, ViescolaireService: IViescolaireService) {
+    ['$scope', 'route', 'ReasonService', 'PunishmentsTypeService', 'SearchService', 'GroupService', 'ViescolaireService',
+        function ($scope, route, ReasonService: ReasonService, punishmentTypeService: IPunishmentsTypeService,
+                  SearchService, GroupService: GroupService, ViescolaireService: IViescolaireService) {
             const vm: ViewModel = this;
             vm.indicators = [];
             vm.reasons = [];
+            vm.punishmentTypes = [];
 
             function buildIndicators() {
                 vm.indicators = [];
                 for (const name of window.indicators) {
-                    vm.indicators.push(IndicatorFactory.create(name, vm.reasons));
+                    vm.indicators.push(IndicatorFactory.create(name, vm.reasons, vm.punishmentTypes));
                 }
 
                 vm.indicator = vm.indicators[0];
@@ -108,11 +115,14 @@ export const mainController = ng.controller('MainController',
 
             vm.loadData = async function () {
                 if (!window.structure) return;
-                const schoolYear = await ViescolaireService.getSchoolYearDates(window.structure.id);
                 vm.filter.from = DateUtils.setFirstTime(new Date());
                 vm.filter.to = DateUtils.setLastTime(new Date());
-                vm.reasons = await ReasonService.getReasons(window.structure.id);
-                vm.reasons = vm.reasons.filter(reason => reason.id !== -1);
+                let values: Promise<[Reason[], IPunishmentType[]]> = Promise.all([
+                    ReasonService.getReasons(window.structure.id),
+                    punishmentTypeService.get(window.structure.id)
+                ]);
+                vm.reasons = values[0].filter(reason => reason.id !== -1);
+                vm.punishmentTypes = values[1];
             };
 
             function resetSearch(type) {

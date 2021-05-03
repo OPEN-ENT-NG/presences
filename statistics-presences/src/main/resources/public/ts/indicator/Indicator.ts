@@ -1,10 +1,11 @@
-import {idiom, moment} from "entcore";
+import {idiom, moment} from 'entcore';
 import {Mix} from "entcore-toolkit";
 import http from 'axios';
-
 import {Reason} from '@presences/models';
-import {Filter, FilterType, FilterTypeFactory, FilterValue} from "../filter";
-import {DateUtils} from "@common/utils";
+import {Filter, FilterType, FilterTypeFactory, FilterValue} from '../filter';
+import {DateUtils} from '@common/utils';
+import {IPunishmentType} from '@incidents/models/PunishmentType';
+import {PunishmentsUtils} from "@incidents/utilities/punishments";
 
 declare const window: any;
 
@@ -30,9 +31,9 @@ export abstract class Indicator implements IIndicator {
     _name: string;
     _page: number;
 
-    constructor(name: string, reasons: Reason[]) {
+    constructor(name: string, reasons: Reason[], punishmentTypes: IPunishmentType[]) {
         this.values = {};
-        this._factoryFilter = new FilterTypeFactory(reasons);
+        this._factoryFilter = new FilterTypeFactory(reasons, punishmentTypes);
         this._filterTypes = [];
         this._filtersEnabled = new Map([
             [Filter.FROM, this._factoryFilter.getFilterValue(0, null)],
@@ -98,11 +99,13 @@ export abstract class Indicator implements IIndicator {
 
     async search(start: Date, end: Date, users: string[], audiences: string[]): Promise<any> {
         const body = {
-            start: moment(start).format(DateUtils.FORMAT["YEAR-MONTH-DAY-HOUR-MIN-SEC"]),
-            end: moment(end).format(DateUtils.FORMAT["YEAR-MONTH-DAY-HOUR-MIN-SEC"]),
+            start: moment(start).format(DateUtils.FORMAT['YEAR-MONTH-DAY-HOUR-MIN-SEC']),
+            end: moment(end).format(DateUtils.FORMAT['YEAR-MONTH-DAY-HOUR-MIN-SEC']),
             types: [],
             filters: {},
             reasons: this.getSelectedReasons(),
+            punishmentTypes: this.getSelectedPunishmentTypes(),
+            sanctionTypes: this.getSelectedSanctionTypes(),
             users,
             audiences
         };
@@ -132,10 +135,36 @@ export abstract class Indicator implements IIndicator {
         window.open(url);
     }
 
-    private getSelectedReasons() {
-        const selection = [];
-        Object.keys(this._factoryFilter.reasonsMap).forEach(reason => {
+    private getSelectedReasons(): number[] {
+        const selection: number[] = [];
+        Object.keys(this._factoryFilter.reasonsMap).forEach((reason: string) => {
             if (this._factoryFilter.reasonsMap[reason]) selection.push(parseInt(reason));
+        });
+
+        return selection;
+    }
+
+    private getSelectedPunishmentTypes(): number[] {
+        const selection: number[] = [];
+        Object.keys(this._factoryFilter.punishmentTypesMap).forEach((type: string) => {
+            if (this._factoryFilter.punishmentTypes.find((punishmentType: IPunishmentType) => punishmentType.id === parseInt(type)
+                && punishmentType.type === PunishmentsUtils.RULES.punishment) !== undefined && this._factoryFilter.punishmentTypesMap[type]) {
+
+                selection.push(parseInt(type));
+            }
+        });
+
+        return selection;
+    }
+
+    private getSelectedSanctionTypes(): number[] {
+        const selection: number[] = [];
+        Object.keys(this._factoryFilter.punishmentTypesMap).forEach((type: string) => {
+            if (this._factoryFilter.punishmentTypes.find((punishmentType: IPunishmentType) => punishmentType.id === parseInt(type)
+                && punishmentType.type === PunishmentsUtils.RULES.sanction) !== undefined && this._factoryFilter.punishmentTypesMap[type]) {
+
+                selection.push(parseInt(type));
+            }
         });
 
         return selection;

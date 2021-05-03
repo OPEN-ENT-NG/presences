@@ -23,7 +23,8 @@ module.exports = {
         extensions: ['', '.ts', '.js'],
         alias: {
             "@common": path.resolve(__dirname, '../common/src/main/resources/ts'),
-            "@presences": path.resolve(__dirname, '../presences/src/main/resources/public/ts')
+            "@presences": path.resolve(__dirname, '../presences/src/main/resources/public/ts'),
+            "@incidents": path.resolve(__dirname, '../incidents/src/main/resources/public/ts')
         }
     },
     devtool: "source-map",

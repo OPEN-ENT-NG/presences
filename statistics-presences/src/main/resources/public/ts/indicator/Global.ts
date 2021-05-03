@@ -1,22 +1,24 @@
-import {Indicator} from "./index";
-import {Filter, FILTER_TYPE, FilterType} from "../filter";
-import {IndicatorFactory} from "../indicator";
-
+import {Indicator} from './index';
+import {Filter, FILTER_TYPE, FilterType} from '../filter';
+import {IndicatorFactory} from '../indicator';
+import {IPunishmentType} from '@incidents/models/PunishmentType';
 import {Reason} from '@presences/models';
 
 export class Global extends Indicator {
     _filterTypes: FilterType[]
     _filterEnabled: any;
 
-    constructor(reasons: Reason[]) {
-        super("Global", reasons);
+    constructor(reasons: Reason[], punishmentTypes: IPunishmentType[]) {
+        super("Global", reasons, punishmentTypes);
         this.resetValues();
         this.setFilterTypes([
             this._factoryFilter.getFilter(FILTER_TYPE.UNJUSTIFIED_ABSENCE, null),
             this._factoryFilter.getFilter(FILTER_TYPE.JUSTIFIED_UNREGULARIZED_ABSENCE, (value: boolean) => this._factoryFilter.changeUnProvingReasons(value)),
             this._factoryFilter.getFilter(FILTER_TYPE.REGULARIZED_ABSENCE, (value: boolean) => this._factoryFilter.changeProvingReasons(value)),
             this._factoryFilter.getFilter(FILTER_TYPE.LATENESS, null),
-            this._factoryFilter.getFilter(FILTER_TYPE.DEPARTURE, null)
+            this._factoryFilter.getFilter(FILTER_TYPE.DEPARTURE, null),
+            this._factoryFilter.getFilter(FILTER_TYPE.PUNISHMENT, (value: boolean) => this._factoryFilter.changePunishmentFilter(value)),
+            this._factoryFilter.getFilter(FILTER_TYPE.SANCTION, (value: boolean) => this._factoryFilter.changeSanctionFilter(value))
         ]);
 
         this.enableFilter(Filter.FROM, false);

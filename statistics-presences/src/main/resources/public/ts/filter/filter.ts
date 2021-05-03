@@ -1,4 +1,6 @@
 import {Reason} from '@presences/models';
+import {IPunishmentType} from '@incidents/models/PunishmentType';
+import {PunishmentsUtils} from "@incidents/utilities/punishments";
 
 export enum Filter {
     FROM = "FROM",
@@ -66,20 +68,25 @@ export class FilterType {
 
 export class FilterTypeFactory {
     reasons: Reason[]
-    reasonsMap: any
+    punishmentTypes : IPunishmentType[];
+    reasonsMap: {[key: number]: boolean};
+    punishmentTypesMap: {[key: number]: boolean};
 
-    constructor(reasons: Reason[]) {
+    constructor(reasons: Reason[], punishmentTypes: IPunishmentType[]) {
         this.reasons = reasons;
+        this.punishmentTypes = punishmentTypes;
         this.reasonsMap = {};
-        this.reasons.map(reason => this.reasonsMap[reason.id] = true);
+        this.punishmentTypesMap = {};
+        this.reasons.map((reason: Reason) => this.reasonsMap[reason.id] = true);
+        this.punishmentTypes.map((type: IPunishmentType) => this.punishmentTypesMap[type.id] = true);
     }
 
-    getFilter(name: string, process: Function): FilterType {
+    public getFilter(name: string, process: Function): FilterType {
         if (process === null) process = () => null;
         return new FilterType(name, process);
     }
 
-    getFilterValue(value: any, selected: boolean): FilterValue {
+    public getFilterValue(value: any, selected: boolean): FilterValue {
         return new FilterValue(value, selected);
     }
 
@@ -89,15 +96,29 @@ export class FilterTypeFactory {
         });
     }
 
-    changeUnProvingReasons(value: boolean): void {
+    public changeUnProvingReasons(value: boolean): void {
         this.changeReasonsValue(false, value);
     }
 
-    changeProvingReasons(value: boolean): void {
+    public changeProvingReasons(value: boolean): void {
         this.changeReasonsValue(true, value);
     }
 
-    unselectAllReasons(): void {
-        this.reasons.forEach(({id}) => this.reasonsMap[id] = false)
+    private changePunishmentTypesValue(type: string, value: boolean): void {
+        this.punishmentTypes
+            .filter((punishmentType: IPunishmentType) => punishmentType.type === type)
+            .forEach((punishmentType: IPunishmentType) => this.punishmentTypesMap[punishmentType.id] = value)
+    }
+
+    public changePunishmentFilter(value: boolean): void {
+        this.changePunishmentTypesValue(PunishmentsUtils.RULES.punishment, value);
+    }
+
+    public changeSanctionFilter(value: boolean): void {
+        this.changePunishmentTypesValue(PunishmentsUtils.RULES.sanction, value);
+    }
+
+    public unselectAllReasons(): void {
+        this.reasons.forEach(({id}) => this.reasonsMap[id] = false);
     }
 }
