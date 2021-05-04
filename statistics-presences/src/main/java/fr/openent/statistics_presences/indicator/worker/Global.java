@@ -1,5 +1,6 @@
 package fr.openent.statistics_presences.indicator.worker;
 
+import fr.openent.presences.common.incidents.*;
 import fr.openent.presences.common.presences.Presences;
 import fr.openent.statistics_presences.StatisticsPresences;
 import fr.openent.statistics_presences.bean.global.GlobalStat;
@@ -11,6 +12,7 @@ import io.vertx.core.Handler;
 import io.vertx.core.eventbus.Message;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
+import io.vertx.core.logging.*;
 import org.entcore.common.neo4j.Neo4j;
 import org.entcore.common.neo4j.Neo4jResult;
 import org.entcore.common.sql.Sql;
@@ -23,7 +25,11 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 public class Global extends IndicatorWorker {
-    private final List<EventType> eventTypes = Arrays.asList(EventType.DEPARTURE, EventType.INCIDENT, EventType.JUSTIFIED_UNREGULARIZED_ABSENCE, EventType.LATENESS, EventType.REGULARIZED_ABSENCE, EventType.UNJUSTIFIED_ABSENCE);
+    private final List<EventType> eventTypes = Arrays.asList(EventType.DEPARTURE, EventType.INCIDENT,
+            EventType.JUSTIFIED_UNREGULARIZED_ABSENCE,
+            EventType.LATENESS, EventType.REGULARIZED_ABSENCE,
+            EventType.UNJUSTIFIED_ABSENCE, EventType.SANCTION, EventType.PUNISHMENT);
+    private static final Logger LOGGER = LoggerFactory.getLogger(Global.class);
     static final String START_DATE = "1969-01-01"; //Fix that ? Do we really need school year dates ?
     static final String END_DATE = "2099-12-31";
 
@@ -56,7 +62,7 @@ public class Global extends IndicatorWorker {
         - regularized absence count
         - lateness count
         - departure count
-        - sanction/punishment count <== Currently unprocessed
+        - sanction/punishment count
         - incident count
      */
     @Override
@@ -124,6 +130,14 @@ public class Global extends IndicatorWorker {
         return future;
     }
 
+    /**
+     * Fetch events in queue and set their count values.
+     *
+     * @param type        event type
+     * @param structureId structure identifier
+     * @param studentId   student identifier
+     * @return future with event process
+     */
     private Future<List<GlobalStat>> fetchEvent(EventType type, String structureId, String studentId) {
         Future<List<GlobalStat>> future;
         switch (type) {
@@ -144,6 +158,10 @@ public class Global extends IndicatorWorker {
                 break;
             case REGULARIZED_ABSENCE:
                 future = fetchEventCountFromPresences(structureId, studentId, null, false, true);
+                break;
+            case PUNISHMENT:
+            case SANCTION:
+                future = retrievePunishmentCount(structureId, studentId, type.toString());
                 break;
             default:
                 future = Future.failedFuture(new RuntimeException("Unrecognized event type"));
@@ -198,6 +216,61 @@ public class Global extends IndicatorWorker {
         Sql.getInstance().prepared(String.format(query, StatisticsPresences.PRESENCES_SCHEMA, StatisticsPresences.PRESENCES_SCHEMA), params, countHandler(future));
 
         return future;
+    }
+
+    @SuppressWarnings("unchecked")
+    private Future<List<GlobalStat>> retrievePunishmentCount(String structureId, String studentId, String eventType) {
+        Future<List<GlobalStat>> future = Future.future();
+        List<String> students = Collections.singletonList(studentId);
+        Incidents.getInstance().getPunishmentsByStudent(structureId, null, null, students,
+                null, eventType, null, null, res -> {
+
+                    if (res.isLeft()) {
+                        String message = "[Statistics@Global::retrievePunishmentCount] Error fetching punishments by student";
+                        LOGGER.error(res.left().getValue(), message);
+                        future.fail(res.left().getValue());
+                        return;
+                    }
+
+                    List<JsonObject> result = res.right().getValue().getList();
+                    List<GlobalStat> stats = result.stream()
+                            .flatMap(punishmentsHolder -> {
+                                List<JsonObject> punishments = punishmentsHolder.getJsonArray("punishments").getList();
+                                return punishments.stream().map(punishment -> {
+                                    GlobalStat stat = new GlobalStat()
+                                            .setSlots(0)
+                                            .setPunishmentType(punishment.getLong("type_id"));
+                                    setDatesFromPunishments(punishment, stat);
+                                    return stat;
+                                });
+                            })
+                            .collect(Collectors.toList());
+                    future.complete(stats);
+                });
+        return future;
+    }
+
+    private void setDatesFromPunishments(JsonObject punishment, GlobalStat stat) {
+        JsonObject fields = punishment.getJsonObject("fields", new JsonObject());
+
+        String startAt = fields.getString("start_at");
+        String endAt = fields.getString("end_at");
+        if (startAt != null && endAt != null) {
+            stat.setStartDate(startAt)
+                    .setEndDate(endAt);
+            return;
+        }
+
+        String delayAt = fields.getString("delay_at");
+        if (delayAt != null) {
+            stat.setStartDate(delayAt)
+                    .setEndDate(delayAt);
+            return;
+        }
+
+        String createdAt = punishment.getString("created_at");
+        stat.setStartDate(createdAt)
+                .setEndDate(createdAt);
     }
 
     private Future<JsonArray> retrieveAudiences(String structureId, String studentId) {

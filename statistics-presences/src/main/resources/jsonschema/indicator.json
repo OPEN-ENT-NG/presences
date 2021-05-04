@@ -43,6 +43,18 @@
       "items": {
         "type": "number"
       }
+    },
+    "punishmentTypes": {
+      "type": "array",
+      "items": {
+        "type": "number"
+      }
+    },
+    "sanctionTypes": {
+      "type": "array",
+      "items": {
+        "type": "number"
+      }
     }
   },
   "required": [
@@ -52,6 +64,7 @@
     "users",
     "start",
     "end",
-    "reasons"
+    "reasons",
+    "punishmentTypes"
   ]
 }

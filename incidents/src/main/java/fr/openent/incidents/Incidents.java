@@ -2,6 +2,7 @@ package fr.openent.incidents;
 
 import fr.openent.incidents.controller.*;
 import fr.openent.presences.common.presences.Presences;
+import fr.openent.presences.common.statistics_presences.StatisticsPresences;
 import fr.openent.presences.db.DB;
 import fr.wseduc.mongodb.MongoDb;
 import io.vertx.core.eventbus.EventBus;
@@ -34,6 +35,7 @@ public class Incidents extends BaseServer {
         DB.getInstance().init(Neo4j.getInstance(), Sql.getInstance(), MongoDb.getInstance());
 
         Presences.getInstance().init(eb);
+        StatisticsPresences.getInstance().init(eb);
 
         addController(new IncidentsController(eb));
         addController(new PresencesController());

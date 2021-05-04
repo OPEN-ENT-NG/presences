@@ -31,6 +31,7 @@ public class EventBusController extends ControllerHelper {
     }
 
     @BusAddress("fr.openent.incidents")
+    @SuppressWarnings("unchecked")
     public void bus(final Message<JsonObject> message) {
         JsonObject body = message.body();
         String action = body.getString("action");
@@ -39,6 +40,7 @@ public class EventBusController extends ControllerHelper {
         List<String> studentIds;
         List<String> punishmentsIds;
         List<Integer> punishmentTypeIds;
+        String eventType;
         Boolean processed;
         Boolean massmailed;
         String structure;
@@ -83,11 +85,13 @@ public class EventBusController extends ControllerHelper {
                 startAt = body.getString("start_at");
                 endAt = body.getString("end_at");
                 studentIds = body.getJsonArray("students", new JsonArray()).getList();
-                punishmentTypeIds = body.getJsonArray("punishmentTypeIds", new JsonArray()).getList();
+                punishmentTypeIds = (body.getJsonArray("punishmentTypeIds") != null) ?
+                        body.getJsonArray("punishmentTypeIds", new JsonArray()).getList() : null;
+                eventType = body.getString("eventType");
                 processed = body.getBoolean("processed");
                 massmailed = body.getBoolean("massmailed");
                 this.punishmentService.getPunishmentByStudents(structure, startAt, endAt, studentIds, punishmentTypeIds,
-                        processed, massmailed, BusResponseHandler.busArrayHandler(message));
+                        eventType, processed, massmailed, BusResponseHandler.busArrayHandler(message));
                 break;
             case "update-punishments-massmailing":
                 punishmentsIds = body.getJsonArray("punishmentsIds", new JsonArray()).getList();

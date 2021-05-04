@@ -30,30 +30,31 @@ public interface PunishmentService {
      * get Sanctions/Punishments by students
      *
      * @param structure  structure identifier
-     * @param start_at   start date
-     * @param end_at     end date
+     * @param startAt   start date
+     * @param endAt     end date
      * @param students   List of students
-     * @param type_id    List of punishment type
+     * @param typeIds    List of punishment type
+     * @param  eventType Punishment event type ("SANCTION"/ "PUNISHMENT")
      * @param processed  filter processed
      * @param massmailed filter massmailed
      * @param handler    Function handler returning data
      */
-    void getPunishmentByStudents(String structure, String start_at, String end_at, List<String> students, List<Integer> type_id,
-                                 Boolean processed, Boolean massmailed, Handler<Either<String, JsonArray>> handler);
+    void getPunishmentByStudents(String structure, String startAt, String endAt, List<String> students, List<Integer> typeIds,
+                                 String eventType, Boolean processed, Boolean massmailed, Handler<Either<String, JsonArray>> handler);
 
     /**
      * get Punishments/Sanctions COUNT By students
      *
      * @param structure  structure identifier
-     * @param start_at   start date
-     * @param end_at     end date
+     * @param startAt   start date
+     * @param endAt     end date
      * @param students   List of students
-     * @param type_id    List of punishment type
+     * @param typeIds    List of punishment type
      * @param processed  filter processed
      * @param massmailed filter massmailed
      * @param handler    Function handler returning data
      */
-    void getPunishmentCountByStudent(String structure, String start_at, String end_at, List<String> students, List<Integer> type_id,
+    void getPunishmentCountByStudent(String structure, String startAt, String endAt, List<String> students, List<Integer> typeIds,
                                      Boolean processed, Boolean massmailed, Handler<Either<String, JsonArray>> handler);
 
 

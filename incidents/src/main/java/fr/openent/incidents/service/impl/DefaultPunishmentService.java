@@ -14,6 +14,7 @@ import fr.openent.presences.common.helper.FutureHelper;
 import fr.openent.presences.common.presences.Presences;
 import fr.openent.presences.common.service.UserService;
 import fr.openent.presences.common.service.impl.DefaultUserService;
+import fr.openent.presences.common.statistics_presences.StatisticsPresences;
 import fr.openent.presences.enums.EventType;
 import fr.wseduc.mongodb.MongoDb;
 import fr.wseduc.webutils.Either;
@@ -58,22 +59,23 @@ public class DefaultPunishmentService implements PunishmentService {
                 handler.handle(Future.failedFuture(event.cause().toString()));
                 return;
             }
+
             handler.handle(Future.succeededFuture(punishmentsFuture.result().getJsonArray("all", new JsonArray())));
         });
     }
 
+    @SuppressWarnings("unchecked")
     private void createPunishments(UserInfos user, JsonObject body, Handler<AsyncResult<JsonObject>> handler) {
-        JsonArray student_ids = body.getJsonArray("student_ids");
+        List<String> studentIds = body.getJsonArray("student_ids").getList();
         JsonArray results = new JsonArray();
         List<Future> futures = new ArrayList<>();
 
-        for (Object oStudent_id : student_ids) {
+        for (String studentId : studentIds) {
             Future future = Future.future();
             futures.add(future);
-            String student_id = (String) oStudent_id;
             Punishment createPunishment = new Punishment();
             createPunishment.setFromJson(body);
-            createPunishment.setStudentId(student_id);
+            createPunishment.setStudentId(studentId);
 
             createPunishment.persistMongo(user, result -> {
                 if (result.failed()) {
@@ -90,6 +92,8 @@ public class DefaultPunishmentService implements PunishmentService {
                 handler.handle(Future.failedFuture(event.cause().toString()));
                 return;
             }
+
+            StatisticsPresences.getInstance().postUsers(body.getString("structure_id"), studentIds, Future.future());
             handler.handle(Future.succeededFuture(new JsonObject().put("all", results)));
         });
     }
@@ -179,6 +183,7 @@ public class DefaultPunishmentService implements PunishmentService {
                 handler.handle(Future.failedFuture(event.cause().toString()));
                 return;
             }
+            StatisticsPresences.getInstance().postUsers(updatePunishment.getStructureId(), Collections.singletonList(studentId), Future.future());
             handler.handle(Future.succeededFuture(punishmentFuture.result()));
         });
     }
@@ -355,49 +360,70 @@ public class DefaultPunishmentService implements PunishmentService {
     }
 
     @Override
-    public void getPunishmentByStudents(String structure, String start_at, String end_at, List<String> students,
-                                        List<Integer> type_id, Boolean processed, Boolean massmailed,
+    @SuppressWarnings("unchecked")
+    public void getPunishmentByStudents(String structure, String startAt, String endAt, List<String> students,
+                                        List<Integer> typeIds, String eventType, Boolean processed, Boolean massmailed,
                                         Handler<Either<String, JsonArray>> handler) {
-        Future<JsonArray> punishmentsFuture = Future.future();
-        Future<JsonArray> punishmentsTypesFuture = Future.future();
+        punishmentType.get(structure, typesResult -> {
+            if (typesResult.isLeft()) {
+                LOGGER.info("[Incidents@DefaultPunishmentService::getPunishmentByStudents] Failed to " +
+                        "fetch punishment types", typesResult.left().getValue());
+                handler.handle(new Either.Left<>(typesResult.left().getValue()));
+                return;
+            }
 
-        CompositeFuture.all(punishmentsFuture, punishmentsTypesFuture).setHandler(event -> {
-            if (event.failed()) {
-                LOGGER.info("[Incidents@DefaultPunishmentService::getPunishmentByStudents] Failed to fetch punishmentType or " +
-                        " punishment by student: ", event.cause());
-                handler.handle(new Either.Left<>(event.cause().getMessage()));
-            } else {
-                List<PunishmentType> punishmentsTypes = PunishmentTypeHelper.
-                        getPunishmentTypeListFromJsonArray(punishmentsTypesFuture.result());
+            List<PunishmentType> punishmentsTypes = PunishmentTypeHelper.
+                    getPunishmentTypeListFromJsonArray(typesResult.right().getValue());
 
-                // for some reason, we still manage to find some "duplicate" data so we use mergeFunction (see collectors.toMap)
-                Map<Integer, PunishmentType> punishmentTypeMap = punishmentsTypes
-                        .stream()
-                        .collect(Collectors.toMap(PunishmentType::getId, PunishmentType::clone, (punishmentType1, punishmentType2) -> punishmentType1));
+            List<Integer> filteredTypeIds = typeIds;
+            if (eventType != null) {
+                punishmentsTypes = punishmentsTypes.stream().filter(pType -> pType.getType().equals(eventType))
+                        .collect(Collectors.toList());
+
+                List<Integer> punishmentsTypeIds = punishmentsTypes.stream()
+                        .map(PunishmentType::getId)
+                        .collect(Collectors.toList());
+
+                filteredTypeIds = typeIds == null ? punishmentsTypeIds : typeIds.stream()
+                        .filter(punishmentsTypeIds::contains)
+                        .collect(Collectors.toList());
+            }
+
+
+            // for some reason, we still manage to find some "duplicate" data so we use mergeFunction (see collectors.toMap)
+            Map<Integer, PunishmentType> punishmentTypeMap = punishmentsTypes
+                    .stream()
+                    .collect(Collectors.toMap(PunishmentType::getId, PunishmentType::clone, (punishmentType1, punishmentType2) -> punishmentType1));
+            punishmentHelper.getPunishmentsCommand(punishment.getTable(), getPunishmentByStudentQueryPipeline(structure, startAt, endAt,
+                    students, filteredTypeIds, processed, massmailed), punishmentsResult -> {
+                if (punishmentsResult.failed()) {
+                    LOGGER.info("[Incidents@DefaultPunishmentService::getPunishmentByStudents] Failed to " +
+                            "fetch punishment by student: ", punishmentsResult.cause());
+                    handler.handle(new Either.Left<>(punishmentsResult.cause().getMessage()));
+                    return;
+                }
+                List<JsonObject> punishments = punishmentsResult.result().getList();
 
                 List<String> ownerIds = new ArrayList<>();
-                setOwnerIdsFromPunishment(punishmentsFuture, ownerIds);
+                setOwnerIdsFromPunishment(punishments, ownerIds);
                 userService.getUsers(ownerIds, userAsync -> {
                     if (userAsync.isLeft()) {
                         LOGGER.info("[Incidents@DefaultPunishmentService::getPunishmentByStudents] Failed to " +
                                 "fetch owner info: ", userAsync.left().getValue());
                         handler.handle(new Either.Left<>(userAsync.left().getValue()));
                     } else {
-                        setPunishmentInfo(punishmentsFuture, punishmentTypeMap, userAsync);
-                        handler.handle(new Either.Right<>(punishmentsFuture.result()));
+                        setPunishmentInfo(punishments, punishmentTypeMap, userAsync);
+                        handler.handle(new Either.Right<>(new JsonArray(punishments)));
                     }
                 });
-            }
-        });
 
-        punishmentHelper.getPunishmentsCommand(punishment.getTable(), getPunishmentByStudentQueryPipeline(structure, start_at, end_at,
-                students, type_id, processed, massmailed), FutureHelper.handlerAsyncJsonArray(punishmentsFuture));
-        punishmentType.get(structure, FutureHelper.handlerJsonArray(punishmentsTypesFuture));
+            });
+        });
     }
 
     @SuppressWarnings("unchecked")
-    private void setOwnerIdsFromPunishment(Future<JsonArray> punishmentsFuture, List<String> ownerIds) {
-        ((List<JsonObject>) punishmentsFuture.result().getList()).forEach(punishmentStudent ->
+    private void setOwnerIdsFromPunishment(List<JsonObject> punishments, List<String> ownerIds) {
+        punishments.forEach(punishmentStudent ->
                 ((List<JsonObject>) punishmentStudent.getJsonArray("punishments").getList()).forEach(punishment -> {
                     if (!ownerIds.contains(punishment.getString("owner_id"))) {
                         ownerIds.add(punishment.getString("owner_id"));
@@ -406,14 +432,14 @@ public class DefaultPunishmentService implements PunishmentService {
     }
 
     @SuppressWarnings("unchecked")
-    private void setPunishmentInfo(Future<JsonArray> punishmentsFuture, Map<Integer, PunishmentType> punishmentTypeMap,
+    private void setPunishmentInfo(List<JsonObject> punishments, Map<Integer, PunishmentType> punishmentTypeMap,
                                    Either<String, JsonArray> userAsync) {
         Map<String, JsonObject> ownerMap = ((List<JsonObject>) userAsync.right().getValue().getList())
                 .stream()
                 .collect(Collectors.toMap(user -> user.getString("id"), Function.identity(), (owner1, owner2) -> owner1));
 
         // remove _id
-        ((List<JsonObject>) punishmentsFuture.result().getList()).forEach(punishmentStudent -> {
+        punishments.forEach(punishmentStudent -> {
             punishmentStudent.remove("_id");
             punishmentStudent.put("type", determinePunishmentType(punishmentStudent, punishmentTypeMap));
             ((List<JsonObject>) punishmentStudent.getJsonArray("punishments").getList()).forEach(punishment -> {
@@ -447,11 +473,11 @@ public class DefaultPunishmentService implements PunishmentService {
 
     @Override
     @SuppressWarnings("unchecked")
-    public void getPunishmentCountByStudent(String structure, String start_at, String end_at, List<String> students,
-                                            List<Integer> type_id, Boolean processed, Boolean massmailed,
+    public void getPunishmentCountByStudent(String structure, String startAt, String endAt, List<String> students,
+                                            List<Integer> typeIds, Boolean processed, Boolean massmailed,
                                             Handler<Either<String, JsonArray>> handler) {
-        punishmentHelper.getPunishmentsCommand(punishment.getTable(), getPunishmentCountByStudentQueryPipeline(structure, start_at,
-                end_at, students, type_id, processed, massmailed), punishmentEvent -> {
+        punishmentHelper.getPunishmentsCommand(punishment.getTable(), getPunishmentCountByStudentQueryPipeline(structure, startAt,
+                endAt, students, typeIds, processed, massmailed), punishmentEvent -> {
             if (punishmentEvent.failed()) {
                 LOGGER.info("[Incidents@DefaultPunishmentService::getPunishmentCountByStudent] Failed " +
                         "to count punishment by student: ", punishmentEvent.cause());
@@ -464,9 +490,9 @@ public class DefaultPunishmentService implements PunishmentService {
         });
     }
 
-    private JsonArray getPunishmentByStudentQueryPipeline(String structure, String start_at, String end_at, List<String> students,
-                                                          List<Integer> type_id, Boolean processed, Boolean massmailed) {
-        JsonObject $queryMatch = getQueryMatchPunishmentByStudent(structure, start_at, end_at, students, type_id, processed, massmailed);
+    private JsonArray getPunishmentByStudentQueryPipeline(String structure, String startAt, String endAt, List<String> students,
+                                                          List<Integer> typeIds, Boolean processed, Boolean massmailed) {
+        JsonObject $queryMatch = getQueryMatchPunishmentByStudent(structure, startAt, endAt, students, typeIds, processed, massmailed);
         return new JsonArray()
                 .add(new JsonObject().put("$match", $queryMatch))
                 .add(new JsonObject().put("$group",
@@ -491,10 +517,10 @@ public class DefaultPunishmentService implements PunishmentService {
                 );
     }
 
-    private JsonArray getPunishmentCountByStudentQueryPipeline(String structure, String start_at, String end_at, List<String> students,
-                                                               List<Integer> type_id, Boolean processed, Boolean massmailed) {
-        JsonObject $queryMatch = getQueryMatchPunishmentByStudent(structure, start_at, end_at, students,
-                type_id, processed, massmailed);
+    private JsonArray getPunishmentCountByStudentQueryPipeline(String structure, String startAt, String endAt, List<String> students,
+                                                               List<Integer> typeIds, Boolean processed, Boolean massmailed) {
+        JsonObject $queryMatch = getQueryMatchPunishmentByStudent(structure, startAt, endAt, students,
+                typeIds, processed, massmailed);
 
         return new JsonArray()
                 .add(new JsonObject().put("$match", $queryMatch))
@@ -511,18 +537,20 @@ public class DefaultPunishmentService implements PunishmentService {
                 );
     }
 
-    private JsonObject getQueryMatchPunishmentByStudent(String structure, String start_at, String end_at, List<String> students,
-                                                        List<Integer> type_id, Boolean processed, Boolean massmailed) {
+    private JsonObject getQueryMatchPunishmentByStudent(String structure, String startAt, String endAt, List<String> students,
+                                                        List<Integer> typeIds, Boolean processed, Boolean massmailed) {
         JsonObject $queryMatch = new JsonObject()
-                .put("structure_id", structure)
-                .put("$or", punishmentHelper.getPunishmentMatchingDate(start_at, end_at).getJsonArray("$or"));
+                .put("structure_id", structure);
+
+        JsonArray matchingDates = punishmentHelper.getPunishmentMatchingDate(startAt, endAt);
+        if (matchingDates != null && !matchingDates.isEmpty()) $queryMatch.put("$or", matchingDates);
 
         if (students != null && !students.isEmpty()) {
             $queryMatch.put("student_id", new JsonObject().put("$in", new JsonArray(students)));
         }
 
-        if (type_id != null && !type_id.isEmpty()) {
-            $queryMatch.put("type_id", new JsonObject().put("$in", new JsonArray(type_id)));
+        if (typeIds != null && !typeIds.isEmpty()) {
+            $queryMatch.put("type_id", new JsonObject().put("$in", new JsonArray(typeIds)));
         }
 
         if (processed != null) {
@@ -579,7 +607,8 @@ public class DefaultPunishmentService implements PunishmentService {
 
     @Override
     public void delete(UserInfos user, MultiMap body, Handler<AsyncResult<JsonObject>> handler) {
-        get(user, body.get("id"), body.get("structureId"), null, null,
+        String structureId = body.get("structureId");
+        get(user, body.get("id"), structureId, null, null,
                 null, null, null, null, false, null, null, null, punishmentResult -> {
                     if (punishmentResult.failed()) {
                         handler.handle(Future.failedFuture(punishmentResult.cause().getMessage()));
@@ -588,7 +617,10 @@ public class DefaultPunishmentService implements PunishmentService {
                     Punishment deletePunishment = new Punishment();
                     deletePunishment.setFromJson(punishmentResult.result());
                     String studentId = punishmentResult.result().getJsonObject("student", new JsonObject()).getString("id");
-                    delete(body, deletePunishment, studentId, handler);
+                    delete(body, deletePunishment, studentId, result -> {
+                        StatisticsPresences.getInstance().postUsers(structureId, Collections.singletonList(studentId), Future.future());
+                        handler.handle(result);
+                    });
                 });
     }
 

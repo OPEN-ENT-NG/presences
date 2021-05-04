@@ -18,6 +18,7 @@ public class GlobalStat {
     private String name;
     private JsonArray audiences = new JsonArray();
     private JsonArray reasons = new JsonArray();
+    private Long punishmentType;
 
     public GlobalStat setUser(String user) {
         this.user = user;
@@ -69,6 +70,15 @@ public class GlobalStat {
         return this;
     }
 
+    public Long getPunishmentType() {
+        return punishmentType;
+    }
+
+    public GlobalStat setPunishmentType(Long punishmentType) {
+        this.punishmentType = punishmentType;
+        return this;
+    }
+
     public JsonObject toJSON() {
         return new JsonObject()
                 .put("indicator", Global.class.getName())
@@ -78,6 +88,7 @@ public class GlobalStat {
                 .put("type", this.type.name())
                 .put("slot", this.slots)
                 .put("reasons", this.reasons)
+                .put("punishment_type", this.punishmentType)
                 .put("start_date", this.startDate)
                 .put("end_date", this.endDate)
                 .put("structure", this.structure)

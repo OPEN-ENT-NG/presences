@@ -17,6 +17,8 @@ public class Filter {
     private final List<String> audiences = new ArrayList<>();
     private final List<String> users = new ArrayList<>();
     private final List<Integer> reasons = new ArrayList<>();
+    private final List<Integer> punishmentTypes = new ArrayList<>();
+    private final List<Integer> sanctionTypes = new ArrayList<>();
     private String structure;
     private String start;
     private String end;
@@ -33,6 +35,8 @@ public class Filter {
         this.audiences.addAll(body.getJsonArray(FilterField.AUDIENCES, new JsonArray()).getList());
         this.users.addAll(body.getJsonArray(FilterField.USERS, new JsonArray()).getList());
         this.reasons.addAll(body.getJsonArray(FilterField.REASONS, new JsonArray()).getList());
+        this.punishmentTypes.addAll(body.getJsonArray(FilterField.PUNISHMENT_TYPES, new JsonArray()).getList());
+        this.sanctionTypes.addAll(body.getJsonArray(FilterField.SANCTION_TYPES, new JsonArray()).getList());
 
         JsonObject filters = body.getJsonObject(FilterField.FILTERS, new JsonObject());
         this.from = filters.getInteger(FilterField.FROM, null);
@@ -49,6 +53,8 @@ public class Filter {
             this.audiences.addAll(request.params().getAll(FilterField.AUDIENCES));
             this.users.addAll(request.params().getAll(FilterField.USERS));
             this.reasons.addAll(request.params().getAll(FilterField.REASONS).stream().map(Integer::parseInt).collect(Collectors.toList()));
+            this.punishmentTypes.addAll(request.params().getAll(FilterField.PUNISHMENT_TYPES).stream().map(Integer::parseInt).collect(Collectors.toList()));
+            this.sanctionTypes.addAll(request.params().getAll(FilterField.SANCTION_TYPES).stream().map(Integer::parseInt).collect(Collectors.toList()));
             this.from = request.params().contains(FilterField.FROM) ? Integer.parseInt(request.getParam(FilterField.FROM)) : null;
             this.to = request.params().contains(FilterField.TO) ? Integer.parseInt(request.getParam(FilterField.TO)) : null;
             this.hourDetail = request.params().contains(FilterField.HOUR_DETAILS) && Boolean.parseBoolean(request.getParam(FilterField.HOUR_DETAILS));
@@ -81,6 +87,14 @@ public class Filter {
 
     public List<Integer> reasons() {
         return this.reasons;
+    }
+
+    public List<Integer> punishmentTypes() {
+        return this.punishmentTypes;
+    }
+
+    public List<Integer> sanctionTypes() {
+        return this.sanctionTypes;
     }
 
     public Integer from() {

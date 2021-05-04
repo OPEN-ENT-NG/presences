@@ -17,6 +17,10 @@ public class MessageResponseHandler {
             if (event.succeeded() && "ok".equals(event.result().body().getString("status"))) {
                 handler.handle(new Either.Right<>(event.result().body().getJsonArray("result")));
             } else {
+                if (event.failed()) {
+                    handler.handle(new Either.Left<>(event.cause().getMessage()));
+                    return;
+                }
                 handler.handle(new Either.Left<>(event.result().body().getString("message")));
             }
         };
@@ -27,7 +31,11 @@ public class MessageResponseHandler {
             if (event.succeeded() && "ok".equals(event.result().body().getString("status"))) {
                 handler.handle(new Either.Right<>(event.result().body().getJsonObject("result")));
             } else {
-                handler.handle(new Either.Left<>(event.cause().getMessage()));
+                if (event.failed()) {
+                    handler.handle(new Either.Left<>(event.cause().getMessage()));
+                    return;
+                }
+                handler.handle(new Either.Left<>(event.result().body().getString("message")));
             }
         };
     }

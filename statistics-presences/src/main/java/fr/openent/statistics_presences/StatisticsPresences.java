@@ -1,9 +1,11 @@
 package fr.openent.statistics_presences;
 
 import fr.openent.presences.common.eventbus.GenericCodec;
+import fr.openent.presences.common.incidents.*;
 import fr.openent.presences.common.presences.Presences;
 import fr.openent.presences.common.viescolaire.Viescolaire;
 import fr.openent.statistics_presences.bean.Report;
+import fr.openent.statistics_presences.controller.EventBusController;
 import fr.openent.statistics_presences.controller.StatisticsController;
 import fr.openent.statistics_presences.indicator.Indicator;
 import fr.openent.statistics_presences.indicator.ProcessingScheduledTask;
@@ -30,6 +32,7 @@ public class StatisticsPresences extends BaseServer {
     @Override
     public void start() throws Exception {
         super.start();
+        addController(new EventBusController());
         addController(new StatisticsController());
 
         setSchemas();
@@ -38,6 +41,8 @@ public class StatisticsPresences extends BaseServer {
 
         Presences.getInstance().init(vertx.eventBus());
         Viescolaire.getInstance().init(vertx.eventBus());
+        Incidents.getInstance().init(vertx.eventBus());
+
         if (config.containsKey("processing-cron")) {
             String processingCron = config.getString("processing-cron");
             new CronTrigger(vertx, processingCron).schedule(new ProcessingScheduledTask(vertx, config));

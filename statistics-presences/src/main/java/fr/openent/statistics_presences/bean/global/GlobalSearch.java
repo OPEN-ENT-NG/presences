@@ -118,7 +118,7 @@ public class GlobalSearch {
 
     public JsonArray totalAbsenceGlobalPipeline() {
         JsonArray pipeline = new JsonArray()
-                .add(match(totalAbsenceTypes))
+                .add(match(totalAbsenceTypes, true))
                 .add(group());
 
         if (this.filter().from() != null || this.filter().to() != null) {
@@ -133,7 +133,7 @@ public class GlobalSearch {
 
     public JsonArray totalAbsenceUserPipeline() {
         JsonArray pipeline = new JsonArray()
-                .add(match(totalAbsenceTypes))
+                .add(match(totalAbsenceTypes, true))
                 .add(group());
 
         if (this.filter().from() != null || this.filter().to() != null) {
@@ -253,14 +253,14 @@ public class GlobalSearch {
                 .put("$match", count);
     }
 
-    private JsonObject match(List<String> types) {
+    private JsonObject match(List<String> types, boolean isTotalAbsences) {
         List<String> userIdentifiers = !this.filter().users().isEmpty()
                 ? this.filter().users()
                 : this.users().stream().map(User::id).collect(Collectors.toList());
 
         JsonObject matcher = new JsonObject()
                 .put("structure", this.filter.structure())
-                .put("$or", filterType(types))
+                .put("$or", filterType(types, isTotalAbsences))
                 .put("start_date", this.startDateFilter())
                 .put("end_date", this.endDateFilter());
 
@@ -276,21 +276,46 @@ public class GlobalSearch {
                 .put("$match", matcher);
     }
 
+
+    private JsonObject match(List<String> types) {
+       return match(types, false);
+    }
+
     private JsonObject match() {
         return match(this.filter().types());
     }
 
     private JsonArray filterType(List<String> types) {
+       return filterType(types, false);
+    }
+    private JsonArray filterType(List<String> types, boolean isTotalAbsences) {
         List<String> typesToUse = types != null ? types : this.filter().types();
         JsonArray filters = new JsonArray();
         for (String type : typesToUse) {
             JsonObject filterType = new JsonObject()
                     .put("type", type);
 
-            if ("JUSTIFIED_UNREGULARIZED_ABSENCE".equals(type) || "REGULARIZED_ABSENCE".equals(type)) {
-                JsonObject inFilter = new JsonObject()
-                        .put("$in", this.filter().reasons());
-                filterType.put("reasons", inFilter);
+            if (!isTotalAbsences) {
+                switch (type) {
+                    case "JUSTIFIED_UNREGULARIZED_ABSENCE":
+                    case "REGULARIZED_ABSENCE":
+                        JsonObject inFilterReasons = new JsonObject()
+                                .put("$in", this.filter().reasons());
+                        filterType.put("reasons", inFilterReasons);
+                        break;
+                    case "SANCTION":
+                        JsonObject inFilterSanctionTypes = new JsonObject()
+                                .put("$in", this.filter.sanctionTypes());
+                        filterType.put("punishment_type", inFilterSanctionTypes);
+                        break;
+                    case "PUNISHMENT":
+                        JsonObject inFilterPunishmentTypes = new JsonObject()
+                                .put("$in", this.filter.punishmentTypes());
+                        filterType.put("punishment_type", inFilterPunishmentTypes);
+                        break;
+                    default:
+                        break;
+                }
             }
 
             filters.add(filterType);

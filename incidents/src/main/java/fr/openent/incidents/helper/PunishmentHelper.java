@@ -24,6 +24,7 @@ import org.entcore.common.user.UserInfos;
 
 import java.util.*;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 public class PunishmentHelper {
     private final GroupService groupService;
@@ -136,35 +137,38 @@ public class PunishmentHelper {
     }
 
     /**
-     * get JsonObject that will query the matching date
+     * get JsonArray that will query the matching date
      *
-     * @param start_at start date string
-     * @param end_at   end date string
+     * @param startAt start date string
+     * @param endAt   end date string
      */
-    public JsonObject getPunishmentMatchingDate(String start_at, String end_at) {
+    public JsonArray getPunishmentMatchingDate(String startAt, String endAt) {
+        JsonObject dateChecks = new JsonObject();
+        JsonArray startAndEndDateChecks = new JsonArray();
+        if (startAt != null) {
+            dateChecks.put("$gte", startAt);
+            startAndEndDateChecks.add(new JsonObject().put("fields.end_at", new JsonObject().put("$gte", startAt)));
+        }
+        if (endAt != null) {
+            dateChecks.put("$lte", endAt);
+            startAndEndDateChecks.add(new JsonObject().put("fields.start_at", new JsonObject().put("$lte", endAt)));
+        }
+
         // Check date for detentions and exclusions
-        JsonArray containDateQueries = new JsonArray(Arrays.asList(
-                new JsonObject().put("fields.start_at", new JsonObject().put("$lte", end_at)),
-                new JsonObject().put("fields.end_at", new JsonObject().put("$gte", start_at))
-        ));
-        JsonObject containDateQuery = new JsonObject().put("$and", containDateQueries);
+        JsonObject containDateQuery = !startAndEndDateChecks.isEmpty() ? new JsonObject().put("$and", startAndEndDateChecks) : null;
 
-        // Check date for duties
-        JsonArray containDateDutyQueries = new JsonArray(Arrays.asList(
-                new JsonObject().put("fields.delay_at", new JsonObject().put("$lte", end_at)),
-                new JsonObject().put("fields.delay_at", new JsonObject().put("$gte", start_at))
-        ));
-        JsonObject containDutyDateQuery = new JsonObject().put("$and", containDateDutyQueries);
-
-        // Check creation date
-        JsonObject nullDateQuery = new JsonObject().put("created_at", new JsonObject().put("$gte", start_at).put("$lte", end_at));
-
-        // Check for formatted format : YYYY/MM/DD instead of YYYY-MM-DD
-        JsonObject nullDateQuery2 = new JsonObject().put("created_at", new JsonObject()
-                .put("$gte", DateHelper.getDateString(start_at, DateHelper.YEAR_MONTH_DAY_HOUR_MINUTES_SECONDS))
-                .put("$lte", DateHelper.getDateString(end_at, DateHelper.YEAR_MONTH_DAY_HOUR_MINUTES_SECONDS)));
-
-        return new JsonObject().put("$or", new JsonArray(Arrays.asList(containDateQuery, nullDateQuery, nullDateQuery2, containDutyDateQuery)));
+        JsonObject containDutyDateQuery = null;
+        JsonObject nullDateQuery = null;
+        if (!dateChecks.isEmpty()) {
+            // Check date for duties
+            containDutyDateQuery = new JsonObject().put("fields.delay_at", dateChecks);
+            // Check creation date
+            nullDateQuery = new JsonObject().put("created_at", dateChecks);
+        }
+        List<JsonObject> listMatchingDates = Stream.of(containDateQuery, nullDateQuery, containDutyDateQuery)
+                .filter(Objects::nonNull)
+                .collect(Collectors.toList());
+        return new JsonArray(listMatchingDates);
     }
 
     /* REQUEST MONGODB PART */
