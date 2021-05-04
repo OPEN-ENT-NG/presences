@@ -89,7 +89,14 @@
             justify-content: space-between;
 
             &-icon {
-              color: $presences-orange;
+
+              &-orange {
+                color: $presences-orange;
+              }
+
+              &-yellow {
+                color: $presences-main;
+              }
             }
 
             &-title {

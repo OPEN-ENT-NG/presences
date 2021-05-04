@@ -97,10 +97,11 @@
                         <div class="sniplet-addList-content-list-item-title">
                             <label class="sniplet-addList-content-list-item-title-label">[[reason.label]]&nbsp;</label>
 
-                            <i title="[[lang.translate('presences.absence.reason.regularisation.necessary')]]" class="sniplet-addList-content-list-item-icon file-checked"
+                            <i title="[[lang.translate('presences.absence.reason.regularisation.necessary')]]"
+                               class="sniplet-addList-content-list-item-icon-yellow alert-octagon"
                                data-ng-show="!reason.proving"></i>
                             <i title="[[lang.translate('presences.absence.reason.notebook.into.account')]]"
-                               class="sniplet-addList-content-list-item-icon alert-octagon"
+                               class="sniplet-addList-content-list-item-icon-orange file-checked"
                                data-ng-show="reason.absence_compliance"></i>
                             <i class="presence-edit" data-ng-click="vm.openReasonLightbox(reason)"></i>
                         </div>
