@@ -74,7 +74,7 @@
         </h4>
         <div class="chips cell">
 
-            <i18n class="margin-right-sm">presences.from</i18n>&nbsp;
+            <i18n class="margin-right-sm">presences.by</i18n>&nbsp;
 
             <select data-ng-model="vm.formFilter.timeslots.start"
                     ng-options="item.name + ' : ' + item.startHour for item in vm.structureTimeSlot.slots
@@ -83,7 +83,7 @@
                 <option value="">[[lang.translate('presences.timeslots.none')]]</option>
             </select>
 
-            &nbsp;<i18n class="margin-right-sm">presences.to</i18n>&nbsp;
+            &nbsp;<i18n class="margin-right-sm">presences.at</i18n>&nbsp;
 
             <select data-ng-model="vm.formFilter.timeslots.end"
                     ng-options="item.name + ' : ' + item.endHour for item in vm.structureTimeSlot.slots

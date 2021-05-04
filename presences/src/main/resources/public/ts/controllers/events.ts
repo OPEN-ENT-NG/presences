@@ -1046,6 +1046,8 @@ export const eventsController = ng.controller('EventsController', ['$scope', '$r
                 vm.formFilter.unjustified = false;
                 vm.formFilter.justifiedNotRegularized = false;
                 vm.formFilter.justifiedRegularized = false;
+                vm.formFilter.followed = false;
+                vm.formFilter.notFollowed = false;
             }
             vm.adaptReason();
         };
@@ -1117,7 +1119,7 @@ export const eventsController = ng.controller('EventsController', ['$scope', '$r
             }
         };
 
-        vm.adaptReason = function () {
+        vm.adaptReason = (): void => {
             if (!vm.formFilter.absences) {
                 vm.eventReasonsId = [];
                 vm.eventType = _.without(vm.eventType, EventType.ABSENCE);
@@ -1125,6 +1127,8 @@ export const eventsController = ng.controller('EventsController', ['$scope', '$r
                 vm.formFilter.unjustified = true;
                 vm.formFilter.justifiedNotRegularized = true;
                 vm.formFilter.justifiedRegularized = true;
+                vm.formFilter.followed = true;
+                vm.formFilter.notFollowed = true;
             }
         };
 
