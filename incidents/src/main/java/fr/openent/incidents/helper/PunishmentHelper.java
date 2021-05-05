@@ -69,68 +69,63 @@ public class PunishmentHelper {
         }
     }
 
-    private void getManyPunishmentsQuery(JsonObject query, String start_at, String end_at, List<String> student_ids, List<String> group_ids,
-                                         List<String> type_ids, List<String> process_states, boolean isStudent,
+    private void getManyPunishmentsQuery(JsonObject query, String startAt, String endAt, List<String> studentIds, List<String> groupIds,
+                                         List<String> typeIds, List<String> processStates, boolean isStudent,
                                          Handler<AsyncResult<JsonObject>> handler) {
-        this.groupService.getGroupStudents(group_ids, groupResult -> {
+        this.groupService.getGroupStudents(groupIds, groupResult -> {
             if (groupResult.isLeft()) {
                 handler.handle(Future.failedFuture("[Incidents@Punishment::getQuery] Failed to retrieve students from groups"));
                 return;
             }
 
-            if (start_at != null && end_at != null) {
+            if (startAt != null && endAt != null) {
 
                 //Check date for detentions and exclusions
                 JsonArray containDateQueries = new JsonArray(Arrays.asList(
-                        new JsonObject().put("fields.start_at", new JsonObject().put("$lte", end_at)),
-                        new JsonObject().put("fields.end_at", new JsonObject().put("$gte", start_at))
+                        new JsonObject().put("fields.start_at", new JsonObject().put("$lte", endAt)),
+                        new JsonObject().put("fields.end_at", new JsonObject().put("$gte", startAt))
                 ));
                 JsonObject containDateQuery = new JsonObject().put("$and", containDateQueries);
 
                 //Check date for duties
                 JsonArray containDateDutyQueries = new JsonArray(Arrays.asList(
-                        new JsonObject().put("fields.delay_at", new JsonObject().put("$lte", end_at)),
-                        new JsonObject().put("fields.delay_at", new JsonObject().put("$gte", start_at))
+                        new JsonObject().put("fields.delay_at", new JsonObject().put("$lte", endAt)),
+                        new JsonObject().put("fields.delay_at", new JsonObject().put("$gte", startAt))
                 ));
                 JsonObject containDutyDateQuery = new JsonObject().put("$and", containDateDutyQueries);
 
                 //Check creation date
-                JsonObject nullDateQuery = new JsonObject().put("created_at", new JsonObject().put("$gte", start_at).put("$lte", end_at));
+                JsonObject nullDateQuery = new JsonObject().put("created_at", new JsonObject().put("$gte", startAt).put("$lte", endAt));
 
-                //Check for formatted format : YYYY/MM/DD instead of YYYY-MM-DD
-                JsonObject nullDateQuery2 = new JsonObject().put("created_at", new JsonObject()
-                        .put("$gte", DateHelper.getDateString(start_at, DateHelper.YEAR_MONTH_DAY_HOUR_MINUTES_SECONDS))
-                        .put("$lte", DateHelper.getDateString(end_at, DateHelper.YEAR_MONTH_DAY_HOUR_MINUTES_SECONDS)));
-
-                query.put("$or", new JsonArray(Arrays.asList(containDateQuery, nullDateQuery, nullDateQuery2, containDutyDateQuery)));
+                query.put("$or", new JsonArray(Arrays.asList(containDateQuery, nullDateQuery, containDutyDateQuery)));
             }
 
             if (!isStudent) {
                 groupResult.right().getValue().forEach(oStudent -> {
                     JsonObject student = (JsonObject) oStudent;
-                    student_ids.add(student.getString("id"));
+                    studentIds.add(student.getString("id"));
                 });
 
-                if (student_ids != null && student_ids.size() > 0)
-                    query.put("student_id", new JsonObject().put("$in", new JsonArray(student_ids)));
+                if (studentIds != null && !studentIds.isEmpty())
+                    query.put("student_id", new JsonObject().put("$in", new JsonArray(studentIds)));
             }
 
-            if (type_ids != null && type_ids.size() > 0) {
+            if (typeIds != null && !typeIds.isEmpty()) {
                 List<Long> listTypeIds = new ArrayList<>();
-                type_ids.forEach(type_id -> listTypeIds.add(Long.parseLong(type_id)));
+                typeIds.forEach(typeId -> listTypeIds.add(Long.parseLong(typeId)));
                 query.put("type_id", new JsonObject().put("$in", new JsonArray(listTypeIds)));
             }
 
 
-            if (process_states != null && process_states.size() > 0) {
-                Boolean isProcessed = process_states.contains(PunishmentsProcessState.PROCESSED.toString());
-                Boolean isNotProcessed = process_states.contains(PunishmentsProcessState.NOT_PROCESSED.toString());
+            if (processStates != null && !processStates.isEmpty()) {
+                Boolean isProcessed = processStates.contains(PunishmentsProcessState.PROCESSED.toString());
+                Boolean isNotProcessed = processStates.contains(PunishmentsProcessState.NOT_PROCESSED.toString());
                 boolean isAllSelected = isProcessed && isNotProcessed;
 
                 if (!isAllSelected) {
-                    if (isProcessed) {
+                    if (Boolean.TRUE.equals(isProcessed)) {
                         query.put("processed", true);
-                    } else if (isNotProcessed) {
+                    } else if (Boolean.TRUE.equals(isNotProcessed)) {
                         query.put("processed", false);
                     }
                 }
