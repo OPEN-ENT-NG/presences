@@ -2,8 +2,12 @@ package fr.openent.incidents;
 
 import fr.openent.incidents.controller.*;
 import fr.openent.presences.common.presences.Presences;
+import fr.openent.presences.db.DB;
+import fr.wseduc.mongodb.MongoDb;
 import io.vertx.core.eventbus.EventBus;
 import org.entcore.common.http.BaseServer;
+import org.entcore.common.neo4j.Neo4j;
+import org.entcore.common.sql.Sql;
 
 public class Incidents extends BaseServer {
 
@@ -26,6 +30,8 @@ public class Incidents extends BaseServer {
         super.start();
         dbSchema = config.getString("db-schema");
         final EventBus eb = getEventBus(vertx);
+
+        DB.getInstance().init(Neo4j.getInstance(), Sql.getInstance(), MongoDb.getInstance());
 
         Presences.getInstance().init(eb);
 

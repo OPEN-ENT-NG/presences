@@ -9,6 +9,8 @@ import fr.openent.massmailing.starter.DatabaseStarter;
 import fr.openent.presences.common.incidents.Incidents;
 import fr.openent.presences.common.presences.Presences;
 import fr.openent.presences.common.viescolaire.Viescolaire;
+import fr.openent.presences.db.DB;
+import fr.wseduc.mongodb.MongoDb;
 import fr.wseduc.webutils.email.EmailSender;
 import io.vertx.core.eventbus.EventBus;
 import io.vertx.core.json.JsonObject;
@@ -16,6 +18,8 @@ import io.vertx.core.shareddata.LocalMap;
 import org.entcore.common.bus.WorkspaceHelper;
 import org.entcore.common.email.EmailFactory;
 import org.entcore.common.http.BaseServer;
+import org.entcore.common.neo4j.Neo4j;
+import org.entcore.common.sql.Sql;
 import org.entcore.common.storage.Storage;
 import org.entcore.common.storage.StorageFactory;
 
@@ -45,6 +49,9 @@ public class Massmailing extends BaseServer {
         types = mailingsConfig();
         emailSender = new EmailFactory(vertx, config).getSender();
         workspaceHelper = new WorkspaceHelper(eb, storage);
+
+        DB.getInstance().init(Neo4j.getInstance(), Sql.getInstance(), MongoDb.getInstance());
+
         addController(new MassmailingController(eb, vertx, config, storage));
         addController(new SettingsController(eb));
         addController(new EventBusController());
