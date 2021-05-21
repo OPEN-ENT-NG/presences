@@ -45,7 +45,7 @@ interface ViewModel {
 
     initPunishmentEdit(punishment: IPunishment): void;
 
-    setCategory(): void;
+    setCategory(type: IPunishmentType): void;
 
     create(): Promise<void>;
 
@@ -167,11 +167,8 @@ const vm: ViewModel = {
 
     setCategory: (): void => {
         vm.removeEmptyOption();
-        let punishmentType: IPunishmentType = vm.punishmentTypes
-            .find((punishmentType: IPunishmentType) => punishmentType.id === vm.form.type.id);
-        if (!punishmentType) return;
-        vm.form.category_id = punishmentType.punishment_category_id;
-        vm.form.type_id = punishmentType.id;
+        vm.form.category_id = vm.form.type.punishment_category_id;
+        vm.form.type_id = vm.form.type.id;
     },
 
     async create(): Promise<void> {
