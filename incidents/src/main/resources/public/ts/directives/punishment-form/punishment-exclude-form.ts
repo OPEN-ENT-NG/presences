@@ -153,7 +153,6 @@ export const PunishmentExcludeForm = ng.directive('punishmentExcludeForm', ['Sea
                 vm.$onInit = () => {
                     vm.lang = idiom;
                     vm.isAddingAbsence = false;
-                    vm.form = {} as IPunishmentBody;
                     if (!vm.punishment || !vm.punishment.id) {
                         vm.form.owner_id = model.me.userId;
                         vm.start_date = moment().startOf('day');

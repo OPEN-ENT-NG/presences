@@ -82,7 +82,6 @@ export const PunishmentDutyForm = ng.directive('punishmentDutyForm', ['SearchSer
             controller: function () {
                 const vm: IViewModel = <IViewModel>this;
                 vm.$onInit = () => {
-                    vm.form = {} as IPunishmentBody;
                     if (!vm.punishment || !vm.punishment.id) {
                         vm.form.owner_id = model.me.userId;
                         vm.date = moment().startOf('day');
