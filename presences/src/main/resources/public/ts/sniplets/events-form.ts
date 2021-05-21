@@ -241,8 +241,8 @@ const vm: ViewModel = {
         }
 
         vm.timeSlotTimePeriod = {
-            start: {name: '', startHour: '', endHour: '', id: ''},
-            end: {name: '', startHour: '', endHour: '', id: ''}
+            start: null,
+            end: null
         };
 
         vm.form = null;
