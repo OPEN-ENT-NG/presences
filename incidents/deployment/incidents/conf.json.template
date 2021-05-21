@@ -1,5 +1,5 @@
     {
-      "name": "fr.openent~incidents~0.18.1",
+      "name": "fr.openent~incidents~0.18-SNAPSHOT",
       "config": {
         "main" : "fr.openent.incidents.Incidents",
         "port" : 8063,

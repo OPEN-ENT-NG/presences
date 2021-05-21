@@ -176,7 +176,7 @@ export const registersController = ng.controller('RegistersController',
                 vm.courses.eventer.on('loading::false', () => $scope.safeApply());
 
                 registerTimeSlot = await Me.preference(PreferencesUtils.PREFERENCE_KEYS.PRESENCE_REGISTER);
-
+                
                 vm.filter = {
                     date: new Date(),
                     start_date: new Date(),
@@ -189,6 +189,7 @@ export const registersController = ng.controller('RegistersController',
                     classes: undefined,
                     forgotten: true,
                     course: undefined,
+                    disableWithoutTeacher: false,
                     selected: {
                         teachers: [],
                         classes: [],
@@ -320,6 +321,7 @@ export const registersController = ng.controller('RegistersController',
                     vm.reasons = await ReasonService.getReasons(window.structure.id);
                 }
             };
+
 
             vm.changeFiltersDate = async function () {
                 vm.filter.offset = 0;
