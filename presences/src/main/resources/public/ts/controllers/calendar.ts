@@ -86,6 +86,10 @@ interface ViewModel {
 
     hasEventAbsenceRegularized(course: Course): boolean;
 
+    containsAbsence(course: Course): boolean;
+
+    containsReasonAbsence(course: Course): boolean;
+
     canDisplayPresence(course: Course): boolean;
 
     canDisplayReasonInEvent(course: Course): boolean;
@@ -318,6 +322,24 @@ export const calendarController = ng.controller('CalendarController',
                         .find((event: CourseEvent) => event.type_id === EventType.ABSENCE && event.counsellor_regularisation === true) ||
                     !!course.absences
                         .find((absence: Absence) => absence.type_id === EventType.ABSENCE && absence.counsellor_regularisation === true);
+            };
+
+            vm.containsAbsence = (course: Course): boolean => {
+                let contains = false;
+                course.events.map((event) => contains = contains ||
+                    (event.type_id === EventType.ABSENCE && (event.reason_id === null || event.reason_id === 0)));
+                course.absences.map((event) => contains = contains ||
+                    (event.reason_id === null || event.reason_id === 0));
+                return contains;
+            };
+
+            vm.containsReasonAbsence = (course: Course): boolean => {
+                let contains = false;
+                course.events.map((event) => contains = contains ||
+                    (event.type_id === EventType.ABSENCE && (event.reason_id !== null || event.reason_id > 0)));
+                course.absences.map((event) => contains = contains ||
+                    (event.reason_id !== null || event.reason_id > 0));
+                return contains;
             };
 
             const findEventAbsenceJustified = (course: Course): CourseEvent | Absence => {

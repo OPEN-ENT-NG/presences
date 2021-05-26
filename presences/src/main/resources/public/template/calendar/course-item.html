@@ -6,7 +6,7 @@
     <!-- color css handling -->
     <div class="exemption" ng-if="item.exempted" ng-class="{
      'absent': item.absences.length > 0 || vm.absenceEvents(item).length > 0,
-     'absent-not-regularized': (!item.containsAbsence && item.containsReasonAbsence) && !vm.hasEventAbsenceRegularized(item),
+     'absent-not-regularized': (!vm.containsAbsence(item) && vm.containsReasonAbsence(item)) && !vm.hasEventAbsenceRegularized(item),
      'absent-regularized': vm.hasEventAbsenceRegularized(item),
      'contains-followed-absence': vm.hasFollowedAbsence(item),
     }">&nbsp;
