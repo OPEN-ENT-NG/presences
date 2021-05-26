@@ -26,7 +26,7 @@
             </h4>
             <div class="chips">
                 <div class="chip"
-                     ng-repeat="reason in vm.reasons track by $index|orderBy:'label'"
+                     ng-repeat="reason in vm.reasons | orderBy:'label' track by $index"
                      ng-class="{ selected: vm.indicator._factoryFilter.reasonsMap[reason.id] }"
                      data-ng-click="vm.indicator._factoryFilter.reasonsMap[reason.id]  = !vm.indicator._factoryFilter.reasonsMap[reason.id]">
                     <span class="no-style">[[reason.label]]</span>
@@ -41,7 +41,7 @@
             </h4>
             <div class="chips">
                 <div class="chip"
-                     ng-repeat="type in vm.punishmentTypes track by $index|orderBy:'label'"
+                     ng-repeat="type in vm.punishmentTypes | orderBy:'label' track by $index"
                      ng-class="{ selected: vm.indicator._factoryFilter.punishmentTypesMap[type.id] }"
                      data-ng-click="vm.indicator._factoryFilter.punishmentTypesMap[type.id]  =
                      !vm.indicator._factoryFilter.punishmentTypesMap[type.id]">

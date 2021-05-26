@@ -4,15 +4,19 @@ import fr.openent.presences.common.eventbus.GenericCodec;
 import fr.openent.presences.common.incidents.*;
 import fr.openent.presences.common.presences.Presences;
 import fr.openent.presences.common.viescolaire.Viescolaire;
+import fr.openent.presences.db.DB;
 import fr.openent.statistics_presences.bean.Report;
 import fr.openent.statistics_presences.controller.EventBusController;
 import fr.openent.statistics_presences.controller.StatisticsController;
 import fr.openent.statistics_presences.indicator.Indicator;
 import fr.openent.statistics_presences.indicator.ProcessingScheduledTask;
 import fr.wseduc.cron.CronTrigger;
+import fr.wseduc.mongodb.MongoDb;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import org.entcore.common.http.BaseServer;
+import org.entcore.common.neo4j.Neo4j;
+import org.entcore.common.sql.Sql;
 
 import java.lang.reflect.InvocationTargetException;
 import java.util.HashMap;
@@ -32,6 +36,8 @@ public class StatisticsPresences extends BaseServer {
     @Override
     public void start() throws Exception {
         super.start();
+        DB.getInstance().init(Neo4j.getInstance(), Sql.getInstance(), MongoDb.getInstance());
+
         addController(new EventBusController());
         addController(new StatisticsController());
 

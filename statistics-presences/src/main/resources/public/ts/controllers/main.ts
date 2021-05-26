@@ -117,12 +117,13 @@ export const mainController = ng.controller('MainController',
                 if (!window.structure) return;
                 vm.filter.from = DateUtils.setFirstTime(new Date());
                 vm.filter.to = DateUtils.setLastTime(new Date());
-                let values: Promise<[Reason[], IPunishmentType[]]> = Promise.all([
+                await Promise.all([
                     ReasonService.getReasons(window.structure.id),
                     punishmentTypeService.get(window.structure.id)
-                ]);
-                vm.reasons = values[0].filter(reason => reason.id !== -1);
-                vm.punishmentTypes = values[1];
+                ]).then((values: [Array<Reason>, Array<IPunishmentType>]) => {
+                    vm.reasons = values[0].filter(reason => reason.id !== -1);
+                    vm.punishmentTypes = values[1];
+                });
             };
 
             function resetSearch(type) {

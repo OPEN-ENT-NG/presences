@@ -121,7 +121,7 @@
                 <i18n>massmailing.all.none</i18n>
             </div>
             <div class="chip" ng-show="vm.formFilter.status.REGULARIZED || vm.formFilter.status.UNREGULARIZED"
-                 ng-repeat="reason in vm.reasons track by $index|orderBy:'label'"
+                 ng-repeat="reason in vm.reasons | orderBy:'label' track by $index"
                  ng-class="{ selected: vm.formFilter.reasons[reason.id]}"
                  data-ng-click="vm.formFilter.reasons[reason.id] = !vm.formFilter.reasons[reason.id]">
                 <span class="no-style">[[reason.label]]</span>
@@ -144,7 +144,7 @@
                 <i18n>massmailing.all.none</i18n>
             </div>
             <div class="chip" ng-show="vm.formFilter.status.PUNISHMENT || vm.formFilter.status.SANCTION"
-                 ng-repeat="punishmentType in vm.punishmentsTypes track by $index|orderBy:'label'"
+                 ng-repeat="punishmentType in vm.punishmentsTypes | orderBy:'label' track by $index"
                  ng-class="{ selected: punishmentType.isSelected}"
                  data-ng-click="vm.setSelectedPunishmentType(punishmentType)">
                 <span class="no-style">[[punishmentType.label]]</span>
