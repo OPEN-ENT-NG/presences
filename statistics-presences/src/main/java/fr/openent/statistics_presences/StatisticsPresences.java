@@ -9,6 +9,7 @@ import fr.openent.statistics_presences.bean.Report;
 import fr.openent.statistics_presences.controller.EventBusController;
 import fr.openent.statistics_presences.controller.StatisticsController;
 import fr.openent.statistics_presences.indicator.Indicator;
+import fr.openent.statistics_presences.indicator.IndicatorGeneric;
 import fr.openent.statistics_presences.indicator.ProcessingScheduledTask;
 import fr.wseduc.cron.CronTrigger;
 import fr.wseduc.mongodb.MongoDb;
@@ -30,6 +31,7 @@ public class StatisticsPresences extends BaseServer {
     public static String DB_SCHEMA = null;
     public static String PRESENCES_SCHEMA = null;
     public static String INCIDENTS_SCHEMA = null;
+    public static IndicatorGeneric indicatorGeneric = IndicatorGeneric.getInstance();
 
     public static final Map<String, Indicator> indicatorMap = new HashMap<>();
 

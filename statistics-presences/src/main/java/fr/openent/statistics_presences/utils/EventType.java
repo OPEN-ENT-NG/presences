@@ -3,10 +3,10 @@ package fr.openent.statistics_presences.utils;
 public enum EventType {
     DEPARTURE,
     INCIDENT,
-    JUSTIFIED_UNREGULARIZED_ABSENCE,
+    UNREGULARIZED,
     LATENESS,
     PUNISHMENT,
     SANCTION,
-    REGULARIZED_ABSENCE,
-    UNJUSTIFIED_ABSENCE
+    REGULARIZED,
+    NO_REASON
 }

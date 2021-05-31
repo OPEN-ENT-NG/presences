@@ -6,6 +6,7 @@ import fr.openent.statistics_presences.bean.global.GlobalSearch;
 import fr.openent.statistics_presences.bean.global.GlobalValue;
 import fr.openent.statistics_presences.filter.Filter;
 import fr.openent.statistics_presences.indicator.Indicator;
+import fr.openent.statistics_presences.indicator.IndicatorGeneric;
 import fr.wseduc.mongodb.MongoDb;
 import io.vertx.core.*;
 import io.vertx.core.eventbus.Message;
@@ -19,6 +20,7 @@ import org.entcore.common.neo4j.Neo4jResult;
 
 import java.util.*;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 public class Global extends Indicator {
     public static final Integer PAGE_SIZE = 35;
@@ -30,24 +32,61 @@ public class Global extends Indicator {
 
     @Override
     public void search(Filter filter, Handler<AsyncResult<JsonObject>> handler) {
+        setSearchSettings(filter)
+                .compose(this::searchProcess)
+                .onComplete(handler);
+    }
+
+    /**
+     * set search and add settings to recover absences
+     *
+     * @param filter filter
+     * @return search
+     */
+    private Future<GlobalSearch> setSearchSettings(Filter filter) {
+        Promise<GlobalSearch> promise = Promise.promise();
         GlobalSearch search = new GlobalSearch(filter);
+
+        Future<JsonObject> settingsFuture = IndicatorGeneric.retrieveSettings(search.filter().structure());
+        Future<JsonObject> slotsSettingsFuture = IndicatorGeneric.retrieveSlotsSettings(search.filter().structure());
+
+        CompositeFuture.all(settingsFuture, slotsSettingsFuture)
+                .onSuccess(success -> {
+                    search.setRecoveryMethod(settingsFuture.result().getString("event_recovery_method", "HOUR"));
+                    search.setHalfDay(slotsSettingsFuture.result().getString("end_of_half_day"));
+                    promise.complete(search);
+                })
+                .onFailure(fail -> {
+                    log.error(String.format("[StatisticsPresences@Global::setSearchSettings] " +
+                            "Indicator %s failed to retrieve settings", Global.class.getName()), fail.getCause());
+                    promise.fail(fail.getCause());
+                });
+        return promise.future();
+    }
+
+    private Future<JsonObject> searchProcess(GlobalSearch search) {
+        Promise<JsonObject> promise = Promise.promise();
+
         Future<List<JsonObject>> valuesFuture = searchValues(search);
         Future<JsonObject> countFuture = countValues(search);
         Future<Number> totalAbsFuture = globalAbsenceCount(search);
-        CompositeFuture.all(valuesFuture, countFuture).setHandler(ar -> {
-            if (ar.failed()) {
-                log.error(String.format("Indicator %s failed to complete search", Global.class.getName()), ar.cause());
-                handler.handle(Future.failedFuture(ar.cause()));
-            } else {
-                List<JsonObject> values = valuesFuture.result();
-                JsonObject count = countFuture.result()
-                        .put("ABSENCE_TOTAL", totalAbsFuture.result());
-                JsonObject response = new JsonObject()
-                        .put("data", values)
-                        .put("count", count);
-                handler.handle(Future.succeededFuture(response));
-            }
-        });
+        CompositeFuture.all(valuesFuture, countFuture, totalAbsFuture)
+                .onSuccess(ar -> {
+                    List<JsonObject> values = valuesFuture.result();
+                    JsonObject count = countFuture.result()
+                            .put("ABSENCE_TOTAL", totalAbsFuture.result());
+                    JsonObject response = new JsonObject()
+                            .put("data", values)
+                            .put("count", count);
+
+                    promise.complete(response);
+                })
+                .onFailure(fail -> {
+                    log.error(String.format("[StatisticsPresences@Global::searchProcess] " +
+                            "Indicator %s failed to complete search", Global.class.getName()), fail.getCause());
+                    promise.fail(fail.getCause());
+                });
+        return promise.future();
     }
 
     /**
@@ -65,7 +104,8 @@ public class Global extends Indicator {
                 .compose(this::mergeStage)
                 .setHandler(ar -> {
                     if (ar.failed()) {
-                        log.error(String.format("Indicator %s failed to complete search values", Global.class.getName()), ar.cause());
+                        log.error(String.format("[StatisticsPresences@Global::searchValues] " +
+                                "Indicator %s failed to complete search values", Global.class.getName()), ar.cause());
                         future.handle(Future.failedFuture(ar.cause()));
                     } else {
                         GlobalSearch completedSearch = ar.result();
@@ -77,7 +117,7 @@ public class Global extends Indicator {
     }
 
     private Future<GlobalSearch> totalAbsenceStage(GlobalSearch search) {
-        if (!search.containsAbsence() || isEmptyPrefetch(search)) {
+        if (Boolean.FALSE.equals(search.containsAbsence()) || isEmptyPrefetch(search)) {
             return Future.succeededFuture(search);
         }
 
@@ -85,7 +125,9 @@ public class Global extends Indicator {
         JsonObject request = commandObject(search.totalAbsenceUserPipeline());
         MongoDb.getInstance().command(request.toString(), MongoDbResult.validResultHandler(either -> {
             if (either.isLeft()) {
-                log.error(String.format("Indicator %s failed to execute mongodb total absence aggregation pipeline", Global.class.getName()), either.left().getValue());
+                log.error(String.format("[StatisticsPresences@Global::totalAbsenceStage] " +
+                                "Indicator %s failed to execute mongodb total absence aggregation pipeline", Global.class.getName()),
+                        either.left().getValue());
                 future.fail(either.left().getValue());
                 return;
             }
@@ -111,44 +153,47 @@ public class Global extends Indicator {
      * @return Future completing count
      */
     private Future<JsonObject> countValues(GlobalSearch search) {
-        Future<JsonObject> future = Future.future();
+        Promise<JsonObject> promise = Promise.promise();
         Future<Number> studentFuture = studentCount(search);
         Future<JsonObject> countFuture = countStatistics(search);
-        CompositeFuture.all(studentFuture, countFuture).setHandler(ar -> {
-            if (ar.failed()) {
-                log.error(String.format("Indicator %s failed to count values", Global.class.getName()), ar.cause());
-                future.fail(ar.cause());
-            } else {
-                JsonObject result = countFuture.result();
-                result.put("STUDENTS", studentFuture.result());
-                future.complete(result);
-            }
-        });
+        CompositeFuture.all(studentFuture, countFuture)
+                .onSuccess(ar -> {
+                    JsonObject result = countFuture.result();
+                    result.put("STUDENTS", studentFuture.result());
+                    promise.complete(result);
+                })
+                .onFailure(fail -> {
+                    log.error(String.format("[StatisticsPresences@Global::countValues] " +
+                            "Indicator %s failed to count values", Global.class.getName()), fail.getCause());
+                    promise.fail(fail.getCause());
+                });
 
-        return future;
+        return promise.future();
     }
 
     private Future<Number> globalAbsenceCount(GlobalSearch search) {
-        Future future = Future.future();
+        Promise<Number> promise = Promise.promise();
         JsonObject request = commandObject(search.totalAbsenceGlobalPipeline());
         MongoDb.getInstance().command(request.toString(), MongoDbResult.validResultHandler(either -> {
             if (either.isLeft()) {
-                log.error(String.format("Indicator %s failed to execute mongodb global absence count aggregation pipeline", Global.class.getName()), either.left().getValue());
-                future.fail(either.left().getValue());
+                log.error(String.format("[StatisticsPresences@Global::globalAbsenceCount] " +
+                                "Indicator %s failed to execute mongodb global absence count aggregation pipeline", Global.class.getName()),
+                        either.left().getValue());
+                promise.fail(either.left().getValue());
                 return;
             }
 
             JsonArray result = either.right().getValue().getJsonObject("cursor").getJsonArray("firstBatch", new JsonArray());
             if (result.isEmpty()) {
-                future.complete(0);
+                promise.complete(0);
                 return;
             }
 
             JsonObject stat = result.getJsonObject(0);
-            future.complete(stat.getInteger("count", 0));
+            promise.complete(stat.getInteger("count", 0));
         }));
 
-        return future;
+        return promise.future();
     }
 
     private boolean isEmptyPrefetch(GlobalSearch search) {
@@ -173,28 +218,34 @@ public class Global extends Indicator {
         return future;
     }
 
+    @SuppressWarnings("unchecked")
     private Future<JsonObject> countStatistics(GlobalSearch search) {
-        Future<JsonObject> future = Future.future();
-        JsonObject request = commandObject(search.countPipeline());
-        MongoDb.getInstance().command(request.toString(), MongoDbResult.validResultHandler(either -> {
-            if (either.isLeft()) {
-                log.error(String.format("Indicator %s failed to execute mongodb count aggregation pipeline", Global.class.getName()), either.left().getValue());
-                future.fail(either.left().getValue());
-                return;
-            }
+        Promise<JsonObject> promise = Promise.promise();
 
-            JsonArray result = either.right().getValue().getJsonObject("cursor").getJsonArray("firstBatch", new JsonArray());
-            JsonObject count = new JsonObject();
-            for (int i = 0; i < result.size(); i++) {
-                JsonObject stat = result.getJsonObject(i);
-                count.put(stat.getString("type"), stat.getInteger("count"));
-            }
+        Future<JsonArray> basicEventTypedStatisticsFuture = retrieveStatistics(search.countBasicEventTypedPipeline());
+        Future<JsonArray> absencesStatisticsFuture = retrieveStatistics(search.countAbsencesPipeline());
 
-            future.complete(count);
-        }));
+        CompositeFuture.all(basicEventTypedStatisticsFuture, absencesStatisticsFuture)
+                .onSuccess(ar -> {
+                    JsonObject result = new JsonObject();
 
-        return future;
+                    ((List<JsonObject>) basicEventTypedStatisticsFuture.result().getList())
+                            .forEach(statistic -> result.put(statistic.getString("type"), statistic.getInteger("count")));
+
+                    ((List<JsonObject>) absencesStatisticsFuture.result().getList())
+                            .forEach(statistic -> result.put(statistic.getString("type"), statistic.getInteger("count")));
+
+                    promise.complete(result);
+                })
+                .onFailure(fail -> {
+                    log.error(String.format("[StatisticsPresences@Global::countStatistics] " +
+                            "Indicator %s failed to retrieve statistics count", Global.class.getName()), fail.getCause());
+                    promise.fail(fail.getCause());
+                });
+
+        return promise.future();
     }
+
 
     /**
      * If filter contains to filter or from filter, skip this stage. First we need to retrieve statistics.
@@ -244,7 +295,9 @@ public class Global extends Indicator {
         JsonObject request = commandObject(search.prefetchUserPipeline());
         MongoDb.getInstance().command(request.toString(), MongoDbResult.validResultHandler(either -> {
             if (either.isLeft()) {
-                log.error(String.format("Indicator %s failed to execute prefetch user mongodb aggregation pipeline", Global.class.getName()), either.left().getValue());
+                log.error(String.format("[StatisticsPresences@Global::prefetchUsers] " +
+                                "Indicator %s failed to execute prefetch user mongodb aggregation pipeline", Global.class.getName()),
+                        either.left().getValue());
                 future.fail(either.left().getValue());
                 return;
             }
@@ -270,22 +323,66 @@ public class Global extends Indicator {
             return Future.succeededFuture(search);
         }
 
-        Future<GlobalSearch> future = Future.future();
-        JsonObject request = commandObject(search.searchPipeline());
+        Promise<GlobalSearch> promise = Promise.promise();
+
+        Future<JsonArray> basicEventTypedStatisticsFuture = retrieveStatistics(search.searchBasicEventTypedPipeline());
+        Future<JsonArray> absencesStatisticsFuture = retrieveStatistics(search.searchAbsencesPipeline());
+
+        CompositeFuture.all(basicEventTypedStatisticsFuture, absencesStatisticsFuture)
+                .onSuccess(res -> {
+                    Map<String, List<JsonObject>> basicEventTypedStatistics = mapPipelineResultByUser(basicEventTypedStatisticsFuture.result());
+                    Map<String, List<JsonObject>> absencesStatistics = mapPipelineResultByUser(absencesStatisticsFuture.result());
+
+                    Map<String, List<JsonObject>> statistics = Stream.of(basicEventTypedStatistics, absencesStatistics)
+                            .flatMap(map -> map.entrySet().stream())
+                            .collect(Collectors.toMap(
+                                    Map.Entry::getKey,
+                                    Map.Entry::getValue,
+                                    (list1, list2) -> Stream.concat(list1.stream(), list2.stream()).collect(Collectors.toList())));
+                    search.setStatistics(statistics);
+                    promise.complete(search);
+                })
+                .onFailure(fail -> {
+                    log.error(String.format("[StatisticsPresences@Global::statisticStage] " +
+                            "Indicator %s failed to retrieve statistics", Global.class.getName()), fail.getCause());
+                    promise.fail(fail.getCause());
+                });
+
+        return promise.future();
+    }
+
+    public Future<JsonArray> retrieveStatistics(JsonArray command) {
+        Promise<JsonArray> promise = Promise.promise();
+        if (command == null || command.isEmpty()) {
+            promise.complete(new JsonArray());
+            return promise.future();
+        }
+
+        JsonObject request = commandObject(command);
         MongoDb.getInstance().command(request.toString(), MongoDbResult.validResultHandler(either -> {
             if (either.isLeft()) {
-                log.error(String.format("Indicator %s failed to execute mongodb aggregation pipeline", Global.class.getName()), either.left().getValue());
-                future.fail(either.left().getValue());
+                log.error(String.format("[StatisticsPresences@Global::retrieveStatistics] " +
+                                "Indicator %s failed to execute mongodb aggregation pipeline", Global.class.getName()),
+                        either.left().getValue());
+                promise.fail(either.left().getValue());
+                return;
+            }
+            JsonObject result = either.right().getValue();
+            if (result.getJsonObject("cursor") == null) {
+                String message = either.right().getValue().getString("errmsg");
+                log.error(String.format("[StatisticsPresences@Global::retrieveStatistics] Indicator %s failed to execute " +
+                        "mongodb aggregation pipeline. ", Global.class.getName()), message);
+                promise.fail(message);
                 return;
             }
 
-            JsonArray result = either.right().getValue().getJsonObject("cursor").getJsonArray("firstBatch", new JsonArray());
-            search.setStatistics(mapPipelineResultByUser(result));
-            future.complete(search);
+
+            promise.complete(result.getJsonObject("cursor").getJsonArray("firstBatch", new JsonArray()));
         }));
 
-        return future;
+        return promise.future();
     }
+
 
     /**
      * If filter does not contains to filter or from filter skip this step. preStatisticsStage retrieved students.
@@ -372,20 +469,10 @@ public class Global extends Indicator {
      * @param result Aggregation pipeline result
      * @return Map containing user identifier as key and an List of statistics as value
      */
+    @SuppressWarnings("unchecked")
     private Map<String, List<JsonObject>> mapPipelineResultByUser(JsonArray result) {
-        Map<String, List<JsonObject>> map = new HashMap<>();
-        for (int i = 0; i < result.size(); i++) {
-            JsonObject obj = result.getJsonObject(i);
-            String user = obj.getString("user");
-            if (!map.containsKey(user)) {
-                map.put(user, new ArrayList<>());
-            }
-
-            obj.remove("user");
-            map.get(user).add(obj);
-        }
-
-        return map;
+        return ((List<JsonObject>) result.getList()).stream()
+                .collect(Collectors.groupingBy(stat -> stat.getString("user")));
     }
 
     /**
@@ -424,7 +511,8 @@ public class Global extends Indicator {
     private Handler<Message<JsonObject>> searchUserHandler(GlobalSearch search, Future<GlobalSearch> future) {
         return Neo4jResult.validResultHandler(either -> {
             if (either.isLeft()) {
-                log.error(String.format("Indicator %s failed to retrieve users", Global.class.getName()), either.left().getValue());
+                log.error(String.format("[StatisticsPresences@Global::searchUserHandler] " +
+                        "Indicator %s failed to retrieve users", Global.class.getName()), either.left().getValue());
                 future.fail(either.left().getValue());
                 return;
             }

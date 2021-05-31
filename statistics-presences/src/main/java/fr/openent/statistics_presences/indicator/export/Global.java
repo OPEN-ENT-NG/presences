@@ -2,11 +2,13 @@ package fr.openent.statistics_presences.indicator.export;
 
 import fr.openent.presences.common.helper.DateHelper;
 import fr.openent.statistics_presences.filter.Filter;
+import fr.openent.statistics_presences.utils.EventType;
 import fr.wseduc.webutils.I18n;
 import fr.wseduc.webutils.http.Renders;
 import io.vertx.core.json.JsonObject;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
 
@@ -70,7 +72,8 @@ public class Global extends IndicatorExport {
     }
 
     private boolean isAbsenceType(String type) {
-        return ("JUSTIFIED_UNREGULARIZED_ABSENCE".equals(type) || "UNJUSTIFIED_ABSENCE".equals(type) || "REGULARIZED_ABSENCE".equals(type));
+        return Arrays.asList(EventType.NO_REASON.name(), EventType.UNREGULARIZED.name(), EventType.REGULARIZED.name())
+                .contains(type);
     }
 
 

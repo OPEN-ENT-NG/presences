@@ -1,23 +1,21 @@
 package fr.openent.statistics_presences.bean.global;
 
+import fr.openent.statistics_presences.bean.Stat;
 import fr.openent.statistics_presences.indicator.impl.Global;
 import fr.openent.statistics_presences.utils.EventType;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 
-import java.util.List;
-
-public class GlobalStat {
+public class GlobalStat implements Stat {
     private EventType type;
     private String user;
     private String structure;
     private String startDate;
     private String endDate;
-    private Integer slots;
     private String className;
     private String name;
     private JsonArray audiences = new JsonArray();
-    private JsonArray reasons = new JsonArray();
+    private Long reason;
     private Long punishmentType;
 
     public GlobalStat setUser(String user) {
@@ -40,11 +38,6 @@ public class GlobalStat {
         return this;
     }
 
-    public GlobalStat setSlots(Integer count) {
-        this.slots = count;
-        return this;
-    }
-
     public GlobalStat setStartDate(String date) {
         this.startDate = date;
         return this;
@@ -55,8 +48,8 @@ public class GlobalStat {
         return this;
     }
 
-    public GlobalStat setReasons(List<Integer> reasons) {
-        this.reasons = new JsonArray(reasons);
+    public GlobalStat setReason(Long reason) {
+        this.reason = reason;
         return this;
     }
 
@@ -86,8 +79,7 @@ public class GlobalStat {
                 .put("name", this.name)
                 .put("class_name", this.className)
                 .put("type", this.type.name())
-                .put("slot", this.slots)
-                .put("reasons", this.reasons)
+                .put("reason", this.reason)
                 .put("punishment_type", this.punishmentType)
                 .put("start_date", this.startDate)
                 .put("end_date", this.endDate)
