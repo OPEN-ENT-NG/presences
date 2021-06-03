@@ -251,7 +251,8 @@ public class CourseHelper {
         return courseList;
     }
 
-    public static List<Course> formatCourses(List<Course> courses, boolean multipleSlot, List<Slot> slots) {
+    public static List<Course> formatCourses(List<Course> courses, boolean multipleSlot,
+                                             List<Slot> slots, Boolean filterWithTeacher) {
         // Case when slots are not defined from viesco.
         if (slots.isEmpty()) {
             return courses;
@@ -266,13 +267,14 @@ public class CourseHelper {
                                 .filter(listCourse -> listCourse.getRegisterId() != null)
                                 .findAny().orElse(null)).isSplitSlot();
                         for (Course course : listCourses) {
-                            if (course.isSplitSlot().equals(isSplit)) {
+                            if (course.isSplitSlot().equals(isSplit) && (!filterWithTeacher || course.getTeachers().size() == 0)) {
                                 formatCourses.add(course);
                             }
                         }
                     } else {
                         for (Course course : listCourses) {
-                            if (course.isSplitSlot().equals(multipleSlot)) {
+                            if (course.isSplitSlot().equals(multipleSlot) &&
+                                    (!filterWithTeacher || course.getTeachers().size() == 0)) {
                                 formatCourses.add(course);
                             }
                         }

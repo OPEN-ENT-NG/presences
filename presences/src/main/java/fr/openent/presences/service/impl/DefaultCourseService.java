@@ -140,8 +140,9 @@ public class DefaultCourseService implements CourseService {
                 List<Course> squashCourses = squashHelper.squash(coursesEvent, splitCoursesEvent, registerEventFuture.result(), multipleSlot);
 
                 handler.handle(new Either.Right<>(forgottenFilter ?
-                        new JsonArray(filterForgottenCourses(CourseHelper.formatCourses(squashCourses, multipleSlot, slots))) :
-                        new JsonArray(CourseHelper.formatCourses(squashCourses, multipleSlot, slots))));
+                        new JsonArray(filterForgottenCourses(CourseHelper.formatCourses(squashCourses, multipleSlot, slots, false))) :
+                        new JsonArray(CourseHelper.formatCourses(squashCourses, multipleSlot, slots,
+                                (disableWithoutTeacher == null || !disableWithoutTeacher.equals(String.valueOf(Boolean.TRUE)))))));
             });
             courseHelper.getCourseTeachers(teachersIds, FutureHelper.handlerJsonArray(teachersFuture));
             Viescolaire.getInstance().getSlotsFromProfile(structureId, FutureHelper.handlerJsonArray(slotsFuture));

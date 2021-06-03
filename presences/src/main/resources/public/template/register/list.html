@@ -67,7 +67,8 @@
             <i18n>presences.register.forgotten</i18n>
         </label>
         <label class="chip" ng-class="{selected: !vm.filter.disableWithoutTeacher}"
-               data-ng-click="vm.switchDisableWithoutTeacherFilter()">
+               data-ng-click="vm.switchDisableWithoutTeacherFilter()"
+               ng-show="!isTeacher()">
             <i18n>presences.register.disable.without.teacher</i18n>
         </label>
     </div>
