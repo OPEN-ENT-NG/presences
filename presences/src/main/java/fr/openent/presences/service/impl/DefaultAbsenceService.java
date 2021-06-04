@@ -9,13 +9,12 @@ import fr.openent.presences.common.service.impl.DefaultGroupService;
 import fr.openent.presences.common.service.impl.DefaultUserService;
 import fr.openent.presences.db.DBService;
 import fr.openent.presences.enums.EventType;
+import fr.openent.presences.helper.*;
+import fr.openent.presences.model.*;
 import fr.openent.presences.model.Event.Event;
 import fr.openent.presences.service.AbsenceService;
 import fr.wseduc.webutils.Either;
-import io.vertx.core.AsyncResult;
-import io.vertx.core.CompositeFuture;
-import io.vertx.core.Future;
-import io.vertx.core.Handler;
+import io.vertx.core.*;
 import io.vertx.core.eventbus.EventBus;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
@@ -111,7 +110,9 @@ public class DefaultAbsenceService extends DBService implements AbsenceService {
     }
 
     @Override
-    public void getAbsencesBetweenDates(String startDate, String endDate, List<String> users, Handler<Either<String, JsonArray>> handler) {
+    public void getAbsencesBetweenDates(String startDate, String endDate, List<String> users, String structureId,
+                                        Handler<Either<String, JsonArray>> handler) {
+
         JsonArray params = new JsonArray();
         String query = "SELECT * FROM " + Presences.dbSchema + ".absence" +
                 " WHERE student_id IN " + Sql.listPrepared(users.toArray()) +
@@ -122,7 +123,18 @@ public class DefaultAbsenceService extends DBService implements AbsenceService {
         params.add(startDate);
         params.add(endDate);
 
+        if (structureId != null) {
+            query += " AND structure_id = ?";
+            params.add(structureId);
+        }
+
         sql.prepared(query, params, SqlResult.validResultHandler(handler));
+    }
+
+    @Override
+    public void getAbsencesBetweenDates(String startDate, String endDate, List<String> users,
+                                        Handler<Either<String, JsonArray>> handler) {
+       getAbsencesBetweenDates(startDate, endDate, users, null, handler);
     }
 
     @Override
@@ -214,31 +226,78 @@ public class DefaultAbsenceService extends DBService implements AbsenceService {
 
     @Override
     public void create(JsonObject absenceBody, UserInfos user, boolean editEvents, Handler<Either<String, JsonObject>> handler) {
-        String query = "INSERT INTO " + Presences.dbSchema + ".absence(structure_id, start_date, end_date, student_id, owner, reason_id) " +
-                "VALUES (?, ?, ?, ?, ?, ?) RETURNING id;";
-        JsonArray params = new JsonArray()
-                .add(absenceBody.getString("structure_id"))
-                .add(absenceBody.getString("start_date"))
-                .add(absenceBody.getString("end_date"))
-                .add(absenceBody.getString("student_id"))
-                .add(user.getUserId());
-        if (absenceBody.getInteger("reason_id") != null) {
-            params.add(absenceBody.getInteger("reason_id"));
-        } else {
-            params.addNull();
-        }
 
-        Sql.getInstance().prepared(query, params, SqlResult.validUniqueResultHandler(absenceResult -> {
-            afterPersistAbsence(
-                    absenceResult.isRight() ? absenceResult.right().getValue().getLong("id") : null,
-                    absenceBody,
-                    null,
-                    editEvents,
-                    user.getUserId(),
-                    handler,
-                    absenceResult
-            );
-        }));
+        String startDate = absenceBody.getString("start_date");
+        String endDate = absenceBody.getString("end_date");
+        String studentId = absenceBody.getString("student_id");
+        String structureId = absenceBody.getString("structure_id");
+
+        deleteOldStudentAbsences(studentId, structureId, startDate, endDate)
+                .onFailure(error -> handler.handle(new Either.Left<>(error.getMessage())))
+                .onSuccess(aVoid -> {
+                    String query = "INSERT INTO " + Presences.dbSchema + ".absence(structure_id, start_date, end_date, student_id, owner, reason_id) " +
+                            "VALUES (?, ?, ?, ?, ?, ?) RETURNING id;";
+                    JsonArray params = new JsonArray()
+                            .add(structureId)
+                            .add(startDate)
+                            .add(endDate)
+                            .add(studentId)
+                            .add(user.getUserId());
+                    if (absenceBody.getInteger("reason_id") != null) {
+                        params.add(absenceBody.getInteger("reason_id"));
+                    } else {
+                        params.addNull();
+                    }
+
+                    sql.prepared(query, params, SqlResult.validUniqueResultHandler(absenceResult ->
+                            afterPersistAbsence(absenceResult.isRight() ? absenceResult.right().getValue().getLong("id") : null,
+                                    absenceBody,
+                                    null,
+                                    editEvents,
+                                    user.getUserId(),
+                                    handler,
+                                    absenceResult
+                            )
+                    ));
+                });
+    }
+
+    private Future<Void> deleteOldStudentAbsences(String studentId, String structureId, String startDate, String endDate) {
+
+        Promise<Void> promise = Promise.promise();
+
+        List<String> studentIdList = new ArrayList<>();
+        studentIdList.add(studentId);
+
+        getAbsencesBetweenDates(startDate, endDate, studentIdList, structureId, absencesRes -> {
+
+            if (absencesRes.isLeft()) {
+                String message = "[Presences@DefaultAbsenceService::deleteOldStudentAbsences] failed to retrieve absences for student";
+                LOGGER.error(message, absencesRes.left().getValue());
+                promise.fail(message);
+            } else {
+                List<Absence> absences = AbsenceHelper.getAbsenceListFromJsonArray(absencesRes.right().getValue(), new ArrayList<>());
+
+                List<Future> futures = new ArrayList<>();
+
+                for (Absence absence : absences) {
+                    Promise<JsonObject> promiseAbs = Promise.promise();
+                    futures.add(promiseAbs.future());
+                    delete(absence.getId(), FutureHelper.handlerJsonObject(promiseAbs));
+                }
+
+                CompositeFuture.join(futures)
+                        .onFailure(fail -> {
+                            String message = "[Presences@DefaultAbsenceService::deleteOldStudentAbsences] " +
+                                    "failed to delete absences for student";
+                            LOGGER.error(message, fail.getMessage());
+                            promise.fail(fail.getMessage());
+                        })
+                        .onSuccess(unused -> promise.complete());
+            }
+
+        });
+        return promise.future();
     }
 
     @Override

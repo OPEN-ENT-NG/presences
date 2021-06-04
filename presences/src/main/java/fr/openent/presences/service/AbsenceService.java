@@ -50,6 +50,7 @@ public interface AbsenceService {
      */
     void getAbsencesBetween(String startDate, String endDate, List<String> users, Handler<Either<String, JsonArray>> handler);
     void getAbsencesBetweenDates(String startDate, String endDate, List<String> users, Handler<Either<String, JsonArray>> handler);
+    void getAbsencesBetweenDates(String startDate, String endDate, List<String> users, String structureId, Handler<Either<String, JsonArray>> handler);
 
     void getAbsencesFromCollective(String structureId, Long collectiveId, Handler<Either<String, JsonArray>> handler);
 
