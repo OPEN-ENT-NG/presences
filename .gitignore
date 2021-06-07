@@ -19,3 +19,7 @@ node_modules
 */out
 coverage/
 presences/src/main/resources/public/font
+/gradle/wrapper/gradle-wrapper.jar
+/gradle/wrapper/gradle-wrapper.properties
+/gradlew
+/gradlew.bat
