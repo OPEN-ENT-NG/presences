@@ -599,6 +599,10 @@ $calendar-user-card-height: 56px;
           &:last-child {
             margin-bottom: 20px !important;
           }
+
+          .quarterHours {
+            display: none;
+          }
         }
       }
     }
