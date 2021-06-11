@@ -1,5 +1,6 @@
 package fr.openent.statistics_presences.indicator;
 
+import fr.openent.presences.common.helper.FutureHelper;
 import fr.openent.statistics_presences.StatisticsPresences;
 import fr.openent.statistics_presences.bean.Failure;
 import fr.openent.statistics_presences.bean.Report;
@@ -13,43 +14,33 @@ import io.vertx.core.json.JsonObject;
 import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
 import org.entcore.common.mongodb.MongoDbResult;
-import org.entcore.common.neo4j.Neo4j;
 
 import java.util.*;
 import java.util.stream.Collectors;
 
+import static fr.openent.statistics_presences.StatisticsPresences.STATISTICS_PRESENCES_CLASS;
+
 public abstract class IndicatorWorker extends AbstractVerticle {
     protected final Logger log = LoggerFactory.getLogger(IndicatorWorker.class);
     protected final Map<String, JsonObject> settings = new HashMap<>();
+    protected Context indicatorContext;
     protected Report report;
 
     @Override
     public void start() throws Exception {
-        log.info(String.format("[StatisticsPresences@IndicatorWorker::start] " +
-                "Launching worker %s", this.getClass().getSimpleName()));
-
-        // initNeo4j();
+        // for some reason we might lose our verticle's context and might also pick its parent's context to keep it "alive"
+        // in order to avoid this behavior, we assign manually its own context to indicatorContext
+        indicatorContext = vertx.getOrCreateContext();
+        log.info(String.format("[StatisticsPresences@IndicatorWorker::start] Launching worker %s, deploy verticle %s",
+                this.getClass().getSimpleName(), indicatorContext.deploymentID()));
         this.report = new Report(this.indicatorName()).start();
         JsonObject structures = config().getJsonObject("structures");
-        List<Future> futures = new ArrayList<>();
+        List<Future<Void>> futures = new ArrayList<>();
         for (String structure : structures.fieldNames()) {
             futures.add(processStructure(structure, structures.getJsonArray(structure)));
         }
-
-        CompositeFuture.join(futures).setHandler(this::sendSigTerm);
+        FutureHelper.join(futures).onComplete(this::sendSigTerm);
     }
-
-    // initNeo4j() was used to instance neo4j for each verticle in order to prevent warning compilation for preprod/prod
-    // by removing this function we will make warning for our compilation in preprod/prod but our local/dev
-    // platform will remain stable
-    private void initNeo4j() {
-        String neo4jConfig = (String) vertx.sharedData().getLocalMap("server").get("neo4jConfig");
-        Neo4j.getInstance().init(vertx, new JsonObject(neo4jConfig));
-    }
-
-    /*protected String recoveryMethod(String structureId) {
-        return settings.get(structureId).getString("event_recovery_method", null);
-    }*/
 
     protected String indicatorName() {
         return config().getString("endpoint");
@@ -114,13 +105,28 @@ public abstract class IndicatorWorker extends AbstractVerticle {
             log.error("[StatisticsPresences@IndicatorWorker::sendSigTerm] Some structure failed to process", ar.cause());
         }
 
-        log.info("[StatisticsPresences@IndicatorWorker::sendSigTerm] Sending term signal");
+        log.info(String.format("[StatisticsPresences@IndicatorWorker::sendSigTerm] Sending term signal by %s indicator", this.getClass().getName()));
 
         DeliveryOptions deliveryOptions = new DeliveryOptions().setCodecName(StatisticsPresences.codec.name());
         vertx.eventBus().send(config().getString("endpoint"), report, deliveryOptions);
-        log.info(String.format("[StatisticsPresences@IndicatorWorker::sendSigTerm] Undeploy verticle %s",
-                vertx.getOrCreateContext().deploymentID()));
-        vertx.undeploy(vertx.getOrCreateContext().deploymentID());
+        if (isParentVerticle()) {
+            log.info(String.format("[StatisticsPresences@IndicatorWorker::sendSigTerm] Tried to undeploy verticle %s but" +
+                    " turns out it is the Parent Verticle...", indicatorContext.deploymentID()));
+        } else {
+            log.info(String.format("[StatisticsPresences@IndicatorWorker::sendSigTerm] Undeploy verticle %s",
+                    indicatorContext.deploymentID()));
+            vertx.undeploy(indicatorContext.deploymentID());
+        }
+    }
+
+    /**
+     * check if our verticle's context is the parent (Statistics Presences Verticle)
+     *
+     * @return boolean  true if verticle parent, false if own vertx's context
+     */
+    private boolean isParentVerticle() {
+        return indicatorContext.config().containsKey("main") &&
+                indicatorContext.config().getString("main").equals(STATISTICS_PRESENCES_CLASS);
     }
 
     @SuppressWarnings("unchecked")

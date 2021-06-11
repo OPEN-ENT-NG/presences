@@ -5,6 +5,9 @@ import fr.openent.statistics_presences.controller.security.UserInStructure;
 import fr.openent.statistics_presences.filter.Filter;
 import fr.openent.statistics_presences.indicator.Indicator;
 import fr.openent.statistics_presences.indicator.export.Global;
+import fr.openent.statistics_presences.service.CommonServiceFactory;
+import fr.openent.statistics_presences.service.StatisticsPresencesService;
+import fr.wseduc.rs.ApiDoc;
 import fr.wseduc.rs.Get;
 import fr.wseduc.rs.Post;
 import fr.wseduc.security.ActionType;
@@ -15,13 +18,20 @@ import io.vertx.core.http.HttpServerRequest;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import org.entcore.common.controller.ControllerHelper;
+import org.entcore.common.http.filter.AdminFilter;
 import org.entcore.common.http.filter.ResourceFilter;
 import org.entcore.common.user.UserUtils;
 
 import java.lang.reflect.InvocationTargetException;
+import java.util.List;
 import java.util.stream.Collectors;
 
 public class StatisticsController extends ControllerHelper {
+    private final StatisticsPresencesService statisticsPresencesService;
+
+    public StatisticsController(CommonServiceFactory serviceFactory) {
+        this.statisticsPresencesService = serviceFactory.statisticsPresencesService();
+    }
 
     @Get("")
     @SecuredAction(StatisticsPresences.VIEW)
@@ -96,4 +106,17 @@ public class StatisticsController extends ControllerHelper {
 
     }
 
+    @Post("/process/statistics/tasks")
+    @SecuredAction(value = "", type = ActionType.RESOURCE)
+    @ResourceFilter(AdminFilter.class)
+    @ApiDoc("Generate notebook archives")
+    @SuppressWarnings("unchecked")
+    public void processStatisticsPrefetch(final HttpServerRequest request) {
+        RequestUtils.bodyToJson(request, pathPrefix + "processStatisticsPrefetch", body -> {
+            List<String> structure = body.getJsonArray("structure").getList();
+            statisticsPresencesService.processStatisticsPrefetch(structure)
+                    .onSuccess(res -> renderJson(request, res))
+                    .onFailure(unused -> renderError(request));
+        });
+    }
 }

@@ -2,6 +2,7 @@ package fr.openent.presences.common.service;
 
 import fr.wseduc.webutils.Either;
 import io.vertx.core.AsyncResult;
+import io.vertx.core.Future;
 import io.vertx.core.Handler;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
@@ -29,6 +30,14 @@ public interface UserService {
      * @param handler     function handler returning data
      */
     void getAllStudentsIdsWithAccommodation(String structureId, Handler<Either<String, JsonArray>> handler);
+
+    /**
+     * Get all students from their structures mapped
+     *
+     * @param structures list of structure identifier
+     * @return Future JsonArray of JsonObject(Map format) {String structure: List<String> student identifier}
+     */
+    Future<JsonArray> fetchAllStudentsFromStructure(List<String> structures);
 
     /**
      * List children upon relative's data

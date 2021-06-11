@@ -15,7 +15,6 @@ import org.entcore.common.neo4j.Neo4jResult;
 import org.entcore.common.sql.Sql;
 import org.entcore.common.sql.SqlResult;
 
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;

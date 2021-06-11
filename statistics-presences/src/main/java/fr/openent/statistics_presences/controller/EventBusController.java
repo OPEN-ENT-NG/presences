@@ -1,6 +1,7 @@
 package fr.openent.statistics_presences.controller;
 
 import fr.openent.presences.common.bus.BusResultHandler;
+import fr.openent.statistics_presences.service.CommonServiceFactory;
 import fr.openent.statistics_presences.service.StatisticsPresencesService;
 import fr.openent.statistics_presences.service.impl.DefaultStatisticsPresencesService;
 import fr.wseduc.bus.BusAddress;
@@ -12,8 +13,8 @@ public class EventBusController extends ControllerHelper {
 
     private final StatisticsPresencesService statisticsService;
 
-    public EventBusController() {
-        statisticsService = new DefaultStatisticsPresencesService();
+    public EventBusController(CommonServiceFactory commonServiceFactory) {
+        statisticsService = new DefaultStatisticsPresencesService(commonServiceFactory);
     }
 
     @BusAddress("fr.openent.statistics.presences")

@@ -67,12 +67,12 @@ public abstract class Indicator {
      * @return Future ending process
      */
     public Future<Report> process(JsonObject structures) {
-        log.info(String.format("processing indicator %s", this.name));
+        log.info(String.format("[StatisticsPresences@Indicator::process] processing indicator %s", this.name));
         String consumerName = indicatorClassName();
         Future<Report> future = Future.future();
 
         Handler<Message<Report>> handler = message -> {
-            log.info(String.format("SIGTERM from %s indicator", this.indicatorClassName()));
+            log.info(String.format("[StatisticsPresences@Indicator::process] SIGTERM sent from %s indicator", this.indicatorClassName()));
             consumer.unregister();
             future.handle(Future.succeededFuture(message.body()));
         };

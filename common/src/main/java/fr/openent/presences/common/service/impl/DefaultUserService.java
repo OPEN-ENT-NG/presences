@@ -5,7 +5,9 @@ import fr.openent.presences.common.service.UserService;
 import fr.openent.presences.db.DBService;
 import fr.wseduc.webutils.Either;
 import io.vertx.core.AsyncResult;
+import io.vertx.core.Future;
 import io.vertx.core.Handler;
+import io.vertx.core.Promise;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import org.entcore.common.neo4j.Neo4j;
@@ -64,6 +66,27 @@ public class DefaultUserService extends DBService implements UserService {
                 .put("structureId", structureId);
 
         Neo4j.getInstance().execute(query, params, Neo4jResult.validResultHandler(handler));
+    }
+
+    @Override
+    public Future<JsonArray> fetchAllStudentsFromStructure(List<String> structures) {
+        Promise<JsonArray> promise = Promise.promise();
+
+        String query = "MATCH (s:Structure)<-[:BELONGS]-(c:Class)<-[:DEPENDS]-(:ProfileGroup)<-[:IN]-" +
+                "(u:User {profiles:['Student']}) WHERE s.id IN {structures} RETURN s.id as structure, collect(u.id) as users";
+        JsonObject params = new JsonObject().put("structures", structures);
+
+        Neo4j.getInstance().execute(query, params, Neo4jResult.validResultHandler(event -> {
+            if (event.isLeft()) {
+                log.error("[Presences@DefaultUserService::fetchAllStudentsFromStructure] An error has occured during" +
+                        " the process " + event.left().getValue());
+                promise.fail(event.left().getValue());
+            } else {
+                promise.complete(event.right().getValue());
+            }
+        }));
+
+        return promise.future();
     }
 
 

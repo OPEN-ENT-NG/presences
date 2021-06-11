@@ -1,7 +1,7 @@
 package fr.openent.statistics_presences;
 
 import fr.openent.presences.common.eventbus.GenericCodec;
-import fr.openent.presences.common.incidents.*;
+import fr.openent.presences.common.incidents.Incidents;
 import fr.openent.presences.common.presences.Presences;
 import fr.openent.presences.common.viescolaire.Viescolaire;
 import fr.openent.presences.db.DB;
@@ -10,9 +10,14 @@ import fr.openent.statistics_presences.controller.EventBusController;
 import fr.openent.statistics_presences.controller.StatisticsController;
 import fr.openent.statistics_presences.indicator.Indicator;
 import fr.openent.statistics_presences.indicator.IndicatorGeneric;
+import fr.openent.statistics_presences.indicator.ProcessingScheduledManual;
 import fr.openent.statistics_presences.indicator.ProcessingScheduledTask;
+import fr.openent.statistics_presences.service.CommonServiceFactory;
 import fr.wseduc.cron.CronTrigger;
 import fr.wseduc.mongodb.MongoDb;
+import io.vertx.core.DeploymentOptions;
+import io.vertx.core.eventbus.DeliveryOptions;
+import io.vertx.core.eventbus.EventBus;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import org.entcore.common.http.BaseServer;
@@ -24,10 +29,13 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import static fr.wseduc.webutils.Utils.handlerToAsyncHandler;
+
 public class StatisticsPresences extends BaseServer {
     public static final String COLLECTION = "presences.statistics";
     public static final String VIEW = "statistics_presences.view";
     public static final GenericCodec codec = new GenericCodec(Report.class);
+    public static final String STATISTICS_PRESENCES_CLASS = StatisticsPresences.class.getName();
     public static String DB_SCHEMA = null;
     public static String PRESENCES_SCHEMA = null;
     public static String INCIDENTS_SCHEMA = null;
@@ -39,9 +47,10 @@ public class StatisticsPresences extends BaseServer {
     public void start() throws Exception {
         super.start();
         DB.getInstance().init(Neo4j.getInstance(), Sql.getInstance(), MongoDb.getInstance());
+        CommonServiceFactory commonServiceFactory = new CommonServiceFactory(vertx);
 
-        addController(new EventBusController());
-        addController(new StatisticsController());
+        addController(new EventBusController(commonServiceFactory));
+        addController(new StatisticsController(commonServiceFactory));
 
         setSchemas();
         registerCodec();
@@ -55,6 +64,9 @@ public class StatisticsPresences extends BaseServer {
             String processingCron = config.getString("processing-cron");
             new CronTrigger(vertx, processingCron).schedule(new ProcessingScheduledTask(vertx, config));
         }
+
+        // worker to be triggered manually
+        vertx.deployVerticle(ProcessingScheduledManual.class, new DeploymentOptions().setConfig(config).setWorker(true));
     }
 
     private void registerCodec() {
@@ -78,6 +90,16 @@ public class StatisticsPresences extends BaseServer {
                 log.error(String.format("Failed to deploy indicator %s", indicatorName), e);
             }
         }
+    }
+
+    public static void launchProcessingStatistics(EventBus eb, JsonObject params) {
+        eb.request(ProcessingScheduledManual.class.getName(), params,
+                new DeliveryOptions().setSendTimeout(1000 * 1000L), handlerToAsyncHandler(eventExport -> {
+                            if (!eventExport.body().getString("status").equals("ok")) {
+                                launchProcessingStatistics(eb, params);
+                            }
+                        }
+                ));
     }
 
 }

@@ -77,6 +77,7 @@ public class ProcessingScheduledTask implements Handler<Long> {
     private Future<JsonObject> fetchUsersToProcess() {
         Future<JsonObject> future = Future.future();
         String query = String.format("SELECT structure, json_agg(id) as users FROM %s.user GROUP BY structure", StatisticsPresences.DB_SCHEMA);
+        
         Sql.getInstance().raw(query, SqlResult.validResultHandler(either -> {
             if (either.isLeft()) {
                 log.error("Failed to retrieve users to process", either.left().getValue());
