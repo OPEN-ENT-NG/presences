@@ -3,18 +3,19 @@ import {Filter, FILTER_TYPE, FilterType} from '../filter';
 import {IndicatorFactory} from '../indicator';
 import {IPunishmentType} from '@incidents/models/PunishmentType';
 import {Reason} from '@presences/models';
+import {INDICATOR_TYPE} from "../core/constants/IndicatorType";
 
 export class Global extends Indicator {
     _filterTypes: FilterType[]
     _filterEnabled: any;
 
     constructor(reasons: Reason[], punishmentTypes: IPunishmentType[]) {
-        super("Global", reasons, punishmentTypes);
+        super(INDICATOR_TYPE.global, reasons, punishmentTypes);
         this.resetValues();
         this.setFilterTypes([
-            this._factoryFilter.getFilter(FILTER_TYPE.UNJUSTIFIED_ABSENCE, null),
-            this._factoryFilter.getFilter(FILTER_TYPE.JUSTIFIED_UNREGULARIZED_ABSENCE, (value: boolean) => this._factoryFilter.changeUnProvingReasons(value)),
-            this._factoryFilter.getFilter(FILTER_TYPE.REGULARIZED_ABSENCE, (value: boolean) => this._factoryFilter.changeProvingReasons(value)),
+            this._factoryFilter.getFilter(FILTER_TYPE.NO_REASON, null),
+            this._factoryFilter.getFilter(FILTER_TYPE.UNREGULARIZED, (value: boolean) => this._factoryFilter.changeUnProvingReasons(value)),
+            this._factoryFilter.getFilter(FILTER_TYPE.REGULARIZED, (value: boolean) => this._factoryFilter.changeProvingReasons(value)),
             this._factoryFilter.getFilter(FILTER_TYPE.LATENESS, null),
             this._factoryFilter.getFilter(FILTER_TYPE.DEPARTURE, null),
             this._factoryFilter.getFilter(FILTER_TYPE.PUNISHMENT, (value: boolean) => this._factoryFilter.changePunishmentFilter(value)),
@@ -28,7 +29,7 @@ export class Global extends Indicator {
 
     absenceSelected(): boolean {
         for (let type of this._filterTypes) {
-            if ((type.name() === FILTER_TYPE.JUSTIFIED_UNREGULARIZED_ABSENCE || type.name() === FILTER_TYPE.UNJUSTIFIED_ABSENCE || type.name() === FILTER_TYPE.REGULARIZED_ABSENCE) && type.selected()) {
+            if ((type.name() === FILTER_TYPE.UNREGULARIZED || type.name() === FILTER_TYPE.NO_REASON || type.name() === FILTER_TYPE.REGULARIZED) && type.selected()) {
                 return true;
             }
         }

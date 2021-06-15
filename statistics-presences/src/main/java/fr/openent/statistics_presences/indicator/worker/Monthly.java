@@ -1,7 +1,7 @@
 package fr.openent.statistics_presences.indicator.worker;
 
 import fr.openent.statistics_presences.bean.Stat;
-import fr.openent.statistics_presences.bean.global.GlobalStat;
+import fr.openent.statistics_presences.bean.monthly.MonthlyStat;
 import fr.openent.statistics_presences.indicator.IndicatorGeneric;
 import fr.openent.statistics_presences.indicator.IndicatorWorker;
 import fr.openent.statistics_presences.utils.EventType;
@@ -15,7 +15,13 @@ import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
-public class Global extends IndicatorWorker {
+
+/**
+ * We keep the same instruction like the Global Worker as we figured the behavior should be the same
+ * We might still be able to "evolve" this behavior
+ */
+
+public class Monthly extends IndicatorWorker {
 
     /**
      * Fetch events in queue and set their count values.
@@ -67,7 +73,7 @@ public class Global extends IndicatorWorker {
                     List<Stat> stats = new ArrayList<>();
                     for (int i = 0; i < result.size(); i++) {
                         JsonObject incident = result.getJsonObject(i);
-                        GlobalStat stat = new GlobalStat()
+                        MonthlyStat stat = new MonthlyStat()
                                 .setStartDate(incident.getString("start_date"))
                                 .setEndDate(incident.getString("end_date"));
                         stats.add(stat);
@@ -86,7 +92,7 @@ public class Global extends IndicatorWorker {
         IndicatorGeneric.fetchEventsFromPresences(structureId, studentId, reasonIds, noReasons, regularized)
                 .onSuccess(result -> {
                     List<Stat> stats = ((List<JsonObject>) result.getList()).stream()
-                            .map(event -> new GlobalStat()
+                            .map(event -> new MonthlyStat()
                                     .setReason(((List<JsonObject>) event.getJsonArray("events").getList()).stream()
                                             .map(evt -> evt.getLong("reason_id"))
                                             .filter(Objects::nonNull)
@@ -117,7 +123,7 @@ public class Global extends IndicatorWorker {
                             .flatMap(punishmentsHolder -> {
                                 List<JsonObject> punishments = punishmentsHolder.getJsonArray("punishments").getList();
                                 return punishments.stream().map(punishment -> {
-                                    GlobalStat stat = new GlobalStat()
+                                    MonthlyStat stat = new MonthlyStat()
                                             .setPunishmentType(punishment.getLong("type_id"));
                                     setDatesFromPunishments(punishment, stat);
                                     return stat;
@@ -130,7 +136,7 @@ public class Global extends IndicatorWorker {
         return promise.future();
     }
 
-    private void setDatesFromPunishments(JsonObject punishment, GlobalStat stat) {
+    private void setDatesFromPunishments(JsonObject punishment, MonthlyStat stat) {
         JsonObject fields = punishment.getJsonObject("fields", new JsonObject());
 
         String startAt = fields.getString("start_at");

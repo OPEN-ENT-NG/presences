@@ -323,6 +323,7 @@ public class GlobalSearch {
 
         JsonObject matcher = new JsonObject()
                 .put("structure", this.filter.structure())
+                .put("indicator", Global.class.getName())
                 .put("$or", filterType(types, isTotalAbsences))
                 .put("start_date", this.startDateFilter())
                 .put("end_date", this.endDateFilter());

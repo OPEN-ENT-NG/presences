@@ -9,6 +9,10 @@ public class Audience {
         this.name = name;
     }
 
+    public Audience(String name) {
+        this.name = name;
+    }
+
     public String id() {
         return this.id;
     }

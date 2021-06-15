@@ -1,69 +1,100 @@
-package fr.openent.statistics_presences.bean.global;
+package fr.openent.statistics_presences.bean.monthly;
 
 import fr.openent.statistics_presences.bean.Stat;
 import fr.openent.statistics_presences.utils.EventType;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 
-public class GlobalStat implements Stat {
+public class MonthlyStat implements Stat {
     private String indicator;
     private EventType type;
     private String user;
     private String structure;
     private String startDate;
     private String endDate;
+    private String month;
+    private Integer total;
+    private Integer slots;
     private String className;
     private String name;
     private JsonArray audiences = new JsonArray();
     private Long reason;
     private Long punishmentType;
 
-    public GlobalStat setIndicator(String indicator) {
+    public MonthlyStat setIndicator(String indicator) {
         this.indicator = indicator;
         return this;
     }
 
-    public GlobalStat setUser(String user) {
+    public MonthlyStat setUser(String user) {
         this.user = user;
         return this;
     }
 
-    public GlobalStat setStructure(String structure) {
+    public MonthlyStat setStructure(String structure) {
         this.structure = structure;
         return this;
     }
 
-    public GlobalStat setAudiences(JsonArray audiences) {
+    public MonthlyStat setAudiences(JsonArray audiences) {
         this.audiences = audiences;
         return this;
     }
 
-    public GlobalStat setType(EventType type) {
+    public MonthlyStat setType(EventType type) {
         this.type = type;
         return this;
     }
 
-    public GlobalStat setStartDate(String date) {
+    public MonthlyStat setStartDate(String date) {
         this.startDate = date;
         return this;
     }
 
-    public GlobalStat setEndDate(String date) {
+    public MonthlyStat setEndDate(String date) {
         this.endDate = date;
         return this;
     }
 
-    public GlobalStat setReason(Long reason) {
+    public MonthlyStat setSlots(Integer count) {
+        this.slots = count;
+        return this;
+    }
+
+    public Integer getSlots() {
+        return slots;
+    }
+
+    public MonthlyStat setMonth(String month) {
+        this.month = month;
+        return this;
+    }
+
+    public String getMonth() {
+        return month;
+    }
+
+    public MonthlyStat setTotal(Integer total) {
+        this.total = total;
+        return this;
+    }
+
+    public MonthlyStat setReason(Long reason) {
         this.reason = reason;
         return this;
     }
 
-    public GlobalStat setName(String name) {
+
+    public Long getReason() {
+        return reason;
+    }
+
+    public MonthlyStat setName(String name) {
         this.name = name;
         return this;
     }
 
-    public GlobalStat setClassName(String className) {
+    public MonthlyStat setClassName(String className) {
         this.className = className;
         return this;
     }
@@ -72,7 +103,7 @@ public class GlobalStat implements Stat {
         return punishmentType;
     }
 
-    public GlobalStat setPunishmentType(Long punishmentType) {
+    public MonthlyStat setPunishmentType(Long punishmentType) {
         this.punishmentType = punishmentType;
         return this;
     }

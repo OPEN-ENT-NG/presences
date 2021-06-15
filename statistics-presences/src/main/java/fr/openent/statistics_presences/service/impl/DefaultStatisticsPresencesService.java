@@ -26,7 +26,7 @@ public class DefaultStatisticsPresencesService extends DBService implements Stat
 
     @Override
     public void create(String structureId, List<String> studentIds, Handler<AsyncResult<JsonObject>> handler) {
-        JsonArray statements = new JsonArray(studentIds.stream().map(studentId -> createIncidentStatement(structureId, studentId)).collect(Collectors.toList()));
+        JsonArray statements = new JsonArray(studentIds.stream().map(studentId -> createStatisticsUserStatement(structureId, studentId)).collect(Collectors.toList()));
         sql.transaction(statements, SqlResult.validUniqueResultHandler(FutureHelper.handlerJsonObject(handler)));
     }
 
@@ -50,7 +50,7 @@ public class DefaultStatisticsPresencesService extends DBService implements Stat
      * @param studentId   user student identifier
      * @return Statement
      */
-    private JsonObject createIncidentStatement(String structureId, String studentId) {
+    private JsonObject createStatisticsUserStatement(String structureId, String studentId) {
 
         String query = " INSERT INTO " + StatisticsPresences.DB_SCHEMA + ".user(id, structure) " +
                 " VALUES (?, ?) " +

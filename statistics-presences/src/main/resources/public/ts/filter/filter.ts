@@ -122,3 +122,15 @@ export class FilterTypeFactory {
         this.reasons.forEach(({id}) => this.reasonsMap[id] = false);
     }
 }
+
+export class FilterMonth {
+    private _name: string
+
+    constructor(name: string) {
+        this._name = name;
+    }
+
+    name(): string {
+        return this._name;
+    }
+}

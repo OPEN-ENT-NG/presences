@@ -8,6 +8,7 @@ import java.text.SimpleDateFormat;
 import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.ZoneId;
+import java.time.temporal.ChronoUnit;
 import java.time.temporal.TemporalAdjusters;
 import java.util.*;
 
@@ -708,6 +709,22 @@ public class DateHelper {
         }
 
         return dateFromDayOfWeekFetched;
+    }
+
+    /**
+     * Calculate number of distinct months separating 2 dates (no matter the day)
+     * <p>
+     * (if using same month), will count as ONE
+     *
+     * @param startAtString start date
+     * @param endAtString   end date
+     * @return number of distinct months separating 2 dates
+     */
+    public static long distinctMonthsNumberSeparating(String startAtString, String endAtString) {
+        LocalDate startAt = LocalDate.parse(DateHelper.getDateString(startAtString, DateHelper.YEAR_MONTH_DAY));
+        LocalDate endAt = LocalDate.parse(DateHelper.getDateString(endAtString, DateHelper.YEAR_MONTH_DAY));
+
+        return ChronoUnit.MONTHS.between(startAt, endAt);
     }
 
 }

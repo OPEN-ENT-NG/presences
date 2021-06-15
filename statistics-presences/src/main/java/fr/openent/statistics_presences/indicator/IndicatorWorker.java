@@ -32,7 +32,7 @@ public abstract class IndicatorWorker extends AbstractVerticle {
         // in order to avoid this behavior, we assign manually its own context to indicatorContext
         indicatorContext = vertx.getOrCreateContext();
         log.info(String.format("[StatisticsPresences@IndicatorWorker::start] Launching worker %s, deploy verticle %s",
-                this.getClass().getSimpleName(), indicatorContext.deploymentID()));
+                this.indicatorName(), indicatorContext.deploymentID()));
         this.report = new Report(this.indicatorName()).start();
         JsonObject structures = config().getJsonObject("structures");
         List<Future<Void>> futures = new ArrayList<>();
@@ -40,6 +40,10 @@ public abstract class IndicatorWorker extends AbstractVerticle {
             futures.add(processStructure(structure, structures.getJsonArray(structure)));
         }
         FutureHelper.join(futures).onComplete(this::sendSigTerm);
+    }
+    
+    protected JsonArray reasonIds(String structureId) {
+        return settings.get(structureId).getJsonArray("reasonIds", new JsonArray());
     }
 
     protected String indicatorName() {
@@ -233,6 +237,7 @@ public abstract class IndicatorWorker extends AbstractVerticle {
                             .flatMap(statsByEventType -> statsByEventType.getValue().result().stream()
                                     .map(stat -> {
                                         stat.setUser(studentId)
+                                                .setIndicator(indicatorName())
                                                 .setName(student.getString("name"))
                                                 .setClassName(String.join(",", student.getJsonArray("className").getList()))
                                                 .setType(statsByEventType.getKey())

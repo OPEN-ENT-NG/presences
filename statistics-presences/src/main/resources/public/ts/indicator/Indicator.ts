@@ -1,9 +1,9 @@
-import {idiom, moment} from 'entcore';
+import {idiom, moment} from "entcore";
 import {Mix} from "entcore-toolkit";
 import http from 'axios';
 import {Reason} from '@presences/models';
-import {Filter, FilterType, FilterTypeFactory, FilterValue} from '../filter';
-import {DateUtils} from '@common/utils';
+import {Filter, FilterMonth, FilterType, FilterTypeFactory, FilterValue} from "../filter";
+import {DateUtils} from "@common/utils";
 import {IPunishmentType} from '@incidents/models/PunishmentType';
 import {PunishmentsUtils} from "@incidents/utilities/punishments";
 
@@ -25,9 +25,10 @@ export interface IIndicator {
 
 export abstract class Indicator implements IIndicator {
     values: any;
-    _factoryFilter: FilterTypeFactory
-    _filtersEnabled: Map<Filter, FilterValue>
-    _filterTypes: FilterType[]
+    _factoryFilter: FilterTypeFactory;
+    _filtersEnabled: Map<Filter, FilterValue>;
+    _filterTypes: FilterType[];
+    _filterMonths: FilterMonth[];
     _name: string;
     _page: number;
 
@@ -77,6 +78,10 @@ export abstract class Indicator implements IIndicator {
 
     public setFilterTypes(types: FilterType[]) {
         this._filterTypes = types;
+    }
+
+    public setFilterMonths(months: FilterMonth[]) {
+        this._filterMonths = months;
     }
 
     protected enableFilter(filter: Filter, value: boolean) {

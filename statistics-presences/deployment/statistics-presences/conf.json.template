@@ -20,7 +20,8 @@
         "processing-cron": "0 0/30 * * * ? *",
         "report-recipients": [],
         "indicators": [
-            "Global"
+            "Global",
+            "Monthly"
         ]
       }
     }

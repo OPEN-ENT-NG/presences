@@ -23,7 +23,7 @@ public abstract class Indicator {
     private final Vertx vertx;
     private MessageConsumer<Report> consumer = null;
 
-    public Indicator(Vertx vertx, String name) {
+    protected Indicator(Vertx vertx, String name) {
         this.vertx = vertx;
         this.name = name;
     }

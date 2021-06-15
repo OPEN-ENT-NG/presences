@@ -1,3 +1,4 @@
+<!-- header / searchbar -->
 <div class="row">
     <h1 class="cell paddingRight">
         <i18n>statistics-presences.title</i18n>
@@ -50,30 +51,39 @@
         </div>
     </div>
 </div>
+
+<!-- filter area -->
 <div class="row margin-bottom-md margin-top-md">
-    <div class="filter-row cell">
-        <div class="cell right-spacing-twice">
-            <i class="filter" data-ng-click="vm.openFilter()">&nbsp;</i>
-        </div>
-        <div class="cell right-spacing-twice" data- ng-show="vm.indicators.length > 1">
-            <select data-ng-model="vm.indicator"
-                    ng-options="indicator as indicator.i18nName() for indicator in vm.indicators"></select>
-        </div>
-        <div class="date-filters cell">
-            <span><i18n>massmailing.from</i18n></span>
-            <span class="card date-picker">
+    <!-- main content header -->
+    <div class="row">
+        <div class="filter-row cell">
+            <div class="cell right-spacing-twice" data-ng-show="vm.indicators.length > 1">
+                <select data-ng-model="vm.indicator"
+                        ng-options="indicator as indicator.i18nName() for indicator in vm.indicators"></select>
+            </div>
+            <div class="date-filters cell">
+                <span><i18n>massmailing.from</i18n></span>
+                <span class="card date-picker">
             <date-picker ng-model="vm.filter.from" ng-change="vm.resetIndicator();"></date-picker>
         </span>
-            <span><i18n>massmailing.to</i18n></span>
-            <span class="card date-picker">
+                <span><i18n>massmailing.to</i18n></span>
+                <span class="card date-picker">
             <date-picker ng-model="vm.filter.to" ng-change="vm.resetIndicator();"></date-picker>
         </span>
+            </div>
         </div>
+        <button class="right-magnet" data-ng-click="vm.export()">
+            <i18n>statistics-presences.csv.export</i18n>
+        </button>
     </div>
-    <button class="right-magnet" data-ng-click="vm.export()">
-        <i18n>statistics-presences.csv.export</i18n>
-    </button>
+
+    <!-- icon to open filter -->
+    <div class="cell right-spacing-twice">
+        <i class="filter" data-ng-click="vm.openFilter()">&nbsp;</i>
+    </div>
 </div>
+
+<!-- empty state -->
 <div data-ng-show="vm.indicator.isEmpty()">
     <div class="empty-content">
         <div class="five description">
@@ -84,4 +94,6 @@
         <img data-ng-src="/statistics-presences/public/images/girl-book.svg" class="four" alt="">
     </div>
 </div>
+
+<!-- indicator -->
 <container template="indicator" data-ng-show="!vm.indicator.isEmpty()"></container>

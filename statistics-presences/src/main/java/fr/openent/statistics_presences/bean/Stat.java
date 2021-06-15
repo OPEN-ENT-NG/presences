@@ -7,6 +7,8 @@ import io.vertx.core.json.JsonObject;
 public interface Stat {
     JsonObject toJSON();
 
+    Stat setIndicator(String indicator);
+
     Stat setUser(String user);
 
     Stat setName(String name);
