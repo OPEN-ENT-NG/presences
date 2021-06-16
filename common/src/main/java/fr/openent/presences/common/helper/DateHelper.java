@@ -7,6 +7,7 @@ import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.time.DayOfWeek;
 import java.time.LocalDate;
+import java.time.YearMonth;
 import java.time.ZoneId;
 import java.time.temporal.ChronoUnit;
 import java.time.temporal.TemporalAdjusters;
@@ -26,6 +27,7 @@ public class DateHelper {
     public static final String DAY_MONTH_YEAR = "dd/MM/yyyy";
     public static final String DAY_MONTH_YEAR_DASH = "dd-MM-yyyy";
     public static final String YEAR_MONTH = "yyyy-MM";
+    public static final String SHORT_MONTH = "MMM"; // e.g "Jan"
     public static final String HOUR_MINUTES = "HH:mm";
     public static final String HOUR_MINUTES_SECONDS = "HH:mm:ss";
     public static final String SAFE_HOUR_MINUTES = "kk'h'mm";
@@ -444,6 +446,16 @@ public class DateHelper {
         }
     }
 
+    public static String getDateString(String date, String format, String wishedFormat, Locale locale) {
+        try {
+            Date parsedDate = parse(date, format);
+            return new SimpleDateFormat(wishedFormat, locale).format(parsedDate);
+        } catch (ParseException err) {
+            LOGGER.error("[Common@DateHelper::getDateString] Failed to parse date " + date, err);
+            return date;
+        }
+    }
+
     public static String getDateString(Date date) {
         SimpleDateFormat sdf = new SimpleDateFormat();
         return sdf.format(date);
@@ -721,8 +733,8 @@ public class DateHelper {
      * @return number of distinct months separating 2 dates
      */
     public static long distinctMonthsNumberSeparating(String startAtString, String endAtString) {
-        LocalDate startAt = LocalDate.parse(DateHelper.getDateString(startAtString, DateHelper.YEAR_MONTH_DAY));
-        LocalDate endAt = LocalDate.parse(DateHelper.getDateString(endAtString, DateHelper.YEAR_MONTH_DAY));
+        YearMonth startAt = YearMonth.parse(DateHelper.getDateString(startAtString, DateHelper.YEAR_MONTH));
+        YearMonth endAt = YearMonth.parse(DateHelper.getDateString(endAtString, DateHelper.YEAR_MONTH));
 
         return ChronoUnit.MONTHS.between(startAt, endAt);
     }

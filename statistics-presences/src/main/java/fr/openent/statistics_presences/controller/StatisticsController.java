@@ -23,6 +23,7 @@ import org.entcore.common.http.filter.ResourceFilter;
 import org.entcore.common.user.UserUtils;
 
 import java.lang.reflect.InvocationTargetException;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -56,7 +57,7 @@ public class StatisticsController extends ControllerHelper {
     }
 
     private JsonArray indicatorList() {
-        return new JsonArray(StatisticsPresences.indicatorMap.keySet().stream().collect(Collectors.toList()));
+        return new JsonArray(new ArrayList<>(StatisticsPresences.indicatorMap.keySet().stream().sorted().collect(Collectors.toList())));
     }
 
     @Post("/structures/:structure/indicators/:indicator")
@@ -85,6 +86,7 @@ public class StatisticsController extends ControllerHelper {
     @Get("/structures/:structure/indicators/:indicator/export")
     @SecuredAction(value = "", type = ActionType.RESOURCE)
     @ResourceFilter(UserInStructure.class)
+    @SuppressWarnings("unchecked")
     public void export(HttpServerRequest request) {
         Filter filter = new Filter(request);
         String indicatorName = request.getParam("indicator");

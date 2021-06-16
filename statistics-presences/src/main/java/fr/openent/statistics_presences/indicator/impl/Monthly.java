@@ -5,6 +5,7 @@ import fr.openent.statistics_presences.StatisticsPresences;
 import fr.openent.statistics_presences.bean.Audience;
 import fr.openent.statistics_presences.bean.monthly.*;
 import fr.openent.statistics_presences.filter.Filter;
+import fr.openent.statistics_presences.helper.MonthlyHelper;
 import fr.openent.statistics_presences.indicator.Indicator;
 import fr.openent.statistics_presences.indicator.IndicatorGeneric;
 import fr.wseduc.mongodb.MongoDb;
@@ -19,7 +20,6 @@ import org.entcore.common.neo4j.Neo4j;
 import org.entcore.common.neo4j.Neo4jResult;
 
 import java.time.LocalDate;
-import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
@@ -132,7 +132,7 @@ public class Monthly extends Indicator {
      * Execute mongodb aggregation pipeline to retrieve user statistics based on search filter object.
      *
      * @param search Search object containing filter and values
-     * @return Future completing stage
+     * @return Future {@link Future<MonthlySearch>} completing stage
      */
     private Future<MonthlySearch> statisticStage(MonthlySearch search) {
         if (isEmptyPrefetch(search)) {
@@ -167,7 +167,7 @@ public class Monthly extends Indicator {
                             .collect(Collectors.toMap(
                                     Map.Entry::getKey,
                                     Map.Entry::getValue,
-                                    this::concatMonths
+                                    MonthlyHelper::concatMonths
                             ));
 
                     Map<String, List<Student>> students = Stream.of(studentBasicEventTypedStatistics, studentAbsencesStatistics)
@@ -227,7 +227,7 @@ public class Monthly extends Indicator {
      * Merge students and statistics based on retrieved values during previous stage.
      *
      * @param search Search object containing filter and values
-     * @return Future completing stage
+     * @return {@link Future<MonthlySearch>} completing stage
      */
     private Future<MonthlySearch> mergeStage(MonthlySearch search) {
         Map<String, List<Month>> statistics = search.statistics();
@@ -237,13 +237,16 @@ public class Monthly extends Indicator {
         // adding 1 to include date itself (e.g filtering start(2021/01) and end(2021/01)
         // will return 1 instead of 0 in order to still "count";
         // then start(2021/01) and end(2021/02) will return 2, start(2021/01) and end(2021/03) will return 3 etc...
-        long numOfMonthsBetween = DateHelper.distinctMonthsNumberSeparating(search.filter().start(), search.filter().end()) + 1;
+        long numOfMonthsBetween = IntStream
+                .range(0, (int) DateHelper.distinctMonthsNumberSeparating(search.filter().start(), search.filter().end()) + 1)
+                .toArray().length;
 
         List<AudienceMap> audiences = search.audiences().stream()
                 .map(audience -> {
                     List<Student> currentStudents = students.get(audience.name());
-                    // in initMonths adding +1 to "count" the index 0 to our Integer stream
-                    List<Month> months = concatMonths(initMonths(startAt, numOfMonthsBetween + 1), statistics.getOrDefault(audience.name(), new ArrayList<>()))
+                    List<Month> months = MonthlyHelper.concatMonths(
+                            MonthlyHelper.initMonths(startAt, numOfMonthsBetween),
+                            statistics.getOrDefault(audience.name(), new ArrayList<>()))
                             .stream()
                             .sorted(Comparator.comparing(Month::key))
                             .collect(Collectors.toList());
@@ -270,16 +273,6 @@ public class Monthly extends Indicator {
                 .ifPresent(month -> month.statistic().setMax(true));
     }
 
-    private List<Month> initMonths(LocalDate startAt, long numOfMonthsBetween) {
-        return IntStream.iterate(0, i -> i + 1)
-                .limit(numOfMonthsBetween)
-                .mapToObj(i -> {
-                    LocalDate date = startAt.plusMonths(i);
-                    return new Month(date.format(DateTimeFormatter.ofPattern(DateHelper.YEAR_MONTH)), new Statistic(0, 0));
-                })
-                .collect(Collectors.toList());
-    }
-
     /**
      * Loop through aggregation pipeline result and store values in a Map. The Map contains audience name
      * identifier as key, containing a map of month for value. This map of month contains the mont (String) as key
@@ -288,6 +281,7 @@ public class Monthly extends Indicator {
      *
      * @param result Aggregation pipeline result
      * @return Map containing user identifier as key and an List of statistics as value
+     * {@link Map} of {@link String} as key and {@link List<Month>} as value
      */
     @SuppressWarnings("unchecked")
     private Map<String, List<Month>> mapPipelineResultByKeyAndMonth(JsonArray result) {
@@ -295,7 +289,7 @@ public class Monthly extends Indicator {
                 .collect(Collectors.toMap(
                         stat -> stat.getString("class_name"),
                         this::mapObjectToMonthsList,
-                        this::concatMonths
+                        MonthlyHelper::concatMonths
                 ));
     }
 
@@ -316,26 +310,13 @@ public class Monthly extends Indicator {
                         .collect(Collectors.toMap(
                                 Student::id,
                                 student -> student,
-                                (stud1, stud2) -> new Student(stud1.name(), stud1.id(), concatMonths(stud1.months(), stud2.months())
+                                (stud1, stud2) -> new Student(stud1.name(), stud1.id(), MonthlyHelper.concatMonths(stud1.months(), stud2.months())
                                         .stream()
                                         .sorted(Comparator.comparing(Month::key))
                                         .collect(Collectors.toList()))
                         ))
                         .values()
         );
-    }
-
-    private List<Month> concatMonths(List<Month> months1, List<Month> months2) {
-        return Stream.of(months1, months2)
-                .flatMap(Collection::stream)
-                .collect(Collectors.toMap(
-                        Month::key,
-                        Month::statistic,
-                        this::sumStatisticValues2
-                ))
-                .entrySet().stream()
-                .map(month -> new Month(month.getKey(), month.getValue()))
-                .collect(Collectors.toList());
     }
 
     private List<Student> mapObjectToStudentList(JsonObject stat) {
@@ -346,33 +327,10 @@ public class Monthly extends Indicator {
         return Collections.singletonList(new Month(stat.getString("month"), setStatisticValues2(stat)));
     }
 
-    private String setStatisticMonthKey(JsonObject stat) {
-        return stat.getString("month");
-    }
-
-    private JsonObject setStatisticValues(JsonObject stat) {
-        return new JsonObject()
-                .put("count", stat.getInteger("count", 0))
-                .put("slots", stat.getInteger("slots", 0));
-    }
-
     private Statistic setStatisticValues2(JsonObject stat) {
         return new Statistic(
                 stat.getInteger("count", 0),
                 stat.getInteger("slots", 0)
-        );
-    }
-
-    private JsonObject sumStatisticValues(JsonObject stat1, JsonObject stat2) {
-        return new JsonObject()
-                .put("count", (stat1.getInteger("count", 0) + stat2.getInteger("count", 0)))
-                .put("slots", (stat1.getInteger("slots", 0) + stat2.getInteger("slots", 0)));
-    }
-
-    private Statistic sumStatisticValues2(Statistic stat1, Statistic stat2) {
-        return new Statistic(
-                stat1.count() + stat2.count(),
-                stat1.slots() + stat2.slots()
         );
     }
 

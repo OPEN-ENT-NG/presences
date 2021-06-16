@@ -8,6 +8,7 @@ public class FilterField {
     public static final String REASONS = "reasons";
     public static final String PUNISHMENT_TYPES = "punishmentTypes";
     public static final String SANCTION_TYPES = "sanctionTypes";
+    public static final String EXPORT_OPTION = "export_option";
     public static final String FROM = "FROM";
     public static final String TO = "TO";
     public static final String HOUR_DETAILS = "HOUR_DETAIL";

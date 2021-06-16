@@ -35,8 +35,9 @@ public class Student extends Value {
         return total;
     }
 
-    public void setTotal(Number total) {
+    public Student setTotal(Number total) {
         this.total = total;
+        return this;
     }
 
     @Override
