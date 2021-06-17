@@ -25,6 +25,7 @@ public class Monthly extends IndicatorExport {
     private final Map<String, Number> monthsMap;
     private final List<AudienceMap> audienceMaps;
     private final List<JsonObject> studentsList;
+    private String exportOption;
     private final LocalDate startAt;
     private final long numOfMonthsBetween;
 
@@ -39,9 +40,10 @@ public class Monthly extends IndicatorExport {
         numOfMonthsBetween = IntStream
                 .range(0, (int) DateHelper.distinctMonthsNumberSeparating(filter.start(), filter.end()) + 1)
                 .toArray().length;
+        exportOption = filter.exportOption();
         monthsMap = MonthlyHelper.initMonthsMap(startAt, numOfMonthsBetween);
         audienceMaps = getAudienceMap(values);
-        studentsList = formatAudienceMapsIntoListStudents(filter.exportOption());
+        studentsList = formatAudienceMapsIntoListStudents(exportOption);
     }
 
     @Override
@@ -192,9 +194,8 @@ public class Monthly extends IndicatorExport {
     public void setHeader(List<String> types) {
         List<String> exportHeaders = new ArrayList<>();
         exportHeaders.add("statistics-presences.classes");
-        exportHeaders.add("statistics-presences.students");
-        monthsMap.forEach((k, v) -> exportHeaders.add(DateHelper.getDateString(k,
-                DateHelper.YEAR_MONTH, DateHelper.SHORT_MONTH, Locale.FRANCE)));
+        exportHeaders.add(!ExportOptions.AUDIENCES.equals(exportOption) ? "statistics-presences.students" : "");
+        monthsMap.forEach((k, v) -> exportHeaders.add(DateHelper.getDateString(k, DateHelper.YEAR_MONTH, DateHelper.SHORT_MONTH, Locale.FRANCE)));
         exportHeaders.add("statistics-presences.indicator.filter.type.ABSENCE_TOTAL.abbr.totale");
 
         super.setHeader(exportHeaders);

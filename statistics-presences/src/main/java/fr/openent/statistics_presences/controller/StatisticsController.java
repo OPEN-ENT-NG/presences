@@ -83,6 +83,26 @@ public class StatisticsController extends ControllerHelper {
         });
     }
 
+    @Post("/structures/:structure/indicators/:indicator/graph")
+    @SecuredAction(value = "", type = ActionType.RESOURCE)
+    @ResourceFilter(UserInStructure.class)
+    public void fetchGraph(HttpServerRequest request) {
+        String indicatorName = request.getParam("indicator");
+        if (!StatisticsPresences.indicatorMap.containsKey(indicatorName)) {
+            notFound(request);
+            return;
+        }
+        RequestUtils.bodyToJson(request, pathPrefix + "indicator", body -> {
+            try {
+                Filter filter = new Filter(request.getParam("structure"), body);
+                Indicator indicator = StatisticsPresences.indicatorMap.get(indicatorName);
+                indicator.searchGraph(filter, Indicator.handler(request));
+            } catch (NumberFormatException e) {
+                badRequest(request);
+            }
+        });
+    }
+
     @Get("/structures/:structure/indicators/:indicator/export")
     @SecuredAction(value = "", type = ActionType.RESOURCE)
     @ResourceFilter(UserInStructure.class)

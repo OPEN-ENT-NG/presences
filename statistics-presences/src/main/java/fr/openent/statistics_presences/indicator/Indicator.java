@@ -53,6 +53,8 @@ public abstract class Indicator {
      */
     public abstract void search(Filter filter, Handler<AsyncResult<JsonObject>> handler);
 
+    public abstract void searchGraph(Filter filter, Handler<AsyncResult<JsonObject>> handler);
+
     public void export(HttpServerRequest request, Filter filter, List<JsonObject> values) throws ClassNotFoundException, IllegalAccessException, InvocationTargetException, InstantiationException {
         String className = String.format(CSV_EXPORT_FORMATTER, name);
         ClassLoader loader = Indicator.class.getClassLoader();

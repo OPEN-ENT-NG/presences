@@ -57,6 +57,14 @@ public class MonthlySearch {
         return this;
     }
 
+    public String recovery() {
+        return recoveryMethod;
+    }
+
+    public String halfDay() {
+        return halfDay;
+    }
+
     public List<User> users() {
         return this.users;
     }
@@ -274,8 +282,8 @@ public class MonthlySearch {
                 .put("_id", 0)
                 .put("month", dateToString("$start_at", "%Y-%m"))
                 .put("class_name", "$_id.class_name")
-                .put("count", sum("$slots"))
-                .put("slots", sum("$count"));
+                .put("count", sum("$count"))
+                .put("slots", sum("$slots"));
 
         return new JsonObject()
                 .put("$project", project);
@@ -289,8 +297,8 @@ public class MonthlySearch {
                 .put("class_name", "$_id.class_name")
                 .put("user", "$_id.user")
                 .put("name", "$_id.name")
-                .put("count", sum("$slots"))
-                .put("slots", sum("$count"));
+                .put("count", sum("$count"))
+                .put("slots", sum("$slots"));
 
         return new JsonObject()
                 .put("$project", project);
@@ -343,6 +351,7 @@ public class MonthlySearch {
 
     private JsonObject audienceIdByHalfDay() {
         return new JsonObject()
+                .put("name", "$name")
                 .put("class_name", "$class_name")
                 .put("day", day())
                 .put("month", month())

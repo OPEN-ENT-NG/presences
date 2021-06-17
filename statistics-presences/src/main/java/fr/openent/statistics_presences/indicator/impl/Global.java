@@ -37,6 +37,11 @@ public class Global extends Indicator {
                 .onComplete(handler);
     }
 
+    @Override
+    public void searchGraph(Filter filter, Handler<AsyncResult<JsonObject>> handler) {
+        throw new UnsupportedOperationException();
+    }
+
     /**
      * set search and add settings to recover absences
      *

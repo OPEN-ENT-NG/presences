@@ -29,6 +29,13 @@ public class AudienceMap extends Value {
         return this.students;
     }
 
+    public List<Month> months() {
+        return this.months;
+    }
+
+    public Number total() {
+        return total;
+    }
 
     @Override
     public JsonObject toJson() {
