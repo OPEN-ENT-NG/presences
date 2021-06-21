@@ -1,5 +1,6 @@
 import {moment} from 'entcore';
-import {CourseUtils, DateUtils} from '../index'
+import {CourseUtils} from '../course';
+import {DateUtils} from '../date';
 
 const course = {
     "_id": "d28ab187-dffa-4cdc-bee4-37c5aa1f484b",
