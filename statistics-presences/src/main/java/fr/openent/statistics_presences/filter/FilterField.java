@@ -1,6 +1,8 @@
 package fr.openent.statistics_presences.filter;
 
 public class FilterField {
+    public static final String START = "start";
+    public static final String END = "end";
     public static final String TYPES = "types";
     public static final String AUDIENCES = "audiences";
     public static final String USERS = "users";

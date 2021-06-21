@@ -1,6 +1,7 @@
 package fr.openent.statistics_presences.indicator;
 
 import fr.openent.presences.common.helper.CSVExport;
+import fr.openent.presences.db.DBService;
 import fr.openent.statistics_presences.bean.Report;
 import fr.openent.statistics_presences.filter.Filter;
 import fr.wseduc.webutils.http.Renders;
@@ -15,7 +16,7 @@ import io.vertx.core.logging.LoggerFactory;
 import java.lang.reflect.InvocationTargetException;
 import java.util.List;
 
-public abstract class Indicator {
+public abstract class Indicator extends DBService {
     private static final String NAME_FORMATTER = "fr.openent.statistics_presences.indicator.impl.%s";
     private final String CSV_EXPORT_FORMATTER = "fr.openent.statistics_presences.indicator.export.%s";
     private final Logger log = LoggerFactory.getLogger(Indicator.class);

@@ -7,7 +7,6 @@ import fr.openent.statistics_presences.bean.global.GlobalValue;
 import fr.openent.statistics_presences.filter.Filter;
 import fr.openent.statistics_presences.indicator.Indicator;
 import fr.openent.statistics_presences.indicator.IndicatorGeneric;
-import fr.wseduc.mongodb.MongoDb;
 import io.vertx.core.*;
 import io.vertx.core.eventbus.Message;
 import io.vertx.core.json.JsonArray;
@@ -15,7 +14,6 @@ import io.vertx.core.json.JsonObject;
 import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
 import org.entcore.common.mongodb.MongoDbResult;
-import org.entcore.common.neo4j.Neo4j;
 import org.entcore.common.neo4j.Neo4jResult;
 
 import java.util.*;
@@ -128,7 +126,7 @@ public class Global extends Indicator {
 
         Future<GlobalSearch> future = Future.future();
         JsonObject request = commandObject(search.totalAbsenceUserPipeline());
-        MongoDb.getInstance().command(request.toString(), MongoDbResult.validResultHandler(either -> {
+        mongoDb.command(request.toString(), MongoDbResult.validResultHandler(either -> {
             if (either.isLeft()) {
                 log.error(String.format("[StatisticsPresences@Global::totalAbsenceStage] " +
                                 "Indicator %s failed to execute mongodb total absence aggregation pipeline", Global.class.getName()),
@@ -179,7 +177,7 @@ public class Global extends Indicator {
     private Future<Number> globalAbsenceCount(GlobalSearch search) {
         Promise<Number> promise = Promise.promise();
         JsonObject request = commandObject(search.totalAbsenceGlobalPipeline());
-        MongoDb.getInstance().command(request.toString(), MongoDbResult.validResultHandler(either -> {
+        mongoDb.command(request.toString(), MongoDbResult.validResultHandler(either -> {
             if (either.isLeft()) {
                 log.error(String.format("[StatisticsPresences@Global::globalAbsenceCount] " +
                                 "Indicator %s failed to execute mongodb global absence count aggregation pipeline", Global.class.getName()),
@@ -211,7 +209,7 @@ public class Global extends Indicator {
                 "RETURN count(u) as count";
         JsonObject params = new JsonObject()
                 .put("structure", search.filter().structure());
-        Neo4j.getInstance().execute(query, params, Neo4jResult.validUniqueResultHandler(either -> {
+        neo4j.execute(query, params, Neo4jResult.validUniqueResultHandler(either -> {
             if (either.isLeft()) {
                 future.fail(either.left().getValue());
             } else {
@@ -283,7 +281,7 @@ public class Global extends Indicator {
 
             params.put("audiences", search.filter().audiences());
 
-            Neo4j.getInstance().execute(query, params, searchUserHandler(search, future));
+            neo4j.execute(query, params, searchUserHandler(search, future));
         }
 
         return future;
@@ -298,7 +296,7 @@ public class Global extends Indicator {
     private Future<GlobalSearch> prefetchUsers(GlobalSearch search) {
         Future<GlobalSearch> future = Future.future();
         JsonObject request = commandObject(search.prefetchUserPipeline());
-        MongoDb.getInstance().command(request.toString(), MongoDbResult.validResultHandler(either -> {
+        mongoDb.command(request.toString(), MongoDbResult.validResultHandler(either -> {
             if (either.isLeft()) {
                 log.error(String.format("[StatisticsPresences@Global::prefetchUsers] " +
                                 "Indicator %s failed to execute prefetch user mongodb aggregation pipeline", Global.class.getName()),
@@ -364,7 +362,7 @@ public class Global extends Indicator {
         }
 
         JsonObject request = commandObject(command);
-        MongoDb.getInstance().command(request.toString(), MongoDbResult.validResultHandler(either -> {
+        mongoDb.command(request.toString(), MongoDbResult.validResultHandler(either -> {
             if (either.isLeft()) {
                 log.error(String.format("[StatisticsPresences@Global::retrieveStatistics] " +
                                 "Indicator %s failed to execute mongodb aggregation pipeline", Global.class.getName()),
@@ -503,7 +501,7 @@ public class Global extends Indicator {
                 .put("structure", search.filter().structure());
         if (users != null && !users.isEmpty()) params.put("users", users);
 
-        Neo4j.getInstance().execute(query, params, searchUserHandler(search, future));
+        neo4j.execute(query, params, searchUserHandler(search, future));
     }
 
     /**

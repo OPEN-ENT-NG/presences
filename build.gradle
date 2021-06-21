@@ -65,6 +65,7 @@ subprojects {
         testCompile "io.vertx:vertx-core:$vertxVersion"
         testCompile "org.junit.jupiter:junit-jupiter-engine:$junitVersion"
         testCompile "org.mockito:mockito-core:$mockitoVersion"
+        testCompile "org.powermock:powermock-core:$powerMockVersion"
         compile "fr.wseduc:vertx-cron-timer:$vertxCronTimer"
         testCompile "io.vertx:testtools:$toolsVersion"
     }

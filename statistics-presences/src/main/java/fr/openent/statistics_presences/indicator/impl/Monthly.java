@@ -8,7 +8,6 @@ import fr.openent.statistics_presences.filter.Filter;
 import fr.openent.statistics_presences.helper.MonthlyHelper;
 import fr.openent.statistics_presences.indicator.Indicator;
 import fr.openent.statistics_presences.indicator.IndicatorGeneric;
-import fr.wseduc.mongodb.MongoDb;
 import io.vertx.core.*;
 import io.vertx.core.eventbus.Message;
 import io.vertx.core.json.JsonArray;
@@ -16,7 +15,6 @@ import io.vertx.core.json.JsonObject;
 import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
 import org.entcore.common.mongodb.MongoDbResult;
-import org.entcore.common.neo4j.Neo4j;
 import org.entcore.common.neo4j.Neo4jResult;
 
 import java.time.LocalDate;
@@ -364,7 +362,7 @@ public class Monthly extends Indicator {
         return promise.future();
     }
 
-    public Future<JsonArray> retrieveStatistics(JsonArray command) {
+    private Future<JsonArray> retrieveStatistics(JsonArray command) {
         Promise<JsonArray> promise = Promise.promise();
         if (command == null || command.isEmpty()) {
             promise.complete(new JsonArray());
@@ -372,7 +370,7 @@ public class Monthly extends Indicator {
         }
 
         JsonObject request = commandObject(command);
-        MongoDb.getInstance().command(request.toString(), MongoDbResult.validResultHandler(either -> {
+        mongoDb.command(request.toString(), MongoDbResult.validResultHandler(either -> {
             if (either.isLeft()) {
                 log.error(String.format("[StatisticsPresences@Monthly::retrieveStatistics] " +
                                 "Indicator %s failed to execute mongodb aggregation pipeline", Monthly.class.getName()),
@@ -547,7 +545,7 @@ public class Monthly extends Indicator {
             query += "SKIP " + (search.filter().page() * PAGE_SIZE) + " LIMIT " + PAGE_SIZE;
 
 
-        Neo4j.getInstance().execute(query, params, searchClassHandler(search, promise));
+        neo4j.execute(query, params, searchClassHandler(search, promise));
     }
 
     /**
