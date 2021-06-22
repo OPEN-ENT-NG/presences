@@ -38,10 +38,11 @@
     "apexcharts": "^3.26.0"
   },
   "devDependencies": {
-    "@types/jquery": "^2.0.34",
-    "@types/jest": "^22.2.0",
-    "@types/core-js": "0.9.42",
     "@types/angular": "^1.6.55",
+    "@types/core-js": "0.9.42",
+    "@types/jest": "^22.2.0",
+    "@types/jquery": "^2.0.34",
+    "axios-mock-adapter": "^1.19.0",
     "jest": "^24.7.1",
     "jest-environment-node": "^23.0.0",
     "moment": "^2.21.0",
