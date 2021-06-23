@@ -177,14 +177,48 @@ export const mainController = ng.controller('MainController',
             };
 
             vm.onSwitchDisplay = async (): Promise<void> => {
-                vm.filter.filterTypes.forEach((type: FilterType) => {
-                    if (type.name() !== FILTER_TYPE.NO_REASON) {
-                        type.select(false);
-                    } else  {
-                        type.select(true);
-                    }
-                });
+                proceedOnChangeFilterMonth();
                 await vm.resetIndicator();
+            };
+
+            const proceedOnChangeFilterMonth = (): void => {
+
+                /** fetch all absence filter without counting eventType
+                 * @return Array<FilterType>
+                 */
+                const getAbsencesTypeFilters = (): Array<FilterType> => {
+                    return vm.filter.filterTypes.filter((f: FilterType) => f.name() === FILTER_TYPE.NO_REASON ||
+                        f.name() === FILTER_TYPE.UNREGULARIZED || f.name() === FILTER_TYPE.REGULARIZED);
+                };
+
+                /** fetch all event type filter without counting absence filter
+                 * @return Array<FilterType>
+                 */
+                const getEventTypeFilter = (): Array<FilterType> => {
+                    return vm.filter.filterTypes.filter((f: FilterType) => f.name() !== FILTER_TYPE.NO_REASON &&
+                        f.name() !== FILTER_TYPE.UNREGULARIZED && f.name() !== FILTER_TYPE.REGULARIZED);
+                };
+
+                if (vm.indicator.name() === INDICATOR_TYPE.monthly && vm.indicator.display === DISPLAY_TYPE.TABLE) {
+                    // check if absence filter has at least one selected
+                    if (getAbsencesTypeFilters().some(f => f.selected())) {
+                        vm.filter.filterTypes.forEach((type: FilterType) => {
+                            // we remove all event type since we have one absence filter selected
+                            if (type.name() !== FILTER_TYPE.NO_REASON && type.name() !== FILTER_TYPE.REGULARIZED && type.name() !== FILTER_TYPE.UNREGULARIZED) {
+                                type.select(false);
+                            }
+                        });
+                    } else {
+                        // this case occurs if none absence filter are selected
+                        // therefore we check if all filters are empty or if at least 2 differents events are selected
+                        if (vm.filter.filterTypes.every((type: FilterType) => !type.selected()) ||
+                            getEventTypeFilter().filter((type: FilterType) => type.selected()).length > 1) {
+                            // we reinitialise the filter by its default "NO_REASON"
+                            vm.filter.filterTypes.forEach((type: FilterType) => type.select(false));
+                            vm.filter.filterTypes.find((type: FilterType) => type.name() === FILTER_TYPE.NO_REASON).select(true);
+                        }
+                    }
+                }
             };
 
             vm.canAccessOption = (indicator: Indicator): boolean => {
