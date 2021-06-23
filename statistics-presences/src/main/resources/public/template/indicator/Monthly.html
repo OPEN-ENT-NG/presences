@@ -1,37 +1,14 @@
-<div class="table monthly-indicator">
-    <div class="thead">
-        <div class="tr">
-            <div class="th">
-                <i18n>statistics-presences.classes</i18n>/<i18n>statistics-presences.students</i18n>
-            </div>
-            <div ng-if="vm.indicator.absenceSelected()" class="th ellipsis">
-                <i18n>statistics-presences.indicator.filter.type.ABSENCE_TOTAL.abbr</i18n>
-            </div>
-            <div class="th ellipsis" ng-repeat="month in vm.indicator._filterMonths">
-                [[month.name()]]
-            </div>
-        </div>
-    </div>
-    <div class="tbody">
-        <div class="tr" ng-repeat="audience in vm.indicator.values.audiences">
-            <div class="td text-center">
-                [[audience.name]]
-            </div>
-            <div ng-repeat="month in vm.indicator._filterMonths"
-                 class="td text-center indicator-value"
-                 ng-class="{'max-value': audience.statistics[month.name()].max}">
-                <span ng-if="audience.statistics[month.name()] !== undefined">
-                    [[audience.statistics[month.name()].count]]
-                    <em class="metadata"
-                        ng-if="audience.statistics[month.name()].slots > 0 && vm.indicator.filter('HOUR_DETAIL').selected">
-                        ([[student.statistics[type.name()].slots]] <i18n>statistics-presences.slots</i18n>)
-                    </em>
-                </span>
-                <span ng-if="audience.statistics[month.name()] === undefined">
-                   -
-                </span>
-            </div>
-        </div>
-    </div>
+<!-- display table mode -->
+<div class="monthly" ng-if="vm.indicator._display === vm.displayType.TABLE">
+    <monthly-table indicator="vm.indicator"></monthly-table>
+    <infinite-scroll scrolled="vm.indicator.page = vm.indicator.page + 1; vm.launchResearch()"></infinite-scroll>
 </div>
-<infinite-scroll scrolled="vm.indicator.page = vm.indicator.page + 1; vm.launchResearch()"></infinite-scroll>
+
+<!-- display graphic chart mode -->
+<div class="statistics-chart">
+    <chart-statistics ng-if="vm.indicator._display === vm.displayType.GRAPH"
+                      indicator="vm.indicator"
+                      filter="vm.filter"
+                      on-change="vm.launchResearch()"></chart-statistics>
+</div>
+

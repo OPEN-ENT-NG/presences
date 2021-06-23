@@ -1,11 +1,15 @@
 import {idiom, moment} from "entcore";
 import {Mix} from "entcore-toolkit";
-import http from 'axios';
 import {Reason} from '@presences/models';
-import {Filter, FilterMonth, FilterType, FilterTypeFactory, FilterValue} from "../filter";
+import {Filter, FilterType, FilterTypeFactory, FilterValue} from "../filter";
 import {DateUtils} from "@common/utils";
 import {IPunishmentType} from '@incidents/models/PunishmentType';
 import {PunishmentsUtils} from "@incidents/utilities/punishments";
+import {DISPLAY_TYPE} from "../core/constants/DisplayMode";
+import {GlobalResponse, IGlobal} from "../model/Global";
+import {IMonthly, IMonthlyGraph} from "../model/Monthly";
+import {IndicatorBody} from "../model/Indicator";
+import {indicatorService} from "../services";
 
 declare const window: any;
 
@@ -24,23 +28,30 @@ export interface IIndicator {
 }
 
 export abstract class Indicator implements IIndicator {
-    values: any;
+    values: IGlobal | IMonthly;
+    graphValues: IMonthlyGraph;
     _factoryFilter: FilterTypeFactory;
     _filtersEnabled: Map<Filter, FilterValue>;
+    _from: Date;
+    _to: Date;
     _filterTypes: FilterType[];
-    _filterMonths: FilterMonth[];
+    _display: string;
     _name: string;
     _page: number;
 
     constructor(name: string, reasons: Reason[], punishmentTypes: IPunishmentType[]) {
         this.values = {};
+        this.graphValues = {data: null, months: []};
         this._factoryFilter = new FilterTypeFactory(reasons, punishmentTypes);
-        this._filterTypes = [];
+        this._filterTypes = new Array<FilterType>();
         this._filtersEnabled = new Map([
             [Filter.FROM, this._factoryFilter.getFilterValue(0, null)],
             [Filter.TO, this._factoryFilter.getFilterValue(0, null)],
             [Filter.HOUR_DETAIL, this._factoryFilter.getFilterValue(null, null)]
         ]);
+        this._from = DateUtils.setFirstTime(new Date());
+        this._to =  DateUtils.setLastTime(new Date());
+        this._display = DISPLAY_TYPE.TABLE;
         this._name = name;
         this._page = 0;
     }
@@ -80,14 +91,26 @@ export abstract class Indicator implements IIndicator {
         this._filterTypes = types;
     }
 
-    public setFilterMonths(months: FilterMonth[]) {
-        this._filterMonths = months;
-    }
-
     protected enableFilter(filter: Filter, value: boolean) {
         if (this._filtersEnabled.has(filter)) {
             this._filtersEnabled.get(filter)._selected = value;
         }
+    }
+
+    set from(from: Date) {
+        this._from = from;
+    }
+
+    get from() {
+        return this._from;
+    }
+
+    set to(to: Date) {
+        this._to = to;
+    }
+
+    get to() {
+        return this._to;
     }
 
     set page(value: number) {
@@ -98,14 +121,36 @@ export abstract class Indicator implements IIndicator {
         return this._page;
     }
 
+    set display(display: string) {
+        this._display = display;
+    }
+
+    get display() {
+        return this._display;
+    }
+
     abstract resetValues();
+
+    abstract resetDisplayMode();
+
+    abstract resetDates();
 
     abstract isEmpty();
 
-    async search(start: Date, end: Date, users: string[], audiences: string[]): Promise<any> {
-        const body = {
-            start: moment(start).format(DateUtils.FORMAT['YEAR-MONTH-DAY-HOUR-MIN-SEC']),
-            end: moment(end).format(DateUtils.FORMAT['YEAR-MONTH-DAY-HOUR-MIN-SEC']),
+    async fetchIndicator(start: Date, end: Date, users: string[], audiences: string[]): Promise<GlobalResponse | IMonthly> {
+        const body = this.prepareIndicator(start, end, users, audiences);
+        return indicatorService.fetchIndicator(window.structure.id, this.name(), this._page, body);
+    }
+
+    async fetchGraphIndicator(start: Date, end: Date, users: string[], audiences: string[]): Promise<IMonthlyGraph> {
+        const body = this.prepareIndicator(start, end, users, audiences);
+        return indicatorService.fetchGraphIndicator(window.structure.id, this.name(), body);
+    }
+
+    private prepareIndicator(start: Date, end: Date, users: string[], audiences: string[]) {
+        const body: IndicatorBody = {
+            start: moment(start).format(DateUtils.FORMAT['YEAR-MONTH-DAY-T-HOUR-MIN-SEC']),
+            end: moment(end).format(DateUtils.FORMAT['YEAR-MONTH-DAY-T-HOUR-MIN-SEC']),
             types: [],
             filters: {},
             reasons: this.getSelectedReasons(),
@@ -114,29 +159,30 @@ export abstract class Indicator implements IIndicator {
             users,
             audiences
         };
-        this._filterTypes.forEach(type => type.selected() && body.types.push(type.name()));
+        this._filterTypes.forEach((type: FilterType) => type.selected() && body.types.push(type.name()));
         this._filtersEnabled.forEach((value: FilterValue, key: Filter) => {
             if (value.selected) {
                 body.filters[key] = value.value === null ? value.selected : value.value
             }
         });
-        // body.filters[Filter.HOUR_DETAIL] = this._filtersEnabled.get(Filter.HOUR_DETAIL).selected;
-        const {data} = await http.post(`/statistics-presences/structures/${window.structure.id}/indicators/${this.name()}?page=${this._page}`, body);
-        return data;
+        return body;
     }
 
-    export(start: Date, end: Date, users: string[], audiences: string[]): void {
-        let url = `/statistics-presences/structures/${window.structure.id}/indicators/${this.name()}/export?`;
-        url += `start=${moment(start).format(DateUtils.FORMAT["YEAR-MONTH-DAY-HOUR-MIN-SEC"])}&end=${moment(end).format(DateUtils.FORMAT["YEAR-MONTH-DAY-HOUR-MIN-SEC"])}`;
+    abstract search(start: Date, end: Date, users: string[], audiences: string[]): Promise<void>;
+
+    export(start: Date, end: Date, users: string[], audiences: string[], exportType?: string): void {
+        let url: string = `/statistics-presences/structures/${window.structure.id}/indicators/${this.name()}/export?`;
+        url += `start=${moment(start).format(DateUtils.FORMAT["YEAR-MONTH-DAY-T-HOUR-MIN-SEC"])}&end=${moment(end).format(DateUtils.FORMAT["YEAR-MONTH-DAY-T-HOUR-MIN-SEC"])}`;
         users.forEach(user => url += `&users=${user}`);
         audiences.forEach(audience => url += `&audiences=${audience}`);
-        this._filterTypes.forEach(type => type.selected() && (url += `&types=${type.name()}`));
+        if (exportType) url += `&export_option=${exportType}`;
+        this._filterTypes.forEach((type: FilterType) => type.selected() && (url += `&types=${type.name()}`));
         this._filtersEnabled.forEach((value: FilterValue, key: Filter) => {
             if (value.selected) {
                 url += `&${key}=${value.value === null ? value.selected : value.value}`
             }
         });
-        this.getSelectedReasons().forEach(reason => url += `&reasons=${reason}`)
+        this.getSelectedReasons().forEach((reason: number) => url += `&reasons=${reason}`)
         window.open(url);
     }
 

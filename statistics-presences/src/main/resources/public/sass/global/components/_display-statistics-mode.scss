@@ -1,0 +1,19 @@
+.displayStatisticsMode {
+  i {
+    font-size: 26px;
+    margin-right: 8px;
+    opacity: 50%;
+
+    &:last-child {
+      margin: 0;
+    }
+
+    &.selected {
+      opacity: 100%;
+    }
+
+    &:hover {
+      opacity: 100%;
+    }
+  }
+}

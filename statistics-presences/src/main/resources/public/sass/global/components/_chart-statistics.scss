@@ -1,0 +1,103 @@
+.statistics-chart {
+  background-color: $statistics-presences-white;
+  display: flex;
+
+  &-graph {
+    margin: 20px;
+  }
+
+  &-legend {
+
+    margin: 20px;
+    width: 100%;
+
+    &-item {
+      margin-top: 20px;
+      margin-bottom: 20px;
+    }
+
+    label.checkbox {
+      input[type=checkbox] {
+
+        &.UNREGULARIZED {
+          + span:before {
+            border: 2px solid $statistics-presences-pink;
+          }
+
+          &:checked + span::before {
+            border-color: $statistics-presences-pink;
+            background-color: $statistics-presences-pink;
+          }
+        }
+
+        &.REGULARIZED {
+          + span:before {
+            border: 2px solid $statistics-presences-green;
+          }
+
+          &:checked + span::before {
+            border-color: $statistics-presences-green;
+            background-color: $statistics-presences-green;
+          }
+        }
+
+        &.NO_REASON {
+          + span:before {
+            border: 2px solid $statistics-presences-red;
+          }
+
+          &:checked + span::before {
+            border-color: $statistics-presences-red;
+            background-color: $statistics-presences-red;
+          }
+        }
+
+        &.DEPARTURE {
+          + span:before {
+            border: 2px solid $statistics-presences-light-purple;
+          }
+
+          &:checked + span::before {
+            border-color: $statistics-presences-light-purple;
+            background-color: $statistics-presences-light-purple;
+          }
+        }
+
+        &.LATENESS {
+          + span:before {
+            border: 2px solid $statistics-presences-purple;
+          }
+
+          &:checked + span::before {
+            border-color: $statistics-presences-purple;
+            background-color: $statistics-presences-purple;
+          }
+        }
+
+        &.PUNISHMENT {
+          + span:before {
+            border: 2px solid $statistics-presences-main;
+          }
+
+          &:checked + span::before {
+            border-color: $statistics-presences-main;
+            background-color: $statistics-presences-main;
+          }
+        }
+
+        &.SANCTION {
+          + span:before {
+            border: 2px solid $statistics-presences-yellow-sand;
+          }
+
+          &:checked + span::before {
+            border-color: $statistics-presences-yellow-sand;
+            background-color: $statistics-presences-yellow-sand;
+          }
+        }
+      }
+    }
+  }
+
+
+}

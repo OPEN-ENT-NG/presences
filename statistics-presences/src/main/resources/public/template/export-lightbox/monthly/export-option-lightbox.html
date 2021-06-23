@@ -1,0 +1,43 @@
+<lightbox class="exportCSVLightbox" show="vm.filter.showCSV" on-close="vm.filter.showCSV = false">
+    <section class="head exportCSVLightbox-header">
+        <h3>
+            <i18n>statistics-presences.indicator.export.csv</i18n>
+        </h3>
+    </section>
+
+    <!-- options radio select export option -->
+    <section class="exportCSVLightbox-body">
+        <div class="md-radio md-radio-inline">
+            <input id="radio-audiences-students"
+                   data-ng-model="vm.filter.exportType"
+                   ng-value="vm.exportType[vm.exportType.ALL]"
+                   data-ng-click="vm.switchExportType(vm.exportType[vm.exportType.ALL])" type="radio">
+            <label for="radio-audiences-students">
+                <i18n>statistics-presences.indicator.export.csv.audiences.students</i18n>
+            </label>
+        </div>
+        <div class="md-radio md-radio-inline">
+            <input id="radio-audiences-only"
+                   data-ng-model="vm.filter.exportType"
+                   ng-value="vm.exportType[vm.exportType.AUDIENCES]"
+                   data-ng-click="vm.switchExportType(vm.exportType[vm.exportType.AUDIENCES])" type="radio">
+            <label for="radio-audiences-only">
+                <i18n>statistics-presences.indicator.export.csv.audiences.only</i18n>
+            </label>
+        </div>
+    </section>
+
+    <!-- Cancel and submit buttons -->
+    <section class="exportCSVLightbox-footer">
+        <div class="row horizontal-spacing">
+            <div class="export-csv-lightbox-footer-submit twelve cell">
+                <button class="right-magnet" data-ng-click="vm.export(vm.filter.exportType)">
+                    <i18n>statistics-presences.validate</i18n>
+                </button>
+                <button class="right-magnet cancel" data-ng-click="vm.filter.showCSV = false">
+                    <i18n>statistics-presences.cancel</i18n>
+                </button>
+            </div>
+        </div>
+    </section>
+</lightbox>

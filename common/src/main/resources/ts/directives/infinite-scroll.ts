@@ -2,6 +2,10 @@ import {ng} from 'entcore';
 import {INFINITE_SCROLL_EVENTER} from "@common/core/enum/infinite-scroll-eventer";
 
 interface IViewModel {
+    $onInit(): any;
+
+    $onDestroy(): any;
+
     loading: boolean;
 }
 /**
@@ -22,7 +26,14 @@ export const InfiniteScroll = ng.directive('infiniteScroll', () => {
         controllerAs: 'vm',
         controller: function () {
             const vm: IViewModel = <IViewModel>this;
-            vm.loading = false;
+
+            vm.$onInit = () => {
+                vm.loading = false;
+            };
+
+            vm.$onDestroy = () => {
+                $(window).off("scroll");
+            };
         },
         link: function ($scope, $element: HTMLDivElement) {
             const vm: IViewModel = $scope.vm;

@@ -4,19 +4,13 @@
     </section>
 
     <section class="massmailing-lightbox-body body lightbox-form statistics-presences-filters">
-
         <!-- Types -->
         <div class="row vertical-spacing">
             <h4>
                 <i18n>statistics-presences.filters.types</i18n>
             </h4>
-            <div class="chips">
-                <div class="chip" ng-repeat="filterType in vm.filter.filterTypes"
-                     ng-class="{ selected: filterType.selected() }"
-                     data-ng-click="filterType.select(!filterType.selected()); filterType.process(filterType.selected())">
-                    <span>[[idiom.translate('statistics-presences.indicator.filter.type.' + filterType.name())]]</span>
-                </div>
-            </div>
+            <!-- event type filter (different rule indicator) -->
+            <filter-indicator filters="vm.filter.filterTypes" indicator="vm.indicator"></filter-indicator>
         </div>
 
         <!-- Absence reasons -->

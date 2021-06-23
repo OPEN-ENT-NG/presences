@@ -4,6 +4,10 @@ import {IndicatorFactory} from '../indicator';
 import {IPunishmentType} from '@incidents/models/PunishmentType';
 import {Reason} from '@presences/models';
 import {INDICATOR_TYPE} from "../core/constants/IndicatorType";
+import {GlobalResponse, IGlobal} from "../model/Global";
+import {AxiosError} from "axios";
+import {DISPLAY_TYPE} from "../core/constants/DisplayMode";
+import {DateUtils} from "@common/utils";
 
 export class Global extends Indicator {
     _filterTypes: FilterType[]
@@ -37,12 +41,20 @@ export class Global extends Indicator {
         return false;
     }
 
-    async search(start: Date, end: Date, users: string[], audiences: string[]): Promise<any> {
-        const {count, data} = await super.search(start, end, users, audiences);
-        this.values = {
-            count,
-            students: [...this.values.students, ...data]
-        }
+    async search(start: Date, end: Date, users: string[], audiences: string[]): Promise<void> {
+        await new Promise((resolve, reject) => {
+            super.fetchIndicator(start, end, users, audiences)
+                .then((res: GlobalResponse) => {
+                    this.values = {
+                        count: res.count,
+                        students: [...(this.values as IGlobal).students, ...res.data]
+                    };
+                    resolve();
+                })
+                .catch((error: AxiosError) => {
+                    reject(error);
+                });
+        });
     }
 
     resetValues() {
@@ -53,7 +65,16 @@ export class Global extends Indicator {
     }
 
     isEmpty() {
-        return this.values.students.length === 0;
+        return (this.values as IGlobal).students.length === 0;
+    }
+
+    resetDisplayMode() {
+        this._display = DISPLAY_TYPE.TABLE;
+    }
+
+    resetDates(): void {
+        this._from = DateUtils.setFirstTime(new Date());
+        this._to = DateUtils.setLastTime(new Date());
     }
 }
 

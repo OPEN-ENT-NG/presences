@@ -1,0 +1,72 @@
+.monthly-indicator {
+
+  .flex-table {
+    .flex-head {
+      z-index: 1;
+
+      .audience-student-header {
+        justify-content: flex-start;
+
+        span {
+          padding-left: 20px;
+        }
+      }
+    }
+
+    .flex-col {
+      flex: 1;
+    }
+
+    .indicator-values-months {
+      padding: 0;
+      flex-grow: 0;
+      flex-shrink: 0;
+      flex-basis: 70%;
+    }
+
+    .flex-body {
+
+      background-color: $white;
+
+      .flex-collapse {
+
+        .student-name {
+          justify-content: flex-start;
+          white-space: nowrap;
+          overflow: hidden;
+          span {
+            padding-left: 20px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+          }
+        }
+      }
+
+      .max-value {
+        background-color: $statistics-presences-main !important;
+        color: $white;
+        font-weight: bold;
+      }
+
+      .total-count {
+        font-size: 18px;
+        font-weight: bold;
+        background-color: $white;
+      }
+
+      .audience-name {
+
+        justify-content: flex-start;
+
+        span {
+          font-weight: bold;
+          padding-left: 20px;
+        }
+      }
+
+      .indicator-value:nth-child(odd) {
+        background-color: $statistics-presences-light-background;
+      }
+    }
+  }
+}

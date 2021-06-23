@@ -3,6 +3,13 @@
   flex-direction: row;
   flex-wrap: wrap;
   align-items: center;
+
+
+  .indicator-switch {
+    select {
+      margin: 5px 0;
+    }
+  }
 }
 
 .statistics-presences-filters {

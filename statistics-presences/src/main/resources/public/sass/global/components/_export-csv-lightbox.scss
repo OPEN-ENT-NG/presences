@@ -1,0 +1,19 @@
+.exportCSVLightbox {
+
+  /* Header part */
+  &-header {
+  }
+
+  /* Body part */
+  &-body {
+    padding: 20px;
+    background: $statistics-presences-grey-smoke;
+    justify-content: center;
+    display: flex
+  }
+
+  /* Footer part */
+  &-footer {
+    padding: 8px 8px 0 8px;
+  }
+}

@@ -77,8 +77,8 @@ export class FilterTypeFactory {
         this.punishmentTypes = punishmentTypes;
         this.reasonsMap = {};
         this.punishmentTypesMap = {};
-        this.reasons.map((reason: Reason) => this.reasonsMap[reason.id] = true);
-        this.punishmentTypes.map((type: IPunishmentType) => this.punishmentTypesMap[type.id] = true);
+        this.reasons.forEach((reason: Reason) => this.reasonsMap[reason.id] = true);
+        this.punishmentTypes.forEach((type: IPunishmentType) => this.punishmentTypesMap[type.id] = true);
     }
 
     public getFilter(name: string, process: Function): FilterType {
@@ -90,18 +90,16 @@ export class FilterTypeFactory {
         return new FilterValue(value, selected);
     }
 
-    private changeReasonsValue(proving: boolean, value: boolean) {
+    public changeUnProvingReasons(value: boolean): void {
         this.reasons.forEach(reason => {
-            if (reason.proving === proving) this.reasonsMap[reason.id] = value;
+            if (reason.proving === false) this.reasonsMap[reason.id] = value;
         });
     }
 
-    public changeUnProvingReasons(value: boolean): void {
-        this.changeReasonsValue(false, value);
-    }
-
     public changeProvingReasons(value: boolean): void {
-        this.changeReasonsValue(true, value);
+        this.reasons.forEach(reason => {
+            this.reasonsMap[reason.id] = value;
+        });
     }
 
     private changePunishmentTypesValue(type: string, value: boolean): void {
@@ -120,17 +118,5 @@ export class FilterTypeFactory {
 
     public unselectAllReasons(): void {
         this.reasons.forEach(({id}) => this.reasonsMap[id] = false);
-    }
-}
-
-export class FilterMonth {
-    private _name: string
-
-    constructor(name: string) {
-        this._name = name;
-    }
-
-    name(): string {
-        return this._name;
     }
 }
