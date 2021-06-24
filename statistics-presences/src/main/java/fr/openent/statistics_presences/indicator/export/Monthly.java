@@ -7,6 +7,7 @@ import fr.openent.statistics_presences.bean.monthly.Statistic;
 import fr.openent.statistics_presences.bean.monthly.Student;
 import fr.openent.statistics_presences.constants.ExportOptions;
 import fr.openent.statistics_presences.filter.Filter;
+import fr.openent.statistics_presences.filter.FilterField;
 import fr.openent.statistics_presences.helper.MonthlyHelper;
 import fr.wseduc.webutils.I18n;
 import fr.wseduc.webutils.http.Renders;
@@ -74,7 +75,7 @@ public class Monthly extends IndicatorExport {
             if (!audienceMap.students().isEmpty()) {
                 studentList.add(new JsonObject()
                         .put("audience", audienceMap.key())
-                        .put("name", "TOTAL")
+                        .put("name", FilterField.TOTAL)
                         .put("months", audienceMap.months().stream().map(Month::toJson).collect(Collectors.toList()))
                         .put("total", audienceMap.total()));
             }
@@ -194,7 +195,9 @@ public class Monthly extends IndicatorExport {
     public void setHeader(List<String> types) {
         List<String> exportHeaders = new ArrayList<>();
         exportHeaders.add("statistics-presences.classes");
-        exportHeaders.add(!ExportOptions.AUDIENCES.equals(exportOption) ? "statistics-presences.students" : "");
+        if (!ExportOptions.AUDIENCES.equals(exportOption)) {
+            exportHeaders.add("statistics-presences.students");
+        }
         monthsMap.forEach((k, v) -> exportHeaders.add(DateHelper.getDateString(k, DateHelper.YEAR_MONTH, DateHelper.SHORT_MONTH, Locale.FRANCE)));
         exportHeaders.add("statistics-presences.indicator.filter.type.ABSENCE_TOTAL.abbr.totale");
 
@@ -213,8 +216,10 @@ public class Monthly extends IndicatorExport {
     @SuppressWarnings("unchecked")
     private String getLine(JsonObject value) {
         StringBuilder line = new StringBuilder();
-        line.append(value.getString("audience")).append(SEPARATOR)
-                .append(value.getString("name")).append(SEPARATOR);
+        line.append(value.getString("audience")).append(SEPARATOR);
+        if (!ExportOptions.AUDIENCES.equals(exportOption)) {
+            line.append(value.getString("name")).append(SEPARATOR);
+        }
         ((List<JsonObject>) value.getJsonArray("months").getList()).forEach(month ->
                 line.append(month.getJsonObject(String.join("", month.fieldNames())).getInteger("count", 0)).append(SEPARATOR));
         line.append(value.getInteger("total", 0)).append(SEPARATOR);
