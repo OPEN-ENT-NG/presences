@@ -333,6 +333,7 @@ public class EventHelper {
                 List<Student> students = personHelper.getStudentListFromJsonArray(
                         studentsInfosFuture.result()
                 );
+
                 for (Event event : events) {
                     // add student info
                     for (Student student : students) {
@@ -347,6 +348,8 @@ public class EventHelper {
                         }
                     }
                 }
+                // Filter events w/ empty students => works only for infinite scroll paging
+                events.removeIf(event -> event.getStudent().getName() == null);
                 matchSlots(slots, events, absences, studentFuture);
             }
         });

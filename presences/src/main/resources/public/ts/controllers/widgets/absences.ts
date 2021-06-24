@@ -223,6 +223,7 @@ export const absencesController = ng.controller('AbsenceController', ['$scope', 
                                 /* Check if absence on a unique slot and remove duplicates */
                                 if (!vm.isOnMultipleSlots(absenceEvent) &&
                                     !absenceEvent.reason_id &&
+                                    absenceEvent.student && absenceEvent.student.name &&
                                     vm.absences.indexOf(vm.absences.find(
                                         (abs: CounsellorAbsence) => {
                                             return (DateUtils.isBetween(abs.start_date, abs.end_date,
