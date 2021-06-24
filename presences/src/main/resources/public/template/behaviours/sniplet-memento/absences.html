@@ -12,7 +12,7 @@
             <div class="centered eleven vertical-spacing-four">
                 <div class="row vertical-spacing-four absence-rate">
                     <i18n>presences.memento.absence.absence_rate</i18n>
-                    : [[vm.graphSummary.absence_rate]] %
+                    : [[vm.periodSummary.absence_rate]] %
                 </div>
                 <div class="row vertical-spacing-four">
                     <select ng-options="period as period.label for period in vm.periods" ng-change="vm.loadPeriodData()"
