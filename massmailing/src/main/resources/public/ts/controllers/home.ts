@@ -213,8 +213,18 @@ export const homeController = ng.controller('HomeController', ['$scope', 'route'
             vm.formFilter.punishments = vm.punishmentsTypes.filter((punishmentType: IPunishmentType) => punishmentType.isSelected);
             const {start_date, end_date} = vm.filter;
             vm.filter = {...vm.formFilter, start_date, end_date};
+            let preferenceFilters: IMassmailingFilterPreferences = {
+                start_at: vm.formFilter.start_at,
+                status: vm.formFilter.status,
+                massmailing_status: vm.formFilter.massmailing_status,
+                allReasons: vm.formFilter.allReasons,
+                noReasons: vm.formFilter.noReasons,
+                reasons: vm.formFilter.reasons,
+                punishments: vm.formFilter.punishments,
+                anomalies: vm.formFilter.anomalies
+            };
             await MassmailingPreferenceUtils.updatePresencesMassmailingFilter(
-                HomeUtils.buildFilteredMassmailingPreference(vm.formFilter),
+                HomeUtils.buildFilteredMassmailingPreference(preferenceFilters),
                 window.structure.id
             );
             vm.formFilter = {};
