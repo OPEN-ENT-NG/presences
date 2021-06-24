@@ -957,6 +957,8 @@ export const eventsController = ng.controller('EventsController', ['$scope', '$r
             vm.events.followed = vm.filter.followed;
             vm.events.notFollowed = vm.filter.notFollowed;
             vm.events.regularized = (!(<any>vm.eventType).includes(1)) ? null : vm.filter.regularized;
+            vm.events.startDate = vm.filter.startDate.toDateString();
+            vm.events.endDate = vm.filter.endDate.toDateString();
             vm.events.startTime = vm.filter.timeslots.start ? vm.filter.timeslots.start.startHour : null;
             vm.events.endTime = vm.filter.timeslots.end ? vm.filter.timeslots.end.endHour : null;
 
