@@ -107,6 +107,23 @@ export const filterIndicator = ng.directive('filterIndicator', () => {
                         filterType.process(filterType.selected());
                         break;
                 }
+
+                switch (filterType.name()) {
+                    case FILTER_TYPE.REGULARIZED:
+                        let unregularizedType: FilterType = vm.filters
+                            .find((type: FilterType) => type.name() === FILTER_TYPE.UNREGULARIZED);
+                        if (unregularizedType && unregularizedType.selected()) {
+                            unregularizedType.process(true);
+                        }
+                        break;
+                    case FILTER_TYPE.UNREGULARIZED:
+                        let regularizedType: FilterType = vm.filters
+                            .find((type: FilterType) => type.name() === FILTER_TYPE.REGULARIZED);
+                        if (regularizedType && regularizedType.selected()) {
+                            regularizedType.process(true);
+                        }
+                        break;
+                }
             }
         }
     };
