@@ -18,6 +18,7 @@
   "incident.processed.undone": "L'incident n'a pas été traité",
   "incidents.punishments.empty.state": "Aucune punition ou sanction sur cette période",
   "incident.punishment.form.input.edit": "Modifier le type de punition ou sanction",
+  "incident.punishment.form.input.edit.warning": "Attention, la modification d'un type de punition ou sanction entraînera une modification sur",
   "incidents.absence.select.empty": "Sans motif",
   "incidents.calendar.create": "Incident",
   "incidents.choice.time.slot": "Choix horaires libres",
