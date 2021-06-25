@@ -252,7 +252,7 @@ public class CourseHelper {
     }
 
     public static List<Course> formatCourses(List<Course> courses, boolean multipleSlot,
-                                             List<Slot> slots, Boolean isOnlyTeacherFilter) {
+                                             List<Slot> slots, Boolean isWithTeacherFilter) {
         // Case when slots are not defined from viesco.
         if (slots.isEmpty()) {
             return courses;
@@ -267,15 +267,18 @@ public class CourseHelper {
                                 .filter(listCourse -> listCourse.getRegisterId() != null)
                                 .findAny().orElse(null)).isSplitSlot();
                         for (Course course : listCourses) {
+                            boolean hasTeachers = !course.getTeachers().isEmpty();
                             // pass if we have a least one teacher or we allow to get courses without teacher
-                            if (course.isSplitSlot().equals(isSplit) && (!course.getTeachers().isEmpty() || !isOnlyTeacherFilter)) {
+                            if (course.isSplitSlot().equals(isSplit) &&
+                                    (hasTeachers && isWithTeacherFilter) || (!hasTeachers && !isWithTeacherFilter)) {
                                 formatCourses.add(course);
                             }
                         }
                     } else {
                         for (Course course : listCourses) {
+                            boolean hasTeachers = !course.getTeachers().isEmpty();
                             if (course.isSplitSlot().equals(multipleSlot) &&
-                                    (!course.getTeachers().isEmpty() || !isOnlyTeacherFilter)) {
+                                    (hasTeachers && isWithTeacherFilter) || (!hasTeachers && !isWithTeacherFilter)) {
                                 formatCourses.add(course);
                             }
                         }

@@ -102,9 +102,9 @@ public class DefaultCourseService implements CourseService {
     public void listCourses(String structureId, List<String> teachersList, List<String> groupsList,
                             String start, String end, String startTime, String endTime,
                             boolean forgottenFilter, boolean multipleSlot,
-                            String limit, String offset, String descendingDate, String disableWithoutTeacher, Handler<Either<String, JsonArray>> handler) {
+                            String limit, String offset, String descendingDate, String isWithTeacherFilter, Handler<Either<String, JsonArray>> handler) {
         courseHelper.getCourses(structureId, teachersList, groupsList, start, end, startTime, endTime, limit, offset, descendingDate,
-                disableWithoutTeacher, event -> {
+                isWithTeacherFilter, event -> {
             if (event.isLeft()) {
                 handler.handle(new Either.Left<>(event.left().getValue()));
                 return;
@@ -142,7 +142,7 @@ public class DefaultCourseService implements CourseService {
                 handler.handle(new Either.Right<>(forgottenFilter ?
                         new JsonArray(filterForgottenCourses(CourseHelper.formatCourses(squashCourses, multipleSlot, slots, false))) :
                         new JsonArray(CourseHelper.formatCourses(squashCourses, multipleSlot, slots,
-                                (disableWithoutTeacher == null || !disableWithoutTeacher.equals(String.valueOf(Boolean.TRUE)))))));
+                                String.valueOf(Boolean.TRUE).equals(isWithTeacherFilter)))));
             });
             courseHelper.getCourseTeachers(teachersIds, FutureHelper.handlerJsonArray(teachersFuture));
             Viescolaire.getInstance().getSlotsFromProfile(structureId, FutureHelper.handlerJsonArray(slotsFuture));
