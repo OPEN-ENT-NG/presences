@@ -17,7 +17,7 @@
         "sql": true,
         "db-schema": "presences_statistics",
         "entcore.port" : 8009,
-        "processing-cron": "0 0/30 * * * ? *",
+        "processing-cron": "0 0/30 7-20 * * ? *",
         "report-recipients": [],
         "indicators": [
             "Global",
