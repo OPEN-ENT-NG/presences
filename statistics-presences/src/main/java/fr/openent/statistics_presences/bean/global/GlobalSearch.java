@@ -195,8 +195,8 @@ public class GlobalSearch {
     private JsonObject totalGlobalAbsenceGroup() {
         JsonObject group = new JsonObject()
                 .put("_id", "ABSENCE_TOTAL")
-                .put("count", sum());
-
+                .put("count", sum())
+                .put("slots", (!HOUR.equals(recoveryMethod)) ? sum("$slots") : sum());
         return group(group);
     }
 
@@ -233,7 +233,8 @@ public class GlobalSearch {
         JsonObject project = new JsonObject()
                 .put("_id", 0)
                 .put("type", "$_id")
-                .put("count", "$count");
+                .put("count", "$count")
+                .put("slots", "$slots");
 
         return new JsonObject().put("$project", project);
     }
@@ -242,7 +243,8 @@ public class GlobalSearch {
         JsonObject project = new JsonObject()
                 .put("_id", 0)
                 .put("type", "$_id")
-                .put("count", sum("$count"));
+                .put("count", sum("$count"))
+                .put("slots", sum("$slots"));
 
         return new JsonObject().put("$project", project);
     }
@@ -454,14 +456,15 @@ public class GlobalSearch {
         JsonObject group;
         switch (recoveryMethod) {
             case DAY:
-                group = group(id(idByDay()));
+                group = group(id(idByDay()).put("slots", sum()));
                 break;
             case HALF_DAY:
-                group = group(id(idByHalfDay()));
+                group = group(id(idByHalfDay()).put("slots", sum()));
                 break;
             default:
                 group = new JsonObject();
         }
+
         return group;
     }
 
@@ -477,6 +480,7 @@ public class GlobalSearch {
             default:
                 groups = new JsonArray().add(groupByTypeTotal());
         }
+
         return groups;
     }
 
@@ -541,6 +545,7 @@ public class GlobalSearch {
     private JsonArray groupByCountTotal(JsonObject id) {
         JsonArray groups = new JsonArray();
         JsonObject group = id(id)
+                .put("slots", sum())
                 .put("type", first("$type"));
         groups.add(group(group))
                 .add(groupByTypeTotal());
@@ -550,7 +555,8 @@ public class GlobalSearch {
     private JsonObject groupByTypeTotal() {
         return group(new JsonObject()
                 .put("_id", "$type")
-                .put("count", sum()));
+                .put("count", sum())
+                .put("slots", (!HOUR.equals(recoveryMethod)) ? sum("$slots") : sum()));
     }
 
 

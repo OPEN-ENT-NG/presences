@@ -72,15 +72,21 @@ public class Global extends Indicator {
 
         Future<List<JsonObject>> valuesFuture = searchValues(search);
         Future<JsonObject> countFuture = countValues(search);
-        Future<Number> totalAbsFuture = globalAbsenceCount(search);
-        CompositeFuture.all(valuesFuture, countFuture, totalAbsFuture)
+        Future<JsonObject> slotsFuture = countSlotsStatistics(search);
+        Future<JsonObject> totalAbsFuture = globalAbsenceCount(search);
+        CompositeFuture.all(valuesFuture, countFuture, totalAbsFuture, slotsFuture)
                 .onSuccess(ar -> {
                     List<JsonObject> values = valuesFuture.result();
+                    Number totalAbs = totalAbsFuture.result().getInteger("count", 0);
+                    Number totalAbsSlots = totalAbsFuture.result().getInteger("slots", 0);
+
                     JsonObject count = countFuture.result()
-                            .put("ABSENCE_TOTAL", totalAbsFuture.result());
+                            .put("ABSENCE_TOTAL", totalAbs);
+                    JsonObject slots = slotsFuture.result();
                     JsonObject response = new JsonObject()
                             .put("data", values)
-                            .put("count", count);
+                            .put("count", count)
+                            .put("slots", slots.put("ABSENCE_TOTAL", totalAbsSlots));
 
                     promise.complete(response);
                 })
@@ -174,8 +180,8 @@ public class Global extends Indicator {
         return promise.future();
     }
 
-    private Future<Number> globalAbsenceCount(GlobalSearch search) {
-        Promise<Number> promise = Promise.promise();
+    private Future<JsonObject> globalAbsenceCount(GlobalSearch search) {
+        Promise<JsonObject> promise = Promise.promise();
         JsonObject request = commandObject(search.totalAbsenceGlobalPipeline());
         mongoDb.command(request.toString(), MongoDbResult.validResultHandler(either -> {
             if (either.isLeft()) {
@@ -188,12 +194,10 @@ public class Global extends Indicator {
 
             JsonArray result = either.right().getValue().getJsonObject("cursor").getJsonArray("firstBatch", new JsonArray());
             if (result.isEmpty()) {
-                promise.complete(0);
+                promise.complete(new JsonObject());
                 return;
             }
-
-            JsonObject stat = result.getJsonObject(0);
-            promise.complete(stat.getInteger("count", 0));
+            promise.complete(result.getJsonObject(0));
         }));
 
         return promise.future();
@@ -243,6 +247,28 @@ public class Global extends Indicator {
                 .onFailure(fail -> {
                     log.error(String.format("[StatisticsPresences@Global::countStatistics] " +
                             "Indicator %s failed to retrieve statistics count", Global.class.getName()), fail.getCause());
+                    promise.fail(fail.getCause());
+                });
+
+        return promise.future();
+    }
+
+    @SuppressWarnings("unchecked")
+    private Future<JsonObject> countSlotsStatistics(GlobalSearch search) {
+        Promise<JsonObject> promise = Promise.promise();
+
+        retrieveStatistics(search.countAbsencesPipeline())
+                .onSuccess(res -> {
+                    JsonObject result = new JsonObject();
+
+                    ((List<JsonObject>) res.getList())
+                            .forEach(statistic -> result.put(statistic.getString("type"), statistic.getInteger("slots")));
+
+                    promise.complete(result);
+                })
+                .onFailure(fail -> {
+                    log.error(String.format("[StatisticsPresences@Global::countSlotsStatistics] " +
+                            "Indicator %s failed to retrieve statistics slots count", Global.class.getName()), fail.getCause());
                     promise.fail(fail.getCause());
                 });
 

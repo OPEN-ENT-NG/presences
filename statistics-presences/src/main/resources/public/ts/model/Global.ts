@@ -27,9 +27,11 @@ export type GlobalStatistics = {
 export interface IGlobal {
     students?: Array<GlobalStatistics>;
     count?: GlobalType;
+    slots?: GlobalType;
 }
 
 export type GlobalResponse = {
     data: Array<GlobalStatistics>;
     count: GlobalType;
+    slots: GlobalType;
 }

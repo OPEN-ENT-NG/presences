@@ -47,6 +47,7 @@ export class Global extends Indicator {
                 .then((res: GlobalResponse) => {
                     this.values = {
                         count: res.count,
+                        slots: res.slots,
                         students: [...(this.values as IGlobal).students, ...res.data]
                     };
                     resolve();
@@ -60,6 +61,7 @@ export class Global extends Indicator {
     resetValues() {
         this.values = {
             count: {},
+            slots: {},
             students: []
         }
     }
