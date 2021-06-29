@@ -66,7 +66,7 @@ public class CourseController extends ControllerHelper {
         courseService.listCourses(params.get("structure"), params.getAll("teacher"), params.getAll("group"),
                 params.get("start"), params.get("end"), params.get("startTime"), params.get("endTime"), forgottenFilter, multipleSlot,
                 params.get("limit"), params.get("offset"), params.get("descendingDate"),
-                params.get("disableWithoutTeacher"), event -> {
+                params.get("searchTeacher"), event -> {
                     if (event.isLeft()) {
                         renderError(request);
                     } else {

@@ -220,6 +220,7 @@ project(":common") {
     dependencies {
         compile "io.vertx:vertx-core:$vertxVersion"
         compile "org.entcore:common:$entCoreVersion"
+        compile "org.apache.commons:commons-lang3:3.6"
         testCompile "io.vertx:vertx-core:$vertxVersion"
         testCompile "org.entcore:common:$entCoreVersion"
         testCompile "org.entcore:tests:$entCoreVersion"

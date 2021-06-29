@@ -39,7 +39,7 @@ interface Filter {
     course: Course;
     selected: { teachers: any[], classes: any[], registerTeacher: any };
     forgotten: boolean;
-    disableWithoutTeacher: boolean,
+    searchTeacher: boolean,
     multipleSlot: boolean;
 }
 
@@ -104,7 +104,7 @@ export interface ViewModel {
     loadCourses(users?: string[], groups?: string[], structure?: string,
                 start_date?: string, end_date?: string, start_time?: string, end_time?: string,
                 forgotten_registers?: boolean, multipleSlot?: boolean, limit?: number, offset?: number,
-                descendingDate?: boolean, disableWithoutTeacher?: boolean): Promise<void>;
+                descendingDate?: boolean, searchTeacher?: boolean): Promise<void>;
 
     loadCoursesWithForgottenRegisters(users?: Array<string>, groups?: Array<string>): Promise<void>;
 
@@ -130,7 +130,7 @@ export interface ViewModel {
 
     switchForgottenFilter(): Promise<void>;
 
-    switchDisableWithoutTeacherFilter(): Promise<void>;
+    switchSearchTeacherFilter(): Promise<void>;
 
     formatDayDate(timestamp: number): string;
 
@@ -189,7 +189,7 @@ export const registersController = ng.controller('RegistersController',
                     classes: undefined,
                     forgotten: true,
                     course: undefined,
-                    disableWithoutTeacher: false,
+                    searchTeacher: true,
                     selected: {
                         teachers: [],
                         classes: [],
@@ -233,7 +233,7 @@ export const registersController = ng.controller('RegistersController',
                             class: '',
                             teachers: undefined,
                             classes: undefined,
-                            disableWithoutTeacher: true,
+                            searchTeacher: true,
                             selected: {
                                 teachers: vm.filter.selected.teachers,
                                 classes: vm.filter.selected.classes,
@@ -307,7 +307,7 @@ export const registersController = ng.controller('RegistersController',
                     vm.filter.offset,
                     false,
                     true,
-                    vm.filter.disableWithoutTeacher
+                    vm.filter.searchTeacher
                 );
                 $scope.safeApply();
                 if (vm.courses.hasCourses) {
@@ -746,7 +746,7 @@ export const registersController = ng.controller('RegistersController',
              * @param limit
              * @param offset
              * @param descendingDate
-             * @param disableWithoutTeacher
+             * @param searchTeacher
              */
             vm.loadCourses = async (users: Array<string> = [model.me.userId],
                                     groups: Array<string> = [],
@@ -759,7 +759,7 @@ export const registersController = ng.controller('RegistersController',
                                     multipleSlot: boolean = vm.filter.multipleSlot,
                                     limit?: number, offset?: number,
                                     descendingDate?: boolean,
-                                    disableWithoutTeacher: boolean = this.filter.disableWithoutTeacher): Promise<void> => {
+                                    searchTeacher: boolean = this.filter.searchTeacher): Promise<void> => {
                 if (model.me.profiles.some((profile: string) => profile === 'Personnel')) {
                     multipleSlot = true;
                 }
@@ -768,7 +768,7 @@ export const registersController = ng.controller('RegistersController',
                     vm.courses.clear();
                 }
                 await vm.courses.sync(users, groups, structure, start_date, end_date, start_time, end_time,
-                    forgotten_registers, multipleSlot, limit, offset, descendingDate, null, disableWithoutTeacher);
+                    forgotten_registers, multipleSlot, limit, offset, descendingDate, null, searchTeacher);
                 $scope.$broadcast(INFINITE_SCROLL_EVENTER.UPDATE);
                 $scope.safeApply();
             };
@@ -818,8 +818,8 @@ export const registersController = ng.controller('RegistersController',
                     undefined, undefined, vm.courses.pageSize, vm.filter.offset, false);
             };
 
-            vm.switchDisableWithoutTeacherFilter = async (): Promise<void> => {
-                vm.filter.disableWithoutTeacher = !vm.filter.disableWithoutTeacher;
+            vm.switchSearchTeacherFilter = async (): Promise<void> => {
+                vm.filter.searchTeacher = !vm.filter.searchTeacher;
                 vm.filter.offset = 0;
                 await vm.loadCourses(extractSelectedTeacherIds(), extractSelectedGroupsName(),
                     undefined, undefined, undefined, undefined, undefined,

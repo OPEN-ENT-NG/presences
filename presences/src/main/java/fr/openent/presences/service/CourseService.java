@@ -39,6 +39,6 @@ public interface CourseService {
 
     void listCourses(String structureId, List<String> teachersList, List<String> groupsList,
                      String start, String end, String startTime, String endTime, boolean forgottenFilter, boolean multipleSlot,
-                     String limit, String offset, String descendingDate, String disableWithoutTeacher,
+                     String limit, String offset, String descendingDate, String isWithTeacherFilter,
                      Handler<Either<String, JsonArray>> handler);
 }

@@ -22,6 +22,7 @@ import io.vertx.core.json.JsonObject;
 import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
 import org.entcore.common.mongodb.MongoDbResult;
+import org.apache.commons.lang3.BooleanUtils;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -102,52 +103,52 @@ public class DefaultCourseService implements CourseService {
     public void listCourses(String structureId, List<String> teachersList, List<String> groupsList,
                             String start, String end, String startTime, String endTime,
                             boolean forgottenFilter, boolean multipleSlot,
-                            String limit, String offset, String descendingDate, String isWithTeacherFilter, Handler<Either<String, JsonArray>> handler) {
+                            String limit, String offset, String descendingDate, String searchTeacher, Handler<Either<String, JsonArray>> handler) {
         courseHelper.getCourses(structureId, teachersList, groupsList, start, end, startTime, endTime, limit, offset, descendingDate,
-                isWithTeacherFilter, event -> {
-            if (event.isLeft()) {
-                handler.handle(new Either.Left<>(event.left().getValue()));
-                return;
-            }
-            JsonArray courses = event.right().getValue();
-            JsonArray teachersIds = new JsonArray();
-            CourseHelper.setTeachersCourses(courses, teachersIds);
+                searchTeacher, event -> {
+                    if (event.isLeft()) {
+                        handler.handle(new Either.Left<>(event.left().getValue()));
+                        return;
+                    }
+                    JsonArray courses = event.right().getValue();
+                    JsonArray teachersIds = new JsonArray();
+                    CourseHelper.setTeachersCourses(courses, teachersIds);
 
-            List<String> coursesIds = ((List<JsonObject>) courses.getList())
-                    .stream()
-                    .map(course -> course.getString("_id")).collect(Collectors.toList());
+                    List<String> coursesIds = ((List<JsonObject>) courses.getList())
+                            .stream()
+                            .map(course -> course.getString("_id")).collect(Collectors.toList());
 
-            Future<JsonArray> teachersFuture = Future.future();
-            Future<JsonArray> slotsFuture = Future.future();
-            Future<JsonArray> registerEventFuture = Future.future();
+                    Future<JsonArray> teachersFuture = Future.future();
+                    Future<JsonArray> slotsFuture = Future.future();
+                    Future<JsonArray> registerEventFuture = Future.future();
 
-            CompositeFuture.all(teachersFuture, slotsFuture, registerEventFuture).setHandler(asyncHandler -> {
-                if (asyncHandler.failed()) {
-                    handler.handle(new Either.Left<>(asyncHandler.cause().toString()));
-                    return;
-                }
+                    CompositeFuture.all(teachersFuture, slotsFuture, registerEventFuture).setHandler(asyncHandler -> {
+                        if (asyncHandler.failed()) {
+                            handler.handle(new Either.Left<>(asyncHandler.cause().toString()));
+                            return;
+                        }
 
-                JsonArray teachers = teachersFuture.result();
-                JsonObject teacherMap = MapHelper.transformToMap(teachers, "id");
+                        JsonArray teachers = teachersFuture.result();
+                        JsonObject teacherMap = MapHelper.transformToMap(teachers, "id");
 
-                CourseHelper.formatCourse(courses, teacherMap);
+                        CourseHelper.formatCourse(courses, teacherMap);
 
-                List<Slot> slots = SlotHelper.getSlotListFromJsonArray(slotsFuture.result(), Slot.MANDATORY_ATTRIBUTE);
-                List<Course> coursesEvent = CourseHelper.getCourseListFromJsonArray(courses, Course.MANDATORY_ATTRIBUTE);
-                List<Course> splitCoursesEvent = CourseHelper.splitCoursesFromSlot(coursesEvent, slots);
+                        List<Slot> slots = SlotHelper.getSlotListFromJsonArray(slotsFuture.result(), Slot.MANDATORY_ATTRIBUTE);
+                        List<Course> coursesEvent = CourseHelper.getCourseListFromJsonArray(courses, Course.MANDATORY_ATTRIBUTE);
+                        List<Course> splitCoursesEvent = CourseHelper.splitCoursesFromSlot(coursesEvent, slots);
 
-                SquashHelper squashHelper = new SquashHelper();
-                List<Course> squashCourses = squashHelper.squash(coursesEvent, splitCoursesEvent, registerEventFuture.result(), multipleSlot);
+                        SquashHelper squashHelper = new SquashHelper();
+                        List<Course> squashCourses = squashHelper.squash(coursesEvent, splitCoursesEvent, registerEventFuture.result(), multipleSlot);
 
-                handler.handle(new Either.Right<>(forgottenFilter ?
-                        new JsonArray(filterForgottenCourses(CourseHelper.formatCourses(squashCourses, multipleSlot, slots, false))) :
-                        new JsonArray(CourseHelper.formatCourses(squashCourses, multipleSlot, slots,
-                                String.valueOf(Boolean.TRUE).equals(isWithTeacherFilter)))));
-            });
-            courseHelper.getCourseTeachers(teachersIds, FutureHelper.handlerJsonArray(teachersFuture));
-            Viescolaire.getInstance().getSlotsFromProfile(structureId, FutureHelper.handlerJsonArray(slotsFuture));
-            registerService.list(structureId, coursesIds, FutureHelper.handlerJsonArray(registerEventFuture));
-        });
+                        handler.handle(new Either.Right<>(forgottenFilter ?
+                                new JsonArray(filterForgottenCourses(CourseHelper.formatCourses(squashCourses, multipleSlot, slots, BooleanUtils.toBooleanObject(searchTeacher)))) :
+                                new JsonArray(CourseHelper.formatCourses(squashCourses, multipleSlot, slots, BooleanUtils.toBooleanObject(searchTeacher)))
+                        ));
+                    });
+                    courseHelper.getCourseTeachers(teachersIds, FutureHelper.handlerJsonArray(teachersFuture));
+                    Viescolaire.getInstance().getSlotsFromProfile(structureId, FutureHelper.handlerJsonArray(slotsFuture));
+                    registerService.list(structureId, coursesIds, FutureHelper.handlerJsonArray(registerEventFuture));
+                });
     }
 
     private List<Course> filterForgottenCourses(List<Course> courses) {

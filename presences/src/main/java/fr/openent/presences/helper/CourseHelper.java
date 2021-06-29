@@ -128,9 +128,9 @@ public class CourseHelper {
 
     public void getCourses(String structure, List<String> teachers, List<String> groups, String start,
                            String end, String startTime, String endTime, String limit, String offset,
-                           String descendingDate, String disableWithoutTeacher, Handler<Either<String, JsonArray>> handler) {
+                           String descendingDate, String isWithTeacherFilter, Handler<Either<String, JsonArray>> handler) {
         this.getCourses(structure, teachers, groups, start, end, startTime, endTime, limit, offset, descendingDate, null,
-                disableWithoutTeacher, handler);
+                isWithTeacherFilter, handler);
     }
 
     public void getCourses(String structure, List<String> teachers, List<String> groups, String start,
@@ -141,7 +141,7 @@ public class CourseHelper {
 
     public void getCourses(String structure, List<String> teachers, List<String> groups, String start,
                            String end, String startTime, String endTime, String limit, String offset,
-                           String descendingDate, String crossDateFilter, String disableWithoutTeacher, Handler<Either<String, JsonArray>> handler) {
+                           String descendingDate, String crossDateFilter, String isWithTeacherFilter, Handler<Either<String, JsonArray>> handler) {
         JsonObject action = new JsonObject()
                 .put("action", "course.getCoursesOccurences")
                 .put("structureId", structure)
@@ -154,7 +154,7 @@ public class CourseHelper {
                 .put("limit", limit)
                 .put("offset", offset)
                 .put("descendingDate", descendingDate)
-                .put("disableWithoutTeacher", disableWithoutTeacher)
+                .put("isWithTeacherFilter", isWithTeacherFilter)
                 .put("crossDateFilter", crossDateFilter);
 
         eb.send("viescolaire", action, event -> {
@@ -252,7 +252,7 @@ public class CourseHelper {
     }
 
     public static List<Course> formatCourses(List<Course> courses, boolean multipleSlot,
-                                             List<Slot> slots, Boolean isWithTeacherFilter) {
+                                             List<Slot> slots, Boolean searchTeacher) {
         // Case when slots are not defined from viesco.
         if (slots.isEmpty()) {
             return courses;
@@ -269,16 +269,16 @@ public class CourseHelper {
                         for (Course course : listCourses) {
                             boolean hasTeachers = !course.getTeachers().isEmpty();
                             // pass if we have a least one teacher or we allow to get courses without teacher
-                            if (course.isSplitSlot().equals(isSplit) &&
-                                    (hasTeachers && isWithTeacherFilter) || (!hasTeachers && !isWithTeacherFilter)) {
+                            if (course.isSplitSlot().equals(isSplit) && (searchTeacher == null ||
+                                    ((hasTeachers && searchTeacher) || (!hasTeachers && !searchTeacher)))) {
                                 formatCourses.add(course);
                             }
                         }
                     } else {
                         for (Course course : listCourses) {
                             boolean hasTeachers = !course.getTeachers().isEmpty();
-                            if (course.isSplitSlot().equals(multipleSlot) &&
-                                    (hasTeachers && isWithTeacherFilter) || (!hasTeachers && !isWithTeacherFilter)) {
+                            if (course.isSplitSlot().equals(multipleSlot) && (searchTeacher == null ||
+                                    ((hasTeachers && searchTeacher) || (!hasTeachers && !searchTeacher)))) {
                                 formatCourses.add(course);
                             }
                         }
