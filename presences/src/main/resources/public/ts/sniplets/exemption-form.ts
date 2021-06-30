@@ -252,16 +252,8 @@ const vm: ViewModel = {
 
     switchForm: (): void => {
         if (!vm.form.id) {
-            if (vm.typeExemptionSelected.type === EXEMPTION_TYPE.RECURSIVE) {
-                vm.form.timeSlotTimePeriod = {
-                    start: {endHour: "", id: "", name: "", startHour: ""},
-                    end: {endHour: "", id: "", name: "", startHour: ""}
-                };
-                vm.form.isRecursiveMode = true;
-            } else {
-                vm.form.timeSlotTimePeriod = null;
-                vm.form.isRecursiveMode = false;
-            }
+            vm.form.timeSlotTimePeriod = null;
+            vm.form.isRecursiveMode = (vm.typeExemptionSelected.type === EXEMPTION_TYPE.RECURSIVE);
         }
     },
 
