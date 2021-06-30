@@ -9,7 +9,7 @@ import io.vertx.core.*;
 import io.vertx.core.eventbus.Message;
 import io.vertx.core.eventbus.MessageConsumer;
 import io.vertx.core.http.HttpServerRequest;
-import io.vertx.core.json.JsonObject;
+import io.vertx.core.json.*;
 import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
 
@@ -56,10 +56,12 @@ public abstract class Indicator extends DBService {
 
     public abstract void searchGraph(Filter filter, Handler<AsyncResult<JsonObject>> handler);
 
-    public void export(HttpServerRequest request, Filter filter, List<JsonObject> values) throws ClassNotFoundException, IllegalAccessException, InvocationTargetException, InstantiationException {
+    public void export(HttpServerRequest request, Filter filter, List<JsonObject> values, JsonObject count, JsonObject slots) throws ClassNotFoundException, IllegalAccessException, InvocationTargetException, InstantiationException {
         String className = String.format(CSV_EXPORT_FORMATTER, name);
         ClassLoader loader = Indicator.class.getClassLoader();
-        CSVExport export = (CSVExport) Class.forName(className, true, loader).getConstructors()[0].newInstance(filter, values);
+        CSVExport export = (count != null) ?
+                (CSVExport) Class.forName(className, true, loader).getConstructors()[0].newInstance(filter, values, count, slots):
+                (CSVExport) Class.forName(className, true, loader).getConstructors()[0].newInstance(filter, values);
         export.export(request);
     }
 

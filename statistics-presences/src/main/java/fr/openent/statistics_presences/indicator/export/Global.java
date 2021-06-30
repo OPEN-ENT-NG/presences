@@ -13,18 +13,26 @@ import java.util.Date;
 import java.util.List;
 
 public class Global extends IndicatorExport {
-    private String HEADER_FORMATTER = "statistics-presences.indicator.filter.type.%s.abbr";
-    private String HEADER_SLOTS_FORMATTER = "statistics-presences.indicator.filter.type.%s.abbr.slots";
-    private String FILENAME = "statistics-presences.indicator.Global.export.filename";
+    private final String HEADER_FORMATTER = "statistics-presences.indicator.filter.type.%s.abbr";
+    private final String HEADER_SLOTS_FORMATTER = "statistics-presences.indicator.filter.type.%s.abbr.slots";
+    private final String FILENAME = "statistics-presences.indicator.Global.export.filename";
+    private final String ABSENCE_TOTAL = "ABSENCE_TOTAL";
+    private final String TOTAL = "TOTAL";
 
-    public Global(Filter filter, List<JsonObject> values) {
+    private JsonObject count;
+    private JsonObject slots;
+
+    public Global(Filter filter, List<JsonObject> values, JsonObject count, JsonObject slots) {
         super(filter, values);
+        this.count = count;
+        this.slots = slots;
     }
 
     @Override
     public void generate() {
         this.setHeader(filter.types());
         this.setFilename(filename());
+        value.append(getTotals());
         for (JsonObject stat : values) {
             value.append(getLine(stat));
         }
@@ -41,7 +49,9 @@ public class Global extends IndicatorExport {
         List<String> exportHeaders = new ArrayList<>();
         exportHeaders.add("statistics-presences.classes");
         exportHeaders.add("statistics-presences.students");
-        exportHeaders.add(String.format(HEADER_FORMATTER, "ABSENCE_TOTAL"));
+        if (isTotalAbsenceSelected()) {
+            exportHeaders.add(String.format(HEADER_FORMATTER, ABSENCE_TOTAL));
+        }
         for (String type : types) {
             exportHeaders.add(String.format(HEADER_FORMATTER, type));
             if (Boolean.TRUE.equals(filter.hourDetail()) && isAbsenceType(type)) {
@@ -58,8 +68,10 @@ public class Global extends IndicatorExport {
                 .append(value.getString("name")).append(SEPARATOR);
 
         JsonObject statistics = value.getJsonObject("statistics", new JsonObject());
-        line.append(statistics.getJsonObject("ABSENCE_TOTAL", new JsonObject())
-                .getInteger("count", 0)).append(SEPARATOR);
+        if (isTotalAbsenceSelected()) {
+            line.append(statistics.getJsonObject(ABSENCE_TOTAL, new JsonObject())
+                    .getInteger("count", 0)).append(SEPARATOR);
+        }
         for (String type : filter.types()) {
             JsonObject statType = statistics.getJsonObject(type, new JsonObject());
             line.append(statType.getInteger("count", 0)).append(SEPARATOR);
@@ -71,10 +83,33 @@ public class Global extends IndicatorExport {
         return line.append(EOL).toString();
     }
 
+
+    private String getTotals() {
+        StringBuilder line = new StringBuilder();
+        line.append(SEPARATOR);
+        line.append(TOTAL).append(SEPARATOR);
+        if (isTotalAbsenceSelected()) {
+            line.append(this.count.getInteger(ABSENCE_TOTAL, 0).toString()).append(SEPARATOR);
+        }
+        for (String type : filter.types()) {
+            line.append(this.count.getInteger(type, 0).toString()).append(SEPARATOR);
+            if (Boolean.TRUE.equals(filter.hourDetail()) && isAbsenceType(type)) {
+                line.append(this.slots.getInteger(type, 0).toString()).append(SEPARATOR);
+            }
+        }
+
+        return line.append(EOL).toString();
+    }
+
     private boolean isAbsenceType(String type) {
         return Arrays.asList(EventType.NO_REASON.name(), EventType.UNREGULARIZED.name(), EventType.REGULARIZED.name())
                 .contains(type);
     }
 
+    private boolean isTotalAbsenceSelected() {
+        return filter.types().contains(EventType.NO_REASON.name()) ||
+               filter.types().contains(EventType.UNREGULARIZED.name()) ||
+               filter.types().contains(EventType.REGULARIZED.name());
+    }
 
 }

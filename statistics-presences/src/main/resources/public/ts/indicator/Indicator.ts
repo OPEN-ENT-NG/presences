@@ -182,7 +182,10 @@ export abstract class Indicator implements IIndicator {
                 url += `&${key}=${value.value === null ? value.selected : value.value}`
             }
         });
-        this.getSelectedReasons().forEach((reason: number) => url += `&reasons=${reason}`)
+
+        this.getSelectedPunishmentTypes().forEach((type: number) => url += `&punishmentTypes=${type}`);
+        this.getSelectedSanctionTypes().forEach((type: number) => url += `&sanctionTypes=${type}`);
+        this.getSelectedReasons().forEach((reason: number) => url += `&reasons=${reason}`);
         window.open(url);
     }
 

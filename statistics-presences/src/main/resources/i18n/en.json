@@ -31,6 +31,8 @@
   "statistics-presences.indicator.filter.type.DEPARTURE.abbr": "Départs",
   "statistics-presences.indicator.filter.type.ABSENCE_TOTAL.abbr": "Abs totales",
   "statistics-presences.indicator.filter.type.ABSENCE_TOTAL.abbr.totale": "total",
+  "statistics-presences.indicator.filter.type.slots": "Créneaux",
+  "statistics-presences.indicator.filter.type.half.days": "Demi journées",
   "statistics-presences.indicator.students.total.1": "Total pour les",
   "statistics-presences.indicator.students.total.2": "élèves",
   "statistics-presences.indicator.Global.export.filename": "Export global",

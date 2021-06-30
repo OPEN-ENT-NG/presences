@@ -51,6 +51,9 @@ public class Monthly extends IndicatorExport {
     public void generate() {
         this.setHeaderType(filter.types());
         this.setHeader(filter.types());
+        if (Boolean.TRUE.equals(filter.hourDetail())) {
+            this.setHeaderHourDetails();
+        }
         this.setFilename(filename());
         studentsList.forEach(student -> value.append(getLine(student)));
     }
@@ -198,7 +201,13 @@ public class Monthly extends IndicatorExport {
         if (!ExportOptions.AUDIENCES.equals(exportOption)) {
             exportHeaders.add("statistics-presences.students");
         }
-        monthsMap.forEach((k, v) -> exportHeaders.add(DateHelper.getDateString(k, DateHelper.YEAR_MONTH, DateHelper.SHORT_MONTH, Locale.FRANCE)));
+        monthsMap.forEach((k, v) -> {
+            exportHeaders
+                    .add(DateHelper.getDateString(k, DateHelper.YEAR_MONTH, DateHelper.SHORT_MONTH, Locale.FRANCE));
+            if (Boolean.TRUE.equals(filter.hourDetail())) {
+                exportHeaders.add("");
+            }
+        });
         exportHeaders.add("statistics-presences.indicator.filter.type.ABSENCE_TOTAL.abbr.totale");
 
         super.setHeader(exportHeaders);
@@ -213,6 +222,21 @@ public class Monthly extends IndicatorExport {
         super.setHeader(exportHeaders);
     }
 
+    private void setHeaderHourDetails() {
+        List<String> hourHeaders = new ArrayList<>();
+        hourHeaders.add("");
+        if (!ExportOptions.AUDIENCES.equals(exportOption)) {
+            hourHeaders.add("");
+        }
+        monthsMap.forEach((k, v) -> {
+            hourHeaders.add("statistics-presences.indicator.filter.type.half.days");
+            hourHeaders.add("statistics-presences.indicator.filter.type.slots");
+        });
+        super.setHeader(hourHeaders);
+    }
+
+
+
     @SuppressWarnings("unchecked")
     private String getLine(JsonObject value) {
         StringBuilder line = new StringBuilder();
@@ -220,8 +244,12 @@ public class Monthly extends IndicatorExport {
         if (!ExportOptions.AUDIENCES.equals(exportOption)) {
             line.append(value.getString("name")).append(SEPARATOR);
         }
-        ((List<JsonObject>) value.getJsonArray("months").getList()).forEach(month ->
-                line.append(month.getJsonObject(String.join("", month.fieldNames())).getInteger("count", 0)).append(SEPARATOR));
+        ((List<JsonObject>) value.getJsonArray("months").getList()).forEach(month -> {
+                line.append(month.getJsonObject(String.join("", month.fieldNames())).getInteger("count", 0)).append(SEPARATOR);
+                if (Boolean.TRUE.equals(filter.hourDetail())) {
+                    line.append(month.getJsonObject(String.join("", month.fieldNames())).getInteger("slots", 0)).append(SEPARATOR);
+                }
+        });
         line.append(value.getInteger("total", 0)).append(SEPARATOR);
         return line.append(EOL).toString();
     }

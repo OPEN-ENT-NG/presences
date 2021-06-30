@@ -23,8 +23,7 @@ import org.entcore.common.http.filter.ResourceFilter;
 import org.entcore.common.user.UserUtils;
 
 import java.lang.reflect.InvocationTargetException;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
 import java.util.stream.Collectors;
 
 public class StatisticsController extends ControllerHelper {
@@ -120,9 +119,12 @@ public class StatisticsController extends ControllerHelper {
 
             try {
                 JsonObject searchResult = ar.result();
-                indicator.export(request, filter, searchResult.getJsonArray("data").getList());
+                indicator.export(request, filter,
+                        searchResult.getJsonArray("data").getList(),
+                        searchResult.getJsonObject("count"),
+                        searchResult.getJsonObject("slots"));
             } catch (ClassNotFoundException | IllegalAccessException | InvocationTargetException | InstantiationException e) {
-                log.error(String.format("Failed to generate exprot for indicator %s", indicator.getClass().getSimpleName()), e);
+                log.error(String.format("Failed to generate export for indicator %s", indicator.getClass().getSimpleName()), e);
             }
         });
 
