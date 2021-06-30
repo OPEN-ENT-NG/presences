@@ -134,13 +134,40 @@ public class GlobalSearch {
                 .add(match(totalAbsenceTypes, true));
 
         JsonObject group = groupCountAbsences();
-        if (group != null && !group.isEmpty()) pipeline.add(group);
-        pipeline.add(totalGlobalAbsenceGroup());
+        if (group != null && !group.isEmpty()) {
+            pipeline.add(group);
+            pipeline.add(totalGroupByUser());
+        } else pipeline.add(totalGroupByUserHourly());
 
         if (this.filter().from() != null || this.filter().to() != null) pipeline.add(fromToMatcher());
+        pipeline.add(totalGlobalAbsenceGroup());
         pipeline.add(projectAbsenceCount());
 
         return pipeline;
+    }
+
+
+    private JsonObject totalGroupByUser() {
+        JsonObject group = id(new JsonObject().put("type", "$_id.type")
+                .put("user", "$_id.user")
+                .put("name", "$_id.name")
+        )
+                .put("count", sum())
+                .put("slots", sum("$slots"));
+
+        return new JsonObject().put("$group", group);
+    }
+
+    private JsonObject totalGroupByUserHourly() {
+
+        JsonObject group = id(new JsonObject().put("type", "$type")
+                .put("user", "$user")
+                .put("name", "$name")
+        )
+                .put("count", sum())
+                .put("slots", sum());
+
+        return new JsonObject().put("$group", group);
     }
 
     public JsonArray totalAbsenceUserPipeline() {
@@ -150,16 +177,25 @@ public class GlobalSearch {
         JsonObject group = groupCountAbsences();
         if (group != null && !group.isEmpty()) {
             pipeline.add(group);
-            pipeline.add(countTotalUser("$_id.user"));
-        } else {
-            pipeline.add(countTotalUser("$user"));
+            pipeline.add(countTotalUserNameType());
         }
+        else pipeline.add(countTotalUserNameTypeHourly());
 
         if (this.filter().from() != null || this.filter().to() != null) pipeline.add(fromToMatcher());
 
+        pipeline.add(groupAbsenceTotalByUser());
         pipeline.add(projectTotalUser());
 
         return pipeline;
+    }
+
+    private JsonObject groupAbsenceTotalByUser() {
+        JsonObject group = id(new JsonObject()
+                .put("user", "$_id.user")
+                .put("name", "$_id.name")
+        )
+                .put("count", sum("$count"));
+        return group(group);
     }
 
     public JsonArray countBasicEventTypedPipeline() {
@@ -188,6 +224,7 @@ public class GlobalSearch {
 
         if (this.filter().from() != null || this.filter().to() != null) pipeline.add(fromToMatcher());
 
+        pipeline.add(countTotalTypes());
         pipeline.add(projectCount());
         return pipeline;
     }
@@ -195,9 +232,18 @@ public class GlobalSearch {
     private JsonObject totalGlobalAbsenceGroup() {
         JsonObject group = new JsonObject()
                 .put("_id", "ABSENCE_TOTAL")
-                .put("count", sum())
-                .put("slots", (!HOUR.equals(recoveryMethod)) ? sum("$slots") : sum());
+                .put("count", sum("$count"))
+                .put("slots", sum("$slots"));
         return group(group);
+    }
+
+    private JsonObject countTotalTypes() {
+        JsonObject group = new JsonObject()
+                .put("_id", "$_id.type")
+                .put("count", sum("$count"))
+                .put("slots", sum("$slots"));
+
+        return new JsonObject().put("$group", group);
     }
 
     private JsonObject countTotalUser(String userParameter) {
@@ -209,11 +255,33 @@ public class GlobalSearch {
         return new JsonObject().put("$group", group);
     }
 
+    private JsonObject countTotalUserNameType() {
+        JsonObject group = new JsonObject()
+                .put("_id", new JsonObject().put("user", "$_id.user")
+                        .put("name", "$_id.name")
+                        .put("type", "$_id.type"));
+
+        group.put("count", sum());
+
+        return new JsonObject().put("$group", group);
+    }
+
+    private JsonObject countTotalUserNameTypeHourly() {
+        JsonObject group = new JsonObject()
+                .put("_id", new JsonObject().put("user", "$user")
+                        .put("name", "$name")
+                        .put("type", "$type"));
+
+        group.put("count", sum());
+
+        return new JsonObject().put("$group", group);
+    }
+
     private JsonObject projectTotalUser() {
         JsonObject project = new JsonObject()
                 .put("_id", 0)
-                .put("user", "$_id")
-                .put("count", "$count");
+                .put("user", "$_id.user")
+                .put("count", sum("$count"));
 
         return new JsonObject().put("$project", project);
     }
@@ -478,7 +546,7 @@ public class GlobalSearch {
                 groups = groupByCountTotal(idByHalfDay());
                 break;
             default:
-                groups = new JsonArray().add(groupByTypeTotal());
+                groups = new JsonArray().add(groupByTypeTotalHourly());
         }
 
         return groups;
@@ -554,9 +622,22 @@ public class GlobalSearch {
 
     private JsonObject groupByTypeTotal() {
         return group(new JsonObject()
-                .put("_id", "$type")
+                .put("_id", new JsonObject()
+                        .put("user", "$_id.user")
+                        .put("name", "$_id.name")
+                        .put("type", "$_id.type"))
                 .put("count", sum())
-                .put("slots", (!HOUR.equals(recoveryMethod)) ? sum("$slots") : sum()));
+                .put("slots", sum("$slots")));
+    }
+
+    private JsonObject groupByTypeTotalHourly() {
+        return group(new JsonObject()
+                .put("_id", new JsonObject()
+                        .put("user", "$user")
+                        .put("name", "$name")
+                        .put("type", "$type"))
+                .put("count", sum())
+                .put("slots", sum()));
     }
 
 
