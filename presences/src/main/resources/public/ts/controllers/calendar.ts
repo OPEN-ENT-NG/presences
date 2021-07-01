@@ -560,6 +560,10 @@ export const calendarController = ng.controller('CalendarController',
 
 
             $scope.$watch(() => window.structure, async (newVal, oldVal) => {
+                // when changing structure after having already loaded courses and absences => redirect to dashboard
+                if (vm.absences.list && vm.courses.list) {
+                    $scope.redirectTo(`/dashboard`);
+                }
                 const structure_slots = await viescolaireService.getSlotProfile(window.structure.id);
                 if (oldVal !== newVal)
                     await PreferencesUtils.resetPreference(PreferencesUtils.PREFERENCE_KEYS.PRESENCE_EVENT_LIST_CALENDAR_FILTER);
