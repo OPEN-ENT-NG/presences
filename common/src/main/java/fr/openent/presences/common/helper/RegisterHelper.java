@@ -114,16 +114,27 @@ public class RegisterHelper {
      * @return Squashed slots and events
      */
     public JsonArray mergeEventsSlots(JsonArray events, JsonArray slots) {
-        for (int i = 0; i < slots.size(); i++) {
-            JsonObject slot = slots.getJsonObject(i);
-            JsonArray slotEvents = slot.getJsonArray("events");
+        for (int i = 0; i < events.size(); i++) {
+            JsonObject event = events.getJsonObject(i).put("type", "event");
+            Integer type = event.getInteger("type_id");
+
             try {
-                for (int j = 0; j < events.size(); j++) {
-                    JsonObject event = events.getJsonObject(j).put("type", "event");
-                    Integer type = event.getInteger("type_id");
-                    if (matchSlot(type, event, slot)) {
+                boolean hasMatchedSlot = false;
+                for (int j = 0; j < slots.size(); j++) {
+                    JsonObject slot = slots.getJsonObject(j);
+                    JsonArray slotEvents = slot.getJsonArray("events");
+                    if (Boolean.TRUE.equals(matchSlot(type, event, slot))) {
+                        hasMatchedSlot = true;
                         slotEvents.add(event);
                     }
+                }
+                // Add events not matching any slots (e.g if slot was removed/modified)
+                if (!hasMatchedSlot) {
+                    JsonObject slotNotMatched = new JsonObject();
+                    slotNotMatched.put("start", event.getString("start_date"))
+                            .put("end", event.getString("end_date"))
+                            .put("events", new JsonArray().add(event));
+                    slots.add(slotNotMatched);
                 }
             } catch (ParseException e) {
                 LOGGER.error("[Presences@DefaultRegisterService] Failed to get Time diff", e);
