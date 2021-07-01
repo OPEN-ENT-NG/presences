@@ -1,44 +1,46 @@
-image: gradle:4.5-alpine
-
-# Disable the Gradle daemon for Continuous Integration servers as correctness
-# is usually a priority over speed in CI environments. Using a fresh
-# runtime for each build is more reliable since the runtime is completely
-# isolated from any previous builds.
-variables:
-  GRADLE_OPTS: "-Dorg.gradle.daemon=false"
-
 stages:
-  - compile
+  - build
   - test
 
-before_script:
-  #  - echo `pwd` # debug
-  #  - echo "$CI_BUILD_NAME, $CI_BUILD_REF_NAME $CI_BUILD_STAGE" # debug
-  - export GRADLE_USER_HOME=`pwd`/.gradle
-
-cache:
-  untracked: true
-  key: "$CI_BUILD_REF_NAME"
-  paths:
-    - node_modules/
-
-# npm install and compile gulpfile
-compile:
-  stage: compile
+# npm install & compile using gulp
+buildNode:
+  stage: build
   image: opendigitaleducation/node
   script:
     - npm install
     - node_modules/gulp/bin/gulp.js build
+  cache:
+    key: $CI_COMMIT_REF_SLUG-$CI_PROJECT_DIR
+    paths:
+      - node_modules/
 
-# test node (javascript/typescript...)
-test_node:
+# gradle install
+buildGradle:
+  stage: build
+  image: gradle:4.5-alpine
+  script:
+    - gradle assemble
+  cache:
+    key: "$CI_COMMIT_REF_NAME"
+    policy: push
+    paths:
+      - build
+      - .gradle
+
+# test node
+testNode:
   stage: test
   image: opendigitaleducation/node
+  cache:
+    key: $CI_COMMIT_REF_SLUG-$CI_PROJECT_DIR
+    paths:
+      - node_modules/
+    policy: pull
   script:
     - npm test
 
-# test all java classes and build gradle
-test_gradle:
+# test gradle
+testGradle:
   stage: test
   image: gradle:4.5-alpine
   script:
@@ -49,7 +51,3 @@ test_gradle:
     paths:
       - build
       - .gradle
-
-
-after_script:
-  - echo "End CI"
