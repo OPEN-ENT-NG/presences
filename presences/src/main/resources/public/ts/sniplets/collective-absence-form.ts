@@ -56,6 +56,8 @@ interface IViewModel {
 
     deleteCollectiveAbsence(): Promise<void>;
 
+    isValidForm(form: IFormData): boolean;
+
     prepareCollectiveForm(): ICollectiveAbsence;
 
     prepareAudiencesForm(): ICollectiveAbsenceAudience[];
@@ -196,6 +198,10 @@ const vm: IViewModel = {
     createCollectiveAbsence: async (): Promise<void> => {
         if (vm.form) {
             vm.prepareDateForm();
+            if (!vm.isValidForm(vm.form)) {
+                toasts.warning(lang.translate('presences.invalid.form'));
+                return;
+            }
             collectiveAbsenceService.createCollectiveAbsence(window.structure.id, vm.prepareCollectiveForm())
                 .then((res: AxiosResponse) => {
                     if (res.status === 200 || res.status === 201) {
@@ -211,6 +217,10 @@ const vm: IViewModel = {
 
     updateCollectiveAbsence: async (): Promise<void> => {
         if (vm.form) {
+            if (!vm.isValidForm(vm.form)) {
+                toasts.warning(lang.translate('presences.invalid.form'));
+                return;
+            }
             collectiveAbsenceService.updateCollectiveAbsence(window.structure.id, vm.prepareCollectiveForm())
                 .then((res: AxiosResponse) => {
                     if (res.status === 200 || res.status === 201) {
@@ -222,6 +232,10 @@ const vm: IViewModel = {
                     }
                 }).catch((_: AxiosError) => toasts.warning('presences.collective.absences.form.edit.error'));
         }
+    },
+
+    isValidForm: (form: IFormData): boolean => {
+        return DateUtils.isPeriodValid(form.startDate, form.endDate);
     },
 
     prepareCollectiveForm: (): ICollectiveAbsence => {

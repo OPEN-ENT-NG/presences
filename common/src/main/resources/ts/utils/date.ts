@@ -86,7 +86,7 @@ export class DateUtils {
         return moment(date).set({hour: 23, minute: 59, second: 59}).toDate();
     }
 
-    static isValid(date: any, format: string): Boolean {
+    static isValid(date: any, format: string): boolean {
         return (moment(date, format, true).isValid());
     }
 
@@ -224,5 +224,11 @@ export class DateUtils {
 
         return (aStartTimestamp < bEndTimestamp && aEndTimestamp > bStartTimestamp)
             || (bStartTimestamp < aEndTimestamp && bEndTimestamp > aStartTimestamp);
+    }
+
+    static isPeriodValid(startAt: String, endAt: String): boolean {
+        return this.isValid(startAt, this.FORMAT["YEAR-MONTH-DAY-HOUR-MIN-SEC"])
+            && this.isValid(endAt, this.FORMAT["YEAR-MONTH-DAY-HOUR-MIN-SEC"])
+            && moment(startAt).isBefore(moment(endAt))
     }
 }

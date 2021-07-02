@@ -173,8 +173,12 @@ const vm: ViewModel = {
 
     async create(): Promise<void> {
         vm.preparePunishmentForm();
+        if (!PunishmentsUtils.isValidPunishmentBody(vm.form)) {
+            toasts.warning(lang.translate('incidents.invalid.form'));
+            return;
+        }
         let response = await punishmentService.create(vm.form);
-        if (response.status == 200 || response.status == 201) {
+        if (response && (response.status == 200 || response.status == 201)) {
             vm.closePunishmentLightbox();
             toasts.confirm(lang.translate('incidents.punishment.create.succeed'));
         } else {
@@ -186,8 +190,12 @@ const vm: ViewModel = {
 
     async update(): Promise<void> {
         vm.preparePunishmentForm();
+        if (!PunishmentsUtils.isValidPunishmentBody(vm.form)) {
+            toasts.warning(lang.translate('incidents.invalid.form'));
+            return;
+        }
         let response = await punishmentService.update(vm.form);
-        if (response.status == 200 || response.status == 201) {
+        if (response && (response.status == 200 || response.status == 201)) {
             vm.closePunishmentLightbox();
             toasts.confirm(lang.translate('incidents.punishment.edit.succeed'));
         } else {

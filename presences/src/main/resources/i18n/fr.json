@@ -235,6 +235,7 @@
   "presences.incidents": "Incidents",
   "presences.incident.place.form.input.placeholder": "Cour de récréation, classe...",
   "presences.input": "Saisir",
+  "presences.invalid.form": "Le formulaire est invalide",
   "presences.lateness.form.create": "Créer",
   "presences.lateness.form.create.succeed": "Retard créé avec succès",
   "presences.lateness.form.create.no.register": "Le retard n'a pas été enregistré. Verifiez que l'appel a été ouvert.",

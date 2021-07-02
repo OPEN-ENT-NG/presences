@@ -1,5 +1,6 @@
-import {EventResponse, Events, EventType, IEvent, ITimeSlot} from "../models";
+import {Absence, EventResponse, Events, EventType, IEvent, IEventBody, ITimeSlot, Lateness} from "../models";
 import {Reason} from "@presences/models/Reason";
+import {DateUtils} from "@common/utils";
 
 export interface EventsFilter {
     startDate: Date;
@@ -124,6 +125,10 @@ export class EventsUtils {
 
         return beforePage.concat(pageEvents).concat(afterPage);
     };
+
+    public static isValidForm = (event: Absence | Lateness | IEventBody): boolean => {
+        return DateUtils.isPeriodValid(event.start_date, event.end_date);
+    }
 
     /* ----------------------------
     counsellor regularisation methods

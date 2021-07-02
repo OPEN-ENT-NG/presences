@@ -484,6 +484,10 @@ const vm: ViewModel = {
     async createAbsence(): Promise<void> {
         vm.prepareAbsenceBody();
         vm.setEventModel(vm.event);
+        if (!EventsUtils.isValidForm(vm.event)) {
+            toasts.warning(lang.translate('presences.invalid.form'));
+            return;
+        }
         let response: AxiosResponse = await (<Absence> vm.event).createAbsence(window.structure.id, vm.eventBody.reason_id, model.me.userId);
         if (response.status === 200 || response.status === 201) {
             await vm.updateFollowed(response.data.events.id);
@@ -500,6 +504,10 @@ const vm: ViewModel = {
     async updateAbsence(): Promise<void> {
         vm.prepareAbsenceBody();
         vm.setEventModel(vm.event);
+        if (!EventsUtils.isValidForm(vm.event)) {
+            toasts.warning(lang.translate('presences.invalid.form'));
+            return;
+        }
         let responses: AxiosResponse[] = [];
         // In this const, we consider vm.form.absences without field "type" can be an event (on calendar view logical)
         // but sometimes we might have type field equal to events (seen on event list) so we double check
@@ -612,6 +620,10 @@ const vm: ViewModel = {
 
     async createLateness(): Promise<void> {
         vm.prepareLatenessBody();
+        if (!EventsUtils.isValidForm(vm.eventBody)) {
+            toasts.warning(lang.translate('presences.invalid.form'));
+            return;
+        }
         eventService.createLatenessEvent(vm.eventBody, window.structure.id)
             .then((response: AxiosResponse) => {
                 if (response.status === 200 || response.status === 201) {
@@ -630,6 +642,10 @@ const vm: ViewModel = {
 
     async updateLateness(): Promise<void> {
         vm.prepareLatenessBody();
+        if (!EventsUtils.isValidForm(vm.eventBody)) {
+            toasts.warning(lang.translate('presences.invalid.form'));
+            return;
+        }
         eventService.updateEvent(vm.form.id, vm.eventBody)
             .then((response: AxiosResponse) => {
                 if (response.status === 200 || response.status === 201) {

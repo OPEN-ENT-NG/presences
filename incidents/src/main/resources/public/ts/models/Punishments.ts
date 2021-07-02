@@ -41,10 +41,12 @@ export interface IPunishmentAbsenceRequest {
     endAt: string;
 }
 
+export type IPunishmentField = IPBlameField | IPDutyField | IPExcludeField | IPDetentionField;
+
 export interface IPunishmentBody {
     id?: string;
     structure_id?: string;
-    fields?: IPBlameField | IPDutyField | IPExcludeField | IPDetentionField;
+    fields?: IPunishmentField;
     student_ids: Array<string>;
     owner_id?: string;
     category_id?: number;
@@ -69,7 +71,7 @@ export interface IPunishment {
     created_at?: string;
     updated_at?: string;
     mailing_id?: number;
-    fields?: IPBlameField | IPDutyField | IPExcludeField | IPDetentionField;
+    fields?: IPunishmentField;
     processed?: boolean;
     description?: string;
     incident?: {};

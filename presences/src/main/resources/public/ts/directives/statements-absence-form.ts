@@ -21,7 +21,7 @@ interface IViewModel {
 
     dateFormat(date: string): void;
 
-    isFormValid(): boolean;
+    isFormValid(form: IStatementAbsenceBody): boolean;
 }
 
 export const StatementsAbsenceForm = ng.directive('statementsAbsenceForm', () => {
@@ -112,7 +112,7 @@ export const StatementsAbsenceForm = ng.directive('statementsAbsenceForm', () =>
                     
                     <!-- valid form -->
                     <div class="margin-top-md statements-absence-form-content-valid">
-                        <button data-ng-click="vm.submit()" data-ng-disabled="!vm.isFormValid()">
+                        <button data-ng-click="vm.submit()" data-ng-disabled="!vm.isFormValid(vm.form)">
                             <i18n>presences.exemptions.form.submit</i18n>
                         </button>
                     </div>
@@ -157,6 +157,10 @@ export const StatementsAbsenceForm = ng.directive('statementsAbsenceForm', () =>
                 form.structure_id = window.structure.id;
                 form.start_at = date.start;
                 form.end_at = date.end;
+                if (!vm.isFormValid(form)) {
+                    toasts.warning(lang.translate('presences.invalid.form'));
+                    return;
+                }
                 let response: AxiosResponse = await statementsAbsencesService.create(form);
                 if (response.status == 200 || response.status == 201) {
                     toasts.confirm(lang.translate('presences.statement.form.create.success'));
@@ -172,13 +176,11 @@ export const StatementsAbsenceForm = ng.directive('statementsAbsenceForm', () =>
                 return DateUtils.format(date, DateUtils.FORMAT["DAY-MONTH-YEAR"])
             };
 
-            vm.isFormValid = (): boolean => {
+            vm.isFormValid = (form: IStatementAbsenceBody): boolean => {
                 let current_date: string = moment().startOf('day');
-                return vm.form.start_at
-                    && vm.form.end_at
-                    && vm.form.start_at <= vm.form.end_at
-                    && current_date <= vm.form.start_at
-                    && current_date <= vm.form.end_at;
+                return DateUtils.isPeriodValid(form.start_at, form.end_at)
+                && DateUtils.isPeriodValid(current_date, form.start_at)
+                && DateUtils.isPeriodValid(current_date, form.end_at)
             };
 
             const setCorrectDateFormat = (): { start: string, end: string } => {

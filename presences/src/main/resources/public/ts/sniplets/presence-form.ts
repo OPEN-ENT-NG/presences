@@ -60,6 +60,8 @@ interface ViewModel {
 
     updatePresence(): Promise<void>;
 
+    isValidForm(presence: PresenceBody): boolean;
+
     deletePresence(): Promise<void>;
 
     closePresenceLightbox(): void;
@@ -110,6 +112,10 @@ const vm: ViewModel = {
 
     async createPresence(): Promise<void> {
         vm.preparePresenceForm();
+        if (!vm.isValidForm(vm.form)) {
+            toasts.warning(lang.translate('presences.invalid.form'));
+            return;
+        }
         let response = await presenceService.create(vm.form);
         if (response.status == 200 || response.status == 201) {
             vm.closePresenceLightbox();
@@ -123,6 +129,10 @@ const vm: ViewModel = {
 
     async updatePresence(): Promise<void> {
         vm.preparePresenceForm();
+        if (!vm.isValidForm(vm.form)) {
+            toasts.warning(lang.translate('presences.invalid.form'));
+            return;
+        }
         let response = await presenceService.update(vm.form);
         if (response.status == 200 || response.status == 201) {
             vm.closePresenceLightbox();
@@ -132,6 +142,10 @@ const vm: ViewModel = {
         }
         presenceForm.that.$emit(SNIPLET_FORM_EMIT_EVENTS.EDIT);
         vm.safeApply();
+    },
+
+    isValidForm(presence: PresenceBody): boolean {
+        return DateUtils.isPeriodValid(presence.startDate, presence.endDate);
     },
 
     async deletePresence(): Promise<void> {

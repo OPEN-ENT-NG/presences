@@ -1,6 +1,14 @@
-import {MassmailingsPunishments, PunishmentsProcessStates, PunishmentsRules} from "@incidents/models";
+import {
+    IPBlameField, IPDetentionField, IPDutyField, IPExcludeField,
+    IPunishmentBody,
+    MassmailingsPunishments,
+    PunishmentsProcessStates,
+    PunishmentsRules
+} from "@incidents/models";
 import {model} from "entcore";
 import incidentsRights from "@incidents/rights";
+import {DateUtils} from "@common/utils";
+import {idiom as lang, moment} from 'entcore';
 
 export class PunishmentsUtils {
 
@@ -90,4 +98,23 @@ export class PunishmentsUtils {
         return model.me.hasWorkflow(incidentsRights.workflow.createPunishment) &&
             !model.me.hasWorkflow(incidentsRights.workflow.createSanction);
     };
+
+    static isValidPunishmentBody = (punishment: IPunishmentBody): boolean => {
+        if (punishment.type) {
+            switch (punishment.type.punishment_category_id) {
+                case 1: // DUTY
+                    return DateUtils.isValid((<IPDutyField>punishment.fields).delay_at,
+                        DateUtils.FORMAT["YEAR-MONTH-DAY-HOUR-MIN-SEC"])
+                case 2: // DETENTION
+                    let fieldDetention: IPDetentionField = (<IPDetentionField>punishment.fields)
+                    return DateUtils.isPeriodValid(fieldDetention.start_at, fieldDetention.end_at);
+                case 3: // BLAME
+                    return true;
+                case 4: // EXCLUSION
+                    let fieldExclusion: IPExcludeField = (<IPExcludeField>punishment.fields)
+                    return DateUtils.isPeriodValid(fieldExclusion.start_at, fieldExclusion.end_at);
+            }
+            return false;
+        }
+    }
 }
