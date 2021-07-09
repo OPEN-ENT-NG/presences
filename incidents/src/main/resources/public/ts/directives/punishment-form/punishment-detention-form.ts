@@ -3,6 +3,7 @@ import {IPDetentionField, IPunishment, IPunishmentBody, ITimeSlot, TimeSlotHourP
 import {DateUtils, UsersSearch} from "@common/utils";
 import {User} from "@common/model/User";
 import {SearchService} from "@common/services";
+import {PeriodFormUtils} from "@common/utils/periodForm";
 
 declare let window: any;
 
@@ -66,8 +67,8 @@ export const PunishmentDetentionForm = ng.directive('punishmentDetentionForm', [
                     <i18n>presences.by</i18n>&#58;
                     <label class="timeslot-select">
                         <i class="time-picker"></i>
-                        <select data-ng-model="vm.timeSlotTimePeriod.start"
-                                data-ng-change="vm.selectTimeSlot(vm.timeSlotHourPeriod.START_HOUR)"
+                        <select ng-model="vm.timeSlotTimePeriod.start"
+                                ng-change="vm.selectTimeSlot(vm.timeSlotHourPeriod.START_HOUR)"
                                 ng-options="item.name + ' : ' + item.startHour for item in vm.timeSlots
                                 | orderBy:vm.timeSlotHourPeriod.START_HOUR">
                             <option value="">[[vm.selectTimeSlotText]]</option>
@@ -78,8 +79,8 @@ export const PunishmentDetentionForm = ng.directive('punishmentDetentionForm', [
                     <i18n>presences.at</i18n>&#58;
                     <label class="timeslot-select">
                         <i class="time-picker"></i>
-                        <select data-ng-model="vm.timeSlotTimePeriod.end"
-                                data-ng-change="vm.selectTimeSlot(vm.timeSlotHourPeriod.END_HOUR)"
+                        <select ng-model="vm.timeSlotTimePeriod.end"
+                                ng-change="vm.selectTimeSlot(vm.timeSlotHourPeriod.END_HOUR)"
                                 ng-options="item.name + ' : ' + item.endHour for item in vm.timeSlots
                                 | orderBy:vm.timeSlotHourPeriod.END_HOUR">
                             <option value="">[[vm.selectTimeSlotText]]</option>
@@ -93,7 +94,7 @@ export const PunishmentDetentionForm = ng.directive('punishmentDetentionForm', [
                     <span class="presenceLightbox-body-info-time-start">
                         <i18n>presences.by</i18n> &#58;
                         <span class="card card-timepicker">
-                            <time-picker required ng-model="vm.date.start_time" data-ng-change="vm.changeTimeInput()"></time-picker>
+                            <time-picker required ng-model="vm.date.start_time" ng-change="vm.changeTimeInput()"></time-picker>
                         </span>
                     </span>
     
@@ -111,7 +112,7 @@ export const PunishmentDetentionForm = ng.directive('punishmentDetentionForm', [
              
            <!-- checkbox free timeslot -->
            <label class="checkbox">
-                <input type="checkbox" data-ng-model="vm.date.isFree"/>
+                <input type="checkbox" ng-model="vm.date.isFree"/>
                 <span></span>
                 <i18n>incidents.choice.time.slot</i18n>
             </label>&nbsp;
@@ -119,7 +120,7 @@ export const PunishmentDetentionForm = ng.directive('punishmentDetentionForm', [
             <!-- place -->
             <div class="punishment-detention-form-place">
                 <i18n>incidents.place</i18n>&#58;&nbsp;
-                <input i18n-placeholder="incidents.write.text" data-ng-model="vm.form.fields.place">
+                <input i18n-placeholder="incidents.write.text" ng-model="vm.form.fields.place">
             </div>
             
             <!-- responsible -->
@@ -130,7 +131,7 @@ export const PunishmentDetentionForm = ng.directive('punishmentDetentionForm', [
                 <div class="seven cell twelve-mobile">
                     <div class="incident-lightbox-body-responsible-autocomplete search-input">
                         <async-autocomplete data-ng-disabled="false"
-                                        data-ng-model="vm.ownerSearch"
+                                        ng-model="vm.ownerSearch"
                                         data-ng-change="vm.selectOwner"
                                         data-on-search="vm.searchOwner"
                                         data-options="vm.usersSearch.users"
@@ -234,25 +235,8 @@ export const PunishmentDetentionForm = ng.directive('punishmentDetentionForm', [
                 vm.usersSearch = new UsersSearch(window.structure.id, SearchService);
 
                 vm.selectTimeSlot = (hourPeriod: TimeSlotHourPeriod): void => {
-                    switch (hourPeriod) {
-                        case TimeSlotHourPeriod.START_HOUR:
-                            let start = vm.timeSlotTimePeriod.start != null ? DateUtils.getDateFormat(new Date(vm.date.date),
-                                DateUtils.getTimeFormatDate(vm.timeSlotTimePeriod.start.startHour)) : null;
-
-                            (<IPDetentionField>vm.form.fields).start_at = start;
-                            (<IPDetentionField>vm.form.fields).end_at = vm.timeSlotTimePeriod.end != null ? DateUtils.getDateFormat(new Date(vm.date.date),
-                                DateUtils.getTimeFormatDate(vm.timeSlotTimePeriod.end.endHour)) : moment(new Date(vm.date.date));
-                            break;
-                        case TimeSlotHourPeriod.END_HOUR:
-                            let end = vm.timeSlotTimePeriod.end != null ? DateUtils.getDateFormat(new Date(vm.date.date),
-                                DateUtils.getTimeFormatDate(vm.timeSlotTimePeriod.end.endHour)) : null;
-                            (<IPDetentionField>vm.form.fields).end_at = end;
-                            (<IPDetentionField>vm.form.fields).start_at = vm.timeSlotTimePeriod.start != null ? DateUtils.getDateFormat(new Date(vm.date.date),
-                                DateUtils.getTimeFormatDate(vm.timeSlotTimePeriod.start.startHour)) : moment(new Date(vm.date.date));
-                            break;
-                        default:
-                            return;
-                    }
+                    PeriodFormUtils.setHourSelectorsFromTimeSlots(vm.date.date, hourPeriod, vm.timeSlotTimePeriod,
+                        (<IPDetentionField>vm.form.fields), "start_at", "end_at");
                 };
 
                 vm.changeTimeInput = (): void => {

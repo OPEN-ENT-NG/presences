@@ -1,6 +1,6 @@
 import {idiom as lang, moment, ng, toasts} from 'entcore';
 import {Student} from "@common/model/Student";
-import {IStructureSlot} from "@common/model";
+import {IStructureSlot, TimeSlotHourPeriod} from "@common/model";
 import {IStatementAbsenceBody} from "../models";
 import {DateUtils} from "@common/utils";
 import {AxiosResponse} from "axios";
@@ -9,11 +9,16 @@ import {statementsAbsencesService} from "../services";
 declare let window: any;
 
 interface IViewModel {
+    $onInit(): any;
+
     title: string;
     student: Student;
     form: IStatementAbsenceBody;
     timeslots: IStructureSlot;
     date: { start_time: string, end_time: string, isComplete: boolean };
+    timeSlotHourPeriod: typeof TimeSlotHourPeriod;
+    timeoutInput: any;
+
 
     submit(): Promise<void>;
 
@@ -22,9 +27,13 @@ interface IViewModel {
     dateFormat(date: string): void;
 
     isFormValid(form: IStatementAbsenceBody): boolean;
+
+    hourInput(hourPeriod: TimeSlotHourPeriod): void;
+
+    selectTimeSlot(hourPeriod: TimeSlotHourPeriod): void
 }
 
-export const StatementsAbsenceForm = ng.directive('statementsAbsenceForm', () => {
+export const StatementsAbsenceForm = ng.directive('statementsAbsenceForm', ($timeout) => {
     return {
         restrict: 'E',
         transclude: true,
@@ -50,14 +59,16 @@ export const StatementsAbsenceForm = ng.directive('statementsAbsenceForm', () =>
                         <div class="margin-bottom-xmd">
                             <span><i18n>presences.from</i18n>&#58;</span>
                             <span class="card date-picker">
-                                 <date-picker ng-model="vm.form.start_at"></date-picker>
+                                 <date-picker ng-model="vm.form.start_at" 
+                                 ng-change="vm.selectTimeSlot(vm.timeSlotHourPeriod.START_HOUR)"></date-picker>
                             </span>
                         </div>
                         
                        <div>
                            <span><i18n>presences.to</i18n>&#58;</span>
                            <span class="card date-picker">
-                               <date-picker ng-model="vm.form.end_at"></date-picker>
+                               <date-picker ng-model="vm.form.end_at" 
+                               ng-change="vm.selectTimeSlot(vm.timeSlotHourPeriod.END_HOUR)"></date-picker>
                            </span>
                        </div>
                     </div>
@@ -75,7 +86,9 @@ export const StatementsAbsenceForm = ng.directive('statementsAbsenceForm', () =>
                         <div class="statements-absence-form-content-time-start">
                             <span><i18n>presences.as.of</i18n> &#58;</span>
                             <span class="top5 card card-timepicker">
-                                <time-picker required ng-model="vm.date.start_time" ng-disabled="vm.date.isComplete"></time-picker>
+                                <time-picker required ng-model="vm.date.start_time" 
+                                ng-change="vm.hourInput(vm.timeSlotHourPeriod.START_HOUR)" 
+                                ng-disabled="vm.date.isComplete"></time-picker>
                             </span>
                         </div>
         
@@ -83,7 +96,9 @@ export const StatementsAbsenceForm = ng.directive('statementsAbsenceForm', () =>
                         <div class="statements-absence-form-content-time-end">
                             <span><i18n>presences.until</i18n> &#58;</span>
                             <span class="top5 card card-timepicker">
-                                <time-picker required ng-model="vm.date.end_time" ng-disabled="vm.date.isComplete"></time-picker>
+                                <time-picker required ng-model="vm.date.end_time"
+                                ng-change="vm.hourInput(vm.timeSlotHourPeriod.END_HOUR)"
+                                ng-disabled="vm.date.isComplete"></time-picker>
                             </span>
                         </div>
                         <div></div>
@@ -125,8 +140,12 @@ export const StatementsAbsenceForm = ng.directive('statementsAbsenceForm', () =>
         replace: true,
         controller: function () {
             const vm: IViewModel = <IViewModel>this;
+            vm.$onInit = () => {
+                vm.timeSlotHourPeriod = TimeSlotHourPeriod;
+            };
+
             vm.form = {
-                start_at: moment().startOf('day').add(8,"hours"),
+                start_at: moment().startOf('day').add(8, "hours"),
                 end_at: moment().startOf('day').add(17, 'hours'),
                 description: "",
                 file: null,
@@ -179,9 +198,45 @@ export const StatementsAbsenceForm = ng.directive('statementsAbsenceForm', () =>
             vm.isFormValid = (form: IStatementAbsenceBody): boolean => {
                 let current_date: string = moment().startOf('day');
                 return DateUtils.isPeriodValid(form.start_at, form.end_at)
-                && DateUtils.isPeriodValid(current_date, form.start_at)
-                && DateUtils.isPeriodValid(current_date, form.end_at)
+                    && DateUtils.isPeriodValid(current_date, form.start_at)
+                    && DateUtils.isPeriodValid(current_date, form.end_at)
             };
+
+            vm.hourInput = (hourPeriod: TimeSlotHourPeriod): void => {
+                if (vm.timeoutInput) $timeout.cancel(vm.timeoutInput);
+                vm.timeoutInput = $timeout(() => vm.selectTimeSlot(hourPeriod), 600);
+            };
+
+
+            vm.selectTimeSlot = (hourPeriod: TimeSlotHourPeriod): void => {
+                vm.form.start_at = moment(DateUtils.getDateFormat(new Date(vm.form.start_at), new Date(vm.date.start_time)));
+                vm.form.end_at = moment(DateUtils.getDateFormat(new Date(vm.form.end_at), new Date(vm.date.end_time)));
+
+                let startHour: Date = vm.date.start_time ? new Date(vm.date.start_time) : null;
+                let endHour: Date = vm.date.end_time ? new Date(vm.date.end_time) : null;
+                let start: string = vm.form.start_at && startHour ? DateUtils.getDateFormat(new Date(vm.form.start_at), startHour) : null;
+                let end: string = vm.form.end_at && endHour ? DateUtils.getDateFormat(new Date(vm.form.end_at), endHour) : null;
+
+                switch (hourPeriod) {
+                    case TimeSlotHourPeriod.START_HOUR:
+                        if (startHour == null) return;
+                        if (!end || !endHour || !DateUtils.isPeriodValid(start, end)) {
+                            vm.date.end_time = moment(vm.date.start_time).add(1, 'hours').toDate();
+                            vm.form.end_at = moment(DateUtils.getDateFormat(new Date(vm.form.start_at), new Date(vm.date.end_time)));
+                        }
+                        break;
+                    case TimeSlotHourPeriod.END_HOUR:
+                        if (endHour == null) return;
+                        if (!start || !startHour || !DateUtils.isPeriodValid(start, end)) {
+                            vm.date.start_time = moment(vm.date.end_time).add(-1, 'hours').toDate();
+                            vm.form.start_at = moment(DateUtils.getDateFormat(new Date(vm.form.end_at), new Date(vm.date.start_time)));
+                        }
+                        break;
+                    default:
+                        return;
+                }
+            };
+
 
             const setCorrectDateFormat = (): { start: string, end: string } => {
                 const start_date: Date = moment(vm.form.start_at).toDate();

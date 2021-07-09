@@ -1,5 +1,11 @@
 import {idiom, model, moment, ng} from 'entcore';
-import {IPExcludeField, IPunishment, IPunishmentAbsence, IPunishmentBody, Student} from "@incidents/models";
+import {
+    IPExcludeField,
+    IPunishment,
+    IPunishmentAbsence,
+    IPunishmentBody,
+    Student,
+} from "@incidents/models";
 import {Reason} from '@presences/models/Reason';
 import {IAbsence} from '@presences/models/Event/Absence';
 import {DateUtils, UsersSearch} from "@common/utils";
@@ -8,6 +14,7 @@ import {SearchService} from "@common/services";
 import {presenceService} from "@incidents/services/PresenceService";
 import {punishmentService} from "@incidents/services";
 import {Idiom} from "@common/interfaces";
+import {PERIOD} from "@common/core/enum/period";
 
 declare let window: any;
 
@@ -30,6 +37,9 @@ interface IViewModel {
     reasons: Array<Reason>;
     absencesByStudentIds: Map<string, Array<IAbsence>>;
     lang: Idiom;
+    period: typeof PERIOD;
+
+    changeDateInput(Period: PERIOD): void;
 
     formatStartDate(): void;
 
@@ -71,10 +81,10 @@ export const PunishmentExcludeForm = ng.directive('punishmentExcludeForm', ['Sea
              <!-- Date -->
              <div class="punishment-exclude-form-date twelve cell">
                 <i18n>presences.from</i18n>&nbsp;&#58;&nbsp;
-                <span class="card date-picker"><date-picker ng-model="vm.start_date"></date-picker></span>
+                <span class="card date-picker"><date-picker ng-model="vm.start_date" ng-change="vm.changeDateInput(vm.period.START)"></date-picker></span>
 
                 <i18n>presences.to</i18n>&nbsp;&#58;&nbsp;
-                <span class="card date-picker"><date-picker ng-model="vm.end_date"></date-picker></span>
+                <span class="card date-picker"><date-picker ng-model="vm.end_date" ng-change="vm.changeDateInput(vm.period.END)"></date-picker></span>
              </div>
            
             <!-- mandatory -->
@@ -151,6 +161,7 @@ export const PunishmentExcludeForm = ng.directive('punishmentExcludeForm', ['Sea
             controller: function () {
                 const vm: IViewModel = <IViewModel>this;
                 vm.$onInit = () => {
+                    vm.period = PERIOD;
                     vm.lang = idiom;
                     vm.isAddingAbsence = false;
                     if (!vm.punishment || !vm.punishment.id) {
@@ -268,8 +279,7 @@ export const PunishmentExcludeForm = ng.directive('punishmentExcludeForm', ['Sea
                                 // we only update list in case that student have no absence matching this period.
                                 vm.absencesByStudentIds = await punishmentService.getStudentsAbsences([vm.punishment.student], vm.start_date, vm.end_date)
                             }
-                        }
-                        else if (vm.isAddingAbsence && vm.students && vm.students.length > 0)
+                        } else if (vm.isAddingAbsence && vm.students && vm.students.length > 0)
                             vm.absencesByStudentIds = await punishmentService.getStudentsAbsences(vm.students, vm.start_date, vm.end_date)
                     }
                     $scope.$apply();
@@ -282,6 +292,22 @@ export const PunishmentExcludeForm = ng.directive('punishmentExcludeForm', ['Sea
 
                 vm.disableAbsence = function (): boolean {
                     return (vm.punishment && !!vm.punishment.id) && (vm.isStudentAnomaly(vm.punishment.student.id) || !!vm.getUpdateMatchingAbsence(vm.punishment.student.id));
+                }
+
+                vm.changeDateInput = (period: PERIOD): void => {
+                    switch (period) {
+                        case PERIOD.START:
+                            if (!vm.end_date || !DateUtils.isPeriodValid(vm.start_date, vm.end_date))
+                                vm.end_date = moment(vm.start_date).add(1, 'days');
+                            break;
+                        case PERIOD.END:
+                            if (!vm.start_date || !DateUtils.isPeriodValid(vm.start_date, vm.end_date))
+                                vm.start_date = moment(vm.end_date).add(-1, 'days');
+                            break;
+                        default:
+                            return;
+                    }
+                    $scope.$apply();
                 }
 
                 $scope.$watch(() => vm.start_date, async () => {
@@ -302,7 +328,7 @@ export const PunishmentExcludeForm = ng.directive('punishmentExcludeForm', ['Sea
                 });
 
                 // tricks used to initialize data from promises (played only one time)
-                const unwatch = $scope.$watchCollection(() => vm.punishment, async function(newVal, oldVal){
+                const unwatch = $scope.$watchCollection(() => vm.punishment, async function (newVal, oldVal) {
                     if (newVal) {
                         vm.reasons = await presenceService.getReasons(window.structure.id);
                         if (vm.punishment.id) {

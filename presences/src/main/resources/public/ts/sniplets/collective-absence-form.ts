@@ -1,12 +1,22 @@
 import {IStructureSlot, ITimeSlot, TimeSlotHourPeriod} from '@common/model';
 import {collectiveAbsenceService, reasonService, SearchItem, ViescolaireService} from '../services';
-import {ICollectiveAbsence, ICollectiveAbsenceAudience, ICollectiveAbsenceBody, ICollectiveAbsenceStudent, Reason} from '../models';
+import {
+    ICollectiveAbsence,
+    ICollectiveAbsenceAudience,
+    ICollectiveAbsenceBody,
+    ICollectiveAbsenceStudent,
+    Reason
+} from '../models';
 import {idiom as lang, moment, toasts} from 'entcore';
 import {DateUtils, GlobalSearch} from '@common/utils';
 import {SearchService, GroupService} from '@common/services';
 import {IAngularEvent} from 'angular';
-import {COLLECTIVE_ABSENCE_FORM_EVENTS, SNIPLET_FORM_EMIT_COLLECTIVE_ABSENCES_EVENTS} from '../core/enum/collective-absences-events';
+import {
+    COLLECTIVE_ABSENCE_FORM_EVENTS,
+    SNIPLET_FORM_EMIT_COLLECTIVE_ABSENCES_EVENTS
+} from '../core/enum/collective-absences-events';
 import {AxiosError, AxiosResponse} from 'axios';
+import {PeriodFormUtils} from "@common/utils/periodForm";
 
 console.log('collectiveAbsenceFormSniplets');
 
@@ -35,12 +45,14 @@ interface IViewModel {
     structureTimeSlot: IStructureSlot;
     reasons: Array<Reason>;
     display: { isFreeSchedule: boolean, confirmValidation: boolean, confirmDeletion: boolean };
-    date: {startDate: Date, startTime: Date, endDate: Date, endTime: Date};
+    date: { startDate: Date, startTime: Date, endDate: Date, endTime: Date };
     canRegularize: boolean;
     updateAbsenceRegularisation: boolean;
     selectedReason: Reason;
     globalSearch: GlobalSearch;
     loadedStudentIds: Array<string>;
+    timeSlotHourPeriod: typeof TimeSlotHourPeriod;
+    timeoutInput: number;
 
     openCreateCollectiveLightBox(): Promise<void>;
 
@@ -66,6 +78,8 @@ interface IViewModel {
 
     setTimeSlot(): void;
 
+    freeHourInput(hourPeriod: TimeSlotHourPeriod): void;
+
     selectTimeSlot(hourPeriod: TimeSlotHourPeriod): void;
 
     selectReason(): Promise<void>;
@@ -81,9 +95,9 @@ interface IViewModel {
     getNbStudentsSubmit(): number;
 
     toggleAudienceDisplay(audience: ICollectiveAbsenceAudience): void;
-    
+
     removeAudience(audienceId: string): void;
-    
+
     removeStudent(audienceId: string, studentId: string): void;
 
     isStudentAdded(audienceId: string, studentId: string): boolean;
@@ -111,10 +125,11 @@ interface IViewModel {
 }
 
 const vm: IViewModel = {
+    timeSlotHourPeriod: TimeSlotHourPeriod,
     safeApply: null,
     openCollectiveAbsenceLightBox: false,
     form: null,
-    reasons:  null,
+    reasons: null,
     selectedReason: null,
     canRegularize: false,
     updateAbsenceRegularisation: false,
@@ -128,6 +143,7 @@ const vm: IViewModel = {
         endDate: moment(new Date()).toDate(),
         endTime: moment(new Date()).set({second: 0, millisecond: 0}).toDate()
     },
+    timeoutInput: null,
 
     openCreateCollectiveLightBox: async (): Promise<void> => {
         vm.openCollectiveAbsenceLightBox = true;
@@ -287,7 +303,7 @@ const vm: IViewModel = {
     prepareDateForm: (): void => {
 
         if (vm.display.isFreeSchedule) {
-            vm.form.startDate =  DateUtils.getDateFormat(vm.date.startDate, vm.date.startTime);
+            vm.form.startDate = DateUtils.getDateFormat(vm.date.startDate, vm.date.startTime);
             vm.form.endDate = DateUtils.getDateFormat(vm.date.endDate, vm.date.endTime);
         } else if (vm.form.timeSlotTimePeriod.start && vm.form.timeSlotTimePeriod.end) {
             vm.form.startDate = DateUtils.getDateFormat(vm.date.startDate,
@@ -340,21 +356,15 @@ const vm: IViewModel = {
             vm.form.timeSlotTimePeriod.end.endHour !== '');
     },
 
+    freeHourInput: (hourPeriod: TimeSlotHourPeriod): void => {
+        if (vm.timeoutInput) window.clearTimeout(vm.timeoutInput);
+        vm.timeoutInput = setTimeout(() => vm.selectTimeSlot(hourPeriod), 600);
+    },
+
     selectTimeSlot: (hourPeriod: TimeSlotHourPeriod): void => {
-        switch (hourPeriod) {
-            case TimeSlotHourPeriod.START_HOUR:
-                vm.form.startSlot = vm.form.timeSlotTimePeriod.start != null ?
-                    DateUtils.getDateFormat(new Date(vm.date.startDate),
-                    DateUtils.getTimeFormatDate(vm.form.timeSlotTimePeriod.start.startHour)) : null;
-                break;
-            case TimeSlotHourPeriod.END_HOUR:
-                vm.form.endSlot = vm.form.timeSlotTimePeriod.end != null ?
-                    DateUtils.getDateFormat(new Date(vm.date.endDate),
-                    DateUtils.getTimeFormatDate(vm.form.timeSlotTimePeriod.end.endHour)) : null;
-                break;
-            default:
-                return;
-        }
+        PeriodFormUtils.setHourSelectorsFromTimeSlotsOrFree(hourPeriod, vm.display.isFreeSchedule, vm.date,
+            "startTime", "endTime", "startDate", "endDate",
+            vm.form.timeSlotTimePeriod, vm.form, "startSlot", "endSlot");
     },
 
     selectReason: async (): Promise<void> => {
@@ -393,21 +403,21 @@ const vm: IViewModel = {
     },
 
     getNbStudentIssues: (): number => {
-      let issuesStudentIds: Array<string> = [];
+        let issuesStudentIds: Array<string> = [];
 
-      if (vm.form && vm.form.audiences) {
-          vm.form.audiences.forEach((audience: ICollectiveAbsenceAudience) => {
-              if (audience.students) {
-                  audience.students.forEach((student: ICollectiveAbsenceStudent) => {
-                      if ((student.isAbsent || student.isUpdated) && issuesStudentIds.indexOf(student.id) === -1) {
-                          issuesStudentIds.push(student.id);
-                      }
-                  });
-              }
-          });
-      }
+        if (vm.form && vm.form.audiences) {
+            vm.form.audiences.forEach((audience: ICollectiveAbsenceAudience) => {
+                if (audience.students) {
+                    audience.students.forEach((student: ICollectiveAbsenceStudent) => {
+                        if ((student.isAbsent || student.isUpdated) && issuesStudentIds.indexOf(student.id) === -1) {
+                            issuesStudentIds.push(student.id);
+                        }
+                    });
+                }
+            });
+        }
 
-      return issuesStudentIds.length;
+        return issuesStudentIds.length;
     },
 
     getNbStudentsSubmit: (): number => {
@@ -485,7 +495,7 @@ const vm: IViewModel = {
                 });
             }
         });
-        
+
         vm.safeApply();
     },
 
@@ -502,11 +512,11 @@ const vm: IViewModel = {
         if (vm.form) {
 
             let studentIds: Array<string> = vm.getListStudentIds();
-            
+
             if (studentIds.length === 0) {
                 return;
             }
-            
+
             vm.prepareDateForm();
 
             let collectiveParams: ICollectiveAbsenceBody = {
@@ -517,19 +527,19 @@ const vm: IViewModel = {
             };
             collectiveAbsenceService.getStudentsAbsencesStatus(window.structure.id, collectiveParams)
                 .then(
-                (res: Array<ICollectiveAbsenceStudent>) => {
-                    res.forEach((studentRes: ICollectiveAbsenceStudent) => {
+                    (res: Array<ICollectiveAbsenceStudent>) => {
+                        res.forEach((studentRes: ICollectiveAbsenceStudent) => {
 
-                        let student: ICollectiveAbsenceStudent = vm.getStudent(studentRes.studentId);
+                            let student: ICollectiveAbsenceStudent = vm.getStudent(studentRes.studentId);
 
-                        if (student) {
-                            student.isAbsent = studentRes.isAbsent;
-                            student.isUpdated = studentRes.isUpdated;
-                        }
-                    });
-                    vm.safeApply();
-                }
-            );
+                            if (student) {
+                                student.isAbsent = studentRes.isAbsent;
+                                student.isUpdated = studentRes.isUpdated;
+                            }
+                        });
+                        vm.safeApply();
+                    }
+                );
         }
     },
 
@@ -664,7 +674,6 @@ const vm: IViewModel = {
         await vm.getAbsencesStatus();
         vm.safeApply();
     }
-
 };
 
 export const collectiveAbsenceForm = {
