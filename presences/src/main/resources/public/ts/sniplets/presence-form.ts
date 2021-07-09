@@ -23,6 +23,7 @@ import {SNIPLET_FORM_EMIT_EVENTS, SNIPLET_FORM_EVENTS} from "@common/model";
 import {_, idiom as lang, model, moment, toasts} from "entcore";
 import {DateUtils} from "@common/utils";
 import {GlobalSearch} from "../utilities";
+import {PeriodFormUtils} from "@common/utils/periodForm";
 
 console.log("presenceFormSnipplets");
 
@@ -307,21 +308,9 @@ const vm: ViewModel = {
     },
 
     selectTimeSlot: (hourPeriod: TimeSlotHourPeriod): void => {
-        switch (hourPeriod) {
-            case TimeSlotHourPeriod.START_HOUR:
-                let start = vm.timeSlotTimePeriod.start != null ? DateUtils.getDateFormat(new Date(vm.form.startDate),
-                    DateUtils.getTimeFormatDate(vm.timeSlotTimePeriod.start.startHour)) : null;
-                vm.form.startDate = start;
-                break;
-            case TimeSlotHourPeriod.END_HOUR:
-                let end = vm.timeSlotTimePeriod.end != null ? DateUtils.getDateFormat(new Date(vm.form.endDate),
-                    DateUtils.getTimeFormatDate(vm.timeSlotTimePeriod.end.endHour)) : null;
-                vm.form.endDate = end;
-                break;
-            default:
-                return;
-        }
-    }
+        PeriodFormUtils.setHourSelectorsFromTimeSlots(vm.date.date, hourPeriod, vm.timeSlotTimePeriod, vm.form,
+            "startDate", "endDate");
+    },
 };
 
 export const presenceForm = {

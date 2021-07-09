@@ -17,6 +17,7 @@ import {DateUtils} from '@common/utils';
 import {ABSENCE_FORM_EVENTS, LATENESS_FORM_EVENTS} from '@common/core/enum/presences-event';
 import {EventsUtils} from '../utilities';
 import {AxiosError, AxiosResponse} from 'axios';
+import {PeriodFormUtils} from "@common/utils/periodForm";
 
 console.log('eventFormSniplets');
 
@@ -85,6 +86,7 @@ interface ViewModel {
     };
 
     isButtonAllowed: boolean;
+    timeoutInput: number;
 
     /* interact lightbox part methods */
 
@@ -153,11 +155,9 @@ interface ViewModel {
     /* Date / Time slots part methods */
     selectDatePicker(startDate: Date, eventType: TEventType): void;
 
-    selectTimeSlot(hourPeriod: TimeSlotHourPeriod, eventType: TEventType): void;
+    selectTimeSlot(hourPeriod: TimeSlotHourPeriod): void;
 
-    setStartSlotFromSelectTimeSlot(eventType: TEventType, timeSlotTimePeriod: { start: ITimeSlot, end: ITimeSlot });
-
-    setEndSlotFromSelectTimeSlot(eventType: TEventType, timeSlotTimePeriod: { start: ITimeSlot, end: ITimeSlot });
+    hourInput(hourPeriod: TimeSlotHourPeriod): void;
 
     setTimeSlot(): void;
 
@@ -183,6 +183,7 @@ const vm: ViewModel = {
     display: {isFreeSchedule: false},
     structureTimeSlot: {} as IStructureSlot,
     isButtonAllowed: true,
+    timeoutInput: null,
 
     switchEventTypeForm: (eventType: TEventType): void => {
         switch (eventType) {
@@ -276,10 +277,10 @@ const vm: ViewModel = {
     setFormEventType: (eventType: TEventType): void => {
         switch (eventType) {
             case 'ABSENCE':
-                (<Absence> vm.event) = new Absence(null, null, null, null);
+                (<Absence>vm.event) = new Absence(null, null, null, null);
                 break;
             case 'LATENESS':
-                (<Lateness> vm.event) = new Lateness(null, null, null, null);
+                (<Lateness>vm.event) = new Lateness(null, null, null, null);
                 break;
         }
     },
@@ -289,7 +290,7 @@ const vm: ViewModel = {
         vm.form = {} as IFormData;
         vm.event = new Absence(null, null, null, null);
         vm.switchEventTypeForm(eventType);
-        let response: AxiosResponse = await (<Absence> vm.event).getAbsence(obj.absenceId);
+        let response: AxiosResponse = await (<Absence>vm.event).getAbsence(obj.absenceId);
         if (response.status === 200 || response.status === 201) {
             /* Assign response data to form edited */
             vm.form.absences = [response.data];
@@ -339,7 +340,7 @@ const vm: ViewModel = {
         vm.form = {} as IFormData;
         vm.event = new Absence(null, null, null, null);
         vm.switchEventTypeForm(eventType);
-        vm.form.absences = <IAbsence[]> data.absences;
+        vm.form.absences = <IAbsence[]>data.absences;
         vm.form.id = 1; // tricks to force our form want to update an "absence" whereas is it actually an event
         vm.form.startDate = data.startDate;
         vm.form.endDate = data.endDate;
@@ -366,7 +367,13 @@ const vm: ViewModel = {
     isFormValid: (eventType: TEventType): boolean => {
         switch (eventType) {
             case 'ABSENCE':
-                if (vm.form && vm.form.startDate && vm.form.startDateTime && vm.form.endDate && vm.form.endDateTime) {
+                if (
+                    vm.form && vm.form.startDate && vm.form.startDateTime
+                    && ((vm.display.isFreeSchedule && vm.form.endDate && vm.form.endDateTime) ||
+                    (!vm.display.isFreeSchedule && vm.timeSlotTimePeriod
+                        && vm.timeSlotTimePeriod.start && vm.timeSlotTimePeriod.start.startHour
+                        && vm.timeSlotTimePeriod.end && vm.timeSlotTimePeriod.end.endHour))
+                ) {
                     return (DateUtils.getDateFormat(vm.form.startDate, vm.form.startDateTime) <=
                         DateUtils.getDateFormat(vm.form.endDate, vm.form.endDateTime));
                 }
@@ -488,7 +495,7 @@ const vm: ViewModel = {
             toasts.warning(lang.translate('presences.invalid.form'));
             return;
         }
-        let response: AxiosResponse = await (<Absence> vm.event).createAbsence(window.structure.id, vm.eventBody.reason_id, model.me.userId);
+        let response: AxiosResponse = await (<Absence>vm.event).createAbsence(window.structure.id, vm.eventBody.reason_id, model.me.userId);
         if (response.status === 200 || response.status === 201) {
             await vm.updateFollowed(response.data.events.id);
             await vm.updateRegularisation(response.data.events.id);
@@ -690,48 +697,17 @@ const vm: ViewModel = {
         }
     },
 
-    selectTimeSlot: (hourPeriod: TimeSlotHourPeriod, eventType: TEventType): void => {
-        switch (hourPeriod) {
-            case TimeSlotHourPeriod.START_HOUR:
-                vm.setStartSlotFromSelectTimeSlot(eventType, vm.timeSlotTimePeriod);
-                break;
-            case TimeSlotHourPeriod.END_HOUR:
-                vm.setEndSlotFromSelectTimeSlot(eventType, vm.timeSlotTimePeriod);
-                break;
-            default:
-                return;
-        }
+    selectTimeSlot: (hourPeriod: TimeSlotHourPeriod): void => {
+        PeriodFormUtils.setHourSelectorsFromTimeSlotsOrFree(hourPeriod, vm.display.isFreeSchedule, vm.form,
+            "startDateTime", "endDateTime", "startDate", "endDate",
+            vm.timeSlotTimePeriod, vm.form, "startSlot", "endSlot")
     },
 
-    setStartSlotFromSelectTimeSlot: (eventType: TEventType, timeSlotTimePeriod: { start: ITimeSlot, end: ITimeSlot }): void => {
-        switch (eventType) {
-            case 'ABSENCE': {
-                vm.form.startSlot = vm.form.timeSlotTimePeriod.start != null ? DateUtils.getDateFormat(new Date(vm.form.startDate),
-                    DateUtils.getTimeFormatDate(timeSlotTimePeriod.start.startHour)) : null;
-                break;
-            }
-            case 'LATENESS': {
-                vm.timeSlotTimePeriod.end = timeSlotTimePeriod.start;
-                vm.form.endSlot = DateUtils.getDateFormat(new Date(vm.form.startDate), DateUtils.getTimeFormatDate(timeSlotTimePeriod.start.startHour));
-                break;
-            }
-        }
+    hourInput: (hourPeriod: TimeSlotHourPeriod): void => {
+        if (vm.timeoutInput) window.clearTimeout(vm.timeoutInput);
+        vm.timeoutInput = setTimeout(() => vm.selectTimeSlot(hourPeriod), 600);
     },
 
-    setEndSlotFromSelectTimeSlot: (eventType: TEventType, timeSlotTimePeriod: { start: ITimeSlot, end: ITimeSlot }): void => {
-        switch (eventType) {
-            case 'ABSENCE': {
-                vm.form.endSlot = vm.form.timeSlotTimePeriod.end != null ? DateUtils.getDateFormat(new Date(vm.form.endDate),
-                    DateUtils.getTimeFormatDate(timeSlotTimePeriod.end.endHour)) : null;
-                break;
-            }
-            case 'LATENESS': {
-                vm.timeSlotTimePeriod.start = timeSlotTimePeriod.end;
-                vm.form.startSlot = DateUtils.getDateFormat(new Date(vm.form.endDate), DateUtils.getTimeFormatDate(timeSlotTimePeriod.start.endHour));
-                break;
-            }
-        }
-    },
 
     setTimeSlot: (): void => {
         let start: string = DateUtils.format(vm.form.startDate, DateUtils.FORMAT['HOUR-MINUTES']);

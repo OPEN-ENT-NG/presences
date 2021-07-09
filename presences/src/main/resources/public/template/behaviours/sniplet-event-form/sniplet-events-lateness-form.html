@@ -9,7 +9,7 @@
 
             <span class="card date-picker margin-right-sm">
                 <date-picker required ng-model="vm.form.startDate"
-                             data-ng-change="vm.selectDatePicker(vm.form.startDate, 'LATENESS')"
+                             data-ng-change="vm.selectTimeSlot(vm.timeSlotHourPeriod.START_HOUR)"
                              ng-disabled="vm.form.id"></date-picker>
             </span>
 
@@ -17,7 +17,7 @@
                 <label class="timeslot-select">
                     <i class="time-picker"></i>
                     <select data-ng-model="vm.timeSlotTimePeriod.start"
-                            data-ng-change="vm.selectTimeSlot(vm.timeSlotHourPeriod.START_HOUR, 'LATENESS')"
+                            data-ng-change="vm.selectTimeSlot(vm.timeSlotHourPeriod.START_HOUR)"
                             ng-disabled="vm.form.id"
                             ng-options="item.name + ' : ' + item.startHour for item in vm.structureTimeSlot.slots
                                     | orderBy:vm.timeSlotHourPeriod.START_HOUR">
@@ -29,7 +29,7 @@
             <i18n class="margin-right-sm">presences.to</i18n>
             <span class="card date-picker margin-right-sm">
                 <date-picker required ng-model="vm.form.endDate"
-                             data-ng-change="vm.selectDatePicker(vm.form.endDate, 'LATENESS')"
+                             data-ng-change="vm.selectTimeSlot(vm.timeSlotHourPeriod.END_HOUR)"
                              ng-disabled="vm.form.id"></date-picker>
             </span>
 
@@ -37,7 +37,7 @@
                 <label class="timeslot-select">
                     <i class="time-picker"></i>
                     <select data-ng-model="vm.timeSlotTimePeriod.end"
-                            data-ng-change="vm.selectTimeSlot(vm.timeSlotHourPeriod.END_HOUR, 'LATENESS')"
+                            data-ng-change="vm.selectTimeSlot(vm.timeSlotHourPeriod.END_HOUR)"
                             ng-disabled="vm.form.id"
                             ng-options="item.name + ' : ' + item.endHour for item in vm.structureTimeSlot.slots
                                 | orderBy:vm.timeSlotHourPeriod.END_HOUR">

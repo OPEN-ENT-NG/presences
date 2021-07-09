@@ -53,19 +53,21 @@
             <div class="twelve timeslots">
                 <i18n class="margin-right-sm">presences.from</i18n>
                 <span class="card date-picker margin-right-sm">
-                <date-picker required ng-change="vm.updateData()" ng-model="vm.date.startDate"></date-picker>
+                <date-picker required ng-change="vm.selectTimeSlot(vm.timeSlotHourPeriod.START_HOUR); vm.updateData()"
+                             ng-model="vm.date.startDate"></date-picker>
             </span>
 
                 <span ng-show="vm.display.isFreeSchedule"
                       class="card margin-left-10">
-                <time-picker required ng-change="vm.updateData()" ng-model="vm.date.startTime"></time-picker>
+                <time-picker required ng-change="vm.freeHourInput(vm.timeSlotHourPeriod.START_HOUR); vm.updateData()"
+                             ng-model="vm.date.startTime"></time-picker>
             </span>
 
                 <label ng-show="!vm.display.isFreeSchedule">
                     <label class="timeslot-select">
                         <i class="time-picker"></i>
                         <select data-ng-model="vm.form.timeSlotTimePeriod.start"
-                                data-ng-change="vm.selectTimeSlot(vm.form.timeSlotHourPeriod.START_HOUR); vm.updateData()"
+                                data-ng-change="vm.selectTimeSlot(vm.timeSlotHourPeriod.START_HOUR); vm.updateData()"
                                 ng-options="item.name + ' : ' + item.startHour for item in vm.structureTimeSlot.slots
                                     | orderBy:vm.form.timeSlotHourPeriod.START_HOUR">
                             <option value="">[[lang.translate('presences.pick.timeslot')]]</option>
@@ -75,19 +77,21 @@
 
                 <i18n class="margin-right-sm">presences.to</i18n>
                 <span class="card date-picker margin-right-sm">
-                <date-picker required ng-change="vm.updateData()" ng-model="vm.date.endDate"></date-picker>
+                <date-picker required ng-change="vm.selectTimeSlot(vm.timeSlotHourPeriod.END_HOUR); vm.updateData()"
+                             ng-model="vm.date.endDate"></date-picker>
             </span>
 
                 <span ng-show="vm.display.isFreeSchedule"
                       class="card">
-                <time-picker required ng-change="vm.updateData()" ng-model="vm.date.endTime"></time-picker>
+                <time-picker required ng-change="vm.freeHourInput(vm.timeSlotHourPeriod.END_HOUR); vm.updateData()"
+                             ng-model="vm.date.endTime"></time-picker>
             </span>
 
                 <label ng-show="!vm.display.isFreeSchedule">
                     <label class="timeslot-select">
                         <i class="time-picker"></i>
                         <select data-ng-model="vm.form.timeSlotTimePeriod.end"
-                                data-ng-change="vm.selectTimeSlot(vm.form.timeSlotHourPeriod.END_HOUR); vm.updateData()"
+                                data-ng-change="vm.selectTimeSlot(vm.timeSlotHourPeriod.END_HOUR); vm.updateData()"
                                 ng-options="item.name + ' : ' + item.endHour for item in vm.structureTimeSlot.slots
                                 | orderBy:vm.form.timeSlotHourPeriod.END_HOUR">
                             <option value="">[[lang.translate('presences.pick.timeslot')]]</option>

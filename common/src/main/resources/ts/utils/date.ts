@@ -1,5 +1,6 @@
 import {moment} from 'entcore';
 import {DurationInputArg1, DurationInputArg2} from 'moment';
+import {ITimeSlot, TimeSlotHourPeriod} from "@common/model";
 
 export class DateUtils {
     static FORMAT = {
