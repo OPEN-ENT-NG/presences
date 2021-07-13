@@ -51,7 +51,7 @@ describe('setHourSelectorsFromTimeSlots', () => {
 describe('setHourSelectorsFromTimeSlotsOrFree', () => {
     test(`When end date got his timeslot before of start date one, correct it with the start date timePeriod end 
     (after start date entry)`, () => {
-        form = {startDate: '2021-07-12', endDate: '2021-07-12', startTime: '11:00:00', endTime: '10:00:00',
+        form = {startDate: '2021-07-12', endDate: '2021-07-12',
             startSlot: '2021-07-12 11:00:00', endSlot: '2021-07-12 10:00:00'}
         timeSlotTimePeriod = {start: time11, end: time09}
 
@@ -59,10 +59,8 @@ describe('setHourSelectorsFromTimeSlotsOrFree', () => {
             TimeSlotHourPeriod.START_HOUR, false, form, "startTime", "endTime",
             "startDate", "endDate", timeSlotTimePeriod, form, "startSlot", "endSlot"
         );
-        expect(form.startDate).toEqual('2021-07-12 11:00:00');
-        expect(form.endDate).toEqual('2021-07-12 11:00:00');
-        expect(form.startTime).toEqual('1:00:00');
-        expect(form.endTime).toEqual('12:00:00');
+        expect(form.startDate).toEqual('2021-07-12');
+        expect(form.endDate).toEqual(new Date('2021-07-12T00:00:00.000Z'));
         expect(form.startSlot).toEqual('2021-07-12 11:00:00');
         expect(form.endSlot).toEqual('2021-07-12 12:00:00');
         expect(timeSlotTimePeriod.start).toEqual(time11);
