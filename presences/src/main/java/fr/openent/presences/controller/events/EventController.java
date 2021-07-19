@@ -15,6 +15,8 @@ import fr.wseduc.rs.*;
 import fr.wseduc.security.ActionType;
 import fr.wseduc.security.SecuredAction;
 import fr.wseduc.webutils.Either;
+import fr.wseduc.webutils.I18n;
+import fr.wseduc.webutils.http.Renders;
 import fr.wseduc.webutils.request.RequestUtils;
 import io.vertx.core.CompositeFuture;
 import io.vertx.core.Future;
@@ -164,8 +166,9 @@ public class EventController extends ControllerHelper {
                                         "presences.exemptions.csv.header.comment",
                                         "presences.widgets.absences.regularized",
                                         "presences.id");
-                                EventsCSVExport ece = new EventsCSVExport(events);
-                                ece.setRequest(request);
+//                                String body = I18n.getInstance().translate("presences.register.notify.body", Renders.getHost(request), I18n.acceptLanguage(request), subjectName, groups, startHour, endHour, structureName);
+//                                Renders.getHost(this.request), I18n.acceptLanguage(this.request)) + SEPARATOR;
+                                EventsCSVExport ece = new EventsCSVExport(events, Renders.getHost(request), I18n.acceptLanguage(request));
                                 ece.setHeader(csvHeaders);
                                 ece.export();
                             }

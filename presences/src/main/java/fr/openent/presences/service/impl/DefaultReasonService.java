@@ -7,6 +7,7 @@ import fr.wseduc.webutils.Either;
 import io.vertx.core.CompositeFuture;
 import io.vertx.core.Future;
 import io.vertx.core.Handler;
+import io.vertx.core.Promise;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import io.vertx.core.logging.Logger;
@@ -69,6 +70,20 @@ public class DefaultReasonService implements ReasonService {
         String query = "SELECT * FROM " + Presences.dbSchema +
                 ".reason where structure_id = '" + structureId + "' OR structure_id = '-1' ORDER BY label ASC";
         Sql.getInstance().raw(query, SqlResult.validResultHandler(handler));
+    }
+
+    public Future<JsonArray> fetchReason(String structureId) {
+        Promise<JsonArray> promise = Promise.promise();
+
+        fetchReason(structureId, event -> {
+           if (event.isLeft()) {
+               promise.fail(event.left().getValue());
+           } else {
+               promise.complete(event.right().getValue());
+           }
+        });
+
+        return promise.future();
     }
 
     public void getReasons(List<Integer> reasonIds, Handler<Either<String, JsonArray>> handler) {

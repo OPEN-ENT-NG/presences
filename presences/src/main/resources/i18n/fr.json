@@ -215,6 +215,7 @@
   "presences.csv.header.student.comment": "Commentaire",
   "presences.csv.header.parent.firstName": "Prénom Parent",
   "presences.csv.header.parent.lastName": "Nom Parent",
+  "presences.csv.report.from": "Voici le rapport des exports du ",
   "presence.existed.disciplines": "Lieux, disciplines, autres existants",
   "presences.export.tocsv": "Exporter CSV",
   "presences.export.topdf": "Exporter PDF",

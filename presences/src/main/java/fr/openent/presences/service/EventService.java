@@ -3,6 +3,7 @@ package fr.openent.presences.service;
 import fr.openent.presences.model.Event.Event;
 import fr.wseduc.webutils.Either;
 import io.vertx.core.AsyncResult;
+import io.vertx.core.Future;
 import io.vertx.core.Handler;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
@@ -65,6 +66,10 @@ public interface EventService {
     void getCsvData(String structureId, String startDate, String endDate, List<String> eventType, List<String> listReasonIds,
                     Boolean noReason, List<String> userId, JsonArray userIdFromClasses, List<String> classes,
                     Boolean regularized, Boolean followed, Handler<AsyncResult<List<Event>>> handler);
+
+    Future<List<Event>> getCsvData(String structureId, String startDate, String endDate, List<String> eventType, List<String> listReasonIds,
+                                  Boolean noReason, List<String> userId, JsonArray userIdFromClasses, List<String> classes,
+                                  Boolean regularized, Boolean followed);
 
     /**
      * Get events page number
