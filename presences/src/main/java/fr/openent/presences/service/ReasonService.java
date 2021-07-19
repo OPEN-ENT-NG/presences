@@ -1,6 +1,7 @@
 package fr.openent.presences.service;
 
 import fr.wseduc.webutils.Either;
+import io.vertx.core.Future;
 import io.vertx.core.Handler;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
@@ -36,6 +37,8 @@ public interface ReasonService {
     void delete(Integer reasonId, Handler<Either<String, JsonObject>> handler);
 
     void fetchReason(String structureId, Handler<Either<String, JsonArray>> handler);
+
+    Future<JsonArray> fetchReason(String structureId);
 
     /**
      * get reasons

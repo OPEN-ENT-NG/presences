@@ -3,7 +3,9 @@ package fr.openent.presences.common.viescolaire;
 import fr.openent.presences.common.helper.DateHelper;
 import fr.openent.presences.common.message.MessageResponseHandler;
 import fr.wseduc.webutils.Either;
+import io.vertx.core.Future;
 import io.vertx.core.Handler;
+import io.vertx.core.Promise;
 import io.vertx.core.eventbus.EventBus;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
@@ -48,6 +50,28 @@ public class Viescolaire {
                 handler.handle(new Either.Right<>(body.getJsonArray("results")));
             }
         });
+    }
+
+    /**
+     * fetch structure's school year period
+     * @param structure structure identifier {@link String}
+     * @return {@link Future <JsonObject>}
+     */
+    public Future<JsonObject> getSchoolYear(String structure) {
+        Promise<JsonObject> promise = Promise.promise();
+        JsonObject action = new JsonObject()
+                .put("action", "periode.getSchoolYearPeriod")
+                .put("structureId", structure);
+
+        eb.request("viescolaire", action, MessageResponseHandler.messageJsonObjectHandler(event -> {
+            if (event.isLeft()) {
+                promise.fail(event.left().getValue());
+            } else {
+                promise.complete(event.right().getValue());
+            }
+        }));
+
+        return promise.future();
     }
 
     public void getSlotProfileSetting(String structureId, Handler<Either<String, JsonObject>> handler) {

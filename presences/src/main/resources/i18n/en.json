@@ -67,6 +67,7 @@
   "presences.alerts.csv.header.student.className": "Classe",
   "presences.alerts.csv.header.type": "Type",
   "presences.alerts.csv.header.count": "Nombre",
+  "presences.csv.report.from": "Here is the export report of the ",
   "presences.alert.empty": "Aucune alerte",
   "presences.alert.reset.success": "La réinitalisation des alertes a été effectuée avec succès",
   "presences.alerts.title": "Alertes",

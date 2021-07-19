@@ -8,7 +8,9 @@ import fr.openent.presences.controller.events.EventController;
 import fr.openent.presences.controller.events.LatenessEventController;
 import fr.openent.presences.cron.CreateDailyRegistersTask;
 import fr.openent.presences.db.DB;
+import fr.openent.presences.service.CommonPresencesServiceFactory;
 import fr.openent.presences.worker.CreateDailyPresenceWorker;
+import fr.openent.presences.worker.EventExportWorker;
 import fr.wseduc.cron.CronTrigger;
 import fr.wseduc.mongodb.MongoDb;
 import io.vertx.core.DeploymentOptions;
@@ -74,6 +76,8 @@ public class Presences extends BaseServer {
         ebViescoAddress = "viescolaire";
         final EventBus eb = getEventBus(vertx);
         Storage storage = new StorageFactory(vertx, config).getStorage();
+        CommonPresencesServiceFactory commonPresencesServiceFactory = new CommonPresencesServiceFactory(vertx, storage);
+
 //        final String exportCron = config.getString("export-cron");
 
         DB.getInstance().init(Neo4j.getInstance(), Sql.getInstance(), MongoDb.getInstance());
@@ -100,6 +104,7 @@ public class Presences extends BaseServer {
         addController(new StudentController(eb));
         addController(new StatementAbsenceController(eb, storage));
         addController(new CollectiveAbsenceController());
+        addController(new ArchiveController(commonPresencesServiceFactory));
 
         // Controller that create fake rights for widgets
         addController(new FakeRight());
@@ -117,6 +122,9 @@ public class Presences extends BaseServer {
                 log.fatal(e.getMessage(), e);
             }
         }
+
+        // worker to be triggered manually (API will call its worker to send csv's export via email)
+        vertx.deployVerticle(EventExportWorker.class, new DeploymentOptions().setConfig(config).setWorker(true));
     }
 
 }

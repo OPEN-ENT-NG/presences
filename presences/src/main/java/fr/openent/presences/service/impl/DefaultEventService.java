@@ -22,10 +22,7 @@ import fr.openent.presences.service.AbsenceService;
 import fr.openent.presences.service.EventService;
 import fr.openent.presences.service.SettingsService;
 import fr.wseduc.webutils.Either;
-import io.vertx.core.AsyncResult;
-import io.vertx.core.CompositeFuture;
-import io.vertx.core.Future;
-import io.vertx.core.Handler;
+import io.vertx.core.*;
 import io.vertx.core.eventbus.EventBus;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
@@ -279,6 +276,24 @@ public class DefaultEventService extends DBService implements EventService {
                                 });
                     }
                 });
+    }
+
+    @Override
+    public Future<List<Event>> getCsvData(String structureId, String startDate, String endDate, List<String> eventType,
+                           List<String> listReasonIds, Boolean noReason, List<String> userId, JsonArray userIdFromClasses,
+                           List<String> classes, Boolean regularized, Boolean followed) {
+        Promise<List<Event>> promise = Promise.promise();
+
+        getCsvData(structureId, startDate, endDate, eventType, listReasonIds, noReason, userId, userIdFromClasses,
+                classes, regularized, followed, event -> {
+            if (event.failed()) {
+                promise.fail(event.cause());
+            } else {
+                promise.complete(event.result());
+            }
+        });
+
+        return promise.future();
     }
 
     /**

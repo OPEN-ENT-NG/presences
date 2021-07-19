@@ -4,17 +4,20 @@ import fr.openent.presences.common.helper.CSVExport;
 import fr.openent.presences.common.helper.DateHelper;
 import fr.openent.presences.model.Event.Event;
 import fr.wseduc.webutils.I18n;
-import fr.wseduc.webutils.http.Renders;
 
 import java.util.List;
 
 public class EventsCSVExport extends CSVExport {
 
     private final List<Event> events;
+    private final String locale;
+    private final String domain;
 
-    public EventsCSVExport(List<Event> events) {
+    public EventsCSVExport(List<Event> events, String domain, String locale) {
         super();
         this.events = events;
+        this.domain = domain;
+        this.locale = locale;
         this.filename = "presences.events.csv.filename";
     }
 
@@ -29,8 +32,7 @@ public class EventsCSVExport extends CSVExport {
         String line = event.getStudent().getLastName() + SEPARATOR;
         line += event.getStudent().getFirstName() + SEPARATOR;
         line += event.getStudent().getClassName() + SEPARATOR;
-        line += I18n.getInstance().translate(event.getEventType().getLabel(),
-                Renders.getHost(this.request), I18n.acceptLanguage(this.request)) + SEPARATOR;
+        line += I18n.getInstance().translate(event.getEventType().getLabel(), domain, locale) + SEPARATOR;
         line += getReason(event) + SEPARATOR;
         line += event.getOwner().getName() + SEPARATOR;
         line += DateHelper.getDateString(event.getStartDate(), DateHelper.DAY_MONTH_YEAR) + SEPARATOR;
@@ -57,12 +59,9 @@ public class EventsCSVExport extends CSVExport {
 
     private String getCounsellorRegularisationState(Event event) {
         if (event.isCounsellorRegularisation()) {
-            return I18n.getInstance().translate("presences.exemptions.csv.attendance.true",
-                    Renders.getHost(this.request), I18n.acceptLanguage(this.request));
+            return I18n.getInstance().translate("presences.exemptions.csv.attendance.true", domain, locale);
         } else {
-            return I18n.getInstance().translate("presences.exemptions.csv.attendance.false",
-                    Renders.getHost(this.request), I18n.acceptLanguage(this.request));
+            return I18n.getInstance().translate("presences.exemptions.csv.attendance.false", domain, locale);
         }
     }
-
 }
