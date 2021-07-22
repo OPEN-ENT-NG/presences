@@ -131,7 +131,7 @@ public class DefaultArchiveService extends DBService implements ArchiveService {
                     String message = "[Presences@DefaultArchiveService::processStructure] An error has occurred during process structure "
                             + structure.getString(Field.NAME) + ": " + err.getMessage();
                     log.error(message);
-                    promise.fail(err.getCause());
+                    promise.fail(err.getMessage());
                 });
 
         return promise.future();
@@ -256,7 +256,7 @@ public class DefaultArchiveService extends DBService implements ArchiveService {
                 .onSuccess(res -> promise.complete(exportProcess))
                 .onFailure(err -> {
                     String message = "[Presences@DefaultArchiveService::interactEvent] An error has occured during" +
-                            " interact event: " + err.getCause().getMessage();
+                            " interact event: " + err.getMessage();
                     log.error(message);
                     promise.fail(err.getCause());
                 });

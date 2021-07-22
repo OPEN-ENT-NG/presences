@@ -166,10 +166,10 @@ public class EventController extends ControllerHelper {
                                         "presences.exemptions.csv.header.comment",
                                         "presences.widgets.absences.regularized",
                                         "presences.id");
-//                                String body = I18n.getInstance().translate("presences.register.notify.body", Renders.getHost(request), I18n.acceptLanguage(request), subjectName, groups, startHour, endHour, structureName);
-//                                Renders.getHost(this.request), I18n.acceptLanguage(this.request)) + SEPARATOR;
+                                
                                 EventsCSVExport ece = new EventsCSVExport(events, Renders.getHost(request), I18n.acceptLanguage(request));
                                 ece.setHeader(csvHeaders);
+                                ece.setRequest(request);
                                 ece.export();
                             }
                         });

@@ -18,9 +18,7 @@ import org.entcore.common.storage.Storage;
 import org.entcore.common.storage.StorageFactory;
 import org.vertx.java.busmods.BusModBase;
 
-import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
-import java.util.Base64;
 import java.util.List;
 
 public class EventExportWorker extends BusModBase implements Handler<Message<JsonObject>> {
@@ -53,7 +51,7 @@ public class EventExportWorker extends BusModBase implements Handler<Message<Jso
                 .compose(this::sendReport)
                 .onSuccess(success -> log.info("[Presences@EventExportWorker::handle] Event export worker success" ))
                 .onFailure(error -> log.error("[Presences@EventExportWorker::handle] " +
-                        "Processing Event Export Worker task failed. See previous logs: ", error.getMessage()));
+                        "Processing Event Export Worker task failed. See previous logs: " + error.getMessage(), error.getMessage()));
     }
 
     @SuppressWarnings("unchecked")
@@ -95,14 +93,21 @@ public class EventExportWorker extends BusModBase implements Handler<Message<Jso
     private Future<Void> sendMail(String recipient, String title, JsonArray attachments) {
         Promise<Void> promise = Promise.promise();
 
-        emailSender.sendEmail(null, recipient, null, null, title, attachments, description(), null, false, event -> {
-            if (event.failed()) {
-                log.error("[Presences@EventExportWorker::sendMail] failed to send mail: ", event.cause().getMessage());
-                promise.fail(event.cause().getCause());
-            } else {
-                promise.complete();
-            }
-        });
+        if (emailSender != null) {
+            emailSender.sendEmail(null, recipient, null, null, title, attachments, description(), null, false, event -> {
+                if (event.failed()) {
+                    log.error("[Presences@EventExportWorker::sendMail] failed to send mail: " +  event.cause().getMessage(),
+                            event.cause().getMessage());
+                    promise.fail(event.cause().getMessage());
+                } else {
+                    promise.complete();
+                }
+            });
+        } else {
+            String message = "[" + this.getClass().getSimpleName() + "] sendMail: emailSender instance is null";
+            log.error(message);
+            promise.fail(message);
+        }
 
         return promise.future();
     }

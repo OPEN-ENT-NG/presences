@@ -225,9 +225,9 @@ public class DefaultEventService extends DBService implements EventService {
         getEvents(structureId, startDate, endDate, eventType, listReasonIds, noReason, userId, userIdFromClasses,
                 regularized, followed, null, eventHandler -> {
                     if (eventHandler.isLeft()) {
-                        String err = "[Presences@DefaultEventService::getCsvData] Failed to fetch events";
+                        String err = "[Presences@DefaultEventService::getCsvData] Failed to fetch events: " + eventHandler.left().getValue() ;
                         LOGGER.error(err, eventHandler.left().getValue());
-                        handler.handle(Future.failedFuture(err));
+                        handler.handle(Future.failedFuture(eventHandler.left().getValue()));
                     } else {
                         List<Event> events = EventHelper.getEventListFromJsonArray(eventHandler.right().getValue(), Event.MANDATORY_ATTRIBUTE);
 
