@@ -13,6 +13,7 @@ import fr.openent.presences.service.CommonPresencesServiceFactory;
 import fr.openent.presences.service.EventService;
 import fr.openent.presences.service.ReasonService;
 import fr.openent.presences.worker.EventExportWorker;
+import fr.wseduc.webutils.I18n;
 import io.vertx.core.CompositeFuture;
 import io.vertx.core.Future;
 import io.vertx.core.Promise;
@@ -268,17 +269,17 @@ public class DefaultArchiveService extends DBService implements ArchiveService {
         Promise<JsonObject> promise = Promise.promise();
 
         List<String> csvHeaders = Arrays.asList(
-                "presences.csv.header.student.lastName",
-                "presences.csv.header.student.firstName",
-                "presences.exemptions.csv.header.audiance",
-                "presences.event.type",
-                "presences.absence.reason",
-                "presences.created.by",
-                "presences.exemptions.dates",
-                "presences.hour",
-                "presences.exemptions.csv.header.comment",
-                "presences.widgets.absences.regularized",
-                "presences.id");
+                translate("presences.csv.header.student.lastName", domain, locale),
+                translate("presences.csv.header.student.firstName", domain, locale),
+                translate("presences.exemptions.csv.header.audiance", domain, locale),
+                translate("presences.event.type", domain, locale),
+                translate("presences.absence.reason", domain, locale),
+                translate("presences.created.by", domain, locale),
+                translate("presences.exemptions.dates", domain, locale),
+                translate("presences.hour", domain, locale),
+                translate("presences.exemptions.csv.header.comment", domain, locale),
+                translate("presences.widgets.absences.regularized", domain, locale),
+                translate( "presences.id",domain, locale));
         EventsCSVExport ece = new EventsCSVExport(events, domain, locale);
 
         ece.setHeader(csvHeaders);
@@ -298,6 +299,10 @@ public class DefaultArchiveService extends DBService implements ArchiveService {
         }
         promise.complete(exportProcess);
         return promise.future();
+    }
+
+    private String translate(String key, String domain, String locale) {
+        return I18n.getInstance().translate(key, domain, locale);
     }
 
     @Override

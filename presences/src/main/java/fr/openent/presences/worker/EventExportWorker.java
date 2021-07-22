@@ -70,7 +70,6 @@ public class EventExportWorker extends BusModBase implements Handler<Message<Jso
         JsonArray filesToSend = new JsonArray();
 
         ((List<JsonObject>) files.getList()).forEach(file -> {
-//            String base64Content = Base64.getEncoder().encodeToString(file.getString(Field.CONTENTS).getBytes(StandardCharsets.UTF_8));
             JsonObject formattedFile = new JsonObject()
                     .put(Field.NAME, file.getString(Field.NAME))
                     .put(Field.CONTENT, file.getString(Field.CONTENTS));
