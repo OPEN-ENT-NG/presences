@@ -168,8 +168,8 @@ public class EventController extends ControllerHelper {
                                         "presences.id");
                                 
                                 EventsCSVExport ece = new EventsCSVExport(events, Renders.getHost(request), I18n.acceptLanguage(request));
-                                ece.setHeader(csvHeaders);
                                 ece.setRequest(request);
+                                ece.setHeader(csvHeaders);
                                 ece.export();
                             }
                         });
