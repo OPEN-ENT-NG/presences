@@ -18,7 +18,9 @@ import org.entcore.common.storage.Storage;
 import org.entcore.common.storage.StorageFactory;
 import org.vertx.java.busmods.BusModBase;
 
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
+import java.util.Base64;
 import java.util.List;
 
 public class EventExportWorker extends BusModBase implements Handler<Message<JsonObject>> {
@@ -68,9 +70,10 @@ public class EventExportWorker extends BusModBase implements Handler<Message<Jso
         JsonArray filesToSend = new JsonArray();
 
         ((List<JsonObject>) files.getList()).forEach(file -> {
+            String base64Content = Base64.getEncoder().encodeToString(file.getString(Field.CONTENTS).getBytes(StandardCharsets.UTF_8));
             JsonObject formattedFile = new JsonObject()
                     .put(Field.NAME, file.getString(Field.NAME))
-                    .put(Field.CONTENT, file.getString(Field.CONTENTS));
+                    .put(Field.CONTENT, base64Content);
             filesToSend.add(formattedFile);
         });
 
