@@ -6,6 +6,7 @@ import fr.openent.presences.common.presences.Presences;
 import fr.openent.presences.common.viescolaire.Viescolaire;
 import fr.openent.presences.db.DB;
 import fr.openent.statistics_presences.bean.Report;
+import fr.openent.statistics_presences.controller.ConfigController;
 import fr.openent.statistics_presences.controller.EventBusController;
 import fr.openent.statistics_presences.controller.StatisticsController;
 import fr.openent.statistics_presences.indicator.Indicator;
@@ -51,6 +52,7 @@ public class StatisticsPresences extends BaseServer {
 
         addController(new EventBusController(commonServiceFactory));
         addController(new StatisticsController(commonServiceFactory));
+        addController(new ConfigController());
 
         setSchemas();
         registerCodec();
