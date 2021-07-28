@@ -105,6 +105,7 @@ public class Presences extends BaseServer {
         addController(new StatementAbsenceController(eb, storage));
         addController(new CollectiveAbsenceController());
         addController(new ArchiveController(commonPresencesServiceFactory));
+        addController(new ConfigController());
 
         // Controller that create fake rights for widgets
         addController(new FakeRight());

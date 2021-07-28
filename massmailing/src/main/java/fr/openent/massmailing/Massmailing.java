@@ -1,9 +1,6 @@
 package fr.openent.massmailing;
 
-import fr.openent.massmailing.controller.EventBusController;
-import fr.openent.massmailing.controller.MailingController;
-import fr.openent.massmailing.controller.MassmailingController;
-import fr.openent.massmailing.controller.SettingsController;
+import fr.openent.massmailing.controller.*;
 import fr.openent.massmailing.enums.MailingType;
 import fr.openent.massmailing.starter.DatabaseStarter;
 import fr.openent.presences.common.incidents.Incidents;
@@ -56,6 +53,7 @@ public class Massmailing extends BaseServer {
         addController(new SettingsController(eb));
         addController(new EventBusController());
         addController(new MailingController(eb, storage));
+        addController(new ConfigController());
 
         Presences.getInstance().init(eb);
         Incidents.getInstance().init(eb);
