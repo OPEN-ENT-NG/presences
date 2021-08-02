@@ -162,6 +162,9 @@ for param in "$@"; do
     testNode)
       testNode
       ;;
+    testGradle)
+      testGradle
+      ;;
   presences)
     presences
     ;;

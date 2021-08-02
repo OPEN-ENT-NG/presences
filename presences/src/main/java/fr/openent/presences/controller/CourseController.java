@@ -3,13 +3,12 @@ package fr.openent.presences.controller;
 import fr.openent.presences.Presences;
 import fr.openent.presences.common.helper.DateHelper;
 import fr.openent.presences.constants.Actions;
+import fr.openent.presences.core.constants.*;
 import fr.openent.presences.export.RegisterCSVExport;
 import fr.openent.presences.helper.CourseHelper;
 import fr.openent.presences.model.Course;
-import fr.openent.presences.service.CourseService;
-import fr.openent.presences.service.RegisterService;
-import fr.openent.presences.service.impl.DefaultCourseService;
-import fr.openent.presences.service.impl.DefaultRegisterService;
+import fr.openent.presences.service.*;
+import fr.openent.presences.service.impl.*;
 import fr.wseduc.rs.ApiDoc;
 import fr.wseduc.rs.Get;
 import fr.wseduc.rs.Post;
@@ -42,6 +41,7 @@ public class CourseController extends ControllerHelper {
     private final RegisterService registerService;
     private final CourseHelper courseHelper;
     private final CourseService courseService;
+    private final SettingsService settingsService;
 
     public CourseController(EventBus eb) {
         super();
@@ -49,6 +49,7 @@ public class CourseController extends ControllerHelper {
         this.registerService = new DefaultRegisterService(eb);
         this.courseHelper = new CourseHelper(eb);
         this.courseService = new DefaultCourseService(eb);
+        this.settingsService = new DefaultSettingsService();
     }
 
     @Get("/courses")
@@ -60,20 +61,38 @@ public class CourseController extends ControllerHelper {
             badRequest(request);
             return;
         }
-        boolean forgottenFilter = params.contains("forgotten_registers") && Boolean.parseBoolean(request.getParam("forgotten_registers"));
-        boolean multipleSlot = params.contains("multiple_slot") && Boolean.parseBoolean(request.getParam("multiple_slot"));
+        boolean forgottenFilter = params.contains(Field.FORGOTTEN_REGISTERS) &&
+                Boolean.parseBoolean(request.getParam(Field.FORGOTTEN_REGISTERS));
 
-        courseService.listCourses(params.get("structure"), params.getAll("teacher"), params.getAll("group"),
-                params.get("start"), params.get("end"), params.get("startTime"), params.get("endTime"), forgottenFilter, multipleSlot,
-                params.get("limit"), params.get("offset"), params.get("descendingDate"),
-                params.get("searchTeacher"), event -> {
-                    if (event.isLeft()) {
+        settingsService.retrieveMultipleSlots(params.get(Field.STRUCTURE))
+                .onFailure(fail -> {
+                    String message = String.format("[Presences@%s::getCourses] Failed to get " +
+                            "multiple slot setting : %s", this.getClass().getSimpleName(), fail.getMessage());
+                    log.error(message, fail.getMessage());
                         renderError(request);
+                })
+                .onSuccess(res -> {
+                    boolean multipleSlot;
+
+                    if (params.contains(Field.MULTIPLE_SLOT)) {
+                        multipleSlot = Boolean.parseBoolean(request.getParam(Field.MULTIPLE_SLOT));
                     } else {
-                        List<Course> courses = event.right().getValue().getList();
-                        // second ternary checks if we choose limit or our courses size
-                        renderJson(request, new JsonArray(courses));
+                        multipleSlot = res.getBoolean(Field.ALLOW_MULTIPLE_SLOTS, true);
                     }
+
+                    courseService.listCourses(params.get(Field.STRUCTURE), params.getAll(Field.TEACHER),
+                            params.getAll(Field.GROUP), params.get(Field.START), params.get(Field.END),
+                            params.get(Field.START_TIME), params.get(Field.END_TIME), forgottenFilter, multipleSlot,
+                            params.get(Field.LIMIT), params.get(Field.OFFSET), params.get(Field.DESCENDING_DATE),
+                            params.get(Field.SEARCH_TEACHER), event -> {
+                                if (event.isLeft()) {
+                                    renderError(request);
+                                } else {
+                                    List<Course> courses = event.right().getValue().getList();
+                                    // second ternary checks if we choose limit or our courses size
+                                    renderJson(request, new JsonArray(courses));
+                                }
+                            });
                 });
     }
 
@@ -87,31 +106,52 @@ public class CourseController extends ControllerHelper {
             return;
         }
 
-        boolean forgottenFilter = params.contains("forgotten_registers") && Boolean.parseBoolean(request.getParam("forgotten_registers"));
-        boolean multipleSlot = params.contains("multiple_slot") && Boolean.parseBoolean(request.getParam("multiple_slot"));
-        courseService.listCourses(params.get("structure"), params.getAll("teacher"), params.getAll("group"),
-                params.get("start"), params.get("end"), null, null, forgottenFilter, multipleSlot, event -> {
-                    if (event.isLeft()) {
-                        log.error("[Presences@CourseController] Failed to list courses", event.left().getValue());
-                        renderError(request);
-                        return;
+        boolean forgottenFilter = params.contains(Field.FORGOTTEN_REGISTERS) &&
+                Boolean.parseBoolean(request.getParam(Field.FORGOTTEN_REGISTERS));
+
+        settingsService.retrieveMultipleSlots(Field.STRUCTURE)
+                .onFailure(fail -> {
+                    String message = String.format("[Presences@%s::exportCourses] Failed to get multiple slot setting: " +
+                            "%s", this.getClass().getSimpleName(), fail.getMessage());
+                    log.error(message, fail.getMessage());
+                    renderError(request);
+                })
+                .onSuccess(res -> {
+                    boolean multipleSlot;
+
+                    if (params.contains(Field.MULTIPLE_SLOT)) {
+                        multipleSlot =  Boolean.parseBoolean(request.getParam(Field.MULTIPLE_SLOT));
+                    } else {
+                        multipleSlot = res.getBoolean(Field.ALLOW_MULTIPLE_SLOTS, true);
                     }
 
-                    JsonArray courses = event.right().getValue();
-                    courses.getList().sort(Comparator.comparing(Course::getTimestamp));
-                    Collections.reverse(courses.getList());
-                    List<String> csvHeaders = Arrays.asList(
-                            "presences.exemptions.dates",
-                            "presences.hour",
-                            "presences.register.csv.header.teacher",
-                            "presences.register.csv.header.groups",
-                            "presences.exemptions.csv.header.subject",
-                            "presences.register.forgotten");
-                    RegisterCSVExport rce = new RegisterCSVExport(courses, forgottenFilter);
-                    rce.setRequest(request);
-                    rce.setHeader(csvHeaders);
-                    rce.export();
-                });
+                    courseService.listCourses(params.get(Field.STRUCTURE), params.getAll(Field.TEACHER),
+                            params.getAll(Field.GROUP), params.get(Field.START), params.get(Field.END), null,
+                            null, forgottenFilter, multipleSlot, event -> {
+                                if (event.isLeft()) {
+                                    String message = String.format("[Presences@%s] Failed to list courses : %s",
+                                            this.getClass().getSimpleName(), event.left().getValue());
+                                    log.error(message, event.left().getValue());
+                                    renderError(request);
+                                    return;
+                                }
+
+                                JsonArray courses = event.right().getValue();
+                                courses.getList().sort(Comparator.comparing(Course::getTimestamp));
+                                Collections.reverse(courses.getList());
+                                List<String> csvHeaders = Arrays.asList(
+                                        "presences.exemptions.dates",
+                                        "presences.hour",
+                                        "presences.register.csv.header.teacher",
+                                        "presences.register.csv.header.groups",
+                                        "presences.exemptions.csv.header.subject",
+                                        "presences.register.forgotten");
+                                RegisterCSVExport rce = new RegisterCSVExport(courses, forgottenFilter);
+                                rce.setRequest(request);
+                                rce.setHeader(csvHeaders);
+                                rce.export();
+                            });
+        });
     }
 
     @Post("/courses/:id/notify")

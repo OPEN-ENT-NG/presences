@@ -3,17 +3,14 @@ package fr.openent.presences.worker;
 import fr.openent.presences.Presences;
 import fr.openent.presences.common.helper.DateHelper;
 import fr.openent.presences.common.helper.FutureHelper;
+import fr.openent.presences.core.constants.*;
 import fr.openent.presences.helper.MapHelper;
 import fr.openent.presences.model.Course;
-import fr.openent.presences.service.CourseService;
-import fr.openent.presences.service.RegisterService;
-import fr.openent.presences.service.impl.DefaultCourseService;
-import fr.openent.presences.service.impl.DefaultRegisterService;
+import fr.openent.presences.service.*;
+import fr.openent.presences.service.impl.*;
+import fr.wseduc.webutils.*;
 import fr.wseduc.webutils.email.EmailSender;
-import io.vertx.core.AsyncResult;
-import io.vertx.core.CompositeFuture;
-import io.vertx.core.Future;
-import io.vertx.core.Handler;
+import io.vertx.core.*;
 import io.vertx.core.eventbus.Message;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
@@ -34,6 +31,7 @@ public class CreateDailyPresenceWorker extends BusModBase implements Handler<Mes
     private EmailSender emailSender;
     private CourseService courseService;
     private RegisterService registerService;
+    private SettingsService settingsService;
     private final Logger log = LoggerFactory.getLogger(CreateDailyPresenceWorker.class);
 
 
@@ -42,6 +40,7 @@ public class CreateDailyPresenceWorker extends BusModBase implements Handler<Mes
         super.start();
         this.courseService = new DefaultCourseService(eb);
         this.registerService = new DefaultRegisterService(eb);
+        this.settingsService = new DefaultSettingsService();
         this.emailSender = new EmailFactory(vertx, config).getSender();
         eb.consumer(this.getClass().getName(), this::handle);
     }
@@ -120,38 +119,45 @@ public class CreateDailyPresenceWorker extends BusModBase implements Handler<Mes
         });
     }
 
+    @SuppressWarnings("unchecked")
     private void createStructureCoursesRegister(String structureId, String date, String startTime, String endTime,
                                                 Handler<AsyncResult<JsonObject>> handler) {
         List<Future> futures = new ArrayList<>();
 
-        Future<String> personnelFuture = Future.future();
-        Future<JsonArray> courseFuture = Future.future();
+        Promise<String> personnelFuture = Promise.promise();
+        Promise<JsonArray> courseFuture = Promise.promise();
 
-        CompositeFuture.join(personnelFuture, courseFuture).setHandler(asyncResult -> {
+        CompositeFuture.join(personnelFuture.future(), courseFuture.future()).onComplete(asyncResult -> {
             String personnelId = "created by cron";
             if (asyncResult.failed()) {
-                log.error("[Presences@DailyPresencesWorker::createStructureCoursesRegister] " +
-                        "Something wrong in createStructureCourseRegister sequence " + asyncResult.cause());
+                String message = String.format("[Presences@%s::createStructureCoursesRegister] Something " +
+                        "wrong in createStructureCourseRegister sequence : %s", this.getClass().getSimpleName(),
+                        asyncResult.cause().getMessage());
+                log.error(message, asyncResult.cause());
                 // If course future failed, then throw an error
-                if (courseFuture.failed()) {
-                    log.error("[Presences@DailyPresencesWorkder] Failed to retrieve courses", courseFuture.cause());
-                    handler.handle(Future.failedFuture("Courses recovery failed: " + courseFuture.cause()));
+                if (courseFuture.future().failed()) {
+                    message = String.format("[Presences@%s::createStructureCoursesRegister] Failed to retrieve " +
+                                    "courses : %s", this.getClass().getSimpleName(), courseFuture.future().cause());
+                    log.error(message, courseFuture.future().cause());
+                    handler.handle(Future.failedFuture("Courses recovery failed: " + courseFuture.future().cause()));
                     return;
                 }
 
                 // In case of personnel future fail, do not throw any error. Log a silent error and use an empty string as personnel identifier
-                if (personnelFuture.failed()) {
-                    log.error("[Presences@DailyPresencesWorker] Failed to retrieve a valid personnel for course creation");
+                if (personnelFuture.future().failed()) {
+                    message = String.format("[Presences@%s::createStructureCoursesRegister] Failed to retrieve " +
+                            "a valid personnel for course creation", this.getClass().getSimpleName());
+                    log.error(message);
                 }
             } else {
-                personnelId = personnelFuture.result();
+                personnelId = personnelFuture.future().result();
             }
 
             JsonObject result = new JsonObject()
                     .put("succeededCoursesNumber", 0)
                     .put("coursesErrors", new JsonObject());
 
-            List<Course> courses = courseFuture.result().getList();
+            List<Course> courses = courseFuture.future().result().getList();
             for (Course course : courses) {
                 JsonArray teachers = course.getTeachers();
                 Integer registerId = course.getRegisterId();
@@ -169,22 +175,31 @@ public class CreateDailyPresenceWorker extends BusModBase implements Handler<Mes
                         .put("groups", course.getGroups())
                         .put("classes", course.getClasses());
 
-                Future<JsonObject> future = Future.future();
-                futures.add(future);
+                Promise<JsonObject> promise = Promise.promise();
+                futures.add(promise.future());
                 String teacherId = teachers.isEmpty() ? personnelId : teachers.getJsonObject(0).getString("id");
-                createRegisterFuture(result, course, register, future, teacherId);
+                createRegisterFuture(result, course, register, promise.future(), teacherId);
             }
-            CompositeFuture.join(futures).setHandler(resultFutures -> {
-                if (resultFutures.succeeded()) {
-                    handler.handle(Future.succeededFuture(result));
-                } else {
-                    handler.handle(Future.failedFuture(resultFutures.cause().getMessage()));
-                }
-            });
+            CompositeFuture.join(futures)
+                    .onSuccess(resultFutures -> handler.handle(Future.succeededFuture(result)))
+                    .onFailure(fail -> handler.handle(Future.failedFuture(fail.getCause())));
         });
 
-        courseService.listCourses(structureId, new ArrayList<>(), new ArrayList<>(), date, date, startTime, endTime, true, true, FutureHelper.handlerJsonArray(courseFuture));
+        listCoursesFuture(structureId, date, startTime, endTime, FutureHelper.handlerJsonArray(courseFuture));
         getFirstCounsellorId(structureId, personnelFuture);
+    }
+
+
+    private void listCoursesFuture(String structureId, String date, String startTime, String endTime,
+                                   Handler<Either<String, JsonArray>> handler) {
+
+        settingsService.retrieveMultipleSlots(structureId)
+                .onFailure(fail -> handler.handle(new Either.Left<>(fail.getMessage())))
+                .onSuccess(res -> {
+                    boolean multipleSlot = res.getBoolean(Field.ALLOW_MULTIPLE_SLOTS, true);
+                    courseService.listCourses(structureId, new ArrayList<>(), new ArrayList<>(), date, date,
+                            startTime, endTime, true, multipleSlot, handler);
+                });
     }
 
     private void createRegisterFuture(JsonObject result, Course course, JsonObject register, Future<JsonObject> future,

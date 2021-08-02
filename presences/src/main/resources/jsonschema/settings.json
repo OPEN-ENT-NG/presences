@@ -17,6 +17,9 @@
     },
     "event_recovery_method": {
       "type": "string"
+    },
+    "allow_multiple_slots": {
+      "type": "boolean"
     }
   }
 }

@@ -69,8 +69,9 @@ public class DefaultInitService implements InitService {
 
     @Override
     public void getSettingsStatement(String structure, Future<JsonObject> future) {
-        String query = "INSERT INTO " + Presences.dbSchema + ".settings(structure_id, alert_absence_threshold, alert_lateness_threshold, alert_incident_threshold, alert_forgotten_notebook_threshold, initialized) " +
-                "VALUES (?, ?, ?, ?, ?, true) ON CONFLICT ON CONSTRAINT settings_pkey DO UPDATE SET initialized = true WHERE settings.structure_id = ? ;";
+        String query = "INSERT INTO " + Presences.dbSchema + ".settings(structure_id, alert_absence_threshold, " +
+                "alert_lateness_threshold, alert_incident_threshold, alert_forgotten_notebook_threshold, initialized, allow_multiple_slots) " +
+                "VALUES (?, ?, ?, ?, ?, true, true) ON CONFLICT ON CONSTRAINT settings_pkey DO UPDATE SET initialized = true WHERE settings.structure_id = ? ;";
         JsonArray params = new JsonArray().add(structure).add(5).add(3).add(3).add(3).add(structure);
         future.complete(new JsonObject()
                 .put("statement", query)
