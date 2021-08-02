@@ -28,6 +28,7 @@ public class Presences extends BaseServer {
     public static String dbSchema;
     public static String ebViescoAddress = "viescolaire";
 
+    public static final String VIEW = "view";
     public static final String READ_PRESENCE = "presences.presence.read";
     public static final String CREATE_PRESENCE = "presences.presence.create";
     public static final String MANAGE_PRESENCE = "presences.presence.manage";
