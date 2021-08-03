@@ -1,18 +1,21 @@
 import {ng} from 'entcore';
-import http from 'axios';
+import http, {AxiosResponse} from 'axios';
 
 export interface Setting {
     alert_absence_threshold?: number
     alert_lateness_threshold?: number
     alert_incident_threshold?: number
     alert_forgotten_notebook_threshold?: number
-    event_recovery_method?: 'HOUR' | 'HALF_DAY' | 'DAY'
+    event_recovery_method?: 'HOUR' | 'HALF_DAY' | 'DAY',
+    allow_multiple_slots?: boolean
 }
 
 export interface SettingsService {
-    retrieve(structureId: string): Promise<Setting>
+    retrieve(structureId: string): Promise<Setting>;
 
-    put(structureId: string, setting: Setting): Promise<Setting>
+    retrieveMultipleSlotSetting(structureId: string): Promise<boolean>;
+
+    put(structureId: string, setting: Setting): Promise<Setting>;
 }
 
 export const settingService: SettingsService = {
@@ -31,6 +34,10 @@ export const settingService: SettingsService = {
         } catch (e) {
             throw e;
         }
+    },
+    async retrieveMultipleSlotSetting(structureId: string): Promise<boolean> {
+        return http.get(`/presences/structures/${structureId}/settings/multiple-slots`)
+                .then((res: AxiosResponse) => res.data.allow_multiple_slots);
     }
 };
 

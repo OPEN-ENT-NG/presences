@@ -1,4 +1,4 @@
-import {_, idiom as lang, Me, model, moment, ng, notify, template} from 'entcore';
+import {_, Me, model, moment, ng, notify, template} from 'entcore';
 import {
     Absence,
     Course,
@@ -13,8 +13,8 @@ import {
     RegisterStatus,
     Remark
 } from '../models';
-import {GroupService, ReasonService, registerService, SearchService} from '../services';
-import {CourseUtils, DateUtils, PreferencesUtils} from '@common/utils';
+import {GroupService, ReasonService, registerService, SearchService, settingService} from '../services';
+import {CourseUtils, DateUtils, PreferencesUtils, PresencesPreferenceUtils} from '@common/utils';
 import rights from '../rights';
 import {Scope} from './main';
 import http from 'axios';
@@ -39,8 +39,7 @@ interface Filter {
     course: Course;
     selected: { teachers: any[], classes: any[], registerTeacher: any };
     forgotten: boolean;
-    searchTeacher: boolean,
-    multipleSlot: boolean;
+    searchTeacher: boolean;
 }
 
 export interface ViewModel {
@@ -55,17 +54,15 @@ export interface ViewModel {
     studentsSearch: StudentsSearch;
     presences: Presences;
     reasons: Reason[];
+    isMultipleSlot: boolean;
+    isMultipleSlotUserPreference: boolean;
 
     /* search bar auto complete */
     searchStudents(value): Promise<void>;
 
     selectStudent(valueInput, studentItem): Promise<void>;
 
-    // removeStudent(value): void;
-
     openRegister(course: Course, $event): Promise<void>;
-
-    tooltipMultipleSlot(): string;
 
     isCurrentRegister(course: Course): boolean;
 
@@ -103,7 +100,7 @@ export interface ViewModel {
 
     loadCourses(users?: string[], groups?: string[], structure?: string,
                 start_date?: string, end_date?: string, start_time?: string, end_time?: string,
-                forgotten_registers?: boolean, multipleSlot?: boolean, limit?: number, offset?: number,
+                forgotten_registers?: boolean, limit?: number, offset?: number,
                 descendingDate?: boolean, searchTeacher?: boolean): Promise<void>;
 
     loadCoursesWithForgottenRegisters(users?: Array<string>, groups?: Array<string>): Promise<void>;
@@ -176,7 +173,7 @@ export const registersController = ng.controller('RegistersController',
                 vm.courses.eventer.on('loading::false', () => $scope.safeApply());
 
                 registerTimeSlot = await Me.preference(PreferencesUtils.PREFERENCE_KEYS.PRESENCE_REGISTER);
-                
+
                 vm.filter = {
                     date: new Date(),
                     start_date: new Date(),
@@ -194,12 +191,25 @@ export const registersController = ng.controller('RegistersController',
                         teachers: [],
                         classes: [],
                         registerTeacher: undefined
-                    },
-                    multipleSlot: registerTimeSlot.multipleSlot,
+                    }
                 };
+
+                try {
+                    vm.isMultipleSlot = await settingService.retrieveMultipleSlotSetting(window.structure.id);
+                    vm.isMultipleSlotUserPreference = ('multipleSlot' in registerTimeSlot) ?
+                        registerTimeSlot.multipleSlot : await initMultipleSlotPreference();
+
+                } catch (e) {
+                    vm.isMultipleSlot = true;
+                }
 
                 startAction();
                 setHandler();
+            };
+
+            const initMultipleSlotPreference = async (): Promise<boolean> => {
+                await PresencesPreferenceUtils.updatePresencesRegisterPreference(true);
+                return true;
             };
 
             const startAction = () => {
@@ -244,7 +254,7 @@ export const registersController = ng.controller('RegistersController',
                     vm.filter.offset = 0;
                     vm.loadCourses(extractSelectedTeacherIds(), extractSelectedGroupsName(),
                         undefined, undefined, undefined, undefined, undefined,
-                        undefined, undefined, vm.courses.pageSize, vm.filter.offset, false);
+                        undefined, vm.courses.pageSize, vm.filter.offset, false);
                 },
                 /*  access register id view */
                 getRegister: async ({id}) => {
@@ -302,7 +312,7 @@ export const registersController = ng.controller('RegistersController',
                     DateUtils.format(vm.filter.end_date, DateUtils.FORMAT["YEAR-MONTH-DAY"]),
                     null, null,
                     vm.filter.forgotten,
-                    $scope.isTeacher() ? registerTimeSlot.multipleSlot : true,
+                    vm.isMultipleSlot,
                     vm.courses.pageSize,
                     vm.filter.offset,
                     false,
@@ -323,11 +333,11 @@ export const registersController = ng.controller('RegistersController',
             };
 
 
-            vm.changeFiltersDate = async function () {
+            vm.changeFiltersDate = async (): Promise<void> => {
                 vm.filter.offset = 0;
                 vm.loadCourses(extractSelectedTeacherIds(), extractSelectedGroupsName(),
                     undefined, undefined, undefined, undefined,
-                    undefined, undefined, undefined, vm.courses.pageSize, vm.filter.offset, false);
+                    undefined, undefined, vm.courses.pageSize, vm.filter.offset, false);
             };
 
             vm.export = function () {
@@ -335,14 +345,14 @@ export const registersController = ng.controller('RegistersController',
                     DateUtils.format(vm.filter.start_date, DateUtils.FORMAT["YEAR-MONTH-DAY"]), DateUtils.format(vm.filter.end_date, DateUtils.FORMAT["YEAR-MONTH-DAY"]), vm.filter.forgotten)
             };
 
-            const changeDate = async function (step: number) {
+            const changeDate = async (step: number): Promise<void> => {
                 vm.filter.date = DateUtils.add(vm.filter.date, step);
                 delete vm.register;
                 vm.filter.offset = 0;
                 await vm.loadCourses(extractSelectedTeacherIds(), [], window.structure.id,
                     DateUtils.format(vm.filter.date, DateUtils.FORMAT["YEAR-MONTH-DAY"]),
                     DateUtils.format(vm.filter.date, DateUtils.FORMAT["YEAR-MONTH-DAY"]), undefined, undefined,
-                    false, false);
+                    false);
                 setCurrentRegister();
             };
 
@@ -374,7 +384,7 @@ export const registersController = ng.controller('RegistersController',
                 return;
             };
 
-            vm.selectClass = function (model, classObject) {
+            vm.selectClass = (model: any, classObject: any): void => {
                 if (_.findWhere(vm.filter.selected.teachers, {id: classObject.id})) {
                     return;
                 }
@@ -384,7 +394,7 @@ export const registersController = ng.controller('RegistersController',
                 vm.filter.offset = 0;
                 vm.loadCourses(extractSelectedTeacherIds(), extractSelectedGroupsName(),
                     undefined, undefined, undefined, undefined, undefined,
-                    undefined, undefined, vm.courses.pageSize, vm.filter.offset, false);
+                    undefined, vm.courses.pageSize, vm.filter.offset, false);
                 $scope.safeApply();
             };
 
@@ -421,7 +431,7 @@ export const registersController = ng.controller('RegistersController',
                 vm.studentsSearch.resetStudents();
             };
 
-            vm.selectTeacher = function (model, teacher) {
+            vm.selectTeacher = (model: any, teacher: any): void => {
                 if (_.findWhere(vm.filter.selected.teachers, {id: teacher.id})) {
                     return;
                 }
@@ -431,17 +441,17 @@ export const registersController = ng.controller('RegistersController',
                 vm.filter.offset = 0;
                 vm.loadCourses(extractSelectedTeacherIds(), extractSelectedGroupsName(),
                     undefined, undefined, undefined, undefined, undefined,
-                    undefined, undefined, vm.courses.pageSize, vm.filter.offset, false);
+                    undefined, vm.courses.pageSize, vm.filter.offset, false);
                 $scope.safeApply();
             };
 
-            vm.dropFilter = function (object, list) {
+            vm.dropFilter = (object: any, list: any): void => {
                 vm.filter.selected[list] = _.without(vm.filter.selected[list], object);
                 delete vm.register;
                 vm.filter.offset = 0;
                 vm.loadCourses(extractSelectedTeacherIds(), extractSelectedGroupsName(),
                     undefined, undefined, undefined, undefined, undefined,
-                    undefined, undefined, vm.courses.pageSize, vm.filter.offset, false);
+                    undefined, vm.courses.pageSize, vm.filter.offset, false);
                 $scope.safeApply();
             };
 
@@ -489,13 +499,6 @@ export const registersController = ng.controller('RegistersController',
                     if (vm.register.teachers.length > 0 && _.countBy(vm.register.teachers, (teacher) => teacher.id === vm.filter.selected.registerTeacher.id) === 0)
                         vm.filter.selected.registerTeacher = vm.register.teachers[0];
                 }
-            };
-
-            vm.tooltipMultipleSlot = function (): string {
-                let tooltipText;
-                tooltipText = vm.filter.multipleSlot ? 'presences.widgets.day.set.multiple.slot.toolip.disable'
-                    : 'presences.widgets.day.set.multiple.slot.toolip.activate';
-                return lang.translate(tooltipText);
             };
 
             vm.isCurrentRegister = function (course: Course): boolean {
@@ -742,7 +745,6 @@ export const registersController = ng.controller('RegistersController',
              * @param start_time
              * @param end_time
              * @param forgotten_registers
-             * @param multipleSlot
              * @param limit
              * @param offset
              * @param descendingDate
@@ -751,24 +753,25 @@ export const registersController = ng.controller('RegistersController',
             vm.loadCourses = async (users: Array<string> = [model.me.userId],
                                     groups: Array<string> = [],
                                     structure: string = window.structure.id,
-                                    start_date: string = DateUtils.format(vm.filter.start_date, DateUtils.FORMAT["YEAR-MONTH-DAY"]),
-                                    end_date: string = DateUtils.format(vm.filter.end_date, DateUtils.FORMAT["YEAR-MONTH-DAY"]),
+                                    start_date: string = DateUtils.format(vm.filter.start_date, DateUtils.FORMAT['YEAR-MONTH-DAY']),
+                                    end_date: string = DateUtils.format(vm.filter.end_date, DateUtils.FORMAT['YEAR-MONTH-DAY']),
                                     start_time: string = null,
                                     end_time: string = null,
                                     forgotten_registers: boolean = vm.filter.forgotten,
-                                    multipleSlot: boolean = vm.filter.multipleSlot,
                                     limit?: number, offset?: number,
                                     descendingDate?: boolean,
                                     searchTeacher: boolean = this.filter.searchTeacher): Promise<void> => {
+
                 if (model.me.profiles.some((profile: string) => profile === 'Personnel')) {
-                    multipleSlot = true;
+                    vm.isMultipleSlot = true;
+                    vm.isMultipleSlotUserPreference = true;
                 }
 
                 if ($route.current.action === 'getRegister' || vm.filter.offset === 0) {
                     vm.courses.clear();
                 }
                 await vm.courses.sync(users, groups, structure, start_date, end_date, start_time, end_time,
-                    forgotten_registers, multipleSlot, limit, offset, descendingDate, null, searchTeacher);
+                    forgotten_registers, vm.isMultipleSlot ? vm.isMultipleSlotUserPreference : false, limit, offset, descendingDate, null, searchTeacher);
                 $scope.$broadcast(INFINITE_SCROLL_EVENTER.UPDATE);
                 $scope.safeApply();
             };
@@ -815,7 +818,7 @@ export const registersController = ng.controller('RegistersController',
                 vm.filter.offset = 0;
                 await vm.loadCourses(extractSelectedTeacherIds(), extractSelectedGroupsName(),
                     undefined, undefined, undefined, undefined, undefined,
-                    undefined, undefined, vm.courses.pageSize, vm.filter.offset, false);
+                    undefined, vm.courses.pageSize, vm.filter.offset, false);
             };
 
             vm.switchSearchTeacherFilter = async (): Promise<void> => {
@@ -823,7 +826,7 @@ export const registersController = ng.controller('RegistersController',
                 vm.filter.offset = 0;
                 await vm.loadCourses(extractSelectedTeacherIds(), extractSelectedGroupsName(),
                     undefined, undefined, undefined, undefined, undefined,
-                    undefined, undefined, vm.courses.pageSize, vm.filter.offset,
+                    undefined, vm.courses.pageSize, vm.filter.offset,
                     false);
             };
 

@@ -1,0 +1,22 @@
+.sniplet-manage-multiple-slots {
+
+  .sniplet-input {
+    display: flex;
+    flex-direction: row !important;
+
+    switch {
+      margin-left: 16px;
+
+      .switch {
+
+        input[type=checkbox]:checked + .tick {
+          background: $presences-orange;
+        }
+        input[type=checkbox]:checked + .tick:before {
+          background: $presences-orange;
+        }
+      }
+    }
+
+  }
+}

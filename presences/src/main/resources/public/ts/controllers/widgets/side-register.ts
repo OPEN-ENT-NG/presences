@@ -1,11 +1,12 @@
-import {model, ng, notify} from 'entcore';
+import {Me, model, ng, notify} from 'entcore';
 import {Absence, Course, Courses, Register, RegisterStatus, RegisterStudent} from '../../models';
 import {DateUtils} from '@common/utils/date';
-import {CourseUtils, PresencesPreferenceUtils} from '@common/utils';
+import {CourseUtils, PreferencesUtils, PresencesPreferenceUtils} from '@common/utils';
 import {RegisterUtils} from '../../utilities';
 import {COURSE_EVENTS} from '@common/model';
 import {IAngularEvent} from 'angular';
-import http, {AxiosResponse} from 'axios';
+import {Setting, settingService} from '../../services';
+import http, {AxiosResponse} from "axios";
 
 interface ViewModel {
     courses: Courses;
@@ -33,17 +34,31 @@ export const sideRegisterController = ng.controller('SideRegisterController', ['
         vm.courses = new Courses();
         vm.register = undefined;
 
-        vm.load = async function (): Promise<void> {
+        vm.load = async (): Promise<void> => {
             try {
-                let start_date = DateUtils.format(new Date(), DateUtils.FORMAT["YEAR-MONTH-DAY"]);
-                let end_date = DateUtils.format(new Date(), DateUtils.FORMAT["YEAR-MONTH-DAY"]);
-                let registerTimeSlot = await getPreference();
-                
-                let isMultipleSlot: boolean = ('multipleSlot' in registerTimeSlot) ? registerTimeSlot.multipleSlot : await initMultipleSlotPreference();
-                if (model.me.profiles.some(profile => profile === "Personnel")) {
+                let start_date: string = DateUtils.format(new Date(), DateUtils.FORMAT['YEAR-MONTH-DAY']);
+                let end_date: string = DateUtils.format(new Date(), DateUtils.FORMAT['YEAR-MONTH-DAY']);
+
+                let isMultipleSlot: boolean;
+                try {
+                    if (model.me.profiles.some(profile => profile === 'Personnel')) {
+                        isMultipleSlot = true;
+                    } else {
+                        isMultipleSlot = await settingService.retrieveMultipleSlotSetting(window.structure.id);
+
+                        // When multiple slot setting is activated, fetch the user preference
+                        if (isMultipleSlot) {
+                            let registerTimeSlot: any = await getPreference();
+                            isMultipleSlot = ('multipleSlot' in registerTimeSlot) ?
+                                registerTimeSlot.multipleSlot : await initMultipleSlotPreference();
+                        }
+                    }
+                }
+                catch (e) {
                     isMultipleSlot = true;
                 }
-                await vm.courses.sync([model.me.userId], [], window.structure.id, start_date, end_date, null, null, false, isMultipleSlot);
+                await vm.courses.sync([model.me.userId], [], window.structure.id, start_date, end_date,
+                    null, null, false, isMultipleSlot);
                 await loadRegister();
                 $scope.safeApply();
             } catch (err) {

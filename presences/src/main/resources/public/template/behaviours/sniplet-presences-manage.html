@@ -7,11 +7,17 @@
     </div>
 </div>
 <div class="sniplet presences presences-manage navigation">
-    <div class="flex-row row__8">
+    <div class="flex-row row__9">
         <!-- reason -->
         <a class="flex-col col__1 presence-navigation-item" data-ng-click="vm.scrollToElement('absence')">
             <div class="presence-icon flex-row"><i class="absence" aria-hidden="true"></i></div>
             <span class="flex-row"><i18n>presences.absence.reason.title</i18n></span>
+        </a>
+
+        <!-- multiple slots -->
+        <a class="flex-col col__1 presence-navigation-item" data-ng-click="vm.scrollToElement('multiple-slots')">
+            <div class="presence-icon flex-row"><i class="register" aria-hidden="true"></i></div>
+            <span class="flex-row"><i18n>presences.multiple.slots.manage.title</i18n></span>
         </a>
 
         <!-- absence actions -->
@@ -62,6 +68,14 @@
 <div class="sniplet presences absence" id="absence">
     <sniplet
             template="presences-manage/reason-manage/sniplet-presences-reason-manage"
+            application="presences">
+    </sniplet>
+</div>
+
+<!-- Multiple slots -->
+<div class="sniplet presences" id="multiple-slots">
+    <sniplet
+            template="presences-manage/multiple-slots-manage/sniplet-presences-multiple-slots-manage"
             application="presences">
     </sniplet>
 </div>
