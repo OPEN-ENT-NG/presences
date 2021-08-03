@@ -13,7 +13,8 @@ import {
     presencesManage,
     presencesManageLightbox,
     presencesReasonManage,
-    statisticsManage
+    statisticsManage,
+    presencesMultipleSlotsManage
 } from './sniplets';
 import rights from './rights';
 import incidentsRights from '@incidents/rights';
@@ -34,6 +35,7 @@ Behaviours.register('presences', {
         'presences-manage/sniplet-presences-manage-lightbox': presencesManageLightbox,
         'presences-manage/action-manage/sniplet-presences-action-manage': presencesActionManage,
         'presences-manage/discipline-manage/sniplet-presences-disciplines-manage': disciplineManage,
+        'presences-manage/multiple-slots-manage/sniplet-presences-multiple-slots-manage': presencesMultipleSlotsManage,
         'memento/absences': absenceMementoWidget,
         'presence-form': presenceForm,
     }

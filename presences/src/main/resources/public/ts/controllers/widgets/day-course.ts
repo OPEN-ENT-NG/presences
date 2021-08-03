@@ -1,9 +1,10 @@
-import {Me, model, moment, ng, notify} from 'entcore';
-import {CourseUtils, DateUtils, PreferencesUtils, PresencesPreferenceUtils} from "@common/utils";
-import {Course, Courses, Register, RegisterStatus} from "../../models";
-import {RegisterUtils} from "../../utilities";
-import http from "axios";
-import rights from "../../rights";
+import {Me, model, moment, ng, notify, idiom as lang} from 'entcore';
+import {CourseUtils, DateUtils, PreferencesUtils, PresencesPreferenceUtils} from '@common/utils';
+import {Course, Courses, Register, RegisterStatus} from '../../models';
+import {RegisterUtils} from '../../utilities';
+import http from 'axios';
+import rights from '../../rights';
+import {Setting, settingService} from '../../services';
 
 interface ViewModel {
     $onInit(): any;
@@ -11,12 +12,13 @@ interface ViewModel {
     $onDestroy(): any;
 
     isMultipleSlot: boolean;
+    isMultipleSlotUserPreference: boolean;
     dayCourse: Courses;
     register: Register;
 
-    tooltipMultipleSlot(): string;
-
     switchMultipleSlot(): Promise<void>;
+
+    tooltipMultipleSlot(): string;
 
     formatHour(date: string): string;
 
@@ -28,8 +30,6 @@ interface ViewModel {
 
     canNotify(start_date: string, state: RegisterStatus): boolean;
 
-    switchMultipleSlot(): Promise<void>;
-
     getGroups(classes: Array<string>, groups: Array<string>): Array<string>;
 }
 
@@ -38,11 +38,19 @@ declare let window: any;
 export const dayCourse = ng.controller('DayCourse', ['$scope', function ($scope) {
     const vm: ViewModel = this;
 
-    vm.$onInit = async () => {
+    vm.$onInit = async (): Promise<void> => {
         vm.dayCourse = new Courses();
         vm.register = new Register();
-        let registerTimeSlot: any = await Me.preference(PreferencesUtils.PREFERENCE_KEYS.PRESENCE_REGISTER);
-        vm.isMultipleSlot = ('multipleSlot' in registerTimeSlot) ? registerTimeSlot.multipleSlot : await initMultipleSlotPreference();
+        try {
+            vm.isMultipleSlot = await settingService.retrieveMultipleSlotSetting(window.structure.id);
+
+            let registerTimeSlot: any = await Me.preference(PreferencesUtils.PREFERENCE_KEYS.PRESENCE_REGISTER);
+            vm.isMultipleSlotUserPreference = ('multipleSlot' in registerTimeSlot) ?
+                registerTimeSlot.multipleSlot : await initMultipleSlotPreference();
+
+        } catch (e) {
+            vm.isMultipleSlot = true;
+        }
 
         /* on (watch) */
         $scope.$watch(() => window.structure, async () => {
@@ -59,13 +67,12 @@ export const dayCourse = ng.controller('DayCourse', ['$scope', function ($scope)
     };
 
     const loadCourses = async (): Promise<void> => {
-        let start_date = DateUtils.format(new Date(), DateUtils.FORMAT["YEAR-MONTH-DAY"]);
-        let end_date = DateUtils.format(new Date(), DateUtils.FORMAT["YEAR-MONTH-DAY"]);
-        if (model.me.profiles.some(profile => profile === "Personnel")) {
-            vm.isMultipleSlot = true
-        }
+        let start_date: string = DateUtils.format(new Date(), DateUtils.FORMAT['YEAR-MONTH-DAY']);
+        let end_date: string = DateUtils.format(new Date(), DateUtils.FORMAT['YEAR-MONTH-DAY']);
         vm.dayCourse.clear();
-        await vm.dayCourse.sync([model.me.userId], [], window.structure.id, start_date, end_date, null, null, false, vm.isMultipleSlot);
+        await vm.dayCourse.sync([model.me.userId], [], window.structure.id, start_date, end_date,
+            null, null, false,
+            vm.isMultipleSlot ? vm.isMultipleSlotUserPreference : false);
         $scope.safeApply();
     };
 
@@ -117,9 +124,16 @@ export const dayCourse = ng.controller('DayCourse', ['$scope', function ($scope)
             && moment(DateUtils.setFirstTime(moment())).diff(moment(DateUtils.setFirstTime(start_date)), 'days') < 2
     };
 
-    vm.switchMultipleSlot = async function (): Promise<void> {
-        await PresencesPreferenceUtils.updatePresencesRegisterPreference(vm.isMultipleSlot);
+    vm.switchMultipleSlot = async (): Promise<void> => {
+        await PresencesPreferenceUtils.updatePresencesRegisterPreference(vm.isMultipleSlotUserPreference);
         loadCourses();
+    };
+
+    vm.tooltipMultipleSlot = (): string => {
+        let tooltipText: string = vm.isMultipleSlotUserPreference ?
+            'presences.widgets.day.set.multiple.slot.toolip.disable'
+            : 'presences.widgets.day.set.multiple.slot.toolip.activate';
+        return lang.translate(tooltipText);
     };
 
     const notifyCourse = async (course: Course) => {
