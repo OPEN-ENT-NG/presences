@@ -222,7 +222,7 @@ public class CreateDailyPresenceWorker extends BusModBase implements Handler<Mes
 
     private void getFirstCounsellorId(String structureId, Handler<AsyncResult<String>> handler) {
         String queryCounsellor = "MATCH (u:User)-[:IN]->(g:ProfileGroup)-[:DEPENDS]->(s:Structure {id:{structureId}}) " +
-                "WHERE ANY(function IN u.functions WHERE function =~ '.*EDU\\\\$EDUCATION\\\\$E0030.*') " +
+                "WHERE ANY(function IN u.functions WHERE function =~ '.*(?=\\\\$EDUCATION).*(?=EDU).*(?=\\\\$E0030).*') " +
                 "OPTIONAL MATCH (u:User)-[:IN]->(:FunctionGroup {filter:'DIRECTION'})-[:DEPENDS]->(s:Structure {id:{structureId}}) " +
                 "RETURN u.id as id";
 
