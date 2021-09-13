@@ -1,4 +1,4 @@
-import {IStructureSlot, ITimeSlot, SNIPLET_FORM_EMIT_EVENTS, SNIPLET_FORM_EVENTS} from '@common/model';
+import {EVENT_TYPES, IStructureSlot, ITimeSlot, SNIPLET_FORM_EMIT_EVENTS, SNIPLET_FORM_EVENTS} from '@common/model';
 import {
     Absence,
     AbsenceEventResponse,
@@ -698,9 +698,16 @@ const vm: ViewModel = {
     },
 
     selectTimeSlot: (hourPeriod: TimeSlotHourPeriod): void => {
+        switch (vm.selectedEventType) {
+            case EVENT_TYPES.LATENESS:
+                vm.form.endDateTime =  moment(DateUtils.getDateFormat(vm.form.startDate,
+                    DateUtils.getTimeFormatDate(vm.timeSlotTimePeriod.start.startHour))).toDate();
+                break;
+        }
+
         PeriodFormUtils.setHourSelectorsFromTimeSlotsOrFree(hourPeriod, vm.display.isFreeSchedule, vm.form,
             "startDateTime", "endDateTime", "startDate", "endDate",
-            vm.timeSlotTimePeriod, vm.form, "startSlot", "endSlot")
+            vm.timeSlotTimePeriod, vm.form, "startSlot", "endSlot");
     },
 
     hourInput: (hourPeriod: TimeSlotHourPeriod): void => {

@@ -3,56 +3,38 @@
     <!-- Info -->
     <div class="eventFormLightBox-body-info row spacing">
 
-        <!-- date -->
-        <div class="twelve eventFormLightBox-body-timeslot-margin-bottom">
-            <i18n class="margin-right-sm">presences.from</i18n>
+        <div class="twelve flex-row">
+            <!-- date -->
+            <div class="eventFormLightBox-body-timeslot-margin-bottom">
+                <i18n class="margin-right-sm">presences.the</i18n>
 
-            <span class="card date-picker margin-right-sm">
+                <span class="card date-picker margin-right-sm">
                 <date-picker required ng-model="vm.form.startDate"
                              data-ng-change="vm.selectTimeSlot(vm.timeSlotHourPeriod.START_HOUR)"
                              ng-disabled="vm.form.id"></date-picker>
             </span>
 
-            <label class="eventFormLightBox-body-timeslot">
-                <label class="timeslot-select">
-                    <i class="time-picker"></i>
-                    <select data-ng-model="vm.timeSlotTimePeriod.start"
-                            data-ng-change="vm.selectTimeSlot(vm.timeSlotHourPeriod.START_HOUR)"
-                            ng-disabled="vm.form.id"
-                            ng-options="item.name + ' : ' + item.startHour for item in vm.structureTimeSlot.slots
+                <i18n class="margin-right-sm">presences.at</i18n>
+                <label class="eventFormLightBox-body-timeslot">
+                    <label class="timeslot-select">
+                        <i class="time-picker"></i>
+                        <select data-ng-model="vm.timeSlotTimePeriod.start"
+                                data-ng-change="vm.selectTimeSlot(vm.timeSlotHourPeriod.START_HOUR)"
+                                ng-disabled="vm.form.id"
+                                ng-options="item.name + ' : ' + item.startHour for item in vm.structureTimeSlot.slots
                                     | orderBy:vm.timeSlotHourPeriod.START_HOUR">
-                        <option value="">[[lang.translate('presences.pick.timeslot')]]</option>
-                    </select>
+                            <option value="">[[lang.translate('presences.pick.timeslot')]]</option>
+                        </select>
+                    </label>
                 </label>
-            </label>
-
-            <i18n class="margin-right-sm">presences.to</i18n>
-            <span class="card date-picker margin-right-sm">
-                <date-picker required ng-model="vm.form.endDate"
-                             data-ng-change="vm.selectTimeSlot(vm.timeSlotHourPeriod.END_HOUR)"
-                             ng-disabled="vm.form.id"></date-picker>
-            </span>
-
-            <label class="eventFormLightBox-body-timeslot">
-                <label class="timeslot-select">
-                    <i class="time-picker"></i>
-                    <select data-ng-model="vm.timeSlotTimePeriod.end"
-                            data-ng-change="vm.selectTimeSlot(vm.timeSlotHourPeriod.END_HOUR)"
-                            ng-disabled="vm.form.id"
-                            ng-options="item.name + ' : ' + item.endHour for item in vm.structureTimeSlot.slots
-                                | orderBy:vm.timeSlotHourPeriod.END_HOUR">
-                        <option value="">[[lang.translate('presences.pick.timeslot')]]</option>
-                    </select>
-                </label>
-            </label>
-        </div>
-
-        <!-- time picker -->
-        <div class="presenceLightbox-body-info-choice margin-top-md">
-            <i18n>presences.registry.csv.lateness.time</i18n>&#58;
-            <span class="card eventFormLightBox-body-timepicker margin-left-md">
-                <time-picker required ng-model="vm.form.endDateTime"></time-picker>
-            </span>
+            </div>
+            <!-- time picker -->
+            <div class="presenceLightbox-body-info-choice">
+                <i18n>presences.registry.csv.lateness.time</i18n>&#58;
+                <span class="card eventFormLightBox-body-timepicker margin-left-md">
+                    <time-picker required ng-model="vm.form.endDateTime"></time-picker>
+                </span>
+            </div>
         </div>
 
         <!--description-->
