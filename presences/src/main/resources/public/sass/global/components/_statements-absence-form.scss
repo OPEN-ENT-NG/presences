@@ -102,4 +102,61 @@
       justify-content: flex-end;
     }
   }
+
+  .statements-history {
+
+    &-title {
+      color: $presences-black;
+      padding: 16px;
+    }
+
+    &-list {
+      max-height: 650px;
+      overflow-y: auto;
+      overflow-x: hidden;
+
+      &-item {
+        &:nth-child(odd) {
+          background: $presences-grey-light;
+        }
+        &-content {
+          padding: 16px;
+          &-student {
+            &-audience {
+              font-size: 12px;
+            }
+          }
+
+          &-infos {
+            display: flex;
+
+            &-absence {
+              width: 100%;
+
+              &-line {
+                display: flex;
+                font-size: 12px;
+                &-title {
+                  width: 24%;
+                  font-weight: bold;
+                }
+              }
+            }
+
+            &-download {
+              display: flex;
+              height: fit-content;
+              i {
+                transform: rotate(-90deg);
+                &:before {
+                  font-size: 32px;
+                }
+              }
+            }
+          }
+        }
+      }
+
+    }
+  }
 }
