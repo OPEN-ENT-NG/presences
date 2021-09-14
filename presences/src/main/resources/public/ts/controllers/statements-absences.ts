@@ -101,7 +101,7 @@ export const statementsAbsencesController = ng.controller('StatementsAbsencesCon
             const getStatementsAbsences = async (): Promise<void> => {
                 vm.statementsAbsences.loading = true;
                 prepareRequest();
-                await vm.statementsAbsences.build(await statementAbsenceService.get(vm.statementsAbsencesRequest));
+                vm.statementsAbsences.build(await statementAbsenceService.get(vm.statementsAbsencesRequest));
                 vm.statementsAbsences.loading = false;
             };
 

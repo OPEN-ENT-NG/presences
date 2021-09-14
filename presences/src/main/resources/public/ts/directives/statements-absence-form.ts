@@ -1,10 +1,15 @@
 import {idiom as lang, moment, ng, toasts} from 'entcore';
 import {Student} from "@common/model/Student";
-import {IStructureSlot, TimeSlotHourPeriod} from "@common/model";
-import {IStatementAbsenceBody} from "../models";
+import {ISchoolYearPeriod, IStructureSlot, TimeSlotHourPeriod} from "@common/model";
+import {IStatementAbsenceBody, IStatementsAbsences, IStatementsAbsencesRequest, StatementsAbsences} from "../models";
 import {DateUtils} from "@common/utils";
 import {AxiosResponse} from "axios";
-import {statementsAbsencesService} from "../services";
+import {
+    IStatementsAbsencesService,
+    IViescolaireService,
+    statementsAbsencesService} from "../services";
+import {UPDATE_STUDENTS_EVENTS} from "@common/core/enum/select-children-events";
+import {IAngularEvent} from "angular";
 
 declare let window: any;
 
@@ -15,6 +20,8 @@ interface IViewModel {
     student: Student;
     form: IStatementAbsenceBody;
     timeslots: IStructureSlot;
+    statementsAbsences: StatementsAbsences;
+    filter: IStatementsAbsencesRequest;
     date: { start_time: string, end_time: string, isComplete: boolean };
     timeSlotHourPeriod: typeof TimeSlotHourPeriod;
     timeoutInput: any;
@@ -24,7 +31,11 @@ interface IViewModel {
 
     uploadFile(): void;
 
+    downloadStatementFile(statementAbsence: IStatementsAbsences): void;
+
     dateFormat(date: string): void;
+
+    hourFormat(date: string): void;
 
     isFormValid(form: IStatementAbsenceBody): boolean;
 
@@ -33,7 +44,9 @@ interface IViewModel {
     selectTimeSlot(hourPeriod: TimeSlotHourPeriod): void
 }
 
-export const StatementsAbsenceForm = ng.directive('statementsAbsenceForm', ($timeout) => {
+export const StatementsAbsenceForm = ng.directive('statementsAbsenceForm',
+    ['$timeout', 'StatementsAbsencesService', 'ViescolaireService',
+        function ($timeout, statementsAbsenceService: IStatementsAbsencesService, viescolaireService: IViescolaireService) {
     return {
         restrict: 'E',
         transclude: true,
@@ -131,14 +144,86 @@ export const StatementsAbsenceForm = ng.directive('statementsAbsenceForm', ($tim
                             <i18n>presences.exemptions.form.submit</i18n>
                         </button>
                     </div>
-
                 </form>
+                
+                <!-- statements history -->
+                <div class="statements-history" data-ng-show="vm.statementsAbsences.statementAbsenceResponse.all.length > 0">
+                    
+                    <h2 class="statements-history-title"><i18n>presences.statements.absence.form.history</i18n></h2>
+                
+                    <div class="statements-history-list">
+                        <div class="statements-history-list-item" ng-repeat="statement in vm.statementsAbsences.statementAbsenceResponse.all">
+                            <div class="statements-history-list-item-content">
+                                <!-- student name/audience -->
+                                <div class="statements-history-list-item-content-student">
+                                    <span class="statements-history-list-item-content-student-name">
+                                        [[statement.student.name]]
+                                    </span>
+                                    &nbsp;&nbsp;&nbsp;
+                                    <span class="statements-history-list-item-content-student-audience">
+                                        [[statement.student.className]]
+                                    </span>
+                                </div>
+                                
+                                <div class="statements-history-list-item-content-infos">
+                                    <div class="statements-history-list-item-content-infos-absence">
+                                        <!-- absence -->
+                                        <div class="statements-history-list-item-content-infos-absence-line">
+                                            <span class="statements-history-list-item-content-infos-absence-line-title">
+                                                <i18n>presences.absence</i18n>
+                                            </span>
+                                            <div class="statements-history-list-item-content-infos-absence-line-dates">
+                                                 <span><i18n>presences.from</i18n>&nbsp;[[vm.dateFormat(statement.start_at)]]
+                                                        <i18n>presences.to</i18n>&nbsp;[[vm.dateFormat(statement.end_at)]]
+                                                 </span> 
+                                                 <br>
+                                                 <span> <i18n>presences.by</i18n>&nbsp;[[vm.hourFormat(statement.start_at)]] 
+                                                        <i18n>presences.at</i18n>&nbsp;[[vm.hourFormat(statement.end_at)]]
+                                                 </span>
+                                            </div>
+                                        </div>
+                                        <!-- reason -->
+                                        <div class="statements-history-list-item-content-infos-absence-line">
+                                            <span class="statements-history-list-item-content-infos-absence-line-title"><i18n>presences.absence.reason</i18n></span>
+                                            <div class="statements-history-list-item-content-infos-absence-line-description">
+                                                 <span>[[statement.description]]</span>
+                                            </div>
+                                        </div>
+                                        
+                                    </div>
+                                     <!-- attachment -->
+                                    <div class="statements-history-list-item-content-infos-download">
+                                        <i class="attach"
+                                           data-ng-click="vm.downloadStatementFile(statement)"
+                                           data-ng-show="statement.attachment_id"></i>
+                                    </div> 
+                                </div>
+                            </div>
+                    </div>
+                   
+                  </div>
+                    
+                    
+                </div>
+                
+                <!-- Empty state -->
+                <div class="nine empty-content-vertical" 
+                     data-ng-show="vm.statementsAbsences.statementAbsenceResponse.all.length === 0">
+                    <div class="description">
+                        <span class="red-bar bar"></span>
+                            <i18n>presences.presences.empty.state</i18n>
+                        <span class="yellow-bar bar"></span>
+                    </div>
+                </div>
+          
+                </div>
+        
             </div>
         `,
         controllerAs: 'vm',
         bindToController: true,
         replace: true,
-        controller: function () {
+        controller: function ($scope) {
             const vm: IViewModel = <IViewModel>this;
             vm.$onInit = () => {
                 vm.timeSlotHourPeriod = TimeSlotHourPeriod;
@@ -185,14 +270,23 @@ export const StatementsAbsenceForm = ng.directive('statementsAbsenceForm', ($tim
                     toasts.confirm(lang.translate('presences.statement.form.create.success'));
                     vm.form.description = "";
                     vm.form.file = null;
+                    await loadStatements();
                     $scope.$apply();
                 } else {
                     toasts.warning('presences.statement.form.create.error');
                 }
             };
 
+            vm.downloadStatementFile = (statementAbsence: IStatementsAbsences): void => {
+                statementsAbsencesService.download(statementAbsence);
+            };
+
             vm.dateFormat = (date: string): string => {
-                return DateUtils.format(date, DateUtils.FORMAT["DAY-MONTH-YEAR"])
+                return DateUtils.format(date, DateUtils.FORMAT["DAY-MONTH-YEAR"]);
+            };
+
+            vm.hourFormat = (date: string): string => {
+                return DateUtils.format(date, DateUtils.FORMAT["HOUR-MINUTES"]);
             };
 
             vm.isFormValid = (form: IStatementAbsenceBody): boolean => {
@@ -280,6 +374,34 @@ export const StatementsAbsenceForm = ng.directive('statementsAbsenceForm', ($tim
 
                 return {start, end};
             };
+
+            const loadStatements = async (): Promise<void> => {
+
+                if (!window.structure) return;
+
+                try {
+                    const schoolYears: ISchoolYearPeriod = await viescolaireService.getSchoolYearDates(window.structure.id);
+
+                    vm.statementsAbsences = new StatementsAbsences(window.structure.id);
+                    vm.filter = {
+                        structure_id: vm.statementsAbsences.structure_id,
+                        start_at: DateUtils.format(moment(schoolYears.start_date), DateUtils.FORMAT["YEAR-MONTH-DAY"]),
+                        end_at: DateUtils.format(DateUtils.setLastTime(moment(schoolYears.end_date)),
+                            DateUtils.FORMAT["YEAR-MONTH-DAY-HOUR-MIN-SEC"]),
+                        student_ids: [vm.student.id],
+                        isTreated: true
+                    }
+                    vm.statementsAbsences.build(await statementsAbsenceService.get(vm.filter));
+                } catch (err) {
+                    throw err;
+                }
+
+                $scope.$apply();
+            }
+
+            $scope.$watch(() => vm.student, async () => {
+                await loadStatements();
+            });
         }
     };
-});
+}]);

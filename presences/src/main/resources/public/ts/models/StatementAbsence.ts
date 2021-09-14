@@ -54,7 +54,7 @@ export class StatementsAbsences extends LoadingCollection {
         this.statementAbsenceResponse = {} as IStatementsAbsencesResponse;
     }
 
-    async build(data: IStatementsAbsencesResponse): Promise<void> {
+    build(data: IStatementsAbsencesResponse): void {
         this.statementAbsenceResponse.all = [];
         data.all.forEach((statementAbsence: IStatementsAbsences) => {
             this.statementAbsenceResponse.all.push(statementAbsence);

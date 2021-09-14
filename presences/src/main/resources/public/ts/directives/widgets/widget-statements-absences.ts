@@ -103,7 +103,7 @@ export const WidgetStatementsAbsences = ng.directive('widgetStatementsAbsences',
                             isTreated: false,
                             limit: 6
                         }
-                        await vm.statementsAbsences.build(await statementsAbsenceService.get(vm.filter));
+                        vm.statementsAbsences.build(await statementsAbsenceService.get(vm.filter));
                         $scope.$apply();
                     }
 
