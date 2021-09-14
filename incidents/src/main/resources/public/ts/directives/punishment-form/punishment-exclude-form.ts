@@ -298,11 +298,11 @@ export const PunishmentExcludeForm = ng.directive('punishmentExcludeForm', ['Sea
                     switch (period) {
                         case PERIOD.START:
                             if (!vm.end_date || !DateUtils.isPeriodValid(vm.start_date, vm.end_date))
-                                vm.end_date = moment(vm.start_date).add(1, 'days');
+                                vm.end_date = moment(vm.start_date);
                             break;
                         case PERIOD.END:
                             if (!vm.start_date || !DateUtils.isPeriodValid(vm.start_date, vm.end_date))
-                                vm.start_date = moment(vm.end_date).add(-1, 'days');
+                                vm.start_date = moment(vm.end_date);
                             break;
                         default:
                             return;
