@@ -2,10 +2,11 @@ package fr.openent.presences.controller;
 
 import fr.openent.presences.Presences;
 import fr.openent.presences.constants.Actions;
+import fr.openent.presences.core.constants.*;
 import fr.openent.presences.enums.RegisterStatus;
 import fr.openent.presences.security.CreateRegisterRight;
-import fr.openent.presences.service.RegisterService;
-import fr.openent.presences.service.impl.DefaultRegisterService;
+import fr.openent.presences.service.*;
+import fr.openent.presences.service.impl.*;
 import fr.wseduc.rs.ApiDoc;
 import fr.wseduc.rs.Get;
 import fr.wseduc.rs.Post;
@@ -25,11 +26,13 @@ import java.util.List;
 public class RegisterController extends ControllerHelper {
 
     private final RegisterService registerService;
+    private final SettingsService settingsService;
     private final EventBus eb;
 
     public RegisterController(EventBus eb) {
         super();
         this.registerService = new DefaultRegisterService(eb);
+        this.settingsService = new DefaultSettingsService();
         this.eb = eb;
     }
 
@@ -122,13 +125,23 @@ public class RegisterController extends ControllerHelper {
         List<String> groupNames = request.params().getAll("groupName");
         List<String> teacherIds = request.params().getAll("teacherId");
 
-        registerService.getLastForgottenRegistersCourses(structureId, teacherIds, groupNames, startDate, endDate, either -> {
-            if (either.failed()) {
-                log.error("[Presences@CourseController::getLastForgottenRegisters] Failed to retrieve last forgotten course registers: " + either.cause().getMessage());
-                renderError(request);
-            } else {
-                renderJson(request, either.result());
-            }
-        });
+        settingsService.retrieveMultipleSlots(request.getParam("structureId"))
+                .onFailure(fail -> {
+                    String message = String.format("[Presences@%s::getLastForgottenRegisters] Failed to get " +
+                            "multiple slot setting : %s", this.getClass().getSimpleName(), fail.getMessage());
+                    log.error(message, fail.getMessage());
+                    renderError(request);
+                })
+                .onSuccess(res -> registerService.getLastForgottenRegistersCourses(structureId, teacherIds, groupNames,
+                        startDate, endDate, res.getBoolean(Field.ALLOW_MULTIPLE_SLOTS, true),
+                        either -> {
+                            if (either.failed()) {
+                                log.error("[Presences@CourseController::getLastForgottenRegisters] Failed to retrieve " +
+                                        "last forgotten course registers: " + either.cause().getMessage());
+                                renderError(request);
+                            } else {
+                                renderJson(request, either.result());
+                            }
+                }));
     }
 }

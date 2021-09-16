@@ -6,7 +6,7 @@ import fr.openent.presences.constants.Actions;
 import fr.openent.presences.core.constants.*;
 import fr.openent.presences.export.RegisterCSVExport;
 import fr.openent.presences.helper.CourseHelper;
-import fr.openent.presences.model.Course;
+import fr.openent.presences.model.*;
 import fr.openent.presences.service.*;
 import fr.openent.presences.service.impl.*;
 import fr.wseduc.rs.ApiDoc;
@@ -72,13 +72,13 @@ public class CourseController extends ControllerHelper {
                         renderError(request);
                 })
                 .onSuccess(res -> {
-                    boolean multipleSlot;
+                    MultipleSlotSettings multipleSlot = new MultipleSlotSettings();
 
                     if (params.contains(Field.MULTIPLE_SLOT)) {
-                        multipleSlot = Boolean.parseBoolean(request.getParam(Field.MULTIPLE_SLOT));
-                    } else {
-                        multipleSlot = res.getBoolean(Field.ALLOW_MULTIPLE_SLOTS, true);
+                        multipleSlot.setUserValue(Boolean.parseBoolean(request.getParam(Field.MULTIPLE_SLOT)));
                     }
+                    multipleSlot.setStructureValue(res.getBoolean(Field.ALLOW_MULTIPLE_SLOTS, true));
+
 
                     courseService.listCourses(params.get(Field.STRUCTURE), params.getAll(Field.TEACHER),
                             params.getAll(Field.GROUP), params.get(Field.START), params.get(Field.END),
@@ -117,13 +117,15 @@ public class CourseController extends ControllerHelper {
                     renderError(request);
                 })
                 .onSuccess(res -> {
-                    boolean multipleSlot;
+
+                    MultipleSlotSettings multipleSlot = new MultipleSlotSettings();
 
                     if (params.contains(Field.MULTIPLE_SLOT)) {
-                        multipleSlot =  Boolean.parseBoolean(request.getParam(Field.MULTIPLE_SLOT));
-                    } else {
-                        multipleSlot = res.getBoolean(Field.ALLOW_MULTIPLE_SLOTS, true);
+                        multipleSlot.setUserValue(Boolean.parseBoolean(request.getParam(Field.MULTIPLE_SLOT)));
                     }
+
+                    multipleSlot.setStructureValue(res.getBoolean(Field.ALLOW_MULTIPLE_SLOTS, true));
+
 
                     courseService.listCourses(params.get(Field.STRUCTURE), params.getAll(Field.TEACHER),
                             params.getAll(Field.GROUP), params.get(Field.START), params.get(Field.END), null,
