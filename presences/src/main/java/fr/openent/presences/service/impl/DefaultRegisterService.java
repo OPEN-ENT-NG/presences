@@ -7,23 +7,18 @@ import fr.openent.presences.common.helper.RegisterHelper;
 import fr.openent.presences.common.service.GroupService;
 import fr.openent.presences.common.service.impl.DefaultGroupService;
 import fr.openent.presences.common.viescolaire.Viescolaire;
+import fr.openent.presences.core.constants.*;
 import fr.openent.presences.db.DBService;
 import fr.openent.presences.enums.EventType;
 import fr.openent.presences.enums.GroupType;
-import fr.openent.presences.helper.CourseHelper;
-import fr.openent.presences.helper.MapHelper;
-import fr.openent.presences.helper.RegisterPresenceHelper;
-import fr.openent.presences.helper.SquashHelper;
-import fr.openent.presences.model.Course;
+import fr.openent.presences.helper.*;
+import fr.openent.presences.model.*;
 import fr.openent.presences.service.ExemptionService;
 import fr.openent.presences.service.NotebookService;
 import fr.openent.presences.service.RegisterService;
 import fr.wseduc.mongodb.MongoDb;
 import fr.wseduc.webutils.Either;
-import io.vertx.core.AsyncResult;
-import io.vertx.core.CompositeFuture;
-import io.vertx.core.Future;
-import io.vertx.core.Handler;
+import io.vertx.core.*;
 import io.vertx.core.eventbus.EventBus;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
@@ -833,10 +828,11 @@ public class DefaultRegisterService extends DBService implements RegisterService
 
     @Override
     public void getLastForgottenRegistersCourses(String structureId, List<String> teacherIds, List<String> groupNames,
-                                                 String startDate, String endDate, Handler<AsyncResult<JsonArray>> handler) {
+                                                 String startDate, String endDate, boolean multipleSlot,
+                                                 Handler<AsyncResult<JsonArray>> handler) {
 
         getLastForgottenRegisters(structureId, startDate, endDate)
-                .compose(registers -> getCoursesFromRegisters(structureId, registers, teacherIds, groupNames))
+                .compose(registers -> getCoursesFromRegisters(structureId, registers, teacherIds, groupNames, multipleSlot))
                 .setHandler(ar -> {
                     if (ar.failed()) {
                         String message = "[Presences@DefaultCourseService::getLastForgottenRegistersCourses] " +
@@ -875,48 +871,51 @@ public class DefaultRegisterService extends DBService implements RegisterService
     }
 
     @SuppressWarnings("unchecked")
-    private Future<JsonArray> getCoursesFromRegisters(String structureId, JsonArray registers, List<String> teacherIds, List<String> groupNames) {
-        Future<JsonArray> future = Future.future();
+    private Future<JsonArray> getCoursesFromRegisters(String structureId, JsonArray registers,
+                                                      List<String> teacherIds, List<String> groupNames, Boolean multipleSlot) {
+        Promise<JsonArray> promise = Promise.promise();
 
         JsonArray courseIds = new JsonArray();
 
         for (int i = 0; i < registers.size(); i++) {
-            courseIds.add(registers.getJsonObject(i).getString("course_id"));
+            courseIds.add(registers.getJsonObject(i).getString(Field.COURSE_ID));
         }
 
         courseHelper.getCoursesByIds(courseIds, res -> {
             if (res.isLeft()) {
-                future.fail(res.left().getValue());
+                promise.fail(res.left().getValue());
             } else {
                 JsonArray courses = res.right().getValue();
                 List<String> coursesIds = ((List<JsonObject>) courses.getList())
                         .stream()
                         .map(course -> course.getString("_id")).collect(Collectors.toList());
 
-                Future<JsonArray> teachersFuture = Future.future();
-                Future<JsonArray> registerEventFuture = Future.future();
+                Promise<JsonArray> teachersFuture = Promise.promise();
+                Promise<JsonArray> registerEventFuture = Promise.promise();
+                Promise<JsonArray> slotsFuture = Promise.promise();
 
-                CompositeFuture.all(teachersFuture, registerEventFuture).setHandler(asyncHandler -> {
-                    if (asyncHandler.failed()) {
-                        future.fail(asyncHandler.cause().getMessage());
-                        return;
-                    }
+                CompositeFuture.all(teachersFuture.future(), registerEventFuture.future(), slotsFuture.future())
+                        .onFailure(fail -> promise.fail(fail.getCause().getMessage()))
+                        .onSuccess(ar -> {
+                            List<Slot> slots = SlotHelper.getSlotListFromJsonArray(slotsFuture.future().result(),
+                                    Slot.MANDATORY_ATTRIBUTE);
+                            List<Course> coursesEvent = CourseHelper.getCourseListFromJsonArray(courses,
+                                    Course.MANDATORY_ATTRIBUTE);
+                            List<Course> splitCoursesEvent = CourseHelper.splitCoursesFromSlot(coursesEvent, slots);
 
-                    List<Course> coursesEvent = CourseHelper.getCourseListFromJsonArray(courses, Course.MANDATORY_ATTRIBUTE);
+                            List<Course> squashCourses = SquashHelper.squash(coursesEvent, splitCoursesEvent,
+                                    registerEventFuture.future().result(), new MultipleSlotSettings(multipleSlot));
 
-                    SquashHelper squashHelper = new SquashHelper();
-                    List<Course> squashCourses = squashHelper.squash(coursesEvent, new ArrayList<>(),
-                            registerEventFuture.result(), false);
-
-                    future.complete(filterLastForgottenRegisterCourses(squashCourses, teacherIds, groupNames));
-                });
+                            promise.complete(filterLastForgottenRegisterCourses(squashCourses, teacherIds, groupNames));
+                        });
 
                 formatCourseTeachersAndSubjects(courses, FutureHelper.handlerJsonArray(teachersFuture));
                 list(structureId, coursesIds, FutureHelper.handlerJsonArray(registerEventFuture));
+                Viescolaire.getInstance().getSlotsFromProfile(structureId, FutureHelper.handlerJsonArray(slotsFuture));
             }
         });
 
-        return future;
+        return promise.future();
     }
 
 

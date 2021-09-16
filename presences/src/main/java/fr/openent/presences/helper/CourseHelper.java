@@ -1,8 +1,7 @@
 package fr.openent.presences.helper;
 
 import fr.openent.presences.common.helper.DateHelper;
-import fr.openent.presences.model.Course;
-import fr.openent.presences.model.Slot;
+import fr.openent.presences.model.*;
 import fr.wseduc.webutils.Either;
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Future;
@@ -251,7 +250,7 @@ public class CourseHelper {
         return courseList;
     }
 
-    public static List<Course> formatCourses(List<Course> courses, boolean multipleSlot,
+    public static List<Course> formatCourses(List<Course> courses, MultipleSlotSettings multipleSlot,
                                              List<Slot> slots, Boolean searchTeacher) {
         // Case when slots are not defined from viesco.
         if (slots.isEmpty()) {
@@ -266,6 +265,11 @@ public class CourseHelper {
                         boolean isSplit = Objects.requireNonNull(listCourses.stream()
                                 .filter(listCourse -> listCourse.getRegisterId() != null)
                                 .findAny().orElse(null)).isSplitSlot();
+
+                        if (Boolean.TRUE.equals(multipleSlot.getStructureValue())) {
+                            isSplit = isSplit || listCourses.stream()
+                                    .anyMatch(c ->  c.getRegisterId() != null && !c.isSplitSlot());
+                        }
                         for (Course course : listCourses) {
                             boolean hasTeachers = !course.getTeachers().isEmpty();
                             // pass if we have a least one teacher or we allow to get courses without teacher
@@ -277,7 +281,7 @@ public class CourseHelper {
                     } else {
                         for (Course course : listCourses) {
                             boolean hasTeachers = !course.getTeachers().isEmpty();
-                            if (course.isSplitSlot().equals(multipleSlot) && (searchTeacher == null ||
+                            if (course.isSplitSlot().equals(multipleSlot.getDefaultValue()) && (searchTeacher == null ||
                                     ((hasTeachers && searchTeacher) || (!hasTeachers && !searchTeacher)))) {
                                 formatCourses.add(course);
                             }
@@ -315,6 +319,8 @@ public class CourseHelper {
         List<Course> splitCoursesEvent = new ArrayList<>();
         try {
             for (Course course : courses) {
+                course.setStartDate(DateHelper.getDateString(course.getStartDate(), DateHelper.MONGO_FORMAT));
+                course.setEndDate(DateHelper.getDateString(course.getEndDate(), DateHelper.MONGO_FORMAT));
                 splitCourseTreatment(slots, splitCoursesEvent, course);
                 if (course.getRegisterId() != null && !course.isSplitSlot()) {
                     splitCoursesEvent.add(course.clone());

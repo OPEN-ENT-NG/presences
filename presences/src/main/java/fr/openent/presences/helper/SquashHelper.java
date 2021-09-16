@@ -1,7 +1,8 @@
 package fr.openent.presences.helper;
 
 import fr.openent.presences.common.helper.DateHelper;
-import fr.openent.presences.model.Course;
+import fr.openent.presences.core.constants.*;
+import fr.openent.presences.model.*;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import io.vertx.core.logging.Logger;
@@ -24,7 +25,8 @@ public class SquashHelper {
      * @param coursesEvent      Course list
      * @param splitCoursesEvent Course list split
      */
-    public List<Course> squash(List<Course> coursesEvent, List<Course> splitCoursesEvent, JsonArray registerEvent, boolean multipleSlot) {
+    public static List<Course> squash(List<Course> coursesEvent, List<Course> splitCoursesEvent,
+                                      JsonArray registerEvent, MultipleSlotSettings multipleSlot) {
         for (Course course : coursesEvent) {
             course.setSplitSlot(false);
         }
@@ -32,10 +34,24 @@ public class SquashHelper {
             course.setSplitSlot(true);
         }
         List<Course> courses = new ArrayList<>(coursesEvent);
-        if (multipleSlot) {
-            courses.addAll(splitCoursesEvent);
-        }
         JsonObject registers = groupRegisters(registerEvent);
+
+
+        if (Boolean.TRUE.equals(multipleSlot.getUserValue())
+                && Boolean.TRUE.equals(multipleSlot.getStructureValue())) {
+            courses.addAll(splitCoursesEvent);
+        } else if (Boolean.TRUE.equals(multipleSlot.getStructureValue())
+                && Boolean.FALSE.equals(multipleSlot.getUserValue())) {
+            for (Course course : splitCoursesEvent) {
+                JsonArray courseRegisters = registers.getJsonArray(course.getId());
+                if ((courseRegisters != null) && courseRegisters.stream()
+                        .anyMatch(r -> ((JsonObject) r).getInteger(Field.ID) != null)) {
+                    courses.add(course);
+                }
+            }
+
+        }
+
         for (Course course : courses) {
             boolean found = false;
             int j = 0;
@@ -46,18 +62,18 @@ public class SquashHelper {
             while (!found && j < courseRegisters.size()) {
                 JsonObject register = courseRegisters.getJsonObject(j);
                 try {
-                    if ((DateHelper.getAbsTimeDiff(course.getStartDate(), register.getString("start_date")) < DateHelper.TOLERANCE
-                            && DateHelper.getAbsTimeDiff(course.getEndDate(), register.getString("end_date")) < DateHelper.TOLERANCE)
+                    if ((DateHelper.getAbsTimeDiff(course.getStartDate(), register.getString(Field.START_DATE)) < DateHelper.TOLERANCE
+                            && DateHelper.getAbsTimeDiff(course.getEndDate(), register.getString(Field.END_DATE)) < DateHelper.TOLERANCE)
                             || isMatchRegisterCourse(course, register)) {
-                        course.setRegisterId(register.getInteger("id"));
-                        course.setRegisterStateId(register.getInteger("state_id"));
-                        course.setNotified(register.getBoolean("notified"));
+                        course.setRegisterId(register.getInteger(Field.ID));
+                        course.setRegisterStateId(register.getInteger(Field.STATE_ID));
+                        course.setNotified(register.getBoolean(Field.NOTIFIED));
                         found = true;
                     } else {
                         course.setNotified(false);
                     }
                 } catch (ParseException err) {
-                    LOGGER.error("[Presences@SquashHelper] Failed to parse date for register " + register.getInteger("id"), err);
+                    LOGGER.error("[Presences@SquashHelper::squash] Failed to parse date for register " + register.getInteger("id"), err);
                 } finally {
                     j++;
                 }
@@ -74,7 +90,7 @@ public class SquashHelper {
      * @param register current register
      * @return boolean if this matches
      */
-    private boolean isMatchRegisterCourse(Course course, JsonObject register) {
+    private static boolean isMatchRegisterCourse(Course course, JsonObject register) {
         boolean isMatch = false;
         try {
             Date courseStartDate = DateHelper.parse(course.getStartDate());
@@ -97,7 +113,7 @@ public class SquashHelper {
      * @param registers Registers list
      * @return Json object containing each registers grouped by course identifier
      */
-    private JsonObject groupRegisters(JsonArray registers) {
+    private static JsonObject groupRegisters(JsonArray registers) {
         JsonObject values = new JsonObject();
         JsonObject register, o;
         for (int i = 0; i < registers.size(); i++) {

@@ -73,8 +73,9 @@ public interface RegisterService {
      * @param groupNames        Group names
      * @param startDate         Start date
      * @param endDate           End date
+     * @param multipleSlot      Multiple slot admin setting value
      * @param handler           Function handler returning data
      */
     void getLastForgottenRegistersCourses(String structureId, List<String> teacherIds, List<String> groupNames,
-                                          String startDate, String endDate, Handler<AsyncResult<JsonArray>> handler);
+                                          String startDate, String endDate, boolean multipleSlot, Handler<AsyncResult<JsonArray>> handler);
 }

@@ -5,7 +5,7 @@ import fr.openent.presences.common.helper.DateHelper;
 import fr.openent.presences.common.helper.FutureHelper;
 import fr.openent.presences.core.constants.*;
 import fr.openent.presences.helper.MapHelper;
-import fr.openent.presences.model.Course;
+import fr.openent.presences.model.*;
 import fr.openent.presences.service.*;
 import fr.openent.presences.service.impl.*;
 import fr.wseduc.webutils.*;
@@ -196,7 +196,8 @@ public class CreateDailyPresenceWorker extends BusModBase implements Handler<Mes
         settingsService.retrieveMultipleSlots(structureId)
                 .onFailure(fail -> handler.handle(new Either.Left<>(fail.getMessage())))
                 .onSuccess(res -> {
-                    boolean multipleSlot = res.getBoolean(Field.ALLOW_MULTIPLE_SLOTS, true);
+                    MultipleSlotSettings multipleSlot = new MultipleSlotSettings();
+                    multipleSlot.setUserValue(res.getBoolean(Field.ALLOW_MULTIPLE_SLOTS, true));
                     courseService.listCourses(structureId, new ArrayList<>(), new ArrayList<>(), date, date,
                             startTime, endTime, true, multipleSlot, handler);
                 });
