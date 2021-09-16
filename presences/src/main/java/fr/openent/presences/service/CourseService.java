@@ -1,5 +1,6 @@
 package fr.openent.presences.service;
 
+import fr.openent.presences.model.*;
 import fr.wseduc.webutils.Either;
 import io.vertx.core.Handler;
 import io.vertx.core.json.JsonArray;
@@ -30,15 +31,16 @@ public interface CourseService {
      * @param handler         Function handler returning data
      */
     void listCourses(String structureId, List<String> teachersList, List<String> groupsList,
-                     String start, String end, String startTime, String endTime, boolean forgottenFilter, boolean multipleSlot,
+                     String start, String end, String startTime, String endTime, boolean forgottenFilter,
+                     MultipleSlotSettings multipleSlot, Handler<Either<String, JsonArray>> handler);
+
+    void listCourses(String structureId, List<String> teachersList, List<String> groupsList,
+                     String start, String end, String startTime, String endTime, boolean forgottenFilter,
+                     MultipleSlotSettings multipleSlot, String limit, String offset, String descendingDate,
                      Handler<Either<String, JsonArray>> handler);
 
     void listCourses(String structureId, List<String> teachersList, List<String> groupsList,
-                     String start, String end, String startTime, String endTime, boolean forgottenFilter, boolean multipleSlot,
-                     String limit, String offset, String descendingDate, Handler<Either<String, JsonArray>> handler);
-
-    void listCourses(String structureId, List<String> teachersList, List<String> groupsList,
-                     String start, String end, String startTime, String endTime, boolean forgottenFilter, boolean multipleSlot,
-                     String limit, String offset, String descendingDate, String isWithTeacherFilter,
-                     Handler<Either<String, JsonArray>> handler);
+                     String start, String end, String startTime, String endTime, boolean forgottenFilter,
+                     MultipleSlotSettings multipleSlot, String limit, String offset, String descendingDate,
+                     String isWithTeacherFilter, Handler<Either<String, JsonArray>> handler);
 }

@@ -40,6 +40,11 @@ public class Field {
     public static final String MULTIPLE_SLOT = "multiple_slot";
     public static final String ALLOW_MULTIPLE_SLOTS = "allow_multiple_slots";
 
+    // Register
+    public static final String COURSE_ID = "course_id";
+    public static final String STATE_ID = "state_id";
+    public static final String NOTIFIED = "notified";
+
 
     public static final String FORGOTTEN_REGISTERS = "forgotten_registers";
 
