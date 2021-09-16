@@ -2,20 +2,18 @@ package fr.openent.presences.service.impl;
 
 import fr.openent.presences.common.helper.FutureHelper;
 import fr.openent.presences.common.viescolaire.Viescolaire;
+import fr.openent.presences.core.constants.*;
 import fr.openent.presences.enums.RegisterStatus;
 import fr.openent.presences.helper.CourseHelper;
 import fr.openent.presences.helper.MapHelper;
 import fr.openent.presences.helper.SlotHelper;
 import fr.openent.presences.helper.SquashHelper;
-import fr.openent.presences.model.Course;
-import fr.openent.presences.model.Slot;
+import fr.openent.presences.model.*;
 import fr.openent.presences.service.CourseService;
 import fr.openent.presences.service.RegisterService;
 import fr.wseduc.mongodb.MongoDb;
 import fr.wseduc.webutils.Either;
-import io.vertx.core.CompositeFuture;
-import io.vertx.core.Future;
-import io.vertx.core.Handler;
+import io.vertx.core.*;
 import io.vertx.core.eventbus.EventBus;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
@@ -84,7 +82,7 @@ public class DefaultCourseService implements CourseService {
     @Override
     public void listCourses(String structureId, List<String> teachersList, List<String> groupsList,
                             String start, String end, String startTime, String endTime,
-                            boolean forgottenFilter, boolean multipleSlot,
+                            boolean forgottenFilter, MultipleSlotSettings multipleSlot,
                             Handler<Either<String, JsonArray>> handler) {
         this.listCourses(structureId, teachersList, groupsList, start, end, startTime, endTime,
                 forgottenFilter, multipleSlot, null, null, null, handler);
@@ -93,7 +91,7 @@ public class DefaultCourseService implements CourseService {
     @Override
     public void listCourses(String structureId, List<String> teachersList, List<String> groupsList,
                             String start, String end, String startTime, String endTime,
-                            boolean forgottenFilter, boolean multipleSlot,
+                            boolean forgottenFilter, MultipleSlotSettings multipleSlot,
                             String limit, String offset, String descendingDate, Handler<Either<String, JsonArray>> handler) {
         this.listCourses(structureId, teachersList, groupsList, start, end, startTime, endTime,
                 forgottenFilter, multipleSlot, null, null, null, null, handler);
@@ -102,7 +100,7 @@ public class DefaultCourseService implements CourseService {
     @Override
     public void listCourses(String structureId, List<String> teachersList, List<String> groupsList,
                             String start, String end, String startTime, String endTime,
-                            boolean forgottenFilter, boolean multipleSlot,
+                            boolean forgottenFilter, MultipleSlotSettings multipleSlot,
                             String limit, String offset, String descendingDate, String searchTeacher, Handler<Either<String, JsonArray>> handler) {
         courseHelper.getCourses(structureId, teachersList, groupsList, start, end, startTime, endTime, limit, offset, descendingDate,
                 searchTeacher, event -> {
@@ -118,33 +116,34 @@ public class DefaultCourseService implements CourseService {
                             .stream()
                             .map(course -> course.getString("_id")).collect(Collectors.toList());
 
-                    Future<JsonArray> teachersFuture = Future.future();
-                    Future<JsonArray> slotsFuture = Future.future();
-                    Future<JsonArray> registerEventFuture = Future.future();
+                    Promise<JsonArray> teachersFuture = Promise.promise();
+                    Promise<JsonArray> slotsFuture = Promise.promise();
+                    Promise<JsonArray> registerEventFuture = Promise.promise();
 
-                    CompositeFuture.all(teachersFuture, slotsFuture, registerEventFuture).setHandler(asyncHandler -> {
-                        if (asyncHandler.failed()) {
-                            handler.handle(new Either.Left<>(asyncHandler.cause().toString()));
-                            return;
-                        }
+                    CompositeFuture.all(teachersFuture.future(), slotsFuture.future(), registerEventFuture.future())
+                            .onFailure(fail ->  handler.handle(new Either.Left<>(fail.getCause().getMessage())))
+                            .onSuccess(ar -> {
+                                JsonArray teachers = teachersFuture.future().result();
+                                JsonObject teacherMap = MapHelper.transformToMap(teachers, Field.ID);
 
-                        JsonArray teachers = teachersFuture.result();
-                        JsonObject teacherMap = MapHelper.transformToMap(teachers, "id");
+                                CourseHelper.formatCourse(courses, teacherMap);
 
-                        CourseHelper.formatCourse(courses, teacherMap);
+                                List<Slot> slots = SlotHelper.getSlotListFromJsonArray(slotsFuture.future().result(),
+                                        Slot.MANDATORY_ATTRIBUTE);
+                                List<Course> coursesEvent = CourseHelper.getCourseListFromJsonArray(courses,
+                                        Course.MANDATORY_ATTRIBUTE);
+                                List<Course> splitCoursesEvent = CourseHelper.splitCoursesFromSlot(coursesEvent, slots);
 
-                        List<Slot> slots = SlotHelper.getSlotListFromJsonArray(slotsFuture.result(), Slot.MANDATORY_ATTRIBUTE);
-                        List<Course> coursesEvent = CourseHelper.getCourseListFromJsonArray(courses, Course.MANDATORY_ATTRIBUTE);
-                        List<Course> splitCoursesEvent = CourseHelper.splitCoursesFromSlot(coursesEvent, slots);
+                                List<Course> squashCourses = SquashHelper.squash(coursesEvent, splitCoursesEvent,
+                                        registerEventFuture.future().result(), multipleSlot);
 
-                        SquashHelper squashHelper = new SquashHelper();
-                        List<Course> squashCourses = squashHelper.squash(coursesEvent, splitCoursesEvent, registerEventFuture.result(), multipleSlot);
-
-                        handler.handle(new Either.Right<>(forgottenFilter ?
-                                new JsonArray(filterForgottenCourses(CourseHelper.formatCourses(squashCourses, multipleSlot, slots, BooleanUtils.toBooleanObject(searchTeacher)))) :
-                                new JsonArray(CourseHelper.formatCourses(squashCourses, multipleSlot, slots, BooleanUtils.toBooleanObject(searchTeacher)))
-                        ));
-                    });
+                                handler.handle(new Either.Right<>(forgottenFilter ?
+                                        new JsonArray(filterForgottenCourses(CourseHelper.formatCourses(squashCourses,
+                                                multipleSlot, slots, BooleanUtils.toBooleanObject(searchTeacher)))) :
+                                        new JsonArray(CourseHelper.formatCourses(squashCourses, multipleSlot,
+                                                slots, BooleanUtils.toBooleanObject(searchTeacher)))
+                                ));
+                            });
                     courseHelper.getCourseTeachers(teachersIds, FutureHelper.handlerJsonArray(teachersFuture));
                     Viescolaire.getInstance().getSlotsFromProfile(structureId, FutureHelper.handlerJsonArray(slotsFuture));
                     registerService.list(structureId, coursesIds, FutureHelper.handlerJsonArray(registerEventFuture));
