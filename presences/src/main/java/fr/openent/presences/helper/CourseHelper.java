@@ -250,8 +250,7 @@ public class CourseHelper {
         return courseList;
     }
 
-    public static List<Course> formatCourses(List<Course> courses, MultipleSlotSettings multipleSlot,
-                                             List<Slot> slots, Boolean searchTeacher) {
+    public static List<Course> formatCourses(List<Course> courses, List<Slot> slots, Boolean searchTeacher) {
         // Case when slots are not defined from viesco.
         if (slots.isEmpty()) {
             return courses;
@@ -261,30 +260,11 @@ public class CourseHelper {
         courses.stream()
                 .collect(Collectors.groupingBy(Course::getId))
                 .forEach((courseId, listCourses) -> {
-                    if (listCourses.stream().anyMatch(listCourse -> listCourse.getRegisterId() != null)) {
-                        boolean isSplit = Objects.requireNonNull(listCourses.stream()
-                                .filter(listCourse -> listCourse.getRegisterId() != null)
-                                .findAny().orElse(null)).isSplitSlot();
-
-                        if (Boolean.TRUE.equals(multipleSlot.getStructureValue())) {
-                            isSplit = isSplit || listCourses.stream()
-                                    .anyMatch(c ->  c.getRegisterId() != null && !c.isSplitSlot());
-                        }
-                        for (Course course : listCourses) {
-                            boolean hasTeachers = !course.getTeachers().isEmpty();
-                            // pass if we have a least one teacher or we allow to get courses without teacher
-                            if (course.isSplitSlot().equals(isSplit) && (searchTeacher == null ||
-                                    ((hasTeachers && searchTeacher) || (!hasTeachers && !searchTeacher)))) {
-                                formatCourses.add(course);
-                            }
-                        }
-                    } else {
-                        for (Course course : listCourses) {
-                            boolean hasTeachers = !course.getTeachers().isEmpty();
-                            if (course.isSplitSlot().equals(multipleSlot.getDefaultValue()) && (searchTeacher == null ||
-                                    ((hasTeachers && searchTeacher) || (!hasTeachers && !searchTeacher)))) {
-                                formatCourses.add(course);
-                            }
+                    for (Course course : listCourses) {
+                        boolean hasTeachers = !course.getTeachers().isEmpty();
+                        if (searchTeacher == null ||
+                                ((hasTeachers && searchTeacher) || (!hasTeachers && !searchTeacher))) {
+                            formatCourses.add(course);
                         }
                     }
                 });
