@@ -9,9 +9,8 @@ import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
 
 import java.text.ParseException;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.List;
+import java.util.*;
+import java.util.stream.*;
 
 public class SquashHelper {
     private static final Logger LOGGER = LoggerFactory.getLogger(SquashHelper.class);
@@ -26,60 +25,94 @@ public class SquashHelper {
      * @param splitCoursesEvent Course list split
      */
     public static List<Course> squash(List<Course> coursesEvent, List<Course> splitCoursesEvent,
-                                      JsonArray registerEvent, MultipleSlotSettings multipleSlot) {
-        for (Course course : coursesEvent) {
-            course.setSplitSlot(false);
-        }
-        for (Course course : splitCoursesEvent) {
-            course.setSplitSlot(true);
-        }
-        List<Course> courses = new ArrayList<>(coursesEvent);
+                                      JsonArray registerEvent, boolean multipleSlot) {
+
+        List<Course> courses = new ArrayList<>();
         JsonObject registers = groupRegisters(registerEvent);
 
+        setCoursesRegistersInfos(coursesEvent, registers, false);
+        setCoursesRegistersInfos(splitCoursesEvent, registers, true);
 
-        if (Boolean.TRUE.equals(multipleSlot.getUserValue())
-                && Boolean.TRUE.equals(multipleSlot.getStructureValue())) {
-            courses.addAll(splitCoursesEvent);
-        } else if (Boolean.TRUE.equals(multipleSlot.getStructureValue())
-                && Boolean.FALSE.equals(multipleSlot.getUserValue())) {
-            for (Course course : splitCoursesEvent) {
-                JsonArray courseRegisters = registers.getJsonArray(course.getId());
-                if ((courseRegisters != null) && courseRegisters.stream()
-                        .anyMatch(r -> ((JsonObject) r).getInteger(Field.ID) != null)) {
-                    courses.add(course);
-                }
-            }
 
-        }
+        List<Course> createdCourses = coursesEvent.stream()
+                .filter(course -> course.getRegisterId() != null).collect(Collectors.toList());
 
+        List<Course> createdSplitCourses = splitCoursesEvent.stream()
+                .filter(course -> course.getRegisterId() != null).collect(Collectors.toList());
+
+
+        courses.addAll(filterDuplicateCourses(createdSplitCourses, createdCourses));
+        courses.addAll(filterDuplicateCourses(createdCourses, createdSplitCourses));
+
+
+        List<Course> futureSplitCourses = splitCoursesEvent.stream()
+                .filter(fSplitCourse -> fSplitCourse.getRegisterId() == null
+                        && coursesEvent.stream()
+                        .noneMatch(course -> course.getRegisterId() != null &&
+                                Objects.equals(course.getId(), fSplitCourse.getId())))
+                .collect(Collectors.toList());
+
+
+        List<Course> futureCourses = coursesEvent.stream()
+                .filter(fCourse -> fCourse.getRegisterId() == null
+                        && splitCoursesEvent.stream()
+                        .noneMatch(course -> course.getRegisterId() != null &&
+                                Objects.equals(course.getId(), fCourse.getId())))
+                .collect(Collectors.toList());
+
+        // Add split courses if part of the course has an opened register
+        futureCourses.addAll(futureSplitCourses.stream()
+                .filter(fSplitCourse -> courses.stream()
+                        .anyMatch(course -> Objects.equals(course.getId(), fSplitCourse.getId())
+                                && course.getRegisterId() != null))
+                .collect(Collectors.toList()));
+
+        courses.addAll(Boolean.TRUE.equals(multipleSlot) ? futureSplitCourses : futureCourses);
+
+        return courses;
+    }
+
+    private static List<Course> filterDuplicateCourses(List<Course> toFilter, List<Course> toCheck) {
+        return toFilter.stream()
+                .filter(c1 -> toCheck.stream()
+                        .noneMatch(c2 -> Objects.equals(c1.getId(), c2.getId())
+                                && (!(Objects.equals(c1.getStartDate(), c2.getStartDate())
+                                    && Objects.equals(c1.getEndDate(), c2.getEndDate()))
+                                    || !c1.isSplitSlot())))
+                .collect(Collectors.toList());
+    }
+
+    @SuppressWarnings("unchecked")
+    private static void setCoursesRegistersInfos(List<Course> courses, JsonObject registers, boolean isSplitSlot) {
         for (Course course : courses) {
-            boolean found = false;
-            int j = 0;
-            JsonArray courseRegisters = registers.getJsonArray(course.getId());
-            if (courseRegisters == null) {
+            course.setSplitSlot(isSplitSlot);
+
+            if (registers.getJsonArray(course.getId()) == null) {
                 continue;
             }
-            while (!found && j < courseRegisters.size()) {
-                JsonObject register = courseRegisters.getJsonObject(j);
+
+            List<JsonObject> courseRegisters = registers.getJsonArray(course.getId()).getList();
+
+            for (JsonObject register : courseRegisters) {
                 try {
-                    if ((DateHelper.getAbsTimeDiff(course.getStartDate(), register.getString(Field.START_DATE)) < DateHelper.TOLERANCE
-                            && DateHelper.getAbsTimeDiff(course.getEndDate(), register.getString(Field.END_DATE)) < DateHelper.TOLERANCE)
+                    if ((DateHelper.getAbsTimeDiff(course.getStartDate(), register.getString(Field.START_DATE))
+                            < DateHelper.TOLERANCE
+                            && DateHelper.getAbsTimeDiff(course.getEndDate(), register.getString(Field.END_DATE))
+                            < DateHelper.TOLERANCE)
                             || isMatchRegisterCourse(course, register)) {
                         course.setRegisterId(register.getInteger(Field.ID));
                         course.setRegisterStateId(register.getInteger(Field.STATE_ID));
                         course.setNotified(register.getBoolean(Field.NOTIFIED));
-                        found = true;
+                        break;
                     } else {
                         course.setNotified(false);
                     }
                 } catch (ParseException err) {
-                    LOGGER.error("[Presences@SquashHelper::squash] Failed to parse date for register " + register.getInteger("id"), err);
-                } finally {
-                    j++;
+                    LOGGER.error("[Presences@SquashHelper::setCoursesRegistersInfos] Failed to parse date for " +
+                            "register " + register.getInteger(Field.ID), err);
                 }
             }
         }
-        return courses;
     }
 
     /**

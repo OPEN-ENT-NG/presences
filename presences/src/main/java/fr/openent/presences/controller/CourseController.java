@@ -72,13 +72,9 @@ public class CourseController extends ControllerHelper {
                         renderError(request);
                 })
                 .onSuccess(res -> {
-                    MultipleSlotSettings multipleSlot = new MultipleSlotSettings();
-
-                    if (params.contains(Field.MULTIPLE_SLOT)) {
-                        multipleSlot.setUserValue(Boolean.parseBoolean(request.getParam(Field.MULTIPLE_SLOT)));
-                    }
-                    multipleSlot.setStructureValue(res.getBoolean(Field.ALLOW_MULTIPLE_SLOTS, true));
-
+                    boolean multipleSlot = res.getBoolean(Field.ALLOW_MULTIPLE_SLOTS, true)
+                            && (!params.contains(Field.MULTIPLE_SLOT)
+                            || Boolean.parseBoolean(request.getParam(Field.MULTIPLE_SLOT)));
 
                     courseService.listCourses(params.get(Field.STRUCTURE), params.getAll(Field.TEACHER),
                             params.getAll(Field.GROUP), params.get(Field.START), params.get(Field.END),
@@ -117,15 +113,9 @@ public class CourseController extends ControllerHelper {
                     renderError(request);
                 })
                 .onSuccess(res -> {
-
-                    MultipleSlotSettings multipleSlot = new MultipleSlotSettings();
-
-                    if (params.contains(Field.MULTIPLE_SLOT)) {
-                        multipleSlot.setUserValue(Boolean.parseBoolean(request.getParam(Field.MULTIPLE_SLOT)));
-                    }
-
-                    multipleSlot.setStructureValue(res.getBoolean(Field.ALLOW_MULTIPLE_SLOTS, true));
-
+                    boolean multipleSlot = res.getBoolean(Field.ALLOW_MULTIPLE_SLOTS, true)
+                            && (!params.contains(Field.MULTIPLE_SLOT)
+                            || Boolean.parseBoolean(request.getParam(Field.MULTIPLE_SLOT)));
 
                     courseService.listCourses(params.get(Field.STRUCTURE), params.getAll(Field.TEACHER),
                             params.getAll(Field.GROUP), params.get(Field.START), params.get(Field.END), null,
