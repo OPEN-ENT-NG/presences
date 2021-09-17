@@ -886,15 +886,10 @@ public class DefaultRegisterService extends DBService implements RegisterService
                 promise.fail(res.left().getValue());
             } else {
                 JsonArray courses = res.right().getValue();
-                List<String> coursesIds = ((List<JsonObject>) courses.getList())
-                        .stream()
-                        .map(course -> course.getString("_id")).collect(Collectors.toList());
-
                 Promise<JsonArray> teachersFuture = Promise.promise();
-                Promise<JsonArray> registerEventFuture = Promise.promise();
                 Promise<JsonArray> slotsFuture = Promise.promise();
 
-                CompositeFuture.all(teachersFuture.future(), registerEventFuture.future(), slotsFuture.future())
+                CompositeFuture.all(teachersFuture.future(), slotsFuture.future())
                         .onFailure(fail -> promise.fail(fail.getCause().getMessage()))
                         .onSuccess(ar -> {
                             List<Slot> slots = SlotHelper.getSlotListFromJsonArray(slotsFuture.future().result(),
@@ -904,13 +899,12 @@ public class DefaultRegisterService extends DBService implements RegisterService
                             List<Course> splitCoursesEvent = CourseHelper.splitCoursesFromSlot(coursesEvent, slots);
 
                             List<Course> squashCourses = SquashHelper.squash(coursesEvent, splitCoursesEvent,
-                                    registerEventFuture.future().result(), new MultipleSlotSettings(multipleSlot));
+                                    registers, new MultipleSlotSettings(multipleSlot));
 
                             promise.complete(filterLastForgottenRegisterCourses(squashCourses, teacherIds, groupNames));
                         });
 
                 formatCourseTeachersAndSubjects(courses, FutureHelper.handlerJsonArray(teachersFuture));
-                list(structureId, coursesIds, FutureHelper.handlerJsonArray(registerEventFuture));
                 Viescolaire.getInstance().getSlotsFromProfile(structureId, FutureHelper.handlerJsonArray(slotsFuture));
             }
         });
@@ -939,8 +933,9 @@ public class DefaultRegisterService extends DBService implements RegisterService
 
     private JsonArray filterLastForgottenRegisterCourses(List<Course> courses, List<String> teacherIds, List<String> groupNames) {
         final int numberRegisters = 16;
-        courses = courses.stream().filter(course -> (teacherIds.isEmpty() || courseHasTeacherOfId(course.toJSON(), teacherIds)) &&
-                (groupNames.isEmpty() || courseHasClassOrGroupName(course.toJSON(), groupNames)) && !course.getTeachers().isEmpty())
+        courses = courses.stream().filter(course -> (teacherIds.isEmpty() || courseHasTeacherOfId(course.toJSON(), teacherIds))
+                        && (groupNames.isEmpty() || courseHasClassOrGroupName(course.toJSON(), groupNames))
+                        && !course.getTeachers().isEmpty() && course.getRegisterId() != null)
                 .sorted((o1, o2) -> o2.getStartDate().compareToIgnoreCase(o1.getStartDate()))
                 .limit(numberRegisters)
                 .sorted((o1, o2) -> o1.getStartDate().compareToIgnoreCase(o2.getStartDate()))
