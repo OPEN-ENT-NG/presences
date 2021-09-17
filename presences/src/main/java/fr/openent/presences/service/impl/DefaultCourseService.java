@@ -82,7 +82,7 @@ public class DefaultCourseService implements CourseService {
     @Override
     public void listCourses(String structureId, List<String> teachersList, List<String> groupsList,
                             String start, String end, String startTime, String endTime,
-                            boolean forgottenFilter, MultipleSlotSettings multipleSlot,
+                            boolean forgottenFilter, boolean multipleSlot,
                             Handler<Either<String, JsonArray>> handler) {
         this.listCourses(structureId, teachersList, groupsList, start, end, startTime, endTime,
                 forgottenFilter, multipleSlot, null, null, null, handler);
@@ -91,7 +91,7 @@ public class DefaultCourseService implements CourseService {
     @Override
     public void listCourses(String structureId, List<String> teachersList, List<String> groupsList,
                             String start, String end, String startTime, String endTime,
-                            boolean forgottenFilter, MultipleSlotSettings multipleSlot,
+                            boolean forgottenFilter, boolean multipleSlot,
                             String limit, String offset, String descendingDate, Handler<Either<String, JsonArray>> handler) {
         this.listCourses(structureId, teachersList, groupsList, start, end, startTime, endTime,
                 forgottenFilter, multipleSlot, null, null, null, null, handler);
@@ -100,7 +100,7 @@ public class DefaultCourseService implements CourseService {
     @Override
     public void listCourses(String structureId, List<String> teachersList, List<String> groupsList,
                             String start, String end, String startTime, String endTime,
-                            boolean forgottenFilter, MultipleSlotSettings multipleSlot,
+                            boolean forgottenFilter, boolean multipleSlot,
                             String limit, String offset, String descendingDate, String searchTeacher, Handler<Either<String, JsonArray>> handler) {
         courseHelper.getCourses(structureId, teachersList, groupsList, start, end, startTime, endTime, limit, offset, descendingDate,
                 searchTeacher, event -> {
@@ -139,8 +139,8 @@ public class DefaultCourseService implements CourseService {
 
                                 handler.handle(new Either.Right<>(forgottenFilter ?
                                         new JsonArray(filterForgottenCourses(CourseHelper.formatCourses(squashCourses,
-                                                multipleSlot, slots, BooleanUtils.toBooleanObject(searchTeacher)))) :
-                                        new JsonArray(CourseHelper.formatCourses(squashCourses, multipleSlot,
+                                                slots, BooleanUtils.toBooleanObject(searchTeacher)))) :
+                                        new JsonArray(CourseHelper.formatCourses(squashCourses,
                                                 slots, BooleanUtils.toBooleanObject(searchTeacher)))
                                 ));
                             });

@@ -32,15 +32,15 @@ public interface CourseService {
      */
     void listCourses(String structureId, List<String> teachersList, List<String> groupsList,
                      String start, String end, String startTime, String endTime, boolean forgottenFilter,
-                     MultipleSlotSettings multipleSlot, Handler<Either<String, JsonArray>> handler);
+                     boolean multipleSlot, Handler<Either<String, JsonArray>> handler);
 
     void listCourses(String structureId, List<String> teachersList, List<String> groupsList,
                      String start, String end, String startTime, String endTime, boolean forgottenFilter,
-                     MultipleSlotSettings multipleSlot, String limit, String offset, String descendingDate,
+                     boolean multipleSlot, String limit, String offset, String descendingDate,
                      Handler<Either<String, JsonArray>> handler);
 
     void listCourses(String structureId, List<String> teachersList, List<String> groupsList,
                      String start, String end, String startTime, String endTime, boolean forgottenFilter,
-                     MultipleSlotSettings multipleSlot, String limit, String offset, String descendingDate,
+                     boolean multipleSlot, String limit, String offset, String descendingDate,
                      String isWithTeacherFilter, Handler<Either<String, JsonArray>> handler);
 }

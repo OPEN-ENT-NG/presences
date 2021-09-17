@@ -196,10 +196,8 @@ public class CreateDailyPresenceWorker extends BusModBase implements Handler<Mes
         settingsService.retrieveMultipleSlots(structureId)
                 .onFailure(fail -> handler.handle(new Either.Left<>(fail.getMessage())))
                 .onSuccess(res -> {
-                    MultipleSlotSettings multipleSlot = new MultipleSlotSettings();
-                    multipleSlot.setUserValue(res.getBoolean(Field.ALLOW_MULTIPLE_SLOTS, true));
                     courseService.listCourses(structureId, new ArrayList<>(), new ArrayList<>(), date, date,
-                            startTime, endTime, true, multipleSlot, handler);
+                            startTime, endTime, true, res.getBoolean(Field.ALLOW_MULTIPLE_SLOTS, true), handler);
                 });
     }
 
