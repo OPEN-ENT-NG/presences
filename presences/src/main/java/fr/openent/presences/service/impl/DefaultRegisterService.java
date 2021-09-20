@@ -901,7 +901,8 @@ public class DefaultRegisterService extends DBService implements RegisterService
                             List<Course> squashCourses = SquashHelper.squash(coursesEvent, splitCoursesEvent,
                                     registers, new MultipleSlotSettings(multipleSlot));
 
-                            promise.complete(filterLastForgottenRegisterCourses(squashCourses, teacherIds, groupNames));
+                            promise.complete(filterLastForgottenRegisterCourses(squashCourses, teacherIds, groupNames,
+                                    multipleSlot));
                         });
 
                 formatCourseTeachersAndSubjects(courses, FutureHelper.handlerJsonArray(teachersFuture));
@@ -931,11 +932,14 @@ public class DefaultRegisterService extends DBService implements RegisterService
         });
     }
 
-    private JsonArray filterLastForgottenRegisterCourses(List<Course> courses, List<String> teacherIds, List<String> groupNames) {
+    private JsonArray filterLastForgottenRegisterCourses(List<Course> courses, List<String> teacherIds,
+                                                         List<String> groupNames, boolean multipleSlot) {
         final int numberRegisters = 16;
         courses = courses.stream().filter(course -> (teacherIds.isEmpty() || courseHasTeacherOfId(course.toJSON(), teacherIds))
                         && (groupNames.isEmpty() || courseHasClassOrGroupName(course.toJSON(), groupNames))
-                        && !course.getTeachers().isEmpty() && course.getRegisterId() != null)
+                        && !course.getTeachers().isEmpty()
+                        && course.getRegisterId() != null
+                        && course.isSplitSlot() == multipleSlot)
                 .sorted((o1, o2) -> o2.getStartDate().compareToIgnoreCase(o1.getStartDate()))
                 .limit(numberRegisters)
                 .sorted((o1, o2) -> o1.getStartDate().compareToIgnoreCase(o2.getStartDate()))
