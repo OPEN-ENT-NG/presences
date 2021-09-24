@@ -2,13 +2,11 @@ package fr.openent.presences.common.service.impl;
 
 import fr.openent.presences.common.helper.FutureHelper;
 import fr.openent.presences.common.service.GroupService;
+import fr.openent.presences.core.constants.*;
 import fr.openent.presences.db.DBService;
 import fr.openent.presences.enums.GroupType;
 import fr.wseduc.webutils.Either;
-import io.vertx.core.AsyncResult;
-import io.vertx.core.CompositeFuture;
-import io.vertx.core.Future;
-import io.vertx.core.Handler;
+import io.vertx.core.*;
 import io.vertx.core.eventbus.EventBus;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
@@ -17,9 +15,8 @@ import io.vertx.core.logging.LoggerFactory;
 import org.entcore.common.neo4j.Neo4j;
 import org.entcore.common.neo4j.Neo4jResult;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
+import java.util.*;
+import java.util.stream.*;
 
 public class DefaultGroupService extends DBService implements GroupService {
 
@@ -52,6 +49,37 @@ public class DefaultGroupService extends DBService implements GroupService {
         getIdsFromClassOrGroups(structureId, groups, GroupType.GROUP, FutureHelper.handlerJsonArray(groupFuture));
         getIdsFromClassOrGroups(structureId, classes, GroupType.CLASS, FutureHelper.handlerJsonArray(classFuture));
         getIdsFromClassOrGroups(structureId, groups, GroupType.MANUAL_GROUP, FutureHelper.handlerJsonArray(manualGroupFuture));
+    }
+
+    @Override
+    @SuppressWarnings("unchecked")
+    public Future<List<String>> getGroupsIdList(String structureId, List<String> groupClassNames) {
+        Promise<List<String>> promise = Promise.promise();
+
+        if (groupClassNames == null || groupClassNames.isEmpty()) {
+            promise.complete(new ArrayList<>());
+        } else {
+            getGroupsId(structureId, new JsonArray(groupClassNames),
+                    new JsonArray(groupClassNames), res -> {
+                if (res.isLeft()) {
+                    promise.fail(res.left().getValue());
+                } else {
+                    JsonArray classes = res.right().getValue().getJsonArray(Field.CLASSES);
+                    JsonArray groups = res.right().getValue().getJsonArray(Field.GROUPS);
+                    JsonArray manualGroups = res.right().getValue().getJsonArray(Field.MANUALGROUPS);
+                    JsonArray audiences = new JsonArray().addAll(classes).addAll(groups).addAll(manualGroups);
+                    List<String> audienceIds = ((List<JsonObject>) audiences.getList())
+                            .stream()
+                            .map(audience -> audience.getString(Field.ID))
+                            .filter(Objects::nonNull)
+                            .distinct()
+                            .collect(Collectors.toList());
+
+                    promise.complete(audienceIds);
+                }
+            });
+        }
+        return promise.future();
     }
 
     @Override

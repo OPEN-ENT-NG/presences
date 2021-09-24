@@ -3,9 +3,12 @@ package fr.openent.presences.core.constants;
 public class Field {
 
     public static final String ID = "id";
+    public static final String _ID = "_id";
     public static final String NAME = "name";
     public static final String STRUCTURE = "structure";
+    public static final String STRUCTUREID = "structureId";
     public static final String TEACHER = "teacher";
+    public static final String TEACHERIDS = "teacherIds";
     public static final String STUDENT_ID = "student_id";
     public static final String STUDENT = "student";
     public static final String SEARCH_TEACHER = "searchTeacher";
@@ -15,7 +18,9 @@ public class Field {
 
     // Dates
     public static final String END_DATE = "end_date";
+    public static final String ENDDATE = "endDate";
     public static final String START_DATE = "start_date";
+    public static final String STARTDATE = "startDate";
     public static final String START = "start";
     public static final String END = "end";
     public static final String START_TIME = "startTime";
