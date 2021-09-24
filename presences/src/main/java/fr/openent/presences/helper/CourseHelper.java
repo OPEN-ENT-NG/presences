@@ -1,12 +1,10 @@
 package fr.openent.presences.helper;
 
 import fr.openent.presences.common.helper.DateHelper;
+import fr.openent.presences.core.constants.*;
 import fr.openent.presences.model.*;
 import fr.wseduc.webutils.Either;
-import io.vertx.core.AsyncResult;
-import io.vertx.core.Future;
-import io.vertx.core.Handler;
-import io.vertx.core.MultiMap;
+import io.vertx.core.*;
 import io.vertx.core.eventbus.EventBus;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
@@ -153,10 +151,10 @@ public class CourseHelper {
                 .put("limit", limit)
                 .put("offset", offset)
                 .put("descendingDate", descendingDate)
-                .put("isWithTeacherFilter", isWithTeacherFilter)
+                .put("searchTeacher", isWithTeacherFilter)
                 .put("crossDateFilter", crossDateFilter);
 
-        eb.send("viescolaire", action, event -> {
+        eb.request("viescolaire", action, event -> {
             if (event.failed() || event.result() == null || "error".equals(((JsonObject) event.result().body()).getString("status"))) {
                 String err = "[CourseHelper@getCourses] Failed to retrieve courses " + event.cause().getMessage();
                 LOGGER.error(err);
@@ -284,6 +282,31 @@ public class CourseHelper {
     public void getCourseTeachers(JsonArray teachers, Handler<Either<String, JsonArray>> handler) {
         String teacherQuery = "MATCH (u:User) WHERE u.id IN {teacherIds} RETURN u.id as id, (u.lastName + ' ' + u.firstName) as displayName";
         Neo4j.getInstance().execute(teacherQuery, new JsonObject().put("teacherIds", teachers), Neo4jResult.validResultHandler(handler));
+    }
+
+    /**
+     * Add teacher and subject objects to courses in {@link JsonArray}
+     * @param   courses courses {@link JsonArray}
+     * @return  {@link Future} of {@link List<JsonArray>}
+     */
+    public Future<JsonArray> formatCourseTeachersAndSubjects(JsonArray courses) {
+        Promise<JsonArray> promise = Promise.promise();
+        JsonArray teachersIds = new JsonArray();
+        CourseHelper.setTeachersCourses(courses, teachersIds);
+
+        getCourseTeachers(teachersIds, teachRes -> {
+            if (teachRes.isLeft()) {
+                String message = String.format("[Presences@%s::formatCourseTeachersAndSubjects] " +
+                        "Failed to get course teachers.", this.getClass().getSimpleName());
+                promise.fail(message);
+            }
+            JsonArray teachers = teachRes.right().getValue();
+            JsonObject teacherMap = MapHelper.transformToMap(teachers, Field.ID);
+
+            formatCourse(courses, teacherMap);
+            promise.complete(courses);
+        });
+        return promise.future();
     }
 
     /**

@@ -11,16 +11,58 @@ import java.util.List;
 public interface RegisterService {
 
     /**
-     * List register based on given structure identifier, start date and end date
+     * List registers based on given structure identifier, start date and end date
      *
      * @param structureId structure identifier
-     * @param start       start date
-     * @param end         end date
-     * @param handler     function handler returning data
+     * @param start       start date filter (format YYY-MM-DD)
+     * @param end         end date filter (format YYY-MM-DD)
+     * @param handler     function {@link Handler} returning data
      */
     void list(String structureId, String start, String end, Handler<Either<String, JsonArray>> handler);
 
+    /**
+     *  List registers based on given parameters
+     * @param structureId       structure identifier
+     * @param start             start date filter (format YYY-MM-DD)
+     * @param end               end date filter (format YYY-MM-DD)
+     * @param courseIds         {@link List} of course identifier
+     * @param teacherIds        {@link List} of teacher identifiers
+     * @param groupIds          {@link List} of group identifiers
+     * @param forgottenFilter   true -> fetch only forgotten registers;
+     *                          false/null -> fetch all registers
+     * @param limit             limit of registers
+     * @param offset            offset to get registers
+     * @param handler           function {@link Handler} returning data
+     */
+    void list(String structureId, String start, String end, List<String> courseIds,
+              List<String> teacherIds, List<String> groupIds, boolean forgottenFilter,
+              String limit, String offset, Handler<Either<String, JsonArray>> handler);
+
+    /**
+     *  List registers from course identifiers
+     * @param structureId       structure identifier
+     * @param courseIds         {@link List} of course identifier
+     * @param handler           function {@link Handler} returning data
+     */
     void list(String structureId, List<String> courseIds, Handler<Either<String, JsonArray>> handler);
+
+    /**
+     *  List registers based on given parameters
+     * @param structureId       structure identifier
+     * @param start             start date filter (format YYY-MM-DD)
+     * @param end               end date filter (format YYY-MM-DD)
+     * @param courseIds         {@link List} of course identifier
+     * @param teacherIds        {@link List} of teacher identifiers
+     * @param groupIds          {@link List} of group identifiers
+     * @param forgottenFilter   true -> fetch only forgotten registers;
+     *                          false/null -> fetch all registers
+     * @param limit             limit of registers
+     * @param offset            offset to get registers
+     * @return {@link Future} of {@link List}
+     */
+    Future<JsonArray> list(String structureId, String start, String end, List<String> courseIds,
+                           List<String> teacherIds, List<String> groupIds, boolean forgottenFilter,
+                           String limit, String offset);
 
     /**
      * Create register

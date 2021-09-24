@@ -2,8 +2,7 @@ package fr.openent.presences.common.service;
 
 import fr.openent.presences.enums.GroupType;
 import fr.wseduc.webutils.Either;
-import io.vertx.core.AsyncResult;
-import io.vertx.core.Handler;
+import io.vertx.core.*;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 
@@ -20,6 +19,14 @@ public interface GroupService {
      * @param handler      Function handler returning data
      */
     void getGroupsId(String structureId, JsonArray groups, JsonArray classes, Handler<Either<String, JsonObject>> handler);
+
+    /**
+     * Get group/class identifiers from their names
+     * @param structureId          structure identifier
+     * @param groupClassNames      group and class names
+     * @return {@link Future} of {@link List}
+     */
+    Future<List<String>> getGroupsIdList(String structureId, List<String> groupClassNames);
 
     /**
      * Get group users

@@ -9,8 +9,7 @@ import fr.openent.presences.common.service.impl.DefaultGroupService;
 import fr.openent.presences.common.viescolaire.Viescolaire;
 import fr.openent.presences.core.constants.*;
 import fr.openent.presences.db.DBService;
-import fr.openent.presences.enums.EventType;
-import fr.openent.presences.enums.GroupType;
+import fr.openent.presences.enums.*;
 import fr.openent.presences.helper.*;
 import fr.openent.presences.model.*;
 import fr.openent.presences.service.ExemptionService;
@@ -61,17 +60,70 @@ public class DefaultRegisterService extends DBService implements RegisterService
 
     @Override
     public void list(String structureId, String start, String end, Handler<Either<String, JsonArray>> handler) {
+        this.list(structureId, start, end, null, null, null,
+                false, null, null, handler);
+    }
+
+    @Override
+    public void list(String structureId, String start, String end, List<String> courseIds,
+                     List<String> teacherIds, List<String> groupIds, boolean forgottenFilter,
+                     String limit, String offset, Handler<Either<String, JsonArray>> handler) {
         String query = "SELECT id, start_date, end_date, course_id, state_id, notified, split_slot " +
-                "FROM " + Presences.dbSchema + ".register " +
-                "WHERE register.structure_id = ? " +
+                "FROM " + Presences.dbSchema + ".register AS register ";
+
+        if (groupIds != null && !groupIds.isEmpty()) {
+            query += "INNER JOIN presences.rel_group_register AS rg ON (register.id = rg.register_id) ";
+        }
+
+        query += "WHERE register.structure_id = ? " +
                 "AND register.start_date > ? " +
                 "AND register.end_date < ?";
+
         JsonArray params = new JsonArray()
                 .add(structureId)
-                .add(start)
-                .add(end);
+                .add(start + " " + EventQueryHelper.DEFAULT_START_TIME)
+                .add(end + " " + EventQueryHelper.DEFAULT_END_TIME);
 
-        Sql.getInstance().prepared(query, params, SqlResult.validResultHandler(handler));
+        if (teacherIds != null && !teacherIds.isEmpty()) {
+            query += " AND register.personnel_id IN " + Sql.listPrepared(teacherIds.toArray());
+            params.addAll(new JsonArray(teacherIds));
+        }
+
+        if (groupIds != null && !groupIds.isEmpty()) {
+            query += " AND rg.group_id IN " + Sql.listPrepared(groupIds.toArray());
+            params.addAll(new JsonArray(groupIds));
+        }
+
+        if (courseIds != null && !courseIds.isEmpty()) {
+            query += " AND register.course_id IN " + Sql.listPrepared(courseIds.toArray());
+            params.addAll(new JsonArray(courseIds));
+        }
+
+        if (forgottenFilter) {
+            query += " AND register.state_id != " + RegisterStatus.DONE.getStatus();
+        }
+
+        if (limit != null && offset != null) {
+            query += " ORDER BY register.start_date, register.id";
+            query += " OFFSET ? LIMIT ? ";
+            params.add(offset);
+            params.add(limit);
+        }
+
+        sql.prepared(query, params, SqlResult.validResultHandler(handler));
+    }
+
+    @Override
+    public Future<JsonArray> list(String structureId, String start, String end, List<String> courseIds,
+                                  List<String> teacherIds, List<String> groupIds, boolean forgottenFilter,
+                                  String limit, String offset) {
+
+        Promise<JsonArray> promise = Promise.promise();
+
+        this.list(structureId, start, end, courseIds, teacherIds, groupIds, forgottenFilter,
+                limit, offset, FutureHelper.handlerJsonArray(promise));
+
+        return promise.future();
     }
 
     @Override
@@ -886,10 +938,10 @@ public class DefaultRegisterService extends DBService implements RegisterService
                 promise.fail(res.left().getValue());
             } else {
                 JsonArray courses = res.right().getValue();
-                Promise<JsonArray> teachersFuture = Promise.promise();
+                Future<JsonArray> teachersFuture = courseHelper.formatCourseTeachersAndSubjects(courses);
                 Promise<JsonArray> slotsFuture = Promise.promise();
 
-                CompositeFuture.all(teachersFuture.future(), slotsFuture.future())
+                CompositeFuture.all(teachersFuture, slotsFuture.future())
                         .onFailure(fail -> promise.fail(fail.getCause().getMessage()))
                         .onSuccess(ar -> {
                             List<Slot> slots = SlotHelper.getSlotListFromJsonArray(slotsFuture.future().result(),
@@ -905,31 +957,11 @@ public class DefaultRegisterService extends DBService implements RegisterService
                                     multipleSlot));
                         });
 
-                formatCourseTeachersAndSubjects(courses, FutureHelper.handlerJsonArray(teachersFuture));
                 Viescolaire.getInstance().getSlotsFromProfile(structureId, FutureHelper.handlerJsonArray(slotsFuture));
             }
         });
 
         return promise.future();
-    }
-
-
-    private void formatCourseTeachersAndSubjects(JsonArray courses, Handler<Either<String, JsonArray>> handler) {
-        JsonArray teachersIds = new JsonArray();
-        CourseHelper.setTeachersCourses(courses, teachersIds);
-
-        courseHelper.getCourseTeachers(teachersIds, teachRes -> {
-            if (teachRes.isLeft()) {
-                String message = "[Presences@DefaultCourseService::getCoursesFromRegisters] " +
-                        "Failed to get course teachers.";
-                handler.handle(new Either.Left<>(message));
-            }
-            JsonArray teachers = teachRes.right().getValue();
-            JsonObject teacherMap = MapHelper.transformToMap(teachers, "id");
-
-            CourseHelper.formatCourse(courses, teacherMap);
-            handler.handle(new Either.Right<>(courses));
-        });
     }
 
     private JsonArray filterLastForgottenRegisterCourses(List<Course> courses, List<String> teacherIds,

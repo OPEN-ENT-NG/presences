@@ -1,10 +1,7 @@
 package fr.openent.presences.common.helper;
 
 import fr.wseduc.webutils.Either;
-import io.vertx.core.AsyncResult;
-import io.vertx.core.CompositeFuture;
-import io.vertx.core.Future;
-import io.vertx.core.Handler;
+import io.vertx.core.*;
 import io.vertx.core.impl.CompositeFutureImpl;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
@@ -27,6 +24,17 @@ public class FutureHelper {
             } else {
                 LOGGER.error(event.left().getValue());
                 future.fail(event.left().getValue());
+            }
+        };
+    }
+
+    public static Handler<Either<String, JsonArray>> handlerJsonArray(Promise<JsonArray> promise) {
+        return event -> {
+            if (event.isRight()) {
+                promise.complete(event.right().getValue());
+            } else {
+                LOGGER.error(event.left().getValue());
+                promise.fail(event.left().getValue());
             }
         };
     }

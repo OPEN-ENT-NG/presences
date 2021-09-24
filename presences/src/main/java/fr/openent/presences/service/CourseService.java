@@ -2,7 +2,7 @@ package fr.openent.presences.service;
 
 import fr.openent.presences.model.*;
 import fr.wseduc.webutils.Either;
-import io.vertx.core.Handler;
+import io.vertx.core.*;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 
@@ -43,4 +43,54 @@ public interface CourseService {
                      String start, String end, String startTime, String endTime, boolean forgottenFilter,
                      boolean multipleSlot, String limit, String offset, String descendingDate,
                      String isWithTeacherFilter, Handler<Either<String, JsonArray>> handler);
+
+    /**
+     * List registers after fetching courses
+     * @param structureId       structure identifier
+     * @param teacherIds        {@link List} of teacher identifiers
+     * @param groupsList        {@link List} of group names
+     * @param start             start date filter (format YYY-MM-DD)
+     * @param end               end date filter (format YYY-MM-DD)
+     * @param startTime         start time filter (optional, format HH:mm)
+     * @param endTime           end time filter (optional, format HH:mm)
+     * @param multipleSlot      multiple slot filter
+     * @param limit             limit of courses
+     * @param offset            offset to get courses
+     * @param descendingDate    true -> order courses from most recent to the oldest;
+     *                          false -> order courses from oldest to most recent
+     * @param searchTeacher     true -> fetch courses with teachers;
+     *                          false -> fetch courses without teachers
+     * @return                  {@link Future} of {@link List}
+     */
+    Future<JsonArray> listRegistersWithCourses(String structureId, List<String> teacherIds, List<String> groupsList,
+                                  String start, String end, String startTime, String endTime,
+                                  boolean multipleSlot,
+                                  String limit, String offset, String descendingDate, String searchTeacher);
+
+    /**
+     * List forgotten registers squashed with corresponding courses
+     * @param structureId           structure identifier
+     * @param teacherIds            {@link List} of teacher identifiers
+     * @param groupsList            {@link List} of group names
+     * @param startDate             start date filter (format YYY-MM-DD)
+     * @param endDate               end date filter (format YYY-MM-DD)
+     * @param multipleSlot          multiple slot filter
+     * @param limit                 limit of courses
+     * @param offset                offset to get courses
+     * @param isWithTeacherFilter   true -> fetch courses with teachers;
+     *                              false -> fetch courses without teachers
+     * @return                      {@link Future} of {@link List}
+     */
+    Future<JsonArray> listCoursesWithForgottenRegisters(String structureId, List<String> teacherIds, List<String> groupsList, String startDate,
+                                                        String endDate, boolean multipleSlot,
+                                                        String limit, String offset, String isWithTeacherFilter);
+
+    /**
+     * Fetch list of courses ids with no teachers
+     * @param structureId       structure identifier
+     * @param startDate         start date filter
+     * @param endDate           end date filter
+     * @return {@link Future} of {@link List}
+     */
+    Future<List<String>> getCourseIdsWithoutTeacher(String structureId, String startDate, String endDate);
 }
