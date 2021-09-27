@@ -7,6 +7,7 @@ import fr.openent.presences.common.service.GroupService;
 import fr.openent.presences.common.service.UserService;
 import fr.openent.presences.common.service.impl.DefaultGroupService;
 import fr.openent.presences.common.service.impl.DefaultUserService;
+import fr.openent.presences.core.constants.*;
 import fr.openent.presences.db.DBService;
 import fr.openent.presences.enums.EventType;
 import fr.openent.presences.helper.*;
@@ -874,6 +875,7 @@ public class DefaultAbsenceService extends DBService implements AbsenceService {
     }
 
     @Override
+    @SuppressWarnings("unchecked")
     public void retrieve(String structure, List<String> students, String start, String end, Boolean justified, Boolean regularized, List<Integer> reasons, Handler<Either<String, JsonArray>> handler) {
         JsonArray params = new JsonArray().add(structure);
         String query = "SELECT id, start_date, end_date, student_id, reason_id, counsellor_regularisation, followed " +
@@ -903,7 +905,9 @@ public class DefaultAbsenceService extends DBService implements AbsenceService {
 
         sql.prepared(query, params, SqlResult.validResultHandler(res -> {
             if (res.isLeft()) {
-                LOGGER.error("[Presences@DefaultAbsenceService] Failed to retrieve absences", res.left().getValue());
+                String message = String.format("[Presences@%s::retrieve] Failed to retrieve absences",
+                        this.getClass().getSimpleName());
+                LOGGER.error(message, res.left().getValue());
                 handler.handle(res.left());
                 return;
             }
@@ -914,10 +918,16 @@ public class DefaultAbsenceService extends DBService implements AbsenceService {
                 return;
             }
 
-            List<String> studentIds = ((List<JsonObject>) absences.getList()).stream().map(absence -> absence.getString("student_id")).collect(Collectors.toList());
+            List<String> studentIds = ((List<JsonObject>) absences.getList())
+                    .stream()
+                    .map(absence -> absence.getString(Field.STUDENT_ID))
+                    .collect(Collectors.toList());
+
             userService.getStudents(studentIds, users -> {
                 if (users.isLeft()) {
-                    LOGGER.error("[Presences@DefaultAbsenceService] Failed to retrieve absences users", users.left().getValue());
+                    String message = String.format("[Presences@%s::retrieve] Failed to retrieve absences users",
+                            this.getClass().getSimpleName());
+                    LOGGER.error(message, users.left().getValue());
                     handler.handle(users.left());
                     return;
                 }
@@ -925,11 +935,16 @@ public class DefaultAbsenceService extends DBService implements AbsenceService {
                 JsonArray result = users.right().getValue();
                 Map<String, JsonObject> studentMap = ((List<JsonObject>) result.getList())
                         .stream()
-                        .collect(Collectors.toMap(user -> user.getString("id"), Function.identity(), (student1, student2) -> student1));
+                        .collect(Collectors.toMap(user -> user.getString(Field.ID),
+                                Function.identity(), (student1, student2) -> student1));
 
                 ((List<JsonObject>) absences.getList())
-                        .forEach(absence -> absence.put("student", studentMap.get(absence.getString("student_id"))));
-                handler.handle(new Either.Right<>(absences));
+                        .forEach(absence -> absence.put(Field.STUDENT,
+                                studentMap.get(absence.getString(Field.STUDENT_ID))));
+
+                handler.handle(new Either.Right<>(new JsonArray(absences.stream()
+                        .filter(absence -> ((JsonObject) absence).getJsonObject(Field.STUDENT)
+                        .getString(Field.NAME) != null).collect(Collectors.toList()))));
             });
         }));
     }

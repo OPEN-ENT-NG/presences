@@ -13,7 +13,8 @@ export class CounsellorAbsence {
     student: {
         id: string,
         displayName: string,
-        className: string
+        className: string,
+        name?: string
     };
 
     async updateReason() {

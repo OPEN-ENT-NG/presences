@@ -29,8 +29,11 @@ export const absenceService: AbsenceService = {
         return Mix.castArrayAs(Absence, await retrieve(structure, students, [], start, end, justified, regularized, reasons));
     },
 
-    async getCounsellorAbsence(structure: string, students: string[], groups: string[], start: string, end: string, justified: boolean, regularized: boolean, reasons: number[]): Promise<CounsellorAbsence[]> {
-        return Mix.castArrayAs(CounsellorAbsence, await retrieve(structure, students, groups, start, end, justified, regularized, reasons));
+    async getCounsellorAbsence(structure: string, students: string[], groups: string[],
+                               start: string, end: string, justified: boolean, regularized: boolean,
+                               reasons: number[]): Promise<CounsellorAbsence[]> {
+        return Mix.castArrayAs(CounsellorAbsence, await retrieve(structure, students, groups, start, end,
+            justified, regularized, reasons)).filter((absence: CounsellorAbsence) => absence.student.name != null);
     },
 
     async updateFollowed(ids: number[], followed: boolean): Promise<AxiosResponse> {
