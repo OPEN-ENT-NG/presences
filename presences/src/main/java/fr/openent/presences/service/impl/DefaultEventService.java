@@ -405,7 +405,7 @@ public class DefaultEventService extends DBService implements EventService {
 
             // If we want to fetch events with NO reasonId, array reasonIds fetched is empty
             // AND noReason is TRUE
-            if (listReasonIds != null && listReasonIds.isEmpty() && (noReason != null && noReason)) {
+            if ((listReasonIds == null || listReasonIds.isEmpty()) && (noReason != null && noReason)) {
                 query += " AND (reason_id IS NULL " + (regularized != null ? " OR counsellor_regularisation = " + regularized + "" : "") + ") ";
             }
 
