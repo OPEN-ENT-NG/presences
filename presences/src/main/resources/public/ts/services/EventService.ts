@@ -148,7 +148,7 @@ export const eventService: EventService = {
         const listReasonIds: string = eventRequest.listReasonIds ? `&reasonIds=${eventRequest.listReasonIds}` : "";
         const userId: string = eventRequest.userId.length === 0 ? "" : `&userId=${eventRequest.userId}`;
         const classes: string = eventRequest.classes.length === 0 ? "" : `&classes=${eventRequest.classes}`;
-        const regularized: string = eventRequest.regularized ? `&regularized=${!eventRequest.regularized}` : "";
+        const regularized: string = (eventRequest.regularized != null) ? `&regularized=${eventRequest.regularized}` : "";
 
         return `${url}${structureId}${startDate}${endDate}${noReason}${eventType}${listReasonIds}${userId}${classes}${regularized}`;
     },
