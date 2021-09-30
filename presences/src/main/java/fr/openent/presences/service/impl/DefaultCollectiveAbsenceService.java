@@ -868,14 +868,12 @@ public class DefaultCollectiveAbsenceService extends DBService implements Collec
     }
 
     private JsonObject getDeleteEventsOnDeleteStatement(Absence absence) {
-        String query = "DELETE FROM " + Presences.dbSchema + ".event" +
-                " WHERE student_id = ? AND start_date < ? AND end_date > ? AND counsellor_input = true AND type_id = "
-                + EventType.ABSENCE.getType();
+        String query = "SELECT " + Presences.dbSchema + ".function_delete_events_synchronously(?,?,?)";
 
         JsonArray params = new JsonArray()
                 .add(absence.getStudentId())
-                .add(absence.getEndDate())
-                .add(absence.getStartDate());
+                .add(absence.getStartDate())
+                .add(absence.getEndDate());
 
         return new JsonObject()
                 .put("action", "prepared")
