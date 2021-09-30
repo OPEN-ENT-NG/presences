@@ -840,15 +840,13 @@ public class DefaultAbsenceService extends DBService implements AbsenceService {
     }
 
     private void deleteEventsOnDelete(JsonObject absenceResult, Handler<Either<String, JsonObject>> handler) {
-        String query = "DELETE FROM " + Presences.dbSchema + ".event" +
-                " WHERE student_id = ? AND start_date >= ? AND end_date <= ? AND counsellor_input = true AND type_id = "
-                + EventType.ABSENCE.getType();
+        String query = "SELECT " + Presences.dbSchema + ".function_delete_events_synchronously(?,?,?)";
 
         JsonArray params = new JsonArray()
                 .add(absenceResult.getString("student_id"))
                 .add(absenceResult.getString("start_date"))
                 .add(absenceResult.getString("end_date"));
-        Sql.getInstance().prepared(query, params, SqlResult.validUniqueResultHandler(handler));
+        sql.prepared(query, params, SqlResult.validUniqueResultHandler(handler));
     }
 
     private void resetEventsOnDelete(JsonObject absenceResult, Handler<Either<String, JsonObject>> handler) {
