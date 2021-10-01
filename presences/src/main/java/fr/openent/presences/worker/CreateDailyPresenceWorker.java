@@ -61,7 +61,7 @@ public class CreateDailyPresenceWorker extends BusModBase implements Handler<Mes
     private void processCreateDailyPresences() {
         String today = DateHelper.getCurrentDay();
         String startDayTime = "00:00";
-        String currentTime = DateHelper.getCurrentDate(DateHelper.HOUR_MINUTES, Calendar.HOUR, 2);
+        String currentTime = DateHelper.getCurrentDate(DateHelper.HOUR_MINUTES);
 
         String queryStructures = "SELECT id_etablissement as id FROM " + Presences.dbSchema + " .etablissements_actifs";
 
