@@ -166,7 +166,6 @@ public class DefaultCourseService extends DBService implements CourseService {
         Promise<JsonArray> promise = Promise.promise();
 
         Future<List<String>> noTeacherFuture = getCourseIdsWithoutTeacher(structureId, startDate, endDate);
-
         Future<List<String>> groupIdsFuture = groupService.getGroupsIdList(structureId, groupsList);
 
         List<Future<List<String>>> futures = new ArrayList<>();
@@ -187,7 +186,7 @@ public class DefaultCourseService extends DBService implements CourseService {
                         }
                         registerService.list(structureId, startDate, endDate, noTeacherFuture.result(),
                                         teacherIds, groupIdsFuture.result(),
-                                        true, limit, offset)
+                                        true, BooleanUtils.toBooleanObject(isWithTeacherFilter), limit, offset)
                                 .onFailure(fail -> promise.fail(fail.getCause().getMessage()))
                                 .onSuccess(registers -> {
 

@@ -23,6 +23,7 @@ import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
+import org.apache.commons.lang3.*;
 import org.entcore.common.mongodb.MongoDbResult;
 import org.entcore.common.neo4j.Neo4j;
 import org.entcore.common.neo4j.Neo4jResult;
@@ -61,13 +62,13 @@ public class DefaultRegisterService extends DBService implements RegisterService
     @Override
     public void list(String structureId, String start, String end, Handler<Either<String, JsonArray>> handler) {
         this.list(structureId, start, end, null, null, null,
-                false, null, null, handler);
+                false, null, null, null, handler);
     }
 
     @Override
     public void list(String structureId, String start, String end, List<String> courseIds,
                      List<String> teacherIds, List<String> groupIds, boolean forgottenFilter,
-                     String limit, String offset, Handler<Either<String, JsonArray>> handler) {
+                     Boolean isWithTeacherFilter, String limit, String offset, Handler<Either<String, JsonArray>> handler) {
         String query = "SELECT id, start_date, end_date, course_id, state_id, notified, split_slot " +
                 "FROM " + Presences.dbSchema + ".register AS register ";
 
@@ -103,6 +104,13 @@ public class DefaultRegisterService extends DBService implements RegisterService
             query += " AND register.state_id != " + RegisterStatus.DONE.getStatus();
         }
 
+        if (isWithTeacherFilter != null && isWithTeacherFilter.equals(Boolean.TRUE)) {
+            query += " AND ( SELECT COUNT(id) FROM presences.rel_teacher_register rt" +
+                    " RIGHT JOIN presences.register r ON (r.id = rt.register_id)" +
+                    " WHERE (teacher_id != '' OR teacher_id IS NULL)" +
+                    " AND id = register.id ) > 0";
+        }
+
         if (limit != null && offset != null) {
             query += " ORDER BY register.start_date, register.id";
             query += " OFFSET ? LIMIT ? ";
@@ -116,11 +124,11 @@ public class DefaultRegisterService extends DBService implements RegisterService
     @Override
     public Future<JsonArray> list(String structureId, String start, String end, List<String> courseIds,
                                   List<String> teacherIds, List<String> groupIds, boolean forgottenFilter,
-                                  String limit, String offset) {
+                                  Boolean isWithTeacherFilter, String limit, String offset) {
 
         Promise<JsonArray> promise = Promise.promise();
 
-        this.list(structureId, start, end, courseIds, teacherIds, groupIds, forgottenFilter,
+        this.list(structureId, start, end, courseIds, teacherIds, groupIds, forgottenFilter, isWithTeacherFilter,
                 limit, offset, FutureHelper.handlerJsonArray(promise));
 
         return promise.future();
@@ -159,72 +167,75 @@ public class DefaultRegisterService extends DBService implements RegisterService
             }
 
             String query = "SELECT nextval('" + Presences.dbSchema + ".register_id_seq') as id";
-            Sql.getInstance().raw(query, SqlResult.validUniqueResultHandler(idEvent -> {
+            sql.raw(query, SqlResult.validUniqueResultHandler(idEvent -> {
                 if (idEvent.isLeft()) {
-                    handler.handle(new Either.Left<>("[Presences@DefaultRegisterService] Failed to query next register identifier"));
+                    String message = String.format("[Presences@%s::create] Failed to query next register identifier : %s",
+                            this.getClass().getSimpleName(), idEvent.left().getValue());
+
+                    handler.handle(new Either.Left<>(message));
                     return;
                 }
 
                 try {
-                    Number id = idEvent.right().getValue().getInteger("id");
-                    groupService.getGroupsId(register.getString("structure_id"), register.getJsonArray("groups"),
-                            register.getJsonArray("classes"), groupsEvent -> {
+                    Number id = idEvent.right().getValue().getInteger(Field.ID);
+                    groupService.getGroupsId(register.getString(Field.STRUCTURE_ID), register.getJsonArray(Field.GROUPS),
+                            register.getJsonArray(Field.CLASSES), groupsEvent -> {
                                 if (groupsEvent.isLeft()) {
-                                    String message = "[Presences@DefaultRegisterService] Failed to retrieve group identifiers";
+                                    String message = String.format("[Presences@%s::create] Failed to retrieve group identifiers",
+                                            this.getClass().getSimpleName());
                                     LOGGER.error(message, groupsEvent.left().getValue());
                                     handler.handle(new Either.Left<>(message));
                                     return;
                                 }
 
-                                JsonArray classes = groupsEvent.right().getValue().getJsonArray("classes");
-                                JsonArray groups = groupsEvent.right().getValue().getJsonArray("groups");
-                                JsonArray manualGroups = groupsEvent.right().getValue().getJsonArray("manualGroups");
+                                JsonArray classes = groupsEvent.right().getValue().getJsonArray(Field.CLASSES);
+                                JsonArray groups = groupsEvent.right().getValue().getJsonArray(Field.GROUPS);
+                                JsonArray manualGroups = groupsEvent.right().getValue().getJsonArray(Field.MANUALGROUPS);
                                 JsonArray audiences = new JsonArray().addAll(classes).addAll(groups);
 
                                 List<String> audienceIds = ((List<JsonObject>) audiences.getList())
                                         .stream()
-                                        .map(audience -> audience.getString("id"))
+                                        .map(audience -> audience.getString(Field.ID))
                                         .filter(Objects::nonNull)
                                         .collect(Collectors.toList());
 
                                 groupService.getGroupStudents(audienceIds, studentsEvt -> {
                                     if (studentsEvt.isLeft()) {
-                                        LOGGER.error("[Presences@DefaultRegisterService::create] Failed to retrieve student groups for ids: "
-                                                + new JsonArray(audienceIds).encode(), studentsEvt.left().getValue());
+                                        String message = String.format("[Presences@%s::create] Failed to retrieve student groups for ids: %s",
+                                                this.getClass().getSimpleName(), new JsonArray(audienceIds).encode());
+                                        LOGGER.error(message, studentsEvt.left().getValue());
                                         handler.handle(new Either.Left<>(studentsEvt.left().getValue()));
                                         return;
                                     }
 
                                     JsonArray statements = new JsonArray();
                                     statements.add(getRegisterCreationStatement(id, register, user));
-                                    for (int i = 0; i < classes.size(); i++) {
-                                        String classId = classes.getJsonObject(i).getString("id");
-                                        statements.add(getGroupCreationStatement(classId, GroupType.CLASS));
-                                        statements.add(getRelRegisterGroupStatement(id, classId));
+
+                                    JsonArray teacherIds = register.getJsonArray(Field.TEACHERIDS, new JsonArray());
+
+                                    if (teacherIds.isEmpty()) {
+                                        statements.add(getRelRegisterTeacherStatement(id, ""));
                                     }
 
-                                    for (int i = 0; i < groups.size(); i++) {
-                                        String groupId = groups.getJsonObject(i).getString("id");
-                                        statements.add(getGroupCreationStatement(groupId, GroupType.GROUP));
-                                        statements.add(getRelRegisterGroupStatement(id, groupId));
+                                    for (int i = 0; i < teacherIds.size(); i++) {
+                                        statements.add(getRelRegisterTeacherStatement(id, teacherIds.getString(i)));
                                     }
 
-                                    for (int i = 0; i < manualGroups.size(); i++) {
-                                        String manualGroupId = manualGroups.getJsonObject(i).getString("id");
-                                        statements.add(getGroupCreationStatement(manualGroupId, GroupType.GROUP));
-                                        statements.add(getRelRegisterGroupStatement(id, manualGroupId));
-                                    }
+                                    statements.addAll(getGroupsCreationStatements(id, classes, GroupType.CLASS));
+                                    statements.addAll(getGroupsCreationStatements(id, groups, GroupType.GROUP));
+                                    statements.addAll(getGroupsCreationStatements(id, manualGroups, GroupType.GROUP));
 
                                     List<String> students = extractStudentIdentifiers(studentsEvt.right().getValue());
                                     if (!students.isEmpty()) {
-                                        register.put("id", id);
+                                        register.put(Field.ID, id);
                                         statements.add(absenceToEventStatement(register, students, user));
                                     }
 
-                                    Sql.getInstance().transaction(statements, event -> {
+                                    sql.transaction(statements, event -> {
                                         Either<String, JsonObject> result = SqlResult.validUniqueResult(0, event);
                                         if (result.isLeft()) {
-                                            String message = String.format("Failed to create register: %s", result.left().getValue());
+                                            String message = String.format("[Presences@%s::create] " +
+                                                    "Failed to create register: %s", this.getClass().getSimpleName(), result.left().getValue());
                                             LOGGER.error(message, result.left().getValue());
                                             handler.handle(new Either.Left<>(message));
                                         } else {
@@ -242,10 +253,22 @@ public class DefaultRegisterService extends DBService implements RegisterService
 
                             });
                 } catch (ClassCastException e) {
-                    handler.handle(new Either.Left<>("[Presences@DefaultRegisterService] Failed cast next register identifier"));
+                    String message = String.format("[Presences@%s::create] Failed cast next register identifier",
+                            this.getClass().getSimpleName());
+                    handler.handle(new Either.Left<>(message));
                 }
             }));
         });
+    }
+
+    private JsonArray getGroupsCreationStatements(Number id, JsonArray groups, GroupType type) {
+        JsonArray statements = new JsonArray();
+        for (int i = 0; i < groups.size(); i++) {
+            String groupId = groups.getJsonObject(i).getString(Field.ID);
+            statements.add(getGroupCreationStatement(groupId, type));
+            statements.add(getRelRegisterGroupStatement(id, groupId));
+        }
+        return statements;
     }
 
     private void processEventStudent(JsonObject register, List<String> students, Handler<Either<String, JsonObject>> handler,
@@ -871,6 +894,27 @@ public class DefaultRegisterService extends DBService implements RegisterService
         JsonArray params = new JsonArray()
                 .add(id)
                 .add(groupId);
+
+        return new JsonObject()
+                .put("statement", query)
+                .put("values", params)
+                .put("action", "prepared");
+    }
+
+
+    /**
+     * Get statement that create relation between register and teacher
+     *
+     * @param id        register identifier
+     * @param teacherId teacher identifier
+     * @return Statement
+     */
+    private JsonObject getRelRegisterTeacherStatement(Number id, String teacherId) {
+        String query = "INSERT INTO " + Presences.dbSchema + ".rel_teacher_register (register_id, teacher_id) VALUES (?, ?) " +
+                "ON CONFLICT DO NOTHING;";
+        JsonArray params = new JsonArray()
+                .add(id)
+                .add(teacherId);
 
         return new JsonObject()
                 .put("statement", query)
