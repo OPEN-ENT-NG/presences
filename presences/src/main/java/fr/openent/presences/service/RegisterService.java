@@ -22,20 +22,21 @@ public interface RegisterService {
 
     /**
      *  List registers based on given parameters
-     * @param structureId       structure identifier
-     * @param start             start date filter (format YYY-MM-DD)
-     * @param end               end date filter (format YYY-MM-DD)
-     * @param courseIds         {@link List} of course identifier
-     * @param teacherIds        {@link List} of teacher identifiers
-     * @param groupIds          {@link List} of group identifiers
-     * @param forgottenFilter   true -> fetch only forgotten registers;
-     *                          false/null -> fetch all registers
-     * @param limit             limit of registers
-     * @param offset            offset to get registers
-     * @param handler           function {@link Handler} returning data
+     * @param structureId           structure identifier
+     * @param start                 start date filter (format YYY-MM-DD)
+     * @param end                   end date filter (format YYY-MM-DD)
+     * @param courseIds             {@link List} of course identifier
+     * @param teacherIds            {@link List} of teacher identifiers
+     * @param groupIds              {@link List} of group identifiers
+     * @param forgottenFilter       true -> fetch only forgotten registers;
+     *                              false/null -> fetch all registers
+     * @param isWithTeacherFilter   true -> only retrieve registers with teachers
+     * @param limit                 limit of registers
+     * @param offset                offset to get registers
+     * @param handler               function {@link Handler} returning data
      */
     void list(String structureId, String start, String end, List<String> courseIds,
-              List<String> teacherIds, List<String> groupIds, boolean forgottenFilter,
+              List<String> teacherIds, List<String> groupIds, boolean forgottenFilter, Boolean isWithTeacherFilter,
               String limit, String offset, Handler<Either<String, JsonArray>> handler);
 
     /**
@@ -48,21 +49,22 @@ public interface RegisterService {
 
     /**
      *  List registers based on given parameters
-     * @param structureId       structure identifier
-     * @param start             start date filter (format YYY-MM-DD)
-     * @param end               end date filter (format YYY-MM-DD)
-     * @param courseIds         {@link List} of course identifier
-     * @param teacherIds        {@link List} of teacher identifiers
-     * @param groupIds          {@link List} of group identifiers
-     * @param forgottenFilter   true -> fetch only forgotten registers;
-     *                          false/null -> fetch all registers
-     * @param limit             limit of registers
-     * @param offset            offset to get registers
+     * @param structureId           structure identifier
+     * @param start                 start date filter (format YYY-MM-DD)
+     * @param end                   end date filter (format YYY-MM-DD)
+     * @param courseIds             {@link List} of course identifier
+     * @param teacherIds            {@link List} of teacher identifiers
+     * @param groupIds              {@link List} of group identifiers
+     * @param forgottenFilter       true -> fetch only forgotten registers;
+     *                              false/null -> fetch all registers
+     * @param isWithTeacherFilter   true -> only retrieve registers with teachers
+     * @param limit                 limit of registers
+     * @param offset                offset to get registers
      * @return {@link Future} of {@link List}
      */
     Future<JsonArray> list(String structureId, String start, String end, List<String> courseIds,
                            List<String> teacherIds, List<String> groupIds, boolean forgottenFilter,
-                           String limit, String offset);
+                           Boolean isWithTeacherFilter, String limit, String offset);
 
     /**
      * Create register

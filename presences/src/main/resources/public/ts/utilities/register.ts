@@ -18,6 +18,8 @@ export class RegisterUtils {
             register.subject_id = course.subjectId;
             register.groups = course.groups;
             register.classes = course.classes;
+            register.teacherIds = course.teachers ?
+                course.teachers.map((teacher: {displayName: string, id: string}) => teacher.id) : [];
             register.splitSlot = course.splitSlot;
         }
 

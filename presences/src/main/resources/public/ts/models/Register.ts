@@ -48,6 +48,7 @@ export interface Register {
     splitSlot: boolean;
     students: RegisterStudent[];
     teachers: Teacher[];
+    teacherIds?: Array<string>;
 }
 
 export class Register extends LoadingCollection {
@@ -64,7 +65,8 @@ export class Register extends LoadingCollection {
             subject_id: this.subject_id,
             groups: this.groups,
             split_slot: this.splitSlot,
-            classes: this.classes
+            classes: this.classes,
+            teacherIds: this.teacherIds
         };
     }
 

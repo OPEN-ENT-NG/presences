@@ -6,13 +6,17 @@ public class Field {
     public static final String _ID = "_id";
     public static final String NAME = "name";
     public static final String STRUCTURE = "structure";
+    public static final String STRUCTURE_ID = "structure_id";
     public static final String STRUCTUREID = "structureId";
     public static final String TEACHER = "teacher";
     public static final String TEACHERIDS = "teacherIds";
     public static final String STUDENT_ID = "student_id";
     public static final String STUDENT = "student";
     public static final String SEARCH_TEACHER = "searchTeacher";
+    public static final String CLASSES = "classes";
     public static final String GROUP = "group";
+    public static final String GROUPS = "groups";
+    public static final String MANUALGROUPS = "manualGroups";
     public static final String LIMIT = "limit";
     public static final String OFFSET = "offset";
 

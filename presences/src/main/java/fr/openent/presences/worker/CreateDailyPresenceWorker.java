@@ -173,12 +173,13 @@ public class CreateDailyPresenceWorker extends BusModBase implements Handler<Mes
                         .put("course_id", course.getId())
                         .put("split_slot", true)
                         .put("groups", course.getGroups())
-                        .put("classes", course.getClasses());
+                        .put("classes", course.getClasses())
+                        .put("teacherIds", teachers);
 
                 Promise<JsonObject> promise = Promise.promise();
                 futures.add(promise.future());
-                String teacherId = teachers.isEmpty() ? personnelId : teachers.getJsonObject(0).getString("id");
-                createRegisterFuture(result, course, register, promise.future(), teacherId);
+                String userId = teachers.isEmpty() ? personnelId : teachers.getJsonObject(0).getString(Field.ID);
+                createRegisterFuture(result, course, register, promise.future(), userId);
             }
             CompositeFuture.join(futures)
                     .onSuccess(resultFutures -> handler.handle(Future.succeededFuture(result)))
@@ -202,8 +203,8 @@ public class CreateDailyPresenceWorker extends BusModBase implements Handler<Mes
     }
 
     private void createRegisterFuture(JsonObject result, Course course, JsonObject register, Future<JsonObject> future,
-                                      String teacherId) {
-        createRegister(teacherId, register, resultRegister -> {
+                                      String userId) {
+        createRegister(userId, register, resultRegister -> {
             try {
                 if (resultRegister.failed()) {
                     log.error(resultRegister.cause().getMessage());

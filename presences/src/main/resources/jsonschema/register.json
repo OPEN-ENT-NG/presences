@@ -24,6 +24,9 @@
     "classes": {
       "type": "array"
     },
+    "teacherIds": {
+      "type": "array"
+    },
     "split_slot": {
       "type": "boolean"
     }
@@ -36,6 +39,7 @@
     "subject_id",
     "groups",
     "classes",
+    "teacherIds",
     "split_slot"
   ]
 }
