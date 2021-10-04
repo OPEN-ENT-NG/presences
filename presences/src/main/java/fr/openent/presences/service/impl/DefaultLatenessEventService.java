@@ -5,13 +5,15 @@ import fr.openent.presences.common.helper.DateHelper;
 import fr.openent.presences.common.helper.FutureHelper;
 import fr.openent.presences.common.service.GroupService;
 import fr.openent.presences.common.service.impl.DefaultGroupService;
-import fr.openent.presences.helper.CourseHelper;
+import fr.openent.presences.common.viescolaire.*;
+import fr.openent.presences.core.constants.*;
+import fr.openent.presences.db.*;
+import fr.openent.presences.helper.*;
+import fr.openent.presences.model.*;
 import fr.openent.presences.model.Event.EventBody;
-import fr.openent.presences.service.EventService;
-import fr.openent.presences.service.LatenessEventService;
+import fr.openent.presences.service.*;
 import fr.wseduc.webutils.Either;
-import io.vertx.core.Future;
-import io.vertx.core.Handler;
+import io.vertx.core.*;
 import io.vertx.core.eventbus.EventBus;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
@@ -21,21 +23,25 @@ import org.entcore.common.sql.Sql;
 import org.entcore.common.sql.SqlResult;
 import org.entcore.common.user.UserInfos;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.text.*;
+import java.util.*;
 import java.util.stream.Collectors;
 
-public class DefaultLatenessEventService implements LatenessEventService {
+public class DefaultLatenessEventService extends DBService implements LatenessEventService {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(DefaultLatenessEventService.class);
     private final EventService eventService;
     private final GroupService groupService;
+    private final RegisterService registerService;
+    private final SettingsService settingsService;
     private final CourseHelper courseHelper;
 
     public DefaultLatenessEventService(EventBus eb) {
 
         eventService = new DefaultEventService(eb);
         groupService = new DefaultGroupService(eb);
+        registerService = new DefaultRegisterService(eb);
+        settingsService = new DefaultSettingsService();
         courseHelper = new CourseHelper(eb);
     }
 
@@ -46,31 +52,33 @@ public class DefaultLatenessEventService implements LatenessEventService {
         if (eventBody.getRegisterId() != -1) return;
 
         JsonObject registerProcess = new JsonObject()
-                .put("body", eventBody.toJSON().put("structure_id", structureId))
+                .put("body", eventBody.toJSON().put(Field.STRUCTURE_ID, structureId))
                 .put("res", new JsonObject());
-
 
         getStudentGroups(registerProcess)
                 .compose(this::getCourseIdsFromGroups)
-                .compose((this::getRegisterIdFromCourseIds))
-                .setHandler(ar -> {
-                    if (ar.failed()) {
-                        LOGGER.error("[Presences@LatenessEventService::create] Failed to fetch register id", ar.cause());
-                        handler.handle(new Either.Left<>("Failed to fetch register id"));
+                .compose(process -> getRegisterIdFromCourses(process, userInfos))
+                .onFailure(fail -> {
+                    String message = String.format("[Presences@%s::create] Failed to fetch register id : %s",
+                            this.getClass().getSimpleName(), fail.getMessage());
+                    LOGGER.error(message, fail.getMessage());
+                    handler.handle(new Either.Left<>(message));
+                })
+                .onSuccess(ar -> {
+                    String message = String.format("[Presences@%s::create] No register id(s) fetched, sending error",
+                            this.getClass().getSimpleName());
+                    if (ar.isEmpty()) {
+                        handler.handle(new Either.Left<>(message));
                     } else {
-                        if (ar.result().isEmpty()) {
-                            handler.handle(new Either.Left<>("No register id(s) fetched, sending error"));
+                        List<Integer> registerIds = ((List<JsonObject>) ar.getList())
+                                .stream()
+                                .filter(registerId -> registerId.getInteger(Field.ID) != -1)
+                                .map(registerId -> registerId.getInteger(Field.ID))
+                                .collect(Collectors.toList());
+                        if (registerIds.isEmpty()) {
+                            handler.handle(new Either.Left<>(message));
                         } else {
-                            List<Integer> registerIds = ((List<JsonObject>) ar.result().getList())
-                                    .stream()
-                                    .filter(registerId -> registerId.getInteger("id") != -1)
-                                    .map(registerId -> registerId.getInteger("id"))
-                                    .collect(Collectors.toList());
-                            if (registerIds.isEmpty()) {
-                                handler.handle(new Either.Left<>("No register id(s) fetched, sending error"));
-                            } else {
-                                createEventsFromRegisterIds(eventBody, userInfos, handler, registerIds);
-                            }
+                            createEventsFromRegisterIds(eventBody, userInfos, handler, registerIds);
                         }
                     }
                 });
@@ -108,91 +116,208 @@ public class DefaultLatenessEventService implements LatenessEventService {
 
     @SuppressWarnings("unchecked")
     private Future<JsonObject> getCourseIdsFromGroups(JsonObject registerProcess) {
-        Future<JsonObject> future = Future.future();
+        Promise<JsonObject> promise = Promise.promise();
         JsonObject body = registerProcess.getJsonObject("body");
         JsonObject res = registerProcess.getJsonObject("res");
 
-        String startDate = DateHelper.getDateString(body.getString("start_date"), DateHelper.YEAR_MONTH_DAY);
-        String startTime = DateHelper.fetchTimeString(body.getString("start_date"), DateHelper.MONGO_FORMAT);
+        String endDate = DateHelper.getDateString(body.getString(Field.END_DATE), DateHelper.YEAR_MONTH_DAY);
+        String endTime = DateHelper.fetchTimeString(body.getString(Field.END_DATE), DateHelper.MONGO_FORMAT);
 
-        courseHelper.getCourses(body.getString("structure_id"), new ArrayList<>(),
-                (List<String>) res.getJsonArray("groupNames").getList(), startDate, startDate, startTime, startTime,
+        courseHelper.getCourses(body.getString(Field.STRUCTURE_ID), new ArrayList<>(),
+                res.getJsonArray(Field.GROUPNAMES).getList(), endDate, endDate, endTime, endTime,
                 "true", courses -> {
 
                     if (courses.isLeft()) {
-                        LOGGER.error("[Presences@LatenessEventService::getCourseIdsFromGroups] " +
-                                "Failed to fetch course ids", courses.left().getValue());
-                        future.fail(courses.left().getValue());
+                        String message = String.format("[Presences@%s::getCourseIdsFromGroups] " +
+                                "Failed to fetch course ids : %s", this.getClass().getSimpleName(),
+                                courses.left().getValue());
+                        LOGGER.error(message, courses.left().getValue());
+                        promise.fail(courses.left().getValue());
                     } else if (courses.right().getValue().isEmpty()) {
-                        future.fail("[Presences@LatenessEventService::getCourseIdsFromGroups] " +
-                                "Student group has no courses");
+                        promise.fail(String.format("[Presences@%s::getCourseIdsFromGroups] " +
+                                "Student group has no courses", this.getClass().getSimpleName()));
                     } else {
-                        JsonArray courseIds = new JsonArray();
-
-                        for (int i = 0; i < courses.right().getValue().size(); i++) {
-                            courseIds.add(courses.right().getValue().getJsonObject(i).getString("_id"));
-                        }
-
-                        res.put("courseIds", courseIds);
-                        future.complete(registerProcess);
+                        res.put(Field.COURSES, courses.right().getValue());
+                        promise.complete(registerProcess);
                     }
                 });
 
-        return future;
+        return promise.future();
     }
 
-    private Future<JsonArray> getRegisterIdFromCourseIds(JsonObject registerProcess) {
-
-        Future<JsonArray> future = Future.future();
+    @SuppressWarnings("unchecked")
+    private Future<JsonArray> getRegisterIdFromCourses(JsonObject registerProcess, UserInfos userInfos) {
+        Promise<JsonArray> promise = Promise.promise();
         JsonObject body = registerProcess.getJsonObject("body");
         JsonObject res = registerProcess.getJsonObject("res");
 
-        String query = "SELECT r.id FROM " + Presences.dbSchema + ".register r WHERE r.course_id IN " +
-                Sql.listPrepared(res.getJsonArray("courseIds")) + " AND r.structure_id = ? AND r.start_date = ?";
+        JsonArray courses = res.getJsonArray(Field.COURSES);
 
+        JsonArray courseIds = new JsonArray(
+                courses.stream()
+                        .map(course -> ((JsonObject) course).getString(Field._ID))
+                        .collect(Collectors.toList()));
+
+        String query = "SELECT r.id FROM " + Presences.dbSchema + ".register r WHERE r.course_id IN " +
+                Sql.listPrepared(courseIds) + " AND r.structure_id = ? AND r.start_date > ?" +
+                " AND r.start_date < ?";
 
         JsonArray params = new JsonArray()
-                .addAll(res.getJsonArray("courseIds"))
-                .add(body.getString("structure_id"))
-                .add(body.getString("start_date"));
+                .addAll(courseIds)
+                .add(body.getString(Field.STRUCTURE_ID));
 
-        Sql.getInstance().prepared(query, params, SqlResult.validResultHandler(either -> {
-            if (either.isLeft()) {
-                LOGGER.error("[Presences@LatenessEventService::getRegisterIdFromCourseIds] " +
-                        "Failed to fetch register ids", either.left().getValue());
-                future.fail(either.left().getValue());
-            } else future.complete(either.right().getValue());
+        try {
+            params.add(DateHelper.getDateString(DateHelper.add(DateHelper.parse(body.getString(Field.START_DATE),
+                            DateHelper.MONGO_FORMAT),
+                    Calendar.MINUTE, -15), DateHelper.MONGO_FORMAT));
+            params.add(DateHelper.getDateString(DateHelper.add(DateHelper.parse(body.getString(Field.START_DATE),
+                            DateHelper.MONGO_FORMAT),
+                    Calendar.MINUTE, 15), DateHelper.MONGO_FORMAT));
+        } catch (ParseException e) {
+            promise.fail(e.getMessage());
+        }
+
+        sql.prepared(query, params, SqlResult.validResultHandler(event -> {
+            if (event.isLeft()) {
+                promise.fail(event.left().getValue());
+            } else {
+                JsonArray registerIds = event.right().getValue();
+
+                if (registerIds.isEmpty()) {
+
+                    fetchCoursesWithMultipleSlotSetting(body.getString(Field.STRUCTURE_ID), courses)
+                            .onFailure(fail -> promise.fail(fail.getMessage()))
+                            .onSuccess(coursesArray -> {
+                                Promise<JsonArray> init = Promise.promise();
+                                Future<JsonArray> createFuture = init.future();
+
+                                List<JsonObject> coursesList = coursesArray.getList();
+
+                                for (JsonObject course : coursesList) {
+                                    createFuture = createFuture.compose(r ->
+                                            addCourseRegister(body.getString(Field.STRUCTURE_ID),
+                                                    body.getString(Field.END_DATE), course, r, userInfos));
+                                }
+
+                                createFuture
+                                        .onFailure(fail -> promise.fail(fail.getMessage()))
+                                        .onSuccess(promise::complete);
+
+                                init.complete();
+                            });
+                } else {
+                    promise.complete(registerIds);
+                }
+            }
         }));
-        return future;
+
+        return promise.future();
     }
 
 
-    private void createEventsFromRegisterIds(EventBody eventBody, UserInfos userInfos, Handler<Either<String, JsonObject>> handler, List<Integer> registerIds) {
+    private Future<JsonArray> fetchCoursesWithMultipleSlotSetting(String structureId, JsonArray courses) {
+        Promise<JsonArray> promise = Promise.promise();
 
-        List<Future<JsonObject>> futures = new ArrayList<>();
+        settingsService.retrieveMultipleSlots(structureId)
+                .onFailure(fail -> promise.fail(fail.getMessage()))
+                .onSuccess(ar -> {
+                    boolean multipleSlot = ar.getBoolean(Field.ALLOW_MULTIPLE_SLOTS, true);
 
-        for (Integer id : registerIds) {
+                    Viescolaire.getInstance().getSlotsFromProfile(structureId, event -> {
+                        if (event.isLeft()) {
+                            promise.fail(event.left().getValue());
+                        } else {
+                            List<Slot> slotsList = SlotHelper.getSlotListFromJsonArray(event.right().getValue(),
+                                    Slot.MANDATORY_ATTRIBUTE);
+                            List<Course> coursesEvent = CourseHelper.getCourseListFromJsonArray(courses,
+                                    Course.MANDATORY_ATTRIBUTE);
+                            JsonArray splitCourses = new JsonArray(CourseHelper.splitCoursesFromSlot(coursesEvent,
+                                    slotsList).stream().map(Course::toJSON).collect(Collectors.toList()));
 
-            Future<JsonObject> eventFuture = Future.future();
-            futures.add(eventFuture);
+                            promise.complete(multipleSlot ? splitCourses : courses);
+                        }
+                    });
+                });
 
-            eventBody.setRegisterId(id);
-            eventService.create(eventBody.toJSON(), userInfos, FutureHelper.handlerJsonObject(eventFuture));
-        }
+        return promise.future();
+    }
 
-        FutureHelper.all(futures).setHandler(compositeEvent -> {
-            if (compositeEvent.failed()) {
-                LOGGER.error("[Presences@DefaultLatenessEventService::createEventsFromRegisterIds] " +
-                        "Failed to create lateness event ", compositeEvent.cause());
-                handler.handle(new Either.Left<>(compositeEvent.cause().toString()));
+    /**
+     * Create course registers and return register id corresponding to lateness hour
+     * @param structureId   structure identifier
+     * @param endDate       lateness time
+     * @param course        course object
+     * @param registers     list of created registers
+     * @param userInfos     user infos
+     * @return {@link Future} array of created registers
+     */
+    private Future<JsonArray> addCourseRegister(String structureId, String endDate,
+                                                JsonObject course, JsonArray registers, UserInfos userInfos) {
+        Promise<JsonArray> promise = Promise.promise();
+
+        JsonObject register = new JsonObject()
+                .put(Field.STRUCTURE_ID, structureId)
+                .put(Field.COURSE_ID, course.getString(Field._ID))
+                .put(Field.START_DATE, course.getString(Field.STARTDATE))
+                .put(Field.END_DATE, course.getString(Field.ENDDATE))
+                .put(Field.SUBJECT_ID, course.getString(Field.SUBJECTID))
+                .put(Field.SPLIT_SLOT, course.getBoolean(Field.SPLIT_SLOT, true))
+                .put(Field.GROUPS, course.getJsonArray(Field.GROUPS, new JsonArray()))
+                .put(Field.CLASSES, course.getJsonArray(Field.CLASSES, new JsonArray()));
+
+        registerService.create(register, userInfos, createEvt -> {
+            if (createEvt.isLeft()) {
+                promise.fail(createEvt.left().getValue());
             } else {
-                JsonArray res = new JsonArray();
-                for (int i = 0; i < compositeEvent.result().size(); i++) {
-                    res.add((JsonObject) compositeEvent.result().resultAt(i));
-                }
-                handler.handle(new Either.Right<>(new JsonObject().put("events", res)));
+                JsonObject createdRegister = createEvt.right().getValue();
+                JsonArray createdRegisters = (registers != null) ? registers : new JsonArray();
+
+                promise.complete(DateHelper.isDateBeforeOrEqual(createdRegister.getString(Field.START_DATE), endDate)
+                        && DateHelper.isDateBeforeOrEqual(endDate, createdRegister.getString(Field.END_DATE))
+                        ? createdRegisters.add(createdRegister)
+                        : createdRegisters);
             }
         });
+
+        return  promise.future();
+    }
+
+    private void createEventsFromRegisterIds(EventBody eventBody, UserInfos userInfos, Handler<Either<String, JsonObject>> handler, List<Integer> registerIds) {
+
+        Promise<JsonArray> init = Promise.promise();
+        Future<JsonArray> createFuture = init.future();
+
+        for (Integer id : registerIds) {
+            createFuture = createFuture.compose(eventList -> {
+                eventBody.setRegisterId(id);
+                return createAndAddEvent(eventList, eventBody.toJSON(), userInfos);
+            });
+        }
+
+        createFuture.onFailure(fail -> {
+                    LOGGER.error(String.format("[Presences@%s::createEventsFromRegisterIds] " +
+                            "Failed to create lateness event : %s", this.getClass().getSimpleName(), fail.getMessage()),
+                            fail.getMessage());
+                    handler.handle(new Either.Left<>(fail.getMessage()));
+                })
+                .onSuccess(ar ->
+                    handler.handle(new Either.Right<>(new JsonObject().put("events", ar))));
+
+        init.complete();
+    }
+
+    private Future<JsonArray> createAndAddEvent(JsonArray eventList, JsonObject event, UserInfos user) {
+        Promise<JsonArray> promise = Promise.promise();
+        eventService.create(event, user, res -> {
+           if (res.isLeft()) {
+               promise.fail(res.left().getValue());
+           } else {
+               promise.complete((eventList != null) ? eventList.add(res.right().getValue())
+                       : new JsonArray().add(res.right().getValue()));
+           }
+        });
+
+        return promise.future();
     }
 
     @Override
