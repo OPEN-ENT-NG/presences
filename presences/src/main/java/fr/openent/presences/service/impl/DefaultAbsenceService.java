@@ -941,7 +941,7 @@ public class DefaultAbsenceService extends DBService implements AbsenceService {
                                 studentMap.get(absence.getString(Field.STUDENT_ID))));
 
                 handler.handle(new Either.Right<>(new JsonArray(absences.stream()
-                        .filter(absence -> ((JsonObject) absence).getJsonObject(Field.STUDENT)
+                        .filter(absence -> ((JsonObject) absence).getJsonObject(Field.STUDENT, new JsonObject())
                         .getString(Field.NAME) != null).collect(Collectors.toList()))));
             });
         }));
