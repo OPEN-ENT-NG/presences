@@ -379,15 +379,17 @@ const vm: ViewModel = {
                 }
                 return false;
             case 'LATENESS':
-                if (vm.form && vm.form.startDate && vm.form.endDate && vm.timeSlotTimePeriod
+                if (vm.form && vm.form.startDate && vm.timeSlotTimePeriod
                     && vm.timeSlotTimePeriod.start && vm.timeSlotTimePeriod.start.startHour
                     && vm.timeSlotTimePeriod.end && vm.timeSlotTimePeriod.end.endHour && vm.form.endDateTime) {
-                    return (DateUtils.getDateFormat(vm.form.startDate, DateUtils.getTimeFormatDate(vm.timeSlotTimePeriod.start.startHour)) <=
-                        DateUtils.getDateFormat(vm.form.endDate, DateUtils.getTimeFormatDate(vm.timeSlotTimePeriod.start.startHour))) &&
-                        (DateUtils.getDateFormat(vm.form.endDate, vm.form.endDateTime) >=
-                            DateUtils.getDateFormat(vm.form.startDate, DateUtils.getTimeFormatDate(vm.timeSlotTimePeriod.start.startHour))) &&
-                        (DateUtils.getDateFormat(vm.form.endDate, vm.form.endDateTime) <=
-                            DateUtils.getDateFormat(vm.form.endDate, DateUtils.getTimeFormatDate(vm.timeSlotTimePeriod.end.endHour)));
+
+                    return ((DateUtils.getDateFormat(vm.form.startDate, vm.form.endDateTime) >=
+                            DateUtils.getDateFormat(vm.form.startDate,
+                                DateUtils.getTimeFormatDate(vm.timeSlotTimePeriod.start.startHour)))
+                        && (DateUtils.getDateFormat(vm.form.startDate, vm.form.endDateTime) <=
+                                        DateUtils.getDateFormat(vm.form.startDate,
+                                            DateUtils.getTimeFormatDate(vm.timeSlotTimePeriod.end.endHour)))
+                        && moment(vm.form.endDateTime).isBefore(moment(DateUtils.setLastTime(new Date()))));
                 }
                 return false;
         }
@@ -618,7 +620,7 @@ const vm: ViewModel = {
     prepareLatenessBody(): void {
         vm.eventBody = {} as IEventBody;
         vm.eventBody.start_date = DateUtils.getDateFormat(moment(vm.form.startDate), DateUtils.getTimeFormatDate(vm.timeSlotTimePeriod.start.startHour));
-        vm.eventBody.end_date = DateUtils.getDateFormat(vm.form.endDate, vm.form.endDateTime);
+        vm.eventBody.end_date = DateUtils.getDateFormat(vm.form.startDate, vm.form.endDateTime);
         vm.eventBody.student_id = vm.form.student_id ? vm.form.student_id : null;
         vm.eventBody.comment = vm.form.comment ? vm.form.comment : "";
         vm.eventBody.register_id = vm.form.register_id ? vm.form.register_id : -1;
