@@ -4,21 +4,25 @@ public class Field {
 
     public static final String ID = "id";
     public static final String _ID = "_id";
+    public static final String CLASSES = "classes";
+    public static final String COURSES = "courses";
+    public static final String GROUP = "group";
+    public static final String GROUPNAMES = "groupNames";
+    public static final String GROUPS = "groups";
+    public static final String LIMIT = "limit";
+    public static final String MANUALGROUPS = "manualGroups";
     public static final String NAME = "name";
+    public static final String OFFSET = "offset";
+    public static final String SEARCH_TEACHER = "searchTeacher";
     public static final String STRUCTURE = "structure";
     public static final String STRUCTURE_ID = "structure_id";
     public static final String STRUCTUREID = "structureId";
+    public static final String STUDENT = "student";
+    public static final String STUDENT_ID = "student_id";
+    public static final String SUBJECT_ID = "subject_id";
+    public static final String SUBJECTID = "subjectId";
     public static final String TEACHER = "teacher";
     public static final String TEACHERIDS = "teacherIds";
-    public static final String STUDENT_ID = "student_id";
-    public static final String STUDENT = "student";
-    public static final String SEARCH_TEACHER = "searchTeacher";
-    public static final String CLASSES = "classes";
-    public static final String GROUP = "group";
-    public static final String GROUPS = "groups";
-    public static final String MANUALGROUPS = "manualGroups";
-    public static final String LIMIT = "limit";
-    public static final String OFFSET = "offset";
 
     // Dates
     public static final String END_DATE = "end_date";
@@ -55,6 +59,7 @@ public class Field {
     public static final String COURSE_ID = "course_id";
     public static final String STATE_ID = "state_id";
     public static final String NOTIFIED = "notified";
+    public static final String SPLIT_SLOT = "split_slot";
 
 
     public static final String FORGOTTEN_REGISTERS = "forgotten_registers";
