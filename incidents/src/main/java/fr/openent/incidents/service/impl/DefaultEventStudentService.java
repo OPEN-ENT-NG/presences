@@ -41,6 +41,7 @@ public class DefaultEventStudentService implements EventStudentService {
         String start = body.get("start_at");
         String end = body.get("end_at");
         List<String> types = body.getAll("type");
+        body.set("id", (String) null);
 
         if (!validTypes(types)) {
             String message = "[Presences@DefaultEventStudentService::get] Types are not valid.";
