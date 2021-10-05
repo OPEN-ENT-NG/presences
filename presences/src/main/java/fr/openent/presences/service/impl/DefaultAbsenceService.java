@@ -923,8 +923,8 @@ public class DefaultAbsenceService extends DBService implements AbsenceService {
 
             userService.getStudents(studentIds, users -> {
                 if (users.isLeft()) {
-                    String message = String.format("[Presences@%s::retrieve] Failed to retrieve absences users",
-                            this.getClass().getSimpleName());
+                    String message = String.format("[Presences@%s::retrieve] Failed to retrieve absences users: %s",
+                            this.getClass().getSimpleName(), users.left().getValue());
                     LOGGER.error(message, users.left().getValue());
                     handler.handle(users.left());
                     return;
