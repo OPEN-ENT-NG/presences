@@ -923,8 +923,8 @@ public class DefaultAbsenceService extends DBService implements AbsenceService {
 
             userService.getStudents(studentIds, users -> {
                 if (users.isLeft()) {
-                    String message = String.format("[Presences@%s::retrieve] Failed to retrieve absences users",
-                            this.getClass().getSimpleName());
+                    String message = String.format("[Presences@%s::retrieve] Failed to retrieve absences users: %s",
+                            this.getClass().getSimpleName(), users.left().getValue());
                     LOGGER.error(message, users.left().getValue());
                     handler.handle(users.left());
                     return;
@@ -941,7 +941,7 @@ public class DefaultAbsenceService extends DBService implements AbsenceService {
                                 studentMap.get(absence.getString(Field.STUDENT_ID))));
 
                 handler.handle(new Either.Right<>(new JsonArray(absences.stream()
-                        .filter(absence -> ((JsonObject) absence).getJsonObject(Field.STUDENT)
+                        .filter(absence -> ((JsonObject) absence).getJsonObject(Field.STUDENT, new JsonObject())
                         .getString(Field.NAME) != null).collect(Collectors.toList()))));
             });
         }));
