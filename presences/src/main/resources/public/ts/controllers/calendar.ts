@@ -569,6 +569,7 @@ export const calendarController = ng.controller('CalendarController',
                     await PreferencesUtils.resetPreference(PreferencesUtils.PREFERENCE_KEYS.PRESENCE_EVENT_LIST_CALENDAR_FILTER);
                 if (Object.keys(structure_slots).length > 0) vm.slots.list = structure_slots.slots;
                 else vm.slots.list = null;
+                model.calendar.setTimeslots(vm.slots.list);
                 $scope.safeApply();
             });
 
