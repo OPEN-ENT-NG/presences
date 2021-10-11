@@ -232,7 +232,7 @@ public class CreateDailyPresenceWorker extends BusModBase implements Handler<Mes
                 if (counsellors.size() > 0) {
                     handler.handle(Future.succeededFuture(counsellors.getJsonObject(0).getString("id")));
                 } else {
-                    handler.handle(Future.failedFuture("Neither counsellor nor direction profile found on this structure"));
+                    handler.handle(Future.failedFuture("Neither counsellor nor direction profile found on this structure for structure: " + structureId));
                 }
             } else {
                 handler.handle(Future.failedFuture(resultCounsellor.left().getValue()));
