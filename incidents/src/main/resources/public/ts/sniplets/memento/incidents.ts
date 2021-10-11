@@ -7,6 +7,7 @@ import {incidentService, punishmentService, punishmentsTypeService} from "@incid
 import {IPunishmentType} from "@incidents/models/PunishmentType";
 import {EVENT_TYPES} from "@common/model";
 import {User} from "@common/model/User";
+import {PunishmentsUtils} from "@incidents/utilities/punishments";
 
 console.log("memento incidents/punishment");
 
@@ -35,7 +36,7 @@ interface IViewModel {
 
     loadStudentYearIncidents(): Promise<void>;
 
-    formatIncident(date: string): void;
+    formatDate(mementoItem: IMementoIncident): string;
 
     setIPunishmentRequest(): void;
 
@@ -135,9 +136,9 @@ const vm: IViewModel = {
         })
     },
 
-    formatIncident(date: string): string {
-        return moment(date).format(DateUtils.FORMAT["DAY-MONTH-YEAR"]);
-    },
+    formatDate: (mementoItem: IMementoIncident): string => mementoItem.type === EVENT_TYPES.INCIDENT ?
+        moment((<Incident>mementoItem.item).date).format(DateUtils.FORMAT["DAY-MONTH-YEAR"]) :
+        PunishmentsUtils.getPunishmentDate(<IPunishment>mementoItem.item),
 
     redirectTo(mementoIncident: IMementoIncident): void {
         if (mementoIncident.type === EVENT_TYPES.INCIDENT) {
