@@ -198,7 +198,7 @@ public class CreateDailyPresenceWorker extends BusModBase implements Handler<Mes
                 .onFailure(fail -> handler.handle(new Either.Left<>(fail.getMessage())))
                 .onSuccess(res -> {
                     courseService.listCourses(structureId, new ArrayList<>(), new ArrayList<>(), date, date,
-                            startTime, endTime, true, res.getBoolean(Field.ALLOW_MULTIPLE_SLOTS, true), handler);
+                            startTime, endTime, false, res.getBoolean(Field.ALLOW_MULTIPLE_SLOTS, true), handler);
                 });
     }
 
