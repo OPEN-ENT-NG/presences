@@ -1,5 +1,6 @@
 package fr.openent.presences.model;
 
+import fr.openent.presences.core.constants.*;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 
@@ -46,6 +47,7 @@ public class Course implements Cloneable {
     private Boolean splitSlot;
     private Long timestamp;
     private Subject subject;
+    private Boolean isOpenedByPersonnel;
 
     public Course(JsonObject course, List<String> mandatoryAttributes) {
         for (String attribute : mandatoryAttributes) {
@@ -53,42 +55,43 @@ public class Course implements Cloneable {
                 throw new IllegalArgumentException("[Presences@CourseModel] Mandatory attribute not present " + attribute);
             }
         }
-        this._id = course.getString("_id", "");
-        this.structureId = course.getString("structureId", "");
-        this.subjectId = course.getString("subjectId", "");
-        this.classes = course.getJsonArray("classes", new JsonArray());
-        this.exceptionnal = course.getString("exceptionnal", "");
-        this.groups = course.getJsonArray("groups", new JsonArray());
-        this.roomLabels = course.getJsonArray("roomLabels", new JsonArray());
-        this.events = course.getJsonArray("events", new JsonArray());
-        this.exempted = course.getBoolean("exempted", null);
-        this.exemption = course.getJsonObject("exemption", null);
-        this.incident = course.getJsonObject("incident", null);
-        this.punishments = course.getJsonArray("punishments", new JsonArray());
-        this.dayOfWeek = course.getInteger("dayOfWeek", null);
-        this.manual = course.getBoolean("manual", null);
-        this.locked = course.getBoolean("locked", null);
-        this.updated = course.getString("updated", "");
-        this.lastUser = course.getString("lastUser", "");
-        this.startDate = course.getString("startDate", "");
-        this.endDate = course.getString("endDate", "");
-        this.startCourse = course.getString("startCourse", "");
-        this.endCourse = course.getString("endCourse", "");
-        this.startMomentDate = course.getString("startMomentDate", "");
-        this.startMomentTime = course.getString("startMomentTime", "");
-        this.endMomentDate = course.getString("endMomentDate", "");
-        this.endMomentTime = course.getString("endMomentTime", "");
-        this.isRecurrent = course.getBoolean("is_recurrent", null);
-        this.color = course.getString("color", "");
-        this.isPeriodic = course.getBoolean("is_periodic", null);
-        this.subjectName = course.getString("subjectName", "");
-        this.teachers = course.getJsonArray("teachers", course.getJsonArray("teacherIds", new JsonArray()));
-        this.registerId = course.getInteger("register_id", null);
-        this.registerStateId = course.getInteger("register_state_id", null);
-        this.notified = course.getBoolean("notified", null);
-        this.splitSlot = course.getBoolean("split_slot", false);
-        this.timestamp = course.getLong("timestamp");
-        this.subject = new Subject(course.getJsonObject("subject", new JsonObject()));
+        this._id = course.getString(Field._ID, "");
+        this.structureId = course.getString(Field.STRUCTUREID, "");
+        this.subjectId = course.getString(Field.SUBJECTID, "");
+        this.classes = course.getJsonArray(Field.CLASSES, new JsonArray());
+        this.exceptionnal = course.getString(Field.EXCEPTIONNAL, "");
+        this.groups = course.getJsonArray(Field.GROUPS, new JsonArray());
+        this.roomLabels = course.getJsonArray(Field.ROOMLABELS, new JsonArray());
+        this.events = course.getJsonArray(Field.EVENTS, new JsonArray());
+        this.exempted = course.getBoolean(Field.EXEMPTED, null);
+        this.exemption = course.getJsonObject(Field.EXEMPTION, null);
+        this.incident = course.getJsonObject(Field.INCIDENT, null);
+        this.punishments = course.getJsonArray(Field.PUNISHMENTS, new JsonArray());
+        this.dayOfWeek = course.getInteger(Field.DAYOFWEEK, null);
+        this.manual = course.getBoolean(Field.MANUAL, null);
+        this.locked = course.getBoolean(Field.LOCKED, null);
+        this.updated = course.getString(Field.UPDATED, "");
+        this.lastUser = course.getString(Field.LASTUSER, "");
+        this.startDate = course.getString(Field.STARTDATE, "");
+        this.endDate = course.getString(Field.ENDDATE, "");
+        this.startCourse = course.getString(Field.STARTCOURSE, "");
+        this.endCourse = course.getString(Field.ENDCOURSE, "");
+        this.startMomentDate = course.getString(Field.STARTMOMENTDATE, "");
+        this.startMomentTime = course.getString(Field.STARTMOMENTTIME, "");
+        this.endMomentDate = course.getString(Field.ENDMOMENTDATE, "");
+        this.endMomentTime = course.getString(Field.ENDMOMENTTIME, "");
+        this.isRecurrent = course.getBoolean(Field.IS_RECURRENT, null);
+        this.color = course.getString(Field.COLOR, "");
+        this.isPeriodic = course.getBoolean(Field.IS_PERIODIC, null);
+        this.subjectName = course.getString(Field.SUBJECTNAME, "");
+        this.teachers = course.getJsonArray(Field.TEACHERS, course.getJsonArray(Field.TEACHERIDS, new JsonArray()));
+        this.registerId = course.getInteger(Field.REGISTER_ID, null);
+        this.registerStateId = course.getInteger(Field.REGISTER_STATE_ID, null);
+        this.notified = course.getBoolean(Field.NOTIFIED, null);
+        this.splitSlot = course.getBoolean(Field.SPLIT_SLOT, false);
+        this.timestamp = course.getLong(Field.TIMESTAMP);
+        this.subject = new Subject(course.getJsonObject(Field.SUBJECT, new JsonObject()));
+        this.isOpenedByPersonnel = course.getBoolean(Field.ISOPENEDBYPERSONNEL, null);
     }
 
     @Override
@@ -102,41 +105,42 @@ public class Course implements Cloneable {
 
     public JsonObject toJSON() {
         JsonObject thisJsonObject = new JsonObject()
-                .put("_id", this._id)
-                .put("structureId", this.getStructureId())
-                .put("subjectId", this.getSubjectId())
-                .put("classes", this.getClasses())
-                .put("exceptionnal", this.getExceptionnal())
-                .put("groups", this.getGroups())
-                .put("roomLabels", this.getRoomLabels())
-                .put("events", this.getEvents())
-                .put("exemption", this.getEvents())
-                .put("incident", this.getEvents())
-                .put("dayOfWeek", this.getDayOfWeek())
-                .put("manual", this.manual)
-                .put("locked", this.locked)
-                .put("updated", this.getUpdated())
-                .put("lastUser", this.getLastUser())
-                .put("startDate", this.getStartDate())
-                .put("endDate", this.getEndDate())
-                .put("startCourse", this.getStartCourse())
-                .put("endCourse", this.getEndCourse())
-                .put("startMomentDate", this.getStartMomentDate())
-                .put("startMomentTime", this.getStartMomentTime())
-                .put("endMomentDate", this.getEndMomentDate())
-                .put("endMomentTime", this.getEndMomentTime())
-                .put("is_recurrent", this.isRecurrent)
-                .put("color", this.getColor())
-                .put("is_periodic", this.isPeriodic)
-                .put("subjectName", this.getSubjectName())
-                .put("teachers", this.getTeachers())
-                .put("split_slot", this.splitSlot)
-                .put("subject", this.subject.toJSON());
+                .put(Field._ID, this._id)
+                .put(Field.STRUCTUREID, this.getStructureId())
+                .put(Field.SUBJECTID, this.getSubjectId())
+                .put(Field.CLASSES, this.getClasses())
+                .put(Field.EXCEPTIONNAL, this.getExceptionnal())
+                .put(Field.GROUPS, this.getGroups())
+                .put(Field.ROOMLABELS, this.getRoomLabels())
+                .put(Field.EVENTS, this.getEvents())
+                .put(Field.EXEMPTION, this.getEvents())
+                .put(Field.INCIDENT, this.getEvents())
+                .put(Field.DAYOFWEEK, this.getDayOfWeek())
+                .put(Field.MANUAL, this.manual)
+                .put(Field.LOCKED, this.locked)
+                .put(Field.UPDATED, this.getUpdated())
+                .put(Field.LASTUSER, this.getLastUser())
+                .put(Field.STARTDATE, this.getStartDate())
+                .put(Field.ENDDATE, this.getEndDate())
+                .put(Field.STARTCOURSE, this.getStartCourse())
+                .put(Field.ENDCOURSE, this.getEndCourse())
+                .put(Field.STARTMOMENTDATE, this.getStartMomentDate())
+                .put(Field.STARTMOMENTTIME, this.getStartMomentTime())
+                .put(Field.ENDMOMENTDATE, this.getEndMomentDate())
+                .put(Field.ENDMOMENTTIME, this.getEndMomentTime())
+                .put(Field.IS_RECURRENT, this.isRecurrent)
+                .put(Field.COLOR, this.getColor())
+                .put(Field.IS_PERIODIC, this.isPeriodic)
+                .put(Field.SUBJECTNAME, this.getSubjectName())
+                .put(Field.TEACHERS, this.getTeachers())
+                .put(Field.SPLIT_SLOT, this.splitSlot)
+                .put(Field.SUBJECT, this.subject.toJSON())
+                .put(Field.ISOPENEDBYPERSONNEL, this.isOpenedByPersonnel);
         if (this.registerId != null && this.registerStateId != null && this.notified != null) {
             thisJsonObject
-                    .put("register_id", this.registerId)
-                    .put("state_id", this.registerStateId)
-                    .put("notified", this.notified);
+                    .put(Field.REGISTER_ID, this.registerId)
+                    .put(Field.STATE_ID, this.registerStateId)
+                    .put(Field.NOTIFIED, this.notified);
         }
         return thisJsonObject;
     }
@@ -439,5 +443,13 @@ public class Course implements Cloneable {
 
     public void setSubject(Subject subject) {
         this.subject = subject;
+    }
+
+    public Boolean getIsOpenedByPersonnel() {
+        return this.isOpenedByPersonnel;
+    }
+
+    public void setIsOpenedByPersonnel(Boolean isOpenedByPersonnel) {
+        this.isOpenedByPersonnel = isOpenedByPersonnel;
     }
 }
