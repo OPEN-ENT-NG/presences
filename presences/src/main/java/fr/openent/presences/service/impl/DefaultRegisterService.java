@@ -1014,8 +1014,7 @@ public class DefaultRegisterService extends DBService implements RegisterService
         courses = courses.stream().filter(course -> (teacherIds.isEmpty() || courseHasTeacherOfId(course.toJSON(), teacherIds))
                         && (groupNames.isEmpty() || courseHasClassOrGroupName(course.toJSON(), groupNames))
                         && !course.getTeachers().isEmpty()
-                        && course.getRegisterId() != null
-                        && course.isSplitSlot() == multipleSlot)
+                        && course.getRegisterId() != null)
                 .sorted((o1, o2) -> o2.getStartDate().compareToIgnoreCase(o1.getStartDate()))
                 .limit(numberRegisters)
                 .sorted((o1, o2) -> o1.getStartDate().compareToIgnoreCase(o2.getStartDate()))

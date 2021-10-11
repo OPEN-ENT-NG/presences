@@ -41,7 +41,7 @@ public class SquashHelper {
                 .filter(course -> course.getRegisterId() != null).collect(Collectors.toList());
 
 
-        courses.addAll(filterDuplicateCourses(createdSplitCourses, createdCourses));
+        courses.addAll(createdSplitCourses);
         courses.addAll(filterDuplicateCourses(createdCourses, createdSplitCourses));
 
 
@@ -76,9 +76,8 @@ public class SquashHelper {
         return toFilter.stream()
                 .filter(c1 -> toCheck.stream()
                         .noneMatch(c2 -> Objects.equals(c1.getId(), c2.getId())
-                                && (!(Objects.equals(c1.getStartDate(), c2.getStartDate())
-                                    && Objects.equals(c1.getEndDate(), c2.getEndDate()))
-                                    || !c1.isSplitSlot())))
+                                && (Objects.equals(c1.getStartDate(), c2.getStartDate())
+                                    && Objects.equals(c1.getEndDate(), c2.getEndDate()))))
                 .collect(Collectors.toList());
     }
 
