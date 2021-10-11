@@ -263,7 +263,8 @@ public class DefaultLatenessEventService extends DBService implements LatenessEv
                 .put(Field.SUBJECT_ID, course.getString(Field.SUBJECTID))
                 .put(Field.SPLIT_SLOT, course.getBoolean(Field.SPLIT_SLOT, true))
                 .put(Field.GROUPS, course.getJsonArray(Field.GROUPS, new JsonArray()))
-                .put(Field.CLASSES, course.getJsonArray(Field.CLASSES, new JsonArray()));
+                .put(Field.CLASSES, course.getJsonArray(Field.CLASSES, new JsonArray()))
+                .put(Field.TEACHERIDS, course.getJsonArray(Field.TEACHERS, new JsonArray()));
 
         registerService.create(register, userInfos, createEvt -> {
             if (createEvt.isLeft()) {

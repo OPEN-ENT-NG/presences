@@ -22,6 +22,7 @@ public class Field {
     public static final String SUBJECT_ID = "subject_id";
     public static final String SUBJECTID = "subjectId";
     public static final String TEACHER = "teacher";
+    public static final String TEACHERS = "teachers";
     public static final String TEACHERIDS = "teacherIds";
 
     // Dates
