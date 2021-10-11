@@ -94,6 +94,7 @@ public class SquashHelper {
 
             for (JsonObject register : courseRegisters) {
                 try {
+                    course.setIsOpenedByPersonnel(register.getBoolean(Field.ISOPENEDBYPERSONNEL, false));
                     if ((DateHelper.getAbsTimeDiff(course.getStartDate(), register.getString(Field.START_DATE))
                             < DateHelper.TOLERANCE
                             && DateHelper.getAbsTimeDiff(course.getEndDate(), register.getString(Field.END_DATE))
@@ -145,25 +146,26 @@ public class SquashHelper {
      * @param registers Registers list
      * @return Json object containing each registers grouped by course identifier
      */
+    @SuppressWarnings("unchecked")
     private static JsonObject groupRegisters(JsonArray registers) {
         JsonObject values = new JsonObject();
-        JsonObject register, o;
-        for (int i = 0; i < registers.size(); i++) {
-            register = registers.getJsonObject(i);
-            if (!values.containsKey(register.getString("course_id"))) {
-                values.put(register.getString("course_id"), new JsonArray());
+
+        ((List<JsonObject>) registers.getList()).forEach(register -> {
+            if (!values.containsKey(register.getString(Field.COURSE_ID))) {
+                values.put(register.getString(Field.COURSE_ID), new JsonArray());
             }
 
-            o = new JsonObject()
-                    .put("id", register.getInteger("id"))
-                    .put("start_date", register.getString("start_date"))
-                    .put("course_id", register.getString("course_id"))
-                    .put("end_date", register.getString("end_date"))
-                    .put("state_id", register.getInteger("state_id"))
-                    .put("notified", register.getBoolean("notified"))
-                    .put("split_slot", register.getBoolean("split_slot"));
-            values.getJsonArray(register.getString("course_id")).add(o);
-        }
+            JsonObject r = new JsonObject()
+                    .put(Field.ID, register.getInteger(Field.ID))
+                    .put(Field.START_DATE, register.getString(Field.START_DATE))
+                    .put(Field.COURSE_ID, register.getString(Field.COURSE_ID))
+                    .put(Field.END_DATE, register.getString(Field.END_DATE))
+                    .put(Field.STATE_ID, register.getInteger(Field.STATE_ID))
+                    .put(Field.NOTIFIED, register.getBoolean(Field.NOTIFIED))
+                    .put(Field.SPLIT_SLOT, register.getBoolean(Field.SPLIT_SLOT))
+                    .put(Field.ISOPENEDBYPERSONNEL, register.getBoolean(Field.IS_OPENED_BY_PERSONNEL));
+            values.getJsonArray(register.getString(Field.COURSE_ID)).add(r);
+        });
 
         return values;
     }
