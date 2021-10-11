@@ -69,7 +69,11 @@ public class DefaultRegisterService extends DBService implements RegisterService
     public void list(String structureId, String start, String end, List<String> courseIds,
                      List<String> teacherIds, List<String> groupIds, boolean forgottenFilter,
                      Boolean isWithTeacherFilter, String limit, String offset, Handler<Either<String, JsonArray>> handler) {
-        String query = "SELECT id, start_date, end_date, course_id, state_id, notified, split_slot " +
+        String query = "SELECT id, start_date, end_date, course_id, state_id, notified, split_slot, " +
+                "CASE WHEN (SELECT COUNT(id) FROM presences.register rr " +
+                "LEFT JOIN presences.rel_teacher_register t ON rr.id = t.register_id " +
+                "WHERE rr.id = register.id AND (t.teacher_id IS NULL OR rr.owner = teacher_id)) > 0 " +
+                "THEN false ELSE true END AS is_opened_by_personnel " +
                 "FROM " + Presences.dbSchema + ".register AS register ";
 
         if (groupIds != null && !groupIds.isEmpty()) {
@@ -140,15 +144,19 @@ public class DefaultRegisterService extends DBService implements RegisterService
             /* sending empty array since we did not fetch any course_id */
             handler.handle(new Either.Right<>(new JsonArray()));
         } else {
-            String query = "SELECT id, start_date, end_date, course_id, state_id, notified, split_slot " +
-                    "FROM " + Presences.dbSchema + ".register " +
-                    "WHERE register.structure_id = ? " +
+            String query = "SELECT id, start_date, end_date, course_id, state_id, notified, split_slot, " +
+                    "CASE WHEN (SELECT COUNT(id) FROM presences.register rr " +
+                    "LEFT JOIN presences.rel_teacher_register t ON rr.id = t.register_id " +
+                    "WHERE rr.id = r.id AND (t.teacher_id IS NULL OR rr.owner = teacher_id)) > 0 " +
+                    "THEN false ELSE true END AS is_opened_by_personnel " +
+                    "FROM " + Presences.dbSchema + ".register r " +
+                    "WHERE r.structure_id = ? " +
                     "AND course_id IN " + Sql.listPrepared(coursesId);
             JsonArray params = new JsonArray()
                     .add(structureId)
                     .addAll(new JsonArray(coursesId));
 
-            Sql.getInstance().prepared(query, params, SqlResult.validResultHandler(handler));
+            sql.prepared(query, params, SqlResult.validResultHandler(handler));
         }
     }
 

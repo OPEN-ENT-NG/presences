@@ -286,6 +286,7 @@
   "presences.register.notify.body": "<p>L'appel du cours <em>{0} {1}</em> de <em>{2}</em> à <em>{3}</em> n'a pas encore été saisi.</p><p style=\"margin-top: 15px;\">La vie scolaire de l'établissement <em>{4}</em></p>",
   "presences.register.notify.err": "Une erreur est survenue lors de l'envoi de la notification",
   "presences.register.notify.subject": "Rappel : Appel du {0} non saisi",
+  "presences.register.opened.by.personnel": "Appel déjà ouvert par un personnel",
   "presences.register.open.404": "L'appel sélectionné n'a pas été trouvé",
   "presences.register.register.title": "Saisir un appel",
   "presences.register.status.done": "Terminé",

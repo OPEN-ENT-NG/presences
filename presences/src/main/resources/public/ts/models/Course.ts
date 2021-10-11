@@ -22,6 +22,7 @@ export interface Course {
     teachers: { id: string, displayName: string }[];
     notified: boolean;
     splitSlot: boolean;
+    isOpenedByPersonnel: boolean;
 }
 
 export class Course {

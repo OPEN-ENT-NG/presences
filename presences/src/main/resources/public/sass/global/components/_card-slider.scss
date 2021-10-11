@@ -52,6 +52,36 @@ $card-height: 85px;
       }
     }
 
+    .personnel-icon {
+      &:hover .register-tooltip{
+        @include tooltipVisible();
+      }
+
+      .register-tooltip {
+        @include tooltipTemplate();
+        max-width: 115px;
+        padding: 5px !important;
+        width: 100px;
+        bottom: 32px;
+        margin-left: -32px;
+        line-height: 16px;
+        @-moz-document url-prefix() {
+          margin-left: -12px;
+        }
+
+        &:after {
+          @include tooltipBottomArrow();
+          top: 100%;
+          left: 15%;
+        }
+      }
+    }
+
+    .clipboard-alert-outline {
+      font-size: 20px;
+      line-height: 20px;
+    }
+
     .hour {
       font-weight: bold;
     }

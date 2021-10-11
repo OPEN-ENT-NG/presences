@@ -279,4 +279,9 @@ i {
     content: '\f4eb';
   }
 
+  &.clipboard-alert-outline:before {
+    font-family: 'material-icons';
+    content: '\fcd3';
+  }
+
 }

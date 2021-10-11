@@ -52,7 +52,8 @@ export class RegisterUtils {
             structureId: "",
             subjectId: "",
             subjectName: "",
-            teachers: []
+            teachers: [],
+            isOpenedByPersonnel: false
         }
     }
 }

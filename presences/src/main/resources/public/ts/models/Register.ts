@@ -49,6 +49,7 @@ export interface Register {
     students: RegisterStudent[];
     teachers: Teacher[];
     teacherIds?: Array<string>;
+    isOpenedByPersonnel: boolean;
 }
 
 export class Register extends LoadingCollection {

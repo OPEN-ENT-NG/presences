@@ -38,8 +38,15 @@
                 </div>
             </div>
             <div ng-if="!hasSearchRight()" class="row">
-                <div class="row hour">[[::vm.formatHour(course.startDate)]] -
-                    [[::vm.formatHour(course.endDate)]]
+                <div class="row hour">
+                    <span>[[::vm.formatHour(course.startDate)]] - [[::vm.formatHour(course.endDate)]]</span>
+                    <!--icon register created by personnel-->
+                    <div class="personnel-icon right-magnet">
+                        <i ng-if="course.isOpenedByPersonnel" class="clipboard-alert-outline">&nbsp;</i>
+                        <span class="register-tooltip">
+                            <span><i18n>presences.register.opened.by.personnel</i18n></span>
+                        </span>
+                    </div>
                 </div>
                 <div class="row classes ellipsis">
                     <span ng-repeat="group in ::vm.getGroups(course.classes, course.groups)">[[::group]]</span>
