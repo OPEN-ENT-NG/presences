@@ -188,20 +188,19 @@ public class CreateDailyPresenceWorker extends BusModBase implements Handler<Mes
                     .onFailure(fail -> handler.handle(Future.failedFuture(fail.getCause())));
         });
 
-        listCoursesFuture(structureId, date, startTime, endTime, FutureHelper.handlerJsonArray(courseFuture));
+        listCoursesFuture(structureId, date, endTime, FutureHelper.handlerJsonArray(courseFuture));
         getFirstCounsellorId(structureId, personnelFuture);
     }
 
 
-    private void listCoursesFuture(String structureId, String date, String startTime, String endTime,
+    private void listCoursesFuture(String structureId, String date, String currentTime,
                                    Handler<Either<String, JsonArray>> handler) {
 
         settingsService.retrieveMultipleSlots(structureId)
                 .onFailure(fail -> handler.handle(new Either.Left<>(fail.getMessage())))
-                .onSuccess(res -> {
-                    courseService.listCourses(structureId, new ArrayList<>(), new ArrayList<>(), date, date,
-                            startTime, endTime, false, res.getBoolean(Field.ALLOW_MULTIPLE_SLOTS, true), handler);
-                });
+                .onSuccess(res -> courseService.listCourses(structureId, new ArrayList<>(), new ArrayList<>(), date, date,
+                        currentTime, currentTime, false, res.getBoolean(Field.ALLOW_MULTIPLE_SLOTS, true),
+                        null, null, null, null, "true", handler));
     }
 
     private void createRegisterFuture(JsonObject result, Course course, JsonObject register, Future<JsonObject> future,
