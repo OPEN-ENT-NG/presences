@@ -191,8 +191,8 @@ public class CreateDailyPresenceWorker extends BusModBase implements Handler<Mes
         listCoursesFuture(structureId, date, endTime, FutureHelper.handlerJsonArray(courseFuture));
         getFirstCounsellorId(structureId, personnelFuture);
     }
-
-
+    
+    // entTime is defined as currentTime
     private void listCoursesFuture(String structureId, String date, String currentTime,
                                    Handler<Either<String, JsonArray>> handler) {
 
