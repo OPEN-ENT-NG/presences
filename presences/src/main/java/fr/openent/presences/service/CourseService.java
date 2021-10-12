@@ -45,6 +45,24 @@ public interface CourseService {
                      String isWithTeacherFilter, Handler<Either<String, JsonArray>> handler);
 
     /**
+     * List courses
+     *
+     * @param structureId     Structure identifier
+     * @param teachersList    Teachers list identifiers
+     * @param groupsList      Groups list identifiers
+     * @param start           Start date
+     * @param end             End date
+     * @param forgottenFilter forgottenFilter
+     * @param multipleSlot    allow split courses
+     * @param handler         Function handler returning data
+     */
+    void listCourses(String structureId, List<String> teachersList, List<String> groupsList,
+                     String start, String end, String startTime, String endTime,
+                     boolean forgottenFilter, boolean multipleSlot,
+                     String limit, String offset, String descendingDate,
+                     String searchTeacher, String crossDateFilter, Handler<Either<String, JsonArray>> handler);
+
+    /**
      * List registers after fetching courses
      * @param structureId       structure identifier
      * @param teacherIds        {@link List} of teacher identifiers
@@ -60,12 +78,12 @@ public interface CourseService {
      *                          false -> order courses from oldest to most recent
      * @param searchTeacher     true -> fetch courses with teachers;
      *                          false -> fetch courses without teachers
+     * @param crossDateFilter   cross date filter (true : get registers beginning < start date and finishing end date)
      * @return                  {@link Future} of {@link List}
      */
-    Future<JsonArray> listRegistersWithCourses(String structureId, List<String> teacherIds, List<String> groupsList,
-                                  String start, String end, String startTime, String endTime,
-                                  boolean multipleSlot,
-                                  String limit, String offset, String descendingDate, String searchTeacher);
+    Future<JsonArray> listRegistersWithCourses(String structureId, List<String> teacherIds, List<String> groupsList, String start,
+                                               String end, String startTime, String endTime, boolean multipleSlot, String limit,
+                                               String offset, String descendingDate, String crossDateFilter, String searchTeacher);
 
     /**
      * List forgotten registers squashed with corresponding courses

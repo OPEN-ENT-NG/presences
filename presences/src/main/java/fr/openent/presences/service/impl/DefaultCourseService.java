@@ -100,15 +100,25 @@ public class DefaultCourseService extends DBService implements CourseService {
     public void listCourses(String structureId, List<String> teachersList, List<String> groupsList,
                             String start, String end, String startTime, String endTime,
                             boolean forgottenFilter, boolean multipleSlot,
-                            String limit, String offset, String descendingDate, String searchTeacher, Handler<Either<String, JsonArray>> handler) {
+                            String limit, String offset, String descendingDate,
+                            String searchTeacher, Handler<Either<String, JsonArray>> handler) {
+        this.listCourses(structureId, teachersList, groupsList, start, end, startTime, endTime,
+                forgottenFilter, multipleSlot, limit, offset, descendingDate, searchTeacher, null, handler);
+    }
 
+    @Override
+    public void listCourses(String structureId, List<String> teachersList, List<String> groupsList,
+                            String start, String end, String startTime, String endTime,
+                            boolean forgottenFilter, boolean multipleSlot,
+                            String limit, String offset, String descendingDate,
+                            String searchTeacher, String crossDateFilter, Handler<Either<String, JsonArray>> handler) {
 
         Future<JsonArray> getCoursesFuture = forgottenFilter ?
-                    listCoursesWithForgottenRegisters(structureId, teachersList, groupsList, start, end, multipleSlot, limit,
-                    offset, searchTeacher) :
-                    listRegistersWithCourses(structureId, teachersList,
-                            groupsList, start, end, startTime, endTime, multipleSlot, limit, offset,
-                            descendingDate, searchTeacher);
+                listCoursesWithForgottenRegisters(structureId, teachersList, groupsList, start, end, multipleSlot, limit,
+                        offset, searchTeacher) :
+                listRegistersWithCourses(structureId, teachersList,
+                        groupsList, start, end, startTime, endTime, multipleSlot, limit, offset,
+                        descendingDate, crossDateFilter, searchTeacher);
 
         getCoursesFuture
                 .onFailure(fail -> handler.handle(new Either.Left<>(fail.getMessage())))
@@ -120,12 +130,13 @@ public class DefaultCourseService extends DBService implements CourseService {
     public Future<JsonArray> listRegistersWithCourses(String structureId, List<String> teacherIds,
                                                       List<String> groupsList, String start, String end, String startTime,
                                                       String endTime, boolean multipleSlot, String limit,
-                                                      String offset, String descendingDate, String searchTeacher) {
+                                                      String offset, String descendingDate, String crossDateFilter,
+                                                      String searchTeacher) {
 
         Promise<JsonArray> promise = Promise.promise();
 
         courseHelper.getCourses(structureId, teacherIds, groupsList, start, end, startTime,
-                endTime, limit, offset, descendingDate, searchTeacher, event -> {
+                endTime, limit, offset, descendingDate, crossDateFilter, searchTeacher, event -> {
                     if (event.isLeft()) {
                         promise.fail(event.left().getValue());
                         return;
