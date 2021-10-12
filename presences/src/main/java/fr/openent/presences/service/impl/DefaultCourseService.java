@@ -111,7 +111,7 @@ public class DefaultCourseService extends DBService implements CourseService {
                             descendingDate, searchTeacher);
 
         getCoursesFuture
-                .onFailure(fail -> handler.handle(new Either.Left<>(fail.getCause().getMessage())))
+                .onFailure(fail -> handler.handle(new Either.Left<>(fail.getMessage())))
                 .onSuccess(courses -> handler.handle(new Either.Right<>(courses)));
     }
 
@@ -143,7 +143,7 @@ public class DefaultCourseService extends DBService implements CourseService {
                     Promise<JsonArray> registerEventFuture = Promise.promise();
 
                     CompositeFuture.all(teachersFuture, slotsFuture.future(), registerEventFuture.future())
-                            .onFailure(fail -> promise.fail(fail.getCause().getMessage()))
+                            .onFailure(fail -> promise.fail(fail.getMessage()))
                             .onSuccess(ar ->
                                     promise.complete(new JsonArray(getFormattedCourses(slotsFuture.future().result(),
                                             courses, registerEventFuture.future().result(), multipleSlot, searchTeacher))));

@@ -166,15 +166,17 @@ public class CreateDailyPresenceWorker extends BusModBase implements Handler<Mes
                 }
 
                 JsonObject register = new JsonObject()
-                        .put("start_date", course.getStartDate())
-                        .put("end_date", course.getEndDate())
-                        .put("subject_id", course.getSubjectId())
-                        .put("structure_id", structureId)
-                        .put("course_id", course.getId())
-                        .put("split_slot", true)
-                        .put("groups", course.getGroups())
-                        .put("classes", course.getClasses())
-                        .put("teacherIds", teachers);
+                        .put(Field.START_DATE, course.getStartDate())
+                        .put(Field.END_DATE, course.getEndDate())
+                        .put(Field.SUBJECT_ID, course.getSubjectId())
+                        .put(Field.STRUCTURE_ID, structureId)
+                        .put(Field.COURSE_ID, course.getId())
+                        .put(Field.SPLIT_SLOT, true)
+                        .put(Field.GROUPS, course.getGroups())
+                        .put(Field.CLASSES, course.getClasses())
+                        .put(Field.TEACHERIDS, new JsonArray(teachers
+                                .stream().map(teacher -> ((JsonObject) teacher).getString(Field.ID))
+                                .collect(Collectors.toList())));
 
                 Promise<JsonObject> promise = Promise.promise();
                 futures.add(promise.future());
