@@ -49,7 +49,7 @@
             <ul class="period" ng-click="vm.preventCollapse($event)">
                 <!-- planning  -->
                 <li data-ng-repeat="periods in event.student.day_history track by $index"
-                    data-ng-if="periods.name != undefined"
+                    data-ng-show="periods.name != undefined"
                     class="[[vm.eventTypeState(periods, $parent.$index, $index)]]"
                     data-ng-click="vm.openEventForm($event, periods, event.student.id)"
                     data-ng-mousedown="vm.dragSlotStart($event, periods, event.student.id, $parent.$index, $index)"
