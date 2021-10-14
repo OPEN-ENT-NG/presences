@@ -177,7 +177,7 @@ public class DefaultEventService extends DBService implements EventService {
                 EventQueryHelper.filterTimes(startTime, endTime, params) +
                 EventQueryHelper.filterStudentIds(studentIds, params) +
                 EventQueryHelper.filterFollowed(followed, params) +
-                EventQueryHelper.filterReasons(reasonIds, noReason, regularized, params) +
+                EventQueryHelper.filterReasons(reasonIds, noReason, regularized, typeIds, params) +
                 " GROUP BY student_id, date ";
     }
 
@@ -332,7 +332,8 @@ public class DefaultEventService extends DBService implements EventService {
         params.add(startDate + " " + defaultStartTime);
         params.add(endDate + " " + defaultEndTime);
 
-        query += setParamsForQueryEvents(listReasonIds, userId, regularized, followed, noReason, userIdFromClasses, params);
+        query += setParamsForQueryEvents(listReasonIds, userId, regularized, followed, noReason,
+                userIdFromClasses, eventType, params);
         query += ") SELECT * FROM allevents " +
                 "GROUP BY id, start_date, end_date, created, comment, student_id, reason_id, owner," +
                 "type_id, register_id, counsellor_regularisation, followed, type, register_id " +
@@ -363,13 +364,14 @@ public class DefaultEventService extends DBService implements EventService {
                 EventQueryHelper.joinEventType(eventType, params) +
                 EventQueryHelper.filterDates(startDate, endDate, params) +
                 EventQueryHelper.filterTimes(startTime, endTime, params) +
-                EventQueryHelper.filterReasons(listReasonIds, noReason, regularized, params) +
+                EventQueryHelper.filterReasons(listReasonIds, noReason, regularized, eventType, params) +
                 EventQueryHelper.filterStudentIds(userId, params) +
                 EventQueryHelper.filterFollowed(followed, params);
     }
 
     private String setParamsForQueryEvents(List<String> listReasonIds, List<String> userId, Boolean regularized,
-                                           Boolean followed, Boolean noReason, JsonArray userIdFromClasses, JsonArray params) {
+                                           Boolean followed, Boolean noReason, JsonArray userIdFromClasses,
+                                           List<String> typeIds, JsonArray params) {
         String query = "";
 
         if (userIdFromClasses != null && !userIdFromClasses.isEmpty()) {
@@ -399,7 +401,15 @@ public class DefaultEventService extends DBService implements EventService {
             // If we want to fetch events WITH reasonId, array reasonIds fetched is not empty
             // (optional if we wish noReason fetched at same time then noReason is TRUE)
             if (listReasonIds != null && !listReasonIds.isEmpty()) {
-                query += " AND (reason_id IN " + Sql.listPrepared(listReasonIds) + (noReason != null && noReason ? " OR reason_id IS NULL" : "") + ") ";
+                query += " AND ((reason_id IN " + Sql.listPrepared(listReasonIds) + ")";
+
+                if (noReason != null && noReason) {
+                    query += " OR reason_id IS NULL";
+                } else {
+                    query += typeIds.contains(EventType.LATENESS.getType().toString())
+                            ? (" OR type_id = " + EventType.LATENESS.getType()) : "";
+                }
+                query += ")";
                 params.addAll(new JsonArray(listReasonIds));
             }
 
