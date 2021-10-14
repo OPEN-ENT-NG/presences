@@ -1,5 +1,6 @@
 package fr.openent.presences.helper;
 
+import fr.openent.presences.enums.EventType;
 import io.vertx.core.json.JsonArray;
 import org.entcore.common.sql.Sql;
 
@@ -164,7 +165,8 @@ public class EventQueryHelper {
      * @param params      JsonArray params where you add the reasonIds, no reason and regularized boolean
      * @return {String}
      */
-    public static String filterReasons(List<String> reasonIds, Boolean noReason, Boolean regularized, JsonArray params) {
+    public static String filterReasons(List<String> reasonIds, Boolean noReason, Boolean regularized,
+                                       List<String> typeIds, JsonArray params) {
         String query = "";
 
         // this condition occurs when we want to filter no reason and regularized event at the same time
@@ -181,7 +183,15 @@ public class EventQueryHelper {
             // If we want to fetch events WITH reasonId, array reasonIds fetched is not empty
             // (optional if we wish noReason fetched at same time then noReason is TRUE)
             if (reasonIds != null && !reasonIds.isEmpty()) {
-                query += " AND (reason_id IN " + Sql.listPrepared(reasonIds) + (noReason != null && noReason ? " OR reason_id IS NULL" : "") + ") ";
+                query += " AND ((reason_id IN " + Sql.listPrepared(reasonIds) + ")";
+
+                if (noReason != null && noReason) {
+                    query += " OR reason_id IS NULL";
+                } else {
+                    query += typeIds.contains(EventType.LATENESS.getType().toString())
+                            ? (" OR type_id = " + EventType.LATENESS.getType()) : "";
+                }
+                query += ")";
                 params.addAll(new JsonArray(reasonIds));
             }
 
