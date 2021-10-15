@@ -245,7 +245,10 @@ export const PunishmentDetentionForm = ng.directive('punishmentDetentionForm', [
                 };
 
                 vm.changeDateInput = (): void => {
-                    (<IPDetentionField>vm.form.fields).start_at = DateUtils.getDateFormat(moment(vm.date.date), moment((<IPDetentionField>vm.form.fields).start_at));
+                    (<IPDetentionField>vm.form.fields).start_at = DateUtils.getDateFormat(moment(vm.date.date),
+                        moment((<IPDetentionField>vm.form.fields).start_at));
+                    (<IPDetentionField>vm.form.fields).end_at = DateUtils.getDateFormat(moment(vm.date.date),
+                        moment((<IPDetentionField>vm.form.fields).end_at));
                 };
 
                 vm.getDisplayOwnerName = (): string => {
