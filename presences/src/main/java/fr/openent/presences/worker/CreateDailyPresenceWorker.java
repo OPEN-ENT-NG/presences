@@ -150,7 +150,9 @@ public class CreateDailyPresenceWorker extends BusModBase implements Handler<Mes
                     log.error(message);
                 }
             } else {
-                personnelId = personnelFuture.future().result();
+                if (!personnelFuture.future().result().isEmpty()){
+                    personnelId = personnelFuture.future().result();
+                }
             }
 
             JsonObject result = new JsonObject()
@@ -180,8 +182,7 @@ public class CreateDailyPresenceWorker extends BusModBase implements Handler<Mes
 
                 Promise<JsonObject> promise = Promise.promise();
                 futures.add(promise.future());
-                String userId = teachers.isEmpty() ? personnelId : teachers.getJsonObject(0).getString(Field.ID);
-                createRegisterFuture(result, course, register, promise.future(), userId);
+                createRegisterFuture(result, course, register, promise.future(), personnelId);
             }
             CompositeFuture.join(futures)
                     .onSuccess(resultFutures -> handler.handle(Future.succeededFuture(result)))
