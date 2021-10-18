@@ -459,7 +459,7 @@
   "presences.widgets.day.forgotten.registers": "Derniers appels oubliés du jour",
   "presences.widgets.day.forgotten.registers.empty": "Pas d'appel oublié aujourd'hui",
   "presences.widgets.day.set.multiple.slot": "Appels multiples pour mes cours dépassant 1h",
-  "presences.widgets.day.set.multiple.slot.toolip.activate": "Activez cette option pour générer plusieurs appels pour les cours dépassant 1h. Valable à partir du prochain cours.",
+  "presences.widgets.day.set.multiple.slot.toolip.activate": "Activez cette option pour générer plusieurs appels pour les cours dépassant 1h. Valable à partir du prochain cours si l'appel n'a pas déjà été ouvert.",
   "presences.widgets.day.set.multiple.slot.toolip.disable": "Désactivez cette option pour générer un appel unique pour les cours dépassant 1h. Valable à partir du prochain cours.",
   "presences.widgets.day_presences": "Présences du jour",
   "presences.widgets.day.presences.empty": "Pas de présences déclarées aujourd'hui",
