@@ -234,7 +234,7 @@ public class EventQueryHelper {
     public static String filterFollowed(Boolean followed, JsonArray params) {
         if (followed != null) {
             params.add(followed);
-            return " AND followed = ? ";
+            return " AND (followed = ? OR type_id != " + EventType.ABSENCE.getType() + ")";
         }
         return "";
     }

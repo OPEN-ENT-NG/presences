@@ -54,6 +54,7 @@
   "presences.absence.select.empty": "Sans motif",
   "presences.absence.select.multiple": "Motifs multiples",
   "presences.absence.state.absence": "Etat de l'absence",
+  "presences.absence.followed.absence": "Suivi de l'absence",
   "presences.absence.types.justified.not.regularized": "Absences non régularisées",
   "presences.absence.types.justified.regularized": "Absences régularisées",
   "presences.absence.types.followed": "Absences suivies",

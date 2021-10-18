@@ -1116,7 +1116,7 @@ export const eventsController = ng.controller('EventsController', ['$scope', '$r
 
         vm.adaptEvent = function () {
             if (!vm.formFilter.unjustified && !vm.formFilter.justifiedNotRegularized
-                && !vm.formFilter.justifiedRegularized && !vm.formFilter.followed && !vm.formFilter.notFollowed) {
+                && !vm.formFilter.justifiedRegularized) {
                 vm.switchAbsencesFilter();
             }
         };
