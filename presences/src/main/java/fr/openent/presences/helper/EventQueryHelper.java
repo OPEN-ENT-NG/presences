@@ -202,7 +202,8 @@ public class EventQueryHelper {
             }
 
             if (regularized != null) {
-                query += " AND counsellor_regularisation = " + regularized + " ";
+                query += " AND (counsellor_regularisation = " + regularized
+                        + " OR type_id != " + EventType.ABSENCE.getType() +") ";
             }
         }
 
@@ -234,7 +235,7 @@ public class EventQueryHelper {
     public static String filterFollowed(Boolean followed, JsonArray params) {
         if (followed != null) {
             params.add(followed);
-            return " AND followed = ? ";
+            return " AND (followed = ? OR type_id != " + EventType.ABSENCE.getType() + ")";
         }
         return "";
     }

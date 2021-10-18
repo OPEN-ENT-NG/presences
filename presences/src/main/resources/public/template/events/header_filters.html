@@ -112,6 +112,15 @@
                    data-ng-click="vm.switchjustifiedRegularizedFilter(); vm.adaptEvent();">
                 <i18n>presences.absence.types.justified.regularized</i18n>
             </label>
+        </div>
+    </div>
+
+    <div class="row vertical-spacing" ng-if="vm.formFilter.absences">
+        <!-- Followed Filter -->
+        <h4 class="row">
+            <i18n class="cell">presences.absence.followed.absence</i18n>
+        </h4>
+        <div class="chips">
             <label class="chip" ng-class="{selected: vm.formFilter.followed}"
                    data-ng-click="vm.switchFollowedFilter(); vm.adaptEvent();">
                 <i18n>presences.absence.types.followed</i18n>
@@ -122,6 +131,7 @@
             </label>
         </div>
     </div>
+
     <div class="row vertical-spacing" ng-if="vm.formFilter.absences">
         <!-- Reason Type Filter -->
         <h4>
