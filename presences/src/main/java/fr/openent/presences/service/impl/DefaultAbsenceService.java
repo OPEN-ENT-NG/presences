@@ -64,6 +64,27 @@ public class DefaultAbsenceService extends DBService implements AbsenceService {
     }
 
     @Override
+    public Future<JsonArray> get(String structureId, String startDate, String endDate, List<String> users) {
+        Promise<JsonArray> promise = Promise.promise();
+        JsonArray params = new JsonArray();
+        String query = "SELECT * FROM " + Presences.dbSchema + ".absence" +
+                " WHERE structure_id = ? AND ? <= end_date AND start_date <= ?";
+
+        params.add(structureId);
+        params.add(startDate);
+        params.add(endDate);
+
+        if (!users.isEmpty()) {
+            query += " AND student_id IN " + Sql.listPrepared(users.toArray());
+            params.addAll(new JsonArray(users));
+        }
+
+        sql.prepared(query, params, SqlResult.validResultHandler(FutureHelper.handlerJsonArray(promise)));
+
+        return promise.future();
+    }
+
+    @Override
     public void getAbsenceInEvents(String structureId, String startDate, String endDate,
                                    List<String> users, Handler<Either<String, JsonArray>> handler) {
         JsonArray params = new JsonArray();
@@ -108,6 +129,18 @@ public class DefaultAbsenceService extends DBService implements AbsenceService {
         params.add(endDate + " " + defaultEndTime);
 
         Sql.getInstance().prepared(query, params, SqlResult.validResultHandler(handler));
+    }
+
+    @Override
+    public Future<JsonArray> getAbsencesIds(String startDate, String endDate, List<String> users, String structureId) {
+        Promise<JsonArray> promise = Promise.promise();
+
+        get(structureId, startDate, endDate, users)
+                .onFailure(fail -> promise.fail(fail.getMessage()))
+                .onSuccess(absences -> promise.complete(new JsonArray(absences.stream()
+                                .map(a -> ((JsonObject) a).getLong(Field.ID)).collect(Collectors.toList()))));
+
+        return promise.future();
     }
 
     @Override
