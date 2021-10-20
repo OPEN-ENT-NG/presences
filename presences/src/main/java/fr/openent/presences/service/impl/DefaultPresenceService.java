@@ -5,6 +5,7 @@ import fr.openent.presences.common.helper.FutureHelper;
 import fr.openent.presences.common.helper.PersonHelper;
 import fr.openent.presences.common.service.*;
 import fr.openent.presences.common.service.impl.*;
+import fr.openent.presences.core.constants.*;
 import fr.openent.presences.db.*;
 import fr.openent.presences.helper.DisciplineHelper;
 import fr.openent.presences.helper.PresenceHelper;
@@ -13,25 +14,19 @@ import fr.openent.presences.model.Person.Student;
 import fr.openent.presences.model.Person.User;
 import fr.openent.presences.model.Presence.MarkedStudent;
 import fr.openent.presences.model.Presence.Presence;
-import fr.openent.presences.service.DisciplineService;
-import fr.openent.presences.service.PresenceService;
+import fr.openent.presences.service.*;
 import fr.wseduc.webutils.Either;
-import io.vertx.core.AsyncResult;
-import io.vertx.core.CompositeFuture;
-import io.vertx.core.Future;
-import io.vertx.core.Handler;
+import io.vertx.core.*;
 import io.vertx.core.eventbus.*;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
-import org.entcore.common.neo4j.*;
 import org.entcore.common.sql.Sql;
 import org.entcore.common.sql.SqlResult;
 import org.entcore.common.user.UserInfos;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
 import java.util.stream.*;
 
 public class DefaultPresenceService extends DBService implements PresenceService {
@@ -44,6 +39,7 @@ public class DefaultPresenceService extends DBService implements PresenceService
     private PresenceHelper presenceHelper;
     private UserService userService;
     private GroupService groupService;
+    private AbsenceService absenceService;
 
     public DefaultPresenceService(EventBus eb) {
         this.disciplineService = new DefaultDisciplineService();
@@ -51,6 +47,7 @@ public class DefaultPresenceService extends DBService implements PresenceService
         this.presenceHelper = new PresenceHelper();
         this.userService = new DefaultUserService();
         this.groupService = new DefaultGroupService(eb);
+        this.absenceService = new DefaultAbsenceService(eb);
     }
 
     @Override
@@ -225,33 +222,73 @@ public class DefaultPresenceService extends DBService implements PresenceService
     }
 
     @Override
+    @SuppressWarnings("unchecked")
     public void create(UserInfos user, JsonObject presenceBody, Handler<Either<String, JsonObject>> handler) {
-        String queryId = "SELECT nextval('" + Presences.dbSchema + ".presence_id_seq') as id";
 
-        Sql.getInstance().raw(queryId, SqlResult.validUniqueResultHandler(presenceId -> {
-            if (presenceId.isLeft()) {
-                String message = "[Presences@DefaultPresenceService] Failed to fetch presence id seq";
-                LOGGER.error(message);
-                handler.handle(new Either.Left<>(message));
-            }
-            Integer id = presenceId.right().getValue().getInteger("id");
+        List<String> studentIds = presenceBody.getJsonArray(Field.MARKEDSTUDENTS)
+                .stream().map(student -> ((JsonObject) student).getString(Field.STUDENTID))
+                .collect(Collectors.toList());
 
-            JsonArray statements = new JsonArray();
-            statements.add(createPresenceStatement(user, id, presenceBody));
-            for (int i = 0; i < presenceBody.getJsonArray("markedStudents").size(); i++) {
-                JsonObject student = presenceBody.getJsonArray("markedStudents").getJsonObject(i);
-                statements.add(addStudentsStatement(id, student.getString("studentId"), student.getString("comment")));
-            }
-            Sql.getInstance().transaction(statements, async -> {
-                Either<String, JsonObject> result = SqlResult.validUniqueResult(0, async);
-                if (result.isLeft()) {
-                    String message = "[Presences@DefaultPresenceService] Failed to execute presence creation statements";
-                    LOGGER.error(message);
-                    handler.handle(new Either.Left<>(message));
-                }
-                handler.handle(new Either.Right<>(result.right().getValue()));
-            });
-        }));
+        absenceService.getAbsencesIds(presenceBody.getString(Field.STARTDATE),
+                        presenceBody.getString(Field.ENDDATE),
+                        studentIds, presenceBody.getString(Field.STRUCTUREID))
+                .compose(absenceIds -> regularizeAbsences(absenceIds, user)
+                        .onFailure(fail -> handler.handle(new Either.Left<>(fail.getMessage())))
+                        .onSuccess(ar -> {
+                            String queryId = "SELECT nextval('" + Presences.dbSchema + ".presence_id_seq') as id";
+
+                            sql.raw(queryId, SqlResult.validUniqueResultHandler(presenceId -> {
+                                if (presenceId.isLeft()) {
+                                    String message = String.format("[Presences@%s::create] Failed to fetch " +
+                                                    "presence id seq :%s",
+                                            this.getClass().getSimpleName(), presenceId.left().getValue());
+                                    LOGGER.error(message);
+                                    handler.handle(new Either.Left<>(message));
+                                } else {
+                                    Integer id = presenceId.right().getValue().getInteger(Field.ID);
+
+                                    JsonArray statements = new JsonArray();
+                                    statements.add(createPresenceStatement(user, id, presenceBody));
+
+                                    JsonArray markedStudents = presenceBody.getJsonArray(Field.MARKEDSTUDENTS);
+
+                                    for (int i = 0; i < presenceBody.getJsonArray(Field.MARKEDSTUDENTS).size(); i++) {
+                                        JsonObject student = presenceBody.getJsonArray(Field.MARKEDSTUDENTS).getJsonObject(i);
+                                        statements.add(addStudentsStatement(id, student.getString(Field.STUDENTID), student.getString(Field.COMMENT)));
+                                    }
+
+                                    sql.transaction(statements, async -> {
+                                        Either<String, JsonObject> result = SqlResult.validUniqueResult(0, async);
+                                        if (result.isLeft()) {
+                                            String message = String.format("[Presences@%s::create] Failed to execute " +
+                                                            "presence creation statements : %s", this.getClass().getSimpleName(),
+                                                    result.left().getValue());
+                                            LOGGER.error(message);
+                                            handler.handle(new Either.Left<>(message));
+                                        }
+                                        handler.handle(new Either.Right<>(result.right().getValue()));
+                                    });
+                                }
+                            }));
+                        }));
+    }
+
+    /**
+     * Regularize absences from identifier list
+     * @param absenceIds    list of absences identifiers
+     * @param user          user infos
+     * @return              {@link Future} of {@link JsonObject}
+     */
+    private Future<JsonObject> regularizeAbsences(JsonArray absenceIds, UserInfos user) {
+        Promise<JsonObject> promise = Promise.promise();
+
+        JsonObject absences = new JsonObject()
+                .put(Field.IDS, absenceIds)
+                .put(Field.REGULARIZED, true);
+
+        absenceService.changeRegularizedAbsences(absences, user, FutureHelper.handlerJsonObject(promise));
+
+        return promise.future();
     }
 
     /**

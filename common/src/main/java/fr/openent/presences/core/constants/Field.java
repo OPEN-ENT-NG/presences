@@ -4,6 +4,7 @@ public class Field {
 
     public static final String ID = "id";
     public static final String _ID = "_id";
+    public static final String IDS = "ids";
     public static final String CLASSES = "classes";
     public static final String COURSES = "courses";
     public static final String GROUP = "group";
@@ -19,6 +20,7 @@ public class Field {
     public static final String STRUCTUREID = "structureId";
     public static final String STUDENT = "student";
     public static final String STUDENT_ID = "student_id";
+    public static final String STUDENTID = "studentId";
     public static final String SUBJECT = "subject";
     public static final String SUBJECT_ID = "subject_id";
     public static final String SUBJECTID = "subjectId";
@@ -92,6 +94,12 @@ public class Field {
     public static final String TIMESTAMP = "timestamp";
     public static final String UPDATED = "updated";
 
+    // Presence
+    public static final String COMMENT = "comment";
+    public static final String MARKEDSTUDENTS = "markedStudents";
+
+    // Absence
+    public static final String REGULARIZED = "regularized";
 
     public static final String FORGOTTEN_REGISTERS = "forgotten_registers";
 
