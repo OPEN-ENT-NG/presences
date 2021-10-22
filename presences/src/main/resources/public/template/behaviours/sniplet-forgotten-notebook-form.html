@@ -46,7 +46,7 @@
     <!-- footer/buttons -->
     <div class="forgotten-notebook-form-footer row">
         <!-- reset mode  -->
-        <button disabled class="forbidden">
+        <button data-ng-disabled="vm.count_forgotten_notebook === 0" data-ng-click="vm.resetForbiddenNotebookCount(vm.form.studentId)">
             <i18n>presences.reset</i18n>
         </button>
 

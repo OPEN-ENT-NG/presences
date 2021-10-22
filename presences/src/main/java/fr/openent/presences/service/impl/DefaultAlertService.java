@@ -1,11 +1,11 @@
 package fr.openent.presences.service.impl;
 
 import fr.openent.presences.Presences;
+import fr.openent.presences.common.helper.*;
+import fr.openent.presences.db.*;
 import fr.openent.presences.service.AlertService;
 import fr.wseduc.webutils.Either;
-import io.vertx.core.CompositeFuture;
-import io.vertx.core.Future;
-import io.vertx.core.Handler;
+import io.vertx.core.*;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import org.entcore.common.neo4j.Neo4j;
@@ -18,7 +18,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-public class DefaultAlertService implements AlertService {
+public class DefaultAlertService extends DBService implements AlertService {
 
     @Override
     public void delete(List<String> alerts, Handler<Either<String, JsonObject>> handler) {
@@ -160,5 +160,27 @@ public class DefaultAlertService implements AlertService {
                 handler.handle(new Either.Left<>(event.cause().getMessage()));
             }
         });
+    }
+
+    @Override
+    public Future<JsonObject> resetStudentAlertsCount(String structureId, String studentId, String type) {
+        Promise<JsonObject> promise = Promise.promise();
+
+        String query = "DELETE FROM " + Presences.dbSchema + ".alerts" +
+                " WHERE student_id = ? AND structure_id = ? AND type = ? ";
+
+        JsonArray params = new JsonArray().add(studentId)
+                        .add(structureId)
+                        .add(type);
+
+       sql.prepared(query, params, SqlResult.validUniqueResultHandler(res -> {
+           if (res.isLeft()) {
+               promise.fail(res.left().getValue());
+           } else {
+               promise.complete(new JsonObject().put("status", "ok"));
+           }
+       }));
+
+        return promise.future();
     }
 }
