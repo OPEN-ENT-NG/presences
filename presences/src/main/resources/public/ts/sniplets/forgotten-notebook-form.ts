@@ -3,6 +3,7 @@ import {alertService, forgottenNotebookService, NotebookRequest} from "../servic
 import {idiom as lang, moment, toasts} from "entcore";
 import {DateUtils} from "@common/utils";
 import {AlertType} from "../models";
+import {AxiosResponse} from "axios";
 
 console.log("forgottenNotebookFormSniplets");
 
@@ -34,6 +35,8 @@ interface ViewModel {
     updateForbiddenNotebook(): Promise<void>;
 
     deleteForbiddenNotebook(): Promise<void>;
+
+    resetForbiddenNotebookCount(studentId: string): Promise<void>;
 
     getStudentForgottenNoteBookNumberWithThreshold(id?: string): void;
 
@@ -125,6 +128,24 @@ const vm: ViewModel = {
         forgottenNotebookForm.that.$emit(SNIPLET_FORM_EMIT_EVENTS.DELETE);
         vm.safeApply();
     },
+
+    resetForbiddenNotebookCount: async (studentId: string): Promise<void> => {
+        try {
+            let response: AxiosResponse = await alertService.resetStudentAlertsCount(window.structure.id, studentId,
+                AlertType[AlertType.FORGOTTEN_NOTEBOOK]);
+
+            if (response.status === 200 || response.status === 201) {
+                vm.getStudentForgottenNoteBookNumberWithThreshold(studentId);
+                toasts.confirm(lang.translate('presences.forgotten.form.reset.succeed'));
+            } else {
+                toasts.warning(lang.translate('presences.forgotten.form.delete.error'));
+            }
+            vm.safeApply();
+        } catch (e) {
+            throw e;
+        }
+    },
+
 
     getStudentForgottenNoteBookNumberWithThreshold: async (id?: string) => {
         // assigning id from parameter as student id, case we did not find it,

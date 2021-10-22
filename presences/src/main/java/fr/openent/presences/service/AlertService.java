@@ -1,7 +1,7 @@
 package fr.openent.presences.service;
 
 import fr.wseduc.webutils.Either;
-import io.vertx.core.Handler;
+import io.vertx.core.*;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 
@@ -43,4 +43,13 @@ public interface AlertService {
      * @param handler     function handler returning data
      */
     void getStudentAlertNumberWithThreshold(String structureId, String studentId, String type, Handler<Either<String, JsonObject>> handler);
+
+    /**
+     * Delete alerts of given type for a student
+     * @param structureId   structure identifier
+     * @param studentId     student identifier
+     * @param type          alert type
+     * @return  {@link Future} of {@link JsonObject}
+     */
+    Future<JsonObject> resetStudentAlertsCount(String structureId, String studentId, String type);
 }

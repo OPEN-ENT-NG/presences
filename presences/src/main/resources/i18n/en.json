@@ -166,6 +166,8 @@
   "presences.filters": "Filtres",
   "presences.forgotten.form.create.succeed": "Carnet oublié créé avec succès",
   "presences.forgotten.form.delete.succeed": "Carnet oublié supprimé avec succès",
+  "presences.forgotten.form.delete.error": "Erreur lors de la réinitialisation",
+  "presences.forgotten.form.reset.succeed": "Réinitalisation effectuée avec succès",
   "presences.forgotten.form.edit.succeed": "Carnet oublié modifié avec succès",
   "presences.forgotten.notebook": "Carnet oublié",
   "presences.forgotten.notebook.2": "Oublis de carnet",
