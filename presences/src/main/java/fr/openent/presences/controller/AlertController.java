@@ -5,15 +5,14 @@ import fr.openent.presences.common.service.GroupService;
 import fr.openent.presences.common.service.impl.DefaultGroupService;
 import fr.openent.presences.constants.Actions;
 import fr.openent.presences.constants.Alerts;
+import fr.openent.presences.core.constants.*;
 import fr.openent.presences.export.AlertsCSVExport;
 import fr.openent.presences.security.Alert.AlertStudentNumber;
 import fr.openent.presences.security.AlertFilter;
 import fr.openent.presences.security.DeleteAlertFilter;
 import fr.openent.presences.service.AlertService;
 import fr.openent.presences.service.impl.DefaultAlertService;
-import fr.wseduc.rs.ApiDoc;
-import fr.wseduc.rs.Delete;
-import fr.wseduc.rs.Get;
+import fr.wseduc.rs.*;
 import fr.wseduc.security.ActionType;
 import fr.wseduc.security.SecuredAction;
 import fr.wseduc.webutils.Either;
@@ -118,19 +117,34 @@ public class AlertController extends ControllerHelper {
     @ResourceFilter(AlertStudentNumber.class)
     @ApiDoc("Get student alert number by given type with the corresponding threshold")
     public void getStudentAlertNumberWithThreshold(HttpServerRequest request) {
-        String type = request.params().get("type");
+        String type = request.params().get(Field.TYPE);
         if (type == null || !Alerts.ALERT_LIST.contains(type)) {
             badRequest(request);
             return;
         }
 
-        alertService.getStudentAlertNumberWithThreshold(
-                request.getParam("id"),
-                request.getParam("studentId"),
-                type,
-                defaultResponseHandler(request)
+        alertService.getStudentAlertNumberWithThreshold(request.getParam(Field.ID), request.getParam(Field.STUDENTID),
+                type, defaultResponseHandler(request)
         );
     }
+
+    @Delete("/structures/:id/students/:studentId/alerts/reset")
+    @SecuredAction(value = "", type = ActionType.RESOURCE)
+    @ResourceFilter(AlertFilter.class)
+    @Trace(Actions.ALERT_DELETION)
+    @ApiDoc("Reset student alert count")
+    public void resetStudentAlertsCount(HttpServerRequest request) {
+        String type = request.params().get(Field.TYPE);
+        if (type == null || !Alerts.ALERT_LIST.contains(type)) {
+            badRequest(request);
+            return;
+        }
+
+        alertService.resetStudentAlertsCount(request.getParam(Field.ID), request.getParam(Field.STUDENTID), type)
+                .onSuccess(res -> renderJson(request, res))
+                .onFailure(unused -> renderError(request));
+    }
+
 
     @Get("/structures/:id/alerts/export")
     @ApiDoc("Export alerts")

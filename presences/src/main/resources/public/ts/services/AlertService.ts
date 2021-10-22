@@ -1,5 +1,5 @@
 import {ng} from 'entcore';
-import http from 'axios';
+import http, {AxiosResponse} from 'axios';
 import {Alert} from "@presences/models/Alert";
 
 export interface AlertService {
@@ -10,6 +10,8 @@ export interface AlertService {
     getStudentAlerts(structureId: string, studentId: string, type: string): Promise<{ count: number, threshold: number }>;
 
     reset(alerts: Array<number>): Promise<void>;
+
+    resetStudentAlertsCount(structureId: string, studentId: string, type: string): Promise<AxiosResponse>;
 
     exportCSV(structureId: string, type: string[]): void;
 }
@@ -70,6 +72,10 @@ export const alertService: AlertService = {
         } catch (e) {
             throw e;
         }
+    },
+
+    resetStudentAlertsCount(structureId: string, studentId: string, type: string): Promise<AxiosResponse> {
+        return http.delete(`/presences/structures/${structureId}/students/${studentId}/alerts/reset?type=${type}`);
     },
 
     exportCSV(structureId: string, types: string[]): void {

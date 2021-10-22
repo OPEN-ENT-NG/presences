@@ -94,6 +94,9 @@ public class Field {
     public static final String TIMESTAMP = "timestamp";
     public static final String UPDATED = "updated";
 
+    // Alert
+    public static final String TYPE = "type";
+
     // Presence
     public static final String COMMENT = "comment";
     public static final String MARKEDSTUDENTS = "markedStudents";
