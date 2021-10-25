@@ -4,6 +4,7 @@ import fr.openent.presences.Presences;
 import fr.openent.presences.common.helper.WorkflowHelper;
 import fr.openent.presences.common.service.UserService;
 import fr.openent.presences.common.service.impl.DefaultUserService;
+import fr.openent.presences.core.constants.*;
 import fr.openent.presences.enums.WorkflowActions;
 import fr.openent.presences.model.StatementAbsence;
 import fr.openent.presences.service.StatementAbsenceService;
@@ -97,31 +98,35 @@ public class DefaultStatementAbsenceService implements StatementAbsenceService {
 
     @Override
     public void getFile(UserInfos user, MultiMap body, Handler<AsyncResult<JsonObject>> handler) {
-        List<String> student_ids = null;
-        if (!WorkflowHelper.hasRight(user, WorkflowActions.MANAGE_ABSENCE_STATEMENTS.toString())) {
-            student_ids = body.getAll("student_id");
-            boolean isValid = student_ids.size() > 0;
-            for (String id : student_ids) {
+        List<String> studentIds = null;
+        if (!WorkflowHelper.hasRight(user, WorkflowActions.ABSENCE_STATEMENTS_VIEW.toString())) {
+            studentIds = body.getAll(Field.STUDENT_ID);
+            boolean isValid = !studentIds.isEmpty();
+            for (String id : studentIds) {
                 if (!(user.getUserId().equals(id) || user.getChildrenIds().contains(id))) isValid = false;
             }
             if (!isValid) {
-                String message = "[Presences@DefaultStatementAbsenceService:getFile] You are not authorized to get this file.";
+                String message = String.format("[Presences@%s:getFile] You are not authorized to get this file.",
+                        this.getClass().getSimpleName());
                 log.error(message);
                 handler.handle(Future.failedFuture(message));
                 return;
             }
         }
 
-        getRequest(null, null, null,body.get("structure_id"), body.get("idStatement"), null, null, student_ids, null, result -> {
+        getRequest(null, null, null,body.get(Field.STRUCTURE_ID), body.get(Field.IDSTATEMENT),
+                null, null, studentIds, null, result -> {
             if (result.failed()) {
-                String message = "[Presences@DefaultStatementAbsenceService:getFile] Failed to retrieve absence statements.";
+                String message = String.format("[Presences@%s:getFile] Failed to retrieve absence statements.",
+                        this.getClass().getSimpleName());
                 log.error(message + " " + result.cause().getMessage());
                 handler.handle(Future.failedFuture(message));
                 return;
             }
 
             if (result.result().size() != 1) {
-                String message = "[Presences@DefaultStatementAbsenceService:getFile] You are not authorized to get this file.";
+                String message = String.format("[Presences@%s:getFile] You are not authorized to get this file.",
+                        this.getClass().getSimpleName());
                 log.error(message);
                 handler.handle(Future.failedFuture(message));
                 return;

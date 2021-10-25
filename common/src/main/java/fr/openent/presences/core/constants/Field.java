@@ -98,6 +98,9 @@ public class Field {
     public static final String COMMENT = "comment";
     public static final String MARKEDSTUDENTS = "markedStudents";
 
+    // Statement
+    public static final String IDSTATEMENT = "idStatement";
+
     // Absence
     public static final String REGULARIZED = "regularized";
 
