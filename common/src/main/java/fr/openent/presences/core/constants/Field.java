@@ -100,6 +100,7 @@ public class Field {
 
     // Absence
     public static final String REGULARIZED = "regularized";
+    public static final String REASONID = "reasonId";
 
     public static final String FORGOTTEN_REGISTERS = "forgotten_registers";
 
