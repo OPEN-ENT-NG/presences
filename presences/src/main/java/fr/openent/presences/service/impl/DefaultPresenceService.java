@@ -5,6 +5,7 @@ import fr.openent.presences.common.helper.FutureHelper;
 import fr.openent.presences.common.helper.PersonHelper;
 import fr.openent.presences.common.service.*;
 import fr.openent.presences.common.service.impl.*;
+import fr.openent.presences.constants.*;
 import fr.openent.presences.core.constants.*;
 import fr.openent.presences.db.*;
 import fr.openent.presences.helper.DisciplineHelper;
@@ -232,7 +233,7 @@ public class DefaultPresenceService extends DBService implements PresenceService
         absenceService.getAbsencesIds(presenceBody.getString(Field.STARTDATE),
                         presenceBody.getString(Field.ENDDATE),
                         studentIds, presenceBody.getString(Field.STRUCTUREID))
-                .compose(absenceIds -> regularizeAbsences(absenceIds, user)
+                .compose(absenceIds -> updateAbsencesReason(absenceIds, user)
                         .onFailure(fail -> handler.handle(new Either.Left<>(fail.getMessage())))
                         .onSuccess(ar -> {
                             String queryId = "SELECT nextval('" + Presences.dbSchema + ".presence_id_seq') as id";
@@ -252,8 +253,8 @@ public class DefaultPresenceService extends DBService implements PresenceService
 
                                     JsonArray markedStudents = presenceBody.getJsonArray(Field.MARKEDSTUDENTS);
 
-                                    for (int i = 0; i < presenceBody.getJsonArray(Field.MARKEDSTUDENTS).size(); i++) {
-                                        JsonObject student = presenceBody.getJsonArray(Field.MARKEDSTUDENTS).getJsonObject(i);
+                                    for (int i = 0; i < markedStudents.size(); i++) {
+                                        JsonObject student = markedStudents.getJsonObject(i);
                                         statements.add(addStudentsStatement(id, student.getString(Field.STUDENTID), student.getString(Field.COMMENT)));
                                     }
 
@@ -274,19 +275,19 @@ public class DefaultPresenceService extends DBService implements PresenceService
     }
 
     /**
-     * Regularize absences from identifier list
+     * Update absences and add "present" reason
      * @param absenceIds    list of absences identifiers
      * @param user          user infos
-     * @return              {@link Future} of {@link JsonObject}
+     * @return  {@link Future} of {@link JsonObject}
      */
-    private Future<JsonObject> regularizeAbsences(JsonArray absenceIds, UserInfos user) {
+    private Future<JsonObject> updateAbsencesReason(JsonArray absenceIds, UserInfos user) {
         Promise<JsonObject> promise = Promise.promise();
 
-        JsonObject absences = new JsonObject()
+        JsonObject absenceBody = new JsonObject()
                 .put(Field.IDS, absenceIds)
-                .put(Field.REGULARIZED, true);
+                .put(Field.REASONID, Reasons.PRESENT_IN_STRUCTURE);
 
-        absenceService.changeRegularizedAbsences(absences, user, FutureHelper.handlerJsonObject(promise));
+        absenceService.changeReasonAbsences(absenceBody, user, FutureHelper.handlerJsonObject(promise));
 
         return promise.future();
     }
