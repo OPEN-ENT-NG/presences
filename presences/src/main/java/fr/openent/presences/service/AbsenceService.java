@@ -1,8 +1,7 @@
 package fr.openent.presences.service;
 
 import fr.wseduc.webutils.Either;
-import io.vertx.core.AsyncResult;
-import io.vertx.core.Handler;
+import io.vertx.core.*;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import org.entcore.common.user.UserInfos;
@@ -21,7 +20,7 @@ public interface AbsenceService {
      * @param handler     Function handler returning data
      */
     void get(String structureId, String startDate, String endDate, List<String> users, Handler<Either<String, JsonArray>> handler);
-
+    Future<JsonArray> get(String structureId, String startDate, String endDate, List<String> users);
 
     /**
      * get absences in events
@@ -51,6 +50,7 @@ public interface AbsenceService {
     void getAbsencesBetween(String startDate, String endDate, List<String> users, Handler<Either<String, JsonArray>> handler);
     void getAbsencesBetweenDates(String startDate, String endDate, List<String> users, Handler<Either<String, JsonArray>> handler);
     void getAbsencesBetweenDates(String startDate, String endDate, List<String> users, String structureId, Handler<Either<String, JsonArray>> handler);
+    Future<JsonArray> getAbsencesIds(String startDate, String endDate, List<String> users, String structureId);
 
     void getAbsencesFromCollective(String structureId, Long collectiveId, Handler<Either<String, JsonArray>> handler);
 
