@@ -283,11 +283,15 @@ public class DefaultPresenceService extends DBService implements PresenceService
     private Future<JsonObject> updateAbsencesReason(JsonArray absenceIds, UserInfos user) {
         Promise<JsonObject> promise = Promise.promise();
 
-        JsonObject absenceBody = new JsonObject()
-                .put(Field.IDS, absenceIds)
-                .put(Field.REASONID, Reasons.PRESENT_IN_STRUCTURE);
+        if (absenceIds.isEmpty()) {
+            promise.complete(new JsonObject());
+        } else {
+            JsonObject absenceBody = new JsonObject()
+                    .put(Field.IDS, absenceIds)
+                    .put(Field.REASONID, Reasons.PRESENT_IN_STRUCTURE);
 
-        absenceService.changeReasonAbsences(absenceBody, user, FutureHelper.handlerJsonObject(promise));
+            absenceService.changeReasonAbsences(absenceBody, user, FutureHelper.handlerJsonObject(promise));
+        }
 
         return promise.future();
     }
