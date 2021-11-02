@@ -2,6 +2,7 @@ package fr.openent.presences.controller;
 
 import fr.openent.presences.Presences;
 import fr.openent.presences.constants.Actions;
+import fr.openent.presences.constants.EventStores;
 import fr.openent.presences.core.constants.*;
 import fr.openent.presences.enums.RegisterStatus;
 import fr.openent.presences.security.CreateRegisterRight;
@@ -17,6 +18,8 @@ import fr.wseduc.webutils.request.RequestUtils;
 import io.vertx.core.eventbus.EventBus;
 import io.vertx.core.http.HttpServerRequest;
 import org.entcore.common.controller.ControllerHelper;
+import org.entcore.common.events.EventStore;
+import org.entcore.common.events.EventStoreFactory;
 import org.entcore.common.http.filter.ResourceFilter;
 import org.entcore.common.http.filter.Trace;
 import org.entcore.common.user.UserUtils;
@@ -28,12 +31,15 @@ public class RegisterController extends ControllerHelper {
     private final RegisterService registerService;
     private final SettingsService settingsService;
     private final EventBus eb;
+    private final EventStore eventStore;
+
 
     public RegisterController(EventBus eb) {
         super();
         this.registerService = new DefaultRegisterService(eb);
         this.settingsService = new DefaultSettingsService();
         this.eb = eb;
+        this.eventStore = EventStoreFactory.getFactory().getEventStore(Presences.class.getSimpleName());
     }
 
     @Get("/registers/:id")
@@ -102,6 +108,9 @@ public class RegisterController extends ControllerHelper {
                         noContent(request);
                     }
                 });
+                if (RegisterStatus.DONE.getStatus().equals(state)) {
+                    eventStore.createAndStoreEvent(EventStores.VALIDATE_REGISTER, request);
+                }
             } catch (ClassCastException | NumberFormatException e) {
                 log.error("[Presences@RegisterController::updateStatus] Failed to parse register identifier", e);
                 renderError(request);
