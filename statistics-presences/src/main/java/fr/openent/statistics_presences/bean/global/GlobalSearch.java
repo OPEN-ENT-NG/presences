@@ -22,6 +22,7 @@ public class GlobalSearch {
     private Map<String, Number> totalAbsMap;
     private String recoveryMethod;
     private String halfDay;
+    private Double totalHalfDays;
     private static final String HALF_DAY = "HALF_DAY";
     private static final String HOUR = "HOUR";
     private static final String DAY = "DAY";
@@ -81,6 +82,15 @@ public class GlobalSearch {
 
     public GlobalSearch setHalfDay(String halfDay) {
         this.halfDay = halfDay;
+        return this;
+    }
+
+    public Double totalHalfDays() {
+        return this.totalHalfDays;
+    }
+
+    public GlobalSearch setTotalHalfDays(Double totalHalfDays) {
+        this.totalHalfDays = totalHalfDays;
         return this;
     }
 

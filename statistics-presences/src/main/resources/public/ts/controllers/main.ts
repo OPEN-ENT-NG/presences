@@ -221,6 +221,10 @@ export const mainController = ng.controller('MainController',
                 }
             };
 
+            /**
+             * Returns true if indicator is NOT Global
+             * @param indicator Indicator type
+             */
             vm.canAccessOption = (indicator: Indicator): boolean => {
                 return indicator && indicator.name() !== INDICATOR_TYPE.global;
             };

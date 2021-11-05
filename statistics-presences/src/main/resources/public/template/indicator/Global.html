@@ -28,25 +28,36 @@
                 <i18n>statistics-presences.indicator.students.total.2</i18n>
             </div>
             <div class="td" ng-if="vm.indicator.absenceSelected()">
+                <!-- display total absence -->
                 <span ng-if="vm.indicator.values.count.ABSENCE_TOTAL > 0">
-                    [[vm.indicator.values.count.ABSENCE_TOTAL]]
-                     <em class="metadata"
-                         ng-if="vm.indicator.values.slots.ABSENCE_TOTAL > 0 && vm.indicator.filter('HOUR_DETAIL').selected">
-                         <br>
-                         ([[vm.indicator.values.slots.ABSENCE_TOTAL]] <i18n>statistics-presences.slots</i18n>)
+                    [[vm.indicator.displayGlobalValue('ABSENCE_TOTAL')]]
+                    <em class="metadata"
+                        ng-if="vm.indicator.values.slots.ABSENCE_TOTAL > 0 && vm.indicator.filter('HOUR_DETAIL').selected">
+                        <br>
+                        ([[vm.indicator.values.slots.ABSENCE_TOTAL]] <i18n>statistics-presences.slots</i18n>)
                     </em>
                 </span>
+                <!-- total absence empty state -->
                 <span ng-if="vm.indicator.values.count.ABSENCE_TOTAL === 0">
                     -
                 </span>
             </div>
             <div class="td" ng-repeat="type in vm.indicator._filterTypes" ng-if="type.selected()">
-                [[ vm.indicator.values.count[type.name()] ]]
-                <em class="metadata"
-                    ng-if="vm.indicator.values.slots[type.name()] > 0 && vm.indicator.filter('HOUR_DETAIL').selected">
-                    <br>
-                    ([[ vm.indicator.values.slots[type.name()] ]] <i18n>statistics-presences.slots</i18n>)
-                </em>
+
+                <!-- display total type of event -->
+                <span ng-if="vm.indicator.values.count[type.name()] && vm.indicator.values.count[type.name()] > 0">
+                    [[vm.indicator.displayGlobalValue(type.name())]]
+                    <em class="metadata"
+                        ng-if="vm.indicator.values.slots[type.name()] > 0 && vm.indicator.filter('HOUR_DETAIL').selected">
+                        <br>
+                        ([[ vm.indicator.values.slots[type.name()] ]] <i18n>statistics-presences.slots</i18n>)
+                    </em>
+                </span>
+
+                <!-- total type empty state -->
+                <span ng-if="!vm.indicator.values.count[type.name()] || vm.indicator.values.count[type.name()] === 0">
+                    -
+                </span>
             </div>
         </div>
     </div>
@@ -65,7 +76,7 @@
             <!-- Total absences -->
             <div ng-if="vm.indicator.absenceSelected()" class="td text-center indicator-value">
                 <span ng-if="student.statistics.ABSENCE_TOTAL !== undefined">
-                    [[student.statistics.ABSENCE_TOTAL.count]]
+                    [[vm.indicator.displayStudentValue(student, 'ABSENCE_TOTAL')]]
                 </span>
                 <span ng-if="student.statistics.ABSENCE_TOTAL === undefined">
                    -
@@ -76,8 +87,8 @@
                  class="td text-center indicator-value"
                  ng-class="{'max-value': student.statistics[type.name()].max}">
                 <span ng-if="student.statistics[type.name()] !== undefined">
-                    [[student.statistics[type.name()].count]]
-                    <em class="metadata"
+                    [[vm.indicator.displayStudentValue(student, type.name())]]
+                    <em class="metadata" ng-class="{'em-slots-rate': vm.indicator.rateDisplay}"
                         ng-if="student.statistics[type.name()].slots > 0 && vm.indicator.filter('HOUR_DETAIL').selected">
                         ([[student.statistics[type.name()].slots]] <i18n>statistics-presences.slots</i18n>)
                     </em>

@@ -122,7 +122,8 @@ public class StatisticsController extends ControllerHelper {
                 indicator.export(request, filter,
                         searchResult.getJsonArray("data").getList(),
                         searchResult.getJsonObject("count"),
-                        searchResult.getJsonObject("slots"));
+                        searchResult.getJsonObject("slots"),
+                        searchResult.getJsonObject("rate"));
             } catch (ClassNotFoundException | IllegalAccessException | InvocationTargetException | InstantiationException e) {
                 log.error(String.format("Failed to generate export for indicator %s", indicator.getClass().getSimpleName()), e);
             }

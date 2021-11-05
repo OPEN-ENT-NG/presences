@@ -63,21 +63,32 @@
                         ng-change="vm.switchIndicator()"
                         ng-options="indicator as indicator.i18nName() for indicator in vm.indicators"></select>
             </div>
+
+            <!-- date picker -->
             <div class="date-filters cell">
                 <span><i18n>massmailing.from</i18n></span>
                 <span class="card date-picker">
-            <date-picker ng-model="vm.filter.from" ng-change="vm.updateDate();"></date-picker>
-        </span>
+                    <date-picker ng-model="vm.filter.from" ng-change="vm.updateDate();"></date-picker>
+                </span>
                 <span><i18n>massmailing.to</i18n></span>
                 <span class="card date-picker">
-            <date-picker ng-model="vm.filter.to" ng-change="vm.updateDate();"></date-picker>
-        </span>
+                    <date-picker ng-model="vm.filter.to" ng-change="vm.updateDate();"></date-picker>
+                </span>
             </div>
         </div>
-        <button class="right-magnet"
-                data-ng-click="vm.openCSVOptions()">
-            <i18n>statistics-presences.csv.export</i18n>
-        </button>
+
+        <div class="center-component flex-direction-row right-magnet">
+            <!-- switch stat default/rate absence -->
+            <label ng-if="!vm.canAccessOption(vm.indicator)" class="checkbox horizontal-margin-twice">
+                <input type="checkbox" ng-model="vm.indicator.rateDisplay">
+                <span><i18n class="horizontal-margin">statistics-presences.display.absences.rate</i18n></span>
+            </label>
+
+            <!-- export CSV -->
+            <button class="left-spacing-twice no-margin" data-ng-click="vm.openCSVOptions()">
+                <i18n>statistics-presences.csv.export</i18n>
+            </button>
+        </div>
     </div>
 
     <div class="filter-row">
@@ -89,7 +100,6 @@
         <!-- this component set display mode to indicator on interaction (onChange) -->
         <display-statistics-mode on-change="vm.onSwitchDisplay()"
                                  indicator="vm.indicator"
-                                 ng-show="true"
                                  ng-show="true"
                                  ng-if="vm.canAccessOption(vm.indicator)"
                                  class="right-spacing">

@@ -3,6 +3,7 @@ export type GlobalEventType = {
     count: number;
     slots?: number;
     max?: boolean;
+    rate?: number;
 }
 
 export type GlobalType = {
@@ -27,11 +28,13 @@ export type GlobalStatistics = {
 export interface IGlobal {
     students?: Array<GlobalStatistics>;
     count?: GlobalType;
+    rate?: GlobalType;
     slots?: GlobalType;
 }
 
 export type GlobalResponse = {
     data: Array<GlobalStatistics>;
     count: GlobalType;
+    rate: GlobalType;
     slots: GlobalType;
-}
+};

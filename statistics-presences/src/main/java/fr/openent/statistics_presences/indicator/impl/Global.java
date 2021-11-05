@@ -1,5 +1,8 @@
 package fr.openent.statistics_presences.indicator.impl;
 
+import fr.openent.presences.common.helper.*;
+import fr.openent.presences.common.viescolaire.*;
+import fr.openent.presences.core.constants.*;
 import fr.openent.statistics_presences.StatisticsPresences;
 import fr.openent.statistics_presences.bean.User;
 import fr.openent.statistics_presences.bean.global.GlobalSearch;
@@ -7,6 +10,7 @@ import fr.openent.statistics_presences.bean.global.GlobalValue;
 import fr.openent.statistics_presences.filter.Filter;
 import fr.openent.statistics_presences.indicator.Indicator;
 import fr.openent.statistics_presences.indicator.IndicatorGeneric;
+import fr.openent.statistics_presences.utils.*;
 import io.vertx.core.*;
 import io.vertx.core.eventbus.Message;
 import io.vertx.core.json.JsonArray;
@@ -16,6 +20,9 @@ import io.vertx.core.logging.LoggerFactory;
 import org.entcore.common.mongodb.MongoDbResult;
 import org.entcore.common.neo4j.Neo4jResult;
 
+import java.math.BigDecimal;
+import java.math.RoundingMode;
+import java.time.*;
 import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -52,11 +59,13 @@ public class Global extends Indicator {
 
         Future<JsonObject> settingsFuture = IndicatorGeneric.retrieveSettings(search.filter().structure());
         Future<JsonObject> slotsSettingsFuture = IndicatorGeneric.retrieveSlotsSettings(search.filter().structure());
+        Future<Double> totalHalfDayFuture = getNumberHalfDays(search);
 
-        CompositeFuture.all(settingsFuture, slotsSettingsFuture)
+        CompositeFuture.all(settingsFuture, slotsSettingsFuture, totalHalfDayFuture)
                 .onSuccess(success -> {
                     search.setRecoveryMethod(settingsFuture.result().getString("event_recovery_method", "HOUR"));
                     search.setHalfDay(slotsSettingsFuture.result().getString("end_of_half_day"));
+                    search.setTotalHalfDays(totalHalfDayFuture.result());
                     promise.complete(search);
                 })
                 .onFailure(fail -> {
@@ -77,16 +86,17 @@ public class Global extends Indicator {
         CompositeFuture.all(valuesFuture, countFuture, totalAbsFuture, slotsFuture)
                 .onSuccess(ar -> {
                     List<JsonObject> values = valuesFuture.result();
-                    Number totalAbs = totalAbsFuture.result().getInteger("count", 0);
-                    Number totalAbsSlots = totalAbsFuture.result().getInteger("slots", 0);
-
+                    Number totalAbs = totalAbsFuture.result().getInteger(Field.COUNT, 0);
+                    Number totalAbsSlots = totalAbsFuture.result().getInteger(Field.SLOTS, 0);
+                    JsonObject slots = slotsFuture.result()
+                            .put(Field.ABSENCE_TOTAL, totalAbsSlots);
                     JsonObject count = countFuture.result()
-                            .put("ABSENCE_TOTAL", totalAbs);
-                    JsonObject slots = slotsFuture.result();
+                            .put(Field.ABSENCE_TOTAL, totalAbs);
                     JsonObject response = new JsonObject()
-                            .put("data", values)
-                            .put("count", count)
-                            .put("slots", slots.put("ABSENCE_TOTAL", totalAbsSlots));
+                            .put(Field.DATA, values)
+                            .put(Field.COUNT, count)
+                            .put(Field.RATE, getAbsenceRates(slots, search.totalHalfDays()))
+                            .put(Field.SLOTS, slots);
 
                     promise.complete(response);
                 })
@@ -97,6 +107,34 @@ public class Global extends Indicator {
                 });
         return promise.future();
     }
+
+    private JsonObject getAbsenceRates(JsonObject slots, Double totalHalfDays) {
+        List<String> absenceTypes = Arrays.asList(EventType.NO_REASON.name(), EventType.UNREGULARIZED.name(),
+                EventType.REGULARIZED.name(), Field.ABSENCE_TOTAL);
+
+        return new JsonObject(absenceTypes
+                .stream()
+                .collect(Collectors.toMap(type -> type, type -> getComputedAbsenceRate(slots.getDouble(type, 0.0), totalHalfDays)))
+        );
+    }
+
+    /**
+     * Compute rules = (number of slots (absence type) / number of total half-day) * 100
+     *
+     * @param slotsAbsence  slots absences value
+     * @param totalHalfDays total of half-day fetched
+     *
+     * @return {@link double} result of absence type rate (e.g 2.456534 will be 2.46)
+     */
+    private double getComputedAbsenceRate(Double slotsAbsence, Double totalHalfDays) {
+        double result = (slotsAbsence / totalHalfDays) * 100;
+        if (Double.isInfinite(result) || Double.isNaN(result)) {
+            return 0.0;
+        }
+        return BigDecimal.valueOf(result).setScale(2, RoundingMode.HALF_DOWN).doubleValue();
+    }
+
+
 
     /**
      * Search for statistic values
@@ -178,6 +216,73 @@ public class Global extends Indicator {
                 });
 
         return promise.future();
+    }
+
+    /**
+     * Retrieve number of opened half days
+     * @param search    search parameters
+     * @return {@link Future} with the number as {@link Double}
+     */
+    private Future<Double> getNumberHalfDays(GlobalSearch search) {
+        Promise<Double> promise = Promise.promise();
+        Viescolaire.getInstance().getExclusionDays(search.filter().structure(), res -> {
+            if (res.isLeft()) {
+                promise.fail(res.left().getValue());
+            } else {
+                String startDate = DateHelper.getDateString(search.filter().start(), DateHelper.YEAR_MONTH_DAY);
+                String endDate = DateHelper.getDateString(search.filter().end(), DateHelper.YEAR_MONTH_DAY);
+                JsonArray excludedPeriods = res.right().getValue();
+                List<LocalDate> dates = DateHelper.getDatesBetweenTwoDates(startDate, endDate);
+                promise.complete(proceedIncrementHalfDays(excludedPeriods, dates));
+            }
+        });
+
+        return promise.future();
+    }
+
+    /**
+     * With dates fetched, we count the number of opened half day
+     * 'opened' meaning day when there are school active
+     *
+     * For example, a day will increment twice (1 morning, 1 afternoon).
+     * A weekend day won't count but a wednesday will count only once
+     * (we consider wednesday as a day when school only last the morning)
+     *
+     * @param excludedPeriods   JsonArray with all excluded periods
+     * @param dates             List of all dates fetched
+     * @return {@link double} number of half day in total
+     */
+    private double proceedIncrementHalfDays(JsonArray excludedPeriods, List<LocalDate> dates) {
+        double numberOfHalfDays = 0.0;
+        for (LocalDate date : dates) {
+            // this condition checks if the date is either not a weekend day or not matching with excluded periods
+            if (!date.getDayOfWeek().name().equals(DayOfWeek.SATURDAY.name()) &&
+                    !date.getDayOfWeek().name().equals(DayOfWeek.SUNDAY.name()) && hasPeriodNoMatch(excludedPeriods, date)) {
+                // if our date matches with a wednesday day, we won't count as half-day therefore we only increment once
+                if (date.getDayOfWeek().name().equals(DayOfWeek.WEDNESDAY.name())) {
+                    numberOfHalfDays++;
+                } else {
+                    numberOfHalfDays += 2;
+                }
+            }
+        }
+        return numberOfHalfDays;
+    }
+
+    /**
+     * Check with there is no match with a date and all excluded periods
+     *
+     * @param excludedPeriods   JsonArray with all excluded periods
+     * @param date              date to match
+     * @return {@link boolean} {@code true} if there are no match
+     * otherwise {@code false} if there are some match with excluded period
+     */
+    @SuppressWarnings("unchecked")
+    private boolean hasPeriodNoMatch(JsonArray excludedPeriods, LocalDate date) {
+        return ((List<JsonObject>) excludedPeriods.getList()).stream().noneMatch(period ->
+                DateHelper.isDateBetween(date + " " + DateHelper.DEFAULT_START_TIME,
+                        period.getString(Field.START_DATE), period.getString(Field.END_DATE))
+        );
     }
 
     private Future<JsonObject> globalAbsenceCount(GlobalSearch search) {
@@ -319,6 +424,7 @@ public class Global extends Indicator {
      * @param search Search object containing filter and values
      * @return Future completing stage
      */
+    @SuppressWarnings("unchecked")
     private Future<GlobalSearch> prefetchUsers(GlobalSearch search) {
         Future<GlobalSearch> future = Future.future();
         JsonObject request = commandObject(search.prefetchUserPipeline());
@@ -347,6 +453,7 @@ public class Global extends Indicator {
      * @param search Search object containing filter and values
      * @return Future completing stage
      */
+    @SuppressWarnings("unchecked")
     private Future<GlobalSearch> statisticStage(GlobalSearch search) {
         if (isEmptyPrefetch(search)) {
             return Future.succeededFuture(search);
@@ -359,8 +466,15 @@ public class Global extends Indicator {
 
         CompositeFuture.all(basicEventTypedStatisticsFuture, absencesStatisticsFuture)
                 .onSuccess(res -> {
+
+                    // we fetch all absences types stats result, and we add the "rate" object
+                    JsonArray absencesAddRateStats = new JsonArray(((List<JsonObject>) absencesStatisticsFuture.result().getList())
+                            .stream()
+                            .map(a -> a.put(Field.RATE, getComputedAbsenceRate(a.getDouble(Field.SLOTS, 0.0), search.totalHalfDays())))
+                            .collect(Collectors.toList()));
+
                     Map<String, List<JsonObject>> basicEventTypedStatistics = mapPipelineResultByUser(basicEventTypedStatisticsFuture.result());
-                    Map<String, List<JsonObject>> absencesStatistics = mapPipelineResultByUser(absencesStatisticsFuture.result());
+                    Map<String, List<JsonObject>> absencesStatistics = mapPipelineResultByUser(absencesAddRateStats);
 
                     Map<String, List<JsonObject>> statistics = Stream.of(basicEventTypedStatistics, absencesStatistics)
                             .flatMap(map -> map.entrySet().stream())
@@ -440,7 +554,7 @@ public class Global extends Indicator {
     }
 
     /**
-     * Merge students and statistics based on retrieved values during previous stage.
+     * Merge students and statistics (count, rate...) based on retrieved values during previous stage.
      *
      * @param search Search object containing filter and values
      * @return Future completing stage
@@ -451,7 +565,7 @@ public class Global extends Indicator {
             if (statistics.containsKey(user.id())) {
                 GlobalValue userStat = new GlobalValue();
                 statistics.get(user.id()).forEach(stat -> {
-                    String type = stat.getString("type");
+                    String type = stat.getString(Field.TYPE);
                     userStat.setValue(type, stat);
                 });
 
@@ -459,9 +573,9 @@ public class Global extends Indicator {
                     Number userTotalAbs = search.totalAbs(user.id());
                     if (userTotalAbs != null) {
                         JsonObject stat = new JsonObject()
-                                .put("count", userTotalAbs);
-
-                        userStat.setValue("ABSENCE_TOTAL", stat);
+                                .put(Field.COUNT, userTotalAbs)
+                                .put(Field.RATE, getComputedAbsenceRate(userTotalAbs.doubleValue(), search.totalHalfDays()));
+                        userStat.setValue(Field.ABSENCE_TOTAL, stat);
                     }
                 }
 

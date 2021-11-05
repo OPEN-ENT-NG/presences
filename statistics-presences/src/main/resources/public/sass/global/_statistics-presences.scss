@@ -13,4 +13,8 @@ $statistics-presences-green: #72bb53;
 body.statistics-presences {
   @import "components/index";
   @import "indicators/index";
+
+  .flex-direction-row {
+    flex-direction: row;
+  }
 }
