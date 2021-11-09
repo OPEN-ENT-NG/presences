@@ -32,6 +32,9 @@ public class DateHelper {
     public static final String HOUR_MINUTES_SECONDS = "HH:mm:ss";
     public static final String SAFE_HOUR_MINUTES = "kk'h'mm";
 
+    public static final String DEFAULT_START_TIME = "00:00:00";
+    public static final String DEFAULT_END_TIME = "23:59:59";
+
     private DateHelper() {
     }
 
@@ -312,6 +315,15 @@ public class DateHelper {
         return firstHour.before(secondHour);
     }
 
+    public static boolean isDateBetween(String date, String startDate, String endDate) {
+        boolean isBetween = false;
+        try {
+            isBetween = isBeforeOrEquals(date, endDate) && isAfterOrEquals(date, startDate);
+        } catch (ParseException e) {
+            LOGGER.error("[Presence@DateHelper::isDateBetween] Error when paring dates: ", e);
+        }
+        return isBetween;
+    }
 
     /**
      * Same that isBeforeOrEquals, but without try / catch

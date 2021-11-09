@@ -1,7 +1,7 @@
 import {idiom, moment} from "entcore";
 import {Mix} from "entcore-toolkit";
 import {Reason} from '@presences/models';
-import {Filter, FilterType, FilterTypeFactory, FilterValue} from "../filter";
+import {Filter, FILTER_TYPE, FilterType, FilterTypeFactory, FilterValue} from "../filter";
 import {DateUtils} from "@common/utils";
 import {IPunishmentType} from '@incidents/models/PunishmentType';
 import {PunishmentsUtils} from "@incidents/utilities/punishments";
@@ -36,6 +36,7 @@ export abstract class Indicator implements IIndicator {
     _to: Date;
     _filterTypes: FilterType[];
     _display: string;
+    _isRateDisplay: boolean;
     _name: string;
     _page: number;
 
@@ -52,6 +53,7 @@ export abstract class Indicator implements IIndicator {
         this._from = DateUtils.setFirstTime(new Date());
         this._to =  DateUtils.setLastTime(new Date());
         this._display = DISPLAY_TYPE.TABLE;
+        this._isRateDisplay = false;
         this._name = name;
         this._page = 0;
     }
@@ -97,6 +99,15 @@ export abstract class Indicator implements IIndicator {
         }
     }
 
+    protected isAbsenceType(type: string): boolean {
+        return (
+            type === FILTER_TYPE.ABSENCE_TOTAL ||
+            type === FILTER_TYPE.UNREGULARIZED ||
+            type === FILTER_TYPE.NO_REASON ||
+            type === FILTER_TYPE.REGULARIZED
+        );
+    }
+
     set from(from: Date) {
         this._from = from;
     }
@@ -127,6 +138,14 @@ export abstract class Indicator implements IIndicator {
 
     get display() {
         return this._display;
+    }
+
+    set rateDisplay(_isRateDisplay: boolean) {
+        this._isRateDisplay = _isRateDisplay;
+    }
+
+    get rateDisplay(): boolean {
+        return this._isRateDisplay;
     }
 
     abstract resetValues();

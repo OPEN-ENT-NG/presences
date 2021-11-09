@@ -169,6 +169,11 @@ i {
     content: '\F236';
   }
 
+  &.percent:before {
+    font-family: 'material-icons';
+    content: '\F3f0';
+  }
+
   &.last-absent:before {
     font-family: 'material-icons';
     content: '\F99A';

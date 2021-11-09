@@ -4,7 +4,7 @@ import {IndicatorFactory} from '../indicator';
 import {IPunishmentType} from '@incidents/models/PunishmentType';
 import {Reason} from '@presences/models';
 import {INDICATOR_TYPE} from "../core/constants/IndicatorType";
-import {GlobalResponse, IGlobal} from "../model/Global";
+import {GlobalResponse, GlobalStatistics, IGlobal} from "../model/Global";
 import {AxiosError} from "axios";
 import {DISPLAY_TYPE} from "../core/constants/DisplayMode";
 import {DateUtils} from "@common/utils";
@@ -41,12 +41,13 @@ export class Global extends Indicator {
         return false;
     }
 
-    async search(start: Date, end: Date, users: string[], audiences: string[]): Promise<void> {
+    async search(start: Date, end: Date, users: Array<string>, audiences: Array<string>): Promise<void> {
         await new Promise((resolve, reject) => {
             super.fetchIndicator(start, end, users, audiences)
-                .then((res: GlobalResponse) => {
+                .then((res: GlobalResponse): void => {
                     this.values = {
                         count: res.count,
+                        rate: res.rate,
                         slots: res.slots,
                         students: [...(this.values as IGlobal).students, ...res.data]
                     };
@@ -58,12 +59,13 @@ export class Global extends Indicator {
         });
     }
 
-    resetValues() {
+    resetValues(): void {
         this.values = {
             count: {},
+            rate: {},
             slots: {},
             students: []
-        }
+        };
     }
 
     isEmpty() {
@@ -77,6 +79,20 @@ export class Global extends Indicator {
     resetDates(): void {
         this._from = DateUtils.setFirstTime(new Date());
         this._to = DateUtils.setLastTime(new Date());
+    }
+
+    displayGlobalValue(type: string): string {
+        if (this.isAbsenceType(type) && this._isRateDisplay) {
+            return ((this.values as IGlobal).rate[type] ? (this.values as IGlobal).rate[type] : "0") + "%";
+        }
+        return (this.values as IGlobal).count[type];
+    }
+
+    displayStudentValue(studentStats: GlobalStatistics, type: string): string {
+        if (this.isAbsenceType(type) && this._isRateDisplay) {
+            return (studentStats.statistics[type].rate ? studentStats.statistics[type].rate : "0") + "%";
+        }
+        return studentStats.statistics[type].count.toString();
     }
 }
 

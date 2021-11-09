@@ -1,4 +1,5 @@
 export * from '@presences/services/ReasonService';
+export * from '@presences/services/SettingsService';
 export * from '@common/services/SearchService';
 export * from '@common/services/GroupService';
 export * from '@common/services/ViescolaireService';
