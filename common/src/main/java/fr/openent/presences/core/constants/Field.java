@@ -59,13 +59,15 @@ public class Field {
     public static final String MULTIPLE_SLOT = "multiple_slot";
     public static final String ALLOW_MULTIPLE_SLOTS = "allow_multiple_slots";
 
-    // Register
+    // Registers
     public static final String COURSE_ID = "course_id";
     public static final String STATE_ID = "state_id";
     public static final String NOTIFIED = "notified";
     public static final String SPLIT_SLOT = "split_slot";
     public static final String IS_OPENED_BY_PERSONNEL = "is_opened_by_personnel";
     public static final String ISOPENEDBYPERSONNEL = "isOpenedByPersonnel";
+    public static final String FORGOTTEN_REGISTERS = "forgotten_registers";
+
 
     // Course
     public static final String COLOR = "color";
@@ -107,9 +109,14 @@ public class Field {
     // Absence
     public static final String REGULARIZED = "regularized";
     public static final String REASONID = "reasonId";
+    public static final String EVENT_RECOVERY_METHOD = "event_recovery_method";
 
-    public static final String FORGOTTEN_REGISTERS = "forgotten_registers";
-
+    // Indicator
+    public static final String DATA = "data";
+    public static final String COUNT = "count";
+    public static final String RATE = "rate";
+    public static final String SLOTS = "slots";
+    public static final String ABSENCE_TOTAL = "ABSENCE_TOTAL";
 
     private Field() {
         throw new IllegalStateException("Utility class");

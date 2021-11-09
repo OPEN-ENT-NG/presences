@@ -1,5 +1,6 @@
 package fr.openent.statistics_presences.controller;
 
+import fr.openent.presences.core.constants.Field;
 import fr.openent.statistics_presences.StatisticsPresences;
 import fr.openent.statistics_presences.controller.security.UserInStructure;
 import fr.openent.statistics_presences.filter.Filter;
@@ -122,7 +123,9 @@ public class StatisticsController extends ControllerHelper {
                 indicator.export(request, filter,
                         searchResult.getJsonArray("data").getList(),
                         searchResult.getJsonObject("count"),
-                        searchResult.getJsonObject("slots"));
+                        searchResult.getJsonObject("slots"),
+                        searchResult.getJsonObject(Field.RATE),
+                        searchResult.getString(Field.EVENT_RECOVERY_METHOD));
             } catch (ClassNotFoundException | IllegalAccessException | InvocationTargetException | InstantiationException e) {
                 log.error(String.format("Failed to generate export for indicator %s", indicator.getClass().getSimpleName()), e);
             }

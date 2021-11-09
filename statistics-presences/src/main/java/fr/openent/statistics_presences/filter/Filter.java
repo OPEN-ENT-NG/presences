@@ -27,6 +27,7 @@ public class Filter {
     private String exportOption;
     private Boolean hourDetail;
     private Integer page;
+    private Boolean rateDisplay;
 
     @SuppressWarnings("unchecked")
     public Filter(String structure, JsonObject body) {
@@ -62,6 +63,7 @@ public class Filter {
             this.from = request.params().contains(FilterField.FROM) ? Integer.parseInt(request.getParam(FilterField.FROM)) : null;
             this.to = request.params().contains(FilterField.TO) ? Integer.parseInt(request.getParam(FilterField.TO)) : null;
             this.hourDetail = request.params().contains(FilterField.HOUR_DETAILS) && Boolean.parseBoolean(request.getParam(FilterField.HOUR_DETAILS));
+            this.rateDisplay = Boolean.parseBoolean(request.getParam(FilterField.RATE));
         } catch (Exception e) {
             log.error("Failed to parse Filter from HttpServerRequest", e);
             Renders.badRequest(request);
@@ -116,6 +118,11 @@ public class Filter {
     public Boolean hourDetail() {
         return this.hourDetail;
     }
+
+    public Boolean rateDisplay() {
+        return this.rateDisplay;
+    }
+
 
     public Filter setPage(Integer page) {
         this.page = page;

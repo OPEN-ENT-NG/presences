@@ -4,12 +4,43 @@
   flex-wrap: wrap;
   align-items: center;
 
+  i {
+    font-size: 26px;
+  }
+
 
   .indicator-switch {
     select {
       margin: 5px 0;
     }
   }
+
+  .displayRate {
+    &.selected {
+      color: $statistics-presences-main;
+    }
+
+    i {
+      position: relative;
+
+      &:hover .tooltip-top {
+        @include tooltipVisible();
+      }
+
+      .tooltip-top {
+        @include tooltipTemplate(190px);
+        bottom: 33px;
+        margin-left: -47px;
+
+        &:after {
+          @include tooltipBottomArrow();
+          top: 100%;
+          left: 15%;
+        }
+      }
+    }
+  }
+
 }
 
 .statistics-presences-filters {

@@ -1,6 +1,7 @@
 $statistics-presences-main: #ffb600;
 $statistics-presences-yellow-sand: #d68227;
 $statistics-presences-middle-grey: #929292;
+$statistics-presences-black: rgba(68, 68, 68, .87);;
 $statistics-presences-grey-smoke: #f7f7f7;
 $statistics-presences-white: #ffffff;
 $statistics-presences-light-background: #f7f6f6;
@@ -11,6 +12,7 @@ $statistics-presences-light-purple: #f2c9fb;
 $statistics-presences-green: #72bb53;
 
 body.statistics-presences {
+  @import "../../../sass/global/common";
   @import "components/index";
   @import "indicators/index";
 }

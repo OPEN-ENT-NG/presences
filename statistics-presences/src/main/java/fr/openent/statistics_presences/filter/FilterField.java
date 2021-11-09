@@ -15,6 +15,7 @@ public class FilterField {
     public static final String TO = "TO";
     public static final String HOUR_DETAILS = "HOUR_DETAIL";
     public static final String TOTAL = "TOTAL";
+    public static final String RATE = "rate";
 
     private FilterField() {
         throw new IllegalStateException("Utility class");

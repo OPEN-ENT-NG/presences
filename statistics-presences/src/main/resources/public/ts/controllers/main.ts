@@ -5,7 +5,10 @@ import {
     IViescolaireService,
     ReasonService,
     SearchService,
-    ViescolaireService
+    SettingService,
+    SettingsService,
+    ViescolaireService,
+    Setting
 } from '../services';
 import {GroupService} from '@common/services/GroupService';
 import {IPunishmentType} from '@incidents/models/PunishmentType';
@@ -51,6 +54,7 @@ interface ViewModel {
     filter: Filter;
     reasons: Array<Reason>;
     punishmentTypes: Array<IPunishmentType>;
+    setting: Setting;
     indicator: Indicator;
     indicators: Array<Indicator>;
     indicatorType: typeof INDICATOR_TYPE;
@@ -98,9 +102,11 @@ interface ViewModel {
 }
 
 export const mainController = ng.controller('MainController',
-    ['$scope', 'route', 'ReasonService', 'PunishmentsTypeService', 'SearchService', 'GroupService', 'ViescolaireService',
+    ['$scope', 'route', 'ReasonService', 'PunishmentsTypeService', 'SearchService', 'GroupService',
+        'ViescolaireService', 'SettingService',
         function ($scope, route, ReasonService: ReasonService, punishmentTypeService: IPunishmentsTypeService,
-                  SearchService, GroupService: GroupService, ViescolaireService: IViescolaireService) {
+                  SearchService, GroupService: GroupService, ViescolaireService: IViescolaireService,
+                  settingService: SettingsService) {
             const vm: ViewModel = this;
 
             vm.$onInit = async () => {
@@ -109,6 +115,7 @@ export const mainController = ng.controller('MainController',
                 vm.exportType = EXPORT_TYPE;
                 vm.reasons = [];
                 vm.punishmentTypes = [];
+                vm.setting = null;
                 vm.loading = false;
 
                 vm.displayType = DISPLAY_TYPE;
@@ -221,6 +228,10 @@ export const mainController = ng.controller('MainController',
                 }
             };
 
+            /**
+             * Returns true if indicator is NOT Global
+             * @param indicator Indicator type
+             */
             vm.canAccessOption = (indicator: Indicator): boolean => {
                 return indicator && indicator.name() !== INDICATOR_TYPE.global;
             };
@@ -229,10 +240,12 @@ export const mainController = ng.controller('MainController',
                 if (!window.structure) return;
                 await Promise.all([
                     ReasonService.getReasons(window.structure.id),
-                    punishmentTypeService.get(window.structure.id)
-                ]).then((values: [Array<Reason>, Array<IPunishmentType>]) => {
+                    punishmentTypeService.get(window.structure.id),
+                    settingService.retrieve(window.structure.id),
+                ]).then((values: [Array<Reason>, Array<IPunishmentType>, Setting]) => {
                     vm.reasons = values[0].filter(reason => reason.id !== -1);
                     vm.punishmentTypes = values[1];
+                    vm.setting = values[2];
                 });
             };
 

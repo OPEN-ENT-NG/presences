@@ -56,11 +56,13 @@ public abstract class Indicator extends DBService {
 
     public abstract void searchGraph(Filter filter, Handler<AsyncResult<JsonObject>> handler);
 
-    public void export(HttpServerRequest request, Filter filter, List<JsonObject> values, JsonObject count, JsonObject slots) throws ClassNotFoundException, IllegalAccessException, InvocationTargetException, InstantiationException {
+    public void export(HttpServerRequest request, Filter filter, List<JsonObject> values, JsonObject count,
+                       JsonObject slots, JsonObject rate, String recoveryMethod) throws ClassNotFoundException, IllegalAccessException,
+            InvocationTargetException, InstantiationException {
         String className = String.format(CSV_EXPORT_FORMATTER, name);
         ClassLoader loader = Indicator.class.getClassLoader();
         CSVExport export = (count != null) ?
-                (CSVExport) Class.forName(className, true, loader).getConstructors()[0].newInstance(filter, values, count, slots):
+                (CSVExport) Class.forName(className, true, loader).getConstructors()[0].newInstance(filter, values, count, slots, rate, recoveryMethod):
                 (CSVExport) Class.forName(className, true, loader).getConstructors()[0].newInstance(filter, values);
         export.export(request);
     }

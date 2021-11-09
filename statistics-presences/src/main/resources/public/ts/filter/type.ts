@@ -6,5 +6,7 @@ export enum FILTER_TYPE {
     INCIDENT = "INCIDENT",
     PUNISHMENT = "PUNISHMENT",
     SANCTION = "SANCTION",
-    DEPARTURE = "DEPARTURE"
+    DEPARTURE = "DEPARTURE",
+    // ABSENCE TOTAL added in order to manipulate its string for rate/count
+    ABSENCE_TOTAL = "ABSENCE_TOTAL",
 }
