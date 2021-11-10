@@ -45,6 +45,7 @@
   "presences.absence.number.presents": "Nombre d'élèves présents dans l'établissement",
   "presences.absence.period": "Période",
   "presences.absence.reason": "Motif",
+  "presences.absence.recap": "Récapitulatif",
   "presences.absence.reason.this": "Motif de l'absence",
   "presences.absence.reason.absence": "Motifs d'absence",
   "presences.absence.reason.form.title": "Motifs d'absences individuelles",

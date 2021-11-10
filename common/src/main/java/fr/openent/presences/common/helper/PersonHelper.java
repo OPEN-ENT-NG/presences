@@ -3,7 +3,9 @@ package fr.openent.presences.common.helper;
 import fr.openent.presences.model.Person.Student;
 import fr.openent.presences.model.Person.User;
 import fr.wseduc.webutils.Either;
+import io.vertx.core.Future;
 import io.vertx.core.Handler;
+import io.vertx.core.Promise;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import org.entcore.common.neo4j.Neo4j;
@@ -63,6 +65,12 @@ public class PersonHelper {
                 "u.firstName as firstName, u.id as id, c.name as classeName, c.id as classId";
         JsonObject params = new JsonObject().put("structureId", structureId).put("idStudents", studentIds);
         Neo4j.getInstance().execute(query, params, Neo4jResult.validResultHandler(handler));
+    }
+
+    public Future<JsonArray> getStudentsInfo(String structureId, List<String> studentIds) {
+        Promise<JsonArray> promise = Promise.promise();
+        getStudentsInfo(structureId, studentIds, FutureHelper.handlerJsonArray(promise));
+        return promise.future();
     }
 
 }

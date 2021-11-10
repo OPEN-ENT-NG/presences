@@ -10,6 +10,7 @@ import fr.openent.presences.common.service.impl.DefaultUserService;
 import fr.openent.presences.enums.Events;
 import fr.openent.presences.model.Absence;
 import fr.openent.presences.model.Event.Event;
+import fr.openent.presences.model.Event.EventByStudent;
 import fr.openent.presences.model.Event.EventType;
 import fr.openent.presences.model.Event.RegisterEvent;
 import fr.openent.presences.model.Person.Student;
@@ -234,6 +235,14 @@ public class EventHelper {
             eventList.add(event);
         }
         return eventList;
+    }
+
+    public static List<Event> getEventListFromJsonArray(JsonArray events) {
+        return events.stream().map(event -> new Event((JsonObject) event)).collect(Collectors.toList());
+    }
+
+    public static List<JsonObject> getEventListToJsonArray(List<Event> events) {
+        return events.stream().map(Event::toJSON).collect(Collectors.toList());
     }
 
     public static JsonArray getMainEventsJsonArrayFromEventList(List<Event> events) {
