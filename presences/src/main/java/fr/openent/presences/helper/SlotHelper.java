@@ -1,10 +1,13 @@
 package fr.openent.presences.helper;
 
 import fr.openent.presences.common.helper.DateHelper;
+import fr.openent.presences.common.helper.FutureHelper;
 import fr.openent.presences.common.message.MessageResponseHandler;
 import fr.openent.presences.model.Slot;
 import fr.wseduc.webutils.Either;
+import io.vertx.core.Future;
 import io.vertx.core.Handler;
+import io.vertx.core.Promise;
 import io.vertx.core.eventbus.EventBus;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
@@ -59,6 +62,12 @@ public class SlotHelper {
                 .put("structureId", structureId);
 
         eb.send("viescolaire", action, MessageResponseHandler.messageJsonObjectHandler(handler));
+    }
+
+    public Future<JsonObject> getTimeSlots(String structureId) {
+        Promise<JsonObject> promise = Promise.promise();
+        getTimeSlots(structureId, FutureHelper.handlerJsonObject(promise));
+        return promise.future();
     }
 
     /**

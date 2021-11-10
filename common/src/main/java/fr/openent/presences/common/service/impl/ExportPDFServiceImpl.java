@@ -3,7 +3,9 @@ package fr.openent.presences.common.service.impl;
 import fr.openent.presences.common.service.ExportPDFService;
 import fr.wseduc.webutils.Either;
 import fr.wseduc.webutils.http.Renders;
+import io.vertx.core.Future;
 import io.vertx.core.Handler;
+import io.vertx.core.Promise;
 import io.vertx.core.Vertx;
 import io.vertx.core.buffer.Buffer;
 import io.vertx.core.http.*;
@@ -11,7 +13,10 @@ import io.vertx.core.json.JsonObject;
 import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
 import io.vertx.core.net.ProxyOptions;
+import org.entcore.common.pdf.Pdf;
 import org.entcore.common.pdf.PdfException;
+import org.entcore.common.pdf.PdfFactory;
+import org.entcore.common.pdf.PdfGenerator;
 import org.entcore.common.user.UserInfos;
 import org.entcore.common.user.UserUtils;
 
@@ -33,6 +38,7 @@ public class ExportPDFServiceImpl implements ExportPDFService {
     private final Vertx vertx;
     private final Renders renders;
     private String authHeader;
+    private final PdfFactory pdfFactory;
 
 
     public ExportPDFServiceImpl(Vertx vertx, JsonObject config) {
@@ -40,6 +46,8 @@ public class ExportPDFServiceImpl implements ExportPDFService {
         this.config = config;
         this.vertx = vertx;
         this.renders = new Renders(this.vertx, this.config);
+        pdfFactory = new PdfFactory(vertx, new JsonObject().put("node-pdf-generator",
+                config.getJsonObject("node-pdf-generator", new JsonObject())));
         try {
             this.authHeader = "Basic " + config.getJsonObject("pdf-generator").getString("auth");
             this.pdfGeneratorURL = config.getJsonObject("pdf-generator").getString("url");
@@ -179,5 +187,29 @@ public class ExportPDFServiceImpl implements ExportPDFService {
         }
         String nodePdfGeneratorUrl = pdfGeneratorURL;
         webServiceNodePdfGeneratorPost(Buffer.buffer(bytes).toString(), token, nodePdfGeneratorUrl, asyncResultHandler);
+    }
+
+    @Override
+    public Future<Pdf> generatePDF(String filename, String buffer) {
+        Promise<Pdf> promise = Promise.promise();
+        try {
+            PdfGenerator pdfGenerator = pdfFactory.getPdfGenerator();
+            pdfGenerator.generatePdfFromTemplate(filename, buffer, ar -> {
+                if (ar.failed()) {
+                    String message = String.format("[PresencesCommon@%s::generatePDF] Failed to generatePdfFromTemplate: " +
+                            "%s", this.getClass().getSimpleName(), ar.cause().getMessage());
+                    LOGGER.error(message, ar.cause());
+                    promise.fail(ar.cause().getMessage());
+                } else {
+                    promise.complete(ar.result());
+                }
+            });
+        } catch (Exception e) {
+            String message = String.format("[PresencesCommon@%s::generatePDF] Failed to generatePDF: " +
+                    "%s", this.getClass().getSimpleName(), e.getMessage());
+            LOGGER.error(message);
+            promise.fail(e.getMessage());
+        }
+        return promise.future();
     }
 }

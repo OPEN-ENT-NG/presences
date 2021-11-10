@@ -1,6 +1,7 @@
 package fr.openent.presences.common.viescolaire;
 
 import fr.openent.presences.common.helper.DateHelper;
+import fr.openent.presences.common.helper.FutureHelper;
 import fr.openent.presences.common.message.MessageResponseHandler;
 import fr.wseduc.webutils.Either;
 import io.vertx.core.Future;
@@ -80,6 +81,12 @@ public class Viescolaire {
                 .put("structureId", structureId);
 
         eb.send(address, action, MessageResponseHandler.messageJsonObjectHandler(handler));
+    }
+
+    public Future<JsonObject> getSlotProfileSetting(String structureId) {
+        Promise<JsonObject> promise = Promise.promise();
+        getSlotProfileSetting(structureId, FutureHelper.handlerJsonObject(promise));
+        return promise.future();
     }
 
     public void getSlotProfiles(String structureId, Handler<Either<String, JsonObject>> handler) {

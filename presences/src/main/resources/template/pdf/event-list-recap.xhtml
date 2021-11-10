@@ -1,0 +1,156 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+        "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="fr" lang="fr">
+
+<head>
+    <title>{{#i18n}}presences.absence.recap{{/i18n}}</title>
+    <style type="text/css">
+        .event {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-content: center;
+            margin-bottom: 8px;
+        }
+        .title {
+            background: #fff;
+            box-shadow: 0 4px 6px rgb(0 0 0 / 12%);
+            border-bottom: none;
+            margin-bottom: 8px;
+            padding: 4px;
+            align-self: center;
+        }
+        table{border-collapse:collapse}
+        table thead tr {
+            background:#fff;box-shadow:0 4px 6px rgba(0,0,0,.12);
+            border-bottom:none
+        }
+        td {
+            padding:5px 15px
+        }
+        tr {
+            border-bottom:1px solid #ccc;background:0 0
+        }
+    </style>
+
+</head>
+
+<body>
+    <!-- Absence event area -->
+    {{#ABSENCE}}
+    {{#-first}}
+    <div class="event">
+        <span class="title">{{#i18n}}presences.register.event_type.absences{{/i18n}}</span>
+        <table>
+            <!-- header -->
+            <thead>
+            <tr>
+                <td>{{#i18n}}presences.csv.header.student.firstName{{/i18n}}</td>
+                <td>{{#i18n}}presences.csv.header.student.lastName{{/i18n}}</td>
+                <td>{{#i18n}}presences.csv.header.student.className{{/i18n}}</td>
+                <td style="width: 15%;">{{#i18n}}presences.presences.csv.header.date{{/i18n}}</td>
+                <td style="width: 15%;">{{#i18n}}presences.hour{{/i18n}}</td>
+                <td style="width: 15%;">{{#i18n}}presences.registry.csv.header.motive{{/i18n}}</td>
+                <td>{{#i18n}}presences.widgets.absences.regularized{{/i18n}}</td>
+            </tr>
+            </thead>
+
+            <!-- content -->
+            <tbody>
+
+            <!-- dynamic value -->
+            {{#ABSENCE}}
+            <tr>
+                <td>{{student.firstName}}</td>
+                <td>{{student.lastName}}</td>
+                <td>{{student.classeName}}</td>
+                <td style="width: 15%;">{{date}}</td>
+                <td style="width: 15%;">{{display_start_date}} - {{display_end_date}}</td>
+                <td>{{reason}}</td>
+                <td>{{regularized}}</td>
+            </tr>
+            {{/ABSENCE}}
+            </tbody>
+        </table>
+    </div>
+    {{/-first}}
+    {{/ABSENCE}}
+
+    <!-- Lateness event area -->
+    {{#LATENESS}}
+    {{#-first}}
+    <div class="event">
+        <span class="title">{{#i18n}}presences.register.event_type.lateness{{/i18n}}</span>
+        <table>
+            <!-- header -->
+            <thead>
+            <tr>
+                <td>{{#i18n}}presences.csv.header.student.firstName{{/i18n}}</td>
+                <td>{{#i18n}}presences.csv.header.student.lastName{{/i18n}}</td>
+                <td>{{#i18n}}presences.csv.header.student.className{{/i18n}}</td>
+                <td>{{#i18n}}presences.presences.csv.header.date{{/i18n}}</td>
+                <td>{{#i18n}}presences.hour{{/i18n}}</td>
+            </tr>
+            </thead>
+
+            <!-- content -->
+            <tbody>
+
+            <!-- dynamic value -->
+            {{#LATENESS}}
+            <tr>
+                <td>{{student.firstName}}</td>
+                <td>{{student.lastName}}</td>
+                <td>{{student.classeName}}</td>
+                <td style="width: 15%;">{{date}}</td>
+                <td style="width: 15%;">{{display_start_date}} - {{display_end_date}}</td>
+                <td>{{reason}}</td>
+                <td>{{regularized}}</td>
+            </tr>
+            {{/LATENESS}}
+            </tbody>
+        </table>
+    </div>
+    {{/-first}}
+    {{/LATENESS}}
+
+    <!-- Departure event area -->
+    {{#DEPARTURE}}
+    {{#-first}}
+    <div class="event">
+        <span class="title">{{#i18n}}presences.register.event_type.departure{{/i18n}}</span>
+        <table>
+            <!-- header -->
+            <thead>
+            <tr>
+                <td>{{#i18n}}presences.csv.header.student.firstName{{/i18n}}</td>
+                <td>{{#i18n}}presences.csv.header.student.lastName{{/i18n}}</td>
+                <td>{{#i18n}}presences.csv.header.student.className{{/i18n}}</td>
+                <td>{{#i18n}}presences.presences.csv.header.date{{/i18n}}</td>
+                <td>{{#i18n}}presences.hour{{/i18n}}</td>
+            </tr>
+            </thead>
+
+            <!-- content -->
+            <tbody>
+
+            <!-- dynamic value -->
+            {{#DEPARTURE}}
+            <tr>
+                <td>{{student.firstName}}</td>
+                <td>{{student.lastName}}</td>
+                <td>{{student.classeName}}</td>
+                <td style="width: 15%;">{{date}}</td>
+                <td style="width: 15%;">{{display_start_date}} - {{display_end_date}}</td>
+            </tr>
+            {{/DEPARTURE}}
+            </tbody>
+        </table>
+    </div>
+    {{/-first}}
+    {{/DEPARTURE}}
+
+</body>
+
+</html>

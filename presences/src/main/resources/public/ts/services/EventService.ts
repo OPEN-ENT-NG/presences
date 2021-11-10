@@ -3,6 +3,7 @@ import http, {AxiosResponse} from 'axios';
 import {ActionBody, EventResponse, Events, IEventBody, IStudentEventRequest, IStudentEventResponse} from '../models';
 import {DateUtils} from '@common/utils';
 import {EventAbsenceSummary} from '@presences/models/Event/EventAbsenceSummary';
+import {EXPORT_TYPE, ExportType} from "@common/core/enum/export-type.enum";
 
 export interface EventService {
     get(eventRequest: EventRequest): Promise<{ pageCount: number, events: EventResponse[], all: EventResponse[] }>;
@@ -13,7 +14,7 @@ export interface EventService {
 
     getStudentEvent(studentEventRequest: IStudentEventRequest): Promise<IStudentEventResponse>;
 
-    exportCSV(eventRequest: EventRequest): string;
+    export(eventRequest: EventRequest, exportType: ExportType): string;
 
     getAbsentsCounts(structureId: string): Promise<EventAbsenceSummary>;
 
@@ -136,11 +137,12 @@ export const eventService: EventService = {
         }
     },
 
-    exportCSV(eventRequest: EventRequest): string {
+    export(eventRequest: EventRequest, exportType: ExportType): string {
         const dateFormat: string = DateUtils.FORMAT['YEAR-MONTH-DAY'];
 
         const url: string = `/presences/events/export`;
-        const structureId: string = `?structureId=${eventRequest.structureId}`;
+        const type: string = `?type=${EXPORT_TYPE[exportType]}`;
+        const structureId: string = `&structureId=${eventRequest.structureId}`;
         const startDate: string = `&startDate=${DateUtils.format(eventRequest.startDate, dateFormat)}`;
         const endDate: string = `&endDate=${DateUtils.format(eventRequest.endDate, dateFormat)}`;
         const noReason: string = eventRequest.noReason ? `&noReason=${eventRequest.noReason}` : "";
@@ -149,8 +151,9 @@ export const eventService: EventService = {
         const userId: string = eventRequest.userId.length === 0 ? "" : `&userId=${eventRequest.userId}`;
         const classes: string = eventRequest.classes.length === 0 ? "" : `&classes=${eventRequest.classes}`;
         const regularized: string = (eventRequest.regularized != null) ? `&regularized=${(eventRequest.regularized)}` : "";
+        const basedUrl: string = `${url}${type}${structureId}`;
 
-        return `${url}${structureId}${startDate}${endDate}${noReason}${eventType}${listReasonIds}${userId}${classes}${regularized}`;
+        return `${basedUrl}${startDate}${endDate}${noReason}${eventType}${listReasonIds}${userId}${classes}${regularized}`;
     },
 
 

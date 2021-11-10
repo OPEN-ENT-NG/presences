@@ -7,11 +7,8 @@ import fr.openent.presences.core.constants.Field;
 import fr.openent.presences.db.DBService;
 import fr.openent.presences.export.EventsCSVExport;
 import fr.openent.presences.model.Event.Event;
-import fr.openent.presences.service.ArchiveService;
+import fr.openent.presences.service.*;
 
-import fr.openent.presences.service.CommonPresencesServiceFactory;
-import fr.openent.presences.service.EventService;
-import fr.openent.presences.service.ReasonService;
 import fr.openent.presences.worker.EventExportWorker;
 import fr.wseduc.webutils.I18n;
 import io.vertx.core.CompositeFuture;
@@ -35,12 +32,14 @@ import static fr.wseduc.webutils.Utils.handlerToAsyncHandler;
 public class DefaultArchiveService extends DBService implements ArchiveService {
     private final EventBus eb;
     private final EventService eventService;
+    private final ExportEventService exportEventService;
     private final ReasonService reasonService;
 
     private final Logger log = LoggerFactory.getLogger(DefaultArchiveService.class);
 
     public DefaultArchiveService(CommonPresencesServiceFactory commonPresencesServiceFactory) {
         this.eventService = commonPresencesServiceFactory.eventService();
+        this.exportEventService = commonPresencesServiceFactory.exportEventService();
         this.reasonService = commonPresencesServiceFactory.reasonService();
         this.eb = commonPresencesServiceFactory.eventBus();
     }
@@ -250,7 +249,7 @@ public class DefaultArchiveService extends DBService implements ArchiveService {
         Promise<JsonObject> promise = Promise.promise();
         String start = splittedDateSchoolYear.getString(Field.START_DATE);
         String end = splittedDateSchoolYear.getString(Field.END_DATE);
-        eventService.getCsvData(structure.getString(Field.ID), start, end, eventType, reasonIds, true, new ArrayList<>(),
+        exportEventService.getCsvData(structure.getString(Field.ID), start, end, eventType, reasonIds, true, new ArrayList<>(),
                 new JsonArray(), null, null, null)
                 .compose(events -> writeCSV(events, start, end, exportProcess, domain, locale))
                 .onSuccess(res -> promise.complete(exportProcess))
