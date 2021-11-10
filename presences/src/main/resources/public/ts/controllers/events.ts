@@ -22,6 +22,7 @@ import {INFINITE_SCROLL_EVENTER} from '@common/core/enum/infinite-scroll-eventer
 import {ABSENCE_FORM_EVENTS, LATENESS_FORM_EVENTS} from '@common/core/enum/presences-event';
 import {SNIPLET_FORM_EMIT_EVENTS} from '@common/model';
 import {IEventSlot} from '@presences/models/Event';
+import {EXPORT_TYPE, ExportType} from "@common/core/enum/export-type.enum";
 
 declare let window: any;
 
@@ -228,9 +229,8 @@ interface ViewModel {
     adaptReason(): void;
 
     /* Export*/
-    exportPdf(): void;
-
-    exportCsv(): void;
+    exportType: typeof EXPORT_TYPE;
+    export(exportType: ExportType): void;
 }
 
 export const eventsController = ng.controller('EventsController', ['$scope', '$route', '$location', '$timeout',
@@ -311,6 +311,7 @@ export const eventsController = ng.controller('EventsController', ['$scope', '$r
 
         vm.structureTimeSlot = {} as IStructureSlot;
         vm.timeSlotHourPeriod = TimeSlotHourPeriod;
+        vm.exportType = EXPORT_TYPE;
 
         const loadFormFilter = async (): Promise<void> => {
             let formFilters = await Me.preference(PresencesPreferenceUtils.PREFERENCE_KEYS.PRESENCE_EVENT_LIST_FILTER);
@@ -1012,11 +1013,7 @@ export const eventsController = ng.controller('EventsController', ['$scope', '$r
         /* ----------------------------
           Export methods
         ---------------------------- */
-        vm.exportPdf = function () {
-            console.log("exporting Pdf");
-        };
-
-        vm.exportCsv = (): void => {
+        vm.export = (exportType: ExportType): void => {
             const filter: EventRequest = {
                 structureId: vm.events.structureId,
                 startDate: vm.events.startDate,
@@ -1030,7 +1027,7 @@ export const eventsController = ng.controller('EventsController', ['$scope', '$r
                 userId: vm.events.userId,
                 classes: vm.events.classes,
             };
-            window.open(eventService.exportCSV(filter));
+            window.open(eventService.export(filter, exportType));
         };
 
         /* ----------------------------

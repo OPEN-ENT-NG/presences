@@ -181,14 +181,8 @@ public class DefaultEventService extends DBService implements EventService {
                 " GROUP BY student_id, date ";
     }
 
-    // *Swa = students_with_actions
-    private String getDayMainEventQueryFromSwaCte() {
-        return " SELECT DISTINCT swa.* " +
-                " FROM presences.event e " +
-                " INNER JOIN students_with_actions swa ON swa.student_id = e.student_id AND swa.date = e.start_date::date ";
-    }
-
-    private void getEvents(String structureId, String startDate, String endDate,
+    @Override
+    public void getEvents(String structureId, String startDate, String endDate,
                            List<String> eventType, List<String> listReasonIds, Boolean noReason, List<String> userId, JsonArray userIdFromClasses,
                            Boolean regularized, Boolean followed, Integer page, Handler<Either<String, JsonArray>> handler) {
         JsonArray params = new JsonArray();
@@ -216,84 +210,6 @@ public class DefaultEventService extends DBService implements EventService {
                 " AND student_id IN " + Sql.listPrepared(users);
 
         Sql.getInstance().prepared(query, params, SqlResult.validResultHandler(handler));
-    }
-
-    @Override
-    public void getCsvData(String structureId, String startDate, String endDate, List<String> eventType,
-                           List<String> listReasonIds, Boolean noReason, List<String> userId, JsonArray userIdFromClasses,
-                           List<String> classes, Boolean regularized, Boolean followed, Handler<AsyncResult<List<Event>>> handler) {
-        getEvents(structureId, startDate, endDate, eventType, listReasonIds, noReason, userId, userIdFromClasses,
-                regularized, followed, null, eventHandler -> {
-                    if (eventHandler.isLeft()) {
-                        String err = "[Presences@DefaultEventService::getCsvData] Failed to fetch events: " + eventHandler.left().getValue() ;
-                        LOGGER.error(err, eventHandler.left().getValue());
-                        handler.handle(Future.failedFuture(eventHandler.left().getValue()));
-                    } else {
-                        List<Event> events = EventHelper.getEventListFromJsonArray(eventHandler.right().getValue(), Event.MANDATORY_ATTRIBUTE);
-
-                        List<Integer> reasonIds = new ArrayList<>();
-                        List<String> studentIds = new ArrayList<>();
-                        List<String> ownerIds = new ArrayList<>();
-                        List<Integer> eventTypeIds = new ArrayList<>();
-
-                        for (Event event : events) {
-                            reasonIds.add(event.getReason().getId());
-                            if (!studentIds.contains(event.getStudent().getId())) {
-                                studentIds.add(event.getStudent().getId());
-                            }
-                            if (!ownerIds.contains(event.getOwner().getId())) {
-                                ownerIds.add(event.getOwner().getId());
-                            }
-                            eventTypeIds.add(event.getEventType().getId());
-                        }
-
-                        // remove potential null value for each list
-                        reasonIds.removeAll(Collections.singletonList(null));
-                        studentIds.removeAll(Collections.singletonList(null));
-                        ownerIds.removeAll(Collections.singletonList(null));
-                        eventTypeIds.removeAll(Collections.singletonList(null));
-
-                        Future<JsonObject> reasonFuture = Future.future();
-                        Future<JsonObject> studentFuture = Future.future();
-                        Future<JsonObject> ownerFuture = Future.future();
-                        Future<JsonObject> eventTypeFuture = Future.future();
-
-                        eventHelper.addReasonsToEvents(events, reasonIds, reasonFuture);
-                        eventHelper.addStudentsToEvents(events, studentIds, structureId, studentFuture);
-                        eventHelper.addOwnerToEvents(events, ownerIds, ownerFuture);
-                        eventHelper.addEventTypeToEvents(events, eventTypeIds, eventTypeFuture);
-
-                        CompositeFuture.all(reasonFuture, eventTypeFuture, studentFuture, ownerFuture)
-                                .setHandler(eventResult -> {
-                                    if (eventResult.failed()) {
-                                        String message = "[Presences@DefaultEventService::getCsvData] Failed to add " +
-                                                "reasons, eventType, students or owner to corresponding event ";
-                                        LOGGER.error(message + eventResult.cause().getMessage());
-                                        handler.handle(Future.failedFuture(message));
-                                    } else {
-                                        handler.handle(Future.succeededFuture(events));
-                                    }
-                                });
-                    }
-                });
-    }
-
-    @Override
-    public Future<List<Event>> getCsvData(String structureId, String startDate, String endDate, List<String> eventType,
-                           List<String> listReasonIds, Boolean noReason, List<String> userId, JsonArray userIdFromClasses,
-                           List<String> classes, Boolean regularized, Boolean followed) {
-        Promise<List<Event>> promise = Promise.promise();
-
-        getCsvData(structureId, startDate, endDate, eventType, listReasonIds, noReason, userId, userIdFromClasses,
-                classes, regularized, followed, event -> {
-            if (event.failed()) {
-                promise.fail(event.cause());
-            } else {
-                promise.complete(event.result());
-            }
-        });
-
-        return promise.future();
     }
 
     /**
@@ -1184,6 +1100,26 @@ public class DefaultEventService extends DBService implements EventService {
         return new JsonObject()
                 .put("query", query)
                 .put("params", params);
+    }
+
+    @Override
+    public Future<JsonArray> getEventsByStudent(Integer eventType, List<String> students, String structure, Boolean justified,
+                                   List<Integer> reasonsId, Boolean massmailed, Boolean compliance, String startDate, String endDate,
+                                   boolean noReasons, String recoveryMethodUsed, String limit, String offset,
+                                   Boolean regularized) {
+        Promise<JsonArray> promise = Promise.promise();
+        this.getEventsByStudent(eventType, students, structure, justified, reasonsId, massmailed, compliance, startDate, endDate, noReasons,
+                recoveryMethodUsed, limit, offset, regularized, event -> {
+            if (event.isLeft()) {
+                String message = String.format("[Presences@%s::getEventsByStudent] an error has occurred while fetching " +
+                        "events by students: %s", this.getClass().getSimpleName(), event.left().getValue());
+                LOGGER.error(message);
+                promise.fail(event.left().getValue());
+            } else {
+                promise.complete(event.right().getValue());
+            }
+        });
+        return promise.future();
     }
 
     @Override

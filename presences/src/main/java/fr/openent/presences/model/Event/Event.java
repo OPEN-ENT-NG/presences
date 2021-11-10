@@ -1,5 +1,6 @@
 package fr.openent.presences.model.Event;
 
+import fr.openent.presences.core.constants.Field;
 import fr.openent.presences.model.Person.Student;
 import fr.openent.presences.model.Person.User;
 import fr.openent.presences.model.Reason;
@@ -61,6 +62,27 @@ public class Event {
         this.type = event.getString("type", null);
         this.isExclude = event.getBoolean("exclude", null);
         this.actionAbbreviation = event.getString("action_abbreviation", null);
+    }
+
+    public Event(JsonObject event) {
+        this.id = event.getInteger(Field.ID, null);
+        this.startDate = event.getString(Field.START_DATE, null);
+        this.endDate = event.getString(Field.END_DATE, null);
+        this.date = event.getString(Field.DATE, null);
+        this.comment = event.getString(Field.COMMENT, null);
+        this.counsellorInput = event.getBoolean(Field.COUNSELLOR_INPUT, false);
+        this.student = new Student(event.getJsonObject(Field.STUDENT, new JsonObject()));
+        this.registerId = event.getInteger(Field.REGISTER_ID, null);
+        this.eventType = new EventType(event.getJsonObject(Field.EVENT_TYPE, new JsonObject()), EventType.MANDATORY_ATTRIBUTE);
+        this.reason = new Reason(event.getJsonObject(Field.REASON, new JsonObject()), Reason.MANDATORY_ATTRIBUTE);
+        this.owner = new User(event.getJsonObject(Field.OWNER, new JsonObject()));
+        this.created = event.getString(Field.CREATED, null);
+        this.counsellorRegularisation = event.getBoolean(Field.COUNSELLOR_REGULARISATION, false);
+        this.followed = event.getBoolean(Field.FOLLOWED, false);
+        this.massmailed = event.getBoolean(Field.MASSMAILED, false);
+        this.type = event.getString(Field.TYPE, null);
+        this.isExclude = event.getBoolean(Field.EXCLUDE, null);
+        this.actionAbbreviation = event.getString(Field.ACTION_ABBREVIATION, null);
     }
 
     public Event() {

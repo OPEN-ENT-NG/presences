@@ -52,9 +52,10 @@ public class EventsHelper {
             JsonObject event = (JsonObject) o;
             String eventStartDate = event.getString("start_date");
             String eventHalfDay = DateHelper.setTimeToDate(eventStartDate, halfDay, DateHelper.HOUR_MINUTES_SECONDS, DateHelper.SQL_FORMAT);
-            // We group events by day and if start event date is before halfDay (yyyy-MM-dd_<true|false>)
+            // We group events by day and if start event date is before halfDay (studentId-yyyy-MM-dd_<true|false>)
             String groupKey =
-                    DateHelper.getDateString(eventStartDate, DateHelper.SQL_FORMAT, DateHelper.YEAR_MONTH_DAY)
+                    event.getJsonObject("student", new JsonObject()).getString("id", "") + "-" +
+                            DateHelper.getDateString(eventStartDate, DateHelper.SQL_FORMAT, DateHelper.YEAR_MONTH_DAY)
                             + "_" + DateHelper.isDateBefore(eventStartDate, eventHalfDay);
 
             if (dateGroupedEvents.containsKey(groupKey)) dateGroupedEvents.get(groupKey).add(event);

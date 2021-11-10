@@ -7,6 +7,8 @@ import io.vertx.core.json.JsonObject;
 public interface SettingsService {
     void retrieve(String structureId, Handler<Either<String, JsonObject>> handler);
 
+    Future<JsonObject> retrieve(String structureId);
+
     /**
      * Retrieve multiple slot setting.
      *

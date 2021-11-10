@@ -5,9 +5,12 @@ public class Field {
     public static final String ID = "id";
     public static final String _ID = "_id";
     public static final String IDS = "ids";
+    public static final String TITLE = "title";
     public static final String CLASSES = "classes";
+    public static final String CREATED = "created";
     public static final String COURSES = "courses";
     public static final String GROUP = "group";
+    public static final String EXCLUDE = "exclude";
     public static final String GROUPNAMES = "groupNames";
     public static final String GROUPS = "groups";
     public static final String LIMIT = "limit";
@@ -27,10 +30,15 @@ public class Field {
     public static final String TEACHER = "teacher";
     public static final String TEACHERS = "teachers";
     public static final String TEACHERIDS = "teacherIds";
+    public static final String TYPEID = "type_id";
+    public static final String OWNER = "owner";
+    public static final String ACTION_ABBREVIATION = "action_abbreviation";
+    public static final String EXPORT_PDF_EVENTS = "export-pdf-events";
 
     // Dates
     public static final String END_DATE = "end_date";
     public static final String ENDDATE = "endDate";
+    public static final String DATE = "date";
     public static final String START_DATE = "start_date";
     public static final String STARTDATE = "startDate";
     public static final String START = "start";
@@ -38,6 +46,8 @@ public class Field {
     public static final String START_TIME = "startTime";
     public static final String END_TIME = "endTime";
     public static final String DESCENDING_DATE = "descendingDate";
+    public static final String DISPLAY_START_DATE = "display_start_date";
+    public static final String DISPLAY_END_DATE = "display_end_date";
 
     // School
     public static final String SCHOOL_YEAR = "schoolYear";
@@ -50,6 +60,7 @@ public class Field {
 
     // Reason
     public static final String REASON = "reason";
+    public static final String MULTIPLE = "multiple";
 
     // i18n
     public static final String LOCALE = "locale";
@@ -58,6 +69,7 @@ public class Field {
     // Multiple slots
     public static final String MULTIPLE_SLOT = "multiple_slot";
     public static final String ALLOW_MULTIPLE_SLOTS = "allow_multiple_slots";
+    public static final String END_OF_HALF_DAY = "end_of_half_day";
 
     // Registers
     public static final String COURSE_ID = "course_id";
@@ -98,6 +110,10 @@ public class Field {
 
     // Alert
     public static final String TYPE = "type";
+    public static final String ALERT_ABSENCE_THRESHOLD = "alert_absence_threshold";
+    public static final String ALERT_LATENESS_THRESHOLD = "alert_lateness_threshold";
+    public static final String ALERT_INCIDENT_THRESHOLD = "alert_incident_threshold";
+    public static final String ALERT_FORGOTTEN_NOTEBOOK_THRESHOLD = "alert_forgotten_notebook_threshold";
 
     // Presence
     public static final String COMMENT = "comment";
@@ -106,10 +122,25 @@ public class Field {
     // Statement
     public static final String IDSTATEMENT = "idStatement";
 
+    // event || event type
+    public static final String ABSENCE = "absence";
+    public static final String LATENESS = "lateness";
+    public static final String DEPARTURE = "departure";
+    public static final String REMARK = "remark";
+    public static final String FORGOTTEN_NOTEBOOK = "forgotten_notebook";
+    public static final String PUNISHMENT = "punishment";
+    public static final String SANCTION = "sanction";
+    public static final String FOLLOWED = "followed";
+    public static final String MASSMAILED = "massmailed";
+
     // Absence
     public static final String REGULARIZED = "regularized";
     public static final String REASONID = "reasonId";
     public static final String EVENT_RECOVERY_METHOD = "event_recovery_method";
+    public static final String RECOVERY_METHOD = "recovery_method";
+    public static final String EVENT_TYPE = "event_type";
+    public static final String COUNSELLOR_INPUT = "counsellor_input";
+    public static final String COUNSELLOR_REGULARISATION = "counsellor_regularisation";
 
     // Indicator
     public static final String DATA = "data";

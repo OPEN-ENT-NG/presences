@@ -31,6 +31,22 @@ public class DefaultSettingsService extends DBService implements SettingsService
     }
 
     @Override
+    public Future<JsonObject> retrieve(String structureId) {
+        Promise<JsonObject> promise = Promise.promise();
+        retrieve(structureId, event -> {
+            if (event.isLeft()) {
+                String message = String.format("[Presences@%s::retrieve] an error has occurred during retrieving settings: %s",
+                        this.getClass().getSimpleName(), event.left().getValue());
+                log.error(message, event.left());
+                promise.fail(event.left().getValue());
+            } else {
+                promise.complete(event.right().getValue());
+            }
+        });
+        return promise.future();
+    }
+
+    @Override
     public Future<JsonObject> retrieveMultipleSlots(String structureId) {
         Promise<JsonObject> promise = Promise.promise();
         String query = "SELECT allow_multiple_slots " +

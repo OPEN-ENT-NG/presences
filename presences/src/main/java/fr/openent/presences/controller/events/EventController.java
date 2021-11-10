@@ -2,14 +2,19 @@ package fr.openent.presences.controller.events;
 
 import fr.openent.presences.Presences;
 import fr.openent.presences.common.helper.FutureHelper;
+import fr.openent.presences.common.service.ExportPDFService;
 import fr.openent.presences.constants.Actions;
+import fr.openent.presences.core.constants.Field;
 import fr.openent.presences.enums.EventType;
+import fr.openent.presences.enums.ExportType;
 import fr.openent.presences.export.EventsCSVExport;
 import fr.openent.presences.model.Event.Event;
 import fr.openent.presences.security.ActionRight;
 import fr.openent.presences.security.CreateEventRight;
 import fr.openent.presences.security.Event.EventReadRight;
+import fr.openent.presences.service.CommonPresencesServiceFactory;
 import fr.openent.presences.service.EventService;
+import fr.openent.presences.service.ExportEventService;
 import fr.openent.presences.service.impl.DefaultEventService;
 import fr.wseduc.rs.*;
 import fr.wseduc.security.ActionType;
@@ -18,9 +23,10 @@ import fr.wseduc.webutils.Either;
 import fr.wseduc.webutils.I18n;
 import fr.wseduc.webutils.http.Renders;
 import fr.wseduc.webutils.request.RequestUtils;
-import io.vertx.core.CompositeFuture;
-import io.vertx.core.Future;
-import io.vertx.core.Handler;
+import fr.wseduc.webutils.template.TemplateProcessor;
+import fr.wseduc.webutils.template.lambdas.I18nLambda;
+import fr.wseduc.webutils.template.lambdas.LocaleDateLambda;
+import io.vertx.core.*;
 import io.vertx.core.eventbus.EventBus;
 import io.vertx.core.http.HttpServerRequest;
 import io.vertx.core.json.JsonArray;
@@ -31,6 +37,7 @@ import org.entcore.common.http.filter.Trace;
 import org.entcore.common.http.response.DefaultResponseHandler;
 import org.entcore.common.neo4j.Neo4j;
 import org.entcore.common.neo4j.Neo4jResult;
+import org.entcore.common.pdf.Pdf;
 import org.entcore.common.user.UserUtils;
 
 import java.util.ArrayList;
@@ -43,10 +50,14 @@ import static org.entcore.common.http.response.DefaultResponseHandler.defaultRes
 public class EventController extends ControllerHelper {
 
     private final EventService eventService;
+    private final ExportEventService exportEventService;
+    private final ExportPDFService exportPDFService;
 
-    public EventController(EventBus eb) {
+    public EventController(EventBus eb, CommonPresencesServiceFactory commonPresencesServiceFactory) {
         super();
         this.eventService = new DefaultEventService(eb);
+        this.exportPDFService = commonPresencesServiceFactory.exportPDFService();
+        this.exportEventService = commonPresencesServiceFactory.exportEventService();
     }
 
     @Get("/events")
@@ -126,7 +137,7 @@ public class EventController extends ControllerHelper {
         String structureId = request.getParam("structureId");
         String startDate = request.getParam("startDate");
         String endDate = request.getParam("endDate");
-
+        String type = request.getParam(Field.TYPE);
         List<String> eventType = request.getParam("eventType") != null ? Arrays.asList(request.getParam("eventType").split("\\s*,\\s*")) : null;
         List<String> reasonIds = request.getParam("reasonIds") != null ? Arrays.asList(request.getParam("reasonIds").split("\\s*,\\s*")) : null;
         Boolean noReason = request.params().contains("noReason") ? Boolean.parseBoolean(request.getParam("noReason")) : false;
@@ -135,7 +146,7 @@ public class EventController extends ControllerHelper {
         Boolean regularized = request.params().contains("regularized") ? Boolean.parseBoolean(request.getParam("regularized")) : null;
         Boolean followed = request.params().contains("followed") ? Boolean.parseBoolean(request.getParam("followed")) : null;
         if (!request.params().contains("structureId") || !request.params().contains("startDate") ||
-                !request.params().contains("endDate")) {
+                !request.params().contains("endDate") || !request.params().contains(Field.TYPE)) {
             badRequest(request);
             return;
         }
@@ -145,34 +156,29 @@ public class EventController extends ControllerHelper {
                 renderError(request, JsonObject.mapFrom(userResponse.left().getValue()));
             } else {
                 JsonArray userIdFromClasses = userResponse.right().getValue();
-                eventService.getCsvData(structureId, startDate, endDate, eventType, reasonIds, noReason, userId, userIdFromClasses,
-                        classes, regularized, followed, event -> {
-                            if (event.failed()) {
-                                log.error("[Presences@EventController::exportEvents] Something went wrong while getting CSV data",
-                                        event.cause().getMessage());
-                                renderError(request);
-                            } else {
-                                List<Event> events = event.result();
-
-                                List<String> csvHeaders = Arrays.asList(
-                                        "presences.csv.header.student.lastName",
-                                        "presences.csv.header.student.firstName",
-                                        "presences.exemptions.csv.header.audiance",
-                                        "presences.event.type",
-                                        "presences.absence.reason",
-                                        "presences.created.by",
-                                        "presences.exemptions.dates",
-                                        "presences.hour",
-                                        "presences.exemptions.csv.header.comment",
-                                        "presences.widgets.absences.regularized",
-                                        "presences.id");
-                                
-                                EventsCSVExport ece = new EventsCSVExport(events, Renders.getHost(request), I18n.acceptLanguage(request));
-                                ece.setRequest(request);
-                                ece.setHeader(csvHeaders);
-                                ece.export();
-                            }
-                        });
+                if (ExportType.CSV.type().equals(type)) {
+                    exportEventService.getCsvData(structureId, startDate, endDate, eventType, reasonIds, noReason, userId, userIdFromClasses,
+                            classes, regularized, followed, event -> processCsvEvent(request, event));
+                } else if (ExportType.PDF.type().equals(type)) {
+                    String domain = Renders.getHost(request);
+                    String local = I18n.acceptLanguage(request);
+                    exportEventService.getPdfData(domain, local, structureId, startDate, endDate, eventType, reasonIds,
+                                    noReason, userId, userIdFromClasses, classes, regularized)
+                            .compose(this::processPdfEvent)
+                            .onSuccess(res -> request.response()
+                                    .putHeader("Content-type", "application/pdf; charset=utf-8")
+                                    .putHeader("Content-Disposition", "attachment; filename=" + res.getName())
+                                    .end(res.getContent())
+                            )
+                            .onFailure(err -> {
+                                String message = String.format("[Presences@%s::exportEvents] an error has occurred during " +
+                                                "export pdf process: %s", this.getClass().getSimpleName(), err.getMessage());
+                                log.error(message);
+                                renderError(request, new JsonObject().put("message", message));
+                            });
+                } else {
+                    badRequest(request);
+                }
             }
         });
     }
@@ -187,6 +193,54 @@ public class EventController extends ControllerHelper {
         JsonObject params = new JsonObject().put("classesId", classes);
 
         Neo4j.getInstance().execute(query, params, Neo4jResult.validResultHandler(handler));
+    }
+
+
+    private void processCsvEvent(HttpServerRequest request, AsyncResult<List<Event>> event) {
+        if (event.failed()) {
+            log.error("[Presences@EventController::exportEvents] Something went wrong while getting CSV data",
+                    event.cause().getMessage());
+            renderError(request);
+        } else {
+            List<Event> events = event.result();
+
+            List<String> csvHeaders = Arrays.asList(
+                    "presences.csv.header.student.lastName",
+                    "presences.csv.header.student.firstName",
+                    "presences.exemptions.csv.header.audiance",
+                    "presences.event.type",
+                    "presences.absence.reason",
+                    "presences.created.by",
+                    "presences.exemptions.dates",
+                    "presences.hour",
+                    "presences.exemptions.csv.header.comment",
+                    "presences.widgets.absences.regularized",
+                    "presences.id");
+
+            EventsCSVExport ece = new EventsCSVExport(events, Renders.getHost(request), I18n.acceptLanguage(request));
+            ece.setRequest(request);
+            ece.setHeader(csvHeaders);
+            ece.export();
+        }
+    }
+
+    private Future<Pdf> processPdfEvent(JsonObject events) {
+        Promise<Pdf> promise = Promise.promise();
+        TemplateProcessor templateProcessor = new TemplateProcessor(vertx, "template").escapeHTML(true);
+        templateProcessor.setLambda("i18n", new I18nLambda("fr"));
+        templateProcessor.setLambda("datetime", new LocaleDateLambda("fr"));
+        templateProcessor.processTemplate("pdf/event-list-recap.xhtml", events, writer -> {
+            if (writer == null) {
+                String message = String.format("[Presences@%s::exportEvents] process template has no buffer result",
+                        this.getClass().getSimpleName());
+                promise.fail(message);
+            } else {
+                exportPDFService.generatePDF(events.getString(Field.TITLE), writer)
+                        .onSuccess(promise::complete)
+                        .onFailure(promise::fail);
+            }
+        });
+        return promise.future();
     }
 
     @Post("/events")

@@ -76,7 +76,7 @@ public class Presences extends BaseServer {
         ebViescoAddress = "viescolaire";
         final EventBus eb = getEventBus(vertx);
         Storage storage = new StorageFactory(vertx, config).getStorage();
-        CommonPresencesServiceFactory commonPresencesServiceFactory = new CommonPresencesServiceFactory(vertx, storage);
+        CommonPresencesServiceFactory commonPresencesServiceFactory = new CommonPresencesServiceFactory(vertx, storage, config);
 
 //        final String exportCron = config.getString("export-cron");
 
@@ -86,7 +86,7 @@ public class Presences extends BaseServer {
         addController(new CourseController(eb));
         addController(new RegisterController(eb));
         addController(new AbsenceController(eb));
-        addController(new EventController(eb));
+        addController(new EventController(eb, commonPresencesServiceFactory));
         addController(new LatenessEventController(eb));
         addController(new ExemptionController(eb));
         addController(new SearchController(eb));

@@ -33,7 +33,22 @@ public class FutureHelper {
             if (event.isRight()) {
                 promise.complete(event.right().getValue());
             } else {
-                LOGGER.error(event.left().getValue());
+                String message = String.format("[PresencesCommon@%s::handlerJsonArray]: %s",
+                        FutureHelper.class.getSimpleName(), event.left().getValue());
+                LOGGER.error(message);
+                promise.fail(event.left().getValue());
+            }
+        };
+    }
+
+    public static Handler<Either<String, JsonObject>> handlerJsonObject(Promise<JsonObject> promise) {
+        return event -> {
+            if (event.isRight()) {
+                promise.complete(event.right().getValue());
+            } else {
+                String message = String.format("[PresencesCommon@%s::handlerJsonObject]: %s",
+                        FutureHelper.class.getSimpleName(), event.left().getValue());
+                LOGGER.error(message);
                 promise.fail(event.left().getValue());
             }
         };

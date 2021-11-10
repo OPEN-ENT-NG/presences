@@ -35,7 +35,7 @@ public class EventExportWorker extends BusModBase implements Handler<Message<Jso
     public void start() {
         super.start();
         Storage storage = new StorageFactory(vertx, config).getStorage();
-        CommonPresencesServiceFactory commonPresencesServiceFactory = new CommonPresencesServiceFactory(vertx, storage);
+        CommonPresencesServiceFactory commonPresencesServiceFactory = new CommonPresencesServiceFactory(vertx, storage, config);
         this.emailSender = new EmailFactory(vertx, config).getSender();
         this.archiveService = commonPresencesServiceFactory.archiveService();
         eb.consumer(this.getClass().getName(), this);
