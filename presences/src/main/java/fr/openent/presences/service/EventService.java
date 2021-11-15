@@ -1,5 +1,4 @@
 package fr.openent.presences.service;
-
 import fr.wseduc.webutils.Either;
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Future;
@@ -35,6 +34,9 @@ public interface EventService {
     void get(String structureId, String startDate, String endDate, String startTime, String endTime,
              List<String> eventType, List<String> listReasonIds, Boolean noReason, List<String> userId,
              Boolean regularized, Boolean followed, Integer page, Handler<AsyncResult<JsonArray>> handler);
+
+    Future<JsonArray> getEventsBetweenDates(String startDate, String endDate, List<String> users, List<Integer> eventType,
+                                            String structureId);
 
     void getDayMainEvents(String structureId, String startDate, String endDate, String startTime, String endTime,
                           List<String> studentIds, List<String> typeIds, List<String> reasonIds, Boolean noReason,
@@ -106,6 +108,8 @@ public interface EventService {
      * @param handler   Function handler returning data
      */
     void changeReasonEvents(JsonObject eventBody, UserInfos user, Handler<Either<String, JsonObject>> handler);
+
+    Future<JsonObject> changeReasonEvents(List<Long> eventsIds, Integer reasonId);
 
     /**
      * Update regularized for each event

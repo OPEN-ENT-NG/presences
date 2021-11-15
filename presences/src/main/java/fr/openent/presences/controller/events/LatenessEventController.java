@@ -4,15 +4,14 @@ import fr.openent.presences.constants.Actions;
 import fr.openent.presences.enums.EventType;
 import fr.openent.presences.model.Event.EventBody;
 import fr.openent.presences.security.CreateEventRight;
+import fr.openent.presences.service.CommonPresencesServiceFactory;
 import fr.openent.presences.service.LatenessEventService;
-import fr.openent.presences.service.impl.DefaultLatenessEventService;
 import fr.wseduc.rs.ApiDoc;
 import fr.wseduc.rs.Post;
 import fr.wseduc.rs.Put;
 import fr.wseduc.security.ActionType;
 import fr.wseduc.security.SecuredAction;
 import fr.wseduc.webutils.request.RequestUtils;
-import io.vertx.core.eventbus.EventBus;
 import io.vertx.core.http.HttpServerRequest;
 import org.entcore.common.controller.ControllerHelper;
 import org.entcore.common.http.filter.ResourceFilter;
@@ -24,9 +23,9 @@ public class LatenessEventController extends ControllerHelper {
 
     private final LatenessEventService latenessService;
 
-    public LatenessEventController(EventBus eb) {
+    public LatenessEventController(CommonPresencesServiceFactory commonPresencesServiceFactory) {
         super();
-        this.latenessService = new DefaultLatenessEventService(eb);
+        this.latenessService = commonPresencesServiceFactory.latenessEventService();
     }
 
     @Post("/events/:structureId/lateness")

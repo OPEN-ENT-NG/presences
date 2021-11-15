@@ -1,6 +1,7 @@
 package fr.openent.presences.service;
 
 import fr.wseduc.webutils.Either;
+import io.vertx.core.Future;
 import io.vertx.core.Handler;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
@@ -23,6 +24,9 @@ public interface PresenceService {
      */
     void get(String structureId, String startDate, String endDate, List<String> userIds,
              List<String> ownerIds, List<String> audienceIds, Handler<Either<String, JsonArray>> handler);
+
+    Future<JsonArray> fetchPresence(String structureId, String startDate, String endDate, List<String> userId,
+                                    List<String> ownerIds, List<String> audienceIds);
 
     /**
      * Create presence

@@ -7,11 +7,12 @@ import {
     IEventBody,
     IEventFormBody,
     Lateness,
+    Presence,
     Reason,
     TimeSlotHourPeriod
 } from '../models';
 import {idiom as lang, model, moment, toasts} from 'entcore';
-import {absenceService, eventService, reasonService, ViescolaireService} from '../services';
+import {absenceService, eventService, presenceService, reasonService, ViescolaireService} from '../services';
 import {IAngularEvent} from 'angular';
 import {DateUtils} from '@common/utils';
 import {ABSENCE_FORM_EVENTS, LATENESS_FORM_EVENTS} from '@common/core/enum/presences-event';
@@ -499,6 +500,21 @@ const vm: ViewModel = {
         }
         let response: AxiosResponse = await (<Absence>vm.event).createAbsence(window.structure.id, vm.eventBody.reason_id, model.me.userId);
         if (response.status === 200 || response.status === 201) {
+            let presences: Presence[] = await presenceService.get({structureId: window.structure.id,
+                startDate: DateUtils.format(vm.eventBody.start_date, DateUtils.FORMAT["YEAR-MONTH-DAY"]),
+                endDate: DateUtils.format(vm.eventBody.end_date, DateUtils.FORMAT["YEAR-MONTH-DAY"]),
+                studentIds: [vm.eventBody.student_id]
+            })
+            if (presences && presences.length > 0) {
+                vm.eventBody.counsellor_regularisation =
+                    DateUtils.getDayNumberDifference(vm.eventBody.start_date, vm.eventBody.end_date) === 0 &&
+                    presences.find((p: Presence) => DateUtils.isBetween(
+                        p.startDate,
+                        p.endDate,
+                        vm.eventBody.start_date,
+                        vm.eventBody.end_date)
+                    ) !== undefined;
+            }
             await vm.updateFollowed(response.data.events.id);
             await vm.updateRegularisation(response.data.events.id);
             vm.closeEventLightbox();

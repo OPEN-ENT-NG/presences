@@ -3,24 +3,22 @@ package fr.openent.presences.service.impl;
 import fr.openent.presences.Presences;
 import fr.openent.presences.common.helper.DateHelper;
 import fr.openent.presences.common.helper.FutureHelper;
-import fr.openent.presences.common.helper.WorkflowHelper;
 import fr.openent.presences.common.service.GroupService;
 import fr.openent.presences.common.service.UserService;
 import fr.openent.presences.common.service.impl.DefaultGroupService;
 import fr.openent.presences.common.service.impl.DefaultUserService;
 import fr.openent.presences.common.viescolaire.Viescolaire;
+import fr.openent.presences.constants.Reasons;
+import fr.openent.presences.core.constants.Field;
 import fr.openent.presences.db.DBService;
 import fr.openent.presences.enums.EventType;
-import fr.openent.presences.enums.WorkflowActions;
 import fr.openent.presences.helper.CourseHelper;
 import fr.openent.presences.helper.EventHelper;
 import fr.openent.presences.helper.EventQueryHelper;
 import fr.openent.presences.helper.SlotHelper;
 import fr.openent.presences.model.Event.Event;
 import fr.openent.presences.model.Slot;
-import fr.openent.presences.service.AbsenceService;
-import fr.openent.presences.service.EventService;
-import fr.openent.presences.service.SettingsService;
+import fr.openent.presences.service.*;
 import fr.wseduc.webutils.Either;
 import io.vertx.core.*;
 import io.vertx.core.eventbus.EventBus;
@@ -34,6 +32,7 @@ import org.entcore.common.sql.Sql;
 import org.entcore.common.sql.SqlResult;
 import org.entcore.common.user.UserInfos;
 
+import java.text.ParseException;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -50,6 +49,8 @@ public class DefaultEventService extends DBService implements EventService {
     private final CourseHelper courseHelper;
     private final SlotHelper slotHelper;
     private final UserService userService;
+    private final RegisterService registerService;
+    private final CommonPresencesServiceFactory commonPresencesServiceFactory;
 
     public DefaultEventService(EventBus eb) {
         this.eb = eb;
@@ -59,6 +60,22 @@ public class DefaultEventService extends DBService implements EventService {
         this.absenceService = new DefaultAbsenceService(eb);
         this.groupService = new DefaultGroupService(eb);
         this.userService = new DefaultUserService();
+
+        // todo spread new class CommonPresencesServiceFactory toward other classes that use EventService
+        this.registerService = null;
+        this.commonPresencesServiceFactory = null;
+    }
+
+    public DefaultEventService(CommonPresencesServiceFactory commonPresencesServiceFactory) {
+        this.eb = commonPresencesServiceFactory.eventBus();
+        this.eventHelper = commonPresencesServiceFactory.eventHelper();
+        this.courseHelper = commonPresencesServiceFactory.courseHelper();
+        this.slotHelper = commonPresencesServiceFactory.slotHelper();
+        this.absenceService = commonPresencesServiceFactory.absenceService();
+        this.groupService = commonPresencesServiceFactory.groupService();
+        this.userService = commonPresencesServiceFactory.userService();
+        this.registerService = commonPresencesServiceFactory.registerService();
+        this.commonPresencesServiceFactory = commonPresencesServiceFactory;
     }
 
     @Override
@@ -143,6 +160,42 @@ public class DefaultEventService extends DBService implements EventService {
                 });
             }
         });
+    }
+
+    @Override
+    public Future<JsonArray> getEventsBetweenDates(String startDate, String endDate, List<String> users,
+                                                   List<Integer> eventType, String structureId) {
+        Promise<JsonArray> promise = Promise.promise();
+
+        JsonArray params = new JsonArray();
+        String query = "SELECT e.* FROM " + Presences.dbSchema + ".event AS e" +
+                " INNER JOIN " + Presences.dbSchema + ".register AS r ON (r.id = e.register_id AND r.structure_id = ?)" +
+                " WHERE ? < e.end_date AND e.start_date < ? ";
+        params.add(structureId);
+        params.add(startDate);
+        params.add(endDate);
+
+        if (users != null && !users.isEmpty()) {
+            query += " AND e.student_id IN " + Sql.listPrepared(users.toArray()) + " ";
+            params.addAll(new JsonArray(users));
+        }
+
+        if (eventType != null && !eventType.isEmpty()) {
+            query += " AND type_id IN " + Sql.listPrepared(eventType) + " ";
+            params.addAll(new JsonArray(eventType));
+        }
+
+        sql.prepared(query, params, SqlResult.validResultHandler(event -> {
+            if (event.isLeft()) {
+                String message = String.format("[Presences@%s::getEventsBetweenDates] Failed to get events between date: %s",
+                        this.getClass().getSimpleName(), event.left().getValue());
+                LOGGER.error(message,  event.left());
+                promise.fail(event.left().getValue());
+            } else {
+                promise.complete(event.right().getValue());
+            }
+        }));
+        return promise.future();
     }
 
     @Override
@@ -470,21 +523,94 @@ public class DefaultEventService extends DBService implements EventService {
 
     @Override
     public void create(JsonObject event, UserInfos user, Handler<Either<String, JsonObject>> handler) {
-        JsonArray statements = new JsonArray();
-        statements.add(getCreationStatement(event, user));
+        checkPresenceEvent(event)
+                .onSuccess(aVoid -> {
+                    JsonArray statements = new JsonArray();
+                    statements.add(eventHelper.getCreationStatement(event, user));
 
-        if (EventType.ABSENCE.getType().equals(event.getInteger("type_id"))) {
-            statements.add(getDeletionEventStatement(event));
+                    if (EventType.ABSENCE.getType().equals(event.getInteger("type_id"))) {
+                        statements.add(eventHelper.getDeletionEventStatement(event));
+                    }
+
+                    Sql.getInstance().transaction(statements, statementEvent -> {
+                        Either<String, JsonObject> either = SqlResult.validUniqueResult(0, statementEvent);
+                        if (either.isLeft()) {
+                            String err = "[Presences@DefaultEventService] Failed to create event";
+                            LOGGER.error(err, either.left().getValue());
+                        }
+                        handler.handle(either);
+                    });
+                })
+                .onFailure(err -> handler.handle(new Either.Left<>(err.getMessage())));
+    }
+
+    /**
+     * Analyse event body and add a present reason if event's body date are matching with findable presences
+     * will search its structure by retrieving a register if found then fetch list of presences and match
+     * dates within event body
+     * ONLY applies to ABSENCE event type
+     *
+     * @param event body to create an event
+     * @return {@link Future<Void>}
+     */
+    @SuppressWarnings("unchecked")
+    private Future<Void> checkPresenceEvent(JsonObject event) {
+        Promise<Void> promise = Promise.promise();
+        if (!event.getInteger(Field.TYPEID, 0).equals(EventType.ABSENCE.getType())) {
+            promise.complete();
+            return promise.future();
         }
+        registerService.fetchRegister(event.getInteger(Field.REGISTER_ID))
+                .compose(register -> {
+                    // complete this sequential with new ArrayList if no register object is found or structure is not found
+                    if (register.isEmpty() || !register.containsKey(Field.STRUCTURE_ID)) {
+                        Promise<JsonArray> registerPromise = Promise.promise();
+                        registerPromise.complete(new JsonArray());
+                        return registerPromise.future();
+                    }
+                    String startDate = DateHelper.getDateString(register.getString(Field.START_DATE), DateHelper.YEAR_MONTH_DAY);
+                    String endDate =  DateHelper.getDateString(register.getString(Field.END_DATE), DateHelper.YEAR_MONTH_DAY);
+                    String studentId = event.getString(Field.STUDENT_ID);
+                    String structureId = register.getString(Field.STRUCTURE_ID);
+                    return commonPresencesServiceFactory.presenceService().fetchPresence(structureId, startDate, endDate,
+                            new ArrayList<>(Collections.singletonList(studentId)), new ArrayList<>(), new ArrayList<>());
+                })
+                .compose(presences -> {
+                    Promise<Void> presencePromise = Promise.promise();
+                    boolean containPresenceInEvent = ((List<JsonObject>) presences.getList())
+                            .stream()
+                            .anyMatch(presence -> {
+                                try {
+                                    return DateHelper.isBetween(
+                                            presence.getString(Field.START_DATE),
+                                            presence.getString(Field.END_DATE),
+                                            event.getString(Field.START_DATE),
+                                            event.getString(Field.END_DATE),
+                                            DateHelper.SQL_FORMAT,
+                                            DateHelper.SQL_FORMAT
+                                    );
+                                } catch (ParseException err) {
+                                    String message = String.format("[Presences@%s::checkPresenceEvent::isBetween] Failed to parse: %s",
+                                            this.getClass().getSimpleName(), err.getMessage());
+                                    LOGGER.error(message, err);
+                                    return false;
+                                }
+                            });
+                    if (containPresenceInEvent) {
+                        event.put(Field.REASON_ID, Reasons.PRESENT_IN_STRUCTURE);
+                    }
+                    presencePromise.complete();
+                    return presencePromise.future();
+                })
+                .onSuccess(promise::complete)
+                .onFailure(err -> {
+                    String message = String.format("[Presences@%s::checkPresenceEvent] Failed to check potential " +
+                            "presences in event creation : %s", this.getClass().getSimpleName(), err.getMessage());
+                    LOGGER.error(message, err);
+                    promise.fail(err.getMessage());
+                });
 
-        Sql.getInstance().transaction(statements, statementEvent -> {
-            Either<String, JsonObject> either = SqlResult.validUniqueResult(0, statementEvent);
-            if (either.isLeft()) {
-                String err = "[Presences@DefaultEventService] Failed to create event";
-                LOGGER.error(err, either.left().getValue());
-            }
-            handler.handle(either);
-        });
+        return promise.future();
     }
 
     @Override
@@ -585,6 +711,32 @@ public class DefaultEventService extends DBService implements EventService {
                     result.right().getValue().getJsonObject(0).getBoolean("counsellor_regularisation"),
                     eventBody.getInteger("reasonId"), handler);
         }));
+    }
+
+    @Override
+    public Future<JsonObject> changeReasonEvents(List<Long> eventsIds, Integer reasonId) {
+        Promise<JsonObject> promise = Promise.promise();
+        JsonArray params = new JsonArray();
+        String query = "UPDATE " + Presences.dbSchema + ".event SET reason_id = ? ";
+        if (reasonId != null) {
+            params.add(reasonId);
+        } else {
+            params.addNull();
+        }
+        query += " WHERE id IN " + Sql.listPrepared(eventsIds);
+        params.addAll(new JsonArray(eventsIds));
+        sql.prepared(query, params, SqlResult.validUniqueResultHandler(event -> {
+            if (event.isLeft()) {
+                String message = String.format("[Presences@%s::changeReasonEvents] Failed change identifier reason %s " +
+                                "to these identifiers events [%s]: %s",
+                        this.getClass().getSimpleName(), reasonId, eventsIds, event.left().getValue());
+                LOGGER.error(message,  event.left());
+                promise.fail(event.left().getValue());
+            } else {
+                promise.complete(event.right().getValue());
+            }
+        }));
+        return promise.future();
     }
 
 
@@ -743,7 +895,6 @@ public class DefaultEventService extends DBService implements EventService {
         editCorrespondingAbsences(editedEvents, user, studentId, structureId, regularized, null, handler);
     }
 
-    @SuppressWarnings("unchecked")
     private void createAbsencesFromEvents(List<Slot> slots, JsonObject nullAbsenceEvents, Boolean regularized, Integer reasonId,
                                           UserInfos user, String studentId, String structureId, Future<JsonObject> future) {
 
@@ -1263,38 +1414,6 @@ public class DefaultEventService extends DBService implements EventService {
 
             Sql.getInstance().prepared(query, params, SqlResult.validUniqueResultHandler(handler));
         });
-    }
-
-    private JsonObject getDeletionEventStatement(JsonObject event) {
-        String query = "DELETE FROM " + Presences.dbSchema + ".event WHERE type_id IN (2, 3) AND register_id = ? AND student_id = ?";
-        JsonArray params = new JsonArray()
-                .add(event.getInteger("register_id"))
-                .add(event.getString("student_id"));
-
-        return new JsonObject()
-                .put("action", "prepared")
-                .put("statement", query)
-                .put("values", params);
-    }
-
-    private JsonObject getCreationStatement(JsonObject event, UserInfos user) {
-        String query = "INSERT INTO " + Presences.dbSchema + ".event (start_date, end_date, comment, counsellor_input, student_id, register_id, type_id, owner) " +
-                "VALUES (?, ?, ?, ?, ?, ?, ?, ?) " +
-                "RETURNING id, start_date, end_date, comment, counsellor_input, student_id, register_id, type_id, reason_id;";
-        JsonArray params = new JsonArray()
-                .add(event.getString("start_date"))
-                .add(event.getString("end_date"))
-                .add(event.containsKey("comment") ? event.getString("comment") : "")
-                .add(WorkflowHelper.hasRight(user, WorkflowActions.MANAGE.toString()))
-                .add(event.getString("student_id"))
-                .add(event.getInteger("register_id"))
-                .add(event.getInteger("type_id"))
-                .add(user.getUserId());
-
-        return new JsonObject()
-                .put("action", "prepared")
-                .put("statement", query)
-                .put("values", params);
     }
 
     @Override

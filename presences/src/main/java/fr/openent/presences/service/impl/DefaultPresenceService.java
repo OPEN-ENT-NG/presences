@@ -4,7 +4,6 @@ import fr.openent.presences.Presences;
 import fr.openent.presences.common.helper.FutureHelper;
 import fr.openent.presences.common.helper.PersonHelper;
 import fr.openent.presences.common.service.*;
-import fr.openent.presences.common.service.impl.*;
 import fr.openent.presences.constants.*;
 import fr.openent.presences.core.constants.*;
 import fr.openent.presences.db.*;
@@ -18,7 +17,6 @@ import fr.openent.presences.model.Presence.Presence;
 import fr.openent.presences.service.*;
 import fr.wseduc.webutils.Either;
 import io.vertx.core.*;
-import io.vertx.core.eventbus.*;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import io.vertx.core.logging.Logger;
@@ -35,20 +33,20 @@ public class DefaultPresenceService extends DBService implements PresenceService
     private static final String defaultStartTime = "00:00:00";
     private static final String defaultEndTime = "23:59:59";
 
-    private DisciplineService disciplineService;
-    private PersonHelper personHelper;
-    private PresenceHelper presenceHelper;
-    private UserService userService;
-    private GroupService groupService;
-    private AbsenceService absenceService;
+    private final DisciplineService disciplineService;
+    private final PersonHelper personHelper;
+    private final PresenceHelper presenceHelper;
+    private final UserService userService;
+    private final GroupService groupService;
+    private final CommonPresencesServiceFactory commonPresencesServiceFactory;
 
-    public DefaultPresenceService(EventBus eb) {
-        this.disciplineService = new DefaultDisciplineService();
-        this.personHelper = new PersonHelper();
-        this.presenceHelper = new PresenceHelper();
-        this.userService = new DefaultUserService();
-        this.groupService = new DefaultGroupService(eb);
-        this.absenceService = new DefaultAbsenceService(eb);
+    public DefaultPresenceService(CommonPresencesServiceFactory commonPresencesServiceFactory) {
+        this.disciplineService = commonPresencesServiceFactory.disciplineService();
+        this.personHelper = commonPresencesServiceFactory.personHelper();
+        this.presenceHelper = commonPresencesServiceFactory.presenceHelper();
+        this.userService = commonPresencesServiceFactory.userService();
+        this.groupService = commonPresencesServiceFactory.groupService();
+        this.commonPresencesServiceFactory = commonPresencesServiceFactory;
     }
 
     @Override
@@ -96,6 +94,14 @@ public class DefaultPresenceService extends DBService implements PresenceService
         disciplineService.get(structureId, FutureHelper.handlerJsonArray(disciplinesFuture));
     }
 
+    @Override
+    public Future<JsonArray> fetchPresence(String structureId, String startDate, String endDate, List<String> userId,
+                                           List<String> ownerIds, List<String> audienceIds) {
+        Promise<JsonArray> promise = Promise.promise();
+        fetchPresence(structureId, startDate, endDate, userId, ownerIds, audienceIds, FutureHelper.handlerJsonArray(promise));
+        return promise.future();
+    }
+
     private void interactUserInfo(String structureId, List<Presence> presences, List<String> usersId,
                                   List<Integer> presenceIds, Future<JsonObject> future) {
 
@@ -135,7 +141,6 @@ public class DefaultPresenceService extends DBService implements PresenceService
         fetchPresenceStudents(structureId, presenceIds, markedStudentsFuture);
         userService.getUsers(usersId, FutureHelper.handlerJsonArray(ownerFuture));
     }
-
     private void fetchPresence(String structureId, String startDate, String endDate, List<String> userId,
                                List<String> ownerIds, List<String> audienceIds, Handler<Either<String, JsonArray>> handler) {
 
@@ -208,8 +213,7 @@ public class DefaultPresenceService extends DBService implements PresenceService
                     handler.handle(Future.failedFuture(message + studentAsync.left().getValue()));
                 }
                 List<Student> students = personHelper.getStudentListFromJsonArray(
-                        studentAsync.right().getValue()
-                );
+                        studentAsync.right().getValue());
                 for (MarkedStudent markedStudent : markedStudents) {
                     for (Student student : students) {
                         if (markedStudent.getStudent().getId().equals(student.getId())) {
@@ -222,56 +226,147 @@ public class DefaultPresenceService extends DBService implements PresenceService
         });
     }
 
+    /**
+     * Create presence and update all events and absences that match with presence's creation date
+     *
+     * @param user              user infos {@link UserInfos}
+     * @param presenceBody      list of absences identifiers
+     * @param handler           Handler sending {@link Either>} reply
+     */
     @Override
-    @SuppressWarnings("unchecked")
     public void create(UserInfos user, JsonObject presenceBody, Handler<Either<String, JsonObject>> handler) {
 
         List<String> studentIds = presenceBody.getJsonArray(Field.MARKEDSTUDENTS)
                 .stream().map(student -> ((JsonObject) student).getString(Field.STUDENTID))
                 .collect(Collectors.toList());
 
-        absenceService.getAbsencesIds(presenceBody.getString(Field.STARTDATE),
-                        presenceBody.getString(Field.ENDDATE),
-                        studentIds, presenceBody.getString(Field.STRUCTUREID))
-                .compose(absenceIds -> updateAbsencesReason(absenceIds, user)
-                        .onFailure(fail -> handler.handle(new Either.Left<>(fail.getMessage())))
-                        .onSuccess(ar -> {
-                            String queryId = "SELECT nextval('" + Presences.dbSchema + ".presence_id_seq') as id";
+        proceedUpdateEventsAbsence(studentIds, presenceBody, user)
+                .onSuccess(ar -> {
+                    String queryId = "SELECT nextval('" + Presences.dbSchema + ".presence_id_seq') as id";
+                    sql.raw(queryId, SqlResult.validUniqueResultHandler(presenceId -> {
+                        if (presenceId.isLeft()) {
+                            String message = String.format("[Presences@%s::create] Failed to fetch presence id seq :%s",
+                                    this.getClass().getSimpleName(), presenceId.left().getValue());
+                            LOGGER.error(message);
+                            handler.handle(new Either.Left<>(message));
+                        } else {
+                            processTransactionPresences(user, presenceBody, handler, presenceId);
+                        }
+                    }));
+                })
+                .onFailure(fail -> handler.handle(new Either.Left<>(fail.getMessage())));
+    }
 
-                            sql.raw(queryId, SqlResult.validUniqueResultHandler(presenceId -> {
-                                if (presenceId.isLeft()) {
-                                    String message = String.format("[Presences@%s::create] Failed to fetch " +
-                                                    "presence id seq :%s",
-                                            this.getClass().getSimpleName(), presenceId.left().getValue());
-                                    LOGGER.error(message);
-                                    handler.handle(new Either.Left<>(message));
-                                } else {
-                                    Integer id = presenceId.right().getValue().getInteger(Field.ID);
 
-                                    JsonArray statements = new JsonArray();
-                                    statements.add(createPresenceStatement(user, id, presenceBody));
+    /**
+     * with defined event type, will fetch grouped events by its type and build event and its slots event
+     *
+     * @param studentIds            List of student identifiers
+     * @param presenceBody          Presences Body {@link JsonObject}
+     * @param user                  user info {@link UserInfos}
+     *
+     * @return {@link JsonObject}
+     */
+    private Future<JsonObject> proceedUpdateEventsAbsence(List<String> studentIds, JsonObject presenceBody, UserInfos user) {
+        Promise<JsonObject> promise = Promise.promise();
 
-                                    JsonArray markedStudents = presenceBody.getJsonArray(Field.MARKEDSTUDENTS);
+        Future<List<Long>> absencesIdsFuture = getAbsencesIds(studentIds, presenceBody);
+        Future<List<Long>> eventsIdsFuture = getEventsIds(studentIds, presenceBody);
 
-                                    for (int i = 0; i < markedStudents.size(); i++) {
-                                        JsonObject student = markedStudents.getJsonObject(i);
-                                        statements.add(addStudentsStatement(id, student.getString(Field.STUDENTID), student.getString(Field.COMMENT)));
-                                    }
+        CompositeFuture.all(absencesIdsFuture, eventsIdsFuture)
+                .compose(aVoid -> updateAbsencesReason(absencesIdsFuture.result(), user))
+                .compose(aVoid -> updateEventsReason(eventsIdsFuture.result()))
+                .onSuccess(promise::complete)
+                .onFailure(err -> {
+                    String message = String.format("[Presences@%s::proceedUpdateEventsAbsence] Failed to process update " +
+                                    "absence or event : %s",
+                            this.getClass().getSimpleName(), err.getMessage());
+                    LOGGER.error(message);
+                    promise.fail(err.getMessage());
+                });
 
-                                    sql.transaction(statements, async -> {
-                                        Either<String, JsonObject> result = SqlResult.validUniqueResult(0, async);
-                                        if (result.isLeft()) {
-                                            String message = String.format("[Presences@%s::create] Failed to execute " +
-                                                            "presence creation statements : %s", this.getClass().getSimpleName(),
-                                                    result.left().getValue());
-                                            LOGGER.error(message);
-                                            handler.handle(new Either.Left<>(message));
-                                        }
-                                        handler.handle(new Either.Right<>(result.right().getValue()));
-                                    });
-                                }
-                            }));
-                        }));
+        return promise.future();
+    }
+
+    /**
+     * fetch absences and map to list of its identifiers
+     *
+     * @param studentIds            List of student identifiers
+     * @param presenceBody          Presences Body {@link JsonObject}
+     *
+     * @return {@link Future<List> of {@link Long}}
+     */
+    private Future<List<Long>> getAbsencesIds(List<String> studentIds, JsonObject presenceBody) {
+        Promise<List<Long>> promise = Promise.promise();
+        String startDate = presenceBody.getString(Field.STARTDATE);
+        String endDate = presenceBody.getString(Field.ENDDATE);
+        String structureId = presenceBody.getString(Field.STRUCTUREID);
+        commonPresencesServiceFactory.absenceService().getAbsencesBetweenDates(startDate, endDate, studentIds, structureId)
+                .onSuccess(absences ->
+                        promise.complete(absences
+                                .stream()
+                                .map(a -> ((JsonObject) a).getLong(Field.ID)).collect(Collectors.toList()))
+                )
+                .onFailure(promise::fail);
+        return promise.future();
+    }
+
+    /**
+     * fetch events and map to list of its identifiers
+     *
+     * @param studentIds            List of student identifiers
+     * @param presenceBody          Presences Body {@link JsonObject}
+     *
+     * @return {@link Future<List> of {@link Long}}
+     */
+    private Future<List<Long>> getEventsIds(List<String> studentIds, JsonObject presenceBody) {
+        Promise<List<Long>> promise = Promise.promise();
+        String startDate = presenceBody.getString(Field.STARTDATE);
+        String endDate = presenceBody.getString(Field.ENDDATE);
+        String structureId = presenceBody.getString(Field.STRUCTUREID);
+        commonPresencesServiceFactory.eventService().getEventsBetweenDates(startDate, endDate, studentIds, new ArrayList<>(Collections.singletonList(1)), structureId)
+                .onSuccess(absences ->
+                        promise.complete(absences
+                                .stream()
+                                .map(a -> ((JsonObject) a).getLong(Field.ID)).collect(Collectors.toList()))
+                )
+                .onFailure(promise::fail);
+        return promise.future();
+    }
+
+    /**
+     * Create presence and student presences transaction
+     *
+     * @param user              user infos {@link UserInfos}
+     * @param presenceBody      list of absences identifiers
+     * @param handler           Handler sending {@link Either>} reply
+     * @param presenceId        {@link Either} containing its result object
+     */
+    private void processTransactionPresences(UserInfos user, JsonObject presenceBody, Handler<Either<String, JsonObject>> handler,
+                                             Either<String, JsonObject> presenceId) {
+        Integer id = presenceId.right().getValue().getInteger(Field.ID);
+
+        JsonArray statements = new JsonArray();
+        statements.add(createPresenceStatement(user, id, presenceBody));
+
+        JsonArray markedStudents = presenceBody.getJsonArray(Field.MARKEDSTUDENTS);
+
+        for (int i = 0; i < markedStudents.size(); i++) {
+            JsonObject student = markedStudents.getJsonObject(i);
+            statements.add(addStudentsStatement(id, student.getString(Field.STUDENTID), student.getString(Field.COMMENT)));
+        }
+
+        sql.transaction(statements, async -> {
+            Either<String, JsonObject> result = SqlResult.validUniqueResult(0, async);
+            if (result.isLeft()) {
+                String message = String.format("[Presences@%s::create] Failed to execute " +
+                                "presence creation statements : %s", this.getClass().getSimpleName(),
+                        result.left().getValue());
+                LOGGER.error(message);
+                handler.handle(new Either.Left<>(message));
+            }
+            handler.handle(new Either.Right<>(result.right().getValue()));
+        });
     }
 
     /**
@@ -280,19 +375,35 @@ public class DefaultPresenceService extends DBService implements PresenceService
      * @param user          user infos
      * @return  {@link Future} of {@link JsonObject}
      */
-    private Future<JsonObject> updateAbsencesReason(JsonArray absenceIds, UserInfos user) {
+    private Future<JsonObject> updateAbsencesReason(List<Long> absenceIds, UserInfos user) {
         Promise<JsonObject> promise = Promise.promise();
-
         if (absenceIds.isEmpty()) {
             promise.complete(new JsonObject());
         } else {
             JsonObject absenceBody = new JsonObject()
-                    .put(Field.IDS, absenceIds)
+                    .put(Field.IDS, new JsonArray(absenceIds))
                     .put(Field.REASONID, Reasons.PRESENT_IN_STRUCTURE);
-
-            absenceService.changeReasonAbsences(absenceBody, user, FutureHelper.handlerJsonObject(promise));
+            commonPresencesServiceFactory.absenceService()
+                    .changeReasonAbsences(absenceBody, user, FutureHelper.handlerJsonObject(promise));
         }
+        return promise.future();
+    }
 
+    /**
+     * Update events and add "present" reason
+     *
+     * @param eventsIds     list of absences identifiers
+     * @return  {@link Future} of {@link JsonObject}
+     */
+    private Future<JsonObject> updateEventsReason(List<Long> eventsIds) {
+        Promise<JsonObject> promise = Promise.promise();
+        if (eventsIds.isEmpty()) {
+            promise.complete(new JsonObject());
+        } else {
+            commonPresencesServiceFactory.eventService().changeReasonEvents(eventsIds, Reasons.PRESENT_IN_STRUCTURE)
+                    .onSuccess(promise::complete)
+                    .onFailure(promise::fail);
+        }
         return promise.future();
     }
 
