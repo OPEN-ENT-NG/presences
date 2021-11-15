@@ -751,4 +751,19 @@ public class DateHelper {
         return ChronoUnit.MONTHS.between(startAt, endAt);
     }
 
+    /**
+     * get days between two dates
+     *
+     * @param date1     begin date
+     * @param date2     date that should be over date1
+     *
+     * @return number of days diff
+     */
+    public static long getDaysBetweenTwoDates(String date1, String date2) {
+        LocalDate start = LocalDate.parse(date1);
+        LocalDate end = LocalDate.parse(date2);
+
+        return ChronoUnit.DAYS.between(start, end);
+    }
+
 }

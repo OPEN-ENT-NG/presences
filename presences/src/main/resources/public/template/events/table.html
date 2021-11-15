@@ -73,7 +73,7 @@
                 <select data-ng-model="event.reason.id"
                         data-ng-click="vm.reasonSelect($event)"
                         data-ng-change="vm.changeAllReason(event, event.student.id)"
-                        ng-options="reason.id as reason.label disable when reason.hidden for reason in vm.filterSelect(vm.eventReasonsType, event)">
+                        ng-options="reason.id as lang.translate(reason.label) disable when reason.hidden for reason in vm.filterSelect(vm.eventReasonsType, event)">
                     <option value="">[[lang.translate('presences.absence.select.empty')]]</option>
                 </select>
             </label>
@@ -140,7 +140,7 @@
                  <label ng-if="history.type_id == 1">
                     <select data-ng-model="history.reason_id"
                             data-ng-change="vm.changeReason(history, event, event.student.id)"
-                            ng-options="reason.id as reason.label disable when reason.hidden for reason in vm.eventReasonsTypeDescription">
+                            ng-options="reason.id as lang.translate(reason.label) disable when reason.hidden for reason in vm.eventReasonsTypeDescription">
                         <option value="">[[lang.translate('presences.absence.select.empty')]]</option>
                     </select>
                 </label>

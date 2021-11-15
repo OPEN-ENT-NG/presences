@@ -1,15 +1,11 @@
 package fr.openent.presences.service;
 
 import fr.openent.presences.common.helper.PersonHelper;
-import fr.openent.presences.common.service.ExportPDFService;
-import fr.openent.presences.common.service.ExportZIPService;
-import fr.openent.presences.common.service.StructureService;
-import fr.openent.presences.common.service.UserService;
-import fr.openent.presences.common.service.impl.DefaultStructureService;
-import fr.openent.presences.common.service.impl.DefaultUserService;
-import fr.openent.presences.common.service.impl.ExportPDFServiceImpl;
-import fr.openent.presences.common.service.impl.ExportZIPServiceImpl;
+import fr.openent.presences.common.service.*;
+import fr.openent.presences.common.service.impl.*;
+import fr.openent.presences.helper.CourseHelper;
 import fr.openent.presences.helper.EventHelper;
+import fr.openent.presences.helper.PresenceHelper;
 import fr.openent.presences.helper.SlotHelper;
 import fr.openent.presences.service.impl.*;
 import io.vertx.core.Vertx;
@@ -22,16 +18,32 @@ public class CommonPresencesServiceFactory {
     private final Storage storage;
     private final JsonObject config;
 
+
+    private final UserService userService;
+    private final GroupService groupService;
+
+    private final AbsenceService absenceService;
+    private final EventService eventService;
+    private final PresenceService presenceService;
+
     public CommonPresencesServiceFactory(Vertx vertx, Storage storage, JsonObject config) {
         this.vertx = vertx;
         this.storage = storage;
         this.config = config;
+
+        this.userService = new DefaultUserService();
+        this.groupService = new DefaultGroupService(this.vertx.eventBus());
+        this.absenceService = new DefaultAbsenceService(this);
+        this.eventService = new DefaultEventService(this);
+        this.presenceService = new DefaultPresenceService(this);
     }
 
     // Common
     public UserService userService() {
-        return new DefaultUserService();
+        return userService;
     }
+
+    public GroupService groupService() { return groupService; }
 
     public StructureService structureService() {
         return new DefaultStructureService();
@@ -55,12 +67,24 @@ public class CommonPresencesServiceFactory {
 
     public PersonHelper personHelper() { return new PersonHelper();}
 
+    public PresenceHelper presenceHelper() { return new PresenceHelper();}
+
     public SlotHelper slotHelper() { return new SlotHelper(this.vertx.eventBus());}
+
+    public CourseHelper courseHelper() {
+        return new CourseHelper(this.vertx.eventBus());
+    }
 
     // Presences Service
 
+    public AbsenceService absenceService() {
+        return absenceService;
+    }
+
+    public DisciplineService disciplineService() { return new DefaultDisciplineService(); }
+
     public EventService eventService() {
-        return new DefaultEventService(vertx.eventBus());
+        return eventService;
     }
 
     public ExportEventService exportEventService() {
@@ -74,6 +98,31 @@ public class CommonPresencesServiceFactory {
     public ArchiveService archiveService() {
         return new DefaultArchiveService(this);
     }
+
+    public PresenceService presenceService() {
+        return presenceService;
+    }
+
+    public ExemptionService exemptionService() {
+        return new DefaultExemptionService(this.vertx.eventBus());
+    }
+
+    public EventStudentService eventStudentService() {
+        return new DefaultEventStudentService(this.vertx.eventBus());
+    }
+
+    public RegisterService registerService() {
+        return new DefaultRegisterService(this.vertx.eventBus());
+    }
+
+    public CollectiveAbsenceService collectiveAbsenceService() {
+        return new DefaultCollectiveAbsenceService(this.vertx.eventBus());
+    }
+
+    public LatenessEventService latenessEventService() {
+        return new DefaultLatenessEventService(this);
+    }
+
 
     // Helpers
     public EventBus eventBus() {

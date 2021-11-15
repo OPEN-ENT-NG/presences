@@ -93,6 +93,14 @@ public interface RegisterService {
     void get(Integer id, Handler<Either<String, JsonObject>> handler);
 
     /**
+     * get register only without extra data
+     *
+     * @param id      register identifier
+     * @return Register from SQL
+     */
+    Future<JsonObject> fetchRegister(Integer id);
+
+    /**
      * Check if a register exists for given information
      *
      * @param courseId  Course identifier

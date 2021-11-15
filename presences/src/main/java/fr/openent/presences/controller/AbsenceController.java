@@ -1,15 +1,13 @@
 package fr.openent.presences.controller;
 
 import fr.openent.presences.common.service.GroupService;
-import fr.openent.presences.common.service.impl.DefaultGroupService;
 import fr.openent.presences.constants.Actions;
 import fr.openent.presences.security.AbsenceWidgetRight;
 import fr.openent.presences.security.CreateEventRight;
 import fr.openent.presences.security.Manage;
 import fr.openent.presences.service.AbsenceService;
 import fr.openent.presences.service.CollectiveAbsenceService;
-import fr.openent.presences.service.impl.DefaultAbsenceService;
-import fr.openent.presences.service.impl.DefaultCollectiveAbsenceService;
+import fr.openent.presences.service.CommonPresencesServiceFactory;
 import fr.wseduc.rs.*;
 import fr.wseduc.security.ActionType;
 import fr.wseduc.security.SecuredAction;
@@ -29,18 +27,17 @@ import java.util.List;
 
 public class AbsenceController extends ControllerHelper {
 
-    private EventBus eb;
-    private AbsenceService absenceService;
-    private GroupService groupService;
-    private CollectiveAbsenceService collectiveService;
+    private final EventBus eb;
+    private final AbsenceService absenceService;
+    private final GroupService groupService;
+    private final CollectiveAbsenceService collectiveService;
 
-    public AbsenceController(EventBus eb) {
+    public AbsenceController(CommonPresencesServiceFactory commonPresencesServiceFactory) {
         super();
-        this.eb = eb;
-        this.absenceService = new DefaultAbsenceService(eb);
-        this.groupService = new DefaultGroupService(eb);
-        this.collectiveService = new DefaultCollectiveAbsenceService(eb);
-
+        this.eb = commonPresencesServiceFactory.eventBus();
+        this.absenceService = commonPresencesServiceFactory.absenceService();
+        this.groupService = commonPresencesServiceFactory.groupService();
+        this.collectiveService = commonPresencesServiceFactory.collectiveAbsenceService();
     }
 
     @Get("/absence/:id")
@@ -62,7 +59,7 @@ public class AbsenceController extends ControllerHelper {
     @Trace(Actions.ABSENCE_CREATION)
     public void postEvent(HttpServerRequest request) {
         RequestUtils.bodyToJson(request, event -> {
-            if (!isAbsenceBodyValid(event)) {
+            if (Boolean.FALSE.equals(isAbsenceBodyValid(event))) {
                 badRequest(request);
                 return;
             }

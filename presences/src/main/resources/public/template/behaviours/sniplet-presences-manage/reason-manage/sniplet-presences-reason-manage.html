@@ -95,7 +95,7 @@
                         ng-repeat="reason in vm.reasons | orderBy:['!proving','absence_compliance', 'label']">
 
                         <div class="sniplet-addList-content-list-item-title">
-                            <label class="sniplet-addList-content-list-item-title-label">[[reason.label]]&nbsp;</label>
+                            <label class="sniplet-addList-content-list-item-title-label">[[lang.translate(reason.label)]]&nbsp;</label>
 
                             <i title="[[lang.translate('presences.absence.reason.regularisation.necessary')]]"
                                class="sniplet-addList-content-list-item-icon-yellow alert-octagon"

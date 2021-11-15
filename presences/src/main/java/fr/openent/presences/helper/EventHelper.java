@@ -1,16 +1,14 @@
 package fr.openent.presences.helper;
 
 import fr.openent.presences.Presences;
-import fr.openent.presences.common.helper.DateHelper;
-import fr.openent.presences.common.helper.FutureHelper;
-import fr.openent.presences.common.helper.PersonHelper;
-import fr.openent.presences.common.helper.RegisterHelper;
+import fr.openent.presences.common.helper.*;
 import fr.openent.presences.common.service.UserService;
 import fr.openent.presences.common.service.impl.DefaultUserService;
+import fr.openent.presences.core.constants.Field;
 import fr.openent.presences.enums.Events;
+import fr.openent.presences.enums.WorkflowActions;
 import fr.openent.presences.model.Absence;
 import fr.openent.presences.model.Event.Event;
-import fr.openent.presences.model.Event.EventByStudent;
 import fr.openent.presences.model.Event.EventType;
 import fr.openent.presences.model.Event.RegisterEvent;
 import fr.openent.presences.model.Person.Student;
@@ -28,7 +26,7 @@ import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
-import org.joda.time.LocalDate;
+import org.entcore.common.user.UserInfos;
 
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
@@ -37,8 +35,6 @@ import java.util.stream.Collectors;
 
 public class EventHelper {
     private static final Logger LOGGER = LoggerFactory.getLogger(EventHelper.class);
-    private static final String DEFAULT_START_TIME = "00:00:00";
-    private static final String DEFAULT_END_TIME = "23:59:59";
     private final EventTypeHelper eventTypeHelper;
     private final ReasonService reasonService;
     private final RegisterHelper registerHelper;
@@ -53,6 +49,44 @@ public class EventHelper {
         this.registerHelper = new RegisterHelper(eb, Presences.dbSchema);
         this.actionService = new DefaultActionService();
         this.userService = new DefaultUserService();
+    }
+
+    public JsonObject getCreationStatement(JsonObject event, UserInfos user) {
+        String query = "INSERT INTO " + Presences.dbSchema + ".event (start_date, end_date, comment, counsellor_input, student_id, register_id, type_id, owner, reason_id) " +
+                "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?) " +
+                "RETURNING id, start_date, end_date, comment, counsellor_input, student_id, register_id, type_id, reason_id;";
+        JsonArray params = new JsonArray()
+                .add(event.getString("start_date"))
+                .add(event.getString("end_date"))
+                .add(event.containsKey("comment") ? event.getString("comment") : "")
+                .add(WorkflowHelper.hasRight(user, WorkflowActions.MANAGE.toString()))
+                .add(event.getString("student_id"))
+                .add(event.getInteger("register_id"))
+                .add(event.getInteger("type_id"))
+                .add(user.getUserId());
+
+        if ((event.getInteger(Field.REASON_ID) != null && event.getInteger(Field.REASON_ID) != -1)) {
+            params.add(event.getInteger(Field.REASON_ID));
+        } else {
+            params.addNull();
+        }
+
+        return new JsonObject()
+                .put("action", "prepared")
+                .put("statement", query)
+                .put("values", params);
+    }
+
+    public JsonObject getDeletionEventStatement(JsonObject event) {
+        String query = "DELETE FROM " + Presences.dbSchema + ".event WHERE type_id IN (2, 3) AND register_id = ? AND student_id = ?";
+        JsonArray params = new JsonArray()
+                .add(event.getInteger("register_id"))
+                .add(event.getString("student_id"));
+
+        return new JsonObject()
+                .put("action", "prepared")
+                .put("statement", query)
+                .put("values", params);
     }
 
     @SuppressWarnings("unchecked")
@@ -109,88 +143,6 @@ public class EventHelper {
         });
         ids.removeAll(Collections.singletonList(null));
         return ids;
-    }
-
-    /**
-     * duplicate absences and edit its start and end date  if it has multiple date in one line
-     * <p>
-     * JsonObject absence (startDate: 2019-12-16 endDate: 2019-12-26) will split 10 times with:
-     * <p>
-     * JsonObject absence (startDate: 2019-12-16 endDate: 2019-12-16)
-     * JsonObject absence (startDate: 2019-12-17 endDate: 2019-12-17)
-     * ~
-     * JsonObject absence (startDate: 2019-12-26 endDate: 2019-12-26)
-     *
-     * @param eventsResult events result JsonArray
-     */
-    public JsonArray duplicateAbsences(JsonArray eventsResult) {
-        JsonArray filteredEvents = new JsonArray();
-        for (int i = 0; i < eventsResult.size(); i++) {
-            JsonObject event = eventsResult.getJsonObject(i).copy();
-            String startDate = DateHelper.getDateString(event.getString("start_date"), DateHelper.YEAR_MONTH_DAY);
-            String endDate = DateHelper.getDateString(event.getString("end_date"), DateHelper.YEAR_MONTH_DAY);
-
-            if (startDate.equals(endDate)) {
-                filteredEvents.add(event);
-            } else {
-                JsonArray duplicate = new JsonArray();
-                int start = Integer.parseInt(DateHelper.getDateString(event.getString("start_date"), "dd"));
-                int end = Integer.parseInt(DateHelper.getDateString(event.getString("end_date"), "dd"));
-                int total = end - start;
-
-                for (int j = 0; j <= total; j++) {
-                    LocalDate date = LocalDate
-                            .parse(DateHelper.getDateString(event.getString("start_date"), DateHelper.YEAR_MONTH_DAY))
-                            .plusDays(j);
-                    String finalStartDate = date.toString() + "T" +
-                            DateHelper.getDateString(event.getString("start_date"), DateHelper.HOUR_MINUTES_SECONDS);
-                    String finalEndDate = date.toString() + "T" +
-                            DateHelper.getDateString(event.getString("end_date"), DateHelper.HOUR_MINUTES_SECONDS);
-                    duplicate.add(event.copy().put("start_date", finalStartDate).put("end_date", finalEndDate));
-                }
-                filteredEvents.addAll(duplicate);
-            }
-        }
-        return filteredEvents;
-    }
-
-    /**
-     * remove potential absences if it has the exact match with any events
-     *
-     * @param events    events result JsonArray
-     * @param startDate startDate from get events
-     * @param endDate   endDate from get events
-     */
-    public List<Event> removeDuplicateAbsences(List<Event> events, String startDate, String endDate) {
-        List<Event> noDuplicatedEvents = new ArrayList<>();
-
-        for (Event event : events) {
-            boolean isFound = false;
-            // check if the event name exists in noRepeat
-            for (Event e : noDuplicatedEvents) {
-                String outLoopStart = DateHelper.getDateString(event.getStartDate(), DateHelper.YEAR_MONTH_DAY);
-                String inLoopStart = DateHelper.getDateString(e.getStartDate(), DateHelper.YEAR_MONTH_DAY);
-                if (event.getStudent().getId().equals(e.getStudent().getId()) && outLoopStart.equals(inLoopStart)) {
-                    isFound = true;
-                    break;
-                }
-            }
-            if (!isFound) noDuplicatedEvents.add(event);
-        }
-
-        // Filter List of events with start end end date param
-        return noDuplicatedEvents.stream().filter(e -> {
-            try {
-                return DateHelper.isBetween(
-                        e.getStartDate(),
-                        e.getEndDate(),
-                        startDate + "T" + DEFAULT_START_TIME,
-                        endDate + "T" + DEFAULT_END_TIME);
-            } catch (ParseException ex) {
-                ex.printStackTrace();
-                return false;
-            }
-        }).collect(Collectors.toList());
     }
 
     public JsonArray mergeAbsencesSlots(JsonArray slots, List<Absence> absences) {

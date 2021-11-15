@@ -76,18 +76,17 @@ public class Presences extends BaseServer {
         ebViescoAddress = "viescolaire";
         final EventBus eb = getEventBus(vertx);
         Storage storage = new StorageFactory(vertx, config).getStorage();
+        DB.getInstance().init(Neo4j.getInstance(), Sql.getInstance(), MongoDb.getInstance());
         CommonPresencesServiceFactory commonPresencesServiceFactory = new CommonPresencesServiceFactory(vertx, storage, config);
 
 //        final String exportCron = config.getString("export-cron");
 
-        DB.getInstance().init(Neo4j.getInstance(), Sql.getInstance(), MongoDb.getInstance());
-
-        addController(new PresencesController(eb));
+        addController(new PresencesController(commonPresencesServiceFactory));
         addController(new CourseController(eb));
         addController(new RegisterController(eb));
-        addController(new AbsenceController(eb));
-        addController(new EventController(eb, commonPresencesServiceFactory));
-        addController(new LatenessEventController(eb));
+        addController(new AbsenceController(commonPresencesServiceFactory));
+        addController(new EventController(commonPresencesServiceFactory));
+        addController(new LatenessEventController(commonPresencesServiceFactory));
         addController(new ExemptionController(eb));
         addController(new SearchController(eb));
         addController(new CalendarController(eb));

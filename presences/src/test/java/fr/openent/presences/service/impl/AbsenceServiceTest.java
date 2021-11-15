@@ -27,7 +27,7 @@ public class AbsenceServiceTest extends DBService {
     @Before
     public void setUp() {
         DB.getInstance().init(null, sql, null);
-        this.absenceService = new DefaultAbsenceService(null);
+        this.absenceService = new DefaultAbsenceService(Vertx.vertx().eventBus());
     }
 
     @Test

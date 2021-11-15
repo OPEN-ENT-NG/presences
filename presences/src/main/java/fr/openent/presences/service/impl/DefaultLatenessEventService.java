@@ -2,9 +2,7 @@ package fr.openent.presences.service.impl;
 
 import fr.openent.presences.Presences;
 import fr.openent.presences.common.helper.DateHelper;
-import fr.openent.presences.common.helper.FutureHelper;
 import fr.openent.presences.common.service.GroupService;
-import fr.openent.presences.common.service.impl.DefaultGroupService;
 import fr.openent.presences.common.viescolaire.*;
 import fr.openent.presences.core.constants.*;
 import fr.openent.presences.db.*;
@@ -14,7 +12,6 @@ import fr.openent.presences.model.Event.EventBody;
 import fr.openent.presences.service.*;
 import fr.wseduc.webutils.Either;
 import io.vertx.core.*;
-import io.vertx.core.eventbus.EventBus;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import io.vertx.core.logging.Logger;
@@ -36,13 +33,12 @@ public class DefaultLatenessEventService extends DBService implements LatenessEv
     private final SettingsService settingsService;
     private final CourseHelper courseHelper;
 
-    public DefaultLatenessEventService(EventBus eb) {
-
-        eventService = new DefaultEventService(eb);
-        groupService = new DefaultGroupService(eb);
-        registerService = new DefaultRegisterService(eb);
-        settingsService = new DefaultSettingsService();
-        courseHelper = new CourseHelper(eb);
+    public DefaultLatenessEventService(CommonPresencesServiceFactory commonPresencesServiceFactory) {
+        eventService = commonPresencesServiceFactory.eventService();
+        groupService = commonPresencesServiceFactory.groupService();
+        registerService = commonPresencesServiceFactory.registerService();
+        settingsService = commonPresencesServiceFactory.settingsService();
+        courseHelper = commonPresencesServiceFactory.courseHelper();
     }
 
     @Override

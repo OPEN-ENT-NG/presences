@@ -37,7 +37,6 @@ public class DefaultExportEventService extends DBService implements ExportEventS
     private final PersonHelper personHelper;
     private final ReasonService reasonService;
 
-
     public DefaultExportEventService(CommonPresencesServiceFactory commonPresencesServiceFactory) {
         this.eventService = commonPresencesServiceFactory.eventService();
         this.settingsService = commonPresencesServiceFactory.settingsService();
