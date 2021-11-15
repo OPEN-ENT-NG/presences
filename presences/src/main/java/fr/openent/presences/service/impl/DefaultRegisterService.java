@@ -476,13 +476,26 @@ public class DefaultRegisterService extends DBService implements RegisterService
         });
     }
 
+    /**
+     * get register only without extra data
+     *
+     * @param id register identifier
+     * @return Register from SQL
+     */
+    @Override
+    public Future<JsonObject> fetchRegister(Integer id) {
+        Promise<JsonObject> promise = Promise.promise();
+        fetchRegister(id, FutureHelper.handlerJsonObject(promise));
+        return promise.future();
+    }
+
     private void fetchRegister(Integer id, Handler<Either<String, JsonObject>> handler) {
         String query = "SELECT personnel_id, proof_id, course_id, owner, notified, subject_id, start_date, end_date, " +
                 "structure_id, counsellor_input, state_id FROM " + Presences.dbSchema + ".register " +
                 "WHERE register.id = ?";
         JsonArray params = new JsonArray().add(id);
 
-        Sql.getInstance().prepared(query, params, SqlResult.validUniqueResultHandler(handler));
+        sql.prepared(query, params, SqlResult.validUniqueResultHandler(handler));
     }
 
     private void fetchGroupRegister(Integer id, Handler<Either<String, JsonObject>> handler) {

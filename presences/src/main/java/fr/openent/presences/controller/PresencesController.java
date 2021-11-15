@@ -6,8 +6,8 @@ import fr.openent.presences.constants.Actions;
 import fr.openent.presences.enums.WorkflowActions;
 import fr.openent.presences.export.PresencesCSVExport;
 import fr.openent.presences.security.presence.ManagePresenceRight;
+import fr.openent.presences.service.CommonPresencesServiceFactory;
 import fr.openent.presences.service.PresenceService;
-import fr.openent.presences.service.impl.DefaultPresenceService;
 import fr.wseduc.rs.*;
 import fr.wseduc.security.ActionType;
 import fr.wseduc.security.SecuredAction;
@@ -15,7 +15,6 @@ import fr.wseduc.webutils.Either;
 import fr.wseduc.webutils.request.RequestUtils;
 import io.vertx.core.Handler;
 import io.vertx.core.MultiMap;
-import io.vertx.core.eventbus.*;
 import io.vertx.core.http.HttpServerRequest;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
@@ -25,7 +24,6 @@ import org.entcore.common.events.EventStoreFactory;
 import org.entcore.common.http.filter.ResourceFilter;
 import org.entcore.common.http.filter.Trace;
 import org.entcore.common.http.response.DefaultResponseHandler;
-import org.entcore.common.neo4j.*;
 import org.entcore.common.user.UserUtils;
 
 import java.util.Collections;
@@ -37,11 +35,11 @@ public class PresencesController extends ControllerHelper {
     private static final String START_DATE = "startDate";
     private static final String STRUCTURE_ID = "structureId";
 
-    private PresenceService presencesService;
-    private EventStore eventStore;
+    private final PresenceService presencesService;
+    private final EventStore eventStore;
 
-    public PresencesController(EventBus eb) {
-        this.presencesService = new DefaultPresenceService(eb);
+    public PresencesController(CommonPresencesServiceFactory commonPresencesServiceFactory) {
+        this.presencesService = commonPresencesServiceFactory.presenceService();
         this.eventStore = EventStoreFactory.getFactory().getEventStore(Presences.class.getSimpleName());
     }
 

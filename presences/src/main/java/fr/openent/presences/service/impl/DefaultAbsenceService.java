@@ -7,6 +7,7 @@ import fr.openent.presences.common.service.GroupService;
 import fr.openent.presences.common.service.UserService;
 import fr.openent.presences.common.service.impl.DefaultGroupService;
 import fr.openent.presences.common.service.impl.DefaultUserService;
+import fr.openent.presences.constants.Reasons;
 import fr.openent.presences.core.constants.*;
 import fr.openent.presences.db.DBService;
 import fr.openent.presences.enums.EventType;
@@ -14,6 +15,8 @@ import fr.openent.presences.helper.*;
 import fr.openent.presences.model.*;
 import fr.openent.presences.model.Event.Event;
 import fr.openent.presences.service.AbsenceService;
+import fr.openent.presences.service.CommonPresencesServiceFactory;
+import fr.openent.presences.service.PresenceService;
 import fr.wseduc.webutils.Either;
 import io.vertx.core.*;
 import io.vertx.core.eventbus.EventBus;
@@ -27,6 +30,7 @@ import org.entcore.common.user.UserInfos;
 
 import java.text.ParseException;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
@@ -34,15 +38,26 @@ import java.util.stream.Collectors;
 
 public class DefaultAbsenceService extends DBService implements AbsenceService {
     private static final Logger LOGGER = LoggerFactory.getLogger(DefaultAbsenceService.class);
-    private static String defaultStartTime = "00:00:00";
-    private static String defaultEndTime = "23:59:59";
+    private static final String defaultStartTime = "00:00:00";
+    private static final String defaultEndTime = "23:59:59";
 
-    private GroupService groupService;
-    private UserService userService;
+    private final GroupService groupService;
+    private final UserService userService;
+    private final CommonPresencesServiceFactory commonPresencesServiceFactory;
+
 
     public DefaultAbsenceService(EventBus eb) {
         this.groupService = new DefaultGroupService(eb);
         this.userService = new DefaultUserService();
+
+        // todo spread new class CommonPresencesServiceFactory toward other classes that use
+        this.commonPresencesServiceFactory = null;
+    }
+
+    public DefaultAbsenceService(CommonPresencesServiceFactory commonPresencesServiceFactory) {
+        this.groupService = commonPresencesServiceFactory.groupService();
+        this.userService = commonPresencesServiceFactory.userService();
+        this.commonPresencesServiceFactory = commonPresencesServiceFactory;
     }
 
     @Override
@@ -132,18 +147,6 @@ public class DefaultAbsenceService extends DBService implements AbsenceService {
     }
 
     @Override
-    public Future<JsonArray> getAbsencesIds(String startDate, String endDate, List<String> users, String structureId) {
-        Promise<JsonArray> promise = Promise.promise();
-
-        get(structureId, startDate, endDate, users)
-                .onFailure(fail -> promise.fail(fail.getMessage()))
-                .onSuccess(absences -> promise.complete(new JsonArray(absences.stream()
-                                .map(a -> ((JsonObject) a).getLong(Field.ID)).collect(Collectors.toList()))));
-
-        return promise.future();
-    }
-
-    @Override
     public void getAbsencesBetweenDates(String startDate, String endDate, List<String> users, String structureId,
                                         Handler<Either<String, JsonArray>> handler) {
 
@@ -163,6 +166,13 @@ public class DefaultAbsenceService extends DBService implements AbsenceService {
         }
 
         sql.prepared(query, params, SqlResult.validResultHandler(handler));
+    }
+
+    @Override
+    public Future<JsonArray> getAbsencesBetweenDates(String startDate, String endDate, List<String> users, String structureId) {
+        Promise<JsonArray> promise = Promise.promise();
+        getAbsencesBetweenDates(startDate, endDate, users, structureId, FutureHelper.handlerJsonArray(promise));
+        return promise.future();
     }
 
     @Override
@@ -261,12 +271,12 @@ public class DefaultAbsenceService extends DBService implements AbsenceService {
     @Override
     public void create(JsonObject absenceBody, UserInfos user, boolean editEvents, Handler<Either<String, JsonObject>> handler) {
 
-        String startDate = absenceBody.getString("start_date");
-        String endDate = absenceBody.getString("end_date");
-        String studentId = absenceBody.getString("student_id");
-        String structureId = absenceBody.getString("structure_id");
-
-        deleteOldStudentAbsences(studentId, structureId, startDate, endDate)
+        String startDate = absenceBody.getString(Field.START_DATE);
+        String endDate = absenceBody.getString(Field.END_DATE);
+        String studentId = absenceBody.getString(Field.STUDENT_ID);
+        String structureId = absenceBody.getString(Field.STRUCTURE_ID);
+        checkPresenceEvent(startDate, endDate, studentId, structureId, absenceBody)
+                .compose(aVoid -> deleteOldStudentAbsences(studentId, structureId, startDate, endDate))
                 .onFailure(error -> handler.handle(new Either.Left<>(error.getMessage())))
                 .onSuccess(aVoid -> {
                     String query = "INSERT INTO " + Presences.dbSchema + ".absence(structure_id, start_date, end_date, student_id, owner, reason_id) " +
@@ -294,6 +304,52 @@ public class DefaultAbsenceService extends DBService implements AbsenceService {
                             )
                     ));
                 });
+    }
+
+    @SuppressWarnings("unchecked")
+    private Future<Void> checkPresenceEvent(String startDate, String endDate, String studentId, String structureId, JsonObject absenceBody) {
+        Promise<Void> promise = Promise.promise();
+        String formattedStartDate = DateHelper.getDateString(startDate, DateHelper.YEAR_MONTH_DAY);
+        String formattedEndDate = DateHelper.getDateString(endDate, DateHelper.YEAR_MONTH_DAY);
+        commonPresencesServiceFactory.presenceService()
+                .fetchPresence(structureId, formattedStartDate, formattedEndDate, new ArrayList<>(Collections.singletonList(studentId)),
+                        new ArrayList<>(), new ArrayList<>())
+                .compose(presences -> {
+                    Promise<Void> presencePromise = Promise.promise();
+                    boolean containPresenceInEvent = ((List<JsonObject>) presences.getList())
+                            .stream()
+                            .anyMatch(presence -> {
+                                try {
+                                    return DateHelper.isBetween(
+                                            presence.getString(Field.START_DATE),
+                                            presence.getString(Field.END_DATE),
+                                            startDate,
+                                            endDate,
+                                            DateHelper.SQL_FORMAT,
+                                            DateHelper.MONGO_FORMAT
+                                    );
+                                } catch (ParseException err) {
+                                    String message = String.format("[Presences@%s::checkPresenceEvent::isBetween] Failed to parse: %s",
+                                            this.getClass().getSimpleName(), err.getMessage());
+                                    LOGGER.error(message, err);
+                                    return false;
+                                }
+                            });
+                    if (DateHelper.getDaysBetweenTwoDates(formattedStartDate, formattedEndDate) == 0 && containPresenceInEvent) {
+                        absenceBody.put(Field.REASON_ID, Reasons.PRESENT_IN_STRUCTURE);
+                    }
+                    presencePromise.complete();
+                    return presencePromise.future();
+                })
+                .onSuccess(promise::complete)
+                .onFailure(err -> {
+                    String message = String.format("[Presences@%s::checkPresenceEvent] Failed to check potential " +
+                            "presences in absence creation : %s", this.getClass().getSimpleName(), err.getMessage());
+                    LOGGER.error(message, err);
+                    promise.fail(err.getMessage());
+                });
+
+        return promise.future();
     }
 
     private Future<Void> deleteOldStudentAbsences(String studentId, String structureId, String startDate, String endDate) {

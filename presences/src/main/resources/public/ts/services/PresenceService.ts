@@ -1,7 +1,6 @@
 import {ng} from 'entcore'
 import http, {AxiosResponse} from 'axios';
 import {Presence, PresenceBody, PresenceRequest} from "../models";
-import {Mix} from "entcore-toolkit";
 
 export interface PresenceService {
     get(presenceRequest: PresenceRequest): Promise<Presence[]>;

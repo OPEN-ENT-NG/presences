@@ -15,7 +15,6 @@ import fr.openent.presences.security.Event.EventReadRight;
 import fr.openent.presences.service.CommonPresencesServiceFactory;
 import fr.openent.presences.service.EventService;
 import fr.openent.presences.service.ExportEventService;
-import fr.openent.presences.service.impl.DefaultEventService;
 import fr.wseduc.rs.*;
 import fr.wseduc.security.ActionType;
 import fr.wseduc.security.SecuredAction;
@@ -27,7 +26,6 @@ import fr.wseduc.webutils.template.TemplateProcessor;
 import fr.wseduc.webutils.template.lambdas.I18nLambda;
 import fr.wseduc.webutils.template.lambdas.LocaleDateLambda;
 import io.vertx.core.*;
-import io.vertx.core.eventbus.EventBus;
 import io.vertx.core.http.HttpServerRequest;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
@@ -53,9 +51,9 @@ public class EventController extends ControllerHelper {
     private final ExportEventService exportEventService;
     private final ExportPDFService exportPDFService;
 
-    public EventController(EventBus eb, CommonPresencesServiceFactory commonPresencesServiceFactory) {
+    public EventController(CommonPresencesServiceFactory commonPresencesServiceFactory) {
         super();
-        this.eventService = new DefaultEventService(eb);
+        this.eventService = commonPresencesServiceFactory.eventService();
         this.exportPDFService = commonPresencesServiceFactory.exportPDFService();
         this.exportEventService = commonPresencesServiceFactory.exportEventService();
     }
@@ -249,20 +247,18 @@ public class EventController extends ControllerHelper {
     @Trace(Actions.EVENT_CREATION)
     public void postEvent(HttpServerRequest request) {
         RequestUtils.bodyToJson(request, pathPrefix + "event", event -> {
-            if (!isValidBody(event)) {
+            if (Boolean.FALSE.equals(isValidBody(event))) {
                 badRequest(request);
                 return;
             }
-            UserUtils.getUserInfos(eb, request, user -> {
-                eventService.create(event, user, either -> {
-                    if (either.isLeft()) {
-                        log.error("[Presences@EventController] failed to create event", either.left().getValue());
-                        renderError(request);
-                    } else {
-                        renderJson(request, either.right().getValue(), 201);
-                    }
-                });
-            });
+            UserUtils.getUserInfos(eb, request, user -> eventService.create(event, user, either -> {
+                if (either.isLeft()) {
+                    log.error("[Presences@EventController] failed to create event", either.left().getValue());
+                    renderError(request);
+                } else {
+                    renderJson(request, either.right().getValue(), 201);
+                }
+            }));
         });
     }
 

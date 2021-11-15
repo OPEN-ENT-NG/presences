@@ -60,6 +60,7 @@ public class Field {
 
     // Reason
     public static final String REASON = "reason";
+    public static final String REASON_ID = "reason_id";
     public static final String MULTIPLE = "multiple";
 
     // i18n
