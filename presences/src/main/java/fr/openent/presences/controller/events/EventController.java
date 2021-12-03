@@ -132,19 +132,19 @@ public class EventController extends ControllerHelper {
     @ResourceFilter(EventReadRight.class)
     @SecuredAction(value = "", type = ActionType.RESOURCE)
     public void exportEvents(HttpServerRequest request) {
-        String structureId = request.getParam("structureId");
-        String startDate = request.getParam("startDate");
-        String endDate = request.getParam("endDate");
+        String structureId = request.getParam(Field.STRUCTUREID);
+        String startDate = request.getParam(Field.STARTDATE);
+        String endDate = request.getParam(Field.ENDDATE);
         String type = request.getParam(Field.TYPE);
-        List<String> eventType = request.getParam("eventType") != null ? Arrays.asList(request.getParam("eventType").split("\\s*,\\s*")) : null;
-        List<String> reasonIds = request.getParam("reasonIds") != null ? Arrays.asList(request.getParam("reasonIds").split("\\s*,\\s*")) : null;
-        Boolean noReason = request.params().contains("noReason") ? Boolean.parseBoolean(request.getParam("noReason")) : false;
-        List<String> userId = request.getParam("userId") != null ? Arrays.asList(request.getParam("userId").split("\\s*,\\s*")) : null;
-        List<String> classes = request.getParam("classes") != null ? Arrays.asList(request.getParam("classes").split("\\s*,\\s*")) : null;
-        Boolean regularized = request.params().contains("regularized") ? Boolean.parseBoolean(request.getParam("regularized")) : null;
-        Boolean followed = request.params().contains("followed") ? Boolean.parseBoolean(request.getParam("followed")) : null;
-        if (!request.params().contains("structureId") || !request.params().contains("startDate") ||
-                !request.params().contains("endDate") || !request.params().contains(Field.TYPE)) {
+        List<String> eventType = request.getParam(Field.EVENTTYPE) != null ? Arrays.asList(request.getParam(Field.EVENTTYPE).split("\\s*,\\s*")) : null;
+        List<String> reasonIds = request.getParam(Field.REASONIDS) != null ? Arrays.asList(request.getParam(Field.REASONIDS).split("\\s*,\\s*")) : null;
+        Boolean noReason = request.params().contains(Field.NOREASON) && Boolean.parseBoolean(request.getParam(Field.NOREASON));
+        List<String> userId = request.getParam(Field.USERID) != null ? Arrays.asList(request.getParam(Field.USERID).split("\\s*,\\s*")) : null;
+        List<String> classes = request.getParam(Field.CLASSES) != null ? Arrays.asList(request.getParam(Field.CLASSES).split("\\s*,\\s*")) : null;
+        Boolean regularized = request.params().contains(Field.REGULARIZED) ? Boolean.parseBoolean(request.getParam(Field.REGULARIZED)) : null;
+        Boolean followed = request.params().contains(Field.FOLLOWED) ? Boolean.parseBoolean(request.getParam(Field.FOLLOWED)) : null;
+        if (!request.params().contains(Field.STRUCTUREID) || !request.params().contains(Field.STARTDATE) ||
+                !request.params().contains(Field.ENDDATE) || !request.params().contains(Field.TYPE)) {
             badRequest(request);
             return;
         }
@@ -169,9 +169,10 @@ public class EventController extends ControllerHelper {
                                     .end(res.getContent())
                             )
                             .onFailure(err -> {
-                                String message = String.format("[Presences@%s::exportEvents] an error has occurred during " +
-                                                "export pdf process: %s", this.getClass().getSimpleName(), err.getMessage());
-                                log.error(message);
+                                String message = "An error has occurred during export pdf process";
+                                String logMessage = String.format("[Presences@%s::processEvents] %s : %s",
+                                        this.getClass().getSimpleName(), message, err.getMessage());
+                                log.error(logMessage);
                                 renderError(request, new JsonObject().put("message", message));
                             });
                 } else {

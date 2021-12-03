@@ -59,6 +59,7 @@ public class Field {
     public static final String CONTENTS = "contents";
 
     // Reason
+    public static final String NOREASON = "noReason";
     public static final String REASON = "reason";
     public static final String REASON_ID = "reason_id";
     public static final String MULTIPLE = "multiple";
@@ -124,6 +125,7 @@ public class Field {
     public static final String IDSTATEMENT = "idStatement";
 
     // event || event type
+    public static final String EVENTTYPE = "eventType";
     public static final String ABSENCE = "absence";
     public static final String LATENESS = "lateness";
     public static final String DEPARTURE = "departure";
@@ -137,6 +139,7 @@ public class Field {
     // Absence
     public static final String REGULARIZED = "regularized";
     public static final String REASONID = "reasonId";
+    public static final String REASONIDS = "reasonIds";
     public static final String EVENT_RECOVERY_METHOD = "event_recovery_method";
     public static final String RECOVERY_METHOD = "recovery_method";
     public static final String EVENT_TYPE = "event_type";
@@ -149,6 +152,10 @@ public class Field {
     public static final String RATE = "rate";
     public static final String SLOTS = "slots";
     public static final String ABSENCE_TOTAL = "ABSENCE_TOTAL";
+
+    // User
+    public static final String USERID = "userId";
+
 
     private Field() {
         throw new IllegalStateException("Utility class");

@@ -268,7 +268,9 @@ public class Template extends BaseServer {
         }
 
         Set<String> values = new HashSet<>(reasons);
-        return values.size() == 1 ? events.getJsonObject(0).getString("reason", noneValue) : multipleValues;
+        return values.size() == 1 ?
+                I18n.getInstance().translate(events.getJsonObject(0).getString("reason", noneValue), domain, locale)
+                : multipleValues;
     }
 
     private String getRegularisedLabel(JsonObject event) {
