@@ -1,6 +1,7 @@
 package fr.openent.presences.common.helper;
 
 
+import fr.openent.presences.core.constants.Field;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 
@@ -11,6 +12,18 @@ public class EventsHelper {
 
     private EventsHelper() {
         throw new IllegalStateException("Utility class");
+    }
+
+    public static JsonObject getEarliestEvent(List<JsonObject> events) {
+        return events.stream().min((eventA, eventB) ->
+                DateHelper.isDateBeforeOrEqual(eventB.getString(Field.START_DATE), eventA.getString(Field.START_DATE)) ? 1 : -1
+        ).orElse(null);
+    }
+
+    public static JsonObject getLatestEvent(List<JsonObject> events) {
+        return events.stream().max((eventA, eventB) ->
+                DateHelper.isDateBeforeOrEqual(eventB.getString(Field.START_DATE), eventA.getString(Field.START_DATE)) ? 1 : -1
+        ).orElse(null);
     }
 
     public static JsonArray mergeEventsByDates(JsonArray events, String halfDay) {
@@ -24,13 +37,8 @@ public class EventsHelper {
         dateGroupedEvents.forEach((key, groupEvents) -> {
             if (groupEvents == null || groupEvents.isEmpty()) return;
 
-            JsonObject earliestEvent = groupEvents.stream().min((eventA, eventB) ->
-                    DateHelper.isDateBeforeOrEqual(eventB.getString("start_date"), eventA.getString("start_date")) ? 1 : -1
-            ).orElse(null);
-
-            JsonObject latestEvent = groupEvents.stream().max((eventA, eventB) ->
-                    DateHelper.isDateBeforeOrEqual(eventB.getString("start_date"), eventA.getString("start_date")) ? 1 : -1
-            ).orElse(null);
+            JsonObject earliestEvent = getEarliestEvent(groupEvents);
+            JsonObject latestEvent = getLatestEvent(groupEvents);
 
             // we set new Event start date with the earliest events start_date and end date with the latest events end_date
             if (earliestEvent != null && latestEvent != null)
@@ -43,6 +51,21 @@ public class EventsHelper {
                         DateHelper.isDateBeforeOrEqual(eventB.getString("start_date"), eventA.getString("start_date")) ? -1 : 1
                 ).collect(Collectors.toList())
         );
+    }
+
+    @SuppressWarnings("unchecked")
+    public static List<JsonObject> setDatesFromNestedEvents(List<JsonObject> events, String halfDay) {
+        if (halfDay == null || events == null) return events;
+
+        return events.stream()
+                .map(event -> {
+                    JsonObject earliestEvent = getEarliestEvent(event.getJsonArray(Field.EVENTS).getList());
+                    JsonObject latestEvent = getLatestEvent(event.getJsonArray(Field.EVENTS).getList());
+                    return setDatesEvent(event,
+                            earliestEvent != null ? earliestEvent.getString(Field.START_DATE) : event.getString(Field.START_DATE),
+                            latestEvent != null ? latestEvent.getString(Field.END_DATE) : event.getString(Field.END_DATE)
+                    );
+                }).collect(Collectors.toList());
     }
 
     private static Map<String, List<JsonObject>> addGroupEventsByDateAndHalfday(JsonArray events, String halfDay) {
@@ -66,20 +89,22 @@ public class EventsHelper {
     }
 
     private static JsonObject setGroupedEvent(List<JsonObject> events, String startDate, String endDate) {
-        if (events == null || events.isEmpty()) {
-            return new JsonObject();
-        }
+        if (events == null || events.isEmpty()) return new JsonObject();
 
         JsonObject newEvent = events.get(0).copy();
+
         JsonArray individualEvents = new JsonArray();
+        events.forEach(event -> individualEvents.addAll(event.getJsonArray(Field.EVENTS, new JsonArray())));
+        newEvent.put(Field.EVENTS, individualEvents);
 
-        events.forEach(event -> individualEvents.addAll(event.getJsonArray("events", new JsonArray())));
-        newEvent.put("events", individualEvents);
-        newEvent.put("start_date", startDate);
-        newEvent.put("display_start_date", startDate);
-        newEvent.put("end_date", endDate);
-        newEvent.put("display_end_date", endDate);
+        return setDatesEvent(newEvent, startDate, endDate);
+    }
 
-        return newEvent;
+    private static JsonObject setDatesEvent(JsonObject event, String startDate, String endDate) {
+        event.put(Field.START_DATE, startDate);
+        event.put(Field.DISPLAY_START_DATE, startDate);
+        event.put(Field.END_DATE, endDate);
+        event.put(Field.DISPLAY_END_DATE, endDate);
+        return event;
     }
 }
