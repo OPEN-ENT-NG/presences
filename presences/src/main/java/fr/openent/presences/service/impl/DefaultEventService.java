@@ -988,11 +988,11 @@ public class DefaultEventService extends DBService implements EventService {
             }
 
             JsonObject createAbsence = new JsonObject()
-                    .put("student_id", studentId)
-                    .put("structure_id", structureId)
-                    .put("reason_id", reasonId != null ? reasonId : getAbsenceReasonId(events))
-                    .put("start_date", startDate.toString())
-                    .put("end_date", endDate.toString());
+                    .put(Field.STUDENT_ID, studentId)
+                    .put(Field.STRUCTURE_ID, structureId)
+                    .put(Field.REASON_ID, reasonId != null ? reasonId : getAbsenceReasonId(events))
+                    .put(Field.START_DATE, DateHelper.getDateString(startDate, DateHelper.SQL_FORMAT))
+                    .put(Field.END_DATE, DateHelper.getDateString(endDate, DateHelper.SQL_FORMAT));
 
             absenceService.create(createAbsence, user, false, resultCreate -> {
                 if (resultCreate.isLeft()) {
