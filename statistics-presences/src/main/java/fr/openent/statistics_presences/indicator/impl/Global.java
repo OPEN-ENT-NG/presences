@@ -289,7 +289,7 @@ public class Global extends Indicator {
     @SuppressWarnings("unchecked")
     private boolean hasPeriodNoMatch(JsonArray excludedPeriods, LocalDate date) {
         return ((List<JsonObject>) excludedPeriods.getList()).stream().noneMatch(period ->
-                DateHelper.isDateBetween(date + " " + DateHelper.DEFAULT_START_TIME,
+                DateHelper.isDateBetween(date + " " + DateHelper.DEFAULT_END_TIME,
                         period.getString(Field.START_DATE), period.getString(Field.END_DATE))
         );
     }
