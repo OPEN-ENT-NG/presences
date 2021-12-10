@@ -3,9 +3,9 @@ package fr.openent.statistics_presences.controller;
 import fr.openent.presences.core.constants.Field;
 import fr.openent.statistics_presences.StatisticsPresences;
 import fr.openent.statistics_presences.controller.security.UserInStructure;
-import fr.openent.statistics_presences.filter.Filter;
 import fr.openent.statistics_presences.indicator.Indicator;
 import fr.openent.statistics_presences.indicator.export.Global;
+import fr.openent.statistics_presences.model.StatisticsFilter;
 import fr.openent.statistics_presences.service.CommonServiceFactory;
 import fr.openent.statistics_presences.service.StatisticsPresencesService;
 import fr.wseduc.rs.ApiDoc;
@@ -24,7 +24,8 @@ import org.entcore.common.http.filter.ResourceFilter;
 import org.entcore.common.user.UserUtils;
 
 import java.lang.reflect.InvocationTargetException;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.stream.Collectors;
 
 public class StatisticsController extends ControllerHelper {
@@ -64,16 +65,16 @@ public class StatisticsController extends ControllerHelper {
     @SecuredAction(value = "", type = ActionType.RESOURCE)
     @ResourceFilter(UserInStructure.class)
     public void fetch(HttpServerRequest request) {
-        String indicatorName = request.getParam("indicator");
+        String indicatorName = request.getParam(Field.INDICATOR);
         if (!StatisticsPresences.indicatorMap.containsKey(indicatorName)) {
             notFound(request);
             return;
         }
 
-        RequestUtils.bodyToJson(request, pathPrefix + "indicator", body -> {
+        RequestUtils.bodyToJson(request, pathPrefix + Field.INDICATOR, body -> {
             try {
-                Integer page = request.params().contains("page") ? Integer.parseInt(request.getParam("page")) : null;
-                Filter filter = new Filter(request.getParam("structure"), body)
+                Integer page = request.params().contains(Field.PAGE) ? Integer.parseInt(request.getParam(Field.PAGE)) : null;
+                StatisticsFilter filter = new StatisticsFilter(request.getParam(Field.STRUCTURE), body)
                         .setPage(page);
                 Indicator indicator = StatisticsPresences.indicatorMap.get(indicatorName);
                 indicator.search(filter, Indicator.handler(request));
@@ -87,14 +88,14 @@ public class StatisticsController extends ControllerHelper {
     @SecuredAction(value = "", type = ActionType.RESOURCE)
     @ResourceFilter(UserInStructure.class)
     public void fetchGraph(HttpServerRequest request) {
-        String indicatorName = request.getParam("indicator");
+        String indicatorName = request.getParam(Field.INDICATOR);
         if (!StatisticsPresences.indicatorMap.containsKey(indicatorName)) {
             notFound(request);
             return;
         }
-        RequestUtils.bodyToJson(request, pathPrefix + "indicator", body -> {
+        RequestUtils.bodyToJson(request, pathPrefix + Field.INDICATOR, body -> {
             try {
-                Filter filter = new Filter(request.getParam("structure"), body);
+                StatisticsFilter filter = new StatisticsFilter(request.getParam(Field.STRUCTURE), body);
                 Indicator indicator = StatisticsPresences.indicatorMap.get(indicatorName);
                 indicator.searchGraph(filter, Indicator.handler(request));
             } catch (NumberFormatException e) {
@@ -108,7 +109,7 @@ public class StatisticsController extends ControllerHelper {
     @ResourceFilter(UserInStructure.class)
     @SuppressWarnings("unchecked")
     public void export(HttpServerRequest request) {
-        Filter filter = new Filter(request);
+        StatisticsFilter filter = new StatisticsFilter(request);
         String indicatorName = request.getParam("indicator");
         Indicator indicator = StatisticsPresences.indicatorMap.get(indicatorName);
         indicator.search(filter, ar -> {

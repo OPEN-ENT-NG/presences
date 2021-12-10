@@ -32,6 +32,31 @@ public class StatisticsPresences {
         eb.send(address, action, MessageResponseHandler.messageJsonObjectHandler(FutureHelper.handlerJsonObject(handler)));
     }
 
+    public void getStatistics(JsonObject statisticsFilterJson, String structureId, String indicator, int page, Handler<AsyncResult<JsonObject>> handler) {
+        JsonObject action = new JsonObject()
+                .put("action", "get-statistics")
+                .put("structureId", structureId)
+                .put("indicator", indicator)
+                .put("page", page)
+                .put("filter", statisticsFilterJson);
+        eb.send(address, action, MessageResponseHandler.messageJsonObjectHandler(FutureHelper.handlerJsonObject(handler)));
+    }
+
+    public void getStatisticsGraph(JsonObject statisticsFilterJson, String structureId, String indicator, Handler<AsyncResult<JsonObject>> handler) {
+        JsonObject action = new JsonObject()
+                .put("action", "get-statistics-graph")
+                .put("structureId", structureId)
+                .put("indicator", indicator)
+                .put("filter", statisticsFilterJson);
+        eb.send(address, action, MessageResponseHandler.messageJsonObjectHandler(FutureHelper.handlerJsonObject(handler)));
+    }
+
+    public void getStatisticsIndicator(Handler<AsyncResult<JsonObject>> handler) {
+        JsonObject action = new JsonObject()
+                .put("action", "get-statistics-indicator");
+        eb.request(address, action, MessageResponseHandler.messageJsonObjectHandler(FutureHelper.handlerJsonObject(handler)));
+    }
+
     private static class StatisticsPresencesHolder {
         private static final StatisticsPresences instance = new StatisticsPresences();
 

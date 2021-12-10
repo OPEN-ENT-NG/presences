@@ -3,13 +3,13 @@ package fr.openent.statistics_presences.indicator;
 import fr.openent.presences.common.helper.CSVExport;
 import fr.openent.presences.db.DBService;
 import fr.openent.statistics_presences.bean.Report;
-import fr.openent.statistics_presences.filter.Filter;
+import fr.openent.statistics_presences.model.StatisticsFilter;
 import fr.wseduc.webutils.http.Renders;
 import io.vertx.core.*;
 import io.vertx.core.eventbus.Message;
 import io.vertx.core.eventbus.MessageConsumer;
 import io.vertx.core.http.HttpServerRequest;
-import io.vertx.core.json.*;
+import io.vertx.core.json.JsonObject;
 import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
 
@@ -29,10 +29,6 @@ public abstract class Indicator extends DBService {
         this.name = name;
     }
 
-    private String indicatorClassName() {
-        return String.format(NAME_FORMATTER, name);
-    }
-
     public static Indicator deploy(Vertx vertx, String name) throws ClassNotFoundException, IllegalAccessException, InvocationTargetException, InstantiationException {
         String className = String.format(NAME_FORMATTER, name);
         ClassLoader loader = Indicator.class.getClassLoader();
@@ -46,23 +42,27 @@ public abstract class Indicator extends DBService {
         };
     }
 
+    private String indicatorClassName() {
+        return String.format(NAME_FORMATTER, name);
+    }
+
     /**
      * Process search request
      *
      * @param filter  Filter query
      * @param handler Function handler returning data
      */
-    public abstract void search(Filter filter, Handler<AsyncResult<JsonObject>> handler);
+    public abstract void search(StatisticsFilter filter, Handler<AsyncResult<JsonObject>> handler);
 
-    public abstract void searchGraph(Filter filter, Handler<AsyncResult<JsonObject>> handler);
+    public abstract void searchGraph(StatisticsFilter filter, Handler<AsyncResult<JsonObject>> handler);
 
-    public void export(HttpServerRequest request, Filter filter, List<JsonObject> values, JsonObject count,
+    public void export(HttpServerRequest request, StatisticsFilter filter, List<JsonObject> values, JsonObject count,
                        JsonObject slots, JsonObject rate, String recoveryMethod) throws ClassNotFoundException, IllegalAccessException,
             InvocationTargetException, InstantiationException {
         String className = String.format(CSV_EXPORT_FORMATTER, name);
         ClassLoader loader = Indicator.class.getClassLoader();
         CSVExport export = (count != null) ?
-                (CSVExport) Class.forName(className, true, loader).getConstructors()[0].newInstance(filter, values, count, slots, rate, recoveryMethod):
+                (CSVExport) Class.forName(className, true, loader).getConstructors()[0].newInstance(filter, values, count, slots, rate, recoveryMethod) :
                 (CSVExport) Class.forName(className, true, loader).getConstructors()[0].newInstance(filter, values);
         export.export(request);
     }
