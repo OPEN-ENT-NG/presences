@@ -217,6 +217,16 @@ const vm: IViewModel = {
             vm.disabled = false;
             translatePeriods(vm.periods);
             vm.selected.period = getCurrentPeriod(vm.periods);
+            if (vm.periods.length > 0) {
+                let yearPeriod: IPeriod = {
+                    label: `${idiom.translate(`presences.year`)}`,
+                    ordre: 1,
+                    timestamp_dt: vm.periods[0].timestamp_dt,
+                    timestamp_fn: vm.periods[vm.periods.length - 1].timestamp_fn}
+                vm.periods.forEach(period => period.ordre += 1);
+                vm.periods.push(yearPeriod);
+                vm.periods.sort((p1: IPeriod,p2: IPeriod) => p1.ordre - p2.ordre);
+            }
             const promises = [loadYearEvents(), loadPeriodEvents()];
             const results = await Promise.all(promises);
             vm.graphSummary = results[0];
