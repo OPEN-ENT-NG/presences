@@ -99,7 +99,7 @@ public class Global extends Indicator {
                     JsonObject response = new JsonObject()
                             .put(Field.DATA, values)
                             .put(Field.COUNT, count)
-                            .put(Field.RATE, getAbsenceRates(count, search.totalHalfDays()))
+                            .put(Field.RATE, getAbsenceRates(count, search.totalHalfDays(), count.getInteger(Field.STUDENTS_CAPS)))
                             .put(Field.SLOTS, slots)
                             .put(Field.EVENT_RECOVERY_METHOD, search.recoveryMethod());
 
@@ -113,13 +113,13 @@ public class Global extends Indicator {
         return promise.future();
     }
 
-    private JsonObject getAbsenceRates(JsonObject slots, Double totalHalfDays) {
+    private JsonObject getAbsenceRates(JsonObject slots, Double totalHalfDays, int nbStudents) {
         List<String> absenceTypes = Arrays.asList(EventType.NO_REASON.name(), EventType.UNREGULARIZED.name(),
                 EventType.REGULARIZED.name(), Field.ABSENCE_TOTAL);
 
         return new JsonObject(absenceTypes
                 .stream()
-                .collect(Collectors.toMap(type -> type, type -> getComputedAbsenceRate(slots.getDouble(type, 0.0), totalHalfDays)))
+                .collect(Collectors.toMap(type -> type, type -> getTotalComputedAbsenceRate(slots.getDouble(type, 0.0), totalHalfDays, nbStudents)))
         );
     }
 
@@ -128,17 +128,22 @@ public class Global extends Indicator {
      *
      * @param slotsAbsence  slots absences value
      * @param totalHalfDays total of half-day fetched
-     *
      * @return {@link double} result of absence type rate (e.g 2.456534 will be 2.46)
      */
     private double getComputedAbsenceRate(Double slotsAbsence, Double totalHalfDays) {
         double result = (slotsAbsence / totalHalfDays) * 100;
-        if (Double.isInfinite(result) || Double.isNaN(result)) {
-            return 0.0;
-        }
-        return BigDecimal.valueOf(result).setScale(2, RoundingMode.HALF_DOWN).doubleValue();
+        return getValidRate(result);
     }
 
+    private double getTotalComputedAbsenceRate(Double slotsAbsence, Double totalHalfDays, int nbStudents) {
+        double result = ((slotsAbsence / totalHalfDays) * 100) / nbStudents;
+        return getValidRate(result);
+    }
+
+    private double getValidRate(double rate) {
+        if (Double.isInfinite(rate) || Double.isNaN(rate)) return 0.0;
+        return BigDecimal.valueOf(rate).setScale(2, RoundingMode.HALF_DOWN).doubleValue();
+    }
 
 
     /**
@@ -225,7 +230,8 @@ public class Global extends Indicator {
 
     /**
      * Retrieve number of opened half days
-     * @param search    search parameters
+     *
+     * @param search search parameters
      * @return {@link Future} with the number as {@link Double}
      */
     private Future<Double> getNumberHalfDays(GlobalSearch search) {
@@ -253,9 +259,9 @@ public class Global extends Indicator {
      * A weekend day won't count but a wednesday will count only once
      * (we consider wednesday as a day when school only last the morning)
      *
-     * @param excludedPeriods   JsonArray with all excluded periods
-     * @param dates             List of all dates fetched
-     * @param recoveryMethod    recovery method ('HOUR' | 'HALF_DAY' | 'DAY')
+     * @param excludedPeriods JsonArray with all excluded periods
+     * @param dates           List of all dates fetched
+     * @param recoveryMethod  recovery method ('HOUR' | 'HALF_DAY' | 'DAY')
      * @return {@link double} number of half day in total
      */
     private double proceedIncrementHalfDays(JsonArray excludedPeriods, List<LocalDate> dates, String recoveryMethod) {
@@ -281,8 +287,8 @@ public class Global extends Indicator {
     /**
      * Check with there is no match with a date and all excluded periods
      *
-     * @param excludedPeriods   JsonArray with all excluded periods
-     * @param date              date to match
+     * @param excludedPeriods JsonArray with all excluded periods
+     * @param date            date to match
      * @return {@link boolean} {@code true} if there are no match
      * otherwise {@code false} if there are some match with excluded period
      */
@@ -322,21 +328,9 @@ public class Global extends Indicator {
     }
 
     private Future<Number> studentCount(GlobalSearch search) {
-        Future<Number> future = Future.future();
-        String query = "MATCH (u:User {profiles: ['Student']})-[:IN]->(:ProfileGroup)-[:DEPENDS]->(c:Class)-[:BELONGS]->(s:Structure {id: {structure}}) " +
-                "RETURN count(u) as count";
-        JsonObject params = new JsonObject()
-                .put("structure", search.filter().structure());
-        neo4j.execute(query, params, Neo4jResult.validUniqueResultHandler(either -> {
-            if (either.isLeft()) {
-                future.fail(either.left().getValue());
-            } else {
-                JsonObject result = either.right().getValue();
-                future.complete(result.getInteger("count"));
-            }
-        }));
-
-        return future;
+        if (search.filter().to() != null || search.filter().from() != null) return countUsersWithStatistics(search);
+        if (search.filter().audiences().isEmpty()) return countUserInClass(search, search.filter().users());
+        return countUsersFromProvidedAudiences(search);
     }
 
     @SuppressWarnings("unchecked")
@@ -398,33 +392,44 @@ public class Global extends Indicator {
      * @return Future completing stage
      */
     private Future<GlobalSearch> preStatisticsStage(GlobalSearch search) {
-        Future<GlobalSearch> future = Future.future();
-        if (search.filter().to() != null || search.filter().from() != null) {
-            return prefetchUsers(search);
-        }
+        if (search.filter().to() != null || search.filter().from() != null) return prefetchUsers(search);
+        if (search.filter().audiences().isEmpty()) return searchUserInClass(search, search.filter().users());
+        return getUsersFromProvidedAudiences(search);
+    }
 
-        if (search.filter().audiences().isEmpty()) {
-            searchUserInClass(search, search.filter().users(), future);
-        } else {
-            JsonObject params = new JsonObject()
-                    .put("structure", search.filter().structure());
+    private Future<GlobalSearch> getUsersFromProvidedAudiences(GlobalSearch search) {
+        Promise<GlobalSearch> promise = Promise.promise();
+        JsonObject params = new JsonObject();
+        String query = matchUsersFromProvidedAudiencesQuery(search, params);
+        query += "RETURN (u.lastName + ' ' + u.firstName) as name, g.name as audience, u.id as id " +
+                "ORDER BY audience ASC, name ASC ";
 
-            // If search.filter().audiences() method does not return an empty list then search users based on provided audiences
-            String query = "MATCH (s:Structure {id:{structure}})<-[:BELONGS|:DEPENDS]-(g)<-[:IN|DEPENDS*1..2]-(u:User {profiles: ['Student']}) " +
-                    "WHERE (g:Class OR g:FunctionalGroup) " +
-                    "AND g.id IN {audiences} " +
-                    "RETURN (u.lastName + ' ' + u.firstName) as name, g.name as audience, u.id as id " +
-                    "ORDER BY audience ASC, name ASC ";
-            if (search.filter().page() != null) {
-                query += "SKIP " + (search.filter().page() * PAGE_SIZE) + " LIMIT " + PAGE_SIZE;
-            }
+        if (search.filter().page() != null)
+            query += "SKIP " + (search.filter().page() * PAGE_SIZE) + " LIMIT " + PAGE_SIZE;
 
-            params.put("audiences", search.filter().audiences());
+        neo4j.execute(query, params, searchUserHandler(search, promise));
 
-            neo4j.execute(query, params, searchUserHandler(search, future));
-        }
+        return promise.future();
+    }
 
-        return future;
+    private Future<Number> countUsersFromProvidedAudiences(GlobalSearch search) {
+        Promise<Number> promise = Promise.promise();
+        JsonObject params = new JsonObject();
+        String query = matchUsersFromProvidedAudiencesQuery(search, params);
+        query += "RETURN count(u) as count";
+        neo4j.execute(query, params, countUserHandler(promise));
+        return promise.future();
+    }
+
+    private String matchUsersFromProvidedAudiencesQuery(GlobalSearch search, JsonObject params) {
+        String query = "MATCH (s:Structure {id:{structure}})<-[:BELONGS|:DEPENDS]-(g)<-[:IN|DEPENDS*1..2]-(u:User {profiles: ['Student']}) " +
+                "WHERE (g:Class OR g:FunctionalGroup) " +
+                "AND g.id IN {audiences} ";
+
+        params.put(Field.STRUCTURE, search.filter().structure())
+                .put(Field.AUDIENCES, search.filter().audiences());
+
+        return query;
     }
 
     /**
@@ -446,14 +451,27 @@ public class Global extends Indicator {
                 return;
             }
 
-            JsonArray result = either.right().getValue().getJsonObject("cursor").getJsonArray("firstBatch", new JsonArray());
-            List<String> users = ((List<JsonObject>) result.getList()).stream().map(user -> user.getString("_id")).collect(Collectors.toList());
+            JsonArray result = either.right().getValue().getJsonObject(Field.CURSOR).getJsonArray(Field.FIRSTBATCH, new JsonArray());
+            List<String> users = ((List<JsonObject>) result.getList()).stream().map(user -> user.getString(Field._ID)).collect(Collectors.toList());
             search.filter().setUsers(users)
                     .setPage(null);
             future.complete(search);
         }));
 
         return future;
+    }
+
+    private Future<Number> countUsersWithStatistics(GlobalSearch search) {
+        Promise<Number> promise = Promise.promise();
+        JsonObject request = commandObject(search.countUsersWithStatisticsPipeline());
+        mongoDb.command(request.toString(), MongoDbResult.validResultHandler(FutureHelper.handlerJsonObject(res -> {
+            if (res.failed()) promise.fail(res.cause().getMessage());
+            else promise.complete(res.result().getJsonObject(Field.CURSOR).getJsonArray(Field.FIRSTBATCH, new JsonArray())
+                    .getJsonObject(0)
+                    .getInteger(Field.COUNT));
+        })));
+
+        return promise.future();
     }
 
     /**
@@ -544,7 +562,6 @@ public class Global extends Indicator {
      * @return Future completing stage
      */
     private Future<GlobalSearch> postStatisticStage(GlobalSearch search) {
-        Future<GlobalSearch> future = Future.future();
         if (search.filter().from() == null && search.filter().to() == null) {
             return Future.succeededFuture(search);
         }
@@ -557,9 +574,7 @@ public class Global extends Indicator {
 
         List<String> users = new ArrayList<>(statistics.keySet());
         if (users.isEmpty()) return Future.succeededFuture(search);
-        searchUserInClass(search, users, future);
-
-        return future;
+        return searchUserInClass(search, users);
     }
 
     /**
@@ -627,45 +642,65 @@ public class Global extends Indicator {
                 .collect(Collectors.groupingBy(stat -> stat.getString("user")));
     }
 
+    private String matchUserInClassQuery(GlobalSearch search, List<String> users, JsonObject params) {
+        String query = "MATCH (u:User {profiles: ['Student']})-[:IN]->(:ProfileGroup)-[:DEPENDS]->(c:Class)-[:BELONGS]->(s:Structure {id: {structure}}) " +
+                (users != null && !users.isEmpty() ? "WHERE u.id IN {users} " : "");
+
+        params.put(Field.STRUCTURE, search.filter().structure());
+        if (users != null && !users.isEmpty()) params.put(Field.USERS, users);
+
+        return query;
+    }
+
     /**
      * Search user in class. If users parameter is neither null nor empty, the request filter on users list
      *
      * @param search Search object containing filter and values
      * @param users  User list. It contains users identifiers. Used as a filter if not null and not empty
-     * @param future Future completing current stage
+     * @return Future completing current stage
      */
-    private void searchUserInClass(GlobalSearch search, List<String> users, Future<GlobalSearch> future) {
+    private Future<GlobalSearch> searchUserInClass(GlobalSearch search, List<String> users) {
         // If search.filter().audiences().isEmpty() method returns true then search for users
         // Warning: search.filter().users() could be fulfilled
-        String query = "MATCH (u:User {profiles: ['Student']})-[:IN]->(:ProfileGroup)-[:DEPENDS]->(c:Class)-[:BELONGS]->(s:Structure {id: {structure}}) " +
-                (users != null && !users.isEmpty() ? "WHERE u.id IN {users} " : "") +
-                "RETURN (u.lastName + ' ' + u.firstName) as name, c.name as audience, u.id as id " +
+        Promise<GlobalSearch> promise = Promise.promise();
+        JsonObject params = new JsonObject();
+        String query = matchUserInClassQuery(search, users, params);
+        query += "RETURN (u.lastName + ' ' + u.firstName) as name, c.name as audience, u.id as id " +
                 "ORDER BY audience ASC, name ASC ";
 
-        if (search.filter().page() != null) {
+        if (search.filter().page() != null)
             query += "SKIP " + (search.filter().page() * PAGE_SIZE) + " LIMIT " + PAGE_SIZE;
-        }
 
-        JsonObject params = new JsonObject()
-                .put("structure", search.filter().structure());
-        if (users != null && !users.isEmpty()) params.put("users", users);
+        neo4j.execute(query, params, searchUserHandler(search, promise));
 
-        neo4j.execute(query, params, searchUserHandler(search, future));
+        return promise.future();
     }
+
+    private Future<Number> countUserInClass(GlobalSearch search, List<String> users) {
+        Promise<Number> promise = Promise.promise();
+        // If search.filter().audiences().isEmpty() method returns true then search for users
+        // Warning: search.filter().users() could be fulfilled
+        JsonObject params = new JsonObject();
+        String query = matchUserInClassQuery(search, users, params);
+        query += "RETURN count(u) as count";
+        neo4j.execute(query, params, countUserHandler(promise));
+        return promise.future();
+    }
+
 
     /**
      * Global user handler. It parse the response, cast objects as User object and store the new list into the search object.
      *
-     * @param search Search object containing filter and values
-     * @param future Future completing current stage
+     * @param search  Search object containing filter and values
+     * @param promise Future completing current stage
      * @return Handler storing users in search object
      */
-    private Handler<Message<JsonObject>> searchUserHandler(GlobalSearch search, Future<GlobalSearch> future) {
+    private Handler<Message<JsonObject>> searchUserHandler(GlobalSearch search, Promise<GlobalSearch> promise) {
         return Neo4jResult.validResultHandler(either -> {
             if (either.isLeft()) {
                 log.error(String.format("[StatisticsPresences@Global::searchUserHandler] " +
                         "Indicator %s failed to retrieve users", Global.class.getName()), either.left().getValue());
-                future.fail(either.left().getValue());
+                promise.fail(either.left().getValue());
                 return;
             }
 
@@ -678,8 +713,15 @@ public class Global extends Indicator {
             }
 
             search.setUsers(users);
-            future.complete(search);
+            promise.complete(search);
         });
+    }
+
+    private Handler<Message<JsonObject>> countUserHandler(Promise<Number> promise) {
+        return Neo4jResult.validUniqueResultHandler(FutureHelper.handlerJsonObject(res -> {
+            if (res.failed()) promise.fail(res.cause().getMessage());
+            else promise.complete(res.result().getInteger(Field.COUNT));
+        }));
     }
 
     private JsonObject commandObject(JsonArray pipeline) {
