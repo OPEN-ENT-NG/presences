@@ -13,6 +13,7 @@ public class Field {
     public static final String EXCLUDE = "exclude";
     public static final String GROUPNAMES = "groupNames";
     public static final String GROUPS = "groups";
+    public static final String AUDIENCES = "audiences";
     public static final String LIMIT = "limit";
     public static final String MANUALGROUPS = "manualGroups";
     public static final String NAME = "name";
@@ -22,6 +23,7 @@ public class Field {
     public static final String STRUCTURE_ID = "structure_id";
     public static final String STRUCTUREID = "structureId";
     public static final String STUDENT = "student";
+    public static final String STUDENTS_CAPS = "STUDENTS";
     public static final String STUDENT_ID = "student_id";
     public static final String STUDENTID = "studentId";
     public static final String SUBJECT = "subject";
@@ -155,6 +157,12 @@ public class Field {
 
     // User
     public static final String USERID = "userId";
+    public static final String USERS = "users";
+
+    //Mongo
+    public static final String $PROJECT = "$project";
+    public static final String CURSOR = "cursor";
+    public static final String FIRSTBATCH = "firstBatch";
 
 
     private Field() {
