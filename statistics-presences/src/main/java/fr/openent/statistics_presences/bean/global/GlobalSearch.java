@@ -1,5 +1,6 @@
 package fr.openent.statistics_presences.bean.global;
 
+import fr.openent.presences.core.constants.Field;
 import fr.openent.statistics_presences.bean.Audience;
 import fr.openent.statistics_presences.bean.User;
 import fr.openent.statistics_presences.filter.Filter;
@@ -115,6 +116,16 @@ public class GlobalSearch {
         return pipeline;
     }
 
+    public JsonArray countUsersWithStatisticsPipeline() {
+        return new JsonArray()
+                .add(match())
+                .add(group())
+                .add(fromToMatcher())
+                .add(prefetchDistinct())
+                .add(group(new JsonObject().put(Field._ID, 0).put(Field.COUNT, sum())))
+                .add(countUsersWithStatisticsProject());
+    }
+
     private JsonObject prefetchUserProject() {
         JsonObject project = new JsonObject()
                 .put("_id", "$_id.user")
@@ -123,6 +134,15 @@ public class GlobalSearch {
 
         return new JsonObject()
                 .put("$project", project);
+    }
+
+    private JsonObject countUsersWithStatisticsProject() {
+        JsonObject project = new JsonObject()
+                .put(Field._ID, 0)
+                .put(Field.COUNT, 1);
+
+        return new JsonObject()
+                .put(Field.$PROJECT, project);
     }
 
     private JsonObject prefetchUserSort() {
