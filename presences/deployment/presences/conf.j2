@@ -1,0 +1,50 @@
+{
+    "name": "{{ presencesVersion }}",
+    "config": {
+        "main" : "fr.openent.presences.Presences",
+        "port" : 8062,
+        "app-name" : "Presences",
+        "app-address" : "/presences",
+        "app-icon" : "absences",
+        "host": "https://{{ host }}",
+        "ssl" : true,
+        {% if overrideTheme %} "override-theme": {{ override2d }}, {% endif %}
+        "auto-redeploy": false,
+        "userbook-host": "https://{{ host }}",
+        "integration-mode" : "HTTP",
+        "app-registry.port" : 8012,
+        "mode" : "prod",
+        "entcore.port" : 8009,
+        "sql": true,
+        "db-schema": "presences",
+        "node-pdf-generator" : {
+            "pdf-connector-id": "exportpdf",
+            "auth": "{{ nodePdfToken }}",
+            "url" : "{{ nodePdfUrl }}"
+        },
+        {% if presencesCronEnable is defined and presencesCronEnable %}
+        "export-cron": "{{ presencesExportCron|default('0 0 1/3 * *')}} ? *",
+        {% else %}
+        "export-cron": "{{ presencesExportCron|default('0 0 1/3 * *')}} ? 2099",
+        {% endif %}
+        {% if presencesCronEnable is defined and presencesCronEnable %}
+        "registers-cron": "0 15,45 7-20 * * ? *",
+        {% else %}
+        "registers-cron": "0 15 * * * ? 2099",
+        {% endif %}
+        "mails-list-cron": {{ presencesMailListCron }},
+        {% if presencesMailListExport is defined %}
+        "mails-list-export" : {{ presencesMailListExport }},
+        {% endif %}
+        "publicConf": {
+            "xiti": {
+                "ID_SERVICE": {
+                    "default": 4
+                },
+                "LIBELLE_SERVICE": {
+                    "default": "ABSENCES"
+                }
+            }
+        }
+    }
+}

@@ -1,0 +1,40 @@
+{
+    "name": "{{ statisticsPresencesVersion }}",
+    "config": {
+        "main" : "fr.openent.statistics_presences.StatisticsPresences",
+        "port" : 8065,
+        "app-name" : "Statistics-presences",
+        "app-address" : "/statistics-presences",
+        "path-prefix" : "statistics-presences",
+        "app-icon" : "Statistics-presences-large",
+        "host": "{{ host }}",
+        "ssl" : true,
+        {% if overrideTheme %} "override-theme": {{ override2d }}, {% endif %}
+        "auto-redeploy": false,
+        "userbook-host": "{{ host }}",
+        "integration-mode" : "HTTP",
+        "app-registry.port" : 8012,
+        "mode" : "prod",
+        "sql": true,
+        "db-schema": "presences_statistics",
+        "entcore.port" : 8009,
+        "report-recipients": [],
+        {% if presencesCronEnable is defined and presencesCronEnable %}
+        "processing-cron": "0 0/30 7-20 * * ? *",
+        {% endif %}
+        "indicators": [
+            "Global",
+            "Monthly" 
+        ],
+        "publicConf": {
+            "xiti": {
+                "ID_SERVICE": {
+                    "default": 4
+                },
+                "LIBELLE_SERVICE": {
+                    "default": "ABSENCES"
+                }
+            }
+        }
+    }
+}
