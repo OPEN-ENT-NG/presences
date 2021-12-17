@@ -41,16 +41,15 @@ import java.util.stream.Collectors;
 public class DefaultRegisterService extends DBService implements RegisterService {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(DefaultRegisterService.class);
-    private final EventBus eb;
     private final GroupService groupService;
     private final ExemptionService exemptionService;
     private final RegisterHelper registerHelper;
     private final CourseHelper courseHelper;
     private final RegisterPresenceHelper registerPresenceHelper;
     private final NotebookService notebookService;
+    private static Integer timeToGetForgotten = 15;
 
     public DefaultRegisterService(EventBus eb) {
-        this.eb = eb;
         this.groupService = new DefaultGroupService(eb);
         this.exemptionService = new DefaultExemptionService(eb);
         this.registerHelper = new RegisterHelper(eb, Presences.dbSchema);
@@ -105,7 +104,13 @@ public class DefaultRegisterService extends DBService implements RegisterService
         }
 
         if (forgottenFilter) {
-            query += " AND register.state_id != " + RegisterStatus.DONE.getStatus();
+            String now = DateHelper.getCurrentDate(DateHelper.SQL_DATE_FORMAT);
+            query += " AND (register.state_id = ?"
+                    + " OR (register.state_id = ?"
+                    + " AND register.start_date + interval '" + timeToGetForgotten + " minute" + "' <= ?))";
+            params.add(RegisterStatus.TODO.getStatus())
+                    .add(RegisterStatus.IN_PROGRESS.getStatus())
+                    .add(now);
         }
 
         if (isWithTeacherFilter != null && isWithTeacherFilter.equals(Boolean.TRUE)) {
@@ -1047,8 +1052,9 @@ public class DefaultRegisterService extends DBService implements RegisterService
 
     /**
      * Checks if course object contains a teacher w/ an id in teacherIds array.
-     * @param course        the course object
-     * @param teacherIds    lit of teacher identifiers
+     *
+     * @param course     the course object
+     * @param teacherIds lit of teacher identifiers
      */
     @SuppressWarnings("unchecked")
     private boolean courseHasTeacherOfId(JsonObject course, List<String> teacherIds) {
@@ -1063,7 +1069,7 @@ public class DefaultRegisterService extends DBService implements RegisterService
     private boolean courseHasClassOrGroupName(JsonObject course, List<String> groupNames) {
         JsonArray classes = course.getJsonArray("classes", new JsonArray());
         JsonArray groups = course.getJsonArray("groups", new JsonArray());
-        return  ((List<String>) classes.getList()).stream().anyMatch(groupNames::contains) ||
+        return ((List<String>) classes.getList()).stream().anyMatch(groupNames::contains) ||
                 ((List<String>) groups.getList()).stream().anyMatch(groupNames::contains);
     }
 }
