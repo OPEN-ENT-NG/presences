@@ -1,8 +1,13 @@
 import {angular, idiom, moment, toasts} from 'entcore';
 import {DateUtils} from '@common/utils'
 import {IPeriod, PeriodService} from '../../services/PeriodService'
-import {IPeriodSummary, MementoService} from '../../services/MementoService';
+import {MementoService} from '../../services/MementoService';
 import * as ApexCharts from 'apexcharts';
+import {IndicatorBody} from "@statistics/model/Indicator";
+import {IMonthlyGraph} from "@statistics/model/Monthly";
+import {GlobalResponse} from "@statistics/model/Global";
+import {reasonService} from "../../services/ReasonService";
+import {Reason} from "@presences/models";
 import ApexOptions = ApexCharts.ApexOptions;
 
 enum EVENT_TYPES {
@@ -13,6 +18,21 @@ enum EVENT_TYPES {
     DEPARTURE = "DEPARTURE"
 }
 
+export interface IPeriodSummary {
+    absence_rate: number,
+    months: Array<IEventSummary>;
+}
+
+export interface IEventSummary {
+    month: number,
+    types: {
+        UNREGULARIZED?: number,
+        REGULARIZED?: number,
+        NO_REASON?: number,
+        LATENESS?: number,
+        DEPARTURE?: number
+    }
+}
 
 interface ISummary {
     UNREGULARIZED: number
@@ -70,10 +90,11 @@ function getDefaultSummary() {
 
 async function loadYearEvents(): Promise<IPeriodSummary> {
     try {
-        const start: string = moment(vm.periods[0].timestamp_dt).format(DateUtils.FORMAT["YEAR-MONTH-DAY"]);
-        const end: string = moment(vm.periods[vm.periods.length - 1].timestamp_fn).format(DateUtils.FORMAT["YEAR-MONTH-DAY"]);
-        const types: Array<string> = [EVENT_TYPES.UNREGULARIZED, EVENT_TYPES.REGULARIZED, EVENT_TYPES.NO_REASON, EVENT_TYPES.LATENESS];
-        return await MementoService.getStudentEventsSummary(vm.student, window.structure.id, start, end, types);
+        const start: string = moment(vm.periods[0].timestamp_dt).format(DateUtils.FORMAT["YEAR-MONTH-DAY-T-HOUR-MIN-SEC"]);
+        const end: string = moment(vm.periods[vm.periods.length - 1].timestamp_fn).format(DateUtils.FORMAT["YEAR-MONTH-DAY-T-HOUR-MIN-SEC"]);
+        const reasons: Reason[] = await reasonService.getReasons(window.structure.id);
+        const reasonsId: Array<number> = reasons.map(reasons => reasons.id);
+        return loadEvents(start, end, reasonsId);
     } catch (err) {
         throw err;
     }
@@ -81,13 +102,59 @@ async function loadYearEvents(): Promise<IPeriodSummary> {
 
 async function loadPeriodEvents(): Promise<IPeriodSummary> {
     try {
-        const start: string = moment(vm.selected.period.timestamp_dt).format(DateUtils.FORMAT["YEAR-MONTH-DAY"]);
-        const end: string = moment(vm.selected.period.timestamp_fn).format(DateUtils.FORMAT["YEAR-MONTH-DAY"]);
-        const types: Array<string> = [EVENT_TYPES.UNREGULARIZED, EVENT_TYPES.REGULARIZED, EVENT_TYPES.NO_REASON, EVENT_TYPES.LATENESS];
-        return await MementoService.getStudentEventsSummary(vm.student, window.structure.id, start, end, types);
+        const start: string = moment(vm.selected.period.timestamp_dt).format(DateUtils.FORMAT["YEAR-MONTH-DAY-T-HOUR-MIN-SEC"]);
+        const end: string = moment(vm.selected.period.timestamp_fn).format(DateUtils.FORMAT["YEAR-MONTH-DAY-T-HOUR-MIN-SEC"]);
+        const reasons: Reason[] = await reasonService.getReasons(window.structure.id);
+        const reasonsId: Array<number> = reasons.map(reasons => reasons.id);
+        return loadEvents(start, end, reasonsId);
     } catch (err) {
         throw err;
     }
+}
+
+async function loadEvents(start: string, end: string, reasons: Array<number>): Promise<IPeriodSummary> {
+    const types: Array<string> = [EVENT_TYPES.UNREGULARIZED, EVENT_TYPES.REGULARIZED, EVENT_TYPES.NO_REASON, EVENT_TYPES.LATENESS];
+    const body: IndicatorBody = {
+        start: start,
+        end: end,
+        audiences: [],
+        filters: {},
+        punishmentTypes: [],
+        reasons: reasons,
+        sanctionTypes: [],
+        types: types,
+        users: []
+    }
+    const months: Array<IEventSummary> = [];
+    let absence_rate: number = 0;
+    try {
+        const globalResponse: GlobalResponse = await MementoService.getStudentEventsSummary(window.structure.id, vm.student, body);
+        const monthlyResponse: IMonthlyGraph = await MementoService.getStudentEventsSummaryGraph(window.structure.id, vm.student, body);
+        if (globalResponse !== undefined && monthlyResponse !== undefined) {
+            absence_rate = globalResponse.rate["ABSENCE_TOTAL"] ? globalResponse.rate["ABSENCE_TOTAL"] : 0;
+            monthlyResponse.months.forEach(month => {
+                const monthEvent: IEventSummary = {
+                    month: Number(month.split("-")[1]).valueOf(),
+                    types: {
+                        UNREGULARIZED: monthlyResponse.data["UNREGULARIZED"] ? monthlyResponse.data["UNREGULARIZED"].find(dataMonth => Object.keys(dataMonth)[0] == month)[month].count : 0,
+                        REGULARIZED: monthlyResponse.data["REGULARIZED"] ? monthlyResponse.data["REGULARIZED"].find(dataMonth => Object.keys(dataMonth)[0] == month)[month].count : 0,
+                        NO_REASON: monthlyResponse.data["NO_REASON"] ? monthlyResponse.data["NO_REASON"].find(dataMonth => Object.keys(dataMonth)[0] == month)[month].count : 0,
+                        LATENESS: monthlyResponse.data["LATENESS"] ? monthlyResponse.data["LATENESS"].find(dataMonth => Object.keys(dataMonth)[0] == month)[month].count : 0,
+                        DEPARTURE: monthlyResponse.data["DEPARTURE"] ? monthlyResponse.data["DEPARTURE"].find(dataMonth => Object.keys(dataMonth)[0] == month)[month].count : 0
+                    }
+                }
+                months.push(monthEvent);
+            });
+        } else {
+            displayErrorOnLoadStatistics(500);
+        }
+    } catch (err) {
+        displayErrorOnLoadStatistics(err.response && err.response.status ? Number(err.response.status).valueOf() : 500);
+    }
+    return {
+        absence_rate: absence_rate,
+        months: months
+    };
 }
 
 const DEFAULT_CHART_OPTIONS: ApexOptions = {
@@ -126,7 +193,7 @@ const DEFAULT_CHART_OPTIONS: ApexOptions = {
     }]
 };
 
-function getCurrentPeriod(periods: Array<IPeriod> ): IPeriod {
+function getCurrentPeriod(periods: Array<IPeriod>): IPeriod {
     for (let i = 0; i < periods.length; i++) {
         if (moment().isBetween(periods[i].timestamp_dt, periods[i].timestamp_fn)) return periods[i];
     }
@@ -185,6 +252,19 @@ function transformGraphSummaryToChartData(): void {
     }
 }
 
+function displayErrorOnLoadStatistics(resultCode: number): void {
+    switch (true) {
+        case (resultCode >= 200 && resultCode < 300):
+            break;
+        case (resultCode == 401):
+            toasts.warning('presences.statistics.acces.deny');
+            break;
+        default:
+            toasts.warning('presences.statistics.error');
+            break;
+    }
+}
+
 window.transformGraphSummaryToChartData = transformGraphSummaryToChartData;
 
 const vm: IViewModel = {
@@ -222,10 +302,11 @@ const vm: IViewModel = {
                     label: `${idiom.translate(`presences.year`)}`,
                     ordre: 1,
                     timestamp_dt: vm.periods[0].timestamp_dt,
-                    timestamp_fn: vm.periods[vm.periods.length - 1].timestamp_fn}
+                    timestamp_fn: vm.periods[vm.periods.length - 1].timestamp_fn
+                }
                 vm.periods.forEach(period => period.ordre += 1);
                 vm.periods.push(yearPeriod);
-                vm.periods.sort((p1: IPeriod,p2: IPeriod) => p1.ordre - p2.ordre);
+                vm.periods.sort((p1: IPeriod, p2: IPeriod) => p1.ordre - p2.ordre);
             }
             const promises = [loadYearEvents(), loadPeriodEvents()];
             const results = await Promise.all(promises);

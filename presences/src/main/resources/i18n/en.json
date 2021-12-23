@@ -227,6 +227,8 @@
   "presences.presences.empty.state": "Aucune présence déclarée sur cette période",
   "presences.publipostage": "Publipostage",
   "presences.statistics": "Statistiques",
+  "presences.statistics.acces.deny": "You don't have permissions to use statistics",
+  "presences.statistics.error": "An error occurred while loading statistics",
   "presences.punishments": "Punitions",
   "presences.punishment": "Punition",
   "presences.sanction": "Sanction",

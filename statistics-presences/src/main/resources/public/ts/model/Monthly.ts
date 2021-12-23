@@ -32,7 +32,7 @@ export interface IMonthly {
 }
 
 export type MonthlyGraphStatistics = {
-    [key in FILTER_TYPE]?: MonthlyStats;
+    [key in FILTER_TYPE]?: Array<MonthlyStats>;
 }
 
 export interface IMonthlyGraph {

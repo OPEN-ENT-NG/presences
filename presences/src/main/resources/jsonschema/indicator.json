@@ -1,0 +1,70 @@
+{
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "start": {
+      "type": "string"
+    },
+    "end": {
+      "type": "string"
+    },
+    "types": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "filters": {
+      "type": "object",
+      "properties": {
+        "FROM": {
+          "type": "number"
+        },
+        "TO": {
+          "type": "number"
+        }
+      }
+    },
+    "audiences": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "users": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "reasons": {
+      "type": "array",
+      "items": {
+        "type": "number"
+      }
+    },
+    "punishmentTypes": {
+      "type": "array",
+      "items": {
+        "type": "number"
+      }
+    },
+    "sanctionTypes": {
+      "type": "array",
+      "items": {
+        "type": "number"
+      }
+    }
+  },
+  "required": [
+    "types",
+    "filters",
+    "audiences",
+    "users",
+    "start",
+    "end",
+    "reasons",
+    "punishmentTypes"
+  ]
+}

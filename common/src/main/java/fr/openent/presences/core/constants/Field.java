@@ -36,6 +36,7 @@ public class Field {
     public static final String OWNER = "owner";
     public static final String ACTION_ABBREVIATION = "action_abbreviation";
     public static final String EXPORT_PDF_EVENTS = "export-pdf-events";
+    public static final String PAGE = "page";
 
     // Dates
     public static final String END_DATE = "end_date";
@@ -164,6 +165,10 @@ public class Field {
     public static final String CURSOR = "cursor";
     public static final String FIRSTBATCH = "firstBatch";
 
+    // Statistics
+    public static final String INDICATOR = "indicator";
+    public static final String MONTHLY = "Monthly";
+    public static final String GLOBAL = "Global";
 
     private Field() {
         throw new IllegalStateException("Utility class");

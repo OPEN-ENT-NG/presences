@@ -1,45 +1,36 @@
-import http from 'axios';
-
-export interface IPeriodSummary {
-    absence_rate: number,
-    months: Array<IEventSummary>;
-}
-
-export interface IEventSummary {
-    month: number,
-    types: {
-        UNREGULARIZED?: number,
-        REGULARIZED?: number,
-        NO_REASON?: number,
-        LATENESS?: number,
-        DEPARTURE?: number
-    }
-}
+import http, {AxiosResponse} from 'axios';
+import {IndicatorBody} from "@statistics/model/Indicator";
+import {IMonthlyGraph} from "@statistics/model/Monthly";
+import {GlobalResponse} from "@statistics/model/Global";
 
 export interface IMementoService {
     /**
+     * Retrieve event summary graph based on given data
+     *
+     * @param structure structure identifier
+     * @param student student identifier
+     * @param body body identifier
+     */
+    getStudentEventsSummaryGraph(structure: string, student: string, body: IndicatorBody): Promise<IMonthlyGraph>;
+
+    /**
      * Retrieve event summary based on given data
      *
-     * @param student student identifier
      * @param structure structure identifier
-     * @param start start date
-     * @param end end date
-     * @param types type list
+     * @param student student identifier
+     * @param body body identifier
      */
-    getStudentEventsSummary(student: string, structure: string, start: string, end: string, types: Array<String>): Promise<IPeriodSummary>;
+    getStudentEventsSummary(structure: string, student: string, body: IndicatorBody): Promise<GlobalResponse>;
 }
 
 export const MementoService: IMementoService = {
-    async getStudentEventsSummary(student: string, structure: string, start: string, end: string, types: Array<String>): Promise<IPeriodSummary> {
-        try {
-            if (types.length === 0) return {absence_rate: 0, months: []};
-            let typeFilter = '';
-            types.forEach(type => typeFilter += `&type=${type}`)
-            const {data} = await http.get(`/presences/memento/students/${student}/absences/summary?structure=${structure}&start=${start}&end=${end}${typeFilter}`);
-            return data as IPeriodSummary;
-        } catch (e) {
-            throw e;
-        }
-    }
+    async getStudentEventsSummaryGraph(structure: string, student: string, body: IndicatorBody): Promise<IMonthlyGraph> {
+        return http.post(`/presences/statistics/structures/${structure}/student/${student}/graph`, body)
+            .then((res: AxiosResponse) => (<IMonthlyGraph>res.data));
+    },
 
+    async getStudentEventsSummary(structure: string, student: string, body: IndicatorBody): Promise<GlobalResponse> {
+        return http.post(`/presences/statistics/structures/${structure}/student/${student}`, body)
+            .then((res: AxiosResponse) => (<GlobalResponse>res.data));
+    }
 }

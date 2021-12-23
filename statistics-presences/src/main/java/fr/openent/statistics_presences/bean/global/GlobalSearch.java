@@ -3,8 +3,8 @@ package fr.openent.statistics_presences.bean.global;
 import fr.openent.presences.core.constants.Field;
 import fr.openent.statistics_presences.bean.Audience;
 import fr.openent.statistics_presences.bean.User;
-import fr.openent.statistics_presences.filter.Filter;
 import fr.openent.statistics_presences.indicator.impl.Global;
+import fr.openent.statistics_presences.model.StatisticsFilter;
 import fr.openent.statistics_presences.utils.EventType;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
@@ -14,9 +14,11 @@ import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 public class GlobalSearch {
+    private static final String HALF_DAY = "HALF_DAY";
+    private static final String HOUR = "HOUR";
+    private static final String DAY = "DAY";
+    private final StatisticsFilter filter;
     List<String> totalAbsenceTypes = Arrays.asList(EventType.NO_REASON.name(), EventType.UNREGULARIZED.name(), EventType.REGULARIZED.name());
-
-    private final Filter filter;
     private List<Audience> audiences = new ArrayList<>();
     private List<User> users = new LinkedList<>();
     private Map<String, List<JsonObject>> statisticsMapped;
@@ -24,15 +26,12 @@ public class GlobalSearch {
     private String recoveryMethod;
     private String halfDay;
     private Double totalHalfDays;
-    private static final String HALF_DAY = "HALF_DAY";
-    private static final String HOUR = "HOUR";
-    private static final String DAY = "DAY";
 
-    public GlobalSearch(Filter filter) {
+    public GlobalSearch(StatisticsFilter filter) {
         this.filter = filter;
     }
 
-    public Filter filter() {
+    public StatisticsFilter filter() {
         return this.filter;
     }
 
@@ -212,8 +211,7 @@ public class GlobalSearch {
         if (group != null && !group.isEmpty()) {
             pipeline.add(group);
             pipeline.add(countTotalUserNameType());
-        }
-        else pipeline.add(countTotalUserNameTypeHourly());
+        } else pipeline.add(countTotalUserNameTypeHourly());
 
         if (this.filter().from() != null || this.filter().to() != null) pipeline.add(fromToMatcher());
 
