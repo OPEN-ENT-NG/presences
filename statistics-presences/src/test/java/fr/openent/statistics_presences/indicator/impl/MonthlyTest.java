@@ -3,8 +3,7 @@ package fr.openent.statistics_presences.indicator.impl;
 import fr.openent.presences.db.DB;
 import fr.openent.presences.db.DBService;
 import fr.openent.statistics_presences.bean.monthly.MonthlySearch;
-import fr.openent.statistics_presences.filter.Filter;
-import fr.openent.statistics_presences.filter.FilterField;
+import fr.openent.statistics_presences.model.StatisticsFilter;
 import fr.wseduc.mongodb.MongoDb;
 import io.vertx.core.Handler;
 import io.vertx.core.Vertx;
@@ -53,12 +52,12 @@ public class MonthlyTest extends DBService {
     @Test
     public void testBasicTypedEventByAudiencesMonthlyPipeline(TestContext ctx) {
         JsonObject filter = new JsonObject()
-                .put(FilterField.START, START)
-                .put(FilterField.END, END)
-                .put(FilterField.TYPES, BASIC_TYPES)
-                .put(FilterField.PUNISHMENT_TYPES, PUNISHMENT_TYPE_IDS);
+                .put(StatisticsFilter.StatisticsFilterField.START, START)
+                .put(StatisticsFilter.StatisticsFilterField.END, END)
+                .put(StatisticsFilter.StatisticsFilterField.TYPES, BASIC_TYPES)
+                .put(StatisticsFilter.StatisticsFilterField.PUNISHMENT_TYPES, PUNISHMENT_TYPE_IDS);
 
-        search = new MonthlySearch(new Filter(STRUCTURE_ID, filter));
+        search = new MonthlySearch(new StatisticsFilter(STRUCTURE_ID, filter));
 
         JsonObject expected = expectedBasicTypedEventMonthlyPipeline();
 
@@ -78,11 +77,11 @@ public class MonthlyTest extends DBService {
     @Test
     public void testAbsencesByAudiencesMonthlyPipeline(TestContext ctx) {
         JsonObject filter = new JsonObject()
-                .put(FilterField.START, START)
-                .put(FilterField.END, END)
-                .put(FilterField.TYPES, Collections.singletonList(NO_REASON));
+                .put(StatisticsFilter.StatisticsFilterField.START, START)
+                .put(StatisticsFilter.StatisticsFilterField.END, END)
+                .put(StatisticsFilter.StatisticsFilterField.TYPES, Collections.singletonList(NO_REASON));
 
-        search = new MonthlySearch(new Filter(STRUCTURE_ID, filter));
+        search = new MonthlySearch(new StatisticsFilter(STRUCTURE_ID, filter));
         search.setHalfDay(HALFDAY);
         search.setRecoveryMethod(RECOVERY);
 

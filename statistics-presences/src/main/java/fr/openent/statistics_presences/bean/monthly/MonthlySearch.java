@@ -2,8 +2,8 @@ package fr.openent.statistics_presences.bean.monthly;
 
 import fr.openent.statistics_presences.bean.Audience;
 import fr.openent.statistics_presences.bean.User;
-import fr.openent.statistics_presences.filter.Filter;
 import fr.openent.statistics_presences.indicator.impl.Monthly;
+import fr.openent.statistics_presences.model.StatisticsFilter;
 import fr.openent.statistics_presences.utils.EventType;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
@@ -13,9 +13,10 @@ import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 public class MonthlySearch {
+    private static final String HALF_DAY = "HALF_DAY";
+    private static final String DAY = "DAY";
+    private final StatisticsFilter filter;
     List<String> totalAbsenceTypes = Arrays.asList(EventType.NO_REASON.name(), EventType.UNREGULARIZED.name(), EventType.REGULARIZED.name());
-
-    private final Filter filter;
     private List<Audience> audiences = new ArrayList<>();
     private List<User> users = new LinkedList<>();
     private Map<String, List<Month>> statisticsByAudience;
@@ -23,14 +24,12 @@ public class MonthlySearch {
     private List<AudienceMap> audienceResult;
     private String recoveryMethod;
     private String halfDay;
-    private static final String HALF_DAY = "HALF_DAY";
-    private static final String DAY = "DAY";
 
-    public MonthlySearch(Filter filter) {
+    public MonthlySearch(StatisticsFilter filter) {
         this.filter = filter;
     }
 
-    public Filter filter() {
+    public StatisticsFilter filter() {
         return this.filter;
     }
 

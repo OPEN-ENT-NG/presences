@@ -6,9 +6,8 @@ import fr.openent.statistics_presences.bean.monthly.Month;
 import fr.openent.statistics_presences.bean.monthly.Statistic;
 import fr.openent.statistics_presences.bean.monthly.Student;
 import fr.openent.statistics_presences.constants.ExportOptions;
-import fr.openent.statistics_presences.filter.Filter;
-import fr.openent.statistics_presences.filter.FilterField;
 import fr.openent.statistics_presences.helper.MonthlyHelper;
+import fr.openent.statistics_presences.model.StatisticsFilter;
 import fr.wseduc.webutils.I18n;
 import fr.wseduc.webutils.http.Renders;
 import io.vertx.core.json.JsonObject;
@@ -26,11 +25,11 @@ public class Monthly extends IndicatorExport {
     private final Map<String, Number> monthsMap;
     private final List<AudienceMap> audienceMaps;
     private final List<JsonObject> studentsList;
-    private String exportOption;
     private final LocalDate startAt;
     private final long numOfMonthsBetween;
+    private String exportOption;
 
-    public Monthly(Filter filter, List<JsonObject> values) {
+    public Monthly(StatisticsFilter filter, List<JsonObject> values) {
         super(filter, values);
 
         startAt = LocalDate.parse(DateHelper.getDateString(filter.start(), DateHelper.YEAR_MONTH_DAY));
@@ -78,7 +77,7 @@ public class Monthly extends IndicatorExport {
             if (!audienceMap.students().isEmpty()) {
                 studentList.add(new JsonObject()
                         .put("audience", audienceMap.key())
-                        .put("name", FilterField.TOTAL)
+                        .put("name", StatisticsFilter.StatisticsFilterField.TOTAL)
                         .put("months", audienceMap.months().stream().map(Month::toJson).collect(Collectors.toList()))
                         .put("total", audienceMap.total()));
             }
@@ -119,7 +118,7 @@ public class Monthly extends IndicatorExport {
         String name = student.getString("name", "");
         String id = student.getString("id", "");
         List<Month> monthStudent = MonthlyHelper.concatMonths(
-                getStudentMonth(student), initListMonths(startAt, numOfMonthsBetween))
+                        getStudentMonth(student), initListMonths(startAt, numOfMonthsBetween))
                 .stream()
                 .sorted(Comparator.comparing(Month::key))
                 .collect(Collectors.toList());
@@ -236,7 +235,6 @@ public class Monthly extends IndicatorExport {
     }
 
 
-
     @SuppressWarnings("unchecked")
     private String getLine(JsonObject value) {
         StringBuilder line = new StringBuilder();
@@ -245,10 +243,10 @@ public class Monthly extends IndicatorExport {
             line.append(value.getString("name")).append(SEPARATOR);
         }
         ((List<JsonObject>) value.getJsonArray("months").getList()).forEach(month -> {
-                line.append(month.getJsonObject(String.join("", month.fieldNames())).getInteger("count", 0)).append(SEPARATOR);
-                if (Boolean.TRUE.equals(filter.hourDetail())) {
-                    line.append(month.getJsonObject(String.join("", month.fieldNames())).getInteger("slots", 0)).append(SEPARATOR);
-                }
+            line.append(month.getJsonObject(String.join("", month.fieldNames())).getInteger("count", 0)).append(SEPARATOR);
+            if (Boolean.TRUE.equals(filter.hourDetail())) {
+                line.append(month.getJsonObject(String.join("", month.fieldNames())).getInteger("slots", 0)).append(SEPARATOR);
+            }
         });
         line.append(value.getInteger("total", 0)).append(SEPARATOR);
         return line.append(EOL).toString();

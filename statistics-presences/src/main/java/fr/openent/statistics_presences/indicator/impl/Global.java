@@ -8,9 +8,9 @@ import fr.openent.statistics_presences.StatisticsPresences;
 import fr.openent.statistics_presences.bean.User;
 import fr.openent.statistics_presences.bean.global.GlobalSearch;
 import fr.openent.statistics_presences.bean.global.GlobalValue;
-import fr.openent.statistics_presences.filter.Filter;
 import fr.openent.statistics_presences.indicator.Indicator;
 import fr.openent.statistics_presences.indicator.IndicatorGeneric;
+import fr.openent.statistics_presences.model.StatisticsFilter;
 import fr.openent.statistics_presences.utils.*;
 import io.vertx.core.*;
 import io.vertx.core.eventbus.Message;
@@ -37,14 +37,14 @@ public class Global extends Indicator {
     }
 
     @Override
-    public void search(Filter filter, Handler<AsyncResult<JsonObject>> handler) {
+    public void search(StatisticsFilter filter, Handler<AsyncResult<JsonObject>> handler) {
         setSearchSettings(filter)
                 .compose(this::searchProcess)
                 .onComplete(handler);
     }
 
     @Override
-    public void searchGraph(Filter filter, Handler<AsyncResult<JsonObject>> handler) {
+    public void searchGraph(StatisticsFilter filter, Handler<AsyncResult<JsonObject>> handler) {
         throw new UnsupportedOperationException();
     }
 
@@ -54,7 +54,7 @@ public class Global extends Indicator {
      * @param filter filter
      * @return search
      */
-    private Future<GlobalSearch> setSearchSettings(Filter filter) {
+    private Future<GlobalSearch> setSearchSettings(StatisticsFilter filter) {
         Promise<GlobalSearch> promise = Promise.promise();
         GlobalSearch search = new GlobalSearch(filter);
 

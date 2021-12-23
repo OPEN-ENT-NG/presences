@@ -2,6 +2,7 @@ package fr.openent.presences;
 
 import fr.openent.presences.common.incidents.Incidents;
 import fr.openent.presences.common.massmailing.Massmailing;
+import fr.openent.presences.common.statistics_presences.StatisticsPresences;
 import fr.openent.presences.common.viescolaire.Viescolaire;
 import fr.openent.presences.controller.*;
 import fr.openent.presences.controller.events.EventController;
@@ -24,9 +25,6 @@ import org.entcore.common.storage.StorageFactory;
 import java.text.ParseException;
 
 public class Presences extends BaseServer {
-
-    public static String dbSchema;
-    public static String ebViescoAddress = "viescolaire";
 
     public static final String VIEW = "view";
     public static final String READ_PRESENCE = "presences.presence.read";
@@ -53,9 +51,7 @@ public class Presences extends BaseServer {
     public static final String MANAGE_FORGOTTEN_NOTEBOOK = "presences.manage.forgotten.notebook";
     public static final String MANAGE_COLLECTIVE_ABSENCES = "presences.manage.collective.absences";
     public static final String ALERTS_STUDENT_NUMBER = "presences.alerts.students.number";
-
     public static final String READ_OWN_INFO = "presences.read.own.info";
-
 
     // Widget rights
     public static final String ALERTS_WIDGET = "presences.widget.alerts";
@@ -66,8 +62,11 @@ public class Presences extends BaseServer {
     public static final String DAY_COURSES_WIDGET = "presences.widget.day_courses";
     public static final String CURRENT_COURSE_WIDGET = "presences.widget.current_course";
     public static final String DAY_PRESENCES_WIDGET = "presences.widget.day_presences";
-
     public static final Integer PAGE_SIZE = 20;
+    // Statistics
+    public static final String STATISTICS_ACCESS_DATA = "presences.statistics.access_data";
+    public static String dbSchema;
+    public static String ebViescoAddress = "viescolaire";
 
     @Override
     public void start() throws Exception {
@@ -105,6 +104,7 @@ public class Presences extends BaseServer {
         addController(new CollectiveAbsenceController());
         addController(new ArchiveController(commonPresencesServiceFactory));
         addController(new ConfigController());
+        addController(new StatisticsController());
 
         // Controller that create fake rights for widgets
         addController(new FakeRight());
@@ -113,6 +113,7 @@ public class Presences extends BaseServer {
         Incidents.getInstance().init(eb);
         Viescolaire.getInstance().init(eb);
         Massmailing.getInstance().init(eb);
+        StatisticsPresences.getInstance().init(eb);
 
         if (config.containsKey("registers-cron")) {
             vertx.deployVerticle(CreateDailyPresenceWorker.class, new DeploymentOptions().setConfig(config).setWorker(true));

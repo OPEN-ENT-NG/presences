@@ -4,10 +4,10 @@ import fr.openent.presences.common.helper.DateHelper;
 import fr.openent.statistics_presences.StatisticsPresences;
 import fr.openent.statistics_presences.bean.Audience;
 import fr.openent.statistics_presences.bean.monthly.*;
-import fr.openent.statistics_presences.filter.Filter;
 import fr.openent.statistics_presences.helper.MonthlyHelper;
 import fr.openent.statistics_presences.indicator.Indicator;
 import fr.openent.statistics_presences.indicator.IndicatorGeneric;
+import fr.openent.statistics_presences.model.StatisticsFilter;
 import io.vertx.core.*;
 import io.vertx.core.eventbus.Message;
 import io.vertx.core.json.JsonArray;
@@ -32,14 +32,14 @@ public class Monthly extends Indicator {
     }
 
     @Override
-    public void search(Filter filter, Handler<AsyncResult<JsonObject>> handler) {
+    public void search(StatisticsFilter filter, Handler<AsyncResult<JsonObject>> handler) {
         setSearchSettings(filter)
                 .compose(this::searchProcess)
                 .onComplete(handler);
     }
 
     @Override
-    public void searchGraph(Filter filter, Handler<AsyncResult<JsonObject>> handler) {
+    public void searchGraph(StatisticsFilter filter, Handler<AsyncResult<JsonObject>> handler) {
         setSearchSettings(filter)
                 .compose(res -> {
                     MonthlyGraphSearch graphSearch = new MonthlyGraphSearch(res);
@@ -54,7 +54,7 @@ public class Monthly extends Indicator {
      * @param filter filter
      * @return search
      */
-    private Future<MonthlySearch> setSearchSettings(Filter filter) {
+    private Future<MonthlySearch> setSearchSettings(StatisticsFilter filter) {
         Promise<MonthlySearch> promise = Promise.promise();
         MonthlySearch search = new MonthlySearch(filter);
 

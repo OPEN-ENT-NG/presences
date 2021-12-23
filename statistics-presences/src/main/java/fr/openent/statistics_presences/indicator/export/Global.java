@@ -3,7 +3,7 @@ package fr.openent.statistics_presences.indicator.export;
 import fr.openent.presences.common.helper.DateHelper;
 import fr.openent.presences.core.constants.Field;
 import fr.openent.presences.enums.EventRecoveryDay;
-import fr.openent.statistics_presences.filter.Filter;
+import fr.openent.statistics_presences.model.StatisticsFilter;
 import fr.openent.statistics_presences.utils.EventType;
 import fr.wseduc.webutils.I18n;
 import fr.wseduc.webutils.http.Renders;
@@ -27,7 +27,7 @@ public class Global extends IndicatorExport {
     private final JsonObject rate;
     private final String recoveryMethod;
 
-    public Global(Filter filter, List<JsonObject> values, JsonObject count, JsonObject slots, JsonObject rate,
+    public Global(StatisticsFilter filter, List<JsonObject> values, JsonObject count, JsonObject slots, JsonObject rate,
                   String recoveryMethod) {
         super(filter, values);
         this.count = count;
@@ -146,13 +146,14 @@ public class Global extends IndicatorExport {
 
     private boolean isTotalAbsenceSelected() {
         return filter.types().contains(EventType.NO_REASON.name()) ||
-               filter.types().contains(EventType.UNREGULARIZED.name()) ||
-               filter.types().contains(EventType.REGULARIZED.name());
+                filter.types().contains(EventType.UNREGULARIZED.name()) ||
+                filter.types().contains(EventType.REGULARIZED.name());
     }
 
     /**
      * check if you should display rate according to its recovery method
      * should allow only for DAY and HALF DAY
+     *
      * @return {@link boolean}
      */
     private boolean canDisplayRateAbsence() {
