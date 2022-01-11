@@ -2,8 +2,10 @@ package fr.openent.presences.controller;
 
 import fr.openent.presences.Presences;
 import fr.openent.presences.constants.Actions;
+import fr.openent.presences.core.constants.Field;
 import fr.openent.presences.security.ForgottenNotebook.ForgottenNotebookManageRight;
 import fr.openent.presences.security.StudentEventsViewRight;
+import fr.openent.presences.security.StudentsEventsViewRight;
 import fr.openent.presences.service.NotebookService;
 import fr.openent.presences.service.impl.DefaultNotebookService;
 import fr.wseduc.rs.*;
@@ -12,14 +14,17 @@ import fr.wseduc.security.SecuredAction;
 import fr.wseduc.webutils.request.RequestUtils;
 import io.vertx.core.MultiMap;
 import io.vertx.core.http.HttpServerRequest;
+import io.vertx.core.json.JsonArray;
 import org.entcore.common.controller.ControllerHelper;
 import org.entcore.common.http.filter.ResourceFilter;
 import org.entcore.common.http.filter.Trace;
 import org.entcore.common.http.response.DefaultResponseHandler;
 
+import java.util.List;
+
 public class NotebookController extends ControllerHelper {
 
-    private NotebookService notebookService;
+    private final NotebookService notebookService;
 
     public NotebookController() {
         super();
@@ -62,7 +67,35 @@ public class NotebookController extends ControllerHelper {
         String offset = params.get("offset");
         String structureId = params.get("structure_id");
 
-        notebookService.studentGet(studentId, startDate, endDate, limit, offset, structureId, DefaultResponseHandler.defaultResponseHandler(request));
+        notebookService.studentGet(studentId, startDate, endDate, limit, offset, structureId)
+                .onSuccess(result -> renderJson(request, result))
+                .onFailure(error -> {
+                    log.error(error.getMessage());
+                    renderError(request);
+                });
+    }
+
+    @Post("structures/:structureId/forgotten/notebook/students")
+    @ApiDoc("Get forgotten notebook from student")
+    @SecuredAction(value = "", type = ActionType.RESOURCE)
+    @ResourceFilter(StudentsEventsViewRight.class)
+    @SuppressWarnings("unchecked")
+    public void studentsGet(HttpServerRequest request) {
+        RequestUtils.bodyToJson(request, pathPrefix + "studentsEvents", body -> {
+            String structureId = request.getParam(Field.STRUCTUREID);
+            List<String> studentIds = body.getJsonArray(Field.STUDENT_IDS, new JsonArray()).getList();
+            String limit = body.getString(Field.LIMIT);
+            String offset = body.getString(Field.OFFSET);
+            String start = body.getString(Field.START_AT);
+            String end = body.getString(Field.END_AT);
+
+            notebookService.studentsGet(structureId, studentIds, start, end, limit, offset)
+                    .onSuccess(result -> renderJson(request, result))
+                    .onFailure(error -> {
+                        log.error(error.getMessage());
+                        renderError(request);
+                    });
+        });
     }
 
     @Post("/forgotten/notebook")
