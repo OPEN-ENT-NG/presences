@@ -9,6 +9,7 @@ import fr.wseduc.webutils.Either;
 import io.vertx.core.CompositeFuture;
 import io.vertx.core.Future;
 import io.vertx.core.Handler;
+import io.vertx.core.Promise;
 import io.vertx.core.eventbus.EventBus;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
@@ -30,12 +31,10 @@ public class DefaultIncidentsService extends SqlCrudService implements Incidents
 
     private final static String DATABASE_TABLE = "incident";
 
-    private EventBus eb;
-    private UserService userService;
+    private final UserService userService;
 
     public DefaultIncidentsService(EventBus eb) {
         super(Incidents.dbSchema, DATABASE_TABLE);
-        this.eb = eb;
         this.userService = new DefaultUserService();
     }
 
@@ -130,6 +129,68 @@ public class DefaultIncidentsService extends SqlCrudService implements Incidents
         Sql.getInstance().prepared(query, params, SqlResult.validResultHandler(handler));
     }
 
+    @Override
+    public Future<JsonArray> get(String structureId, String startDate, String endDate, List<String> studentIds, String limit, String offset) {
+        Promise<JsonArray> promise = Promise.promise();
+
+        JsonArray params = new JsonArray();
+        String query = "SELECT incident.*, place.label as place, " +
+                "incident_type.label as incident_type, protagonist.user_id as student_id, " +
+                "protagonist_type.label as protagonist_type, protagonist_type.id as protagonist_type_id" +
+                getFromWhereQuery(params, structureId, startDate, endDate, studentIds) +
+                " ORDER BY incident.date DESC ";
+        if (limit != null) {
+            query += " LIMIT ? ";
+            params.add(limit);
+        }
+
+        if (offset != null) {
+            query += " OFFSET ? ";
+            params.add(offset);
+        }
+
+        Sql.getInstance().prepared(query, params, SqlResult.validResultHandler(FutureHelper.handlerJsonArray(promise)));
+
+        return promise.future();
+    }
+
+    @Override
+    public Future<JsonArray> countByStudents(String structureId, String startDate, String endDate, List<String> studentIds) {
+        Promise<JsonArray> promise = Promise.promise();
+
+        JsonArray params = new JsonArray();
+        String query = "SELECT protagonist.user_id as student_id, count(*) " +
+                getFromWhereQuery(params, structureId, startDate, endDate, studentIds)
+                + " GROUP BY protagonist.user_id ";
+
+        Sql.getInstance().prepared(query, params, SqlResult.validResultHandler(FutureHelper.handlerJsonArray(promise)));
+
+        return promise.future();
+    }
+
+    private String getFromWhereQuery(JsonArray params, String structureId, String startDate, String endDate, List<String> studentIds) {
+        String query = " FROM " + Incidents.dbSchema + ".incident " +
+                "INNER JOIN " + Incidents.dbSchema + ".incident_type ON (incident.type_id = incident_type.id) " +
+                "INNER JOIN " + Incidents.dbSchema + ".protagonist ON (incident.id = protagonist.incident_id) " +
+                "INNER JOIN " + Incidents.dbSchema + ".place ON (incident.place_id = place.id) " +
+                "INNER JOIN " + Incidents.dbSchema + ".protagonist_type ON (protagonist.type_id = protagonist_type.id)" +
+                "WHERE protagonist.user_id IN " + Sql.listPrepared(studentIds) +
+                " AND incident.date >= to_date(?, 'YYYY-MM-DD') " +
+                "AND incident.date <= to_date(?, 'YYYY-MM-DD') ";
+
+        params
+                .addAll(new JsonArray(studentIds))
+                .add(startDate)
+                .add(endDate);
+
+        if (structureId != null) {
+            query += "AND incident.structure_id = ? ";
+            params.add(structureId);
+        }
+
+        return query;
+    }
+
     private void toFormatJson(JsonObject incidents) {
         incidents.put("place", new JsonObject(incidents.getString("place")));
         incidents.put("partner", new JsonObject(incidents.getString("partner")));
@@ -144,7 +205,7 @@ public class DefaultIncidentsService extends SqlCrudService implements Incidents
                               String page, String order, boolean reverse, Handler<Either<String, JsonObject>> handler) {
         JsonArray params = new JsonArray();
         Sql.getInstance().prepared(this.getQuery(structureId, startDate, endDate,
-                userId, page, params, true, order, reverse),
+                        userId, page, params, true, order, reverse),
                 params, SqlResult.validUniqueResultHandler(handler));
     }
 

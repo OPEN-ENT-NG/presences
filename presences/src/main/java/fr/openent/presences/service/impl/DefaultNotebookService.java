@@ -1,20 +1,29 @@
 package fr.openent.presences.service.impl;
 
 import fr.openent.presences.Presences;
+import fr.openent.presences.common.helper.FutureHelper;
+import fr.openent.presences.core.constants.Field;
 import fr.openent.presences.service.NotebookService;
 import fr.wseduc.webutils.Either;
 import io.vertx.core.CompositeFuture;
 import io.vertx.core.Future;
 import io.vertx.core.Handler;
+import io.vertx.core.Promise;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
+import io.vertx.core.logging.Logger;
+import io.vertx.core.logging.LoggerFactory;
 import org.entcore.common.sql.Sql;
 import org.entcore.common.sql.SqlResult;
 
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 public class DefaultNotebookService implements NotebookService {
+
+    private static final Logger log = LoggerFactory.getLogger(DefaultNotebookService.class);
 
     @Override
     public void get(String studentId, String startDate, String endDate, Handler<Either<String, JsonArray>> handler) {
@@ -28,48 +37,70 @@ public class DefaultNotebookService implements NotebookService {
     }
 
     @Override
-    public void studentGet(String studentId, String startDate, String endDate, String limit, String offset, String structureId, Handler<Either<String, JsonObject>> handler) {
-        getStudentNotebooks(studentId, startDate, endDate, limit, offset, structureId, false, result -> {
-            if (result.isLeft()) {
-                handler.handle(new Either.Left<>(result.left().getValue()));
-                return;
-            }
+    public Future<JsonObject> studentGet(String studentId, String startDate, String endDate, String limit, String offset, String structureId) {
+        Promise<JsonObject> promise = Promise.promise();
 
-
-            Future<Integer> future = Future.future();
-            if (limit == null && offset == null) { // If we get all result, we just need to get array size to get total results
-                future.complete(result.right().getValue().size());
-            } else { // Else, we use same query with a count result
-                getStudentNotebooks(studentId, startDate, endDate, null, null, structureId, true, resultAllEvents -> {
-                    if (resultAllEvents.isLeft()) {
-                        future.fail(resultAllEvents.left().getValue());
-                        return;
-                    }
-                    future.complete(resultAllEvents.right().getValue().getJsonObject(0).getInteger("count"));
+        getForgottenNotebooksData(structureId, Collections.singletonList(studentId), startDate, endDate, limit, offset)
+                .onFailure(promise::fail)
+                .onSuccess(result -> {
+                    JsonObject response = result.get(studentId)
+                            .put(Field.LIMIT, limit)
+                            .put(Field.OFFSET, offset);
+                    promise.complete(response);
                 });
-            }
 
-            CompositeFuture.all(Collections.singletonList(future)).setHandler(resultTotals -> {
-                if (resultTotals.failed()) {
-                    String message = "[Presences@DefaultNotebookService::studentGet] Failed to get totals from events.";
-                    handler.handle(new Either.Left<>(message + " " + resultTotals.cause()));
-                    return;
-                }
+        return promise.future();
+    }
 
-                JsonObject response = new JsonObject()
-                        .put("limit", limit)
-                        .put("offset", offset)
-                        .put("all", result.right().getValue())
-                        .put("totals", future.result());
-                handler.handle(new Either.Right<>(response));
-            });
+    @Override
+    public Future<JsonObject> studentsGet(String structureId, List<String> studentIds, String startDate, String endDate, String limit, String offset) {
+        Promise<JsonObject> promise = Promise.promise();
 
-        });
+        getForgottenNotebooksData(structureId, studentIds, startDate, endDate, limit, offset)
+                .onFailure(promise::fail)
+                .onSuccess(result -> {
+                    JsonObject response = new JsonObject()
+                            .put(Field.LIMIT, limit)
+                            .put(Field.OFFSET, offset)
+                            .put(Field.STUDENTS_EVENTS, result);
+                    promise.complete(response);
+                });
+
+        return promise.future();
+    }
+
+    private Future<Map<String, JsonObject>> getForgottenNotebooksData(String structureId, List<String> studentIds, String startDate,
+                                                                      String endDate, String limit, String offset) {
+        Promise<Map<String, JsonObject>> promise = Promise.promise();
+
+        Map<String, JsonObject> studentsEvents = studentIds.stream()
+                .collect(Collectors.toMap(
+                        studentId -> studentId,
+                        studentId -> new JsonObject()
+                                .put(Field.ALL, new JsonArray())
+                                .put(Field.TOTALS, 0)
+                ));
+
+        Future<Map<String, JsonObject>> forgottenNotebooksFuture = setForgottenNotebooks(structureId, studentIds, startDate, endDate, limit, offset, studentsEvents);
+        Future<Map<String, JsonObject>> countForgottenNotebooksFuture = getCountForgottenNotebooks(structureId, studentIds, startDate, endDate, studentsEvents);
+        CompositeFuture.all(forgottenNotebooksFuture, countForgottenNotebooksFuture)
+                .onSuccess(result -> {
+                    promise.complete(studentsEvents);
+                })
+                .onFailure(error -> {
+                    String message =
+                            String.format("[Presences@%s::create] Failed to get protagonist data.",
+                                    this.getClass().getSimpleName());
+                    log.error(String.format("%s %s", message, error));
+                    promise.fail(error);
+                });
+
+        return promise.future();
     }
 
     @Override
     public void get(List<String> studentIds, String startDate, String endDate, Handler<Either<String, JsonArray>> handler) {
-        if(studentIds.isEmpty()) {
+        if (studentIds.isEmpty()) {
             handler.handle(new Either.Right<>(new JsonArray()));
             return;
         }
@@ -114,10 +145,14 @@ public class DefaultNotebookService implements NotebookService {
         Sql.getInstance().prepared(query, params, SqlResult.validUniqueResultHandler(handler));
     }
 
-
+    private void getStudentNotebooks(String studentId, String startDate, String endDate, String limit, String offset,
+                                     String structureId, Boolean countTotal, Handler<Either<String, JsonArray>> handler) {
+        getStudentNotebooks(Collections.singletonList(studentId), startDate, endDate, limit, offset, structureId, countTotal, handler);
+    }
 
     // If countTotal is true, it will handler will return the query count result ({count: Integer})
-    private void getStudentNotebooks(String studentId, String startDate, String endDate, String limit, String offset, String structureId, Boolean countTotal, Handler<Either<String, JsonArray>> handler) {
+    private void getStudentNotebooks(List<String> studentIds, String startDate, String endDate, String limit, String offset,
+                                     String structureId, Boolean countTotal, Handler<Either<String, JsonArray>> handler) {
         JsonArray params = new JsonArray();
         String query;
         if (countTotal) {
@@ -125,8 +160,8 @@ public class DefaultNotebookService implements NotebookService {
         } else {
             query = "SELECT id, student_id, structure_id, to_char(date, 'YYYY-MM-DD') as date";
         }
-        query += " FROM " + Presences.dbSchema + ".forgotten_notebook WHERE student_id = ? ";
-        params.add(studentId);
+        query += " FROM " + Presences.dbSchema + ".forgotten_notebook WHERE student_id IN " + Sql.listPrepared(studentIds);
+        params.addAll(new JsonArray(studentIds));
 
         if (structureId != null) {
             query += "AND structure_id = ?";
@@ -155,4 +190,99 @@ public class DefaultNotebookService implements NotebookService {
 
         Sql.getInstance().prepared(query, params, SqlResult.validResultHandler(handler));
     }
+
+    @SuppressWarnings("unchecked")
+    private Future<Map<String, JsonObject>> setForgottenNotebooks(String structureId, List<String> studentIds, String startDate,
+                                                                  String endDate, String limit, String offset,
+                                                                  Map<String, JsonObject> studentsEvents) {
+        Promise<Map<String, JsonObject>> promise = Promise.promise();
+
+        JsonArray params = new JsonArray();
+        String query = "SELECT id, student_id, structure_id, to_char(date, 'YYYY-MM-DD') as date" +
+                getFromWhereQuery(params, structureId, startDate, endDate, studentIds) +
+                " ORDER BY forgotten_notebook.date DESC ";
+
+        if (limit != null) {
+            query += " LIMIT ? ";
+            params.add(limit);
+        }
+
+        if (offset != null) {
+            query += " OFFSET ? ";
+            params.add(offset);
+        }
+
+        Sql.getInstance().prepared(query, params, SqlResult.validResultHandler(FutureHelper.handlerJsonArray(result -> {
+            if (result.failed()) {
+                String message =
+                        String.format("[Presences@%s::setForgottenNotebooks] Failed to get ForgottenNotebooks data.",
+                                this.getClass().getSimpleName());
+                log.error(String.format("%s %s", message, result.cause().getMessage()));
+                promise.fail(message);
+            }
+
+            for (JsonObject forgottenNotebook : ((List<JsonObject>) result.result().getList())) {
+                JsonObject studentEvents = studentsEvents.get(forgottenNotebook.getString(Field.STUDENT_ID, ""));
+                if (studentEvents != null && studentEvents.containsKey(Field.ALL))
+                    studentEvents.getJsonArray(Field.ALL, new JsonArray()).add(forgottenNotebook);
+            }
+
+
+            promise.complete(studentsEvents);
+        })));
+
+        return promise.future();
+    }
+
+    @SuppressWarnings("unchecked")
+    private Future<Map<String, JsonObject>> getCountForgottenNotebooks(String structureId, List<String> studentIds, String startDate,
+                                                                       String endDate, Map<String, JsonObject> studentsEvents) {
+        Promise<Map<String, JsonObject>> promise = Promise.promise();
+
+        JsonArray params = new JsonArray();
+        String query = "SELECT student_id, count(*) " +
+                getFromWhereQuery(params, structureId, startDate, endDate, studentIds)
+                + " GROUP BY student_id ";
+
+        Sql.getInstance().prepared(query, params, SqlResult.validResultHandler(FutureHelper.handlerJsonArray(result -> {
+            if (result.failed()) {
+                String message =
+                        String.format("[Presences@%s::getCountForgottenNotebooks] Failed to count ForgottenNotebooks.",
+                                this.getClass().getSimpleName());
+                log.error(String.format("%s %s", message, result.cause().getMessage()));
+                promise.fail(message);
+            }
+
+            for (JsonObject forgottenNotebook : ((List<JsonObject>) result.result().getList())) {
+                JsonObject studentEvents = studentsEvents.get(forgottenNotebook.getString(Field.STUDENT_ID, ""));
+                if (studentEvents != null)
+                    studentEvents.put(Field.TOTALS, forgottenNotebook.getInteger(Field.COUNT));
+            }
+
+
+            promise.complete(studentsEvents);
+        })));
+
+        return promise.future();
+    }
+
+    private String getFromWhereQuery(JsonArray params, String structureId, String startDate, String endDate, List<String> studentIds) {
+        String query = " FROM " + Presences.dbSchema + ".forgotten_notebook WHERE student_id IN " + Sql.listPrepared(studentIds);
+        params.addAll(new JsonArray(studentIds));
+
+        if (structureId != null) {
+            query += "AND structure_id = ?";
+            params.add(structureId);
+        }
+
+        if (!startDate.contentEquals("null") && !endDate.contentEquals("null")) {
+            query += " AND date >= ? AND date <= ? ";
+            params.add(startDate);
+            params.add(endDate);
+        }
+
+        return query;
+    }
+
+
 }

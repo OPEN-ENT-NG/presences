@@ -18,6 +18,8 @@ public class Field {
     public static final String MANUALGROUPS = "manualGroups";
     public static final String NAME = "name";
     public static final String OFFSET = "offset";
+    public static final String ALL = "all";
+    public static final String TOTALS = "totals";
     public static final String SEARCH_TEACHER = "searchTeacher";
     public static final String STRUCTURE = "structure";
     public static final String STRUCTURE_ID = "structure_id";
@@ -25,7 +27,9 @@ public class Field {
     public static final String STUDENT = "student";
     public static final String STUDENTS_CAPS = "STUDENTS";
     public static final String STUDENT_ID = "student_id";
+    public static final String STUDENT_IDS = "student_ids";
     public static final String STUDENTID = "studentId";
+    public static final String STUDENTS_EVENTS = "students_events";
     public static final String SUBJECT = "subject";
     public static final String SUBJECT_ID = "subject_id";
     public static final String SUBJECTID = "subjectId";
@@ -41,10 +45,12 @@ public class Field {
     // Dates
     public static final String END_DATE = "end_date";
     public static final String ENDDATE = "endDate";
+    public static final String END_AT = "end_at";
     public static final String DATE = "date";
     public static final String START_DATE = "start_date";
     public static final String STARTDATE = "startDate";
     public static final String START = "start";
+    public static final String START_AT = "start_at";
     public static final String END = "end";
     public static final String START_TIME = "startTime";
     public static final String END_TIME = "endTime";
@@ -103,6 +109,8 @@ public class Field {
     public static final String LOCKED = "locked";
     public static final String MANUAL = "manual";
     public static final String PUNISHMENTS = "punishments";
+    public static final String PROTAGONIST = "protagonist";
+    public static final String PROTAGONIST_TYPE_ID = "protagonist_type_id";
     public static final String REGISTER_ID = "register_id";
     public static final String REGISTER_STATE_ID = "register_state_id";
     public static final String ROOMLABELS = "roomLabels";
@@ -115,6 +123,7 @@ public class Field {
 
     // Alert
     public static final String TYPE = "type";
+    public static final String TYPES = "types";
     public static final String ALERT_ABSENCE_THRESHOLD = "alert_absence_threshold";
     public static final String ALERT_LATENESS_THRESHOLD = "alert_lateness_threshold";
     public static final String ALERT_INCIDENT_THRESHOLD = "alert_incident_threshold";
