@@ -22,19 +22,20 @@ public interface PunishmentService {
      * @param handler   Function handler returning data
      */
     void get(UserInfos user, MultiMap body, boolean isStudent, Handler<AsyncResult<JsonObject>> handler);
+
     void get(UserInfos user, String id, String structureId, String startAt, String endAt, List<String> studentIds, List<String> groupIds,
-        List<String> typeIds, List<String> processStates, boolean isStudent, String pageString, String limitString, String offsetString,
-        Handler<AsyncResult<JsonObject>> handler);
+             List<String> typeIds, List<String> processStates, boolean isStudent, String pageString, String limitString, String offsetString,
+             Handler<AsyncResult<JsonObject>> handler);
 
     /**
      * get Sanctions/Punishments by students
      *
      * @param structure  structure identifier
-     * @param startAt   start date
-     * @param endAt     end date
+     * @param startAt    start date
+     * @param endAt      end date
      * @param students   List of students
      * @param typeIds    List of punishment type
-     * @param  eventType Punishment event type ("SANCTION"/ "PUNISHMENT")
+     * @param eventType  Punishment event type ("SANCTION"/ "PUNISHMENT")
      * @param processed  filter processed
      * @param massmailed filter massmailed
      * @param handler    Function handler returning data
@@ -46,8 +47,8 @@ public interface PunishmentService {
      * get Punishments/Sanctions COUNT By students
      *
      * @param structure  structure identifier
-     * @param startAt   start date
-     * @param endAt     end date
+     * @param startAt    start date
+     * @param endAt      end date
      * @param students   List of students
      * @param typeIds    List of punishment type
      * @param processed  filter processed
@@ -77,38 +78,42 @@ public interface PunishmentService {
      */
     void count(UserInfos user, MultiMap body, boolean isStudent, Handler<AsyncResult<Long>> handler);
 
+
+    void count(UserInfos user, String structureId, String startAt, String endAt, List<String> studentIds,
+               List<String> groupIds, List<String> typeIds, List<String> processStates, boolean isStudent, Handler<AsyncResult<Long>> handler);
+
     /**
      * create punishment
      *
-     * @param user               current user logged
-     * @param body               data to store
-     * @param handler            Function handler returning data
+     * @param user    current user logged
+     * @param body    data to store
+     * @param handler Function handler returning data
      */
     void create(UserInfos user, JsonObject body, Handler<AsyncResult<JsonArray>> handler);
 
     /**
      * put punishment
      *
-     * @param user               current user logged
-     * @param body               data to update
-     * @param handler            Function handler returning data
+     * @param user    current user logged
+     * @param body    data to update
+     * @param handler Function handler returning data
      */
     void update(UserInfos user, JsonObject body, Handler<AsyncResult<JsonObject>> handler);
 
     /**
      * delete punishment
      *
-     * @param body             data containing id to delete
-     * @param handler          Function handler returning data
+     * @param body    data containing id to delete
+     * @param handler Function handler returning data
      */
     void delete(UserInfos user, MultiMap body, Handler<AsyncResult<JsonObject>> handler);
 
     /**
      * get absences by students
      *
-     * @param studentIds    student list identifiers
-     * @param starDate      start period to get
-     * @param endDate       end period to get
+     * @param studentIds student list identifiers
+     * @param starDate   start period to get
+     * @param endDate    end period to get
      */
     void getAbsencesByStudentIds(List<String> studentIds, String starDate, String endDate, Handler<AsyncResult<Map<String, List<JsonObject>>>> handler);
 }

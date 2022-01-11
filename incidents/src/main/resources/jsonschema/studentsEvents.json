@@ -1,0 +1,42 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema",
+  "type": "object",
+  "title": "Students Events schema",
+  "properties": {
+    "student_ids": {
+      "type": "array",
+      "items": {
+        "anyOf": [
+          {
+            "type": "string"
+          }
+        ]
+      }
+    },
+    "limit": {
+      "type": "string"
+    },
+    "offset": {
+      "type": "string"
+    },
+    "start_at": {
+      "type": "string"
+    },
+    "end_at": {
+      "type": "string"
+    },
+    "types": {
+      "type": "array",
+      "items": {
+        "anyOf": [
+          {
+            "type": "string"
+          }
+        ]
+      }
+    }
+  },
+  "required": [
+    "student_ids"
+  ]
+}

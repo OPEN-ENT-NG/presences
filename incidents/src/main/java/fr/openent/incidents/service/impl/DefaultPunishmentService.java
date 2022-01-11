@@ -604,6 +604,17 @@ public class DefaultPunishmentService implements PunishmentService {
             punishmentHelper.countPunishments(punishment.getTable(), result.result(), handler);
         });
     }
+    @Override
+    public void count(UserInfos user, String structureId, String startAt, String endAt, List<String> studentIds,
+                      List<String> groupIds, List<String> typeIds, List<String> processStates, boolean isStudent, Handler<AsyncResult<Long>> handler) {
+        punishmentHelper.getQuery(user, null, structureId, startAt, endAt, studentIds, groupIds, typeIds, processStates, isStudent, result -> {
+            if (result.failed()) {
+                handler.handle(Future.failedFuture(result.cause().getMessage()));
+                return;
+            }
+            punishmentHelper.countPunishments(punishment.getTable(), result.result(), handler);
+        });
+    }
 
     @Override
     public void delete(UserInfos user, MultiMap body, Handler<AsyncResult<JsonObject>> handler) {

@@ -56,7 +56,7 @@ public class PunishmentHelper {
                          Handler<AsyncResult<JsonObject>> handler) {
         JsonObject query = new JsonObject().put("structure_id", structureId);
 
-        if (!isStudent && (!WorkflowHelper.hasRight(user, WorkflowActions.PUNISHMENTS_VIEW.toString()) || !WorkflowHelper.hasRight(user, WorkflowActions.SANCTIONS_VIEW.toString()))) {
+        if (!isStudent && user != null && (!WorkflowHelper.hasRight(user, WorkflowActions.PUNISHMENTS_VIEW.toString()) || !WorkflowHelper.hasRight(user, WorkflowActions.SANCTIONS_VIEW.toString()))) {
             query.put("owner_id", user.getUserId());
         }
 

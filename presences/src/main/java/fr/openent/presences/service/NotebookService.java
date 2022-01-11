@@ -1,6 +1,7 @@
 package fr.openent.presences.service;
 
 import fr.wseduc.webutils.Either;
+import io.vertx.core.Future;
 import io.vertx.core.Handler;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
@@ -22,15 +23,17 @@ public interface NotebookService {
     /**
      * Retrieve forgotten notebook from student based on student_id and date since filter is possible
      *
-     * @param studentId     student identifier
-     * @param startDate     beginning date to filter. Format is : YYYY-DD-MM
-     * @param endDate       end date to filter. Format is : YYYY-DD-MM
-     * @param limit         limit of occurrences.
-     * @param offset        offset to get occurrences.
-     * @param structureId   structure identifier
-     * @param handler       Function handler returning data. Returns a JsonArray
+     * @param studentId   student identifier
+     * @param startDate   beginning date to filter. Format is : YYYY-DD-MM
+     * @param endDate     end date to filter. Format is : YYYY-DD-MM
+     * @param limit       limit of occurrences.
+     * @param offset      offset to get occurrences.
+     * @param structureId structure identifier
+     * @return future returning data. Returns a JsonArray
      */
-    void studentGet(String studentId, String startDate, String endDate, String limit, String offset, String structureId, Handler<Either<String, JsonObject>> handler);
+    Future<JsonObject> studentGet(String studentId, String startDate, String endDate, String limit, String offset, String structureId);
+
+    Future<JsonObject> studentsGet(String structureId, List<String> studentIds, String startDate, String endDate, String limit, String offset);
 
     /**
      * Retrieve forgotten notebook based on a list of student_id and date

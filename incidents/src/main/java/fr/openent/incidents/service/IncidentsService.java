@@ -1,6 +1,7 @@
 package fr.openent.incidents.service;
 
 import fr.wseduc.webutils.Either;
+import io.vertx.core.Future;
 import io.vertx.core.Handler;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
@@ -43,6 +44,10 @@ public interface IncidentsService {
      * @param handler   Function handler returning data
      */
     void get(String startDate, String endDate, List<String> users, Handler<Either<String, JsonArray>> handler);
+
+    Future<JsonArray> get(String structureId, String startDate, String endDate, List<String> studentIds, String limit, String offset);
+
+    Future<JsonArray> countByStudents(String structureId, String startDate, String endDate, List<String> studentIds);
 
     /**
      * Get Incidents count
