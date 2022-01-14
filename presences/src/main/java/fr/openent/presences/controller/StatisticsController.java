@@ -4,6 +4,7 @@ import fr.openent.presences.Presences;
 import fr.openent.presences.common.security.UserInStructure;
 import fr.openent.presences.common.statistics_presences.StatisticsPresences;
 import fr.openent.presences.core.constants.Field;
+import fr.openent.presences.security.StatisticsAccessData;
 import fr.wseduc.rs.Post;
 import fr.wseduc.security.SecuredAction;
 import fr.wseduc.webutils.request.RequestUtils;
@@ -13,12 +14,13 @@ import io.vertx.core.http.HttpServerRequest;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import org.entcore.common.controller.ControllerHelper;
+import org.entcore.common.http.filter.ResourceFilter;
 import org.entcore.common.user.UserUtils;
 
 public class StatisticsController extends ControllerHelper {
 
     @Post("/statistics/structures/:structure/student/:student/graph")
-    @SecuredAction(Presences.STATISTICS_ACCESS_DATA)
+    @ResourceFilter(StatisticsAccessData.class)
     public void getStatisticsGraph(HttpServerRequest request) {
         request.pause();
         UserUtils.getUserInfos(eb, request, user ->
