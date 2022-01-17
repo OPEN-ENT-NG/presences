@@ -6,6 +6,7 @@ import fr.openent.incidents.security.punishment.PunishmentsManageRight;
 import fr.openent.incidents.security.punishment.PunishmentsViewRight;
 import fr.openent.incidents.service.PunishmentService;
 import fr.openent.incidents.service.impl.DefaultPunishmentService;
+import fr.openent.presences.core.constants.Field;
 import fr.wseduc.rs.*;
 import fr.wseduc.security.ActionType;
 import fr.wseduc.security.SecuredAction;
@@ -41,14 +42,23 @@ public class PunishmentController extends ControllerHelper {
             return;
         }
         UserUtils.getUserInfos(eb, request, user -> {
-            punishmentService.get(user, request.params(), false, result -> {
-                if (result.failed()) {
-                    log.error(result.cause().getMessage());
-                    renderError(request);
-                    return;
-                }
-                renderJson(request, result.result());
-            });
+            String id = request.params().get(Field.ID);
+            String groupedPunishmentId = request.params().get(Field.GROUPED_PUNISHMENT_ID);
+            String structureId = request.params().get(Field.STRUCTURE_ID);
+            String startAt = request.params().get(Field.START_AT);
+            String endAt = request.params().get(Field.END_AT);
+            List<String> studentIds = request.params().getAll(Field.STUDENT_ID);
+            List<String> groupIds = request.params().getAll(Field.GROUP_ID);
+            List<String> typeIds = request.params().getAll(Field.TYPEID);
+            List<String> processStates = request.params().getAll(Field.PROCESS);
+            String page = request.params().get(Field.PAGE);
+            String limit = request.params().get(Field.LIMIT);
+            String offset = request.params().get(Field.OFFSET);
+
+            punishmentService.get(user, id, groupedPunishmentId, structureId, startAt, endAt, studentIds, groupIds, typeIds,
+                            processStates, false, page, limit, offset)
+                    .onFailure(error -> renderError(request))
+                    .onSuccess(result -> renderJson(request, result));
         });
     }
 
@@ -98,19 +108,27 @@ public class PunishmentController extends ControllerHelper {
     @ResourceFilter(PunishmentsManageRight.class)
     @Trace(Actions.INCIDENT_PUNISHMENT_DELETE)
     public void delete(final HttpServerRequest request) {
-        if (!request.params().contains("id") && !request.params().contains("structureId")) {
+        if ((!request.params().contains("id") || !request.params().contains("grouped_punishment_id")) && !request.params().contains("structureId")) {
             badRequest(request);
             return;
         }
+
+        String structureId = request.params().get(Field.STRUCTUREID);
+        String punishmentId = request.params().get(Field.ID);
+        String groupedPunishmentId = request.params().get(Field.GROUPED_PUNISHMENT_ID);
+
         UserUtils.getUserInfos(eb, request, user -> {
-            punishmentService.delete(user, request.params(), result -> {
-                if (result.failed()) {
-                    log.error(result.cause().getMessage());
-                    renderError(request);
-                    return;
-                }
-                renderJson(request, result.result());
-            });
+            request.pause();
+            punishmentService.delete(user, structureId, punishmentId, groupedPunishmentId)
+                    .onSuccess(result -> {
+                        request.resume();
+                        renderJson(request, result);
+                    })
+                    .onFailure(error -> {
+                        request.resume();
+                        log.error(error.getMessage());
+                        renderError(request);
+                    });
         });
     }
 

@@ -13,9 +13,15 @@ public class ExcludeCategory extends PunishmentCategory {
         fillables.put("mandatory_presence", Arrays.asList("CREATE", "UPDATE"));
     }
 
+    @Override
     public void formatDates() {
         start_at = start_at.replace("/", "-");
         end_at = end_at.replace("/", "-");
+    }
+
+    @Override
+    public String getLabel() {
+        return PunishmentCategory.EXCLUDE;
     }
 
     public String getStartAt() {

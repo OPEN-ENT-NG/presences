@@ -2,6 +2,7 @@ package fr.openent.incidents.service;
 
 import fr.wseduc.webutils.Either;
 import io.vertx.core.AsyncResult;
+import io.vertx.core.Future;
 import io.vertx.core.Handler;
 import io.vertx.core.MultiMap;
 import io.vertx.core.json.JsonArray;
@@ -26,6 +27,9 @@ public interface PunishmentService {
     void get(UserInfos user, String id, String structureId, String startAt, String endAt, List<String> studentIds, List<String> groupIds,
              List<String> typeIds, List<String> processStates, boolean isStudent, String pageString, String limitString, String offsetString,
              Handler<AsyncResult<JsonObject>> handler);
+
+    Future<JsonObject> get(UserInfos user, String id, String groupedPunishmentId, String structureId, String startAt, String endAt, List<String> studentIds, List<String> groupIds,
+                           List<String> typeIds, List<String> processStates, boolean isStudent, String pageString, String limitString, String offsetString);
 
     /**
      * get Sanctions/Punishments by students
@@ -98,15 +102,18 @@ public interface PunishmentService {
      * @param body    data to update
      * @param handler Function handler returning data
      */
-    void update(UserInfos user, JsonObject body, Handler<AsyncResult<JsonObject>> handler);
+    void update(UserInfos user, JsonObject body, Handler<AsyncResult<JsonArray>> handler);
 
     /**
      * delete punishment
      *
-     * @param body    data containing id to delete
-     * @param handler Function handler returning data
+     * @param user                User
+     * @param structureId         Structure identifier
+     * @param punishmentId        Delete one punishment (by id)
+     * @param groupedPunishmentId Delete grouped punishments
+     * @return returning data
      */
-    void delete(UserInfos user, MultiMap body, Handler<AsyncResult<JsonObject>> handler);
+    Future<JsonObject> delete(UserInfos user, String structureId, String punishmentId, String groupedPunishmentId);
 
     /**
      * get absences by students

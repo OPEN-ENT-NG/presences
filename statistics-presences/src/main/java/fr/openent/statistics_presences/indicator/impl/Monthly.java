@@ -134,7 +134,7 @@ public class Monthly extends Indicator {
                 )
                 .onFailure(fail -> {
                     log.error(String.format("[StatisticsPresences@Monthly::searchValues] " +
-                            "Indicator %s failed to complete search values ", Monthly.class.getName()), fail.getCause().getMessage());
+                            "Indicator %s failed to complete search values ", Monthly.class.getName()), fail.getMessage());
                     promise.handle(Future.failedFuture(fail.getCause()));
                 });
 

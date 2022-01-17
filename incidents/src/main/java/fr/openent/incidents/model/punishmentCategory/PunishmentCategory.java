@@ -5,6 +5,7 @@ import fr.openent.presences.model.Model;
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Future;
 import io.vertx.core.Handler;
+import io.vertx.core.Promise;
 import io.vertx.core.json.JsonObject;
 import org.entcore.common.sql.Sql;
 import org.entcore.common.sql.SqlResult;
@@ -43,16 +44,39 @@ public abstract class PunishmentCategory extends Model {
                 return;
             }
 
-            PunishmentCategory category = getSpecifiedCategoryFromLabel(result.result());
+            PunishmentCategory category = initCategoryFromLabel(result.result(), body);
 
             if (category == null) {
-                handler.handle(Future.failedFuture("[Incidents@PunishmentCategory::specifyCategoryFromType] category not found"));
+                String message = String.format("[Incidents@%s::specifyCategoryFromType] category not found"
+                        , "PunishmentCategory");
+                log.error(String.format("%s %s", message, result.cause().getMessage()));
+                handler.handle(Future.failedFuture(message));
                 return;
             }
-            category.setFromJson(body);
-            category.formatDates();
+
             handler.handle(Future.succeededFuture(category));
         });
+    }
+
+    public static Future<PunishmentCategory> getSpecifiedCategoryFromType(String structure_id, Long type_id) {
+        Promise<PunishmentCategory> promise = Promise.promise();
+        getSpecifiedCategoryFromType(type_id, structure_id, null, promise);
+        return promise.future();
+    }
+
+    public static PunishmentCategory initCategoryFromLabel(String label, JsonObject body) {
+        PunishmentCategory category = getSpecifiedCategoryFromLabel(label);
+
+        if (category == null) return null;
+
+        if (body != null) formatFromBody(category, body);
+
+        return category;
+    }
+
+    public static void formatFromBody(PunishmentCategory category, JsonObject body) {
+        category.setFromJson(body);
+        category.formatDates();
     }
 
 
@@ -81,4 +105,6 @@ public abstract class PunishmentCategory extends Model {
     }
 
     public abstract void formatDates();
+
+    public abstract String getLabel();
 }

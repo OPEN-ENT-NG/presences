@@ -1,5 +1,6 @@
 package fr.openent.statistics_presences.indicator.worker;
 
+import fr.openent.presences.core.constants.Field;
 import fr.openent.statistics_presences.bean.Stat;
 import fr.openent.statistics_presences.bean.monthly.MonthlyStat;
 import fr.openent.statistics_presences.indicator.IndicatorGeneric;
@@ -123,9 +124,12 @@ public class Monthly extends IndicatorWorker {
                             .flatMap(punishmentsHolder -> {
                                 List<JsonObject> punishments = punishmentsHolder.getJsonArray("punishments").getList();
                                 return punishments.stream().map(punishment -> {
+                                    String createdAt = punishment.getString(Field.CREATED_AT);
                                     MonthlyStat stat = new MonthlyStat()
-                                            .setPunishmentType(punishment.getLong("type_id"));
-                                    setDatesFromPunishments(punishment, stat);
+                                            .setPunishmentType(punishment.getLong(Field.TYPEID))
+                                            .setGroupedPunishmentId(punishment.getString(Field.GROUPED_PUNISHMENT_ID))
+                                            .setStartDate(createdAt)
+                                            .setEndDate(createdAt);
                                     return stat;
                                 });
                             })
@@ -134,28 +138,5 @@ public class Monthly extends IndicatorWorker {
                 })
                 .onFailure(promise::fail);
         return promise.future();
-    }
-
-    private void setDatesFromPunishments(JsonObject punishment, MonthlyStat stat) {
-        JsonObject fields = punishment.getJsonObject("fields", new JsonObject());
-
-        String startAt = fields.getString("start_at");
-        String endAt = fields.getString("end_at");
-        if (startAt != null && endAt != null) {
-            stat.setStartDate(startAt)
-                    .setEndDate(endAt);
-            return;
-        }
-
-        String delayAt = fields.getString("delay_at");
-        if (delayAt != null) {
-            stat.setStartDate(delayAt)
-                    .setEndDate(delayAt);
-            return;
-        }
-
-        String createdAt = punishment.getString("created_at");
-        stat.setStartDate(createdAt)
-                .setEndDate(createdAt);
     }
 }

@@ -17,6 +17,7 @@ public class GlobalSearch {
     private static final String HALF_DAY = "HALF_DAY";
     private static final String HOUR = "HOUR";
     private static final String DAY = "DAY";
+    private static final String COUNTID = "countId";
     private final StatisticsFilter filter;
     List<String> totalAbsenceTypes = Arrays.asList(EventType.NO_REASON.name(), EventType.UNREGULARIZED.name(), EventType.REGULARIZED.name());
     private List<Audience> audiences = new ArrayList<>();
@@ -101,6 +102,8 @@ public class GlobalSearch {
     public JsonArray prefetchUserPipeline() {
         JsonArray pipeline = new JsonArray()
                 .add(match())
+                .add(addCountIdField())
+                .add(groupByCountId())
                 .add(group())
                 .add(fromToMatcher())
                 .add(prefetchDistinct())
@@ -118,6 +121,8 @@ public class GlobalSearch {
     public JsonArray countUsersWithStatisticsPipeline() {
         return new JsonArray()
                 .add(match())
+                .add(addCountIdField())
+                .add(groupByCountId())
                 .add(group())
                 .add(fromToMatcher())
                 .add(prefetchDistinct())
@@ -236,6 +241,8 @@ public class GlobalSearch {
 
         JsonArray pipeline = new JsonArray()
                 .add(match(types))
+                .add(addCountIdField())
+                .add(groupByCountId())
                 .add(group());
 
         if (this.filter().from() != null || this.filter().to() != null) pipeline.add(fromToMatcher());
@@ -355,6 +362,9 @@ public class GlobalSearch {
 
         JsonArray pipeline = new JsonArray()
                 .add(match(types))
+                .add(addCountIdField())
+                .add(addCountIdField())
+                .add(groupByCountId())
                 .add(group())
                 .add(project());
 
@@ -451,6 +461,21 @@ public class GlobalSearch {
         return match(this.filter().types());
     }
 
+    private JsonObject addCountIdField() {
+        JsonObject groupedPunishmentIdExistsQuery = new JsonObject().put(Field.$GT,
+                new JsonArray().add(Field.$GROUPED_PUNISHMENT_ID).addNull()
+        );
+
+        JsonObject cond = new JsonObject()
+                .put(Field.$COND, new JsonArray()
+                        .add(groupedPunishmentIdExistsQuery)
+                        .add(Field.$GROUPED_PUNISHMENT_ID)
+                        .add(Field.$_ID)
+                );
+
+        return new JsonObject().put(Field.$ADDFIELDS, new JsonObject().put(COUNTID, cond));
+    }
+
     private JsonArray filterType(List<String> types, boolean isTotalAbsences) {
         List<String> typesToUse = types != null ? types : this.filter().types();
         JsonArray filters = new JsonArray();
@@ -508,19 +533,30 @@ public class GlobalSearch {
                 .put("$lte", this.filter().end());
     }
 
-    private JsonObject group() {
+    private JsonObject groupByCountId() {
         JsonObject id = new JsonObject()
                 .put("user", "$user")
                 .put("type", "$type")
                 .put("name", "$name")
-                .put("class_name", "$class_name");
-
-        JsonObject slots = new JsonObject()
-                .put("$sum", "$slot");
+                .put(Field.CLASS_NAME, String.format("$%s", Field.CLASS_NAME))
+                .put(COUNTID, String.format("$%s", COUNTID));
 
         JsonObject group = id(id)
-                .put("count", sum())
-                .put("slots", slots);
+                .put(Field.SLOTS, sum(String.format("$%s", Field.SLOTS)));
+
+        return group(group);
+    }
+
+    private JsonObject group() {
+        JsonObject id = new JsonObject()
+                .put(Field.USER, String.format("%s.%s", Field.$_ID, Field.USER))
+                .put(Field.TYPE, String.format("%s.%s", Field.$_ID, Field.TYPE))
+                .put(Field.NAME, String.format("%s.%s", Field.$_ID, Field.NAME))
+                .put(Field.CLASS_NAME, String.format("%s.%s", Field.$_ID, Field.CLASS_NAME));
+
+        JsonObject group = id(id)
+                .put(Field.COUNT, sum())
+                .put(Field.SLOTS, sum(String.format("$%s", Field.SLOTS)));
 
         return group(group);
     }

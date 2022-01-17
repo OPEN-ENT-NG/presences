@@ -9,6 +9,7 @@ import fr.openent.presences.common.helper.FutureHelper;
 import fr.openent.presences.common.incidents.Incidents;
 import fr.openent.presences.common.presences.Presences;
 import fr.openent.presences.common.viescolaire.Viescolaire;
+import fr.openent.presences.core.constants.Field;
 import fr.openent.presences.enums.EventType;
 import fr.wseduc.webutils.Either;
 import fr.wseduc.webutils.I18n;
@@ -26,6 +27,7 @@ import org.entcore.common.sql.SqlResult;
 
 import java.text.ParseException;
 import java.util.*;
+import java.util.stream.Collectors;
 
 import static fr.openent.massmailing.enums.MailingType.PDF;
 import static fr.openent.massmailing.enums.MassmailingType.*;
@@ -123,7 +125,7 @@ public abstract class MassMailingProcessor implements Mailing {
         JsonObject massmailingHourEvents = massmailingHour.getJsonObject("events", new JsonObject());
 
         JsonArray absences = massmailingEvents.getJsonArray(EventType.ABSENCE.name(), new JsonArray());
-        JsonArray punishments = massmailingEvents.getJsonArray(EventType.PUNISHMENT.name(), new JsonArray());
+        JsonArray punishments = mergeDetentionWithSlots(massmailingEvents.getJsonArray(EventType.PUNISHMENT.name(), new JsonArray()));
         JsonArray sanctions = massmailingEvents.getJsonArray(EventType.SANCTION.name(), new JsonArray());
         JsonArray absencesHour = massmailingHourEvents.getJsonArray(EventType.ABSENCE.name(), new JsonArray());
         JsonArray latenessesHour = massmailingHourEvents.getJsonArray(EventType.LATENESS.name(), new JsonArray());
@@ -223,6 +225,47 @@ public abstract class MassMailingProcessor implements Mailing {
         massmailing.put("message", template.process(codeValues, settings.getString("end_of_half_day")));
     }
 
+    /**
+     * Map punishment that are grouped by grouped_punishment_id by list of slots regarding each punishments
+     *
+     * @param punishments JsonArray
+     * @return punishments JsonArray
+     */
+    @SuppressWarnings("unchecked")
+    private JsonArray mergeDetentionWithSlots(JsonArray punishments) {
+        return new JsonArray(((List<JsonObject>) punishments.getList()).stream()
+                .peek(item -> {
+                    List<JsonObject> mergedPunishments = new ArrayList<>();
+                    ((List<JsonObject>) item.getJsonArray(Field.PUNISHMENTS).getList())
+                            .stream()
+                            .filter(punishment -> punishment.getString(Field.GROUPED_PUNISHMENT_ID) != null)
+                            .forEach(punishment -> {
+                                JsonObject mergedPunishment = mergedPunishments
+                                        .stream()
+                                        .findFirst()
+                                        .orElse(null);
+
+                                if (mergedPunishment != null) {
+                                    mergedPunishment.getJsonArray(Field.SLOTS)
+                                            .add(punishment.getJsonObject(Field.FIELDS));
+                                } else {
+                                    punishment.put(Field.SLOTS, new JsonArray().add(punishment.getJsonObject(Field.FIELDS)));
+                                    mergedPunishments.add(punishment);
+                                }
+                            });
+
+                    mergedPunishments.addAll(
+                            ((List<JsonObject>) item.getJsonArray(Field.PUNISHMENTS).getList())
+                                    .stream()
+                                    .filter(punishment -> punishment.getString(Field.GROUPED_PUNISHMENT_ID) == null)
+                                    .collect(Collectors.toList())
+                    );
+
+                    item.put(Field.PUNISHMENTS, mergedPunishments);
+                })
+                .collect(Collectors.toList()));
+    }
+
     private void formatPunishmentEvents(JsonObject massmailingHourEvents) {
         if (massmailingHourEvents.containsKey(EventType.PUNISHMENT.name()) &&
                 massmailingHourEvents.getJsonArray(EventType.PUNISHMENT.name()).size() > 0) {
@@ -246,6 +289,7 @@ public abstract class MassMailingProcessor implements Mailing {
      * @param punishment the punishment/sanction event
      * @return the date string value
      */
+    @SuppressWarnings("unchecked")
     private String getPunishmentDate(JsonObject punishment) {
         String punishmentDate = "";
         if (punishment.getString("created_at") != null) {
@@ -264,6 +308,14 @@ public abstract class MassMailingProcessor implements Mailing {
                     }
                     break;
                 case 2: // DETENTION
+                    JsonArray slots = punishment.getJsonArray(Field.SLOTS);
+                    return ((List<JsonObject>) slots.getList()).stream()
+                            .map(slot -> String.format("%s %s - %s",
+                                    DateHelper.getDateString(slot.getString(Field.START_AT), DateHelper.DAY_MONTH_YEAR),
+                                    DateHelper.fetchTimeString(slot.getString(Field.START_AT), DateHelper.MONGO_FORMAT),
+                                    DateHelper.fetchTimeString(slot.getString(Field.END_AT), DateHelper.MONGO_FORMAT)
+                            ))
+                            .collect(Collectors.joining(", "));
                 case 3: // BLAME
                 case 4: // EXCLUSION
                     if (fields.getString("start_at") != null) {
@@ -284,7 +336,15 @@ public abstract class MassMailingProcessor implements Mailing {
      * @param event the event
      * @return the number of days
      */
+    @SuppressWarnings("unchecked")
     private long getDayNumber(JsonObject event) {
+        JsonArray slots = event.getJsonArray(Field.SLOTS, new JsonArray());
+        if (!slots.isEmpty())
+            return ((List<JsonObject>) slots.getList())
+                    .stream()
+                    .map(slot -> DateHelper.getDateString(slot.getString(Field.START_AT), DateHelper.MONGO_FORMAT))
+                    .distinct()
+                    .count();
         try {
             if (event.containsKey("fields") && (event.getJsonObject("fields").getString("start_at") != null) &&
                     (event.getJsonObject("fields").getString("end_at") != null)) {
@@ -323,7 +383,8 @@ public abstract class MassMailingProcessor implements Mailing {
         return I18n.getInstance().translate("massmailing.recovery." + recoveryType.toLowerCase() + "s", template.getDomain(), template.getLocale());
     }
 
-    private JsonObject formatMassmailingBasedOnRecoveryMethod(JsonObject massmailing, JsonArray slots, String recoveryMethod, String midHour) {
+    private JsonObject formatMassmailingBasedOnRecoveryMethod(JsonObject massmailing, JsonArray slots, String
+            recoveryMethod, String midHour) {
         JsonObject events = massmailing.getJsonObject("events", new JsonObject());
         if ("HOUR".equals(recoveryMethod) || slots.isEmpty() || !events.containsKey("ABSENCE")) {
             return massmailing;
@@ -424,7 +485,8 @@ public abstract class MassMailingProcessor implements Mailing {
         return data;
     }
 
-    private void proceedOnDuplicate(HashMap<String, JsonObject> data, Map<String, JsonObject> duplicatedData, JsonObject relative) {
+    private void proceedOnDuplicate
+            (HashMap<String, JsonObject> data, Map<String, JsonObject> duplicatedData, JsonObject relative) {
 
         String duplicatedDataContact = this.mailingType.equals(PDF) ? getAddressAndZipCodeValue(duplicatedData, relative)
                 : duplicatedData.get(relative.getString("student_id")).getString("contact");
@@ -658,7 +720,8 @@ public abstract class MassMailingProcessor implements Mailing {
         });
     }
 
-    private void getEventsByStudent(MassmailingType type, String recoveryMethod, Handler<Either<String, JsonArray>> handler) {
+    private void getEventsByStudent(MassmailingType type, String
+            recoveryMethod, Handler<Either<String, JsonArray>> handler) {
         switch (type) {
             case REGULARIZED:
             case UNREGULARIZED:
@@ -709,7 +772,8 @@ public abstract class MassMailingProcessor implements Mailing {
         }));
     }
 
-    void savePunishmentsMassmailing(List<JsonObject> savedEvents, JsonObject eventEither, Handler<Either<String, JsonObject>> handler) {
+    void savePunishmentsMassmailing(List<JsonObject> savedEvents, JsonObject
+            eventEither, Handler<Either<String, JsonObject>> handler) {
 
         ArrayList<String> punishmentsIds = new ArrayList<>();
 

@@ -3,7 +3,9 @@ package fr.openent.presences.common.statistics_presences;
 import fr.openent.presences.common.helper.FutureHelper;
 import fr.openent.presences.common.message.MessageResponseHandler;
 import io.vertx.core.AsyncResult;
+import io.vertx.core.Future;
 import io.vertx.core.Handler;
+import io.vertx.core.Promise;
 import io.vertx.core.eventbus.EventBus;
 import io.vertx.core.json.JsonObject;
 
@@ -22,14 +24,15 @@ public class StatisticsPresences {
         this.eb = eb;
     }
 
-    public void postUsers(String structureId, List<String> studentIds,
-                          Handler<AsyncResult<JsonObject>> handler) {
+    public Future<JsonObject> postUsers(String structureId, List<String> studentIds) {
+        Promise<JsonObject> promise = Promise.promise();
         JsonObject action = new JsonObject()
                 .put("action", "post-users")
                 .put("structureId", structureId)
                 .put("studentIds", studentIds);
 
-        eb.send(address, action, MessageResponseHandler.messageJsonObjectHandler(FutureHelper.handlerJsonObject(handler)));
+        eb.send(address, action, MessageResponseHandler.messageJsonObjectHandler(FutureHelper.handlerJsonObject(promise)));
+        return promise.future();
     }
 
     public void getStatistics(JsonObject statisticsFilterJson, String structureId, String indicator, int page, Handler<AsyncResult<JsonObject>> handler) {
