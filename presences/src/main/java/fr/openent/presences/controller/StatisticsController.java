@@ -6,6 +6,7 @@ import fr.openent.presences.common.statistics_presences.StatisticsPresences;
 import fr.openent.presences.core.constants.Field;
 import fr.openent.presences.security.StatisticsAccessData;
 import fr.wseduc.rs.Post;
+import fr.wseduc.security.ActionType;
 import fr.wseduc.security.SecuredAction;
 import fr.wseduc.webutils.request.RequestUtils;
 import io.vertx.core.Future;
@@ -21,6 +22,7 @@ public class StatisticsController extends ControllerHelper {
 
     @Post("/statistics/structures/:structure/student/:student/graph")
     @ResourceFilter(StatisticsAccessData.class)
+    @SecuredAction(value = "", type = ActionType.AUTHENTICATED)
     public void getStatisticsGraph(HttpServerRequest request) {
         request.pause();
         UserUtils.getUserInfos(eb, request, user ->
