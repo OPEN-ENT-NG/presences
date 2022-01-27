@@ -901,6 +901,8 @@ export const registersController = ng.controller('RegistersController',
             vm.validRegister = async (): Promise<void> => {
                 if (vm.register.id) {
                     await vm.register.setStatus(RegisterStatus.DONE);
+                    await vm.register.sync();
+                    $scope.safeApply();
                 } else {
                     notify.error('presences.register.validation.error');
                 }
