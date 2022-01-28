@@ -467,12 +467,13 @@ export const registersController = ng.controller('RegistersController',
                 return vm.openRegister(course || vm.courses.all[0], null);
             };
 
-            vm.openRegister = async function (course: Course, $event) {
-                if ($event && ($event.target as Element).className.includes('notify-bell')) {
+            vm.openRegister = async (course: Course, $event): Promise<void> => {
+                if ($event && ($event.target as Element).className.includes('notify-bell')
+                    && course.allowRegister) {
                     notifyCourse(course);
                     return;
                 }
-                if (vm.isFuturCourse(course)) return;
+                if (vm.isFuturCourse(course) || !course.allowRegister) return;
                 vm.register = RegisterUtils.createRegisterFromCourse(course);
                 if (!course.registerId) {
                     try {

@@ -20,13 +20,14 @@
         <div class="card cell" ng-repeat="course in vm.dayCourse.all|orderBy:'timestamp'"
              data-ng-click="vm.openRegister(course, $event)"
              ng-class="{
-                 active: vm.isCurrentCourse(course),
-                 disabled: vm.isFutureCourse(course)
+                 active: (vm.isCurrentCourse(course) && course.allowRegister),
+                 disabled: (vm.isFutureCourse(course) || !course.allowRegister)
              }">
             <div ng-if="hasSearchRight()" class="row has-search-right">
                 <div class="row hour">
                     <span>[[::vm.formatHour(course.startDate)]] - [[::vm.formatHour(course.endDate)]]</span>
-                    <i class="right-magnet notify-bell" ng-if="vm.canNotify(course.startDate, course.register_state_id)"
+                    <i class="right-magnet notify-bell"
+                       ng-if="vm.canNotify(course.startDate, course.register_state_id) && course.allowRegister"
                        ng-class="{active: course.notified}">&nbsp;</i>
                 </div>
                 <div class="row teachers">

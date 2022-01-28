@@ -23,6 +23,7 @@ export interface Course {
     notified: boolean;
     splitSlot: boolean;
     isOpenedByPersonnel: boolean;
+    allowRegister?: boolean;
 }
 
 export class Course {

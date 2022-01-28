@@ -48,6 +48,7 @@ public class Course implements Cloneable {
     private Long timestamp;
     private Subject subject;
     private Boolean isOpenedByPersonnel;
+    private boolean allowRegister;
 
     public Course(JsonObject course, List<String> mandatoryAttributes) {
         for (String attribute : mandatoryAttributes) {
@@ -92,6 +93,7 @@ public class Course implements Cloneable {
         this.timestamp = course.getLong(Field.TIMESTAMP);
         this.subject = new Subject(course.getJsonObject(Field.SUBJECT, new JsonObject()));
         this.isOpenedByPersonnel = course.getBoolean(Field.ISOPENEDBYPERSONNEL, null);
+        this.allowRegister = course.getBoolean(Field.ALLOWREGISTER, true);
     }
 
     @Override
@@ -113,11 +115,12 @@ public class Course implements Cloneable {
                 .put(Field.GROUPS, this.getGroups())
                 .put(Field.ROOMLABELS, this.getRoomLabels())
                 .put(Field.EVENTS, this.getEvents())
-                .put(Field.EXEMPTION, this.getEvents())
-                .put(Field.INCIDENT, this.getEvents())
+                .put(Field.EXEMPTED, this.isExempted())
+                .put(Field.EXEMPTION, this.getExemption())
+                .put(Field.INCIDENT, this.getIncident())
                 .put(Field.DAYOFWEEK, this.getDayOfWeek())
-                .put(Field.MANUAL, this.manual)
-                .put(Field.LOCKED, this.locked)
+                .put(Field.MANUAL, this.isManual())
+                .put(Field.LOCKED, this.isLocked())
                 .put(Field.UPDATED, this.getUpdated())
                 .put(Field.LASTUSER, this.getLastUser())
                 .put(Field.STARTDATE, this.getStartDate())
@@ -128,14 +131,15 @@ public class Course implements Cloneable {
                 .put(Field.STARTMOMENTTIME, this.getStartMomentTime())
                 .put(Field.ENDMOMENTDATE, this.getEndMomentDate())
                 .put(Field.ENDMOMENTTIME, this.getEndMomentTime())
-                .put(Field.IS_RECURRENT, this.isRecurrent)
+                .put(Field.IS_RECURRENT, this.isRecurrent())
                 .put(Field.COLOR, this.getColor())
-                .put(Field.IS_PERIODIC, this.isPeriodic)
+                .put(Field.IS_PERIODIC, this.isPeriodic())
                 .put(Field.SUBJECTNAME, this.getSubjectName())
                 .put(Field.TEACHERS, this.getTeachers())
-                .put(Field.SPLIT_SLOT, this.splitSlot)
-                .put(Field.SUBJECT, this.subject.toJSON())
-                .put(Field.ISOPENEDBYPERSONNEL, this.isOpenedByPersonnel);
+                .put(Field.SPLIT_SLOT, this.isSplitSlot())
+                .put(Field.SUBJECT, this.getSubject().toJSON())
+                .put(Field.ISOPENEDBYPERSONNEL, this.getIsOpenedByPersonnel())
+                .put(Field.ALLOWREGISTER, this.getAllowRegister());
         if (this.registerId != null && this.registerStateId != null && this.notified != null) {
             thisJsonObject
                     .put(Field.REGISTER_ID, this.registerId)
@@ -452,4 +456,13 @@ public class Course implements Cloneable {
     public void setIsOpenedByPersonnel(Boolean isOpenedByPersonnel) {
         this.isOpenedByPersonnel = isOpenedByPersonnel;
     }
+
+    public boolean getAllowRegister() {
+        return this.allowRegister;
+    }
+
+    public void setAllowRegister(boolean allowRegister) {
+        this.allowRegister = allowRegister;
+    }
+
 }

@@ -4,14 +4,16 @@ import rights from "../rights";
 
 export class RegisterUtils {
 
-    static createRegisterFromCourse = function (course: Course): Register {
-        const register = new Register();
+    static createRegisterFromCourse = (course: Course): Register => {
+        if (!course.allowRegister) {
+            return;
+        }
+        const register: Register = new Register();
+        register.course_id = course.id;
         if (course.registerId) {
             register.id = course.registerId;
-            register.course_id = course.id;
             register.splitSlot = course.splitSlot;
         } else {
-            register.course_id = course.id;
             register.structure_id = course.structureId;
             register.start_date = course.startDate;
             register.end_date = course.endDate;
@@ -24,9 +26,9 @@ export class RegisterUtils {
         }
 
         return register;
-    };
+    }
 
-    static isAbsenceDisabled = function (student: RegisterStudent, register: Register): boolean {
+    static isAbsenceDisabled = (student: RegisterStudent, register: Register): boolean => {
         if (student.absence !== undefined && student.absence.counsellor_input) {
             return !model.me.hasWorkflow(rights.workflow.managePresences);
         }
@@ -36,9 +38,9 @@ export class RegisterUtils {
             }
         }
         return false;
-    };
+    }
 
-    static initCourseToFilter = function (): Course {
+    static initCourseToFilter = (): Course => {
         return {
             classes: [],
             dayOfWeek: 0,
@@ -53,7 +55,8 @@ export class RegisterUtils {
             subjectId: "",
             subjectName: "",
             teachers: [],
-            isOpenedByPersonnel: false
-        }
+            isOpenedByPersonnel: false,
+            allowRegister: true
+        };
     }
 }

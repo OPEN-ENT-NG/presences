@@ -149,9 +149,11 @@ public class DefaultCourseService extends DBService implements CourseService {
                             .distinct()
                             .collect(Collectors.toList());
 
-                    Future<JsonArray> teachersFuture = courseHelper.formatCourseTeachersAndSubjects(courses);
+                    Future<JsonArray> teachersFuture = courseHelper.formatCourseTeachersSubjectsAndTags(courses,
+                            structureId);
                     Promise<JsonArray> slotsFuture = Promise.promise();
                     Promise<JsonArray> registerEventFuture = Promise.promise();
+
 
                     CompositeFuture.all(teachersFuture, slotsFuture.future(), registerEventFuture.future())
                             .onFailure(fail -> promise.fail(fail.getMessage()))
@@ -215,7 +217,8 @@ public class DefaultCourseService extends DBService implements CourseService {
                                         } else {
                                             JsonArray courses = courseRes.right().getValue();
 
-                                            Future<JsonArray> teachersFuture = courseHelper.formatCourseTeachersAndSubjects(courses);
+                                            Future<JsonArray> teachersFuture = courseHelper.formatCourseTeachersSubjectsAndTags(courses,
+                                                    structureId);
                                             Promise<JsonArray> slotsFuture = Promise.promise();
 
                                             CompositeFuture.all(teachersFuture, slotsFuture.future())

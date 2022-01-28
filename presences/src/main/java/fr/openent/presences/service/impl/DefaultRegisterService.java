@@ -1008,10 +1008,10 @@ public class DefaultRegisterService extends DBService implements RegisterService
                 promise.fail(res.left().getValue());
             } else {
                 JsonArray courses = res.right().getValue();
-                Future<JsonArray> teachersFuture = courseHelper.formatCourseTeachersAndSubjects(courses);
+                Future<JsonArray> teachersSubjectsTagsFuture = courseHelper.formatCourseTeachersSubjectsAndTags(courses, structureId);
                 Promise<JsonArray> slotsFuture = Promise.promise();
 
-                CompositeFuture.all(teachersFuture, slotsFuture.future())
+                CompositeFuture.all(teachersSubjectsTagsFuture, slotsFuture.future())
                         .onFailure(fail -> promise.fail(fail.getCause().getMessage()))
                         .onSuccess(ar -> {
                             List<Slot> slots = SlotHelper.getSlotListFromJsonArray(slotsFuture.future().result(),
