@@ -105,6 +105,8 @@ public class Field {
     public static final String INCIDENT = "incident";
     public static final String IS_PERIODIC = "is_periodic";
     public static final String IS_RECURRENT = "is_recurrent";
+    public static final String ALLOW_REGISTER = "allow_register";
+    public static final String ALLOWREGISTER = "allowRegister";
     public static final String LASTUSER = "lastUser";
     public static final String LOCKED = "locked";
     public static final String MANUAL = "manual";
@@ -120,6 +122,7 @@ public class Field {
     public static final String SUBJECTNAME = "subjectName";
     public static final String TIMESTAMP = "timestamp";
     public static final String UPDATED = "updated";
+    public static final String TAGIDS = "tagIds";
 
     // Alert
     public static final String TYPE = "type";

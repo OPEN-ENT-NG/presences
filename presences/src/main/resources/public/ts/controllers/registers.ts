@@ -472,7 +472,7 @@ export const registersController = ng.controller('RegistersController',
                     notifyCourse(course);
                     return;
                 }
-                if (vm.isFuturCourse(course)) return;
+                if (vm.isFuturCourse(course) || !course.allowRegister) return;
                 vm.register = RegisterUtils.createRegisterFromCourse(course);
                 if (!course.registerId) {
                     try {

@@ -20,8 +20,8 @@
         <div class="card cell" ng-repeat="course in vm.dayCourse.all|orderBy:'timestamp'"
              data-ng-click="vm.openRegister(course, $event)"
              ng-class="{
-                 active: vm.isCurrentCourse(course),
-                 disabled: vm.isFutureCourse(course)
+                 active: (vm.isCurrentCourse(course) && course.allowRegister),
+                 disabled: (vm.isFutureCourse(course) || !course.allowRegister)
              }">
             <div ng-if="hasSearchRight()" class="row has-search-right">
                 <div class="row hour">

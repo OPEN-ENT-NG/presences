@@ -22,5 +22,13 @@ module.exports = {
     "coverageReporters": [
         "text",
         "cobertura"
-    ]
+    ],
+    "moduleNameMapper": {
+        "^@common(.*)$": "<rootDir>/common/src/main/resources/ts$1",
+        "^@incidents(.*)$": "<rootDir>/incidents/src/main/resources/public/ts$1",
+        "^@presences(.*)$": "<rootDir>/presences/src/main/resources/public/ts$1",
+        "^@massmailing(.*)$": "<rootDir>/massmailing/src/main/resources/public/ts$1",
+        "^@statistics(.*)$": "<rootDir>/statistics-presences/src/main/resources/public/ts$1"
+
+    }
 };

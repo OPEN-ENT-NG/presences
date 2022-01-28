@@ -163,7 +163,7 @@ public class CreateDailyPresenceWorker extends BusModBase implements Handler<Mes
             for (Course course : courses) {
                 JsonArray teachers = course.getTeachers();
                 Integer registerId = course.getRegisterId();
-                if (registerId != null) {
+                if (registerId != null || !course.getAllowRegister()) {
                     continue;
                 }
 

@@ -92,14 +92,15 @@ export const sideRegisterController = ng.controller('SideRegisterController', ['
             $scope.safeApply();
         };
 
-        async function loadRegister() {
+        const loadRegister = async (): Promise<void> => {
             if (vm.courses.all.length > 0) {
-                let currentCourse = vm.courses.all.find(course => CourseUtils.isCurrentCourse(course));
+                let currentCourse: Course = vm.courses.all.find(
+                    (course: Course): boolean => CourseUtils.isCurrentCourse(course) && course.allowRegister);
                 if (currentCourse) {
                     vm.register = RegisterUtils.createRegisterFromCourse(currentCourse);
                     /* create or sync register on current course*/
                     if (!currentCourse.registerId) {
-                        vm.register.create().then(async () => {
+                        vm.register.create().then(async (): Promise<void> => {
                             await vm.register.sync();
                             currentCourse.registerId = vm.register.id;
                             $scope.$emit(COURSE_EVENTS.SEND_COURSE, currentCourse);
@@ -111,7 +112,7 @@ export const sideRegisterController = ng.controller('SideRegisterController', ['
                     }
                 }
             }
-        }
+        };
 
         vm.isEmpty = function (): boolean {
             return vm.register === undefined || vm.register.id === undefined;

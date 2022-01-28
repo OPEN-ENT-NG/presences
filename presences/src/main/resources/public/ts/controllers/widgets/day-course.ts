@@ -6,7 +6,7 @@ import http from 'axios';
 import rights from '../../rights';
 import {Setting, settingService} from '../../services';
 
-interface ViewModel {
+export interface DayCourseVm {
     $onInit(): any;
 
     $onDestroy(): any;
@@ -36,7 +36,7 @@ interface ViewModel {
 declare let window: any;
 
 export const dayCourse = ng.controller('DayCourse', ['$scope', function ($scope) {
-    const vm: ViewModel = this;
+    const vm: DayCourseVm = this;
 
     vm.$onInit = async (): Promise<void> => {
         vm.dayCourse = new Courses();
@@ -81,7 +81,7 @@ export const dayCourse = ng.controller('DayCourse', ['$scope', function ($scope)
             await notifyCourse(course);
             return;
         }
-        if (vm.isFutureCourse(course)) return;
+        if (vm.isFutureCourse(course) || !course.allowRegister) return;
         vm.register = RegisterUtils.createRegisterFromCourse(course);
         if (!course.registerId) {
             try {
