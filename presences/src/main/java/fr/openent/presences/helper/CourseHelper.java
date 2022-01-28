@@ -204,6 +204,26 @@ public class CourseHelper {
         });
     }
 
+    public Future<JsonArray> getCourseTags(String structureId) {
+
+        Promise<JsonArray> promise = Promise.promise();
+
+        JsonObject action = new JsonObject()
+                .put("action", "get-course-tags")
+                .put(Field.STRUCTUREID, structureId);
+
+        eb.request("fr.cgi.edt", action, tags -> {
+            if (tags.failed() || tags.result() == null || "error".equals(((JsonObject) tags.result().body()).getString("status"))) {
+                String message = String.format("[Presences@%s::getCourseTags] Failed to retrieve courses tags : %s",
+                        this.getClass().getSimpleName(), tags.cause().getMessage());
+                promise.fail(message);
+            } else {
+                promise.complete(((JsonObject) tags.result().body()).getJsonArray("result"));
+            }
+        });
+        return promise.future();
+    }
+
     /**
      * Format course fetched (must provide teacher data)
      *
@@ -285,11 +305,11 @@ public class CourseHelper {
     }
 
     /**
-     * Add teacher and subject objects to courses in {@link JsonArray}
+     * Add teacher, subject objects and tag allowRegister value to courses in {@link JsonArray}
      * @param   courses courses {@link JsonArray}
      * @return  {@link Future} of {@link List<JsonArray>}
      */
-    public Future<JsonArray> formatCourseTeachersAndSubjects(JsonArray courses) {
+    public Future<JsonArray> formatCourseTeachersSubjectsAndTags(JsonArray courses, String structureId) {
         Promise<JsonArray> promise = Promise.promise();
         JsonArray teachersIds = new JsonArray();
         CourseHelper.setTeachersCourses(courses, teachersIds);
@@ -304,8 +324,38 @@ public class CourseHelper {
             JsonObject teacherMap = MapHelper.transformToMap(teachers, Field.ID);
 
             formatCourse(courses, teacherMap);
-            promise.complete(courses);
+
+            formatCourseTags(courses, structureId)
+                    .onFailure(fail -> promise.fail(fail.getMessage()))
+                    .onSuccess(promise::complete);
         });
+        return promise.future();
+    }
+
+    @SuppressWarnings("unchecked")
+    public Future<JsonArray> formatCourseTags(JsonArray courses, String structureId)  {
+        Promise<JsonArray> promise = Promise.promise();
+
+        getCourseTags(structureId)
+                .onFailure(fail -> {
+                    LOGGER.error(fail.getMessage());
+                    promise.complete(courses);
+                })
+                .onSuccess(tags -> {
+                    for (int i = 0; i < courses.size(); i++) {
+                        JsonObject course = courses.getJsonObject(i);
+
+                        boolean allowRegister =
+                                !((List<JsonObject>) tags.getList()).stream()
+                                        .filter(t -> course.getJsonArray(Field.TAGIDS, new JsonArray()).contains(t.getInteger(Field.ID)))
+                                        .map(t -> t.getBoolean(Field.ALLOW_REGISTER, true))
+                                        .collect(Collectors.toList()).contains(false);
+
+                        course.put(Field.ALLOWREGISTER, allowRegister);
+                    }
+
+                    promise.complete(courses);
+                });
         return promise.future();
     }
 

@@ -94,11 +94,13 @@
         <h2 class="capitalized">[[::vm.formatDayDate(date)]]</h2>
         <div class="card cell" ng-repeat="course in vm.courses.map.get(date)"
              data-ng-click="vm.openRegister(course, $event)"
-             ng-class="{active: vm.isCurrentRegister(course), disabled: vm.isFuturCourse(course)}">
+             ng-class="{active: (vm.isCurrentRegister(course)) && course.allowRegister,
+             disabled: (vm.isFuturCourse(course)) || !course.allowRegister}">
             <div ng-if="hasSearchRight()" class="row has-search-right">
                 <div class="row hour">
                     <span>[[::vm.formatHour(course.startDate)]] - [[::vm.formatHour(course.endDate)]]</span>
-                    <i class="right-magnet notify-bell" ng-if="vm.canNotify(course.startDate, course.register_state_id)"
+                    <i class="right-magnet notify-bell"
+                       ng-if="vm.canNotify(course.startDate, course.register_state_id) && course.allowRegister"
                        ng-class="{active: course.notified}">&nbsp;</i>
                 </div>
                 <div class="row teachers">
