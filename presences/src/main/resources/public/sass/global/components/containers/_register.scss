@@ -66,6 +66,15 @@ $absence-button-width: 20px;
         }
       }
     }
+
+    .valid-content {
+      display: flex !important;
+      align-items: flex-end;
+
+      .check-circle::before {
+        color: $presences-green;
+      }
+    }
   }
 
   .student {

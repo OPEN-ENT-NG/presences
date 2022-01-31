@@ -153,19 +153,17 @@ export class Register extends LoadingCollection {
     }
 
     async setStatus(state_id: number): Promise<void> {
-        registerService.setStatus(this.id, state_id)
+        const state_idOld = this.state_id;
+        this.state_id = state_id;
+        registerService.setStatus(this.id, this.state_id)
             .then((response: AxiosResponse) => {
                 // Prevent displaying toasts when selecting students in register.
-                if (state_id !== RegisterStatus.DONE) {
-                    return;
-                }
-                if (response.status === 200 || response.status === 201 || response.status === 204) {
+                if (state_id === RegisterStatus.DONE) {
                     toasts.confirm('presences.register.validation.success');
-                } else {
-                    toasts.warning('presences.register.validation.error');
                 }
             })
             .catch((_: AxiosError) => {
+                this.state_id = state_idOld;
                 toasts.warning('presences.register.validation.error');
             });
     }
