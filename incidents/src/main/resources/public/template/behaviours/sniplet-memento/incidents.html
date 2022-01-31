@@ -83,8 +83,11 @@
                             <!-- link -->
                             <div class="flex-col col__3 padding-lg">
                                 <label>
-                                    <i class="open-in-new"
-                                       data-ng-click="vm.redirectTo(mementoIncident)"></i>
+                                    <!-- ng-href only work to redirect to other page -->
+                                    <a ng-href="[[vm.redirectTo(mementoIncident)]]">
+                                        <!-- redirect in click only work to the same page (it's like refresh) -->
+                                        <i class="open-in-new" data-ng-click="vm.refreshPage(mementoIncident)"></i>
+                                    </a>
                                 </label>
                             </div>
                         </div>

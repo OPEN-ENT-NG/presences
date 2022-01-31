@@ -40,7 +40,9 @@ interface IViewModel {
 
     setIPunishmentRequest(): void;
 
-    redirectTo(mementoIncident: IMementoIncident): void;
+    redirectTo(mementoIncident: IMementoIncident): string;
+
+    refreshPage(mementoIncident: IMementoIncident): void;
 
     isPunishment(type: string): boolean;
 
@@ -140,24 +142,29 @@ const vm: IViewModel = {
         moment((<Incident>mementoItem.item).date).format(DateUtils.FORMAT["DAY-MONTH-YEAR"]) :
         PunishmentsUtils.getPunishmentDate(<IPunishment>mementoItem.item),
 
-    redirectTo(mementoIncident: IMementoIncident): void {
+    redirectTo(mementoIncident: IMementoIncident): string {
         if (mementoIncident.type === EVENT_TYPES.INCIDENT) {
             let protagonists: ProtagonistForm[] = (<Incident>mementoIncident.item).protagonists;
             const protagonist: ProtagonistForm = protagonists.find(student => student.user_id === vm.student);
-            window.location.href = `/incidents#/incidents?mementoStudentId=${protagonist.student.idEleve}&mementoStudentName=${protagonist.student.displayName}`;
+            return `/incidents#/incidents?mementoStudentId=${protagonist.student.idEleve}&mementoStudentName=${protagonist.student.displayName}`;
         } else if (mementoIncident.type === (EVENT_TYPES.PUNISHMENT || EVENT_TYPES.SANCTION)) {
             const student: User = {
                 displayName: (<IPunishment>mementoIncident.item).student.name,
                 id: (<IPunishment>mementoIncident.item).student.id
             };
-            window.location.href = `/incidents#/punishment/sanction?mementoStudentId=${student.id}&mementoStudentName=${student.displayName}`;
+            return `/incidents#/punishment/sanction?mementoStudentId=${student.id}&mementoStudentName=${student.displayName}`;
         }
+    },
+
+    refreshPage(mementoIncident: IMementoIncident): void {
+        window.location.href = vm.redirectTo(mementoIncident);
         if (window.location.href === `/incidents#/incidents` || `/incidents#/punishment/sanction`) {
             window.location.reload();
         }
         window.memento.close();
         vm.apply();
     },
+
 
     isPunishment(type: string): boolean {
         return type === (EVENT_TYPES.PUNISHMENT || EVENT_TYPES.SANCTION);
