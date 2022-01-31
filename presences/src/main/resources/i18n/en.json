@@ -302,6 +302,7 @@
   "presences.register.validation": "Valider appel",
   "presences.register.validation.error": "Une erreur est survenue lors de la validation de l'appel. Merci de réessayer plus tard",
   "presences.register.validation.success": "Appel validé avec succès",
+  "presences.register.validated": "Validated register",
   "presences.registers.attenders": "Présents",
   "presences.registers.empty": "Pas d'appel oublié pour le moment",
   "presences.registers.group.empty": "Le groupe est vide, pas d'appel nécessaire",

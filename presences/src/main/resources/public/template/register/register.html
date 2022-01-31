@@ -44,7 +44,7 @@
             <div class="row subject ellipsis">[[::course.subjectName]]</div>
         </div>
     </div>
-    <div class="row settings" ng-if="vm.register">
+    <div class="align-end flex-row settings" ng-if="vm.register">
         <div class="cell view-settings" ng-if="vm.register.groupMap !== undefined">
             <i class="show-list"
                ng-click="template.open('register', 'register/list-view')"
@@ -68,12 +68,16 @@
                        widget-forgotten-notebook="true">
         </events-legend>
 
-        <!-- Register validation top button -->
-        <button class="right-magnet"
-                data-ng-click="vm.validRegister()"
-                ng-show="vm.register && !vm.register.loading">
-            <i18n>presences.register.validation</i18n>
-        </button>
+        <div ng-show="vm.register && !vm.register.loading" class="valid-content flex-column flex-one right-magnet">
+            <div ng-show="vm.register.state_id == 3">
+                <p class="no-margin"><i18n>presences.register.validated</i18n><i class="check-circle"></i></p>
+            </div>
+
+            <!-- Register validation top button -->
+            <button data-ng-click="vm.validRegister()">
+                <i18n>presences.register.validation</i18n>
+            </button>
+        </div>
     </div>
     <div class="row vertical-spacing-four" role="grid"
          ng-show="vm.register && !vm.register.loading">
