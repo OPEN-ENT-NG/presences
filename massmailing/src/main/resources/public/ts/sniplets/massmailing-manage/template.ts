@@ -1,5 +1,6 @@
 import {angular, idiom as lang, toasts} from 'entcore';
 import {settingsService, Template} from '../../services/';
+import {MailTemplateCategory} from "@common/core/enum/mail-template-category";
 
 console.log('massmailing');
 
@@ -16,7 +17,8 @@ interface ViewModel {
     deletion: {
         show: boolean,
         template: Template
-    }
+    },
+    mailCategory: any,
 
     syncTemplates(type: 'MAIL' | 'SMS' | 'PDF'): void
 
@@ -51,17 +53,20 @@ const vm: ViewModel = {
     smsMaxLength: 160,
     pdf: {
         name: '',
-        content: ''
+        content: '',
+        category: MailTemplateCategory.ALL
     },
     pdfs: [],
     mail: {
         name: '',
-        content: ''
+        content: '',
+        category: MailTemplateCategory.ALL
     },
     mails: [],
     sms: {
         name: '',
-        content: ''
+        content: '',
+        category: MailTemplateCategory.ALL
     },
     smss: [],
     deletion: {
@@ -69,11 +74,14 @@ const vm: ViewModel = {
         template: {
             name: '',
             content: '',
+            category: MailTemplateCategory.ALL
         }
     },
+    mailCategory: MailTemplateCategory,
+
     syncTemplates: async function (type: 'MAIL' | 'SMS' | 'PDF'): Promise<void> {
         try {
-            vm[`${type.toLowerCase()}s`] = await settingsService.get(type, window.model.vieScolaire.structure.id);
+            vm[`${type.toLowerCase()}s`] = await settingsService.get(type, window.model.vieScolaire.structure.id, "ALL");
             mailTemplateForm.that.$apply();
         } catch (e) {
             throw e;
@@ -94,6 +102,7 @@ const vm: ViewModel = {
                 if (template.id === _template.id) {
                     _template.name = template.name;
                     _template.content = template.content;
+                    _template.category = template.category;
                 }
             });
         } catch (e) {
@@ -142,7 +151,7 @@ const vm: ViewModel = {
             vm.resetTemplate(type);
         }
     },
-    openTemplate: function ({id, structure_id, type, name, content}: Template) {
+    openTemplate: function ({id, structure_id, type, name, content, category}: Template) {
         // Fix <editor> issues for interacting with ngModel from editor
         // we get its element and use "value" data instead of our View Model
         if (type === 'MAIL') {
@@ -150,7 +159,7 @@ const vm: ViewModel = {
         } else if (type === 'PDF') {
             angular.element(document.getElementById("editor-pdf")).scope().valuePDF = content;
         }
-        vm[type.toLowerCase()] = {id, structure_id, type, name, content};
+        vm[type.toLowerCase()] = {id, structure_id, type, name, content, category};
     },
     copyCode: function (code: string, codeTooltip: string) {
         let copyText = document.getElementById(code);
@@ -194,9 +203,9 @@ export const mailTemplateForm = {
         setHandler: function (): void {
             this.$on('reload', this.load);
             this.$on('$destroy', () => {
-                vm.pdf = {name: '', content: ''};
-                vm.mail = {name: '', content: ''};
-                vm.sms = {name: '', content: ''}
+                vm.pdf = {name: '', content: '', category: MailTemplateCategory.ALL};
+                vm.mail = {name: '', content: '', category: MailTemplateCategory.ALL};
+                vm.sms = {name: '', content: '', category: MailTemplateCategory.ALL}
             });
             this.$watch(() => window.model.vieScolaire.structure, this.load);
             this.$watch(() => vm.sms.content, (newVal, oldVal) => {

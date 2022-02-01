@@ -15,6 +15,7 @@ import {IPunishmentService, IPunishmentsTypeService} from "@incidents/services";
 import {IPunishmentType} from "@incidents/models/PunishmentType";
 import {EVENT_TYPES} from "@common/model";
 import {MassmailingFilters} from "@massmailing/model/Preferences";
+import {MailTemplateCategory} from "@common/core/enum/mail-template-category";
 
 interface Filter {
     start_date: Date;
@@ -106,7 +107,7 @@ interface ViewModel {
 
     openForm(): void;
 
-    validForm(): void;
+    validForm(): Promise<void>;
 
     getKeys(object): string[];
 
@@ -209,7 +210,7 @@ export const homeController = ng.controller('HomeController', ['$scope', 'route'
             vm.formFilter.selected.groups.forEach((obj) => obj.toString = () => obj.name);
         };
 
-        vm.validForm = async function () {
+        vm.validForm = async function (): Promise<void> {
             vm.formFilter.punishments = vm.punishmentsTypes.filter((punishmentType: IPunishmentType) => punishmentType.isSelected);
             const {start_date, end_date} = vm.filter;
             vm.filter = {...vm.formFilter, start_date, end_date};
@@ -596,7 +597,25 @@ export const homeController = ng.controller('HomeController', ['$scope', 'route'
                 const students = [], groups = [];
                 vm.filter.selected.students.forEach(({id}) => students.push(id));
                 vm.filter.selected.groups.forEach(({id}) => groups.push(id));
-                const settings: Promise<any> = SettingsService.get(type, window.structure.id);
+                let category: string = "";
+                if (vm.filter.status["LATENESS"]) {
+                    category += MailTemplateCategory.LATENESS + ",";
+                }
+                if (vm.filter.status["PUNISHMENT"] || vm.filter.status["SANCTION"]) {
+                    category += MailTemplateCategory.PUNISHMENT_SANCTION + ",";
+                }
+                if (vm.filter.status["NO_REASON"] ||
+                    vm.filter.status["REGULARIZED"] ||
+                    vm.filter.status["UNREGULARIZED"]) {
+                    category += MailTemplateCategory.ABSENCES + ",";
+                }
+                if (category.length == 0) {
+                    category = MailTemplateCategory.ALL;
+                } else {
+                    category = category.slice(0, -1);
+                }
+
+                const settings: Promise<any> = SettingsService.get(type, window.structure.id, category);
                 const prefetch: Promise<Massmailing> = MassmailingService.prefetch(
                     type, window.structure.id, massmailedParameter(), reasons, punishmentTypes, sanctionsTypes,
                     vm.filter.start_at, vm.filter.start_date, vm.filter.end_date, groups, students, types, vm.filter.noReasons
