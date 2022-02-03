@@ -1,6 +1,9 @@
 {
   "massmailing.title": "Massmailer",
   "massmailing.pdf.generated": "Pdf generated",
-
+  "massmailing.template.form.category.ALL": "All",
+  "massmailing.template.form.category.PUNISHMENT_SANCTION": "Punishment/Sanction",
+  "massmailing.template.form.category.LATENESS": "Lateness",
+  "massmailing.template.form.category.ABSENCES": "Absences",
   "presences.in.structure": "Presence in stucture"
 }
