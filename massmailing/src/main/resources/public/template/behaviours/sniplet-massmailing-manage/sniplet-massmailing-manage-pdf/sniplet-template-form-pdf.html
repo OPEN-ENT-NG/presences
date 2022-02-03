@@ -8,10 +8,14 @@
             <i18n>massmailing.template.form.mail.description</i18n>
         </div>
         <div class="sniplet-input-form">
-            <div class="cell search-input">
+            <div class="cell search-input right-spacing">
                 <input type="text" data-ng-model="vm.pdf.name" class="cell ng-pristine ng-touched ng-valid"
                        i18n-placeholder="massmailing.template.form.pdf.name.placeholder">
             </div>
+            <select class="sniplet-select-width no-margin"
+                    data-ng-model="vm.pdf.category"
+                    ng-options="lang.translate('massmailing.template.form.category.'+mailCategory) for mailCategory in vm.mailCategory">
+            </select>
         </div>
         <div class="massmailing margin-top-lg">
 

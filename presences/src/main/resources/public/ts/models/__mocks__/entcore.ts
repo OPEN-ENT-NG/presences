@@ -18,8 +18,8 @@ interface IService {
 }
 
 const controllers: Array<IController> = [];
-const directives: Array<IController> = [];
-const services: Array<IController> = [];
+const directives: Array<IDirective> = [];
+const services: Array<IService> = [];
 
 export const ng = {
     service: jest.fn((name: string, contents: any): void => {
@@ -55,5 +55,5 @@ export const model = {
 };
 
 export const idiom = {
-    translate: jest.fn(() => "")
+    translate: jest.fn((key : string) => key)
 };

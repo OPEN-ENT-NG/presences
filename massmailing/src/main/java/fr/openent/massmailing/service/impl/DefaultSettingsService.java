@@ -10,37 +10,51 @@ import io.vertx.core.json.JsonObject;
 import org.entcore.common.sql.Sql;
 import org.entcore.common.sql.SqlResult;
 
+import java.util.List;
+
 public class DefaultSettingsService implements SettingsService {
 
-    private String returningValues = "id, name, content, type, structure_id";
+    private String returningValues = "id, name, content, type, structure_id, category";
 
     @Override
-    public void getTemplates(MailingType type, String structure, Handler<Either<String, JsonArray>> handler) {
-        String query = "SELECT id, name, content, type, structure_id FROM " + Massmailing.dbSchema + ".template WHERE structure_id = ? AND type = ?;";
+    public void getTemplates(MailingType type, String structure, List<String> listCategory, Handler<Either<String, JsonArray>> handler) {
+        final StringBuilder queryBuilder = new StringBuilder("SELECT id, name, content, type, structure_id, category FROM " + Massmailing.dbSchema + ".template WHERE structure_id = ? AND type = ?");
         JsonArray params = new JsonArray()
                 .add(structure)
                 .add(type.toString());
+        if (!listCategory.contains("ALL")) {
+            queryBuilder.append("AND ( 0 = 1");
+            listCategory.stream().forEach(category -> {
+                queryBuilder.append(" OR category = ?");
+                params.add(category);
+            });
+            queryBuilder.append(" OR category = ?)");
+            params.add("ALL");
+        }
+        queryBuilder.append(";");
 
-        Sql.getInstance().prepared(query, params, SqlResult.validResultHandler(handler));
+        Sql.getInstance().prepared(queryBuilder.toString(), params, SqlResult.validResultHandler(handler));
     }
 
     @Override
     public void createTemplate(JsonObject template, String userId, Handler<Either<String, JsonObject>> handler) {
         String type = template.getString("type");
         String content = template.getString("content");
+        String category = template.getString("category");
 
-        if(!isRespectedSmsLengthContent(type, content, handler)) {
+        if (!isRespectedSmsLengthContent(type, content, handler)) {
             return;
         }
 
-        String query = "INSERT INTO " + Massmailing.dbSchema + ".template (structure_id, name, content, type, owner) " +
-                "VALUES (?, ?, ?, ?, ?) RETURNING " + returningValues;
+        String query = "INSERT INTO " + Massmailing.dbSchema + ".template (structure_id, name, content, type, owner, category) " +
+                "VALUES (?, ?, ?, ?, ?, ?) RETURNING " + returningValues;
         JsonArray params = new JsonArray()
                 .add(template.getString("structure_id"))
                 .add(template.getString("name"))
                 .add(content)
                 .add(type)
-                .add(userId);
+                .add(userId)
+                .add(category);
 
         Sql.getInstance().prepared(query, params, SqlResult.validUniqueResultHandler(handler));
     }
@@ -49,13 +63,14 @@ public class DefaultSettingsService implements SettingsService {
     public void updateTemplate(Integer id, JsonObject template, Handler<Either<String, JsonObject>> handler) {
         String type = template.getString("type");
         String content = template.getString("content");
+        String category = template.getString("category");
 
-        if(!isRespectedSmsLengthContent(type, content, handler)) {
+        if (!isRespectedSmsLengthContent(type, content, handler)) {
             return;
         }
 
         String query = "UPDATE " + Massmailing.dbSchema + ".template " +
-                "SET structure_id = ?, name = ?, content = ?, type = ? " +
+                "SET structure_id = ?, name = ?, content = ?, type = ?, category = ? " +
                 "WHERE id = ? " +
                 "RETURNING " + returningValues;
 
@@ -64,6 +79,7 @@ public class DefaultSettingsService implements SettingsService {
                 .add(template.getString("name"))
                 .add(content)
                 .add(type)
+                .add(category)
                 .add(id);
 
         Sql.getInstance().prepared(query, params, SqlResult.validUniqueResultHandler(handler));

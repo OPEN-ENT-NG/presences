@@ -2,6 +2,7 @@ package fr.openent.massmailing.controller;
 
 import fr.openent.massmailing.Massmailing;
 import fr.openent.massmailing.actions.Action;
+import fr.openent.massmailing.enums.MailingCategory;
 import fr.openent.massmailing.enums.MailingType;
 import fr.openent.massmailing.security.Manage;
 import fr.openent.massmailing.service.SettingsService;
@@ -16,6 +17,9 @@ import org.entcore.common.controller.ControllerHelper;
 import org.entcore.common.http.filter.ResourceFilter;
 import org.entcore.common.http.filter.Trace;
 import org.entcore.common.user.UserUtils;
+
+import java.util.Arrays;
+import java.util.List;
 
 import static org.entcore.common.http.response.DefaultResponseHandler.arrayResponseHandler;
 import static org.entcore.common.http.response.DefaultResponseHandler.defaultResponseHandler;
@@ -35,6 +39,8 @@ public class SettingsController extends ControllerHelper {
     public void getTemplates(HttpServerRequest request) {
         String mailingType = request.getParam("type");
         String structure = request.getParam("structure");
+        String category = request.getParam("category") == null ? MailingCategory.ALL.name() : request.getParam("category");
+        List<String> listCategory = Arrays.asList(category.split(","));
 
         if (structure == null ||
                 !(MailingType.PDF.toString().equals(mailingType) || MailingType.MAIL.toString().equals(mailingType) || MailingType.SMS.toString().equals(mailingType))) {
@@ -43,7 +49,7 @@ public class SettingsController extends ControllerHelper {
         }
 
         MailingType type = MailingType.valueOf(mailingType);
-        settingsService.getTemplates(type, structure, arrayResponseHandler(request));
+        settingsService.getTemplates(type, structure, listCategory, arrayResponseHandler(request));
     }
 
     @Post("/settings/templates")

@@ -1,21 +1,24 @@
 import {ng} from 'entcore';
 import http from 'axios';
+import {MailTemplateCategory} from "@common/core/enum/mail-template-category";
 
 export interface Template {
     id?: number
     structure_id?: string
     name: string,
     content: string,
-    type?: 'MAIL' | 'PDF' | 'SMS'
+    type?: 'MAIL' | 'PDF' | 'SMS',
+    category: MailTemplateCategory
 }
 
 export interface SettingsService {
     /**
      * Retrieve templates based on given type and structure identifier
      * @param type template type. Should be MAIL, PDF or SMS
-     * @param structure structure identifie
+     * @param structure structure identifier
+     * @param category category identifier
      */
-    get(type: 'MAIL' | 'PDF' | 'SMS', structure: string): Promise<any>;
+    get(type: 'MAIL' | 'PDF' | 'SMS', structure: string, category: string): Promise<any>;
 
     /**
      * Create given template
@@ -37,9 +40,9 @@ export interface SettingsService {
 }
 
 export const settingsService: SettingsService = {
-    get: async function (type: "MAIL" | "PDF" | "SMS", structure: string): Promise<any> {
+    get: async function (type: "MAIL" | "PDF" | "SMS", structure: string, category: string): Promise<any> {
         try {
-            const {data} = await http.get(`/massmailing/settings/templates/${type}?structure=${structure}`);
+            const {data} = await http.get(`/massmailing/settings/templates/${type}?structure=${structure}&category=${category}`);
             return data;
         } catch (e) {
             throw e;
