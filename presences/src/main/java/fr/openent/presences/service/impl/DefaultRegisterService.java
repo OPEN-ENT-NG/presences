@@ -69,14 +69,15 @@ public class DefaultRegisterService extends DBService implements RegisterService
                      List<String> teacherIds, List<String> groupIds, boolean forgottenFilter,
                      Boolean isWithTeacherFilter, String limit, String offset, Handler<Either<String, JsonArray>> handler) {
         String query = "SELECT id, start_date, end_date, course_id, state_id, notified, split_slot, " +
-                "CASE WHEN (SELECT COUNT(id) FROM presences.register rr " +
-                "LEFT JOIN presences.rel_teacher_register t ON rr.id = t.register_id " +
+                "CASE WHEN (SELECT COUNT(id) FROM " + Presences.dbSchema +".register rr " +
+                "LEFT JOIN " + Presences.dbSchema +".rel_teacher_register t ON rr.id = t.register_id " +
                 "WHERE rr.id = register.id AND (t.teacher_id IS NULL OR rr.owner = teacher_id)) > 0 " +
                 "THEN false ELSE true END AS is_opened_by_personnel " +
-                "FROM " + Presences.dbSchema + ".register AS register ";
+                "FROM " + Presences.dbSchema + ".register AS register " +
+                "INNER JOIN " + Presences.dbSchema + ".rel_teacher_register rtr ON (rtr.register_id = register.id) ";
 
         if (groupIds != null && !groupIds.isEmpty()) {
-            query += "INNER JOIN presences.rel_group_register AS rg ON (register.id = rg.register_id) ";
+            query += "INNER JOIN " + Presences.dbSchema + ".rel_group_register AS rg ON (register.id = rg.register_id) ";
         }
 
         query += "WHERE register.structure_id = ? " +
@@ -89,7 +90,7 @@ public class DefaultRegisterService extends DBService implements RegisterService
                 .add(end + " " + EventQueryHelper.DEFAULT_END_TIME);
 
         if (teacherIds != null && !teacherIds.isEmpty()) {
-            query += " AND register.personnel_id IN " + Sql.listPrepared(teacherIds.toArray());
+            query += " AND rtr.teacher_id IN " + Sql.listPrepared(teacherIds.toArray());
             params.addAll(new JsonArray(teacherIds));
         }
 
