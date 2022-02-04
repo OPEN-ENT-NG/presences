@@ -1,5 +1,5 @@
 import {idiom as lang, moment, toasts} from 'entcore';
-import {IPunishment, IPunishmentBody, IStructureSlot, Student} from "../models";
+import {IPDetentionField, IPunishment, IPunishmentBody, IStructureSlot, Student} from "../models";
 import {SNIPLET_FORM_EMIT_PUNISHMENT_EVENTS} from '@common/model'
 import {IAngularEvent} from "angular";
 import {StudentsSearch} from "@common/utils";
@@ -41,6 +41,8 @@ interface ViewModel {
 
     isFormValid(): boolean;
 
+    isNotArrayOfDetentionOrArrayNotEmpty(): boolean;
+
     preparePunishmentForm(): void;
 
     initPunishmentEdit(punishment: IPunishment): void;
@@ -52,6 +54,10 @@ interface ViewModel {
     update(): Promise<void>;
 
     delete(): Promise<void>;
+
+    deleteAll(): Promise<void>;
+
+    validDeleteResponse(response: AxiosResponse): void
 
     getStudentsFromView(): void;
 
@@ -121,8 +127,13 @@ const vm: ViewModel = {
     isFormValid(): boolean {
         return vm.form.type_id != null &&
             vm.form.fields != null &&
+            vm.isNotArrayOfDetentionOrArrayNotEmpty() &&
             (vm.studentsSearch.getSelectedStudents().map(student => student["id"]).length > 0 ||
                 vm.punishment.student != undefined);
+    },
+
+    isNotArrayOfDetentionOrArrayNotEmpty(): boolean {
+        return (!Array.isArray(vm.form.fields) || (<Array<IPDetentionField>>vm.form.fields).length > 0)
     },
 
     preparePunishmentForm: (): void => {
@@ -142,6 +153,7 @@ const vm: ViewModel = {
         /* when click on card to edit presence */
         vm.punishment = {
             id: punishment.id,
+            grouped_punishment_id: punishment.grouped_punishment_id,
             structure_id: punishment.structure_id,
             type: punishment.type,
             fields: punishment.fields,
@@ -157,6 +169,7 @@ const vm: ViewModel = {
             } as Student,
         };
         vm.form.id = punishment.id;
+        vm.form.grouped_punishment_id = punishment.grouped_punishment_id;
         vm.form.structure_id = punishment.structure_id;
         vm.form.description = punishment.description;
         vm.form.fields = punishment.fields;
@@ -184,7 +197,6 @@ const vm: ViewModel = {
         } else {
             toasts.warning(response.data.toString());
         }
-        punishmentForm.that.$emit(SNIPLET_FORM_EMIT_PUNISHMENT_EVENTS.CREATION);
         vm.safeApply();
     },
 
@@ -201,20 +213,28 @@ const vm: ViewModel = {
         } else {
             toasts.warning(response.data.toString());
         }
-        punishmentForm.that.$emit(SNIPLET_FORM_EMIT_PUNISHMENT_EVENTS.EDIT);
         vm.safeApply();
     },
 
     async delete(): Promise<void> {
         vm.preparePunishmentForm();
         let response: AxiosResponse = await punishmentService.delete(vm.form.id, window.structure.id);
+        vm.validDeleteResponse(response);
+    },
+
+    async deleteAll(): Promise<void> {
+        vm.preparePunishmentForm();
+        let response: AxiosResponse = await punishmentService.deleteGroupedPunishment(vm.form.grouped_punishment_id, window.structure.id);
+        vm.validDeleteResponse(response);
+    },
+
+    validDeleteResponse(response: AxiosResponse) {
         if (response.status == 200 || response.status == 201) {
             vm.closePunishmentLightbox();
             toasts.confirm(lang.translate('incidents.punishment.delete.succeed'));
         } else {
             toasts.warning(response.data.toString());
         }
-        punishmentForm.that.$emit(SNIPLET_FORM_EMIT_PUNISHMENT_EVENTS.DELETE);
         vm.safeApply();
     },
 
@@ -222,6 +242,7 @@ const vm: ViewModel = {
         vm.form = {} as IPunishmentBody;
         vm.punishment = {} as IPunishment;
         vm.createPunishmentLightBox = false;
+        punishmentForm.that.$emit(SNIPLET_FORM_EMIT_PUNISHMENT_EVENTS.CLOSE);
     },
 
     getStudentsFromView: (): void => {

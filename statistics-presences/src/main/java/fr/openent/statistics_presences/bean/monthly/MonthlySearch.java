@@ -1,5 +1,6 @@
 package fr.openent.statistics_presences.bean.monthly;
 
+import fr.openent.presences.core.constants.Field;
 import fr.openent.statistics_presences.bean.Audience;
 import fr.openent.statistics_presences.bean.User;
 import fr.openent.statistics_presences.indicator.impl.Monthly;
@@ -15,6 +16,7 @@ import java.util.stream.Collectors;
 public class MonthlySearch {
     private static final String HALF_DAY = "HALF_DAY";
     private static final String DAY = "DAY";
+    private static final String COUNTID = "countId";
     private final StatisticsFilter filter;
     List<String> totalAbsenceTypes = Arrays.asList(EventType.NO_REASON.name(), EventType.UNREGULARIZED.name(), EventType.REGULARIZED.name());
     private List<Audience> audiences = new ArrayList<>();
@@ -104,7 +106,9 @@ public class MonthlySearch {
         return new JsonArray()
                 .add(addStartAtField())
                 .add(match(types))
-                .add(audienceGroup())
+                .add(addCountIdField())
+                .add(audienceGroupByCountId())
+                .add(audienceGroupById())
                 .add(audienceProject());
     }
 
@@ -127,7 +131,9 @@ public class MonthlySearch {
         return new JsonArray()
                 .add(addStartAtField())
                 .add(match(types))
-                .add(studentGroup())
+                .add(addCountIdField())
+                .add(studentGroupByCountId())
+                .add(studentGroupById())
                 .add(studentProject());
     }
 
@@ -246,6 +252,49 @@ public class MonthlySearch {
                 .put("$lte", this.filter().end());
     }
 
+    private JsonObject addCountIdField() {
+        JsonObject groupedPunishmentIdExistsQuery = new JsonObject().put(Field.$GT,
+                new JsonArray().add(Field.$GROUPED_PUNISHMENT_ID).addNull()
+        );
+
+        JsonObject cond = new JsonObject()
+                .put(Field.$COND, new JsonArray()
+                        .add(groupedPunishmentIdExistsQuery)
+                        .add(Field.$GROUPED_PUNISHMENT_ID)
+                        .add(Field.$_ID)
+                );
+
+        return new JsonObject().put(Field.$ADDFIELDS, new JsonObject().put(COUNTID, cond));
+    }
+
+    private JsonObject audienceGroupByCountId() {
+        JsonObject id = new JsonObject()
+                .put(Field.CLASS_NAME, String.format("$%s", Field.CLASS_NAME))
+                .put(Field.MONTH, month())
+                .put(Field.YEAR, year())
+                .put(COUNTID, String.format("$%s", COUNTID));
+
+        JsonObject group = id(id)
+                .put(Field.SLOTS, sum(String.format("$%s", Field.SLOTS)))
+                .put(Field.START_AT, first(String.format("$%s", Field.START_AT)));
+
+        return group(group);
+    }
+
+    private JsonObject audienceGroupById() {
+        JsonObject id = new JsonObject()
+                .put(Field.CLASS_NAME, String.format("%s.%s", Field.$_ID, Field.CLASS_NAME))
+                .put(Field.MONTH, String.format("%s.%s", Field.$_ID, Field.MONTH))
+                .put(Field.YEAR, String.format("%s.%s", Field.$_ID, Field.YEAR));
+
+        JsonObject group = id(id)
+                .put(Field.COUNT, sum())
+                .put(Field.START_AT, first(String.format("$%s", Field.START_AT)))
+                .put(Field.SLOTS, sum());
+
+        return group(group);
+    }
+
     private JsonObject audienceGroup() {
         JsonObject id = new JsonObject()
                 .put("class_name", "$class_name")
@@ -256,6 +305,39 @@ public class MonthlySearch {
                 .put("count", sum())
                 .put("start_at", first("$start_at"))
                 .put("slots", sum());
+
+        return group(group);
+    }
+
+    private JsonObject studentGroupByCountId() {
+        JsonObject id = new JsonObject()
+                .put(Field.USER, String.format("$%s", Field.USER))
+                .put(Field.NAME, String.format("$%s", Field.NAME))
+                .put(Field.MONTH, month())
+                .put(Field.YEAR, year())
+                .put(Field.CLASS_NAME, String.format("$%s", Field.CLASS_NAME))
+                .put(COUNTID, String.format("$%s", COUNTID));
+
+        JsonObject group = id(id)
+                .put(Field.SLOTS, sum())
+                .put(Field.START_AT, first(String.format("$%s", Field.START_AT)));
+
+        return group(group);
+    }
+
+
+    private JsonObject studentGroupById() {
+        JsonObject id = new JsonObject()
+                .put(Field.USER, String.format("%s.%s", Field.$_ID, Field.USER))
+                .put(Field.NAME, String.format("%s.%s", Field.$_ID, Field.NAME))
+                .put(Field.CLASS_NAME, String.format("%s.%s", Field.$_ID, Field.CLASS_NAME))
+                .put(Field.MONTH, String.format("%s.%s", Field.$_ID, Field.MONTH))
+                .put(Field.YEAR, String.format("%s.%s", Field.$_ID, Field.YEAR));
+
+        JsonObject group = id(id)
+                .put(Field.COUNT, sum())
+                .put(Field.START_AT, first(String.format("$%s", Field.START_AT)))
+                .put(Field.SLOTS, sum(String.format("$%s", Field.SLOTS)));
 
         return group(group);
     }

@@ -7,11 +7,15 @@ import {User} from "@common/model/User";
 export interface IPunishmentService {
     get(punishmentRequest: IPunishmentRequest): Promise<IPunishmentResponse>;
 
+    getGroupedPunishmentId(groupedPunishmentId: string, structureId: string): Promise<IPunishmentResponse>;
+
     create(punishmentBody: IPunishmentBody): Promise<AxiosResponse>;
 
     update(punishmentBody: IPunishmentBody): Promise<AxiosResponse>;
 
     delete(punishmentId: string, structureId: string): Promise<AxiosResponse>;
+
+    deleteGroupedPunishment(groupPunishmentId: string, structureId: string): Promise<AxiosResponse>;
 
     exportCSV(punishmentRequest: IPunishmentRequest): void;
 
@@ -46,7 +50,7 @@ export const punishmentService: IPunishmentService = {
             let stateParams: string = '';
             if (punishmentRequest.process_state) {
                 punishmentRequest.process_state.forEach((processState: { label: string, value: string, isSelected: boolean }) => {
-                    if(processState.isSelected) {
+                    if (processState.isSelected) {
                         stateParams += `&process=${processState.value}`;
                     }
                 });
@@ -62,6 +66,12 @@ export const punishmentService: IPunishmentService = {
         }
     },
 
+    async getGroupedPunishmentId(groupedPunishmentId: string, structureId: string): Promise<IPunishmentResponse> {
+        const url: string = `/incidents/punishments?grouped_punishment_id=${groupedPunishmentId}&structure_id=${structureId}`
+        const {data}: AxiosResponse = await http.get(url);
+        return data;
+    },
+
     async create(punishmentBody: IPunishmentBody): Promise<AxiosResponse> {
         return http.post(`/incidents/punishments`, punishmentBody);
     },
@@ -72,6 +82,10 @@ export const punishmentService: IPunishmentService = {
 
     async delete(punishmentId: string, structureId: string): Promise<AxiosResponse> {
         return http.delete(`/incidents/punishments?id=${punishmentId}&structureId=${structureId}`);
+    },
+
+    async deleteGroupedPunishment(groupedPunishmentId: string, structureId: string): Promise<AxiosResponse> {
+        return http.delete(`/incidents/punishments?grouped_punishment_id=${groupedPunishmentId}&structureId=${structureId}`);
     },
 
 

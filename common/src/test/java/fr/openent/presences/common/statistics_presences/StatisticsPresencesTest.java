@@ -112,8 +112,7 @@ public class StatisticsPresencesTest {
         });
 
         try {
-            Whitebox.invokeMethod(this.statisticsPresences, "postUsers", structure, studentIds, (Handler) e -> {
-            });
+            Whitebox.invokeMethod(this.statisticsPresences, "postUsers", structure, studentIds);
         } catch (Exception e) {
             ctx.assertNotNull(e);
         }

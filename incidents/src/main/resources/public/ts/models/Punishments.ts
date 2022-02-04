@@ -25,7 +25,7 @@ export interface IPunishmentRequest {
     students_ids: Array<string>;
     groups_ids: Array<string>;
     type_ids: Array<number>;
-    process_state: Array<{ label: string , isSelected: boolean }>;
+    process_state: Array<{ label: string, isSelected: boolean, value?: string }>;
     massmailed?: boolean;
     page: number;
 }
@@ -41,10 +41,11 @@ export interface IPunishmentAbsenceRequest {
     endAt: string;
 }
 
-export type IPunishmentField = IPBlameField | IPDutyField | IPExcludeField | IPDetentionField;
+export type IPunishmentField = IPBlameField | IPDutyField | IPExcludeField | Array<IPDetentionField>;
 
 export interface IPunishmentBody {
     id?: string;
+    grouped_punishment_id?: string;
     structure_id?: string;
     fields?: IPunishmentField;
     student_ids: Array<string>;
@@ -67,6 +68,7 @@ export interface IPunishmentResponse {
 
 export interface IPunishment {
     id: string;
+    grouped_punishment_id: string;
     structure_id: string;
     created_at?: string;
     updated_at?: string;
@@ -98,6 +100,7 @@ export interface IPDetentionField {
     start_at?: string;
     end_at?: string;
     place?: string;
+    id?: string;
 }
 
 export class Punishments extends LoadingCollection {

@@ -111,8 +111,12 @@
         <div class="punishment-form-lightbox-footer-submit row" ng-class="{create: !vm.punishment.id}">
 
             <!-- Delete mode  -->
-            <button ng-if="vm.punishment.id" data-ng-click="vm.delete()">
+            <button ng-if="vm.punishment.id && !vm.punishment.grouped_punishment_id" data-ng-click="vm.delete()">
                 <i18n>presences.exemptions.form.delete</i18n>
+            </button>
+
+            <button ng-if="vm.punishment.id && vm.punishment.grouped_punishment_id" data-ng-click="vm.deleteAll()">
+                <i18n>presences.exemptions.form.delete.all</i18n>
             </button>
 
             <div class="punishment-form-lightbox-footer-submit-right">

@@ -1,18 +1,11 @@
-import {moment, ng} from 'entcore';
+import {idiom as lang, moment, ng} from 'entcore';
 import {COLOR_TYPE} from "@common/core/constants/ColorType";
 import {DASHBOARD_STUDENT_EVENTS} from "../core/enum/dashboard-student-events";
 import {Student} from "@common/model/Student";
 import {IPeriod, Notebook} from "../services";
 import {Event, EVENT_TYPES} from "../models";
-import {
-    Incident,
-    IPunishment,
-    IPDetentionField,
-    IPDutyField,
-    IPExcludeField
-} from "@incidents/models";
+import {Incident, IPDetentionField, IPDutyField, IPExcludeField, IPunishment} from "@incidents/models";
 import {DateUtils} from "@common/utils";
-import {idiom as lang} from "entcore";
 
 interface IViewModel {
     title: string;
@@ -192,7 +185,7 @@ export const EventsCard = ng.directive('eventsCard', () => {
                     case 3: //BLAME
                         return lang.translate("incidents.punishments.date.created.on") + createdDate;
                     case 4: // EXCLUSION
-                        if ((<IPDetentionField>punishment.fields).start_at && (<IPDetentionField>punishment.fields).end_at) {
+                        if ((<IPExcludeField>punishment.fields).start_at && (<IPExcludeField>punishment.fields).end_at) {
                             let startExcludeDate: string = DateUtils.format((<IPExcludeField>punishment.fields).start_at, DateUtils.FORMAT["DAY-MONTH-YEAR"]);
                             let endExcludeDate: string = DateUtils.format((<IPExcludeField>punishment.fields).end_at, DateUtils.FORMAT["DAY-MONTH-YEAR"]);
                             if (startExcludeDate && endExcludeDate) {

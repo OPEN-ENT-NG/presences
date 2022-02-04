@@ -8,6 +8,7 @@ public class Field {
     public static final String TITLE = "title";
     public static final String CLASSES = "classes";
     public static final String CREATED = "created";
+    public static final String CREATED_AT = "created_at";
     public static final String COURSES = "courses";
     public static final String GROUP = "group";
     public static final String EXCLUDE = "exclude";
@@ -41,6 +42,8 @@ public class Field {
     public static final String ACTION_ABBREVIATION = "action_abbreviation";
     public static final String EXPORT_PDF_EVENTS = "export-pdf-events";
     public static final String PAGE = "page";
+    public static final String LABEL = "label";
+
 
     // Dates
     public static final String END_DATE = "end_date";
@@ -110,7 +113,6 @@ public class Field {
     public static final String LASTUSER = "lastUser";
     public static final String LOCKED = "locked";
     public static final String MANUAL = "manual";
-    public static final String PUNISHMENTS = "punishments";
     public static final String PROTAGONIST = "protagonist";
     public static final String PROTAGONIST_TYPE_ID = "protagonist_type_id";
     public static final String REGISTER_ID = "register_id";
@@ -146,7 +148,6 @@ public class Field {
     public static final String DEPARTURE = "departure";
     public static final String REMARK = "remark";
     public static final String FORGOTTEN_NOTEBOOK = "forgotten_notebook";
-    public static final String PUNISHMENT = "punishment";
     public static final String SANCTION = "sanction";
     public static final String FOLLOWED = "followed";
     public static final String MASSMAILED = "massmailed";
@@ -161,6 +162,16 @@ public class Field {
     public static final String COUNSELLOR_INPUT = "counsellor_input";
     public static final String COUNSELLOR_REGULARISATION = "counsellor_regularisation";
 
+    // Punishments
+    public static final String PUNISHMENT = "punishment";
+    public static final String PUNISHMENTS = "punishments";
+    public static final String FIELDS = "fields";
+    public static final String GROUPED_PUNISHMENT_ID = "grouped_punishment_id";
+    public static final String $GROUPED_PUNISHMENT_ID = "$grouped_punishment_id";
+    public static final String GROUP_ID = "group_id";
+    public static final String PROCESS = "process";
+
+
     // Indicator
     public static final String DATA = "data";
     public static final String COUNT = "count";
@@ -171,16 +182,26 @@ public class Field {
     // User
     public static final String USERID = "userId";
     public static final String USERS = "users";
+    public static final String USER = "user";
 
     //Mongo
+    public static final String $_ID = "$_id";
     public static final String $PROJECT = "$project";
     public static final String CURSOR = "cursor";
     public static final String FIRSTBATCH = "firstBatch";
+    public static final String $IN = "$in";
+    public static final String $GROUP = "$group";
+    public static final String $GT = "$gt";
+    public static final String $COND = "$cond";
+    public static final String $ADDFIELDS = "$addFields";
 
     // Statistics
     public static final String INDICATOR = "indicator";
     public static final String MONTHLY = "Monthly";
     public static final String GLOBAL = "Global";
+    public static final String CLASS_NAME = "class_name";
+    public static final String MONTH = "month";
+    public static final String YEAR = "year";
 
     private Field() {
         throw new IllegalStateException("Utility class");

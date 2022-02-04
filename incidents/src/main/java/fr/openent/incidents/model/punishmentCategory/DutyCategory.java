@@ -11,7 +11,13 @@ public class DutyCategory extends PunishmentCategory {
         fillables.put("instruction", Arrays.asList("CREATE", "UPDATE"));
     }
 
+    @Override
     public void formatDates() {
         delay_at = delay_at.replace("/", "-");
+    }
+
+    @Override
+    public String getLabel() {
+        return PunishmentCategory.DUTY;
     }
 }

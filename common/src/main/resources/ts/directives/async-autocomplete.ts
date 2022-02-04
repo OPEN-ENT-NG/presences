@@ -1,5 +1,5 @@
 import {$, idiom as lang, ng} from 'entcore';
-import {SafeApplyUtils} from "@common/utils";
+import {safeApply} from "@common/utils";
 
 export const asyncAutocomplete = ng.directive('asyncAutocomplete', ['$timeout', ($timeout) => ({
     restrict: 'E',
@@ -51,7 +51,7 @@ export const asyncAutocomplete = ng.directive('asyncAutocomplete', ['$timeout', 
 
         const setLoadingStatus = (status: boolean = true) => {
             $scope.loading = status;
-            SafeApplyUtils.safeApply($scope);
+            safeApply($scope);
         };
 
         const endUserTyping = () => {
@@ -64,7 +64,7 @@ export const asyncAutocomplete = ng.directive('asyncAutocomplete', ['$timeout', 
             $scope.match = newVal;
             cancelAnimationFrame(token);
             setLoadingStatus(false);
-            SafeApplyUtils.safeApply($scope);
+            safeApply($scope);
         });
 
         $scope.select = (option) => {
@@ -75,7 +75,7 @@ export const asyncAutocomplete = ng.directive('asyncAutocomplete', ['$timeout', 
         const closeDropDown = function () {
             setLoadingStatus(false);
             $scope.match = undefined;
-            SafeApplyUtils.safeApply($scope);
+            safeApply($scope);
         };
 
         linkedInput.on('keyup', () => {
@@ -124,7 +124,7 @@ export const asyncAutocomplete = ng.directive('asyncAutocomplete', ['$timeout', 
                 return;
             } else {
                 $scope.search = newVal;
-                SafeApplyUtils.safeApply($scope);
+                safeApply($scope);
             }
         });
     }

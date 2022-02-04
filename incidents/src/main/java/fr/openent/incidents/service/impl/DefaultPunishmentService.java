@@ -5,6 +5,7 @@ import fr.openent.incidents.helper.PunishmentHelper;
 import fr.openent.incidents.helper.PunishmentTypeHelper;
 import fr.openent.incidents.model.Punishment;
 import fr.openent.incidents.model.PunishmentType;
+import fr.openent.incidents.model.punishmentCategory.DetentionCategory;
 import fr.openent.incidents.model.punishmentCategory.ExcludeCategory;
 import fr.openent.incidents.model.punishmentCategory.PunishmentCategory;
 import fr.openent.incidents.service.PunishmentService;
@@ -15,6 +16,7 @@ import fr.openent.presences.common.presences.Presences;
 import fr.openent.presences.common.service.UserService;
 import fr.openent.presences.common.service.impl.DefaultUserService;
 import fr.openent.presences.common.statistics_presences.StatisticsPresences;
+import fr.openent.presences.core.constants.Field;
 import fr.openent.presences.enums.EventType;
 import fr.wseduc.mongodb.MongoDb;
 import fr.wseduc.webutils.Either;
@@ -34,6 +36,8 @@ import java.util.stream.Collectors;
 public class DefaultPunishmentService implements PunishmentService {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(DefaultPunishmentService.class);
+    private static final String COUNTID = "countId";
+    private static final String $COUNTID = "$countId";
     private final PunishmentHelper punishmentHelper;
     private final Punishment punishment = new Punishment();
     private final PunishmentTypeService punishmentType = new DefaultPunishmentTypeService();
@@ -46,84 +50,115 @@ public class DefaultPunishmentService implements PunishmentService {
 
     @Override
     public void create(UserInfos user, JsonObject body, Handler<AsyncResult<JsonArray>> handler) {
-        Punishment createPunishment = new Punishment();
-        createPunishment.setFromJson(body);
+        String structureId = body.getString(Field.STRUCTURE_ID, "");
+        Long typeId = body.getLong(Field.TYPEID);
+        PunishmentCategory.getSpecifiedCategoryFromType(structureId, typeId)
+                .onFailure(error -> {
+                    String message = String.format("[Incidents@%s::createPunishments] Fail to get category label"
+                            , this.getClass().getSimpleName());
+                    LOGGER.error(String.format("%s %s", message, error));
+                    handler.handle(Future.failedFuture(message));
+                })
+                .onSuccess(category -> {
+                    Future<JsonObject> punishmentsFuture = Future.future();
+                    Future<JsonObject> absencesFuture = Future.future();
+                    createPunishments(user, body, category, punishmentsFuture);
+                    createRelatedAbsences(structureId, user, body, category.getLabel(), absencesFuture);
 
-        Future<JsonObject> punishmentsFuture = Future.future();
-        Future<JsonObject> absencesFuture = Future.future();
-        createPunishments(user, body, punishmentsFuture);
-        createRelatedAbsences(user, body, createPunishment, absencesFuture);
-
-        FutureHelper.all(Arrays.asList(punishmentsFuture, absencesFuture)).setHandler(event -> {
-            if (event.failed()) {
-                handler.handle(Future.failedFuture(event.cause().toString()));
-                return;
-            }
-
-            handler.handle(Future.succeededFuture(punishmentsFuture.result().getJsonArray("all", new JsonArray())));
-        });
+                    FutureHelper.all(Arrays.asList(punishmentsFuture, absencesFuture))
+                            .onFailure(error -> handler.handle(Future.failedFuture(error.getMessage())))
+                            .onSuccess(result -> handler.handle(Future.succeededFuture(
+                                    punishmentsFuture.result().getJsonArray(Field.ALL, new JsonArray())
+                            )));
+                });
     }
 
     @SuppressWarnings("unchecked")
-    private void createPunishments(UserInfos user, JsonObject body, Handler<AsyncResult<JsonObject>> handler) {
-        List<String> studentIds = body.getJsonArray("student_ids").getList();
+    private void createPunishments(UserInfos user, JsonObject body, PunishmentCategory category, Handler<AsyncResult<JsonObject>> handler) {
+        List<String> studentIds = body.getJsonArray(Field.STUDENT_IDS).getList();
+        List<Punishment> punishments = initPunishmentsFromFields(category, body);
         JsonArray results = new JsonArray();
-        List<Future> futures = new ArrayList<>();
-
-        for (String studentId : studentIds) {
-            Future future = Future.future();
-            futures.add(future);
-            Punishment createPunishment = new Punishment();
-            createPunishment.setFromJson(body);
-            createPunishment.setStudentId(studentId);
-
-            createPunishment.persistMongo(user, result -> {
-                if (result.failed()) {
-                    future.fail(result.cause().getMessage());
-                } else {
-                    results.add(result.result());
-                    future.complete();
-                }
-            });
-        }
-
-        CompositeFuture.join(futures).setHandler(event -> {
-            if (event.failed()) {
-                handler.handle(Future.failedFuture(event.cause().toString()));
-                return;
-            }
-
-            StatisticsPresences.getInstance().postUsers(body.getString("structure_id"), studentIds, Future.future());
-            handler.handle(Future.succeededFuture(new JsonObject().put("all", results)));
-        });
+        FutureHelper.join(createPunishments(user, punishments, studentIds, category, results))
+                .onFailure(error -> {
+                    String message = String.format("[Incidents@%s::createPunishments] Fail to create punishments"
+                            , this.getClass().getSimpleName());
+                    LOGGER.error(String.format("%s %s", message, error.getMessage()));
+                    handler.handle(Future.failedFuture(message));
+                })
+                .onSuccess(result -> {
+                    StatisticsPresences.getInstance().postUsers(body.getString("structure_id"), studentIds);
+                    handler.handle(Future.succeededFuture(new JsonObject().put("all", results)));
+                });
     }
 
-    private void createRelatedAbsences(UserInfos user, JsonObject body, Punishment punishment, Handler<AsyncResult<JsonObject>> handler) {
-        PunishmentCategory.getCategoryLabelFromType(punishment.getTypeId(), punishment.getStructureId(), label -> {
-            if (!label.result().equals(PunishmentCategory.EXCLUDE) || !body.containsKey("absence")) {
+    @SuppressWarnings("unchecked")
+    private List<Punishment> initPunishmentsFromFields(PunishmentCategory category, JsonObject body) {
+        if (DetentionCategory.DETENTION.equals(category.getLabel())) {
+            // Cast list as Map, because it's easier to manipulate than LinkedHashMap
+            List<Map<String, Object>> fields = body.getJsonArray(Field.FIELDS, new JsonArray()).getList();
+            body.remove(Field.FIELDS);
+            return fields.stream()
+                    .map((mapField) -> {
+                        Punishment punishment = new Punishment();
+                        punishment.setFromJson(body);
+                        JsonObject field = new JsonObject(mapField);
+                        punishment.setId(field.getString(Field.ID));
+                        PunishmentCategory.formatFromBody(category, field);
+                        punishment.setFields(category.toJsonObject());
+                        return punishment;
+                    }).collect(Collectors.toList());
+        } else {
+            Punishment punishment = new Punishment();
+            punishment.setFromJson(body);
+            PunishmentCategory.formatFromBody(category, punishment.getFields());
+            punishment.setFields(category.toJsonObject());
+            return Collections.singletonList(punishment);
+        }
+    }
+
+    private List<Future<JsonObject>> createPunishments(UserInfos user, List<Punishment> punishments, List<String> studentIds,
+                                                       PunishmentCategory category, JsonArray results) {
+        List<Future<JsonObject>> futures = new ArrayList<>();
+
+        for (String studentId : studentIds) {
+            String groupedPunishmentId = DetentionCategory.DETENTION.equals(category.getLabel()) ?
+                    UUID.randomUUID().toString() : null;
+            for (Punishment punishment : punishments) {
+                // re-init punishments, to keep reference of each punishments
+                Punishment createPunishment = new Punishment();
+                createPunishment.setFromJson(punishment.toJsonObject());
+                createPunishment.setGroupedPunishmentId(groupedPunishmentId);
+                createPunishment.setStudentId(studentId);
+                futures.add(persistMongo(createPunishment, user, results));
+            }
+        }
+        return futures;
+    }
+
+    private void createRelatedAbsences(String structureId, UserInfos user, JsonObject body, String categoryLabel, Handler<AsyncResult<JsonObject>> handler) {
+        if (!PunishmentCategory.EXCLUDE.equals(categoryLabel) || !body.containsKey(Field.ABSENCE)) {
+            handler.handle(Future.succeededFuture(new JsonObject()));
+            return;
+        }
+        JsonObject fields = body.getJsonObject("fields", new JsonObject());
+        Long reasonId = body.getJsonObject("absence").getLong("reason_id");
+        Boolean followed = body.getJsonObject("absence").getBoolean("followed", false);
+        String startAt = fields.getString("start_at").replace("/", "-");
+        String endAt = fields.getString("end_at").replace("/", "-");
+
+        getStudentsWithoutAbsences(body, startAt, endAt).setHandler(resultStudentIds -> {
+            if (resultStudentIds.failed()) {
+                handler.handle(Future.failedFuture(resultStudentIds.cause().getMessage()));
+                return;
+            }
+            List<String> studentIds = resultStudentIds.result();
+            if (studentIds == null || studentIds.isEmpty()) {
                 handler.handle(Future.succeededFuture(new JsonObject()));
                 return;
             }
-            JsonObject fields = body.getJsonObject("fields", new JsonObject());
-            Long reasonId = body.getJsonObject("absence").getLong("reason_id");
-            Boolean followed = body.getJsonObject("absence").getBoolean("followed", false);
-            String startAt = fields.getString("start_at").replace("/", "-");
-            String endAt = fields.getString("end_at").replace("/", "-");
-
-            getStudentsWithoutAbsences(body, startAt, endAt).setHandler(resultStudentIds -> {
-                if (resultStudentIds.failed()) {
-                    handler.handle(Future.failedFuture(resultStudentIds.cause().getMessage()));
-                    return;
-                }
-                List<String> studentIds = resultStudentIds.result();
-                if (studentIds == null || studentIds.isEmpty()) {
-                    handler.handle(Future.succeededFuture(new JsonObject()));
-                    return;
-                }
-                Presences.getInstance()
-                        .createAbsences(punishment.getStructureId(), studentIds, user.getUserId(), reasonId, startAt,
-                                endAt, true, followed, handler);
-            });
+            Presences.getInstance()
+                    .createAbsences(structureId, studentIds, user.getUserId(), reasonId, startAt,
+                            endAt, true, followed, handler);
         });
     }
 
@@ -153,112 +188,125 @@ public class DefaultPunishmentService implements PunishmentService {
     }
 
     @Override
-    public void update(UserInfos user, JsonObject body, Handler<AsyncResult<JsonObject>> handler) {
-        Punishment updatePunishment = new Punishment();
-        updatePunishment.setFromJson(body);
-        get(user, updatePunishment.getId(), updatePunishment.getStructureId(), null, null,
-                null, null, null, null, false, null, null, null, punishmentResult -> {
-                    if (punishmentResult.failed()) {
-                        handler.handle(Future.failedFuture(punishmentResult.cause().getMessage()));
-                    }
+    public void update(UserInfos user, JsonObject body, Handler<AsyncResult<JsonArray>> handler) {
+        String structureId = body.getString(Field.STRUCTURE_ID, "");
+        Long typeId = body.getLong(Field.TYPEID);
+        PunishmentCategory.getSpecifiedCategoryFromType(structureId, typeId)
+                .onFailure(error -> {
+                    String message = String.format("[Incidents@%s::createPunishments] Fail to get category label"
+                            , this.getClass().getSimpleName());
+                    LOGGER.error(String.format("%s %s", message, error));
+                    handler.handle(Future.failedFuture(message));
+                })
+                .onSuccess(category -> {
+                    Future<JsonObject> punishmentsFuture = updatePunishments(user, body, category);
+                    Future<JsonObject> absencesFuture = updateRelatedAbsence(structureId, user, body, category.getLabel());
 
-                    String studentId = punishmentResult.result().getJsonObject("student", new JsonObject()).getString("id");
-                    Punishment oldPunishment = new Punishment();
-                    oldPunishment.setFromJson(punishmentResult.result());
-
-                    update(user, body, updatePunishment, oldPunishment, studentId, handler);
+                    FutureHelper.all(Arrays.asList(punishmentsFuture, absencesFuture))
+                            .onFailure(error -> handler.handle(Future.failedFuture(error.getMessage())))
+                            .onSuccess(result -> handler.handle(Future.succeededFuture(
+                                    punishmentsFuture.result().getJsonArray(Field.ALL, new JsonArray())
+                            )));
                 });
     }
 
-    public void update(UserInfos user, JsonObject body, Punishment updatePunishment, Punishment oldPunishment, String studentId,
-                       Handler<AsyncResult<JsonObject>> handler) {
-        Future<JsonObject> punishmentFuture = Future.future();
-        Future<JsonObject> absencesFuture = Future.future();
+    public Future<JsonObject> updatePunishments(UserInfos user, JsonObject body, PunishmentCategory category) {
+        Promise<JsonObject> promise = Promise.promise();
 
-        updatePunishment(user, updatePunishment, punishmentFuture);
-        updateRelatedAbsence(user, body, studentId, oldPunishment, updatePunishment, absencesFuture);
+        List<Punishment> punishments = initPunishmentsFromFields(category, body);
+        JsonArray results = new JsonArray();
+        FutureHelper.join(updatePunishments(user, punishments, results))
+                .onFailure(error -> {
+                    String message = String.format("[Incidents@%s::createPunishments] Fail to create punishments"
+                            , this.getClass().getSimpleName());
+                    LOGGER.error(String.format("%s %s", message, error.getMessage()));
+                    promise.fail(message);
+                })
+                .onSuccess(result -> {
+                    List<String> studentIds = punishments.stream().map(Punishment::getStudentId).collect(Collectors.toList());
+                    StatisticsPresences.getInstance().postUsers(body.getString(Field.STRUCTURE_ID), studentIds);
+                    promise.complete(new JsonObject().put(Field.ALL, results));
+                });
 
-        FutureHelper.all(Arrays.asList(punishmentFuture, absencesFuture)).setHandler(event -> {
-            if (event.failed()) {
-                handler.handle(Future.failedFuture(event.cause().toString()));
-                return;
-            }
-            StatisticsPresences.getInstance().postUsers(updatePunishment.getStructureId(), Collections.singletonList(studentId), Future.future());
-            handler.handle(Future.succeededFuture(punishmentFuture.result()));
-        });
+        return promise.future();
     }
 
-    private void updatePunishment(UserInfos user, Punishment updatePunishment, Handler<AsyncResult<JsonObject>> handler) {
-        updatePunishment.persistMongo(user, result -> {
-            if (result.failed()) {
-                handler.handle(Future.failedFuture(result.cause().getMessage()));
-                return;
-            }
-            handler.handle(Future.succeededFuture(result.result()));
-        });
+    public List<Future<JsonObject>> updatePunishments(UserInfos user, List<Punishment> updatePunishments, JsonArray results) {
+        List<Future<JsonObject>> futures = new ArrayList<>();
+        for (Punishment punishment : updatePunishments) {
+            // re-init punishments, to keep reference of each punishments
+            Punishment updatePunishment = new Punishment();
+            updatePunishment.setFromJson(punishment.toJsonObject());
+            futures.add(persistMongo(updatePunishment, user, results));
+        }
+        return futures;
     }
 
-    private void updateRelatedAbsence(UserInfos user, JsonObject body, String studentId, Punishment oldPunishment,
-                                      Punishment updatePunishment, Handler<AsyncResult<JsonObject>> handler) {
-        if (!body.containsKey("absence")) {
-            handler.handle(Future.succeededFuture(new JsonObject()));
-            return;
+    private Future<JsonObject> persistMongo(Punishment punishment, UserInfos user, JsonArray results) {
+        Promise<JsonObject> promise = Promise.promise();
+        punishment.persistMongo(user)
+                .onFailure(error -> {
+                    String message = String.format("[Incidents@%s::persistMongo] Fail to persist punishment for student: %s"
+                            , this.getClass().getSimpleName(), punishment.getStudentId());
+                    LOGGER.error(String.format("%s %s", message, error.getMessage()));
+                    promise.fail(message);
+                })
+                .onSuccess(result -> {
+                    results.add(result);
+                    promise.complete();
+                });
+        return promise.future();
+    }
+
+    private Future<JsonObject> updateRelatedAbsence(String structureId, UserInfos user, JsonObject body, String categoryLabel) {
+        Promise<JsonObject> promise = Promise.promise();
+        String punishmentId = body.getString(Field.ID);
+        if (!body.containsKey(Field.ABSENCE) || !PunishmentCategory.EXCLUDE.equals(categoryLabel) || punishmentId == null) {
+            promise.complete(new JsonObject());
+            return promise.future();
         }
 
-        getCategoryLabel(updatePunishment, labelResult -> {
-            if (labelResult.failed()) {
-                handler.handle(Future.failedFuture(labelResult.cause().getMessage()));
-                return;
-            }
+        Punishment oldPunishment = new Punishment();
+        ExcludeCategory oldCategory = new ExcludeCategory();
 
-            String label = labelResult.result().getString("label", "");
-            if (!label.equals(PunishmentCategory.EXCLUDE)) {
-                handler.handle(Future.succeededFuture(new JsonObject()));
-                return;
-            }
+        ExcludeCategory category = new ExcludeCategory();
+        category.setFromJson(body.getJsonObject(Field.FIELDS));
+        category.formatDates();
 
-            ExcludeCategory oldCategory = new ExcludeCategory();
-            oldCategory.setFromJson(oldPunishment.getFields());
-            oldCategory.formatDates();
+        get(user, punishmentId, null, structureId, null, null, null, null,
+                null, null, false, null, null, null)
+                .compose(oldPunishmentResult -> {
+                    oldPunishment.setFromJson(oldPunishmentResult);
 
-            ExcludeCategory category = new ExcludeCategory();
-            category.setFromJson(updatePunishment.getFields());
-            category.formatDates();
+                    oldCategory.setFromJson(oldPunishment.getFields());
+                    oldCategory.formatDates();
 
-            Long reasonId = body.getJsonObject("absence").getLong("reason_id");
+                    return getStudentAbsences(oldPunishment.getStudentId(), oldCategory.getStartAt(), oldCategory.getEndAt());
+                })
+                .onFailure(error -> {
+                    String message = String.format("[Incidents@%s::updateRelatedAbsence] Fail to get update punishment related absence"
+                            , this.getClass().getSimpleName());
+                    LOGGER.error(String.format("%s %s", message, error));
+                    promise.fail(message);
+                })
+                .onSuccess(absences -> {
+                    Long reasonId = body.getJsonObject(Field.ABSENCE).getLong(Field.REASON_ID);
 
-            getStudentAbsences(studentId, oldCategory.getStartAt(), oldCategory.getEndAt()).setHandler(absencesResult -> {
-                if (absencesResult.failed()) {
-                    handler.handle(Future.failedFuture(absencesResult.cause().getMessage()));
-                    return;
-                }
-
-                List<JsonObject> absences = absencesResult.result();
-                if (absences.isEmpty()) {
-                    Presences.getInstance()
-                            .createAbsences(updatePunishment.getStructureId(), Collections.singletonList(studentId),
-                                    user.getUserId(), reasonId, category.getStartAt(), category.getEndAt(), true, true, handler);
-                } else if (absences.size() == 1 && areAbsenceDatesCorresponding(absences.get(0), oldCategory.getStartAt(), oldCategory.getEndAt())) {
-                    Presences.getInstance()
-                            .updateAbsence(updatePunishment.getStructureId(), absences.get(0).getLong("id"),
-                                    user.getUserId(), reasonId, studentId, category.getStartAt(), category.getEndAt(), true, handler);
-                } else {
-                    handler.handle(Future.succeededFuture(new JsonObject()));
-                }
-            });
-
-        });
+                    if (absences.isEmpty()) {
+                        Presences.getInstance()
+                                .createAbsences(structureId, Collections.singletonList(oldPunishment.getStudentId()),
+                                        user.getUserId(), reasonId, category.getStartAt(), category.getEndAt(), true, true, promise);
+                    } else if (absences.size() == 1 && areAbsenceDatesCorresponding(absences.get(0), oldCategory.getStartAt(), oldCategory.getEndAt())) {
+                        Presences.getInstance()
+                                .updateAbsence(structureId, absences.get(0).getLong(Field.ID),
+                                        user.getUserId(), reasonId, oldPunishment.getStudentId(), category.getStartAt(), category.getEndAt(), true, promise);
+                    } else {
+                        promise.complete(new JsonObject());
+                    }
+                });
+        return promise.future();
     }
 
-    private void getCategoryLabel(Punishment punishment, Handler<AsyncResult<JsonObject>> handler) {
-        PunishmentCategory.getCategoryLabelFromType(punishment.getTypeId(), punishment.getStructureId(), label -> {
-            if (label.failed()) {
-                handler.handle(Future.failedFuture(label.cause().getMessage()));
-                return;
-            }
-            handler.handle(Future.succeededFuture(new JsonObject().put("label", label.result())));
-        });
-    }
 
     @SuppressWarnings("unchecked")
     private Future<List<JsonObject>> getStudentAbsences(String studentId, String startAt, String endAt) {
@@ -306,14 +354,29 @@ public class DefaultPunishmentService implements PunishmentService {
     public void get(UserInfos user, String id, String structureId, String startAt, String endAt, List<String> studentIds, List<String> groupIds,
                     List<String> typeIds, List<String> processStates, boolean isStudent, String pageString, String limitString, String offsetString,
                     Handler<AsyncResult<JsonObject>> handler) {
-        punishmentHelper.getQuery(user, id, structureId, startAt, endAt, studentIds, groupIds, typeIds, processStates, isStudent, queryResult -> {
+        get(user, id, null, structureId, startAt, endAt, studentIds, groupIds, typeIds, processStates, isStudent, pageString,
+                limitString, offsetString)
+                .onFailure(error -> handler.handle(Future.failedFuture(error)))
+                .onSuccess(result -> handler.handle(Future.succeededFuture(result)));
+    }
+
+    @Override
+    public Future<JsonObject> get(UserInfos user, String id, String groupedPunishmentId, String structureId, String startAt, String endAt, List<String> studentIds, List<String> groupIds,
+                                  List<String> typeIds, List<String> processStates, boolean isStudent, String pageString, String limitString, String offsetString) {
+        Promise<JsonObject> promise = Promise.promise();
+        punishmentHelper.getQuery(user, id, groupedPunishmentId, structureId, startAt, endAt, studentIds, groupIds, typeIds, processStates, isStudent, queryResult -> {
             if (queryResult.failed()) {
-                handler.handle(Future.failedFuture(queryResult.cause().getMessage()));
+                String message = String.format("[Incidents@%s::getPunishments] Failed to get query"
+                        , this.getClass().getSimpleName());
+                LOGGER.error(String.format("%s %s", message, queryResult.cause().getMessage()));
+                promise.fail(message);
                 return;
             }
 
             if (id != null && !id.equals("")) {
-                punishmentHelper.getPunishment(punishment.getTable(), queryResult.result(), handler);
+                punishmentHelper.getPunishment(punishment.getTable(), queryResult.result())
+                        .onSuccess(promise::complete)
+                        .onFailure(promise::fail);
             } else {
                 Future<Long> countFuture = Future.future();
                 Future<JsonArray> findFuture = Future.future();
@@ -350,13 +413,18 @@ public class DefaultPunishmentService implements PunishmentService {
                 Integer finalPage = page;
                 CompositeFuture.all(countFuture, findFuture).setHandler(resultFuture -> {
                     if (resultFuture.failed()) {
-                        handler.handle(Future.failedFuture(resultFuture.cause()));
+                        String message = String.format("[Incidents@%s::specifyCategoryFromType] fail to get punishments."
+                                , this.getClass().getSimpleName());
+                        LOGGER.error(String.format("%s %s", message, resultFuture.cause().getMessage()));
+                        promise.fail(resultFuture.cause());
                     } else {
-                        formatPunishmentsResult(countFuture.result(), findFuture.result(), finalPage, limit, offset, handler);
+                        formatPunishmentsResult(countFuture.result(), findFuture.result(), finalPage, limit, offset, promise);
                     }
                 });
             }
         });
+
+        return promise.future();
     }
 
     @Override
@@ -496,18 +564,19 @@ public class DefaultPunishmentService implements PunishmentService {
         return new JsonArray()
                 .add(new JsonObject().put("$match", $queryMatch))
                 .add(new JsonObject().put("$group",
-                        new JsonObject()
-                                .put("_id", "$student_id")
-                                .put("punishments", new JsonObject()
-                                        .put("$push", new JsonObject()
-                                                .put("id", "$_id")
-                                                .put("created_at", "$created_at")
-                                                .put("type_id", "$type_id")
-                                                .put("owner_id", "$owner_id")
-                                                .put("description", "$description")
-                                                .put("fields", "$fields")
+                                new JsonObject()
+                                        .put("_id", "$student_id")
+                                        .put("punishments", new JsonObject()
+                                                .put("$push", new JsonObject()
+                                                        .put("id", "$_id")
+                                                        .put("created_at", "$created_at")
+                                                        .put("type_id", "$type_id")
+                                                        .put("owner_id", "$owner_id")
+                                                        .put("description", "$description")
+                                                        .put(Field.GROUPED_PUNISHMENT_ID, "$grouped_punishment_id")
+                                                        .put("fields", "$fields")
+                                                )
                                         )
-                                )
                         )
                 )
                 .add(new JsonObject().put("$project", new JsonObject()
@@ -524,10 +593,18 @@ public class DefaultPunishmentService implements PunishmentService {
 
         return new JsonArray()
                 .add(new JsonObject().put("$match", $queryMatch))
+                .add(addCountIdField())
+                .add(new JsonObject().put(Field.$GROUP,
+                                new JsonObject().put(Field._ID, new JsonObject()
+                                        .put(Field.STUDENT_ID, "$student_id")
+                                        .put(COUNTID, $COUNTID)
+                                )
+                        )
+                )
                 .add(new JsonObject().put("$group",
-                        new JsonObject()
-                                .put("_id", "$student_id")
-                                .put("count", new JsonObject().put("$sum", 1))
+                                new JsonObject()
+                                        .put("_id", String.format("%s.%s", Field.$_ID, Field.STUDENT_ID))
+                                        .put("count", new JsonObject().put("$sum", 1))
                         )
                 )
                 .add(new JsonObject().put("$project", new JsonObject()
@@ -562,6 +639,21 @@ public class DefaultPunishmentService implements PunishmentService {
         }
 
         return $queryMatch;
+    }
+
+    private JsonObject addCountIdField() {
+        JsonObject groupedPunishmentIdExistsQuery = new JsonObject().put(Field.$GT,
+                new JsonArray().add(Field.$GROUPED_PUNISHMENT_ID).addNull()
+        );
+
+        JsonObject cond = new JsonObject()
+                .put(Field.$COND, new JsonArray()
+                        .add(groupedPunishmentIdExistsQuery)
+                        .add(Field.$GROUPED_PUNISHMENT_ID)
+                        .add(Field.$_ID)
+                );
+
+        return new JsonObject().put(Field.$ADDFIELDS, new JsonObject().put(COUNTID, cond));
     }
 
     private void formatPunishmentsResult(Long punishmentsNumber, JsonArray punishments,
@@ -604,99 +696,124 @@ public class DefaultPunishmentService implements PunishmentService {
             punishmentHelper.countPunishments(punishment.getTable(), result.result(), handler);
         });
     }
+
     @Override
     public void count(UserInfos user, String structureId, String startAt, String endAt, List<String> studentIds,
                       List<String> groupIds, List<String> typeIds, List<String> processStates, boolean isStudent, Handler<AsyncResult<Long>> handler) {
-        punishmentHelper.getQuery(user, null, structureId, startAt, endAt, studentIds, groupIds, typeIds, processStates, isStudent, result -> {
-            if (result.failed()) {
-                handler.handle(Future.failedFuture(result.cause().getMessage()));
-                return;
-            }
-            punishmentHelper.countPunishments(punishment.getTable(), result.result(), handler);
-        });
-    }
-
-    @Override
-    public void delete(UserInfos user, MultiMap body, Handler<AsyncResult<JsonObject>> handler) {
-        String structureId = body.get("structureId");
-        get(user, body.get("id"), structureId, null, null,
-                null, null, null, null, false, null, null, null, punishmentResult -> {
-                    if (punishmentResult.failed()) {
-                        handler.handle(Future.failedFuture(punishmentResult.cause().getMessage()));
+        punishmentHelper.getQuery(user, null, null, structureId, startAt, endAt, studentIds,
+                groupIds, typeIds, processStates, isStudent, result -> {
+                    if (result.failed()) {
+                        handler.handle(Future.failedFuture(result.cause().getMessage()));
+                        return;
                     }
-
-                    Punishment deletePunishment = new Punishment();
-                    deletePunishment.setFromJson(punishmentResult.result());
-                    String studentId = punishmentResult.result().getJsonObject("student", new JsonObject()).getString("id");
-                    delete(body, deletePunishment, studentId, result -> {
-                        StatisticsPresences.getInstance().postUsers(structureId, Collections.singletonList(studentId), Future.future());
-                        handler.handle(result);
-                    });
+                    punishmentHelper.countPunishments(punishment.getTable(), result.result(), handler);
                 });
     }
 
-    public void delete(MultiMap body, Punishment deletePunishment, String studentId, Handler<AsyncResult<JsonObject>> handler) {
-        Future<JsonObject> punishmentFuture = Future.future();
-        Future<JsonObject> absenceFuture = Future.future();
+    @Override
+    public Future<JsonObject> delete(UserInfos user, String structureId, String punishmentId, String groupedPunishmentId) {
+        Promise<JsonObject> promise = Promise.promise();
+        get(user, punishmentId, groupedPunishmentId, structureId, null, null,
+                null, null, null, null, false, null, null, null)
+                .onFailure(error -> {
+                    String message = String.format("[Incidents@%s::delete] Fail to delete punishments"
+                            , this.getClass().getSimpleName());
+                    LOGGER.error(String.format("%s %s", message, error.getMessage()));
+                    promise.fail(message);
+                })
+                .onSuccess(punishmentResult -> {
+                    List<Punishment> deletePunishments;
+                    LOGGER.info("success");
+                    if (punishmentId != null) {
+                        Punishment deletePunishment = new Punishment();
+                        deletePunishment.setFromJson(punishmentResult);
+                        deletePunishments = Collections.singletonList(deletePunishment);
+                    } else
+                        deletePunishments = PunishmentHelper
+                                .getCollectivePunishmentListFromJsonArray(punishmentResult.getJsonArray(Field.ALL, new JsonArray()));
 
-        deletePunishment(body, punishmentFuture);
-        deleteRelatedAbsence(deletePunishment, studentId, absenceFuture);
+                    delete(structureId, deletePunishments, promise);
+                });
+        return promise.future();
+    }
+
+    public void delete(String structureId, List<Punishment> deletePunishments, Handler<AsyncResult<JsonObject>> handler) {
+        LOGGER.info("delete");
+        List<String> studentIds = deletePunishments.stream()
+                .map(Punishment::getStudentId)
+                .collect(Collectors.toList());
+
+        List<String> punishmentIds = deletePunishments.stream()
+                .map(Punishment::getId)
+                .collect(Collectors.toList());
+
+        Future<JsonObject> punishmentFuture = deletePunishment(punishmentIds);
+        Future<JsonObject> absenceFuture = deleteRelatedAbsence(deletePunishments, structureId);
+
         FutureHelper.all(Arrays.asList(punishmentFuture, absenceFuture)).setHandler(event -> {
             if (event.failed()) {
                 handler.handle(Future.failedFuture(event.cause().toString()));
                 return;
             }
+            StatisticsPresences.getInstance().postUsers(structureId, studentIds);
             handler.handle(Future.succeededFuture(punishmentFuture.result()));
         });
     }
 
-    private void deletePunishment(MultiMap body, Handler<AsyncResult<JsonObject>> handler) {
+    private Future<JsonObject> deletePunishment(List<String> ids) {
+        Promise<JsonObject> promise = Promise.promise();
         JsonObject query = new JsonObject()
-                .put("_id", body.get("id"));
-        MongoDb.getInstance().delete(punishment.getTable(), query, message -> {
-            Either<String, JsonObject> messageCheck = MongoDbResult.validResult(message);
-            if (messageCheck.isLeft()) {
-                handler.handle(Future.failedFuture("[Incidents@Punishment::deletePunishment] Failed to delete punishment"));
+                .put(Field._ID, new JsonObject().put(Field.$IN, ids));
+
+        MongoDb.getInstance().delete(punishment.getTable(), query, MongoDbResult.validResultHandler(FutureHelper.handlerJsonObject(result -> {
+            if (result.failed()) {
+                String message = String.format("[Incidents@%s::deletePunishment] Fail to delete punishments"
+                        , this.getClass().getSimpleName());
+                LOGGER.error(String.format("%s %s", message, result.cause().getMessage()));
+                promise.fail(message);
             } else {
-                JsonObject result = messageCheck.right().getValue();
-                handler.handle(Future.succeededFuture(result));
+                promise.complete(result.result());
             }
-        });
+        })));
+        return promise.future();
     }
 
-    private void deleteRelatedAbsence(Punishment deletePunishment, String studentId, Handler<AsyncResult<JsonObject>> handler) {
-        getCategoryLabel(deletePunishment, labelResult -> {
-            if (labelResult.failed()) {
-                handler.handle(Future.failedFuture(labelResult.cause().getMessage()));
-                return;
-            }
+    private Future<JsonObject> deleteRelatedAbsence(List<Punishment> deletePunishments, String structureId) {
+        Promise<JsonObject> promise = Promise.promise();
+        if (deletePunishments.isEmpty()) {
+            promise.complete(new JsonObject());
+            return promise.future();
+        }
+        Punishment deletePunishment = deletePunishments.get(0);
 
-            String label = labelResult.result().getString("label", "");
-            if (!label.equals(PunishmentCategory.EXCLUDE)) {
-                handler.handle(Future.succeededFuture(new JsonObject()));
-                return;
-            }
+        PunishmentCategory.getSpecifiedCategoryFromType(structureId, deletePunishment.getTypeId())
+                .onFailure(promise::fail)
+                .onSuccess(categoryResult -> {
+                    if (!PunishmentCategory.EXCLUDE.equals(categoryResult.getLabel())) {
+                        promise.complete(new JsonObject());
+                        return;
+                    }
 
-            ExcludeCategory category = new ExcludeCategory();
-            category.setFromJson(deletePunishment.getFields());
-            category.formatDates();
+                    ExcludeCategory category = new ExcludeCategory();
+                    category.setFromJson(deletePunishment.getFields());
+                    category.formatDates();
 
-            getStudentAbsences(studentId, category.getStartAt(), category.getEndAt()).setHandler(absencesResult -> {
-                if (absencesResult.failed()) {
-                    handler.handle(Future.failedFuture(absencesResult.cause().getMessage()));
-                    return;
-                }
+                    getStudentAbsences(deletePunishment.getStudentId(), category.getStartAt(), category.getEndAt()).setHandler(absencesResult -> {
+                        if (absencesResult.failed()) {
+                            promise.fail(absencesResult.cause().getMessage());
+                            return;
+                        }
 
-                List<JsonObject> absences = absencesResult.result();
-                if (absences.size() == 1 && areAbsenceDatesCorresponding(absences.get(0), category.getStartAt(), category.getEndAt())) {
-                    Presences.getInstance()
-                            .deleteAbsence(absences.get(0).getLong("id"), handler);
-                    return;
-                }
-                handler.handle(Future.succeededFuture(new JsonObject()));
-            });
-
-        });
+                        List<JsonObject> absences = absencesResult.result();
+                        if (absences.size() == 1 && areAbsenceDatesCorresponding(absences.get(0), category.getStartAt(), category.getEndAt())) {
+                            Presences.getInstance()
+                                    .deleteAbsence(absences.get(0).getLong(Field.ID), promise);
+                            return;
+                        }
+                        promise.complete(new JsonObject());
+                    });
+                });
+        return promise.future();
     }
 
 

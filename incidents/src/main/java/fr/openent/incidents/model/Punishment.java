@@ -2,7 +2,6 @@ package fr.openent.incidents.model;
 
 import fr.openent.incidents.Incidents;
 import fr.openent.incidents.enums.WorkflowActions;
-import fr.openent.incidents.model.punishmentCategory.PunishmentCategory;
 import fr.openent.presences.common.helper.DateHelper;
 import fr.openent.presences.common.helper.WorkflowHelper;
 import fr.openent.presences.model.Model;
@@ -11,6 +10,7 @@ import fr.wseduc.mongodb.MongoDb;
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Future;
 import io.vertx.core.Handler;
+import io.vertx.core.Promise;
 import io.vertx.core.json.JsonObject;
 import org.entcore.common.sql.Sql;
 import org.entcore.common.sql.SqlResult;
@@ -20,6 +20,7 @@ import java.text.SimpleDateFormat;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Date;
+import java.util.UUID;
 
 public class Punishment extends Model {
 
@@ -33,6 +34,7 @@ public class Punishment extends Model {
     private String student_id;
     private JsonObject fields;
     private JsonObject type;
+    private String grouped_punishment_id;
     private String created_at;
     private String updated_at;
 
@@ -50,6 +52,7 @@ public class Punishment extends Model {
         fillables.put("student_id", Arrays.asList("CREATE", "mandatory"));
         fillables.put("fields", Arrays.asList("CREATE", "UPDATE"));
         fillables.put("type", Collections.emptyList());
+        fillables.put("grouped_punishment_id", Collections.singletonList("CREATE"));
         fillables.put("created_at", Collections.emptyList());
         fillables.put("updated_at", Collections.emptyList());
     }
@@ -70,6 +73,18 @@ public class Punishment extends Model {
         return fields;
     }
 
+    public String getStudentId() {
+        return student_id;
+    }
+
+    public String getOwnerId() {
+        return owner_id;
+    }
+
+    public void setId(String id) {
+        this.id = id;
+    }
+
     public void setStudentId(String student_id) {
         this.student_id = student_id;
     }
@@ -78,7 +93,25 @@ public class Punishment extends Model {
         this.owner_id = owner_id;
     }
 
-    public void setFields(JsonObject fields) {this.fields = fields;}
+    public void setFields(JsonObject fields) {
+        this.fields = fields;
+    }
+
+    public void setTypeId(Long typeId) {
+        this.type_id = typeId;
+    }
+
+    public void setStructureId(String structureId) {
+        this.structure_id = structureId;
+    }
+
+    public void setGroupedPunishmentId(String groupedPunishmentId) {
+        this.grouped_punishment_id = groupedPunishmentId;
+    }
+
+    public void setGroupedPunishmentId() {
+        setGroupedPunishmentId(null);
+    }
 
 
     public JsonObject toJsonObject(String method) {
@@ -91,27 +124,31 @@ public class Punishment extends Model {
         return result;
     }
 
-    public void persistMongo(UserInfos user, Handler<AsyncResult<JsonObject>> handler) {
-        PunishmentCategory.getSpecifiedCategoryFromType(getTypeId(), getStructureId(), getFields(), result -> {
-                    if (result.failed()) {
-                        handler.handle(Future.failedFuture(result.cause().getMessage()));
-                    }
-                    PunishmentCategory category = result.result();
-                    setFields(category.toJsonObject());
 
-                    checkUserRight(user, resRight -> {
-                        if (resRight.succeeded()) {
-                            if (getId() != null) {
-                                updateMongo(getId(), handler);
-                            } else {
-                                createMongo(handler);
-                            }
-                        } else {
-                            handler.handle(Future.failedFuture(resRight.cause().getMessage()));
-                        }
-                    });
-                });
+    public Future<JsonObject> persistMongo(UserInfos user) {
+        Promise<JsonObject> promise = Promise.promise();
+        persistMongo(user, promise);
+        return promise.future();
     }
+
+    public void persistMongo(UserInfos user, Handler<AsyncResult<JsonObject>> handler) {
+        checkUserRight(user, resRight -> {
+            if (resRight.succeeded()) {
+                if (getId() != null) {
+                    if (getOwnerId() == null) this.setOwnerId(user.getUserId());
+                    updateMongo(getId(), handler);
+                } else {
+                    this.setOwnerId(user.getUserId());
+                    createMongo(handler);
+                }
+            } else {
+                handler.handle(Future.failedFuture(resRight.cause().getMessage()));
+            }
+        });
+    }
+
+
+
 
     private void updateMongo(String id, Handler<AsyncResult<JsonObject>> handler) {
         SimpleDateFormat formatter = new SimpleDateFormat(DateHelper.MONGO_FORMAT);
@@ -177,7 +214,7 @@ public class Punishment extends Model {
             if (resType.equals("PUNITION") && !WorkflowHelper.hasRight(user, WorkflowActions.PUNISHMENT_CREATE.toString())) {
                 handler.handle(Future.failedFuture("[Incidents@Punishment::createMongo] This user have not the right to create Punishment."));
                 return;
-            } else if(resType.equals("SANCTION") && !WorkflowHelper.hasRight(user, WorkflowActions.SANCTION_CREATE.toString())) {
+            } else if (resType.equals("SANCTION") && !WorkflowHelper.hasRight(user, WorkflowActions.SANCTION_CREATE.toString())) {
                 handler.handle(Future.failedFuture("[Incidents@Punishment::createMongo] This user have not the right to create Sanction."));
                 return;
             }

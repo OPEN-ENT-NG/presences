@@ -1,0 +1,106 @@
+<div class="punishment-detention-form">
+
+    <div class="punishment-detention-form-dates" ng-repeat="detentionSlot in vm.detentionSlots">
+        <!-- Date -->
+        <div class="punishment-detention-form-dates-date align-center flex-row justify-between">
+            <!-- Date -->
+            <div>
+                <i18n>incidents.date</i18n> &#58;&nbsp;
+                <span class="card date-picker">
+                        <date-picker required ng-model="detentionSlot.date" ng-change="vm.changeDateInput(detentionSlot)"></date-picker>
+                    </span>
+            </div>
+
+            <!-- CASE FALSE : Select time slots -->
+            <div data-ng-show="!detentionSlot.isFreeSelection" class="timeslot">
+                <!-- start time slot -->
+                <i18n>presences.by</i18n>&#58;
+                <label class="timeslot-select">
+                    <i class="time-picker"></i>
+                    <select ng-model="detentionSlot.timeSlotTimePeriod.start"
+                            ng-change="vm.selectTimeSlot(vm.timeSlotHourPeriod.START_HOUR, detentionSlot)"
+                            ng-options="item.name + ' : ' + item.startHour for item in vm.timeSlots
+                                | orderBy:vm.timeSlotHourPeriod.START_HOUR">
+                        <option value="">[[vm.selectTimeSlotText]]</option>
+                    </select>
+                </label>
+
+                <!-- end time slot -->
+                <i18n>presences.at</i18n>&#58;
+                <label class="timeslot-select">
+                    <i class="time-picker"></i>
+                    <select ng-model="detentionSlot.timeSlotTimePeriod.end"
+                            ng-change="vm.selectTimeSlot(vm.timeSlotHourPeriod.END_HOUR, detentionSlot)"
+                            ng-options="item.name + ' : ' + item.endHour for item in vm.timeSlots
+                                | orderBy:vm.timeSlotHourPeriod.END_HOUR">
+                        <option value="">[[vm.selectTimeSlotText]]</option>
+                    </select>
+                </label>
+            </div>
+
+            <!-- CASE TRUE : Free choice for time slots -->
+            <div data-ng-show="detentionSlot.isFreeSelection">
+                <!-- start time -->
+                <span class="presenceLightbox-body-info-time-start">
+                        <i18n>presences.by</i18n> &#58;
+                        <span class="card card-timepicker">
+                            <time-picker required ng-model="detentionSlot.start_time"
+                                         ng-change="vm.changeTimeInput(detentionSlot)"></time-picker>
+                        </span>
+                    </span>
+
+                <!-- end time -->
+                <span class="presenceLightbox-body-info-time-end">
+                        <i18n>presences.at</i18n> &#58;
+                        <span class="card card-timepicker">
+                            <time-picker required ng-model="detentionSlot.end_time"
+                                         data-ng-change="vm.changeTimeInput(detentionSlot)"></time-picker>
+                        </span>
+                    </span>
+            </div>
+            <div><i class="trash" data-ng-click="vm.deleteSlot(detentionSlot)"></i></div>
+
+        </div>
+
+        <!-- place -->
+        <div class="align-center flex-row punishment-detention-form-dates-place">
+            <i18n>incidents.place</i18n>&#58;&nbsp;
+            <input i18n-placeholder="incidents.write.text" ng-model="detentionSlot.detentionField.place"
+                ng-change="vm.changePlace(detentionSlot)">
+
+            <!-- checkbox free timeslot -->
+            <label class="checkbox flex-one right-text">
+                <input type="checkbox" ng-model="detentionSlot.isFreeSelection"/>
+                <span></span>
+                <i18n>incidents.choice.time.slot</i18n>
+            </label>&nbsp;
+        </div>
+    </div>
+
+    <div class="punishment-detention-form-createSlot align-center flex-row" data-ng-click="vm.createSlot()">
+        <span class="punishment-detention-form-createSlot-icon">+</span><i18n>incidents.punishment.add.slot</i18n>
+    </div>
+
+    <!-- responsible -->
+    <label class="twelve cell twelve-mobile">
+        <div class="two cell twelve-mobile">
+            <i18n>presences.responsible</i18n>
+            :
+        </div>
+        <div class="seven cell twelve-mobile">
+            <div class="incident-lightbox-body-responsible-autocomplete search-input">
+                <async-autocomplete data-ng-disabled="false"
+                                    ng-model="vm.ownerSearch"
+                                    data-ng-change="vm.selectOwner"
+                                    data-on-search="vm.searchOwner"
+                                    data-options="vm.usersSearch.users"
+                                    data-placeholder="incidents.search.personal"
+                                    data-search="vm.ownerSearch">
+                </async-autocomplete>
+            </div>
+            <div ng-show="vm.owner" class="margin-top-sm">
+                <span class="font-bold">[[vm.getDisplayOwnerName()]]</span>
+            </div>
+        </div>
+    </label>
+</div>
