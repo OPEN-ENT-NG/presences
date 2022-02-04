@@ -147,6 +147,7 @@
   "presences.exemptions.form.defautValue.comment": "Ecrire un texte",
   "presences.exemptions.form.defautValue.comment.2": "Ecrire du texte",
   "presences.exemptions.form.delete": "Supprimer",
+  "presences.exemptions.form.delete.all": "Delete all",
   "presences.exemptions.form.edit.succeed": "Dispense modifiée avec succès",
   "presences.exemptions.form.sniplet.title": "Créer une dispense",
   "presences.exemptions.form.submit": "Valider",

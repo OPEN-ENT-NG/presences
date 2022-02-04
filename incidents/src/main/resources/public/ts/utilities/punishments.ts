@@ -1,14 +1,16 @@
 import {
-    IPDetentionField, IPDutyField, IPExcludeField, IPunishment,
+    IPDetentionField,
+    IPDutyField,
+    IPExcludeField,
+    IPunishment,
     IPunishmentBody,
     MassmailingsPunishments,
     PunishmentsProcessStates,
     PunishmentsRules
 } from "@incidents/models";
-import {model} from "entcore";
+import {idiom as lang, model} from "entcore";
 import incidentsRights from "@incidents/rights";
 import {DateUtils} from "@common/utils";
-import {idiom as lang} from 'entcore';
 
 export class PunishmentsUtils {
 
@@ -107,9 +109,10 @@ export class PunishmentsUtils {
                     return fieldDuty && fieldDuty.delay_at && DateUtils.isValid(fieldDuty.delay_at,
                         DateUtils.FORMAT["YEAR-MONTH-DAY-HOUR-MIN-SEC"])
                 case 2: // DETENTION
-                    let fieldDetention: IPDetentionField = (<IPDetentionField>punishment.fields)
-                    return fieldDetention && fieldDetention.start_at && fieldDetention.end_at &&
-                        DateUtils.isPeriodValid(fieldDetention.start_at, fieldDetention.end_at);
+                    let slots: Array<IPDetentionField> = (<Array<IPDetentionField>>punishment.fields)
+                    return !!slots
+                        && slots.filter((slot: IPDetentionField) => !PunishmentsUtils.isValidDetention(slot))
+                            .length == 0;
                 case 3: // BLAME
                     return true;
                 case 4: // EXCLUSION
@@ -128,28 +131,35 @@ export class PunishmentsUtils {
             switch (punishment.type.punishment_category_id) {
                 case 1: // DUTY
                     let dutyDate: string = createdDate;
-                    if ((<IPDutyField> punishment.fields).delay_at) {
-                        dutyDate = DateUtils.format((<IPDutyField> punishment.fields).delay_at, DateUtils.FORMAT['DAY-MONTH-YEAR']);
+                    if ((<IPDutyField>punishment.fields).delay_at) {
+                        dutyDate = DateUtils.format((<IPDutyField>punishment.fields).delay_at, DateUtils.FORMAT['DAY-MONTH-YEAR']);
                     }
                     return lang.translate('incidents.punishments.date.for.the') + dutyDate;
                 case 2: // DETENTION
                     let startDetentionDate: string = createdDate;
-                    if ((<IPDetentionField> punishment.fields).start_at) {
-                        startDetentionDate = DateUtils.format((<IPDetentionField> punishment.fields).start_at, DateUtils.FORMAT['DAY-MONTH-YEAR']);
+                    if ((<IPDetentionField>punishment.fields).start_at) {
+                        startDetentionDate = DateUtils.format((<IPDetentionField>punishment.fields).start_at, DateUtils.FORMAT['DAY-MONTH-YEAR']);
                     }
                     return lang.translate('incidents.punishments.date.for.the') + startDetentionDate;
                 case 3: // BLAME
                     return lang.translate('incidents.punishments.date.created.on') + createdDate;
                 case 4: // EXCLUSION
-                    if ((<IPDetentionField> punishment.fields).start_at && (<IPDetentionField> punishment.fields).end_at) {
-                        let startExcludeDate: string = DateUtils.format((<IPExcludeField> punishment.fields).start_at, DateUtils.FORMAT['DAY-MONTH-YEAR']);
-                        let endExcludeDate: string = DateUtils.format((<IPExcludeField> punishment.fields).end_at, DateUtils.FORMAT['DAY-MONTH-YEAR']);
+                    if ((<IPExcludeField>punishment.fields).start_at && (<IPExcludeField>punishment.fields).end_at) {
+                        let startExcludeDate: string = DateUtils.format((<IPExcludeField>punishment.fields).start_at, DateUtils.FORMAT['DAY-MONTH-YEAR']);
+                        let endExcludeDate: string = DateUtils.format((<IPExcludeField>punishment.fields).end_at, DateUtils.FORMAT['DAY-MONTH-YEAR']);
                         if (startExcludeDate && endExcludeDate) {
-                            return lang.translate('incidents.punishments.date.from') + startExcludeDate + lang.translate('incidents.punishments.date.to') + endExcludeDate;
+                            return lang.translate('incidents.punishments.date.from') +
+                                startExcludeDate + lang.translate('incidents.punishments.date.to') +
+                                endExcludeDate;
                         }
                     }
             }
         }
         return lang.translate('incidents.punishments.date.created.on') + createdDate;
     };
+
+    static isValidDetention = (slot: IPDetentionField): boolean => {
+        return !!slot.start_at && !!slot.end_at
+            && DateUtils.isPeriodValid(slot.start_at, slot.end_at);
+    }
 }

@@ -1,5 +1,6 @@
 package fr.openent.statistics_presences.indicator.worker;
 
+import fr.openent.presences.core.constants.Field;
 import fr.openent.statistics_presences.bean.Stat;
 import fr.openent.statistics_presences.bean.global.GlobalStat;
 import fr.openent.statistics_presences.indicator.IndicatorGeneric;
@@ -118,7 +119,8 @@ public class Global extends IndicatorWorker {
                                 List<JsonObject> punishments = punishmentsHolder.getJsonArray("punishments").getList();
                                 return punishments.stream().map(punishment -> {
                                     GlobalStat stat = new GlobalStat()
-                                            .setPunishmentType(punishment.getLong("type_id"));
+                                            .setPunishmentType(punishment.getLong(Field.TYPEID))
+                                            .setGroupedPunishmentId(punishment.getString(Field.GROUPED_PUNISHMENT_ID));
                                     setDatesFromPunishments(punishment, stat);
                                     return stat;
                                 });

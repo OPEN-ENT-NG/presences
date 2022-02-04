@@ -13,8 +13,14 @@ public class DetentionCategory extends PunishmentCategory {
         fillables.put("place", Arrays.asList("CREATE", "UPDATE"));
     }
 
+    @Override
     public void formatDates() {
         start_at = start_at.replace("/", "-");
         end_at = end_at.replace("/", "-");
+    }
+
+    @Override
+    public String getLabel() {
+        return PunishmentCategory.DETENTION;
     }
 }

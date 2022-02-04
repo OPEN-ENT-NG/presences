@@ -17,6 +17,7 @@ public class GlobalStat implements Stat {
     private JsonArray audiences = new JsonArray();
     private Long reason;
     private Long punishmentType;
+    private String groupedPunishmentId;
 
     public GlobalStat setIndicator(String indicator) {
         this.indicator = indicator;
@@ -77,6 +78,15 @@ public class GlobalStat implements Stat {
         return this;
     }
 
+    public String getGroupedPunishmentId() {
+        return groupedPunishmentId;
+    }
+
+    public GlobalStat setGroupedPunishmentId(String groupedPunishmentId) {
+        this.groupedPunishmentId = groupedPunishmentId;
+        return this;
+    }
+
     public JsonObject toJSON() {
         return new JsonObject()
                 .put("indicator", this.indicator)
@@ -86,6 +96,7 @@ public class GlobalStat implements Stat {
                 .put("type", this.type.name())
                 .put("reason", this.reason)
                 .put("punishment_type", this.punishmentType)
+                .put("grouped_punishment_id", this.groupedPunishmentId)
                 .put("start_date", this.startDate)
                 .put("end_date", this.endDate)
                 .put("structure", this.structure)

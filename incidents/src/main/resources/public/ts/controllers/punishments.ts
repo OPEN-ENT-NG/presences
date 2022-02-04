@@ -1,12 +1,10 @@
-import {idiom as lang, moment, ng, notify, toasts} from 'entcore';
+import {moment, ng, notify, toasts} from 'entcore';
 
 import {DateUtils, StudentsSearch} from "@common/utils";
 import {GroupsSearch} from "@common/utils/autocomplete/groupsSearch";
 import {PunishmentsUtils} from "@incidents/utilities/punishments";
 import {
     IPDetentionField,
-    IPDutyField,
-    IPExcludeField,
     IPunishment,
     IPunishmentBody,
     IPunishmentRequest,
@@ -43,7 +41,7 @@ interface IFilterForm {
     groups: Array<{}>;
     isAllPunishmentTypeSelected: boolean;
     punishmentsRules: Array<{ label: string, value: string, isSelected: boolean, type: string }>;
-    punishmentsStates: Array<{ label: string,  value: string, isSelected: boolean }>;
+    punishmentsStates: Array<{ label: string, value: string, isSelected: boolean }>;
     massmaillingsPunishments: Array<{ label: string, isSelected: boolean }>;
     isUpdated?: boolean;
 }
@@ -67,9 +65,9 @@ interface IViewModel {
 
     updateFilter(): Promise<void>;
 
-    getPunishmentDate(punishment: IPunishment) : string;
+    getPunishmentDate(punishment: IPunishment): string;
 
-    getPunishmentTime(punishment: IPunishment) : string;
+    getPunishmentTime(punishment: IPunishment): string;
 
     stopPropagation($event): void;
 
@@ -265,9 +263,9 @@ export const punishmentController = ng.controller('PunishmentController',
 
             vm.getPunishmentTime = (punishment: IPunishment): string => {
                 if (punishment.type && punishment.type.punishment_category_id === 2) { // DETENTION
-                    if ((<IPDetentionField> punishment.fields).start_at && (<IPDetentionField> punishment.fields).end_at) {
-                        let startDetentionDate: string = DateUtils.format((<IPDetentionField> punishment.fields).start_at, DateUtils.FORMAT['HOUR-MIN']);
-                        let endDetentionDate: string = DateUtils.format((<IPDetentionField> punishment.fields).end_at, DateUtils.FORMAT['HOUR-MIN']);
+                    if ((<IPDetentionField>punishment.fields).start_at && (<IPDetentionField>punishment.fields).end_at) {
+                        let startDetentionDate: string = DateUtils.format((<IPDetentionField>punishment.fields).start_at, DateUtils.FORMAT['HOUR-MIN']);
+                        let endDetentionDate: string = DateUtils.format((<IPDetentionField>punishment.fields).end_at, DateUtils.FORMAT['HOUR-MIN']);
                         if (startDetentionDate && endDetentionDate) {
                             return startDetentionDate + ' - ' + endDetentionDate;
                         } else {
@@ -324,7 +322,7 @@ export const punishmentController = ng.controller('PunishmentController',
                 if (punishment.type &&
                     ((punishment.type.type === PunishmentsUtils.RULES.sanction) && $scope.hasRight('createSanction')) ||
                     ((punishment.type.type === PunishmentsUtils.RULES.punishment) && $scope.hasRight('createPunishment'))) {
-                        $scope.$broadcast(SNIPLET_FORM_EMIT_PUNISHMENT_EVENTS.OPEN, JSON.parse(JSON.stringify(punishment)));
+                    $scope.$broadcast(SNIPLET_FORM_EMIT_PUNISHMENT_EVENTS.OPEN, JSON.parse(JSON.stringify(punishment)));
                 }
             };
 
@@ -550,6 +548,7 @@ export const punishmentController = ng.controller('PunishmentController',
             $scope.$on(SNIPLET_FORM_EMIT_PUNISHMENT_EVENTS.CREATION, load);
             $scope.$on(SNIPLET_FORM_EMIT_PUNISHMENT_EVENTS.EDIT, load);
             $scope.$on(SNIPLET_FORM_EMIT_PUNISHMENT_EVENTS.DELETE, load);
+            $scope.$on(SNIPLET_FORM_EMIT_PUNISHMENT_EVENTS.CLOSE, load);
 
             /* on  (watch) */
             $scope.$watch(() => window.structure, () => {

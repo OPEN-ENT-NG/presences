@@ -3,12 +3,14 @@ package fr.openent.incidents.helper;
 import fr.openent.incidents.Incidents;
 import fr.openent.incidents.enums.PunishmentsProcessState;
 import fr.openent.incidents.enums.WorkflowActions;
+import fr.openent.incidents.model.Punishment;
 import fr.openent.presences.common.helper.DateHelper;
 import fr.openent.presences.common.helper.WorkflowHelper;
 import fr.openent.presences.common.service.GroupService;
 import fr.openent.presences.common.service.UserService;
 import fr.openent.presences.common.service.impl.DefaultGroupService;
 import fr.openent.presences.common.service.impl.DefaultUserService;
+import fr.openent.presences.core.constants.Field;
 import fr.wseduc.mongodb.MongoDb;
 import fr.wseduc.webutils.Either;
 import io.vertx.core.*;
@@ -37,6 +39,17 @@ public class PunishmentHelper {
         this.userService = new DefaultUserService();
     }
 
+    @SuppressWarnings("unchecked")
+    public static List<Punishment> getCollectivePunishmentListFromJsonArray(JsonArray punishments) {
+        return ((List<JsonObject>) punishments.getList()).stream()
+                .map(oPunishment -> {
+                    Punishment punishment = new Punishment();
+                    punishment.setFromJson(oPunishment);
+                    return punishment;
+                })
+                .collect(Collectors.toList());
+    }
+
     /* QUERY CONSTRUCTION PART */
     public void getQuery(UserInfos user, MultiMap body, boolean isStudent, Handler<AsyncResult<JsonObject>> handler) {
         String id = body.get("id");
@@ -47,11 +60,11 @@ public class PunishmentHelper {
         List<String> groupIds = body.getAll("group_id");
         List<String> typeIds = body.getAll("type_id");
         List<String> processStates = body.getAll("process");
-        getQuery(user, id, structureId, startAt, endAt, studentIds, groupIds, typeIds, processStates, isStudent, handler);
+        getQuery(user, id, null, structureId, startAt, endAt, studentIds, groupIds, typeIds, processStates, isStudent, handler);
 
     }
 
-    public void getQuery(UserInfos user, String id, String structureId, String startAt, String endAt, List<String> studentIds,
+    public void getQuery(UserInfos user, String id, String groupedPunishmentId, String structureId, String startAt, String endAt, List<String> studentIds,
                          List<String> groupIds, List<String> typeIds, List<String> processStates, boolean isStudent,
                          Handler<AsyncResult<JsonObject>> handler) {
         JsonObject query = new JsonObject().put("structure_id", structureId);
@@ -64,6 +77,9 @@ public class PunishmentHelper {
 
         if (id != null && !id.equals("")) {
             query.put("_id", id);
+            handler.handle(Future.succeededFuture(query));
+        } else if (groupedPunishmentId != null && !groupedPunishmentId.equals("")) {
+            query.put(Field.GROUPED_PUNISHMENT_ID, groupedPunishmentId);
             handler.handle(Future.succeededFuture(query));
         } else {
             getManyPunishmentsQuery(query, startAt, endAt, studentIds, groupIds, typeIds, processStates, isStudent, handler);
@@ -173,22 +189,30 @@ public class PunishmentHelper {
 
     /* REQUEST MONGODB PART */
 
-    public void getPunishment(String tableName, JsonObject query, Handler<AsyncResult<JsonObject>> handler) {
+    public Future<JsonObject> getPunishment(String tableName, JsonObject query) {
+        Promise<JsonObject> promise = Promise.promise();
         MongoDb.getInstance().findOne(tableName, query, message -> {
             Either<String, JsonObject> messageCheck = MongoDbResult.validResult(message);
             if (messageCheck.isLeft()) {
-                handler.handle(Future.failedFuture("[Incidents@PunishmentHelper::getPunishment] Failed to get punishment by id."));
+                String messageError = String.format("[Incidents@%s::getPunishment] Failed to get punishment by id."
+                        , this.getClass().getSimpleName());
+                log.error(String.format("%s %s", messageError, messageCheck.left().getValue()));
+                promise.fail(messageError);
             } else {
                 JsonObject result = messageCheck.right().getValue();
                 mapGetterResults(new JsonArray().add(result), mapResult -> {
                     if (mapResult.failed()) {
-                        handler.handle(Future.failedFuture(mapResult.cause()));
+                        String messageError = String.format("[Incidents@%s::getPunishment] Failed to map punishment."
+                                , this.getClass().getSimpleName());
+                        log.error(String.format("%s %s", messageError, mapResult.cause().getMessage()));
+                        promise.fail(messageError);
                     } else {
-                        handler.handle(Future.succeededFuture(mapResult.result().getJsonObject(0)));
+                        promise.complete(mapResult.result().getJsonObject(0));
                     }
                 });
             }
         });
+        return promise.future();
     }
 
     public void getPunishments(String tableName, JsonObject query, Integer limit, Integer offset, Handler<AsyncResult<JsonArray>> handler) {
@@ -266,19 +290,19 @@ public class PunishmentHelper {
         return new JsonObject()
                 .put("sortField", new JsonObject().put(
                         "$switch", new JsonObject().put("branches", new JsonArray(Arrays.asList(
-                                getCase(
-                                        new JsonObject().put("$gt", new JsonArray(Arrays.asList("$fields.delay_at", null))),
-                                        getDate("$fields.delay_at")
-                                ),
-                                getCase(
-                                        new JsonObject().put("$gt", new JsonArray(Arrays.asList("$fields.start_at", null))),
-                                        getDate("$fields.start_at")
-                                ),
-                                getCase(
-                                        new JsonObject().put("$gt", new JsonArray(Arrays.asList("$fields.end_at", null))),
-                                        getDate("$fields.end_at")
-                                )
-                        )))
+                                        getCase(
+                                                new JsonObject().put("$gt", new JsonArray(Arrays.asList("$fields.delay_at", null))),
+                                                getDate("$fields.delay_at")
+                                        ),
+                                        getCase(
+                                                new JsonObject().put("$gt", new JsonArray(Arrays.asList("$fields.start_at", null))),
+                                                getDate("$fields.start_at")
+                                        ),
+                                        getCase(
+                                                new JsonObject().put("$gt", new JsonArray(Arrays.asList("$fields.end_at", null))),
+                                                getDate("$fields.end_at")
+                                        )
+                                )))
                                 .put("default", getDate("$created_at"))
                 ));
     }
@@ -324,7 +348,7 @@ public class PunishmentHelper {
 
     private JsonObject addProject() {
         return new JsonObject()
-                .put("_id", 1)
+                .put("id", "$_id")
                 .put("description", 1)
                 .put("processed", 1)
                 .put("incident_id", 1)
@@ -332,6 +356,7 @@ public class PunishmentHelper {
                 .put("owner_id", 1)
                 .put("structure_id", 1)
                 .put("student_id", 1)
+                .put("grouped_punishment_id", 1)
                 .put("fields.place", cond(fieldIsNotNull("$fields.place"), "$fields.place", "$$REMOVE"))
                 .put("fields.instruction", cond(fieldIsNotNull("$fields.instruction"), "$fields.instruction", "$$REMOVE"))
                 .put("fields.delay_at",
@@ -441,10 +466,6 @@ public class PunishmentHelper {
                     res.put("type", typeMap.get(res.getLong("type_id")));
 
                     res.put("id", res.getString("_id"));
-                    res.remove("_id");
-                    res.remove("owner_id");
-                    res.remove("student_id");
-                    res.remove("type_id");
                 });
                 handler.handle(Future.succeededFuture(result));
             }

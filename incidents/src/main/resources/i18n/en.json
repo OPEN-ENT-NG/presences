@@ -4,6 +4,8 @@
   "incidents.punishment.declare.absence": "Declare an absence during this period",
   "incidents.punishment.declare.absence.followed": "Followed event",
   "incidents.punishment.declare.absence.anomaly": "Some students are already absents during this period, no absence will be created or updated for them",
+  "incidents.punishments.get.grouped.err": "Une erreur est survenue dans le chargement des punitions",
+  "incidents.punishment.add.slot": "Add a slot",
   "incidents.absence.select.empty": "No reason",
   "incidents.invalid.form": "Form is invalid"
 }
