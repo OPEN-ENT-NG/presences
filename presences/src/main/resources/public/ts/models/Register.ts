@@ -155,7 +155,7 @@ export class Register extends LoadingCollection {
     async setStatus(state_id: number): Promise<void> {
         const state_idOld = this.state_id;
         this.state_id = state_id;
-        registerService.setStatus(this.id, this.state_id)
+        await registerService.setStatus(this.id, this.state_id)
             .then((response: AxiosResponse) => {
                 // Prevent displaying toasts when selecting students in register.
                 if (state_id === RegisterStatus.DONE) {
