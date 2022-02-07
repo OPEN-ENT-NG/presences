@@ -1,7 +1,9 @@
 package fr.openent.presences.controller;
 
+import fr.openent.presences.common.security.UserInStructure;
 import fr.openent.presences.common.service.GroupService;
 import fr.openent.presences.constants.Actions;
+import fr.openent.presences.core.constants.Field;
 import fr.openent.presences.security.AbsenceWidgetRight;
 import fr.openent.presences.security.CreateEventRight;
 import fr.openent.presences.security.Manage;
@@ -59,18 +61,28 @@ public class AbsenceController extends ControllerHelper {
     @Trace(Actions.ABSENCE_CREATION)
     public void postEvent(HttpServerRequest request) {
         RequestUtils.bodyToJson(request, event -> {
-            if (Boolean.FALSE.equals(isAbsenceBodyValid(event))) {
+            String studentId = event.getString(Field.STUDENT_ID, null);
+            String structureId = event.getString(Field.STRUCTURE_ID, null);
+            if (Boolean.FALSE.equals(isAbsenceBodyValid(event))
+                    || structureId == null
+                    || studentId == null) {
                 badRequest(request);
                 return;
             }
-
-            UserUtils.getUserInfos(eb, request, user -> absenceService.create(event, user, true, either -> {
-                if (either.isLeft()) {
-                    log.error("[Presences@AbsenceController] failed to create absent or events", either.left().getValue());
-                    renderError(request);
+            UserUtils.getUserInfos(eb, request, user -> UserInStructure.authorize(structureId, studentId, eb, inStructure -> {
+                if (Boolean.TRUE.equals(inStructure)) {
+                    absenceService.create(event, user, true, either -> {
+                        if (either.isLeft()) {
+                            String message = String.format("[Presences@AbsenceController] failed to create absent or events %s", either.left().getValue());
+                            log.error(message);
+                            renderError(request);
+                        } else {
+                            JsonObject res = new JsonObject().put(Field.EVENTS, either.right().getValue());
+                            renderJson(request, res, 201);
+                        }
+                    });
                 } else {
-                    JsonObject res = new JsonObject().put("events", either.right().getValue());
-                    renderJson(request, res, 201);
+                    unauthorized(request, "presences.absences.user.not.in.structure");
                 }
             }));
         });
@@ -180,8 +192,8 @@ public class AbsenceController extends ControllerHelper {
                     return;
                 }
 
-                if(collectiveId != null) {
-                    collectiveService.removeAudiencesRelation(structureId, collectiveId , audienceResult -> {
+                if (collectiveId != null) {
+                    collectiveService.removeAudiencesRelation(structureId, collectiveId, audienceResult -> {
                         if (audienceResult.failed()) {
                             String message = "[Presences@AbsenceController::delete] Failed to delete collectives audiences.";
                             log.error(message);
