@@ -586,7 +586,7 @@ const vm: ViewModel = {
             absence.id = id ? id : absenceFoundId;
             absence.counsellor_regularisation = vm.eventBody.counsellor_regularisation;
             if (absence.id) {
-                absence.updateAbsenceRegularized([absence.id], absence.counsellor_regularisation);
+                await absence.updateAbsenceRegularized([absence.id], absence.counsellor_regularisation);
             }
             vm.updateAbsenceRegularisation = false;
         }
