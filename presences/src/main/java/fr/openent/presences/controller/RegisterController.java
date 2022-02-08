@@ -20,8 +20,7 @@ import io.vertx.core.http.HttpServerRequest;
 import org.entcore.common.controller.ControllerHelper;
 import org.entcore.common.events.EventStore;
 import org.entcore.common.events.EventStoreFactory;
-import org.entcore.common.http.filter.ResourceFilter;
-import org.entcore.common.http.filter.Trace;
+import org.entcore.common.http.filter.*;
 import org.entcore.common.user.UserUtils;
 
 import java.util.List;
@@ -34,11 +33,11 @@ public class RegisterController extends ControllerHelper {
     private final EventStore eventStore;
 
 
-    public RegisterController(EventBus eb) {
+    public RegisterController(CommonPresencesServiceFactory commonPresencesServiceFactory) {
         super();
-        this.registerService = new DefaultRegisterService(eb);
+        this.registerService = commonPresencesServiceFactory.registerService();
         this.settingsService = new DefaultSettingsService();
-        this.eb = eb;
+        this.eb = commonPresencesServiceFactory.eventBus();
         this.eventStore = EventStoreFactory.getFactory().getEventStore(Presences.class.getSimpleName());
     }
 
@@ -80,6 +79,22 @@ public class RegisterController extends ControllerHelper {
                 }
             });
         }));
+    }
+
+
+    @Post("/structures/:structureId/registers/multiple")
+    @ApiDoc("Create multiple registers")
+    @SecuredAction(value = "", type = ActionType.RESOURCE)
+    @ResourceFilter(AdminFilter.class)
+    @Trace(value= Actions.REGISTER_CREATION, body = false)
+    public void createMultipleRegisters(final HttpServerRequest request) {
+        String structureId = request.params().get(Field.STRUCTUREID);
+        String startDate = request.getParam(Field.STARTDATE);
+        String endDate = request.getParam(Field.ENDDATE);
+        registerService.createMultipleRegisters(structureId, startDate, endDate)
+                .onFailure(fail -> renderError(request))
+                .onSuccess(res -> renderJson(request, res));
+
     }
 
     @Put("/registers/:id/status")

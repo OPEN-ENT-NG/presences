@@ -112,7 +112,11 @@ public class CommonPresencesServiceFactory {
     }
 
     public RegisterService registerService() {
-        return new DefaultRegisterService(this.vertx.eventBus());
+        return new DefaultRegisterService(this);
+    }
+
+    public CourseService courseService() {
+        return new DefaultCourseService(this);
     }
 
     public CollectiveAbsenceService collectiveAbsenceService() {
