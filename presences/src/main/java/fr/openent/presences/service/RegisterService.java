@@ -76,6 +76,31 @@ public interface RegisterService {
     void create(JsonObject register, UserInfos user, Handler<Either<String, JsonObject>> handler);
 
     /**
+     * Create multiple registers in given time period
+     * @param structureId   structure identifier
+     * @param startDate     start date
+     * @param endDate       end date
+     * @return  {@link Future} of {@link JsonObject}
+     */
+    Future<JsonObject> createMultipleRegisters(String structureId, String startDate, String endDate);
+
+
+    /**
+     * Create not existing registers based on courses for given structure and dates
+     *
+     * @param startDate             start date filter
+     * @param endDate               end date filter
+     * @param startTime             start time filter
+     * @param endTime               end time filter
+     * @param result                result object for worker
+     * @param structureId           structure identifier
+     * @param crossDateFilter       cross date filter (true : get courses beginning < start date and finishing end date)
+     * @param promise               promise handling data
+     */
+    void createStructureCoursesRegisterFuture(String startDate, String endDate, String startTime, String endTime, JsonObject result,
+                                              String structureId, String crossDateFilter, Promise<JsonObject> promise);
+
+    /**
      * Update register status
      *
      * @param registerId Register identifier

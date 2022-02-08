@@ -8,8 +8,7 @@ import fr.openent.presences.core.constants.*;
 import fr.openent.presences.db.*;
 import fr.openent.presences.helper.*;
 import fr.openent.presences.model.*;
-import fr.openent.presences.service.CourseService;
-import fr.openent.presences.service.RegisterService;
+import fr.openent.presences.service.*;
 import fr.wseduc.mongodb.MongoDb;
 import fr.wseduc.webutils.Either;
 import io.vertx.core.*;
@@ -33,10 +32,10 @@ public class DefaultCourseService extends DBService implements CourseService {
     private final RegisterService registerService;
     private final GroupService groupService;
 
-    public DefaultCourseService(EventBus eb) {
-        this.eb = eb;
-        this.courseHelper = new CourseHelper(eb);
-        this.registerService = new DefaultRegisterService(eb);
+    public DefaultCourseService(CommonPresencesServiceFactory commonPresencesServiceFactory) {
+        this.eb = commonPresencesServiceFactory.eventBus();
+        this.courseHelper = commonPresencesServiceFactory.courseHelper();
+        this.registerService = commonPresencesServiceFactory.registerService();
         this.groupService = new DefaultGroupService(eb);
     }
 
