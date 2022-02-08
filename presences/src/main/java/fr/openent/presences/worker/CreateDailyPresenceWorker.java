@@ -5,10 +5,8 @@ import fr.openent.presences.common.helper.DateHelper;
 import fr.openent.presences.common.helper.FutureHelper;
 import fr.openent.presences.core.constants.*;
 import fr.openent.presences.helper.MapHelper;
-import fr.openent.presences.model.*;
 import fr.openent.presences.service.*;
 import fr.openent.presences.service.impl.*;
-import fr.wseduc.webutils.*;
 import fr.wseduc.webutils.email.EmailSender;
 import io.vertx.core.*;
 import io.vertx.core.eventbus.Message;
@@ -21,28 +19,28 @@ import org.entcore.common.neo4j.Neo4j;
 import org.entcore.common.neo4j.Neo4jResult;
 import org.entcore.common.sql.Sql;
 import org.entcore.common.sql.SqlResult;
-import org.entcore.common.user.UserInfos;
+import org.entcore.common.storage.*;
 import org.vertx.java.busmods.BusModBase;
 
 import java.util.*;
 import java.util.stream.Collectors;
 
 public class CreateDailyPresenceWorker extends BusModBase implements Handler<Message<JsonObject>> {
+    private CommonPresencesServiceFactory commonPresencesServiceFactory;
+
     private EmailSender emailSender;
-    private CourseService courseService;
     private RegisterService registerService;
-    private SettingsService settingsService;
     private final Logger log = LoggerFactory.getLogger(CreateDailyPresenceWorker.class);
 
 
     @Override
     public void start() {
         super.start();
-        this.courseService = new DefaultCourseService(eb);
-        this.registerService = new DefaultRegisterService(eb);
-        this.settingsService = new DefaultSettingsService();
+        this.commonPresencesServiceFactory = new CommonPresencesServiceFactory(vertx,
+                new StorageFactory(vertx, config).getStorage(), config);
+        this.registerService = new DefaultRegisterService(commonPresencesServiceFactory);
         this.emailSender = new EmailFactory(vertx, config).getSender();
-        eb.consumer(this.getClass().getName(), this::handle);
+        eb.consumer(this.getClass().getName(), this);
     }
 
     @Override
@@ -58,9 +56,9 @@ public class CreateDailyPresenceWorker extends BusModBase implements Handler<Mes
         Neo4j.getInstance().execute(query, params, Neo4jResult.validResultHandler(FutureHelper.handlerJsonArray(future)));
     }
 
+    @SuppressWarnings("unchecked")
     private void processCreateDailyPresences() {
         String today = DateHelper.getCurrentDay();
-        String startDayTime = "00:00";
         String currentTime = DateHelper.getCurrentDate(DateHelper.HOUR_MINUTES);
 
         String queryStructures = "SELECT id_etablissement as id FROM " + Presences.dbSchema + " .etablissements_actifs";
@@ -68,195 +66,41 @@ public class CreateDailyPresenceWorker extends BusModBase implements Handler<Mes
         JsonObject result = new JsonObject();
         List<Future> futures = new ArrayList<>();
         Sql.getInstance().prepared(queryStructures, new JsonArray(), SqlResult.validResultHandler(resultStructures -> {
-            Future<JsonArray> structureFuture = Future.future();
+            Promise<JsonArray> structurePromise = Promise.promise();
             if (resultStructures.isLeft()) {
-                Future<JsonObject> future = Future.future();
-                futures.add(future);
+                Promise<JsonObject> promise = Promise.promise();
+                futures.add(promise.future());
                 log.error(resultStructures.left().getValue());
                 result.put("errorMessage", "Structures recovery failed");
-                future.complete();
+                promise.complete();
             } else {
                 // Tableau Structures
-                result.put("structures", new JsonObject());
+                result.put(Field.STRUCTURES, new JsonObject());
                 JsonArray structureIds = resultStructures.right().getValue();
                 List<String> stuctures = ((List<JsonObject>) structureIds.getList()).stream().map(structure -> structure.getString("id")).collect(Collectors.toList());
                 if (!structureIds.isEmpty()) {
-                    futures.add(structureFuture);
-                    getStructures(new JsonArray(stuctures), structureFuture);
+                    futures.add(structurePromise.future());
+                    getStructures(new JsonArray(stuctures), structurePromise.future());
                 }
                 for (int i = 0; i < structureIds.size(); i++) {
-                    String structureId = structureIds.getJsonObject(i).getString("id");
-                    Future<JsonObject> future = Future.future();
-                    futures.add(future);
-                    createStructureCoursesRegisterFuture(today, startDayTime, currentTime, result, structureId, future);
+                    String structureId = structureIds.getJsonObject(i).getString(Field.ID);
+                    Promise<JsonObject> promise = Promise.promise();
+                    futures.add(promise.future());
+                    registerService.createStructureCoursesRegisterFuture(today, today, currentTime, currentTime,
+                            result, structureId, "true", promise);
                 }
             }
 
-            CompositeFuture.join(futures).setHandler(resultFutures -> {
-                String title = "[" + config.getString("host") + "][Présences] Rapport d'ouverture des appels: " + (getRegistersCreationWorked(result) ? "succès." : "échec.");
-                JsonObject structureMap = structureFuture != null && structureFuture.succeeded() ? MapHelper.transformToMap(structureFuture.result(), "id") : new JsonObject();
+            CompositeFuture.join(futures).onComplete(resultFutures -> {
+                String title = "[" + config.getString("host") + "][Présences] Rapport d'ouverture des appels: " +
+                        ((getRegistersCreationWorked(result) == Boolean.TRUE) ? "succès." : "échec.");
+                JsonObject structureMap = structurePromise.future() != null && structurePromise.future().succeeded()
+                        ? MapHelper.transformToMap(structurePromise.future().result(), Field.ID) : new JsonObject();
                 String message = getFormattedMessage(result, structureMap);
                 sendMail(title, message);
             });
 
         }));
-    }
-
-    private void createStructureCoursesRegisterFuture(String today, String startDayTime, String currentTime, JsonObject result,
-                                                      String structureId, Future<JsonObject> future) {
-        createStructureCoursesRegister(structureId, today, startDayTime, currentTime, resultCreations -> {
-            try {
-                if (resultCreations.succeeded()) {
-                    result.getJsonObject("structures").put(structureId, resultCreations.result());
-                } else {
-                    result.getJsonObject("structures").put("errorMessage", resultCreations.cause().getMessage());
-                }
-                future.complete();
-            } catch (Error e) {
-                log.error(e.getMessage());
-                future.fail(e.getMessage());
-            }
-        });
-    }
-
-    @SuppressWarnings("unchecked")
-    private void createStructureCoursesRegister(String structureId, String date, String startTime, String endTime,
-                                                Handler<AsyncResult<JsonObject>> handler) {
-        List<Future> futures = new ArrayList<>();
-
-        Promise<String> personnelFuture = Promise.promise();
-        Promise<JsonArray> courseFuture = Promise.promise();
-
-        CompositeFuture.join(personnelFuture.future(), courseFuture.future()).onComplete(asyncResult -> {
-            String personnelId = "created by cron";
-            if (asyncResult.failed()) {
-                String message = String.format("[Presences@%s::createStructureCoursesRegister] Something " +
-                        "wrong in createStructureCourseRegister sequence : %s", this.getClass().getSimpleName(),
-                        asyncResult.cause().getMessage());
-                log.error(message, asyncResult.cause());
-                // If course future failed, then throw an error
-                if (courseFuture.future().failed()) {
-                    message = String.format("[Presences@%s::createStructureCoursesRegister] Failed to retrieve " +
-                                    "courses : %s", this.getClass().getSimpleName(), courseFuture.future().cause());
-                    log.error(message, courseFuture.future().cause());
-                    handler.handle(Future.failedFuture("Courses recovery failed: " + courseFuture.future().cause()));
-                    return;
-                }
-
-                // In case of personnel future fail, do not throw any error. Log a silent error and use an empty string as personnel identifier
-                if (personnelFuture.future().failed()) {
-                    message = String.format("[Presences@%s::createStructureCoursesRegister] Failed to retrieve " +
-                            "a valid personnel for course creation", this.getClass().getSimpleName());
-                    log.error(message);
-                }
-            } else {
-                if (!personnelFuture.future().result().isEmpty()){
-                    personnelId = personnelFuture.future().result();
-                }
-            }
-
-            JsonObject result = new JsonObject()
-                    .put("succeededCoursesNumber", 0)
-                    .put("coursesErrors", new JsonObject());
-
-            List<Course> courses = courseFuture.future().result().getList();
-            for (Course course : courses) {
-                JsonArray teachers = course.getTeachers();
-                Integer registerId = course.getRegisterId();
-                if (registerId != null || !course.getAllowRegister()) {
-                    continue;
-                }
-
-                JsonObject register = new JsonObject()
-                        .put(Field.START_DATE, course.getStartDate())
-                        .put(Field.END_DATE, course.getEndDate())
-                        .put(Field.SUBJECT_ID, course.getSubjectId())
-                        .put(Field.STRUCTURE_ID, structureId)
-                        .put(Field.COURSE_ID, course.getId())
-                        .put(Field.SPLIT_SLOT, true)
-                        .put(Field.GROUPS, course.getGroups())
-                        .put(Field.CLASSES, course.getClasses())
-                        .put(Field.TEACHERIDS, new JsonArray(teachers
-                                .stream().map(teacher -> ((JsonObject) teacher).getString(Field.ID))
-                                .collect(Collectors.toList())));
-
-                Promise<JsonObject> promise = Promise.promise();
-                futures.add(promise.future());
-                createRegisterFuture(result, course, register, promise.future(), personnelId);
-            }
-            CompositeFuture.join(futures)
-                    .onSuccess(resultFutures -> handler.handle(Future.succeededFuture(result)))
-                    .onFailure(fail -> handler.handle(Future.failedFuture(fail.getCause())));
-        });
-
-        listCoursesFuture(structureId, date, endTime, FutureHelper.handlerJsonArray(courseFuture));
-        getFirstCounsellorId(structureId, personnelFuture);
-    }
-    
-    // entTime is defined as currentTime
-    private void listCoursesFuture(String structureId, String date, String currentTime,
-                                   Handler<Either<String, JsonArray>> handler) {
-
-        settingsService.retrieveMultipleSlots(structureId)
-                .onFailure(fail -> handler.handle(new Either.Left<>(fail.getMessage())))
-                .onSuccess(res -> courseService.listCourses(structureId, new ArrayList<>(), new ArrayList<>(), date, date,
-                        currentTime, currentTime, false, res.getBoolean(Field.ALLOW_MULTIPLE_SLOTS, true),
-                        null, null, null, null, "true", handler));
-    }
-
-    private void createRegisterFuture(JsonObject result, Course course, JsonObject register, Future<JsonObject> future,
-                                      String userId) {
-        createRegister(userId, register, resultRegister -> {
-            try {
-                if (resultRegister.failed()) {
-                    log.error(resultRegister.cause().getMessage());
-                    result.getJsonObject("coursesErrors").put(course.getId(), resultRegister.cause().getMessage());
-                } else {
-                    result.put("succeededCoursesNumber", result.getInteger("succeededCoursesNumber") + 1);
-                }
-                future.complete();
-            } catch (Error e) {
-                log.error(e.getMessage());
-                future.fail(e.getMessage());
-            }
-        });
-    }
-
-    private void getFirstCounsellorId(String structureId, Handler<AsyncResult<String>> handler) {
-        String queryCounsellor = "MATCH (u:User)-[:IN]->(g:ProfileGroup)-[:DEPENDS]->(s:Structure {id:{structureId}}) " +
-                "WHERE ANY(function IN u.functions WHERE function =~ '.*(?=\\\\$EDUCATION).*(?=EDU).*(?=\\\\$E0030).*') " +
-                "OPTIONAL MATCH (u:User)-[:IN]->(:FunctionGroup {filter:'DIRECTION'})-[:DEPENDS]->(s:Structure {id:{structureId}}) " +
-                "RETURN u.id as id";
-
-        Neo4j.getInstance().execute(queryCounsellor, new JsonObject().put("structureId", structureId), Neo4jResult.validResultHandler(resultCounsellor -> {
-            if (resultCounsellor.isRight()) {
-                JsonArray counsellors = resultCounsellor.right().getValue();
-                if (counsellors.size() > 0) {
-                    handler.handle(Future.succeededFuture(counsellors.getJsonObject(0).getString("id")));
-                } else {
-                    handler.handle(Future.failedFuture("Neither counsellor nor direction profile found on this structure for structure: " + structureId));
-                }
-            } else {
-                handler.handle(Future.failedFuture(resultCounsellor.left().getValue()));
-            }
-        }));
-    }
-
-    private void createRegister(String userId, JsonObject register, Handler<AsyncResult<Boolean>> handler) {
-        if (userId == null) {
-            handler.handle(Future.failedFuture("No user found to assign register"));
-            return;
-        }
-
-        UserInfos user = new UserInfos();
-        user.setUserId(userId);
-        registerService.create(register, user, resultRegister -> {
-            if (resultRegister.isLeft()) {
-                handler.handle(Future.failedFuture(resultRegister.left().getValue()));
-            } else {
-                handler.handle(Future.succeededFuture(true));
-            }
-        });
     }
 
     private Boolean getRegistersCreationWorked(JsonObject workerResult) {

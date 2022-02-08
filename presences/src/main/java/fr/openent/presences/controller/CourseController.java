@@ -18,7 +18,6 @@ import fr.wseduc.webutils.I18n;
 import fr.wseduc.webutils.http.Renders;
 import fr.wseduc.webutils.request.RequestUtils;
 import io.vertx.core.MultiMap;
-import io.vertx.core.eventbus.EventBus;
 import io.vertx.core.http.HttpServerRequest;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
@@ -37,18 +36,17 @@ import static org.entcore.common.http.response.DefaultResponseHandler.defaultRes
 
 public class CourseController extends ControllerHelper {
 
-    private final EventBus eb;
     private final RegisterService registerService;
     private final CourseHelper courseHelper;
     private final CourseService courseService;
     private final SettingsService settingsService;
 
-    public CourseController(EventBus eb) {
+    public CourseController(CommonPresencesServiceFactory commonPresencesServiceFactory) {
         super();
-        this.eb = eb;
-        this.registerService = new DefaultRegisterService(eb);
-        this.courseHelper = new CourseHelper(eb);
-        this.courseService = new DefaultCourseService(eb);
+        this.eb = commonPresencesServiceFactory.eventBus();
+        this.registerService = commonPresencesServiceFactory.registerService();
+        this.courseHelper = commonPresencesServiceFactory.courseHelper();
+        this.courseService = commonPresencesServiceFactory.courseService();
         this.settingsService = new DefaultSettingsService();
     }
 

@@ -23,6 +23,7 @@ public class Field {
     public static final String TOTALS = "totals";
     public static final String SEARCH_TEACHER = "searchTeacher";
     public static final String STRUCTURE = "structure";
+    public static final String STRUCTURES = "structures";
     public static final String STRUCTURE_ID = "structure_id";
     public static final String STRUCTUREID = "structureId";
     public static final String STUDENT = "student";
