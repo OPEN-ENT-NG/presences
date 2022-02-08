@@ -12,9 +12,7 @@ import fr.openent.presences.db.DBService;
 import fr.openent.presences.enums.*;
 import fr.openent.presences.helper.*;
 import fr.openent.presences.model.*;
-import fr.openent.presences.service.ExemptionService;
-import fr.openent.presences.service.NotebookService;
-import fr.openent.presences.service.RegisterService;
+import fr.openent.presences.service.*;
 import fr.wseduc.mongodb.MongoDb;
 import fr.wseduc.webutils.Either;
 import io.vertx.core.*;
@@ -23,7 +21,6 @@ import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
-import org.apache.commons.lang3.*;
 import org.entcore.common.mongodb.MongoDbResult;
 import org.entcore.common.neo4j.Neo4j;
 import org.entcore.common.neo4j.Neo4jResult;
@@ -41,21 +38,29 @@ import java.util.stream.Collectors;
 public class DefaultRegisterService extends DBService implements RegisterService {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(DefaultRegisterService.class);
+
+    private final EventBus eb;
+
     private final GroupService groupService;
     private final ExemptionService exemptionService;
     private final RegisterHelper registerHelper;
     private final CourseHelper courseHelper;
     private final RegisterPresenceHelper registerPresenceHelper;
     private final NotebookService notebookService;
+    private final SettingsService settingsService;
     private static Integer timeToGetForgotten = 15;
+    private final CommonPresencesServiceFactory commonPresencesServiceFactory;
 
-    public DefaultRegisterService(EventBus eb) {
+    public DefaultRegisterService(CommonPresencesServiceFactory commonPresencesServiceFactory) {
+        this.eb = commonPresencesServiceFactory.eventBus();
         this.groupService = new DefaultGroupService(eb);
         this.exemptionService = new DefaultExemptionService(eb);
         this.registerHelper = new RegisterHelper(eb, Presences.dbSchema);
         this.registerPresenceHelper = new RegisterPresenceHelper();
         this.courseHelper = new CourseHelper(eb);
         this.notebookService = new DefaultNotebookService();
+        this.settingsService = new DefaultSettingsService();
+        this.commonPresencesServiceFactory = commonPresencesServiceFactory;
     }
 
     @Override
@@ -242,7 +247,7 @@ public class DefaultRegisterService extends DBService implements RegisterService
                                     List<String> students = extractStudentIdentifiers(studentsEvt.right().getValue());
                                     if (!students.isEmpty()) {
                                         register.put(Field.ID, id);
-                                        statements.add(absenceToEventStatement(register, students, user));
+                                        statements.add(absenceToEventStatement(register, students));
                                     }
 
                                     sql.transaction(statements, event -> {
@@ -334,7 +339,7 @@ public class DefaultRegisterService extends DBService implements RegisterService
                 .collect(Collectors.toList());
     }
 
-    private JsonObject absenceToEventStatement(JsonObject register, List<String> users, UserInfos user) {
+    private JsonObject absenceToEventStatement(JsonObject register, List<String> users) {
         JsonArray params = new JsonArray();
         String query = "WITH absence as (SELECT absence.id, absence.start_date, absence.end_date, " +
                 "absence.student_id, absence.reason_id, absence.owner, absence.counsellor_regularisation" +
@@ -361,6 +366,206 @@ public class DefaultRegisterService extends DBService implements RegisterService
                 .put("action", "prepared");
     }
 
+    @Override
+    public Future<JsonObject> createMultipleRegisters(String structureId, String startDate, String endDate) {
+        Promise<JsonObject> promise = Promise.promise();
+
+        String startDay = DateHelper.getDateString(startDate, DateHelper.YEAR_MONTH_DAY);
+        String endDay = DateHelper.getDateString(endDate, DateHelper.YEAR_MONTH_DAY);
+
+        String startTime = DateHelper.getDateString(startDate, DateHelper.HOUR_MINUTES);
+        String endTime = DateHelper.getDateString(endDate, DateHelper.HOUR_MINUTES);
+
+        createStructureCoursesRegisterFuture(startDay, endDay, startTime, endTime,
+                new JsonObject(), structureId, null, promise);
+
+        return promise.future();
+    }
+
+
+    @Override
+    public void createStructureCoursesRegisterFuture(String startDate, String endDate, String startTime, String endTime,
+                                                     JsonObject result, String structureId, String crossDateFilter,
+                                                     Promise<JsonObject> promise) {
+
+        createStructureCoursesRegister(structureId, startDate, endDate, startTime, endTime, crossDateFilter, resultCreations -> {
+            try {
+                if (resultCreations.succeeded()) {
+                    result.getJsonObject(Field.STRUCTURES, new JsonObject()).put(structureId, resultCreations.result());
+                } else {
+                    result.getJsonObject(Field.STRUCTURES, new JsonObject())
+                            .put("errorMessage", resultCreations.cause().getMessage());
+                }
+                promise.complete(new JsonObject().put("status", "ok"));
+            } catch (Error e) {
+                LOGGER.error(e.getMessage());
+                promise.fail(e.getMessage());
+            }
+        });
+    }
+
+    @SuppressWarnings("unchecked")
+    private void createStructureCoursesRegister(String structureId, String startDate, String endDate,
+                                                String startTime, String endTime, String crossDateFilter,
+                                                Handler<AsyncResult<JsonObject>> handler) {
+        List<Future<JsonObject>> futures = new ArrayList<>();
+
+        Promise<String> personnelFuture = Promise.promise();
+        Promise<JsonArray> courseFuture = Promise.promise();
+
+        CompositeFuture.join(personnelFuture.future(), courseFuture.future()).onComplete(asyncResult -> {
+            String personnelId = "created by cron";
+            if (asyncResult.failed()) {
+                String message = String.format("[Presences@%s::createStructureCoursesRegister] Something " +
+                                "wrong in createStructureCourseRegister sequence : %s", this.getClass().getSimpleName(),
+                        asyncResult.cause().getMessage());
+                LOGGER.error(message, asyncResult.cause());
+                // If course future failed, then throw an error
+                if (courseFuture.future().failed()) {
+                    message = String.format("[Presences@%s::createStructureCoursesRegister] Failed to retrieve " +
+                            "courses : %s", this.getClass().getSimpleName(), courseFuture.future().cause());
+                    LOGGER.error(message, courseFuture.future().cause());
+                    handler.handle(Future.failedFuture("Courses recovery failed: " + courseFuture.future().cause()));
+                    return;
+                }
+
+                // In case of personnel future fail, do not throw any error. Log a silent error and use an empty string as personnel identifier
+                if (personnelFuture.future().failed()) {
+                    message = String.format("[Presences@%s::createStructureCoursesRegister] Failed to retrieve " +
+                            "a valid personnel for course creation", this.getClass().getSimpleName());
+                    LOGGER.error(message);
+                }
+            } else {
+                if (!personnelFuture.future().result().isEmpty()){
+                    personnelId = personnelFuture.future().result();
+                }
+            }
+
+            JsonObject result = new JsonObject()
+                    .put("succeededCoursesNumber", 0)
+                    .put("coursesErrors", new JsonObject());
+
+            List<Course> courses = courseFuture.future().result().getList();
+            for (Course course : courses) {
+                JsonArray teachers = course.getTeachers();
+                Integer registerId = course.getRegisterId();
+                if (registerId != null || !course.getAllowRegister()) {
+                    continue;
+                }
+
+                JsonObject register = new JsonObject()
+                        .put(Field.START_DATE, course.getStartDate())
+                        .put(Field.END_DATE, course.getEndDate())
+                        .put(Field.SUBJECT_ID, course.getSubjectId())
+                        .put(Field.STRUCTURE_ID, structureId)
+                        .put(Field.COURSE_ID, course.getId())
+                        .put(Field.SPLIT_SLOT, true)
+                        .put(Field.GROUPS, course.getGroups())
+                        .put(Field.CLASSES, course.getClasses())
+                        .put(Field.TEACHERIDS, new JsonArray(teachers
+                                .stream().map(teacher -> ((JsonObject) teacher).getString(Field.ID))
+                                .collect(Collectors.toList())));
+
+                Promise<JsonObject> promise = Promise.promise();
+                futures.add(promise.future());
+                createRegisterFuture(result, course, register, promise, personnelId);
+            }
+            FutureHelper.join(futures)
+                    .onSuccess(resultFutures -> handler.handle(Future.succeededFuture(result)))
+                    .onFailure(fail -> handler.handle(Future.failedFuture(fail.getCause())));
+        });
+
+        listCoursesFuture(structureId, startDate, endDate, startTime, endTime, crossDateFilter, FutureHelper.handlerJsonArray(courseFuture));
+        getFirstCounsellorId(structureId, personnelFuture);
+    }
+
+    private void createRegisterFuture(JsonObject result, Course course, JsonObject register, Promise<JsonObject> promise,
+                                      String userId) {
+        createRegister(userId, register, resultRegister -> {
+            try {
+                if (resultRegister.failed()) {
+                    LOGGER.error(resultRegister.cause().getMessage());
+                    result.getJsonObject("coursesErrors").put(course.getId(), resultRegister.cause().getMessage());
+                } else {
+                    result.put("succeededCoursesNumber", result.getInteger("succeededCoursesNumber") + 1);
+                }
+                promise.complete();
+            } catch (Error e) {
+                LOGGER.error(e.getMessage());
+                promise.fail(e.getMessage());
+            }
+        });
+    }
+
+    /**
+     * Retrieve courses for given structure and dates
+     * @param structureId          structure identifier
+     * @param startDate            start date filter
+     * @param endDate              end date filter
+     * @param startTime            start time filter
+     * @param endTime              end time filter
+     * @param crossDateFilter      cross date filter (true : get courses beginning < start date and finishing end date)
+     * @param handler              Function handler returning data
+     */
+    private void listCoursesFuture(String structureId, String startDate, String endDate, String startTime,
+                                   String endTime, String crossDateFilter, Handler<Either<String, JsonArray>> handler) {
+
+        settingsService.retrieveMultipleSlots(structureId)
+                .onFailure(fail -> handler.handle(new Either.Left<>(fail.getMessage())))
+                .onSuccess(res -> commonPresencesServiceFactory.courseService().listCourses(structureId, new ArrayList<>(),
+                        new ArrayList<>(), startDate, endDate, startTime, endTime, false,
+                        res.getBoolean(Field.ALLOW_MULTIPLE_SLOTS, true), null, null, null,
+                        null, crossDateFilter, handler));
+    }
+
+
+    /**
+     * Retrieve first counsellor identifier
+     * @param structureId       structure identifier
+     * @param handler           Function handler returning data
+     */
+    private void getFirstCounsellorId(String structureId, Handler<AsyncResult<String>> handler) {
+        String queryCounsellor = "MATCH (u:User)-[:IN]->(g:ProfileGroup)-[:DEPENDS]->(s:Structure {id:{structureId}}) " +
+                "WHERE ANY(function IN u.functions WHERE function =~ '.*(?=\\\\$EDUCATION).*(?=EDU).*(?=\\\\$E0030).*') " +
+                "OPTIONAL MATCH (u:User)-[:IN]->(:FunctionGroup {filter:'DIRECTION'})-[:DEPENDS]->(s:Structure {id:{structureId}}) " +
+                "RETURN u.id as id";
+
+        Neo4j.getInstance().execute(queryCounsellor, new JsonObject().put(Field.STRUCTUREID, structureId), Neo4jResult.validResultHandler(resultCounsellor -> {
+            if (resultCounsellor.isRight()) {
+                JsonArray counsellors = resultCounsellor.right().getValue();
+                if (counsellors != null && counsellors.size() > 0) {
+                    handler.handle(Future.succeededFuture(counsellors.getJsonObject(0).getString(Field.ID)));
+                } else {
+                    handler.handle(Future.failedFuture("Neither counsellor nor direction profile found on this structure for structure: " + structureId));
+                }
+            } else {
+                handler.handle(Future.failedFuture(resultCounsellor.left().getValue()));
+            }
+        }));
+    }
+
+    /**
+     * Create register based on object data
+     * @param userId           user identifier on which the register will be assigned
+     * @param register         new register object data
+     * @param handler          Function handler returning data
+     */
+    private void createRegister(String userId, JsonObject register, Handler<AsyncResult<Boolean>> handler) {
+        if (userId == null) {
+            handler.handle(Future.failedFuture("No user found to assign register"));
+            return;
+        }
+
+        UserInfos user = new UserInfos();
+        user.setUserId(userId);
+        create(register, user, resultRegister -> {
+            if (resultRegister.isLeft()) {
+                handler.handle(Future.failedFuture(resultRegister.left().getValue()));
+            } else {
+                handler.handle(Future.succeededFuture(true));
+            }
+        });
+    }
 
     @Override
     public void updateStatus(Integer registerId, Integer status, Handler<Either<String, JsonObject>> handler) {
