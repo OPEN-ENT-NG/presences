@@ -20,6 +20,9 @@
                data-ng-show="vm.incidents.all && vm.incidents.all.length > 0">
             <thead>
             <tr>
+                <th width="2%">
+                    <i18n>incidents.names</i18n>
+                </th>
                 <th width="1%" data-ng-click="vm.sortField('date')">
                     <i18n>incidents.date</i18n>
                     <span ng-class="{'arrow-up' : (vm.incidents.order === 'date' && vm.incidents.reverse == true),
@@ -63,10 +66,16 @@
                    data-ng-repeat="incident in vm.incidents.all">
             <tr data-id="[[incident.id]]"
                 data-ng-click="vm.toggleCollapse(incident, $event)">
+                <th class="text-center">
+                    <span ng-repeat="protagonist in incident.protagonists">
+                        [[protagonist.label]]
+                        <br>
+                    </span>
+                </th>
                 <th class="uppercase text-center">[[incident.date | date:'dd/MM/yyyy']]</th>
                 <th class="uppercase text-center">[[incident.date | date:'HH:mm']]</th>
                 <th class="text-center">[[incident.place.label]]</th>
-                <th class="uppercase playdown highlight text-center">[[incident.incidentType.label]]</th>
+                <th class="playdown highlight text-center">[[incident.incidentType.label]]</th>
                 <th class="text-center seriousness-[[incident.seriousness.level]]">
                     <div class="incident-content-table-body-seriousness">
                         <i class="seriousness"></i>

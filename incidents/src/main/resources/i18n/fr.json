@@ -63,6 +63,7 @@
 
 
   "incidents.date": "Date",
+  "incidents.names": "Noms",
   "incidents.delete.err": "Une erreur est survenue lors de la suppression d'un incident",
   "incidents.delete.succeed": "Incident supprimé avec succès.",
   "incidents.description": "Description",
