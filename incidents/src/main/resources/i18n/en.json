@@ -7,5 +7,7 @@
   "incidents.punishments.get.grouped.err": "Une erreur est survenue dans le chargement des punitions",
   "incidents.punishment.add.slot": "Add a slot",
   "incidents.absence.select.empty": "No reason",
-  "incidents.invalid.form": "Form is invalid"
+  "incidents.invalid.form": "Form is invalid",
+
+  "incidents.name": "Name"
 }
