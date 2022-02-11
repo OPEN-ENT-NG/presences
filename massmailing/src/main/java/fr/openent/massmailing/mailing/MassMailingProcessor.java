@@ -666,7 +666,7 @@ public abstract class MassMailingProcessor implements Mailing {
         }
 
         String query = "MATCH (u:User)-[:RELATED]->(r:User) WHERE u.id IN {students} AND r.id IN {relatives} RETURN DISTINCT r.id as id, " +
-                "(r.lastName + ' ' + r.firstName) as displayName, " + contactValue + " as contact, r.address as address, " +
+                "(r.title + ' ' + r.lastName + ' ' + r.firstName) as displayName, " + contactValue + " as contact, r.address as address, " +
                 "(r.zipCode + ' ' + r.city) as zipcodeCity, u.id as student_id, " +
                 "(u.lastName + ' ' + u.firstName) as studentDisplayName, split(u.classes[0],'$')[1] as className";
         JsonObject params = new JsonObject()
