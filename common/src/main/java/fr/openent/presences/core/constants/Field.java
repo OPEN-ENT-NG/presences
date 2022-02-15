@@ -234,7 +234,6 @@ public class Field {
     public static final String SUM = "sum";
     public static final String DATESTRING = "dateString";
     public static final String DATEFROMSTRING = "dateFromString";
-    public static final String STATUS = "status";
     public static final String OK = "ok";
 
     //Viescolaire

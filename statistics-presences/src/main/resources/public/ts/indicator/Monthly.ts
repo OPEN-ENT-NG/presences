@@ -30,6 +30,7 @@ export class Monthly extends Indicator {
         ]);
 
         this.enableFilter(Filter.HOUR_DETAIL, false);
+        this.enableFilter(Filter.PUNISHMENT_SANCTION_TYPES, false);
     }
 
     absenceSelected(): boolean {

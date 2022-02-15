@@ -79,7 +79,7 @@
 
         <div class="right-magnet">
             <!-- export CSV -->
-            <button class="left-spacing-twice no-margin" data-ng-click="vm.openCSVOptions()">
+            <button class="left-spacing-twice no-margin" data-ng-click="vm.openCSVOptions()" data-ng-disabled="vm.isWeekly(vm.indicator)">
                 <i18n>statistics-presences.csv.export</i18n>
             </button>
         </div>
@@ -92,7 +92,7 @@
         </div>
         <!-- display absence rate -->
         <!-- switch stat default/rate absence -->
-        <div ng-if="!vm.canAccessOption(vm.indicator) && vm.setting.event_recovery_method !== 'HOUR'"
+        <div ng-if="vm.isGlobal(vm.indicator) && vm.setting.event_recovery_method !== 'HOUR'"
              class="right-spacing displayRate"
              ng-class="{selected: vm.indicator.rateDisplay}">
             <i class="percent" data-ng-click="vm.indicator.rateDisplay = !vm.indicator.rateDisplay">
@@ -105,7 +105,7 @@
         <display-statistics-mode on-change="vm.onSwitchDisplay()"
                                  indicator="vm.indicator"
                                  ng-show="true"
-                                 ng-if="vm.canAccessOption(vm.indicator)"
+                                 ng-if="vm.isMonthly(vm.indicator)"
                                  class="right-spacing">
         </display-statistics-mode>
         <!-- tagged filter -->
@@ -121,7 +121,7 @@
     <div class="empty-content">
         <div class="five description">
             <span class="red-bar bar"></span>
-            <i18n>statistics-presences.indicator.empty.state</i18n>
+            <span class="text-center">[[vm.indicator.getEmptyMessage()]]</span>
             <span class="yellow-bar bar"></span>
         </div>
         <img data-ng-src="/statistics-presences/public/images/girl-book.svg" class="four" alt="">

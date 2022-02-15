@@ -1,6 +1,7 @@
 import {model, ng} from 'entcore'
 import {ISchoolYearPeriod, IStructure, IStructureSlot} from "../model";
 import http from "axios";
+import {Student} from "@common/model/Student";
 
 declare let window: any;
 
@@ -8,6 +9,8 @@ export interface IViescolaireService {
     getSchoolYearDates(structureId): Promise<ISchoolYearPeriod>;
 
     getSlotProfile(structureId: string): Promise<IStructureSlot>;
+
+    getStudent(structureId:string, studentId: string): Promise<Array<Student>>
 
     getBuildOwnStructure(): Array<IStructure>;
 }
@@ -25,6 +28,11 @@ export const ViescolaireService: IViescolaireService = {
         } catch (err) {
             throw err;
         }
+    },
+
+    getStudent: async (structureId: string, studentId: string): Promise<Array<Student>> => {
+        let {data} = await http.get(`viescolaire/eleves?idUser=${studentId}&idStructure=${structureId}`);
+        return data;
     },
 
     getBuildOwnStructure: (): Array<IStructure> => {

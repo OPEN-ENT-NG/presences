@@ -6,3 +6,4 @@ declare const require: any;
 // Require all indicators. Needed by webpack
 require('./Global');
 require('./Monthly');
+require('./Weekly');

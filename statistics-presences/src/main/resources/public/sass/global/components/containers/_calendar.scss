@@ -1,0 +1,66 @@
+$calendar-item-color: rgba(247, 246, 246, 1);
+$calendar-item-border-color: rgba(96, 96, 96, 0.15);
+$calendar-item-border-radius: 5px;
+
+.calendar {
+  &.calendar-statistics {
+    .week-switcher {
+      display: none;
+    }
+    .calendar-current-week {
+      display: none;
+    }
+    .schedule {
+      .days {
+        button {
+
+        }
+        .day {
+          legend {
+            top: -60px;
+            height: 40px;
+
+            div:nth-child(2) {
+              display: none;
+            }
+          }
+        }
+      }
+    }
+  }
+
+  calendar {
+    .schedule {
+      .schedule-item {
+        .statistics-item-container {
+          display: flex;
+          flex-direction: row;
+          width: 100%;
+          height: 100%;
+        }
+
+        .statistics-item {
+          font-size: 11px;
+          display: flex;
+          width: 100%;
+          background-color: $calendar-item-color;
+          border: solid 1px $calendar-item-border-color;
+          border-radius: $calendar-item-border-radius;
+          flex-direction: column;
+          justify-content: center;
+
+          &.important {
+            background-color: $statistics-presences-main;
+            color: $statistics-presences-white;
+          }
+
+          .data {
+            p {
+              font-size: 2em;
+            }
+          }
+        }
+      }
+    }
+  }
+}
