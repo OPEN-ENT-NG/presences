@@ -1,0 +1,15 @@
+<div class="calendar calendar-statistics">
+    <script>
+        window.entcore.calendar.dayHeight = 47;
+    </script>
+    <div class="calendar-container row">
+        <calendar ng-if="!vm.indicator.disabled"
+                  enable-display-modes="false"
+                  readonly="true"
+                  display-template="calendar/weekly-statistics-item"
+                  items="vm.indicator.values.slots"
+                  slots="vm.indicator.timeslot"
+                  show-quarter-hours="false"
+                  show-next-previous-button="false"></calendar>
+    </div>
+</div>

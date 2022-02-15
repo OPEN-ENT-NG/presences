@@ -10,6 +10,7 @@ import {GlobalResponse, IGlobal} from "../model/Global";
 import {IMonthly, IMonthlyGraph} from "../model/Monthly";
 import {IndicatorBody} from "../model/Indicator";
 import {indicatorService} from "../services";
+import {IWeekly, IWeeklyResponse, WeeklyStatistics} from "@statistics/model/Weekly";
 
 declare const window: any;
 
@@ -28,7 +29,7 @@ export interface IIndicator {
 }
 
 export abstract class Indicator implements IIndicator {
-    values: IGlobal | IMonthly;
+    values: IGlobal | IMonthly | IWeekly;
     graphValues: IMonthlyGraph;
     _factoryFilter: FilterTypeFactory;
     _filtersEnabled: Map<Filter, FilterValue>;
@@ -156,7 +157,7 @@ export abstract class Indicator implements IIndicator {
 
     abstract isEmpty();
 
-    async fetchIndicator(start: Date, end: Date, users: string[], audiences: string[]): Promise<GlobalResponse | IMonthly> {
+    async fetchIndicator(start: Date, end: Date, users: string[], audiences: string[]): Promise<GlobalResponse | IMonthly | IWeeklyResponse> {
         const body = this.prepareIndicator(start, end, users, audiences);
         return indicatorService.fetchIndicator(window.structure.id, this.name(), this._page, body);
     }

@@ -85,7 +85,7 @@ export const filterIndicator = ng.directive('filterIndicator', () => {
                         filterType.process(filterType.selected());
                         break;
                     case INDICATOR_TYPE.monthly:
-
+                    case INDICATOR_TYPE.weekly:
                         if (vm.isAbsenceFilter(filterType)) {
                             vm.filters.forEach((type: FilterType) => {
                                 if (!vm.isAbsenceFilter(type)) {

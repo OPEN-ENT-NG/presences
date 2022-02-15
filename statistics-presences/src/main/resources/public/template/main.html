@@ -92,7 +92,7 @@
         </div>
         <!-- display absence rate -->
         <!-- switch stat default/rate absence -->
-        <div ng-if="!vm.canAccessOption(vm.indicator) && vm.setting.event_recovery_method !== 'HOUR'"
+        <div ng-if="vm.isGlobal(vm.indicator) && vm.setting.event_recovery_method !== 'HOUR'"
              class="right-spacing displayRate"
              ng-class="{selected: vm.indicator.rateDisplay}">
             <i class="percent" data-ng-click="vm.indicator.rateDisplay = !vm.indicator.rateDisplay">
@@ -105,7 +105,7 @@
         <display-statistics-mode on-change="vm.onSwitchDisplay()"
                                  indicator="vm.indicator"
                                  ng-show="true"
-                                 ng-if="vm.canAccessOption(vm.indicator)"
+                                 ng-if="vm.isMonthly(vm.indicator)"
                                  class="right-spacing">
         </display-statistics-mode>
         <!-- tagged filter -->

@@ -1,11 +1,10 @@
-import {_, idiom, ng, template} from 'entcore';
+import {_, idiom, model, ng, template} from 'entcore';
 import {Reason} from "@presences/models";
 import {
     IPunishmentsTypeService,
     IViescolaireService,
     ReasonService,
     SearchService,
-    SettingService,
     SettingsService,
     ViescolaireService,
     Setting
@@ -20,6 +19,7 @@ import {INDICATOR_TYPE} from "../core/constants/IndicatorType";
 import {DISPLAY_TYPE} from "../core/constants/DisplayMode";
 import {IMonthly, MonthlyStatistics} from "../model/Monthly";
 import {EXPORT_TYPE} from "../core/enums/export-type.enum";
+import {Weekly} from "@statistics/indicator/Weekly";
 
 declare let window: any;
 
@@ -68,7 +68,11 @@ interface ViewModel {
 
     onSwitchDisplay(): void;
 
-    canAccessOption(indicator: Indicator): boolean;
+    isGlobal(indicator: Indicator): boolean;
+
+    isMonthly(indicator: Indicator): boolean;
+
+    isWeekly(indicator: Indicator): boolean;
 
     getSelectedFilterLabel(): Array<string>;
 
@@ -229,11 +233,19 @@ export const mainController = ng.controller('MainController',
             };
 
             /**
-             * Returns true if indicator is NOT Global
+             * Returns true if indicator is Monthly
              * @param indicator Indicator type
              */
-            vm.canAccessOption = (indicator: Indicator): boolean => {
-                return indicator && indicator.name() !== INDICATOR_TYPE.global;
+            vm.isGlobal = (indicator: Indicator): boolean => {
+                return indicator && indicator.name() === INDICATOR_TYPE.global;
+            };
+
+            vm.isMonthly = (indicator: Indicator): boolean => {
+                return indicator && indicator.name() === INDICATOR_TYPE.monthly
+            };
+
+            vm.isWeekly = (indicator: Indicator): boolean => {
+                return indicator && indicator.name() === INDICATOR_TYPE.weekly
             };
 
             vm.loadData = async (): Promise<void> => {
@@ -262,14 +274,19 @@ export const mainController = ng.controller('MainController',
                 vm.safeApply();
             }
 
-            function searchSelection(type, searchType, object) {
+            async function searchSelection(type, searchType, object) {
                 if (_.findWhere(type, {id: object.id})) {
                     type.value = '';
                     return;
                 }
 
                 type.push(object);
-                resetSearch(searchType);
+                if (vm.isWeekly(vm.indicator)) await (<Weekly> vm.indicator)
+                    .initTimeslot(
+                        vm.filter.students.map(student => student.id),
+                        vm.filter.audiences.map(audience => audience.id)
+                    )
+                await resetSearch(searchType);
             }
 
             vm.searchStudent = async function (value: string) {
@@ -284,6 +301,12 @@ export const mainController = ng.controller('MainController',
             };
 
             vm.selectStudent = async function (model, student) {
+                if (vm.isWeekly(vm.indicator)) {
+                    vm.filter.students = [];
+                }
+                vm.filter.audiences = [];
+                vm.search.audience.list = null;
+                vm.search.audience.value = '';
                 searchSelection(vm.filter.students, vm.search.student, student);
             };
 
@@ -301,6 +324,12 @@ export const mainController = ng.controller('MainController',
             };
 
             vm.selectAudience = async function (model, audience) {
+                if (vm.isWeekly(vm.indicator)) {
+                    vm.filter.audiences = [];
+                }
+                vm.filter.students = [];
+                vm.search.student.list = null;
+                vm.search.student.value = '';
                 searchSelection(vm.filter.audiences, vm.search.audience, audience);
             };
 
@@ -358,6 +387,8 @@ export const mainController = ng.controller('MainController',
             }
 
             vm.switchIndicator = async (): Promise<void> => {
+                if (model.calendar.callbacks)
+                    model.calendar.callbacks['date-change'] = [];
                 vm.indicator.page = 0;
                 vm.indicator.resetValues();
                 vm.indicator.resetDisplayMode();
@@ -366,8 +397,15 @@ export const mainController = ng.controller('MainController',
                 await vm.indicator.resetDates();
                 vm.filter.from = vm.indicator.from;
                 vm.filter.to = vm.indicator.to;
-                $scope.$broadcast(INFINITE_SCROLL_EVENTER.UPDATE);
-                vm.launchResearch();
+                if (vm.isWeekly(vm.indicator)) {
+                    vm.filter.students = [];
+                    vm.filter.audiences = [];
+                    await (<Weekly> vm.indicator).initTimeslot(
+                        [],
+                        []
+                    );
+                }
+                await vm.launchResearch();
                 vm.safeApply();
             };
 

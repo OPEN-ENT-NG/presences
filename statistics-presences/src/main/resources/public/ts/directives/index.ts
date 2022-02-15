@@ -8,3 +8,4 @@ export * from './monthly-table';
 export * from './chart-statistics';
 export * from './sticked';
 export * from './filter-indicator';
+export * from './weekly-statistics/weekly-statistics';
