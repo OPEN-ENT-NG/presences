@@ -1,7 +1,8 @@
 package fr.openent.presences.controller;
 
 import fr.openent.presences.constants.Actions;
-import fr.openent.presences.security.Manage;
+import fr.openent.presences.core.constants.*;
+import fr.openent.presences.security.*;
 import fr.openent.presences.service.ReasonService;
 import fr.openent.presences.service.impl.DefaultReasonService;
 import fr.wseduc.rs.*;
@@ -26,11 +27,11 @@ public class ReasonController extends ControllerHelper {
 
     @Get("/reasons")
     @ApiDoc("Get reasons")
-    @ResourceFilter(Manage.class)
+    @ResourceFilter(AbsenceRight.class)
     @SecuredAction(value = "", type = ActionType.RESOURCE)
     public void get(final HttpServerRequest request) {
-        String structureId = request.getParam("structureId");
-        if (!request.params().contains("structureId")) {
+        String structureId = request.getParam(Field.STRUCTUREID);
+        if (!request.params().contains(Field.STRUCTUREID)) {
             badRequest(request);
             return;
         }

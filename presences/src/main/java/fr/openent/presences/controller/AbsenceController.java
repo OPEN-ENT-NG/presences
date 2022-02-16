@@ -4,7 +4,7 @@ import fr.openent.presences.common.security.UserInStructure;
 import fr.openent.presences.common.service.GroupService;
 import fr.openent.presences.constants.Actions;
 import fr.openent.presences.core.constants.Field;
-import fr.openent.presences.security.AbsenceWidgetRight;
+import fr.openent.presences.security.AbsenceRight;
 import fr.openent.presences.security.CreateEventRight;
 import fr.openent.presences.security.Manage;
 import fr.openent.presences.service.AbsenceService;
@@ -213,7 +213,7 @@ public class AbsenceController extends ControllerHelper {
     @Get("/absences")
     @ApiDoc("Retrieve all absences matching parameters")
     @SecuredAction(value = "", type = ActionType.RESOURCE)
-    @ResourceFilter(AbsenceWidgetRight.class)
+    @ResourceFilter(AbsenceRight.class)
     public void getAbsences(HttpServerRequest request) {
         String structure = request.getParam("structure");
         String start = request.getParam("start");
