@@ -1,7 +1,7 @@
 package fr.openent.presences.controller;
 
+import fr.openent.presences.*;
 import fr.openent.presences.common.helper.FutureHelper;
-import fr.openent.presences.common.security.SearchRight;
 import fr.openent.presences.common.service.GroupService;
 import fr.openent.presences.common.service.impl.DefaultGroupService;
 import fr.openent.presences.common.viescolaire.Viescolaire;
@@ -9,6 +9,7 @@ import fr.openent.presences.helper.*;
 import fr.openent.presences.model.Course;
 import fr.openent.presences.model.Exemption.ExemptionView;
 import fr.openent.presences.model.Slot;
+import fr.openent.presences.security.*;
 import fr.openent.presences.service.AbsenceService;
 import fr.openent.presences.service.EventService;
 import fr.openent.presences.service.ExemptionService;
@@ -56,8 +57,7 @@ public class CalendarController extends ControllerHelper {
 
     @Get("/calendar/courses")
     @ApiDoc("Retrieve all courses and events")
-    @SecuredAction(value = "", type = ActionType.RESOURCE)
-    @ResourceFilter(SearchRight.class)
+    @SecuredAction(Presences.CALENDAR_VIEW)
     @SuppressWarnings("unchecked")
     public void getCalendarCourses(HttpServerRequest request) {
         MultiMap params = request.params();
@@ -263,8 +263,8 @@ public class CalendarController extends ControllerHelper {
 
     @Get("/calendar/groups/:id/students")
     @ApiDoc("Retrieve students in given group")
+    @ResourceFilter(CalendarViewRight.class)
     @SecuredAction(value = "", type = ActionType.RESOURCE)
-    @ResourceFilter(SearchRight.class)
     public void getGroupStudents(HttpServerRequest request) {
         String groupIdentifier = request.getParam("id");
         groupService.getGroupStudents(groupIdentifier, arrayResponseHandler(request));

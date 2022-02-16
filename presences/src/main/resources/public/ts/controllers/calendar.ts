@@ -272,6 +272,7 @@ export const calendarController = ng.controller('CalendarController',
             };
 
             vm.actionEventForm = (item: Course): void => {
+                if (!$scope.hasRight('managePresences')) return;
                 if (item.absences.length > 0) { // ABSENCE
                     $scope.$broadcast(item.absences[0].type_id ? ABSENCE_FORM_EVENTS.EDIT_EVENT : ABSENCE_FORM_EVENTS.EDIT,
                         formatEventForm(item, EventType.ABSENCE));
