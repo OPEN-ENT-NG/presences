@@ -19,6 +19,7 @@ export class CalendarAbsenceUtils {
      * Click on any timeslot to declare an absence
      */
     public static async actionAbsenceTimeSlot($scope): Promise<void> {
+        if (!$scope.hasRight('managePresences')) return;
         let $slots = $('.days .timeslot');
         $slots.click(function () {
             let _scope = angular.element(arguments[0].target).scope();
@@ -49,6 +50,7 @@ export class CalendarAbsenceUtils {
      * [Animation] slide to drag & drop any time slot to declare absence
      */
     public static async actionDragAbsence($scope): Promise<void> {
+        if (!$scope.hasRight('managePresences')) return;
         let isClickHold = false;
         let $slots = $('.days .timeslot');
         let $slotsCourses = $('.course-item-container');

@@ -64,7 +64,7 @@ routes.define(function ($routeProvider) {
             });
     }
 
-    if (model.me.hasWorkflow(rights.workflow.search)) {
+    if (model.me.hasWorkflow(rights.workflow.viewCalendar)) {
         $routeProvider
             .when('/calendar/:studentId', {
                 action: 'calendar'

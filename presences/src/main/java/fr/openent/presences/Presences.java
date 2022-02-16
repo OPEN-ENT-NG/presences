@@ -68,6 +68,9 @@ public class Presences extends BaseServer {
     public static String dbSchema;
     public static String ebViescoAddress = "viescolaire";
 
+    // Calendar
+    public static final String CALENDAR_VIEW = "presences.calendar.view";
+
     @Override
     public void start() throws Exception {
         super.start();
