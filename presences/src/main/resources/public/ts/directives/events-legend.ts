@@ -1,4 +1,5 @@
-import {idiom as lang, ng} from 'entcore';
+import {idiom as lang, model, ng} from 'entcore';
+import rights from "../../ts/rights";
 
 interface EventLegend {
     canShow: boolean;
@@ -75,7 +76,8 @@ export const EventsLegend = ng.directive('eventsLegend', () => {
                 {canShow: vm.remark, style: "remark", legendTitle: "presences.register.event_type.remark"},
                 {canShow: vm.previouslyAbsent, style: "last-absent", legendTitle: "presences.register.event_type.last.absent", widget: "last-absent"},
                 {canShow: vm.forgottenNotebook, style: "forgotten-notebook", legendTitle: "presences.register.event_type.forgotten.notebook"},
-                {canShow: vm.widgetForgottenNotebook, style: "forgotten-notebook", legendTitle: "presences.register.event_type.forgotten.notebook", widget: "forgotten-notebook"},
+                {canShow: (vm.widgetForgottenNotebook && model.me.hasWorkflow(rights.workflow.manageForgottenNotebook)),
+                    style: "forgotten-notebook", legendTitle: "presences.register.event_type.forgotten.notebook", widget: "forgotten-notebook"},
                 {canShow: vm.incident, style: "incident", legendTitle: "presences.register.event_type.incident"},
             ];
 
