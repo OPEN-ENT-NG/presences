@@ -22,6 +22,7 @@ import {NOTEBOOK_FORM_EVENTS} from '../sniplets';
 import {CalendarAbsenceUtils, CalendarUtils, EventsUtils} from '../utilities';
 import {ABSENCE_FORM_EVENTS, LATENESS_FORM_EVENTS} from '@common/core/enum/presences-event';
 import {IAngularEvent} from 'angular';
+import rights from "../rights";
 
 declare let window: any;
 
@@ -219,17 +220,20 @@ export const calendarController = ng.controller('CalendarController',
                 $scope.safeApply();
             };
 
-            vm.loadForgottenNotebook = async function () {
-                let diff = 7;
+            vm.loadForgottenNotebook = async (): Promise<void> => {
+                if (!model.me.hasWorkflow(rights.workflow.manageForgottenNotebook)) {
+                    return;
+                }
+                let diff: number = 7;
                 if (!model.calendar.display.saturday) diff--;
                 if (!model.calendar.display.synday) diff--;
 
-                const notebookRequest = {} as NotebookRequest;
+                const notebookRequest: NotebookRequest = {} as NotebookRequest;
                 notebookRequest.startDate = moment(model.calendar.firstDay).format(DateUtils.FORMAT["YEAR-MONTH-DAY"]);
                 notebookRequest.endDate = moment(DateUtils.add(model.calendar.firstDay, diff)).format(DateUtils.FORMAT["YEAR-MONTH-DAY"]);
                 notebookRequest.studentId = window.item.id;
-                const notebooks = await ForgottenNotebookService.get(notebookRequest);
-                let legends = document.querySelectorAll('legend:not(.timeslots)');
+                const notebooks: Array<Notebook> = await ForgottenNotebookService.get(notebookRequest);
+                let legends: NodeListOf<Element> = document.querySelectorAll('legend:not(.timeslots)');
                 CalendarUtils.renderLegends(legends, notebooks);
                 onClickLegend(legends, notebooks);
             };

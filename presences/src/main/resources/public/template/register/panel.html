@@ -18,7 +18,8 @@
     </div>
 
     <!-- Forgotten notebook (teacher only) -->
-    <div ng-show="isTeacher()" class="forgotten-notebook eleven vertical-spacing"
+    <div workflow="presences.manageForgottenNotebook"
+         ng-show="isTeacher()" class="forgotten-notebook eleven vertical-spacing"
          ng-class="{ disabled: vm.filter.student.forgotten_notebook }">
         <sniplet template="forgotten-notebook-form" application="presences"></sniplet>
     </div>
