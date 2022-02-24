@@ -6,6 +6,7 @@ public enum WorkflowActions {
     CREATE_REGISTER(Presences.CREATE_REGISTER),
     READ_REGISTER(Presences.READ_REGISTER),
     SEARCH(Presences.SEARCH),
+    SEARCH_RESTRICTED(Presences.SEARCH_RESTRICTED),
     SEARCH_STUDENTS(Presences.SEARCH_STUDENTS),
     EXPORT(Presences.EXPORT),
     READ_EVENT(Presences.READ_EVENT),

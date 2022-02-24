@@ -78,4 +78,9 @@ public class FakeRight extends ControllerHelper {
     @Get("/rights/absence/statements/create")
     @SecuredAction(Presences.ABSENCE_STATEMENTS_CREATE)
     public void AbsenceStatementsCreate(HttpServerRequest request) {notImplemented(request);}
+
+    @Get("/rights/search/restricted")
+    @SecuredAction(Presences.SEARCH_RESTRICTED)
+    public void searchRestricted(HttpServerRequest request) {notImplemented(request);}
+
 }
