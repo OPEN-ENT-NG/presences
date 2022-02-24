@@ -45,6 +45,7 @@ public class Field {
     public static final String EXPORT_PDF_EVENTS = "export-pdf-events";
     public static final String PAGE = "page";
     public static final String LABEL = "label";
+    public static final String PROFILE = "profile";
 
 
     // Dates
@@ -198,6 +199,10 @@ public class Field {
     public static final String $GT = "$gt";
     public static final String $COND = "$cond";
     public static final String $ADDFIELDS = "$addFields";
+
+    // Query
+    public static final String Q = "q";
+    public static final String FIELD = "field";
 
     // Statistics
     public static final String INDICATOR = "indicator";
