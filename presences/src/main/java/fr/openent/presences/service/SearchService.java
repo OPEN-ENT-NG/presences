@@ -13,9 +13,10 @@ public interface SearchService {
      *
      * @param query       query search
      * @param structureId Structure identifier
+     * @param userId       teacher identifier
      * @param handler     Function handler returning data
      */
-    void search(String query, String structureId, Handler<Either<String, JsonArray>> handler);
+    void search(String query, String structureId, String userId, Handler<Either<String, JsonArray>> handler);
 
     /**
      * Search for classes/groups
@@ -23,7 +24,9 @@ public interface SearchService {
      * @param query        query string for research
      * @param fields       list of fields
      * @param structure_id structure identifier
+     * @param userId       teacher identifier
      * @param handler      Function handler returning data
      */
-    void searchGroups(String query, List<String> fields, String structure_id, Handler<Either<String, JsonArray>> handler);
+    void searchGroups(String query, List<String> fields, String structure_id, String userId,
+                      Handler<Either<String, JsonArray>> handler);
 }

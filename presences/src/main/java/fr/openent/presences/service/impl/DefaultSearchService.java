@@ -29,7 +29,7 @@ public class DefaultSearchService implements SearchService {
     }
 
     @Override
-    public void search(String query, String structureId, Handler<Either<String, JsonArray>> handler) {
+    public void search(String query, String structureId, String userId, Handler<Either<String, JsonArray>> handler) {
         Future<JsonArray> userAndGroupFuture = Future.future();
         Future<JsonArray> manualGroup = Future.future();
 
@@ -45,12 +45,13 @@ public class DefaultSearchService implements SearchService {
                 handler.handle(new Either.Right<>(new JsonArray(items)));
             }
         });
-        searchUserAndGroup(query, structureId, FutureHelper.handlerJsonArray(userAndGroupFuture));
-        searchManualGroup(query, structureId, FutureHelper.handlerJsonArray(manualGroup));
+        searchUserAndGroup(query, structureId, userId, FutureHelper.handlerJsonArray(userAndGroupFuture));
+        searchManualGroup(query, structureId, userId, FutureHelper.handlerJsonArray(manualGroup));
     }
 
     @Override
-    public void searchGroups(String query, List<String> fields, String structure_id, Handler<Either<String, JsonArray>> handler) {
+    public void searchGroups(String query, List<String> fields, String structure_id,
+                             String userId, Handler<Either<String, JsonArray>> handler) {
         Future<JsonArray> groups = Future.future();
         Future<JsonArray> manualGroups = Future.future();
 
@@ -72,18 +73,20 @@ public class DefaultSearchService implements SearchService {
             }
         });
 
-        searchGroupsEventBus(query, fields, structure_id, FutureHelper.handlerJsonArray(groups));
-        searchManualGroup(query, structure_id, FutureHelper.handlerJsonArray(manualGroups));
+        searchGroupsEventBus(query, fields, structure_id, userId, FutureHelper.handlerJsonArray(groups));
+        searchManualGroup(query, structure_id, userId, FutureHelper.handlerJsonArray(manualGroups));
     }
 
-    private void searchGroupsEventBus(String query, List<String> fields, String structure_id, Handler<Either<String, JsonArray>> handler) {
+    private void searchGroupsEventBus(String query, List<String> fields, String structureId,
+                                      String userId, Handler<Either<String, JsonArray>> handler) {
         JsonObject action = new JsonObject()
                 .put("action", "groupe.search")
                 .put("q", query)
                 .put("fields", new JsonArray(fields))
-                .put("structureId", structure_id);
+                .put("structureId", structureId)
+                .put("userId", userId);
 
-        eb.send("viescolaire", action, event -> {
+        eb.request("viescolaire", action, event -> {
             if (event.failed() || event.result() == null || "error".equals(((JsonObject) event.result().body()).getString("status"))) {
                 String message = "[Presences@DefaultSearchService::searchGroupsEventBus] Failed to search for groups" + event.cause();
                 LOGGER.error(message);
@@ -94,20 +97,34 @@ public class DefaultSearchService implements SearchService {
         });
     }
 
-    private void searchManualGroup(String query, String structureId, Handler<Either<String, JsonArray>> handler) {
-        String searchQuery = "MATCH (User {profiles:['Student']})-[:IN]->(g:ManualGroup)-[:BELONGS|:DEPENDS]->(s:Structure {id: {structureId}}) " +
+    private void searchManualGroup(String query, String structureId, String userId, Handler<Either<String, JsonArray>> handler) {
+        String searchQuery = "MATCH (User {profiles:['Student']})-[:IN]->(g:ManualGroup)-[:DEPENDS]->(s:Structure {id: {structureId}}) " +
                 "WHERE toLower(g.name) CONTAINS {query} " +
                 "RETURN DISTINCT g.id as id, g.name as displayName, 'GROUP' as type, g.id as groupId, g.name as groupName ";
 
-        JsonObject params = new JsonObject().put("structureId", structureId).put("query", query);
-        Neo4j.getInstance().execute(searchQuery, params, Neo4jResult.validResultHandler(handler));
+
+        String queryFromUserId = "MATCH (u:User {profiles:['Student']})--(:ProfileGroup)--(c:Class)" +
+                "--(:ProfileGroup)--(t:User {id: {userId}}) " +
+                "WITH u, c MATCH (u)--(g)-[:DEPENDS]->(s:Structure {id: {structureId}}) " +
+                "WHERE (g:ManualGroup) AND (toLower(g.name) CONTAINS {query}) " +
+                "RETURN DISTINCT g.id as id, g.name as displayName, 'GROUP' as type, g.id AS groupId, g.name AS groupName " +
+                "ORDER BY g.name";
+
+
+        JsonObject params = new JsonObject()
+                .put("structureId", structureId)
+                .put("userId", userId)
+                .put("query", query);
+        Neo4j.getInstance().execute((userId != null) ? queryFromUserId : searchQuery, params, Neo4jResult.validResultHandler(handler));
     }
 
-    private void searchUserAndGroup(String query, String structureId, Handler<Either<String, JsonArray>> handler) {
-        String searchQuery = "MATCH (u:User {profiles: ['Student']})-[:IN]->(:ProfileGroup)-[:DEPENDS]->(c:Class)-[:BELONGS]->(s:Structure {id:{structureId}}) " +
+    private void searchUserAndGroup(String query, String structureId, String userId, Handler<Either<String, JsonArray>> handler) {
+        String searchQuery = "MATCH (u:User {profiles: ['Student']})-[:IN]->(:ProfileGroup)-[:DEPENDS]->" +
+                "(c:Class)-[:BELONGS]->(s:Structure {id:{structureId}}) " +
                 "WHERE toLower(u.firstName) CONTAINS {query} " +
                 "OR toLower(u.lastName) CONTAINS {query} " +
-                "RETURN distinct u.id as id, (u.lastName + ' ' + u.firstName) as displayName, 'USER' as type, c.id as groupId, c.name as groupName " +
+                "RETURN distinct u.id as id, (u.lastName + ' ' + u.firstName) as displayName, " +
+                "'USER' as type, c.id as groupId, c.name as groupName " +
                 "UNION " +
                 // MATCHING Functional Group
                 "MATCH (g)-[:BELONGS|:DEPENDS]->(s:Structure {id:{structureId}}) " +
@@ -115,9 +132,31 @@ public class DefaultSearchService implements SearchService {
                 "AND (g:Class OR g:FunctionalGroup) " +
                 "RETURN g.id as id, g.name as displayName, 'GROUP' as type, g.id as groupId, g.name as groupName ";
 
+
+        String queryFromUserId = "MATCH (u:User {profiles: ['Student']})-[:IN]->" +
+                "(:ProfileGroup)-[:DEPENDS]->(c:Class)-[:BELONGS]->(s:Structure {id:{structureId}}), " +
+                "(t:User {id: {userId}})-[:IN]->(:ProfileGroup)-[:DEPENDS]->(c) " +
+                "WHERE toLower(u.firstName) CONTAINS {query} " +
+                "OR toLower(u.lastName) CONTAINS {query} " +
+                "RETURN distinct u.id AS id, (u.lastName + ' ' + u.firstName) AS displayName, " +
+                "'USER' AS type, c.id AS groupId, c.name AS groupName " +
+                "UNION " +
+                // MATCHING Class
+                "MATCH (u:User {id:{userId}})-[:IN]->" +
+                "(:ProfileGroup)-[:DEPENDS]->(g: Class)-[:BELONGS]->(s:Structure {id:{structureId}}) WHERE " +
+                "toLower(g.name) CONTAINS {query} " +
+                "RETURN g.id AS id, g.name AS displayName, 'GROUP' AS type, g.id AS groupId, g.name AS groupName " +
+                "UNION " +
+                // MATCHING Functional Group
+                "MATCH (u:User {profiles:['Student']})--(:ProfileGroup)--(c:Class)--(:ProfileGroup)--(t:User {id:{userId}}) " +
+                "WITH u, c MATCH (u)--(g)-[:DEPENDS]->(s:Structure {id:{structureId}}) WHERE (g:FunctionalGroup) AND " +
+                "toLower(g.name) CONTAINS {query} " +
+                "RETURN g.id AS id, g.name AS displayName, 'GROUP' AS type, g.id AS groupId, g.name AS groupName";
+
         JsonObject params = new JsonObject()
                 .put("structureId", structureId)
+                .put("userId", userId)
                 .put("query", query);
-        Neo4j.getInstance().execute(searchQuery, params, Neo4jResult.validResultHandler(handler));
+        Neo4j.getInstance().execute((userId != null) ? queryFromUserId : searchQuery, params, Neo4jResult.validResultHandler(handler));
     }
 }

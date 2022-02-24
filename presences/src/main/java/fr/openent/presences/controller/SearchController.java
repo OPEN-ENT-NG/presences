@@ -1,12 +1,14 @@
 package fr.openent.presences.controller;
 
 import fr.openent.presences.Presences;
+import fr.openent.presences.common.helper.*;
 import fr.openent.presences.common.service.GroupService;
 import fr.openent.presences.common.service.UserService;
 import fr.openent.presences.common.service.impl.DefaultGroupService;
 import fr.openent.presences.common.service.impl.DefaultUserService;
-import fr.openent.presences.enums.GroupType;
-import fr.openent.presences.security.SearchStudents;
+import fr.openent.presences.core.constants.*;
+import fr.openent.presences.enums.*;
+import fr.openent.presences.security.*;
 import fr.openent.presences.service.SearchService;
 import fr.openent.presences.service.impl.DefaultSearchService;
 import fr.wseduc.rs.ApiDoc;
@@ -45,25 +47,37 @@ public class SearchController extends ControllerHelper {
 
     @Get("/search/users")
     @ApiDoc("Search for users")
-    @SecuredAction(Presences.SEARCH)
-    public void searchUsers(HttpServerRequest request) {
-        if (request.params().contains("q") && !"".equals(request.params().get("q").trim())
-                && request.params().contains("field")
-                && request.params().contains("profile")
-                && request.params().contains("structureId")) {
-            String query = request.getParam("q");
-            List<String> fields = request.params().getAll("field");
-            String profile = request.getParam("profile");
-            String structure_id = request.getParam("structureId");
+    @SecuredAction(value = "", type = ActionType.RESOURCE)
+    @ResourceFilter(SearchRight.class)
+    public void searchForUsers(HttpServerRequest request) {
+        if (request.params().contains(Field.Q) && !"".equals(request.params().get(Field.Q).trim())
+                && request.params().contains(Field.FIELD)
+                && request.params().contains(Field.PROFILE)
+                && request.params().contains(Field.STRUCTUREID)) {
 
-            JsonObject action = new JsonObject()
-                    .put("action", "user.search")
-                    .put("q", query)
-                    .put("fields", new JsonArray(fields))
-                    .put("profile", profile)
-                    .put("structureId", structure_id);
+            UserUtils.getUserInfos(eb, request, user -> {
 
-            callViescolaireEventBus(action, request);
+                String restrictedTeacherId = (WorkflowHelper.hasRight(user,
+                        WorkflowActions.SEARCH_RESTRICTED.toString()) && UserType.TEACHER.equals(user.getType())) ?
+                        user.getUserId() : null;
+
+                String query = request.getParam(Field.Q);
+                List<String> fields = request.params().getAll(Field.FIELD);
+                String profile = request.getParam(Field.PROFILE);
+                String structureId = request.getParam(Field.STRUCTUREID);
+
+                JsonObject action = new JsonObject()
+                        .put("action", "user.search")
+                        .put(Field.Q, query)
+                        .put(Field.FIELDS, new JsonArray(fields))
+                        .put(Field.PROFILE, profile)
+                        .put(Field.STRUCTUREID, structureId)
+                        .put(Field.USERID, restrictedTeacherId);
+
+                callViescolaireEventBus(action, request);
+
+            });
+
         } else {
             badRequest(request);
         }
@@ -74,23 +88,28 @@ public class SearchController extends ControllerHelper {
     @SecuredAction(value = "", type = ActionType.RESOURCE)
     @ResourceFilter(SearchStudents.class)
     public void searchStudents(HttpServerRequest request) {
-        if (request.params().contains("q") && !"".equals(request.params().get("q").trim())
-                && request.params().contains("field")
-                && request.params().contains("structureId")) {
-            String query = request.getParam("q");
-            List<String> fields = request.params().getAll("field");
-            String structure_id = request.getParam("structureId");
+        UserUtils.getUserInfos(eb, request, user -> {
+            String userId = (WorkflowHelper.hasRight(user, WorkflowActions.SEARCH_RESTRICTED.toString())
+                    && UserType.TEACHER.equals(user.getType())) ?
+                    user.getUserId() : null;
+        if (request.params().contains(Field.Q) && !"".equals(request.params().get(Field.Q).trim())
+                && request.params().contains(Field.FIELD)
+                && request.params().contains(Field.STRUCTUREID)) {
+            String query = request.getParam(Field.Q);
+            List<String> fields = request.params().getAll(Field.FIELD);
+            String structureId = request.getParam(Field.STRUCTUREID);
 
             JsonObject action = new JsonObject()
                     .put("action", "user.search")
-                    .put("q", query)
-                    .put("fields", new JsonArray(fields))
-                    .put("profile", "Student")
-                    .put("structureId", structure_id);
+                    .put(Field.Q, query)
+                    .put(Field.FIELDS, new JsonArray(fields))
+                    .put(Field.PROFILE, UserType.STUDENT)
+                    .put(Field.STRUCTUREID, structureId)
+                    .put(Field.USERID, userId);
             callViescolaireEventBus(action, request);
         } else {
             badRequest(request);
-        }
+        }});
     }
 
     @Get("/search/groups")
@@ -98,28 +117,40 @@ public class SearchController extends ControllerHelper {
     @SecuredAction(value = "", type = ActionType.RESOURCE)
     @ResourceFilter(SearchStudents.class)
     public void searchGroups(HttpServerRequest request) {
-        if (request.params().contains("q")
-                && !"".equals(request.params().get("q").trim())
-                && request.params().contains("field")
-                && request.params().contains("structureId")) {
-            String query = request.getParam("q");
-            List<String> fields = request.params().getAll("field");
-            String structure_id = request.getParam("structureId");
+        UserUtils.getUserInfos(eb, request, user -> {
+            String userId = (WorkflowHelper.hasRight(user, WorkflowActions.SEARCH_RESTRICTED.toString())
+                            && UserType.TEACHER.equals(user.getType())) ?
+                    user.getUserId() : null;
+            if (request.params().contains(Field.Q)
+                    && !"".equals(request.params().get(Field.Q).trim())
+                    && request.params().contains(Field.FIELD)
+                    && request.params().contains(Field.STRUCTUREID)) {
+                String query = request.getParam(Field.Q);
+                List<String> fields = request.params().getAll(Field.FIELD);
+                String structureId = request.getParam(Field.STRUCTUREID);
 
-            searchService.searchGroups(query, fields, structure_id, arrayResponseHandler(request));
-        } else {
-            badRequest(request);
-        }
+                searchService.searchGroups(query, fields, structureId, userId, arrayResponseHandler(request));
+            } else {
+                badRequest(request);
+            }
+        });
     }
 
     @Get("/search")
     @ApiDoc("Search for a student or a group")
     @SecuredAction(Presences.SEARCH_STUDENTS)
     public void search(HttpServerRequest request) {
-        if (request.params().contains("q") && !"".equals(request.params().get("q").trim())
-                && request.params().contains("structureId")) {
-            searchService.search(request.getParam("q"), request.getParam("structureId"), arrayResponseHandler(request));
-        }
+        UserUtils.getUserInfos(eb, request, user -> {
+            String userId = (WorkflowHelper.hasRight(user, WorkflowActions.SEARCH_RESTRICTED.toString())
+                    && UserType.TEACHER.equals(user.getType())) ?
+                    user.getUserId() : null;
+
+            if (request.params().contains(Field.Q) && !"".equals(request.params().get(Field.Q).trim())
+                    && request.params().contains(Field.STRUCTUREID)) {
+                searchService.search(request.getParam(Field.Q), request.getParam(Field.STRUCTUREID),
+                        userId, arrayResponseHandler(request));
+            }
+        });
     }
 
     @Get("/users")
@@ -168,6 +199,13 @@ public class SearchController extends ControllerHelper {
             }
             renderJson(request, body.getJsonArray("results"));
         }));
+    }
+
+
+    @Get("/rights/search/users")
+    @SecuredAction(Presences.SEARCH)
+    public void searchUsers(HttpServerRequest request) {
+        request.response().setStatusCode(501).end();
     }
 
 }
