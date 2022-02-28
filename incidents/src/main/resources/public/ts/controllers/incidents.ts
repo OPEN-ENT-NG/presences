@@ -1,10 +1,10 @@
 import {_, angular, moment, ng, notify} from 'entcore';
 import {Incident, Incidents, ISchoolYearPeriod, Student, Students} from "../models";
-import {IncidentService} from "../services";
+import {IncidentService, SearchService} from "../services";
 import {Toast} from "@common/utils/toast";
 import {Scope} from "./main";
 import {INCIDENTS_FORM_EVENTS} from '../sniplets';
-import {DateUtils} from "@common/utils";
+import {DateUtils, StudentsSearch} from "@common/utils";
 import {IViescolaireService, ViescolaireService} from "@common/services/ViescolaireService";
 
 declare let window: any;
@@ -12,6 +12,7 @@ declare let window: any;
 interface ViewModel {
     incidents: Incidents;
     notifications: any[];
+    studentsSearch: StudentsSearch;
 
     // Collapse
     incidentId: number;
@@ -38,18 +39,18 @@ interface ViewModel {
     // Students
     students: Students;
 
-    searchStudent(string): void;
+    searchStudent(searchText: string): Promise<void>;
 
-    selectStudents(model, option: Student): void;
+    selectStudents(model: string, option: Student): void;
 
-    removeStudents(audience): void;
+    removeStudents(student: Student): void;
 
     editIncidentLightbox(incident: Incident): void;
 }
 
 export const incidentsController = ng.controller('IncidentsController',
-    ['$scope', '$location', 'IncidentService', 'ViescolaireService',
-        function ($scope: Scope, $location, IncidentService: IncidentService, viescolaireService: IViescolaireService) {
+    ['$scope', '$location', 'SearchService', 'IncidentService', 'ViescolaireService',
+        function ($scope: Scope, $location, searchService: SearchService, IncidentService: IncidentService, viescolaireService: IViescolaireService) {
             const vm: ViewModel = this;
             vm.notifications = [];
             vm.filter = {
@@ -81,6 +82,8 @@ export const incidentsController = ng.controller('IncidentsController',
                 if (!window.structure) return;
 
                 vm.incidents.structureId = window.structure.id;
+                vm.studentsSearch = new StudentsSearch(window.structure.id, searchService);
+
 
                 if (vm.filter.startDate === null) {
                     const schoolYears: ISchoolYearPeriod = await viescolaireService.getSchoolYearDates(window.structure.id);
@@ -164,13 +167,15 @@ export const incidentsController = ng.controller('IncidentsController',
                 $scope.safeApply();
             };
 
-            vm.searchStudent = async (searchText: string) => {
-                await vm.students.search(window.structure.id, searchText);
+            vm.searchStudent = async (searchText: string): Promise<void> => {
+                await vm.studentsSearch.searchStudents(searchText);
                 $scope.safeApply();
             };
 
-            vm.selectStudents = (model: Student, option: Student): void => {
+            vm.selectStudents = (model: string, option: Student): void => {
                 vm.updateFilter(option);
+                vm.studentsSearch.selectStudents(model, option);
+                vm.studentsSearch.student = "";
                 vm.filter.student.search = '';
             };
 
