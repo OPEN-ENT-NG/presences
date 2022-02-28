@@ -3,7 +3,7 @@ import {IncidentParameterType, incidentService, Partner, SearchService} from "..
 import {_, idiom as lang, model, moment, notify, toasts} from "entcore";
 import {SNIPLET_FORM_EMIT_EVENTS, SNIPLET_FORM_EVENTS} from '@common/model'
 import {User} from "@common/model/User";
-import {UsersSearch} from "@common/utils";
+import {StudentsSearch, UsersSearch} from "@common/utils";
 
 declare let window: any;
 
@@ -23,6 +23,7 @@ interface ViewModel {
     emptyParameter: Partner;
     usersSearch: UsersSearch;
     ownerSearch: string;
+    studentsSearch: StudentsSearch;
 
     safeApply(fn?: () => void): void;
 
@@ -44,11 +45,11 @@ interface ViewModel {
 
     closeIncidentLightbox(): void;
 
-    selectIncidentStudentForm(model: Student, student: Student): void;
+    selectIncidentStudentForm(model: string, student: Student): void;
 
     removeIncidentStudentForm(student): void;
 
-    searchIncidentStudentForm(string): void;
+    searchIncidentStudentForm(search: string): void;
 
     getButtonLabel(): string;
 
@@ -73,9 +74,13 @@ const vm: ViewModel = {
     emptyParameter: null,
     usersSearch: null,
     ownerSearch: null,
+    studentsSearch: null,
+
 
     createIncidentLightbox: async () => {
         vm.usersSearch = new UsersSearch(window.structure.id, SearchService);
+        vm.studentsSearch = new StudentsSearch(window.structure.id, SearchService);
+
         vm.isLightboxActive = true;
         vm.lightbox.createMode = true;
         if (!vm.incidentParameterType) {
@@ -220,24 +225,25 @@ const vm: ViewModel = {
         delete vm.incidentForm;
     },
 
-    selectIncidentStudentForm: function (model, student: Student) {
+    selectIncidentStudentForm: (model: string, student: Student): void => {
         if (student && !_.find(vm.incidentForm.protagonists, student)) {
-            let protagonist = {} as ProtagonistForm;
+            let protagonist: ProtagonistForm = {} as ProtagonistForm;
             protagonist.label = student.displayName;
             protagonist.userId = student.id;
             protagonist.protagonistType = vm.incidentParameterType.protagonistType[0];
             vm.incidentForm.protagonists.push(protagonist);
-            vm.incidentStudentsForm.searchValue = null;
+            vm.studentsSearch.selectStudents(model, student);
+            vm.studentsSearch.student = "";
         }
     },
 
-    removeIncidentStudentForm: function (student) {
+    removeIncidentStudentForm: (student: Student): void => {
         vm.incidentForm.protagonists = _.without(vm.incidentForm.protagonists, student);
         vm.safeApply();
     },
 
-    searchIncidentStudentForm: async function (searchText: string) {
-        await vm.incidentStudentsForm.search(window.structure.id, searchText);
+    searchIncidentStudentForm: async (searchText: string): Promise<void> => {
+        await vm.studentsSearch.searchStudents(searchText);
         vm.safeApply();
     },
 

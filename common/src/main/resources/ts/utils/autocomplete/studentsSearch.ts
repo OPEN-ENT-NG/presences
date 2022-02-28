@@ -1,6 +1,7 @@
 import {User} from "@common/model/User";
 import {SearchService} from "@common/services/SearchService";
 import {AutoCompleteUtils} from "./auto-complete";
+import {Student} from "@common/model/Student";
 
 /**
  * ⚠ This class is used for the directive async-autocomplete
@@ -42,12 +43,12 @@ export class StudentsSearch extends AutoCompleteUtils {
         this.selectedStudents = [];
     }
 
-    public selectStudents(valueInput, studentItem) {
+    public selectStudents(valueInput: string, studentItem: Student): void {
         if (!this.selectedStudents) this.selectedStudents = [];
         if (this.selectedStudents.find(student => student["id"] === studentItem.id) === undefined) {
             this.selectedStudents.push(studentItem);
         }
-    };
+    }
 
     public selectStudent(valueInput, studentItem) {
         this.selectedStudents = [];
