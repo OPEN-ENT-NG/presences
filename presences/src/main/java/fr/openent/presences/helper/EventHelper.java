@@ -270,7 +270,8 @@ public class EventHelper {
         });
     }
 
-    public void addStudentsToEvents(String structureId, List<Event> events, List<String> studentIds, String startDate, String endDate,
+    public void addStudentsToEvents(String structureId, List<Event> events, List<String> studentIds,
+                                    List<String> restrictedClasses, String startDate, String endDate,
                                     String startTime, String endTime, List<String> typeIds, List<String> reasonIds,
                                     Boolean noReason, Boolean regularized, Boolean followed, JsonArray absences,
                                     JsonObject slots, Future<JsonObject> studentFuture) {
@@ -282,7 +283,7 @@ public class EventHelper {
                 studentIds, typeIds, reasonIds, noReason, regularized,
                 followed, registerEventFuture);
 
-        personHelper.getStudentsInfo(structureId, studentIds, FutureHelper.handlerJsonArray(studentsInfosFuture));
+        personHelper.getStudentsInfo(structureId, studentIds, restrictedClasses, FutureHelper.handlerJsonArray(studentsInfosFuture));
 
         CompositeFuture.all(registerEventFuture, studentsInfosFuture).setHandler(eventResult -> {
             if (eventResult.failed()) {
@@ -316,9 +317,9 @@ public class EventHelper {
         });
     }
 
-    public void addStudentsToEvents(List<Event> events, List<String> studentIds, String structureId,
+    public void addStudentsToEvents(List<Event> events, List<String> studentIds, List<String> restrictedClasses, String structureId,
                                     Future<JsonObject> studentFuture) {
-        personHelper.getStudentsInfo(structureId, studentIds, studentResp -> {
+        personHelper.getStudentsInfo(structureId, studentIds, restrictedClasses, studentResp -> {
             if (studentResp.isLeft()) {
                 String message = "[Presences@EventHelper::addStudentsToEvents] Failed to retrieve students info";
                 LOGGER.error(message);

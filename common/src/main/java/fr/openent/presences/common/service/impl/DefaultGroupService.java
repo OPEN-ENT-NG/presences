@@ -218,6 +218,36 @@ public class DefaultGroupService extends DBService implements GroupService {
     }
 
     @Override
+    @SuppressWarnings("unchecked")
+    public Future<List<String>> getGroupsAndClassesFromTeacherId(String userId, String structureId) {
+        Promise<List<String>> promise = Promise.promise();
+        if (userId == null) promise.complete(new ArrayList<>());
+        else {
+            String query = "MATCH (u:User {id:{userId}})-[:IN]->(:ProfileGroup)-[:DEPENDS]->(g: Class)-[:BELONGS]->" +
+                    "(s:Structure {id:{structureId}}) RETURN g.id AS id " +
+                    "UNION " +
+                    "MATCH (u:User {profiles:['Student']})--(:ProfileGroup)--(c:Class)--(:ProfileGroup)" +
+                    "--(t:User {id:{userId}}) " +
+                    "WITH u, c MATCH (u)--(g)-[:DEPENDS]->(s:Structure {id:{structureId}}) WHERE (g:FunctionalGroup) " +
+                    "RETURN g.id AS id";
+
+            JsonObject params = new JsonObject()
+                    .put(Field.USERID, userId)
+                    .put(Field.STRUCTUREID, structureId);
+            Neo4j.getInstance().execute(query, params, Neo4jResult.validResultHandler(res -> {
+                if (res.isLeft()) {
+                    promise.fail(res.left().getValue());
+                } else {
+                    promise.complete(((List<JsonObject>) res.right().getValue().getList())
+                            .stream().map(group -> group.getString(Field.ID)).collect(Collectors.toList()));
+                }
+            }));
+        }
+
+        return promise.future();
+    }
+
+    @Override
     public void getClassesStudents(List<String> classes, Handler<Either<String, JsonArray>> handler) {
         String query = "MATCH (c:Class)<-[:DEPENDS]-(:ProfileGroup)<-[:IN]-(u:User {profiles: ['Student']}) " +
                 "WHERE c.id IN {identifiers} " +
