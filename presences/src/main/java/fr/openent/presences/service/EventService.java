@@ -32,7 +32,7 @@ public interface EventService {
               Boolean regularized, Boolean followed, Integer page, Handler<Either<String, JsonArray>> handler);
 
     void get(String structureId, String startDate, String endDate, String startTime, String endTime,
-             List<String> eventType, List<String> listReasonIds, Boolean noReason, List<String> userId,
+             List<String> eventType, List<String> listReasonIds, Boolean noReason, List<String> userId, List<String> restrictedClasses,
              Boolean regularized, Boolean followed, Integer page, Handler<AsyncResult<JsonArray>> handler);
 
     Future<JsonArray> getEventsBetweenDates(String startDate, String endDate, List<String> users, List<Integer> eventType,

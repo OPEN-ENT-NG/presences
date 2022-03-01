@@ -58,18 +58,30 @@ public class PersonHelper {
      * @param studentIds  List of student ids
      * @param handler     handler
      */
-    public void getStudentsInfo(String structureId, List<String> studentIds, Handler<Either<String, JsonArray>> handler) {
+    public void getStudentsInfo(String structureId, List<String> studentIds, List<String> restrictedClasses, Handler<Either<String, JsonArray>> handler) {
         String query = "MATCH (s:Structure {id: {structureId} })<--()--" +
-                "(u:User {profiles:['Student']})-[:IN]->(:ProfileGroup)-[:DEPENDS]->(c:Class) WHERE u.id IN {idStudents} " +
-                "RETURN distinct (u.lastName + ' ' + u.firstName) as displayName, u.lastName as lastName, " +
+                "(u:User {profiles:['Student']})-[:IN]->(:ProfileGroup)-[:DEPENDS]->(c:Class) WHERE u.id IN {idStudents} ";
+
+        if (restrictedClasses != null && !restrictedClasses.isEmpty()) {
+            query += "AND c.id IN {restrictedClasses} ";
+        }
+
+        query += "RETURN distinct (u.lastName + ' ' + u.firstName) as displayName, u.lastName as lastName, " +
                 "u.firstName as firstName, u.id as id, c.name as classeName, c.id as classId";
-        JsonObject params = new JsonObject().put("structureId", structureId).put("idStudents", studentIds);
+        JsonObject params = new JsonObject()
+                .put("structureId", structureId)
+                .put("idStudents", studentIds)
+                .put("restrictedClasses", restrictedClasses);
         Neo4j.getInstance().execute(query, params, Neo4jResult.validResultHandler(handler));
+    }
+
+    public void getStudentsInfo(String structureId, List<String> studentIds, Handler<Either<String, JsonArray>> handler) {
+        getStudentsInfo(structureId, studentIds, null, handler);
     }
 
     public Future<JsonArray> getStudentsInfo(String structureId, List<String> studentIds) {
         Promise<JsonArray> promise = Promise.promise();
-        getStudentsInfo(structureId, studentIds, FutureHelper.handlerJsonArray(promise));
+        getStudentsInfo(structureId, studentIds, null, FutureHelper.handlerJsonArray(promise));
         return promise.future();
     }
 

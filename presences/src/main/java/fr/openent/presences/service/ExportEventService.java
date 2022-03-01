@@ -24,13 +24,14 @@ public interface ExportEventService {
      * @param userId            userId userId neo4j
      * @param userIdFromClasses userId fetched from classes neo4j
      * @param classes           classes list
+     * @param restrictedClasses classes ids for restricted teachers
      * @param regularized       regularized filter
      * @param followed          followed filter
      * @param handler           Function handler returning data
      */
     void getCsvData(String structureId, String startDate, String endDate, List<String> eventType, List<String> listReasonIds,
                     Boolean noReason, List<String> userId, JsonArray userIdFromClasses, List<String> classes,
-                    Boolean regularized, Boolean followed, Handler<AsyncResult<List<Event>>> handler);
+                    List<String> restrictedClasses, Boolean regularized, Boolean followed, Handler<AsyncResult<List<Event>>> handler);
 
     /**
      * Get events. Will after export this into csv (or PDF)
@@ -65,7 +66,6 @@ public interface ExportEventService {
      * @param noReason          noReason filter
      * @param userId            userId userId neo4j
      * @param userIdFromClasses userId fetched from classes neo4j
-     * @param classes           classes list
      * @param regularized       regularized filter
      * @return {@link JsonObject} will be build as
      * title -> {@link String}
@@ -74,6 +74,6 @@ public interface ExportEventService {
      */
     Future<JsonObject> getPdfData(String domain, String local, String structureId, String startDate, String endDate,
                                   List<String> eventType, List<String> listReasonIds, Boolean noReason, List<String> userId,
-                                  JsonArray userIdFromClasses, List<String> classes, Boolean regularized);
+                                  JsonArray userIdFromClasses, Boolean regularized);
 
 }

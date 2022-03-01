@@ -83,4 +83,8 @@ public class FakeRight extends ControllerHelper {
     @SecuredAction(Presences.SEARCH_RESTRICTED)
     public void searchRestricted(HttpServerRequest request) {notImplemented(request);}
 
+    @Get("/rights/read/event/restricted")
+    @SecuredAction(Presences.READ_EVENT_RESTRICTED)
+    public void readEventRestricted(HttpServerRequest request) {notImplemented(request);}
+
 }

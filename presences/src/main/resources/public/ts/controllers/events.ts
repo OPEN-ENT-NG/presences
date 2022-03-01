@@ -13,9 +13,9 @@ import {
     Students,
     TimeSlotHourPeriod
 } from '../models';
-import {DateUtils, PreferencesUtils, PresencesPreferenceUtils} from '@common/utils';
+import {DateUtils, PreferencesUtils, PresencesPreferenceUtils, StudentsSearch} from '@common/utils';
 import {GroupService} from '@common/services/GroupService';
-import {actionService, EventRequest, EventService, ReasonService, ViescolaireService} from '../services';
+import {actionService, EventRequest, EventService, ReasonService, SearchService, ViescolaireService} from '../services';
 import {EventsFilter, EventsFormFilter, EventsUtils} from '../utilities';
 import {Reason} from '@presences/models/Reason';
 import {INFINITE_SCROLL_EVENTER} from '@common/core/enum/infinite-scroll-eventer';
@@ -154,20 +154,22 @@ interface ViewModel {
     /* Students */
     studentSearchInput: string;
     students: Students;
+    studentsSearch: StudentsSearch;
+    studentsSearchLightbox: StudentsSearch;
 
     /* Students lightbox */
     studentSearchInputLightbox: string;
     studentsLightbox: Students;
 
-    searchByStudent(string: string): void;
+    searchByStudent(searchText: string): Promise<void>;
 
-    searchByStudentFromLightbox(string: string): void;
+    searchByStudentFromLightbox(searchText: string): Promise<void>;
 
-    selectStudent(model: Student, option: Student): void;
+    selectStudent(model: string, option: Student): void;
 
     selectStudentFromLightbox(value: string, student: Student): void;
 
-    selectStudentFromDashboard(model: Student, option: Student): void;
+    selectStudentFromDashboard(model: string, option: Student): void;
 
     excludeStudentFromFilter(audience): void;
 
@@ -234,9 +236,10 @@ interface ViewModel {
 }
 
 export const eventsController = ng.controller('EventsController', ['$scope', '$route', '$location', '$timeout',
-    'GroupService', 'ReasonService', 'EventService',
-    function ($scope, $route, $location, $timeout, GroupService: GroupService, ReasonService: ReasonService, eventService: EventService) {
-        const isWidget = $route.current.action === 'dashboard';
+    'GroupService', 'ReasonService', 'EventService', 'SearchService',
+    function ($scope, $route, $location, $timeout, GroupService: GroupService,
+              ReasonService: ReasonService, eventService: EventService, searchService: SearchService) {
+        const isWidget: boolean = $route.current.action === 'dashboard';
         const vm: ViewModel = this;
         vm.filter = {
             startDate: isWidget ? DateUtils.add(new Date(), -5, 'd') : DateUtils.add(new Date(), -7, 'd'),
@@ -279,6 +282,8 @@ export const eventsController = ng.controller('EventsController', ['$scope', '$r
         vm.classesSearchInput = '';
         vm.students = new Students();
         vm.studentsLightbox = new Students();
+        vm.studentsSearch = undefined;
+        vm.studentsSearchLightbox = undefined;
         vm.classesFiltered = undefined;
         vm.classesFilteredLightbox = undefined;
 
@@ -828,17 +833,19 @@ export const eventsController = ng.controller('EventsController', ['$scope', '$r
         /* ----------------------------
           Student methods
         ---------------------------- */
-        vm.searchByStudent = async (searchText: string) => {
-            await vm.students.search(window.structure.id, searchText);
+        vm.searchByStudent = async (searchText: string): Promise<void> => {
+            await vm.studentsSearch.searchStudents(searchText);
             $scope.safeApply();
         };
 
-        vm.selectStudent = function (model: Student, option: Student) {
+        vm.selectStudent = (model: string, option: Student): void => {
             vm.updateFilter(option);
+            vm.studentsSearch.selectStudents(model, option);
+            vm.studentsSearch.student = "";
             vm.studentSearchInput = '';
         };
 
-        vm.selectStudentFromDashboard = function (model: Student, option: Student) {
+        vm.selectStudentFromDashboard = (model: string, option: Student): void => {
             vm.filter.students = [];
             vm.selectStudent(model, option);
         };
@@ -852,8 +859,8 @@ export const eventsController = ng.controller('EventsController', ['$scope', '$r
             Student lightbox methods
         ---------------------------- */
 
-        vm.searchByStudentFromLightbox = async (searchText: string) => {
-            await vm.studentsLightbox.search(window.structure.id, searchText);
+        vm.searchByStudentFromLightbox = async (searchText: string): Promise<void> => {
+            await vm.studentsSearchLightbox.searchStudents(searchText);
             $scope.safeApply();
         };
 
@@ -1187,6 +1194,8 @@ export const eventsController = ng.controller('EventsController', ['$scope', '$r
         $scope.$watch(() => window.structure, async () => {
             if (window.structure) {
                 this.filter.students = [];
+                vm.studentsSearch = new StudentsSearch(window.structure.id, searchService);
+                vm.studentsSearchLightbox = new StudentsSearch(window.structure.id, searchService);
                 await loadReasonTypes().then(async () => {
                     await loadFormFilter();
                 });

@@ -46,6 +46,7 @@ public class Field {
     public static final String ACTION_ABBREVIATION = "action_abbreviation";
     public static final String EXPORT_PDF_EVENTS = "export-pdf-events";
     public static final String PAGE = "page";
+    public static final String PAGE_COUNT = "page_count";
     public static final String LABEL = "label";
     public static final String PROFILE = "profile";
 

@@ -81,7 +81,7 @@ public class DefaultEventService extends DBService implements EventService {
     @Override
     public void get(String structureId, String startDate, String endDate, String startTime, String endTime,
                     List<String> eventType, List<String> listReasonIds, Boolean noReason, List<String> userId,
-                    Boolean regularized, Boolean followed, Integer page, Handler<AsyncResult<JsonArray>> handler) {
+                    List<String> restrictedClasses, Boolean regularized, Boolean followed, Integer page, Handler<AsyncResult<JsonArray>> handler) {
 
         Future<JsonArray> eventsFuture = Future.future();
         Future<JsonObject> slotsFuture = Future.future();
@@ -128,7 +128,7 @@ public class DefaultEventService extends DBService implements EventService {
 
                         Future<JsonObject> studentFuture = Future.future();
 
-                        eventHelper.addStudentsToEvents(structureId, events, studentIds, startDate, endDate, startTime,
+                        eventHelper.addStudentsToEvents(structureId, events, studentIds, restrictedClasses, startDate, endDate, startTime,
                                 endTime, eventType, listReasonIds, noReason, regularized, followed, absences,
                                 slotsFuture.result(), studentFuture);
 
@@ -200,8 +200,9 @@ public class DefaultEventService extends DBService implements EventService {
 
     @Override
     public void getDayMainEvents(String structureId, String startDate, String endDate, String startTime, String endTime,
-                                 List<String> studentIds, List<String> typeIds, List<String> reasonIds, Boolean noReason,
-                                 Boolean regularized, Boolean followed, Integer page, Handler<AsyncResult<JsonArray>> handler) {
+                                 List<String> studentIds, List<String> typeIds,
+                                 List<String> reasonIds, Boolean noReason, Boolean regularized, Boolean followed,
+                                 Integer page, Handler<AsyncResult<JsonArray>> handler) {
         JsonArray params = new JsonArray();
         String query = getDayMainEventsQuery(structureId, startDate, endDate, startTime,
                 endTime, studentIds, typeIds, reasonIds, noReason, regularized, followed, params) +
@@ -1346,7 +1347,14 @@ public class DefaultEventService extends DBService implements EventService {
                                 params.add(offset);
                             }
 
-                            Sql.getInstance().prepared(query, params, SqlResult.validResultHandler(queryHandler));
+                            Sql.getInstance().prepared(query, params, SqlResult.validResultHandler(res -> {
+                                if (res.isLeft()) {
+                                    queryHandler.handle(new Either.Left<>(res.left().getValue()));
+                                } else {
+                                    queryHandler.handle(new Either.Right<>((students == null || students.isEmpty()) ?
+                                            new JsonArray() : res.right().getValue()));
+                                }
+                            }));
                         } else {
                             handler.handle(new Either.Left<>("Structure does not initialize end of half day"));
                         }
