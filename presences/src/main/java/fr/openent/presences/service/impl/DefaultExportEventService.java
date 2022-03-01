@@ -48,7 +48,7 @@ public class DefaultExportEventService extends DBService implements ExportEventS
     @Override
     public void getCsvData(String structureId, String startDate, String endDate, List<String> eventType,
                            List<String> listReasonIds, Boolean noReason, List<String> userId, JsonArray userIdFromClasses,
-                           List<String> classes, Boolean regularized, Boolean followed, Handler<AsyncResult<List<Event>>> handler) {
+                           List<String> classes, List<String> restrictedClasses, Boolean regularized, Boolean followed, Handler<AsyncResult<List<Event>>> handler) {
         eventService.getEvents(structureId, startDate, endDate, eventType, listReasonIds, noReason, userId, userIdFromClasses,
                 regularized, followed, null, eventHandler -> {
                     if (eventHandler.isLeft()) {
@@ -86,7 +86,7 @@ public class DefaultExportEventService extends DBService implements ExportEventS
                         Future<JsonObject> eventTypeFuture = Future.future();
 
                         eventHelper.addReasonsToEvents(events, reasonIds, reasonFuture);
-                        eventHelper.addStudentsToEvents(events, studentIds, structureId, studentFuture);
+                        eventHelper.addStudentsToEvents(events, studentIds, restrictedClasses, structureId, studentFuture);
                         eventHelper.addOwnerToEvents(events, ownerIds, ownerFuture);
                         eventHelper.addEventTypeToEvents(events, eventTypeIds, eventTypeFuture);
 
@@ -112,7 +112,7 @@ public class DefaultExportEventService extends DBService implements ExportEventS
         Promise<List<Event>> promise = Promise.promise();
 
         getCsvData(structureId, startDate, endDate, eventType, listReasonIds, noReason, userId, userIdFromClasses,
-                classes, regularized, followed, event -> {
+                classes, null, regularized, followed, event -> {
                     if (event.failed()) {
                         promise.fail(event.cause());
                     } else {
@@ -124,12 +124,21 @@ public class DefaultExportEventService extends DBService implements ExportEventS
     }
 
     @Override
+    @SuppressWarnings("unchecked")
     public Future<JsonObject> getPdfData(String domain, String local, String structureId, String startDate, String endDate,
                                          List<String> eventType, List<String> listReasonIds, Boolean noReason, List<String> userId,
-                                         JsonArray userIdFromClasses, List<String> classes, Boolean regularized) {
+                                         JsonArray userIdFromClasses, Boolean regularized) {
         Promise<JsonObject> promise = Promise.promise();
-        if (userId != null && !userId.isEmpty()) {
-            userIdFromClasses.addAll(new JsonArray(userId));
+
+        JsonArray studentIdList;
+
+        if (userIdFromClasses != null && !userIdFromClasses.isEmpty() && userId.isEmpty()) {
+            List<String> studentIds = ((List<JsonObject>) userIdFromClasses.getList()).stream()
+                    .map(user -> user.getString(Field.STUDENTID))
+                    .collect(Collectors.toList());
+            studentIdList = new JsonArray(studentIds);
+        } else {
+            studentIdList = new JsonArray(userId);
         }
 
         Future<JsonObject> settingsFuture = settingsService.retrieve(structureId);
@@ -142,7 +151,7 @@ public class DefaultExportEventService extends DBService implements ExportEventS
                             .setEndOfHalfDayTimeSlot(slotsSettingsFuture.result().getString(Field.END_OF_HALF_DAY));
                     List<Reason> reasons = ReasonHelper.getReasonListFromJsonArray(reasonFuture.result(), Reason.MANDATORY_ATTRIBUTE);
 
-                    processEvents(settings, structureId, startDate, endDate, eventType, listReasonIds, noReason, userIdFromClasses)
+                    processEvents(settings, structureId, startDate, endDate, eventType, listReasonIds, noReason, studentIdList)
                             .compose(eventByStudent -> formatEventsDataPdf(startDate, endDate, domain, local, settings, reasons, eventByStudent, eventType))
                             .onSuccess(promise::complete)
                             .onFailure(err -> {
