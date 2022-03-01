@@ -69,5 +69,7 @@ public interface GroupService {
     // Define this new service to fix some performance issues. Maybe refactor later ?
     void getFunctionalAndManualGroupsStudents(List<String> groups, Handler<Either<String, JsonArray>> handler);
 
+    Future<List<String>> getGroupsAndClassesFromTeacherId(String userId, String structureId);
+
     void getClassesStudents(List<String> classes, Handler<Either<String, JsonArray>> handler);
 }
