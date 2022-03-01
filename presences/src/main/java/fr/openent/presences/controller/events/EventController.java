@@ -1,12 +1,11 @@
 package fr.openent.presences.controller.events;
 
 import fr.openent.presences.Presences;
-import fr.openent.presences.common.helper.FutureHelper;
-import fr.openent.presences.common.service.ExportPDFService;
+import fr.openent.presences.common.helper.*;
+import fr.openent.presences.common.service.*;
 import fr.openent.presences.constants.Actions;
 import fr.openent.presences.core.constants.Field;
-import fr.openent.presences.enums.EventType;
-import fr.openent.presences.enums.ExportType;
+import fr.openent.presences.enums.*;
 import fr.openent.presences.export.EventsCSVExport;
 import fr.openent.presences.model.Event.Event;
 import fr.openent.presences.security.ActionRight;
@@ -50,80 +49,99 @@ public class EventController extends ControllerHelper {
     private final EventService eventService;
     private final ExportEventService exportEventService;
     private final ExportPDFService exportPDFService;
+    private final GroupService groupService;
 
     public EventController(CommonPresencesServiceFactory commonPresencesServiceFactory) {
         super();
         this.eventService = commonPresencesServiceFactory.eventService();
         this.exportPDFService = commonPresencesServiceFactory.exportPDFService();
         this.exportEventService = commonPresencesServiceFactory.exportEventService();
+        this.groupService = commonPresencesServiceFactory.groupService();
     }
 
     @Get("/events")
     @ApiDoc("get events")
-    @SecuredAction(Presences.READ_EVENT)
+    @ResourceFilter(EventReadRight.class)
+    @SecuredAction(value = "", type = ActionType.RESOURCE)
     @SuppressWarnings("unchecked")
-    public void getEvents(HttpServerRequest request) {
-        String structureId = request.getParam("structureId");
-        String startDate = request.getParam("startDate");
-        String endDate = request.getParam("endDate");
-        String startTime = request.getParam("startTime");
-        String endTime = request.getParam("endTime");
+    public void getListEvents(HttpServerRequest request) {
 
-        List<String> eventType = request.getParam("eventType") != null ? Arrays.asList(request.getParam("eventType").split("\\s*,\\s*")) : null;
-        List<String> reasonIds = request.getParam("reasonIds") != null ? Arrays.asList(request.getParam("reasonIds").split("\\s*,\\s*")) : new ArrayList<>();
-        Boolean noReason = request.params().contains("noReason") && Boolean.parseBoolean(request.getParam("noReason"));
-        List<String> userIds = request.getParam("userId") != null ? Arrays.asList(request.getParam("userId").split("\\s*,\\s*")) : new ArrayList<>();
-        List<String> classes = request.getParam("classes") != null ? Arrays.asList(request.getParam("classes").split("\\s*,\\s*")) : null;
-        Boolean regularized = request.params().contains("regularized") ? Boolean.parseBoolean(request.getParam("regularized")) : null;
-        Boolean followed = request.params().contains("followed") ? Boolean.parseBoolean(request.getParam("followed")) : null;
-        Integer page = request.getParam("page") != null ? Integer.parseInt(request.getParam("page")) : 0;
-
-        if (!request.params().contains("structureId") || !request.params().contains("startDate") ||
-                !request.params().contains("endDate")) {
+        if (!request.params().contains(Field.STRUCTUREID) || !request.params().contains(Field.STARTDATE) ||
+                !request.params().contains(Field.ENDDATE)) {
             badRequest(request);
             return;
         }
+        String structureId = request.getParam(Field.STRUCTUREID);
+        String startDate = request.getParam(Field.STARTDATE);
+        String endDate = request.getParam(Field.ENDDATE);
+        String startTime = request.getParam(Field.START_TIME);
+        String endTime = request.getParam(Field.END_TIME);
+        List<String> eventType = request.getParam(Field.EVENTTYPE) != null ?
+                Arrays.asList(request.getParam(Field.EVENTTYPE).split("\\s*,\\s*")) : null;
+        List<String> reasonIds = request.getParam(Field.REASONIDS) != null ?
+                Arrays.asList(request.getParam(Field.REASONIDS).split("\\s*,\\s*")) : new ArrayList<>();
+        Boolean noReason = request.params().contains(Field.NOREASON)
+                && Boolean.parseBoolean(request.getParam(Field.NOREASON));
+        List<String> userIds = request.getParam(Field.USERID) != null ?
+                new ArrayList<>(Arrays.asList(request.getParam(Field.USERID).split("\\s*,\\s*"))) : new ArrayList<>();
 
-        getUserIdFromClasses(classes, event -> {
-            if (event.isLeft()) {
-                renderError(request, JsonObject.mapFrom(event.left().getValue()));
-                return;
-            }
-            JsonArray userFromClasses = event.right().getValue();
-            if (userFromClasses != null && !userFromClasses.isEmpty()) {
-                List<String> studentIds = ((List<JsonObject>) userFromClasses.getList()).stream()
-                        .map(user -> user.getString("studentId"))
-                        .collect(Collectors.toList());
-                userIds.addAll(studentIds);
-            }
+        Boolean regularized = request.params().contains(Field.REGULARIZED) ?
+                Boolean.parseBoolean(request.getParam(Field.REGULARIZED)) : null;
+        Boolean followed = request.params().contains(Field.FOLLOWED) ? Boolean.parseBoolean(request.getParam(Field.FOLLOWED)) : null;
+        Integer page = request.getParam(Field.PAGE) != null ? Integer.parseInt(request.getParam(Field.PAGE)) : 0;
+
+        List<String> classes = request.getParam(Field.CLASSES) != null ?
+                Arrays.asList(request.getParam(Field.CLASSES).split("\\s*,\\s*")) : new ArrayList<>();
 
 
-            Future<JsonArray> eventsFuture = Future.future();
-            Future<JsonObject> pageNumberFuture = Future.future();
+        UserUtils.getUserInfos(eb, request, userInfos -> {
 
-            CompositeFuture.all(eventsFuture, pageNumberFuture).setHandler(resultFuture -> {
+            String teacherId = (WorkflowHelper.hasRight(userInfos, WorkflowActions.READ_EVENT_RESTRICTED.toString())
+                    && "Teacher".equals(userInfos.getType())) ?
+                    userInfos.getUserId() : null;
 
-                if (resultFuture.failed()) {
-                    renderError(request, JsonObject.mapFrom(resultFuture.cause()));
-                } else {
-                    // set 0 if count.equal Presences.PAGE_SIZE (20 === 20) else set > 0
-                    Integer pageCount = pageNumberFuture.result().getInteger("count", 0).equals(Presences.PAGE_SIZE) ? 0
-                            : pageNumberFuture.result().getInteger("count", 0) / Presences.PAGE_SIZE;
-                    JsonObject res = new JsonObject()
-                            .put("page", page)
-                            .put("page_count", pageCount)
-                            .put("all", eventsFuture.result());
 
-                    renderJson(request, res);
+            this.groupService.getGroupsAndClassesFromTeacherId(teacherId, structureId)
+                    .onFailure(fail -> renderError(request, JsonObject.mapFrom(fail.getMessage())))
+                    .onSuccess(restrictedClasses ->
+                            getUserIdFromClasses((classes.isEmpty()) ? restrictedClasses : classes, event -> {
+                                if (event.isLeft()) {
+                                    renderError(request, JsonObject.mapFrom(event.left().getValue()));
+                                    return;
+                                }
+                                JsonArray userFromClasses = event.right().getValue();
+                                if (userFromClasses != null && !userFromClasses.isEmpty() && userIds.isEmpty()) {
+                                    List<String> studentIds = ((List<JsonObject>) userFromClasses.getList()).stream()
+                                            .map(user -> user.getString(Field.STUDENTID))
+                                            .collect(Collectors.toList());
+                                    userIds.addAll(studentIds);
+                                }
 
-                }
-            });
+                                Promise<JsonArray> eventsPromise = Promise.promise();
+                                Promise<JsonObject> pageNumberPromise = Promise.promise();
 
-            eventService.get(structureId, startDate, endDate, startTime, endTime, eventType,
-                    reasonIds, noReason, userIds, regularized, followed, page, eventsFuture);
-            eventService.getPageNumber(structureId, startDate, endDate, startTime, endTime, eventType, reasonIds, noReason, userIds,
-                    regularized, followed, FutureHelper.handlerJsonObject(pageNumberFuture));
+                                CompositeFuture.all(eventsPromise.future(), pageNumberPromise.future())
+                                        .onFailure(fail -> renderError(request, JsonObject.mapFrom(fail.getMessage())))
+                                        .onSuccess(evt -> {
+                                            // set 0 if count.equal Presences.PAGE_SIZE (20 === 20) else set > 0
+                                            Integer pageCount = pageNumberPromise.future().result().getInteger(Field.COUNT, 0)
+                                                    .equals(Presences.PAGE_SIZE) ? 0
+                                                    : pageNumberPromise.future().result().getInteger(Field.COUNT, 0) / Presences.PAGE_SIZE;
 
+                                            JsonObject res = new JsonObject()
+                                                    .put(Field.PAGE, page)
+                                                    .put(Field.PAGE_COUNT, pageCount)
+                                                    .put(Field.ALL, eventsPromise.future().result());
+
+                                            renderJson(request, res);
+                                        });
+
+                                eventService.get(structureId, startDate, endDate, startTime, endTime, eventType,
+                                        reasonIds, noReason, userIds, restrictedClasses, regularized, followed, page, eventsPromise);
+                                eventService.getPageNumber(structureId, startDate, endDate, startTime, endTime, eventType, reasonIds, noReason, userIds,
+                                        regularized, followed, FutureHelper.handlerJsonObject(pageNumberPromise));
+
+                            }));
         });
     }
 
@@ -132,6 +150,12 @@ public class EventController extends ControllerHelper {
     @ResourceFilter(EventReadRight.class)
     @SecuredAction(value = "", type = ActionType.RESOURCE)
     public void exportEvents(HttpServerRequest request) {
+        if (!request.params().contains(Field.STRUCTUREID) || !request.params().contains(Field.STARTDATE) ||
+                !request.params().contains(Field.ENDDATE) || !request.params().contains(Field.TYPE)) {
+            badRequest(request);
+            return;
+        }
+
         String structureId = request.getParam(Field.STRUCTUREID);
         String startDate = request.getParam(Field.STARTDATE);
         String endDate = request.getParam(Field.ENDDATE);
@@ -139,46 +163,66 @@ public class EventController extends ControllerHelper {
         List<String> eventType = request.getParam(Field.EVENTTYPE) != null ? Arrays.asList(request.getParam(Field.EVENTTYPE).split("\\s*,\\s*")) : null;
         List<String> reasonIds = request.getParam(Field.REASONIDS) != null ? Arrays.asList(request.getParam(Field.REASONIDS).split("\\s*,\\s*")) : null;
         Boolean noReason = request.params().contains(Field.NOREASON) && Boolean.parseBoolean(request.getParam(Field.NOREASON));
-        List<String> userId = request.getParam(Field.USERID) != null ? Arrays.asList(request.getParam(Field.USERID).split("\\s*,\\s*")) : null;
-        List<String> classes = request.getParam(Field.CLASSES) != null ? Arrays.asList(request.getParam(Field.CLASSES).split("\\s*,\\s*")) : null;
+        List<String> userId = request.getParam(Field.USERID) != null ? Arrays.asList(request.getParam(Field.USERID).split("\\s*,\\s*")) : new ArrayList<>();
+        List<String> classes = request.getParam(Field.CLASSES) != null ?
+                Arrays.asList(request.getParam(Field.CLASSES).split("\\s*,\\s*")) : new ArrayList<>();
+
         Boolean regularized = request.params().contains(Field.REGULARIZED) ? Boolean.parseBoolean(request.getParam(Field.REGULARIZED)) : null;
         Boolean followed = request.params().contains(Field.FOLLOWED) ? Boolean.parseBoolean(request.getParam(Field.FOLLOWED)) : null;
-        if (!request.params().contains(Field.STRUCTUREID) || !request.params().contains(Field.STARTDATE) ||
-                !request.params().contains(Field.ENDDATE) || !request.params().contains(Field.TYPE)) {
-            badRequest(request);
-            return;
-        }
 
-        getUserIdFromClasses(classes, userResponse -> {
-            if (userResponse.isLeft()) {
-                renderError(request, JsonObject.mapFrom(userResponse.left().getValue()));
-            } else {
-                JsonArray userIdFromClasses = userResponse.right().getValue();
-                if (ExportType.CSV.type().equals(type)) {
-                    exportEventService.getCsvData(structureId, startDate, endDate, eventType, reasonIds, noReason, userId, userIdFromClasses,
-                            classes, regularized, followed, event -> processCsvEvent(request, event));
-                } else if (ExportType.PDF.type().equals(type)) {
-                    String domain = Renders.getHost(request);
-                    String local = I18n.acceptLanguage(request);
-                    exportEventService.getPdfData(domain, local, structureId, startDate, endDate, eventType, reasonIds,
-                                    noReason, userId, userIdFromClasses, classes, regularized)
-                            .compose(this::processPdfEvent)
-                            .onSuccess(res -> request.response()
-                                    .putHeader("Content-type", "application/pdf; charset=utf-8")
-                                    .putHeader("Content-Disposition", "attachment; filename=" + res.getName())
-                                    .end(res.getContent())
-                            )
-                            .onFailure(err -> {
-                                String message = "An error has occurred during export pdf process";
-                                String logMessage = String.format("[Presences@%s::processEvents] %s : %s",
-                                        this.getClass().getSimpleName(), message, err.getMessage());
-                                log.error(logMessage);
-                                renderError(request, new JsonObject().put("message", message));
-                            });
-                } else {
-                    badRequest(request);
-                }
-            }
+
+        UserUtils.getUserInfos(eb, request, userInfos -> {
+
+            String teacherId = (WorkflowHelper.hasRight(userInfos, WorkflowActions.READ_EVENT_RESTRICTED.toString())
+                    && "Teacher".equals(userInfos.getType())) ?
+                    userInfos.getUserId() : null;
+
+            this.groupService.getGroupsAndClassesFromTeacherId(teacherId, structureId)
+                    .onFailure(fail -> renderError(request, JsonObject.mapFrom(fail.getMessage())))
+                    .onSuccess(restrictedClasses -> {
+
+
+                        List<String> filterClasses;
+
+                        if (restrictedClasses.isEmpty()) {
+                            filterClasses = classes;
+                        } else {
+                            filterClasses = classes.isEmpty() ? restrictedClasses :
+                                    classes.stream().filter(restrictedClasses::contains).collect(Collectors.toList());
+                        }
+
+                        getUserIdFromClasses(filterClasses, userResponse -> {
+                            if (userResponse.isLeft()) {
+                                renderError(request, JsonObject.mapFrom(userResponse.left().getValue()));
+                            } else {
+                                JsonArray userIdFromClasses = userResponse.right().getValue();
+                                if (ExportType.CSV.type().equals(type)) {
+                                    exportEventService.getCsvData(structureId, startDate, endDate, eventType, reasonIds, noReason, userId, userIdFromClasses,
+                                            classes, restrictedClasses, regularized, followed, event -> processCsvEvent(request, event));
+                                } else if (ExportType.PDF.type().equals(type)) {
+                                    String domain = Renders.getHost(request);
+                                    String local = I18n.acceptLanguage(request);
+                                    exportEventService.getPdfData(domain, local, structureId, startDate, endDate, eventType, reasonIds,
+                                                    noReason, userId, userIdFromClasses, regularized)
+                                            .compose(this::processPdfEvent)
+                                            .onSuccess(res -> request.response()
+                                                    .putHeader("Content-type", "application/pdf; charset=utf-8")
+                                                    .putHeader("Content-Disposition", "attachment; filename=" + res.getName())
+                                                    .end(res.getContent())
+                                            )
+                                            .onFailure(err -> {
+                                                String message = "An error has occurred during export pdf process";
+                                                String logMessage = String.format("[Presences@%s::processEvents] %s : %s",
+                                                        this.getClass().getSimpleName(), message, err.getMessage());
+                                                log.error(logMessage);
+                                                renderError(request, new JsonObject().put("message", message));
+                                            });
+                                } else {
+                                    badRequest(request);
+                                }
+                            }
+                        });
+                    });
         });
     }
 
@@ -393,5 +437,11 @@ public class EventController extends ControllerHelper {
                 renderJson(request, summary.right().getValue());
             }
         });
+    }
+
+    @Get("/rights/read/events")
+    @SecuredAction(Presences.READ_EVENT)
+    public void getEvents(HttpServerRequest request) {
+        request.response().setStatusCode(501).end();
     }
 }
