@@ -13,7 +13,7 @@
             <div class="card cell" ng-repeat="course in vm.courses.all|orderBy:'timestamp'"
                  data-ng-click="vm.openRegister(course, $event)"
                  ng-class="{active: vm.isCurrentRegister(course)}">
-                <div ng-if="hasSearchRight()" class="row has-search-right">
+                <div ng-if="!isTeacher()" class="row has-search-right">
                     <div class="row hour">
                         <span>[[::vm.formatHour(course.startDate)]] - [[::vm.formatHour(course.endDate)]]</span>
                         <i class="right-magnet notify-bell"
@@ -28,7 +28,7 @@
                         <span ng-repeat="group in ::vm.getGroups(course.classes, course.groups)">[[::group]]</span>
                     </div>
                 </div>
-                <div ng-if="!hasSearchRight()" class="row">
+                <div ng-if="isTeacher()" class="row">
                     <div class="row hour">[[::vm.formatHour(course.startDate)]] -
                         [[::vm.formatHour(course.endDate)]]
                     </div>

@@ -95,7 +95,7 @@
 </div>
 
 <!-- Presences Filter -->
-<div class="register registry-eventTypeFilter" workflow="presences.search">
+<div class="register registry-eventTypeFilter" ng-if="!isTeacher()">
     <div class="chips">
         <!-- key for presence filter "mine" is vm.presencesFilter[0] -->
         <label class="chip" ng-class="{selected: vm.filter.presencesFilter.mine}"
