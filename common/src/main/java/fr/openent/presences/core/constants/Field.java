@@ -6,6 +6,7 @@ public class Field {
     public static final String _ID = "_id";
     public static final String IDS = "ids";
     public static final String TITLE = "title";
+    public static final String AUDIENCEID = "audienceId";
     public static final String CLASSES = "classes";
     public static final String CREATE = "CREATE";
     public static final String CREATED = "created";
@@ -41,6 +42,7 @@ public class Field {
     public static final String TEACHERIDS = "teacherIds";
     public static final String TYPEID = "type_id";
     public static final String OWNER = "owner";
+    public static final String OWNERID = "ownerId";
     public static final String ACTION_ABBREVIATION = "action_abbreviation";
     public static final String EXPORT_PDF_EVENTS = "export-pdf-events";
     public static final String PAGE = "page";

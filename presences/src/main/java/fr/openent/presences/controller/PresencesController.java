@@ -1,9 +1,8 @@
 package fr.openent.presences.controller;
 
 import fr.openent.presences.Presences;
-import fr.openent.presences.common.helper.WorkflowHelper;
 import fr.openent.presences.constants.Actions;
-import fr.openent.presences.enums.WorkflowActions;
+import fr.openent.presences.core.constants.*;
 import fr.openent.presences.export.PresencesCSVExport;
 import fr.openent.presences.security.presence.ManagePresenceRight;
 import fr.openent.presences.service.CommonPresencesServiceFactory;
@@ -147,11 +146,11 @@ public class PresencesController extends ControllerHelper {
             String structureId = params.get(STRUCTURE_ID);
             String startDate = params.get(START_DATE);
             String endDate = params.get(END_DATE);
-            List<String> userIds = params.getAll("studentId");
-            List<String> audienceIds = params.getAll("audienceId");
-            List<String> ownerIds = params.getAll("ownerId");
-            ownerIds = WorkflowHelper.hasRight(user, WorkflowActions.SEARCH.toString()) ? ownerIds :
-                    Collections.singletonList(user.getUserId());
+            List<String> userIds = params.getAll(Field.STUDENTID);
+            List<String> audienceIds = params.getAll(Field.AUDIENCEID);
+            List<String> ownerIds = params.getAll(Field.OWNERID);
+            ownerIds = UserType.TEACHER.equals(user.getType()) ? Collections.singletonList(user.getUserId()) :
+                    ownerIds;
 
             if (!request.params().contains(STRUCTURE_ID) || !request.params().contains(START_DATE) ||
                     !request.params().contains(END_DATE)) {
