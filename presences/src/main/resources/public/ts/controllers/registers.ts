@@ -398,9 +398,9 @@ export const registersController = ng.controller('RegistersController',
                 $scope.safeApply();
             };
 
-            const extractSelectedTeacherIds = function () {
-                const ids = [];
-                if (model.me.hasWorkflow(rights.workflow.search)) {
+            const extractSelectedTeacherIds = (): Array<string> => {
+                const ids: Array<string> = [];
+                if (!$scope.isTeacher()) {
                     if ($route.current.action === 'getRegister') {
                         ids.push(vm.filter.selected.registerTeacher.id || vm.register.teachers[0].id);
                     } else {
