@@ -67,6 +67,17 @@ public interface RegisterService {
                            Boolean isWithTeacherFilter, String limit, String offset);
 
     /**
+     *  List registers based on given parameters
+     * @param structureId           structure identifier
+     * @param registerIds           {@link List} of register identifiers (optional)
+     * @param startAt               start date filter (optional)
+     * @param endAt                 end date filter (optional)
+     *
+     * @return {@link Future} of {@link List}
+     */
+    Future<JsonArray> listWithGroups(String structureId, List<Integer> registerIds, String startAt, String endAt);
+
+    /**
      * Create register
      *
      * @param register register

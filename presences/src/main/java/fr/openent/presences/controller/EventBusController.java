@@ -1,14 +1,10 @@
 package fr.openent.presences.controller;
 
 import fr.openent.presences.common.bus.BusResultHandler;
-import fr.openent.presences.service.AbsenceService;
-import fr.openent.presences.service.EventService;
-import fr.openent.presences.service.ReasonService;
-import fr.openent.presences.service.SettingsService;
-import fr.openent.presences.service.impl.DefaultAbsenceService;
-import fr.openent.presences.service.impl.DefaultEventService;
-import fr.openent.presences.service.impl.DefaultReasonService;
-import fr.openent.presences.service.impl.DefaultSettingsService;
+import fr.openent.presences.common.helper.FutureHelper;
+import fr.openent.presences.core.constants.Field;
+import fr.openent.presences.service.*;
+import fr.openent.presences.service.impl.*;
 import fr.wseduc.bus.BusAddress;
 import io.vertx.core.eventbus.EventBus;
 import io.vertx.core.eventbus.Message;
@@ -26,14 +22,17 @@ public class EventBusController extends ControllerHelper {
     private final ReasonService reasonService = new DefaultReasonService();
     private final SettingsService settingsService = new DefaultSettingsService();
     private final AbsenceService absenceService;
+    private final RegisterService registerService;
     private UserInfos user;
 
-    public EventBusController(EventBus eb) {
+    public EventBusController(EventBus eb, CommonPresencesServiceFactory commonPresencesServiceFactory) {
         this.eventService = new DefaultEventService(eb);
         this.absenceService = new DefaultAbsenceService(eb);
+        this.registerService = new DefaultRegisterService(commonPresencesServiceFactory);
     }
 
     @BusAddress("fr.openent.presences")
+    @SuppressWarnings("unchecked")
     public void bus(final Message<JsonObject> message) {
         JsonObject body = message.body();
         String action = body.getString("action");
@@ -44,6 +43,7 @@ public class EventBusController extends ControllerHelper {
         String structure;
         Integer startAt;
         List<Integer> reasonsId;
+        List<Integer> registerIds;
         Boolean massmailed;
         Boolean compliance;
         String startDate;
@@ -120,6 +120,13 @@ public class EventBusController extends ControllerHelper {
             case "get-settings":
                 structure = body.getString("structure");
                 this.settingsService.retrieve(structure, BusResponseHandler.busResponseHandler(message));
+                break;
+            case "get-registers-with-groups":
+                structure = body.getString(Field.STRUCTUREID);
+                registerIds = body.getJsonArray(Field.REGISTERIDS).getList();
+                startDate = body.getString(Field.STARTAT);
+                endDate = body.getString(Field.ENDAT);
+                FutureHelper.busArrayHandler(this.registerService.listWithGroups(structure, registerIds, startDate, endDate), message);
                 break;
             default:
                 message.reply(new JsonObject()

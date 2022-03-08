@@ -91,7 +91,7 @@ public class Presences extends BaseServer {
         addController(new CalendarController(eb));
         addController(new ReasonController());
         addController(new RegistryController(eb));
-        addController(new EventBusController(eb));
+        addController(new EventBusController(eb, commonPresencesServiceFactory));
         addController(new NotebookController());
         addController(new SettingsController());
         addController(new AlertController(eb));

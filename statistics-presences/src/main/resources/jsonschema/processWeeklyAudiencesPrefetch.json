@@ -1,0 +1,28 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema",
+  "$id": "http://example.com/example.json",
+  "type": "object",
+  "properties": {
+    "structure_id": {
+      "type": [
+        "array",
+        "string"
+      ]
+    },
+    "start_at": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "end_at": {
+      "type": [
+        "string",
+        "null"
+      ]
+    }
+  },
+  "required": [
+    "structure"
+  ]
+}

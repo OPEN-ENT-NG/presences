@@ -172,6 +172,37 @@ public class DefaultRegisterService extends DBService implements RegisterService
     }
 
     @Override
+    public Future<JsonArray> listWithGroups(String structureId, List<Integer> registerIds, String startAt, String endAt) {
+        Promise<JsonArray> promise = Promise.promise();
+        String query = " SELECT id, start_date, end_date, course_id, state_id, notified, split_slot, rg.group_id as group_id " +
+                " FROM " + Presences.dbSchema + ".register AS register " +
+                " INNER JOIN " + Presences.dbSchema + ".rel_group_register AS rg ON (register.id = rg.register_id) " +
+                " WHERE register.structure_id = ? ";
+
+        JsonArray params = new JsonArray()
+                .add(structureId);
+
+
+        if (registerIds != null && !registerIds.isEmpty()) {
+            query += " AND id IN " + Sql.listPrepared(registerIds);
+            params.addAll(new JsonArray(registerIds));
+        }
+
+        if (startAt != null) {
+            query += " AND ? < register.end_date ";
+            params.add(startAt);
+        }
+
+        if (endAt != null) {
+            query += " AND register.start_date < ? ";
+            params.add(endAt);
+        }
+
+        sql.prepared(query, params, SqlResult.validResultHandler(FutureHelper.handlerJsonArray(promise)));
+        return promise.future();
+    }
+
+    @Override
     public void create(JsonObject register, UserInfos user, Handler<Either<String, JsonObject>> handler) {
         fetchIfRegisterExists(register, existsEither -> {
             if (existsEither.isLeft()) {

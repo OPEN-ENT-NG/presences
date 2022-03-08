@@ -1,10 +1,13 @@
 package fr.openent.statistics_presences.indicator;
 
 import fr.openent.presences.common.helper.FutureHelper;
+import fr.openent.presences.common.viescolaire.Viescolaire;
 import fr.openent.statistics_presences.StatisticsPresences;
 import fr.openent.statistics_presences.bean.Failure;
 import fr.openent.statistics_presences.bean.Report;
 import fr.openent.statistics_presences.bean.Stat;
+import fr.openent.statistics_presences.bean.StatProcessSettings;
+import fr.openent.statistics_presences.bean.timeslot.Timeslot;
 import fr.openent.statistics_presences.utils.EventType;
 import fr.wseduc.mongodb.MongoDb;
 import io.vertx.core.*;
@@ -41,7 +44,7 @@ public abstract class IndicatorWorker extends AbstractVerticle {
         }
         FutureHelper.join(futures).onComplete(this::sendSigTerm);
     }
-    
+
     protected JsonArray reasonIds(String structureId) {
         return settings.get(structureId).getJsonArray("reasonIds", new JsonArray());
     }
@@ -213,17 +216,46 @@ public abstract class IndicatorWorker extends AbstractVerticle {
         List<EventType> eventTypes = Arrays.asList(EventType.values());
         Map<EventType, Future<List<Stat>>> statsByEventTypes = new HashMap<>();
 
-        for (EventType eventType : eventTypes) {
-            statsByEventTypes.put(eventType, fetchEvent(eventType, structureId, studentId));
-        }
+        StatProcessSettings statProcessSettings = new StatProcessSettings();
+
         Future<JsonArray> audienceFuture = IndicatorGeneric.retrieveAudiences(structureId, studentId);
         Future<JsonObject> studentFuture = IndicatorGeneric.retrieveUser(structureId, studentId);
 
-        List<Future> futures = new ArrayList<>(statsByEventTypes.values());
-        futures.add(audienceFuture);
-        futures.add(studentFuture);
+        CompositeFuture.all(audienceFuture, studentFuture)
+                .compose(settingsRes -> {
+                    statProcessSettings.setStudentInfo(studentFuture.result());
+                    statProcessSettings.setAudienceIds(audienceFuture.result());
 
-        CompositeFuture.all(futures)
+                    String classId = !statProcessSettings.getStudentClassIds().isEmpty() ?
+                            statProcessSettings.getStudentClassIds().get(0) : null;
+
+                    return Viescolaire.getInstance().getAudienceTimeslots(structureId, Collections.singletonList(classId));
+                })
+                .compose(timeslots -> {
+                    if (timeslots == null || timeslots.isEmpty()) {
+                        String message = String.format("[StatisticsPresences@%s::processStudent] " +
+                                        "%s error: timeslot not found in structure %s",
+                                this.getClass().getSimpleName(), indicatorName(), structureId);
+                        log.error(message);
+                        return Future.failedFuture(message);
+                    }
+
+                    statProcessSettings.setTimeslot(timeslots.getJsonObject(0));
+
+                    for (EventType eventType : eventTypes) {
+                        statsByEventTypes.put(eventType, fetchEvent(eventType, structureId, studentId, statProcessSettings.getTimeslot()));
+                    }
+
+
+                    //todo, à tester le fonctionnement
+                    return CompositeFuture.all(new ArrayList<>(statsByEventTypes.values()));
+                })
+                .onFailure(ar -> {
+                    log.error(String.format("[StatisticsPresences@IndicatorWorker::processStudent] " +
+                                    "Failed to process student %s in structure %s for indicator %s", studentId, structureId,
+                            indicatorName()), ar.getCause());
+                    promise.fail(ar.getCause());
+                })
                 .onSuccess(ar -> {
                     log.debug(String.format("[StatisticsPresences@IndicatorWorker::processStudent] Student %s proceed", studentId));
                     List<JsonObject> userStats = new ArrayList<>();
@@ -247,12 +279,6 @@ public abstract class IndicatorWorker extends AbstractVerticle {
                                     }))
                             .collect(Collectors.toList());
                     promise.complete(userStats);
-                })
-                .onFailure(ar -> {
-                    log.error(String.format("[StatisticsPresences@IndicatorWorker::processStudent] " +
-                            "Failed to process student %s in structure %s for indicator %s", studentId, structureId,
-                            indicatorName()), ar.getCause());
-                    promise.fail(ar.getCause());
                 });
 
         return promise.future();
@@ -267,5 +293,5 @@ public abstract class IndicatorWorker extends AbstractVerticle {
         }
     }
 
-    protected abstract Future<List<Stat>> fetchEvent(EventType type, String structureId, String studentId);
+    protected abstract Future<List<Stat>> fetchEvent(EventType type, String structureId, String studentId, Timeslot timeslot);
 }

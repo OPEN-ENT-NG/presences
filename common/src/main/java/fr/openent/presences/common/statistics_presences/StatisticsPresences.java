@@ -60,6 +60,17 @@ public class StatisticsPresences {
         eb.request(address, action, MessageResponseHandler.messageJsonObjectHandler(FutureHelper.handlerJsonObject(handler)));
     }
 
+    public Future<JsonObject> postWeeklyAudiences(String structureId, List<Integer> registerIds) {
+        Promise<JsonObject> promise = Promise.promise();
+        JsonObject action = new JsonObject()
+                .put("action", "post-weekly-audiences")
+                .put("structureId", structureId)
+                .put("registerIds", registerIds);
+
+        eb.request(address, action, MessageResponseHandler.messageJsonObjectHandler(FutureHelper.handlerJsonObject(promise)));
+        return promise.future();
+    }
+
     private static class StatisticsPresencesHolder {
         private static final StatisticsPresences instance = new StatisticsPresences();
 

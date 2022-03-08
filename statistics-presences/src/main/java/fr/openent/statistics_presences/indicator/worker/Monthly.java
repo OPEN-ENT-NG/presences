@@ -3,6 +3,7 @@ package fr.openent.statistics_presences.indicator.worker;
 import fr.openent.presences.core.constants.Field;
 import fr.openent.statistics_presences.bean.Stat;
 import fr.openent.statistics_presences.bean.monthly.MonthlyStat;
+import fr.openent.statistics_presences.bean.timeslot.Timeslot;
 import fr.openent.statistics_presences.indicator.IndicatorGeneric;
 import fr.openent.statistics_presences.indicator.IndicatorWorker;
 import fr.openent.statistics_presences.utils.EventType;
@@ -34,7 +35,7 @@ public class Monthly extends IndicatorWorker {
      */
     @Override
     @SuppressWarnings("unchecked")
-    protected Future<List<Stat>> fetchEvent(EventType type, String structureId, String studentId) {
+    protected Future<List<Stat>> fetchEvent(EventType type, String structureId, String studentId, Timeslot timeslot) {
         Future<List<Stat>> future;
         switch (type) {
             case INCIDENT:
