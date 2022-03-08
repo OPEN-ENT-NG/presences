@@ -75,7 +75,7 @@ public class Weekly extends Indicator {
 
         CompositeFuture.all(countEventsBySlotsFuture, studentCountBySlotsFuture)
                 .onSuccess(ar -> {
-                    List<JsonObject> values = ((List<JsonObject>) countEventsBySlotsFuture.result().getList()).stream()
+                    List<JsonObject> values = (List<JsonObject>) ((List<JsonObject>) countEventsBySlotsFuture.result().getList()).stream()
                             .map(eventCount ->
                                     formatEventToRateSlots(eventCount, studentCountBySlotsFuture.result().getList()))
                             .collect(Collectors.toList());
