@@ -1,13 +1,16 @@
 package fr.openent.statistics_presences.controller;
 
 import fr.openent.presences.common.bus.BusResultHandler;
+import fr.openent.presences.common.helper.FutureHelper;
 import fr.openent.presences.core.constants.Field;
 import fr.openent.statistics_presences.StatisticsPresences;
 import fr.openent.statistics_presences.indicator.Indicator;
 import fr.openent.statistics_presences.model.StatisticsFilter;
 import fr.openent.statistics_presences.service.CommonServiceFactory;
 import fr.openent.statistics_presences.service.StatisticsPresencesService;
+import fr.openent.statistics_presences.service.StatisticsWeeklyAudiencesService;
 import fr.openent.statistics_presences.service.impl.DefaultStatisticsPresencesService;
+import fr.openent.statistics_presences.service.impl.DefaultStatisticsWeeklyAudiencesService;
 import fr.wseduc.bus.BusAddress;
 import io.vertx.core.eventbus.Message;
 import io.vertx.core.json.JsonArray;
@@ -20,9 +23,11 @@ import java.util.List;
 public class EventBusController extends ControllerHelper {
 
     private final StatisticsPresencesService statisticsService;
+    private final StatisticsWeeklyAudiencesService weeklyAudiencesService;
 
     public EventBusController(CommonServiceFactory commonServiceFactory) {
         statisticsService = new DefaultStatisticsPresencesService(commonServiceFactory);
+        weeklyAudiencesService = new DefaultStatisticsWeeklyAudiencesService(commonServiceFactory);
     }
 
     @BusAddress("fr.openent.statistics.presences")
@@ -35,6 +40,11 @@ public class EventBusController extends ControllerHelper {
                 String structure = body.getString("structureId");
                 List<String> student = body.getJsonArray("studentIds").getList();
                 statisticsService.create(structure, student, BusResultHandler.busResponseHandler(message));
+                break;
+            case "post-weekly-audiences":
+                String structureId = body.getString(Field.STRUCTUREID);
+                List<Integer> registerIds = body.getJsonArray(Field.REGISTERIDS).getList();
+                FutureHelper.busObjectHandler(weeklyAudiencesService.create(structureId, registerIds), message);
                 break;
             case "get-statistics-graph":
                 structure = body.getString("structureId");

@@ -1,0 +1,28 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "structureIds": {
+      "type": [
+        "array",
+        "string"
+      ]
+    },
+    "startAt": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "endAt": {
+      "type": [
+        "string",
+        "null"
+      ]
+    }
+  },
+  "required": [
+    "structureIds"
+  ]
+}

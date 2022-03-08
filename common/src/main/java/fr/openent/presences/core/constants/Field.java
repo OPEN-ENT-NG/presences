@@ -17,6 +17,8 @@ public class Field {
     public static final String GROUPNAMES = "groupNames";
     public static final String GROUPS = "groups";
     public static final String AUDIENCES = "audiences";
+    public static final String AUDIENCEIDS = "audienceIds";
+    public static final String AUDIENCE_ID = "audience_id";
     public static final String LIMIT = "limit";
     public static final String MANUALGROUPS = "manualGroups";
     public static final String NAME = "name";
@@ -28,6 +30,7 @@ public class Field {
     public static final String STRUCTURES = "structures";
     public static final String STRUCTURE_ID = "structure_id";
     public static final String STRUCTUREID = "structureId";
+    public static final String STRUCTUREIDS = "structureIds";
     public static final String STUDENT = "student";
     public static final String STUDENTS = "students";
     public static final String STUDENTS_CAPS = "STUDENTS";
@@ -56,14 +59,18 @@ public class Field {
     public static final String END_DATE = "end_date";
     public static final String ENDDATE = "endDate";
     public static final String END_AT = "end_at";
+    public static final String ENDAT = "endAt";
     public static final String DATE = "date";
     public static final String START_DATE = "start_date";
     public static final String STARTDATE = "startDate";
     public static final String START = "start";
     public static final String START_AT = "start_at";
+    public static final String STARTAT = "startAt";
     public static final String END = "end";
     public static final String START_TIME = "startTime";
     public static final String END_TIME = "endTime";
+    public static final String STARTHOUR = "startHour";
+    public static final String ENDHOUR = "endHour";
     public static final String DESCENDING_DATE = "descendingDate";
     public static final String DISPLAY_START_DATE = "display_start_date";
     public static final String DISPLAY_END_DATE = "display_end_date";
@@ -97,6 +104,7 @@ public class Field {
     // Registers
     public static final String COURSE_ID = "course_id";
     public static final String STATE_ID = "state_id";
+    public static final String STATEIDS = "stateIds";
     public static final String NOTIFIED = "notified";
     public static final String SPLIT_SLOT = "split_slot";
     public static final String IS_OPENED_BY_PERSONNEL = "is_opened_by_personnel";
@@ -134,6 +142,7 @@ public class Field {
     public static final String PROTAGONIST = "protagonist";
     public static final String PROTAGONIST_TYPE_ID = "protagonist_type_id";
     public static final String REGISTER_ID = "register_id";
+    public static final String REGISTERIDS = "registerIds";
     public static final String REGISTER_STATE_ID = "register_state_id";
     public static final String ROOMLABELS = "roomLabels";
     public static final String STARTCOURSE = "startCourse";
@@ -201,6 +210,7 @@ public class Field {
     public static final String DATA = "data";
     public static final String COUNT = "count";
     public static final String RATE = "rate";
+    public static final String MAX = "max";
     public static final String SLOTS = "slots";
     public static final String ABSENCE_TOTAL = "ABSENCE_TOTAL";
 
@@ -213,24 +223,51 @@ public class Field {
     public static final String $_ID = "$_id";
     public static final String $PROJECT = "$project";
     public static final String CURSOR = "cursor";
+    public static final String ERRMSG = "errmsg";
     public static final String FIRSTBATCH = "firstBatch";
     public static final String $IN = "$in";
     public static final String $GROUP = "$group";
     public static final String $GT = "$gt";
     public static final String $COND = "$cond";
     public static final String $ADDFIELDS = "$addFields";
+    public static final String ISODAYOFWEEK = "isoDayOfWeek";
+    public static final String SUM = "sum";
+    public static final String DATESTRING = "dateString";
+    public static final String DATEFROMSTRING = "dateFromString";
+    public static final String STATUS = "status";
+    public static final String OK = "ok";
+
+    //Viescolaire
+    public static final String SCHOOLID = "schoolId";
+    public static final String IDGROUPES = "idGroupes";
+    public static final String ID_GROUPE = "id_groupe";
+    public static final String NB = "nb";
+
 
     // Query
     public static final String Q = "q";
     public static final String FIELD = "field";
+    public static final String RESULT = "result";
+    public static final String RESULTS = "results";
+    public static final String ERROR = "error";
+    public static final String MESSAGE = "message";
+    public static final String ACTION = "action";
 
     // Statistics
     public static final String INDICATOR = "indicator";
     public static final String MONTHLY = "Monthly";
     public static final String GLOBAL = "Global";
     public static final String CLASS_NAME = "class_name";
+    public static final String CLASSNAME = "className";
+    public static final String CLASSIDS = "classIds";
     public static final String MONTH = "month";
     public static final String YEAR = "year";
+    public static final String PUNISHMENT_TYPE = "punishment_type";
+
+    //Weekly Audiences
+    public static final String SLOT_ID = "slot_id";
+    public static final String TIMESLOTS = "timeslots";
+    public static final String STUDENT_COUNT = "student_count";
 
     //Massmailing
     public static final String MASSMAILING = "massmailing";

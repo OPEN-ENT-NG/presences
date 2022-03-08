@@ -2,6 +2,7 @@ package fr.openent.presences.common.statistics_presences;
 
 import fr.openent.presences.common.helper.FutureHelper;
 import fr.openent.presences.common.message.MessageResponseHandler;
+import fr.openent.presences.core.constants.Field;
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Future;
 import io.vertx.core.Handler;
@@ -58,6 +59,17 @@ public class StatisticsPresences {
         JsonObject action = new JsonObject()
                 .put("action", "get-statistics-indicator");
         eb.request(address, action, MessageResponseHandler.messageJsonObjectHandler(FutureHelper.handlerJsonObject(handler)));
+    }
+
+    public Future<JsonObject> postWeeklyAudiences(String structureId, List<Integer> registerIds) {
+        Promise<JsonObject> promise = Promise.promise();
+        JsonObject action = new JsonObject()
+                .put(Field.ACTION, "post-weekly-audiences")
+                .put(Field.STRUCTUREID, structureId)
+                .put(Field.REGISTERIDS, registerIds);
+
+        eb.request(address, action, MessageResponseHandler.messageJsonObjectHandler(FutureHelper.handlerJsonObject(promise)));
+        return promise.future();
     }
 
     private static class StatisticsPresencesHolder {
