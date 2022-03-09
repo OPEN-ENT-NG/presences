@@ -23,6 +23,7 @@ public interface UserService {
 
     void getStudentsWithAudiences(String structureId, List<String> studentIds, Handler<AsyncResult<JsonArray>> handler);
 
+    Future<List<String>> getStudentsFromTeacher(String teacherId, String structureId);
     /**
      * Get every student ids from the structure with their accommodation.
      *
