@@ -19,10 +19,7 @@ import org.entcore.common.sql.SqlResult;
 import org.entcore.common.storage.Storage;
 import org.entcore.common.user.UserInfos;
 
-import java.util.Date;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.stream.Collectors;
 
 public class DefaultStatementAbsenceService implements StatementAbsenceService {
@@ -38,46 +35,57 @@ public class DefaultStatementAbsenceService implements StatementAbsenceService {
     }
 
     @Override
-    public void get(UserInfos user, MultiMap body, Handler<AsyncResult<JsonObject>> handler) {
-        String structure_id = body.get("structure_id");
-        String id = body.get("id");
-        String end_at = body.get("end_at");
-        String start_at = body.get("start_at");
-        List<String> student_ids = body.getAll("student_id");
-        Boolean is_treated = body.get("is_treated") != null ? Boolean.valueOf(body.get("is_treated")) : null;
-        Integer page = body.get("page") != null ? Integer.parseInt(body.get("page")) : null;
-        String limit = body.get("limit");
-        String offset = body.get("offset");
+    public void get(UserInfos user, MultiMap body, List<String> restrictedStudentIds,
+                    Handler<AsyncResult<JsonObject>> handler) {
+        String structureId = body.get(Field.STRUCTURE_ID);
+        String id = body.get(Field.ID);
+        String endAt = body.get(Field.END_AT);
+        String startAt = body.get(Field.START_AT);
+        Boolean isTreated = body.get(Field.IS_TREATED) != null ? Boolean.valueOf(body.get(Field.IS_TREATED)) : null;
+        Integer page = body.get(Field.PAGE) != null ? Integer.parseInt(body.get(Field.PAGE)) : null;
+        String limit = body.get(Field.LIMIT);
+        String offset = body.get(Field.OFFSET);
 
-        Future<JsonArray> listResultsFuture = Future.future();
-        Future<Long> countResultsFuture = Future.future();
+        Promise<JsonArray> listResultsPromise = Promise.promise();
+        Promise<Long> countResultsPromise = Promise.promise();
 
-        getRequest(page, limit, offset, structure_id, id, start_at, end_at, student_ids, is_treated, listResultsFuture);
-        countRequest(structure_id, id, start_at, end_at, student_ids, is_treated, countResultsFuture);
+        List<String> studentIds;
 
-        CompositeFuture.all(listResultsFuture, countResultsFuture).setHandler(eventResult -> {
-            if (eventResult.failed()) {
-                handler.handle(Future.failedFuture(eventResult.cause().getMessage()));
-                return;
-            }
+        if (body.getAll(Field.STUDENT_ID) != null && !body.getAll(Field.STUDENT_ID).isEmpty()) {
+            studentIds = restrictedStudentIds.isEmpty() ? body.getAll(Field.STUDENT_ID) :
+                    body.getAll(Field.STUDENT_ID).stream().filter(restrictedStudentIds::contains)
+                    .collect(Collectors.toList());
+        } else {
+            studentIds = restrictedStudentIds;
+        }
 
-            JsonObject result = new JsonObject()
-                    .put("all", listResultsFuture.result())
-                    .put("page_count", countResultsFuture.result());
+        getRequest(page, limit, offset, structureId, id, startAt, endAt, studentIds, isTreated, listResultsPromise);
+        countRequest(structureId, id, startAt, endAt, studentIds, isTreated, countResultsPromise.future());
 
-            if(page != null) {
-                result.put("page", page);
-            } else {
-                if (limit != null) {
-                    result.put("limit", limit);
-                }
-                if (offset != null) {
-                    result.put("offset", offset);
-                }
-            }
+        CompositeFuture.all(listResultsPromise.future(), countResultsPromise.future())
+                .onFailure(fail -> handler.handle(Future.failedFuture(fail.getMessage())))
+                .onSuccess(eventResult -> {
 
-            handler.handle(Future.succeededFuture(result));
-        });
+                    boolean restrictedHasNoStudents = !restrictedStudentIds.isEmpty() && studentIds.isEmpty();
+
+                    JsonObject result = new JsonObject()
+                            .put(Field.ALL, restrictedHasNoStudents ? new JsonArray() :
+                                    listResultsPromise.future().result())
+                            .put(Field.PAGE_COUNT, restrictedHasNoStudents ? 0 : countResultsPromise.future().result());
+
+                    if (page != null) {
+                        result.put(Field.PAGE, page);
+                    } else {
+                        if (limit != null) {
+                            result.put(Field.LIMIT, limit);
+                        }
+                        if (offset != null) {
+                            result.put(Field.OFFSET, offset);
+                        }
+                    }
+
+                    handler.handle(Future.succeededFuture(result));
+                });
     }
 
     @Override

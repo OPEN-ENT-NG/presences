@@ -2,6 +2,7 @@ package fr.openent.presences.common.service.impl;
 
 import fr.openent.presences.common.helper.FutureHelper;
 import fr.openent.presences.common.service.UserService;
+import fr.openent.presences.core.constants.*;
 import fr.openent.presences.db.DBService;
 import fr.wseduc.webutils.Either;
 import io.vertx.core.AsyncResult;
@@ -13,9 +14,8 @@ import io.vertx.core.json.JsonObject;
 import org.entcore.common.neo4j.Neo4j;
 import org.entcore.common.neo4j.Neo4jResult;
 
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
+import java.util.stream.*;
 
 import static fr.openent.presences.model.Model.log;
 
@@ -37,6 +37,32 @@ public class DefaultUserService extends DBService implements UserService {
         JsonObject params = new JsonObject().put("userIds", students);
 
         Neo4j.getInstance().execute(query, params, Neo4jResult.validResultHandler(handler));
+    }
+
+    @Override
+    @SuppressWarnings("unchecked")
+    public Future<List<String>> getStudentsFromTeacher(String teacherId, String structureId) {
+        Promise<List<String>> promise = Promise.promise();
+        if (teacherId == null) promise.complete(new ArrayList<>());
+        else {
+            String query = "MATCH (u:User {profiles:['Student']})-[:IN]->(:ProfileGroup)-[:DEPENDS]->" +
+                    "(c:Class)-[:BELONGS]->(s:Structure {id:{structureId}})," +
+                    "(t:User {id: {userId}})-[:IN]->(:ProfileGroup)-[:DEPENDS]->(c) " +
+                    "RETURN DISTINCT u.id AS id";
+            JsonObject params = new JsonObject()
+                    .put(Field.STRUCTUREID, structureId)
+                    .put(Field.USERID, teacherId);
+
+            Neo4j.getInstance().execute(query, params, Neo4jResult.validResultHandler(res -> {
+                if (res.isLeft()) {
+                    promise.fail(res.left().getValue());
+                } else {
+                    promise.complete(((List<JsonObject>) res.right().getValue().getList())
+                            .stream().map(group -> group.getString(Field.ID)).collect(Collectors.toList()));
+                }
+            }));
+        }
+        return promise.future();
     }
 
     @Override

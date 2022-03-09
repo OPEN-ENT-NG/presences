@@ -1,10 +1,12 @@
 package fr.openent.presences.controller;
 
 import fr.openent.presences.Presences;
-import fr.openent.presences.common.helper.DateHelper;
-import fr.openent.presences.common.service.UserService;
+import fr.openent.presences.common.helper.*;
+import fr.openent.presences.common.service.*;
 import fr.openent.presences.common.service.impl.DefaultUserService;
 import fr.openent.presences.constants.Actions;
+import fr.openent.presences.core.constants.*;
+import fr.openent.presences.enums.*;
 import fr.openent.presences.export.StatementAbsencesCSVExport;
 import fr.openent.presences.security.AbsenceStatementsCreateRight;
 import fr.openent.presences.security.AbsenceStatementsGetFileRight;
@@ -36,10 +38,10 @@ import java.util.stream.Collectors;
 
 public class StatementAbsenceController extends ControllerHelper {
 
-    private StatementAbsenceService statementAbsenceService;
-    private EventBus eb;
-    private Storage storage;
-    private UserService userService;
+    private final StatementAbsenceService statementAbsenceService;
+    private final EventBus eb;
+    private final Storage storage;
+    private final UserService userService;
 
     public StatementAbsenceController(EventBus eventBus, Storage storage) {
         super();
@@ -56,13 +58,23 @@ public class StatementAbsenceController extends ControllerHelper {
     @SecuredAction(value = "", type = ActionType.RESOURCE)
     public void get(HttpServerRequest request) {
         UserUtils.getUserInfos(eb, request, user -> {
-            statementAbsenceService.get(user, request.params(), result -> {
-                if (result.failed()) {
-                    renderError(request);
-                    return;
-                }
-                renderJson(request, result.result());
-            });
+
+            String structureId = request.getParam(Field.STRUCTURE_ID);
+
+            String teacherId = (WorkflowHelper.hasRight(user, WorkflowActions.MANAGE_ABSENCE_STATEMENTS_RESTRICTED.toString())
+                    && "Teacher".equals(user.getType())) ?
+                    user.getUserId() : null;
+
+            this.userService.getStudentsFromTeacher(teacherId, structureId)
+                    .onFailure(fail -> renderError(request))
+                    .onSuccess(studentIds ->
+                            statementAbsenceService.get(user, request.params(), studentIds, result -> {
+                                if (result.failed()) {
+                                    renderError(request);
+                                    return;
+                                }
+                                renderJson(request, result.result());
+                            }));
         });
     }
 
@@ -72,28 +84,38 @@ public class StatementAbsenceController extends ControllerHelper {
     @SecuredAction(value = "", type = ActionType.RESOURCE)
     public void export(HttpServerRequest request) {
         UserUtils.getUserInfos(eb, request, user -> {
-            statementAbsenceService.get(user, request.params(), result -> {
-                if (result.failed()) {
-                    renderError(request);
-                    return;
-                }
 
-                setParent(result.result().getJsonArray("all"), listResult -> {
-                    JsonArray statementAbsences = listResult.result();
-                    List<String> csvHeaders = new ArrayList<>(Arrays.asList(
-                            "presences.csv.header.student.lastName", "presences.csv.header.student.firstName",
-                            "presences.csv.header.parent.lastName", "presences.csv.header.parent.firstName",
-                            "presences.statements.absence.csv.header.start.at.date", "presences.statements.absence.csv.header.start.at.hour",
-                            "presences.statements.absence.csv.header.end.at.date", "presences.statements.absence.csv.header.end.at.hour",
-                            "presences.statements.absence.csv.header.description",
-                            "presences.statements.absence.csv.header.treated.at.date", "presences.statements.absence.csv.header.treated.at.hour",
-                            "presences.statements.absence.csv.header.created.at.date", "presences.statements.absence.csv.header.created.at.hour"));
-                    StatementAbsencesCSVExport csv = new StatementAbsencesCSVExport(statementAbsences);
-                    csv.setRequest(request);
-                    csv.setHeader(csvHeaders);
-                    csv.export();
-                });
-            });
+            String structureId = request.getParam(Field.STRUCTURE_ID);
+
+            String teacherId = (WorkflowHelper.hasRight(user, WorkflowActions.MANAGE_ABSENCE_STATEMENTS_RESTRICTED.toString())
+                    && "Teacher".equals(user.getType())) ?
+                    user.getUserId() : null;
+
+            this.userService.getStudentsFromTeacher(teacherId, structureId)
+                    .onFailure(fail -> renderError(request))
+                    .onSuccess(studentIds ->
+                            statementAbsenceService.get(user, request.params(), studentIds, result -> {
+                                if (result.failed()) {
+                                    renderError(request);
+                                    return;
+                                }
+
+                                setParent(result.result().getJsonArray(Field.ALL), listResult -> {
+                                    JsonArray statementAbsences = listResult.result();
+                                    List<String> csvHeaders = new ArrayList<>(Arrays.asList(
+                                            "presences.csv.header.student.lastName", "presences.csv.header.student.firstName",
+                                            "presences.csv.header.parent.lastName", "presences.csv.header.parent.firstName",
+                                            "presences.statements.absence.csv.header.start.at.date", "presences.statements.absence.csv.header.start.at.hour",
+                                            "presences.statements.absence.csv.header.end.at.date", "presences.statements.absence.csv.header.end.at.hour",
+                                            "presences.statements.absence.csv.header.description",
+                                            "presences.statements.absence.csv.header.treated.at.date", "presences.statements.absence.csv.header.treated.at.hour",
+                                            "presences.statements.absence.csv.header.created.at.date", "presences.statements.absence.csv.header.created.at.hour"));
+                                    StatementAbsencesCSVExport csv = new StatementAbsencesCSVExport(statementAbsences);
+                                    csv.setRequest(request);
+                                    csv.setHeader(csvHeaders);
+                                    csv.export();
+                                });
+                            }));
         });
     }
 

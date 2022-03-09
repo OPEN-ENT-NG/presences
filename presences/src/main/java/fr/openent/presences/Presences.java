@@ -49,6 +49,7 @@ public class Presences extends BaseServer {
     public static final String STUDENT_EVENTS_VIEW = "presences.student.events.view";
     public static final String ABSENCE_STATEMENTS_VIEW = "presences.absence.statements.view";
     public static final String MANAGE_ABSENCE_STATEMENTS = "presences.manage.absence.statements";
+    public static final String MANAGE_ABSENCE_STATEMENTS_RESTRICTED = "presences.manage.absence.statements.restricted";
     public static final String ABSENCE_STATEMENTS_CREATE = "presences.absence.statements.create";
     public static final String MANAGE_FORGOTTEN_NOTEBOOK = "presences.manage.forgotten.notebook";
     public static final String MANAGE_COLLECTIVE_ABSENCES = "presences.manage.collective.absences";

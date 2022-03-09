@@ -16,6 +16,7 @@ public class AbsenceStatementsViewRight implements ResourcesProvider {
     public void authorize(HttpServerRequest request, Binding binding, UserInfos user, Handler<Boolean> handler) {
         List<String> studentIds = request.params().getAll(Field.STUDENT_ID);
         boolean result = WorkflowHelper.hasRight(user, WorkflowActions.MANAGE_ABSENCE_STATEMENTS.toString()) ||
+                WorkflowHelper.hasRight(user, WorkflowActions.MANAGE_ABSENCE_STATEMENTS_RESTRICTED.toString()) ||
                 (WorkflowHelper.hasRight(user, WorkflowActions.ABSENCE_STATEMENTS_VIEW.toString())
                         && request.params().size() > 0 && (!studentIds.isEmpty())
                         && studentIds.stream()
