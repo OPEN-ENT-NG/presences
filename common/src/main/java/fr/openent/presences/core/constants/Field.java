@@ -146,6 +146,7 @@ public class Field {
 
     // Statement
     public static final String IDSTATEMENT = "idStatement";
+    public static final String IS_TREATED = "is_treated";
 
     // event || event type
     public static final String EVENTTYPE = "eventType";
