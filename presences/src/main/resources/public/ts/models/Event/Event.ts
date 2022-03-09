@@ -144,6 +144,17 @@ export class Event {
         }
     }
 
+    toJsonPut() {
+        return {
+            register_id: parseInt(this.register_id.toString()),
+            type_id: this.type_id,
+            ...(this.student_id ? {student_id: this.student_id} : {}),
+            ...(this.start_date ? {start_date: this.start_date} : {}),
+            ...(this.end_date ? {end_date: this.end_date} : {}),
+            ...(this.comment ? {comment: this.comment} : {})
+        }
+    }
+
     async save(): Promise<AxiosResponse> {
         if (this.id) {
             return this.update();
@@ -159,7 +170,7 @@ export class Event {
             } else if (this.type_id === EventType.LATENESS) {
                 this.end_date = moment(this.end_date_time).format(DateUtils.FORMAT["YEAR-MONTH-DAY-HOUR-MIN-SEC"]);
             }
-            await http.put(`/presences/events/${this.id}`, this.toJson());
+            await http.put(`/presences/events/${this.id}`, this.toJsonPut());
         } catch (err) {
             throw err;
         }
