@@ -62,6 +62,7 @@ public interface GroupService {
      */
     void getGroupStudents(List<String> groups, Handler<Either<String, JsonArray>> handler);
 
+    Future<JsonArray> getGroupStudents(List<String> groups);
 
     void getAudiences(String structureId, List<String> audienceIds, Handler<AsyncResult<JsonArray>> handler);
     void getAudiencesFromNames(String structureId, List<String> audienceNames, Handler<AsyncResult<JsonArray>> handler);

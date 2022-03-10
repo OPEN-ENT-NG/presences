@@ -2,6 +2,7 @@ package fr.openent.massmailing.security;
 
 import fr.openent.massmailing.actions.WorkflowActions;
 import fr.openent.presences.common.helper.WorkflowHelper;
+import fr.openent.presences.core.constants.*;
 import fr.wseduc.webutils.http.Binding;
 import io.vertx.core.Handler;
 import io.vertx.core.http.HttpServerRequest;
@@ -13,8 +14,10 @@ import java.util.List;
 public class CanAccessMassMailing implements ResourcesProvider {
     @Override
     public void authorize(HttpServerRequest request, Binding binding, UserInfos userInfos, Handler<Boolean> handler) {
-        String structureId = request.getParam("structure");
+        String structureId = request.getParam(Field.STRUCTURE);
         List<String> structures = userInfos.getStructures();
-        handler.handle(structures.contains(structureId) && WorkflowHelper.hasRight(userInfos, WorkflowActions.VIEW.toString()));
+        handler.handle(structures.contains(structureId)
+                && (WorkflowHelper.hasRight(userInfos, WorkflowActions.VIEW.toString())
+                    || WorkflowHelper.hasRight(userInfos, WorkflowActions.VIEW_RESTRICTED.toString())));
     }
 }

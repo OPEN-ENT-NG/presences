@@ -233,8 +233,11 @@ export const homeController = ng.controller('HomeController', ['$scope', 'route'
             vm.lightbox.filter = false;
         };
 
-        vm.loadData = async function (): Promise<void> {
+        vm.loadData = async (): Promise<void> => {
             if (!window.structure) return;
+            if (!$scope.hasRight('manage')) {
+                $scope.redirectTo(`/history`);
+            }
             await loadFormFilter();
             await Promise.all([getReasons(), getPunishmentTypes()]);
             vm.fetchData();

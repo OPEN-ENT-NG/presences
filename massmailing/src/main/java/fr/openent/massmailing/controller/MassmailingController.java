@@ -1,7 +1,7 @@
 package fr.openent.massmailing.controller;
 
 import fr.openent.massmailing.Massmailing;
-import fr.openent.massmailing.actions.Action;
+import fr.openent.massmailing.actions.*;
 import fr.openent.massmailing.enums.MailingType;
 import fr.openent.massmailing.enums.MassmailingType;
 import fr.openent.massmailing.mailing.*;
@@ -9,10 +9,10 @@ import fr.openent.massmailing.security.BodyCanAccessMassMailing;
 import fr.openent.massmailing.security.CanAccessMassMailing;
 import fr.openent.massmailing.service.MassmailingService;
 import fr.openent.massmailing.service.impl.DefaultMassmailingService;
-import fr.openent.presences.common.helper.ArrayHelper;
-import fr.openent.presences.common.helper.FutureHelper;
-import fr.openent.presences.common.service.GroupService;
-import fr.openent.presences.common.service.impl.DefaultGroupService;
+import fr.openent.presences.common.helper.*;
+import fr.openent.presences.common.service.*;
+import fr.openent.presences.common.service.impl.*;
+import fr.openent.presences.core.constants.*;
 import fr.wseduc.rs.ApiDoc;
 import fr.wseduc.rs.Get;
 import fr.wseduc.rs.Post;
@@ -36,6 +36,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
+import java.util.stream.*;
 
 public class MassmailingController extends ControllerHelper {
     private final GroupService groupService;
@@ -43,6 +44,7 @@ public class MassmailingController extends ControllerHelper {
     private final Vertx vertx;
     private final Storage storage;
     private final MassmailingService massmailingService;
+    private final UserService userService;
     private final List<MailingType> typesToCheck = Arrays.asList(MailingType.MAIL, MailingType.SMS);
 
     public MassmailingController(EventBus eb, Vertx vertx, JsonObject config, Storage storage) {
@@ -50,6 +52,7 @@ public class MassmailingController extends ControllerHelper {
         this.vertx = vertx;
         this.groupService = new DefaultGroupService(eb);
         this.massmailingService = new DefaultMassmailingService(eb);
+        this.userService = new DefaultUserService();
         this.storage = storage;
     }
 
@@ -178,69 +181,102 @@ public class MassmailingController extends ControllerHelper {
      */
     private void processMassmailingStatus(HttpServerRequest request, List<String> students) {
         List<MassmailingType> types = getMassMailingTypes(request);
-        List<Future> futures = new ArrayList<>();
-        String structure = request.getParam("structure");
-        Boolean massmailed = request.params().contains("massmailed") ? Boolean.parseBoolean(request.getParam("massmailed")) : null;
-        List<Integer> reasons = parseReasons(request.params().getAll("reason"));
-        List<Integer> punishmentsTypes = parsePunishmentsTypes(request.params().getAll("punishmentType"));
-        List<Integer> sanctionsTypes = parsePunishmentsTypes(request.params().getAll("sanctionType"));
-        boolean noReasons = !request.params().contains("no_reason") || Boolean.parseBoolean(request.getParam("no_reasons"));
+        List<Future<JsonObject>> futures = new ArrayList<>();
+        String structure = request.getParam(Field.STRUCTURE);
+        Boolean massmailed = request.params().contains(Field.MASSMAILED) ?
+                Boolean.parseBoolean(request.getParam(Field.MASSMAILED)) : null;
+        List<Integer> reasons = parseReasons(request.params().getAll(Field.REASON));
+        List<Integer> punishmentsTypes = parsePunishmentsTypes(request.params().getAll(Field.PUNISHMENTTYPE));
+        List<Integer> sanctionsTypes = parsePunishmentsTypes(request.params().getAll(Field.SANCTIONTYPE));
+        boolean noReasons = !request.params().contains(Field.NO_REASON)
+                || Boolean.parseBoolean(request.getParam(Field.NO_REASONS));
         Integer startAt;
         try {
-            startAt = Integer.parseInt(request.getParam("start_at"));
+            startAt = Integer.parseInt(request.getParam(Field.START_AT));
         } catch (NumberFormatException e) {
             startAt = 1;
         }
-        String startDate = request.getParam("start_date");
-        String endDate = request.getParam("end_date");
+        String startDate = request.getParam(Field.START_DATE);
+        String endDate = request.getParam(Field.END_DATE);
 
         for (MassmailingType type : types) {
-            Future<JsonObject> future = Future.future();
-            futures.add(future);
+            Promise<JsonObject> promise = Promise.promise();
+            futures.add(promise.future());
             massmailingService.getStatus(structure, type, massmailed, reasons, punishmentsTypes, sanctionsTypes, startAt, startDate,
-                    endDate, students, noReasons, FutureHelper.handlerJsonObject(future));
+                    endDate, students, noReasons, FutureHelper.handlerJsonObject(promise));
         }
 
-        CompositeFuture.all(futures).setHandler(event -> {
-            if (event.failed()) {
-                log.error("[Massmailing@MassmailingController] Failed to retrieve status");
-                renderError(request);
-                return;
-            }
+        FutureHelper.all(futures)
+                .onFailure(fail -> {
+                    String message = String.format("[Massmailing@%s::processMassmailingStatus] Failed to retrieve status]",
+                            this.getClass().getSimpleName());
+                    log.error(message);
+                    renderError(request);
+                })
+                .onSuccess(event -> {
+                    // If user has restricted right and is searching forbidden class/student return 0
+                    boolean hasFilterWithRestrictedParam = students.isEmpty() &&
+                            ((request.params().contains(Field.GROUP) && !request.params().getAll(Field.GROUP).isEmpty())
+                                    || (request.params().contains(Field.STUDENT) && !request.params().getAll(Field.STUDENT).isEmpty()));
 
-            JsonObject res = new JsonObject();
-            for (int i = 0; i < types.size(); i++) {
-                JsonObject status = (JsonObject) futures.get(i).result();
-                res.put(types.get(i).toString(), status.getInteger("status"));
-            }
 
-            renderJson(request, res);
-        });
+                    JsonObject res = new JsonObject();
+                    for (int i = 0; i < types.size(); i++) {
+                        JsonObject status = futures.get(i).result();
+                        res.put(types.get(i).toString(), hasFilterWithRestrictedParam ? 0 : status.getInteger(Field.STATUS));
+                    }
+
+                    renderJson(request, res);
+                });
+
+
     }
 
     private void processStudents(HttpServerRequest request, Handler<Either<String, List<String>>> handler) {
-        final List<String> students = new ArrayList<>();
-        if (request.params().contains("student")) students.addAll(request.params().getAll("student"));
-        if (request.params().contains("group")) {
-            List<String> groups = request.params().getAll("group");
-            groupService.getGroupStudents(groups, event -> {
-                if (event.isLeft()) {
-                    log.error("[Massmailing@MassmailingController] Failed to retrieve students for massmailing status groups");
-                    handler.handle(new Either.Left("[Massmailing@MassmailingController] Failed to retrieve students for massmailing status groups"));
-                    return;
-                }
+        UserUtils.getUserInfos(eb, request, userInfos -> {
 
-                JsonArray res = event.right().getValue();
-                for (int i = 0; i < res.size(); i++) {
-                    JsonObject o = res.getJsonObject(i);
-                    students.add(o.getString("id", ""));
-                }
+            String teacherId = (WorkflowHelper.hasRight(userInfos, WorkflowActions.MANAGE_RESTRICTED.toString())
+                    && UserType.TEACHER.equals(userInfos.getType())) ?
+                    userInfos.getUserId() : null;
 
-                handler.handle(new Either.Right(students));
-            });
-        } else {
-            handler.handle(new Either.Right(students));
-        }
+            String structureId = request.getParam(Field.STRUCTURE);
+
+
+            this.userService.getStudentsFromTeacher(teacherId, structureId)
+                    .onFailure(fail -> renderError(request))
+                    .onSuccess(restrictedStudentIds -> {
+
+                        List<String> students = request.params().contains(Field.STUDENT) ?
+                                request.params().getAll(Field.STUDENT) : new ArrayList<>();
+                        List<String> groups = request.params().contains(Field.GROUP) ?
+                                request.params().getAll(Field.GROUP) : new ArrayList<>();
+
+                        groupService.getGroupStudents(groups, event -> {
+
+                            if (event.isLeft()) {
+                                String message = String.format("[Massmailing@%s::processStudents] Failed to retrieve " +
+                                        "students for massmailing status groups", this.getClass().getSimpleName());
+                                log.error(message);
+                                handler.handle(new Either.Left<>(message));
+                                return;
+                            }
+
+                            JsonArray res = event.right().getValue();
+                            for (int i = 0; i < res.size(); i++) {
+                                JsonObject o = res.getJsonObject(i);
+                                students.add(o.getString(Field.ID, ""));
+                            }
+
+
+                            if (students.isEmpty()) {
+                                students.addAll(restrictedStudentIds.isEmpty() ? new ArrayList<>() : restrictedStudentIds);
+                            }
+
+                            handler.handle(new Either.Right<>(restrictedStudentIds.isEmpty() ? students :
+                                    students.stream().filter(restrictedStudentIds::contains).collect(Collectors.toList())));
+                        });
+                    });
+        });
     }
 
     @Get("/massmailings/anomalies")
@@ -248,73 +284,87 @@ public class MassmailingController extends ControllerHelper {
     @ResourceFilter(CanAccessMassMailing.class)
     @ApiDoc("Get massmailings anomalies for given arguments")
     public void getMassmailingsAnomalies(HttpServerRequest request) {
-        if (!validParams(request) || !validMassmailingType(request)) {
+        if (Boolean.TRUE.equals(!validParams(request)) || Boolean.TRUE.equals(!validMassmailingType(request))) {
             badRequest(request);
             return;
         }
 
         processStudents(request, event -> {
             if (event.isLeft()) {
-                log.error("[Massmailing@MassmailingController] Failed to retrieve students for anomalies request");
+                String message = String.format("[Massmailing@%s::getMassmailingsAnomalies] Failed to " +
+                        "retrieve students for anomalies request", this.getClass().getSimpleName());
+                log.error(message);
                 renderError(request);
                 return;
             }
 
             List<String> students = event.right().getValue();
             List<MassmailingType> types = getMassMailingTypes(request);
-            List<Future> futures = new ArrayList<>();
-            String structure = request.getParam("structure");
-            Boolean massmailed = request.params().contains("massmailed") ? Boolean.parseBoolean(request.getParam("massmailed")) : null;
-            List<Integer> reasons = parseReasons(request.params().getAll("reason"));
-            List<Integer> punishmentsTypes = parsePunishmentsTypes(request.params().getAll("punishmentType"));
-            List<Integer> sanctionsTypes = parsePunishmentsTypes(request.params().getAll("sanctionType"));
-            boolean noReasons = !request.params().contains("no_reason") || Boolean.parseBoolean(request.getParam("no_reasons"));
+            List<Future<JsonArray>> futures = new ArrayList<>();
+            String structure = request.getParam(Field.STRUCTURE);
+            Boolean massmailed = request.params().contains(Field.MASSMAILED) ?
+                    Boolean.parseBoolean(request.getParam(Field.MASSMAILED)) : null;
+            List<Integer> reasons = parseReasons(request.params().getAll(Field.REASON));
+            List<Integer> punishmentsTypes = parsePunishmentsTypes(request.params().getAll(Field.PUNISHMENTTYPE));
+            List<Integer> sanctionsTypes = parsePunishmentsTypes(request.params().getAll(Field.SANCTIONTYPE));
+            boolean noReasons = !request.params().contains(Field.NOREASON)
+                    || Boolean.parseBoolean(request.getParam(Field.NO_REASONS));
             Integer startAt;
             try {
-                startAt = Integer.parseInt(request.getParam("start_at"));
+                startAt = Integer.parseInt(request.getParam(Field.START_AT));
             } catch (NumberFormatException e) {
                 startAt = 1;
             }
-            String startDate = request.getParam("start_date");
-            String endDate = request.getParam("end_date");
+            String startDate = request.getParam(Field.START_DATE);
+            String endDate = request.getParam(Field.END_DATE);
 
             for (MassmailingType type : types) {
-                Future<JsonArray> future = Future.future();
-                futures.add(future);
+                Promise<JsonArray> promise = Promise.promise();
+                futures.add(promise.future());
                 massmailingService.getCountEventByStudent(structure, type, massmailed, reasons, punishmentsTypes, sanctionsTypes,
-                        startAt, startDate, endDate, students, noReasons, FutureHelper.handlerJsonArray(future));
+                        startAt, startDate, endDate, students, noReasons, FutureHelper.handlerJsonArray(promise));
             }
 
-            CompositeFuture.all(futures).setHandler(compositeEvent -> {
-                if (compositeEvent.failed()) {
-                    log.error("[Massmailing@MassmailingController] Failed to retrieve count event for anomalies request", compositeEvent.cause());
-                    renderError(request);
-                    return;
-                }
-
-                List<String> studentList = getStudentsList(futures);
-                processAnomalies(studentList, anomaliesEvent -> {
-                    if (anomaliesEvent.isLeft()) {
-                        log.error("[Massmailing@MassmailingController] Failed to process anomalies for anomalies request", anomaliesEvent.left().getValue());
+            FutureHelper.all(futures)
+                    .onFailure(fail -> {
+                        String message = String.format("[Massmailing@%s::getMassmailingsAnomalies] Failed to retrieve count " +
+                                "event for anomalies request", this.getClass().getSimpleName());
+                        log.error(message, fail.getCause().getMessage());
                         renderError(request);
-                        return;
-                    }
+                    })
+                    .onSuccess(evt -> {
+                        List<String> studentList = getStudentsList(futures);
+                        processAnomalies(studentList, anomaliesEvent -> {
+                            if (anomaliesEvent.isLeft()) {
+                                String message = String.format("[Massmailing@%s::getMassmailingsAnomalies] Failed to process " +
+                                        "anomalies for anomalies request", this.getClass().getSimpleName());
+                                log.error(message, anomaliesEvent.left().getValue());
+                                renderError(request);
+                                return;
+                            }
 
-                    JsonArray anomalies = anomaliesEvent.right().getValue();
-                    HashMap<String, JsonObject> map = mapById(anomalies);
-                    for (int i = 0; i < types.size(); i++) {
-                        JsonArray res = (JsonArray) futures.get(i).result();
-                        for (int j = 0; j < res.size(); j++) {
-                            if (!map.containsKey(res.getJsonObject(j).getString("student_id"))) continue;
-                            JsonObject student = map.get(res.getJsonObject(j).getString("student_id"));
-                            if (!student.containsKey("count")) student.put("count", new JsonObject());
-                            student.getJsonObject("count").put(types.get(i).name(), res.getJsonObject(j).getInteger("count"));
-                        }
-                    }
+                            boolean hasFilterWithRestrictedParam = students.isEmpty() &&
+                                    ((request.params().contains(Field.GROUP) && !request.params().getAll(Field.GROUP).isEmpty())
+                                    || (request.params().contains(Field.STUDENT) && !request.params().getAll(Field.STUDENT).isEmpty()));
 
-                    renderJson(request, transformMapToArray(map));
-                });
-            });
+                            // If user has restricted right and is searching forbidden class/student return empty array
+                            JsonArray anomalies = hasFilterWithRestrictedParam ? new JsonArray() : anomaliesEvent.right().getValue();
+
+                            HashMap<String, JsonObject> map = mapById(anomalies);
+                            for (int i = 0; i < types.size(); i++) {
+                                JsonArray res = futures.get(i).result();
+                                for (int j = 0; j < res.size(); j++) {
+                                    if (!map.containsKey(res.getJsonObject(j).getString(Field.STUDENT_ID))) continue;
+                                    JsonObject student = map.get(res.getJsonObject(j).getString(Field.STUDENT_ID));
+                                    if (!student.containsKey(Field.COUNT)) student.put(Field.COUNT, new JsonObject());
+                                    student.getJsonObject(Field.COUNT).put(types.get(i).name(),
+                                            res.getJsonObject(j).getInteger(Field.COUNT));
+                                }
+                            }
+
+                            renderJson(request, transformMapToArray(map));
+                        });
+                    });
         });
     }
 
@@ -371,13 +421,13 @@ public class MassmailingController extends ControllerHelper {
         return new JsonArray(array);
     }
 
-    private List<String> getStudentsList(List<Future> futures) {
+    private List<String> getStudentsList(List<Future<JsonArray>> futures) {
         List<String> students = new ArrayList<>();
-        for (Future future : futures) {
-            JsonArray res = (JsonArray) future.result();
-            for (int i = 0; i < res.size(); i++) {
-                JsonObject student = res.getJsonObject(i);
-                if (!students.contains(student.getString("student_id"))) students.add(student.getString("student_id"));
+        for (Future<JsonArray> future : futures) {
+            for (int i = 0; i < future.result().size(); i++) {
+                JsonObject student = future.result().getJsonObject(i);
+                if (!students.contains(student.getString(Field.STUDENT_ID)))
+                    students.add(student.getString(Field.STUDENT_ID));
             }
         }
 
@@ -389,14 +439,16 @@ public class MassmailingController extends ControllerHelper {
     @ResourceFilter(CanAccessMassMailing.class)
     @ApiDoc("Prefetch massmailing")
     public void prefetch(HttpServerRequest request) {
-        if (!validParams(request) || !validMassmailingType(request) || !validMailingType(request)) {
+        if (Boolean.TRUE.equals(!validParams(request) || !validMassmailingType(request)) || !validMailingType(request)) {
             badRequest(request);
             return;
         }
 
         processStudents(request, studentEvent -> {
             if (studentEvent.isLeft()) {
-                log.error("[Massmailing@MassmailingController]");
+                String message = String.format("[Massmailing@%s::prefetch] Failed to retrieve students for prefetch request",
+                        this.getClass().getSimpleName());
+                log.error(message);
                 renderError(request);
                 return;
             }
@@ -404,71 +456,88 @@ public class MassmailingController extends ControllerHelper {
             List<String> students = studentEvent.right().getValue();
             List<MassmailingType> types = getMassMailingTypes(request);
             MailingType mailingType = getMailingType(request);
-            List<Future> futures = new ArrayList<>();
-            String structure = request.getParam("structure");
-            Boolean massmailed = request.params().contains("massmailed") ? Boolean.parseBoolean(request.getParam("massmailed")) : null;
-            List<Integer> reasons = parseReasons(request.params().getAll("reason"));
-            List<Integer> punishmentsTypes = parsePunishmentsTypes(request.params().getAll("punishmentType"));
-            List<Integer> sanctionsTypes = parsePunishmentsTypes(request.params().getAll("sanctionType"));
-            boolean noReasons = !request.params().contains("no_reason") || Boolean.parseBoolean(request.getParam("no_reasons"));
+            List<Future<JsonArray>> futures = new ArrayList<>();
+            String structure = request.getParam(Field.STRUCTURE);
+            Boolean massmailed = request.params().contains(Field.MASSMAILED)
+                    ? Boolean.parseBoolean(request.getParam(Field.MASSMAILED)) : null;
+            List<Integer> reasons = parseReasons(request.params().getAll(Field.REASON));
+            List<Integer> punishmentsTypes = parsePunishmentsTypes(request.params().getAll(Field.PUNISHMENTTYPE));
+            List<Integer> sanctionsTypes = parsePunishmentsTypes(request.params().getAll(Field.SANCTIONTYPE));
+            boolean noReasons = !request.params().contains(Field.NO_REASON)
+                    || Boolean.parseBoolean(request.getParam(Field.NO_REASONS));
             Integer startAt;
             try {
-                startAt = Integer.parseInt(request.getParam("start_at"));
+                startAt = Integer.parseInt(request.getParam(Field.START_AT));
             } catch (NumberFormatException e) {
                 startAt = 1;
             }
-            String startDate = request.getParam("start_date");
-            String endDate = request.getParam("end_date");
+            String startDate = request.getParam(Field.START_DATE);
+            String endDate = request.getParam(Field.END_DATE);
 
             for (MassmailingType type : types) {
-                Future<JsonArray> future = Future.future();
-                futures.add(future);
+                Promise<JsonArray> promise = Promise.promise();
+                futures.add(promise.future());
                 massmailingService.getCountEventByStudent(structure, type, massmailed, reasons, punishmentsTypes, sanctionsTypes,
-                        startAt, startDate, endDate, students, noReasons, FutureHelper.handlerJsonArray(future));
+                        startAt, startDate, endDate, students, noReasons, FutureHelper.handlerJsonArray(promise));
             }
 
-            CompositeFuture.all(futures).setHandler(compositeEvent -> {
-                if (compositeEvent.failed()) {
-                    log.error("[Massmailing@MassmailingController] Failed to retrieve count event for anomalies request", compositeEvent.cause());
-                    renderError(request);
-                    return;
-                }
-
-                processRelatives(mailingType, getStudentsList(futures), relativesEvent -> {
-                    if (relativesEvent.isLeft()) {
-                        log.error("[Massmailing@prefetch] Failed to retrieve relatives");
+            FutureHelper.all(futures)
+                    .onFailure(fail -> {
+                        String message = String.format("[Massmailing@%s::prefetch] Failed to retrieve count " +
+                                "event for prefetch request", this.getClass().getSimpleName());
+                        log.error(message, fail.getCause().getMessage());
                         renderError(request);
-                        return;
-                    }
+                    })
+                    .onSuccess(event -> {
+                        processRelatives(mailingType, getStudentsList(futures), relativesEvent -> {
+                            if (relativesEvent.isLeft()) {
+                                String message = String.format("[Massmailing@%s::prefetch] Failed to retrieve relatives",
+                                        this.getClass().getSimpleName());
+                                log.error(message);
+                                renderError(request);
+                                return;
+                            }
 
-                    HashMap<String, JsonObject> relativesMap = mapById(relativesEvent.right().getValue().getJsonArray("values", new JsonArray()));
-                    for (int i = 0; i < futures.size(); i++) {
-                        JsonArray result = (JsonArray) futures.get(i).result();
-                        for (int j = 0; j < result.size(); j++) {
-                            JsonObject count = result.getJsonObject(j);
-                            if (!relativesMap.containsKey(count.getString("student_id"))) continue;
-                            JsonObject student = relativesMap.get(count.getString("student_id"));
-                            if (!student.containsKey("events")) student.put("events", new JsonObject());
-                            student.getJsonObject("events").put(types.get(i).name(), count.getInteger("count"));
-                        }
-                    }
+                            HashMap<String, JsonObject> relativesMap = mapById(relativesEvent.right().getValue()
+                                    .getJsonArray(Field.VALUES, new JsonArray()));
 
-                    JsonArray studentsObject = transformMapToArray(relativesMap);
+                            for (int i = 0; i < futures.size(); i++) {
+                                JsonArray result = futures.get(i).result();
 
-                    JsonObject response = new JsonObject()
-                            .put("type", mailingType.name());
+                                for (int j = 0; j < result.size(); j++) {
+                                    JsonObject count = result.getJsonObject(j);
+                                    if (!relativesMap.containsKey(count.getString(Field.STUDENT_ID))) continue;
+                                    JsonObject student = relativesMap.get(count.getString(Field.STUDENT_ID));
+                                    if (!student.containsKey(Field.EVENTS)) student.put(Field.EVENTS, new JsonObject());
+                                    student.getJsonObject(Field.EVENTS).put(types.get(i).name(), count.getInteger(Field.COUNT));
+                                }
+                            }
 
-                    JsonObject countObject = new JsonObject()
-                            .put("anomalies", relativesEvent.right().getValue().getInteger("anomalies_count"))
-                            .put("students", studentsObject.size())
-                            .put("massmailing", countMassmailing(studentsObject));
+                            boolean hasFilterWithRestrictedParam = students.isEmpty() &&
+                                    ((request.params().contains(Field.GROUP) && !request.params().getAll(Field.GROUP).isEmpty())
+                                            || (request.params().contains(Field.STUDENT)
+                                            && !request.params().getAll(Field.STUDENT).isEmpty()));
 
-                    response.put("counts", countObject);
-                    response.put("students", ArrayHelper.sort(studentsObject, "displayName"));
 
-                    renderJson(request, response);
-                });
-            });
+                            JsonArray studentsObject = hasFilterWithRestrictedParam ? new JsonArray() :
+                                    transformMapToArray(relativesMap);
+
+                            JsonObject response = new JsonObject()
+                                    .put(Field.TYPE, mailingType.name());
+
+
+                            JsonObject countObject = new JsonObject()
+                                    .put(Field.ANOMALIES, hasFilterWithRestrictedParam ?
+                                            0 : relativesEvent.right().getValue().getInteger(Field.ANOMALIES_COUNT))
+                                    .put(Field.STUDENTS, hasFilterWithRestrictedParam ? 0 : studentsObject.size())
+                                    .put(Field.MASSMAILING, hasFilterWithRestrictedParam ? 0 : countMassmailing(studentsObject));
+
+                            response.put(Field.COUNTS, countObject);
+                            response.put(Field.STUDENTS, ArrayHelper.sort(studentsObject, Field.DISPLAYNAME));
+
+                            renderJson(request, response);
+                        });
+                    });
         });
     }
 

@@ -5,13 +5,15 @@
 </div>
 <div class="row menu">
     <!-- massmailing -->
-    <div class="cell menu-item">
+    <div class="cell menu-item"
+         ng-if="hasRight('manage')">
         <a href="#/" ng-class="{'current-state': vm.homeState()}">
             <i18n>massmailing.home.title</i18n>
         </a>
     </div>
     <!-- massmailing history -->
-    <div class="cell menu-item">
+    <div class="cell menu-item"
+         ng-if="hasRight('access') || hasRight('viewRestricted')">
         <a href="#/history" ng-class="{'current-state': vm.historyState()}">
             <i18n>massmailing.history.title</i18n>
         </a>
