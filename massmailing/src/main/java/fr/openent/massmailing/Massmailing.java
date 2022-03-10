@@ -28,7 +28,9 @@ public class Massmailing extends BaseServer {
     public static final String dbSchema = "massmailing";
 
     public static final String MANAGE = "massmailing.manage";
+    public static final String MANAGE_RESTRICTED = "massmailing.manage.restricted";
     public static final String VIEW = "massmailing.view";
+    public static final String VIEW_RESTRICTED = "massmailing.view.restricted";
 
     public static String SMS_ADDRESS = "entcore.sms";
 

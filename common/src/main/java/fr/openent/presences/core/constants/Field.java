@@ -29,6 +29,7 @@ public class Field {
     public static final String STRUCTURE_ID = "structure_id";
     public static final String STRUCTUREID = "structureId";
     public static final String STUDENT = "student";
+    public static final String STUDENTS = "students";
     public static final String STUDENTS_CAPS = "STUDENTS";
     public static final String STUDENT_ID = "student_id";
     public static final String STUDENT_IDS = "student_ids";
@@ -78,6 +79,8 @@ public class Field {
 
     // Reason
     public static final String NOREASON = "noReason";
+    public static final String NO_REASON = "no_reason";
+    public static final String NO_REASONS = "no_reasons";
     public static final String REASON = "reason";
     public static final String REASON_ID = "reason_id";
     public static final String MULTIPLE = "multiple";
@@ -179,6 +182,10 @@ public class Field {
     public static final String $GROUPED_PUNISHMENT_ID = "$grouped_punishment_id";
     public static final String GROUP_ID = "group_id";
     public static final String PROCESS = "process";
+    public static final String PUNISHMENTTYPE = "punishmentType";
+
+    // Sanctions
+    public static final String SANCTIONTYPE = "sanctionType";
 
 
     // Indicator
@@ -215,6 +222,16 @@ public class Field {
     public static final String CLASS_NAME = "class_name";
     public static final String MONTH = "month";
     public static final String YEAR = "year";
+
+    //Massmailing
+    public static final String MASSMAILING = "massmailing";
+    public static final String MAILTYPE = "mailType";
+    public static final String STATUS = "status";
+    public static final String VALUES = "values";
+    public static final String ANOMALIES = "anomalies";
+    public static final String ANOMALIES_COUNT = "anomalies_count";
+    public static final String COUNTS = "counts";
+    public static final String DISPLAYNAME = "displayName";
 
     private Field() {
         throw new IllegalStateException("Utility class");

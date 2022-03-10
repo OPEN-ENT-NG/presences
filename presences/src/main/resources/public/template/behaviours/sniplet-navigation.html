@@ -57,12 +57,12 @@
                         <i18n>presences.incidents</i18n>
                     </span>
                 </div>
-                <a role="menuitem" ng-if="::hasMassmailingRight('access')"
+                <a role="menuitem" ng-if="hasMassmailingRight('access') || hasMassmailingRight('viewRestricted')"
                    ng-class="{active: getCurrentPathState() === 'massmailing'}"
                    class="item"
                    href="/massmailing#/">
                     <i class="mass-mailing" aria-hidden="true"></i>
-                    <span class="label-navbar" ng-if="::hasMassmailingRight('access')">
+                    <span class="label-navbar" ng-if="hasMassmailingRight('access') || hasMassmailingRight('viewRestricted')">
                         <i18n>presences.publipostage</i18n>
                     </span>
                 </a>

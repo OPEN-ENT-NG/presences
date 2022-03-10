@@ -155,6 +155,13 @@ public class DefaultGroupService extends DBService implements GroupService {
     }
 
     @Override
+    public Future<JsonArray> getGroupStudents(List<String> groups) {
+        Promise<JsonArray> promise = Promise.promise();
+        getGroupStudents(groups, FutureHelper.handlerJsonArray(promise));
+        return promise.future();
+    }
+
+    @Override
     public void getAudiences(String structureId, List<String> audienceIds, Handler<AsyncResult<JsonArray>> handler) {
         String query =  "MATCH (s:Structure {id: {structureId}}) " +
                 "MATCH (s)<-[:BELONGS|DEPENDS]-(g:Group)<-[:IN]-(u:User {profiles:['Student']}) " +
