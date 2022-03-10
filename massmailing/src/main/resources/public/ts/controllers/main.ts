@@ -1,9 +1,14 @@
-import {idiom, ng, template} from 'entcore';
+import {idiom, model, ng, template} from 'entcore';
+import rights from "../rights";
 
 interface ViewModel {
-    homeState(): boolean
+    homeState(): boolean;
 
-    historyState(): boolean
+    historyState(): boolean;
+
+    hasRight(right: string): boolean;
+
+    redirectTo(path: string): void;
 }
 
 export const mainController = ng.controller('MainController', ['$scope', 'route', '$location',
@@ -30,6 +35,14 @@ export const mainController = ng.controller('MainController', ['$scope', 'route'
             } else {
                 $scope.$apply(fn);
             }
+        };
+
+       $scope.hasRight = (right: string): boolean => {
+            return model.me.hasWorkflow(rights.workflow[right]);
+        };
+
+        $scope.redirectTo = (path: string): void => {
+            $location.path(path);
         };
 
         route({
