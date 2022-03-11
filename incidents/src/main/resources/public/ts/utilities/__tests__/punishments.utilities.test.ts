@@ -132,7 +132,7 @@ describe('PunishmentsUtilities', () => {
 
         //Test detentionField
         let detention : IPDetentionField = {};
-        punishment.fields = detention;
+        punishment.fields = [detention];
         punishment.type.punishment_category_id = 2;
         expect(PunishmentsUtils.getPunishmentDate(punishment).includes("01/02/2000")).toEqual(true);
         detention.end_at = "2000-03-09 00:00:00";
@@ -150,13 +150,12 @@ describe('PunishmentsUtilities', () => {
         punishment.type.punishment_category_id = 4;
         let exclude : IPExcludeField = {};
         punishment.fields = exclude;
-        punishment.type.punishment_category_id = 2;
         expect(PunishmentsUtils.getPunishmentDate(punishment).includes("01/02/2000")).toEqual(true);
         exclude.end_at = "2000-03-09 00:00:00";
         expect(PunishmentsUtils.getPunishmentDate(punishment).includes("01/02/2000")).toEqual(true);
         exclude.end_at = undefined;
         exclude.start_at = "2000-03-09 00:00:00";
-        expect(PunishmentsUtils.getPunishmentDate(punishment).includes("09/03/2000")).toEqual(true);
+        expect(PunishmentsUtils.getPunishmentDate(punishment).includes("01/02/2000")).toEqual(true);
         exclude.end_at = "2000-04-09 00:00:00";
         expect(PunishmentsUtils.getPunishmentDate(punishment).includes("09/03/2000")).toEqual(true);
 

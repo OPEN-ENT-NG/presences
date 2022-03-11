@@ -7,6 +7,7 @@ public class Field {
     public static final String IDS = "ids";
     public static final String TITLE = "title";
     public static final String CLASSES = "classes";
+    public static final String CREATE = "CREATE";
     public static final String CREATED = "created";
     public static final String CREATED_AT = "created_at";
     public static final String COURSES = "courses";
@@ -126,8 +127,10 @@ public class Field {
     public static final String STARTMOMENTTIME = "startMomentTime";
     public static final String SUBJECTNAME = "subjectName";
     public static final String TIMESTAMP = "timestamp";
+    public static final String UPDATE = "UPDATE";
     public static final String UPDATED = "updated";
     public static final String TAGIDS = "tagIds";
+    public static final String MANDATORY = "mandatory";
 
     // Alert
     public static final String TYPE = "type";

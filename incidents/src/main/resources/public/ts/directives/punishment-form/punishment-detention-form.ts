@@ -97,7 +97,16 @@ export const PunishmentDetentionForm = ng.directive('punishmentDetentionForm', [
 
                         //Get and add other punishment
                         try {
-                            const listPunishment: IPunishmentResponse = await punishmentService.getGroupedPunishmentId(vm.punishment.grouped_punishment_id, vm.punishment.structure_id);
+                            let listPunishment: IPunishmentResponse;
+                            if (vm.punishment.grouped_punishment_id) {
+                                listPunishment = await punishmentService.getGroupedPunishmentId(vm.punishment.grouped_punishment_id, vm.punishment.structure_id);
+                            } else {
+                                listPunishment = {
+                                    page: 0,
+                                    page_count: 0,
+                                    all: [await punishmentService.getFromId(vm.punishment.id, vm.punishment.structure_id)]
+                                };
+                            }
                             vm.form.fields = listPunishment.all
                                 .sort((punishment1: IPunishment, punishment2: IPunishment) => moment((<IPDetentionField>punishment1.fields).start_at).unix() - moment((<IPDetentionField>punishment2.fields).start_at).unix())
                                 .map((punishment: IPunishment) => {
@@ -154,16 +163,20 @@ export const PunishmentDetentionForm = ng.directive('punishmentDetentionForm', [
 
                                     return punishment.fields;
                                 });
-                        }
-                        catch (e) {
+                        } catch (e) {
                             vm.form.fields = [];
                             toasts.warning('incidents.punishments.get.grouped.err');
+                            console.error(e, e.message)
                         }
                         vm.owner = vm.punishment.owner;
                     } else {
                         vm.form.owner_id = model.me.userId;
                         (<Array<IPDetentionField>>vm.form.fields) = [];
                         vm.createSlot();
+                        (<Array<IPDetentionField>>vm.form.fields)[0].start_at =
+                            DateUtils.format(vm.detentionSlots[0].start_time, DateUtils.FORMAT["YEAR-MONTH-DAY-HOUR-MIN-SEC"]);
+                        (<Array<IPDetentionField>>vm.form.fields)[0].end_at =
+                            DateUtils.format(vm.detentionSlots[0].end_time, DateUtils.FORMAT["YEAR-MONTH-DAY-HOUR-MIN-SEC"]);
                         vm.owner = model.me;
                     }
                     safeApply($scope);
@@ -183,8 +196,8 @@ export const PunishmentDetentionForm = ng.directive('punishmentDetentionForm', [
                     }
                     vm.detentionSlots.push(detentionSlot)
                     const slot: IPDetentionField = {
-                        start_at: DateUtils.format(vm.detentionSlots[0].start_time, DateUtils.FORMAT["YEAR-MONTH-DAY-HOUR-MIN-SEC"]),
-                        end_at: DateUtils.format(vm.detentionSlots[0].end_time, DateUtils.FORMAT["YEAR-MONTH-DAY-HOUR-MIN-SEC"]),
+                        start_at: DateUtils.format(detentionSlot.start_time, DateUtils.FORMAT["YEAR-MONTH-DAY-HOUR-MIN-SEC"]),
+                        end_at: DateUtils.format(detentionSlot.end_time, DateUtils.FORMAT["YEAR-MONTH-DAY-HOUR-MIN-SEC"]),
                         place: ""
                     };
                     detentionSlot.detentionField = slot;

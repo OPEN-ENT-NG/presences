@@ -4,6 +4,7 @@ import fr.openent.incidents.Incidents;
 import fr.openent.incidents.enums.WorkflowActions;
 import fr.openent.presences.common.helper.DateHelper;
 import fr.openent.presences.common.helper.WorkflowHelper;
+import fr.openent.presences.core.constants.Field;
 import fr.openent.presences.model.Model;
 import fr.openent.presences.model.Validator;
 import fr.wseduc.mongodb.MongoDb;
@@ -42,17 +43,17 @@ public class Punishment extends Model {
     public Punishment() {
         table = "presences.punishments";
 
-        fillables.put("id", Arrays.asList("UPDATE", "mandatory"));
-        fillables.put("description", Arrays.asList("CREATE", "UPDATE"));
-        fillables.put("processed", Collections.singletonList("UPDATE"));
-        fillables.put("incident_id", Collections.singletonList("CREATE"));
-        fillables.put("type_id", Arrays.asList("CREATE", "UPDATE", "mandatory"));
-        fillables.put("owner_id", Arrays.asList("CREATE", "UPDATE", "mandatory"));
-        fillables.put("structure_id", Arrays.asList("CREATE", "mandatory"));
-        fillables.put("student_id", Arrays.asList("CREATE", "mandatory"));
-        fillables.put("fields", Arrays.asList("CREATE", "UPDATE"));
+        fillables.put("id", Arrays.asList(Field.CREATE, Field.MANDATORY));
+        fillables.put("description", Arrays.asList(Field.CREATE, Field.UPDATE));
+        fillables.put("processed", Collections.singletonList(Field.UPDATE));
+        fillables.put("incident_id", Collections.singletonList(Field.CREATE));
+        fillables.put("type_id", Arrays.asList(Field.CREATE, Field.UPDATE, Field.MANDATORY));
+        fillables.put("owner_id", Arrays.asList(Field.CREATE, Field.UPDATE, Field.MANDATORY));
+        fillables.put("structure_id", Arrays.asList(Field.CREATE, Field.MANDATORY));
+        fillables.put("student_id", Arrays.asList(Field.CREATE, Field.MANDATORY));
+        fillables.put("fields", Arrays.asList(Field.CREATE, Field.UPDATE));
         fillables.put("type", Collections.emptyList());
-        fillables.put("grouped_punishment_id", Collections.singletonList("CREATE"));
+        fillables.put("grouped_punishment_id", Arrays.asList(Field.CREATE, Field.UPDATE));
         fillables.put("created_at", Collections.emptyList());
         fillables.put("updated_at", Collections.emptyList());
     }
@@ -75,6 +76,10 @@ public class Punishment extends Model {
 
     public String getStudentId() {
         return student_id;
+    }
+
+    public String getGroupedPunishmentId() {
+        return grouped_punishment_id;
     }
 
     public String getOwnerId() {
