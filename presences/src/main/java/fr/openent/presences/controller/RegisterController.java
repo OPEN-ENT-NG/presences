@@ -123,8 +123,7 @@ public class RegisterController extends ControllerHelper {
                                 + registerId, either.left().getValue());
                         renderError(request);
                     } else {
-                        StatisticsPresences.getInstance().postWeeklyAudiences(body.getString("structure_id"),
-                                Collections.singletonList(registerId));
+                        StatisticsPresences.getInstance().postWeeklyAudiences(null, Collections.singletonList(registerId));
                         noContent(request);
                     }
                 });

@@ -15,7 +15,7 @@ public class MessageResponseHandler {
     public static Handler<AsyncResult<Message<JsonObject>>> messageJsonArrayHandler(Handler<Either<String, JsonArray>> handler) {
         return event -> {
             if (event.succeeded() && "ok".equals(event.result().body().getString("status"))) {
-                handler.handle(new Either.Right<>(event.result().body().getJsonArray("result")));
+                handler.handle(new Either.Right<>(event.result().body().getJsonArray("result", event.result().body().getJsonArray("results"))));
             } else {
                 if (event.failed()) {
                     handler.handle(new Either.Left<>(event.cause().getMessage()));

@@ -6,6 +6,7 @@ import io.vertx.core.json.JsonObject;
 public class WeeklyAudience {
     private String structureId;
     private String audienceId;
+    private Integer registerId;
     private String slotId;
     private String startAt;
     private String endAt;
@@ -18,6 +19,11 @@ public class WeeklyAudience {
 
     public WeeklyAudience setAudienceId(String audienceId) {
         this.audienceId = audienceId;
+        return this;
+    }
+
+    public WeeklyAudience setRegisterId(Integer registerId) {
+        this.registerId = registerId;
         return this;
     }
 
@@ -44,9 +50,11 @@ public class WeeklyAudience {
     public JsonObject toJSON() {
         return new JsonObject()
                 .put(Field._ID, new JsonObject()
+                        .put(Field.REGISTER_ID, this.registerId)
                         .put(Field.AUDIENCE_ID, this.audienceId)
                         .put(Field.START_AT, this.startAt)
-                        .put(Field.END_AT, this.endAt))
+                        .put(Field.END_AT, this.endAt)
+                )
                 .put(Field.STRUCTURE_ID, this.structureId)
                 .put(Field.SLOT_ID, this.slotId)
                 .put(Field.STUDENT_COUNT, this.studentCount);

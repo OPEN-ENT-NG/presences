@@ -172,29 +172,37 @@ public class DefaultRegisterService extends DBService implements RegisterService
     }
 
     @Override
-    public Future<JsonArray> listWithGroups(String structureId, List<Integer> registerIds, String startAt, String endAt) {
+    public Future<JsonArray> listWithGroups(String structureId, List<Integer> registerIds, List<Integer> stateIds, String startAt, String endAt) {
         Promise<JsonArray> promise = Promise.promise();
-        String query = " SELECT id, start_date, end_date, course_id, state_id, notified, split_slot, rg.group_id as group_id " +
+        String query = " SELECT id, start_date, end_date, course_id, state_id, notified, split_slot, structure_id, " +
+                " rg.group_id as group_id " +
                 " FROM " + Presences.dbSchema + ".register AS register " +
-                " INNER JOIN " + Presences.dbSchema + ".rel_group_register AS rg ON (register.id = rg.register_id) " +
-                " WHERE register.structure_id = ? ";
+                " INNER JOIN " + Presences.dbSchema + ".rel_group_register AS rg ON (register.id = rg.register_id) ";
 
-        JsonArray params = new JsonArray()
-                .add(structureId);
+        JsonArray params = new JsonArray();
 
+        if (structureId != null) {
+            query += " WHERE register.structure_id = ? ";
+            params.add(structureId);
+        }
 
         if (registerIds != null && !registerIds.isEmpty()) {
-            query += " AND id IN " + Sql.listPrepared(registerIds);
+            query += String.format(" %s register.id IN %s", params.isEmpty() ? "WHERE" : "AND", Sql.listPrepared(registerIds));
             params.addAll(new JsonArray(registerIds));
         }
 
+        if (stateIds != null && !stateIds.isEmpty()) {
+            query += String.format(" %s register.state_id IN %s", params.isEmpty() ? "WHERE" : "AND", Sql.listPrepared(stateIds));
+            params.addAll(new JsonArray(stateIds));
+        }
+
         if (startAt != null) {
-            query += " AND ? < register.end_date ";
+            query += String.format(" %s ? < register.end_date ", params.isEmpty() ? "WHERE" : "AND");
             params.add(startAt);
         }
 
         if (endAt != null) {
-            query += " AND register.start_date < ? ";
+            query += String.format(" %s register.start_date < ? ", params.isEmpty() ? "WHERE" : "AND");
             params.add(endAt);
         }
 

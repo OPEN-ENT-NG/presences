@@ -97,6 +97,7 @@ public class Field {
     // Registers
     public static final String COURSE_ID = "course_id";
     public static final String STATE_ID = "state_id";
+    public static final String STATEIDS = "stateIds";
     public static final String NOTIFIED = "notified";
     public static final String SPLIT_SLOT = "split_slot";
     public static final String IS_OPENED_BY_PERSONNEL = "is_opened_by_personnel";

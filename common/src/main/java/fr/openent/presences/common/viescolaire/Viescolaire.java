@@ -150,7 +150,7 @@ public class Viescolaire {
     public Future<JsonArray> getCountStudentsByAudiences(List<String> audienceIds) {
         Promise<JsonArray> promise = Promise.promise();
         JsonObject action = new JsonObject()
-                .put("action", "timeslot.getAudienceTimeslot")
+                .put("action", "classe.getNbElevesGroupe")
                 .put(Field.IDGROUPES, audienceIds);
 
         eb.request(address, action, MessageResponseHandler.messageJsonArrayHandler(FutureHelper.handlerJsonArray(promise)));

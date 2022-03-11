@@ -126,6 +126,7 @@ public class WeeklyStat implements Stat {
                 .put("start_date", this.startDate)
                 .put("end_date", this.endDate)
                 .put("structure", this.structure)
-                .put("audiences", this.audiences);
+                .put("audiences", this.audiences)
+                .put("slot_id", this.slotId);
     }
 }

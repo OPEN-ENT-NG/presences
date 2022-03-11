@@ -14,6 +14,8 @@ import org.entcore.common.bus.BusResponseHandler;
 import org.entcore.common.controller.ControllerHelper;
 import org.entcore.common.user.UserInfos;
 
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 
 public class EventBusController extends ControllerHelper {
@@ -44,6 +46,7 @@ public class EventBusController extends ControllerHelper {
         Integer startAt;
         List<Integer> reasonsId;
         List<Integer> registerIds;
+        List<Integer> stateIds;
         Boolean massmailed;
         Boolean compliance;
         String startDate;
@@ -123,10 +126,13 @@ public class EventBusController extends ControllerHelper {
                 break;
             case "get-registers-with-groups":
                 structure = body.getString(Field.STRUCTUREID);
-                registerIds = body.getJsonArray(Field.REGISTERIDS).getList();
+                registerIds = body.getJsonArray(Field.REGISTERIDS) == null ? Collections.emptyList() :
+                        body.getJsonArray(Field.REGISTERIDS).getList();
                 startDate = body.getString(Field.STARTAT);
+                stateIds = body.getJsonArray(Field.STATEIDS) == null ? Collections.emptyList() :
+                        body.getJsonArray(Field.STATEIDS).getList();
                 endDate = body.getString(Field.ENDAT);
-                FutureHelper.busArrayHandler(this.registerService.listWithGroups(structure, registerIds, startDate, endDate), message);
+                FutureHelper.busArrayHandler(this.registerService.listWithGroups(structure, registerIds, stateIds, startDate, endDate), message);
                 break;
             default:
                 message.reply(new JsonObject()

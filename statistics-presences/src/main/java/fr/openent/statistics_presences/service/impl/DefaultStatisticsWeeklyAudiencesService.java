@@ -1,7 +1,9 @@
 package fr.openent.statistics_presences.service.impl;
 
 
+import com.mongodb.QueryBuilder;
 import fr.openent.presences.common.helper.DateHelper;
+import fr.openent.presences.common.helper.FutureHelper;
 import fr.openent.presences.common.presences.Presences;
 import fr.openent.presences.common.viescolaire.Viescolaire;
 import fr.openent.presences.core.constants.Field;
@@ -16,6 +18,7 @@ import fr.openent.statistics_presences.helper.TimeslotHelper;
 import fr.openent.statistics_presences.indicator.ProcessingWeeklyAudiencesManual;
 import fr.openent.statistics_presences.service.CommonServiceFactory;
 import fr.openent.statistics_presences.service.StatisticsWeeklyAudiencesService;
+import fr.wseduc.mongodb.MongoQueryBuilder;
 import io.vertx.core.CompositeFuture;
 import io.vertx.core.DeploymentOptions;
 import io.vertx.core.Future;
@@ -42,8 +45,28 @@ public class DefaultStatisticsWeeklyAudiencesService extends DBService implement
     public Future<JsonObject> create(String structureId, List<Integer> registerIds) {
         Promise<JsonObject> promise = Promise.promise();
 
-        Presences.getInstance().getRegistersWithGroups(structureId, registerIds, null, null)
-                .compose(registerResults -> createFromRegisters(structureId, RegisterHelper.getRegistersFromArray(registerResults)))
+        Presences.getInstance().getRegistersWithGroups(structureId, registerIds, null, null, null)
+                .compose(registerResults -> {
+                    List<Register> registers = RegisterHelper.getRegistersFromArray(registerResults);
+
+                    String resStructureId = structureId;
+                    if (resStructureId == null) {
+                        List<String> structureIds = registers.stream()
+                                .map(Register::getStructureId)
+                                .filter(Objects::nonNull)
+                                .distinct()
+                                .collect(Collectors.toList());
+
+                        if (structureIds.size() != 1) {
+                            String message = String.format("[StatisticsPresences@%s::create] " +
+                                    "Can not save registers from different structures", this.getClass().getSimpleName());
+                            return Future.failedFuture(message);
+                        }
+                        resStructureId = structureIds.get(0);
+                    }
+
+                    return createFromRegisters(resStructureId, RegisterHelper.getRegistersFromArray(registerResults));
+                })
                 .onFailure(promise::fail)
                 .onSuccess(createResults -> promise.complete());
 
@@ -62,33 +85,21 @@ public class DefaultStatisticsWeeklyAudiencesService extends DBService implement
 
         Future<JsonArray> timeslotsFuture = Viescolaire.getInstance().getAudienceTimeslots(structureId, audienceIds);
         Future<JsonArray> countStudentsFuture = Viescolaire.getInstance().getCountStudentsByAudiences(audienceIds);
+        Future<List<Register>> registersFuture = filterRegisterByUnsavedWeeklyAudiences(registers);
 
-        CompositeFuture.all(timeslotsFuture, countStudentsFuture)
-                .onFailure(error -> {
-                    String message = String.format("[StatisticsPresences@%s::create] " +
-                            "Failed to get info from registers audiences", this.getClass().getSimpleName());
-                    log.error(String.format("%s. %s", message, error));
-                    promise.fail(message);
-                })
-                .onSuccess(futures -> {
+        CompositeFuture.all(timeslotsFuture, countStudentsFuture, registersFuture)
+                .compose(futures -> {
                     List<Timeslot> timeslots = TimeslotHelper.getRegistersFromArray(timeslotsFuture.result());
                     List<JsonObject> groupCountStudents = countStudentsFuture.result().getList();
-
-                    List<JsonObject> weeklyAudiences = mapRegistersToMongoWeeklyAudiences(registers, timeslots, groupCountStudents);
-
-                    mongoDb.insert(StatisticsPresences.WEEKLY_AUDIENCES_COLLECTION, new JsonArray(weeklyAudiences),
-                            MongoDbResult.validResultHandler(results -> {
-                                if (results.isLeft()) {
-                                    String message = String.format("[StatisticsPresences@%s::create] " +
-                                            "Failed to store new values", this.getClass().getSimpleName());
-
-                                    log.error(String.format("%s. %s", message, results.left().getValue()));
-                                    promise.fail(message);
-                                    return;
-                                }
-                                // todo gérer l'erreur de duplication
-                                promise.complete();
-                            }));
+                    List<JsonObject> weeklyAudiences = mapRegistersToMongoWeeklyAudiences(registersFuture.result(), timeslots, groupCountStudents);
+                    return storeValues(new JsonArray(weeklyAudiences));
+                })
+                .onSuccess(res -> promise.complete())
+                .onFailure(error -> {
+                    String message = String.format("[StatisticsPresences@%s::createFromRegisters] " +
+                            "Failed create weekly audiences from registers", this.getClass().getSimpleName());
+                    log.error(String.format("%s. %s", message, error));
+                    promise.fail(message);
                 });
 
         return promise.future();
@@ -135,6 +146,7 @@ public class DefaultStatisticsWeeklyAudiencesService extends DBService implement
                     .setSlotId(null)
                     .setStructureId(register.getStructureId())
                     .setAudienceId(register.getAudienceId())
+                    .setRegisterId(register.getId())
                     .setStartAt(register.getStartAt())
                     .setEndAt(register.getEndAt())
                     .setStudentCount(countStudents.getInteger(Field.NB, 0))
@@ -144,6 +156,7 @@ public class DefaultStatisticsWeeklyAudiencesService extends DBService implement
                 .map(slot -> new WeeklyAudience()
                         .setStructureId(register.getStructureId())
                         .setAudienceId(register.getAudienceId())
+                        .setRegisterId(register.getId())
                         .setSlotId(slot.getId())
                         .setStartAt(DateHelper.setTimeToDate(
                                 register.getStartAt(), slot.getStartHour(), DateHelper.HOUR_MINUTES, DateHelper.SQL_FORMAT
@@ -156,12 +169,72 @@ public class DefaultStatisticsWeeklyAudiencesService extends DBService implement
                 .collect(Collectors.toList());
     }
 
+    @SuppressWarnings("unchecked")
+    private Future<List<Register>> filterRegisterByUnsavedWeeklyAudiences(List<Register> registers) {
+        Promise<List<Register>> promise = Promise.promise();
+        List<Integer> registerIds = registers.stream().map(Register::getId)
+                .filter(Objects::nonNull)
+                .distinct()
+                .collect(Collectors.toList());
+
+        getWeeklyAudiences(registerIds)
+                .onFailure(err -> {
+                    String message = String.format("[StatisticsPresences@%s::filterRegisterByUnsavedWeeklyAudiences]" +
+                            " failed to retrieve weeklyAudiences.", this.getClass().getSimpleName());
+                    log.error(String.format("%s %s", message, err.getMessage()));
+                    promise.fail(message);
+                })
+                .onSuccess(weeklyAudiences ->
+                        promise.complete(
+                                registers
+                                        .stream()
+                                        .filter(register ->
+                                                ((List<JsonObject>) weeklyAudiences.getList()).stream()
+                                                        .noneMatch(weeklyAudience -> {
+                                                            JsonObject id = weeklyAudience.getJsonObject(Field._ID);
+                                                            return register.getId() == null || register.getAudienceId() == null ||
+                                                                    (register.getId().equals(id.getInteger(Field.REGISTER_ID)) &&
+                                                                            register.getAudienceId().equals(id.getString(Field.AUDIENCE_ID)));
+                                                        }))
+                                        .collect(Collectors.toList())
+                        ));
+        return promise.future();
+    }
+
+    private Future<Void> storeValues(JsonArray weeklyAudiences) {
+        Promise<Void> promise = Promise.promise();
+        if (!weeklyAudiences.isEmpty()) {
+            mongoDb.insert(StatisticsPresences.WEEKLY_AUDIENCES_COLLECTION, weeklyAudiences,
+                    MongoDbResult.validResultHandler(results -> {
+                        if (results.isLeft()) {
+                            String message = String.format("[StatisticsPresences@%s::createFromRegisters] " +
+                                    "Failed to store new values", this.getClass().getSimpleName());
+
+                            log.error(String.format("%s. %s", message, results.left().getValue()));
+                            promise.fail(message);
+                            return;
+                        }
+                        promise.complete();
+                    }));
+        } else promise.complete();
+
+        return promise.future();
+    }
+
+    private Future<JsonArray> getWeeklyAudiences(List<Integer> registerIds) {
+        Promise<JsonArray> promise = Promise.promise();
+        QueryBuilder matcher = QueryBuilder.start(String.format("%s.%s", Field._ID, Field.REGISTER_ID)).in(registerIds);
+        mongoDb.find(StatisticsPresences.WEEKLY_AUDIENCES_COLLECTION, MongoQueryBuilder.build(matcher),
+                MongoDbResult.validResultsHandler(FutureHelper.handlerJsonArray(promise)));
+        return promise.future();
+    }
+
     @Override
     public Future<JsonObject> processWeeklyAudiencesPrefetch(List<String> structureIds, String startAt, String endAt) {
         Promise<JsonObject> promise = Promise.promise();
         if (structureIds.isEmpty()) {
             String message = String.format("[StatisticsPresences@%s::processWeeklyAudiencesPrefetch] " +
-                            "No structure(s) identifier given", this.getClass().getSimpleName());
+                    "No structure(s) identifier given", this.getClass().getSimpleName());
             promise.fail(message);
         } else {
             JsonObject params = new JsonObject()

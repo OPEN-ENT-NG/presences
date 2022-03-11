@@ -57,6 +57,11 @@ public class Weekly extends IndicatorWorker {
                 future = fetchEventCountFromPresences(structureId, studentId, reasonIds(structureId).getList(), false,
                         true, timeslot);
                 break;
+            case INCIDENT:
+            case SANCTION:
+            case PUNISHMENT:
+                future = Future.succeededFuture(Collections.emptyList());
+                break;
             default:
                 future = Future.failedFuture(new RuntimeException("Unrecognized event type"));
         }

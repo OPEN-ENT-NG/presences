@@ -11,11 +11,15 @@ import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
 
 
 public class ProcessingWeeklyAudiencesManual extends AbstractVerticle {
+    public static final Integer STATE_IN_PROGRESS = 2;
+    public static final Integer STATE_DONE = 3;
+
     Logger log = LoggerFactory.getLogger(ProcessingWeeklyAudiencesManual.class);
     private CommonServiceFactory commonServiceFactory;
 
@@ -66,7 +70,10 @@ public class ProcessingWeeklyAudiencesManual extends AbstractVerticle {
      */
     private Future<String> processStructure(String structureId, String startAt, String endAt) {
         Promise<String> promise = Promise.promise();
-        Presences.getInstance().getRegistersWithGroups(structureId, null, startAt, endAt)
+
+
+        Presences.getInstance().getRegistersWithGroups(structureId, null, Arrays.asList(STATE_DONE, STATE_DONE),
+                        startAt, endAt)
                 .compose(registersResult -> commonServiceFactory.statisticsWeeklyAudiencesService()
                         .createFromRegisters(structureId, RegisterHelper.getRegistersFromArray(registersResult)))
                 .onSuccess(result -> promise.complete(structureId))

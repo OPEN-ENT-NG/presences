@@ -38,7 +38,6 @@ public class Weekly extends Indicator {
         WeeklySearch search = new WeeklySearch(filter);
 
         if (!filter.users().isEmpty()) {
-            // todo vérifier si c'est bien la bonne instance de filter.
             filter.setUserId(filter.users().get(0));
             IndicatorGeneric.retrieveAudiences(filter.structure(), filter.userId())
                     .onFailure(err -> {
@@ -54,6 +53,12 @@ public class Weekly extends Indicator {
         } else if (!filter.audiences().isEmpty()) {
             filter.setAudiences(Collections.singletonList(filter.audiences().get(0)));
             promise.complete(search);
+        } else {
+            String message = String.format("[StatisticsPresences@%s::setSearchUserWithAudiences] " +
+                    "Indicator %s search need one audience or one student to retrieve data.", this.getClass().getSimpleName(),
+                    Weekly.class.getName());
+            log.error(message);
+            promise.fail(message);
         }
 
         return promise.future();
@@ -111,7 +116,7 @@ public class Weekly extends Indicator {
 
 
     private double getEventRates(Integer studentCount, Integer eventCount) {
-        double rate = (studentCount == null || eventCount == null ? 0 : Math.abs((studentCount * 100) / eventCount));
+        double rate = (studentCount == null || eventCount == null ? 0.0 : Math.abs((((double)eventCount) * 100) / ((double)studentCount)));
         return  getValidRate(Math.min(rate, 100));
     }
 

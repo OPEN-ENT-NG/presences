@@ -3,7 +3,7 @@ package fr.openent.statistics_presences.bean.weekly;
 import com.mongodb.QueryBuilder;
 import fr.openent.presences.core.constants.Field;
 import fr.openent.statistics_presences.StatisticsPresences;
-import fr.openent.statistics_presences.indicator.impl.Monthly;
+import fr.openent.statistics_presences.indicator.impl.Weekly;
 import fr.openent.statistics_presences.model.StatisticsFilter;
 import fr.openent.statistics_presences.utils.EventType;
 import fr.wseduc.mongodb.AggregationsBuilder;
@@ -40,7 +40,7 @@ public class WeeklySearch {
     }
 
     public JsonObject countStudentsBySlotsCommand() {
-        AggregationsBuilder eventsAggregation = AggregationsBuilder.startWithCollection(StatisticsPresences.COLLECTION);
+        AggregationsBuilder eventsAggregation = AggregationsBuilder.startWithCollection(StatisticsPresences.WEEKLY_AUDIENCES_COLLECTION);
         eventsAggregation
                 .withAllowDiskUse(true)
                 .withMatch(matchCountStudents())
@@ -60,7 +60,7 @@ public class WeeklySearch {
     }*/
     private QueryBuilder matchEvents() {
         QueryBuilder matcher = QueryBuilder.start(Field.STRUCTURE).is(this.filter.structure())
-                .and(Field.INDICATOR).is(Monthly.class.getName())
+                .and(Field.INDICATOR).is(Weekly.class.getName())
                 .and(Field.START_DATE).lessThan(this.filter.end())
                 .and(Field.END_DATE).greaterThan(this.filter.start());
 
@@ -77,14 +77,14 @@ public class WeeklySearch {
 
     private QueryBuilder matchCountStudents() {
         QueryBuilder matcher = QueryBuilder.start(Field.STRUCTURE_ID).is(this.filter.structure())
-                .and(Field.START_AT).lessThan(this.filter.end())
-                .and(Field.END_AT).greaterThan(this.filter.start());
+                .and(String.format("%s.%s", Field._ID, Field.START_AT)).lessThan(this.filter.end())
+                .and(String.format("%s.%s", Field._ID, Field.END_AT)).greaterThan(this.filter.start());
 
         if (!this.filter.audiences().isEmpty()) {
-            matcher.put(Field.AUDIENCE_ID).in(this.filter().audiences());
+            matcher.put(String.format("%s.%s", Field._ID, Field.AUDIENCE_ID)).in(this.filter().audiences());
         }
 
-        return filterType(matcher);
+        return matcher;
     }
 
     private QueryBuilder filterType(QueryBuilder query) {
@@ -96,12 +96,6 @@ public class WeeklySearch {
                 case UNREGULARIZED:
                 case REGULARIZED:
                     filterType.and(Field.REASON).in(this.filter().reasons());
-                    break;
-                case SANCTION:
-                    filterType.and(Field.PUNISHMENT_TYPE).in(this.filter().sanctionTypes());
-                    break;
-                case PUNISHMENT:
-                    filterType.and(Field.PUNISHMENT_TYPE).in(this.filter().punishmentTypes());
                     break;
                 default:
                     break;
@@ -116,20 +110,16 @@ public class WeeklySearch {
         JsonObject id = new JsonObject()
                 .put(Field.SLOT_ID, String.format("$%s", Field.SLOT_ID));
 
-        JsonObject group = id(id)
+        return id(id)
                 .put(Field.COUNT, sum());
-
-        return group(group);
     }
 
     private JsonObject groupStudentCountBySlot() {
         JsonObject id = new JsonObject()
                 .put(Field.SLOT_ID, String.format("$%s", Field.SLOT_ID));
 
-        JsonObject group = id(id)
-                .put(Field.COUNT, this.filter().userId() != null ? sum() : sum(Field.STUDENT_COUNT));
-
-        return group(group);
+        return id(id)
+                .put(Field.COUNT, this.filter().userId() != null ? sum() : sum(String.format("$%s", Field.STUDENT_COUNT)));
     }
 
 
@@ -181,10 +171,5 @@ public class WeeklySearch {
     private JsonObject id(JsonObject value) {
         return new JsonObject()
                 .put(Field._ID, value);
-    }
-
-    private JsonObject group(JsonObject value) {
-        return new JsonObject()
-                .put(String.format("$%s", Field.GROUP), value);
     }
 }

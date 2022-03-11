@@ -68,14 +68,15 @@ public interface RegisterService {
 
     /**
      *  List registers based on given parameters
-     * @param structureId           structure identifier
+     * @param structureId           structure identifier (optional)
      * @param registerIds           {@link List} of register identifiers (optional)
+     * @param stateIds              {@link List} of state identifiers (optional)
      * @param startAt               start date filter (optional)
      * @param endAt                 end date filter (optional)
      *
      * @return {@link Future} of {@link List}
      */
-    Future<JsonArray> listWithGroups(String structureId, List<Integer> registerIds, String startAt, String endAt);
+    Future<JsonArray> listWithGroups(String structureId, List<Integer> registerIds, List<Integer> stateIds, String startAt, String endAt);
 
     /**
      * Create register

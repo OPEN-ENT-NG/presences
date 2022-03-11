@@ -139,11 +139,13 @@ public class Presences {
         eb.send(address, action, MessageResponseHandler.messageJsonObjectHandler(handler));
     }
 
-    public Future<JsonArray> getRegistersWithGroups(String structureId, List<Integer> registerIds, String startAt, String endAt) {
+    public Future<JsonArray> getRegistersWithGroups(String structureId, List<Integer> registerIds, List<Integer> stateIds,
+                                                    String startAt, String endAt) {
         Promise<JsonArray> promise = Promise.promise();
         JsonObject action = new JsonObject()
                 .put(Field.STRUCTUREID, structureId)
                 .put(Field.REGISTERIDS, registerIds)
+                .put(Field.STATEIDS, stateIds)
                 .put(Field.STARTAT, startAt)
                 .put(Field.ENDAT, endAt)
                 .put("action", "get-registers-with-groups");
