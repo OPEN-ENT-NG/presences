@@ -1,7 +1,7 @@
 package fr.openent.statistics_presences.service;
 
-import fr.openent.presences.common.service.UserService;
-import fr.openent.presences.common.service.impl.DefaultUserService;
+import fr.openent.presences.common.service.*;
+import fr.openent.presences.common.service.impl.*;
 import fr.openent.statistics_presences.service.impl.DefaultStatisticsPresencesService;
 import io.vertx.core.Vertx;
 import io.vertx.core.eventbus.EventBus;
@@ -16,6 +16,8 @@ public class CommonServiceFactory {
     public UserService userService() {
         return new DefaultUserService();
     }
+
+    public GroupService groupService() { return new DefaultGroupService(this.vertx.eventBus()); }
 
     public StatisticsPresencesService statisticsPresencesService() {
         return new DefaultStatisticsPresencesService(this);
