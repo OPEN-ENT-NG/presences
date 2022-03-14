@@ -23,9 +23,7 @@ describe('PunishmentService', () => {
         }
 
         const dataGraph = {
-            dataGraph: {
-                dataExample: "Example"
-            }
+            all: [{type: {punishment_category_id: undefined}}]
         };
         const structureUrl: string = `?structure_id=structure_id`;
         const dateUrl: string = `&start_at=start_at&end_at=end_at`;
@@ -57,9 +55,7 @@ describe('PunishmentService', () => {
         }
 
         const dataGraph = {
-            dataGraph: {
-                dataExample: "Example"
-            }
+            all: [{type: {punishment_category_id: undefined}}]
         };
         const structureUrl: string = `?structure_id=structure_id`;
         const dateUrl: string = `&start_at=start_at&end_at=end_at`;
@@ -91,9 +87,7 @@ describe('PunishmentService', () => {
         }
 
         const dataGraph = {
-            dataGraph: {
-                dataExample: "Example"
-            }
+            all: [{type: {punishment_category_id: undefined}}]
         };
         const structureUrl: string = `?structure_id=structure_id`;
         const dateUrl: string = `&start_at=start_at&end_at=end_at`;
@@ -128,9 +122,7 @@ describe('PunishmentService', () => {
         }
 
         const dataGraph = {
-            dataGraph: {
-                dataExample: "Example"
-            }
+            all: [{type: {punishment_category_id: undefined}}]
         };
         const structureUrl: string = `?structure_id=structure_id`;
         const dateUrl: string = `&start_at=start_at&end_at=end_at`;
@@ -165,9 +157,7 @@ describe('PunishmentService', () => {
         }
 
         const dataGraph = {
-            dataGraph: {
-                dataExample: "Example"
-            }
+            all: [{type: {punishment_category_id: undefined}}]
         };
 
         const structureUrl: string = `?structure_id=structure_id`;

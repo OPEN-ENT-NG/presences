@@ -15,12 +15,13 @@ import {
     GroupService,
     IPunishmentService,
     IPunishmentsTypeService,
-    IViescolaireService,
+    IViescolaireService, PunishmentsCategoryService,
     SearchService
 } from "@incidents/services";
 import {SNIPLET_FORM_EMIT_PUNISHMENT_EVENTS} from "@common/model";
 import {IPunishmentType} from "@incidents/models/PunishmentType";
 import {User} from "@common/model/User";
+import {PunishmentCategoryType} from "@incidents/models/PunishmentCategory";
 
 declare let window: any;
 
@@ -262,10 +263,11 @@ export const punishmentController = ng.controller('PunishmentController',
             vm.getPunishmentDate = (punishment: IPunishment): string => PunishmentsUtils.getPunishmentDate(punishment);
 
             vm.getPunishmentTime = (punishment: IPunishment): string => {
-                if (punishment.type && punishment.type.punishment_category_id === 2) { // DETENTION
-                    if ((<IPDetentionField>punishment.fields).start_at && (<IPDetentionField>punishment.fields).end_at) {
-                        let startDetentionDate: string = DateUtils.format((<IPDetentionField>punishment.fields).start_at, DateUtils.FORMAT['HOUR-MIN']);
-                        let endDetentionDate: string = DateUtils.format((<IPDetentionField>punishment.fields).end_at, DateUtils.FORMAT['HOUR-MIN']);
+                if (punishment.type && punishment.type.punishment_category_id === PunishmentCategoryType.DETENTION && (<Array<IPDetentionField>>punishment.fields).length > 0) { // DETENTION
+                    const slot: IPDetentionField = (<Array<IPDetentionField>>punishment.fields)[0];
+                    if (slot.start_at && slot.end_at) {
+                        let startDetentionDate: string = DateUtils.format(slot.start_at, DateUtils.FORMAT['HOUR-MIN']);
+                        let endDetentionDate: string = DateUtils.format(slot.end_at, DateUtils.FORMAT['HOUR-MIN']);
                         if (startDetentionDate && endDetentionDate) {
                             return startDetentionDate + ' - ' + endDetentionDate;
                         } else {
@@ -292,12 +294,15 @@ export const punishmentController = ng.controller('PunishmentController',
                 try {
                     let form = {
                         id: punishment.id,
+                        grouped_punishment_id: punishment.grouped_punishment_id,
                         structure_id: punishment.structure_id,
-                        owner_id: punishment.owner.id,
+                        description: punishment.description,
                         fields: punishment.fields,
                         type_id: punishment.type.id,
+                        type: punishment.type,
+                        owner_id: punishment.owner.id,
+                        student_id: punishment.student.id,
                         processed: punishment.processed,
-                        description: punishment.description
                     } as IPunishmentBody;
 
                     let response = await punishmentService.update(form);

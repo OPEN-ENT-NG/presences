@@ -1,11 +1,20 @@
 import {ng} from 'entcore'
 import http, {AxiosError, AxiosResponse} from 'axios';
-import {IPunishmentAbsenceRequest, IPunishmentBody, IPunishmentRequest, IPunishmentResponse} from "@incidents/models";
+import {
+    IPunishment,
+    IPunishmentAbsenceRequest,
+    IPunishmentBody,
+    IPunishmentRequest,
+    IPunishmentResponse
+} from "@incidents/models";
 import {IAbsence} from '@presences/models/Event/Absence';
 import {User} from "@common/model/User";
+import {PunishmentCategoryType} from "@incidents/models/PunishmentCategory";
 
 export interface IPunishmentService {
     get(punishmentRequest: IPunishmentRequest): Promise<IPunishmentResponse>;
+
+    getFromId(punishmentId: string, structureId: string): Promise<IPunishment>;
 
     getGroupedPunishmentId(groupedPunishmentId: string, structureId: string): Promise<IPunishmentResponse>;
 
@@ -60,10 +69,21 @@ export const punishmentService: IPunishmentService = {
             const urlParams: string = `${typeParams}${studentParams}${groupParams}${stateParams}`;
             const pageUrl: string = `&page=${punishmentRequest.page}`;
             const {data}: AxiosResponse = await http.get(`/incidents/punishments${structureUrl}${dateUrl}${urlParams}${pageUrl}`);
+            data.all.filter((punishment:IPunishment) => punishment.type.punishment_category_id == PunishmentCategoryType.DETENTION)
+                .forEach((punishment:IPunishment) => {
+                    punishment.fields = [punishment.fields];
+                    punishment.fields[0].id = punishment.id;
+                })
             return data;
         } catch (err) {
             throw err;
         }
+    },
+
+    async getFromId(punishmentId: string, structureId: string): Promise<IPunishment> {
+        const url: string = `/incidents/punishments?id=${punishmentId}&structure_id=${structureId}`
+        const {data}: AxiosResponse = await http.get(url);
+        return data;
     },
 
     async getGroupedPunishmentId(groupedPunishmentId: string, structureId: string): Promise<IPunishmentResponse> {
