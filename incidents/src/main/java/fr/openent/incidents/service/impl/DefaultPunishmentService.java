@@ -96,6 +96,7 @@ public class DefaultPunishmentService implements PunishmentService {
         if (DetentionCategory.DETENTION.equals(category.getLabel())) {
             // Cast list as Map, because it's easier to manipulate than LinkedHashMap
             List<Map<String, Object>> fields = body.getJsonArray(Field.FIELDS, new JsonArray()).getList();
+            String grouped_punishment_id = body.getString(Field.GROUPED_PUNISHMENT_ID, null);
             body.remove(Field.FIELDS);
             return fields.stream()
                     .map((mapField) -> {
@@ -105,6 +106,7 @@ public class DefaultPunishmentService implements PunishmentService {
                         punishment.setId(field.getString(Field.ID));
                         PunishmentCategory.formatFromBody(category, field);
                         punishment.setFields(category.toJsonObject());
+                        punishment.setGroupedPunishmentId(grouped_punishment_id);
                         return punishment;
                     }).collect(Collectors.toList());
         } else {
@@ -215,7 +217,7 @@ public class DefaultPunishmentService implements PunishmentService {
 
         List<Punishment> punishments = initPunishmentsFromFields(category, body);
         JsonArray results = new JsonArray();
-        FutureHelper.join(updatePunishments(user, punishments, results))
+        FutureHelper.join(updatePunishments(user, punishments, category, results))
                 .onFailure(error -> {
                     String message = String.format("[Incidents@%s::createPunishments] Fail to create punishments"
                             , this.getClass().getSimpleName());
@@ -231,12 +233,15 @@ public class DefaultPunishmentService implements PunishmentService {
         return promise.future();
     }
 
-    public List<Future<JsonObject>> updatePunishments(UserInfos user, List<Punishment> updatePunishments, JsonArray results) {
+    public List<Future<JsonObject>> updatePunishments(UserInfos user, List<Punishment> updatePunishments, PunishmentCategory category, JsonArray results) {
         List<Future<JsonObject>> futures = new ArrayList<>();
+        String groupedPunishmentId = PunishmentCategory.DETENTION.equals(category.getLabel()) ?
+                UUID.randomUUID().toString() : null;
         for (Punishment punishment : updatePunishments) {
             // re-init punishments, to keep reference of each punishments
             Punishment updatePunishment = new Punishment();
             updatePunishment.setFromJson(punishment.toJsonObject());
+            updatePunishment.setGroupedPunishmentId(punishment.getGroupedPunishmentId() == null ? groupedPunishmentId: punishment.getGroupedPunishmentId());
             futures.add(persistMongo(updatePunishment, user, results));
         }
         return futures;

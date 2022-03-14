@@ -137,8 +137,8 @@ export class PunishmentsUtils {
                     return lang.translate('incidents.punishments.date.for.the') + dutyDate;
                 case 2: // DETENTION
                     let startDetentionDate: string = createdDate;
-                    if ((<IPDetentionField>punishment.fields).start_at) {
-                        startDetentionDate = DateUtils.format((<IPDetentionField>punishment.fields).start_at, DateUtils.FORMAT['DAY-MONTH-YEAR']);
+                    if ((<Array<IPDetentionField>>punishment.fields).length > 0 && (<Array<IPDetentionField>>punishment.fields)[0].start_at) {
+                        startDetentionDate = DateUtils.format((<Array<IPDetentionField>>punishment.fields)[0].start_at, DateUtils.FORMAT['DAY-MONTH-YEAR']);
                     }
                     return lang.translate('incidents.punishments.date.for.the') + startDetentionDate;
                 case 3: // BLAME
