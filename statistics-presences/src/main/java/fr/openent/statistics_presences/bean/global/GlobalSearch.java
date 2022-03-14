@@ -429,7 +429,7 @@ public class GlobalSearch {
     }
 
     private JsonObject match(List<String> types, boolean isTotalAbsences) {
-        List<String> userIdentifiers = !this.filter().users().isEmpty()
+        List<String> userIdentifiers = (this.filter().users() == null || !this.filter().users().isEmpty())
                 ? this.filter().users()
                 : this.users().stream().map(User::id).collect(Collectors.toList());
 
@@ -444,7 +444,7 @@ public class GlobalSearch {
             matcher.put("audiences", audienceFilter());
         }
 
-        if (!userIdentifiers.isEmpty()) {
+        if (userIdentifiers == null || !userIdentifiers.isEmpty()) {
             matcher.put("user", usersFilter(userIdentifiers));
         }
 

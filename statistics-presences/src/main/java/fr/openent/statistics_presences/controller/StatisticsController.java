@@ -1,8 +1,10 @@
 package fr.openent.statistics_presences.controller;
 
-import fr.openent.presences.core.constants.Field;
+import fr.openent.presences.common.helper.*;
+import fr.openent.presences.core.constants.*;
 import fr.openent.statistics_presences.StatisticsPresences;
 import fr.openent.statistics_presences.controller.security.UserInStructure;
+import fr.openent.statistics_presences.enums.*;
 import fr.openent.statistics_presences.indicator.Indicator;
 import fr.openent.statistics_presences.indicator.export.Global;
 import fr.openent.statistics_presences.model.StatisticsFilter;
@@ -15,6 +17,7 @@ import fr.wseduc.security.ActionType;
 import fr.wseduc.security.SecuredAction;
 import fr.wseduc.webutils.http.Renders;
 import fr.wseduc.webutils.request.RequestUtils;
+import io.vertx.core.*;
 import io.vertx.core.http.HttpServerRequest;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
@@ -30,8 +33,10 @@ import java.util.stream.Collectors;
 
 public class StatisticsController extends ControllerHelper {
     private final StatisticsPresencesService statisticsPresencesService;
+    private final CommonServiceFactory serviceFactory;
 
     public StatisticsController(CommonServiceFactory serviceFactory) {
+        this.serviceFactory = serviceFactory;
         this.statisticsPresencesService = serviceFactory.statisticsPresencesService();
     }
 
@@ -72,15 +77,23 @@ public class StatisticsController extends ControllerHelper {
         }
 
         RequestUtils.bodyToJson(request, pathPrefix + Field.INDICATOR, body -> {
-            try {
-                Integer page = request.params().contains(Field.PAGE) ? Integer.parseInt(request.getParam(Field.PAGE)) : null;
-                StatisticsFilter filter = new StatisticsFilter(request.getParam(Field.STRUCTURE), body)
-                        .setPage(page);
-                Indicator indicator = StatisticsPresences.indicatorMap.get(indicatorName);
-                indicator.search(filter, Indicator.handler(request));
-            } catch (NumberFormatException e) {
-                badRequest(request);
-            }
+
+                try {
+
+                    Integer page = request.params().contains(Field.PAGE) ? Integer.parseInt(request.getParam(Field.PAGE)) : null;
+                    StatisticsFilter filter = new StatisticsFilter(request.getParam(Field.STRUCTURE), body)
+                            .setPage(page);
+
+                    setRestrictedTeacherFilter(filter, request)
+                            .onFailure(fail -> renderError(request))
+                            .onSuccess(event -> {
+                                Indicator indicator = StatisticsPresences.indicatorMap.get(indicatorName);
+                                indicator.search(filter, Indicator.handler(request));
+                            });
+
+                } catch (NumberFormatException e) {
+                    badRequest(request);
+                }
         });
     }
 
@@ -96,8 +109,14 @@ public class StatisticsController extends ControllerHelper {
         RequestUtils.bodyToJson(request, pathPrefix + Field.INDICATOR, body -> {
             try {
                 StatisticsFilter filter = new StatisticsFilter(request.getParam(Field.STRUCTURE), body);
-                Indicator indicator = StatisticsPresences.indicatorMap.get(indicatorName);
-                indicator.searchGraph(filter, Indicator.handler(request));
+
+                setRestrictedTeacherFilter(filter, request)
+                        .onFailure(fail -> renderError(request))
+                        .onSuccess(event -> {
+                            Indicator indicator = StatisticsPresences.indicatorMap.get(indicatorName);
+                            indicator.searchGraph(filter, Indicator.handler(request));
+                        });
+
             } catch (NumberFormatException e) {
                 badRequest(request);
             }
@@ -110,28 +129,86 @@ public class StatisticsController extends ControllerHelper {
     @SuppressWarnings("unchecked")
     public void export(HttpServerRequest request) {
         StatisticsFilter filter = new StatisticsFilter(request);
-        String indicatorName = request.getParam("indicator");
-        Indicator indicator = StatisticsPresences.indicatorMap.get(indicatorName);
-        indicator.search(filter, ar -> {
-            if (ar.failed()) {
-                log.error(String.format("Search failed for indicator %s in csv export", Global.class.getSimpleName()), ar.cause());
-                Renders.renderError(request);
-                return;
-            }
 
-            try {
-                JsonObject searchResult = ar.result();
-                indicator.export(request, filter,
-                        searchResult.getJsonArray("data").getList(),
-                        searchResult.getJsonObject("count"),
-                        searchResult.getJsonObject("slots"),
-                        searchResult.getJsonObject(Field.RATE),
-                        searchResult.getString(Field.EVENT_RECOVERY_METHOD));
-            } catch (ClassNotFoundException | IllegalAccessException | InvocationTargetException | InstantiationException e) {
-                log.error(String.format("Failed to generate export for indicator %s", indicator.getClass().getSimpleName()), e);
-            }
+        setRestrictedTeacherFilter(filter, request)
+                .onFailure(fail -> renderError(request))
+                .onSuccess(event -> {
+                    String indicatorName = request.getParam(Field.INDICATOR);
+                    Indicator indicator = StatisticsPresences.indicatorMap.get(indicatorName);
+                    indicator.search(filter, ar -> {
+                        if (ar.failed()) {
+                            log.error(String.format("[Presences@%s::export] Search failed for indicator %s " +
+                                    "in csv export", this.getClass().getSimpleName(), Global.class.getSimpleName()), ar.cause());
+                            Renders.renderError(request);
+                            return;
+                        }
+
+                        try {
+                            JsonObject searchResult = ar.result();
+                            indicator.export(request, filter,
+                                    searchResult.getJsonArray(Field.DATA).getList(),
+                                    searchResult.getJsonObject(Field.COUNT),
+                                    searchResult.getJsonObject(Field.SLOTS),
+                                    searchResult.getJsonObject(Field.RATE),
+                                    searchResult.getString(Field.EVENT_RECOVERY_METHOD));
+                        } catch (ClassNotFoundException | IllegalAccessException | InvocationTargetException | InstantiationException e) {
+                            log.error(String.format("[Presences@%s::export] Failed to generate export for indicator %s",
+                                    this.getClass().getSimpleName(), indicator.getClass().getSimpleName()), e);
+                        }
+                    });
+                });
+    }
+
+    private Future<Void> setRestrictedTeacherFilter(StatisticsFilter filter, HttpServerRequest request) {
+        Promise<Void> promise = Promise.promise();
+
+        UserUtils.getUserInfos(eb, request, userInfos -> {
+            String restrictedTeacherId = (WorkflowHelper.hasRight(userInfos,
+                    WorkflowActions.STATISTICS_PRESENCES_VIEW_RESTRICTED.toString())
+                    && UserType.TEACHER.equals(userInfos.getType())) ?
+                    userInfos.getUserId() : null;
+
+            Future<List<String>> restrictedClassesFuture = serviceFactory.groupService()
+                    .getGroupsAndClassesFromTeacherId(restrictedTeacherId, request.getParam(Field.STRUCTURE));
+
+            Future<List<String>> restrictedStudentFuture = serviceFactory.userService()
+                    .getStudentsFromTeacher(restrictedTeacherId, request.getParam(Field.STRUCTURE));
+
+            CompositeFuture.all(restrictedClassesFuture, restrictedStudentFuture)
+                    .onFailure(fail -> promise.fail(fail.getMessage()))
+                    .onSuccess(event -> {
+                        List<String> restrictedClasses = restrictedClassesFuture.result();
+                        List<String> restrictedStudents = restrictedStudentFuture.result();
+
+                        if (restrictedTeacherId != null) {
+                            if (filter.audiences().isEmpty() && filter.users().isEmpty()) {
+                                filter.setAudiences(restrictedClasses);
+                            } else {
+                                if (!filter.users().isEmpty()) {
+                                    filter.setNewUsers(filter.users().stream()
+                                            .filter(restrictedStudents::contains).collect(Collectors.toList()));
+                                    filter.setAudiences(new ArrayList<>());
+                                    if (filter.users().isEmpty()) {
+                                        filter.setNewUsers(null);
+
+                                    }
+                                } else {
+                                    filter.setAudiences(filter.audiences().stream()
+                                            .filter(restrictedClasses::contains).collect(Collectors.toList()));
+                                    if (filter.audiences().isEmpty()) {
+                                        filter.setAudiences(null);
+                                    }
+                                }
+                            }
+                        }
+
+                        promise.complete();
+                    });
+
         });
 
+
+        return promise.future();
     }
 
     @Post("/process/statistics/tasks")

@@ -14,8 +14,8 @@ import java.util.stream.Collectors;
 public class StatisticsFilter {
     private final Logger log = LoggerFactory.getLogger(StatisticsFilter.class);
     private final List<String> types = new ArrayList<>();
-    private final List<String> audiences = new ArrayList<>();
-    private final List<String> users = new ArrayList<>();
+    private List<String> audiences = new ArrayList<>();
+    private List<String> users = new ArrayList<>();
     private final List<Integer> reasons = new ArrayList<>();
     private final List<Integer> punishmentTypes = new ArrayList<>();
     private final List<Integer> sanctionTypes = new ArrayList<>();
@@ -75,6 +75,11 @@ public class StatisticsFilter {
         return this;
     }
 
+    public StatisticsFilter setNewUsers(List<String> users) {
+        this.users = users;
+        return this;
+    }
+
     public String structure() {
         return this.structure;
     }
@@ -85,6 +90,10 @@ public class StatisticsFilter {
 
     public List<String> audiences() {
         return this.audiences;
+    }
+
+    public void setAudiences(List<String> audiences) {
+        this.audiences = audiences;
     }
 
     public List<String> users() {

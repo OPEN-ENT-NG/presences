@@ -312,7 +312,8 @@ public class Global extends Indicator {
                 return;
             }
 
-            JsonArray result = either.right().getValue().getJsonObject("cursor").getJsonArray("firstBatch", new JsonArray());
+            JsonArray result = either.right().getValue().getJsonObject(Field.CURSOR, new JsonObject())
+                    .getJsonArray(Field.FIRSTBATCH, new JsonArray());
             if (result.isEmpty()) {
                 promise.complete(new JsonObject());
                 return;
@@ -393,7 +394,9 @@ public class Global extends Indicator {
      */
     private Future<GlobalSearch> preStatisticsStage(GlobalSearch search) {
         if (search.filter().to() != null || search.filter().from() != null) return prefetchUsers(search);
-        if (search.filter().audiences().isEmpty()) return searchUserInClass(search, search.filter().users());
+        if (search.filter().audiences().isEmpty() && search.filter().users() != null) {
+            return searchUserInClass(search, search.filter().users());
+        }
         return getUsersFromProvidedAudiences(search);
     }
 

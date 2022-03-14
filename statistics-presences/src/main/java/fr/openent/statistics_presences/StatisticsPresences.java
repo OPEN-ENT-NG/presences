@@ -34,7 +34,10 @@ import static fr.wseduc.webutils.Utils.handlerToAsyncHandler;
 
 public class StatisticsPresences extends BaseServer {
     public static final String COLLECTION = "presences.statistics";
+
     public static final String VIEW = "statistics_presences.view";
+    public static final String VIEW_RESTRICTED = "statistics_presences.view.restricted";
+
     public static final GenericCodec codec = new GenericCodec(Report.class);
     public static final String STATISTICS_PRESENCES_CLASS = StatisticsPresences.class.getName();
     public static String DB_SCHEMA = null;
