@@ -81,9 +81,10 @@ public class Weekly extends Indicator {
 
         CompositeFuture.all(countEventsBySlotsFuture, studentCountBySlotsFuture)
                 .onSuccess(ar -> {
-                    List<JsonObject> values = (List<JsonObject>) ((List<JsonObject>) countEventsBySlotsFuture.result().getList()).stream()
-                            .map(eventCount ->
-                                    formatEventToRateSlots(eventCount, studentCountBySlotsFuture.result().getList()))
+                    List<JsonObject> values = (List<JsonObject>) ((List<JsonObject>) studentCountBySlotsFuture.result().getList()).stream()
+                            .map(studentCount ->
+                                formatEventsToRateSlots(countEventsBySlotsFuture.result().getList(), studentCount)
+                            )
                             .collect(Collectors.toList());
 
                     setMaxValue(values);
@@ -100,24 +101,22 @@ public class Weekly extends Indicator {
         return promise.future();
     }
 
-    private JsonObject formatEventToRateSlots(JsonObject eventCount, List<JsonObject> studentCountBySlots) {
-        JsonObject studentCount = studentCountBySlots.stream()
-                .filter(studentsSlot ->
-                        studentsSlot.getString(Field.SLOT_ID, "")
-                                .equals(eventCount.getString(Field.SLOT_ID))
-                        && studentsSlot.getInteger(Field.DAYOFWEEK) != null  && studentsSlot.getInteger(Field.DAYOFWEEK)
-                                .equals(eventCount.getInteger(Field.DAYOFWEEK))
+    private JsonObject formatEventsToRateSlots(List<JsonObject> eventCounts, JsonObject studentCount) {
+        JsonObject eventCount = eventCounts.stream()
+                .filter(eventSlot -> eventSlot.getString(Field.SLOT_ID, "")
+                            .equals(studentCount.getString(Field.SLOT_ID))
+                            && eventSlot.getInteger(Field.DAYOFWEEK) != null && eventSlot.getInteger(Field.DAYOFWEEK)
+                            .equals(studentCount.getInteger(Field.DAYOFWEEK))
                 )
                 .findFirst()
                 .orElse(new JsonObject().put(Field.COUNT, 0));
 
         return new JsonObject()
-                .put(Field.SLOT_ID, eventCount.getString(Field.SLOT_ID))
-                .put(Field.DAYOFWEEK, DateHelper.getDayOfWeek(eventCount.getInteger(Field.DAYOFWEEK)))
+                .put(Field.SLOT_ID, studentCount.getString(Field.SLOT_ID))
+                .put(Field.DAYOFWEEK, DateHelper.getDayOfWeek(studentCount.getInteger(Field.DAYOFWEEK)))
                 .put(Field.RATE, getEventRates(studentCount.getInteger(Field.COUNT),
                         eventCount.getInteger(Field.COUNT)));
     }
-
 
     private double getEventRates(Integer studentCount, Integer eventCount) {
         double rate = (studentCount == null || eventCount == null ? 0.0 : Math.abs((((double)eventCount) * 100) / ((double)studentCount)));
