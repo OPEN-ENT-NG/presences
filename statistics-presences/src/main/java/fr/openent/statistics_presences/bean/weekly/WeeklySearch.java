@@ -25,18 +25,11 @@ public class WeeklySearch {
         eventsAggregation
                 .withAllowDiskUse(true)
                 .withMatch(matchEvents())
+                .withAddFields(addDayOfWeekField(String.format("$%s", Field.START_DATE)))
                 .withGroup(groupBySlot())
                 .withProjection(project());
 
         return eventsAggregation.getCommand();
-
-        /*return new JsonArray()
-                .add(addDateField(String.format("$%s", Field.START_AT)))
-                .add(match())
-                .add(groupBySlotAndAudience())
-                .add(audienceGroupByCountId())
-                .add(audienceGroupById())
-                .add(audienceProject());*/
     }
 
     public JsonObject countStudentsBySlotsCommand() {
@@ -44,6 +37,7 @@ public class WeeklySearch {
         eventsAggregation
                 .withAllowDiskUse(true)
                 .withMatch(matchCountStudents())
+                .withAddFields(addDayOfWeekField(String.format("$%s.%s", Field._ID, Field.START_AT)))
                 .withGroup(groupStudentCountBySlot())
                 .withProjection(project());
 
@@ -54,10 +48,11 @@ public class WeeklySearch {
      *
      * @return field start_at
      */
-    /*private JsonObject addDateField(String dateField) {
+    private JsonObject addDayOfWeekField(String dateField) {
         return new JsonObject()
-                .put(Field.DATE, dateToString(dateFromString(dateField), "%Y-%m-%d"));
-    }*/
+                .put(Field.DAYOFWEEK, dayOfWeek(dateFromString(dateField)));
+    }
+
     private QueryBuilder matchEvents() {
         QueryBuilder matcher = QueryBuilder.start(Field.STRUCTURE).is(this.filter.structure())
                 .and(Field.INDICATOR).is(Weekly.class.getName())
@@ -108,7 +103,8 @@ public class WeeklySearch {
 
     private JsonObject groupBySlot() {
         JsonObject id = new JsonObject()
-                .put(Field.SLOT_ID, String.format("$%s", Field.SLOT_ID));
+                .put(Field.SLOT_ID, String.format("$%s", Field.SLOT_ID))
+                .put(Field.DAYOFWEEK, String.format("$%s", Field.DAYOFWEEK));
 
         return id(id)
                 .put(Field.COUNT, sum());
@@ -116,7 +112,8 @@ public class WeeklySearch {
 
     private JsonObject groupStudentCountBySlot() {
         JsonObject id = new JsonObject()
-                .put(Field.SLOT_ID, String.format("$%s", Field.SLOT_ID));
+                .put(Field.SLOT_ID, String.format("$%s", Field.SLOT_ID))
+                .put(Field.DAYOFWEEK, String.format("$%s", Field.DAYOFWEEK));
 
         return id(id)
                 .put(Field.COUNT, this.filter().userId() != null ? sum() : sum(String.format("$%s", Field.STUDENT_COUNT)));
@@ -127,6 +124,7 @@ public class WeeklySearch {
         return new JsonObject()
                 .put(Field._ID, 0)
                 .put(Field.SLOT_ID, String.format("$%s.%s", Field._ID, Field.SLOT_ID))
+                .put(Field.DAYOFWEEK, String.format("$%s.%s", Field._ID, Field.DAYOFWEEK))
                 .put(Field.COUNT, sum(String.format("$%s", Field.COUNT)));
 
     }
@@ -135,20 +133,8 @@ public class WeeklySearch {
     UTILITIES
      */
 
-    private JsonObject dateToString(String dateParam, String format) {
-        JsonObject dateToString = new JsonObject()
-                .put("format", format)
-                .put("date", dateParam);
-
-        return new JsonObject().put("$dateToString", dateToString);
-    }
-
-    private JsonObject dateToString(JsonObject dateParam, String format) {
-        JsonObject dateToString = new JsonObject()
-                .put("format", format)
-                .put("date", dateParam);
-
-        return new JsonObject().put("$dateToString", dateToString);
+    private JsonObject dayOfWeek(JsonObject dateParam) {
+        return new JsonObject().put(String.format("$%s", Field.DAYOFWEEK), dateParam);
     }
 
     private JsonObject dateFromString(String dateParam) {

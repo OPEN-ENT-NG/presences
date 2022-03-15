@@ -89,7 +89,7 @@ public class DefaultStatisticsWeeklyAudiencesService extends DBService implement
 
         CompositeFuture.all(timeslotsFuture, countStudentsFuture, registersFuture)
                 .compose(futures -> {
-                    List<Timeslot> timeslots = TimeslotHelper.getRegistersFromArray(timeslotsFuture.result());
+                    List<Timeslot> timeslots = TimeslotHelper.getTimeslotsFromArray(timeslotsFuture.result());
                     List<JsonObject> groupCountStudents = countStudentsFuture.result().getList();
                     List<JsonObject> weeklyAudiences = mapRegistersToMongoWeeklyAudiences(registersFuture.result(), timeslots, groupCountStudents);
                     return storeValues(new JsonArray(weeklyAudiences));

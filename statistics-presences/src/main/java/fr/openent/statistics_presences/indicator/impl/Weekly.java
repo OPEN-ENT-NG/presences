@@ -1,5 +1,6 @@
 package fr.openent.statistics_presences.indicator.impl;
 
+import fr.openent.presences.common.helper.DateHelper;
 import fr.openent.presences.core.constants.Field;
 import fr.openent.statistics_presences.bean.weekly.WeeklySearch;
 import fr.openent.statistics_presences.indicator.Indicator;
@@ -104,12 +105,15 @@ public class Weekly extends Indicator {
                 .filter(studentsSlot ->
                         studentsSlot.getString(Field.SLOT_ID, "")
                                 .equals(eventCount.getString(Field.SLOT_ID))
+                        && studentsSlot.getInteger(Field.DAYOFWEEK) != null  && studentsSlot.getInteger(Field.DAYOFWEEK)
+                                .equals(eventCount.getInteger(Field.DAYOFWEEK))
                 )
                 .findFirst()
                 .orElse(new JsonObject().put(Field.COUNT, 0));
 
         return new JsonObject()
                 .put(Field.SLOT_ID, eventCount.getString(Field.SLOT_ID))
+                .put(Field.DAYOFWEEK, DateHelper.getDayOfWeek(eventCount.getInteger(Field.DAYOFWEEK)))
                 .put(Field.RATE, getEventRates(studentCount.getInteger(Field.COUNT),
                         eventCount.getInteger(Field.COUNT)));
     }

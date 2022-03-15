@@ -16,7 +16,7 @@ public class TimeslotHelper {
     }
 
     @SuppressWarnings("unchecked")
-    public static List<Timeslot> getRegistersFromArray(JsonArray timeslots) {
+    public static List<Timeslot> getTimeslotsFromArray(JsonArray timeslots) {
         return ((List<JsonObject>) timeslots.getList()).stream()
                 .map(Timeslot::new)
                 .collect(Collectors.toList());

@@ -72,7 +72,7 @@ public class ProcessingWeeklyAudiencesManual extends AbstractVerticle {
         Promise<String> promise = Promise.promise();
 
 
-        Presences.getInstance().getRegistersWithGroups(structureId, null, Arrays.asList(STATE_DONE, STATE_DONE),
+        Presences.getInstance().getRegistersWithGroups(structureId, null, Arrays.asList(STATE_DONE, STATE_IN_PROGRESS),
                         startAt, endAt)
                 .compose(registersResult -> commonServiceFactory.statisticsWeeklyAudiencesService()
                         .createFromRegisters(structureId, RegisterHelper.getRegistersFromArray(registersResult)))
