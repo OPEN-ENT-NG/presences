@@ -18,6 +18,8 @@ interface ViewModel {
 
     isAbsenceDisabled(student: RegisterStudent): boolean;
 
+    isAbsenceDisabledWithoutWorkFlow(student: RegisterStudent): boolean;
+
     validRegister(): Promise<void>;
 
     isEmpty(): boolean;
@@ -76,6 +78,10 @@ export const sideRegisterController = ng.controller('SideRegisterController', ['
 
         vm.isAbsenceDisabled = function (student: RegisterStudent): boolean {
             return RegisterUtils.isAbsenceDisabled(student, vm.register);
+        };
+
+        vm.isAbsenceDisabledWithoutWorkFlow = function (student): boolean {
+            return RegisterUtils.isAbsenceDisabledWithoutWorkFlow(student, vm.register);
         };
 
         vm.validRegister = async (): Promise<void> => {

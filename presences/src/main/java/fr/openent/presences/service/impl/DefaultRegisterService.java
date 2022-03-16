@@ -643,7 +643,7 @@ public class DefaultRegisterService extends DBService implements RegisterService
                         return;
                     }
 
-                    JsonObject exemptionsMap = mapExemptions(exemptionFuture.result());
+                    JsonArray exemptions = exemptionFuture.result();
                     JsonArray lastAbsentUsers = reduce(lastAbsentsFuture.result(), "student_id");
                     JsonArray forgottenNotebooks = forgottenNotebookFuture.result();
                     JsonObject groupsNameMap = mapGroupsName(groupsNameFuture.result());
@@ -651,7 +651,7 @@ public class DefaultRegisterService extends DBService implements RegisterService
                     JsonArray events = registerEventHistoryFuture.result();
                     JsonObject historyMap = extractUsersEvents(events);
 
-                    formatRegister(id, register, groups, users, teachersFuture, exemptionsMap, lastAbsentUsers,
+                    formatRegister(id, register, groups, users, teachersFuture, exemptions, lastAbsentUsers,
                             forgottenNotebooks, groupsNameMap, historyMap);
 
                     matchSlots(register, register.getString("structure_id"), slotEvent -> {
@@ -719,22 +719,23 @@ public class DefaultRegisterService extends DBService implements RegisterService
     }
 
     private void formatRegister(Integer id, JsonObject register, JsonArray groups, JsonArray users, Future<JsonArray> teachersFuture,
-                                JsonObject exemptionsMap, JsonArray lastAbsentUsers, JsonArray forgottenNotebooks,
+                                JsonArray exemptionsMap, JsonArray lastAbsentUsers, JsonArray forgottenNotebooks,
                                 JsonObject groupsNameMap, JsonObject historyMap) {
         JsonArray formattedUsers = new JsonArray();
         for (int i = 0; i < users.size(); i++) {
             JsonObject user = users.getJsonObject(i);
-            boolean exempted = exemptionsMap.containsKey(user.getString("id"));
-            String exempted_subjectId = exemptionsMap.containsKey(user.getString("id")) ? exemptionsMap.getJsonObject(user.getString("id")).getString("subject_id", "") : "0";
-            Integer exemption_recursive_id = exemptionsMap.containsKey(user.getString("id")) ? exemptionsMap.getJsonObject(user.getString("id")).getInteger("recursive_id") : null;
-            boolean exemption_attendance = exemptionsMap.containsKey(user.getString("id")) ? exemptionsMap.getJsonObject(user.getString("id")).getBoolean("attendance") : false;
-            formattedUsers.add(formatStudent(id, user, historyMap.getJsonArray(user.getString("id"), new JsonArray()),
-                    lastAbsentUsers.contains(user.getString("id")), groupsNameMap.getString(user.getString("groupId")),
-                    exempted, exemption_recursive_id, exemption_attendance, exempted_subjectId, forgottenNotebooks));
+            List<JsonObject> userExemptions = exemptionsMap.stream()
+                    .map(object -> (JsonObject)object)
+                    .filter(exemption -> exemption.getString(Field.STUDENT_ID, "").equals(user.getString(Field.ID)))
+                    .collect(Collectors.toList());
+            userExemptions.forEach(exemption -> exemption.remove(Field.STUDENT_ID));
+            formattedUsers.add(formatStudent(id, user, historyMap.getJsonArray(user.getString(Field.ID), new JsonArray()),
+                    lastAbsentUsers.contains(user.getString(Field.ID)), groupsNameMap.getString(user.getString(Field.GROUPID)),
+                    !userExemptions.isEmpty(), userExemptions, forgottenNotebooks));
         }
-        register.put("students", formattedUsers);
-        register.put("groups", groups);
-        register.put("teachers", teachersFuture.result());
+        register.put(Field.STUDENTS, formattedUsers);
+        register.put(Field.GROUPS, groups);
+        register.put(Field.TEACHERS, teachersFuture.result());
     }
 
     @Override
@@ -870,45 +871,37 @@ public class DefaultRegisterService extends DBService implements RegisterService
      * @param lastCourseAbsent     Define if user was absent during last teacher course$
      * @param groupName            User group name
      * @param exempted             User exemption status
-     * @param exemption_attendance User exemption attendance status. Sometime, the exemption needs attendance
+     * @param exemptions           List of all exemption
+     * @param forgottenNotebooks   ForgottenNotebooks
      * @return Formatted student
      */
     private JsonObject formatStudent(Integer registerId, JsonObject student, JsonArray events, boolean lastCourseAbsent,
-                                     String groupName, Boolean exempted, Integer exemption_recursive_id, Boolean exemption_attendance,
-                                     String exempted_subjectId, JsonArray forgottenNotebooks) {
+                                     String groupName, Boolean exempted, List<JsonObject> exemptions, JsonArray forgottenNotebooks) {
         JsonArray registerEvents = new JsonArray();
         for (int i = 0; i < events.size(); i++) {
             JsonObject event = events.getJsonObject(i);
-            if (registerId.equals(event.getInteger("register_id"))) {
+            if (registerId.equals(event.getInteger(Field.REGISTER_ID))) {
                 registerEvents.add(event);
             }
         }
-        JsonObject user = new JsonObject()
-                .put("id", student.getString("id"))
-                .put("name", student.getString("lastName") + " " + student.getString("firstName"))
-                .put("birth_date", student.getString("birthDate"))
-                .put("group", student.getString("groupId"))
-                .put("group_name", groupName)
-                .put("events", registerEvents)
-                .put("last_course_absent", lastCourseAbsent)
-                .put("forgotten_notebook", hasForgottenNotebook(student, forgottenNotebooks))
-                .put("day_history", events)
-                .put("exempted", exempted);
-
-
-        if (exempted) {
-            user.put("exemption_attendance", exemption_attendance);
-            user.put("exempted_subjectId", exempted_subjectId);
-            user.put("exemption_recursive_id", exemption_recursive_id);
-        }
-
-        return user;
+        return new JsonObject()
+                .put(Field.ID, student.getString(Field.ID))
+                .put(Field.NAME, student.getString(Field.LASTNAME) + " " + student.getString(Field.FIRSTNAME))
+                .put(Field.BIRTH_DATE, student.getString(Field.BIRTHDATE))
+                .put(Field.GROUP, student.getString(Field.GROUPID))
+                .put(Field.GROUP_NAME, groupName)
+                .put(Field.EVENTS, registerEvents)
+                .put(Field.LAST_COURSE_ABSENT, lastCourseAbsent)
+                .put(Field.FORGOTTEN_NOTEBOOK, hasForgottenNotebook(student, forgottenNotebooks))
+                .put(Field.DAY_HISTORY, events)
+                .put(Field.EXEMPTED, exempted)
+                .put(Field.EXEMPTIONS, exemptions);
     }
 
     private boolean hasForgottenNotebook(JsonObject student, JsonArray forgottenNotebooks) {
         boolean hasForgottenNotebook = false;
         for (int i = 0; i < forgottenNotebooks.size(); i++) {
-            if (forgottenNotebooks.getJsonObject(i).getString("student_id").equals(student.getString("id"))) {
+            if (forgottenNotebooks.getJsonObject(i).getString(Field.STUDENT_ID).equals(student.getString(Field.ID))) {
                 hasForgottenNotebook = true;
             }
         }

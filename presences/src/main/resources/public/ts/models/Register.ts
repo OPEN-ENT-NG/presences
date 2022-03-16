@@ -1,7 +1,7 @@
 import http, {AxiosError, AxiosResponse} from 'axios';
 import {_, moment, toasts} from 'entcore';
 import {Mix} from 'entcore-toolkit';
-import {Event, EventType, RegisterStatus, Remark} from './index';
+import {Event, EventType, ExemptionRegister, RegisterStatus, Remark} from './index';
 import {LoadingCollection} from '@common/model';
 import {registerService} from '../services';
 
@@ -17,9 +17,7 @@ export interface RegisterStudent {
     lateness?: Event;
     remark?: Event;
     exempted?: boolean;
-    exemption_attendance?: boolean;
-    exempted_subjectId?: string;
-    exemption_recursive_id?: number;
+    exemptions?: Array<ExemptionRegister>;
     birth_date: string;
 }
 
@@ -127,6 +125,9 @@ export class Register extends LoadingCollection {
             this.students.map((student) => {
                 if (student.absence) {
                     this.absenceCounter++;
+                }
+                if (!student.exemptions) {
+                    student.exemptions = [];
                 }
             });
             if (data.groups.length > 1) {

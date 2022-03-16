@@ -4,6 +4,12 @@ import {DateUtils} from "@common/utils";
 import {ITimeSlot, LoadingCollection} from "@common/model";
 import {_, moment} from "entcore";
 
+export interface ExemptionRegister {
+    attendance?: boolean;
+    subject_id?: string;
+    recursive_id?: number;
+}
+
 export class ExemptionView {
     exemption_id?: number;
     exemption_recursive_id?: number;
