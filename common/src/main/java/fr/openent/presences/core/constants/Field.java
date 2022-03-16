@@ -207,6 +207,7 @@ public class Field {
     public static final String $GT = "$gt";
     public static final String $COND = "$cond";
     public static final String $ADDFIELDS = "$addFields";
+    public static final String ISODAYOFWEEK = "isoDayOfWeek";
     public static final String SUM = "sum";
     public static final String DATESTRING = "dateString";
     public static final String DATEFROMSTRING = "dateFromString";

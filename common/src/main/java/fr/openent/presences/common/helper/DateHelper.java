@@ -634,13 +634,6 @@ public class DateHelper {
         return calendar.get(Calendar.DAY_OF_WEEK) - 1;
     }
 
-    public static int getDayOfWeek(int dayOfWeek) {
-        if (dayOfWeek - 1 == 0) {
-            return 7;
-        }
-        return dayOfWeek - 1;
-    }
-
     public static String getCurrentDayWithHours() {
         Calendar cal = Calendar.getInstance();
         Date date = cal.getTime();

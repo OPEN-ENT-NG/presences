@@ -50,7 +50,7 @@ public class WeeklySearch {
      */
     private JsonObject addDayOfWeekField(String dateField) {
         return new JsonObject()
-                .put(Field.DAYOFWEEK, dayOfWeek(dateFromString(dateField)));
+                .put(Field.DAYOFWEEK, isoDayOfWeek(dateFromString(dateField)));
     }
 
     private QueryBuilder matchEvents() {
@@ -133,8 +133,8 @@ public class WeeklySearch {
     UTILITIES
      */
 
-    private JsonObject dayOfWeek(JsonObject dateParam) {
-        return new JsonObject().put(String.format("$%s", Field.DAYOFWEEK), dateParam);
+    private JsonObject isoDayOfWeek(JsonObject dateParam) {
+        return new JsonObject().put(String.format("$%s", Field.ISODAYOFWEEK), dateParam);
     }
 
     private JsonObject dateFromString(String dateParam) {

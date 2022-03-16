@@ -113,7 +113,7 @@ public class Weekly extends Indicator {
 
         return new JsonObject()
                 .put(Field.SLOT_ID, studentCount.getString(Field.SLOT_ID))
-                .put(Field.DAYOFWEEK, DateHelper.getDayOfWeek(studentCount.getInteger(Field.DAYOFWEEK)))
+                .put(Field.DAYOFWEEK, studentCount.getInteger(Field.DAYOFWEEK))
                 .put(Field.RATE, getEventRates(studentCount.getInteger(Field.COUNT),
                         eventCount.getInteger(Field.COUNT)));
     }
