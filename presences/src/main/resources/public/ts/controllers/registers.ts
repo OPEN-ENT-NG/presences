@@ -327,7 +327,7 @@ export const registersController = ng.controller('RegistersController',
 
             // Get absences reasons as personal user info
             const getReasons = async (): Promise<void> => {
-                if (model.me.profiles.some(profile => profile === "Personnel")) {
+                if (model.me.profiles.some(profile => profile === "Personnel" || profile === "Teacher")) {
                     vm.reasons = await ReasonService.getReasons(window.structure.id);
                 }
             };
