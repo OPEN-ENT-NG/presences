@@ -280,6 +280,13 @@ public class Field {
     public static final String COUNTS = "counts";
     public static final String DISPLAYNAME = "displayName";
 
+    public static final String REASONTYPEID = "reasonTypeId";
+    public static final String PROVING = "proving";
+    public static final String DEFAULT = "default";
+    public static final String HIDDEN = "hidden";
+    public static final String ABSENCE_COMPILANCE = "absence_compliance";
+    public static final String REASON_TYPE_ID = "reason_type_id";
+
     private Field() {
         throw new IllegalStateException("Utility class");
     }

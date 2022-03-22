@@ -1,3 +1,5 @@
+import {REASON_TYPE_ID} from "@common/core/enum/reason-type-id";
+
 export interface Reason {
     id: number;
     label: string;
@@ -9,6 +11,7 @@ export interface Reason {
     hidden: boolean;
     absence_compliance: boolean;
     isSelected: boolean;
+    reason_type_id?: REASON_TYPE_ID;
 }
 
 export interface ReasonRequest {
@@ -18,4 +21,5 @@ export interface ReasonRequest {
     hidden?: boolean;
     structureId?: string;
     proving: boolean;
+    reasonTypeId?: REASON_TYPE_ID;
 }

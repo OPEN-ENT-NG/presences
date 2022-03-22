@@ -2,6 +2,7 @@ package fr.openent.presences.controller;
 
 import fr.openent.presences.constants.Actions;
 import fr.openent.presences.core.constants.*;
+import fr.openent.presences.enums.ReasonType;
 import fr.openent.presences.security.*;
 import fr.openent.presences.service.ReasonService;
 import fr.openent.presences.service.impl.DefaultReasonService;
@@ -31,11 +32,14 @@ public class ReasonController extends ControllerHelper {
     @SecuredAction(value = "", type = ActionType.RESOURCE)
     public void get(final HttpServerRequest request) {
         String structureId = request.getParam(Field.STRUCTUREID);
+        Integer reasonTypeId = request.params().contains(Field.REASONTYPEID) ?
+                Integer.parseInt(request.getParam(Field.REASONTYPEID)) : ReasonType.ABSENCE.getValue();
+
         if (!request.params().contains(Field.STRUCTUREID)) {
             badRequest(request);
             return;
         }
-        reasonService.get(structureId, DefaultResponseHandler.arrayResponseHandler(request));
+        reasonService.get(structureId, reasonTypeId, DefaultResponseHandler.arrayResponseHandler(request));
     }
 
     @Post("/reason")
@@ -49,6 +53,8 @@ public class ReasonController extends ControllerHelper {
                 badRequest(request);
                 return;
             }
+            if (request.params().contains(Field.REASONTYPEID))
+                reasonBody.put(Field.REASONTYPEID, Integer.parseInt(request.getParam(Field.REASONTYPEID)));
             reasonService.create(reasonBody, either -> {
                 if (either.isLeft()) {
                     log.error("[Presences@ReasonController] failed to create reason", either.left().getValue());
