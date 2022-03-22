@@ -303,4 +303,24 @@ i {
     content: '\fcd3';
   }
 
+  &.flag:before {
+    font-family: 'material-icons';
+    content: '\f23b';
+  }
+
+  &.flag-outline:before {
+    font-family: 'material-icons';
+    content: '\f23d';
+  }
+
+  &.silverware:before {
+    font-family: 'material-icons';
+    content: '\f4a3';
+  }
+
+  &.hotel:before {
+    font-family: 'material-icons';
+    content: '\f2e3';
+  }
+
 }

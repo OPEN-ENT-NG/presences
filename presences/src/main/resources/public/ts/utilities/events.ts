@@ -21,45 +21,47 @@ export interface EventsFilter {
     late?: boolean;
     departure?: boolean;
     regularized?: boolean;
+    notRegularized?: boolean;
     regularizedNotregularized?: boolean;
-    allAbsenceReasons?: boolean,
-    allLatenessReasons?: boolean,
-    noReasons?: boolean,
-    noReasonsLateness?: boolean,
-    reasons?: Reason,
-    reasonIds?: number[],
+    allAbsenceReasons?: boolean;
+    allLatenessReasons?: boolean;
+    noReasons?: boolean;
+    noReasonsLateness?: boolean;
+    reasons?: Reason;
+    reasonIds?: number[];
     timeslots?: {
         start: ITimeSlot;
         end: ITimeSlot;
-    },
-    unjustified?: boolean,
-    justifiedNotRegularized?: boolean,
-    justifiedRegularized?: boolean,
-    followed?: boolean,
-    notFollowed?: boolean,
+    };
+    followed?: boolean;
+    notFollowed?: boolean;
     noFilter?: boolean;
+    halfBoarders?: boolean;
+    interns?: boolean;
     page?: number;
 }
 
 export interface EventsFormFilter {
     classes?: any;
     students?: any;
-    absences?: boolean,
-    late?: boolean,
-    departure?: boolean,
-    unjustified?: boolean,
-    justifiedNotRegularized?: boolean,
-    justifiedRegularized?: boolean,
-    followed?: boolean,
-    notFollowed?: boolean,
-    allAbsenceReasons?: boolean,
-    allLatenessReasons?: boolean,
-    noReasons?: boolean,
-    reasonIds?: number[],
+    absences?: boolean;
+    late?: boolean;
+    departure?: boolean;
+    followed?: boolean;
+    notFollowed?: boolean;
+    allAbsenceReasons?: boolean;
+    allLatenessReasons?: boolean;
+    noReasons?: boolean;
+    noReasonsLateness?: boolean;
+    reasonIds?: number[];
+    regularized?: boolean;
+    notRegularized?: boolean;
     timeslots?: {
         start: ITimeSlot;
         end: ITimeSlot;
-    }
+    };
+    halfBoarders?: boolean;
+    interns?: boolean;
 }
 
 export class EventsUtils {

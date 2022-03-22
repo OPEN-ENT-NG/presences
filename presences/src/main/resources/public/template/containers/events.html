@@ -1,4 +1,73 @@
-<div class="events" ng-controller="EventsController as vm">
-    <div ng-include="'/presences/public/template/events/header.html'"></div>
-    <div ng-include="'/presences/public/template/events/content.html'"></div>
+<div ng-controller="EventsController as vm">
+    <div class="row">
+        <h1 class="cell paddingRight title">
+            <i18n>presences.event.title</i18n>
+        </h1>
+        <!-- Student search bar -->
+        <div class="cell four paddingRight">
+            <div class="cell twelve search-input">
+                <async-autocomplete data-ng-disabled="false"
+                                    data-ng-model="vm.studentsSearch.student"
+                                    data-ng-change="vm.selectStudent()"
+                                    data-on-search="vm.searchStudent"
+                                    data-options="vm.studentsSearch.students"
+                                    data-placeholder="presences.exemptions.search.student"
+                                    data-search="vm.studentsSearch.student">
+                </async-autocomplete>
+            </div>
+
+            <!-- Student search results -->
+            <div class="cell twelve">
+                <ul class="cell twelve search-input-ul">
+                    <li ng-repeat="student in vm.studentsSearch.selectedStudents">
+                        [[student.displayName]] <i class="close"
+                                                   data-ng-click="vm.removeSelectedStudent(student)"></i>
+                    </li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- Classes/Groups search bar -->
+        <div class="cell four paddingLeft">
+            <div class="cell twelve search-input">
+                <async-autocomplete data-ng-disabled="false"
+                                    data-ng-model="vm.groupsSearch.group"
+                                    data-ng-change="vm.selectGroup()"
+                                    data-on-search="vm.searchGroup"
+                                    data-options="vm.groupsSearch.groups"
+                                    data-placeholder="presences.exemptions.search.audience"
+                                    data-search="vm.groupsSearch.group">
+                </async-autocomplete>
+            </div>
+
+            <!-- Group search results -->
+            <div class="cell twelve">
+                <ul class="cell twelve search-input-ul">
+                    <li ng-repeat="class in vm.groupsSearch.selectedGroups">
+                        [[class.name]] <i class="close" data-ng-click="vm.removeSelectedGroup(class)"></i>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </div>
+    <div class="row menu">
+        <!-- Event List -->
+        <div class="cell menu-item">
+            <a href="#/events" ng-class="{'current-state': vm.homeState()}">
+                <i18n>presences.event.title</i18n>
+            </a>
+        </div>
+        <!-- Planned absences -->
+        <div class="cell menu-item">
+            <a href="#/planned-absences"
+               ng-class="{'current-state': vm.plannedAbsencesState()}">
+                <i18n>presences.event.planned.absences</i18n>
+            </a>
+        </div>
+    </div>
+
+    <!-- Container with event-list or planned absences list -->
+    <div class="row presences-content">
+        <container template="events"></container>
+    </div>
 </div>
