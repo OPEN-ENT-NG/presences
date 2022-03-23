@@ -102,6 +102,15 @@ public class Field {
     public static final String IS_OPENED_BY_PERSONNEL = "is_opened_by_personnel";
     public static final String ISOPENEDBYPERSONNEL = "isOpenedByPersonnel";
     public static final String FORGOTTEN_REGISTERS = "forgotten_registers";
+    public static final String BIRTH_DATE = "birth_day";
+    public static final String BIRTHDATE = "birthDay";
+    public static final String FIRSTNAME = "firstName";
+    public static final String LASTNAME = "lastName";
+    public static final String GROUPID = "groupId";
+    public static final String GROUP_NAME = "group_name";
+    public static final String LAST_COURSE_ABSENT = "last_course_absent";
+    public static final String DAY_HISTORY = "day_history";
+    public static final String EXEMPTIONS = "exemptions";
 
 
     // Course

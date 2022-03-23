@@ -44,10 +44,10 @@ interface Filter {
 
 export interface ViewModel {
     $onInit(): any;
-
     $onDestroy(): any;
 
     widget: { forgottenRegisters: boolean };
+
     register: Register;
     courses: Courses;
     filter: Filter;
@@ -56,10 +56,9 @@ export interface ViewModel {
     reasons: Reason[];
     isMultipleSlot: boolean;
     isMultipleSlotUserPreference: boolean;
-
     /* search bar auto complete */
-    searchStudents(value): Promise<void>;
 
+    searchStudents(value): Promise<void>;
     selectStudent(valueInput, studentItem): Promise<void>;
 
     openRegister(course: Course, $event): Promise<void>;
@@ -124,6 +123,8 @@ export interface ViewModel {
     isEmptyDayHistory(student): boolean;
 
     isAbsenceDisabled(student): boolean;
+
+    isAbsenceDisabledWithoutWorkFlow(student): boolean;
 
     switchForgottenFilter(): Promise<void>;
 
@@ -601,7 +602,7 @@ export const registersController = ng.controller('RegistersController',
                 if (vm.isAbsenceDisabled(student)) {
                     return;
                 }
-                // if ((student.absence && student.absence.counsellor_input) || (student.exempted && !student.exemption_attendance)) return;
+                // if ((student.absence && student.absence.counsellor_input) || (student.exempted && !student.attendance)) return;
                 await toggleEvent(student, 'absence', vm.register.start_date, vm.register.end_date);
                 student.departure = undefined;
                 student.lateness = undefined;
@@ -812,6 +813,10 @@ export const registersController = ng.controller('RegistersController',
 
             vm.isAbsenceDisabled = function (student): boolean {
                 return RegisterUtils.isAbsenceDisabled(student, vm.register);
+            };
+
+            vm.isAbsenceDisabledWithoutWorkFlow = function (student): boolean {
+                return RegisterUtils.isAbsenceDisabledWithoutWorkFlow(student, vm.register);
             };
 
             vm.switchForgottenFilter = async (): Promise<void> => {
