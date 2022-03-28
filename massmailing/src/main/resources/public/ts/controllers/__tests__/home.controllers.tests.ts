@@ -8,6 +8,7 @@ import {punishmentService, punishmentsTypeService} from "@incidents/services";
 import {homeController} from "@massmailing/controllers";
 import {IPunishmentType} from "@incidents/models/PunishmentType";
 import {Reason} from '@presences/models/Reason';
+import {REASON_TYPE_ID} from "@common/core/enum/reason-type-id";
 
 describe('HomeControllers', () => {
     let homeControllerTest: any;
@@ -95,28 +96,80 @@ describe('HomeControllers', () => {
         done();
     });
 
-    it('test of the proper functioning of the switchAllReasons method', done => {
+    it('test of the proper functioning of the switchAllAbsenceReasons method', done => {
         homeControllerTest.formFilter = {
-            allReasons: false,
+            allAbsenceReasons: false,
+            allLatenessReasons: false,
+            noReasons: false,
+            noLatenessReasons: false,
             reasons: {
-                "REASON1": false,
-                "REASON2": false
+                "1": false,
+                "2": false
             }
         }
+        const reason1: Reason = {
+            absence_compliance: false,
+            comment: "",
+            default: false,
+            group: false,
+            hidden: false,
+            id: 1,
+            isSelected: false,
+            label: "",
+            proving: false,
+            structure_id: "",
+            reason_type_id: REASON_TYPE_ID.ABSENCE
+        };
+        const reason2: Reason = {
+            absence_compliance: false,
+            comment: "",
+            default: false,
+            group: false,
+            hidden: false,
+            id: 2,
+            isSelected: false,
+            label: "",
+            proving: false,
+            structure_id: "",
+            reason_type_id: REASON_TYPE_ID.LATENESS
+        };
+        homeControllerTest.reasons = [reason1, reason2];
 
-        homeControllerTest.switchAllReasons()
+        homeControllerTest.switchAllAbsenceReasons();
 
-        expect(homeControllerTest.formFilter.allReasons).toEqual(true);
+        expect(homeControllerTest.formFilter.allAbsenceReasons).toEqual(true);
+        expect(homeControllerTest.formFilter.allLatenessReasons).toEqual(false);
         expect(homeControllerTest.formFilter.noReasons).toEqual(true);
-        expect(homeControllerTest.formFilter.reasons["REASON1"]).toEqual(true);
-        expect(homeControllerTest.formFilter.reasons["REASON2"]).toEqual(true);
+        expect(homeControllerTest.formFilter.noLatenessReasons).toEqual(false);
+        expect(homeControllerTest.formFilter.reasons["1"]).toEqual(true);
+        expect(homeControllerTest.formFilter.reasons["2"]).toEqual(false);
 
-        homeControllerTest.switchAllReasons()
+        homeControllerTest.switchAllAbsenceReasons();
 
-        expect(homeControllerTest.formFilter.allReasons).toEqual(false);
+        expect(homeControllerTest.formFilter.allAbsenceReasons).toEqual(false);
+        expect(homeControllerTest.formFilter.allLatenessReasons).toEqual(false);
         expect(homeControllerTest.formFilter.noReasons).toEqual(false);
-        expect(homeControllerTest.formFilter.reasons["REASON1"]).toEqual(false);
-        expect(homeControllerTest.formFilter.reasons["REASON2"]).toEqual(false);
+        expect(homeControllerTest.formFilter.noLatenessReasons).toEqual(false);
+        expect(homeControllerTest.formFilter.reasons["1"]).toEqual(false);
+        expect(homeControllerTest.formFilter.reasons["2"]).toEqual(false);
+
+        homeControllerTest.switchAllLatenessReasons();
+
+        expect(homeControllerTest.formFilter.allAbsenceReasons).toEqual(false);
+        expect(homeControllerTest.formFilter.allLatenessReasons).toEqual(true);
+        expect(homeControllerTest.formFilter.noReasons).toEqual(false);
+        expect(homeControllerTest.formFilter.noLatenessReasons).toEqual(true);
+        expect(homeControllerTest.formFilter.reasons["1"]).toEqual(false);
+        expect(homeControllerTest.formFilter.reasons["2"]).toEqual(true);
+
+        homeControllerTest.switchAllLatenessReasons();
+
+        expect(homeControllerTest.formFilter.allAbsenceReasons).toEqual(false);
+        expect(homeControllerTest.formFilter.allLatenessReasons).toEqual(false);
+        expect(homeControllerTest.formFilter.noReasons).toEqual(false);
+        expect(homeControllerTest.formFilter.noLatenessReasons).toEqual(false);
+        expect(homeControllerTest.formFilter.reasons["1"]).toEqual(false);
+        expect(homeControllerTest.formFilter.reasons["2"]).toEqual(false);
 
         done();
     });
@@ -247,15 +300,73 @@ describe('HomeControllers', () => {
         done();
     });
 
-    it('test of the proper functioning of the getActivatedReasonsCount method', done => {
+    it('test of the proper functioning of the getActivatedAbsenceCount and getActivatedLatenessCount method', done => {
         homeControllerTest.formFilter = {
             reasons: {
-                "reason1": 7,
-                "reason2": 3
+                "1": true,
+                "2": true,
+                "3": false,
+                "4": false,
             }
         }
 
-        expect(homeControllerTest.getActivatedReasonsCount()).toEqual(10);
+        const reason1: Reason = {
+            absence_compliance: false,
+            comment: "",
+            default: false,
+            group: false,
+            hidden: false,
+            id: 1,
+            isSelected: false,
+            label: "",
+            proving: false,
+            structure_id: "",
+            reason_type_id: REASON_TYPE_ID.ABSENCE
+        };
+        const reason2: Reason = {
+            absence_compliance: false,
+            comment: "",
+            default: false,
+            group: false,
+            hidden: false,
+            id: 2,
+            isSelected: false,
+            label: "",
+            proving: false,
+            structure_id: "",
+            reason_type_id: REASON_TYPE_ID.LATENESS
+        };
+        const reason3: Reason = {
+            absence_compliance: false,
+            comment: "",
+            default: false,
+            group: false,
+            hidden: false,
+            id: 3,
+            isSelected: false,
+            label: "",
+            proving: false,
+            structure_id: "",
+            reason_type_id: REASON_TYPE_ID.ABSENCE
+        };
+        const reason4: Reason = {
+            absence_compliance: false,
+            comment: "",
+            default: false,
+            group: false,
+            hidden: false,
+            id: 4,
+            isSelected: false,
+            label: "",
+            proving: false,
+            structure_id: "",
+            reason_type_id: REASON_TYPE_ID.LATENESS
+        };
+
+        homeControllerTest.reasons = [reason1, reason2, reason3, reason4];
+
+        expect(homeControllerTest.getActivatedAbsenceCount()).toEqual(1);
+        expect(homeControllerTest.getActivatedLatenessCount()).toEqual(1);
         done();
     });
 
@@ -297,20 +408,52 @@ describe('HomeControllers', () => {
         done();
     });
 
-    it('test of the proper functioning of the getReasonsCount method', done => {
-        homeControllerTest.formFilter = {
-            reasons: {
-                "reason1": 7,
-                "reason2": 3,
-                "reason3": 3,
-                "reason4": 3,
-            }
-        }
+    it('test of the proper functioning of the getAbsenceCount and getLatenessCount method', done => {
+        const reason1: Reason = {
+            absence_compliance: false,
+            comment: "",
+            default: false,
+            group: false,
+            hidden: false,
+            id: 1,
+            isSelected: false,
+            label: "",
+            proving: false,
+            structure_id: "",
+            reason_type_id: REASON_TYPE_ID.ABSENCE
+        };
+        const reason2: Reason = {
+            absence_compliance: false,
+            comment: "",
+            default: false,
+            group: false,
+            hidden: false,
+            id: 2,
+            isSelected: false,
+            label: "",
+            proving: false,
+            structure_id: "",
+            reason_type_id: REASON_TYPE_ID.LATENESS
+        };
+        const reason3: Reason = {
+            absence_compliance: false,
+            comment: "",
+            default: false,
+            group: false,
+            hidden: false,
+            id: 3,
+            isSelected: false,
+            label: "",
+            proving: false,
+            structure_id: "",
+            reason_type_id: REASON_TYPE_ID.ABSENCE
+        };
 
-        expect(4).toEqual(homeControllerTest.getReasonsCount());
+        homeControllerTest.reasons = [reason1, reason2, reason3];
 
-        homeControllerTest.formFilter.reasons = undefined;
-        expect(0).toEqual(homeControllerTest.getReasonsCount());
+        expect(2).toEqual(homeControllerTest.getAbsenceCount());
+
+        expect(1).toEqual(homeControllerTest.getLatenessCount());
 
         done();
     });
@@ -337,7 +480,8 @@ describe('HomeControllers', () => {
             isSelected: false,
             label: "",
             proving: false,
-            structure_id: ""
+            structure_id: "",
+            reason_type_id: REASON_TYPE_ID.ABSENCE
         }
 
         const reason2 : Reason = {
@@ -350,10 +494,25 @@ describe('HomeControllers', () => {
             isSelected: false,
             label: "",
             proving: false,
-            structure_id: ""
+            structure_id: "",
+            reason_type_id: REASON_TYPE_ID.ABSENCE
         }
 
-        homeControllerTest.reasons = [reason1, reason2]
+        const reason3 : Reason = {
+            absence_compliance: false,
+            comment: "",
+            default: false,
+            group: false,
+            hidden: false,
+            id: 3,
+            isSelected: false,
+            label: "",
+            proving: false,
+            structure_id: "",
+            reason_type_id: REASON_TYPE_ID.LATENESS
+        }
+
+        homeControllerTest.reasons = [reason1, reason2, reason3]
 
         homeControllerTest.switchToRegularizedAbsences()
         expect(homeControllerTest.formFilter.status.REGULARIZED).toEqual(true);
@@ -392,7 +551,8 @@ describe('HomeControllers', () => {
             isSelected: false,
             label: "",
             proving: false,
-            structure_id: ""
+            structure_id: "",
+            reason_type_id: REASON_TYPE_ID.ABSENCE
         }
 
         const reason2 : Reason = {
@@ -405,10 +565,25 @@ describe('HomeControllers', () => {
             isSelected: false,
             label: "",
             proving: false,
-            structure_id: ""
+            structure_id: "",
+            reason_type_id: REASON_TYPE_ID.ABSENCE
         }
 
-        homeControllerTest.reasons = [reason1, reason2]
+        const reason3 : Reason = {
+            absence_compliance: false,
+            comment: "",
+            default: false,
+            group: false,
+            hidden: false,
+            id: 3,
+            isSelected: false,
+            label: "",
+            proving: false,
+            structure_id: "",
+            reason_type_id: REASON_TYPE_ID.LATENESS
+        }
+
+        homeControllerTest.reasons = [reason1, reason2, reason3]
 
         homeControllerTest.switchToUnregularizedAbsences()
         expect(homeControllerTest.formFilter.status.UNREGULARIZED).toEqual(true);
@@ -435,11 +610,11 @@ describe('HomeControllers', () => {
 
         homeControllerTest.switchToAbsencesWithoutReason()
         expect(homeControllerTest.formFilter.status.NO_REASON).toEqual(true);
-        expect(homeControllerTest.formFilter.noReasons).toEqual(true);
+        expect(homeControllerTest.formFilter.noAbsenceReasons).toEqual(true);
 
         homeControllerTest.switchToAbsencesWithoutReason()
         expect(homeControllerTest.formFilter.status.NO_REASON).toEqual(false);
-        expect(homeControllerTest.formFilter.noReasons).toEqual(true);
+        expect(homeControllerTest.formFilter.noAbsenceReasons).toEqual(true);
 
         done();
     });

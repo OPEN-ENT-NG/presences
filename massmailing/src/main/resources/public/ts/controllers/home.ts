@@ -16,6 +16,7 @@ import {IPunishmentType} from "@incidents/models/PunishmentType";
 import {EVENT_TYPES} from "@common/model";
 import {MassmailingFilters} from "@massmailing/model/Preferences";
 import {MailTemplateCategory} from "@common/core/enum/mail-template-category";
+import {REASON_TYPE_ID} from "@common/core/enum/reason-type-id";
 
 interface Filter {
     start_date: Date;
@@ -38,6 +39,7 @@ interface Filter {
     reasons: any;
     punishments: Array<IPunishmentType>;
     noReasons: boolean;
+    noLatenessReasons: boolean;
     student: any;
     students: any[];
     group: any;
@@ -64,7 +66,8 @@ interface ViewModel {
     };
     errors: {
         TYPE: boolean,
-        REASONS: boolean,
+        ABSENCES_REASONS: boolean,
+        LATENESS_REASONS: boolean,
         STATUS: boolean
     };
     massmailing: Massmailing;
@@ -81,7 +84,9 @@ interface ViewModel {
 
     loadData(): Promise<void>;
 
-    switchAllReasons(): void;
+    switchAllAbsenceReasons(): void;
+
+    switchAllLatenessReasons(): void;
 
     switchAllPunishmentTypes(): void;
 
@@ -89,11 +94,19 @@ interface ViewModel {
 
     setSelectedPunishmentType(punishmentType: IPunishmentType): void;
 
-    getActivatedReasonsCount(): number;
+    getAbsenceReasons(): Reason[];
+
+    getLatenessReasons(): Reason[];
+
+    getActivatedAbsenceCount(): number;
+
+    getActivatedLatenessCount(): number;
 
     getActivatedPunishmentTypes(): number;
 
-    getReasonsCount(): number;
+    getAbsenceCount(): number;
+
+    getLatenessCount(): number;
 
     searchStudent(value: string): void;
 
@@ -116,6 +129,10 @@ interface ViewModel {
     switchToUnregularizedAbsences(): void;
 
     switchToAbsencesWithoutReason(): void;
+
+    switchToLatenessReason(): void;
+
+    switchNoLatenessReasons(): void;
 
     filterInError(): boolean;
 
@@ -153,7 +170,8 @@ export const homeController = ng.controller('HomeController', ['$scope', 'route'
         vm.errors = {
             TYPE: false,
             STATUS: false,
-            REASONS: false
+            ABSENCES_REASONS: false,
+            LATENESS_REASONS: false
         };
 
         vm.filter = {
@@ -175,6 +193,7 @@ export const homeController = ng.controller('HomeController', ['$scope', 'route'
             allReasons: true,
             allPunishments: true,
             noReasons: true,
+            noLatenessReasons: true,
             reasons: {},
             punishments: [],
             students: undefined,
@@ -208,6 +227,8 @@ export const homeController = ng.controller('HomeController', ['$scope', 'route'
             vm.formFilter = JSON.parse(JSON.stringify(vm.filter));
             vm.formFilter.selected.students.forEach((item) => item.toString = () => item.displayName);
             vm.formFilter.selected.groups.forEach((obj) => obj.toString = () => obj.name);
+            vm.formFilter.allAbsenceReasons = (vm.filter.status.REGULARIZED || vm.filter.status.UNREGULARIZED);
+            vm.formFilter.allLatenessReasons = vm.filter.status.LATENESS;
         };
 
         vm.validForm = async function (): Promise<void> {
@@ -218,7 +239,7 @@ export const homeController = ng.controller('HomeController', ['$scope', 'route'
                 start_at: vm.formFilter.start_at,
                 status: vm.formFilter.status,
                 massmailing_status: vm.formFilter.massmailing_status,
-                allReasons: vm.formFilter.allReasons,
+                allReasons: vm.formFilter.allAbsenceReasons && vm.formFilter.allLatenessReasons,
                 noReasons: vm.formFilter.noReasons,
                 reasons: vm.formFilter.reasons,
                 punishments: vm.formFilter.punishments,
@@ -245,15 +266,14 @@ export const homeController = ng.controller('HomeController', ['$scope', 'route'
         };
 
         const getReasons = (): Promise<void> => {
-            return new Promise((resolve) => {
-                reasonService.getReasons(window.structure.id)
-                    .then((reasons: Reason[]) => {
-                        reasons.forEach((reason: Reason) => vm.filter.reasons[reason.id] = (vm.filter.status.REGULARIZED || vm.filter.status.UNREGULARIZED));
-                        vm.reasons = reasons;
-                        $scope.$apply();
-                        resolve(undefined);
-                    });
-            });
+            return reasonService.getReasons(window.structure.id, 0).then((reasons: Array<Reason>) => {
+                reasons.forEach((reason: Reason) => {
+                    vm.filter.reasons[reason.id] = reason.reason_type_id == REASON_TYPE_ID.ABSENCE ?
+                        (vm.filter.status.REGULARIZED || vm.filter.status.UNREGULARIZED) : vm.filter.status.LATENESS;
+                });
+                vm.reasons = reasons;
+                $scope.$apply();
+            })
         };
 
         const getPunishmentTypes = (): Promise<void> => {
@@ -278,12 +298,18 @@ export const homeController = ng.controller('HomeController', ['$scope', 'route'
             });
         };
 
-        vm.switchAllReasons = function () {
-            vm.formFilter.allReasons = !vm.formFilter.allReasons;
-            vm.formFilter.noReasons = vm.formFilter.allReasons;
-            for (let reason in vm.formFilter.reasons) {
-                vm.formFilter.reasons[reason] = vm.formFilter.allReasons;
-            }
+        vm.switchAllAbsenceReasons = function (): void {
+            vm.formFilter.allAbsenceReasons = !vm.formFilter.allAbsenceReasons;
+            vm.formFilter.noReasons = vm.formFilter.allAbsenceReasons;
+
+            vm.getAbsenceReasons().forEach((reason:Reason) => vm.formFilter.reasons[reason.id] = vm.formFilter.allAbsenceReasons)
+        };
+
+        vm.switchAllLatenessReasons = function (): void {
+            vm.formFilter.allLatenessReasons = !vm.formFilter.allLatenessReasons;
+            vm.formFilter.noLatenessReasons = vm.formFilter.allLatenessReasons;
+
+            vm.getLatenessReasons().forEach((reason:Reason) => vm.formFilter.reasons[reason.id] = vm.formFilter.allLatenessReasons)
         };
 
         vm.switchAllPunishmentTypes = (): void => {
@@ -328,12 +354,33 @@ export const homeController = ng.controller('HomeController', ['$scope', 'route'
             return isAllSelected;
         };
 
+        vm.getAbsenceReasons = (): Reason[] => {
+            if (!vm.reasons)
+                return [];
+            return vm.reasons.filter((reason: Reason) => reason.reason_type_id == REASON_TYPE_ID.ABSENCE);
+        }
 
-        vm.getActivatedReasonsCount = (): number => {
+        vm.getLatenessReasons = (): Reason[] => {
+            if (!vm.reasons)
+                return [];
+            return vm.reasons.filter((reason: Reason) => reason.reason_type_id == REASON_TYPE_ID.LATENESS);
+        }
+
+        vm.getActivatedAbsenceCount = (): number => {
             let count: number = 0;
-            for (let reason in vm.formFilter.reasons) {
-                count += vm.formFilter.reasons[reason];
-            }
+            if (!vm.reasons || !vm.formFilter.reasons)
+                return count;
+            vm.getAbsenceReasons()
+                .forEach((reason: Reason) => count += (!!vm.formFilter.reasons[reason.id]) ? 1 : 0);
+            return count;
+        };
+
+        vm.getActivatedLatenessCount = (): number => {
+            let count: number = 0;
+            if (!vm.reasons || !vm.formFilter.reasons)
+                return count;
+            vm.getLatenessReasons()
+                .forEach((reason: Reason) => count += (!!vm.formFilter.reasons[reason.id]) ? 1 : 0);
             return count;
         };
 
@@ -345,12 +392,12 @@ export const homeController = ng.controller('HomeController', ['$scope', 'route'
             }
         };
 
-        vm.getReasonsCount = (): number => {
-            if (vm.formFilter.reasons) {
-                return Object.keys(vm.formFilter.reasons).length;
-            } else {
-                return 0;
-            }
+        vm.getAbsenceCount = (): number => {
+            return vm.getAbsenceReasons().length;
+        };
+
+        vm.getLatenessCount = (): number => {
+            return vm.getLatenessReasons().length;
         };
 
         // If mailed AND waiting, return null. Empty massmailed parameter = non parameter filter.
@@ -382,11 +429,12 @@ export const homeController = ng.controller('HomeController', ['$scope', 'route'
 
             for (let i = 0; i < vm.reasons.length; i++) if (vm.filter.reasons[vm.reasons[i].id]) reasons.push(vm.reasons[i].id);
             for (let status in vm.filter.status) if (vm.filter.status[status]) types.push(status);
+
             const students = [], groups = [];
             vm.filter.selected.students.forEach(({id}) => students.push(id));
             vm.filter.selected.groups.forEach(({id}) => groups.push(id));
             return await MassmailingService[`get${type}`](window.structure.id, massmailedParameter(), reasons, punishmentTypes,
-                sanctionsTypes, vm.filter.start_at, vm.filter.start_date, vm.filter.end_date, groups, students, types, vm.filter.noReasons);
+                sanctionsTypes, vm.filter.start_at, vm.filter.start_date, vm.filter.end_date, groups, students, types, vm.filter.noReasons, vm.filter.noLatenessReasons);
         }
 
         function fetchMassmailingStatus() {
@@ -476,46 +524,65 @@ export const homeController = ng.controller('HomeController', ['$scope', 'route'
 
         vm.switchToRegularizedAbsences = (): void => {
             vm.formFilter.status.REGULARIZED = !vm.formFilter.status.REGULARIZED;
-            vm.reasons.forEach((reason: Reason) => {
+            vm.getAbsenceReasons().forEach((reason: Reason) => {
                 vm.formFilter.reasons[reason.id] = vm.formFilter.status.REGULARIZED;
             });
         };
 
         vm.switchToUnregularizedAbsences = (): void => {
             vm.formFilter.status.UNREGULARIZED = !vm.formFilter.status.UNREGULARIZED;
-            vm.reasons.forEach((reason: Reason) => {
+            vm.getAbsenceReasons().forEach((reason: Reason) => {
                 vm.formFilter.reasons[reason.id] = vm.formFilter.status.UNREGULARIZED;
             });
         };
 
         vm.switchToAbsencesWithoutReason = (): void => {
             vm.formFilter.status.NO_REASON = !vm.formFilter.status.NO_REASON;
-            vm.formFilter.noReasons = vm.formFilter.status.UNREGULARIZED;
+            vm.formFilter.noAbsenceReasons = vm.formFilter.status.UNREGULARIZED;
         };
 
+        vm.switchToLatenessReason = (): void => {
+            vm.formFilter.status.LATENESS = !vm.formFilter.status.LATENESS;
+            vm.getLatenessReasons().forEach((reason: Reason) => {
+                vm.formFilter.reasons[reason.id] = vm.formFilter.status.LATENESS;
+            });
+        }
+
+        vm.switchNoLatenessReasons = (): void => {
+            vm.formFilter.noLatenessReasons = !vm.formFilter.noLatenessReasons;
+        }
+
         const checkFilter = (): boolean => {
-            function allIsFalse(map): boolean {
-                let bool = false;
-                const keys = Object.keys(map);
+            function allIsFalse(map: { [key: number]: boolean }): boolean {
+                let bool: boolean = false;
+                const keys: string[] = Object.keys(map);
                 keys.forEach((key: string) => bool = bool || map[key]);
 
                 return !bool;
             }
 
-            const {noReasons, massmailing_status, status, reasons} = vm.filter;
-            const reasonCheck: boolean = (!status.UNREGULARIZED && !status.REGULARIZED &&
-                (status.LATENESS || status.NO_REASON || status.PUNISHMENT || status.SANCTION))
-                ? false : (allIsFalse(reasons) && !noReasons);
+            function filtredReasonIsFalse(map: { [key: number]: boolean }, reasons: Reason[] ): boolean {
+                let bool: boolean = false;
+                const keys: string[] = Object.keys(map);
+                keys.filter((key: string) => !!reasons.find((reason: Reason) => reason.id.toString() == key)).forEach((key: string) => bool = bool || map[key]);
+
+                return !bool;
+            }
+
+            const {noReasons, noLatenessReasons, massmailing_status, status, reasons} = vm.filter;
+            const absencesReasonCheck: boolean = ((status.REGULARIZED || status.UNREGULARIZED) && filtredReasonIsFalse(reasons, vm.getAbsenceReasons()) && !noReasons);
+            const latenessReasonCheck: boolean = (status.LATENESS && filtredReasonIsFalse(reasons, vm.getLatenessReasons()) && !noLatenessReasons);
             const massmailingStatusCheck: boolean = allIsFalse(massmailing_status);
             const statusCheck: boolean = allIsFalse(status);
 
             vm.errors = {
-                REASONS: reasonCheck,
+                ABSENCES_REASONS: absencesReasonCheck,
+                LATENESS_REASONS: latenessReasonCheck,
                 STATUS: massmailingStatusCheck,
                 TYPE: statusCheck
             };
 
-            return !(reasonCheck || massmailingStatusCheck || statusCheck);
+            return !(absencesReasonCheck || latenessReasonCheck || massmailingStatusCheck || statusCheck);
         };
 
         const loadFormFilter = async (): Promise<void> => {
@@ -621,7 +688,8 @@ export const homeController = ng.controller('HomeController', ['$scope', 'route'
                 const settings: Promise<any> = SettingsService.get(type, window.structure.id, category);
                 const prefetch: Promise<Massmailing> = MassmailingService.prefetch(
                     type, window.structure.id, massmailedParameter(), reasons, punishmentTypes, sanctionsTypes,
-                    vm.filter.start_at, vm.filter.start_date, vm.filter.end_date, groups, students, types, vm.filter.noReasons
+                    vm.filter.start_at, vm.filter.start_date, vm.filter.end_date, groups, students, types,
+                    vm.filter.noReasons, vm.filter.noLatenessReasons
                 );
                 vm.lightbox.massmailing = true;
                 const data = await Promise.all([settings, prefetch]);
