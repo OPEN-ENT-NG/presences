@@ -1,4 +1,14 @@
-import {Absence, EventResponse, Events, EventType, IEvent, IEventBody, ITimeSlot, Lateness} from "../models";
+import {
+    Absence,
+    EventResponse,
+    Events,
+    EventType,
+    IEvent,
+    IEventBody,
+    ITimeSlot,
+    Lateness,
+    ReasonTypeId
+} from "../models";
 import {Reason} from "@presences/models/Reason";
 import {DateUtils} from "@common/utils";
 
@@ -12,8 +22,10 @@ export interface EventsFilter {
     departure?: boolean;
     regularized?: boolean;
     regularizedNotregularized?: boolean;
-    allReasons?: boolean,
+    allAbsenceReasons?: boolean,
+    allLatenessReasons?: boolean,
     noReasons?: boolean,
+    noReasonsLateness?: boolean,
     reasons?: Reason,
     reasonIds?: number[],
     timeslots?: {
@@ -40,7 +52,8 @@ export interface EventsFormFilter {
     justifiedRegularized?: boolean,
     followed?: boolean,
     notFollowed?: boolean,
-    allReasons?: boolean,
+    allAbsenceReasons?: boolean,
+    allLatenessReasons?: boolean,
     noReasons?: boolean,
     reasonIds?: number[],
     timeslots?: {
@@ -56,8 +69,8 @@ export class EventsUtils {
         absence: 'absence'
     };
 
-    public static addEventsArray = (item: IEvent, events: Array<IEvent | EventResponse>): void => {
-        if (item.type === EventsUtils.ALL_EVENTS.event && item.type_id === 1
+    public static addEventsArray = (item: IEvent, events: Array<IEvent | EventResponse>, reasontype: ReasonTypeId): void => {
+        if (item.type === EventsUtils.ALL_EVENTS.event && item.type_id == reasontype
             && events.map((event: IEvent) => event.id).indexOf(item.id) === -1) {
             events.push(item);
         }
@@ -80,9 +93,9 @@ export class EventsUtils {
      * Method to fetch all ids in the concerned dayHistory and events
      * from one student's event.all
      */
-    public static fetchEvents(event: EventResponse, fetchedEvents: Array<IEvent | EventResponse>) {
+    public static fetchEvents(event: EventResponse, fetchedEvents: Array<IEvent | EventResponse>, reasonType: ReasonTypeId) {
         event.events.forEach((event: IEvent) => {
-            EventsUtils.addEventsArray(event, fetchedEvents);
+            EventsUtils.addEventsArray(event, fetchedEvents, reasonType);
         });
     }
 
@@ -155,10 +168,10 @@ export class EventsUtils {
         return new Set(reasonArray).size === 1;
     };
 
-    public static initGlobalReason = (event: EventResponse): number => {
-        let reasonArray: Array<number> = event.events.map(event => event.reason_id);
+    public static initGlobalReason = (event: EventResponse, reasonType: ReasonTypeId): number => {
+        let reasonArray: Array<number> = event.events.filter((event: IEvent) => event.type_id == reasonType.valueOf()).map(event => event.reason_id);
         /* reasonArray[0] corresponds all same reasonId, 0 if they are different */
-        return new Set(reasonArray).size === 1 ? reasonArray[0] : 0;
+        return new Set(reasonArray).size === 1 ? reasonArray[0] : -1;
     };
 
     /* ----------------------------
@@ -170,4 +183,7 @@ export class EventsUtils {
         return events.some((event: IEvent) => event.type_id === EventType.ABSENCE);
     }
 
+    public static hasTypeEventLateness = (events: Array<IEvent>): boolean => {
+        return events.some((event: IEvent) => event.type_id === EventType.LATENESS);
+    }
 }

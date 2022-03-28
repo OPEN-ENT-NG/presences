@@ -37,16 +37,15 @@
             </div>
         </div>
 
-        <!--description-->
-        <div class="eventFormLightBox-body-description twelve cell margin-bottom-xmd">
-            <div class="twelve">
-                <div class="margin-top-sm">
-                    <i18n>presences.lateness.reason</i18n>
-                </div>
-                <textarea class="latenessText" type="text" data-ng-model="vm.form.comment"
-                          i18n-placeholder="presences.exemptions.form.defautValue.comment.2">
-                </textarea>
-            </div>
+        <!-- Reasons -->
+        <div class="eventFormLightBox-body-info-reason margin-bottom-md table-reason">
+            <label>
+                <select data-ng-model="vm.form.reason_id"
+                        data-ng-change="vm.selectReason()"
+                        ng-options="reason.id as lang.translate(reason.label) disable when reason.hidden for reason in vm.getLatenessReason()">
+                    <option value="">[[lang.translate('presences.absence.select.empty')]]</option>
+                </select>
+            </label>
         </div>
     </div>
 </section>

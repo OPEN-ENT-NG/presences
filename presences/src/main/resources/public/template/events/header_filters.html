@@ -133,20 +133,20 @@
     </div>
 
     <div class="row vertical-spacing" ng-if="vm.formFilter.absences">
-        <!-- Reason Type Filter -->
+        <!-- Reason Absence Type Filter -->
         <h4>
             <i18n>presences.absence.reason.absence</i18n>
         </h4>
         <div class="chips cell overflow-y">
-            <label class="chip" ng-class="{ selected: vm.formFilter.allReasons &&
+            <label class="chip" ng-class="{ selected: vm.formFilter.allAbsenceReasons &&
                    (!vm.formFilter.unjustified ||
                    (vm.formFilter.unjustified &&
                    (vm.formFilter.justifiedNotRegularized || vm.formFilter.justifiedRegularized)))}"
-                   data-ng-click="vm.switchAllReasons()">
+                   data-ng-click="vm.switchAllAbsenceReasons()">
                 <i18n>presences.all.none</i18n>
             </label>
             <label class="chip"
-                   ng-repeat="reason in vm.eventReasonsType track by $index"
+                   ng-repeat="reason in vm.getAbsenceReasons(vm.eventReasonsType) track by $index"
                    ng-class="{ selected: reason.isSelected &&
                    (!vm.formFilter.unjustified ||
                    (vm.formFilter.unjustified &&
@@ -155,6 +155,27 @@
                 <span ng-show="[[reason.id]] !== 0 && !reason.hidden"
                       ng-disabled="vm.formFilter.unjustified &&
                       (!vm.formFilter.justifiedNotRegularized && !vm.formFilter.justifiedRegularized)">
+                    [[lang.translate(reason.label)]]
+                </span>
+            </label>
+        </div>
+    </div>
+
+    <div class="row vertical-spacing" ng-if="vm.formFilter.late">
+        <!-- Reason Lateness Type Filter -->
+        <h4>
+            <i18n>presences.lateness.reason.lateness</i18n>
+        </h4>
+        <div class="chips cell overflow-y">
+            <label class="chip" ng-class="{ selected: vm.formFilter.allLatenessReasons}"
+                   data-ng-click="vm.switchAllLatenessReasons()">
+                <i18n>presences.all.none</i18n>
+            </label>
+            <label class="chip"
+                   ng-repeat="reason in vm.getLatenessReasonsWithNoReason(vm.eventReasonsType) track by $index"
+                   ng-class="{ selected: reason.isSelected}"
+                   ng-click="vm.switchReason(reason)">
+                <span ng-show="!reason.hidden">
                     [[lang.translate(reason.label)]]
                 </span>
             </label>

@@ -32,6 +32,7 @@ export interface EventRequest {
     startTime?: string;
     endTime?: string;
     noReason?: boolean;
+    noReasonLateness?: boolean;
     eventType: string;
     listReasonIds?: string;
     regularized?: boolean;
@@ -54,6 +55,7 @@ export const eventService: EventService = {
             const startTime: string = eventRequest.startTime ? `&startTime=${eventRequest.startTime}` : '';
             const endTime: string = eventRequest.endTime ? `&endTime=${eventRequest.endTime}` : '';
             const noReason: string = eventRequest.noReason ? `&noReason=${eventRequest.noReason}` : '';
+            const noReasonLateness: string = eventRequest.noReasonLateness ? `&noReason=${eventRequest.noReasonLateness}` : '';
             const eventType: string = eventRequest.eventType ? `&eventType=${eventRequest.eventType}` : '';
             const listReasonIds: string = eventRequest.listReasonIds ? `&reasonIds=${eventRequest.listReasonIds}` : '';
             const userId: string = eventRequest.userId && eventRequest.userId.length > 0 ? `&userId=${eventRequest.userId}` : '';
@@ -78,8 +80,8 @@ export const eventService: EventService = {
             const page: string = eventRequest.page ? `&page=${eventRequest.page}` : '';
 
 
-            const urlParams: string = `${structureId}${startDate}${endDate}${startTime}${endTime}${noReason}${eventType}${listReasonIds}
-            ${userId}${userIds}${classes}${classesIds}${regularized}${followed}${page}`;
+            const urlParams: string = `${structureId}${startDate}${endDate}${startTime}${endTime}${noReason}${noReasonLateness}
+            ${eventType}${listReasonIds}${userId}${userIds}${classes}${classesIds}${regularized}${followed}${page}`;
 
             const {data}: AxiosResponse = await http.get(`/presences/events${urlParams}`);
 

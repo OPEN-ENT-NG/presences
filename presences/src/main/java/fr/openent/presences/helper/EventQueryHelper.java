@@ -62,10 +62,18 @@ public class EventQueryHelper {
      * @return {String}
      */
     public static String addMainReasonEvent() {
-        return " (CASE " +
-                " WHEN count(DISTINCT CASE WHEN e.type_id = 1 then coalesce(e.reason_id, 1) end) > 1 " +
-                " THEN -1 " +
-                " ELSE (array_agg(e.reason_id) FILTER (WHERE e.type_id = 1))[1] END) AS reason_id, ";
+        return " (CASE WHEN count(DISTINCT CASE WHEN e.type_id = 1 then coalesce(e.reason_id, 1) end) = 0 " +
+                " THEN " +
+                "  CASE WHEN count(DISTINCT CASE WHEN e.type_id = 2 then coalesce(e.reason_id, 1) end) > 1 " +
+                "   THEN -1 " +
+                "   ELSE (array_agg(e.reason_id) FILTER (WHERE e.type_id = 2))[1] " +
+                "  END " +
+                " ELSE " +
+                "  CASE WHEN count(DISTINCT CASE WHEN e.type_id = 1 then coalesce(e.reason_id, 1) end) > 1 " +
+                "   THEN -1 " +
+                "   ELSE (array_agg(e.reason_id) FILTER (WHERE e.type_id = 1))[1] " +
+                " END " +
+                "END) AS reason_id, ";
     }
 
     /**
@@ -160,53 +168,54 @@ public class EventQueryHelper {
      * This method filter reason (by including several rules between regularized and reasons)
      *
      * @param reasonIds   list of reason ids
-     * @param noReason    no reason wish to not display boolean
+     * @param noAbsenceReason    no reason wish to not display boolean
+     * @param noLatenessReason    no reason wish to not display boolean
      * @param regularized regularized wish to display boolean
      * @param params      JsonArray params where you add the reasonIds, no reason and regularized boolean
      * @return {String}
      */
-    public static String filterReasons(List<String> reasonIds, Boolean noReason, Boolean regularized,
+    public static String filterReasons(List<String> reasonIds, Boolean noAbsenceReason, Boolean noLatenessReason, Boolean regularized,
                                        List<String> typeIds, JsonArray params) {
-        String query = "";
+        if (!noAbsenceReason && !noLatenessReason && (reasonIds == null || reasonIds.isEmpty()) && regularized == null)
+            return "";
 
-        // this condition occurs when we want to filter no reason and regularized event at the same time
-        if ((noReason != null && noReason) && (regularized != null && regularized)) {
-            query += "AND (reason_id IS NULL OR (reason_id IS NOT NULL AND counsellor_regularisation = true)";
+        String query = "AND (";
+        query += "(type_id != 1 AND type_id != 2)";
+        if (noAbsenceReason || (reasonIds != null && !reasonIds.isEmpty()) || regularized != null) {
+            query += " OR (type_id = 1 ";
             if (reasonIds != null && !reasonIds.isEmpty()) {
-                query += " AND reason_id IN " + Sql.listPrepared(reasonIds);
+                query += " AND (reason_id IN " + Sql.listPrepared(reasonIds);
                 params.addAll(new JsonArray(reasonIds));
-            }
-            query += ")";
-
-            // else is default condition
-        } else {
-            // If we want to fetch events WITH reasonId, array reasonIds fetched is not empty
-            // (optional if we wish noReason fetched at same time then noReason is TRUE)
-            if (reasonIds != null && !reasonIds.isEmpty()) {
-                query += " AND ((reason_id IN " + Sql.listPrepared(reasonIds) + ")";
-
-                if (noReason != null && noReason) {
+                if (noAbsenceReason) {
                     query += " OR reason_id IS NULL";
-                } else {
-                    query += typeIds.contains(EventType.LATENESS.getType().toString())
-                            ? (" OR type_id = " + EventType.LATENESS.getType()) : "";
                 }
                 query += ")";
-                params.addAll(new JsonArray(reasonIds));
+            }
+            else if (noAbsenceReason) {
+                query += " AND reason_id IS NULL";
             }
 
-            // If we want to fetch events with NO reasonId, array reasonIds fetched is empty
-            // AND noReason is TRUE
-            if (reasonIds != null && reasonIds.isEmpty() && (noReason != null && noReason)) {
-                query += " AND (reason_id IS NULL " + (regularized != null ? " OR counsellor_regularisation = " + regularized + "" : "") + ") ";
-            }
-
-            if (regularized != null) {
-                query += " AND (counsellor_regularisation = " + regularized
-                        + " OR type_id != " + EventType.ABSENCE.getType() +") ";
-            }
+            query += (regularized != null ? " AND counsellor_regularisation = " + regularized + "" : "");
+            query += ")";
         }
 
+        if (noLatenessReason || (reasonIds != null && !reasonIds.isEmpty())){
+            query += " OR (type_id = 2 ";
+            if (reasonIds != null && !reasonIds.isEmpty()) {
+                query += " AND (reason_id IN " + Sql.listPrepared(reasonIds);
+                params.addAll(new JsonArray(reasonIds));
+                if (noLatenessReason) {
+                    query += " OR reason_id IS NULL";
+                }
+                query += ")";
+            }
+            else if (noLatenessReason) {
+                query += " AND reason_id IS NULL";
+            }
+            query += ")";
+        }
+
+        query += ")";
         return query;
     }
 

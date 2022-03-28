@@ -19,6 +19,7 @@ import {ABSENCE_FORM_EVENTS, LATENESS_FORM_EVENTS} from '@common/core/enum/prese
 import {EventsUtils} from '../utilities';
 import {AxiosError, AxiosResponse} from 'axios';
 import {PeriodFormUtils} from "@common/utils/periodForm";
+import {REASON_TYPE_ID} from "@common/core/enum/reason-type-id";
 
 console.log('eventFormSniplets');
 
@@ -165,6 +166,10 @@ interface ViewModel {
     defaultTimeSlot(): void;
 
     safeApply(fn?: () => void): void;
+
+    getAbsenceReason(): Reason[];
+
+    getLatenessReason(): Reason[];
 }
 
 const vm: ViewModel = {
@@ -641,6 +646,7 @@ const vm: ViewModel = {
         vm.eventBody.comment = vm.form.comment ? vm.form.comment : "";
         vm.eventBody.register_id = vm.form.register_id ? vm.form.register_id : -1;
         vm.eventBody.type_id = EventType.LATENESS;
+        vm.eventBody.reason_id = vm.form.reason_id
     },
 
     async createLateness(): Promise<void> {
@@ -765,6 +771,13 @@ const vm: ViewModel = {
         }
     },
 
+    getAbsenceReason: (): Reason[] => {
+        return vm.reasons.filter((reason: Reason) => reason.reason_type_id == REASON_TYPE_ID.ABSENCE);
+    },
+
+    getLatenessReason: (): Reason[] => {
+        return vm.reasons.filter((reason: Reason) => reason.reason_type_id == REASON_TYPE_ID.LATENESS);
+    },
 
 };
 
@@ -799,7 +812,7 @@ export const eventsForm = {
             this.$on(SNIPLET_FORM_EVENTS.SET_PARAMS, (event: IAngularEvent, arg) => vm.setFormParams(arg));
 
             this.$watch(() => window.structure, async () => {
-                vm.reasons = await reasonService.getReasons(window.structure.id);
+                vm.reasons = await reasonService.getReasons(window.structure.id, REASON_TYPE_ID.ALL);
                 this.getStructureTimeSlot();
                 vm.safeApply();
             });

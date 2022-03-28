@@ -80,14 +80,14 @@ public class DefaultEventService extends DBService implements EventService {
 
     @Override
     public void get(String structureId, String startDate, String endDate, String startTime, String endTime,
-                    List<String> eventType, List<String> listReasonIds, Boolean noReason, List<String> userId,
+                    List<String> eventType, List<String> listReasonIds, Boolean noAbsenceReason, Boolean noLatenessReason, List<String> userId,
                     List<String> restrictedClasses, Boolean regularized, Boolean followed, Integer page, Handler<AsyncResult<JsonArray>> handler) {
 
         Future<JsonArray> eventsFuture = Future.future();
         Future<JsonObject> slotsFuture = Future.future();
 
-        getDayMainEvents(structureId, startDate, endDate, startTime, endTime, userId, eventType, listReasonIds, noReason, regularized,
-                followed, page, eventsFuture);
+        getDayMainEvents(structureId, startDate, endDate, startTime, endTime, userId, eventType, listReasonIds, noAbsenceReason,
+                noLatenessReason, regularized, followed, page, eventsFuture);
         slotHelper.getTimeSlots(structureId, FutureHelper.handlerJsonObject(slotsFuture));
 
 
@@ -129,7 +129,7 @@ public class DefaultEventService extends DBService implements EventService {
                         Future<JsonObject> studentFuture = Future.future();
 
                         eventHelper.addStudentsToEvents(structureId, events, studentIds, restrictedClasses, startDate, endDate, startTime,
-                                endTime, eventType, listReasonIds, noReason, regularized, followed, absences,
+                                endTime, eventType, listReasonIds, noAbsenceReason, noLatenessReason, regularized, followed, absences,
                                 slotsFuture.result(), studentFuture);
 
                         studentFuture.setHandler(addInfoResult -> {
@@ -201,11 +201,11 @@ public class DefaultEventService extends DBService implements EventService {
     @Override
     public void getDayMainEvents(String structureId, String startDate, String endDate, String startTime, String endTime,
                                  List<String> studentIds, List<String> typeIds,
-                                 List<String> reasonIds, Boolean noReason, Boolean regularized, Boolean followed,
+                                 List<String> reasonIds, Boolean noAbsenceReason,Boolean noLatenessReason , Boolean regularized, Boolean followed,
                                  Integer page, Handler<AsyncResult<JsonArray>> handler) {
         JsonArray params = new JsonArray();
         String query = getDayMainEventsQuery(structureId, startDate, endDate, startTime,
-                endTime, studentIds, typeIds, reasonIds, noReason, regularized, followed, params) +
+                endTime, studentIds, typeIds, reasonIds, noAbsenceReason, noLatenessReason, regularized, followed, params) +
                 " ORDER BY date DESC, created DESC, student_id " +
                 " OFFSET ? LIMIT ? ";
 
@@ -215,8 +215,8 @@ public class DefaultEventService extends DBService implements EventService {
     }
 
     private String getDayMainEventsQuery(String structureId, String startDate, String endDate, String startTime, String endTime,
-                                         List<String> studentIds, List<String> typeIds, List<String> reasonIds, Boolean noReason,
-                                         Boolean regularized, Boolean followed, JsonArray params) {
+                                         List<String> studentIds, List<String> typeIds, List<String> reasonIds, Boolean noAbsenceReason,
+                                         Boolean noLatenessReason, Boolean regularized, Boolean followed, JsonArray params) {
         return "SELECT e.student_id AS student_id, " +
                 " e.start_date::date AS date, " +
                 " 'event'::text AS TYPE, " +
@@ -231,7 +231,7 @@ public class DefaultEventService extends DBService implements EventService {
                 EventQueryHelper.filterTimes(startTime, endTime, params) +
                 EventQueryHelper.filterStudentIds(studentIds, params) +
                 EventQueryHelper.filterFollowed(followed, params) +
-                EventQueryHelper.filterReasons(reasonIds, noReason, regularized, typeIds, params) +
+                EventQueryHelper.filterReasons(reasonIds, noAbsenceReason, noLatenessReason, regularized, typeIds, params) +
                 " GROUP BY student_id, date ";
     }
 
@@ -319,22 +319,22 @@ public class DefaultEventService extends DBService implements EventService {
 
     @Override
     public void getPageNumber(String structureId, String startDate, String endDate, String startTime, String endTime,
-                              List<String> eventType, List<String> listReasonIds, Boolean noReason, List<String> userId,
+                              List<String> eventType, List<String> listReasonIds, Boolean noAbsenceReason, Boolean noLatenessReason, List<String> userId,
                               Boolean regularized, Boolean followed, Handler<Either<String, JsonObject>> handler) {
         JsonArray params = new JsonArray();
         Sql.getInstance().prepared(this.getEventsQueryPagination(structureId, startDate, endDate, startTime, endTime, eventType,
-                userId, listReasonIds, noReason, regularized, followed, params), params, SqlResult.validUniqueResultHandler(handler));
+                userId, listReasonIds, noAbsenceReason, noLatenessReason, regularized, followed, params), params, SqlResult.validUniqueResultHandler(handler));
     }
 
     private String getEventsQueryPagination(String structureId, String startDate, String endDate, String startTime, String endTime,
-                                            List<String> eventType, List<String> userId, List<String> listReasonIds, Boolean noReason,
+                                            List<String> eventType, List<String> userId, List<String> listReasonIds, Boolean noAbsenceReason, Boolean noLatenessReason,
                                             Boolean regularized, Boolean followed, JsonArray params) {
         return " SELECT count(DISTINCT (e.student_id, e.start_date::date)) FROM " + Presences.dbSchema + ".event e " +
                 EventQueryHelper.joinRegister(structureId, params) +
                 EventQueryHelper.joinEventType(eventType, params) +
                 EventQueryHelper.filterDates(startDate, endDate, params) +
                 EventQueryHelper.filterTimes(startTime, endTime, params) +
-                EventQueryHelper.filterReasons(listReasonIds, noReason, regularized, eventType, params) +
+                EventQueryHelper.filterReasons(listReasonIds, noAbsenceReason, noLatenessReason, regularized, eventType, params) +
                 EventQueryHelper.filterStudentIds(userId, params) +
                 EventQueryHelper.filterFollowed(followed, params);
     }
@@ -854,12 +854,12 @@ public class DefaultEventService extends DBService implements EventService {
                 "       array_to_json(array_agg(e)) as events " +
                 "      FROM presences.absence a " +
                 "         RIGHT JOIN presences.event e " +
-                "                    ON e.type_id = 1 " +
-                "                        AND (a.student_id = e.student_id) " +
+                "                    ON (a.student_id = e.student_id) " +
                 "                        AND e.student_id = ?" +
                 "                        AND ((a.start_date < e.end_date AND e.start_date < a.end_date) OR " +
                 "                             (e.start_date < a.end_date AND a.start_date < e.end_date)) " +
-                "      WHERE ((e.start_date < ? AND ? < e.end_date) " +
+                "      WHERE e.type_id = 1 AND " +
+                "       ((e.start_date < ? AND ? < e.end_date) " +
                 "       OR (? < e.end_date AND e.start_date < ?) " +
                 "       OR (a.start_date < ? AND ? < a.end_date) " +
                 "       OR (? < a.end_date AND a.start_date < ?)) " +
