@@ -36,7 +36,7 @@
             <div class="select-reason-absences right-magnet margin-bottom-md">
                 <label>
                     <select ng-model="vm.filter.student.absence.reason_id"
-                            ng-options="reason.id as reason.label disable when reason.hidden for reason in vm.reasons"
+                            ng-options="reason.id as reason.label disable when reason.hidden for reason in vm.getAbsenceReason()"
                             ng-change="vm.manageAbsence(vm.filter.student.absence, vm.filter.student)">
                         <option value="">
                             [[lang.translate('presences.absence.select.empty')]]
@@ -62,8 +62,19 @@
                     vm.isAbsenceDisabledWithoutWorkFlow(vm.filter.student)"
                     ng-model="vm.filter.student.lateness.end_date_time"
                     ng-change="vm.updateLateness()"></time-picker>
+            <div ng-if="hasRight('managePresences')" class="select-reason-absences right-magnet margin-bottom-md">
+                <label>
+                    <select ng-model="vm.filter.student.lateness.reason_id"
+                            ng-options="reason.id as reason.label disable when reason.hidden for reason in vm.getLatenessReason()"
+                            ng-change="vm.manageLateness(vm.filter.student.lateness, vm.filter.student)">
+                        <option value="">
+                            [[lang.translate('presences.absence.select.empty')]]
+                        </option>
+                    </select>
+                </label>
+            </div>
         </div>
-        <div class="row">
+        <div ng-if="!hasRight('managePresences')" class="row">
             <label>
                 <i18n>presences.lateness.reason</i18n>
                 <textarea

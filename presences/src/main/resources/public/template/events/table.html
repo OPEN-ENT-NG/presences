@@ -70,10 +70,26 @@
         <!-- Select reason-->
         <th class="table-reason text-center">
             <label ng-if="vm.isEachEventAbsence(event)">
+                <div class="table-reason-icon">
+                    <i class="calendar-remove"></i>
+                </div>
                 <select data-ng-model="event.reason.id"
                         data-ng-click="vm.reasonSelect($event)"
-                        data-ng-change="vm.changeAllReason(event, event.student.id)"
-                        ng-options="reason.id as lang.translate(reason.label) disable when reason.hidden for reason in vm.filterSelect(vm.eventReasonsType, event)">
+                        data-ng-change="vm.changeAllReason(event, event.student.id, vm.reasonType.ABSENCE)"
+                        ng-options="reason.id as lang.translate(reason.label) disable when reason.hidden for reason in vm.getAbsenceReasonsWithMultipleSelection(vm.filterSelect(vm.eventReasonsType, event))"
+                        class="table-reason-select">
+                    <option value="">[[lang.translate('presences.absence.select.empty')]]</option>
+                </select>
+            </label>
+            <label ng-if="!vm.isEachEventAbsence(event) && vm.isEachEventLateness(event)">
+                <div class="table-reason-icon">
+                    <i class="uncolored-time-picker"></i>
+                </div>
+                <select data-ng-model="event.reason.id"
+                        data-ng-click="vm.reasonSelect($event)"
+                        data-ng-change="vm.changeAllReason(event, event.student.id, vm.reasonType.LATENESS)"
+                        ng-options="reason.id as lang.translate(reason.label) disable when reason.hidden for reason in vm.getLatenessReasonsWithMultipleSelection(vm.filterSelect(vm.eventReasonsType, event))"
+                        class="table-reason-select">
                     <option value="">[[lang.translate('presences.absence.select.empty')]]</option>
                 </select>
             </label>
@@ -95,7 +111,7 @@
         <!-- Absence regularised -->
         <th class="text-center">
             <label class="checkbox"
-                   ng-show="!vm.hideGlobalCheckbox(event)"
+                   ng-show="!vm.hideGlobalCheckbox(event) && vm.isEachEventAbsence(event)"
                    ng-style="{
                         'pointer-events': 'all'
                     }"
@@ -137,10 +153,25 @@
         <!-- description under events select reason -->
         <td class="text-center padding-sm" style="width: 18%">
             <span class="events-table-body-description-content-select table-reason">
-                 <label ng-if="history.type_id == 1">
+                <label ng-if="history.type_id == 1">
+                    <div class="table-reason-icon">
+                        <i class="calendar-remove"></i>
+                    </div>
                     <select data-ng-model="history.reason_id"
-                            data-ng-change="vm.changeReason(history, event, event.student.id)"
-                            ng-options="reason.id as lang.translate(reason.label) disable when reason.hidden for reason in vm.eventReasonsTypeDescription">
+                            data-ng-change="vm.changeReason(history, event, event.student.id, vm.reasonType.ABSENCE)"
+                            ng-options="reason.id as lang.translate(reason.label) disable when reason.hidden for reason in vm.getAbsenceReasons(vm.eventReasonsTypeDescription)"
+                            class="table-reason-select">
+                        <option value="">[[lang.translate('presences.absence.select.empty')]]</option>
+                    </select>
+                </label>
+                <label ng-if="history.type_id == 2">
+                    <div class="table-reason-icon">
+                        <i class="uncolored-time-picker"></i>
+                    </div>
+                    <select data-ng-model="history.reason_id"
+                            data-ng-change="vm.changeReason(history, event, event.student.id, vm.reasonType.LATENESS)"
+                            ng-options="reason.id as lang.translate(reason.label) disable when reason.hidden for reason in vm.getLatenessReasons(vm.eventReasonsTypeDescription)"
+                            class="table-reason-select">
                         <option value="">[[lang.translate('presences.absence.select.empty')]]</option>
                     </select>
                 </label>
@@ -158,7 +189,8 @@
 
         <!-- description under events regularized -->
         <td class="text-center padding-sm" style="width: 4%">
-            <label class="events-table-body-description-content-checkbox checkbox"
+            <label ng-show="history.reason_id == vm.reasonType.ABSENCE"
+                   class="events-table-body-description-content-checkbox checkbox"
                    ng-style="{
                       opacity: !vm.provingReasonsMap[history.reason_id] && history.reason_id !== null ? 1 : 0,
                       'pointer-events': history.reason_id !== null && !vm.provingReasonsMap[history.reason_id] ? 'all' : 'none'

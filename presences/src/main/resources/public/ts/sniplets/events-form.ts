@@ -1,4 +1,4 @@
-import {EVENT_TYPES, IStructureSlot, ITimeSlot, SNIPLET_FORM_EMIT_EVENTS, SNIPLET_FORM_EVENTS} from '@common/model';
+import {IStructureSlot, ITimeSlot, SNIPLET_FORM_EMIT_EVENTS, SNIPLET_FORM_EVENTS} from '@common/model';
 import {
     Absence,
     AbsenceEventResponse,
@@ -19,12 +19,14 @@ import {ABSENCE_FORM_EVENTS, LATENESS_FORM_EVENTS} from '@common/core/enum/prese
 import {EventsUtils} from '../utilities';
 import {AxiosError, AxiosResponse} from 'axios';
 import {PeriodFormUtils} from "@common/utils/periodForm";
+import {REASON_TYPE_ID} from "@common/core/enum/reason-type-id";
+import {EVENT_TYPE} from "@common/core/enum/event-type";
 
 console.log('eventFormSniplets');
 
 declare let window: any;
 
-type TEventType = 'ABSENCE' | 'LATENESS';
+type TEventType = EVENT_TYPE;
 
 interface IFormData {
     id?: number;
@@ -165,6 +167,10 @@ interface ViewModel {
     defaultTimeSlot(): void;
 
     safeApply(fn?: () => void): void;
+
+    getAbsenceReason(): Reason[];
+
+    getLatenessReason(): Reason[];
 }
 
 const vm: ViewModel = {
@@ -174,7 +180,7 @@ const vm: ViewModel = {
     form: null,
     eventBody: null,
     event: null,
-    eventsTypes: ['ABSENCE', 'LATENESS'],
+    eventsTypes: [EVENT_TYPE.ABSENCE, EVENT_TYPE.LATENESS],
     selectedEventType: null,
     isEventEditable: true,
     selectedReason: null,
@@ -188,12 +194,14 @@ const vm: ViewModel = {
 
     switchEventTypeForm: (eventType: TEventType): void => {
         switch (eventType) {
-            case 'ABSENCE':
-                vm.selectedEventType = 'ABSENCE';
+            case EVENT_TYPE.ABSENCE:
+                vm.selectedEventType = EVENT_TYPE.ABSENCE;
+                vm.form.reason_id = vm.getAbsenceReason().find((reason: Reason) => reason.id == vm.form.reason_id) ? vm.form.reason_id : null;
                 break;
-            case 'LATENESS':
-                vm.selectedEventType = 'LATENESS';
+            case EVENT_TYPE.LATENESS:
+                vm.selectedEventType = EVENT_TYPE.LATENESS;
                 vm.form.endDateTime = moment(new Date()).set({second: 0, millisecond: 0}).toDate();
+                vm.form.reason_id = vm.getLatenessReason().find((reason: Reason) => reason.id == vm.form.reason_id) ? vm.form.reason_id : null;
                 break;
         }
         vm.setFormEventType(eventType);
@@ -202,10 +210,10 @@ const vm: ViewModel = {
     getEventTypeLabel: (eventType: TEventType): string => {
         let i18n: string;
         switch (eventType) {
-            case 'ABSENCE':
+            case EVENT_TYPE.ABSENCE:
                 i18n = 'presences.register.event_type.absences';
                 break;
-            case 'LATENESS':
+            case EVENT_TYPE.LATENESS:
                 i18n = 'presences.register.event_type.lateness';
                 break;
             default:
@@ -277,10 +285,10 @@ const vm: ViewModel = {
 
     setFormEventType: (eventType: TEventType): void => {
         switch (eventType) {
-            case 'ABSENCE':
+            case EVENT_TYPE.ABSENCE:
                 (<Absence>vm.event) = new Absence(null, null, null, null);
                 break;
-            case 'LATENESS':
+            case EVENT_TYPE.LATENESS:
                 (<Lateness>vm.event) = new Lateness(null, null, null, null);
                 break;
         }
@@ -304,7 +312,7 @@ const vm: ViewModel = {
             vm.form.followed = response.data.followed;
             vm.form.counsellor_regularisation = response.data.counsellor_regularisation;
             vm.form.type_id = EventType.ABSENCE;
-            vm.form.eventType = 'ABSENCE';
+            vm.form.eventType = EVENT_TYPE.ABSENCE;
             vm.setFormDateParams(vm.form.startDate, vm.form.endDate);
             vm.setTimeSlot();
         } else {
@@ -321,11 +329,12 @@ const vm: ViewModel = {
         vm.form.student_id = data.studentId;
         vm.form.comment = data.comment;
         switch (eventType) {
-            case 'LATENESS':
+            case EVENT_TYPE.LATENESS:
                 vm.form.startDate = data.startDate;
                 vm.form.endDate = data.endDate;
                 vm.form.type_id = EventType.LATENESS;
-                vm.form.eventType = 'LATENESS';
+                vm.form.eventType = EVENT_TYPE.LATENESS;
+                vm.form.reason_id = data.absences && data.absences.length > 0 ? data.absences[0].reason_id : null;
                 vm.setFormDateParams(vm.form.startDate, vm.form.endDate);
                 break;
         }
@@ -347,7 +356,7 @@ const vm: ViewModel = {
         vm.form.endDate = data.endDate;
         vm.form.student_id = data.studentId;
         vm.form.type_id = EventType.ABSENCE;
-        vm.form.eventType = 'ABSENCE';
+        vm.form.eventType = EVENT_TYPE.ABSENCE;
         vm.form.reason_id = data.reason_id ? data.reason_id : vm.form.absences
             .find(a => 'type' in a || 'type_id' in a).reason_id;
 
@@ -367,19 +376,19 @@ const vm: ViewModel = {
      */
     isFormValid: (eventType: TEventType): boolean => {
         switch (eventType) {
-            case 'ABSENCE':
+            case EVENT_TYPE.ABSENCE:
                 if (
                     vm.form && vm.form.startDate && vm.form.startDateTime
                     && ((vm.display.isFreeSchedule && vm.form.endDate && vm.form.endDateTime) ||
-                    (!vm.display.isFreeSchedule && vm.timeSlotTimePeriod
-                        && vm.timeSlotTimePeriod.start && vm.timeSlotTimePeriod.start.startHour
-                        && vm.timeSlotTimePeriod.end && vm.timeSlotTimePeriod.end.endHour))
+                        (!vm.display.isFreeSchedule && vm.timeSlotTimePeriod
+                            && vm.timeSlotTimePeriod.start && vm.timeSlotTimePeriod.start.startHour
+                            && vm.timeSlotTimePeriod.end && vm.timeSlotTimePeriod.end.endHour))
                 ) {
                     return (DateUtils.getDateFormat(vm.form.startDate, vm.form.startDateTime) <=
                         DateUtils.getDateFormat(vm.form.endDate, vm.form.endDateTime));
                 }
                 return false;
-            case 'LATENESS':
+            case EVENT_TYPE.LATENESS:
                 if (vm.form && vm.form.startDate && vm.timeSlotTimePeriod
                     && vm.timeSlotTimePeriod.start && vm.timeSlotTimePeriod.start.startHour
                     && vm.timeSlotTimePeriod.end && vm.timeSlotTimePeriod.end.endHour && vm.form.endDateTime) {
@@ -388,8 +397,8 @@ const vm: ViewModel = {
                             DateUtils.getDateFormat(vm.form.startDate,
                                 DateUtils.getTimeFormatDate(vm.timeSlotTimePeriod.start.startHour)))
                         && (DateUtils.getDateFormat(vm.form.startDate, vm.form.endDateTime) <=
-                                        DateUtils.getDateFormat(vm.form.startDate,
-                                            DateUtils.getTimeFormatDate(vm.timeSlotTimePeriod.end.endHour)))
+                            DateUtils.getDateFormat(vm.form.startDate,
+                                DateUtils.getTimeFormatDate(vm.timeSlotTimePeriod.end.endHour)))
                         && moment(vm.form.endDateTime).isBefore(moment(DateUtils.setLastTime(new Date()))));
                 }
                 return false;
@@ -399,7 +408,7 @@ const vm: ViewModel = {
     selectReason(): void {
         vm.selectedReason = vm.reasons.find(reason => reason.id === vm.form.reason_id);
         vm.canRegularize = (vm.selectedReason) ? (!vm.selectedReason.proving) : false;
-        vm.updateAbsenceRegularisation = vm.selectedReason ? vm.selectedReason.proving : false;
+        vm.updateAbsenceRegularisation = vm.selectedEventType == EVENT_TYPE.ABSENCE && (vm.selectedReason ? vm.selectedReason.proving : false);
         vm.form.counsellor_regularisation = vm.selectedReason ? vm.selectedReason.proving : false;
         if (vm.form.absences) {
             vm.form.absences.forEach((absence: IAbsence) => absence.counsellor_regularisation = vm.selectedReason ? vm.selectedReason.proving : false);
@@ -408,10 +417,10 @@ const vm: ViewModel = {
 
     submitEvent(eventType: TEventType): void {
         switch (eventType) {
-            case 'ABSENCE':
+            case EVENT_TYPE.ABSENCE:
                 vm.createAbsence();
                 break;
-            case 'LATENESS':
+            case EVENT_TYPE.LATENESS:
                 vm.createLateness();
                 break;
         }
@@ -419,17 +428,17 @@ const vm: ViewModel = {
 
     editEvent(eventType: TEventType): void {
         switch (eventType) {
-            case 'ABSENCE':
-                if (vm.form.eventType !== 'ABSENCE') {
+            case EVENT_TYPE.ABSENCE:
+                if (vm.form.eventType !== EVENT_TYPE.ABSENCE) {
                     vm.deleteEvent(vm.form.eventType, false);
                     vm.createAbsence();
                 } else {
                     vm.updateAbsence();
                 }
                 break;
-            case 'LATENESS':
-                if (vm.form.eventType !== 'LATENESS') {
-                    if (vm.form.eventType === 'ABSENCE') {
+            case EVENT_TYPE.LATENESS:
+                if (vm.form.eventType !== EVENT_TYPE.LATENESS) {
+                    if (vm.form.eventType === EVENT_TYPE.ABSENCE) {
                         vm.event = new Absence(null, null, null, null);
                     }
                     vm.deleteEvent(vm.form.eventType, false);
@@ -443,10 +452,10 @@ const vm: ViewModel = {
 
     canSwitchEventTypeForm(eventType: TEventType): boolean {
         switch (eventType) {
-            case 'ABSENCE':
+            case EVENT_TYPE.ABSENCE:
                 return true;
-            case 'LATENESS':
-                if (vm.form && vm.form.eventType === 'ABSENCE') {
+            case EVENT_TYPE.LATENESS:
+                if (vm.form && vm.form.eventType === EVENT_TYPE.ABSENCE) {
                     let startDate: string = DateUtils.format(vm.form.startDate.toDateString(), DateUtils.FORMAT["YEAR-MONTH-DAY"]);
                     let endDate: string = DateUtils.format(vm.form.endDate.toDateString(), DateUtils.FORMAT["YEAR-MONTH-DAY"])
                     return startDate === endDate
@@ -460,10 +469,10 @@ const vm: ViewModel = {
 
     deleteEvent(eventType: TEventType, canReload: boolean): void {
         switch (eventType) {
-            case 'ABSENCE':
+            case EVENT_TYPE.ABSENCE:
                 vm.deleteAbsence(canReload);
                 break;
-            case 'LATENESS':
+            case EVENT_TYPE.LATENESS:
                 vm.deleteLateness(canReload);
                 break;
         }
@@ -500,7 +509,8 @@ const vm: ViewModel = {
         }
         let response: AxiosResponse = await (<Absence>vm.event).createAbsence(window.structure.id, vm.eventBody.reason_id, model.me.userId);
         if (response.status === 200 || response.status === 201) {
-            let presences: Presence[] = await presenceService.get({structureId: window.structure.id,
+            let presences: Presence[] = await presenceService.get({
+                structureId: window.structure.id,
                 startDate: DateUtils.format(vm.eventBody.start_date, DateUtils.FORMAT["YEAR-MONTH-DAY"]),
                 endDate: DateUtils.format(vm.eventBody.end_date, DateUtils.FORMAT["YEAR-MONTH-DAY"]),
                 studentIds: [vm.eventBody.student_id]
@@ -641,6 +651,7 @@ const vm: ViewModel = {
         vm.eventBody.comment = vm.form.comment ? vm.form.comment : "";
         vm.eventBody.register_id = vm.form.register_id ? vm.form.register_id : -1;
         vm.eventBody.type_id = EventType.LATENESS;
+        vm.eventBody.reason_id = vm.form.reason_id;
     },
 
     async createLateness(): Promise<void> {
@@ -708,7 +719,7 @@ const vm: ViewModel = {
 
     selectDatePicker: (date: Date, eventType: TEventType): void => {
         switch (eventType) {
-            case "LATENESS":
+            case EVENT_TYPE.LATENESS:
                 vm.form.startDate = date;
                 vm.form.endDate = date;
                 break;
@@ -717,8 +728,8 @@ const vm: ViewModel = {
 
     selectTimeSlot: (hourPeriod: TimeSlotHourPeriod): void => {
         switch (vm.selectedEventType) {
-            case EVENT_TYPES.LATENESS:
-                vm.form.endDateTime =  moment(DateUtils.getDateFormat(vm.form.startDate,
+            case EVENT_TYPE.LATENESS:
+                vm.form.endDateTime = moment(DateUtils.getDateFormat(vm.form.startDate,
                     DateUtils.getTimeFormatDate(vm.timeSlotTimePeriod.start.startHour))).toDate();
                 break;
         }
@@ -765,6 +776,13 @@ const vm: ViewModel = {
         }
     },
 
+    getAbsenceReason: (): Reason[] => {
+        return vm.reasons.filter((reason: Reason) => reason.reason_type_id == REASON_TYPE_ID.ABSENCE);
+    },
+
+    getLatenessReason: (): Reason[] => {
+        return vm.reasons.filter((reason: Reason) => reason.reason_type_id == REASON_TYPE_ID.LATENESS);
+    },
 
 };
 
@@ -786,20 +804,20 @@ export const eventsForm = {
         setHandler: async function () {
 
             /* Absence event */
-            this.$on(ABSENCE_FORM_EVENTS.OPEN, (event: IAngularEvent, args: IEventFormBody) => vm.openEventLightbox('ABSENCE', event, args));
-            this.$on(ABSENCE_FORM_EVENTS.EDIT, (event: IAngularEvent, args: IEventFormBody) => vm.editAbsenceForm('ABSENCE', args));
-            this.$on(ABSENCE_FORM_EVENTS.EDIT_EVENT, (event: IAngularEvent, args: IEventFormBody) => vm.editEventAbsenceForm('ABSENCE', args));
+            this.$on(ABSENCE_FORM_EVENTS.OPEN, (event: IAngularEvent, args: IEventFormBody) => vm.openEventLightbox(EVENT_TYPE.ABSENCE, event, args));
+            this.$on(ABSENCE_FORM_EVENTS.EDIT, (event: IAngularEvent, args: IEventFormBody) => vm.editAbsenceForm(EVENT_TYPE.ABSENCE, args));
+            this.$on(ABSENCE_FORM_EVENTS.EDIT_EVENT, (event: IAngularEvent, args: IEventFormBody) => vm.editEventAbsenceForm(EVENT_TYPE.ABSENCE, args));
 
             /* Lateness event */
-            this.$on(LATENESS_FORM_EVENTS.OPEN, (event: IAngularEvent, args: IEventFormBody) => vm.openEventLightbox('LATENESS', event, args));
-            this.$on(LATENESS_FORM_EVENTS.EDIT, (event: IAngularEvent, args: IEventFormBody) => vm.editEventForm('LATENESS', args));
+            this.$on(LATENESS_FORM_EVENTS.OPEN, (event: IAngularEvent, args: IEventFormBody) => vm.openEventLightbox(EVENT_TYPE.LATENESS, event, args));
+            this.$on(LATENESS_FORM_EVENTS.EDIT, (event: IAngularEvent, args: IEventFormBody) => vm.editEventForm(EVENT_TYPE.LATENESS, args));
 
 
             /* setFormData FROM calendar view (event sent from SNIPLET_FORM_EMIT_EVENTS.CREATION) */
             this.$on(SNIPLET_FORM_EVENTS.SET_PARAMS, (event: IAngularEvent, arg) => vm.setFormParams(arg));
 
             this.$watch(() => window.structure, async () => {
-                vm.reasons = await reasonService.getReasons(window.structure.id);
+                vm.reasons = await reasonService.getReasons(window.structure.id, REASON_TYPE_ID.ALL);
                 this.getStructureTimeSlot();
                 vm.safeApply();
             });

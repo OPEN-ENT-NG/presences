@@ -217,6 +217,7 @@ export class Events extends LoadingCollection {
     followed: boolean;
     notFollowed: boolean;
     noReason: boolean;
+    noReasonLateness: boolean;
 
     constructor() {
         super();
@@ -264,6 +265,10 @@ export class Events extends LoadingCollection {
 
             if (this.noReason) {
                 url += `&noReason=${this.noReason}`;
+            }
+
+            if (this.noReasonLateness) {
+                url += `&noReasonLateness=${this.noReasonLateness}`;
             }
 
             if (this.regularized != null) {

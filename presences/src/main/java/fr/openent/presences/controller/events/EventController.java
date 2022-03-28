@@ -80,8 +80,10 @@ public class EventController extends ControllerHelper {
                 Arrays.asList(request.getParam(Field.EVENTTYPE).split("\\s*,\\s*")) : null;
         List<String> reasonIds = request.getParam(Field.REASONIDS) != null ?
                 Arrays.asList(request.getParam(Field.REASONIDS).split("\\s*,\\s*")) : new ArrayList<>();
-        Boolean noReason = request.params().contains(Field.NOREASON)
+        Boolean noAbsenceReason = request.params().contains(Field.NOREASON)
                 && Boolean.parseBoolean(request.getParam(Field.NOREASON));
+        Boolean noLatenessReason = request.params().contains(Field.NOREASONLATENESS)
+                && Boolean.parseBoolean(request.getParam(Field.NOREASONLATENESS));
         List<String> userIds = request.getParam(Field.USERID) != null ?
                 new ArrayList<>(Arrays.asList(request.getParam(Field.USERID).split("\\s*,\\s*"))) : new ArrayList<>();
 
@@ -137,8 +139,8 @@ public class EventController extends ControllerHelper {
                                         });
 
                                 eventService.get(structureId, startDate, endDate, startTime, endTime, eventType,
-                                        reasonIds, noReason, userIds, restrictedClasses, regularized, followed, page, eventsPromise);
-                                eventService.getPageNumber(structureId, startDate, endDate, startTime, endTime, eventType, reasonIds, noReason, userIds,
+                                        reasonIds, noAbsenceReason, noLatenessReason, userIds, restrictedClasses, regularized, followed, page, eventsPromise);
+                                eventService.getPageNumber(structureId, startDate, endDate, startTime, endTime, eventType, reasonIds, noAbsenceReason, noLatenessReason, userIds,
                                         regularized, followed, FutureHelper.handlerJsonObject(pageNumberPromise));
 
                             }));
