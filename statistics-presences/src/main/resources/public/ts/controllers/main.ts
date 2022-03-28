@@ -1,4 +1,4 @@
-import {_, idiom, model, ng, template, toasts} from 'entcore';
+import {_, idiom, ng, model, template, toasts} from 'entcore';
 import {Reason} from "@presences/models";
 import {
     indicatorService,
@@ -22,6 +22,7 @@ import {IMonthly, MonthlyStatistics} from "../model/Monthly";
 import {EXPORT_TYPE} from "../core/enums/export-type.enum";
 import {Weekly} from "@statistics/indicator/Weekly";
 import {SLOT_HEIGHT} from "../../constants/calendar";
+import {REASON_TYPE_ID} from "@common/core/enum/reason-type-id";
 import {AxiosError} from "axios";
 
 declare let window: any;
@@ -64,6 +65,7 @@ interface ViewModel {
     exportType: typeof EXPORT_TYPE;
     loading: boolean;
     displayType: typeof DISPLAY_TYPE;
+    noLatenessReason: Reason;
 
     safeApply(fn?: () => void): void;
 
@@ -108,6 +110,10 @@ interface ViewModel {
     removeSelection(type: any, value: any): Promise<void>;
 
     refreshStudentsStatistics(arrayStudentIds: Array<string>): void;
+
+    getAbsenceReasons(): Array<Reason>;
+
+    getLatenessReasons(): Array<Reason>;
 }
 
 export const mainController = ng.controller('MainController',
@@ -150,7 +156,20 @@ export const mainController = ng.controller('MainController',
                     audiences: [],
                     filterTypes: [],
                     exportType: null
-                }
+                };
+
+                vm.noLatenessReason = {
+                    absence_compliance: false,
+                    comment: "",
+                    default: false,
+                    group: false,
+                    hidden: false,
+                    id: 0,
+                    isSelected: true,
+                    label: idiom.translate('presences.absence.no.reason'),
+                    proving: false,
+                    structure_id: ""
+                };
 
                 $scope.$watch(() => window.structure, async () => {
                     if ('structure' in window) {
@@ -257,11 +276,11 @@ export const mainController = ng.controller('MainController',
             vm.loadData = async (): Promise<void> => {
                 if (!window.structure) return;
                 await Promise.all([
-                    ReasonService.getReasons(window.structure.id),
+                    ReasonService.getReasons(window.structure.id, REASON_TYPE_ID.ALL),
                     punishmentTypeService.get(window.structure.id),
                     settingService.retrieve(window.structure.id),
                 ]).then((values: [Array<Reason>, Array<IPunishmentType>, Setting]) => {
-                    vm.reasons = values[0].filter(reason => reason.id !== -1);
+                    vm.reasons = [vm.noLatenessReason].concat(values[0].filter(reason => reason.id !== -1));
                     vm.punishmentTypes = values[1];
                     vm.setting = values[2];
                 });
@@ -464,5 +483,13 @@ export const mainController = ng.controller('MainController',
                     console.error(err, err.message);
                     vm.loading = false;
                 });
+            }
+
+            vm.getAbsenceReasons = ():Array<Reason> => {
+                return vm.reasons.filter((reason: Reason) => reason.reason_type_id == REASON_TYPE_ID.ABSENCE);
+            }
+
+            vm.getLatenessReasons = ():Array<Reason> => {
+                return [vm.noLatenessReason].concat(vm.reasons.filter((reason: Reason) => reason.reason_type_id == REASON_TYPE_ID.LATENESS));
             }
         }]);
