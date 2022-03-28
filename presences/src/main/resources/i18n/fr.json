@@ -24,6 +24,7 @@
   "presences.absence.action.setting.method.update.error": "Une erreur est survenue lors de la modification de l'action",
   "presences.absence.action.types": "Types d'action",
   "presences.absence.actions.warning.update": "Attention, la modification de l'action entraînera une modification sur tous les événements déjà saisis avec cette action.",
+  "presences.absences.csv.filename": "export_absences.csv",
   "presences.absence.create": "Créer une absence",
   "presences.absence.dates": "Dates d'absence",
   "presences.absence.edit": "Modifier une absence",

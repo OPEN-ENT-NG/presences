@@ -447,6 +447,7 @@
   "presences.multiple.slots.manage.load.error": "Appels multiples : une erreur est survenue lors de la récupération du paramètrage",
   "presences.multiple.slots.manage.save.confirm": "Appels multiples : modification enregistrée avec succès",
   "presences.multiple.slots.manage.save.error": "Appels multiples : une erreur est survenue lors de la sauvegarde du paramètrage",
+  "presences.absences.csv.filename": "export_absences.csv",
   "presences.absences.load.failed": "An error has occurred while loading absences for regularization",
   "presences.absences.update_reason.error": "An error has occurred while updating the reason for the absence",
   "presences.absences.update.error": "An error has occurred while updating the absence",
