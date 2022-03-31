@@ -1,7 +1,9 @@
 package fr.openent.presences.common.helper;
 
 import fr.wseduc.webutils.Either;
+import fr.openent.presences.core.constants.Field;
 import io.vertx.core.*;
+import io.vertx.core.eventbus.Message;
 import io.vertx.core.impl.CompositeFutureImpl;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
@@ -96,6 +98,18 @@ public class FutureHelper {
                 handler.handle(Future.failedFuture(event.left().getValue()));
             }
         };
+    }
+
+    public static void busArrayHandler(Future<JsonArray> future, Message<JsonObject> message) {
+        future
+                .onSuccess(result -> message.reply((new JsonObject()).put(Field.STATUS, Field.OK).put(Field.RESULT, result)))
+                .onFailure(error -> message.reply((new JsonObject()).put(Field.STATUS, Field.ERROR).put(Field.MESSAGE, error)));
+    }
+
+    public static void busObjectHandler(Future<JsonObject> future, Message<JsonObject> message) {
+        future
+                .onSuccess(result -> message.reply((new JsonObject()).put(Field.STATUS, Field.OK).put(Field.RESULT, result)))
+                .onFailure(error -> message.reply((new JsonObject()).put(Field.STATUS, Field.ERROR).put(Field.MESSAGE, error)));
     }
 
     public static <T> CompositeFuture all(List<Future<T>> futures) {

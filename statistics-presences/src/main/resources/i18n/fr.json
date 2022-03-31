@@ -6,6 +6,7 @@
   "statistics-presences.to": "au",
   "statistics-presences.indicator.Global": "Globales",
   "statistics-presences.indicator.Monthly": "Mensuelles",
+  "statistics-presences.indicator.Weekly": "Hebdomadaire",
   "statistics-presences.indicator.export.csv": "Export CSV",
   "statistics-presences.indicator.export.csv.audiences.only": "Exporter uniquement les classes",
   "statistics-presences.indicator.export.csv.audiences.students": "Exporter classes et élèves",
@@ -55,7 +56,9 @@
   "statistics-presences.events": "événements",
   "statistics-presences.csv.export": "Exporter CSV",
   "statistics-presences.indicator.empty.state": "Aucune statistique trouvée pour votre recherche",
+  "statistics-presences.indicator.empty.filter": "Veuillez sélectionner une classe ou un utilisateur pour afficher les statistiques",
   "statistics-presences.month.empty": "Aucune statistique trouvée pour votre recherche",
   "statistics-presences.cancel": "Annuler",
-  "statistics-presences.validate": "Valider"
+  "statistics-presences.validate": "Valider",
+  "statistics-presences.slots.error": "Une erreur est survenue dans la récupération des statistiques"
 }

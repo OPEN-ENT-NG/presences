@@ -9,10 +9,8 @@ import fr.openent.statistics_presences.bean.Report;
 import fr.openent.statistics_presences.controller.ConfigController;
 import fr.openent.statistics_presences.controller.EventBusController;
 import fr.openent.statistics_presences.controller.StatisticsController;
-import fr.openent.statistics_presences.indicator.Indicator;
-import fr.openent.statistics_presences.indicator.IndicatorGeneric;
-import fr.openent.statistics_presences.indicator.ProcessingScheduledManual;
-import fr.openent.statistics_presences.indicator.ProcessingScheduledTask;
+import fr.openent.statistics_presences.controller.StatisticsWeeklyAudiencesController;
+import fr.openent.statistics_presences.indicator.*;
 import fr.openent.statistics_presences.service.CommonServiceFactory;
 import fr.wseduc.cron.CronTrigger;
 import fr.wseduc.mongodb.MongoDb;
@@ -35,6 +33,7 @@ import static fr.wseduc.webutils.Utils.handlerToAsyncHandler;
 public class StatisticsPresences extends BaseServer {
     public static final String COLLECTION = "presences.statistics";
 
+    public static final String WEEKLY_AUDIENCES_COLLECTION = "presences.statistics_weekly_audiences";
     public static final String VIEW = "statistics_presences.view";
     public static final String VIEW_RESTRICTED = "statistics_presences.view.restricted";
 
@@ -55,6 +54,7 @@ public class StatisticsPresences extends BaseServer {
 
         addController(new EventBusController(commonServiceFactory));
         addController(new StatisticsController(commonServiceFactory));
+        addController(new StatisticsWeeklyAudiencesController(commonServiceFactory));
         addController(new ConfigController());
 
         setSchemas();
@@ -72,6 +72,7 @@ public class StatisticsPresences extends BaseServer {
 
         // worker to be triggered manually
         vertx.deployVerticle(ProcessingScheduledManual.class, new DeploymentOptions().setConfig(config).setWorker(true));
+        vertx.deployVerticle(ProcessingWeeklyAudiencesManual.class, new DeploymentOptions().setConfig(config).setWorker(true));
     }
 
     private void registerCodec() {

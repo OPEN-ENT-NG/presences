@@ -2,9 +2,12 @@ package fr.openent.presences.common.presences;
 
 import fr.openent.presences.common.helper.FutureHelper;
 import fr.openent.presences.common.message.MessageResponseHandler;
+import fr.openent.presences.core.constants.Field;
 import fr.wseduc.webutils.Either;
 import io.vertx.core.AsyncResult;
+import io.vertx.core.Future;
 import io.vertx.core.Handler;
+import io.vertx.core.Promise;
 import io.vertx.core.eventbus.EventBus;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
@@ -134,6 +137,21 @@ public class Presences {
                 .put("structure", structure)
                 .put("action", "get-settings");
         eb.send(address, action, MessageResponseHandler.messageJsonObjectHandler(handler));
+    }
+
+    public Future<JsonArray> getRegistersWithGroups(String structureId, List<Integer> registerIds, List<Integer> stateIds,
+                                                    String startAt, String endAt) {
+        Promise<JsonArray> promise = Promise.promise();
+        JsonObject action = new JsonObject()
+                .put(Field.STRUCTUREID, structureId)
+                .put(Field.REGISTERIDS, registerIds)
+                .put(Field.STATEIDS, stateIds)
+                .put(Field.STARTAT, startAt)
+                .put(Field.ENDAT, endAt)
+                .put("action", "get-registers-with-groups");
+        eb.send(address, action, MessageResponseHandler.messageJsonArrayHandler(FutureHelper.handlerJsonArray(promise)));
+
+        return promise.future();
     }
 
     private static class PresencesHolder {
