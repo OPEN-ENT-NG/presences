@@ -10,6 +10,7 @@ import {GlobalResponse, IGlobal} from "../model/Global";
 import {IMonthly, IMonthlyGraph} from "../model/Monthly";
 import {IndicatorBody} from "../model/Indicator";
 import {indicatorService} from "../services";
+import {IWeekly, IWeeklyResponse} from "@statistics/model/Weekly";
 
 declare const window: any;
 
@@ -25,10 +26,12 @@ export interface IIndicator {
     cloneFilterTypes();
 
     cloneFilterTypes(): FilterType[];
+
+    getEmptyMessage(): string
 }
 
 export abstract class Indicator implements IIndicator {
-    values: IGlobal | IMonthly;
+    values: IGlobal | IMonthly | IWeekly;
     graphValues: IMonthlyGraph;
     _factoryFilter: FilterTypeFactory;
     _filtersEnabled: Map<Filter, FilterValue>;
@@ -51,7 +54,7 @@ export abstract class Indicator implements IIndicator {
             [Filter.HOUR_DETAIL, this._factoryFilter.getFilterValue(null, null)]
         ]);
         this._from = DateUtils.setFirstTime(new Date());
-        this._to =  DateUtils.setLastTime(new Date());
+        this._to = DateUtils.setLastTime(new Date());
         this._display = DISPLAY_TYPE.TABLE;
         this._isRateDisplay = false;
         this._name = name;
@@ -156,7 +159,11 @@ export abstract class Indicator implements IIndicator {
 
     abstract isEmpty();
 
-    async fetchIndicator(start: Date, end: Date, users: string[], audiences: string[]): Promise<GlobalResponse | IMonthly> {
+    getEmptyMessage(): string {
+        return idiom.translate('statistics-presences.indicator.empty.state');
+    }
+
+    async fetchIndicator(start: Date, end: Date, users: string[], audiences: string[]): Promise<GlobalResponse | IMonthly | IWeeklyResponse> {
         const body = this.prepareIndicator(start, end, users, audiences);
         return indicatorService.fetchIndicator(window.structure.id, this.name(), this._page, body);
     }

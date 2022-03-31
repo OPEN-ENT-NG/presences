@@ -3,6 +3,7 @@ package fr.openent.presences.common.viescolaire;
 import fr.openent.presences.common.helper.DateHelper;
 import fr.openent.presences.common.helper.FutureHelper;
 import fr.openent.presences.common.message.MessageResponseHandler;
+import fr.openent.presences.core.constants.Field;
 import fr.wseduc.webutils.Either;
 import io.vertx.core.Future;
 import io.vertx.core.Handler;
@@ -12,6 +13,8 @@ import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
+
+import java.util.List;
 
 public class Viescolaire {
     private static final Logger LOGGER = LoggerFactory.getLogger(Viescolaire.class);
@@ -143,14 +146,27 @@ public class Viescolaire {
             }
         });
     }
-//
-//    public void getGroupsPeriods(String structureId, List<String> groups, Handler<Either<String, JsonArray>> handler) {
-//        JsonObject action = new JsonObject()
-//                .put("action", "periode.getPeriodes")
-//                .put("idGroupes", new JsonArray(groups))
-//                .put("idEtablissement", structureId);
-//        eb.send(address, action, MessageResponseHandler.messageJsonArrayHandler(handler));
-//    }
+
+    public Future<JsonArray> getCountStudentsByAudiences(List<String> audienceIds) {
+        Promise<JsonArray> promise = Promise.promise();
+        JsonObject action = new JsonObject()
+                .put(Field.ACTION, "classe.getNbElevesGroupe")
+                .put(Field.IDGROUPES, audienceIds);
+
+        eb.request(address, action, MessageResponseHandler.messageJsonArrayHandler(FutureHelper.handlerJsonArray(promise)));
+        return promise.future();
+    }
+
+    public Future<JsonArray> getAudienceTimeslots(String structureId, List<String> audienceIds) {
+        Promise<JsonArray> promise = Promise.promise();
+        JsonObject action = new JsonObject()
+                .put(Field.ACTION, "timeslot.getAudienceTimeslot")
+                .put(Field.STRUCTUREID, structureId)
+                .put(Field.AUDIENCEIDS, audienceIds);
+
+        eb.request(address, action, MessageResponseHandler.messageJsonArrayHandler(FutureHelper.handlerJsonArray(promise)));
+        return promise.future();
+    }
 
     private static class ViescolaireHolder {
         private static final Viescolaire instance = new Viescolaire();

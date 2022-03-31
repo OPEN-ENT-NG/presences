@@ -5,7 +5,8 @@ import {PunishmentsUtils} from "@incidents/utilities/punishments";
 export enum Filter {
     FROM = "FROM",
     TO = "TO",
-    HOUR_DETAIL = "HOUR_DETAIL"
+    HOUR_DETAIL = "HOUR_DETAIL",
+    PUNISHMENT_SANCTION_TYPES = "PUNISHMENT_SANCTION_TYPES"
 }
 
 export class FilterValue {

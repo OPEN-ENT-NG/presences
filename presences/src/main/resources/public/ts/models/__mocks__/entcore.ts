@@ -50,7 +50,9 @@ export const model = {
         userId: '7b6459f5-2765-45b5-8086-d5b3f422e69e',
         type: 'PERSEDUCNAT',
         hasWorkflow: jest.fn(() => true),
-        hasRight: jest.fn(() => true)
+        hasRight: jest.fn(() => true),
+        structures: [],
+        structureNames: []
     },
 };
 

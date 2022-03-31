@@ -21,7 +21,8 @@
         "report-recipients": [],
         "indicators": [
             "Global",
-            "Monthly"
+            "Monthly",
+            "Weekly"
         ]
       }
     }

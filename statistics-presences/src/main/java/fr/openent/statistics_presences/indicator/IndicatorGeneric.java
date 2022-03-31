@@ -55,7 +55,9 @@ public class IndicatorGeneric {
     public static Future<JsonObject> retrieveUser(String structureId, String studentId) {
         Promise<JsonObject> promise = Promise.promise();
         String query = "MATCH (s:Structure {id:{structureId}})<-[:BELONGS]-(c:Class)<-[:DEPENDS]-(:ProfileGroup)<-[:IN]-" +
-                "(u:User {id: {studentId}}) RETURN (u.lastName + ' ' + u.firstName) as name, collect(c.name) as className";
+                "(u:User {id: {studentId}}) RETURN (u.lastName + ' ' + u.firstName) as name, collect(c.name) as className, " +
+                "collect(c.id) as classIds";
+
         JsonObject params = new JsonObject()
                 .put("structureId", structureId)
                 .put("studentId", studentId);

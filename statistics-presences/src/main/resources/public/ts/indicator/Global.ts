@@ -29,6 +29,7 @@ export class Global extends Indicator {
         this.enableFilter(Filter.FROM, false);
         this.enableFilter(Filter.TO, false);
         this.enableFilter(Filter.HOUR_DETAIL, false);
+        this.enableFilter(Filter.PUNISHMENT_SANCTION_TYPES, false);
     }
 
     absenceSelected(): boolean {

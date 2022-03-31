@@ -3,6 +3,7 @@ package fr.openent.statistics_presences.service;
 import fr.openent.presences.common.service.*;
 import fr.openent.presences.common.service.impl.*;
 import fr.openent.statistics_presences.service.impl.DefaultStatisticsPresencesService;
+import fr.openent.statistics_presences.service.impl.DefaultStatisticsWeeklyAudiencesService;
 import io.vertx.core.Vertx;
 import io.vertx.core.eventbus.EventBus;
 
@@ -21,6 +22,10 @@ public class CommonServiceFactory {
 
     public StatisticsPresencesService statisticsPresencesService() {
         return new DefaultStatisticsPresencesService(this);
+    }
+
+    public StatisticsWeeklyAudiencesService statisticsWeeklyAudiencesService() {
+        return new DefaultStatisticsWeeklyAudiencesService(this);
     }
 
     public EventBus eventBus() {

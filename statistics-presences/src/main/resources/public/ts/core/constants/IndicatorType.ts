@@ -1,4 +1,5 @@
 export const INDICATOR_TYPE = {
     global: 'Global',
-    monthly: 'Monthly'
+    monthly: 'Monthly',
+    weekly: 'Weekly'
 };
