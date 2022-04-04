@@ -251,6 +251,8 @@ public class Field {
     public static final String ERROR = "error";
     public static final String MESSAGE = "message";
     public static final String ACTION = "action";
+    public static final String PREPARED = "prepared";
+    public static final String STATEMENT = "statement";
 
     // Statistics
     public static final String INDICATOR = "indicator";
