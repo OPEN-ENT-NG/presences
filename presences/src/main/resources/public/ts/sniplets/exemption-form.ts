@@ -2,9 +2,10 @@ import {_, idiom as lang, model, moment, toasts} from 'entcore';
 import {Exemption, IStructureSlot, ITimeSlot, Student, Students, Subjects, TimeSlotHourPeriod} from '../models';
 import rights from "../rights";
 import {SNIPLET_FORM_EMIT_EVENTS, SNIPLET_FORM_EVENTS} from '@common/model'
-import {DateUtils} from "@common/utils";
-import {ViescolaireService} from "@common/services";
+import {DateUtils, StudentsSearch} from "@common/utils";
+import {SearchService, searchService, ViescolaireService} from "@common/services";
 import {IAngularEvent} from "angular";
+import {AxiosResponse} from "axios";
 
 console.log("ExemptionForm sniplet");
 
@@ -29,6 +30,7 @@ interface ViewModel {
     formStudentSelected: any[];
     form: Exemption;
     searchValue: string;
+    studentsSearch: StudentsSearch;
     exemptionType: any;
     typeExemptionSelect: Array<{ label: string, type: string }>;
     typeExemptionSelected: { label: string, type: string };
@@ -47,7 +49,7 @@ interface ViewModel {
 
     closeCreateExemption(): void;
 
-    selectStudentForm(model: Student, student): void;
+    selectStudentForm(model: string, student: Student): void;
 
     excludeStudentFromForm(student): void;
 
@@ -80,6 +82,7 @@ const vm: ViewModel = {
     createExemptionLightBox: false,
     isEditMode: false,
     searchValue: '',
+    studentsSearch: undefined,
     formStudentSelected: [],
     subjects: new Subjects(),
     studentsFrom: new Students(),
@@ -193,17 +196,18 @@ const vm: ViewModel = {
         });
     },
 
-    selectStudentForm: (model: Student, student) => {
+    selectStudentForm: (model: string, student: Student): void => {
         if (!_.find(vm.form.students, student)) {
             vm.form.students.push(student);
         }
 
         vm.studentsFrom.all = [];
+        vm.studentsSearch.selectStudents(model, student);
         vm.studentsFrom.searchValue = "";
     },
 
     searchFormByStudent: async (searchText: string) => {
-        await vm.studentsFrom.search(window.structure.id, searchText);
+        await vm.studentsSearch.searchStudents(searchText);
         vm.safeApply();
     },
 
@@ -227,11 +231,16 @@ const vm: ViewModel = {
             vm.form.startDateRecursive = vm.form.startDate;
             vm.form.endDateRecursive = vm.form.endDate;
         }
-        let response = await vm.form.save();
-        if (vm.form.id) {
-            vm.updateAfterSaveOrDelete(response, lang.translate('presences.exemptions.form.edit.succeed'));
-        } else {
-            vm.updateAfterSaveOrDelete(response, lang.translate('presences.exemptions.form.create.succeed'));
+        try {
+            let response: AxiosResponse = await vm.form.save();
+            if (vm.form.id) {
+                vm.updateAfterSaveOrDelete(response, lang.translate('presences.exemptions.form.edit.succeed'));
+            } else {
+                vm.updateAfterSaveOrDelete(response, lang.translate('presences.exemptions.form.create.succeed'));
+            }
+        } catch (e) {
+            toasts.warning('presences.exemption.save.error');
+            console.error(e, e.message);
         }
     },
 
@@ -290,6 +299,7 @@ export const exemptionForm = {
                 {label: 'presences.thursday', value: 'THURSDAY', isChecked: false},
                 {label: 'presences.friday', value: 'FRIDAY', isChecked: false},
             ];
+            this.vm.studentsSearch = new StudentsSearch(window.structure.id, SearchService);
             this.setHandler();
             exemptionForm.that = this;
             vm.safeApply = this.safeApply;

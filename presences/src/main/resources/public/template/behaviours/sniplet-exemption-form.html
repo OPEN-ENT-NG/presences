@@ -15,13 +15,13 @@
         <div class="row">
             <div class="cell twelve paddingRight">
                 <div class="cell twelve search-input" ng-if="!vm.isEditMode">
-                    <async-autocomplete ng-disabled="false"
-                                        ng-model="vm.studentSearchFormInput"
-                                        ng-change="vm.selectStudentForm"
-                                        on-search="vm.searchFormByStudent"
-                                        options="vm.studentsFrom.all"
-                                        placeholder="presences.exemptions.search.student"
-                                        search="vm.studentsFrom.searchValue"></async-autocomplete>
+                    <async-autocomplete data-ng-disabled="false"
+                                        data-ng-model="vm.studentSearchFormInput"
+                                        data-ng-change="vm.selectStudentForm"
+                                        data-on-search="vm.searchFormByStudent"
+                                        data-options="vm.studentsSearch.students"
+                                        data-placeholder="presences.exemptions.search.student"
+                                        data-search="vm.studentsSearch.student"></async-autocomplete>
                 </div>
                 <div class="cell twelve">
                     <ul class="cell twelve search-input-ul">

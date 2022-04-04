@@ -43,6 +43,8 @@ public class Presences extends BaseServer {
     public static final String READ_EVENT_RESTRICTED = "presences.event.read.restricted";
     public static final String READ_EXEMPTION = "presences.exemption.read";
     public static final String MANAGE_EXEMPTION = "presences.exemption.manage";
+    public static final String READ_EXEMPTION_RESTRICTED = "presences.exemption.read.restricted";
+    public static final String MANAGE_EXEMPTION_RESTRICTED = "presences.exemption.manage.restricted";
     public static final String MANAGE = "presences.manage";
     public static final String REGISTRY = "presences.registry";
     public static final String CREATE_ACTION = "presences.action.create";
@@ -92,7 +94,7 @@ public class Presences extends BaseServer {
         addController(new AbsenceController(commonPresencesServiceFactory));
         addController(new EventController(commonPresencesServiceFactory));
         addController(new LatenessEventController(commonPresencesServiceFactory));
-        addController(new ExemptionController(eb));
+        addController(new ExemptionController(commonPresencesServiceFactory));
         addController(new SearchController(eb));
         addController(new CalendarController(eb));
         addController(new ReasonController());

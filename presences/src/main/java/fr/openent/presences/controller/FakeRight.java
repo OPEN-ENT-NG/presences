@@ -91,4 +91,12 @@ public class FakeRight extends ControllerHelper {
     @SecuredAction(Presences.READ_EVENT_RESTRICTED)
     public void readEventRestricted(HttpServerRequest request) {notImplemented(request);}
 
+    @Get("/rights/read/exemption/restricted")
+    @SecuredAction(Presences.READ_EXEMPTION_RESTRICTED)
+    public void readExemptionRestricted(HttpServerRequest request) {notImplemented(request);}
+
+    @Get("/rights/manage/exemption/restricted")
+    @SecuredAction(Presences.MANAGE_EXEMPTION_RESTRICTED)
+    public void manageExemptionRestricted(HttpServerRequest request) {notImplemented(request);}
+
 }

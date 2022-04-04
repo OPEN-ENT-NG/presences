@@ -9,6 +9,7 @@ const rights = {
         createEvent: 'fr.openent.presences.controller.events.EventController|postEvent',
         readAbsentsCounts: 'fr.openent.presences.controller.events.EventController|getEvents',
         search: 'fr.openent.presences.controller.SearchController|searchUsers',
+        searchRestricted: 'fr.openent.presences.controller.FakeRight|searchRestricted',
         searchStudents: 'fr.openent.presences.controller.SearchController|search',
         export: 'fr.openent.presences.controller.CourseController|exportCourses',
         notify: 'fr.openent.presences.controller.CourseController|notify',
