@@ -19,6 +19,7 @@ import io.vertx.core.http.HttpServerRequest;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import org.entcore.common.controller.ControllerHelper;
+import org.entcore.common.http.filter.AdminFilter;
 import org.entcore.common.http.filter.ResourceFilter;
 import org.entcore.common.http.filter.Trace;
 import org.entcore.common.http.response.DefaultResponseHandler;
@@ -242,6 +243,22 @@ public class AbsenceController extends ControllerHelper {
 
             absenceService.retrieve(structure, students, start, end, justified, regularized, reasons, DefaultResponseHandler.arrayResponseHandler(request));
 
+        });
+    }
+
+    @Post("/absences/restore")
+    @SecuredAction(value = "", type = ActionType.RESOURCE)
+    @ResourceFilter(AdminFilter.class)
+    @ApiDoc("restore absences with the correct structure")
+    public void restoreAbsences(HttpServerRequest request) {
+        RequestUtils.bodyToJson(request, String.format("%s%s", pathPrefix, "restoreAbsences"), body -> {
+            String structureId = body.getString(Field.STRUCTURE_ID);
+            String startAt = body.getString(Field.START_AT);
+            String endAt = body.getString(Field.END_AT);
+
+            absenceService.restoreAbsences(structureId, startAt, endAt)
+                    .onSuccess(result -> renderJson(request, result))
+                    .onFailure(err -> renderError(request));
         });
     }
 }
