@@ -16,7 +16,6 @@ import fr.openent.presences.model.*;
 import fr.openent.presences.model.Event.Event;
 import fr.openent.presences.service.AbsenceService;
 import fr.openent.presences.service.CommonPresencesServiceFactory;
-import fr.openent.presences.service.PresenceService;
 import fr.wseduc.webutils.Either;
 import io.vertx.core.*;
 import io.vertx.core.eventbus.EventBus;
@@ -178,7 +177,7 @@ public class DefaultAbsenceService extends DBService implements AbsenceService {
     @Override
     public void getAbsencesBetweenDates(String startDate, String endDate, List<String> users,
                                         Handler<Either<String, JsonArray>> handler) {
-       getAbsencesBetweenDates(startDate, endDate, users, null, handler);
+        getAbsencesBetweenDates(startDate, endDate, users, null, handler);
     }
 
     @Override
@@ -397,35 +396,38 @@ public class DefaultAbsenceService extends DBService implements AbsenceService {
 
     @Override
     public void update(Long absenceId, JsonObject absenceBody, String userInfoId, boolean editEvents, Handler<Either<String, JsonObject>> handler) {
-        String beforeUpdateAbsenceQuery = "SELECT * FROM " + Presences.dbSchema + ".absence WHERE id = ?";
-        Sql.getInstance().prepared(beforeUpdateAbsenceQuery, new JsonArray().add(absenceId), SqlResult.validUniqueResultHandler(oldAbsenceResult -> {
-            if (oldAbsenceResult.isLeft()) {
-                String message = "[Presences@DefaultAbsenceService::update] failed to retrieve absence";
-                LOGGER.error(message, oldAbsenceResult.left().getValue());
-                handler.handle(new Either.Left<>(message));
-                return;
-            }
-            JsonObject oldAbsence = oldAbsenceResult.right().getValue();
+        String beforeUpdateAbsenceQuery = "SELECT * FROM " + Presences.dbSchema + ".absence WHERE id = ? AND structure_id = ?";
+        Sql.getInstance().prepared(beforeUpdateAbsenceQuery, new JsonArray().add(absenceId).add(absenceBody.getString(Field.STRUCTURE_ID)),
+                SqlResult.validUniqueResultHandler(oldAbsenceResult -> {
+                    if (oldAbsenceResult.isLeft() || oldAbsenceResult.right().getValue().isEmpty()) {
+                        String message = String.format("[Presences@%s::update] failed to retrieve absence", this.getClass().getSimpleName());
+                        LOGGER.error(String.format("%s %s", message, oldAbsenceResult.isLeft() ? oldAbsenceResult.isLeft() : ""));
+                        handler.handle(new Either.Left<>(message));
+                        return;
+                    }
+                    JsonObject oldAbsence = oldAbsenceResult.right().getValue();
 
-            String query = "UPDATE " + Presences.dbSchema + ".absence " +
-                    "SET structure_id = ?, start_date = ?, end_date = ?, student_id = ?, reason_id = ? WHERE id = ?";
+                    String query = "UPDATE " + Presences.dbSchema + ".absence " +
+                            " start_date = ?, end_date = ?, reason_id = ? " +
+                            " WHERE id = ? AND structure_id = ?";
 
-            JsonArray values = new JsonArray()
-                    .add(absenceBody.getString("structure_id"))
-                    .add(absenceBody.getString("start_date"))
-                    .add(absenceBody.getString("end_date"))
-                    .add(absenceBody.getString("student_id"));
-            if (absenceBody.getInteger("reason_id") != null) {
-                values.add(absenceBody.getInteger("reason_id"));
-            } else {
-                values.addNull();
-            }
-            values.add(absenceId);
 
-            Sql.getInstance().prepared(query, values, SqlResult.validUniqueResultHandler(absenceResult -> {
-                afterPersistAbsence(absenceId, absenceBody, oldAbsence, editEvents, userInfoId, handler, absenceResult);
-            }));
-        }));
+                    JsonArray values = new JsonArray()
+                            .add(absenceBody.getString(Field.START_DATE))
+                            .add(absenceBody.getString(Field.END_DATE));
+
+                    if (absenceBody.getInteger(Field.REASON_ID) != null) {
+                        values.add(absenceBody.getInteger(Field.REASON_ID));
+                    } else {
+                        values.addNull();
+                    }
+                    values
+                            .add(absenceId)
+                            .add(absenceBody.getString(Field.STRUCTURE_ID));
+
+                    Sql.getInstance().prepared(query, values, SqlResult.validUniqueResultHandler(absenceResult ->
+                            afterPersistAbsence(absenceId, absenceBody, oldAbsence, editEvents, userInfoId, handler, absenceResult)));
+                }));
     }
 
     @Override
@@ -965,7 +967,7 @@ public class DefaultAbsenceService extends DBService implements AbsenceService {
     @SuppressWarnings("unchecked")
     public void retrieve(String structure, List<String> students, String start, String end, Boolean justified, Boolean regularized, List<Integer> reasons, Handler<Either<String, JsonArray>> handler) {
         JsonArray params = new JsonArray().add(structure);
-        String query = "SELECT id, start_date, end_date, student_id, reason_id, counsellor_regularisation, followed " +
+        String query = "SELECT id, start_date, end_date, student_id, reason_id, counsellor_regularisation, followed, structure_id " +
                 "FROM " + Presences.dbSchema + ".absence " +
                 "WHERE structure_id = ? ";
         if (!students.isEmpty()) {
@@ -1031,9 +1033,15 @@ public class DefaultAbsenceService extends DBService implements AbsenceService {
 
                 handler.handle(new Either.Right<>(new JsonArray(absences.stream()
                         .filter(absence -> ((JsonObject) absence).getJsonObject(Field.STUDENT, new JsonObject())
-                        .getString(Field.NAME) != null).collect(Collectors.toList()))));
+                                .getString(Field.NAME) != null).collect(Collectors.toList()))));
             });
         }));
+    }
+
+    private Future<JsonArray> retrieve(String structure, List<String> students, String start, String end, Boolean justified, Boolean regularized, List<Integer> reasons) {
+        Promise<JsonArray> promise = Promise.promise();
+        retrieve(structure, students, start, end, justified, regularized, reasons, FutureHelper.handlerJsonArray(promise));
+        return promise.future();
     }
 
     @Override
@@ -1057,5 +1065,54 @@ public class DefaultAbsenceService extends DBService implements AbsenceService {
                 " WHERE (ev.start_date < ? AND ev.end_date > ?)";
 
         Sql.getInstance().prepared(query, params, SqlResult.validResultHandler(handler));
+    }
+
+    @Override
+    @SuppressWarnings("unchecked")
+    public Future<JsonObject> restoreAbsences(String structureId, String startAt, String endAt) {
+        Promise<JsonObject> promise = Promise.promise();
+        retrieve(structureId, Collections.emptyList(), startAt, endAt, null, null, null)
+                .onFailure(err -> {
+                    String message = String.format("[Presences@%s::restoreAbsences] Fail to retrieve absences"
+                            , this.getClass().getSimpleName());
+                    LOGGER.error(String.format("%s %s", message, err));
+                    promise.fail(message);
+                })
+                .onSuccess(absences -> {
+                    List<JsonObject> statements = ((List<JsonObject>) absences.getList()).stream()
+                            .filter(absence ->
+                                    absence.getString(Field.STRUCTURE_ID) != null &&
+                                            !absence.getString(Field.STRUCTURE_ID).equals(
+                                                    absence.getJsonObject(Field.STUDENT, new JsonObject())
+                                                            .getString(Field.STRUCTURE_ID)
+                                            ))
+                            .map(this::restoreStructureStatement)
+                            .collect(Collectors.toList());
+
+                    if (statements.isEmpty()) {
+                        promise.complete(new JsonObject());
+                        return;
+                    }
+
+                    sql.transaction(new JsonArray(statements), SqlResult.validUniqueResultHandler(FutureHelper.handlerJsonObject(promise)));
+                });
+        return promise.future();
+    }
+
+    private JsonObject restoreStructureStatement(JsonObject absence) {
+        String structureId = absence.getJsonObject(Field.STUDENT, new JsonObject())
+                .getString(Field.STRUCTURE_ID);
+
+        String query = "UPDATE " + Presences.dbSchema + ".absence " +
+                "SET structure_id = ? WHERE id = ?";
+
+        JsonArray params = new JsonArray()
+                .add(structureId)
+                .add(absence.getLong(Field.ID));
+
+        return new JsonObject()
+                .put(Field.STATEMENT, query)
+                .put(Field.VALUES, params)
+                .put(Field.ACTION, Field.PREPARED);
     }
 }

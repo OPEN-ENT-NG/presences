@@ -20,6 +20,7 @@ public interface AbsenceService {
      * @param handler     Function handler returning data
      */
     void get(String structureId, String startDate, String endDate, List<String> users, Handler<Either<String, JsonArray>> handler);
+
     Future<JsonArray> get(String structureId, String startDate, String endDate, List<String> users);
 
     /**
@@ -48,8 +49,11 @@ public interface AbsenceService {
      * @param handler Function handler returning data
      */
     void getAbsencesBetween(String startDate, String endDate, List<String> users, Handler<Either<String, JsonArray>> handler);
+
     void getAbsencesBetweenDates(String startDate, String endDate, List<String> users, Handler<Either<String, JsonArray>> handler);
+
     void getAbsencesBetweenDates(String startDate, String endDate, List<String> users, String structureId, Handler<Either<String, JsonArray>> handler);
+
     Future<JsonArray> getAbsencesBetweenDates(String startDate, String endDate, List<String> users, String structureId);
 
     void getAbsencesFromCollective(String structureId, Long collectiveId, Handler<Either<String, JsonArray>> handler);
@@ -57,17 +61,18 @@ public interface AbsenceService {
     /**
      * create absence
      *
-     * @param absenceBody   absenceBody fetched
-     * @param user          userInfo
-     * @param collectiveId  absence collective identifier (nullable)
-     * @param handler       Function handler returning data
+     * @param absenceBody  absenceBody fetched
+     * @param user         userInfo
+     * @param collectiveId absence collective identifier (nullable)
+     * @param handler      Function handler returning data
      */
     void create(JsonObject absenceBody, List<String> studentIds, UserInfos user, Long collectiveId, Handler<AsyncResult<JsonArray>> handler);
+
     void create(JsonObject absenceBody, List<String> studentIds, String userId, Long collectiveId, Handler<AsyncResult<JsonArray>> handler);
+
     void create(JsonObject absenceBody, UserInfos user, boolean editEvents, Handler<Either<String, JsonObject>> handler);
 
     /**
-     *
      * @param collectiveId collective absence identifier
      * @param structureId  structure identifier
      * @param userInfoId   user logged identifier
@@ -75,6 +80,7 @@ public interface AbsenceService {
      * @param handler      response handler
      */
     void afterPersistCollective(Long collectiveId, String structureId, String userInfoId, boolean editEvents, Handler<AsyncResult<JsonObject>> handler);
+
     void afterPersist(List<String> studentIds, String structureId, String startDate, String endDate, String userInfoId, boolean editEvents, Handler<AsyncResult<JsonObject>> handler);
 
     /**
@@ -85,7 +91,9 @@ public interface AbsenceService {
      * @param handler     Function handler returning data
      */
     void update(Long absenceId, JsonObject absenceBody, UserInfos user, boolean editEvents, Handler<Either<String, JsonObject>> handler);
+
     void update(Long absenceId, JsonObject absenceBody, String userInfoId, boolean editEvents, Handler<Either<String, JsonObject>> handler);
+
     void updateFromCollective(JsonObject absenceBody, UserInfos user, Long collectiveId, boolean editEvents, Handler<AsyncResult<JsonObject>> handler);
 
     /**
@@ -93,7 +101,7 @@ public interface AbsenceService {
      *
      * @param absence Absence object from client to update absence reasons
      *                JsonObject : {Ids: JsonArray, reasonId: Integer}
-     * @param user        userInfo
+     * @param user    userInfo
      * @param handler Function handler returning data
      */
     void changeReasonAbsences(JsonObject absence, UserInfos user, Handler<Either<String, JsonObject>> handler);
@@ -113,9 +121,10 @@ public interface AbsenceService {
 
     /**
      * Update absence followed state
-     * @param absenceIds    absences identifiers
-     * @param followed      followed status
-     * @param handler       Function handler returning data
+     *
+     * @param absenceIds absences identifiers
+     * @param followed   followed status
+     * @param handler    Function handler returning data
      */
     void followAbsence(JsonArray absenceIds, Boolean followed, Handler<Either<String, JsonObject>> handler);
 
@@ -158,9 +167,20 @@ public interface AbsenceService {
      * Get all student ids for absent students from the structure
      * in a given period
      *
-     * @param structureId       structure identifier
-     * @param currentDate       current date and hour
-     * @param handler           function handler returning data
+     * @param structureId structure identifier
+     * @param currentDate current date and hour
+     * @param handler     function handler returning data
      */
     void getAbsentStudentIds(String structureId, String currentDate, Handler<Either<String, JsonArray>> handler);
+
+
+    /**
+     * Restore absences with bad structure with the correct one
+     *
+     * @param structureId structure identifier that own absences to restore
+     * @param startAt     date from which we need to retrieve absences to restore
+     * @param endAt       date until which we need to retrieve absences to restore
+     * @return result if restore worked
+     */
+    Future<JsonObject> restoreAbsences(String structureId, String startAt, String endAt);
 }
