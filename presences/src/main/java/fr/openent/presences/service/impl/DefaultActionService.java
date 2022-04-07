@@ -52,18 +52,20 @@ public class DefaultActionService implements ActionService {
     }
 
     private void fetchUsedAction(String structureId, Handler<Either<String, JsonArray>> handler) {
+        JsonArray params = new JsonArray().add(structureId);
+
         String query = "WITH ids AS (" +
                 "SELECT a.id, a.label, a.abbreviation FROM " + Presences.dbSchema + ".actions a " +
-                "WHERE structure_id = '" + structureId +
-                "') " +
+                "WHERE structure_id = ?) " +
                 "SELECT DISTINCT i.id, i.label, i.abbreviation FROM ids i " +
                 "WHERE (i.id IN (SELECT action_id FROM " + Presences.dbSchema + ".event_actions))";
-        Sql.getInstance().raw(query, SqlResult.validResultHandler(handler));
+        Sql.getInstance().prepared(query, params, SqlResult.validResultHandler(handler));
     }
 
     public void fetchActions(String structureId, Handler<Either<String, JsonArray>> handler) {
-        String query = "SELECT * FROM " + Presences.dbSchema + ".actions WHERE structure_id = '" + structureId + "'";
-        Sql.getInstance().raw(query, SqlResult.validResultHandler(handler));
+        JsonArray params = new JsonArray().add(structureId);
+        String query = "SELECT * FROM " + Presences.dbSchema + ".actions WHERE structure_id = ?";
+        Sql.getInstance().prepared(query, params, SqlResult.validResultHandler(handler));
     }
 
     @Override

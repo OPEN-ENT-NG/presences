@@ -68,8 +68,9 @@ public class DefaultSettingsService extends DBService implements SettingsService
 
     @Override
     public void put(String structureId, JsonObject settings, Handler<Either<String, JsonObject>> handler) {
-        String query = "SELECT COUNT(structure_id) FROM " + Presences.dbSchema + ".settings WHERE structure_id = '" + structureId + "'";
-        sql.raw(query, evt -> {
+        JsonArray params = new JsonArray().add(structureId);
+        String query = "SELECT COUNT(structure_id) FROM " + Presences.dbSchema + ".settings WHERE structure_id = ?";
+        sql.prepared(query, params, evt -> {
             Long count = SqlResult.countResult(evt);
             if (count == 0) create(structureId, settings, handler);
             else update(structureId, settings, handler);

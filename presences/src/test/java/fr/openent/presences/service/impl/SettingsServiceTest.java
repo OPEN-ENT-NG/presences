@@ -12,6 +12,7 @@ import org.junit.runner.RunWith;
 import org.mockito.Mockito;
 import io.vertx.core.Handler;
 import org.mockito.stubbing.*;
+import org.powermock.reflect.*;
 
 
 @RunWith(VertxUnitRunner.class)
@@ -68,26 +69,26 @@ public class SettingsServiceTest extends DBService {
     }
 
     @Test
-    public void testSetSettingTrue(TestContext ctx)  {
+    public void testSetSettingTrue(TestContext ctx) throws Exception {
         Mockito.doAnswer((Answer<Void>) invocation -> {
             JsonArray params = invocation.getArgument(1);
-
-            ctx.assertEquals(params.getJsonObject(0).getBoolean(SETTING_BOOLEAN_PARAM), true);
+            ctx.assertEquals(params, new JsonArray().add(STRUCTURE_ID).add(true));
             return null;
         }).when(sql).prepared(Mockito.anyString(), Mockito.any(JsonArray.class), Mockito.any(Handler.class));
 
-        settingsService.put(STRUCTURE_ID, new JsonObject().put(SETTING_BOOLEAN_PARAM, true), null);
+        Whitebox.invokeMethod(settingsService, "create",
+                STRUCTURE_ID, new JsonObject().put(SETTING_BOOLEAN_PARAM, true), null);
     }
 
     @Test
-    public void testSetSettingFalse(TestContext ctx)  {
+    public void testSetSettingFalse(TestContext ctx) throws Exception {
         Mockito.doAnswer((Answer<Void>) invocation -> {
             JsonArray params = invocation.getArgument(1);
-
-            ctx.assertEquals(params.getJsonObject(0).getBoolean(SETTING_BOOLEAN_PARAM), false);
+            ctx.assertEquals(params, new JsonArray().add(STRUCTURE_ID).add(false));
             return null;
         }).when(sql).prepared(Mockito.anyString(), Mockito.any(JsonArray.class), Mockito.any(Handler.class));
 
-        settingsService.put(STRUCTURE_ID, new JsonObject().put(SETTING_BOOLEAN_PARAM, false), null);
+        Whitebox.invokeMethod(settingsService, "create",
+                STRUCTURE_ID, new JsonObject().put(SETTING_BOOLEAN_PARAM, false), null);
     }
 }
