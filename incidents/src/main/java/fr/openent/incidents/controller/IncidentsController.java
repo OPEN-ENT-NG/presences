@@ -3,10 +3,11 @@ package fr.openent.incidents.controller;
 import fr.openent.incidents.Incidents;
 import fr.openent.incidents.constants.Actions;
 import fr.openent.incidents.export.IncidentsCSVExport;
-import fr.openent.incidents.security.ManageIncidentRight;
+import fr.openent.incidents.security.*;
 import fr.openent.incidents.service.IncidentsService;
 import fr.openent.incidents.service.impl.DefaultIncidentsService;
 import fr.openent.presences.common.helper.FutureHelper;
+import fr.openent.presences.core.constants.*;
 import fr.wseduc.bus.BusAddress;
 import fr.wseduc.rs.*;
 import fr.wseduc.security.ActionType;
@@ -106,18 +107,23 @@ public class IncidentsController extends ControllerHelper {
 
     @Get("/incidents/export")
     @ApiDoc("Export incidents")
+    @ResourceFilter(ManageIncidentRight.class)
+    @SecuredAction(value = "", type = ActionType.RESOURCE)
     public void exportIncidents(HttpServerRequest request) {
-        String structureId = request.getParam("structureId");
-        String startDate = request.getParam("startDate");
-        String endDate = request.getParam("endDate");
-        List<String> userId = request.getParam("userId") != null ? Arrays.asList(request.getParam("userId").split("\\s*,\\s*")) : null;
-        String field = request.params().contains("order") ? request.getParam("order") : "date";
-        boolean reverse = request.params().contains("reverse") && Boolean.parseBoolean(request.getParam("reverse"));
+        String structureId = request.getParam(Field.STRUCTUREID);
+        String startDate = request.getParam(Field.STARTDATE);
+        String endDate = request.getParam(Field.ENDDATE);
+        List<String> userId = request.getParam(Field.USERID) != null
+                ? Arrays.asList(request.getParam(Field.USERID).split("\\s*,\\s*")) : null;
+        String field = request.params().contains(Field.ORDER) ? request.getParam(Field.ORDER) : Field.DATE;
+        boolean reverse = request.params().contains(Field.REVERSE) && Boolean.parseBoolean(request.getParam(Field.REVERSE));
 
         incidentsService.get(structureId, startDate, endDate, userId,
                 null, false, field, reverse, event -> {
                     if (event.isLeft()) {
-                        log.error("[Incidents@IncidentsController] Failed to fetch incidents", event.left().getValue());
+                        String message = String.format("[Incidents@%s::exportIncidents] Failed to fetch incidents",
+                                this.getClass().getSimpleName());
+                        log.error(message, event.left().getValue());
                         renderError(request);
                         return;
                     }
@@ -137,13 +143,15 @@ public class IncidentsController extends ControllerHelper {
 
     @Get("/incidents/parameter/types")
     @ApiDoc("Retrieve incidents parameter")
+    @ResourceFilter(ReadIncidentRight.class)
+    @SecuredAction(value = "", type = ActionType.RESOURCE)
     public void getIncidentParameter(final HttpServerRequest request) {
-        String structure_id = request.getParam("structureId");
-        if (!request.params().contains("structureId")) {
+        String structureId = request.getParam(Field.STRUCTUREID);
+        if (!request.params().contains(Field.STRUCTUREID)) {
             badRequest(request);
             return;
         }
-        incidentsService.getIncidentParameter(structure_id, DefaultResponseHandler.defaultResponseHandler(request));
+        incidentsService.getIncidentParameter(structureId, DefaultResponseHandler.defaultResponseHandler(request));
     }
 
 

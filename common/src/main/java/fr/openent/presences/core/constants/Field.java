@@ -53,6 +53,8 @@ public class Field {
     public static final String PAGE_COUNT = "page_count";
     public static final String LABEL = "label";
     public static final String PROFILE = "profile";
+    public static final String ORDER = "order";
+    public static final String REVERSE = "reverse";
 
 
     // Dates
