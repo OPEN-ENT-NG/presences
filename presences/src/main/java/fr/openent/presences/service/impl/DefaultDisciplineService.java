@@ -53,18 +53,19 @@ public class DefaultDisciplineService implements DisciplineService {
     }
 
     private void fetchUsedDiscipline(String structureId, Handler<Either<String, JsonArray>> handler) {
+        JsonArray params = new JsonArray().add(structureId);
         String query = "WITH ids AS (" +
                 "SELECT d.id, d.label FROM " + Presences.dbSchema + ".discipline d " +
-                "WHERE structure_id = '" + structureId +
-                "') " +
+                "WHERE structure_id = ?) " +
                 "SELECT DISTINCT i.id, i.label FROM ids i " +
                 "WHERE (i.id IN (SELECT discipline_id FROM " + Presences.dbSchema + ".presence))";
-        Sql.getInstance().raw(query, SqlResult.validResultHandler(handler));
+        Sql.getInstance().prepared(query, params, SqlResult.validResultHandler(handler));
     }
 
     public void fetchDiscipline(String structureId, Handler<Either<String, JsonArray>> handler) {
-        String query = "SELECT * FROM " + Presences.dbSchema + ".discipline where structure_id = '" + structureId + "'";
-        Sql.getInstance().raw(query, SqlResult.validResultHandler(handler));
+        JsonArray params = new JsonArray().add(structureId);
+        String query = "SELECT * FROM " + Presences.dbSchema + ".discipline WHERE structure_id = ?";
+        Sql.getInstance().prepared(query, params, SqlResult.validResultHandler(handler));
     }
 
     @Override
