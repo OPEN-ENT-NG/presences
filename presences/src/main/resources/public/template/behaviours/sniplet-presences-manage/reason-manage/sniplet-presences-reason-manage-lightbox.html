@@ -22,28 +22,28 @@
         </div>
 
         <!-- Regularisable form -->
-        <label>
+        <label ng-if="vm.reasonTypeId == 1">
             <i18n>regularisable</i18n>
         </label>
-        <div class="sniplet-form-lightbox-body-regularisable">
+        <div ng-if="vm.reasonTypeId == 1" class="sniplet-form-lightbox-body-regularisable">
             <div class="md-radio md-radio-inline">
-                <input id="reasonLightBoxRegularisable-true"
+                <input id="reasonLightBoxRegularisable-true-[[vm.reasonTypeId]]"
                        data-ng-model="vm.formEdit.proving"
                        type="radio"
                        ng-value="false"
-                       name="reasonLightBoxRegularisable"
+                       name="reasonLightBoxRegularisable-[[vm.reasonTypeId]]"
                        ng-checked="true">
-                <label for="reasonLightBoxRegularisable-true">
+                <label for="reasonLightBoxRegularisable-true-[[vm.reasonTypeId]]">
                     <i18n>true.maj</i18n>
                 </label>
             </div>
             <div class="md-radio md-radio-inline">
-                <input id="reasonLightBoxRegularisable-false"
+                <input id="reasonLightBoxRegularisable-false-[[vm.reasonTypeId]]"
                        data-ng-model="vm.formEdit.proving"
                        type="radio"
                        ng-value="true"
-                       name="reasonLightBoxRegularisable">
-                <label for="reasonLightBoxRegularisable-false">
+                       name="reasonLightBoxRegularisable-[[vm.reasonTypeId]]">
+                <label for="reasonLightBoxRegularisable-false-[[vm.reasonTypeId]]">
                     <i18n>false.maj</i18n>
                 </label>
             </div>
@@ -55,23 +55,23 @@
         </label>
         <div class="sniplet-form-lightbox-body-compliance">
             <div class="md-radio md-radio-inline">
-                <input id="reasonLightboxCompliance-true"
+                <input id="reasonLightboxCompliance-true-[[vm.reasonTypeId]]"
                        data-ng-model="vm.formEdit.absenceCompliance"
                        type="radio"
                        ng-value="true"
-                       name="reasonLightboxCompliance"
+                       name="reasonLightboxCompliance-[[vm.reasonTypeId]]"
                        ng-checked="true">
-                <label for="reasonLightboxCompliance-true">
+                <label for="reasonLightboxCompliance-true-[[vm.reasonTypeId]]">
                     <i18n>true.maj</i18n>
                 </label>
             </div>
             <div class="md-radio md-radio-inline">
-                <input id="reasonLightboxCompliance-false"
+                <input id="reasonLightboxCompliance-false-[[vm.reasonTypeId]]"
                        data-ng-model="vm.formEdit.absenceCompliance"
                        type="radio"
                        ng-value="false"
-                       name="reasonLightboxCompliance">
-                <label for="reasonLightboxCompliance-false">
+                       name="reasonLightboxCompliance-[[vm.reasonTypeId]]">
+                <label for="reasonLightboxCompliance-false-[[vm.reasonTypeId]]">
                     <i18n>false.maj</i18n>
                 </label>
             </div>

@@ -117,7 +117,7 @@ public class EventBusController extends ControllerHelper {
                 break;
             case "get-reasons":
                 structure = body.getString("structure");
-                this.reasonService.fetchReason(structure, BusResponseHandler.busArrayHandler(message));
+                this.reasonService.fetchAbsenceReason(structure, BusResponseHandler.busArrayHandler(message));
                 break;
             case "get-settings":
                 structure = body.getString("structure");

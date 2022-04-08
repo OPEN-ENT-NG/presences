@@ -142,7 +142,7 @@ public class DefaultArchiveService extends DBService implements ArchiveService {
         String structure = exportProcess.getJsonObject(Field.STRUCTURE).getString(Field.ID);
 
         Future<JsonObject> schoolYearFuture = Viescolaire.getInstance().getSchoolYear(structure);
-        Future<JsonArray> reasonFuture = this.reasonService.fetchReason(structure);
+        Future<JsonArray> reasonFuture = this.reasonService.fetchAbsenceReason(structure);
 
         CompositeFuture.all(schoolYearFuture, reasonFuture)
                 .onSuccess(unused -> {

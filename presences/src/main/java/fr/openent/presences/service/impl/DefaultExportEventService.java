@@ -143,7 +143,7 @@ public class DefaultExportEventService extends DBService implements ExportEventS
 
         Future<JsonObject> settingsFuture = settingsService.retrieve(structureId);
         Future<JsonObject> slotsSettingsFuture = Viescolaire.getInstance().getSlotProfileSetting(structureId);
-        Future<JsonArray> reasonFuture = reasonService.fetchReason(structureId);
+        Future<JsonArray> reasonFuture = reasonService.fetchAbsenceReason(structureId);
 
         CompositeFuture.all(settingsFuture, slotsSettingsFuture, reasonFuture)
                 .onSuccess(ar -> {

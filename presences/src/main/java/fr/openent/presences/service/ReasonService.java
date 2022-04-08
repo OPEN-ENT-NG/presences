@@ -13,10 +13,11 @@ public interface ReasonService {
     /**
      * get reasons
      *
-     * @param structureId Structure Identifier
-     * @param handler     Function handler returning data
+     * @param structureId  Structure Identifier
+     * @param reasonTypeId Reason type Identifier
+     * @param handler      Function handler returning data
      */
-    void get(String structureId, Handler<Either<String, JsonArray>> handler);
+    void get(String structureId, Integer reasonTypeId, Handler<Either<String, JsonArray>> handler);
 
     /**
      * create reason
@@ -34,14 +35,41 @@ public interface ReasonService {
      */
     void put(JsonObject reasonBody, Handler<Either<String, JsonObject>> handler);
 
+    /**
+     * delete reason
+     *
+     * @param reasonId Reason Identifier
+     * @param handler  Function handler returning data
+     */
     void delete(Integer reasonId, Handler<Either<String, JsonObject>> handler);
 
-    void fetchReason(String structureId, Handler<Either<String, JsonArray>> handler);
-
-    Future<JsonArray> fetchReason(String structureId);
+    /**
+     * get absence reasons from structure id and reason type id
+     *
+     * @param structureId Structure Identifier
+     * @param handler     Function handler returning data
+     */
+    void fetchAbsenceReason(String structureId, Handler<Either<String, JsonArray>> handler);
 
     /**
-     * get reasons
+     * get reasons from structure id and reason type id
+     *
+     * @param structureId  Structure Identifier
+     * @param reasonTypeId Reason type Identifier
+     * @return {@link Future} of {@link JsonObject}
+     */
+    Future<JsonArray> fetchReason(String structureId, Integer reasonTypeId);
+
+    /**
+     * get absence reasons from structure id and reason type id
+     *
+     * @param structureId Structure Identifier
+     * @return {@link Future} of {@link JsonObject}
+     */
+    Future<JsonArray> fetchAbsenceReason(String structureId);
+
+    /**
+     * get absence reasons from structure i
      *
      * @param reasonIds Reason Identifier
      * @param handler   Function handler returning data
