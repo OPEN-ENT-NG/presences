@@ -50,25 +50,28 @@ public class DefaultIncidentsTypeService implements IncidentsTypeService {
     }
 
     private void fetchIncidentsType(String structureId, Handler<Either<String, JsonArray>> handler) {
-        String query = "SELECT * FROM " + Incidents.dbSchema + ".incident_type where structure_id = '" + structureId + "'";
-        Sql.getInstance().raw(query, SqlResult.validResultHandler(handler));
+        String query = "SELECT * FROM " + Incidents.dbSchema + ".incident_type where structure_id = ?";
+        JsonArray params = new JsonArray();
+        params.add(structureId);
+        Sql.getInstance().prepared(query, params, SqlResult.validResultHandler(handler));
     }
 
     private void fetchUsedIncidentsType(String structureId, Handler<Either<String, JsonArray>> handler) {
         String query = "WITH ids AS (" +
                 "SELECT i.id, i.label FROM " + Incidents.dbSchema + ".incident_type i " +
-                "WHERE structure_id = '" + structureId +
-                "') " +
+                "WHERE structure_id = ?) " +
                 "SELECT DISTINCT i.id, i.label FROM ids i " +
                 "WHERE (i.id IN (SELECT type_id FROM " + Incidents.dbSchema + ".incident))";
-        Sql.getInstance().raw(query, SqlResult.validResultHandler(handler));
+        JsonArray params = new JsonArray();
+        params.add(structureId);
+        Sql.getInstance().prepared(query, params, SqlResult.validResultHandler(handler));
     }
 
     @Override
     public void create(JsonObject incidentTypeBody, Handler<Either<String, JsonObject>> handler) {
         String query = "INSERT INTO " + Incidents.dbSchema + ".incident_type " +
                 "(structure_id, label, hidden)" +
-                "VALUES (?, ?, false) RETURNING id";
+                " VALUES (?, ?, false) RETURNING id";
         JsonArray params = new JsonArray()
                 .add(incidentTypeBody.getString("structureId"))
                 .add(incidentTypeBody.getString("label"));
@@ -88,9 +91,10 @@ public class DefaultIncidentsTypeService implements IncidentsTypeService {
 
     @Override
     public void delete(Integer incidentTypeId, Handler<Either<String, JsonObject>> handler) {
-        String query = "DELETE FROM  " + Incidents.dbSchema + ".incident_type WHERE id = " + incidentTypeId +
-                " RETURNING id as id_deleted";
-        Sql.getInstance().raw(query, SqlResult.validUniqueResultHandler(handler));
+        String query = "DELETE FROM " + Incidents.dbSchema + ".incident_type WHERE id = ? RETURNING id as id_deleted";
+        JsonArray params = new JsonArray();
+        params.add(incidentTypeId);
+        Sql.getInstance().prepared(query, params, SqlResult.validUniqueResultHandler(handler));
     }
 
 }
