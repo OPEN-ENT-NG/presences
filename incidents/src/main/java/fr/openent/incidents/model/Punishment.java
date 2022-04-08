@@ -12,7 +12,7 @@ import io.vertx.core.AsyncResult;
 import io.vertx.core.Future;
 import io.vertx.core.Handler;
 import io.vertx.core.Promise;
-import io.vertx.core.json.JsonObject;
+import io.vertx.core.json.*;
 import org.entcore.common.sql.Sql;
 import org.entcore.common.sql.SqlResult;
 import org.entcore.common.user.UserInfos;
@@ -205,22 +205,27 @@ public class Punishment extends Model {
     }
 
     private void checkUserRight(UserInfos user, Handler<AsyncResult<JsonObject>> handler) {
-        String query = "SELECT type FROM " + Incidents.dbSchema + ".punishment_type where id = " + getTypeId() +
-                " AND structure_id = '" + getStructureId() + "'";
-        Sql.getInstance().raw(query, SqlResult.validUniqueResultHandler(result -> {
+        JsonArray params = new JsonArray();
+
+        String query = "SELECT type FROM " + Incidents.dbSchema + ".punishment_type where id = ?" +
+                " AND structure_id = ?";
+
+        params.add(getTypeId())
+                .add(getStructureId());
+        Sql.getInstance().prepared(query, params, SqlResult.validUniqueResultHandler(result -> {
             if (result.isLeft()) {
-                String message = "[Incidents@Punishment::createMongo] Failed to get type";
+                String message = "[Incidents@Punishment::checkUserRight] Failed to get type";
                 handler.handle(Future.failedFuture(message + " " + result.left().getValue()));
                 return;
             }
 
-            String resType = result.right().getValue().getString("type");
+            String resType = result.right().getValue().getString(Field.TYPE);
 
             if (resType.equals("PUNITION") && !WorkflowHelper.hasRight(user, WorkflowActions.PUNISHMENT_CREATE.toString())) {
-                handler.handle(Future.failedFuture("[Incidents@Punishment::createMongo] This user have not the right to create Punishment."));
+                handler.handle(Future.failedFuture("[Incidents@Punishment::checkUserRight] This user have not the right to create Punishment."));
                 return;
             } else if (resType.equals("SANCTION") && !WorkflowHelper.hasRight(user, WorkflowActions.SANCTION_CREATE.toString())) {
-                handler.handle(Future.failedFuture("[Incidents@Punishment::createMongo] This user have not the right to create Sanction."));
+                handler.handle(Future.failedFuture("[Incidents@Punishment::checkUserRight] This user have not the right to create Sanction."));
                 return;
             }
             handler.handle(Future.succeededFuture());

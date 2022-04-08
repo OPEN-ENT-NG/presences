@@ -76,8 +76,11 @@ public class DefaultPunishmentTypeService implements PunishmentTypeService {
     }
 
     private void fetchPunishmentsType(String structureId, Handler<Either<String, JsonArray>> handler) {
-        String query = "SELECT * FROM " + Incidents.dbSchema + ".punishment_type where structure_id = '" + structureId + "'";
-        Sql.getInstance().raw(query, SqlResult.validResultHandler(handler));
+        JsonArray params = new JsonArray().add(structureId);
+
+        String query = "SELECT * FROM " + Incidents.dbSchema + ".punishment_type where structure_id = ?";
+
+        Sql.getInstance().prepared(query, params, SqlResult.validResultHandler(handler));
     }
 
     @Override

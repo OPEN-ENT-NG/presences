@@ -1,12 +1,13 @@
 package fr.openent.incidents.model.punishmentCategory;
 
 import fr.openent.incidents.Incidents;
+import fr.openent.presences.core.constants.*;
 import fr.openent.presences.model.Model;
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Future;
 import io.vertx.core.Handler;
 import io.vertx.core.Promise;
-import io.vertx.core.json.JsonObject;
+import io.vertx.core.json.*;
 import org.entcore.common.sql.Sql;
 import org.entcore.common.sql.SqlResult;
 
@@ -17,21 +18,26 @@ public abstract class PunishmentCategory extends Model {
     public static final String BLAME = "Modèle 3";
 
     public static void getCategoryLabelFromType(Long typeId, String structureId, Handler<AsyncResult<String>> handler) {
-        String query = "SELECT c.label AS label " +
-                "      FROM " + Incidents.dbSchema + ".punishment_category c " +
-                "               INNER JOIN " + Incidents.dbSchema + ".punishment_type t " +
-                "                          ON t.punishment_category_id = c.id " +
-                "      WHERE t.id =  " + typeId +
-                "        AND t.structure_id = '" + structureId + "';";
+        JsonArray params = new JsonArray();
 
-        Sql.getInstance().raw(query, SqlResult.validUniqueResultHandler(result -> {
+        String query = "SELECT c.label AS label " +
+                "   FROM " + Incidents.dbSchema + ".punishment_category c " +
+                "  INNER JOIN " + Incidents.dbSchema + ".punishment_type t " +
+                "  ON t.punishment_category_id = c.id " +
+                "  WHERE t.id =  ?" +
+                "  AND t.structure_id = ?";
+
+        params.add(typeId)
+                .add(structureId);
+
+        Sql.getInstance().prepared(query, params, SqlResult.validUniqueResultHandler(result -> {
             if (result.isLeft()) {
                 String message = "[Incidents@PunishmentCategory::getCategoryLabelFromType] Failed to get category";
                 handler.handle(Future.failedFuture(message + " " + result.left().getValue()));
                 return;
             }
 
-            String label = result.right().getValue().getString("label");
+            String label = result.right().getValue().getString(Field.LABEL);
             handler.handle(Future.succeededFuture(label));
         }));
     }
