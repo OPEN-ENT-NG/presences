@@ -1,5 +1,6 @@
 package fr.openent.presences.model;
 
+import fr.openent.presences.core.constants.Field;
 import io.vertx.core.json.JsonObject;
 
 import java.util.ArrayList;
@@ -18,6 +19,7 @@ public class Reason {
     private Boolean isGroup;
     private Boolean isHidden;
     private Boolean isAbsenceCompliance;
+    private Integer reasonTypeId;
 
     public Reason(JsonObject reason, List<String> mandatoryAttributes) {
         for (String attribute : mandatoryAttributes) {
@@ -34,6 +36,7 @@ public class Reason {
         this.isGroup = reason.getBoolean("group", null);
         this.isHidden = reason.getBoolean("hidden", null);
         this.isAbsenceCompliance = reason.getBoolean("absence_compliance", null);
+        this.reasonTypeId = reason.getInteger("reason_type_id", null);
     }
 
     public Reason(Integer reasonId) {
@@ -51,15 +54,16 @@ public class Reason {
 
     public JsonObject toJSON() {
         return new JsonObject()
-                .put("id", this.id)
-                .put("structure_id", this.structureId)
-                .put("label", this.label)
-                .put("proving", this.isProving)
-                .put("comment", this.comment)
-                .put("default", this.isDefault)
-                .put("group", this.isGroup)
-                .put("hidden", this.isHidden)
-                .put("absence_compliance", this.isAbsenceCompliance);
+                .put(Field.ID, this.id)
+                .put(Field.STRUCTURE_ID, this.structureId)
+                .put(Field.LABEL, this.label)
+                .put(Field.PROVING, this.isProving)
+                .put(Field.COMMENT, this.comment)
+                .put(Field.DEFAULT, this.isDefault)
+                .put(Field.GROUP, this.isGroup)
+                .put(Field.HIDDEN, this.isHidden)
+                .put(Field.ABSENCE_COMPILANCE, this.isAbsenceCompliance)
+                .put(Field.REASON_TYPE_ID, this.reasonTypeId);
     }
 
     public Integer getId() {
@@ -68,6 +72,14 @@ public class Reason {
 
     public void setId(Integer id) {
         this.id = id;
+    }
+
+    public Integer getReasonTypeId() {
+        return reasonTypeId;
+    }
+
+    public void setReasonTypeId(Integer reasonTypeId) {
+        this.reasonTypeId = reasonTypeId;
     }
 
     public String getStructureId() {

@@ -12,9 +12,10 @@ import {
     presencesAlertManage,
     presencesManage,
     presencesManageLightbox,
-    presencesReasonManage,
+    presencesReasonManageAbsence,
     statisticsManage,
-    presencesMultipleSlotsManage
+    presencesMultipleSlotsManage,
+    presencesReasonManageLateness
 } from './sniplets';
 import rights from './rights';
 import incidentsRights from '@incidents/rights';
@@ -29,7 +30,8 @@ Behaviours.register('presences', {
         'forgotten-notebook-form': forgottenNotebookForm,
         'collective-absence-form/sniplet-collective-absence-form': collectiveAbsenceForm,
         'presences-manage': presencesManage,
-        'presences-manage/reason-manage/sniplet-presences-reason-manage': presencesReasonManage,
+        'presences-manage/reason-manage/sniplet-presences-reason-manage-absence': presencesReasonManageAbsence,
+        'presences-manage/reason-manage/sniplet-presences-reason-manage-lateness': presencesReasonManageLateness,
         'presences-manage/statistics-manage/sniplet-statistics-manage': statisticsManage,
         'presences-manage/alert-manage/sniplet-presences-alert-manage': presencesAlertManage,
         'presences-manage/sniplet-presences-manage-lightbox': presencesManageLightbox,

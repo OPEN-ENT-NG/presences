@@ -16,7 +16,7 @@
             </label>
             <div class="cell four search-input sniplet-input-form">
                 <input type="text" data-ng-model="vm.form.label" class="twelve cell"
-                       i18n-placeholder="maladie.placeholder">
+                       placeholder="[[lang.translate('presences.lateness.reason.placeholder')]]">
             </div>
         </div>
 
@@ -27,23 +27,23 @@
             </label>
             <div class="sniplet-input-flex">
                 <div class="md-radio md-radio-inline">
-                    <input id="regularisable_true"
+                    <input id="absence_regularisable_true"
                            data-ng-model="vm.form.proving"
                            type="radio"
                            ng-value="false"
-                           name="radio-regularisable"
+                           name="radio-absence-regularisable"
                            ng-checked="true">
-                    <label for="regularisable_true">
+                    <label for="absence_regularisable_true">
                         <i18n>true.maj</i18n>
                     </label>
                 </div>
                 <div class="md-radio md-radio-inline">
-                    <input id="regularisable_false"
+                    <input id="absence_regularisable_false"
                            data-ng-model="vm.form.proving"
                            type="radio"
                            ng-value="true"
-                           name="radio-regularisable">
-                    <label for="regularisable_false">
+                           name="radio-absence-regularisable">
+                    <label for="absence_regularisable_false">
                         <i18n>false.maj</i18n>
                     </label>
                 </div>
@@ -57,23 +57,23 @@
             </label>
             <div>
                 <div class="md-radio md-radio-inline">
-                    <input id="compliance_true"
+                    <input id="absence_compliance_true"
                            data-ng-model="vm.form.absenceCompliance"
                            type="radio"
                            ng-value="true"
-                           name="radio-compliance"
+                           name="radio-absence-compliance"
                            ng-checked="true">
-                    <label for="compliance_true">
+                    <label for="absence_compliance_true">
                         <i18n>true.maj</i18n>
                     </label>
                 </div>
                 <div class="md-radio md-radio-inline">
-                    <input id="compliance_false"
+                    <input id="absence_compliance_false"
                            data-ng-model="vm.form.absenceCompliance"
                            type="radio"
                            ng-value="false"
-                           name="radio-compliance">
-                    <label for="compliance_false">
+                           name="radio-absence-compliance">
+                    <label for="absence_compliance_false">
                         <i18n>false.maj</i18n>
                     </label>
                 </div>

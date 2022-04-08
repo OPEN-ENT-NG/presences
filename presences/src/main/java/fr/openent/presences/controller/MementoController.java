@@ -72,7 +72,7 @@ public class MementoController extends ControllerHelper {
             return;
         }
 
-        reasonService.fetchReason(structure, eventAsync -> {
+        reasonService.fetchAbsenceReason(structure, eventAsync -> {
             if (eventAsync.isLeft()) {
                 log.error("[Presences@MementoController::getAbsenceSummary] failed to fetch reasons for getting our events " + eventAsync.left().getValue());
                 badRequest(request);

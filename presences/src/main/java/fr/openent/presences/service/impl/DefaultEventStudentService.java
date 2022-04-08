@@ -169,7 +169,7 @@ public class DefaultEventStudentService implements EventStudentService {
 
     private Future<Map<Integer, JsonObject>> getReasons(String structure) {
         Promise<Map<Integer, JsonObject>> promise = Promise.promise();
-        reasonService.fetchReason(structure, resultReason -> {
+        reasonService.fetchAbsenceReason(structure, resultReason -> {
             if (resultReason.isLeft()) {
                 String message =
                         String.format("[Presences@%s::getReasons] Fail to get structure absence reasons.",
