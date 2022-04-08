@@ -16,14 +16,11 @@ import io.vertx.core.logging.LoggerFactory;
 import org.vertx.java.busmods.BusModBase;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
 
 
 public class ProcessingWeeklyAudiencesManual extends BusModBase implements Handler<Message<JsonObject>> {
-    public static final Integer STATE_IN_PROGRESS = 2;
-    public static final Integer STATE_DONE = 3;
 
     Logger log = LoggerFactory.getLogger(ProcessingWeeklyAudiencesManual.class);
     private CommonServiceFactory commonServiceFactory;
@@ -96,7 +93,7 @@ public class ProcessingWeeklyAudiencesManual extends BusModBase implements Handl
         Promise<String> promise = Promise.promise();
 
 
-        Presences.getInstance().getRegistersWithGroups(structureId, null, Arrays.asList(STATE_DONE, STATE_IN_PROGRESS),
+        Presences.getInstance().getRegistersWithGroups(structureId, null, null,
                         startAt, endAt)
                 .compose(registersResult -> commonServiceFactory.statisticsWeeklyAudiencesService()
                         .createFromRegisters(structureId, RegisterHelper.getRegistersFromArray(registersResult)))

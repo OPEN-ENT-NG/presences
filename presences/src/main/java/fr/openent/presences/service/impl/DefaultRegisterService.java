@@ -6,6 +6,7 @@ import fr.openent.presences.common.helper.FutureHelper;
 import fr.openent.presences.common.helper.RegisterHelper;
 import fr.openent.presences.common.service.GroupService;
 import fr.openent.presences.common.service.impl.DefaultGroupService;
+import fr.openent.presences.common.statistics_presences.StatisticsPresences;
 import fr.openent.presences.common.viescolaire.Viescolaire;
 import fr.openent.presences.core.constants.*;
 import fr.openent.presences.db.DBService;
@@ -297,6 +298,7 @@ public class DefaultRegisterService extends DBService implements RegisterService
                                             LOGGER.error(message, result.left().getValue());
                                             handler.handle(new Either.Left<>(message));
                                         } else {
+                                            StatisticsPresences.getInstance().postWeeklyAudiences(null, Collections.singletonList(id.intValue()));
                                             if (!students.isEmpty()) {
                                                 // tricks to correct trigger that force our event counsellor regularisation with our reason.proving
                                                 // we fix by SQL querying our event regularized with absences
