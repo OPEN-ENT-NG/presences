@@ -431,34 +431,38 @@ public class DefaultIncidentsService extends SqlCrudService implements Incidents
     }
 
     private void getPlaceType(String structureId, Handler<Either<String, JsonArray>> handler) {
-        String placeTypeQuery = "SELECT * FROM " + Incidents.dbSchema + ".place where structure_id = '" + structureId + "'";
-        Sql.getInstance().raw(placeTypeQuery, SqlResult.validResultHandler(handler));
+        JsonArray params = new JsonArray().add(structureId);
+        String placeTypeQuery = "SELECT * FROM " + Incidents.dbSchema + ".place WHERE structure_id = ?";
+        Sql.getInstance().prepared(placeTypeQuery, params, SqlResult.validResultHandler(handler));
     }
 
     private void getPartnerType(String structureId, Handler<Either<String, JsonArray>> handler) {
-        String partnerTypeQuery = "SELECT * FROM " + Incidents.dbSchema + ".partner where " +
-                "structure_id = '" + structureId + "' OR structure_id = '' ORDER BY structure_id desc";
-        Sql.getInstance().raw(partnerTypeQuery, SqlResult.validResultHandler(handler));
+        JsonArray params = new JsonArray().add(structureId);
+        String partnerTypeQuery = "SELECT * FROM " + Incidents.dbSchema + ".partner WHERE " +
+                "structure_id = ? OR structure_id = '' ORDER BY structure_id DESC";
+        Sql.getInstance().prepared(partnerTypeQuery, params, SqlResult.validResultHandler(handler));
 
     }
 
     private void getIncidentType(String structureId, Handler<Either<String, JsonArray>> handler) {
-        String incidentTypeQuery = "SELECT * FROM " + Incidents.dbSchema + ".incident_type where structure_id = '" + structureId + "'";
-        Sql.getInstance().raw(incidentTypeQuery, SqlResult.validResultHandler(handler));
+        JsonArray params = new JsonArray().add(structureId);
+        String incidentTypeQuery = "SELECT * FROM " + Incidents.dbSchema + ".incident_type WHERE structure_id = ?";
+        Sql.getInstance().prepared(incidentTypeQuery, params, SqlResult.validResultHandler(handler));
 
     }
 
     private void getProtagonistType(String structureId, Handler<Either<String, JsonArray>> handler) {
-        String incidentTypeQuery = "SELECT * FROM " + Incidents.dbSchema + ".protagonist_type where structure_id = '" + structureId + "'";
-        Sql.getInstance().raw(incidentTypeQuery, SqlResult.validResultHandler(handler));
+        JsonArray params = new JsonArray().add(structureId);
+        String protagonistTypeQuery = "SELECT * FROM " + Incidents.dbSchema + ".protagonist_type WHERE structure_id = ?";
+        Sql.getInstance().prepared(protagonistTypeQuery, params, SqlResult.validResultHandler(handler));
 
     }
 
     private void getSeriousnessLevel(String structureId, Handler<Either<String, JsonArray>> handler) {
-        String seriousnessLevelQuery = "SELECT * FROM " + Incidents.dbSchema + ".seriousness where structure_id = '" + structureId + "'";
-        Sql.getInstance().raw(seriousnessLevelQuery, SqlResult.validResultHandler(handler));
+        JsonArray params = new JsonArray().add(structureId);
+        String seriousnessLevelQuery = "SELECT * FROM " + Incidents.dbSchema + ".seriousness WHERE structure_id = ?";
+        Sql.getInstance().prepared(seriousnessLevelQuery, params, SqlResult.validResultHandler(handler));
     }
-
 
     @Override
     public void create(JsonObject incident, Handler<Either<String, JsonArray>> handler) {
