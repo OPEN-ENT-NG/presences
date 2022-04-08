@@ -175,6 +175,7 @@
   "presences.event.type": "Type d'événement",
   "presences.every.15.days": "Tous les 15 jours",
   "presences.exemption": "Dispense",
+  "presences.exemption.save.error": "Une erreur est survenue lors de l'enregistrement de la dispense",
   "presences.exemptions.punctual": "Dispense ponctuelle",
   "presences.exemptions.recursive": "Dispense récurrente",
   "presences.exemptions.attendance": "Présence",

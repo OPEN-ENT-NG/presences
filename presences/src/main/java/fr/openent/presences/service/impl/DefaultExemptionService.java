@@ -7,9 +7,7 @@ import fr.openent.presences.model.Exemption.ExemptionBody;
 import fr.openent.presences.model.Exemption.ExemptionView;
 import fr.openent.presences.service.ExemptionService;
 import fr.wseduc.webutils.Either;
-import io.vertx.core.CompositeFuture;
-import io.vertx.core.Future;
-import io.vertx.core.Handler;
+import io.vertx.core.*;
 import io.vertx.core.eventbus.EventBus;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
@@ -33,9 +31,9 @@ public class DefaultExemptionService extends SqlCrudService implements Exemption
     }
 
     @Override
-    public void get(String structure_id, String start_date, String end_date, List<String> student_ids, String page,
+    public void get(String structureId, String startDate, String endDate, List<String> studentIds, String page,
                     String order, boolean reverse, Handler<Either<String, JsonArray>> handler) {
-        String query = "SELECT * " + this.getterFROMBuilder(DATABASE_TABLE_VIEW, structure_id, start_date, end_date, student_ids);
+        String query = "SELECT * " + this.getterFROMBuilder(DATABASE_TABLE_VIEW, structureId, startDate, endDate, studentIds);
         JsonArray values = new JsonArray();
 
         if (page != null) {
@@ -50,22 +48,20 @@ public class DefaultExemptionService extends SqlCrudService implements Exemption
                 handler.handle(new Either.Left<>(event.left().getValue()));
             } else {
                 List<ExemptionView> exemptions = ExemptionHelper.getExemptionListFromJsonArray(event.right().getValue());
-                if (exemptions.size() == 0) {
+                if (exemptions.isEmpty()) {
                     handler.handle(new Either.Right<>(ModelHelper.convertToJsonArray(exemptions)));
+                } else if (studentIds == null) {
+                    handler.handle(new Either.Right<>(new JsonArray()));
                 } else {
-                    Future<JsonObject> userInfoFuture = Future.future();
-                    Future<JsonObject> subjectInfoFuture = Future.future();
+                    Promise<JsonObject> userInfoPromise = Promise.promise();
+                    Promise<JsonObject> subjectInfoPromise = Promise.promise();
 
-                    exemptionHelper.addUsersInfo(structure_id, exemptions, userInfoFuture);
-                    exemptionHelper.addSubjectsInfo(exemptions, subjectInfoFuture);
+                    exemptionHelper.addUsersInfo(structureId, exemptions, userInfoPromise.future());
+                    exemptionHelper.addSubjectsInfo(exemptions, subjectInfoPromise.future());
 
-                    CompositeFuture.all(userInfoFuture, subjectInfoFuture).setHandler(eventFutured -> {
-                        if (eventFutured.succeeded()) {
-                            handler.handle(new Either.Right<>(ModelHelper.convertToJsonArray(exemptions)));
-                        } else {
-                            handler.handle(new Either.Left<>(eventFutured.cause().getMessage()));
-                        }
-                    });
+                    CompositeFuture.all(userInfoPromise.future(), subjectInfoPromise.future())
+                            .onFailure(fail -> handler.handle(new Either.Left<>(fail.getMessage())))
+                            .onSuccess(evt -> handler.handle(new Either.Right<>(ModelHelper.convertToJsonArray(exemptions))));
                 }
             }
         }));

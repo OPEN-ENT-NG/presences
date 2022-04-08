@@ -11,6 +11,7 @@ import org.entcore.common.user.UserInfos;
 public class ManageExemptionRight implements ResourcesProvider {
     @Override
     public void authorize(HttpServerRequest request, Binding binding, UserInfos user, Handler<Boolean> handler) {
-        handler.handle(WorkflowHelper.hasRight(user, WorkflowActions.MANAGE_EXEMPTION.toString()));
+        handler.handle(WorkflowHelper.hasRight(user, WorkflowActions.MANAGE_EXEMPTION.toString())
+        || WorkflowHelper.hasRight(user, WorkflowActions.MANAGE_EXEMPTION_RESTRICTED.toString()));
     }
 }
