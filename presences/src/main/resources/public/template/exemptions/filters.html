@@ -1,16 +1,18 @@
-<div class="row" ng-if="::hasRight('search')">
+<div class="row" ng-if="hasRight('search') || hasRight('searchRestricted')">
     <h1 class="cell paddingRight">
         <i18n>presences.navigation.exemption</i18n>
     </h1>
     <div class="cell four paddingRight">
         <div class="cell twelve search-input">
-            <async-autocomplete ng-disabled="false"
-                                ng-model="vm.studentSearchInput"
-                                ng-change="vm.selectFilterStudent"
-                                on-search="vm.searchByStudent"
-                                options="vm.students.all"
-                                placeholder="presences.exemptions.search.student"
-                                search="vm.students.searchValue"></async-autocomplete>
+            <async-autocomplete data-ng-disabled="false"
+                                data-ng-model="vm.studentSearchInput"
+                                data-ng-change="vm.selectFilterStudent"
+                                data-on-search="vm.searchByStudent"
+                                data-options="vm.studentsSearch.students"
+                                data-placeholder="presences.exemptions.search.student"
+                                data-search="vm.studentsSearch.student">
+
+            </async-autocomplete>
         </div>
         <div class="cell twelve">
             <ul class="cell twelve search-input-ul">

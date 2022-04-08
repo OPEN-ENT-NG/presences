@@ -1,11 +1,12 @@
 import {_, idiom as lang, ng} from 'entcore';
 import {Exemptions, Student, Students} from "../models";
 import {EXEMPTIONS_FORM_EVENTS} from '../sniplets';
-import {Toast} from "../utilities";
+import {StudentsSearch, Toast} from "../utilities";
 import {DateUtils} from "@common/utils"
 import {SNIPLET_FORM_EMIT_EVENTS} from '@common/model';
 import {GroupService} from "@common/services/GroupService";
 import {Scope} from './main'
+import {SearchService} from "@common/services";
 
 declare let window: any;
 
@@ -20,6 +21,7 @@ interface ViewModel {
     students: Students;
     studentsFrom: Students;
     studentsSearching: Students;
+    studentsSearch: StudentsSearch;
     studentsFiltered: any[];
     classesFiltered: any[];
     form: any;
@@ -35,11 +37,9 @@ interface ViewModel {
 
     searchByStudent(string): void;
 
-    searchFormByStudent(searchText: string): void;
-
     selectFilterClass(model: any, option: any): void;
 
-    selectFilterStudent(model: Student, option: Student): void;
+    selectFilterStudent(model: string, option: Student): void;
 
     filters(student?, audience?): void;
 
@@ -67,8 +67,8 @@ interface ViewModel {
 }
 
 export const exemptionsController = ng.controller('ExemptionsController',
-    ['$scope', '$route', 'GroupService',
-        function ($scope: Scope, $route, GroupService: GroupService) {
+    ['$scope', '$route', 'GroupService', 'SearchService',
+        function ($scope: Scope, $route, GroupService: GroupService, searchService: SearchService) {
             const vm: ViewModel = this;
 
             console.log('ExemptionsController');
@@ -89,15 +89,15 @@ export const exemptionsController = ng.controller('ExemptionsController',
 
                 vm.exemptions = new Exemptions();
                 vm.exemptions.eventer.on('loading::false', () => $scope.safeApply());
-                
+
                 vm.classes = undefined;
 
                 vm.students = new Students();
                 vm.studentsFrom = new Students();
-
                 vm.studentsFiltered = [];
                 vm.classesFiltered = [];
                 vm.studentsSearching = new Students();
+                vm.studentsSearch = new StudentsSearch(window.structure.id, searchService);
                 loadExemptions();
                 $scope.safeApply();
 
@@ -133,14 +133,9 @@ export const exemptionsController = ng.controller('ExemptionsController',
             };
 
             vm.searchByStudent = async (searchText: string) => {
-                await vm.students.search(window.structure.id, searchText);
+                await vm.studentsSearch.searchStudents(searchText);
                 $scope.safeApply();
             };
-
-            // vm.searchFormByStudent = async (searchText: string) => {
-            //     await vm.studentsFrom.search(window.structure.id, searchText);
-            //     $scope.safeApply();
-            // };
 
             vm.selectFilterClass = function (model: Student, option: Student) {
                 vm.classes = undefined;
@@ -148,10 +143,12 @@ export const exemptionsController = ng.controller('ExemptionsController',
                 vm.filters(null, option);
             };
 
-            vm.selectFilterStudent = function (model: Student, option: Student) {
+            vm.selectFilterStudent = (model: string, option: Student) => {
+                vm.filters(option);
                 vm.students.all = undefined;
                 vm.students.searchValue = '';
-                vm.filters(option);
+                vm.studentsSearch.selectStudents(model, option);
+                vm.studentsSearch.student = "";
             };
 
             vm.filters = (student?, audience?) => {
