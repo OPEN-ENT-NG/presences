@@ -408,7 +408,7 @@ public class DefaultAbsenceService extends DBService implements AbsenceService {
                     JsonObject oldAbsence = oldAbsenceResult.right().getValue();
 
                     String query = "UPDATE " + Presences.dbSchema + ".absence " +
-                            " start_date = ?, end_date = ?, reason_id = ? " +
+                            " SET start_date = ?, end_date = ?, reason_id = ? " +
                             " WHERE id = ? AND structure_id = ?";
 
 
