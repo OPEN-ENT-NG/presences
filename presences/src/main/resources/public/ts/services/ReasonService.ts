@@ -3,9 +3,9 @@ import http, {AxiosResponse} from 'axios';
 import {Reason, ReasonRequest} from "@presences/models/Reason";
 
 export interface ReasonService {
-    getReasons(structureId: string): Promise<Reason[]>;
+    getReasons(structureId: string, reasonTypeId?: Number): Promise<Reason[]>;
 
-    create(reasonBody: ReasonRequest): Promise<AxiosResponse>;
+    create(reasonBody: ReasonRequest, reasonTypeId?: Number): Promise<AxiosResponse>;
 
     update(reasonBody: ReasonRequest): Promise<AxiosResponse>;
 
@@ -13,9 +13,10 @@ export interface ReasonService {
 }
 
 export const reasonService: ReasonService = {
-    getReasons: async (structureId: string): Promise<Reason[]> => {
+    getReasons: async (structureId: string, reasonTypeId?: Number): Promise<Reason[]> => {
         try {
-            const {data} = await http.get(`/presences/reasons?structureId=${structureId}`);
+            let reasonTypeIdParam: string = reasonTypeId ? `&reasonTypeId=${reasonTypeId}` : '';
+            const {data} = await http.get(`/presences/reasons?structureId=${structureId}${reasonTypeIdParam}`);
             data.map((reason: Reason) => {
                 if (reason.id === -1) {
                     reason.label = lang.translate(reason.label);
@@ -28,16 +29,17 @@ export const reasonService: ReasonService = {
         }
     },
 
-    create: async (reasonBody: ReasonRequest): Promise<AxiosResponse> => {
-        return await http.post(`/presences/reason`, reasonBody);
+    create: async (reasonBody: ReasonRequest, reasonTypeId?: Number): Promise<AxiosResponse> => {
+        let reasonTypeIdParam: string = reasonTypeId ? `?reasonTypeId=${reasonTypeId}` : '';
+        return http.post(`/presences/reason${reasonTypeIdParam}`, reasonBody);
     },
 
     update: async (reasonBody: ReasonRequest): Promise<AxiosResponse> => {
-        return await http.put(`/presences/reason`, reasonBody);
+        return http.put(`/presences/reason`, reasonBody);
     },
 
     delete: async (reasonId: number): Promise<AxiosResponse> => {
-        return await http.delete(`/presences/reason?id=${reasonId}`);
+        return http.delete(`/presences/reason?id=${reasonId}`);
     },
 };
 

@@ -1,0 +1,99 @@
+<div class="ten sniplet presences sniplet-presence-form">
+    <div class="sniplet-form">
+
+        <!-- header -->
+        <div class="sniplet-header">
+            <span class="sniplet-header-icon"><i class="lateness" aria-hidden="true"></i></span>
+            <h3 class="sniplet-header-title">
+                <i18n>presences.lateness.reason</i18n>
+            </h3>
+        </div>
+
+        <!-- Input -->
+        <div class="sniplet-input">
+            <label class="sniplet-input-title">
+                <i18n>presences.lateness.reason.form.input</i18n>
+            </label>
+            <div class="cell four search-input sniplet-input-form">
+                <input type="text" data-ng-model="vm.form.label" class="twelve cell"
+                       placeholder="[[lang.translate('presences.absence.reason.placeholder')]]">
+            </div>
+        </div>
+
+        <!-- Compliance form -->
+        <div class="sniplet-input">
+            <label class="sniplet-input-title">
+                <i18n>presences.lateness.reason.compliance.form.input</i18n>
+            </label>
+            <div>
+                <div class="md-radio md-radio-inline">
+                    <input id="lateness_compliance_true"
+                           data-ng-model="vm.form.absenceCompliance"
+                           type="radio"
+                           ng-value="true"
+                           name="radio-lateness-compliance"
+                           ng-checked="true">
+                    <label for="lateness_compliance_true">
+                        <i18n>true.maj</i18n>
+                    </label>
+                </div>
+                <div class="md-radio md-radio-inline">
+                    <input id="lateness_compliance_false"
+                           data-ng-model="vm.form.absenceCompliance"
+                           type="radio"
+                           ng-value="false"
+                           name="lateness-radio-compliance">
+                    <label for="lateness_compliance_false">
+                        <i18n>false.maj</i18n>
+                    </label>
+                </div>
+            </div>
+        </div>
+
+        <!-- Add reason / Lists -->
+        <div class="sniplet-addList">
+            <button data-ng-click="vm.createReason()" data-ng-disabled="!vm.isFormValid(vm.form)">
+                <i18n>add</i18n>
+            </button>
+
+            <div class="sniplet-addList-content" ng-if="vm.hasReasons()">
+                <i18n>presence.existed.reasons</i18n>
+                <ul class="sniplet-addList-content-list">
+
+                    <!-- Reason item -->
+                    <li class="sniplet-addList-content-list-item"
+                        ng-repeat="reason in vm.reasons | orderBy:['!proving','absence_compliance', 'label']">
+
+                        <div class="sniplet-addList-content-list-item-title">
+                            <label class="sniplet-addList-content-list-item-title-label">[[lang.translate(reason.label)]]&nbsp;</label>
+
+                            <i title="[[lang.translate('presences.absence.reason.regularisation.necessary')]]"
+                               class="sniplet-addList-content-list-item-icon-yellow alert-octagon"
+                               data-ng-show="!reason.proving"></i>
+                            <i title="[[lang.translate('presences.absence.reason.notebook.into.account')]]"
+                               class="sniplet-addList-content-list-item-icon-orange file-checked"
+                               data-ng-show="reason.absence_compliance"></i>
+                            <i class="presence-edit" data-ng-click="vm.openReasonLightbox(reason)"></i>
+                        </div>
+
+                        <!-- Visibility icons + delete -->
+                        <div class="sniplet-addList-content-list-item-icons">
+                            <i class="visible" data-ng-show="reason.used && !reason.hidden"
+                               data-ng-click="vm.toggleVisibility(reason)"></i>
+                            <i class="invisible" data-ng-show="reason.hidden && reason.used"
+                               data-ng-click="vm.toggleVisibility(reason)"></i>
+                            <i class="delete" data-ng-show="!reason.used"
+                               data-ng-click="vm.deleteReason(reason)"></i>
+                        </div>
+                    </li>
+
+                </ul>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+<!-- lightbox edit reason -->
+<div ng-include="'/presences/public/template/behaviours/sniplet-presences-manage
+/reason-manage/sniplet-presences-reason-manage-lightbox.html'"></div>
