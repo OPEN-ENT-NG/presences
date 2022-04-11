@@ -1,6 +1,7 @@
 package fr.openent.statistics_presences.indicator;
 
 import fr.openent.presences.common.helper.FutureHelper;
+import fr.openent.presences.core.constants.Field;
 import fr.openent.statistics_presences.StatisticsPresences;
 import fr.openent.statistics_presences.bean.Report;
 import fr.openent.statistics_presences.service.CommonServiceFactory;
@@ -38,23 +39,42 @@ public class ProcessingScheduledManual extends BusModBase implements Handler<Mes
     @Override
     @SuppressWarnings("unchecked")
     public void handle(Message<JsonObject> eventMessage) {
-        eventMessage.reply(new JsonObject().put("status", "ok"));
+        Boolean isWaitingEndProcess = eventMessage.body().getBoolean(Field.ISWAITINGENDPROCESS, false);
+        if (Boolean.FALSE.equals(isWaitingEndProcess)) eventMessage.reply(new JsonObject().put(Field.STATUS, Field.OK));
         log.info("[" + this.getClass().getSimpleName() + "] receiving from route /process/statistics/tasks");
         start = System.currentTimeMillis();
         initTemplateProcessor();
         List<String> structures = eventMessage.body().getJsonArray("structure", new JsonArray()).getList();
-        fetchUsersFromStructures(structures)
+        List<String> studentIds = eventMessage.body().getJsonArray(Field.STUDENTIDS, new JsonArray()).getList();
+        fetchUsers(structures, studentIds)
                 .compose(this::processIndicators)
                 .compose(this::generateReport)
-                .onSuccess(success -> log.info(success))
-                .onFailure(error -> log.error(String.format("[StatisticsPresences@ProcessingScheduledManual::handle] " +
-                        "Processing scheduled manual task failed. See previous logs. %s", error.getMessage())));
+                .onSuccess(success -> {
+                    log.info(success);
+                    if (Boolean.TRUE.equals(isWaitingEndProcess))
+                        eventMessage.reply(new JsonObject().put(Field.STATUS, Field.OK));
+                })
+                .onFailure(error -> {
+                    String message = String.format("[StatisticsPresences@ProcessingScheduledManual::handle] " +
+                            "Processing scheduled manual task failed. See previous logs. %s", error.getMessage());
+                    log.error(message);
+                    if (Boolean.TRUE.equals(isWaitingEndProcess))
+                        eventMessage.reply(new JsonObject()
+                                .put(Field.STATUS, Field.ERROR)
+                                .put(Field.MESSAGE, message));
+                });
     }
 
     private void initTemplateProcessor() {
         templateProcessor = new TemplateProcessor(vertx, "template").escapeHTML(false);
         templateProcessor.setLambda("i18n", new I18nLambda("fr"));
         templateProcessor.setLambda("datetime", new LocaleDateLambda("fr"));
+    }
+
+    private Future<JsonObject> fetchUsers(List<String> structureIds, List<String> studentIds) {
+        if (studentIds == null || studentIds.isEmpty()) return fetchUsersFromStructures(structureIds);
+        if (structureIds == null || structureIds.isEmpty()) return Future.succeededFuture(new JsonObject());
+        return Future.succeededFuture(new JsonObject().put(structureIds.get(0), studentIds));
     }
 
     /**
@@ -78,8 +98,8 @@ public class ProcessingScheduledManual extends BusModBase implements Handler<Mes
                 })
                 .onFailure(promise::fail);
         return promise.future();
-
     }
+
 
     /**
      * Launch indicators process. The process compute values for each user and store it in the database.

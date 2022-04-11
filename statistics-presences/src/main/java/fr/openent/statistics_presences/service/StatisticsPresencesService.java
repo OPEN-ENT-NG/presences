@@ -21,7 +21,8 @@ public interface StatisticsPresencesService {
      * Add user in deleted table.
      *
      * @param structure list structure identifier
+     * @param studentIds list student identifiers
      * @return Future JsonObject completing process
      */
-    Future<JsonObject> processStatisticsPrefetch(List<String> structure);
+    Future<JsonObject> processStatisticsPrefetch(List<String> structure, List<String> studentIds, Boolean isWaitingEndProcess);
 }
