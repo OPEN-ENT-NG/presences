@@ -1,4 +1,5 @@
 package fr.openent.presences.service;
+
 import fr.wseduc.webutils.Either;
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Future;
@@ -14,32 +15,32 @@ public interface EventService {
     /**
      * Get events
      *
-     * @param structureId       structure identifier
-     * @param startDate         startDate start date
-     * @param endDate           endDate end date
-     * @param eventType         event type
-     * @param listReasonIds     reasonId reason_id
-     * @param noReason          noReason filter
-     * @param userId            userId userId neo4j
-     * @param regularized       regularized filter
-     * @param followed          followed filter
-     * @param page              page
-     * @param handler           function handler returning data
+     * @param structureId   structure identifier
+     * @param startDate     startDate start date
+     * @param endDate       endDate end date
+     * @param eventType     event type
+     * @param listReasonIds reasonId reason_id
+     * @param noReason      noReason filter
+     * @param userId        userId userId neo4j
+     * @param regularized   regularized filter
+     * @param followed      followed filter
+     * @param page          page
+     * @param handler       function handler returning data
      */
 
     void getEvents(String structureId, String startDate, String endDate,
-              List<String> eventType, List<String> listReasonIds, Boolean noReason, List<String> userId, JsonArray userIdFromClasses,
-              Boolean regularized, Boolean followed, Integer page, Handler<Either<String, JsonArray>> handler);
+                   List<String> eventType, List<String> listReasonIds, Boolean noReason, List<String> userId, JsonArray userIdFromClasses,
+                   Boolean regularized, Boolean followed, Integer page, Handler<Either<String, JsonArray>> handler);
 
     void get(String structureId, String startDate, String endDate, String startTime, String endTime,
-             List<String> eventType, List<String> listReasonIds, Boolean noReason, List<String> userId, List<String> restrictedClasses,
+             List<String> eventType, List<String> listReasonIds, Boolean noAbsenceReason, Boolean noLatenessReason, List<String> userId, List<String> restrictedClasses,
              Boolean regularized, Boolean followed, Integer page, Handler<AsyncResult<JsonArray>> handler);
 
     Future<JsonArray> getEventsBetweenDates(String startDate, String endDate, List<String> users, List<Integer> eventType,
                                             String structureId);
 
     void getDayMainEvents(String structureId, String startDate, String endDate, String startTime, String endTime,
-                          List<String> studentIds, List<String> typeIds, List<String> reasonIds, Boolean noReason,
+                          List<String> studentIds, List<String> typeIds, List<String> reasonIds, Boolean noAbsenceReason, Boolean noLateness,
                           Boolean regularized, Boolean followed, Integer page, Handler<AsyncResult<JsonArray>> handler);
 
     /**
@@ -56,27 +57,29 @@ public interface EventService {
     /**
      * Get events page number
      *
-     * @param structureId       structure identifier
-     * @param startDate         startDate start date
-     * @param endDate           endDate end date
-     * @param eventType         event type
-     * @param listReasonIds     reasonId reason_id
-     * @param noReason          noReason filter
-     * @param userId            userId userId neo4j
-     * @param regularized       filter regularized absence
-     * @param followed          filter followed absence
-     * @param handler           function handler returning data
+     * @param structureId      structure identifier
+     * @param startDate        startDate start date
+     * @param endDate          endDate end date
+     * @param eventType        event type
+     * @param listReasonIds    reasonId reason_id
+     * @param noAbsenceReason  noAbsenceReason filter
+     * @param noLatenessReason noLatenessReason filter
+     * @param userId           userId userId neo4j
+     * @param regularized      filter regularized absence
+     * @param followed         filter followed absence
+     * @param handler          function handler returning data
      */
     void getPageNumber(String structureId, String startDate, String endDate, String startTime, String endTime,
-                       List<String> eventType, List<String> listReasonIds, Boolean noReason, List<String> userId,
+                       List<String> eventType, List<String> listReasonIds, Boolean noAbsenceReason, Boolean noLatenessReason, List<String> userId,
                        Boolean regularized, Boolean followed, Handler<Either<String, JsonObject>> handler);
 
 
     /**
      * Get absence and absence events counts summary.
-     * @param structureId       structure identifier
-     * @param currentDate       current date
-     * @param handler           function handler returning data
+     *
+     * @param structureId structure identifier
+     * @param currentDate current date
+     * @param handler     function handler returning data
      */
     void getAbsencesCountSummary(String structureId, String currentDate, Handler<Either<String, JsonObject>> handler);
 
@@ -84,9 +87,9 @@ public interface EventService {
     /**
      * Create event
      *
-     * @param event             event
-     * @param user              user that create event
-     * @param handler           function handler returning data
+     * @param event   event
+     * @param user    user that create event
+     * @param handler function handler returning data
      */
     void create(JsonObject event, UserInfos user, Handler<Either<String, JsonObject>> handler);
 
