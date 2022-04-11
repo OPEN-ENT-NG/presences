@@ -140,7 +140,7 @@ public class ExemptionController extends ControllerHelper {
 
                             List<String> studentIdList = studentIds;
 
-                            if (restrictedStudentIds != null) {
+                            if (restrictedStudentIds != null && !restrictedStudentIds.isEmpty()) {
                                 if (studentIds.isEmpty()) {
                                     studentIdList = restrictedStudentIds;
                                 } else {
