@@ -45,8 +45,8 @@ public class ProcessingScheduledTask implements Handler<Long> {
                 .compose(this::clearWaitingList)
                 .setHandler(ar -> {
                     if (ar.failed()) {
-                        log.error("[Statistics@ProcessingScheduledTask::handle] " +
-                                "Processing scheduled task failed. See previous logs", ar.cause());
+                        log.error(String.format("[Statistics@ProcessingScheduledTask::handle] " +
+                                "Processing scheduled task failed. See previous logs. %s", ar.cause().getMessage()));
                     }
                 });
     }
@@ -79,8 +79,8 @@ public class ProcessingScheduledTask implements Handler<Long> {
         
         Sql.getInstance().raw(query, SqlResult.validResultHandler(either -> {
             if (either.isLeft()) {
-                log.error("[Statistics@ProcessingScheduledTask::fetchUsersToProcess] " +
-                        "Failed to retrieve users to process", either.left().getValue());
+                log.error(String.format("[Statistics@ProcessingScheduledTask::fetchUsersToProcess] " +
+                        "Failed to retrieve users to process. %s", either.left().getValue()));
                 future.fail(either.left().getValue());
             } else {
                 JsonArray result = either.right().getValue();
@@ -122,8 +122,8 @@ public class ProcessingScheduledTask implements Handler<Long> {
                     promise.complete(reports);
                 })
                 .onFailure(fail -> {
-                    log.error("[Statistics@ProcessingScheduledTask::processIndicators] " +
-                            "Some indicator failed during processing", fail.getCause());
+                    log.error(String.format("[Statistics@ProcessingScheduledTask::processIndicators] " +
+                            "Some indicator failed during processing. %s", fail.getMessage()));
                     promise.fail(fail.getCause());
                 });
 

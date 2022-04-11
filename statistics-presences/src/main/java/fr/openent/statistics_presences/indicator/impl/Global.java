@@ -73,7 +73,7 @@ public class Global extends Indicator {
                 })
                 .onFailure(fail -> {
                     log.error(String.format("[StatisticsPresences@Global::setSearchSettings] " +
-                            "Indicator %s failed to retrieve settings", Global.class.getName()), fail.getCause());
+                            "Indicator %s failed to retrieve settings. %s", Global.class.getName(), fail.getMessage()));
                     promise.fail(fail.getCause());
                 });
         return promise.future();
@@ -107,7 +107,7 @@ public class Global extends Indicator {
                 })
                 .onFailure(fail -> {
                     log.error(String.format("[StatisticsPresences@Global::searchProcess] " +
-                            "Indicator %s failed to complete search", Global.class.getName()), fail.getCause());
+                            "Indicator %s failed to complete search. %s", Global.class.getName(), fail.getMessage()));
                     promise.fail(fail.getCause());
                 });
         return promise.future();
@@ -162,7 +162,7 @@ public class Global extends Indicator {
                 .setHandler(ar -> {
                     if (ar.failed()) {
                         log.error(String.format("[StatisticsPresences@Global::searchValues] " +
-                                "Indicator %s failed to complete search values", Global.class.getName()), ar.cause());
+                                "Indicator %s failed to complete search values. %s", Global.class.getName(), ar.cause().getMessage()));
                         future.handle(Future.failedFuture(ar.cause()));
                     } else {
                         GlobalSearch completedSearch = ar.result();
@@ -183,8 +183,8 @@ public class Global extends Indicator {
         mongoDb.command(request.toString(), MongoDbResult.validResultHandler(either -> {
             if (either.isLeft()) {
                 log.error(String.format("[StatisticsPresences@Global::totalAbsenceStage] " +
-                                "Indicator %s failed to execute mongodb total absence aggregation pipeline", Global.class.getName()),
-                        either.left().getValue());
+                                "Indicator %s failed to execute mongodb total absence aggregation pipeline. %s", Global.class.getName(),
+                        either.left().getValue()));
                 future.fail(either.left().getValue());
                 return;
             }
@@ -221,7 +221,7 @@ public class Global extends Indicator {
                 })
                 .onFailure(fail -> {
                     log.error(String.format("[StatisticsPresences@Global::countValues] " +
-                            "Indicator %s failed to count values", Global.class.getName()), fail.getCause());
+                            "Indicator %s failed to count values. %s", Global.class.getName(), fail.getMessage()));
                     promise.fail(fail.getCause());
                 });
 
@@ -306,8 +306,8 @@ public class Global extends Indicator {
         mongoDb.command(request.toString(), MongoDbResult.validResultHandler(either -> {
             if (either.isLeft()) {
                 log.error(String.format("[StatisticsPresences@Global::globalAbsenceCount] " +
-                                "Indicator %s failed to execute mongodb global absence count aggregation pipeline", Global.class.getName()),
-                        either.left().getValue());
+                                "Indicator %s failed to execute mongodb global absence count aggregation pipeline. %s", Global.class.getName(),
+                        either.left().getValue()));
                 promise.fail(either.left().getValue());
                 return;
             }
@@ -355,7 +355,7 @@ public class Global extends Indicator {
                 })
                 .onFailure(fail -> {
                     log.error(String.format("[StatisticsPresences@Global::countStatistics] " +
-                            "Indicator %s failed to retrieve statistics count", Global.class.getName()), fail.getCause());
+                            "Indicator %s failed to retrieve statistics count. %s", Global.class.getName(), fail.getMessage()));
                     promise.fail(fail.getCause());
                 });
 
@@ -377,7 +377,7 @@ public class Global extends Indicator {
                 })
                 .onFailure(fail -> {
                     log.error(String.format("[StatisticsPresences@Global::countSlotsStatistics] " +
-                            "Indicator %s failed to retrieve statistics slots count", Global.class.getName()), fail.getCause());
+                            "Indicator %s failed to retrieve statistics slots count. %s", Global.class.getName(), fail.getMessage()));
                     promise.fail(fail.getCause());
                 });
 
@@ -448,8 +448,8 @@ public class Global extends Indicator {
         mongoDb.command(request.toString(), MongoDbResult.validResultHandler(either -> {
             if (either.isLeft()) {
                 log.error(String.format("[StatisticsPresences@Global::prefetchUsers] " +
-                                "Indicator %s failed to execute prefetch user mongodb aggregation pipeline", Global.class.getName()),
-                        either.left().getValue());
+                                "Indicator %s failed to execute prefetch user mongodb aggregation pipeline. %s", Global.class.getName(),
+                        either.left().getValue()));
                 future.fail(either.left().getValue());
                 return;
             }
@@ -517,7 +517,7 @@ public class Global extends Indicator {
                 })
                 .onFailure(fail -> {
                     log.error(String.format("[StatisticsPresences@Global::statisticStage] " +
-                            "Indicator %s failed to retrieve statistics", Global.class.getName()), fail.getCause());
+                            "Indicator %s failed to retrieve statistics. %s", Global.class.getName(), fail.getMessage()));
                     promise.fail(fail.getCause());
                 });
 
@@ -535,16 +535,16 @@ public class Global extends Indicator {
         mongoDb.command(request.toString(), MongoDbResult.validResultHandler(either -> {
             if (either.isLeft()) {
                 log.error(String.format("[StatisticsPresences@Global::retrieveStatistics] " +
-                                "Indicator %s failed to execute mongodb aggregation pipeline", Global.class.getName()),
-                        either.left().getValue());
+                                "Indicator %s failed to execute mongodb aggregation pipeline. %s", Global.class.getName(),
+                        either.left().getValue()));
                 promise.fail(either.left().getValue());
                 return;
             }
             JsonObject result = either.right().getValue();
             if (result.getJsonObject("cursor") == null) {
-                String message = either.right().getValue().getString("errmsg");
+                String message = either.right().getValue().getString(Field.ERRMSG, "");
                 log.error(String.format("[StatisticsPresences@Global::retrieveStatistics] Indicator %s failed to execute " +
-                        "mongodb aggregation pipeline. ", Global.class.getName()), message);
+                        "mongodb aggregation pipeline. %s", Global.class.getName(), message));
                 promise.fail(message);
                 return;
             }
@@ -702,7 +702,7 @@ public class Global extends Indicator {
         return Neo4jResult.validResultHandler(either -> {
             if (either.isLeft()) {
                 log.error(String.format("[StatisticsPresences@Global::searchUserHandler] " +
-                        "Indicator %s failed to retrieve users", Global.class.getName()), either.left().getValue());
+                        "Indicator %s failed to retrieve users. %s", Global.class.getName(), either.left().getValue()));
                 promise.fail(either.left().getValue());
                 return;
             }

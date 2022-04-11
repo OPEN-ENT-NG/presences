@@ -1,6 +1,7 @@
 package fr.openent.statistics_presences.indicator.impl;
 
 import fr.openent.presences.common.helper.DateHelper;
+import fr.openent.presences.core.constants.Field;
 import fr.openent.statistics_presences.StatisticsPresences;
 import fr.openent.statistics_presences.bean.Audience;
 import fr.openent.statistics_presences.bean.monthly.*;
@@ -69,7 +70,7 @@ public class Monthly extends Indicator {
                 })
                 .onFailure(fail -> {
                     log.error(String.format("[StatisticsPresences@Global::setSearchSettings] " +
-                            "Indicator %s failed to retrieve settings", Monthly.class.getName()), fail.getCause());
+                            "Indicator %s failed to retrieve settings. %s", Monthly.class.getName(), fail.getMessage()));
                     promise.fail(fail.getCause());
                 });
         return promise.future();
@@ -92,7 +93,7 @@ public class Monthly extends Indicator {
                 })
                 .onFailure(fail -> {
                     log.error(String.format("[StatisticsPresences@Monthly::searchProcess] " +
-                            "Indicator %s failed to complete search", Monthly.class.getName()), fail.getCause());
+                            "Indicator %s failed to complete search. %s", Monthly.class.getName(), fail.getMessage()));
                     promise.fail(fail.getCause());
                 });
         return promise.future();
@@ -110,7 +111,7 @@ public class Monthly extends Indicator {
                 .onSuccess(promise::complete)
                 .onFailure(fail -> {
                     log.error(String.format("[StatisticsPresences@Monthly::searchGraphProcess] " +
-                            "Indicator %s failed to complete search", Monthly.class.getName()), fail.getCause());
+                            "Indicator %s failed to complete search. %s", Monthly.class.getName(), fail.getMessage()));
                     promise.fail(fail.getCause());
                 });
         return promise.future();
@@ -134,7 +135,7 @@ public class Monthly extends Indicator {
                 )
                 .onFailure(fail -> {
                     log.error(String.format("[StatisticsPresences@Monthly::searchValues] " +
-                            "Indicator %s failed to complete search values ", Monthly.class.getName()), fail.getMessage());
+                            "Indicator %s failed to complete search values. %s", Monthly.class.getName(), fail.getMessage()));
                     promise.handle(Future.failedFuture(fail.getCause()));
                 });
 
@@ -154,7 +155,7 @@ public class Monthly extends Indicator {
                 .onSuccess(ar -> promise.handle(Future.succeededFuture(ar)))
                 .onFailure(fail -> {
                     log.error(String.format("[StatisticsPresences@Monthly::searchValues] " +
-                            "Indicator %s failed to complete search values ", Monthly.class.getName()), fail.getCause().getMessage());
+                            "Indicator %s failed to complete search values. %s", Monthly.class.getName(), fail.getMessage()));
                     promise.handle(Future.failedFuture(fail.getCause()));
                 });
 
@@ -244,7 +245,7 @@ public class Monthly extends Indicator {
                 })
                 .onFailure(fail -> {
                     log.error(String.format("[StatisticsPresences@Monthly::statisticStage] " +
-                            "Indicator %s failed to retrieve statistics", Monthly.class.getName()), fail.getCause());
+                            "Indicator %s failed to retrieve statistics. %s", Monthly.class.getName(), fail.getMessage()));
                     promise.fail(fail.getCause());
                 });
 
@@ -355,7 +356,7 @@ public class Monthly extends Indicator {
                 })
                 .onFailure(fail -> {
                     log.error(String.format("[StatisticsPresences@Monthly::statisticGraphStage] " +
-                            "Indicator %s failed to retrieve statistics", Monthly.class.getName()), fail.getCause());
+                            "Indicator %s failed to retrieve statistics. %s", Monthly.class.getName(), fail.getMessage()));
                     promise.fail(fail.getCause());
                 });
 
@@ -373,16 +374,16 @@ public class Monthly extends Indicator {
         mongoDb.command(request.toString(), MongoDbResult.validResultHandler(either -> {
             if (either.isLeft()) {
                 log.error(String.format("[StatisticsPresences@Monthly::retrieveStatistics] " +
-                                "Indicator %s failed to execute mongodb aggregation pipeline", Monthly.class.getName()),
-                        either.left().getValue());
+                                "Indicator %s failed to execute mongodb aggregation pipeline. %s", Monthly.class.getName(),
+                        either.left().getValue()));
                 promise.fail(either.left().getValue());
                 return;
             }
             JsonObject result = either.right().getValue();
             if (result.getJsonObject("cursor") == null) {
-                String message = either.right().getValue().getString("errmsg");
+                String message = either.right().getValue().getString(Field.ERRMSG, "");
                 log.error(String.format("[StatisticsPresences@Monthly::retrieveStatistics] Indicator %s failed to execute " +
-                        "mongodb aggregation pipeline. ", Monthly.class.getName()), message);
+                        "mongodb aggregation pipeline. %s", Monthly.class.getName(), message));
                 promise.fail(message);
                 return;
             }
@@ -560,7 +561,7 @@ public class Monthly extends Indicator {
         return Neo4jResult.validResultHandler(either -> {
             if (either.isLeft()) {
                 log.error(String.format("[StatisticsPresences@Monthly::searchClassHandler] " +
-                        "Indicator %s failed to retrieve classes", Monthly.class.getName()), either.left().getValue());
+                        "Indicator %s failed to retrieve classes. %s", Monthly.class.getName(), either.left().getValue()));
                 promise.fail(either.left().getValue());
                 return;
             }
