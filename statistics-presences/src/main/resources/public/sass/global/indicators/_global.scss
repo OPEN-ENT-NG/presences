@@ -40,4 +40,18 @@
   .em-slots-rate {
     font-size: 9px;
   }
+
+  .reload {
+    cursor: pointer;
+    &:hover {
+      color: $statistics-presences-main;
+    }
+  }
+
+  .flex-row {
+    min-height: 0 !important;
+    padding-top: 0 !important;
+    padding-bottom: 0 !important;
+  }
+
 }

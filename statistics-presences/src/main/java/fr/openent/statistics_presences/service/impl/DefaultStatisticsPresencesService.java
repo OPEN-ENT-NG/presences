@@ -2,6 +2,7 @@ package fr.openent.statistics_presences.service.impl;
 
 
 import fr.openent.presences.common.helper.FutureHelper;
+import fr.openent.presences.core.constants.Field;
 import fr.openent.presences.db.DBService;
 import fr.openent.statistics_presences.StatisticsPresences;
 import fr.openent.statistics_presences.service.CommonServiceFactory;
@@ -31,16 +32,20 @@ public class DefaultStatisticsPresencesService extends DBService implements Stat
     }
 
     @Override
-    public Future<JsonObject> processStatisticsPrefetch(List<String> structures) {
+    public Future<JsonObject> processStatisticsPrefetch(List<String> structures, List<String> studentIds, Boolean isWaitingEndProcess) {
         Promise<JsonObject> promise = Promise.promise();
+        Future<JsonObject> process = null;
         if (structures.isEmpty()) {
             promise.fail("No structure(s) identifier given");
         } else {
-            JsonObject param = new JsonObject().put("structure", structures);
-            StatisticsPresences.launchProcessingStatistics(commonServiceFactory.eventBus(), param);
-            promise.complete(new JsonObject().put("status", "ok"));
+            JsonObject params = new JsonObject()
+                    .put(Field.STRUCTURE, structures)
+                    .put(Field.STUDENTIDS, studentIds)
+                    .put(Field.ISWAITINGENDPROCESS, isWaitingEndProcess);
+            process = StatisticsPresences.launchProcessingStatistics(commonServiceFactory.eventBus(), params);
+            promise.complete(new JsonObject().put(Field.STATUS, Field.OK));
         }
-        return promise.future();
+        return Boolean.TRUE.equals(isWaitingEndProcess) ? process : promise.future();
     }
 
     /**

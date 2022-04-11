@@ -37,6 +37,7 @@ public class Field {
     public static final String STUDENT_ID = "student_id";
     public static final String STUDENT_IDS = "student_ids";
     public static final String STUDENTID = "studentId";
+    public static final String STUDENTIDS = "studentIds";
     public static final String STUDENTS_EVENTS = "students_events";
     public static final String SUBJECT = "subject";
     public static final String SUBJECT_ID = "subject_id";
@@ -266,6 +267,7 @@ public class Field {
     public static final String MONTH = "month";
     public static final String YEAR = "year";
     public static final String PUNISHMENT_TYPE = "punishment_type";
+    public static final String ISWAITINGENDPROCESS = "isWaitingEndProcess";
 
     //Weekly Audiences
     public static final String SLOT_ID = "slot_id";
