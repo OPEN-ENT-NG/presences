@@ -1,13 +1,14 @@
-import {_, idiom, model, ng, template} from 'entcore';
+import {_, idiom, model, ng, template, toasts} from 'entcore';
 import {Reason} from "@presences/models";
 import {
+    indicatorService,
     IPunishmentsTypeService,
     IViescolaireService,
     ReasonService,
     SearchService,
+    Setting,
     SettingsService,
-    ViescolaireService,
-    Setting
+    ViescolaireService
 } from '../services';
 import {GroupService} from '@common/services/GroupService';
 import {IPunishmentType} from '@incidents/models/PunishmentType';
@@ -21,6 +22,7 @@ import {IMonthly, MonthlyStatistics} from "../model/Monthly";
 import {EXPORT_TYPE} from "../core/enums/export-type.enum";
 import {Weekly} from "@statistics/indicator/Weekly";
 import {SLOT_HEIGHT} from "../../constants/calendar";
+import {AxiosError} from "axios";
 
 declare let window: any;
 
@@ -89,9 +91,9 @@ interface ViewModel {
 
     openCSVOptions(): void;
 
-    switchExportType(exportType : string): void;
+    switchExportType(exportType: string): void;
 
-    export(exportType? : string): void;
+    export(exportType?: string): void;
 
     /* search bar methods */
 
@@ -104,6 +106,8 @@ interface ViewModel {
     selectAudience(model: any, audience: any): void;
 
     removeSelection(type: any, value: any): Promise<void>;
+
+    refreshStudentsStatistics(arrayStudentIds: Array<string>): void;
 }
 
 export const mainController = ng.controller('MainController',
@@ -283,7 +287,7 @@ export const mainController = ng.controller('MainController',
                 }
 
                 type.push(object);
-                if (vm.isWeekly(vm.indicator)) await (<Weekly> vm.indicator)
+                if (vm.isWeekly(vm.indicator)) await (<Weekly>vm.indicator)
                     .initTimeslot(
                         vm.filter.students.map(student => student.id),
                         vm.filter.audiences.map(audience => audience.id)
@@ -406,7 +410,7 @@ export const mainController = ng.controller('MainController',
                 if (vm.isWeekly(vm.indicator)) {
                     vm.filter.students = [];
                     vm.filter.audiences = [];
-                    await (<Weekly> vm.indicator).initTimeslot(
+                    await (<Weekly>vm.indicator).initTimeslot(
                         [],
                         []
                     );
@@ -430,11 +434,11 @@ export const mainController = ng.controller('MainController',
 
             }
 
-            vm.switchExportType = (exportType : string): void => {
+            vm.switchExportType = (exportType: string): void => {
                 vm.filter.exportType = exportType;
             }
 
-            vm.export = (exportType? : string): void => {
+            vm.export = (exportType?: string): void => {
                 let users = [];
                 let audiences = [];
                 vm.filter.students.map(student => users.push(student.id));
@@ -443,5 +447,18 @@ export const mainController = ng.controller('MainController',
                 if (exportType) {
                     vm.filter.showCSV = false
                 }
+            }
+
+            vm.refreshStudentsStatistics = (arrayStudentIds: Array<string>): void => {
+                const structureId: string = window.structure.id;
+                toasts.info('statistics-presences.indicator.Global.student.refresh.inprogress')
+                indicatorService.refreshStudentsStats(structureId, arrayStudentIds)
+                    .then(() => vm.resetIndicator())
+                    .then(() => {
+                        toasts.info('statistics-presences.indicator.Global.student.refresh.success');
+                    }).catch((err: AxiosError) => {
+                    toasts.warning('statistics-presences.indicator.Global.student.refresh.error');
+                    console.error(err, err.message);
+                });
             }
         }]);

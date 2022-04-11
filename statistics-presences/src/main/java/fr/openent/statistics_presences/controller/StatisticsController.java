@@ -28,6 +28,7 @@ import org.entcore.common.user.UserUtils;
 
 import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -219,12 +220,27 @@ public class StatisticsController extends ControllerHelper {
     @Post("/process/statistics/tasks")
     @SecuredAction(value = "", type = ActionType.RESOURCE)
     @ResourceFilter(AdminFilter.class)
-    @ApiDoc("Generate notebook archives")
+    @ApiDoc("Generate statistics")
     @SuppressWarnings("unchecked")
     public void processStatisticsPrefetch(final HttpServerRequest request) {
         RequestUtils.bodyToJson(request, pathPrefix + "processStatisticsPrefetch", body -> {
             List<String> structure = body.getJsonArray("structure").getList();
-            statisticsPresencesService.processStatisticsPrefetch(structure)
+            statisticsPresencesService.processStatisticsPrefetch(structure, null, false)
+                    .onSuccess(res -> renderJson(request, res))
+                    .onFailure(unused -> renderError(request));
+        });
+    }
+
+    @Post("structures/:structure/process/students/statistics/tasks")
+    @SecuredAction(value = "", type = ActionType.RESOURCE)
+    @ResourceFilter(UserInStructure.class)
+    @ApiDoc("Generate statistics for some students in structure")
+    @SuppressWarnings("unchecked")
+    public void processStudentsStatisticsPrefetch(final HttpServerRequest request) {
+        RequestUtils.bodyToJson(request, pathPrefix + "processStudentsStatisticsPrefetch", body -> {
+           String structureId = request.getParam(Field.STRUCTURE);
+            List<String> studentIds = body.getJsonArray("studentIds").getList();
+            statisticsPresencesService.processStatisticsPrefetch(Collections.singletonList(structureId), studentIds, true)
                     .onSuccess(res -> renderJson(request, res))
                     .onFailure(unused -> renderError(request));
         });

@@ -1,6 +1,7 @@
 package fr.openent.statistics_presences;
 
 import fr.openent.presences.common.eventbus.GenericCodec;
+import fr.openent.presences.common.helper.FutureHelper;
 import fr.openent.presences.common.incidents.Incidents;
 import fr.openent.presences.common.presences.Presences;
 import fr.openent.presences.common.viescolaire.Viescolaire;
@@ -15,6 +16,8 @@ import fr.openent.statistics_presences.service.CommonServiceFactory;
 import fr.wseduc.cron.CronTrigger;
 import fr.wseduc.mongodb.MongoDb;
 import io.vertx.core.DeploymentOptions;
+import io.vertx.core.Future;
+import io.vertx.core.Promise;
 import io.vertx.core.eventbus.DeliveryOptions;
 import io.vertx.core.eventbus.EventBus;
 import io.vertx.core.json.JsonArray;
@@ -98,14 +101,11 @@ public class StatisticsPresences extends BaseServer {
         }
     }
 
-    public static void launchProcessingStatistics(EventBus eb, JsonObject params) {
+    public static Future<JsonObject> launchProcessingStatistics(EventBus eb, JsonObject params) {
+        Promise<JsonObject> promise = Promise.promise();
         eb.request(ProcessingScheduledManual.class.getName(), params,
-                new DeliveryOptions().setSendTimeout(1000 * 1000L), handlerToAsyncHandler(eventExport -> {
-                            if (!eventExport.body().getString("status").equals("ok")) {
-                                launchProcessingStatistics(eb, params);
-                            }
-                        }
-                ));
+                new DeliveryOptions(), handlerToAsyncHandler(res -> FutureHelper.handleObjectResult(res.body(), promise)));
+        return promise.future();
     }
 
 }

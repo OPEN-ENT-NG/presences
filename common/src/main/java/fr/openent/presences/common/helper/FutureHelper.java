@@ -112,6 +112,15 @@ public class FutureHelper {
                 .onFailure(error -> message.reply((new JsonObject()).put(Field.STATUS, Field.ERROR).put(Field.MESSAGE, error)));
     }
 
+    public static void handleObjectResult(JsonObject messageBody, Promise<JsonObject> promise) {
+        if (Field.OK.equals(messageBody.getString(Field.STATUS)))
+            promise.complete(messageBody.getJsonObject(Field.RESULT, new JsonObject()));
+        else {
+            LOGGER.error(messageBody.getString(Field.MESSAGE));
+            promise.fail(messageBody.getString(Field.MESSAGE));
+        }
+    }
+
     public static <T> CompositeFuture all(List<Future<T>> futures) {
         return CompositeFutureImpl.all(futures.toArray(new Future[futures.size()]));
     }
