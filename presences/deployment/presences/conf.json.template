@@ -1,5 +1,5 @@
     {
-      "name": "fr.openent~presences~1.0.1",
+      "name": "fr.openent~presences~1.0-SNAPSHOT",
       "config": {
         "main" : "fr.openent.presences.Presences",
         "port" : 8062,
