@@ -17,6 +17,7 @@ import {
 } from '../core/enum/collective-absences-events';
 import {AxiosError, AxiosResponse} from 'axios';
 import {PeriodFormUtils} from "@common/utils/periodForm";
+import {REASON_TYPE_ID} from "@common/core/enum/reason-type-id";
 
 console.log('collectiveAbsenceFormSniplets');
 
@@ -685,7 +686,7 @@ export const collectiveAbsenceForm = {
             this.setHandler();
             vm.globalSearch = new GlobalSearch(window.structure.id, SearchService, GroupService);
             vm.structureTimeSlot = await ViescolaireService.getSlotProfile(window.structure.id);
-            vm.reasons = await reasonService.getReasons(window.structure.id);
+            vm.reasons = await reasonService.getReasons(window.structure.id, REASON_TYPE_ID.ALL);
 
             collectiveAbsenceForm.that = this;
 

@@ -273,14 +273,14 @@ public class EventHelper {
     public void addStudentsToEvents(String structureId, List<Event> events, List<String> studentIds,
                                     List<String> restrictedClasses, String startDate, String endDate,
                                     String startTime, String endTime, List<String> typeIds, List<String> reasonIds,
-                                    Boolean noReason, Boolean regularized, Boolean followed, JsonArray absences,
+                                    Boolean noAbsenceReason, Boolean noLatenessReason, Boolean regularized, Boolean followed, JsonArray absences,
                                     JsonObject slots, Future<JsonObject> studentFuture) {
 
         Future<JsonArray> registerEventFuture = Future.future();
         Future<JsonArray> studentsInfosFuture = Future.future();
 
         RegisterPresenceHelper.getEventHistory(structureId, startDate, endDate, startTime, endTime,
-                studentIds, typeIds, reasonIds, noReason, regularized,
+                studentIds, typeIds, reasonIds, noAbsenceReason, noLatenessReason, regularized,
                 followed, registerEventFuture);
 
         personHelper.getStudentsInfo(structureId, studentIds, restrictedClasses, FutureHelper.handlerJsonArray(studentsInfosFuture));

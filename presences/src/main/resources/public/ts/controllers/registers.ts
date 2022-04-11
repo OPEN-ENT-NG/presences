@@ -6,22 +6,31 @@ import {
     Departure,
     Event,
     Events,
-    EventType,
+    EventType, IEvent,
     Lateness,
     Presences,
     Register,
-    RegisterStatus,
-    Remark
+    RegisterStatus, RegisterStudent,
+    Remark, Student
 } from '../models';
-import {GroupService, ReasonService, registerService, SearchService, settingService} from '../services';
+import {
+    eventService,
+    GroupService,
+    reasonService,
+    ReasonService,
+    registerService,
+    SearchService,
+    settingService
+} from '../services';
 import {CourseUtils, DateUtils, PreferencesUtils, PresencesPreferenceUtils} from '@common/utils';
 import rights from '../rights';
 import {Scope} from './main';
-import http from 'axios';
+import http, {AxiosError} from 'axios';
 import {EventsUtils, RegisterUtils, StudentsSearch} from '../utilities';
 import {Reason} from '@presences/models/Reason';
 import {SNIPLET_FORM_EMIT_EVENTS, SNIPLET_FORM_EVENTS} from '@common/model';
 import {INFINITE_SCROLL_EVENTER} from '@common/core/enum/infinite-scroll-eventer';
+import {REASON_TYPE_ID} from "@common/core/enum/reason-type-id";
 
 declare let window: any;
 
@@ -89,7 +98,9 @@ export interface ViewModel {
 
     updateDeparture(): void;
 
-    manageAbsence(events, student): void;
+    manageAbsence(events: IEvent, student: RegisterStudent): void;
+
+    manageLateness(events: IEvent, student: RegisterStudent): void;
 
     getHistoryEventClassName(events, slot): string;
 
@@ -153,6 +164,10 @@ export interface ViewModel {
     validRegister(): Promise<void>;
 
     onScroll(): Promise<void>;
+
+    getAbsenceReason(): Reason[];
+
+    getLatenessReason(): Reason[];
 }
 
 export const registersController = ng.controller('RegistersController',
@@ -329,7 +344,7 @@ export const registersController = ng.controller('RegistersController',
             // Get absences reasons as personal user info
             const getReasons = async (): Promise<void> => {
                 if (model.me.profiles.some(profile => profile === "Personnel" || profile === "Teacher")) {
-                    vm.reasons = await ReasonService.getReasons(window.structure.id);
+                    vm.reasons = await ReasonService.getReasons(window.structure.id, 0);
                 }
             };
 
@@ -694,7 +709,7 @@ export const registersController = ng.controller('RegistersController',
                 });
             };
 
-            vm.manageAbsence = async function (events, student) {
+            vm.manageAbsence = async function (events: IEvent, student: RegisterStudent) {
                 if (events.id) {
                     if (typeof events.register_id === 'string') {
                         events.register_id = parseInt(events.register_id);
@@ -709,6 +724,39 @@ export const registersController = ng.controller('RegistersController',
                     }
                     new Events().updateReason([student.absence], reason_id, student.id, window.structure.id);
                     student.absence.reason_id = reason_id;
+                    $scope.safeApply();
+                }
+            };
+
+            vm.manageLateness = async function (events: IEvent, student: RegisterStudent): Promise<void> {
+                if (events.id) {
+                    if (typeof events.register_id === 'string') {
+                        events.register_id = parseInt(events.register_id);
+                    }
+                    eventService.updateEvent(events.id, {
+                        end_date: events.end_date,
+                        reason_id: events.reason_id,
+                        register_id: events.register_id,
+                        start_date: events.start_date,
+                        student_id: student.id,
+                        type_id: REASON_TYPE_ID.LATENESS
+                    });
+                } else {
+                    let reason_id: number = events.reason_id;
+                    student.lateness = undefined;
+                    await vm.toggleLateness(student).catch((err: AxiosError) => console.error(err));
+                    if (typeof student.lateness.register_id === 'string') {
+                        student.lateness.register_id = parseInt(student.lateness.register_id);
+                    }
+                    eventService.updateEvent(events.id, {
+                        end_date: student.lateness.end_date,
+                        reason_id: reason_id,
+                        register_id: student.lateness.register_id,
+                        start_date: student.lateness.start_date,
+                        student_id: student.id,
+                        type_id: REASON_TYPE_ID.LATENESS
+                    });
+                    student.lateness.reason_id = reason_id;
                     $scope.safeApply();
                 }
             };
@@ -958,5 +1006,13 @@ export const registersController = ng.controller('RegistersController',
                 if ($route.current.action === "dashboard") {
                     window.filter = {};
                 }
+            };
+
+            vm.getAbsenceReason = (): Reason[] => {
+                return vm.reasons.filter((reason: Reason) => reason.reason_type_id == REASON_TYPE_ID.ABSENCE);
+            };
+
+            vm.getLatenessReason = (): Reason[] => {
+                return vm.reasons.filter((reason: Reason) => reason.reason_type_id == REASON_TYPE_ID.LATENESS);
             };
         }]);

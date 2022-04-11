@@ -29,6 +29,15 @@ i {
     content: "\F005";
   }
 
+  &.calendar-remove:before {
+    font-family: 'material-icons';
+    content: "\F0F4";
+  }
+
+  &.uncolored-time-picker:before {
+    content: "\F017";
+  }
+
   &.collective-absences::before {
     font-family: 'material-icons';
     content: "\e7fb";

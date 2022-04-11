@@ -28,7 +28,7 @@
       "type": "number"
     },
     "reason_id": {
-      "type": "number"
+      "type": ["number", "null"]
     }
   },
   "required": [

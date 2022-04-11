@@ -94,6 +94,7 @@ public class Field {
     public static final String REASON = "reason";
     public static final String REASON_ID = "reason_id";
     public static final String MULTIPLE = "multiple";
+    public static final String NOREASONLATENESS = "noReasonLateness";
 
     // i18n
     public static final String LOCALE = "locale";

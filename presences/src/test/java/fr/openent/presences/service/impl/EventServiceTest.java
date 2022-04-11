@@ -43,6 +43,7 @@ public class EventServiceTest extends DBService {
                     .add(Field.START_TIME)
                     .add(true)
                     .add(Field.REASON_ID)
+                    .add(Field.REASON_ID)
                     .add(0)
                     .add(20));
 
@@ -50,7 +51,7 @@ public class EventServiceTest extends DBService {
         }).when(sql).prepared(Mockito.anyString(), Mockito.any(JsonArray.class), Mockito.any(Handler.class));
 
         eventService.get(Field.STRUCTURE_ID, Field.START_DATE, Field.END_DATE,
-                Field.START_TIME, Field.END_TIME,  Collections.singletonList(Field.EVENT_TYPE), Collections.singletonList(Field.REASON_ID), false, new ArrayList<>(),
+                Field.START_TIME, Field.END_TIME,  Collections.singletonList(Field.EVENT_TYPE), Collections.singletonList(Field.REASON_ID), false, false, new ArrayList<>(),
                 new ArrayList<>(), true, true, 0, handler -> {});
     }
 }

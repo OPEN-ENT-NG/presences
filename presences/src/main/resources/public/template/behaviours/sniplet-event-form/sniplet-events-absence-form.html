@@ -69,7 +69,7 @@
             <label>
                 <select data-ng-model="vm.form.reason_id"
                         data-ng-change="vm.selectReason()"
-                        ng-options="reason.id as lang.translate(reason.label) disable when reason.hidden for reason in vm.reasons">
+                        ng-options="reason.id as lang.translate(reason.label) disable when reason.hidden for reason in vm.getAbsenceReason()">
                     <option value="">[[lang.translate('presences.absence.select.empty')]]</option>
                 </select>
             </label>

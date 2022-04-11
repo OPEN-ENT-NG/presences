@@ -14,7 +14,18 @@ import {
     Setting,
 } from '../services';
 import {Scope} from './main';
-import {Absence, EventType, ICalendarItems, ITimeSlot, Presence, Presences, Reason, User} from '../models';
+import {
+    Absence,
+    EventType,
+    IAbsence,
+    ICalendarItems,
+    IEvent,
+    ITimeSlot,
+    Presence,
+    Presences,
+    Reason,
+    User
+} from '../models';
 import {Punishments} from '@incidents/models';
 import {DateUtils, PreferencesUtils} from '@common/utils';
 import {SNIPLET_FORM_EMIT_EVENTS, SNIPLET_FORM_EMIT_PUNISHMENT_EVENTS, SNIPLET_FORM_EVENTS} from '@common/model';
@@ -396,12 +407,14 @@ export const calendarController = ng.controller('CalendarController',
                         let endDate: Date = moment(itemCourse.endDate).toDate();
                         let counsellor_regularisation: boolean;
                         let followed: boolean;
+                        let absences: IAbsence[] | IEvent[] = itemCourse.absences;
 
                         if (itemCourse.events.length === 1) {
                             startDate = moment(itemCourse.events[0].start_date).toDate();
                             endDate = moment(itemCourse.events[0].end_date).toDate();
                             counsellor_regularisation = itemCourse.events[0].counsellor_regularisation;
                             followed = itemCourse.events[0].followed;
+                            absences = itemCourse.events;
                         }
 
                         if (itemCourse.absences.length === 1) {
@@ -409,6 +422,7 @@ export const calendarController = ng.controller('CalendarController',
                             endDate = moment(itemCourse.absences[0].end_date).toDate();
                             counsellor_regularisation = itemCourse.absences[0].counsellor_regularisation;
                             followed = itemCourse.absences[0].followed;
+                            absences = itemCourse.absences;
                         }
 
                         return {
@@ -420,7 +434,7 @@ export const calendarController = ng.controller('CalendarController',
                             comment: itemCourse.events.length > 0 ? itemCourse.events[0].comment : null,
                             studentId: window.item.id,
                             eventType: ('subjectId' in itemCourse) ? EventsUtils.ALL_EVENTS.event : EventsUtils.ALL_EVENTS.absence,
-                            absences: itemCourse.absences,
+                            absences: absences,
                             counsellor_regularisation: counsellor_regularisation,
                             followed: followed
                         };

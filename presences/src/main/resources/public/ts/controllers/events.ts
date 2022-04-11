@@ -8,7 +8,9 @@ import {
     Events,
     EventType,
     IEvent,
-    IEventFormBody, IStructureSlot, ITimeSlot,
+    IEventFormBody,
+    IStructureSlot,
+    ITimeSlot,
     Student,
     Students,
     TimeSlotHourPeriod
@@ -23,12 +25,14 @@ import {ABSENCE_FORM_EVENTS, LATENESS_FORM_EVENTS} from '@common/core/enum/prese
 import {SNIPLET_FORM_EMIT_EVENTS} from '@common/model';
 import {IEventSlot} from '@presences/models/Event';
 import {EXPORT_TYPE, ExportType} from "@common/core/enum/export-type.enum";
+import {REASON_TYPE_ID} from "@common/core/enum/reason-type-id";
 
 declare let window: any;
 
 interface ViewModel {
     filter: EventsFilter;
     formFilter: EventsFormFilter;
+    reasonType: typeof REASON_TYPE_ID;
 
     /* Get reasons type */
     eventReasonsType: Reason[];
@@ -41,6 +45,7 @@ interface ViewModel {
     interactedEvent: EventResponse;
     events: Events;
     multipleSelect: Reason;
+    noReason: Reason;
     provingReasonsMap: any;
     isScroll: boolean;
 
@@ -90,9 +95,9 @@ interface ViewModel {
 
     regularizedChecked(event: EventResponse): boolean;
 
-    changeAllReason(event: EventResponse, studentId: string): Promise<void>;
+    changeAllReason(event: EventResponse, studentId: string, reasonType: REASON_TYPE_ID): Promise<void>;
 
-    changeReason(history: Event, event: EventResponse, studentId: string): Promise<void>;
+    changeReason(history: Event, event: EventResponse, studentId: string, reasonType: REASON_TYPE_ID): Promise<void>;
 
     toggleAllEventsRegularised(event: EventResponse, studentId: string): Promise<void>;
 
@@ -112,6 +117,8 @@ interface ViewModel {
     findEvent(event: Array<Event>): Event;
 
     isEachEventAbsence(event: EventResponse): boolean;
+
+    isEachEventLateness(event: EventResponse): boolean;
 
     /* Action */
     doAction($event: MouseEvent, event: any): void;
@@ -217,7 +224,19 @@ interface ViewModel {
     /*  switch reasons */
     switchReason(reason: Reason): void;
 
-    switchAllReasons(): void;
+    getAbsenceReasons(reasonArray: Reason[]): Reason[];
+
+    getAbsenceReasonsWithMultipleSelection(reasonArray: Reason[]): Reason[];
+
+    getLatenessReasons(reasonArray: Reason[]): Reason[];
+
+    getLatenessReasonsWithMultipleSelection(reasonArray: Reason[]): Reason[];
+
+    getLatenessReasonsWithNoReason(reasonArray: Reason[]): Reason[];
+
+    switchAllAbsenceReasons(): void;
+
+    switchAllLatenessReasons(): void;
 
     /*  switch state */
     switchUnjustifiedFilter(): void;
@@ -232,6 +251,7 @@ interface ViewModel {
 
     /* Export*/
     exportType: typeof EXPORT_TYPE;
+
     export(exportType: ExportType): void;
 }
 
@@ -241,6 +261,7 @@ export const eventsController = ng.controller('EventsController', ['$scope', '$r
               ReasonService: ReasonService, eventService: EventService, searchService: SearchService) {
         const isWidget: boolean = $route.current.action === 'dashboard';
         const vm: ViewModel = this;
+        vm.reasonType = REASON_TYPE_ID;
         vm.filter = {
             startDate: isWidget ? DateUtils.add(new Date(), -5, 'd') : DateUtils.add(new Date(), -7, 'd'),
             endDate: isWidget ? DateUtils.add(new Date(), -1, 'd') : moment().endOf('day').toDate(),
@@ -255,7 +276,8 @@ export const eventsController = ng.controller('EventsController', ['$scope', '$r
             late: $route.current.action !== 'dashboard',
             regularized: true,
             regularizedNotregularized: false,
-            allReasons: true,
+            allAbsenceReasons: true,
+            allLatenessReasons: true,
             noReasons: true,
             reasons: {} as Reason,
             unjustified: true,
@@ -270,8 +292,17 @@ export const eventsController = ng.controller('EventsController', ['$scope', '$r
         vm.isScroll = false;
         vm.eventType = [];
         vm.multipleSelect = {
-            id: 0,
+            id: -1,
             label: lang.translate('presences.absence.select.multiple'),
+            structure_id: '',
+            comment: '',
+            default: false,
+            proving: false,
+            group: false
+        } as Reason;
+        vm.noReason = {
+            id: 0,
+            label: lang.translate('presences.absence.no.reason'),
             structure_id: '',
             comment: '',
             default: false,
@@ -335,7 +366,8 @@ export const eventsController = ng.controller('EventsController', ['$scope', '$r
                         absences: true,
                         departure: true,
                         late: $route.current.action !== 'dashboard',
-                        allReasons: true,
+                        allAbsenceReasons: true,
+                        allLatenessReasons: true,
                         unjustified: true,
                         justifiedNotRegularized: true,
                         justifiedRegularized: false,
@@ -347,7 +379,7 @@ export const eventsController = ng.controller('EventsController', ['$scope', '$r
         };
 
         const loadReasonTypes = async (): Promise<void> => {
-            vm.eventReasonsType = await ReasonService.getReasons(window.structure.id);
+            vm.eventReasonsType = await ReasonService.getReasons(window.structure.id, REASON_TYPE_ID.ALL);
             vm.eventReasonsTypeDescription = _.clone(vm.eventReasonsType);
             vm.eventReasonsType.map((reason: Reason) => {
                 reason.isSelected = true;
@@ -355,6 +387,7 @@ export const eventsController = ng.controller('EventsController', ['$scope', '$r
             });
 
             if (!isWidget) vm.eventReasonsType.push(vm.multipleSelect);
+            vm.eventReasonsType.push(vm.noReason);
         };
 
         const getEvents = async (actionMode?: boolean): Promise<void> => {
@@ -433,6 +466,7 @@ export const eventsController = ng.controller('EventsController', ['$scope', '$r
                 startTime: vm.events.startTime,
                 endTime: vm.events.endTime,
                 noReason: vm.events.noReason,
+                noReasonLateness: vm.events.noReasonLateness,
                 eventType: vm.events.eventType,
                 listReasonIds: (vm.filter.justifiedRegularized || vm.filter.justifiedNotRegularized) ? vm.eventReasonsId.toString() : '',
                 userId: vm.events.userId,
@@ -453,7 +487,7 @@ export const eventsController = ng.controller('EventsController', ['$scope', '$r
             $scope.safeApply();
         };
 
-        const getStructureTimeSlots = async () : Promise<void> => {
+        const getStructureTimeSlots = async (): Promise<void> => {
             vm.structureTimeSlot = await ViescolaireService.getSlotProfile(window.structure.id);
         };
 
@@ -634,15 +668,19 @@ export const eventsController = ng.controller('EventsController', ['$scope', '$r
             return event.events && EventsUtils.hasTypeEventAbsence(event.events);
         };
 
+        vm.isEachEventLateness = (event: EventResponse): boolean => {
+            return event.events && EventsUtils.hasTypeEventLateness(event.events);
+        };
+
         /* Add global reason_id to all events that exist */
-        vm.changeAllReason = async (event: EventResponse, studentId: string): Promise<void> => {
+        vm.changeAllReason = async (event: EventResponse, studentId: string, reasonType: REASON_TYPE_ID): Promise<void> => {
             let initialReasonId: number = event.reason.id;
             vm.interactedEvent = event;
             let fetchedEvent: Event | EventResponse[] = [];
             if (isWidget) {
                 fetchedEvent.push(event);
             } else {
-                EventsUtils.fetchEvents(event, fetchedEvent);
+                EventsUtils.fetchEvents(event, fetchedEvent, reasonType);
             }
             await vm.events.updateReason(fetchedEvent, initialReasonId, studentId, window.structure.id)
                 .then(() => {
@@ -656,13 +694,15 @@ export const eventsController = ng.controller('EventsController', ['$scope', '$r
         };
 
         /* Change its description reason id */
-        vm.changeReason = async (history: Event, event: EventResponse, studentId: string): Promise<void> => {
+        vm.changeReason = async (history: Event, event: EventResponse, studentId: string, reasonType: REASON_TYPE_ID): Promise<void> => {
             let initialReasonId = history.reason ? history.reason.id : history.reason_id;
             vm.interactedEvent = event;
             let fetchedEvent: Array<Event | EventResponse> = [];
             history.counsellor_regularisation = vm.provingReasonsMap[history.reason_id];
             fetchedEvent.push(history);
-            event.reason.id = EventsUtils.initGlobalReason(event);
+            if (reasonType == REASON_TYPE_ID.ABSENCE || (reasonType == REASON_TYPE_ID.LATENESS && !vm.isEachEventAbsence(event))) {
+                event.reason.id = EventsUtils.initGlobalReason(event, reasonType);
+            }
             await vm.events.updateReason(fetchedEvent, initialReasonId, studentId, window.structure.id)
                 .then(() => {
 
@@ -681,7 +721,7 @@ export const eventsController = ng.controller('EventsController', ['$scope', '$r
             let initialCounsellorRegularisation = event.counsellor_regularisation;
             vm.interactedEvent = event;
             let fetchedEvent: IEvent | Array<EventResponse> = [];
-            EventsUtils.fetchEvents(event, fetchedEvent);
+            EventsUtils.fetchEvents(event, fetchedEvent, REASON_TYPE_ID.ABSENCE);
             vm.events.updateRegularized(fetchedEvent, initialCounsellorRegularisation, studentId, window.structure.id)
                 .then(async () => {
                     $timeout(async () => {
@@ -944,10 +984,14 @@ export const eventsController = ng.controller('EventsController', ['$scope', '$r
             /* Fetch reason Id */
             vm.eventReasonsId = [];
 
+            vm.filter.noReasonsLateness = false;
             if (vm.eventReasonsType && vm.eventReasonsType.length > 0) {
-                vm.eventReasonsType.forEach(r => {
-                    if (r.isSelected && r.id) {
+                vm.eventReasonsType.forEach((r: Reason) => {
+                    if (r.isSelected && r.id > 0) {
                         vm.eventReasonsId.push(r.id);
+                    }
+                    if (r == vm.noReason && r.isSelected) {
+                        vm.filter.noReasonsLateness = true;
                     }
                 });
             }
@@ -962,6 +1006,7 @@ export const eventsController = ng.controller('EventsController', ['$scope', '$r
             vm.events.eventType = vm.eventType.toString();
             vm.events.listReasonIds = (vm.filter.justifiedRegularized || vm.filter.justifiedNotRegularized) ? vm.eventReasonsId.toString() : "";
             vm.events.noReason = vm.filter.noReasons;
+            vm.events.noReasonLateness = vm.filter.noReasonsLateness;
             vm.events.followed = vm.filter.followed;
             vm.events.notFollowed = vm.filter.notFollowed;
             vm.events.regularized = (!(<any>vm.eventType).includes(1)) ? null : vm.filter.regularized;
@@ -1112,10 +1157,46 @@ export const eventsController = ng.controller('EventsController', ['$scope', '$r
             reason.isSelected = !reason.isSelected;
         };
 
-        vm.switchAllReasons = function () {
-            vm.formFilter.allReasons = !vm.formFilter.allReasons;
-            vm.formFilter.noReasons = vm.formFilter.allReasons;
-            vm.eventReasonsType.forEach(reason => reason.isSelected = vm.formFilter.allReasons);
+        vm.getAbsenceReasons = function (reasonArray: Reason[]): Reason[] {
+            if (!reasonArray)
+                return [];
+            return reasonArray.filter(reason => reason.reason_type_id == REASON_TYPE_ID.ABSENCE);
+        }
+
+        vm.getAbsenceReasonsWithMultipleSelection = function (reasonArray: Reason[]): Reason[] {
+            if (!reasonArray)
+                return [];
+            return [vm.multipleSelect].concat(vm.getAbsenceReasons(reasonArray));
+        }
+
+        vm.getLatenessReasons = function (reasonArray: Reason[]): Reason[] {
+            if (!reasonArray)
+                return [];
+            return reasonArray.filter(reason => reason.reason_type_id == REASON_TYPE_ID.LATENESS);
+        }
+
+        vm.getLatenessReasonsWithMultipleSelection = function (reasonArray: Reason[]): Reason[] {
+            if (!reasonArray)
+                return [];
+            return [vm.multipleSelect].concat(vm.getLatenessReasons(reasonArray));
+        }
+
+        vm.getLatenessReasonsWithNoReason = function (reasonArray: Reason[]): Reason[] {
+            if (!reasonArray)
+                return [];
+            return [vm.noReason].concat(vm.getLatenessReasons(reasonArray));
+        }
+
+        vm.switchAllAbsenceReasons = function (): void {
+            vm.formFilter.allAbsenceReasons = !vm.formFilter.allAbsenceReasons;
+            vm.formFilter.noReasons = vm.formFilter.allAbsenceReasons;
+            vm.getAbsenceReasons(vm.eventReasonsType).forEach(reason => reason.isSelected = vm.formFilter.allAbsenceReasons);
+        };
+
+        vm.switchAllLatenessReasons = function (): void {
+            vm.formFilter.allLatenessReasons = !vm.formFilter.allLatenessReasons;
+
+            vm.getLatenessReasonsWithNoReason(vm.eventReasonsType).forEach(reason => reason.isSelected = vm.formFilter.allLatenessReasons);
         };
 
         vm.adaptEvent = function () {
@@ -1166,7 +1247,8 @@ export const eventsController = ng.controller('EventsController', ['$scope', '$r
                 justifiedRegularized: vm.formFilter.justifiedRegularized,
                 followed: vm.formFilter.followed,
                 notFollowed: vm.formFilter.notFollowed,
-                allReasons: vm.formFilter.allReasons,
+                allAbsenceReasons: vm.formFilter.allAbsenceReasons,
+                allLatenessReasons: vm.formFilter.allLatenessReasons,
                 timeslots: vm.formFilter.timeslots,
                 reasonIds: []
             };
