@@ -109,7 +109,7 @@ public class RegisterPresenceHelper {
     }
 
     public static void getEventHistory(String structureId, String startDate, String endDate, String startTime, String endTime,
-                                 List<String> registerUsers, List<String> typeIds, List<String> reasonIds, Boolean noReason,
+                                 List<String> registerUsers, List<String> typeIds, List<String> reasonIds, Boolean noAbsenceReason, Boolean noLatenessReason,
                                  Boolean regularized, Boolean followed, Handler<AsyncResult<JsonArray>> handler) {
 
         if (registerUsers.isEmpty()) {
@@ -128,7 +128,7 @@ public class RegisterPresenceHelper {
                 filterDates(startDate, endDate, params) +
                 filterTimes(startTime, endTime, params) +
                 EventQueryHelper.filterStudentIds(registerUsers, params) +
-                EventQueryHelper.filterReasons(reasonIds, noReason, regularized, typeIds, params) +
+                EventQueryHelper.filterReasons(reasonIds, noAbsenceReason, noLatenessReason,regularized, typeIds, params) +
                 EventQueryHelper.filterFollowed(followed, params) +
                 filterTypes(typeIds, params) +
                 " GROUP BY student_id; ";
