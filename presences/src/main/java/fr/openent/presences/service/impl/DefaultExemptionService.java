@@ -15,9 +15,7 @@ import org.entcore.common.service.impl.SqlCrudService;
 import org.entcore.common.sql.Sql;
 import org.entcore.common.sql.SqlResult;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
+import java.util.*;
 
 public class DefaultExemptionService extends SqlCrudService implements ExemptionService {
     private final static String DATABASE_TABLE = "exemption";
@@ -33,8 +31,15 @@ public class DefaultExemptionService extends SqlCrudService implements Exemption
     @Override
     public void get(String structureId, String startDate, String endDate, List<String> studentIds, String page,
                     String order, boolean reverse, Handler<Either<String, JsonArray>> handler) {
-        String query = "SELECT * " + this.getterFROMBuilder(DATABASE_TABLE_VIEW, structureId, startDate, endDate, studentIds);
-        JsonArray values = new JsonArray();
+        String query = "SELECT * " + this.getterFROMBuilder(DATABASE_TABLE_VIEW, studentIds);
+        JsonArray values = new JsonArray()
+                .add(structureId)
+                .add(endDate)
+                .add(startDate);
+
+        if (studentIds != null && !studentIds.isEmpty()) {
+            values.addAll(new JsonArray(studentIds));
+        }
 
         if (page != null) {
             query += " ORDER BY " + exemptionHelper.getSqlOrderValue(order) + " " + exemptionHelper.getSqlReverseString(reverse);
@@ -68,10 +73,17 @@ public class DefaultExemptionService extends SqlCrudService implements Exemption
     }
 
     @Override
-    public void get(String structure_id, String start_date, String end_date, String userId, String page,
+    public void get(String structureId, String startDate, String endDate, String userId, String page,
                     Handler<Either<String, JsonArray>> handler) {
-        String query = "SELECT * " + this.getterFROMBuilder(DATABASE_TABLE, structure_id, start_date, end_date, Arrays.asList(userId));
-        JsonArray values = new JsonArray();
+        String query = "SELECT * " + this.getterFROMBuilder(DATABASE_TABLE, Collections.singletonList(userId));
+        JsonArray values = new JsonArray()
+                .add(structureId)
+                .add(endDate)
+                .add(startDate);
+
+        if (userId != null) {
+            values.addAll(new JsonArray(Collections.singletonList(userId)));
+        }
 
         if (page != null) {
             query += " ORDER BY start_date";
@@ -84,35 +96,34 @@ public class DefaultExemptionService extends SqlCrudService implements Exemption
     }
 
     @Override
-    public void getPageNumber(String structure_id, String start_date, String end_date, List<String> student_ids,
+    public void getPageNumber(String structureId, String startDate, String endDate, List<String> studentIds,
                               String order, boolean reverse, Handler<Either<String, JsonObject>> handler) {
+        JsonArray params = new JsonArray()
+                .add(structureId)
+                .add(endDate)
+                .add(startDate);
+
+        if (studentIds != null && !studentIds.isEmpty()) {
+             params.addAll(new JsonArray(studentIds));
+        }
+
         String query =
                 "SELECT count(" + Presences.dbSchema + "." + DATABASE_TABLE_VIEW + ".exemption_id)" +
-                        this.getterFROMBuilder(DATABASE_TABLE_VIEW, structure_id, start_date, end_date, student_ids);
-        Sql.getInstance().raw(query, SqlResult.validUniqueResultHandler(handler));
+                        this.getterFROMBuilder(DATABASE_TABLE_VIEW, studentIds);
+        Sql.getInstance().prepared(query, params, SqlResult.validUniqueResultHandler(handler));
     }
 
-    private String getterFROMBuilder(String databaseTable, String structure_id, String start_date, String end_date, List<String> student_ids) {
+    private String getterFROMBuilder(String databaseTable, List<String> studentIds) {
         StringBuilder query = new StringBuilder(" FROM " + Presences.dbSchema + "." + databaseTable +
-                " WHERE structure_id = '" + structure_id + "'");
+                " WHERE structure_id = ?");
         if (databaseTable.equals(DATABASE_TABLE_VIEW)) {
             query.append(" AND recursive_id IS NULL");
         }
-        query.append(" AND (" + " (start_date <= '")
-                .append(end_date)
-                .append("')")
-                .append(" AND (end_date >= '")
-                .append(start_date)
-                .append("')")
-                .append(")");
+        query.append(" AND ((start_date <= ?) AND (end_date >= ?))");
 
-        if (student_ids != null && !student_ids.isEmpty()) {
-            query.append(" AND student_id IN (");
-            for (String student_id : student_ids) {
-                query.append("'").append(student_id).append("',");
-            }
-            query = new StringBuilder(query.substring(0, query.length() - 1) + ")");
-
+        if (studentIds != null && !studentIds.isEmpty()) {
+            query.append(" AND student_id IN ");
+            query.append(Sql.listPrepared(studentIds));
         }
         return query.toString();
     }
