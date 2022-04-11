@@ -93,7 +93,7 @@ public class Weekly extends Indicator {
                 })
                 .onFailure(fail -> {
                     log.error(String.format("[StatisticsPresences@Global::searchProcess] " +
-                            "Indicator %s failed to complete search", Weekly.class.getName()), fail.getCause());
+                            "Indicator %s failed to complete search. %s", Weekly.class.getName(), fail.getMessage()));
                     promise.fail(fail.getCause());
                 });
         return promise.future();
@@ -145,7 +145,7 @@ public class Weekly extends Indicator {
             }
             JsonObject result = either.right().getValue();
             if (result.getJsonObject(Field.CURSOR) == null) {
-                String error = either.right().getValue().getString(Field.ERRMSG);
+                String error = either.right().getValue().getString(Field.ERRMSG, "");
                 String message = String.format("[StatisticsPresences@%s::retrieveStatistics] Indicator %s failed to execute " +
                         "mongodb aggregation pipeline.", this.getClass().getSimpleName(), Weekly.class.getName());
                 log.error(String.format("%s. %s", message, error));
