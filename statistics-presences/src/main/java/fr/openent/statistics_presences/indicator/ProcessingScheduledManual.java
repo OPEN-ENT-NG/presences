@@ -47,8 +47,8 @@ public class ProcessingScheduledManual extends BusModBase implements Handler<Mes
                 .compose(this::processIndicators)
                 .compose(this::generateReport)
                 .onSuccess(success -> log.info(success))
-                .onFailure(error -> log.error("[StatisticsPresences@ProcessingScheduledManual::handle] " +
-                        "Processing scheduled manual task failed. See previous logs", error.getMessage()));
+                .onFailure(error -> log.error(String.format("[StatisticsPresences@ProcessingScheduledManual::handle] " +
+                        "Processing scheduled manual task failed. See previous logs. %s", error.getMessage())));
     }
 
     private void initTemplateProcessor() {
@@ -104,8 +104,7 @@ public class ProcessingScheduledManual extends BusModBase implements Handler<Mes
                     promise.complete(reports);
                 })
                 .onFailure(error -> {
-                    String message = "[StatisticsPresences@ProcessingScheduledManual::processIndicators] Some indicator failed during processing";
-                    log.error(message, error.getMessage());
+                    log.error(String.format("[StatisticsPresences@ProcessingScheduledManual::processIndicators] Some indicator failed during processing. %s", error.getMessage()));
                     promise.fail(error.getMessage());
                 });
 

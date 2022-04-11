@@ -93,7 +93,7 @@ public class StatisticsPresences extends BaseServer {
                 Indicator indicator = Indicator.deploy(vertx, indicatorName);
                 indicatorMap.put(indicatorName, indicator);
             } catch (IllegalAccessException | InstantiationException | InvocationTargetException | ClassNotFoundException e) {
-                log.error(String.format("Failed to deploy indicator %s", indicatorName), e);
+                log.error(String.format("Failed to deploy indicator %s. %s", indicatorName, e.getMessage()));
             }
         }
     }

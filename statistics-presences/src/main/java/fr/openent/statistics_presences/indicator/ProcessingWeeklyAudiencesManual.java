@@ -5,7 +5,9 @@ import fr.openent.presences.common.presences.Presences;
 import fr.openent.presences.core.constants.Field;
 import fr.openent.statistics_presences.helper.RegisterHelper;
 import fr.openent.statistics_presences.service.CommonServiceFactory;
-import io.vertx.core.*;
+import io.vertx.core.Future;
+import io.vertx.core.Handler;
+import io.vertx.core.Promise;
 import io.vertx.core.eventbus.Message;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
@@ -64,9 +66,11 @@ public class ProcessingWeeklyAudiencesManual extends BusModBase implements Handl
 
         FutureHelper.join(structuresFutures)
                 .onFailure(err -> {
-                    String message = String.format("[StatisticsPresences@%s::sendSigTerm] Some structures failed during processing",
-                            this.getClass().getSimpleName());
-                    log.error(message, err.getMessage());
+                    String message = String.format("[StatisticsPresences@%s::sendSigTerm] Some structures failed during processing. %s",
+                            this.getClass().getSimpleName(),
+                            err.getMessage()
+                    );
+                    log.error(message);
                 })
                 .onSuccess(res -> {
                     List<String> structureResultIds = structuresFutures.stream()

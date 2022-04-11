@@ -81,7 +81,10 @@ public abstract class IndicatorWorker extends AbstractVerticle {
         MongoDb.getInstance().delete(StatisticsPresences.COLLECTION, selector, MongoDbResult.validResultHandler(either -> {
             if (either.isLeft()) {
                 log.error(String.format("[StatisticsPresences@IndicatorWorker::deleteOldValues] " +
-                        "Failed to remove old statistics for indicator %s", this.indicatorName()), either.left().getValue());
+                                "Failed to remove old statistics for indicator %s. %s",
+                        this.indicatorName(),
+                        either.left().getValue()
+                ));
                 future.fail(either.left().getValue());
             } else {
                 future.complete(values);
@@ -96,7 +99,10 @@ public abstract class IndicatorWorker extends AbstractVerticle {
         MongoDb.getInstance().insert(StatisticsPresences.COLLECTION, new JsonArray(values), MongoDbResult.validResultHandler(either -> {
             if (either.isLeft()) {
                 log.error(String.format("[StatisticsPresences@IndicatorWorker::storeValues] " +
-                        "%s indicator failed to store new values", this.indicatorName()), either.left().getValue());
+                                "%s indicator failed to store new values. %s",
+                        this.indicatorName(),
+                        either.left().getValue()
+                ));
                 future.fail(either.left().getValue());
             } else {
                 future.complete();
@@ -109,7 +115,7 @@ public abstract class IndicatorWorker extends AbstractVerticle {
     private void sendSigTerm(AsyncResult<CompositeFuture> ar) {
         this.report.end();
         if (ar.failed()) {
-            log.error("[StatisticsPresences@IndicatorWorker::sendSigTerm] Some structure failed to process", ar.cause());
+            log.error(String.format("[StatisticsPresences@IndicatorWorker::sendSigTerm] Some structure failed to process. %s", ar.cause().getMessage()));
         }
 
         log.info(String.format("[StatisticsPresences@IndicatorWorker::sendSigTerm] Sending term signal by %s indicator", this.getClass().getName()));
@@ -250,8 +256,12 @@ public abstract class IndicatorWorker extends AbstractVerticle {
                 })
                 .onFailure(ar -> {
                     log.error(String.format("[StatisticsPresences@IndicatorWorker::processStudent] " +
-                                    "Failed to process student %s in structure %s for indicator %s", studentId, structureId,
-                            indicatorName()), ar.getCause());
+                                    "Failed to process student %s in structure %s for indicator %s. %s",
+                            studentId,
+                            structureId,
+                            indicatorName(),
+                            ar.getCause().getMessage()
+                    ));
                     promise.fail(ar.getCause());
                 })
                 .onSuccess(ar -> {

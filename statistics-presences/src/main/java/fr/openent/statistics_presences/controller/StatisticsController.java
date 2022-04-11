@@ -137,8 +137,10 @@ public class StatisticsController extends ControllerHelper {
                     Indicator indicator = StatisticsPresences.indicatorMap.get(indicatorName);
                     indicator.search(filter, ar -> {
                         if (ar.failed()) {
-                            log.error(String.format("[Presences@%s::export] Search failed for indicator %s " +
-                                    "in csv export", this.getClass().getSimpleName(), Global.class.getSimpleName()), ar.cause());
+                            log.error(String.format("[Presences@%s::export] Search failed for indicator %s in csv export. %s",
+                                    this.getClass().getSimpleName(),
+                                    Global.class.getSimpleName(),
+                                    ar.cause().getMessage()));
                             Renders.renderError(request);
                             return;
                         }
@@ -152,8 +154,11 @@ public class StatisticsController extends ControllerHelper {
                                     searchResult.getJsonObject(Field.RATE),
                                     searchResult.getString(Field.EVENT_RECOVERY_METHOD));
                         } catch (ClassNotFoundException | IllegalAccessException | InvocationTargetException | InstantiationException e) {
-                            log.error(String.format("[Presences@%s::export] Failed to generate export for indicator %s",
-                                    this.getClass().getSimpleName(), indicator.getClass().getSimpleName()), e);
+                            log.error(String.format("[Presences@%s::export] Failed to generate export for indicator %s. %s",
+                                    this.getClass().getSimpleName(),
+                                    indicator.getClass().getSimpleName(),
+                                    e.getMessage()
+                            ));
                         }
                     });
                 });
