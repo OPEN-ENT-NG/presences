@@ -1,6 +1,7 @@
 import {idiom as lang, ng} from 'entcore'
 import http, {AxiosResponse} from 'axios';
 import {Reason, ReasonRequest} from "@presences/models/Reason";
+import {REASON_TYPE_ID} from "@common/core/enum/reason-type-id";
 
 export interface ReasonService {
     getReasons(structureId: string, reasonTypeId?: Number): Promise<Reason[]>;
@@ -15,7 +16,7 @@ export interface ReasonService {
 export const reasonService: ReasonService = {
     getReasons: async (structureId: string, reasonTypeId?: Number): Promise<Reason[]> => {
         try {
-            let reasonTypeIdParam: string = reasonTypeId ? `&reasonTypeId=${reasonTypeId}` : '';
+            let reasonTypeIdParam: string = reasonTypeId != null && reasonTypeId != undefined ? `&reasonTypeId=${reasonTypeId}` : '';
             const {data} = await http.get(`/presences/reasons?structureId=${structureId}${reasonTypeIdParam}`);
             data.map((reason: Reason) => {
                 if (reason.id === -1) {
