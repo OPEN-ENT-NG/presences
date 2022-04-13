@@ -1,7 +1,6 @@
 package fr.openent.presences.controller;
 
 import fr.openent.presences.Presences;
-import fr.openent.presences.common.statistics_presences.StatisticsPresences;
 import fr.openent.presences.constants.Actions;
 import fr.openent.presences.constants.EventStores;
 import fr.openent.presences.core.constants.*;
@@ -24,8 +23,6 @@ import org.entcore.common.events.EventStoreFactory;
 import org.entcore.common.http.filter.*;
 import org.entcore.common.user.UserUtils;
 
-import java.util.Arrays;
-import java.util.Collections;
 import java.util.List;
 
 public class RegisterController extends ControllerHelper {
@@ -123,7 +120,6 @@ public class RegisterController extends ControllerHelper {
                                 + registerId, either.left().getValue());
                         renderError(request);
                     } else {
-                        StatisticsPresences.getInstance().postWeeklyAudiences(null, Collections.singletonList(registerId));
                         noContent(request);
                     }
                 });
