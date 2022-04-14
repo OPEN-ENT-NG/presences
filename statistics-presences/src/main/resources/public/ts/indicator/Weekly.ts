@@ -73,31 +73,32 @@ export class Weekly extends Indicator {
     }
 
     private _mapResults(res: IWeeklyResponse): Array<WeeklyStatistics> {
-           return res.data.map((week: WeeklyStatisticsResponse) => {
-                const slot = this.timeslot.find((slot: ITimeSlot) => slot._id == week.slot_id);
-                if (!!slot && !!slot.startHour && !!slot.endHour) {
-                    return {
-                        dayOfWeek: week.dayOfWeek,
-                        slot_id: slot._id,
-                        endMoment: moment()
-                            .isoWeekday(week.dayOfWeek)
-                            .set('hour', Number(slot.endHour.split(":")[0]))
-                            .set('minute', Number(slot.endHour.split(":")[1]))
-                            .set('second', 0)
-                            .set('millisecond', 0),
-                        startMoment: moment()
-                            .isoWeekday(week.dayOfWeek)
-                            .set('hour', Number(slot.startHour.split(":")[0]))
-                            .set('minute', Number(slot.startHour.split(":")[1]))
-                            .set('second', 0)
-                            .set('millisecond', 0),
-                        is_periodic: false,
-                        locked: true,
-                        rate: week.rate,
-                        max: week.max
-                    } as WeeklyStatistics;
-                }
-            });
+        return res.data.filter((week: WeeklyStatisticsResponse) => {
+            const slot = this.timeslot.find((slot: ITimeSlot) => slot._id == week.slot_id);
+            return slot && slot.startHour && slot.endHour;
+        }).map((week: WeeklyStatisticsResponse) => {
+            const slot = this.timeslot.find((slot: ITimeSlot) => slot._id == week.slot_id);
+            return {
+                dayOfWeek: week.dayOfWeek,
+                slot_id: slot._id,
+                endMoment: moment()
+                    .isoWeekday(week.dayOfWeek)
+                    .set('hour', Number(slot.endHour.split(":")[0]))
+                    .set('minute', Number(slot.endHour.split(":")[1]))
+                    .set('second', 0)
+                    .set('millisecond', 0),
+                startMoment: moment()
+                    .isoWeekday(week.dayOfWeek)
+                    .set('hour', Number(slot.startHour.split(":")[0]))
+                    .set('minute', Number(slot.startHour.split(":")[1]))
+                    .set('second', 0)
+                    .set('millisecond', 0),
+                is_periodic: false,
+                locked: true,
+                rate: week.rate,
+                max: week.max
+            } as WeeklyStatistics;
+        });
     }
 
     public async initTimeslot(users: string[], audiences: string[]): Promise<void> {
