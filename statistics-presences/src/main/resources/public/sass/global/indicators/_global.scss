@@ -46,6 +46,12 @@
     &:hover {
       color: $statistics-presences-main;
     }
+    &.disabled {
+      color: $statistics-presences-middle-grey;
+      &:hover {
+        color: $statistics-presences-middle-grey;
+      }
+    }
   }
 
   .flex-row {

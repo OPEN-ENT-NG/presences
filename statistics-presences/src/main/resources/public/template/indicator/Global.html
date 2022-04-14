@@ -68,7 +68,8 @@
             <!-- Audience name -->
             <div class="td text-center flex-row row__6">
                 <span class="flex-col col__1 justify-center">
-                    <i class="last-absent reload" ng-click="vm.refreshStudentsStatistics([student.id])"></i>
+                    <i class="last-absent reload" ng-click="vm.refreshStudentsStatistics([student.id])"
+                       ng-class="{'disabled': vm.loading}"></i>
                 </span>
                 <span class="flex-col col__4 justify-center">
                     [[student.audience]]

@@ -450,15 +450,19 @@ export const mainController = ng.controller('MainController',
             }
 
             vm.refreshStudentsStatistics = (arrayStudentIds: Array<string>): void => {
+                if (vm.loading) return;
+                vm.loading = true;
                 const structureId: string = window.structure.id;
                 toasts.info('statistics-presences.indicator.Global.student.refresh.inprogress')
                 indicatorService.refreshStudentsStats(structureId, arrayStudentIds)
                     .then(() => vm.resetIndicator())
                     .then(() => {
                         toasts.info('statistics-presences.indicator.Global.student.refresh.success');
+                        vm.loading = false;
                     }).catch((err: AxiosError) => {
                     toasts.warning('statistics-presences.indicator.Global.student.refresh.error');
                     console.error(err, err.message);
+                    vm.loading = false;
                 });
             }
         }]);
