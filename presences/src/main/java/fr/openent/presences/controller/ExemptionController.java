@@ -119,7 +119,7 @@ public class ExemptionController extends ControllerHelper {
 
                                         List<String> studentIdList = studentIds;
 
-                                        if (restrictedStudentIds != null) {
+                                        if (restrictedTeacherId != null) {
                                             if (studentIds.isEmpty()) {
                                                 studentIdList = restrictedStudentIds;
                                             } else {
@@ -140,7 +140,7 @@ public class ExemptionController extends ControllerHelper {
 
                             List<String> studentIdList = studentIds;
 
-                            if (restrictedStudentIds != null && !restrictedStudentIds.isEmpty()) {
+                            if (restrictedTeacherId != null) {
                                 if (studentIds.isEmpty()) {
                                     studentIdList = restrictedStudentIds;
                                 } else {
@@ -150,10 +150,10 @@ public class ExemptionController extends ControllerHelper {
 
                             if (wantCSV) {
                                 csvResponse(request, structureId, startDate, endDate,
-                                        (restrictedStudentIds != null && studentIdList.isEmpty()) ? null : studentIdList);
+                                        (restrictedTeacherId != null && studentIdList.isEmpty()) ? null : studentIdList);
                             } else {
                                 paginateResponse(request, page, structureId, startDate, endDate,
-                                        (restrictedStudentIds != null && studentIdList.isEmpty()) ? null : studentIdList);
+                                        (restrictedTeacherId != null && studentIdList.isEmpty()) ? null : studentIdList);
                             }
                         }
                     });
