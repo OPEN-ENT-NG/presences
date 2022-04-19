@@ -9,6 +9,8 @@ import fr.openent.statistics_presences.utils.EventType;
 import fr.wseduc.mongodb.AggregationsBuilder;
 import io.vertx.core.json.JsonObject;
 
+import java.util.List;
+
 public class WeeklySearch {
     private final StatisticsFilter filter;
 
@@ -91,6 +93,13 @@ public class WeeklySearch {
                 case UNREGULARIZED:
                 case REGULARIZED:
                     filterType.and(Field.REASON).in(this.filter().reasons());
+                    break;
+                case LATENESS:
+                    List<Integer> list = this.filter().reasons();
+                    if (this.filter().getNoLatenessReason()) {
+                        list.add(null);
+                    }
+                    filterType.and(Field.REASON).in(list);
                     break;
                 default:
                     break;
