@@ -20,6 +20,7 @@ import org.entcore.common.neo4j.Neo4j;
 import org.entcore.common.neo4j.Neo4jResult;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 public class DefaultMassmailingService implements MassmailingService {
@@ -79,7 +80,7 @@ public class DefaultMassmailingService implements MassmailingService {
                 break;
             case LATENESS:
                 Presences.getInstance().getCountEventByStudent(EventType.LATENESS.getType(), students, structure, null, startAt,
-                        new ArrayList<>(), massmailed, startDate, endDate, noReasons, "HOUR", null, handler);
+                        reasons, massmailed, startDate, endDate, noReasons, "HOUR", null, handler);
                 break;
             case PUNISHMENT:
                 Incidents.getInstance().getPunishmentsCountByStudent(structure, startDate + " 00:00:00", endDate + " 23:59:59",
