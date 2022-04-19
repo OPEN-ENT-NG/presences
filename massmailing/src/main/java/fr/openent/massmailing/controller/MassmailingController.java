@@ -190,6 +190,7 @@ public class MassmailingController extends ControllerHelper {
         List<Integer> sanctionsTypes = parsePunishmentsTypes(request.params().getAll(Field.SANCTIONTYPE));
         boolean noReasons = !request.params().contains(Field.NO_REASON)
                 || Boolean.parseBoolean(request.getParam(Field.NO_REASONS));
+        boolean noLatenessReasons = Boolean.parseBoolean(request.getParam(Field.NO_LATENESS_REASONS));
         Integer startAt;
         try {
             startAt = Integer.parseInt(request.getParam(Field.START_AT));
@@ -203,7 +204,7 @@ public class MassmailingController extends ControllerHelper {
             Promise<JsonObject> promise = Promise.promise();
             futures.add(promise.future());
             massmailingService.getStatus(structure, type, massmailed, reasons, punishmentsTypes, sanctionsTypes, startAt, startDate,
-                    endDate, students, noReasons, FutureHelper.handlerJsonObject(promise));
+                    endDate, students, noLatenessReasons, FutureHelper.handlerJsonObject(promise));
         }
 
         FutureHelper.all(futures)

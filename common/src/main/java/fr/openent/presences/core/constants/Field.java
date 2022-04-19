@@ -91,6 +91,7 @@ public class Field {
     public static final String NOREASON = "noReason";
     public static final String NO_REASON = "no_reason";
     public static final String NO_REASONS = "no_reasons";
+    public static final String NO_LATENESS_REASONS = "no_lateness_reasons";
     public static final String REASON = "reason";
     public static final String REASON_ID = "reason_id";
     public static final String MULTIPLE = "multiple";
