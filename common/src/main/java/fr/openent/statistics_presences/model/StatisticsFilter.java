@@ -29,6 +29,7 @@ public class StatisticsFilter {
     private Boolean hourDetail;
     private Integer page;
     private Boolean rateDisplay;
+    private Boolean noLatenessReason;
 
     @SuppressWarnings("unchecked")
     public StatisticsFilter(String structure, JsonObject body) {
@@ -42,6 +43,7 @@ public class StatisticsFilter {
         this.punishmentTypes.addAll(body.getJsonArray(StatisticsFilterField.PUNISHMENT_TYPES, new JsonArray()).getList());
         this.sanctionTypes.addAll(body.getJsonArray(StatisticsFilterField.SANCTION_TYPES, new JsonArray()).getList());
         this.exportOption = body.getString(StatisticsFilterField.EXPORT_OPTION);
+        this.noLatenessReason = body.getBoolean(StatisticsFilterField.NOLATENESSREASON, false);
 
         JsonObject filters = body.getJsonObject(StatisticsFilterField.FILTERS, new JsonObject());
         this.from = filters.getInteger(StatisticsFilterField.FROM, null);
@@ -161,6 +163,10 @@ public class StatisticsFilter {
         return this.end;
     }
 
+    public Boolean getNoLatenessReason() {
+        return noLatenessReason;
+    }
+
     public static class StatisticsFilterField {
         public static final String START = "start";
         public static final String END = "end";
@@ -177,6 +183,7 @@ public class StatisticsFilter {
         public static final String HOUR_DETAILS = "HOUR_DETAIL";
         public static final String TOTAL = "TOTAL";
         public static final String RATE = "rate";
+        public static final String NOLATENESSREASON = "noLatenessReason";
 
         private StatisticsFilterField() {
             throw new IllegalStateException("Utility class");

@@ -55,6 +55,9 @@
       "items": {
         "type": "number"
       }
+    },
+    "noLatenessReason": {
+      "type": "boolean"
     }
   },
   "required": [

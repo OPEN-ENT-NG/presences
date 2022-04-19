@@ -3,6 +3,7 @@ package fr.openent.presences.common.presences;
 import fr.openent.presences.common.helper.FutureHelper;
 import fr.openent.presences.common.message.MessageResponseHandler;
 import fr.openent.presences.core.constants.Field;
+import fr.openent.presences.enums.ReasonType;
 import fr.wseduc.webutils.Either;
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Future;
@@ -125,10 +126,28 @@ public class Presences {
         eb.send(address, action, MessageResponseHandler.messageJsonObjectHandler(FutureHelper.handlerJsonObject(handler)));
     }
 
+    /**
+     * ⚠ Get only Absence reason from a structure
+     *
+     * @param structure     Structure identifier
+     * @param handler       handler data
+     */
     public void getReasons(String structure, Handler<Either<String, JsonArray>> handler) {
+        getReasons(structure, ReasonType.ABSENCE, handler);
+    }
+
+    /**
+     * Get reason from a structure
+     *
+     * @param reasonType    Reason type identifier
+     * @param structure     Structure identifier
+     * @param handler       handler data
+     */
+    public void getReasons(String structure, ReasonType reasonType, Handler<Either<String, JsonArray>> handler) {
         JsonObject action = new JsonObject()
-                .put("structure", structure)
-                .put("action", "get-reasons");
+                .put(Field.STRUCTURE, structure)
+                .put(Field.REASONTYPE, reasonType.getValue())
+                .put(Field.ACTION, "get-reasons");
         eb.send(address, action, MessageResponseHandler.messageJsonArrayHandler(handler));
     }
 

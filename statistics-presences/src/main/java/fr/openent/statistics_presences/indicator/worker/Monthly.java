@@ -43,10 +43,10 @@ public class Monthly extends IndicatorWorker {
                 future = countHandler(IndicatorGeneric.fetchIncidentValue(structureId, studentId, select, null));
                 break;
             case DEPARTURE:
-                future = retrieveEventCount(structureId, studentId, 3);
+                future = retrieveEventCount(structureId, studentId, 3, reasonIds(structureId).getList());
                 break;
             case LATENESS:
-                future = retrieveEventCount(structureId, studentId, 2);
+                future = retrieveEventCount(structureId, studentId, 2, reasonIds(structureId).getList());
                 break;
             case NO_REASON:
                 future = fetchEventCountFromPresences(structureId, studentId, new ArrayList<>(), true, false);
@@ -76,8 +76,9 @@ public class Monthly extends IndicatorWorker {
                     for (int i = 0; i < result.size(); i++) {
                         JsonObject incident = result.getJsonObject(i);
                         MonthlyStat stat = new MonthlyStat()
-                                .setStartDate(incident.getString("start_date"))
-                                .setEndDate(incident.getString("end_date"));
+                                .setReason(incident.getLong(Field.REASON_ID, null))
+                                .setStartDate(incident.getString(Field.START_DATE))
+                                .setEndDate(incident.getString(Field.END_DATE));
                         stats.add(stat);
                     }
 
@@ -111,9 +112,9 @@ public class Monthly extends IndicatorWorker {
         return promise.future();
     }
 
-    private Future<List<Stat>> retrieveEventCount(String structureId, String studentId, Integer eventType) {
-        String select = "event.start_date, event.end_date";
-        return countHandler(IndicatorGeneric.retrieveEventCount(structureId, studentId, eventType, select, null));
+    private Future<List<Stat>> retrieveEventCount(String structureId, String studentId, Integer eventType, List<Integer> reasonIds) {
+        String select = "event.start_date, event.end_date, event.reason_id";
+        return countHandler(IndicatorGeneric.retrieveEventCount(structureId, studentId, eventType, select, null, reasonIds));
     }
 
     @SuppressWarnings("unchecked")

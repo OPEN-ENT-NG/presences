@@ -3,9 +3,11 @@ package fr.openent.presences.controller;
 import fr.openent.presences.common.bus.BusResultHandler;
 import fr.openent.presences.common.helper.FutureHelper;
 import fr.openent.presences.core.constants.Field;
+import fr.openent.presences.enums.EventType;
 import fr.openent.presences.service.*;
 import fr.openent.presences.service.impl.*;
 import fr.wseduc.bus.BusAddress;
+import fr.wseduc.webutils.Either;
 import io.vertx.core.eventbus.EventBus;
 import io.vertx.core.eventbus.Message;
 import io.vertx.core.json.JsonArray;
@@ -117,7 +119,11 @@ public class EventBusController extends ControllerHelper {
                 break;
             case "get-reasons":
                 structure = body.getString("structure");
-                this.reasonService.fetchAbsenceReason(structure, BusResponseHandler.busArrayHandler(message));
+                Integer reason = body.getInteger(Field.REASONTYPE, EventType.ABSENCE.getType());
+
+                this.reasonService.fetchReason(structure, reason)
+                        .onSuccess(res -> BusResponseHandler.busArrayHandler(message).handle(new Either.Right<>(res)))
+                        .onFailure(err -> BusResponseHandler.busArrayHandler(message).handle(new Either.Left<>(err.getMessage())));
                 break;
             case "get-settings":
                 structure = body.getString("structure");

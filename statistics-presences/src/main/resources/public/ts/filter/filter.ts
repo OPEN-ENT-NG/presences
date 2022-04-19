@@ -1,6 +1,7 @@
 import {Reason} from '@presences/models';
 import {IPunishmentType} from '@incidents/models/PunishmentType';
 import {PunishmentsUtils} from "@incidents/utilities/punishments";
+import {REASON_TYPE_ID} from "@common/core/enum/reason-type-id";
 
 export enum Filter {
     FROM = "FROM",
@@ -69,9 +70,9 @@ export class FilterType {
 
 export class FilterTypeFactory {
     reasons: Reason[]
-    punishmentTypes : IPunishmentType[];
-    reasonsMap: {[key: number]: boolean};
-    punishmentTypesMap: {[key: number]: boolean};
+    punishmentTypes: IPunishmentType[];
+    reasonsMap: { [key: number]: boolean };
+    punishmentTypesMap: { [key: number]: boolean };
 
     constructor(reasons: Reason[], punishmentTypes: IPunishmentType[]) {
         this.reasons = reasons;
@@ -91,16 +92,21 @@ export class FilterTypeFactory {
         return new FilterValue(value, selected);
     }
 
-    public changeUnProvingReasons(value: boolean): void {
-        this.reasons.forEach(reason => {
-            if (reason.proving === false) this.reasonsMap[reason.id] = value;
-        });
+    public changeUnProvingAbsences(value: boolean): void {
+        this.reasons.filter((reason: Reason) => reason.reason_type_id == REASON_TYPE_ID.ABSENCE && reason.proving === false)
+            .forEach((reason: Reason) => this.reasonsMap[reason.id] = value);
     }
 
-    public changeProvingReasons(value: boolean): void {
-        this.reasons.forEach(reason => {
-            this.reasonsMap[reason.id] = value;
-        });
+    public changeProvingAbsences(value: boolean): void {
+        this.reasons.filter((reason: Reason) => reason.reason_type_id == REASON_TYPE_ID.ABSENCE)
+            .forEach((reason: Reason) => this.reasonsMap[reason.id] = value);
+    }
+
+    public changeLateness(value: boolean): void {
+        this.reasons.filter((reason: Reason) => reason.reason_type_id == REASON_TYPE_ID.LATENESS || reason.id == 0)
+            .forEach((reason: Reason) => {
+                this.reasonsMap[reason.id] = value;
+            });
     }
 
     private changePunishmentTypesValue(type: string, value: boolean): void {

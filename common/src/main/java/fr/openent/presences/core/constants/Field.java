@@ -286,6 +286,7 @@ public class Field {
     public static final String DISPLAYNAME = "displayName";
 
     public static final String REASONTYPEID = "reasonTypeId";
+    public static final String REASONTYPE = "reasonType";
     public static final String PROVING = "proving";
     public static final String DEFAULT = "default";
     public static final String HIDDEN = "hidden";

@@ -35,10 +35,10 @@ public class Weekly extends IndicatorWorker {
         Future<List<Stat>> future;
         switch (type) {
             case DEPARTURE:
-                future = retrieveEventCount(structureId, studentId, 3, timeslot);
+                future = retrieveEventCount(structureId, studentId, 3, null, timeslot);
                 break;
             case LATENESS:
-                future = retrieveEventCount(structureId, studentId, 2, timeslot);
+                future = retrieveEventCount(structureId, studentId, 2, reasonIds(structureId).getList(), timeslot);
                 break;
             case NO_REASON:
                 future = fetchEventCountFromPresences(structureId, studentId, new ArrayList<>(), true,
@@ -71,7 +71,7 @@ public class Weekly extends IndicatorWorker {
                     List<Stat> stats = new ArrayList<>();
                     for (int i = 0; i < result.size(); i++) {
                         JsonObject incident = result.getJsonObject(i);
-                        stats.add(setStatFromStartDate(incident, timeslot));
+                        stats.add(setStatFromStartDate(incident, timeslot).setReason(incident.getLong(Field.REASON_ID, null)));
                     }
 
                     promise.complete(stats);
@@ -106,9 +106,9 @@ public class Weekly extends IndicatorWorker {
         return promise.future();
     }
 
-    private Future<List<Stat>> retrieveEventCount(String structureId, String studentId, Integer eventType, Timeslot timeslot) {
-        String select = "event.start_date, event.end_date";
-        return countHandler(IndicatorGeneric.retrieveEventCount(structureId, studentId, eventType, select, null), timeslot);
+    private Future<List<Stat>> retrieveEventCount(String structureId, String studentId, Integer eventType, List<Integer> reasonIds, Timeslot timeslot) {
+        String select = "event.start_date, event.end_date, event.reason_id";
+        return countHandler(IndicatorGeneric.retrieveEventCount(structureId, studentId, eventType, select, null, reasonIds), timeslot);
     }
 
     private List<WeeklyStat> getSplitEventsBySlots(JsonObject event, Timeslot timeslot) {

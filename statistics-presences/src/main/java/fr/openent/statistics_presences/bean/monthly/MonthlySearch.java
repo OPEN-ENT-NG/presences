@@ -210,7 +210,7 @@ public class MonthlySearch {
                 case REGULARIZED:
                     JsonObject inFilterReasons = new JsonObject()
                             .put("$in", this.filter().reasons());
-                    filterType.put("reason", inFilterReasons);
+                    filterType.put(Field.REASON, inFilterReasons);
                     break;
                 case SANCTION:
                     JsonObject inFilterSanctionTypes = new JsonObject()
@@ -221,6 +221,15 @@ public class MonthlySearch {
                     JsonObject inFilterPunishmentTypes = new JsonObject()
                             .put("$in", this.filter.punishmentTypes());
                     filterType.put("punishment_type", inFilterPunishmentTypes);
+                    break;
+                case LATENESS:
+                    List<Integer> list = this.filter().reasons();
+                    if (this.filter().getNoLatenessReason()) {
+                        list.add(null);
+                    }
+                    JsonObject inFilterLatenessReasons = new JsonObject()
+                            .put("$in", list);
+                    filterType.put(Field.REASON, inFilterLatenessReasons );
                     break;
                 default:
                     break;

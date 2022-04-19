@@ -8,4 +8,5 @@ export type IndicatorBody = {
     sanctionTypes: Array<number>;
     users: Array<string>;
     audiences: Array<string>;
+    noLatenessReason?: boolean;
 }

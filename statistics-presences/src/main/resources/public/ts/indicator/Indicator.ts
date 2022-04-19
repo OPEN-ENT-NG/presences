@@ -182,6 +182,7 @@ export abstract class Indicator implements IIndicator {
             reasons: this.getSelectedReasons(),
             punishmentTypes: this.getSelectedPunishmentTypes(),
             sanctionTypes: this.getSelectedSanctionTypes(),
+            noLatenessReason: this.isNoLatenessReason(),
             users,
             audiences
         };
@@ -217,11 +218,17 @@ export abstract class Indicator implements IIndicator {
 
     private getSelectedReasons(): number[] {
         const selection: number[] = [];
-        Object.keys(this._factoryFilter.reasonsMap).forEach((reason: string) => {
-            if (this._factoryFilter.reasonsMap[reason]) selection.push(parseInt(reason));
+        Object.keys(this._factoryFilter.reasonsMap).forEach((reasonId: string) => {
+            if (reasonId != '0' && this._factoryFilter.reasonsMap[reasonId]) selection.push(parseInt(reasonId));
         });
 
         return selection;
+    }
+
+    private isNoLatenessReason(): boolean {
+        return Object.keys(this._factoryFilter.reasonsMap)
+            .filter((reasonId: string) => this._factoryFilter.reasonsMap[reasonId] && reasonId == '0')
+            .length > 0
     }
 
     private getSelectedPunishmentTypes(): number[] {

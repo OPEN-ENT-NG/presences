@@ -35,6 +35,7 @@ public class MonthlyTest extends DBService {
     private static final String LATENESS = "LATENESS";
     private static final String PUNISHMENT = "PUNISHMENT";
     private static final List<Integer> PUNISHMENT_TYPE_IDS = Arrays.asList(1, 2);
+    private static final List<Integer> LATENESS_TYPE_IDS = Arrays.asList(1, 2, null);
     private static final String NO_REASON = "NO_REASON";
     private static final List<String> BASIC_TYPES = Arrays.asList(LATENESS, PUNISHMENT);
     private static final String HALFDAY = "12:30:00";
@@ -55,6 +56,8 @@ public class MonthlyTest extends DBService {
                 .put(StatisticsFilter.StatisticsFilterField.START, START)
                 .put(StatisticsFilter.StatisticsFilterField.END, END)
                 .put(StatisticsFilter.StatisticsFilterField.TYPES, BASIC_TYPES)
+                .put(StatisticsFilter.StatisticsFilterField.NOLATENESSREASON, true)
+                .put(StatisticsFilter.StatisticsFilterField.REASONS, new JsonArray(Arrays.asList(1, 2)))
                 .put(StatisticsFilter.StatisticsFilterField.PUNISHMENT_TYPES, PUNISHMENT_TYPE_IDS);
 
         search = new MonthlySearch(new StatisticsFilter(STRUCTURE_ID, filter));
@@ -173,7 +176,10 @@ public class MonthlyTest extends DBService {
                                                         .put("structure", STRUCTURE_ID)
                                                         .put("indicator", "fr.openent.statistics_presences.indicator.impl.Monthly")
                                                         .put("$or", new JsonArray()
-                                                                .add(new JsonObject().put("type", LATENESS))
+                                                                .add(new JsonObject()
+                                                                        .put("type", LATENESS)
+                                                                        .put("reason", new JsonObject()
+                                                                                .put("$in", LATENESS_TYPE_IDS)))
                                                                 .add(new JsonObject()
                                                                         .put("type", PUNISHMENT)
                                                                         .put("punishment_type", new JsonObject()

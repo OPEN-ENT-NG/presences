@@ -5,6 +5,7 @@ import fr.openent.presences.common.helper.FutureHelper;
 import fr.openent.presences.common.incidents.Incidents;
 import fr.openent.presences.common.presences.Presences;
 import fr.openent.presences.common.viescolaire.Viescolaire;
+import fr.openent.presences.enums.ReasonType;
 import fr.openent.statistics_presences.StatisticsPresences;
 import io.vertx.core.Future;
 import io.vertx.core.Promise;
@@ -15,6 +16,7 @@ import org.entcore.common.neo4j.Neo4jResult;
 import org.entcore.common.sql.Sql;
 import org.entcore.common.sql.SqlResult;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -87,7 +89,7 @@ public class IndicatorGeneric {
 
     public static Future<JsonArray> retrieveReasons(String structureId) {
         Promise<JsonArray> promise = Promise.promise();
-        Presences.getInstance().getReasons(structureId, FutureHelper.handlerJsonArray(promise));
+        Presences.getInstance().getReasons(structureId, ReasonType.ALL, FutureHelper.handlerJsonArray(promise));
         return promise.future();
     }
 
@@ -114,23 +116,32 @@ public class IndicatorGeneric {
         return promise.future();
     }
 
-    public static Future<JsonArray> retrieveEventCount(String structureId, String studentId, Integer eventType, String select, String group) {
+    public static Future<JsonArray> retrieveEventCount(String structureId, String studentId, Integer eventType, String select, String group, List<Integer> reasonIds) {
         Promise<JsonArray> promise = Promise.promise();
         String query = "SELECT " + select + " " +
                 "FROM %s.event " +
                 "INNER JOIN %s.register ON (event.register_id = register.id) " +
                 "WHERE event.student_id = ? " +
                 "AND register.structure_id = ? " +
-                "AND event.type_id = ? ";
-
-        if (group != null) {
-            query += "GROUP BY " + group;
-        }
-
+                "AND event.type_id = ? " +
+                "AND (event.reason_id IS NULL";
         JsonArray params = new JsonArray()
                 .add(studentId)
                 .add(structureId)
                 .add(eventType);
+
+
+        if (reasonIds != null && !reasonIds.isEmpty()){
+            query += " OR event.reason_id IN " + Sql.listPrepared(reasonIds);
+            params.addAll(new JsonArray(reasonIds));
+        }
+        query += ") ";
+
+        if (group != null) {
+            query += "GROUP BY ? ";
+            params.add(group);
+        }
+
 
         Sql.getInstance().prepared(String.format(query, StatisticsPresences.PRESENCES_SCHEMA, StatisticsPresences.PRESENCES_SCHEMA), params,
                 SqlResult.validResultHandler(FutureHelper.handlerJsonArray(promise)));
