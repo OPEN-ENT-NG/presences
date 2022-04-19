@@ -18,9 +18,9 @@ export class Global extends Indicator {
         this.resetValues();
         this.setFilterTypes([
             this._factoryFilter.getFilter(FILTER_TYPE.NO_REASON, null),
-            this._factoryFilter.getFilter(FILTER_TYPE.UNREGULARIZED, (value: boolean) => this._factoryFilter.changeUnProvingReasons(value)),
-            this._factoryFilter.getFilter(FILTER_TYPE.REGULARIZED, (value: boolean) => this._factoryFilter.changeProvingReasons(value)),
-            this._factoryFilter.getFilter(FILTER_TYPE.LATENESS, null),
+            this._factoryFilter.getFilter(FILTER_TYPE.UNREGULARIZED, (value: boolean) => this._factoryFilter.changeUnProvingAbsences(value)),
+            this._factoryFilter.getFilter(FILTER_TYPE.REGULARIZED, (value: boolean) => this._factoryFilter.changeProvingAbsences(value)),
+            this._factoryFilter.getFilter(FILTER_TYPE.LATENESS, (value: boolean) => this._factoryFilter.changeLateness(value)),
             this._factoryFilter.getFilter(FILTER_TYPE.DEPARTURE, null),
             this._factoryFilter.getFilter(FILTER_TYPE.PUNISHMENT, (value: boolean) => this._factoryFilter.changePunishmentFilter(value)),
             this._factoryFilter.getFilter(FILTER_TYPE.SANCTION, (value: boolean) => this._factoryFilter.changeSanctionFilter(value))
