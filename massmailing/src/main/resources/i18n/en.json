@@ -5,5 +5,10 @@
   "massmailing.template.form.category.PUNISHMENT_SANCTION": "Punishment/Sanction",
   "massmailing.template.form.category.LATENESS": "Lateness",
   "massmailing.template.form.category.ABSENCES": "Absences",
+  "massmailing.filters.reasons.absence": "Reasons for absences",
+  "massmailing.filters.reasons.lateness": "Reasons for lateness",
+  "massmailing.lateness.none": "No reason",
+  "massmailing.filter.ABSENCES_REASONS": "Motif Absence",
+  "massmailing.filter.LATENESS_REASONS": "Motif Retard",
   "presences.in.structure": "Presence in stucture"
 }

@@ -45,7 +45,8 @@
   "massmailing.filters": "Filtres",
   "massmailing.filters.type": "Type",
   "massmailing.filters.massmailing": "Publipostage",
-  "massmailing.filters.reasons": "Motifs d'absences",
+  "massmailing.filters.reasons.absence": "Motifs d'absences",
+  "massmailing.filters.reasons.lateness": "Motifs de retard",
   "massmailing.filters.punishment.types": "Type de punitions, sanctions",
   "massmailing.types.NO_REASON": "Absences sans motif",
   "massmailing.types.REGULARIZED": "Absences régularisées",
@@ -81,6 +82,8 @@
   "massmailing.filter.TYPE": "Type",
   "massmailing.filter.STATUS": "Publipostage",
   "massmailing.filter.REASONS": "Motif",
+  "massmailing.filter.ABSENCES_REASONS": "Motif Absence",
+  "massmailing.filter.LATENESS_REASONS": "Motif Retard",
   "massmailing.filter.empty.no.filter": "Aucun filtre",
   "massmailing.filter.empty.selected": "n'est sélectionné. Activez en au moins un pour afficher des absences à publiposter.",
   "massmailing.pdf.error.download": "Une erreur est survenue lors du publipostage pdf",
@@ -168,6 +171,6 @@
   "massmailing.init.template.sms.0.content": "Bonjour, votre enfant [NOM ENFANT] a été absent le [DATE DERNIERE ABSENCE]. Merci de régulariser cette absence au plus vite. La Vie Scolaire",
   "massmailing.init.template.sms.1.name": "Quotidien Retard SMS",
   "massmailing.init.template.sms.1.content": "Bonjour, votre enfant [NOM ENFANT] a été en retard le [DATE DERNIER RETARD]. Merci de régulariser ce retard au plus vite. La Vie Scolaire",
-
+  "massmailing.lateness.none": "Sans motif",
   "presences.in.structure": "Présence dans l'établissement"
 }
