@@ -7,6 +7,7 @@ import fr.openent.presences.service.*;
 import io.vertx.core.Handler;
 import io.vertx.core.Vertx;
 import io.vertx.core.json.*;
+import io.vertx.ext.unit.Async;
 import io.vertx.ext.unit.TestContext;
 import io.vertx.ext.unit.junit.VertxUnitRunner;
 import org.entcore.common.neo4j.*;
@@ -20,11 +21,14 @@ import org.mockito.internal.util.reflection.*;
 import org.mockito.stubbing.Answer;
 import org.powermock.reflect.*;
 
+import java.util.Arrays;
+
 import static org.mockito.Mockito.mock;
 
 @RunWith(VertxUnitRunner.class)
 public class DefaultRegisterServiceTest extends DBService {
 
+    private Vertx vertx;
     private final Sql sql = mock(Sql.class);
     private final Neo4j neo4j = Neo4j.getInstance();
     private final Neo4jRest neo4jRest = mock(Neo4jRest.class);
@@ -35,8 +39,10 @@ public class DefaultRegisterServiceTest extends DBService {
 
     @Before
     public void setUp() throws NoSuchFieldException {
+        vertx = Vertx.vertx();
         DB.getInstance().init(neo4j, sql, null);
         FieldSetter.setField(neo4j, neo4j.getClass().getDeclaredField("database"), neo4jRest);
+        Sql.getInstance().init(vertx.eventBus(), "fr.openent.presences");
         this.commonPresencesServiceFactory = new CommonPresencesServiceFactory(Vertx.vertx(),
                 new StorageFactory(Vertx.vertx(), null).getStorage(), null);
         this.registerService = new DefaultRegisterService(commonPresencesServiceFactory);
@@ -88,6 +94,23 @@ public class DefaultRegisterServiceTest extends DBService {
 
         Whitebox.invokeMethod(registerService, "getFirstCounsellorId", "structureId",
                 null);
+    }
+
+    @Test
+    public void testUpdateStatus(TestContext ctx) {
+        Async async = ctx.async();
+
+        String expectedQuery = "UPDATE null.register SET state_id = ? WHERE id = ? AND state_id != 3";
+        JsonArray expectedParams = new JsonArray(Arrays.asList(2,1));
+
+        vertx.eventBus().consumer("fr.openent.presences", message -> {
+            JsonObject body = (JsonObject) message.body();
+            ctx.assertEquals("prepared", body.getString("action"));
+            ctx.assertEquals(expectedQuery, body.getString("statement"));
+            ctx.assertEquals(expectedParams.toString(), body.getJsonArray("values").toString());
+            async.complete();
+        });
+        registerService.updateStatus(1, 2, null);
     }
 
 }

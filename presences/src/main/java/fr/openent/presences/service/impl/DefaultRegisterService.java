@@ -610,7 +610,7 @@ public class DefaultRegisterService extends DBService implements RegisterService
 
     @Override
     public void updateStatus(Integer registerId, Integer status, Handler<Either<String, JsonObject>> handler) {
-        String query = "UPDATE " + Presences.dbSchema + ".register SET state_id = ? WHERE id = ?";
+        String query = "UPDATE " + Presences.dbSchema + ".register SET state_id = ? WHERE id = ? AND state_id != 3";
         JsonArray params = new JsonArray()
                 .add(status)
                 .add(registerId);
