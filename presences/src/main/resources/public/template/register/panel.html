@@ -65,6 +65,7 @@
             <div ng-if="hasRight('managePresences')" class="select-reason-absences right-magnet margin-bottom-md">
                 <label>
                     <select ng-model="vm.filter.student.lateness.reason_id"
+                            ng-disabled="vm.isAbsenceDisabledWithoutWorkFlow(vm.filter.student)"
                             ng-options="reason.id as reason.label disable when reason.hidden for reason in vm.getLatenessReason()"
                             ng-change="vm.manageLateness(vm.filter.student.lateness, vm.filter.student)">
                         <option value="">
