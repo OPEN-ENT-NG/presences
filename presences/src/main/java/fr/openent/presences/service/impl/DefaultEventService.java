@@ -11,6 +11,7 @@ import fr.openent.presences.common.viescolaire.Viescolaire;
 import fr.openent.presences.constants.Reasons;
 import fr.openent.presences.core.constants.Field;
 import fr.openent.presences.db.DBService;
+import fr.openent.presences.enums.EventRecoveryMethodEnum;
 import fr.openent.presences.enums.EventType;
 import fr.openent.presences.helper.CourseHelper;
 import fr.openent.presences.helper.EventHelper;
@@ -1124,9 +1125,9 @@ public class DefaultEventService extends DBService implements EventService {
             }
             JsonObject settings = event.right().getValue();
             String recoveryMethod = recoveryMethodUsed != null ? recoveryMethodUsed : settings.getString("event_recovery_method");
-            switch (recoveryMethod) {
-                case "DAY":
-                case "HOUR": {
+            switch (EventRecoveryMethodEnum.getInstanceFromString(recoveryMethod)) {
+                case DAY:
+                case HOUR: {
                     JsonObject eventsQuery = getEventQuery(eventType, students, structure, justified, reasonsId,
                             massmailed, null, startDate, endDate, noReasons, recoveryMethod, null, null, null, null, true, regularized);
                     String query = "WITH count_by_user AS (WITH events as (" + eventsQuery.getString("query") + ") " +
@@ -1134,7 +1135,7 @@ public class DefaultEventService extends DBService implements EventService {
                     Sql.getInstance().prepared(query, eventsQuery.getJsonArray("params"), SqlResult.validResultHandler(handler));
                     break;
                 }
-                case "HALF_DAY":
+                case HALF_DAY:
                 default:
                     Viescolaire.getInstance().getSlotProfileSetting(structure, evt -> {
                         if (evt.isLeft()) {
@@ -1170,9 +1171,10 @@ public class DefaultEventService extends DBService implements EventService {
                                      List<Integer> reasonsId, Boolean massmailed, Boolean compliance, String startDate, String endDate,
                                      boolean noReasons, String recoveryMethod, String startTime, String endTime,
                                      String limit, String offset, boolean isCount, Boolean regularized) {
-        String dateCast = !"HOUR".equals(recoveryMethod) ? "::date" : "";
-        String periodRangeName = "HALF_DAY".equals(recoveryMethod) && endTime.equals(defaultEndTime) ? "AFTERNOON" : "";
-        periodRangeName = "HALF_DAY".equals(recoveryMethod) && startTime.equals(defaultStartTime) ? "MORNING" : periodRangeName;
+        recoveryMethod = EventRecoveryMethodEnum.getInstanceFromString(recoveryMethod) == null ? EventRecoveryMethodEnum.HOUR.getValue() : recoveryMethod;
+        String dateCast = !EventRecoveryMethodEnum.HOUR.getValue().equals(recoveryMethod) ? "::date" : "";
+        String periodRangeName = EventRecoveryMethodEnum.HALF_DAY.getValue().equals(recoveryMethod) && endTime.equals(defaultEndTime) ? "AFTERNOON" : "";
+        periodRangeName = EventRecoveryMethodEnum.HALF_DAY.getValue().equals(recoveryMethod) && startTime.equals(defaultStartTime) ? "MORNING" : periodRangeName;
         String periodRange = periodRangeName.length() != 0 ? ",'" + periodRangeName + "' as period " : "";
         String query = "SELECT event.student_id, event.start_date" + dateCast + ", event.end_date" +
                 dateCast + ", event.type_id, '" + recoveryMethod + "' as recovery_method, " +
@@ -1213,7 +1215,8 @@ public class DefaultEventService extends DBService implements EventService {
 
         if ("HALF_DAY".equals(recoveryMethod)) {
             String dateEquality = "AFTERNOON".equals(periodRangeName) ? "=" : "";
-            query += " AND event.start_date::time >" + dateEquality + " '" + startTime + "' AND event.start_date::time <" + dateEquality + " '" + endTime + "'";
+            query += " AND event.start_date::time >" + dateEquality + " ? AND event.start_date::time <" + dateEquality + " ?";
+            params.add(startTime).add(endTime);
         }
 
         if (students != null && !students.isEmpty()) {
@@ -1317,15 +1320,15 @@ public class DefaultEventService extends DBService implements EventService {
 
             JsonObject settings = event.right().getValue();
             String recoveryMethod = recoveryMethodUsed != null ? recoveryMethodUsed : settings.getString("event_recovery_method", "");
-            switch (recoveryMethod) {
-                case "DAY":
-                case "HOUR": {
+            switch (EventRecoveryMethodEnum.getInstanceFromString(recoveryMethod)) {
+                case DAY:
+                case HOUR: {
                     JsonObject eventsQuery = getEventQuery(eventType, students, structure, justified, reasonsId,
                             massmailed, compliance, startDate, endDate, noReasons, recoveryMethod, null, null, limit, offset, false, regularized);
                     Sql.getInstance().prepared(eventsQuery.getString("query"), eventsQuery.getJsonArray("params"), SqlResult.validResultHandler(queryHandler));
                     break;
                 }
-                case "HALF_DAY":
+                case HALF_DAY:
                 default:
                     Viescolaire.getInstance().getSlotProfileSetting(structure, evt -> {
                         if (evt.isLeft()) {
