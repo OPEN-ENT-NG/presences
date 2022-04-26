@@ -32,18 +32,13 @@ export class RegisterUtils {
         if (student.absence !== undefined && student.absence.counsellor_input) {
             return !model.me.hasWorkflow(rights.workflow.managePresences);
         }
-        const exempted = student.exemptions.find((exempted: ExemptionRegister) => exempted.subject_id == register.subject_id);
-        if (!!exempted) {
-            if (student.exempted && !exempted.attendance) {
-                return true;
-            }
-        }
-        return false;
+        return RegisterUtils.isAbsenceDisabledWithoutWorkFlow(student, register)
     }
 
     static isAbsenceDisabledWithoutWorkFlow = (student: RegisterStudent, register: Register): boolean => {
-        const exempted = student.exemptions.find(exempted => exempted.subject_id == register.subject_id);
-        return (!!exempted && student.exempted && !exempted.attendance);
+        const exempted: ExemptionRegister = student.exemptions
+            .find((exempted: ExemptionRegister) => (exempted.subject_id == register.subject_id || exempted.recursive_id == 1) && !exempted.attendance);
+        return !!exempted && student.exempted;
     }
 
     static initCourseToFilter = (): Course => {
