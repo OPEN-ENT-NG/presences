@@ -1,17 +1,26 @@
 package fr.openent.presences.service.impl;
 
 import fr.openent.presences.Presences;
-import fr.openent.presences.db.*;
+import fr.openent.presences.core.constants.Field;
+import fr.openent.presences.db.DBService;
+import fr.openent.presences.enums.SettingsFieldEnum;
 import fr.openent.presences.service.SettingsService;
 import fr.wseduc.webutils.Either;
-import io.vertx.core.*;
+import io.vertx.core.Future;
+import io.vertx.core.Handler;
+import io.vertx.core.Promise;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
-import io.vertx.core.logging.*;
+import io.vertx.core.logging.Logger;
+import io.vertx.core.logging.LoggerFactory;
 import org.entcore.common.sql.Sql;
 import org.entcore.common.sql.SqlResult;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.Objects;
+import java.util.stream.Collectors;
 
 public class DefaultSettingsService extends DBService implements SettingsService {
 
@@ -72,27 +81,32 @@ public class DefaultSettingsService extends DBService implements SettingsService
         String query = "SELECT COUNT(structure_id) FROM " + Presences.dbSchema + ".settings WHERE structure_id = ?";
         sql.prepared(query, params, evt -> {
             Long count = SqlResult.countResult(evt);
-            if (count == 0) create(structureId, settings, handler);
-            else update(structureId, settings, handler);
+            if (count == 0) {
+                create(structureId, settings, handler);
+            } else {
+                update(structureId, settings, handler);
+            }
         });
     }
 
     private void create(String structureId, JsonObject settings, Handler<Either<String, JsonObject>> handler) {
         List<String> insertValues = new ArrayList<>();
-        insertValues.add("structure_id");
-        insertValues.addAll(settings.fieldNames());
-        JsonArray params = new JsonArray()
-                .add(structureId);
+        insertValues.add(Field.STRUCTURE_ID);
+        List<String> settingsFields = settings.fieldNames()
+                .stream()
+                .map(SettingsFieldEnum::getSettingsField)
+                .filter(Objects::nonNull)
+                .collect(Collectors.toList());
+        insertValues.addAll(settingsFields);
 
         String query = "INSERT INTO " + Presences.dbSchema + ".settings (";
-        for (String field : insertValues) {
-            query += field + ",";
-        }
+        query += String.join(",", insertValues);
+        JsonArray params = new JsonArray();
 
-        for (String field : settings.fieldNames()) {
+        params.add(structureId);
+        for (String field : settingsFields) {
             params.add(settings.getValue(field));
         }
-        query = query.substring(0, query.length() - 1);
         query += ") VALUES " + Sql.listPrepared(insertValues) + " RETURNING *";
         sql.prepared(query, params, SqlResult.validUniqueResultHandler(handler));
     }
@@ -101,10 +115,10 @@ public class DefaultSettingsService extends DBService implements SettingsService
         List<String> columns = new ArrayList<>(settings.fieldNames());
         JsonArray params = new JsonArray();
         StringBuilder query = new StringBuilder("UPDATE " + Presences.dbSchema + ".settings SET ");
-        for (String column : columns) {
-            query.append(column).append("= ?,");
+        columns.stream().map(SettingsFieldEnum::getSettingsField).filter(Objects::nonNull).forEach(column -> {
+            query.append(SettingsFieldEnum.getSettingsField(column)).append(" = ?,");
             params.add(settings.getValue(column));
-        }
+        });
 
         params.add(structureId);
         sql.prepared(query.substring(0, query.length() - 1) + " WHERE structure_id = ? RETURNING *;",
