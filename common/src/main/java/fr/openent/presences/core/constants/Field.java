@@ -293,6 +293,7 @@ public class Field {
     public static final String HIDDEN = "hidden";
     public static final String ABSENCE_COMPILANCE = "absence_compliance";
     public static final String REASON_TYPE_ID = "reason_type_id";
+    public static final String INITIALIZED = "initialized";
 
     private Field() {
         throw new IllegalStateException("Utility class");
