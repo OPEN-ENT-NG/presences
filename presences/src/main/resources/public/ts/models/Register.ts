@@ -154,6 +154,8 @@ export class Register extends LoadingCollection {
     }
 
     async setStatus(state_id: number): Promise<void> {
+        if (this.state_id == RegisterStatus.DONE)
+            return;
         const state_idOld = this.state_id;
         this.state_id = state_id;
         await registerService.setStatus(this.id, this.state_id)
