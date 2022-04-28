@@ -37,7 +37,7 @@ export class RegisterUtils {
 
     static isAbsenceDisabledWithoutWorkFlow = (student: RegisterStudent, register: Register): boolean => {
         const exempted: ExemptionRegister = student.exemptions
-            .find((exempted: ExemptionRegister) => (exempted.subject_id == register.subject_id || exempted.recursive_id == 1) && !exempted.attendance);
+            .find((exempted: ExemptionRegister) => (exempted.subject_id == register.subject_id || (exempted.recursive_id != null && exempted.recursive_id != undefined)) && !exempted.attendance);
         return !!exempted && student.exempted;
     }
 
