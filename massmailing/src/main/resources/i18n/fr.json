@@ -160,6 +160,7 @@
   "massmailing.false": "Non",
   "massmailing.unnecessary": "Non nécessaire",
   "massmailing.mail.subject": "{0} - Vie scolaire",
+  "massmailing.massmail.multiple.punishments": "Générer autant de courriers qu'il y a de punitions/sanctions par élève. Ex: un élève a 10 punitions, le publipostage enverra 10 courriers.",
   "massmailing.in-progress": "Publipostage en cours. L'opération peut prendre quelques minutes...",
   "massmailing.reasons.multiple": "Motifs multiples",
   "massmailing.reasons.none": "Sans motif",
