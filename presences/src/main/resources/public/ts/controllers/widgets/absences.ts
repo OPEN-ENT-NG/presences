@@ -43,8 +43,6 @@ interface ViewModel {
 
     updateRegularisationAbsenceEvent(absence: CounsellorAbsence | any): void;
 
-    isOnMultipleSlots(absence: CounsellorAbsence | IEvent): boolean;
-
     getTimeSlots(): Promise<void>;
 }
 
@@ -221,8 +219,7 @@ export const absencesController = ng.controller('AbsenceController', ['$scope', 
                                 };
 
                                 /* Check if absence on a unique slot and remove duplicates */
-                                if (!vm.isOnMultipleSlots(absenceEvent) &&
-                                    !absenceEvent.reason_id &&
+                                if (!absenceEvent.reason_id &&
                                     absenceEvent.student && absenceEvent.student.name &&
                                     vm.absences.indexOf(vm.absences.find(
                                         (abs: CounsellorAbsence) => {
@@ -271,24 +268,6 @@ export const absencesController = ng.controller('AbsenceController', ['$scope', 
             await viescolaireService.getSlotProfile(window.structure.id).then((structureSlot: IStructureSlot) => {
                 vm.timeSlots = structureSlot.slots;
             });
-        };
-
-        /**
-         * Check if the absence is on multiple time slots
-         * @param absence the absence
-         */
-        vm.isOnMultipleSlots = (absence: CounsellorAbsence | IEvent): boolean => {
-            let startHour: string = DateUtils.format(absence.start_date, DateUtils.FORMAT['HOUR-MIN']);
-            let endHour: string = DateUtils.format(absence.end_date, DateUtils.FORMAT['HOUR-MIN']);
-
-            for (let i = 0; i < vm.timeSlots.length; i++) {
-                let slot: ITimeSlot = vm.timeSlots[i];
-                if (slot.startHour === startHour) {
-                    return slot.endHour !== endHour;
-                }
-            }
-
-            return true;
         };
 
         /* Events handler */
