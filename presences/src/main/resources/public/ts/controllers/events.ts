@@ -1004,7 +1004,8 @@ export const eventsController = ng.controller('EventsController', ['$scope', '$r
             (vm.filter.justifiedRegularized && vm.filter.justifiedNotRegularized) ? null : vm.filter.justifiedRegularized;
 
             vm.events.eventType = vm.eventType.toString();
-            vm.events.listReasonIds = (vm.filter.justifiedRegularized || vm.filter.justifiedNotRegularized) ? vm.eventReasonsId.toString() : "";
+            //If neither absences nor lateness are selected, the list of reasons is empty
+            vm.events.listReasonIds = (vm.filter.justifiedRegularized || vm.filter.justifiedNotRegularized || vm.filter.late) ? vm.eventReasonsId.toString() : "";
             vm.events.noReason = vm.filter.noReasons;
             vm.events.noReasonLateness = vm.filter.noReasonsLateness;
             vm.events.followed = vm.filter.followed;
