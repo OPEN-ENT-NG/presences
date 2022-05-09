@@ -23,7 +23,7 @@
                  active: (vm.isCurrentCourse(course) && course.allowRegister),
                  disabled: (vm.isFutureCourse(course) || !course.allowRegister)
              }">
-            <div ng-if="!isTeacher()" class="row has-search-right">
+            <div ng-if="!isTeacher() || hasRight('widget_forgotten_registers')" class="row has-search-right">
                 <div class="row hour">
                     <span>[[::vm.formatHour(course.startDate)]] - [[::vm.formatHour(course.endDate)]]</span>
                     <i class="right-magnet notify-bell"
@@ -38,7 +38,7 @@
                     <span ng-repeat="group in ::vm.getGroups(course.classes, course.groups)">[[::group]]</span>
                 </div>
             </div>
-            <div ng-if="isTeacher()" class="row">
+            <div ng-if="isTeacher() && !hasRight('widget_forgotten_registers')" class="row">
                 <div class="row hour">
                     <span>[[::vm.formatHour(course.startDate)]] - [[::vm.formatHour(course.endDate)]]</span>
                     <!--icon register created by personnel-->
