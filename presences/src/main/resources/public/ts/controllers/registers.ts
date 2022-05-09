@@ -11,12 +11,11 @@ import {
     Presences,
     Register,
     RegisterStatus, RegisterStudent,
-    Remark, Student
+    Remark, User
 } from '../models';
 import {
     eventService,
     GroupService,
-    reasonService,
     ReasonService,
     registerService,
     SearchService,
@@ -46,7 +45,7 @@ interface Filter {
     class: string;
     classes: any[];
     course: Course;
-    selected: { teachers: any[], classes: any[], registerTeacher: any };
+    selected: { teachers: Array<User>, classes: any[], registerTeacher: any };
     forgotten: boolean;
     searchTeacher: boolean;
 }
@@ -416,11 +415,11 @@ export const registersController = ng.controller('RegistersController',
 
             const extractSelectedTeacherIds = (): Array<string> => {
                 const ids: Array<string> = [];
-                if (!$scope.isTeacher()) {
+                if (!$scope.isTeacher() || $scope.hasRight('widget_forgotten_registers')) {
                     if ($route.current.action === 'getRegister') {
                         ids.push(vm.filter.selected.registerTeacher.id || vm.register.teachers[0].id);
                     } else {
-                        vm.filter.selected.teachers.map((teacher) => ids.push(teacher.id));
+                        vm.filter.selected.teachers.map((teacher: User) => ids.push(teacher.id));
                     }
                 } else {
                     ids.push(model.me.userId);
