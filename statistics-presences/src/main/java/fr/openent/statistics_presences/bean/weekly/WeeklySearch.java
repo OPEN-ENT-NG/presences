@@ -96,7 +96,7 @@ public class WeeklySearch {
                     break;
                 case LATENESS:
                     List<Integer> list = this.filter().reasons();
-                    if (this.filter().getNoLatenessReason()) {
+                    if (Boolean.TRUE.equals(this.filter().getNoLatenessReason())) {
                         list.add(null);
                     }
                     filterType.and(Field.REASON).in(list);

@@ -224,7 +224,7 @@ public class MonthlySearch {
                     break;
                 case LATENESS:
                     List<Integer> list = this.filter().reasons();
-                    if (this.filter().getNoLatenessReason()) {
+                    if (Boolean.TRUE.equals(this.filter().getNoLatenessReason())) {
                         list.add(null);
                     }
                     JsonObject inFilterLatenessReasons = new JsonObject()
