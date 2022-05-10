@@ -63,6 +63,7 @@ public class StatisticsFilter {
             this.punishmentTypes.addAll(request.params().getAll(StatisticsFilterField.PUNISHMENT_TYPES).stream().map(Integer::parseInt).collect(Collectors.toList()));
             this.sanctionTypes.addAll(request.params().getAll(StatisticsFilterField.SANCTION_TYPES).stream().map(Integer::parseInt).collect(Collectors.toList()));
             this.exportOption = request.getParam(StatisticsFilterField.EXPORT_OPTION);
+            this.noLatenessReason = Boolean.parseBoolean(request.getParam(StatisticsFilterField.NOLATENESSREASON));
             this.from = request.params().contains(StatisticsFilterField.FROM) ? Integer.parseInt(request.getParam(StatisticsFilterField.FROM)) : null;
             this.to = request.params().contains(StatisticsFilterField.TO) ? Integer.parseInt(request.getParam(StatisticsFilterField.TO)) : null;
             this.hourDetail = request.params().contains(StatisticsFilterField.HOUR_DETAILS) && Boolean.parseBoolean(request.getParam(StatisticsFilterField.HOUR_DETAILS));
