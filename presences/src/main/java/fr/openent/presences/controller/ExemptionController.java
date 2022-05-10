@@ -239,9 +239,8 @@ public class ExemptionController extends ControllerHelper {
                                 renderError(request);
                             })
                             .onSuccess(restrictedStudentIds -> {
-
                                 boolean hasUnallowedStudentIds = restrictedTeacherId != null
-                                        && exemptionBody.getListStudentId().stream().anyMatch(restrictedStudentIds::contains);
+                                        && exemptionBody.getListStudentId().stream().noneMatch(restrictedStudentIds::contains);
 
                                 if (hasUnallowedStudentIds) {
                                     renderError(request);
