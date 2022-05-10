@@ -139,11 +139,10 @@ public class Punishment extends Model {
     public void persistMongo(UserInfos user, Handler<AsyncResult<JsonObject>> handler) {
         checkUserRight(user, resRight -> {
             if (resRight.succeeded()) {
+                if (getOwnerId() == null) this.setOwnerId(user.getUserId());
                 if (getId() != null) {
-                    if (getOwnerId() == null) this.setOwnerId(user.getUserId());
                     updateMongo(getId(), handler);
                 } else {
-                    this.setOwnerId(user.getUserId());
                     createMongo(handler);
                 }
             } else {
