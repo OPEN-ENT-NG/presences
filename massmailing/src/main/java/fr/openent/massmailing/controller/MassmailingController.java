@@ -645,18 +645,19 @@ public class MassmailingController extends ControllerHelper {
 
         MailingType mailingType = getMailingType(request);
 
-        RequestUtils.bodyToJson(request, pathPrefix + "massmailing", body -> {
-            String structure = body.getString("structure");
-            Template template = new Template(mailingType, body.getInteger("template"), structure, config);
-            Boolean massmailed = body.containsKey("massmailed") ? body.getBoolean("massmailed") : null;
-            List<MassmailingType> massmailingTypeList = getMassMailingTypes(body.getJsonArray("event_types").getList());
-            List<Integer> reasons = body.getJsonArray("reasons").getList();
-            List<Integer> punishmentsTypes = body.getJsonArray("punishmentsTypes").getList();
-            List<Integer> sanctionsTypes = body.getJsonArray("sanctionsTypes").getList();
-            String start = body.getString("start");
-            String end = body.getString("end");
-            Boolean noReason = body.getBoolean("no_reason", true);
-            JsonObject students = body.getJsonObject("students");
+        RequestUtils.bodyToJson(request, pathPrefix + Field.MASSMAILING, body -> {
+            String structure = body.getString(Field.STRUCTURE);
+            Template template = new Template(mailingType, body.getInteger(Field.TEMPLATE), structure, config);
+            Boolean massmailed = body.containsKey(Field.MASSMAILED) ? body.getBoolean(Field.MASSMAILED) : null;
+            List<MassmailingType> massmailingTypeList = getMassMailingTypes(body.getJsonArray(Field.EVENT_TYPES).getList());
+            List<Integer> reasons = body.getJsonArray(Field.REASONS).getList();
+            List<Integer> punishmentsTypes = body.getJsonArray(Field.PUNISHMENTSTYPES).getList();
+            List<Integer> sanctionsTypes = body.getJsonArray(Field.SANCTIONSTYPES).getList();
+            String start = body.getString(Field.START);
+            String end = body.getString(Field.END);
+            boolean noReason = body.getBoolean(Field.NO_REASON, true);
+            boolean isMultiple = body.getBoolean(Field.ISMULTIPLE, false);
+            JsonObject students = body.getJsonObject(Field.STUDENTS);
             template.setLocale(I18n.acceptLanguage(request));
             template.setDomain(getHost(request));
 
@@ -664,15 +665,15 @@ public class MassmailingController extends ControllerHelper {
             switch (mailingType) {
                 case MAIL:
                     mailing = new Mail(structure, template, massmailed, massmailingTypeList, reasons, punishmentsTypes,
-                            sanctionsTypes, start, end, noReason, students);
+                            sanctionsTypes, start, end, noReason, isMultiple, students);
                     break;
                 case SMS:
                     mailing = new Sms(eb, structure, template, massmailed, massmailingTypeList, reasons, punishmentsTypes,
-                            sanctionsTypes, start, end, noReason, students);
+                            sanctionsTypes, start, end, noReason, isMultiple, students);
                     break;
                 case PDF:
                     mailing = new Pdf(eb, vertx, storage, config, request, structure, template, massmailed, massmailingTypeList,
-                            reasons, punishmentsTypes, sanctionsTypes, start, end, noReason, students);
+                            reasons, punishmentsTypes, sanctionsTypes, start, end, noReason, isMultiple, students);
                     break;
                 default:
                     badRequest(request);

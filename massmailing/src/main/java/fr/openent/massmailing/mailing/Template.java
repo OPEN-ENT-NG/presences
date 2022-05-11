@@ -119,6 +119,14 @@ public class Template extends BaseServer {
         this.domain = domain;
     }
 
+    public void setContent(String content) {
+        this.content = content;
+    }
+
+    public void setSystemCodes(HashMap<TemplateCode, String> systemCodes) {
+        this.systemCodes = systemCodes;
+    }
+
     public String getLocale() {
         return this.locale;
     }

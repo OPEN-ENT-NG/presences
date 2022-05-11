@@ -36,6 +36,9 @@
     "end": {
       "type": "string"
     },
+    "isMultiple": {
+      "type": "boolean"
+    },
     "no_reason": {
       "type": "boolean"
     },

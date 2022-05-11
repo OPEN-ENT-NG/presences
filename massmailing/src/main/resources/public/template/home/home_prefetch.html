@@ -44,10 +44,19 @@
             </div>
         </div>
         <div bind-html="vm.massmailing.template.content" class="row template-preview"></div>
+        <div class="flex-row row__16 vertical-spacing" ng-show="vm.filter.status.PUNISHMENT || vm.filter.status.SANCTION">
+            <label class="checkbox flex-col col__1">
+                <input type="checkbox" data-ng-model="vm.massmailing.isMultiple">
+                <span></span>
+            </label>
+            <span class="text-align-left flex-col col__15">
+                <i18n>massmailing.massmail.multiple.punishments</i18n>
+            </span>
+        </div>
     </div>
 
     <!-- Table -->
-    <div class="massmail-anomalies row vertical-spacing-six">
+    <div class="massmail-anomalies row vertical-spacing">
         <div class="row vertical-spacing">
             <!-- title -->
             <table class="head-table">
