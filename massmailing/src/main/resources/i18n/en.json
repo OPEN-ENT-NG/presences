@@ -10,5 +10,6 @@
   "massmailing.lateness.none": "No reason",
   "massmailing.filter.ABSENCES_REASONS": "Motif Absence",
   "massmailing.filter.LATENESS_REASONS": "Motif Retard",
-  "presences.in.structure": "Presence in stucture"
+  "presences.in.structure": "Presence in stucture",
+  "massmailing.massmail.multiple.punishments": "Generate as many mails as there are punishments/sanctions per student. Ex: a student has 10 punishments, the mailing will send 10 mails."
 }

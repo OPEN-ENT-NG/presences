@@ -93,6 +93,7 @@ public class Field {
     public static final String NO_REASONS = "no_reasons";
     public static final String NO_LATENESS_REASONS = "no_lateness_reasons";
     public static final String REASON = "reason";
+    public static final String REASONS = "reasons";
     public static final String REASON_ID = "reason_id";
     public static final String MULTIPLE = "multiple";
     public static final String NOREASONLATENESS = "noReasonLateness";
@@ -194,6 +195,7 @@ public class Field {
     public static final String EVENT_RECOVERY_METHOD = "event_recovery_method";
     public static final String RECOVERY_METHOD = "recovery_method";
     public static final String EVENT_TYPE = "event_type";
+    public static final String EVENT_TYPES = "event_types";
     public static final String COUNSELLOR_INPUT = "counsellor_input";
     public static final String COUNSELLOR_REGULARISATION = "counsellor_regularisation";
 
@@ -206,9 +208,11 @@ public class Field {
     public static final String GROUP_ID = "group_id";
     public static final String PROCESS = "process";
     public static final String PUNISHMENTTYPE = "punishmentType";
+    public static final String PUNISHMENTSTYPES = "punishmentsTypes";
 
     // Sanctions
     public static final String SANCTIONTYPE = "sanctionType";
+    public static final String SANCTIONSTYPES = "sanctionsTypes";
 
 
     // Indicator
@@ -285,6 +289,8 @@ public class Field {
     public static final String ANOMALIES_COUNT = "anomalies_count";
     public static final String COUNTS = "counts";
     public static final String DISPLAYNAME = "displayName";
+    public static final String ISMULTIPLE = "isMultiple";
+    public static final String TEMPLATE = "template";
 
     public static final String REASONTYPEID = "reasonTypeId";
     public static final String REASONTYPE = "reasonType";

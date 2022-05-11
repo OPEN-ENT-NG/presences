@@ -29,9 +29,9 @@ public class Pdf extends MassMailingProcessor {
 
     public Pdf(EventBus eb, Vertx vertx, Storage storage, JsonObject config, HttpServerRequest request, String structure, Template template,
                Boolean massmailed, List<MassmailingType> massmailingTypeList, List<Integer> reasons, List<Integer> punishmentsTypes,
-               List<Integer> sanctionsTypes, String start, String end, Boolean noReason, JsonObject students) {
+               List<Integer> sanctionsTypes, String start, String end, Boolean noReason, boolean isMultiple, JsonObject students) {
         super(MailingType.PDF, structure, template, massmailed, massmailingTypeList, reasons, punishmentsTypes, sanctionsTypes,
-                start, end, noReason, students);
+                start, end, noReason,  isMultiple, students);
         this.exportPDFService = new ExportPDFServiceImpl(vertx, config);
         this.request = request;
         this.eb = eb;

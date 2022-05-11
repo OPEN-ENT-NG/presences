@@ -44,6 +44,7 @@ export interface IMassmailingBody {
     template: number;
     structure: string;
     no_reason: boolean;
+    isMultiple?: boolean;
     start_at: number;
     reasons: Array<string>;
     punishmentsTypes: Array<number>;
@@ -85,11 +86,13 @@ export class Massmailing {
     students: MassmailingStudent[];
     filter: any;
     template: Template;
+    isMultiple?: boolean;
 
-    constructor(type: string, counts: IMassmailingCounts, students: MassmailingStudent[]) {
+    constructor(type: string, counts: IMassmailingCounts, students: MassmailingStudent[], isMultiple?: boolean) {
         this.type = type;
         this.counts = counts;
         this.students = students;
+        this.isMultiple = isMultiple;
         this.students.forEach((student: MassmailingStudent) => {
             let primaryRelative: boolean = (student.relative
                 .find((relative: IRelative) => relative.primary === true)) !== undefined;
@@ -162,6 +165,7 @@ export class Massmailing {
             template: this.template.id,
             structure: window.structure.id,
             no_reason: this.filter.noReasons,
+            isMultiple: this.isMultiple,
             start_at: this.filter.start_at,
             reasons,
             punishmentsTypes,
