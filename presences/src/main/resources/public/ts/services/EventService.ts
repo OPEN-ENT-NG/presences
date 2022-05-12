@@ -16,7 +16,7 @@ export interface EventService {
 
     export(eventRequest: EventRequest, exportType: ExportType): string;
 
-    getAbsentsCounts(structureId: string): Promise<EventAbsenceSummary>;
+    getAbsentsCounts(structureId: string, startDate: string, endDate: string): Promise<EventAbsenceSummary>;
 
     createLatenessEvent(eventBody: IEventBody, structureId: string): Promise<AxiosResponse>;
 
@@ -163,14 +163,20 @@ export const eventService: EventService = {
      * Get counts of current absences.
      *
      * @param structureId       structure id
+     * @param startDate         start date filter (optional)
+     * @param endDate           end date filter (optional)
      */
-    async getAbsentsCounts(structureId: string): Promise<EventAbsenceSummary> {
+    async getAbsentsCounts(structureId: string, startDate: string, endDate: string): Promise<EventAbsenceSummary> {
         try {
             let url: string = `/presences/events/absences/summary`;
 
             if (structureId) {
                 url += `?structureId=${structureId}`;
                 url += `&currentDate=${DateUtils.getCurrentDate(DateUtils.FORMAT['YEAR-MONTH-DAY-HOUR-MIN-SEC'])}`;
+            }
+
+            if (startDate && endDate) {
+                url += `&startAt=${startDate}&endAt=${endDate}`;
             }
 
             const {data}: AxiosResponse = await http.get(url);

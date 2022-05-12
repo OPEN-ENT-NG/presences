@@ -1,0 +1,29 @@
+.planned-absences-empty {
+  text-align: center;
+
+  &-description {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding-bottom: 24px;
+
+    &-title {
+      color: $presences-middle-grey;
+      padding: 0 12px;
+    }
+  }
+
+  img {
+    width: 25%;
+  }
+}
+
+.planned-absences-legend {
+  &-day-students {
+    padding-left: 0 !important;
+  }
+
+  i:before {
+    font-size: 20px;
+  }
+}

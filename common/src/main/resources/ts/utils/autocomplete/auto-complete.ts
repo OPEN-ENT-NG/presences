@@ -2,7 +2,7 @@ import {SearchService} from "@common/services/SearchService";
 
 export class AutoCompleteUtils {
 
-    protected readonly structureId: string;
+    public readonly structureId: string;
 
     protected searchService: SearchService;
 

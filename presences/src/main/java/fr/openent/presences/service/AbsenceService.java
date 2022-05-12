@@ -24,6 +24,29 @@ public interface AbsenceService {
     Future<JsonArray> get(String structureId, String startDate, String endDate, List<String> users);
 
     /**
+     * get absences / count with paginate
+     *
+     * @param structureId Structure identifier
+     * @param teacherId   teacher identifier
+     * @param audienceIds audience identifiers
+     * @param studentIds  student identifiers
+     * @param reasonIds   reason identifiers
+     * @param startAt     date from which we want to retrieve absences
+     * @param regularized filter on regularized or not
+     * @param followed    filter on followed or not
+     * @param halfBoarder filter on half boarder students or not
+     * @param internal    filter on internal students or not
+     * @param page        page number
+     * @return Future returning data with page data / Future returning count
+     */
+    Future<JsonObject> get(String structureId, String teacherId, List<String> audienceIds, List<String> studentIds,
+                           List<Integer> reasonIds, String startAt, String endAt,
+                           Boolean regularized, Boolean noReason, Boolean followed, Boolean halfBoarder, Boolean internal, Integer page);
+
+    Future<JsonObject> count(String structure, List<String> students, String start, String end, Boolean regularized,
+                             Boolean noReason, Boolean followed, List<Integer> reasons);
+
+    /**
      * get absences in events
      *
      * @param structureId Structure identifier
@@ -156,12 +179,14 @@ public interface AbsenceService {
      * @param students
      * @param start
      * @param end
-     * @param justified
      * @param regularized
+     * @param followed
      * @param reasons
-     * @param handler
+     * @param page
+     * @return
      */
-    void retrieve(String structure, List<String> students, String start, String end, Boolean justified, Boolean regularized, List<Integer> reasons, Handler<Either<String, JsonArray>> handler);
+    Future<JsonArray> retrieve(String structure, List<String> students, String start, String end, Boolean regularized,
+                               Boolean followed, Boolean noReason, List<Integer> reasons, Integer page);
 
     /**
      * Get all student ids for absent students from the structure
@@ -172,6 +197,19 @@ public interface AbsenceService {
      * @param handler     function handler returning data
      */
     void getAbsentStudentIds(String structureId, String currentDate, Handler<Either<String, JsonArray>> handler);
+
+
+    /**
+     * Get all student ids for absent students from the structure
+     * in a given period
+     *
+     * @param structureId structure identifier
+     * @param studentIds  student identifiers to filter
+     * @param startAt     date from which we want to count students
+     * @param endAt       date until which we want to count students
+     * @return future that contain count result.
+     */
+    Future<JsonObject> countAbsentStudents(String structureId, List<String> studentIds, String startAt, String endAt);
 
 
     /**

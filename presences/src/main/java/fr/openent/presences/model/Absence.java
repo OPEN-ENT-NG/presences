@@ -1,5 +1,8 @@
 package fr.openent.presences.model;
 
+import fr.openent.presences.core.constants.Field;
+import fr.openent.presences.model.Person.Student;
+import fr.openent.presences.model.Person.User;
 import io.vertx.core.json.JsonObject;
 
 import java.util.ArrayList;
@@ -15,7 +18,11 @@ public class Absence implements Cloneable {
     private String startDate;
     private String endDate;
     private Boolean counsellorRegularisation;
+    private String regularized;
     private Boolean followed;
+    private Reason reason;
+    private Student student;
+    private User owner;
 
     public Absence(JsonObject absence, List<String> mandatoryAttributes) {
         for (String attribute : mandatoryAttributes) {
@@ -23,14 +30,20 @@ public class Absence implements Cloneable {
                 throw new IllegalArgumentException("[Presences@AbsenceModel] Mandatory attribute not present " + attribute);
             }
         }
-        this.id = absence.getInteger("id", null);
+        this.id = absence.getInteger(Field.ID, null);
         this.absence = null;
-        this.studentId = absence.getString("student_id", "");
-        this.reasonId = absence.getInteger("reason_id", null);
-        this.startDate = absence.getString("start_date", "");
-        this.endDate = absence.getString("end_date", "");
-        this.counsellorRegularisation = absence.getBoolean("counsellor_regularisation", false);
-        this.followed = absence.getBoolean("followed", false);
+        this.studentId = absence.getString(Field.STUDENT_ID, "");
+        this.student = absence.getValue(Field.STUDENT) instanceof String ? new Student(absence.getString(Field.STUDENT)) :
+                new Student(absence.getJsonObject(Field.STUDENT, new JsonObject()));
+        this.owner = absence.getValue(Field.OWNER) instanceof String ? new User(absence.getString(Field.OWNER)) :
+                new User(absence.getJsonObject(Field.OWNER, new JsonObject()));
+        this.reasonId = absence.getInteger(Field.REASON_ID, null);
+        this.reason = new Reason(reasonId);
+        this.startDate = absence.getString(Field.START_DATE, "");
+        this.endDate = absence.getString(Field.END_DATE, "");
+        this.counsellorRegularisation = absence.getBoolean(Field.COUNSELLOR_REGULARISATION, false);
+        this.regularized = absence.getString(Field.REGULARIZED, null);
+        this.followed = absence.getBoolean(Field.FOLLOWED, false);
     }
 
     @Override
@@ -79,12 +92,36 @@ public class Absence implements Cloneable {
         this.studentId = studentId;
     }
 
+    public Student getStudent() {
+        return student;
+    }
+
+    public void setStudent(Student student) {
+        this.student = student;
+    }
+
+    public User getOwner() {
+        return owner;
+    }
+
+    public void setOwner(User owner) {
+        this.owner = owner;
+    }
+
     public Integer getReasonId() {
         return reasonId;
     }
 
     public void setReasonId(Integer reasonId) {
         this.reasonId = reasonId;
+    }
+
+    public Reason getReason() {
+        return reason;
+    }
+
+    public void setReason(Reason reason) {
+        this.reason = reason;
     }
 
     public String getStartDate() {
@@ -109,6 +146,14 @@ public class Absence implements Cloneable {
 
     public void setCounsellorRegularisation(Boolean counsellorRegularisation) {
         this.counsellorRegularisation = counsellorRegularisation;
+    }
+
+    public String getRegularized() {
+        return regularized;
+    }
+
+    public void setRegularized(String regularized) {
+        this.regularized = regularized;
     }
 
     public Boolean isFollowed() {

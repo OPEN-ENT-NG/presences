@@ -171,7 +171,7 @@ export const dashboardController = ng.controller('DashboardController', ['$scope
             const canReadAbsentsCounts: boolean = model.me.hasWorkflow(rights.workflow.readAbsentsCounts);
             try {
                 if (canReadAbsentsCounts) {
-                    vm.absencesSummary = await eventService.getAbsentsCounts(structureId);
+                    vm.absencesSummary = await eventService.getAbsentsCounts(structureId, null, null);
                 }
             } catch (e) {
                 vm.absencesSummary = {

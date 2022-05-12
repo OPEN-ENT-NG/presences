@@ -428,17 +428,17 @@ public class EventController extends ControllerHelper {
     public void getAbsentsCounts(final HttpServerRequest request) {
 
         String structureId = request.getParam("structureId");
-        String currentDate = request.getParam("currentDate");
+        String startAt = request.getParam(Field.STARTAT) != null ? request.getParam(Field.STARTAT) : request.getParam(Field.CURRENTDATE);
+        String endAt = request.getParam(Field.ENDAT) != null ? request.getParam(Field.ENDAT) : request.getParam(Field.CURRENTDATE);
 
-        eventService.getAbsencesCountSummary(structureId, currentDate, summary -> {
-            if (summary.isLeft()) {
-                log.error("[Presences@EventController::getAbsentsCounts] failed to fetch absences count summary",
-                        summary.left().getValue());
-                renderError(request);
-            } else {
-                renderJson(request, summary.right().getValue());
-            }
-        });
+        if (structureId == null || startAt == null || endAt == null) {
+            badRequest(request);
+            return;
+        }
+
+        eventService.getAbsencesCountSummary(structureId, startAt, endAt)
+                .onFailure(err -> renderError(request))
+                .onSuccess(summary -> renderJson(request, summary));
     }
 
     @Get("/rights/read/events")

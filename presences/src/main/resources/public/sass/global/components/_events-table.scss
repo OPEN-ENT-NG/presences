@@ -1,0 +1,98 @@
+.events-table-component {
+  &-empty {
+    text-align: center;
+
+    &-description {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding-bottom: 24px;
+
+      &-title {
+        color: $presences-middle-grey;
+        padding: 0 12px;
+      }
+    }
+
+    img {
+      width: 25%;
+    }
+  }
+
+  .planned-absences-legend {
+    &-day-students {
+      padding-left: 0 !important;
+    }
+
+    i:before {
+      font-size: 20px;
+    }
+  }
+
+  &-list {
+
+    &-head {
+      &-calendar, &-followed, &-action, &-regularized {
+        max-width: 5%;
+      }
+    }
+
+    .flex-col {
+      flex: 1;
+    }
+
+    &-item {
+      .flag:before {
+        font-size: 25px;
+        color: $presences-main;
+      }
+
+      .flag-outline:before {
+        font-size: 25px;
+      }
+
+      &-student {
+        display: flex;
+        flex-direction: row;
+
+        &-item {
+
+          background-color: transparent !important;
+          box-shadow: none !important;
+
+          &-picture {
+            max-width: 20%;
+            align-self: center;
+          }
+
+          &-name {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start !important;
+
+            &-audience {
+              color: $presences-grey;
+              font-size: 14px;
+            }
+          }
+
+          span {
+            align-self: flex-start;
+          }
+        }
+      }
+
+      .table-reason {
+        label::after {
+          top: 12px;
+        }
+      }
+
+      &-calendar, &-followed, &-action, &-regularized {
+        max-width: 5%;
+      }
+
+    }
+  }
+}
+

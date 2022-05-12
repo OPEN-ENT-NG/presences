@@ -1,0 +1,226 @@
+<lightbox class="filterLightbox" show="vm.display" on-close="vm.display = false">
+    <section class="head">
+        <h3>
+            <i18n>presences.filters</i18n>
+        </h3>
+    </section>
+    <section class="body lightbox-form">
+        <div class="row vertical-spacing">
+            <!-- Student search bar -->
+            <div class="cell six paddingRight">
+                <div class="cell twelve search-input">
+                    <async-autocomplete data-ng-disabled="false"
+                                        data-ng-model="vm.studentsSearch.student"
+                                        data-ng-change="vm.selectStudent()"
+                                        data-on-search="vm.searchStudent"
+                                        data-options="vm.studentsSearch.students"
+                                        data-placeholder="presences.exemptions.search.student"
+                                        data-search="vm.studentsSearch.student">
+                    </async-autocomplete>
+                </div>
+
+                <!-- Student search results -->
+                <div class="cell twelve">
+                    <ul class="cell twelve search-input-ul">
+                        <li ng-repeat="student in vm.studentsSearch.selectedStudents">
+                            [[student.displayName]]
+                            <i class="close" data-ng-click="vm.removeSelectedStudent(student)"></i>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Classes/Groups search bar -->
+            <div class="cell six paddingLeft">
+                <div class="cell twelve search-input">
+                    <async-autocomplete data-ng-disabled="false"
+                                        data-ng-model="vm.groupsSearch.group"
+                                        data-ng-change="vm.selectGroup()"
+                                        data-on-search="vm.searchGroup"
+                                        data-options="vm.groupsSearch.groups"
+                                        data-placeholder="presences.exemptions.search.audience"
+                                        data-search="vm.groupsSearch.group">
+                    </async-autocomplete>
+                </div>
+
+                <!-- Group search results -->
+                <div class="cell twelve">
+                    <ul class="cell twelve search-input-ul">
+                        <li ng-repeat="class in vm.groupsSearch.selectedGroups">
+                            [[class.name]]
+                            <i class="close" data-ng-click="vm.removeSelectedGroup(class)"></i>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- Half boarders and Interns checkboxes -->
+        <div class="row vertical-spacing" ng-if="vm.absencesOnly">
+            <span class="margin-right-sm"><i18n>presences.filter.on</i18n></span>
+            <label class="checkbox paddingRight">
+                <input type="checkbox" data-ng-model="vm.formFilter.halfBoarders"/>
+                <span>
+                    <i18n>presences.half.boarders</i18n>
+                </span>
+            </label>
+
+            <label class="checkbox follow-checkbox">
+                <input type="checkbox" data-ng-model="vm.formFilter.interns"/>
+                <span>
+                    <i18n>presences.interns</i18n>
+                </span>
+            </label>
+        </div>
+
+        <!-- Event Type Filter -->
+        <div class="row vertical-spacing" ng-if="!vm.absencesOnly">
+            <h4>
+                <i18n>presences.events.title</i18n>
+            </h4>
+            <div class="chips cell">
+                <label class="chip" ng-class="{selected: vm.formFilter.absences}"
+                       data-ng-click="vm.switchAbsencesFilter()">
+                    <i18n>presences.absence.absences</i18n>
+                </label>
+                <label class="chip" ng-class="{selected: vm.formFilter.late}"
+                       data-ng-click="vm.switchLateFilter()">
+                    <i18n>presences.absence.lateness</i18n>
+                </label>
+                <label class="chip" ng-class="{selected: vm.formFilter.departure}"
+                       data-ng-click="vm.switchDepartureFilter()">
+                    <i18n>presences.absence.actions.departures</i18n>
+                </label>
+            </div>
+        </div>
+
+        <!-- Slots Filter -->
+        <div class="row vertical-spacing">
+            <h4>
+                <i18n>presences.timeslots</i18n>
+            </h4>
+            <div class="chips cell">
+
+                <i18n class="margin-right-sm">presences.by</i18n>&nbsp;
+
+                <select data-ng-model="vm.formFilter.timeslots.start"
+                        ng-options="item.name + ' : ' + item.startHour for item in vm.structureTimeSlot.slots
+                                                | orderBy:vm.formFilter.timeslots.START_HOUR"
+                        data-ng-change="vm.updateFilterSlot(vm.timeSlotHourPeriod.START_HOUR)">
+                    <option value="">[[vm.translate('presences.timeslots.none')]]</option>
+                </select>
+
+                &nbsp;<i18n class="margin-right-sm">presences.at</i18n>&nbsp;
+
+                <select data-ng-model="vm.formFilter.timeslots.end"
+                        ng-options="item.name + ' : ' + item.endHour for item in vm.structureTimeSlot.slots
+                                                | orderBy:vm.formFilter.timeslots.END_HOUR"
+                        data-ng-change="vm.updateFilterSlot(vm.timeSlotHourPeriod.END_HOUR)">
+                    <option value="">[[vm.translate('presences.timeslots.none')]]</option>
+                </select>
+            </div>
+        </div>
+
+        <!-- State Filter -->
+        <div class="row vertical-spacing" ng-if="vm.absencesOnly || vm.formFilter.absences">
+            <h4 class="row">
+                <i18n class="cell">presences.absence.state.absence</i18n>
+            </h4>
+            <div class="chips">
+                <label class="chip" ng-class="{selected: vm.formFilter.noReasons}"
+                       data-ng-click="vm.switchNoReasonsFilter(); vm.adaptEvent();">
+                    <i18n>presences.absence.unjustified</i18n>
+                </label>
+                <label class="chip" ng-class="{selected: vm.formFilter.notRegularized}"
+                       data-ng-click="vm.switchNotRegularizedFilter(); vm.adaptEvent();">
+                    <i18n>presences.absence.types.justified.not.regularized</i18n>
+                </label>
+                <label class="chip" ng-class="{selected: vm.formFilter.regularized}"
+                       data-ng-click="vm.switchRegularizedFilter(); vm.adaptEvent();">
+                    <i18n>presences.absence.types.justified.regularized</i18n>
+                </label>
+            </div>
+        </div>
+
+        <!-- Followed Filter -->
+        <div class="row vertical-spacing" ng-if="vm.absencesOnly || vm.formFilter.absences">
+            <h4 class="row">
+                <i18n class="cell">presences.absence.followed.absence</i18n>
+            </h4>
+            <div class="chips">
+                <label class="chip" ng-class="{selected: vm.formFilter.followed}"
+                       data-ng-click="vm.switchFollowedFilter(); vm.adaptEvent();">
+                    <i18n>presences.absence.types.followed</i18n>
+                </label>
+                <label class="chip" ng-class="{selected: vm.formFilter.notFollowed}"
+                       data-ng-click="vm.switchNotFollowedFilter(); vm.adaptEvent();">
+                    <i18n>presences.absence.types.not.followed</i18n>
+                </label>
+            </div>
+        </div>
+
+        <!-- Reason Absence Type Filter -->
+        <div class="row vertical-spacing" ng-if="vm.absencesOnly || vm.formFilter.absences">
+            <h4>
+                <i18n>presences.absence.reason.absence</i18n>
+            </h4>
+            <div class="chips cell overflow-y">
+                <label class="chip" ng-class="{ selected: vm.formFilter.allAbsenceReasons &&
+                               (!vm.formFilter.noReasons ||
+                               (vm.formFilter.noReasons &&
+                               (vm.formFilter.notRegularized || vm.formFilter.regularized)))}"
+                       data-ng-click="vm.switchAllAbsenceReasons()">
+                    <i18n>presences.all.none</i18n>
+                </label>
+                <label class="chip"
+                       ng-repeat="reason in vm.getAbsencesReasons() track by $index"
+                       ng-class="{ selected: reason.isSelected &&
+                               (!vm.formFilter.noReasons ||
+                               (vm.formFilter.noReasons &&
+                               (vm.formFilter.notRegularized || vm.formFilter.regularized)))}"
+                       ng-click="vm.switchReason(reason)">
+                            <span ng-show="[[reason.id]] !== 0 && !reason.hidden"
+                                  ng-disabled="vm.formFilter.noReasons &&
+                                  (!vm.formFilter.notRegularized && !vm.formFilter.regularized)">
+                                [[vm.translate(reason.label)]]
+                            </span>
+                </label>
+            </div>
+        </div>
+
+        <!-- Reason Lateness Type Filter -->
+        <div class="row vertical-spacing" ng-if="vm.formFilter.late && !vm.absencesOnly">
+            <h4>
+                <i18n>presences.lateness.reason.lateness</i18n>
+            </h4>
+            <div class="chips cell overflow-y">
+                <label class="chip" ng-class="{ selected: vm.formFilter.allLatenessReasons}"
+                       data-ng-click="vm.switchAllLatenessReasons()">
+                    <i18n>presences.all.none</i18n>
+                </label>
+                <label class="chip"
+                       ng-repeat="reason in vm.getLatenessReasons() track by $index"
+                       ng-class="{ selected: reason.isSelected}"
+                       ng-click="vm.switchReason(reason)">
+                            <span ng-show="!reason.hidden">
+                                [[vm.translate(reason.label)]]
+                            </span>
+                </label>
+            </div>
+        </div>
+    </section>
+
+    <!-- Form submit/cancel buttons -->
+    <section>
+        <div class="row horizontal-spacing">
+            <div class="twelve cell">
+                <button class="right-magnet" data-ng-click="vm.submitForm()">
+                    <i18n>presences.exemptions.form.submit</i18n>
+                </button>
+                <button class="right-magnet cancel" data-ng-click="vm.display = false">
+                    <i18n>presences.exemptions.form.cancel</i18n>
+                </button>
+            </div>
+        </div>
+    </section>
+</lightbox>

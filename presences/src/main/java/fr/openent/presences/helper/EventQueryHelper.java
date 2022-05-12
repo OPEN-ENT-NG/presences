@@ -176,21 +176,21 @@ public class EventQueryHelper {
      */
     public static String filterReasons(List<String> reasonIds, Boolean noAbsenceReason, Boolean noLatenessReason, Boolean regularized,
                                        List<String> typeIds, JsonArray params) {
-        if (!noAbsenceReason && !noLatenessReason && (reasonIds == null || reasonIds.isEmpty()) && regularized == null)
+        if (Boolean.TRUE.equals(!noAbsenceReason && !noLatenessReason && (reasonIds == null || reasonIds.isEmpty())) && regularized == null)
             return "";
 
         String query = "AND (";
         query += "(type_id != 1 AND type_id != 2)";
-        if (noAbsenceReason || (reasonIds != null && !reasonIds.isEmpty()) || regularized != null) {
+        if (Boolean.TRUE.equals(noAbsenceReason || (reasonIds != null && !reasonIds.isEmpty())) || regularized != null) {
             query += " OR (type_id = 1 ";
             if (reasonIds != null && !reasonIds.isEmpty()) {
                 query += " AND (reason_id IN " + Sql.listPrepared(reasonIds);
                 params.addAll(new JsonArray(reasonIds));
-                if (noAbsenceReason) {
+                if (Boolean.TRUE.equals(noAbsenceReason)) {
                     query += " OR reason_id IS NULL";
                 }
                 query += ")";
-            } else if (noAbsenceReason) {
+            } else if (Boolean.TRUE.equals(noAbsenceReason)) {
                 query += " AND reason_id IS NULL";
             }
 
@@ -198,16 +198,16 @@ public class EventQueryHelper {
             query += ")";
         }
 
-        if (noLatenessReason || (reasonIds != null && !reasonIds.isEmpty())) {
+        if (Boolean.TRUE.equals(noLatenessReason) || (reasonIds != null && !reasonIds.isEmpty())) {
             query += " OR (type_id = 2 ";
             if (reasonIds != null && !reasonIds.isEmpty()) {
                 query += " AND (reason_id IN " + Sql.listPrepared(reasonIds);
                 params.addAll(new JsonArray(reasonIds));
-                if (noLatenessReason) {
+                if (Boolean.TRUE.equals(noLatenessReason)) {
                     query += " OR reason_id IS NULL";
                 }
                 query += ")";
-            } else if (noLatenessReason) {
+            } else if (Boolean.TRUE.equals(noLatenessReason)) {
                 query += " AND reason_id IS NULL";
             }
             query += ")";

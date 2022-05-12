@@ -182,6 +182,15 @@ public class DateHelper {
         return firstDate.after(secondDate);
     }
 
+    public static boolean isFormat(String date, String format) {
+        try {
+            parse(date, format);
+            return true;
+        } catch (ParseException e) {
+            return false;
+        }
+    }
+
     /**
      * Same that isAfter, but from a given format and without try / catch
      *

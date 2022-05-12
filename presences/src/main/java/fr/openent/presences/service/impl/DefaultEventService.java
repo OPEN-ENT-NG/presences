@@ -13,6 +13,7 @@ import fr.openent.presences.core.constants.Field;
 import fr.openent.presences.db.DBService;
 import fr.openent.presences.enums.EventRecoveryMethodEnum;
 import fr.openent.presences.enums.EventType;
+import fr.openent.presences.enums.Markers;
 import fr.openent.presences.helper.CourseHelper;
 import fr.openent.presences.helper.EventHelper;
 import fr.openent.presences.helper.EventQueryHelper;
@@ -401,69 +402,88 @@ public class DefaultEventService extends DBService implements EventService {
 
         return query;
     }
+    @Override
+    public Future<JsonObject> getAbsencesCountSummary(String structureId, String startAt, String endAt) {
+        return getAbsencesCountSummary(structureId, startAt, endAt, Arrays.stream(Markers.values())
+                .map(Enum::name)
+                .collect(Collectors.toList()));
+    }
 
     @Override
-    public void getAbsencesCountSummary(String structureId, String currentDate, Handler<Either<String, JsonObject>> handler) {
-        Future<JsonArray> absentStudentIdsFuture = Future.future();
-        Future<JsonArray> studentsWithAccommodationFuture = Future.future();
-        Future<JsonArray> countCurrentStudentsFuture = Future.future();
+    @SuppressWarnings("unchecked")
+    public Future<JsonObject> getAbsencesCountSummary(String structureId, String startAt, String endAt, List<String> requiredMarkers) {
+        Promise<JsonObject> promise = Promise.promise();
+        Promise<JsonArray> countCurrentStudentsFuture = Promise.promise();
+        Future<JsonArray> halfBoardersFuture = requiredMarkers.contains(Markers.NB_HALFBOARDERS.name()) ?
+                userService.getStudents(structureId, null, true, null) :
+                Future.succeededFuture(new JsonArray());
 
-        String currentDateDay = DateHelper.getDateString(currentDate, DateHelper.MONGO_FORMAT, DateHelper.YEAR_MONTH_DAY);
-        String currentDateTime = DateHelper.fetchTimeString(currentDate, DateHelper.MONGO_FORMAT);
+        Future<JsonArray> internalsFuture = requiredMarkers.contains(Markers.NB_INTERNALS.name()) ?
+                userService.getStudents(structureId, null, null, true) :
+                Future.succeededFuture(new JsonArray());
 
-        CompositeFuture.all(absentStudentIdsFuture, studentsWithAccommodationFuture, countCurrentStudentsFuture).setHandler(resultFuture -> {
-            if (resultFuture.failed()) {
-                String message = "[Presences@DefaultEventService::getAbsencesCountSummary] Failed to retrieve " +
-                        "absent students, student ids and accommodations and current student counts";
-                LOGGER.error(message);
-                handler.handle(new Either.Left<>(resultFuture.cause().getMessage()));
-            } else {
-                JsonArray absentStudentIds = absentStudentIdsFuture.result();
-                JsonArray studentsAccommodations = studentsWithAccommodationFuture.result();
-                JsonArray countStudents = countCurrentStudentsFuture.result();
+        Map<String, Future<JsonObject>> countsFutures = new HashMap<>();
 
-                int nbCurrentStudents = countStudents.getJsonObject(0).getInteger("nbStudents") +
-                        countStudents.getJsonObject(1).getInteger("nbStudents") +
-                        countStudents.getJsonObject(2).getInteger("nbStudents");
+        String startDay = DateHelper.getDateString(startAt, DateHelper.MONGO_FORMAT, DateHelper.YEAR_MONTH_DAY);
+        String startDayTime = DateHelper.fetchTimeString(startAt, DateHelper.MONGO_FORMAT);
+        String endDay = DateHelper.getDateString(endAt, DateHelper.MONGO_FORMAT, DateHelper.YEAR_MONTH_DAY);
+        String endDayTime = DateHelper.fetchTimeString(endAt, DateHelper.MONGO_FORMAT);
 
-                int nbDayStudents = 0;
+        CompositeFuture.all(halfBoardersFuture, internalsFuture, countCurrentStudentsFuture.future())
+                .compose(studentsFutures -> {
+                    List<String> halfBoarderIds = ((List<JsonObject>) halfBoardersFuture.result().getList()).stream()
+                            .map(student -> student.getString(Field.ID))
+                            .filter(Objects::nonNull)
+                            .collect(Collectors.toList());
 
-                @SuppressWarnings("unchecked")
-                long countAbsentIds = ((List<JsonObject>) absentStudentIds.getList())
-                        .stream()
-                        .filter(student -> student.getString("student_id") != null).count();
+                    List<String> internalIds = ((List<JsonObject>) internalsFuture.result().getList()).stream()
+                            .map(student -> student.getString(Field.ID))
+                            .filter(Objects::nonNull)
+                            .collect(Collectors.toList());
 
-                for (int i = 0; i < studentsAccommodations.size(); i++) {
-                    JsonObject student = studentsAccommodations.getJsonObject(i);
+                    countsFutures.put(Field.HALFBOARDER,
+                            halfBoarderIds.isEmpty() ? Future.succeededFuture(new JsonObject().put(Field.COUNT, 0)) :
+                                    absenceService.countAbsentStudents(structureId, halfBoarderIds, startAt, endAt)
+                    );
+                    countsFutures.put(Field.INTERNAL,
+                            internalIds.isEmpty() ? Future.succeededFuture(new JsonObject().put(Field.COUNT, 0)) :
+                                    absenceService.countAbsentStudents(structureId, internalIds, startAt, endAt));
 
-                    if (student != null && student.getString("accommodation") != null &&
-                            student.getString("accommodation").contains("DEMI-PENSIONNAIRE")) {
+                    countsFutures.put(Field.ABSENCE, requiredMarkers.contains(Markers.NB_ABSENTS.name()) || requiredMarkers.contains(Markers.NB_PRESENTS.name()) ?
+                            absenceService.countAbsentStudents(structureId, null, startAt, endAt) :
+                            Future.succeededFuture(new JsonObject().put(Field.COUNT, 0)));
 
-                        // Counting the number of absent day students
-                        for (int j = 0; j < absentStudentIds.size(); j++) {
-                            JsonObject absentStudent = absentStudentIds.getJsonObject(j);
-                            if (absentStudent != null &&
-                                    absentStudent.getString("student_id") != null &&
-                                    student.getString("id") != null &&
-                                    absentStudent.getString("student_id").equals(student.getString("id"))) {
-                                nbDayStudents++;
-                            }
-                        }
-                    }
-                }
 
-                JsonObject res = new JsonObject()
-                        .put("nb_absents", countAbsentIds > 0 ? countAbsentIds : 0)
-                        .put("nb_day_students", nbDayStudents > 0 ? nbDayStudents : 0)
-                        .put("nb_presents", (nbCurrentStudents - countAbsentIds) > 0 ?
-                                (nbCurrentStudents - countAbsentIds) : 0);
+                    return CompositeFuture.all(new ArrayList<>(countsFutures.values()));
+                })
+                .onFailure(err -> {
+                    String message = String.format("[Presences@%s::getAbsencesCountSummary] " +
+                            "Failed to retrieve absent data numbers", this.getClass().getName());
+                    LOGGER.error(String.format("%s %s", message, err.getMessage()));
+                    promise.fail(message);
+                })
+                .onSuccess(futuresRes -> {
+                    int nbCurrentStudents = countCurrentStudentsFuture.future().result().size();
+                    int countAbsents = Math.max(countsFutures.get(Field.ABSENCE).result().getInteger(Field.COUNT, 0), 0);
 
-                handler.handle(new Either.Right<>(res));
-            }
-        });
-        absenceService.getAbsentStudentIds(structureId, currentDate, FutureHelper.handlerJsonArray(absentStudentIdsFuture));
-        userService.getAllStudentsIdsWithAccommodation(structureId, FutureHelper.handlerJsonArray(studentsWithAccommodationFuture));
-        this.getCoursesStudentCount(structureId, currentDateDay, currentDateTime, FutureHelper.handlerJsonArray(countCurrentStudentsFuture));
+                    JsonObject res = new JsonObject();
+                    if (requiredMarkers.contains(Markers.NB_ABSENTS.name())) res.put(Field.NB_ABSENTS, countAbsents);
+                    if (requiredMarkers.contains(Markers.NB_HALFBOARDERS.name()))
+                        res.put(Field.NB_DAY_STUDENTS, Math.max(countsFutures.get(Field.HALFBOARDER).result().getInteger(Field.COUNT, 0), 0));
+                    if (requiredMarkers.contains(Markers.NB_PRESENTS.name()))
+                        res.put(Field.NB_PRESENTS, Math.max((nbCurrentStudents - countAbsents), 0));
+                    if (requiredMarkers.contains(Markers.NB_INTERNALS.name()))
+                        res.put(Field.NB_INTERNALS, Math.max(countsFutures.get(Field.INTERNAL).result().getInteger(Field.COUNT, 0), 0));
+
+                    promise.complete(res);
+                });
+
+        if (requiredMarkers.contains(Markers.NB_PRESENTS.name()))
+            getCoursesStudentIds(structureId, startDay, startDayTime, endDay, endDayTime,
+                    FutureHelper.handlerJsonArray(countCurrentStudentsFuture));
+        else countCurrentStudentsFuture.complete(new JsonArray());
+
+        return promise.future();
     }
 
 
@@ -471,48 +491,48 @@ public class DefaultEventService extends DBService implements EventService {
      * Get number of students in all occurring courses during the specified date.
      *
      * @param structureId structure identifier
-     * @param date        a date (format yyyy-MM-dd)
-     * @param time        an hour (format HH:mm:ss)
+     * @param startAt     start date (format yyyy-MM-dd)
+     * @param startTime   start hour (format HH:mm:ss)
+     * @param endAt       end date (format yyyy-MM-dd)
+     * @param endTime     end hour (format HH:mm:ss)
      * @param handler     Function handler returning data
      */
-    private void getCoursesStudentCount(String structureId, String date, String time,
-                                        Handler<Either<String, JsonArray>> handler) {
-        courseHelper.getCourses(structureId, date, date, time, time, "true", event -> {
+    @SuppressWarnings("unchecked")
+    private void getCoursesStudentIds(String structureId, String startAt, String startTime,
+                                      String endAt, String endTime,
+                                      Handler<Either<String, JsonArray>> handler) {
+        courseHelper.getCourses(structureId, startAt, endAt, startTime, endTime, Boolean.TRUE.toString(), event -> {
             if (event.isLeft()) {
                 handler.handle(new Either.Left<>(event.left().getValue()));
                 return;
             }
 
-            ArrayList<String> classesName = new ArrayList<>();
-            ArrayList<String> groupsName = new ArrayList<>();
-
             JsonArray courses = event.right().getValue();
 
-            for (int i = 0; i < courses.size(); i++) {
-                JsonObject course = courses.getJsonObject(i);
-                JsonArray classNames = course.getJsonArray("classes");
-                JsonArray groupsNames = course.getJsonArray("groups");
+            List<String> classesName = ((List<JsonObject>) courses.getList()).stream()
+                    .flatMap(course -> ((List<String>) course.getJsonArray(Field.CLASSES, new JsonArray()).getList()).stream())
+                    .distinct()
+                    .filter(Objects::nonNull)
+                    .collect(Collectors.toList());
 
-                for (int classIndex = 0; classIndex < classNames.size(); classIndex++) {
-                    classesName.add(classNames.getString(classIndex));
-                }
-                for (int groupIndex = 0; groupIndex < groupsNames.size(); groupIndex++) {
-                    groupsName.add(groupsNames.getString(groupIndex));
-                }
-            }
+            List<String> groupsName = ((List<JsonObject>) courses.getList()).stream()
+                    .flatMap(course -> ((List<String>) course.getJsonArray(Field.GROUPS, new JsonArray()).getList()).stream())
+                    .distinct()
+                    .filter(Objects::nonNull)
+                    .collect(Collectors.toList());
 
-            String query = "MATCH" +
-                    " (c:Class)<-[:DEPENDS]-(:ProfileGroup)<-[:IN]-(u:User {profiles: ['Student']})-[:ADMINISTRATIVE_ATTACHMENT]->(s:Structure {id:{structureId}})" +
+            String query = "MATCH (u:User {profiles: ['Student']})-[:ADMINISTRATIVE_ATTACHMENT]->(s:Structure {id:{structureId}})" +
+                    " MATCH (c:Class)<-[:DEPENDS]-(:ProfileGroup)<-[:IN]-(u)" +
                     " WHERE c.name IN {classesName}" +
-                    " RETURN COUNT(DISTINCT(u)) AS nbStudents" +
+                    " RETURN distinct(u.id) AS id" +
                     " UNION ALL" +
-                    " MATCH (fg:FunctionalGroup)<-[:IN]-(u:User {profiles:['Student']})-[:ADMINISTRATIVE_ATTACHMENT]->(s:Structure {id:{structureId}})" +
+                    " MATCH (fg:FunctionalGroup)<-[:IN]-(u)" +
                     " WHERE fg.name IN {groupsName}" +
-                    " RETURN COUNT(DISTINCT(u)) AS nbStudents" +
+                    " RETURN distinct(u.id) AS id" +
                     " UNION ALL" +
-                    " MATCH (mg:ManualGroup)<-[:IN]-(u:User {profiles:['Student']})-[:ADMINISTRATIVE_ATTACHMENT]->(s:Structure {id:{structureId}})" +
+                    " MATCH (mg:ManualGroup)<-[:IN]-(u)" +
                     " WHERE mg.name IN {groupsName}" +
-                    " RETURN COUNT(DISTINCT(u)) AS nbStudents";
+                    " RETURN distinct(u.id) AS id";
 
 
             JsonObject params = new JsonObject()

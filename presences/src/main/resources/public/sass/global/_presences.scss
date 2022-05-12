@@ -145,6 +145,12 @@ body.presences, .sniplet.presences {
     font-weight: bold;
   }
 
+  .presences-content {
+    padding: 0 10px;
+    margin: 0 5px;
+    background-color: $presences-body;
+  }
+
   textarea:focus {
     outline: none;
     border: 2px solid $presences-main;

@@ -28,11 +28,7 @@ import org.entcore.common.sql.SqlResult;
 import org.entcore.common.user.UserInfos;
 
 import java.text.ParseException;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
-import java.util.function.Function;
+import java.util.*;
 import java.util.stream.Collectors;
 
 public class DefaultAbsenceService extends DBService implements AbsenceService {
@@ -96,6 +92,137 @@ public class DefaultAbsenceService extends DBService implements AbsenceService {
         sql.prepared(query, params, SqlResult.validResultHandler(FutureHelper.handlerJsonArray(promise)));
 
         return promise.future();
+    }
+
+    @Override
+    @SuppressWarnings("unchecked")
+    public Future<JsonObject> get(String structureId, String teacherId, List<String> audienceIds, List<String> studentIds,
+                                  List<Integer> reasonIds, String startAt, String endAt,
+                                  Boolean regularized, Boolean noReason, Boolean followed, Boolean halfBoarder, Boolean internal, Integer page) {
+        Promise<JsonObject> promise = Promise.promise();
+
+        List<String> filteredAudienceIds = new ArrayList<>();
+        groupService.getGroupsAndClassesFromTeacherId(teacherId, structureId)
+                .compose(restrictedAudienceIds -> {
+                    filteredAudienceIds.addAll(
+                            teacherId != null ? audienceIds.stream()
+                                    .filter(restrictedAudienceIds::contains).collect(Collectors.toList()) :
+                                    audienceIds
+                    );
+                    return groupService.getGroupStudents(teacherId != null ? restrictedAudienceIds : audienceIds);
+                })
+                .compose(resStudents -> {
+                    if (teacherId != null && resStudents.isEmpty()) return Future.succeededFuture(new JsonArray());
+
+                    List<String> filteredStudentIds = getFilteredStudentIds(teacherId, filteredAudienceIds,
+                            resStudents.getList(), studentIds);
+
+                    return userService.getStudents(structureId, filteredStudentIds, halfBoarder, internal);
+                })
+                .compose(students -> getWithPaginate(structureId, teacherId, students.getList(), startAt, endAt, regularized,
+                        noReason, followed, reasonIds, page))
+                .onFailure(err -> {
+                    String message = String.format("[Presences@%s::getWithPaginate] Failed to get absences ",
+                            this.getClass().getSimpleName());
+                    LOGGER.error(message);
+                    promise.fail(message);
+                })
+                .onSuccess(result -> promise.complete((JsonObject) result));
+
+        return promise.future();
+    }
+
+    private List<String> getFilteredStudentIds(String teacherId, List<String> filteredAudienceIds, List<JsonObject> students, List<String> studentIds) {
+        if (teacherId != null)
+            return students
+                    .stream()
+                    .filter(student -> (studentIds.isEmpty() || studentIds.contains(student.getString(Field.ID)))
+                            && (filteredAudienceIds.isEmpty() ||
+                            filteredAudienceIds.contains(student.getString(Field.GROUPID))))
+                    .map(student -> student.getString(Field.ID))
+                    .filter(Objects::nonNull)
+                    .distinct()
+                    .collect(Collectors.toList());
+
+        studentIds.addAll(students.stream()
+                .map(student -> student.getString(Field.ID))
+                .filter(Objects::nonNull)
+                .distinct()
+                .collect(Collectors.toList()));
+
+        return studentIds;
+    }
+
+    @SuppressWarnings("unchecked")
+    private Future<JsonObject> getWithPaginate(String structureId, String teacherId, List<JsonObject> students,
+                                               String startAt, String endAt, Boolean regularized, Boolean noReason,
+                                               Boolean followed, List<Integer> reasonIds, Integer page) {
+        Promise<JsonObject> promise = Promise.promise();
+
+        List<String> filterStudentIds = students.stream()
+                .map(student -> student.getString(Field.ID))
+                .filter(Objects::nonNull)
+                .collect(Collectors.toList());
+
+        boolean canRetrieveAbsences = teacherId == null || !students.isEmpty();
+
+        Future<JsonArray> absencesFuture = !canRetrieveAbsences ? Future.succeededFuture(new JsonArray()) :
+                retrieve(structureId, filterStudentIds, startAt, endAt, regularized,
+                        noReason, followed, reasonIds, page);
+
+        Future<JsonObject> countFuture = (page == null || !canRetrieveAbsences) ? Future.succeededFuture(new JsonObject()) :
+                count(structureId, filterStudentIds, startAt, endAt, regularized, noReason, followed, reasonIds);
+
+        CompositeFuture.all(absencesFuture, countFuture)
+                .compose(futures -> {
+                    List<String> ownerIds = ((List<JsonObject>) (absencesFuture.result()).getList())
+                            .stream()
+                            .map(absence -> absence.getString(Field.OWNER))
+                            .filter(Objects::nonNull)
+                            .distinct()
+                            .collect(Collectors.toList());
+
+                    return userService.getUsers(ownerIds);
+                })
+                .onFailure(err -> {
+                    String message = String.format("[Presences@%s::getWithPaginate] Failed to get absences ",
+                            this.getClass().getSimpleName());
+                    LOGGER.error(String.format("%s %s", message, err.getMessage()));
+                    promise.fail(message);
+                })
+                .onSuccess(ownersArray -> {
+                    List<JsonObject> owners = ownersArray.getList();
+                    List<JsonObject> values = absencesFuture.result().getList();
+                    values.forEach(absence -> mapAbsence(absence, owners, students));
+
+                    Integer pageCount = countFuture.result().getInteger(Field.COUNT, 0)
+                            .equals(Presences.PAGE_SIZE) ? 0
+                            : countFuture.result().getInteger(Field.COUNT, 0) / Presences.PAGE_SIZE;
+
+                    promise.complete(new JsonObject()
+                            .put(Field.PAGE, page)
+                            .put(Field.PAGE_COUNT, pageCount)
+                            .put(Field.ALL, values));
+                });
+        return promise.future();
+    }
+
+    private JsonObject mapAbsence(JsonObject absence, List<JsonObject> owners, List<JsonObject> students) {
+        JsonObject owner = owners.stream()
+                .filter(currentOwner -> absence.getString(Field.OWNER) != null
+                        && absence.getString(Field.OWNER).equals(currentOwner.getString(Field.ID)))
+                .findFirst()
+                .orElse(null);
+
+        JsonObject student = students.stream()
+                .filter(currentStudent -> absence.getString(Field.STUDENT_ID) != null
+                        && absence.getString(Field.STUDENT_ID).equals(currentStudent.getString(Field.ID)))
+                .findFirst()
+                .orElse(null);
+
+        return absence
+                .put(Field.OWNER, owner)
+                .put(Field.STUDENT, student);
     }
 
     @Override
@@ -964,84 +1091,107 @@ public class DefaultAbsenceService extends DBService implements AbsenceService {
     }
 
     @Override
-    @SuppressWarnings("unchecked")
-    public void retrieve(String structure, List<String> students, String start, String end, Boolean justified, Boolean regularized, List<Integer> reasons, Handler<Either<String, JsonArray>> handler) {
-        JsonArray params = new JsonArray().add(structure);
-        String query = "SELECT id, start_date, end_date, student_id, reason_id, counsellor_regularisation, followed, structure_id " +
-                "FROM " + Presences.dbSchema + ".absence " +
-                "WHERE structure_id = ? ";
-        if (!students.isEmpty()) {
-            query += "AND student_id IN " + Sql.listPrepared(students);
-            params.addAll(new JsonArray(students));
-        }
+    public Future<JsonObject> count(String structure, List<String> students, String start, String end, Boolean regularized,
+                                    Boolean noReason, Boolean followed, List<Integer> reasons) {
+        Promise<JsonObject> promise = Promise.promise();
 
-        if (regularized != null || justified != null) {
-            query += " AND counsellor_regularisation = ? ";
-            params.add(regularized != null ? regularized : justified);
-        }
+        JsonArray params = new JsonArray();
+        String query = "SELECT COUNT(id) " +
+                " FROM " + Presences.dbSchema + ".absence " +
+                getWhereFilter(params, structure, students, start, end, regularized, noReason, followed, reasons);
 
-        if (start != null) {
-            query += " AND end_date > ? ";
-            params.add(start + " " + defaultStartTime);
-        }
+        sql.prepared(query, params, SqlResult.validUniqueResultHandler(FutureHelper.handlerJsonObject(promise)));
 
-        if (end != null) {
-            query += " AND start_date < ? ";
-            params.add(end + " " + defaultEndTime);
-        }
-
-        query += " ORDER BY start_date DESC";
-
-        sql.prepared(query, params, SqlResult.validResultHandler(res -> {
-            if (res.isLeft()) {
-                String message = String.format("[Presences@%s::retrieve] Failed to retrieve absences",
-                        this.getClass().getSimpleName());
-                LOGGER.error(message, res.left().getValue());
-                handler.handle(res.left());
-                return;
-            }
-
-            JsonArray absences = res.right().getValue();
-            if (absences.isEmpty()) {
-                handler.handle(res.right());
-                return;
-            }
-
-            List<String> studentIds = ((List<JsonObject>) absences.getList())
-                    .stream()
-                    .map(absence -> absence.getString(Field.STUDENT_ID))
-                    .collect(Collectors.toList());
-
-            userService.getStudents(studentIds, users -> {
-                if (users.isLeft()) {
-                    String message = String.format("[Presences@%s::retrieve] Failed to retrieve absences users: %s",
-                            this.getClass().getSimpleName(), users.left().getValue());
-                    LOGGER.error(message, users.left().getValue());
-                    handler.handle(users.left());
-                    return;
-                }
-
-                JsonArray result = users.right().getValue();
-                Map<String, JsonObject> studentMap = ((List<JsonObject>) result.getList())
-                        .stream()
-                        .collect(Collectors.toMap(user -> user.getString(Field.ID),
-                                Function.identity(), (student1, student2) -> student1));
-
-                ((List<JsonObject>) absences.getList())
-                        .forEach(absence -> absence.put(Field.STUDENT,
-                                studentMap.get(absence.getString(Field.STUDENT_ID))));
-
-                handler.handle(new Either.Right<>(new JsonArray(absences.stream()
-                        .filter(absence -> ((JsonObject) absence).getJsonObject(Field.STUDENT, new JsonObject())
-                                .getString(Field.NAME) != null).collect(Collectors.toList()))));
-            });
-        }));
+        return promise.future();
     }
 
-    private Future<JsonArray> retrieve(String structure, List<String> students, String start, String end, Boolean justified, Boolean regularized, List<Integer> reasons) {
+    @Override
+    public Future<JsonArray> retrieve(String structure, List<String> students, String start, String end, Boolean regularized,
+                                      Boolean noReason, Boolean followed, List<Integer> reasons, Integer page) {
         Promise<JsonArray> promise = Promise.promise();
-        retrieve(structure, students, start, end, justified, regularized, reasons, FutureHelper.handlerJsonArray(promise));
+
+        JsonArray params = new JsonArray();
+        String query = "SELECT id, start_date, end_date, student_id, reason_id, counsellor_regularisation, followed, " +
+                " structure_id, owner" +
+                " FROM " + Presences.dbSchema + ".absence " +
+                getWhereFilter(params, structure, students, start, end, regularized, noReason, followed, reasons) +
+                " ORDER BY start_date DESC";
+
+        if (page != null) {
+            params.add(Presences.PAGE_SIZE);
+            params.add(page * Presences.PAGE_SIZE);
+            query += " LIMIT ? OFFSET ?";
+        }
+
+        sql.prepared(query, params, SqlResult.validResultHandler(FutureHelper.handlerJsonArray(promise)));
+
         return promise.future();
+    }
+
+    private String getWhereFilter(JsonArray params, String structureId, List<String> studentIds, String startAt, String endAt,
+                                  Boolean regularized, Boolean noReason, Boolean followed, List<Integer> reasonIds) {
+        String where = "WHERE structure_id = ?";
+        params.add(structureId);
+
+        if (!studentIds.isEmpty()) {
+            where += " AND student_id IN " + Sql.listPrepared(studentIds);
+            params.addAll(new JsonArray(studentIds));
+        }
+
+        where += filterReasons(reasonIds, noReason, regularized, params);
+
+        if (followed != null) {
+            where += " AND followed = ? ";
+            params.add(followed);
+        }
+
+        if (startAt != null) {
+            where += " AND end_date > ? ";
+            params.add(DateHelper.isFormat(startAt, DateHelper.MONGO_FORMAT) ? startAt : String.format("%s %s", startAt, defaultStartTime));
+        }
+
+        if (endAt != null) {
+            where += " AND start_date < ? ";
+            params.add(DateHelper.isFormat(endAt, DateHelper.MONGO_FORMAT) ? endAt : String.format("%s %s", endAt, defaultEndTime));
+        }
+
+        return where;
+    }
+
+    private String filterReasons(List<Integer> reasonIds, Boolean noReason, Boolean regularized, JsonArray params) {
+        String query = "";
+
+        boolean isNoReason = (noReason != null && noReason);
+
+        // this condition occurs when we want to filter no reason and regularized event at the same time
+        if (isNoReason && (regularized != null && regularized)) {
+            query += " AND (reason_id IS NULL OR (reason_id IS NOT NULL AND counsellor_regularisation = true)";
+            if (reasonIds != null && !reasonIds.isEmpty()) {
+                query += " AND reason_id IN " + Sql.listPrepared(reasonIds);
+                params.addAll(new JsonArray(reasonIds));
+            }
+            query += ")";
+
+            // else is default condition
+        } else {
+            // If we want to fetch events WITH reasonId, array reasonIds fetched is not empty
+            // (optional if we wish noReason fetched at same time then noReason is TRUE)
+            if (reasonIds != null && !reasonIds.isEmpty()) {
+                query += " AND ((reason_id IN " + Sql.listPrepared(reasonIds) + ")";
+                if (isNoReason) query += " OR reason_id IS NULL";
+                query += ")";
+                params.addAll(new JsonArray(reasonIds));
+            }
+
+            // If we want to fetch events with NO reasonId, array reasonIds fetched is empty
+            // AND noReason is TRUE
+            if (reasonIds != null && reasonIds.isEmpty() && isNoReason)
+                query += " AND (reason_id IS NULL " + (regularized != null ? " OR counsellor_regularisation = " + regularized : "") + ") ";
+
+            if (regularized != null) query += " AND (counsellor_regularisation = " + regularized + ") ";
+        }
+
+        return query;
     }
 
     @Override
@@ -1068,24 +1218,93 @@ public class DefaultAbsenceService extends DBService implements AbsenceService {
     }
 
     @Override
+    public Future<JsonObject> countAbsentStudents(String structureId, List<String> studentIds, String startAt, String endAt) {
+        Promise<JsonObject> promise = Promise.promise();
+        JsonArray params = new JsonArray();
+        String query = "SELECT COUNT(DISTINCT result.student_id)" +
+                " FROM (" +
+                " SELECT ab.student_id" +
+                " FROM presences.absence ab" +
+                " WHERE ab.structure_id = ?";
+        params.add(structureId);
+        query += countAbsentStudentsWhereFilter(params, "ab", studentIds, startAt, endAt) +
+                " UNION" +
+                " SELECT ev.student_id" +
+                " FROM presences.event ev" +
+                " INNER JOIN presences.register AS r" +
+                " ON (r.id = ev.register_id AND r.structure_id = ?)" +
+                " WHERE ev.type_id = ?";
+        params.add(structureId)
+                .add(EventType.ABSENCE.getType());
+        query += countAbsentStudentsWhereFilter(params, "ev", studentIds, startAt, endAt) +
+                " ) as result";
+
+        Sql.getInstance().prepared(query, params, SqlResult.validUniqueResultHandler(FutureHelper.handlerJsonObject(promise)));
+
+        return promise.future();
+    }
+
+    public String countAbsentStudentsWhereFilter(JsonArray params, String alias, List<String> studentIds,
+                                                 String startAt, String endAt) {
+        String query = "";
+        if (endAt != null) {
+            query += String.format(" AND %s.start_date < ?", alias);
+            params.add(endAt);
+        }
+
+        if (startAt != null) {
+            query += String.format(" AND %s.end_date > ?", alias);
+            params.add(startAt);
+        }
+
+        if (studentIds != null && !studentIds.isEmpty()) {
+            query += String.format(" AND %s.student_id in %s", alias, Sql.listPrepared(studentIds));
+            params.addAll(new JsonArray(studentIds));
+        }
+
+        return query;
+    }
+
+    @Override
     @SuppressWarnings("unchecked")
     public Future<JsonObject> restoreAbsences(String structureId, String startAt, String endAt) {
         Promise<JsonObject> promise = Promise.promise();
-        retrieve(structureId, Collections.emptyList(), startAt, endAt, null, null, null)
+        List<JsonObject> absences = new ArrayList<>();
+        retrieve(structureId, Collections.emptyList(), startAt, endAt, null, null, null, null, null)
+                .compose(absencesResult -> {
+                    absences.addAll(absencesResult.getList());
+                    List<String> studentIds = absences.stream()
+                            .map(student -> student.getString(Field.ID))
+                            .filter(Objects::nonNull)
+                            .distinct()
+                            .collect(Collectors.toList());
+
+                    return userService.getStudents(studentIds);
+                })
                 .onFailure(err -> {
                     String message = String.format("[Presences@%s::restoreAbsences] Fail to retrieve absences"
                             , this.getClass().getSimpleName());
                     LOGGER.error(String.format("%s %s", message, err));
                     promise.fail(message);
                 })
-                .onSuccess(absences -> {
-                    List<JsonObject> statements = ((List<JsonObject>) absences.getList()).stream()
-                            .filter(absence ->
-                                    absence.getString(Field.STRUCTURE_ID) != null &&
-                                            !absence.getString(Field.STRUCTURE_ID).equals(
-                                                    absence.getJsonObject(Field.STUDENT, new JsonObject())
-                                                            .getString(Field.STRUCTURE_ID)
-                                            ))
+                .onSuccess(students -> {
+
+
+                    List<JsonObject> statements = absences.stream()
+                            .filter(absence -> {
+                                JsonObject student = ((List<JsonObject>) students.getList())
+                                        .stream()
+                                        .filter(currentStudent -> currentStudent.getString(Field.ID) != null &&
+                                                currentStudent.getString(Field.ID)
+                                                        .equals(absence.getString(Field.STUDENT_ID)))
+                                        .findFirst()
+                                        .orElse(null);
+
+                                String absenceStructureId = absence.getString(Field.STRUCTURE_ID);
+
+                                return student != null && absenceStructureId != null &&
+                                        !absenceStructureId.equals(student.getString(Field.STRUCTURE_ID));
+                            })
                             .map(this::restoreStructureStatement)
                             .collect(Collectors.toList());
 

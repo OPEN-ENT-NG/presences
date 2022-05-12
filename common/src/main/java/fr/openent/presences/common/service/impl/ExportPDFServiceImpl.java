@@ -2,7 +2,9 @@ package fr.openent.presences.common.service.impl;
 
 import fr.openent.presences.common.service.ExportPDFService;
 import fr.wseduc.webutils.Either;
-import fr.wseduc.webutils.http.Renders;
+import fr.wseduc.webutils.template.TemplateProcessor;
+import fr.wseduc.webutils.template.lambdas.I18nLambda;
+import fr.wseduc.webutils.template.lambdas.LocaleDateLambda;
 import io.vertx.core.Future;
 import io.vertx.core.Handler;
 import io.vertx.core.Promise;
@@ -34,18 +36,14 @@ import static fr.wseduc.webutils.http.Renders.badRequest;
 public class ExportPDFServiceImpl implements ExportPDFService {
     private static final Logger LOGGER = LoggerFactory.getLogger(ExportPDFServiceImpl.class);
     private String pdfGeneratorURL;
-    private final JsonObject config;
     private final Vertx vertx;
-    private final Renders renders;
     private String authHeader;
     private final PdfFactory pdfFactory;
 
 
     public ExportPDFServiceImpl(Vertx vertx, JsonObject config) {
         super();
-        this.config = config;
         this.vertx = vertx;
-        this.renders = new Renders(this.vertx, this.config);
         pdfFactory = new PdfFactory(vertx, new JsonObject().put("node-pdf-generator",
                 config.getJsonObject("node-pdf-generator", new JsonObject())));
         try {
@@ -187,6 +185,31 @@ public class ExportPDFServiceImpl implements ExportPDFService {
         }
         String nodePdfGeneratorUrl = pdfGeneratorURL;
         webServiceNodePdfGeneratorPost(Buffer.buffer(bytes).toString(), token, nodePdfGeneratorUrl, asyncResultHandler);
+    }
+
+    @Override
+    public Future<Pdf> generatePDF(String filename, String resourceName, JsonObject resources) {
+        Promise<Pdf> promise = Promise.promise();
+        initTemplateProcessor().processTemplate(resourceName, resources, writer -> {
+            if (writer == null) {
+                String message = String.format("[Presences@%s::generatePDF] process template has no buffer result",
+                        this.getClass().getSimpleName());
+                promise.fail(message);
+            } else {
+                generatePDF(filename, writer)
+                        .onSuccess(promise::complete)
+                        .onFailure(promise::fail);
+            }
+        });
+        return promise.future();
+    }
+
+
+    private TemplateProcessor initTemplateProcessor() {
+        TemplateProcessor templateProcessor = new TemplateProcessor(vertx, "template").escapeHTML(false);
+        templateProcessor.setLambda("i18n", new I18nLambda("fr"));
+        templateProcessor.setLambda("datetime", new LocaleDateLambda("fr"));
+        return templateProcessor;
     }
 
     @Override
