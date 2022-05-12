@@ -1,0 +1,20 @@
+<!-- Empty state -->
+<div class="planned-absences-empty" data-ng-show="vm.plannedAbsences.length === 0 && !vm.loading">
+    <div class="planned-absences-empty-description">
+        <span class="red-bar"></span>
+        <i18n class="planned-absences-empty-description-title">presences.absences.empty</i18n>
+        <span class="yellow-bar"></span>
+    </div>
+    <img data-ng-src="/presences/public/img/absences_empty.svg" alt="empty absence">
+</div>
+
+<loader data-ng-show="vm.loading" min-height="'250px'"></loader>
+
+<div ng-if="!vm.loading">
+    <events-table
+            events="vm.plannedAbsences" dates="true" reason="true" owner="true"
+            calendar="true" action="false" regularized="true">
+    </events-table>
+</div>
+
+<infinite-scroll scrolled="vm.onScroll()" loading-mode="true"></infinite-scroll>

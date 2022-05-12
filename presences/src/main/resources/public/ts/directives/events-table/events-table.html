@@ -1,0 +1,118 @@
+<div class="events-table-component">
+    <!-- board/list of student -->
+    <div class="events-table-component-list top20 flex-table"
+         ng-if="vm.events.length > 0">
+        <!-- title -->
+        <div class="flex-row flex-head events-table-component-list-head">
+            <div class="flex-col">
+                <i18n>presences.student.caps</i18n>
+            </div>
+            <div ng-if="vm.dates" class="flex-col text-center">
+                <i18n>presences.date</i18n>
+            </div>
+            <div ng-if="vm.reason" class="flex-col text-center">
+                <i18n>presences.absence.reason</i18n>
+            </div>
+            <div ng-if="vm.owner" class="flex-col text-center">
+                <i18n>presences.created.by.caps</i18n>
+            </div>
+            <div ng-if="vm.calendar" class="flex-col text-center events-table-component-list-head-calendar">
+                <i18n>presences.calendar.view.abbr</i18n>
+            </div>
+            <div ng-if="vm.followed" class="flex-col text-center events-table-component-list-head-followed">
+                <i18n>presences.planned.absence.followed</i18n>
+            </div>
+            <div ng-if="vm.action" class="flex-col text-center events-table-component-list-head-action">
+                <i18n>presences.absence.action</i18n>
+            </div>
+            <div ng-if="vm.regularized"
+                 class="flex-col text-center events-table-component-list-head-regularized">
+                <i18n>presences.planned.absence.regularized.abbr</i18n>
+            </div>
+        </div>
+
+        <!-- List planned absences -->
+        <div class="flex-table events-table-component-list"
+             data-ng-show="vm.events.length > 0">
+            <div class="flex-body events-table-component-list-item"
+                 ng-repeat="event in vm.events track by $index">
+                <div class="flex-content">
+                    <div class="flex-row">
+                        <!-- student -->
+                        <div class="flex-col events-table-component-list-item-student">
+                            <div class="flex-row events-table-component-list-item-student-item">
+                                <!-- student picture -->
+                                <div class="flex-col events-table-component-list-item-student-item-picture">
+                                    <img data-ng-src="/viescolaire/structures/[[event.structure_id]]/students/[[event.student.id]]/picture"
+                                         height="30" width="30">
+                                </div>
+                                <div class="flex-col events-table-component-list-item-student-item-name">
+                                    <student-name class="paddingRight"
+                                                  name="event.student.name"
+                                                  id="event.student.id"></student-name>
+                                    <span class="events-table-component-list-item-student-item-name-audience">[[event.student.className]]</span>
+                                </div>
+                            </div>
+                        </div>
+                        <!-- event dates -->
+                        <div ng-if="vm.dates" class="flex-col">
+                            <span>[[vm.getAbsenceDateString(event)]]</span>
+                        </div>
+                        <!-- absence reason -->
+                        <div ng-if="vm.reason" class="flex-col table-reason">
+                            <label>
+                                <select data-ng-model="event.reason_id"
+                                        data-ng-click="vm.reasonSelect($event)"
+                                        data-ng-change="vm.selectReason(event)"
+                                        ng-options="reason.id as reason.label disable when reason.hidden for reason in vm.reasons">
+                                    <option value="">[[vm.translate('presences.absence.select.empty')]]</option>
+                                </select>
+                            </label>
+                        </div>
+                        <!-- absence owner -->
+                        <div ng-if="vm.owner" class="flex-col">
+                            <span>[[event.owner.displayName]]</span>
+                        </div>
+                        <!-- calendar view -->
+                        <div ng-if="vm.calendar" class="flex-col events-table-component-list-item-calendar">
+                            <i class="tableEdit" data-ng-click="vm.redirectCalendar(event)"></i>
+                        </div>
+                        <!-- followed -->
+                        <div ng-if="vm.followed" class="flex-col events-table-component-list-item-followed">
+                            <i class="flag" ng-if="event.followed"></i>
+                            <i class="flag-outline" ng-if="!event.followed"></i>
+                        </div>
+
+                        <!-- action -->
+                        <div ng-if="vm.action" class="flex-col events-table-component-list-item-action">
+                            <i ng-class="{add : event.actionAbbreviation == null}"
+                               data-ng-click="vm.doAction($event, event)">
+                            </i>
+                            <span class="events-table-body-color" data-ng-click="vm.doAction($event, event)">
+                                            [[event.actionAbbreviation]]
+                                        </span>
+                        </div>
+
+                        <!-- regularized -->
+                        <div ng-if="vm.regularized" class="flex-col events-table-component-list-item-regularized">
+                            <label class="checkbox"
+                                   ng-style="{
+                                                opacity: !vm.provingReasonsMap[event.reason.id] && event.reason.id !== null ? 1 : 0,
+                                                'pointer-events': event.reason.id !== null && !vm.provingReasonsMap[event.reason.id] ? 'all' : 'none'
+                                            }">
+                                <input type="checkbox" data-ng-model="event.counsellor_regularisation"
+                                       ng-disabled="!(event.reason.id !== null && !vm.provingReasonsMap[event.reason.id]) && event.counsellor_regularisation"
+                                       data-ng-change="vm.toggleEventRegularised(event)">
+                                <span ng-style="{cursor: event.reason.id !== null && !vm.provingReasonsMap[event.reason.id] ? 'pointer' : 'default'}"></span>
+                            </label>
+                        </div>
+
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<lightbox class="actionLightbox" show="vm.lightbox.action" on-close="vm.lightbox.action = false">
+    <div ng-include="'/presences/public/template/events/header_actions.html'"></div>
+</lightbox>

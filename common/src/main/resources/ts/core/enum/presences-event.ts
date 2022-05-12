@@ -34,3 +34,21 @@ export enum LATENESS_FORM_EVENTS {
     EDIT = 'lateness-form:edit',
     OPEN = 'lateness-form:open'
 }
+
+export enum EVENTS_FORM {
+    SUBMIT = 'events-form:submit',
+}
+
+export enum EVENTS_SEARCH {
+    STUDENT = 'events-search:student',
+    GROUP = 'events-search:group'
+}
+
+export enum EVENTS_DATE {
+    EVENT_LIST_SAVE = 'events-date:event-list-save',
+    ABSENCES_SAVE = 'events-date:absences-save',
+    EVENT_LIST_SEND = 'events-date:event-list-send',
+    ABSENCES_SEND = 'events-date:absences-send',
+    EVENT_LIST_REQUEST = 'events-date-request:event-list-request',
+    ABSENCES_REQUEST = 'events-date-request:absences-request'
+}

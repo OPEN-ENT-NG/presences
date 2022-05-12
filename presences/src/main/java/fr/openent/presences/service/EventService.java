@@ -77,11 +77,15 @@ public interface EventService {
     /**
      * Get absence and absence events counts summary.
      *
-     * @param structureId structure identifier
-     * @param currentDate current date
-     * @param handler     function handler returning data
+     * @param structureId     structure identifier
+     * @param startAt         start date
+     * @param endAt           end date
+     * @param requiredMarkers required makers
+     * @return future with results
      */
-    void getAbsencesCountSummary(String structureId, String currentDate, Handler<Either<String, JsonObject>> handler);
+    Future<JsonObject> getAbsencesCountSummary(String structureId, String startAt, String endAt, List<String> requiredMarkers);
+
+    Future<JsonObject> getAbsencesCountSummary(String structureId, String startAt, String endAt);
 
 
     /**

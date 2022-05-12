@@ -86,6 +86,15 @@ export const mainController = ng.controller('MainController', ['$scope', 'route'
                     template.open('main', `containers/dashboard-student`);
                 } else {
                     template.open('main', `containers/events`);
+                    template.open('events', `events/event-list`);
+                }
+            },
+            'planned-absences': () => {
+                if ($scope.isChild() || $scope.isRelative()) {
+                    template.open('main', `containers/dashboard-student`);
+                } else {
+                    template.open('main', `containers/events`);
+                    template.open('events', `events/planned-absences`);
                 }
             },
             alerts: () => {

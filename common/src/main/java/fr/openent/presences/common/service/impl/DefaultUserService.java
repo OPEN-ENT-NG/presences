@@ -20,6 +20,8 @@ import java.util.stream.*;
 import static fr.openent.presences.model.Model.log;
 
 public class DefaultUserService extends DBService implements UserService {
+    public static String HALF_BOARDER = "DEMI-PENSIONNAIRE";
+    public static String INTERNAL = "INTERNE";
 
     @Override
     public void getUsers(List<String> userIds, Handler<Either<String, JsonArray>> handler) {
@@ -31,6 +33,13 @@ public class DefaultUserService extends DBService implements UserService {
     }
 
     @Override
+    public Future<JsonArray> getUsers(List<String> userIds) {
+        Promise<JsonArray> promise = Promise.promise();
+        getUsers(userIds, FutureHelper.handlerJsonArray(promise));
+        return promise.future();
+    }
+
+    @Override
     public void getStudents(List<String> students, Handler<Either<String, JsonArray>> handler) {
         String query = "MATCH (u:User {profiles:['Student']})-[:IN]->(:ProfileGroup)-[:DEPENDS]->(c:Class) WHERE u.id IN {userIds} " +
                 "OPTIONAL MATCH (s:Structure)<-[:BELONGS|DEPENDS]-(c)" +
@@ -39,6 +48,56 @@ public class DefaultUserService extends DBService implements UserService {
         JsonObject params = new JsonObject().put("userIds", students);
 
         Neo4j.getInstance().execute(query, params, Neo4jResult.validResultHandler(handler));
+    }
+
+    @Override
+    public Future<JsonArray> getStudents(List<String> studentIds) {
+        Promise<JsonArray> promise = Promise.promise();
+        getStudents(studentIds, FutureHelper.handlerJsonArray(promise));
+        return promise.future();
+    }
+
+    @Override
+    public Future<JsonArray> getStudents(String structureId, List<String> studentIds, Boolean halfBoarder, Boolean internal) {
+        Promise<JsonArray> promise = Promise.promise();
+        JsonObject params = new JsonObject();
+
+        String query = "MATCH (u:User {profiles:['Student']})-[:IN]->(:ProfileGroup)-[:DEPENDS]->(c:Class)-[:BELONGS]->(s:Structure) " +
+                getWhereFilter(params, structureId, studentIds, halfBoarder, internal) +
+                " RETURN u.id as id, u.lastName + ' ' + u.firstName as name, u.lastName as lastName, u.firstName as firstName, c.name as className";
+
+        neo4j.execute(query, params, Neo4jResult.validResultHandler(FutureHelper.handlerJsonArray(promise)));
+
+        return promise.future();
+    }
+
+    private String getWhereFilter(JsonObject params, String structureId, List<String> studentIds, Boolean halfBoarder,
+                                  Boolean internal) {
+
+        String where = " WHERE s.id = {structureId}";
+        params.put(Field.STRUCTUREID, structureId);
+
+        if (studentIds != null && !studentIds.isEmpty()) {
+            where += " AND u.id IN {studentIds}";
+            params.put(Field.STUDENTIDS, studentIds);
+        }
+
+        if (halfBoarder != null || internal != null) {
+            where += " AND (";
+            if (halfBoarder != null) {
+                where += String.format(" %s (u.accommodation CONTAINS {halfBoarder})", (halfBoarder ? "" : "NOT"));
+                params.put(Field.HALFBOARDER, HALF_BOARDER);
+            }
+            if (internal != null) {
+                where += String.format(" %s %s (u.accommodation CONTAINS {internal})", (halfBoarder != null ? "OR" : ""),
+                        (internal ? "" : "NOT"));
+                params.put(Field.INTERNAL, INTERNAL);
+            }
+            where += " ) ";
+        }
+
+
+        return where;
     }
 
     @Override

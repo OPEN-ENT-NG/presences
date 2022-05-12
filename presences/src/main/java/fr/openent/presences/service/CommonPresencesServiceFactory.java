@@ -57,6 +57,10 @@ public class CommonPresencesServiceFactory {
         return new ExportPDFServiceImpl(vertx, config);
     }
 
+    public ExportAbsenceService exportAbsenceService() {
+        return new DefaultExportAbsenceService(this);
+    }
+
     public SettingsService settingsService() {
         return new DefaultSettingsService();
     }

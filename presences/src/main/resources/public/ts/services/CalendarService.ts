@@ -132,6 +132,7 @@ export const calendarService = ng.service('CalendarService', (): CalendarService
         let absences = await absenceService.getAbsence(
             structureId,
             [student.id],
+            null,
             DateUtils.format(startWeekDate, DateUtils.FORMAT["YEAR-MONTH-DAY"]),
             DateUtils.format(DateUtils.add(startWeekDate, 1, 'w'), DateUtils.FORMAT["YEAR-MONTH-DAY"]),
             null,

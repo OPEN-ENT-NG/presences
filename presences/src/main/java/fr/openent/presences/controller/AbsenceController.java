@@ -1,18 +1,22 @@
 package fr.openent.presences.controller;
 
+import fr.openent.presences.common.helper.WorkflowHelper;
 import fr.openent.presences.common.security.UserInStructure;
-import fr.openent.presences.common.service.GroupService;
 import fr.openent.presences.constants.Actions;
 import fr.openent.presences.core.constants.Field;
+import fr.openent.presences.enums.EventType;
+import fr.openent.presences.enums.Markers;
+import fr.openent.presences.enums.WorkflowActions;
+import fr.openent.presences.export.AbsencesCSVExport;
 import fr.openent.presences.security.AbsenceRight;
 import fr.openent.presences.security.CreateEventRight;
 import fr.openent.presences.security.Manage;
-import fr.openent.presences.service.AbsenceService;
-import fr.openent.presences.service.CollectiveAbsenceService;
-import fr.openent.presences.service.CommonPresencesServiceFactory;
+import fr.openent.presences.service.*;
 import fr.wseduc.rs.*;
 import fr.wseduc.security.ActionType;
 import fr.wseduc.security.SecuredAction;
+import fr.wseduc.webutils.I18n;
+import fr.wseduc.webutils.http.Renders;
 import fr.wseduc.webutils.request.RequestUtils;
 import io.vertx.core.eventbus.EventBus;
 import io.vertx.core.http.HttpServerRequest;
@@ -26,21 +30,25 @@ import org.entcore.common.http.response.DefaultResponseHandler;
 import org.entcore.common.user.UserUtils;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
+import java.util.stream.Collectors;
 
 public class AbsenceController extends ControllerHelper {
 
     private final EventBus eb;
     private final AbsenceService absenceService;
-    private final GroupService groupService;
+    private final EventService eventService;
     private final CollectiveAbsenceService collectiveService;
+    private final ExportAbsenceService exportAbsencesPdf;
 
     public AbsenceController(CommonPresencesServiceFactory commonPresencesServiceFactory) {
         super();
         this.eb = commonPresencesServiceFactory.eventBus();
         this.absenceService = commonPresencesServiceFactory.absenceService();
-        this.groupService = commonPresencesServiceFactory.groupService();
+        this.eventService = commonPresencesServiceFactory.eventService();
         this.collectiveService = commonPresencesServiceFactory.collectiveAbsenceService();
+        this.exportAbsencesPdf = commonPresencesServiceFactory.exportAbsenceService();
     }
 
     @Get("/absence/:id")
@@ -216,33 +224,38 @@ public class AbsenceController extends ControllerHelper {
     @SecuredAction(value = "", type = ActionType.RESOURCE)
     @ResourceFilter(AbsenceRight.class)
     public void getAbsences(HttpServerRequest request) {
-        String structure = request.getParam("structure");
-        String start = request.getParam("start");
-        String end = request.getParam("end");
-        List<String> students = request.params().getAll("student");
-        List<String> classes = request.params().getAll("classes");
-        Boolean justified = request.params().contains("justified") ? Boolean.parseBoolean(request.getParam("justified")) : null;
-        Boolean regularized = request.params().contains("regularized") ? Boolean.parseBoolean(request.getParam("regularized")) : null;
-        List<Integer> reasons = request.params().getAll("reason")
+        String structure = request.getParam(Field.STRUCTURE);
+        String start = request.getParam(Field.START);
+        String end = request.getParam(Field.END);
+        List<String> students = request.params().getAll(Field.STUDENT);
+        List<String> classes = request.params().getAll(Field.CLASSES);
+        Boolean halfBoarder = request.params().contains(Field.HALFBOARDER) ? Boolean.parseBoolean(request.getParam(Field.HALFBOARDER)) : null;
+        Boolean internal = request.params().contains(Field.INTERNAL) ? Boolean.parseBoolean(request.getParam(Field.INTERNAL)) : null;
+        Boolean followed = request.params().contains(Field.FOLLOWED) ? Boolean.parseBoolean(request.getParam(Field.FOLLOWED)) : null;
+        Boolean regularized = request.params().contains(Field.REGULARIZED) ? Boolean.parseBoolean(request.getParam(Field.REGULARIZED)) : null;
+        Boolean noReason = request.params().contains(Field.NOREASON)
+                && Boolean.parseBoolean(request.getParam(Field.NOREASON));
+        Boolean justified = request.params().contains(Field.JUSTIFIED) ? Boolean.parseBoolean(request.getParam(Field.JUSTIFIED)) : null;
+
+        List<Integer> reasons = request.params().getAll(Field.REASON)
                 .stream()
                 .mapToInt(Integer::parseInt)
                 .collect(ArrayList::new, ArrayList::add, ArrayList::addAll);
+        Integer page = request.getParam(Field.PAGE) != null ? Integer.parseInt(request.getParam(Field.PAGE)) : null;
 
-        groupService.getGroupStudents(classes, resp -> {
-            if (resp.isLeft()) {
-                String message = "[Presences@AbsenceController::getAbsences] Failed to retrieve groupStudents info.";
-                log.error(message);
-                return;
-            }
+        UserUtils.getUserInfos(eb, request, user -> {
+            String teacherId = (WorkflowHelper.hasRight(user, WorkflowActions.READ_EVENT_RESTRICTED.toString())
+                    && "Teacher".equals(user.getType())) ?
+                    user.getUserId() : null;
 
-            JsonArray users = resp.right().getValue();
-
-            for (int i = 0; i < users.size(); i++) {
-                students.add(users.getJsonObject(i).getString("id"));
-            }
-
-            absenceService.retrieve(structure, students, start, end, justified, regularized, reasons, DefaultResponseHandler.arrayResponseHandler(request));
-
+            absenceService
+                    .get(structure, teacherId, classes, students, reasons, start, end, (regularized != null ? regularized : justified),
+                            noReason, followed, halfBoarder, internal, page)
+                    .onFailure(err -> renderError(request))
+                    .onSuccess(result -> {
+                        if (page != null) renderJson(request, result);
+                        else renderJson(request, result.getJsonArray(Field.ALL, new JsonArray()));
+                    });
         });
     }
 
@@ -259,6 +272,124 @@ public class AbsenceController extends ControllerHelper {
             absenceService.restoreAbsences(structureId, startAt, endAt)
                     .onSuccess(result -> renderJson(request, result))
                     .onFailure(err -> renderError(request));
+        });
+    }
+
+    @Get("/structures/:structureId/absences/markers")
+    @ApiDoc("Get absences counts markers")
+    @SecuredAction(value = "", type = ActionType.RESOURCE)
+    @ResourceFilter(AbsenceRight.class)
+    public void getAbsentsCounts(final HttpServerRequest request) {
+        String structureId = request.getParam(Field.STRUCTUREID);
+        String startAt = request.getParam(Field.STARTAT);
+        String endAt = request.getParam(Field.ENDAT);
+
+        if (structureId == null || startAt == null || endAt == null) {
+            badRequest(request);
+            return;
+        }
+
+        eventService.getAbsencesCountSummary(structureId, startAt, endAt, Arrays.stream(Markers.values())
+                        .filter(value -> !value.equals(Markers.NB_PRESENTS))
+                        .map(Enum::name)
+                        .collect(Collectors.toList()))
+                .onFailure(err -> renderError(request))
+                .onSuccess(summary -> renderJson(request, summary));
+    }
+
+    @Get("/structures/:structureId/absences/export/pdf")
+    @SecuredAction(value = "", type = ActionType.RESOURCE)
+    @ResourceFilter(AbsenceRight.class)
+    @ApiDoc("Export absences")
+    public void exportAbsencesPdf(HttpServerRequest request) {
+        String structure = request.getParam(Field.STRUCTUREID);
+        String start = request.getParam(Field.START);
+        String end = request.getParam(Field.END);
+        List<String> students = request.params().getAll(Field.STUDENT);
+        List<String> classes = request.params().getAll(Field.CLASSES);
+        Boolean halfBoarder = request.params().contains(Field.HALFBOARDER) ? Boolean.parseBoolean(request.getParam(Field.HALFBOARDER)) : null;
+        Boolean internal = request.params().contains(Field.INTERNAL) ? Boolean.parseBoolean(request.getParam(Field.INTERNAL)) : null;
+        Boolean followed = request.params().contains(Field.FOLLOWED) ? Boolean.parseBoolean(request.getParam(Field.FOLLOWED)) : null;
+        Boolean noReason = request.params().contains(Field.NOREASON)
+                && Boolean.parseBoolean(request.getParam(Field.NOREASON));
+        Boolean regularized = request.params().contains(Field.REGULARIZED) ? Boolean.parseBoolean(request.getParam(Field.REGULARIZED)) : null;
+        Boolean justified = request.params().contains(Field.JUSTIFIED) ? Boolean.parseBoolean(request.getParam(Field.JUSTIFIED)) : null;
+
+        List<Integer> reasons = request.params().getAll(Field.REASON)
+                .stream()
+                .mapToInt(Integer::parseInt)
+                .collect(ArrayList::new, ArrayList::add, ArrayList::addAll);
+
+        UserUtils.getUserInfos(eb, request, user -> {
+            String teacherId = (WorkflowHelper.hasRight(user, WorkflowActions.READ_EVENT_RESTRICTED.toString())
+                    && "Teacher".equals(user.getType())) ?
+                    user.getUserId() : null;
+
+            String domain = Renders.getHost(request);
+            String local = I18n.acceptLanguage(request);
+            exportAbsencesPdf.generatePdf(domain, local, structure, teacherId, classes, students, reasons, start, end,
+                            (regularized != null ? regularized : justified), noReason, followed, halfBoarder, internal)
+                    .onSuccess(pdf -> request.response()
+                            .putHeader("Content-type", "application/pdf; charset=utf-8")
+                            .putHeader("Content-Disposition", "attachment; filename=" + pdf.getName())
+                            .end(pdf.getContent()))
+                    .onFailure(err -> {
+                        String message = "An error has occurred during export pdf process";
+                        String logMessage = String.format("[Presences@%s::exportAbsencesPdf] %s: %s",
+                                this.getClass().getSimpleName(), message, err.getMessage());
+                        log.error(logMessage);
+                        renderError(request, new JsonObject().put(Field.MESSAGE, message));
+                    });
+
+        });
+    }
+
+    @Get("/structures/:structureId/absences/export/csv")
+    @SecuredAction(value = "", type = ActionType.RESOURCE)
+    @ResourceFilter(AbsenceRight.class)
+    @ApiDoc("Export absences")
+    @SuppressWarnings("unchecked")
+    public void exportAbsencesCsv(HttpServerRequest request) {
+        String structure = request.getParam(Field.STRUCTUREID);
+        String start = request.getParam(Field.START);
+        String end = request.getParam(Field.END);
+        List<String> students = request.params().getAll(Field.STUDENT);
+        List<String> classes = request.params().getAll(Field.CLASSES);
+        Boolean halfBoarder = request.params().contains(Field.HALFBOARDER) ? Boolean.parseBoolean(request.getParam(Field.HALFBOARDER)) : null;
+        Boolean internal = request.params().contains(Field.INTERNAL) ? Boolean.parseBoolean(request.getParam(Field.INTERNAL)) : null;
+        Boolean followed = request.params().contains(Field.FOLLOWED) ? Boolean.parseBoolean(request.getParam(Field.FOLLOWED)) : null;
+        Boolean noReason = request.params().contains(Field.NOREASON)
+                && Boolean.parseBoolean(request.getParam(Field.NOREASON));
+        Boolean regularized = request.params().contains(Field.REGULARIZED) ? Boolean.parseBoolean(request.getParam(Field.REGULARIZED)) : null;
+        Boolean justified = request.params().contains(Field.JUSTIFIED) ? Boolean.parseBoolean(request.getParam(Field.JUSTIFIED)) : null;
+
+        List<Integer> reasons = request.params().getAll(Field.REASON)
+                .stream()
+                .mapToInt(Integer::parseInt)
+                .collect(ArrayList::new, ArrayList::add, ArrayList::addAll);
+
+        UserUtils.getUserInfos(eb, request, user -> {
+            String teacherId = (WorkflowHelper.hasRight(user, WorkflowActions.READ_EVENT_RESTRICTED.toString())
+                    && "Teacher".equals(user.getType())) ?
+                    user.getUserId() : null;
+
+            String domain = Renders.getHost(request);
+            String local = I18n.acceptLanguage(request);
+
+            exportAbsencesPdf.getAbsencesData(domain, local, structure, teacherId, classes, students, reasons, start, end,
+                            (regularized != null ? regularized : justified), noReason, followed, halfBoarder, internal)
+                    .onSuccess(absences -> {
+                        AbsencesCSVExport ace =
+                                new AbsencesCSVExport(absences.getJsonArray(EventType.ABSENCE.name(), new JsonArray()).getList(), request);
+                        ace.export();
+                    })
+                    .onFailure(err -> {
+                        String message = "An error has occurred during export csv process";
+                        String logMessage = String.format("[Presences@%s::exportAbsencesCsv] %s: %s",
+                                this.getClass().getSimpleName(), message, err.getMessage());
+                        log.error(logMessage);
+                        renderError(request, new JsonObject().put("message", message));
+                    });
         });
     }
 }

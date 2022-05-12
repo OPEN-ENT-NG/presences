@@ -1,0 +1,98 @@
+<!-- Date filter -->
+<div class="row">
+    <div class="cell eight top5">
+        <i18n>presences.from</i18n>
+        :
+        <span class="card date-picker">
+             <date-picker ng-change="vm.updateDate();" ng-model="vm.filter.startDate"></date-picker>
+        </span>
+        <i18n>presences.to</i18n>
+        :
+        <span class="card date-picker">
+            <date-picker ng-change="vm.updateDate();" ng-model="vm.filter.endDate"></date-picker>
+        </span>
+    </div>
+
+    <!-- export csv/pdf -->
+    <div class="four cell top5">
+        <button ng-disabled="vm.plannedAbsences.length == 0" class="right-magnet"
+                data-ng-click="vm.export(vm.exportType.PDF)">
+            <i18n>presences.export.topdf</i18n>
+        </button>
+        <button ng-disabled="vm.plannedAbsences.length == 0" class="right-magnet"
+                data-ng-click="vm.export(vm.exportType.CSV)">
+            <i18n>presences.export.tocsv</i18n>
+        </button>
+    </div>
+</div>
+
+<!-- Event Type Filter -->
+<div class="registry-eventTypeFilter">
+
+    <div class="cell six vertical-spacing-twice">
+        <i class="filter cell" ng-click="vm.lightbox.filter = true">&nbsp;</i>
+        <!-- Display selected student states -->
+        <div class="cell" ng-show="vm.filter.halfBoarders">
+            <div class="card horizontal-margin-small horizontal-spacing margin-bottom-md">
+                <i18n>presences.half.boarders</i18n>
+            </div>
+        </div>
+        <div class="cell" ng-show="vm.filter.interns">
+            <div class="card horizontal-margin-small horizontal-spacing margin-bottom-md">
+                <i18n>presences.interns</i18n>
+            </div>
+        </div>
+        <!-- Display selected slots -->
+        <div class="cell" ng-show="vm.filter.timeslots.start.startHour && vm.filter.timeslots.end.endHour">
+            <div class="card horizontal-margin-small horizontal-spacing margin-bottom-md">
+                [[vm.filter.timeslots.start.startHour]]
+                &nbsp;-&nbsp;
+                [[vm.filter.timeslots.end.endHour]]
+            </div>
+        </div>
+        <!-- Display selected states -->
+        <div class="cell" ng-show="vm.filter.noReasons">
+            <div class="card horizontal-margin-small horizontal-spacing margin-bottom-md">
+                <i18n>presences.absence.unjustified</i18n>
+            </div>
+        </div>
+        <div class="cell" ng-show="vm.filter.notRegularized">
+            <div class="card horizontal-margin-small horizontal-spacing margin-bottom-md">
+                <i18n>presences.absence.types.justified.not.regularized</i18n>
+            </div>
+        </div>
+        <div class="cell" ng-show="vm.filter.regularized">
+            <div class="card horizontal-margin-small horizontal-spacing margin-bottom-md">
+                <i18n ng-show="vm.filter.regularized">presences.absence.types.justified.regularized</i18n>
+            </div>
+        </div>
+        <div class="cell" ng-show="vm.filter.followed">
+            <div class="card horizontal-margin-small horizontal-spacing margin-bottom-md">
+                <i18n ng-show="vm.filter.followed">presences.absence.types.followed</i18n>
+            </div>
+        </div>
+        <div class="cell" ng-show="vm.filter.notFollowed">
+            <div class="card horizontal-margin-small horizontal-spacing margin-bottom-md">
+                <i18n ng-show="vm.filter.notFollowed">presences.absence.types.not.followed</i18n>
+            </div>
+        </div>
+    </div>
+
+    <div class="planned-absences-legend event-legend">
+        <ul class="vertical-spacing-twice">
+            <li class="planned-absences-legend-day-students">
+                <i class="silverware"></i>
+                <i18n>presences.absence.day.student</i18n> : [[vm.absencesMarkers.nb_day_students]]
+            </li>
+            <li ng-if="vm.absencesMarkers.nb_internals > 0">
+                <i class="hotel"></i>
+                <i18n>presences.absence.absent.interns</i18n> : [[vm.absencesMarkers.nb_internals]]
+            </li>
+        </ul>
+    </div>
+</div>
+
+<events-filter-form display="vm.lightbox.filter"
+                    filter="vm.filter"
+                    absences-only="true">
+</events-filter-form>

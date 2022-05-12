@@ -16,12 +16,13 @@
         </div>
 
         <!-- Content Table -->
-        <div ng-include="'/presences/public/template/events/table.html'"></div>
+        <div ng-include="'/presences/public/template/events/event-list/table.html'"></div>
 
     </div>
-    <infinite-scroll scrolled="vm.onScroll()" loading-mode="true"></infinite-scroll>
 
     <span class="events-content-end" data-ng-show="!vm.events.loading && (vm.filter.page !== 0) && (vm.filter.page > vm.events.pageCount)">
         -&nbsp;[[lang.translate('presences.event.end.results')]]&nbsp;-
     </span>
 </div>
+
+<infinite-scroll scrolled="vm.onScroll()" loading-mode="true"></infinite-scroll>

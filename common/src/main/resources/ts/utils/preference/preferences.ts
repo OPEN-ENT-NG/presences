@@ -7,6 +7,7 @@ export class PreferencesUtils {
         // presence module's preferences
         PRESENCE_REGISTER: 'presences.register',
         PRESENCE_EVENT_LIST_FILTER: 'presences.eventList.filters',
+        PRESENCE_PLANNED_ABSENCES_FILTER: 'presences.plannedAbsences.filters',
         PRESENCE_EVENT_LIST_CALENDAR_FILTER: 'presences.eventListCalendar.filters',
         // Massmailing module's preferences
         MASSMAILING_FILTER: 'presences.massmailing.filters'

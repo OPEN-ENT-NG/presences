@@ -19,6 +19,7 @@ public class Field {
     public static final String AUDIENCES = "audiences";
     public static final String AUDIENCEIDS = "audienceIds";
     public static final String AUDIENCE_ID = "audience_id";
+    public static final String AUDIENCE_IDS = "audience_ids";
     public static final String LIMIT = "limit";
     public static final String MANUALGROUPS = "manualGroups";
     public static final String NAME = "name";
@@ -50,6 +51,7 @@ public class Field {
     public static final String OWNERID = "ownerId";
     public static final String ACTION_ABBREVIATION = "action_abbreviation";
     public static final String EXPORT_PDF_EVENTS = "export-pdf-events";
+    public static final String EXPORT_PDF_ABSENCES = "export-pdf-absences";
     public static final String PAGE = "page";
     public static final String PAGE_COUNT = "page_count";
     public static final String LABEL = "label";
@@ -77,6 +79,8 @@ public class Field {
     public static final String DESCENDING_DATE = "descendingDate";
     public static final String DISPLAY_START_DATE = "display_start_date";
     public static final String DISPLAY_END_DATE = "display_end_date";
+    public static final String CURRENTDATE = "currentDate";
+
 
     // School
     public static final String SCHOOL_YEAR = "schoolYear";
@@ -188,16 +192,22 @@ public class Field {
     public static final String FOLLOWED = "followed";
     public static final String MASSMAILED = "massmailed";
 
-    // Absence
+    // Absence || Absence counts
     public static final String REGULARIZED = "regularized";
     public static final String REASONID = "reasonId";
     public static final String REASONIDS = "reasonIds";
+    public static final String REASON_IDS = "reason_ids";
     public static final String EVENT_RECOVERY_METHOD = "event_recovery_method";
     public static final String RECOVERY_METHOD = "recovery_method";
     public static final String EVENT_TYPE = "event_type";
     public static final String EVENT_TYPES = "event_types";
     public static final String COUNSELLOR_INPUT = "counsellor_input";
     public static final String COUNSELLOR_REGULARISATION = "counsellor_regularisation";
+    public static final String JUSTIFIED = "justified";
+    public static final String NB_ABSENTS = "nb_absents";
+    public static final String NB_DAY_STUDENTS = "nb_day_students";
+    public static final String NB_PRESENTS = "nb_presents";
+    public static final String NB_INTERNALS = "nb_internals";
 
     // Punishments
     public static final String PUNISHMENT = "punishment";
@@ -225,8 +235,11 @@ public class Field {
 
     // User
     public static final String USERID = "userId";
+    public static final String USERIDS = "userIds";
     public static final String USERS = "users";
     public static final String USER = "user";
+    public static final String HALFBOARDER = "halfBoarder";
+    public static final String INTERNAL = "internal";
 
     //Mongo
     public static final String $_ID = "$_id";
@@ -269,6 +282,7 @@ public class Field {
     public static final String GLOBAL = "Global";
     public static final String CLASS_NAME = "class_name";
     public static final String CLASSNAME = "className";
+    public static final String CLASSID = "classId";
     public static final String CLASSIDS = "classIds";
     public static final String MONTH = "month";
     public static final String YEAR = "year";

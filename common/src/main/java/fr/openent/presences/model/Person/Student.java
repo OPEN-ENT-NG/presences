@@ -1,5 +1,6 @@
 package fr.openent.presences.model.Person;
 
+import fr.openent.presences.core.constants.Field;
 import fr.openent.presences.model.Audience;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
@@ -17,15 +18,15 @@ public class Student extends Person implements Cloneable {
 
     public Student(JsonObject student) {
         super();
-        this.id = student.getString("id", null);
-        this.displayName = student.getString("displayName", null);
-        this.classId = student.getString("classId", null);
-        this.className = student.getString("classeName", null);
-        this.firstName = student.getString("firstName", null);
-        this.lastName = student.getString("lastName", null);
-        this.dayHistory = student.getJsonArray("day_history", new JsonArray());
+        this.id = student.getString(Field.ID, null);
+        this.displayName = student.getString(Field.DISPLAYNAME, null);
+        this.classId = student.getString(Field.CLASSID, null);
+        this.className = student.getString("classeName", student.getString(Field.CLASSNAME, null));
+        this.firstName = student.getString(Field.FIRSTNAME, null);
+        this.lastName = student.getString(Field.LASTNAME, null);
+        this.dayHistory = student.getJsonArray(Field.DAY_HISTORY, new JsonArray());
 
-        this.audiences = Audience.audiences(student.getJsonArray("audiences", new JsonArray()));
+        this.audiences = Audience.audiences(student.getJsonArray(Field.AUDIENCES, new JsonArray()));
     }
 
     public Student(String studentId) {
