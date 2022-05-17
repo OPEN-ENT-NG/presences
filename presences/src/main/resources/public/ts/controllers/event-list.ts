@@ -302,8 +302,8 @@ export const eventListController = ng.controller('EventListController', ['$scope
             vm.events.structureId = window.structure.id;
             vm.events.startDate = vm.filter.startDate.toDateString();
             vm.events.endDate = vm.filter.endDate.toDateString();
-            vm.events.startTime = vm.filter.timeslots.start ? vm.filter.timeslots.start.startHour : null;
-            vm.events.endTime = vm.filter.timeslots.end ? vm.filter.timeslots.end.endHour : null;
+            vm.events.startTime = (vm.filter.timeslots && vm.filter.timeslots.start) ? vm.filter.timeslots.start.startHour : null;
+            vm.events.endTime = (vm.filter.timeslots && vm.filter.timeslots.end) ? vm.filter.timeslots.end.endHour : null;
             vm.events.regularized = (vm.filter.noReasons && !vm.filter.regularized && !vm.filter.notRegularized) ||
             (vm.filter.regularized && vm.filter.notRegularized) ? null : vm.filter.regularized;
             vm.events.noReason = vm.filter.noReasons;
@@ -371,7 +371,8 @@ export const eventListController = ng.controller('EventListController', ['$scope
                 noReason: vm.events.noReason,
                 noReasonLateness: vm.events.noReasonLateness,
                 eventType: vm.events.eventType,
-                listReasonIds: (vm.filter.regularized || vm.filter.notRegularized) ? vm.filter.reasonIds.toString() : '',
+                // If neither absences nor lateness are selected, the list of reasons is empty
+                listReasonIds: (vm.filter.regularized || vm.filter.notRegularized || vm.filter.late) ? vm.filter.reasonIds.toString() : '',
                 userId: vm.events.userId,
                 classes: vm.events.classes,
                 page: vm.interactedEvent.page
@@ -793,8 +794,8 @@ export const eventListController = ng.controller('EventListController', ['$scope
             vm.events.regularized = (!(<any> vm.eventType).includes(1)) ? null : vm.filter.regularized;
             vm.events.startDate = vm.filter.startDate.toDateString();
             vm.events.endDate = vm.filter.endDate.toDateString();
-            vm.events.startTime = vm.filter.timeslots.start ? vm.filter.timeslots.start.startHour : null;
-            vm.events.endTime = vm.filter.timeslots.end ? vm.filter.timeslots.end.endHour : null;
+            vm.events.startTime = (vm.filter.timeslots && vm.filter.timeslots.start) ? vm.filter.timeslots.start.startHour : null;
+            vm.events.endTime = (vm.filter.timeslots && vm.filter.timeslots.end) ? vm.filter.timeslots.end.endHour : null;
 
             EventsUtils.setStudentToSync(vm.events, vm.filter);
             EventsUtils.setClassToSync(vm.events, vm.filter);
@@ -823,7 +824,8 @@ export const eventListController = ng.controller('EventListController', ['$scope
                 endTime: vm.events.endTime,
                 noReason: vm.events.noReason,
                 eventType: vm.events.eventType,
-                listReasonIds: (vm.filter.regularized || vm.filter.notRegularized) ? vm.filter.reasonIds.toString() : "",
+                // If neither absences nor lateness are selected, the list of reasons is empty
+                listReasonIds: (vm.filter.regularized || vm.filter.notRegularized || vm.filter.late) ? vm.filter.reasonIds.toString() : "",
                 followed: vm.events.followed,
                 notFollowed: vm.events.notFollowed,
                 userId: vm.events.userId,
