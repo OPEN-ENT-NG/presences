@@ -302,8 +302,8 @@ export const eventListController = ng.controller('EventListController', ['$scope
             vm.events.structureId = window.structure.id;
             vm.events.startDate = vm.filter.startDate.toDateString();
             vm.events.endDate = vm.filter.endDate.toDateString();
-            vm.events.startTime = vm.filter.timeslots.start ? vm.filter.timeslots.start.startHour : null;
-            vm.events.endTime = vm.filter.timeslots.end ? vm.filter.timeslots.end.endHour : null;
+            vm.events.startTime = (vm.filter.timeslots && vm.filter.timeslots.start) ? vm.filter.timeslots.start.startHour : null;
+            vm.events.endTime = (vm.filter.timeslots && vm.filter.timeslots.end) ? vm.filter.timeslots.end.endHour : null;
             vm.events.regularized = (vm.filter.noReasons && !vm.filter.regularized && !vm.filter.notRegularized) ||
             (vm.filter.regularized && vm.filter.notRegularized) ? null : vm.filter.regularized;
             vm.events.noReason = vm.filter.noReasons;
@@ -793,8 +793,8 @@ export const eventListController = ng.controller('EventListController', ['$scope
             vm.events.regularized = (!(<any> vm.eventType).includes(1)) ? null : vm.filter.regularized;
             vm.events.startDate = vm.filter.startDate.toDateString();
             vm.events.endDate = vm.filter.endDate.toDateString();
-            vm.events.startTime = vm.filter.timeslots.start ? vm.filter.timeslots.start.startHour : null;
-            vm.events.endTime = vm.filter.timeslots.end ? vm.filter.timeslots.end.endHour : null;
+            vm.events.startTime = (vm.filter.timeslots && vm.filter.timeslots.start) ? vm.filter.timeslots.start.startHour : null;
+            vm.events.endTime = (vm.filter.timeslots && vm.filter.timeslots.end) ? vm.filter.timeslots.end.endHour : null;
 
             EventsUtils.setStudentToSync(vm.events, vm.filter);
             EventsUtils.setClassToSync(vm.events, vm.filter);
