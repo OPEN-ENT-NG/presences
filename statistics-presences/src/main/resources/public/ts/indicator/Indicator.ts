@@ -210,6 +210,11 @@ export abstract class Indicator implements IIndicator {
             }
         });
 
+        //Check if we have selection lateness with no reason
+        if (this._factoryFilter.reasonsMap && this._factoryFilter.reasonsMap[0]) {
+            url += `&noLatenessReason=true`;
+        }
+
         this.getSelectedPunishmentTypes().forEach((type: number) => url += `&punishmentTypes=${type}`);
         this.getSelectedSanctionTypes().forEach((type: number) => url += `&sanctionTypes=${type}`);
         this.getSelectedReasons().forEach((reason: number) => url += `&reasons=${reason}`);
