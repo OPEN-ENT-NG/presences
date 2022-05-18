@@ -785,7 +785,7 @@ export const eventListController = ng.controller('EventListController', ['$scope
 
             // If neither absences nor lateness are selected, the list of reasons is empty
             vm.events.listReasonIds = (vm.filter.regularized || vm.filter.notRegularized
-                || (!vm.filter.allLatenessReasons && vm.filter.late)) ? vm.filter.reasonIds.toString() : "";
+                || vm.filter.late) ? vm.filter.reasonIds.toString() : "";
             vm.events.noReason = vm.filter.noReasons;
             vm.events.noReasonLateness = vm.filter.noReasonsLateness;
             vm.events.followed = vm.filter.followed;
