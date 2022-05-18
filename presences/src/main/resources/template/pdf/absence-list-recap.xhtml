@@ -49,9 +49,9 @@
                 <td>{{#i18n}}presences.csv.header.student.firstName{{/i18n}}</td>
                 <td>{{#i18n}}presences.csv.header.student.lastName{{/i18n}}</td>
                 <td>{{#i18n}}presences.csv.header.student.className{{/i18n}}</td>
-                <td style="width: 15%;">{{#i18n}}presences.presences.csv.header.date{{/i18n}}</td>
-                <td style="width: 15%;">{{#i18n}}presences.hour{{/i18n}}</td>
-                <td style="width: 15%;">{{#i18n}}presences.registry.csv.header.motive{{/i18n}}</td>
+                <td style="width: 15%;">{{#i18n}}presences.registry.csv.header.start.date{{/i18n}}</td>
+                <td style="width: 15%;">{{#i18n}}presences.registry.csv.header.end.date{{/i18n}}</td>
+                <td>{{#i18n}}presences.registry.csv.header.motive{{/i18n}}</td>
                 <td>{{#i18n}}presences.widgets.absences.regularized{{/i18n}}</td>
             </tr>
             </thead>
@@ -64,9 +64,9 @@
             <tr>
                 <td>{{student.firstName}}</td>
                 <td>{{student.lastName}}</td>
-                <td>{{student.classeName}}</td>
-                <td style="width: 15%;">{{date}}</td>
-                <td style="width: 15%;">{{display_start_date}} - {{display_end_date}}</td>
+                <td>{{student.className}}</td>
+                <td style="width: 15%;">{{startAt}}</td>
+                <td style="width: 15%;">{{endAt}}</td>
                 <td>{{reason}}</td>
                 <td>{{regularized}}</td>
             </tr>
