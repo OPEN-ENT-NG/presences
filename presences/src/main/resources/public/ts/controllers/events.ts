@@ -85,12 +85,10 @@ class Controller implements ng.IController, IViewModel {
         });
 
         this.$scope.$on(EVENTS_DATE.ABSENCES_REQUEST, () => {
-            console.log ("onrequest");
             this.$scope.$broadcast(EVENTS_DATE.ABSENCES_SEND, this.absenceListDates);
         });
 
         this.$scope.$on(EVENTS_DATE.EVENT_LIST_REQUEST, () => {
-            console.log ("onrequest");
             this.$scope.$broadcast(EVENTS_DATE.EVENT_LIST_SEND, this.eventListDates);
         });
     }

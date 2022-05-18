@@ -165,19 +165,13 @@
                 <i18n>presences.absence.reason.absence</i18n>
             </h4>
             <div class="chips cell overflow-y">
-                <label class="chip" ng-class="{ selected: vm.formFilter.allAbsenceReasons &&
-                               (!vm.formFilter.noReasons ||
-                               (vm.formFilter.noReasons &&
-                               (vm.formFilter.notRegularized || vm.formFilter.regularized)))}"
+                <label class="chip" ng-class="{ selected: vm.formFilter.allAbsenceReasons }"
                        data-ng-click="vm.switchAllAbsenceReasons()">
                     <i18n>presences.all.none</i18n>
                 </label>
                 <label class="chip"
                        ng-repeat="reason in vm.getAbsencesReasons() track by $index"
-                       ng-class="{ selected: reason.isSelected &&
-                               (!vm.formFilter.noReasons ||
-                               (vm.formFilter.noReasons &&
-                               (vm.formFilter.notRegularized || vm.formFilter.regularized)))}"
+                       ng-class="{ selected: reason.isSelected }"
                        ng-click="vm.switchReason(reason)">
                             <span ng-show="[[reason.id]] !== 0 && !reason.hidden"
                                   ng-disabled="vm.formFilter.noReasons &&
