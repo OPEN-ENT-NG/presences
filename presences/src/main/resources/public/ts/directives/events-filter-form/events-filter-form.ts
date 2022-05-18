@@ -24,6 +24,8 @@ interface IViewModel {
 
     initData(): Promise<void>;
 
+    resetFilter(): void;
+
     loadReasons(): Promise<void>;
     getStructureTimeSlots(): Promise<void>;
     submitForm(): Promise<void>;
@@ -125,8 +127,15 @@ class Controller implements ng.IController, IViewModel {
         let formFilterPref: EventsFormFilter = this.absencesOnly ?
             await Me.preference(PresencesPreferenceUtils.PREFERENCE_KEYS.PRESENCE_PLANNED_ABSENCES_FILTER) :
             await Me.preference(PresencesPreferenceUtils.PREFERENCE_KEYS.PRESENCE_EVENT_LIST_FILTER);
-        formFilterPref = formFilterPref ? formFilterPref[window.structure.id] : null;
-        this.formFilter = formFilterPref ? formFilterPref : JSON.parse(JSON.stringify(this.filter));
+
+        // Filter is reset if user is loading with old preferences
+        if (formFilterPref[window.structure.id].regularized !== undefined) {
+            formFilterPref = formFilterPref ? formFilterPref[window.structure.id] : null;
+            this.formFilter = formFilterPref ? formFilterPref : JSON.parse(JSON.stringify(this.filter));
+        } else {
+            this.resetFilter();
+        }
+
         this.studentsSearch = new StudentsSearch(window.structure.id, this.searchService);
         this.groupsSearch = new GroupsSearch(window.structure.id, this.searchService, this.groupService);
         await Promise.all([this.loadReasons(), this.getStructureTimeSlots()]);
@@ -138,6 +147,31 @@ class Controller implements ng.IController, IViewModel {
                     slot._id === this.formFilter.timeslots.end._id)
             };
         }
+    }
+
+    resetFilter(): void {
+        this.formFilter = {
+            timeslots: {
+                start: {name: '', startHour: '', endHour: '', id: ''},
+                end: {name: '', startHour: '', endHour: '', id: ''}
+            },
+            students: [],
+            classes: [],
+            absences: true,
+            departure: true,
+            late: true,
+            regularized: true,
+            allAbsenceReasons: true,
+            allLatenessReasons: true,
+            noReasons: true,
+            noReasonsLateness: true,
+            reasonIds: [],
+            notRegularized: true,
+            followed: true,
+            notFollowed: true,
+            interns: false,
+            halfBoarders: false
+        };
     }
 
     async loadReasons(): Promise<void> {
