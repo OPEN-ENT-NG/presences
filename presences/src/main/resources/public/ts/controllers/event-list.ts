@@ -259,7 +259,7 @@ export const eventListController = ng.controller('EventListController', ['$scope
         const loadFormFilter = async (): Promise<void> => {
             let formFilters: any = await Me.preference(PresencesPreferenceUtils.PREFERENCE_KEYS.PRESENCE_EVENT_LIST_FILTER);
             formFilters = formFilters ? formFilters[window.structure.id] : null;
-            if (formFilters) {
+            if (formFilters && formFilters.regularized !== undefined) {
                 const {startDate, endDate} = vm.filter;
                 vm.filter = {...vm.filter, ...formFilters, startDate, endDate};
                 vm.eventReasonsType.forEach((r: Reason) => {

@@ -24,7 +24,10 @@ interface IViewModel {
 
     initData(): Promise<void>;
 
+    resetFilter(): void;
+
     loadReasons(): Promise<void>;
+    updateReasonsFromIds(): void;
     getStructureTimeSlots(): Promise<void>;
     submitForm(): Promise<void>;
 
@@ -38,7 +41,7 @@ interface IViewModel {
     switchReason(reason: Reason): void;
     switchAllAbsenceReasons(isAllAbsenceReason?: boolean): void;
 
-    switchAllLatenessReasons(): void;
+    switchAllLatenessReasons(isAllLatenessReason?: boolean): void;
     adaptAllReasonsFilters(isSelected: boolean): void;
     getAbsencesReasons(): Array<Reason>;
     getLatenessReasons(): Array<Reason>;
@@ -123,14 +126,27 @@ class Controller implements ng.IController, IViewModel {
 
     async initData(): Promise<void> {
         this.structureTimeSlot = {} as IStructureSlot;
+
         let formFilterPref: EventsFormFilter = this.absencesOnly ?
             await Me.preference(PresencesPreferenceUtils.PREFERENCE_KEYS.PRESENCE_PLANNED_ABSENCES_FILTER) :
             await Me.preference(PresencesPreferenceUtils.PREFERENCE_KEYS.PRESENCE_EVENT_LIST_FILTER);
-        formFilterPref = formFilterPref ? formFilterPref[window.structure.id] : null;
-        this.formFilter = formFilterPref ? formFilterPref : JSON.parse(JSON.stringify(this.filter));
+        this.formFilter = this.filter ? JSON.parse(JSON.stringify(this.filter)) : {};
+
+        await Promise.all([this.loadReasons(), this.getStructureTimeSlots()]);
+
+        // Filter is reset if user is loading with old preferences
+        if (!this.absencesOnly && formFilterPref[window.structure.id] !== undefined
+            && formFilterPref[window.structure.id].regularized !== undefined) {
+            formFilterPref = formFilterPref ? formFilterPref[window.structure.id] : null;
+            this.formFilter = formFilterPref ? formFilterPref : JSON.parse(JSON.stringify(this.filter));
+            this.updateReasonsFromIds();
+        } else {
+            this.resetFilter();
+        }
+
         this.studentsSearch = new StudentsSearch(window.structure.id, this.searchService);
         this.groupsSearch = new GroupsSearch(window.structure.id, this.searchService, this.groupService);
-        await Promise.all([this.loadReasons(), this.getStructureTimeSlots()]);
+
         if (this.formFilter.timeslots && this.formFilter.timeslots.start && this.formFilter.timeslots.end) {
             this.formFilter.timeslots = {
                 start: this.structureTimeSlot.slots.find((slot: ITimeSlot) =>
@@ -141,10 +157,42 @@ class Controller implements ng.IController, IViewModel {
         }
     }
 
+    resetFilter(): void {
+        this.formFilter = {
+            timeslots: {
+                start: {name: '', startHour: '', endHour: '', id: ''},
+                end: {name: '', startHour: '', endHour: '', id: ''}
+            },
+            students: [],
+            classes: [],
+            absences: true,
+            departure: true,
+            late: true,
+            regularized: true,
+            allAbsenceReasons: true,
+            allLatenessReasons: true,
+            noReasons: true,
+            noReasonsLateness: true,
+            reasonIds: [],
+            notRegularized: true,
+            followed: true,
+            notFollowed: true,
+            interns: false,
+            halfBoarders: false
+        };
+
+        this.switchAllAbsenceReasons(true);
+        this.switchAllLatenessReasons(true);
+    }
+
     async loadReasons(): Promise<void> {
         this.reasons = await reasonService.getReasons(window.structure.id, REASON_TYPE_ID.ALL);
         this.reasons = [this.noReason].concat(this.reasons);
-        if (this.reasons) {
+        this.updateReasonsFromIds();
+    }
+
+    updateReasonsFromIds(): void {
+        if (this.reasons && this.formFilter.reasonIds !== undefined) {
             this.reasons.forEach((reason: Reason) => {
                 if (this.formFilter.reasonIds.find((rId: number) => rId === reason.id) !== undefined) {
                     reason.isSelected = true;
@@ -165,7 +213,7 @@ class Controller implements ng.IController, IViewModel {
     async submitForm(): Promise<void> {
         this.display = false;
         let selectedReasons: Array<Reason> = this.reasons.filter((r: Reason): boolean => r.isSelected);
-        let filterResult: EventsFilter = (<EventsFilter>this.formFilter);
+        let filterResult: EventsFilter = (<EventsFilter> this.formFilter);
 
         filterResult.reasonIds = (
             ((this.absencesOnly || this.formFilter.absences) && (this.formFilter.regularized || this.formFilter.notRegularized)) || this.formFilter.late
@@ -257,8 +305,8 @@ class Controller implements ng.IController, IViewModel {
         this.getAbsencesReasons().forEach((reason: Reason) => reason.isSelected = isSelected);
     }
 
-    switchAllLatenessReasons(): void {
-        this.formFilter.allLatenessReasons = !this.formFilter.allLatenessReasons;
+    switchAllLatenessReasons(isAllLatenessReason?: boolean): void {
+        this.formFilter.allLatenessReasons = isAllLatenessReason != null ? isAllLatenessReason : !this.formFilter.allLatenessReasons;
         this.formFilter.noReasonsLateness = this.formFilter.allLatenessReasons;
         this.getLatenessReasons()
             .forEach((reason: Reason) => reason.isSelected = this.formFilter.allLatenessReasons);
@@ -281,7 +329,7 @@ class Controller implements ng.IController, IViewModel {
 
     adaptReason(): void {
         if (this.formFilter.absences) {
-            this.switchAllAbsenceReasons(true)
+            this.switchAllAbsenceReasons(true);
             this.formFilter.notRegularized = true;
             this.formFilter.regularized = true;
             this.formFilter.followed = true;
