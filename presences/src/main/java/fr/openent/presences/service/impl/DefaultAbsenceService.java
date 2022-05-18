@@ -120,7 +120,7 @@ public class DefaultAbsenceService extends DBService implements AbsenceService {
                     return userService.getStudents(structureId, filteredStudentIds, halfBoarder, internal);
                 })
                 .compose(students -> getWithPaginate(structureId, teacherId, students.getList(), startAt, endAt, regularized,
-                        noReason, followed, reasonIds, page))
+                        noReason, followed, halfBoarder, internal, reasonIds, page))
                 .onFailure(err -> {
                     String message = String.format("[Presences@%s::getWithPaginate] Failed to get absences ",
                             this.getClass().getSimpleName());
@@ -156,7 +156,8 @@ public class DefaultAbsenceService extends DBService implements AbsenceService {
     @SuppressWarnings("unchecked")
     private Future<JsonObject> getWithPaginate(String structureId, String teacherId, List<JsonObject> students,
                                                String startAt, String endAt, Boolean regularized, Boolean noReason,
-                                               Boolean followed, List<Integer> reasonIds, Integer page) {
+                                               Boolean followed, Boolean halfBoarder, Boolean internal,
+                                               List<Integer> reasonIds, Integer page) {
         Promise<JsonObject> promise = Promise.promise();
 
         List<String> filterStudentIds = students.stream()
@@ -164,7 +165,8 @@ public class DefaultAbsenceService extends DBService implements AbsenceService {
                 .filter(Objects::nonNull)
                 .collect(Collectors.toList());
 
-        boolean canRetrieveAbsences = teacherId == null || !students.isEmpty();
+        boolean canRetrieveAbsences = (teacherId == null && !Boolean.TRUE.equals(halfBoarder) && !Boolean.TRUE.equals(internal))
+                || !students.isEmpty();
 
         Future<JsonArray> absencesFuture = !canRetrieveAbsences ? Future.succeededFuture(new JsonArray()) :
                 retrieve(structureId, filterStudentIds, startAt, endAt, regularized,

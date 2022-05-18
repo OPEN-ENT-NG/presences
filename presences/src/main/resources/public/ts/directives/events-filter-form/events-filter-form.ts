@@ -36,9 +36,10 @@ interface IViewModel {
     switchNotFollowedFilter(): void;
 
     switchReason(reason: Reason): void;
-    switchAllAbsenceReasons(): void;
+    switchAllAbsenceReasons(isAllAbsenceReason?: boolean): void;
 
     switchAllLatenessReasons(): void;
+    adaptAllReasonsFilters(isSelected: boolean): void;
     getAbsencesReasons(): Array<Reason>;
     getLatenessReasons(): Array<Reason>;
 
@@ -164,9 +165,11 @@ class Controller implements ng.IController, IViewModel {
     async submitForm(): Promise<void> {
         this.display = false;
         let selectedReasons: Array<Reason> = this.reasons.filter((r: Reason): boolean => r.isSelected);
-        let filterResult: EventsFilter = (<EventsFilter> this.formFilter);
-        filterResult.reasonIds = ((this.formFilter.absences && (this.formFilter.regularized || this.formFilter.notRegularized))
-            || this.formFilter.late) ? selectedReasons.map((r: Reason): number => r.id) : [];
+        let filterResult: EventsFilter = (<EventsFilter>this.formFilter);
+
+        filterResult.reasonIds = (
+            ((this.absencesOnly || this.formFilter.absences) && (this.formFilter.regularized || this.formFilter.notRegularized)) || this.formFilter.late
+        ) ? selectedReasons.map((r: Reason): number => r.id) : [];
         filterResult.regularized = this.formFilter.regularized;
         filterResult.notRegularized = this.formFilter.notRegularized;
         filterResult.followed = this.formFilter.followed;
@@ -184,11 +187,9 @@ class Controller implements ng.IController, IViewModel {
     switchAbsencesFilter(): void {
         this.formFilter.absences = !this.formFilter.absences;
         if (!this.formFilter.absences) {
-            this.formFilter.noReasons = false;
+            this.switchAllAbsenceReasons(false);
             this.formFilter.notRegularized = false;
             this.formFilter.regularized = false;
-            this.formFilter.followed = false;
-            this.formFilter.notFollowed = false;
         }
         this.adaptReason();
     }
@@ -208,10 +209,14 @@ class Controller implements ng.IController, IViewModel {
 
     switchNotRegularizedFilter(): void {
         this.formFilter.notRegularized = !this.formFilter.notRegularized;
+        if (!this.formFilter.notRegularized && !this.formFilter.regularized) this.adaptAllReasonsFilters(false);
+        else if (this.formFilter.notRegularized && !this.formFilter.regularized) this.adaptAllReasonsFilters(true);
     }
 
     switchRegularizedFilter(): void {
         this.formFilter.regularized = !this.formFilter.regularized;
+        if (!this.formFilter.notRegularized && !this.formFilter.regularized) this.adaptAllReasonsFilters(false);
+        else if (!this.formFilter.notRegularized && this.formFilter.regularized) this.adaptAllReasonsFilters(true);
     }
 
     switchFollowedFilter(): void {
@@ -229,17 +234,27 @@ class Controller implements ng.IController, IViewModel {
     }
 
     switchReason(reason: Reason): void {
-        reason.isSelected = !reason.isSelected;
-        if (this.formFilter.late && reason.id === this.noReason.id && reason.reason_type_id === REASON_TYPE_ID.LATENESS) {
+        if (this.formFilter.notRegularized || this.formFilter.regularized || reason.reason_type_id === REASON_TYPE_ID.LATENESS)
+            reason.isSelected = !reason.isSelected;
+        if (this.formFilter.late && reason.id === this.noReason.id && reason.reason_type_id === REASON_TYPE_ID.LATENESS)
             this.formFilter.noReasonsLateness = reason.isSelected;
-        }
     }
 
-    switchAllAbsenceReasons(): void {
-        this.formFilter.allAbsenceReasons = !this.formFilter.allAbsenceReasons;
+    switchAllAbsenceReasons(isAllAbsenceReason?: boolean): void {
+        this.formFilter.allAbsenceReasons = isAllAbsenceReason != null ? isAllAbsenceReason : !this.formFilter.allAbsenceReasons;
         this.formFilter.noReasons = this.formFilter.allAbsenceReasons;
-        this.reasons.filter((reason: Reason) => reason.reason_type_id === REASON_TYPE_ID.ABSENCE)
+        this.getAbsencesReasons()
             .forEach((reason: Reason) => reason.isSelected = this.formFilter.allAbsenceReasons);
+        if (this.formFilter.allAbsenceReasons && !this.formFilter.notRegularized && !this.formFilter.regularized) {
+            this.formFilter.notRegularized = true;
+            this.formFilter.regularized = true;
+        }
+        if (this.absencesOnly) this.adaptEvent();
+    }
+
+    adaptAllReasonsFilters(isSelected: boolean): void {
+        this.formFilter.allAbsenceReasons = isSelected;
+        this.getAbsencesReasons().forEach((reason: Reason) => reason.isSelected = isSelected);
     }
 
     switchAllLatenessReasons(): void {
@@ -266,7 +281,7 @@ class Controller implements ng.IController, IViewModel {
 
     adaptReason(): void {
         if (this.formFilter.absences) {
-            this.formFilter.noReasons = true;
+            this.switchAllAbsenceReasons(true)
             this.formFilter.notRegularized = true;
             this.formFilter.regularized = true;
             this.formFilter.followed = true;

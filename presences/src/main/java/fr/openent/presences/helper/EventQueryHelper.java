@@ -183,19 +183,19 @@ public class EventQueryHelper {
         query += "(type_id != 1 AND type_id != 2)";
         if (Boolean.TRUE.equals(noAbsenceReason || (reasonIds != null && !reasonIds.isEmpty())) || regularized != null) {
             query += " OR (type_id = 1 ";
+
+            String regularizedFilter = regularized != null ? "counsellor_regularisation = " + regularized : "";
             if (reasonIds != null && !reasonIds.isEmpty()) {
-                query += " AND (reason_id IN " + Sql.listPrepared(reasonIds);
+                query += String.format(" AND (reason_id IN %s %s",
+                        Sql.listPrepared(reasonIds),
+                        (regularized != null ? "AND " + regularizedFilter + "))" : "))"));
                 params.addAll(new JsonArray(reasonIds));
                 if (Boolean.TRUE.equals(noAbsenceReason)) {
                     query += " OR reason_id IS NULL";
                 }
-                query += ")";
-            } else if (Boolean.TRUE.equals(noAbsenceReason)) {
-                query += " AND reason_id IS NULL";
-            }
-
-            query += (regularized != null ? " AND counsellor_regularisation = " + regularized : "");
-            query += ")";
+            } else if (Boolean.TRUE.equals(noAbsenceReason)) query += String.format(" AND (reason_id IS NULL %s",
+                    (regularized != null ? "OR " + regularizedFilter + "))" : "))"));
+            else query += " AND " + regularizedFilter + ")";
         }
 
         if (Boolean.TRUE.equals(noLatenessReason) || (reasonIds != null && !reasonIds.isEmpty())) {
