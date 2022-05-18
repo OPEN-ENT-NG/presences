@@ -244,6 +244,7 @@ class Controller implements ng.IController, IViewModel {
 
     switchAllLatenessReasons(): void {
         this.formFilter.allLatenessReasons = !this.formFilter.allLatenessReasons;
+        this.formFilter.noReasonsLateness = this.formFilter.allLatenessReasons;
         this.getLatenessReasons()
             .forEach((reason: Reason) => reason.isSelected = this.formFilter.allLatenessReasons);
     }
