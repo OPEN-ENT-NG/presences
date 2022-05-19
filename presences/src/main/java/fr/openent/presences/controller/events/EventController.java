@@ -178,6 +178,7 @@ public class EventController extends ControllerHelper {
             String teacherId = (WorkflowHelper.hasRight(userInfos, WorkflowActions.READ_EVENT_RESTRICTED.toString())
                     && "Teacher".equals(userInfos.getType())) ?
                     userInfos.getUserId() : null;
+            Boolean canSeeAllStudent = teacherId != null;
 
             this.groupService.getGroupsAndClassesFromTeacherId(teacherId, structureId)
                     .onFailure(fail -> renderError(request, JsonObject.mapFrom(fail.getMessage())))
@@ -204,7 +205,7 @@ public class EventController extends ControllerHelper {
                                 } else if (ExportType.PDF.type().equals(type)) {
                                     String domain = Renders.getHost(request);
                                     String local = I18n.acceptLanguage(request);
-                                    exportEventService.getPdfData(domain, local, structureId, startDate, endDate, eventType, reasonIds,
+                                    exportEventService.getPdfData(canSeeAllStudent, domain, local, structureId, startDate, endDate, eventType, reasonIds,
                                                     noReason, userId, userIdFromClasses, regularized)
                                             .compose(this::processPdfEvent)
                                             .onSuccess(res -> request.response()

@@ -1289,12 +1289,12 @@ public class DefaultEventService extends DBService implements EventService {
     }
 
     @Override
-    public Future<JsonArray> getEventsByStudent(Integer eventType, List<String> students, String structure, Boolean justified,
+    public Future<JsonArray> getEventsByStudent(Boolean canSeeAllStudent, Integer eventType, List<String> students, String structure, Boolean justified,
                                                 List<Integer> reasonsId, Boolean massmailed, Boolean compliance, String startDate, String endDate,
                                                 boolean noReasons, String recoveryMethodUsed, String limit, String offset,
                                                 Boolean regularized) {
         Promise<JsonArray> promise = Promise.promise();
-        this.getEventsByStudent(eventType, students, structure, justified, reasonsId, massmailed, compliance, startDate, endDate, noReasons,
+        this.getEventsByStudent(canSeeAllStudent, eventType, students, structure, justified, reasonsId, massmailed, compliance, startDate, endDate, noReasons,
                 recoveryMethodUsed, limit, offset, regularized, event -> {
                     if (event.isLeft()) {
                         String message = String.format("[Presences@%s::getEventsByStudent] an error has occurred while fetching " +
@@ -1309,7 +1309,7 @@ public class DefaultEventService extends DBService implements EventService {
     }
 
     @Override
-    public void getEventsByStudent(Integer eventType, List<String> students, String structure, Boolean justified,
+    public void getEventsByStudent(Boolean canSeeAllStudent, Integer eventType, List<String> students, String structure, Boolean justified,
                                    List<Integer> reasonsId, Boolean massmailed, Boolean compliance, String startDate, String endDate,
                                    boolean noReasons, String recoveryMethodUsed, String limit, String offset,
                                    Boolean regularized, Handler<Either<String, JsonArray>> handler) {
@@ -1385,7 +1385,10 @@ public class DefaultEventService extends DBService implements EventService {
                                 if (res.isLeft()) {
                                     queryHandler.handle(new Either.Left<>(res.left().getValue()));
                                 } else {
-                                    queryHandler.handle(new Either.Right<>((students == null || students.isEmpty()) ?
+                                    //If we do not have permission to see the information of all the students
+                                    // and the list of our students is empty
+                                    // then we do not return any data
+                                    queryHandler.handle(new Either.Right<>(!Boolean.TRUE.equals(canSeeAllStudent) && (students == null || students.isEmpty()) ?
                                             new JsonArray() : res.right().getValue()));
                                 }
                             }));
@@ -1410,7 +1413,7 @@ public class DefaultEventService extends DBService implements EventService {
     public void getEventsByStudent(Integer eventType, List<String> students, String structure, Boolean justified, List<Integer> reasonsId,
                                    Boolean massmailed, Boolean compliance, String startDate, String endDate, boolean noReasons,
                                    String recoveryMethodUsed, Boolean regularized, Handler<Either<String, JsonArray>> handler) {
-        this.getEventsByStudent(eventType, students, structure, justified, reasonsId, massmailed, compliance, startDate,
+        this.getEventsByStudent(null, eventType, students, structure, justified, reasonsId, massmailed, compliance, startDate,
                 endDate, noReasons, recoveryMethodUsed, null, null, regularized, handler);
     }
 
@@ -1419,7 +1422,7 @@ public class DefaultEventService extends DBService implements EventService {
                                    List<Integer> reasonsId, Boolean massmailed, String startDate, String endDate,
                                    boolean noReasons, String recoveryMethodUsed, String limit, String offset,
                                    Boolean regularized, Handler<Either<String, JsonArray>> handler) {
-        this.getEventsByStudent(eventType, students, structure, justified, reasonsId, massmailed, null, startDate,
+        this.getEventsByStudent(null, eventType, students, structure, justified, reasonsId, massmailed, null, startDate,
                 endDate, noReasons, recoveryMethodUsed, null, null, regularized, handler);
     }
 
