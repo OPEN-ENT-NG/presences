@@ -1,6 +1,18 @@
 import {_, angular, idiom as lang, Me, model, moment, ng} from 'entcore';
-import {Action, ActionBody, Event, EventListCalendarFilter, EventResponse, Events, EventType,
-    IEvent, IEventFormBody, IStructureSlot, Student, TimeSlotHourPeriod} from '../models';
+import {
+    Action,
+    ActionBody,
+    Event,
+    EventListCalendarFilter,
+    EventResponse,
+    Events,
+    EventType,
+    IEvent,
+    IEventFormBody,
+    IStructureSlot,
+    Student,
+    TimeSlotHourPeriod
+} from '../models';
 import {DateUtils, PreferencesUtils, PresencesPreferenceUtils} from '@common/utils';
 import {Group, GroupService} from '@common/services/GroupService';
 import {actionService, EventRequest, EventService, ReasonService, ViescolaireService} from '../services';
@@ -8,7 +20,8 @@ import {EventsFilter, EventsFormFilter, EventsUtils} from '../utilities';
 import {Reason} from '@presences/models/Reason';
 import {INFINITE_SCROLL_EVENTER} from '@common/core/enum/infinite-scroll-eventer';
 import {
-    ABSENCE_FORM_EVENTS, EVENTS_DATE,
+    ABSENCE_FORM_EVENTS,
+    EVENTS_DATE,
     EVENTS_FORM,
     EVENTS_SEARCH,
     LATENESS_FORM_EVENTS
@@ -165,6 +178,8 @@ interface ViewModel {
     /* Export*/
     exportType: typeof EXPORT_TYPE;
     export(exportType: ExportType): void;
+
+    createEventRequest(page: any): EventRequest
 }
 
 export const eventListController = ng.controller('EventListController', ['$scope', '$route', '$location', '$timeout',
@@ -362,25 +377,7 @@ export const eventListController = ng.controller('EventListController', ['$scope
         };
 
         const refreshGetEventWhileAction = async (): Promise<void> => {
-            let filter: EventRequest = {
-                structureId: vm.events.structureId,
-                startDate: vm.events.startDate,
-                endDate: vm.events.endDate,
-                startTime: vm.events.startTime,
-                endTime: vm.events.endTime,
-                noReason: vm.events.noReason,
-                noReasonLateness: vm.events.noReasonLateness,
-                eventType: vm.events.eventType,
-                // If neither absences nor lateness are selected, the list of reasons is empty
-                listReasonIds: (vm.filter.regularized || vm.filter.notRegularized || vm.filter.late) ? vm.filter.reasonIds.toString() : '',
-                userId: vm.events.userId,
-                classes: vm.events.classes,
-                page: vm.interactedEvent.page
-            };
-            filter.regularized = (!(<any> vm.eventType).includes(1)) ? null : vm.filter.regularized;
-            filter.followed = (!(<any> vm.eventType).includes(1)) ? null : vm.filter.followed;
-            filter.notFollowed = (!(<any> vm.eventType).includes(1)) ? null : vm.filter.notFollowed;
-            let events = await eventService.get(filter);
+            let events = await eventService.get(vm.createEventRequest(vm.interactedEvent.page));
 
             vm.events.pageCount = events.pageCount;
             vm.events.events = events.events;
@@ -816,25 +813,9 @@ export const eventListController = ng.controller('EventListController', ['$scope
 
         vm.onScroll = (): void => {
             vm.filter.page++;
-            let filter: EventRequest = {
-                structureId: vm.events.structureId,
-                startDate: vm.events.startDate,
-                endDate: vm.events.endDate,
-                startTime: vm.events.startTime,
-                endTime: vm.events.endTime,
-                noReason: vm.events.noReason,
-                eventType: vm.events.eventType,
-                // If neither absences nor lateness are selected, the list of reasons is empty
-                listReasonIds: (vm.filter.regularized || vm.filter.notRegularized || vm.filter.late) ? vm.filter.reasonIds.toString() : "",
-                followed: vm.events.followed,
-                notFollowed: vm.events.notFollowed,
-                userId: vm.events.userId,
-                classes: vm.events.classes,
-                page: vm.filter.page
-            };
-            filter.regularized = (!(<any> vm.eventType).includes(1)) ? null : vm.filter.regularized;
+
             eventService
-                .get(filter)
+                .get(vm.createEventRequest(vm.filter.page))
                 .then((events: { pageCount: number, events: Array<EventResponse>, all: Array<EventResponse> }) => {
                     if (events.all.length !== 0) {
                         vm.events.pageCount = events.pageCount;
@@ -931,6 +912,27 @@ export const eventListController = ng.controller('EventListController', ['$scope
             vm.lightbox.action = false;
             vm.createAction();
         };
+
+        vm.createEventRequest = (page: any): EventRequest => {
+            return {
+                structureId: vm.events.structureId,
+                startDate: vm.events.startDate,
+                endDate: vm.events.endDate,
+                startTime: vm.events.startTime,
+                endTime: vm.events.endTime,
+                noReason: vm.events.noReason,
+                noReasonLateness: vm.events.noReasonLateness,
+                eventType: vm.events.eventType,
+                // If neither absences nor lateness are selected, the list of reasons is empty
+                listReasonIds: (vm.filter.regularized || vm.filter.notRegularized || vm.filter.late) ? vm.filter.reasonIds.toString() : '',
+                userId: vm.events.userId,
+                classes: vm.events.classes,
+                regularized: (!(<any> vm.eventType).includes(1)) ? null : vm.filter.regularized,
+                followed: (!(<any> vm.eventType).includes(1)) ? null : vm.filter.followed,
+                notFollowed: (!(<any> vm.eventType).includes(1)) ? null : vm.filter.notFollowed,
+                page: page
+            };
+        }
 
         /* ----------------------------
                 Handler events
