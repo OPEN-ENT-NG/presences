@@ -125,7 +125,7 @@ public class DefaultExportEventService extends DBService implements ExportEventS
 
     @Override
     @SuppressWarnings("unchecked")
-    public Future<JsonObject> getPdfData(String domain, String local, String structureId, String startDate, String endDate,
+    public Future<JsonObject> getPdfData(Boolean canSeeAllStudent, String domain, String local, String structureId, String startDate, String endDate,
                                          List<String> eventType, List<String> listReasonIds, Boolean noReason, List<String> userId,
                                          JsonArray userIdFromClasses, Boolean regularized) {
         Promise<JsonObject> promise = Promise.promise();
@@ -151,7 +151,7 @@ public class DefaultExportEventService extends DBService implements ExportEventS
                             .setEndOfHalfDayTimeSlot(slotsSettingsFuture.result().getString(Field.END_OF_HALF_DAY));
                     List<Reason> reasons = ReasonHelper.getReasonListFromJsonArray(reasonFuture.result(), Reason.MANDATORY_ATTRIBUTE);
 
-                    processEvents(settings, structureId, startDate, endDate, eventType, listReasonIds, noReason, studentIdList)
+                    processEvents(canSeeAllStudent, settings, structureId, startDate, endDate, eventType, listReasonIds, noReason, studentIdList)
                             .compose(eventByStudent -> formatEventsDataPdf(startDate, endDate, domain, local, settings, reasons, eventByStudent, eventType))
                             .onSuccess(promise::complete)
                             .onFailure(err -> {
@@ -185,7 +185,7 @@ public class DefaultExportEventService extends DBService implements ExportEventS
      * @return {@link Future<List>} of {@link EventByStudent}
      */
     @SuppressWarnings("unchecked")
-    private Future<List<EventByStudent>> processEvents(Settings setting, String structureId, String startDate, String endDate,
+    private Future<List<EventByStudent>> processEvents(Boolean canSeeAllStudent, Settings setting, String structureId, String startDate, String endDate,
                                                        List<String> eventType, List<String> listReasonIds, Boolean noReason,
                                                        JsonArray userIdFromClasses) {
         Promise<List<EventByStudent>> promise = Promise.promise();
@@ -198,7 +198,7 @@ public class DefaultExportEventService extends DBService implements ExportEventS
 
         for (Integer type : eventsTypes) {
             current = current.compose(v -> {
-                Future<JsonArray> next = this.eventService.getEventsByStudent(type, userIdFromClasses.getList(), structureId,
+                Future<JsonArray> next = this.eventService.getEventsByStudent(canSeeAllStudent, type, userIdFromClasses.getList(), structureId,
                         null, reasonIds, null, null, startDate, endDate, noReason,
                         setting.recoveryMethod(), null, null, null);
                 eventsTypeResult.add(next);
