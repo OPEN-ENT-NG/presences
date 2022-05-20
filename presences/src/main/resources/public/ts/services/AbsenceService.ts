@@ -24,16 +24,9 @@ async function retrieve(structure: string, students: Array<string>, groups: Arra
                         justified: boolean, regularized: boolean, reasons: Array<number>, noReason? : boolean, followed?: boolean, halfBoarder?: boolean,
                         internal?: boolean, page?: number): Promise<any> {
     try {
-        let url: string = `/presences/absences?structure=${structure}&start=${start}&end=${end}`;
-        if (justified !== null) url += `&justified=${justified}`;
-        if (regularized !== null) url += `&regularized=${regularized}`;
-        if (students && students.length > 0) students.forEach(student => url += `&student=${student}`);
-        if (groups && groups.length > 0) groups.forEach(group => url += `&classes=${group}`);
-        if (reasons && reasons.length > 0) reasons.forEach(reason => url += `&reason=${reason}`);
-        if (noReason !== null) url += `&noReason=${noReason}`;
-        if (followed !== null) url += `&followed=${followed}`;
-        if (halfBoarder) url += `&halfBoarder=true`;
-        if (internal) url += `&internal=true`;
+        let url: string = `/presences/absences?structure=${structure}&`;
+        url += getUriFilterAbsences(students, groups, start, end, justified, regularized, reasons, noReason,
+            followed, halfBoarder, internal);
         if (page || page === 0) url += `&page=${page}`;
 
         const {data}: AxiosResponse = await http.get(url);
@@ -41,6 +34,23 @@ async function retrieve(structure: string, students: Array<string>, groups: Arra
     } catch (err) {
         throw err;
     }
+}
+
+function getUriFilterAbsences(students: Array<string>, groups: Array<string>, start: string, end: string,
+                              justified: boolean, regularized: boolean, reasons: Array<number>, noReason? : boolean, followed?: boolean, halfBoarder?: boolean,
+                              internal?: boolean): String {
+    let uri: string = `start=${start}&end=${end}`;
+    if (justified !== null) uri += `&justified=${justified}`;
+    if (regularized !== null) uri += `&regularized=${regularized}`;
+    if (students && students.length > 0) students.forEach(student => uri += `&student=${student}`);
+    if (groups && groups.length > 0) groups.forEach(group => uri += `&classes=${group}`);
+    if (reasons && reasons.length > 0) reasons.forEach(reason => uri += `&reason=${reason}`);
+    if (noReason !== null) uri += `&noReason=${noReason}`;
+    if (followed !== null) uri += `&followed=${followed}`;
+    if (halfBoarder) uri += `&halfBoarder=true`;
+    if (internal) uri += `&internal=true`;
+
+    return uri;
 }
 
 export const absenceService: AbsenceService = {
@@ -94,21 +104,8 @@ export const absenceService: AbsenceService = {
                     break;
             }
 
-            url += `?start=${startDate}&end=${endDate}`;
-            url += (regularized != null) ? `&regularized=${regularized}` : '';
-            url += (followed != null) ? `&followed=${followed}` : '';
-            if (reasons && reasons.length > 0) reasons.forEach(reason => url += `&reason=${reason}`);
-            (noReason !== null) ? `&noReason=${noReason}` : '';
-            url += (halfBoarder != null) ? `&halfBoarder=${halfBoarder}` : '';
-            url += (internal != null) ? `&internal=${internal}` : '';
-
-            for (let studentId of studentIds) {
-                url += `&student=${studentId}`;
-            }
-
-            for (let audienceId of audienceIds) {
-                url += `&classes=${audienceId}`;
-            }
+            url += '?' + getUriFilterAbsences(studentIds, audienceIds, startDate, endDate, null, regularized, reasons, noReason,
+                followed, halfBoarder, internal);
 
             window.open(url);
         } catch (err) {

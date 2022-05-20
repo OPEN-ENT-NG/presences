@@ -240,6 +240,7 @@ public class Field {
     public static final String USER = "user";
     public static final String HALFBOARDER = "halfBoarder";
     public static final String INTERNAL = "internal";
+    public static final String ACCOMMODATION = "accommodation";
 
     //Mongo
     public static final String $_ID = "$_id";

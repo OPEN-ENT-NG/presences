@@ -2,6 +2,7 @@ package fr.openent.presences.service.impl;
 
 import fr.openent.presences.common.helper.DateHelper;
 import fr.openent.presences.common.service.ExportPDFService;
+import fr.openent.presences.common.service.impl.DefaultUserService;
 import fr.openent.presences.core.constants.Field;
 import fr.openent.presences.db.DBService;
 import fr.openent.presences.enums.EventType;
@@ -41,8 +42,13 @@ public class DefaultExportAbsenceService extends DBService implements ExportAbse
         getAbsencesData(domain, local, structureId, teacherId,
                 audienceIds, studentIds, reasonIds,
                 startAt, endAt, regularized, noReason, followed, halfBoarder, internal)
-                .compose(absences -> exportPDFService.generatePDF(Field.EXPORT_PDF_ABSENCES + "_" + startAt + "_" + endAt,
-                        "pdf/absence-list-recap.xhtml", absences))
+                .compose(absences -> {
+                    String titleStartAt = DateHelper.getDateString(startAt, DateHelper.YEAR_MONTH_DAY);
+                    String titleEndAt = DateHelper.getDateString(endAt, DateHelper.YEAR_MONTH_DAY);
+                    return exportPDFService.generatePDF(Field.EXPORT_PDF_ABSENCES + "_" + titleStartAt
+                                    + (titleStartAt != null && titleStartAt.equals(titleEndAt) ? "" : "_" + titleEndAt),
+                            "pdf/absence-list-recap.xhtml", absences);
+                })
                 .onSuccess(promise::complete)
                 .onFailure(err -> {
                     String message = String.format("[Presences@%s::getPdfData]: An error has occurred " +
@@ -85,9 +91,10 @@ public class DefaultExportAbsenceService extends DBService implements ExportAbse
 
     private JsonObject mapAbsencesToExportData(String domain, String local, List<JsonObject> absences, List<Reason> reasons) {
         absences.forEach(absence -> {
-            absence.put(Field.DATE, DateHelper.getDateString(absence.getString(Field.START_DATE), DateHelper.YEAR_MONTH_DAY));
-            absence.put(Field.DISPLAY_START_DATE, DateHelper.getDateString(absence.getString(Field.START_DATE), DateHelper.HOUR_MINUTES));
-            absence.put(Field.DISPLAY_END_DATE, DateHelper.getDateString(absence.getString(Field.END_DATE), DateHelper.HOUR_MINUTES));
+            absence.put(Field.STARTAT, DateHelper.getDateString(absence.getString(Field.START_DATE),
+                    DateHelper.DAY_MONTH_YEAR_HOUR_MINUTES));
+            absence.put(Field.ENDAT, DateHelper.getDateString(absence.getString(Field.END_DATE),
+                    DateHelper.DAY_MONTH_YEAR_HOUR_MINUTES));
 
             Reason reason = reasons.stream()
                     .filter(currentReason -> currentReason.getId() != null &&
@@ -101,6 +108,18 @@ public class DefaultExportAbsenceService extends DBService implements ExportAbse
 
             absence.put(Field.REGULARIZED,
                     Boolean.TRUE.equals(absence.getBoolean(Field.COUNSELLOR_REGULARISATION)) ?
+                            I18n.getInstance().translate("presences.exemptions.csv.attendance.true", domain, local) :
+                            I18n.getInstance().translate("presences.exemptions.csv.attendance.false", domain, local));
+
+            JsonObject student = absence.getJsonObject(Field.STUDENT, new JsonObject());
+
+            absence.put(Field.INTERNAL,
+                    student.getString(Field.ACCOMMODATION, "").contains(DefaultUserService.INTERNAL) ?
+                            I18n.getInstance().translate("presences.exemptions.csv.attendance.true", domain, local) :
+                            I18n.getInstance().translate("presences.exemptions.csv.attendance.false", domain, local));
+
+            absence.put(Field.HALFBOARDER,
+                    student.getString(Field.ACCOMMODATION, "").contains(DefaultUserService.HALF_BOARDER) ?
                             I18n.getInstance().translate("presences.exemptions.csv.attendance.true", domain, local) :
                             I18n.getInstance().translate("presences.exemptions.csv.attendance.false", domain, local));
         });
