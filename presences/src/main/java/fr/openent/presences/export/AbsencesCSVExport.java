@@ -31,8 +31,8 @@ public class AbsencesCSVExport extends CSVExport {
                 "presences.exemptions.csv.header.audiance",
                 "presences.absence.reason",
                 "presences.created.by",
-                "presences.exemptions.dates",
-                "presences.hour",
+                "presences.registry.csv.header.start.date",
+                "presences.registry.csv.header.end.date",
                 "presences.widgets.absences.regularized",
                 "presences.id"));
     }
@@ -50,16 +50,10 @@ public class AbsencesCSVExport extends CSVExport {
         line += absence.getStudent().getClassName() + SEPARATOR;
         line += absence.getReason().getLabel() + SEPARATOR;
         line += absence.getOwner().getName() + SEPARATOR;
-        line += DateHelper.getDateString(absence.getStartDate(), DateHelper.DAY_MONTH_YEAR) + SEPARATOR;
-        line += getEventTime(absence) + SEPARATOR;
+        line += DateHelper.getDateString(absence.getStartDate(), DateHelper.DAY_MONTH_YEAR_HOUR_MINUTES) + SEPARATOR;
+        line += DateHelper.getDateString(absence.getEndDate(), DateHelper.DAY_MONTH_YEAR_HOUR_MINUTES) + SEPARATOR;
         line += absence.getRegularized() + SEPARATOR;
         line += absence.getId() + SEPARATOR;
         return line + EOL;
-    }
-
-    private String getEventTime(Absence absence) {
-        String startTime = DateHelper.fetchTimeString(absence.getStartDate(), DateHelper.SQL_FORMAT);
-        String endTime = DateHelper.fetchTimeString(absence.getEndDate(), DateHelper.SQL_FORMAT);
-        return startTime + " - " + endTime;
     }
 }

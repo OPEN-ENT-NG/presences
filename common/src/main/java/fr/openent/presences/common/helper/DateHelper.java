@@ -25,6 +25,7 @@ public class DateHelper {
 
     public static final String YEAR_MONTH_DAY = "yyyy-MM-dd";
     public static final String DAY_MONTH_YEAR = "dd/MM/yyyy";
+    public static final String DAY_MONTH_YEAR_HOUR_MINUTES = "dd/MM/yyyy HH:mm";
     public static final String DAY_MONTH_YEAR_DASH = "dd-MM-yyyy";
     public static final String YEAR_MONTH = "yyyy-MM";
     public static final String SHORT_MONTH = "MMM"; // e.g "Jan"
