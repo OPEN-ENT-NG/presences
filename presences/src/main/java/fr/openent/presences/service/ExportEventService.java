@@ -56,6 +56,7 @@ public interface ExportEventService {
     /**
      * Get events. Will after export this into csv (or PDF)
      *
+     * @param canSeeAllStudent  true if we have access to all student
      * @param domain            domain request sent
      * @param local             accepted langage
      * @param structureId       structure identifier
@@ -72,7 +73,7 @@ public interface ExportEventService {
      * event type -> {@link List} of {@link fr.openent.presences.model.Event.EventByStudent} as JsonObject
      * ... event type...
      */
-    Future<JsonObject> getPdfData(String domain, String local, String structureId, String startDate, String endDate,
+    Future<JsonObject> getPdfData(Boolean canSeeAllStudent, String domain, String local, String structureId, String startDate, String endDate,
                                   List<String> eventType, List<String> listReasonIds, Boolean noReason, List<String> userId,
                                   JsonArray userIdFromClasses, Boolean regularized);
 

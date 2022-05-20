@@ -190,12 +190,12 @@ public interface EventService {
                             String startDate, String endDate, boolean noReasons, String recoveryMethodUsed, String limit, String offset,
                             Boolean regularized, Handler<Either<String, JsonArray>> handler);
 
-    Future<JsonArray> getEventsByStudent(Integer eventType, List<String> students, String structure, Boolean justified,
+    Future<JsonArray> getEventsByStudent(Boolean canSeeAllStudent, Integer eventType, List<String> students, String structure, Boolean justified,
                                          List<Integer> reasonsId, Boolean massmailed, Boolean compliance, String startDate, String endDate,
                                          boolean noReasons, String recoveryMethodUsed, String limit, String offset,
                                          Boolean regularized);
 
-    void getEventsByStudent(Integer eventType, List<String> students, String structure, Boolean justified,
+    void getEventsByStudent(Boolean canSeeAllStudent, Integer eventType, List<String> students, String structure, Boolean justified,
                             List<Integer> reasonsId, Boolean massmailed, Boolean compliance, String startDate, String endDate,
                             boolean noReasons, String recoveryMethodUsed, String limit, String offset,
                             Boolean regularized, Handler<Either<String, JsonArray>> handler);
