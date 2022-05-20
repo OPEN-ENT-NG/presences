@@ -85,9 +85,10 @@ public class DefaultExportAbsenceService extends DBService implements ExportAbse
 
     private JsonObject mapAbsencesToExportData(String domain, String local, List<JsonObject> absences, List<Reason> reasons) {
         absences.forEach(absence -> {
-            absence.put(Field.DATE, DateHelper.getDateString(absence.getString(Field.START_DATE), DateHelper.YEAR_MONTH_DAY));
-            absence.put(Field.DISPLAY_START_DATE, DateHelper.getDateString(absence.getString(Field.START_DATE), DateHelper.HOUR_MINUTES));
-            absence.put(Field.DISPLAY_END_DATE, DateHelper.getDateString(absence.getString(Field.END_DATE), DateHelper.HOUR_MINUTES));
+            absence.put(Field.STARTAT, DateHelper.getDateString(absence.getString(Field.START_DATE),
+                    DateHelper.DAY_MONTH_YEAR_HOUR_MINUTES));
+            absence.put(Field.ENDAT, DateHelper.getDateString(absence.getString(Field.END_DATE),
+                    DateHelper.DAY_MONTH_YEAR_HOUR_MINUTES));
 
             Reason reason = reasons.stream()
                     .filter(currentReason -> currentReason.getId() != null &&
