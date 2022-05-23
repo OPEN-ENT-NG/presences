@@ -293,7 +293,7 @@ export const eventListController = ng.controller('EventListController', ['$scope
                         noReasons: true,
                         noReasonsLateness: true,
                         notRegularized: true,
-                        regularized: false,
+                        regularized: true,
                         followed: true,
                         notFollowed: true,
                         reasonIds: []
