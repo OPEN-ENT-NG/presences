@@ -98,9 +98,8 @@ class Controller implements ng.IController, IViewModel {
                 this.studentsSearch.setSelectedStudents(this.filter.students);
                 this.groupsSearch.setSelectedGroups(this.filter.classes);
             }
-            if (!this.formFilter) {
-                await this.initData();
-            }
+            await this.initData();
+            safeApply(this.$scope);
         });
 
         this.noReason = {
@@ -125,27 +124,35 @@ class Controller implements ng.IController, IViewModel {
     }
 
     async initData(): Promise<void> {
-        this.structureTimeSlot = {} as IStructureSlot;
 
-        let formFilterPref: EventsFormFilter = this.absencesOnly ?
-            await Me.preference(PresencesPreferenceUtils.PREFERENCE_KEYS.PRESENCE_PLANNED_ABSENCES_FILTER) :
-            await Me.preference(PresencesPreferenceUtils.PREFERENCE_KEYS.PRESENCE_EVENT_LIST_FILTER);
-        this.formFilter = this.filter ? JSON.parse(JSON.stringify(this.filter)) : {};
-
-        await Promise.all([this.loadReasons(), this.getStructureTimeSlots()]);
-
-        // Filter is reset if user is loading with old preferences
-        if (!this.absencesOnly && formFilterPref[window.structure.id] !== undefined
-            && formFilterPref[window.structure.id].regularized !== undefined) {
-            formFilterPref = formFilterPref ? formFilterPref[window.structure.id] : null;
-            this.formFilter = formFilterPref ? formFilterPref : JSON.parse(JSON.stringify(this.filter));
-            this.updateReasonsFromIds();
-        } else {
-            this.resetFilter();
+        if (!this.structureTimeSlot || !this.structureTimeSlot._id) {
+            this.structureTimeSlot = {} as IStructureSlot;
         }
 
-        this.studentsSearch = new StudentsSearch(window.structure.id, this.searchService);
-        this.groupsSearch = new GroupsSearch(window.structure.id, this.searchService, this.groupService);
+        let formFilterPref: EventsFormFilter = this.absencesOnly ?
+            JSON.parse(JSON.stringify(await Me.preference(PresencesPreferenceUtils.PREFERENCE_KEYS.PRESENCE_PLANNED_ABSENCES_FILTER))) :
+            JSON.parse(JSON.stringify(await Me.preference(PresencesPreferenceUtils.PREFERENCE_KEYS.PRESENCE_EVENT_LIST_FILTER)));
+        this.formFilter = this.filter ? JSON.parse(JSON.stringify(this.filter)) : {};
+
+        if (!this.structureTimeSlot.slots) {
+            await Promise.all([this.loadReasons(), this.getStructureTimeSlots()]);
+        }
+
+        if (!this.absencesOnly) {
+            // Filter is reset if user is loading with old preferences
+            if (formFilterPref[window.structure.id] !== undefined && formFilterPref[window.structure.id].regularized !== undefined) {
+                formFilterPref = formFilterPref ? formFilterPref[window.structure.id] : null;
+                this.formFilter = formFilterPref ? formFilterPref : JSON.parse(JSON.stringify(this.filter));
+                this.updateReasonsFromIds();
+            } else {
+                this.resetFilter();
+            }
+        }
+
+        if (!this.studentsSearch || !this.studentsSearch.structureId || !this.groupsSearch || !this.groupsSearch.structureId) {
+            this.studentsSearch = new StudentsSearch(window.structure.id, this.searchService);
+            this.groupsSearch = new GroupsSearch(window.structure.id, this.searchService, this.groupService);
+        }
 
         if (this.formFilter.timeslots && this.formFilter.timeslots.start && this.formFilter.timeslots.end) {
             this.formFilter.timeslots = {
