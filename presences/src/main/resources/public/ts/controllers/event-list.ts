@@ -834,9 +834,12 @@ export const eventListController = ng.controller('EventListController', ['$scope
                 startTime: vm.events.startTime,
                 endTime: vm.events.endTime,
                 noReason: vm.events.noReason,
+                noReasonLateness: vm.events.noReasonLateness,
                 eventType: vm.events.eventType,
                 listReasonIds: vm.events.listReasonIds,
                 regularized: vm.events.regularized,
+                followed: vm.events.followed,
+                notFollowed: vm.events.notFollowed,
                 userId: vm.events.userId,
                 classes: vm.events.classes,
             };
