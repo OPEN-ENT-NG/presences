@@ -143,7 +143,9 @@ class Controller implements ng.IController, IViewModel {
             if (formFilterPref[window.structure.id] !== undefined && formFilterPref[window.structure.id].regularized !== undefined) {
                 formFilterPref = formFilterPref ? formFilterPref[window.structure.id] : null;
                 this.formFilter = formFilterPref ? formFilterPref : JSON.parse(JSON.stringify(this.filter));
-                this.updateReasonsFromIds();
+                let hasOnlyNoReason: boolean = this.formFilter.noReasons && !this.formFilter.regularized && !this.formFilter.notRegularized;
+                this.updateReasonsFromIds(hasOnlyNoReason ? REASON_TYPE_ID.LATENESS : null);
+                this.formFilter.allAbsenceReasons = false;
             } else {
                 this.resetFilter();
             }
@@ -198,10 +200,11 @@ class Controller implements ng.IController, IViewModel {
         this.updateReasonsFromIds();
     }
 
-    updateReasonsFromIds(): void {
+    updateReasonsFromIds(reasonTypeId?: number): void {
         if (this.reasons && this.formFilter.reasonIds !== undefined) {
             this.reasons.forEach((reason: Reason) => {
-                if (this.formFilter.reasonIds.find((rId: number) => rId === reason.id) !== undefined) {
+                if (this.formFilter.reasonIds.find((rId: number) => rId === reason.id &&
+                    ((reasonTypeId && reason.reason_type_id === reasonTypeId) || !reasonTypeId)) !== undefined) {
                     reason.isSelected = true;
                 }
             });
