@@ -64,7 +64,7 @@ public class DefaultUserService extends DBService implements UserService {
 
         String query = "MATCH (u:User {profiles:['Student']})-[:IN]->(:ProfileGroup)-[:DEPENDS]->(c:Class)-[:BELONGS]->(s:Structure) " +
                 getWhereFilter(params, structureId, studentIds, halfBoarder, internal) +
-                " RETURN u.id as id, u.lastName + ' ' + u.firstName as name, u.lastName as lastName, u.firstName as firstName, " +
+                " RETURN u.id as id, u.lastName + ' ' + u.firstName as name, u.lastName as lastName, u.firstName as firstName," +
                 " c.name as className, u.accommodation as accommodation";
 
         neo4j.execute(query, params, Neo4jResult.validResultHandler(FutureHelper.handlerJsonArray(promise)));

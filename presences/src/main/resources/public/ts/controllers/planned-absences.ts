@@ -2,12 +2,13 @@ import {Me, moment, ng} from 'entcore';
 import {IAngularEvent, ILocationService, IScope, IWindowService} from "angular";
 import {Absence, IStructureSlot, Reason, Student} from "@presences/models";
 import {DateUtils, PresencesPreferenceUtils, safeApply} from "@common/utils";
-import {AbsenceService, Group} from "../services";
+import {AbsenceService, Group, ReasonService} from "../services";
 import {EventsFilter, EventsFormFilter} from "@presences/utilities";
 import {EventAbsenceSummary} from "@presences/models/Event/EventAbsenceSummary";
 import {EXPORT_TYPE, ExportType} from "@common/core/enum/export-type.enum";
 import {EVENTS_DATE, EVENTS_FORM, EVENTS_SEARCH} from "@common/core/enum/presences-event";
 import {INFINITE_SCROLL_EVENTER} from '@common/core/enum/infinite-scroll-eventer';
+import {REASON_TYPE_ID} from "@common/core/enum/reason-type-id";
 
 declare let window: any;
 
@@ -47,7 +48,8 @@ class Controller implements ng.IController, IViewModel {
     constructor(private $scope: IScope,
                 private $location: ILocationService,
                 private $window: IWindowService,
-                private absenceService: AbsenceService) {
+                private absenceService: AbsenceService,
+                private reasonService: ReasonService) {
         this.$scope['vm'] = this;
         this.exportType = EXPORT_TYPE;
         this.plannedAbsences = [];
@@ -66,6 +68,7 @@ class Controller implements ng.IController, IViewModel {
 
     async $onInit(): Promise<void> {
         this.loading = false;
+        this.reasons = await this.reasonService.getReasons(window.structure.id, REASON_TYPE_ID.ALL);
         await this.initFilter();
         this.$scope.$on(EVENTS_DATE.ABSENCES_SEND, (evt: IAngularEvent, dates: {startDate: Date, endDate: Date}) => {
             if (dates.startDate !== null && dates.endDate !== null) {
@@ -77,6 +80,7 @@ class Controller implements ng.IController, IViewModel {
         /* on (watch) */
         this.$scope.$watch(() => window.structure, async () => {
             if (window.structure) {
+                this.reasons = await this.reasonService.getReasons(window.structure.id, REASON_TYPE_ID.ABSENCE);
                 await this.initFilter();
                 this.$scope.$emit(EVENTS_DATE.ABSENCES_REQUEST);
                 await Promise.all([this.getAbsenceMarkers(), this.getPlannedAbsences()]);
@@ -171,6 +175,11 @@ class Controller implements ng.IController, IViewModel {
             page: 0
         };
 
+        if((this.filter.regularized || this.filter.notRegularized) && !this.filter.reasonIds.length) {
+            this.reasons.forEach((reasons: Reason) => reasons.isSelected)
+            this.filter.reasonIds = [...this.reasons.map((reason: Reason) => reason.id)]
+        }
+
         let parentVm: any = this.$scope.$parent.$parent['vm'];
         if (parentVm && parentVm.groupsSearch && parentVm.studentsSearch
             && parentVm.groupsSearch.structureId && parentVm.studentsSearch.structureId) {
@@ -246,4 +255,4 @@ class Controller implements ng.IController, IViewModel {
 }
 
 export const plannedAbsencesController = ng.controller('PlannedAbsencesController',
-    ['$scope', '$location', '$window', 'AbsenceService', Controller]);
+    ['$scope', '$location', '$window', 'AbsenceService', 'ReasonService', Controller]);
