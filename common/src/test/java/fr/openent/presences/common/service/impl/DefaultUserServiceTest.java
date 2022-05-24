@@ -44,7 +44,7 @@ public class DefaultUserServiceTest extends DBService {
                     "->(c:Class)-[:BELONGS]->(s:Structure)  WHERE s.id = {structureId} AND u.id IN {studentIds}" +
                     " AND (  (u.accommodation CONTAINS {halfBoarder}) OR  (u.accommodation CONTAINS {internal}) ) " +
                     " RETURN u.id as id, u.lastName + ' ' + u.firstName as name, u.lastName as lastName," +
-                    " u.firstName as firstName, c.name as className");
+                    " u.firstName as firstName, c.name as className, u.accommodation as accommodation");
 
             ctx.assertEquals(params,
                     new JsonObject()
