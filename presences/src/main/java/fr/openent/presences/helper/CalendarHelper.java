@@ -30,6 +30,10 @@ public class CalendarHelper {
     public static final int SATURDAY_OF_WEEK = 6;
     public static final int SUNDAY_OF_WEEK = 7;
 
+    private CalendarHelper() {
+        throw new IllegalStateException("Utility class");
+    }
+
     public static HashMap<String, Map<String, Course>> hashCourses(List<Course> courses, List<Slot> slots,
                                                                    List<String> subjects) {
         HashMap<String, Map<String, Course>> courseList = new HashMap<>();
@@ -336,7 +340,7 @@ public class CalendarHelper {
                 JsonObject exclusion = exclusionsDate.getJsonObject(i);
                 String startDate = exclusion.getString("start_date");
                 String endDate = exclusion.getString("end_date");
-                if (DateHelper.isAfterOrEquals(date, startDate) && DateHelper.isBeforeOrEquals(date, endDate)) {
+                if (DateHelper.isAfterOrEquals(date, startDate) && DateHelper.isBefore(date, endDate)) {
                     return true;
                 }
             }
