@@ -175,46 +175,83 @@ public class EventQueryHelper {
      * @return {String}
      */
     public static String filterReasons(List<String> reasonIds, Boolean noAbsenceReason, Boolean noLatenessReason, Boolean regularized,
-                                       List<String> typeIds, JsonArray params) {
-        if (Boolean.TRUE.equals(!noAbsenceReason && !noLatenessReason && (reasonIds == null || reasonIds.isEmpty())) && regularized == null)
-            return "";
-
-        String query = "AND (";
-        query += "(type_id != 1 AND type_id != 2)";
-        if (Boolean.TRUE.equals(noAbsenceReason || (reasonIds != null && !reasonIds.isEmpty())) || regularized != null) {
-            query += " OR (type_id = 1 ";
-
-            String regularizedFilter = regularized != null ? "counsellor_regularisation = " + regularized : "";
-            if (reasonIds != null && !reasonIds.isEmpty()) {
-                query += String.format(" AND (reason_id IN %s %s",
-                        Sql.listPrepared(reasonIds),
-                        (regularized != null ? "AND " + regularizedFilter + "))" : "))"));
-                params.addAll(new JsonArray(reasonIds));
-                if (Boolean.TRUE.equals(noAbsenceReason)) {
-                    query += " OR reason_id IS NULL";
-                }
-            } else if (Boolean.TRUE.equals(noAbsenceReason)) query += String.format(" AND (reason_id IS NULL %s",
-                    (regularized != null ? "OR " + regularizedFilter + "))" : "))"));
-            else query += " AND " + regularizedFilter + ")";
+                                       Boolean followed, List<String> typeIds, JsonArray params) {
+        String reasonFilter = "";
+        if (typeIds.contains(EventType.LATENESS.getType().toString())){
+            reasonFilter += filterLatenessReasons(reasonIds, noLatenessReason, params);
         }
 
-        if (Boolean.TRUE.equals(noLatenessReason) || (reasonIds != null && !reasonIds.isEmpty())) {
-            query += " OR (type_id = 2 ";
-            if (reasonIds != null && !reasonIds.isEmpty()) {
-                query += " AND (reason_id IN " + Sql.listPrepared(reasonIds);
-                params.addAll(new JsonArray(reasonIds));
-                if (Boolean.TRUE.equals(noLatenessReason)) {
-                    query += " OR reason_id IS NULL";
-                }
-                query += ")";
-            } else if (Boolean.TRUE.equals(noLatenessReason)) {
-                query += " AND reason_id IS NULL";
-            }
-            query += ")";
+        if (typeIds.contains(EventType.ABSENCE.getType().toString())){
+            String connector = reasonFilter.isEmpty() ? "" : " OR ";
+            reasonFilter += connector + filterAbsenceReasons(reasonIds, regularized, followed, noAbsenceReason, params);
         }
 
-        query += ")";
-        return query;
+        if (!typeIds.isEmpty()) {
+            String connector = reasonFilter.isEmpty() ? "" : " OR ";
+            //If we want other than absence and lateness
+            reasonFilter += connector + "(type_id IN " + Sql.listPrepared(typeIds) + " AND type_id NOT IN (" + EventType.ABSENCE.getType() + "," + EventType.LATENESS.getType() + "))";
+            params.addAll(new JsonArray(typeIds));
+        }
+        return reasonFilter.isEmpty() ? "" : " AND (" + reasonFilter + ")";
+    }
+
+    private static String filterLatenessReasons(List<String> listReasonIds, Boolean noReasonLateness, JsonArray params) {
+        String latenessFilter = "";
+        if (noReasonLateness == null) {
+            return "(type_id = " + EventType.LATENESS.getType() + ")";
+        }
+
+        if (listReasonIds != null && !listReasonIds.isEmpty()) {
+            latenessFilter += "reason_id IN " + Sql.listPrepared(listReasonIds);
+            params.addAll(new JsonArray(listReasonIds));
+        }
+
+        if (Boolean.TRUE.equals(noReasonLateness)) {
+            String connector = latenessFilter.isEmpty() ? "" : " OR ";
+            latenessFilter += connector + "reason_id IS NULL";
+        }
+
+
+        if (!latenessFilter.isEmpty()) {
+            latenessFilter = "(" + latenessFilter + ") AND type_id = " + EventType.LATENESS.getType();
+        }
+        return latenessFilter.isEmpty() ? "" : "(" + latenessFilter + ")";
+    }
+
+    private static String filterAbsenceReasons(List<String> listReasonIds,Boolean regularized,
+                                       Boolean followed, Boolean noReason, JsonArray params) {
+        String absenceFilter = "";
+        if (followed != null) {
+            absenceFilter += "followed = " + followed;
+        }
+
+        String reasonFilter = "";
+
+        if (listReasonIds != null && !listReasonIds.isEmpty()) {
+            reasonFilter += "reason_id IN " + Sql.listPrepared(listReasonIds);
+            params.addAll(new JsonArray(listReasonIds));
+        }
+
+        if (regularized != null) {
+            String connector = reasonFilter.isEmpty() ? "" : " AND ";
+            reasonFilter += connector + "counsellor_regularisation = " + regularized;
+        }
+
+        if (Boolean.TRUE.equals(noReason)) {
+            String connector = reasonFilter.isEmpty() ? "" : " OR ";
+            reasonFilter += connector + "reason_id IS NULL";
+        }
+
+        if (!reasonFilter.isEmpty() && !absenceFilter.isEmpty()) {
+            absenceFilter = absenceFilter + " AND (" + reasonFilter + ")";
+        } else {
+            absenceFilter = absenceFilter.isEmpty() ? reasonFilter : absenceFilter;
+        }
+
+        if (!absenceFilter.isEmpty()) {
+            absenceFilter = "(" + absenceFilter + ") AND type_id = " + EventType.ABSENCE.getType();
+        }
+        return absenceFilter.isEmpty() ? "" : "(" + absenceFilter + ")";
     }
 
     /**

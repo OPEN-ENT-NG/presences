@@ -165,6 +165,7 @@ public class EventController extends ControllerHelper {
         List<String> eventType = request.getParam(Field.EVENTTYPE) != null ? Arrays.asList(request.getParam(Field.EVENTTYPE).split("\\s*,\\s*")) : null;
         List<String> reasonIds = request.getParam(Field.REASONIDS) != null ? Arrays.asList(request.getParam(Field.REASONIDS).split("\\s*,\\s*")) : null;
         Boolean noReason = request.params().contains(Field.NOREASON) && Boolean.parseBoolean(request.getParam(Field.NOREASON));
+        Boolean noReasonLateness = request.params().contains(Field.NOREASONLATENESS) && Boolean.parseBoolean(request.getParam(Field.NOREASONLATENESS));
         List<String> userId = request.getParam(Field.USERID) != null ? Arrays.asList(request.getParam(Field.USERID).split("\\s*,\\s*")) : new ArrayList<>();
         List<String> classes = request.getParam(Field.CLASSES) != null ?
                 Arrays.asList(request.getParam(Field.CLASSES).split("\\s*,\\s*")) : new ArrayList<>();
@@ -200,13 +201,13 @@ public class EventController extends ControllerHelper {
                             } else {
                                 JsonArray userIdFromClasses = userResponse.right().getValue();
                                 if (ExportType.CSV.type().equals(type)) {
-                                    exportEventService.getCsvData(structureId, startDate, endDate, eventType, reasonIds, noReason, userId, userIdFromClasses,
+                                    exportEventService.getCsvData(structureId, startDate, endDate, eventType, reasonIds, noReason, noReasonLateness, userId, userIdFromClasses,
                                             classes, restrictedClasses, regularized, followed, event -> processCsvEvent(request, event));
                                 } else if (ExportType.PDF.type().equals(type)) {
                                     String domain = Renders.getHost(request);
                                     String local = I18n.acceptLanguage(request);
                                     exportEventService.getPdfData(canSeeAllStudent, domain, local, structureId, startDate, endDate, eventType, reasonIds,
-                                                    noReason, userId, userIdFromClasses, regularized)
+                                                    noReason, noReasonLateness, userId, userIdFromClasses, regularized, followed)
                                             .compose(this::processPdfEvent)
                                             .onSuccess(res -> request.response()
                                                     .putHeader("Content-type", "application/pdf; charset=utf-8")

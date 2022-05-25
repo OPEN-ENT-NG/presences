@@ -74,7 +74,6 @@ public class EventBusController extends ControllerHelper {
                 break;
             case "get-events-by-student":
                 eventType = body.getInteger("eventType");
-                justified = body.getBoolean("justified");
                 students = body.getJsonArray("students", new JsonArray()).getList();
                 structure = body.getString("structure");
                 reasonsId = body.getJsonArray("reasonsId", new JsonArray()).getList();
@@ -85,7 +84,7 @@ public class EventBusController extends ControllerHelper {
                 noReasons = body.getBoolean("noReasons");
                 recoveryMethod = body.getString("recoveryMethod");
                 regularized = body.getBoolean("regularized");
-                this.eventService.getEventsByStudent(eventType, students, structure, justified, reasonsId, massmailed, compliance, startDate, endDate, noReasons, recoveryMethod, regularized, BusResponseHandler.busArrayHandler(message));
+                this.eventService.getEventsByStudent(eventType, students, structure, reasonsId, massmailed, compliance, startDate, endDate, noReasons, recoveryMethod, regularized, BusResponseHandler.busArrayHandler(message));
                 break;
             case "get-absences":
                 students = body.getJsonArray("studentIds", new JsonArray()).getList();
