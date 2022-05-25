@@ -172,7 +172,7 @@ describe('EventService', () => {
         }
         const exportType: ExportType = 'CSV';
         const res: string = eventService.export(eventRequest, exportType);
-        expect(res).toEqual(`/presences/events/export?type=${exportType}&structureId=${eventRequest.structureId}&startDate=${eventRequest.startDate}&endDate=${eventRequest.endDate}&noReason=${eventRequest.noReason}&eventType=${eventRequest.eventType}&reasonIds=${eventRequest.listReasonIds}&userId=${eventRequest.userId}&classes=${eventRequest.classes}&regularized=${eventRequest.regularized}`)
+        expect(res).toEqual(`/presences/events/export?type=${exportType}&structureId=${eventRequest.structureId}&startDate=${eventRequest.startDate}&endDate=${eventRequest.endDate}&noReason=${eventRequest.noReason}&noReasonLateness=${eventRequest.noReasonLateness}&eventType=${eventRequest.eventType}&reasonIds=${eventRequest.listReasonIds}&userId=${eventRequest.userId}&classes=${eventRequest.classes}&regularized=${eventRequest.regularized}`)
         done();
     });
 

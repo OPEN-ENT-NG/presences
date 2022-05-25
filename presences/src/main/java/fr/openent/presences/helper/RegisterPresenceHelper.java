@@ -128,7 +128,7 @@ public class RegisterPresenceHelper {
                 filterDates(startDate, endDate, params) +
                 filterTimes(startTime, endTime, params) +
                 EventQueryHelper.filterStudentIds(registerUsers, params) +
-                EventQueryHelper.filterReasons(reasonIds, noAbsenceReason, noLatenessReason,regularized, typeIds, params) +
+                EventQueryHelper.filterReasons(reasonIds, noAbsenceReason, noLatenessReason,regularized, followed, typeIds, params) +
                 EventQueryHelper.filterFollowed(followed, params) +
                 filterTypes(typeIds, params) +
                 " GROUP BY student_id; ";

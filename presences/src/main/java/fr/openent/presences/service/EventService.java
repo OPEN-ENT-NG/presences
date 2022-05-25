@@ -29,7 +29,7 @@ public interface EventService {
      */
 
     void getEvents(String structureId, String startDate, String endDate,
-                   List<String> eventType, List<String> listReasonIds, Boolean noReason, List<String> userId, JsonArray userIdFromClasses,
+                   List<String> eventType, List<String> listReasonIds, Boolean noReason, Boolean noReasonLateness, List<String> userId, JsonArray userIdFromClasses,
                    Boolean regularized, Boolean followed, Integer page, Handler<Either<String, JsonArray>> handler);
 
     void get(String structureId, String startDate, String endDate, String startTime, String endTime,
@@ -186,21 +186,21 @@ public interface EventService {
      * @param offset             corresponding to the offset data rows wanted (optional).
      * @param handler            Function handler returning data
      */
-    void getEventsByStudent(Integer eventType, List<String> students, String structure, Boolean justified, List<Integer> reasonsId, Boolean massmailed,
+    void getEventsByStudent(Integer eventType, List<String> students, String structure, List<Integer> reasonsId, Boolean massmailed,
                             String startDate, String endDate, boolean noReasons, String recoveryMethodUsed, String limit, String offset,
                             Boolean regularized, Handler<Either<String, JsonArray>> handler);
 
-    Future<JsonArray> getEventsByStudent(Boolean canSeeAllStudent, Integer eventType, List<String> students, String structure, Boolean justified,
+    Future<JsonArray> getEventsByStudent(Boolean canSeeAllStudent, Integer eventType, List<String> students, String structure,
                                          List<Integer> reasonsId, Boolean massmailed, Boolean compliance, String startDate, String endDate,
-                                         boolean noReasons, String recoveryMethodUsed, String limit, String offset,
-                                         Boolean regularized);
+                                         boolean noReasons, boolean noReasonsLateness, String recoveryMethodUsed, String limit, String offset,
+                                         Boolean regularized, Boolean followed);
 
-    void getEventsByStudent(Boolean canSeeAllStudent, Integer eventType, List<String> students, String structure, Boolean justified,
+    void getEventsByStudent(Boolean canSeeAllStudent, Integer eventType, List<String> students, String structure,
                             List<Integer> reasonsId, Boolean massmailed, Boolean compliance, String startDate, String endDate,
-                            boolean noReasons, String recoveryMethodUsed, String limit, String offset,
-                            Boolean regularized, Handler<Either<String, JsonArray>> handler);
+                            boolean noReasons, Boolean noReasonsLateness, String recoveryMethodUsed, String limit, String offset,
+                            Boolean regularized, Boolean followed, Handler<Either<String, JsonArray>> handler);
 
-    void getEventsByStudent(Integer eventType, List<String> students, String structure, Boolean justified, List<Integer> reasonsId,
+    void getEventsByStudent(Integer eventType, List<String> students, String structure, List<Integer> reasonsId,
                             Boolean massmailed, String startDate, String endDate, boolean noReasons, String recoveryMethodUsed,
                             Boolean regularized, Handler<Either<String, JsonArray>> handler);
 
@@ -210,7 +210,6 @@ public interface EventService {
      * @param eventType          Event Type list
      * @param students           Student list. Contains every students identifiers
      * @param structure          Structure identifier
-     * @param justified          Justified events or not ? Can be null if justified event needs to be excluded
      * @param massmailed         Massmailed ? Use by massmailing module. When null, column is excluded
      * @param compliance         compliance ? Using this filter will remove absence whose compliance is TRUE if included
      * @param startDate          Range start date
@@ -220,7 +219,7 @@ public interface EventService {
      * @param recoveryMethodUsed method used to recover events, can be null if method in settings is wanted.
      * @param handler            Function handler returning data
      */
-    void getEventsByStudent(Integer eventType, List<String> students, String structure, Boolean justified, List<Integer> reasonsId,
+    void getEventsByStudent(Integer eventType, List<String> students, String structure, List<Integer> reasonsId,
                             Boolean massmailed, Boolean compliance, String startDate, String endDate, boolean noReasons,
                             String recoveryMethodUsed, Boolean regularized, Handler<Either<String, JsonArray>> handler);
 

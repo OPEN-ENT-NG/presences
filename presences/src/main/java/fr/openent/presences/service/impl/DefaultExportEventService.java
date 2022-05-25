@@ -47,9 +47,9 @@ public class DefaultExportEventService extends DBService implements ExportEventS
 
     @Override
     public void getCsvData(String structureId, String startDate, String endDate, List<String> eventType,
-                           List<String> listReasonIds, Boolean noReason, List<String> userId, JsonArray userIdFromClasses,
+                           List<String> listReasonIds, Boolean noReason, Boolean noReasonLateness, List<String> userId, JsonArray userIdFromClasses,
                            List<String> classes, List<String> restrictedClasses, Boolean regularized, Boolean followed, Handler<AsyncResult<List<Event>>> handler) {
-        eventService.getEvents(structureId, startDate, endDate, eventType, listReasonIds, noReason, userId, userIdFromClasses,
+        eventService.getEvents(structureId, startDate, endDate, eventType, listReasonIds, noReason, noReasonLateness, userId, userIdFromClasses,
                 regularized, followed, null, eventHandler -> {
                     if (eventHandler.isLeft()) {
                         String err = "[Presences@DefaultEventService::getCsvData] Failed to fetch events: " + eventHandler.left().getValue();
@@ -107,11 +107,11 @@ public class DefaultExportEventService extends DBService implements ExportEventS
 
     @Override
     public Future<List<Event>> getCsvData(String structureId, String startDate, String endDate, List<String> eventType,
-                                          List<String> listReasonIds, Boolean noReason, List<String> userId, JsonArray userIdFromClasses,
+                                          List<String> listReasonIds, Boolean noReason, Boolean noReasonLateness, List<String> userId, JsonArray userIdFromClasses,
                                           List<String> classes, Boolean regularized, Boolean followed) {
         Promise<List<Event>> promise = Promise.promise();
 
-        getCsvData(structureId, startDate, endDate, eventType, listReasonIds, noReason, userId, userIdFromClasses,
+        getCsvData(structureId, startDate, endDate, eventType, listReasonIds, noReason, noReasonLateness, userId, userIdFromClasses,
                 classes, null, regularized, followed, event -> {
                     if (event.failed()) {
                         promise.fail(event.cause());
@@ -126,8 +126,8 @@ public class DefaultExportEventService extends DBService implements ExportEventS
     @Override
     @SuppressWarnings("unchecked")
     public Future<JsonObject> getPdfData(Boolean canSeeAllStudent, String domain, String local, String structureId, String startDate, String endDate,
-                                         List<String> eventType, List<String> listReasonIds, Boolean noReason, List<String> userId,
-                                         JsonArray userIdFromClasses, Boolean regularized) {
+                                         List<String> eventType, List<String> listReasonIds, Boolean noReason, Boolean noReasonLateness, List<String> userId,
+                                         JsonArray userIdFromClasses, Boolean regularized, Boolean followed) {
         Promise<JsonObject> promise = Promise.promise();
 
         JsonArray studentIdList;
@@ -151,7 +151,7 @@ public class DefaultExportEventService extends DBService implements ExportEventS
                             .setEndOfHalfDayTimeSlot(slotsSettingsFuture.result().getString(Field.END_OF_HALF_DAY));
                     List<Reason> reasons = ReasonHelper.getReasonListFromJsonArray(reasonFuture.result(), Reason.MANDATORY_ATTRIBUTE);
 
-                    processEvents(canSeeAllStudent, settings, structureId, startDate, endDate, eventType, listReasonIds, noReason, studentIdList)
+                    processEvents(canSeeAllStudent, settings, structureId, startDate, endDate, eventType, listReasonIds, noReason, noReasonLateness, studentIdList, regularized, followed)
                             .compose(eventByStudent -> formatEventsDataPdf(startDate, endDate, domain, local, settings, reasons, eventByStudent, eventType))
                             .onSuccess(promise::complete)
                             .onFailure(err -> {
@@ -186,8 +186,8 @@ public class DefaultExportEventService extends DBService implements ExportEventS
      */
     @SuppressWarnings("unchecked")
     private Future<List<EventByStudent>> processEvents(Boolean canSeeAllStudent, Settings setting, String structureId, String startDate, String endDate,
-                                                       List<String> eventType, List<String> listReasonIds, Boolean noReason,
-                                                       JsonArray userIdFromClasses) {
+                                                       List<String> eventType, List<String> listReasonIds, Boolean noReason, Boolean noReasonLateness,
+                                                       JsonArray userIdFromClasses, Boolean regularized, Boolean followed) {
         Promise<List<EventByStudent>> promise = Promise.promise();
         List<Integer> eventsTypes = eventType.stream().map(Integer::parseInt).collect(Collectors.toList());
         List<Integer> reasonIds = listReasonIds != null ? listReasonIds.stream().map(Integer::parseInt).collect(Collectors.toList()) : new ArrayList<>();
@@ -199,8 +199,8 @@ public class DefaultExportEventService extends DBService implements ExportEventS
         for (Integer type : eventsTypes) {
             current = current.compose(v -> {
                 Future<JsonArray> next = this.eventService.getEventsByStudent(canSeeAllStudent, type, userIdFromClasses.getList(), structureId,
-                        null, reasonIds, null, null, startDate, endDate, noReason,
-                        setting.recoveryMethod(), null, null, null);
+                        reasonIds, null, null, startDate, endDate, noReason, noReasonLateness,
+                        setting.recoveryMethod(), null, null, regularized, followed);
                 eventsTypeResult.add(next);
                 return next;
             });

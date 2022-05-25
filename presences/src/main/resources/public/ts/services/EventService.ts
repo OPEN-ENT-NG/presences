@@ -148,14 +148,17 @@ export const eventService: EventService = {
         const startDate: string = `&startDate=${DateUtils.format(eventRequest.startDate, dateFormat)}`;
         const endDate: string = `&endDate=${DateUtils.format(eventRequest.endDate, dateFormat)}`;
         const noReason: string = eventRequest.noReason ? `&noReason=${eventRequest.noReason}` : "";
+        const noReasonLateness: string = eventRequest.noReasonLateness ? `&noReasonLateness=${eventRequest.noReasonLateness}` : "";
         const eventType: string = `&eventType=${eventRequest.eventType}`;
         const listReasonIds: string = eventRequest.listReasonIds ? `&reasonIds=${eventRequest.listReasonIds}` : "";
         const userId: string = eventRequest.userId.length === 0 ? "" : `&userId=${eventRequest.userId}`;
         const classes: string = eventRequest.classes.length === 0 ? "" : `&classes=${eventRequest.classes}`;
         const regularized: string = (eventRequest.regularized != null) ? `&regularized=${(eventRequest.regularized)}` : "";
+        const followed: string = (eventRequest.followed != null || eventRequest.notFollowed != null)
+        && (eventRequest.followed === !eventRequest.notFollowed) ? `&followed=${eventRequest.followed}` : '';
         const basedUrl: string = `${url}${type}${structureId}`;
 
-        return `${basedUrl}${startDate}${endDate}${noReason}${eventType}${listReasonIds}${userId}${classes}${regularized}`;
+        return `${basedUrl}${startDate}${endDate}${noReason}${noReasonLateness}${eventType}${listReasonIds}${userId}${classes}${regularized}${followed}`;
     },
 
 

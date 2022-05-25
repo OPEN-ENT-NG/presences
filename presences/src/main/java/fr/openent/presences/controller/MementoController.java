@@ -88,19 +88,19 @@ public class MementoController extends ControllerHelper {
                     Future<JsonArray> future = Future.future();
                     switch (type) {
                         case UNREGULARIZED:
-                            eventService.getEventsByStudent(1, Collections.singletonList(student), structure, null, reasonIds, null, start, end, false, null, false, FutureHelper.handlerJsonArray(future));
+                            eventService.getEventsByStudent(1, Collections.singletonList(student), structure, reasonIds, null, start, end, false, null, false, FutureHelper.handlerJsonArray(future));
                             break;
                         case REGULARIZED:
-                            eventService.getEventsByStudent(1, Collections.singletonList(student), structure, null, reasonIds, null, start, end, false, null, true, FutureHelper.handlerJsonArray(future));
+                            eventService.getEventsByStudent(1, Collections.singletonList(student), structure, reasonIds, null, start, end, false, null, true, FutureHelper.handlerJsonArray(future));
                             break;
                         case NO_REASON:
-                            eventService.getEventsByStudent(1, Collections.singletonList(student), structure, null, new ArrayList<>(), null, start, end, true, null, false, FutureHelper.handlerJsonArray(future));
+                            eventService.getEventsByStudent(1, Collections.singletonList(student), structure, new ArrayList<>(), null, start, end, true, null, false, FutureHelper.handlerJsonArray(future));
                             break;
                         case LATENESS:
-                            eventService.getEventsByStudent(2, Collections.singletonList(student), structure, null, new ArrayList<>(), null, start, end, true, null, null, FutureHelper.handlerJsonArray(future));
+                            eventService.getEventsByStudent(2, Collections.singletonList(student), structure, new ArrayList<>(), null, start, end, true, null, null, FutureHelper.handlerJsonArray(future));
                             break;
                         case DEPARTURE:
-                            eventService.getEventsByStudent(3, Collections.singletonList(student), structure, null, new ArrayList<>(), null, start, end, true, null, null, FutureHelper.handlerJsonArray(future));
+                            eventService.getEventsByStudent(3, Collections.singletonList(student), structure, new ArrayList<>(), null, start, end, true, null, null, FutureHelper.handlerJsonArray(future));
                             break;
                         default:
                             //There is no default case

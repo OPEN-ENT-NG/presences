@@ -4,6 +4,7 @@ import fr.openent.presences.Presences;
 import fr.openent.presences.common.helper.WorkflowHelper;
 
 import fr.openent.presences.enums.WorkflowActions;
+import fr.openent.presences.service.impl.DefaultEventService;
 import io.vertx.core.Vertx;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
@@ -13,11 +14,20 @@ import org.entcore.common.user.UserInfos;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.powermock.core.classloader.annotations.PrepareForTest;
+import org.powermock.modules.junit4.PowerMockRunner;
+import org.powermock.modules.junit4.PowerMockRunnerDelegate;
+import org.powermock.reflect.Whitebox;
 
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import java.util.stream.Collectors;
 
 
-@RunWith(VertxUnitRunner.class)
+@RunWith(PowerMockRunner.class) //Using the PowerMock runner
+@PowerMockRunnerDelegate(VertxUnitRunner.class) //And the Vertx runner
+@PrepareForTest({EventQueryHelper.class}) //Prepare the static class you want to test
 public class EventHelperTest {
 
     private EventHelper eventHelper;
@@ -119,5 +129,155 @@ public class EventHelperTest {
 
         ctx.assertEquals(this.eventHelper.getDeletionEventStatement(event), expectedStatement);
 
+    }
+
+    @Test
+    public void testFilterLatenessReasons(TestContext ctx) throws Exception {
+        List<String> listReasonIds = Arrays.asList("reason1", "reason2");
+        Boolean noReasonLateness = true;
+        JsonArray params = new JsonArray();
+        String expectedQuery = "((reason_id IN (?,?) OR reason_id IS NULL) AND type_id = 2)";
+        JsonArray expectedParams = new JsonArray(Arrays.asList("reason1", "reason2"));
+        String res = Whitebox.invokeMethod(EventQueryHelper.class, "filterLatenessReasons", listReasonIds, noReasonLateness, params);
+        ctx.assertEquals(expectedQuery, res);
+        ctx.assertEquals(res.length() - res.replace("?","").length(), params.size());
+        ctx.assertEquals(expectedParams, params);
+
+        params = new JsonArray();
+        noReasonLateness = false;
+
+        expectedQuery = "((reason_id IN (?,?)) AND type_id = 2)";
+        expectedParams = new JsonArray(Arrays.asList("reason1", "reason2"));
+        res = Whitebox.invokeMethod(EventQueryHelper.class, "filterLatenessReasons", listReasonIds, noReasonLateness, params);
+        ctx.assertEquals(expectedQuery, res);
+        ctx.assertEquals(res.length() - res.replace("?","").length(), params.size());
+        ctx.assertEquals(expectedParams, params);
+
+        params = new JsonArray();
+        listReasonIds = Arrays.asList();
+
+        expectedQuery = "";
+        expectedParams = new JsonArray(Arrays.asList());
+        res = Whitebox.invokeMethod(EventQueryHelper.class, "filterLatenessReasons", listReasonIds, noReasonLateness, params);
+        ctx.assertEquals(expectedQuery, res);
+        ctx.assertEquals(res.length() - res.replace("?","").length(), params.size());
+        ctx.assertEquals(expectedParams, params);
+
+        params = new JsonArray();
+        noReasonLateness = true;
+
+        expectedQuery = "((reason_id IS NULL) AND type_id = 2)";
+        expectedParams = new JsonArray(Arrays.asList());
+        res = Whitebox.invokeMethod(EventQueryHelper.class, "filterLatenessReasons", listReasonIds, noReasonLateness, params);
+        ctx.assertEquals(expectedQuery, res);
+        ctx.assertEquals(res.length() - res.replace("?","").length(), params.size());
+        ctx.assertEquals(expectedParams, params);
+    }
+
+    @Test
+    public void testFilterAbsenceReasons(TestContext ctx) throws Exception {
+        List<String> listReasonIds = Arrays.asList("reason1", "reason2");
+        Boolean noReason = true;
+        Boolean regularized = true;
+        Boolean followed = true;
+        JsonArray params = new JsonArray();
+
+        String expectedQuery = "((followed = true AND (reason_id IN (?,?) AND counsellor_regularisation = true OR reason_id IS NULL)) AND type_id = 1)";
+        JsonArray expectedParams = new JsonArray(Arrays.asList("reason1", "reason2"));
+
+        String res = Whitebox.invokeMethod(EventQueryHelper.class, "filterAbsenceReasons", listReasonIds, regularized, followed, noReason, params);
+        ctx.assertEquals(expectedQuery, res);
+        ctx.assertEquals(res.length() - res.replace("?","").length(), params.size());
+        ctx.assertEquals(expectedParams, params);
+
+        params = new JsonArray();
+        followed = false;
+
+        expectedQuery = "((followed = false AND (reason_id IN (?,?) AND counsellor_regularisation = true OR reason_id IS NULL)) AND type_id = 1)";
+        expectedParams = new JsonArray(Arrays.asList("reason1", "reason2"));
+
+        res = Whitebox.invokeMethod(EventQueryHelper.class, "filterAbsenceReasons", listReasonIds, regularized, followed, noReason, params);
+        ctx.assertEquals(expectedQuery, res);
+        ctx.assertEquals(res.length() - res.replace("?","").length(), params.size());
+        ctx.assertEquals(expectedParams, params);
+
+        params = new JsonArray();
+        followed = null;
+
+        expectedQuery = "((reason_id IN (?,?) AND counsellor_regularisation = true OR reason_id IS NULL) AND type_id = 1)";
+        expectedParams = new JsonArray(Arrays.asList("reason1", "reason2"));
+
+        res = Whitebox.invokeMethod(EventQueryHelper.class, "filterAbsenceReasons", listReasonIds, regularized, followed, noReason, params);
+        ctx.assertEquals(expectedQuery, res);
+        ctx.assertEquals(res.length() - res.replace("?","").length(), params.size());
+        ctx.assertEquals(expectedParams, params);
+
+        params = new JsonArray();
+        noReason = null;
+
+        expectedQuery = "((reason_id IN (?,?) AND counsellor_regularisation = true) AND type_id = 1)";
+        expectedParams = new JsonArray(Arrays.asList("reason1", "reason2"));
+
+        res = Whitebox.invokeMethod(EventQueryHelper.class, "filterAbsenceReasons", listReasonIds, regularized, followed, noReason, params);
+        ctx.assertEquals(expectedQuery, res);
+        ctx.assertEquals(res.length() - res.replace("?","").length(), params.size());
+        ctx.assertEquals(expectedParams, params);
+
+        params = new JsonArray();
+        regularized = false;
+
+        expectedQuery = "((reason_id IN (?,?) AND counsellor_regularisation = false) AND type_id = 1)";
+        expectedParams = new JsonArray(Arrays.asList("reason1","reason2"));
+
+        res = Whitebox.invokeMethod(EventQueryHelper.class, "filterAbsenceReasons", listReasonIds, regularized, followed, noReason, params);
+        ctx.assertEquals(expectedQuery, res);
+        ctx.assertEquals(res.length() - res.replace("?","").length(), params.size());
+        ctx.assertEquals(expectedParams, params);
+
+        params = new JsonArray();
+        regularized = null;
+
+        expectedQuery = "((reason_id IN (?,?)) AND type_id = 1)";
+        expectedParams = new JsonArray(Arrays.asList("reason1","reason2"));
+
+        res = Whitebox.invokeMethod(EventQueryHelper.class, "filterAbsenceReasons", listReasonIds, regularized, followed, noReason, params);
+        ctx.assertEquals(expectedQuery, res);
+        ctx.assertEquals(res.length() - res.replace("?","").length(), params.size());
+        ctx.assertEquals(expectedParams, params);
+
+        params = new JsonArray();
+        listReasonIds = Arrays.asList();
+        noReason = true;
+        regularized = true;
+        followed = true;
+
+        expectedQuery = "((followed = true AND (counsellor_regularisation = true OR reason_id IS NULL)) AND type_id = 1)";
+        expectedParams = new JsonArray(Arrays.asList());
+
+        res = Whitebox.invokeMethod(EventQueryHelper.class, "filterAbsenceReasons", listReasonIds, regularized, followed, noReason, params);
+        ctx.assertEquals(expectedQuery, res);
+        ctx.assertEquals(res.length() - res.replace("?","").length(), params.size());
+        ctx.assertEquals(expectedParams, params);
+
+        noReason = false;
+        regularized = null;
+
+        expectedQuery = "((followed = true) AND type_id = 1)";
+        expectedParams = new JsonArray(Arrays.asList());
+
+        res = Whitebox.invokeMethod(EventQueryHelper.class, "filterAbsenceReasons", listReasonIds, regularized, followed, noReason, params);
+        ctx.assertEquals(expectedQuery, res);
+        ctx.assertEquals(res.length() - res.replace("?","").length(), params.size());
+        ctx.assertEquals(expectedParams, params);
+
+        followed = null;
+
+        expectedQuery = "";
+        expectedParams = new JsonArray(Arrays.asList());
+
+        res = Whitebox.invokeMethod(EventQueryHelper.class, "filterAbsenceReasons", listReasonIds, regularized, followed, noReason, params);
+        ctx.assertEquals(expectedQuery, res);
+        ctx.assertEquals(res.length() - res.replace("?","").length(), params.size());
+        ctx.assertEquals(expectedParams, params);
     }
 }

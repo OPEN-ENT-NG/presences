@@ -249,7 +249,7 @@ public class DefaultArchiveService extends DBService implements ArchiveService {
         Promise<JsonObject> promise = Promise.promise();
         String start = splittedDateSchoolYear.getString(Field.START_DATE);
         String end = splittedDateSchoolYear.getString(Field.END_DATE);
-        exportEventService.getCsvData(structure.getString(Field.ID), start, end, eventType, reasonIds, true, new ArrayList<>(),
+        exportEventService.getCsvData(structure.getString(Field.ID), start, end, eventType, reasonIds, true, true, new ArrayList<>(),
                 new JsonArray(), null, null, null)
                 .compose(events -> writeCSV(events, start, end, exportProcess, domain, locale))
                 .onSuccess(res -> promise.complete(exportProcess))

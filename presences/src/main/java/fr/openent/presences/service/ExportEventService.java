@@ -30,7 +30,7 @@ public interface ExportEventService {
      * @param handler           Function handler returning data
      */
     void getCsvData(String structureId, String startDate, String endDate, List<String> eventType, List<String> listReasonIds,
-                    Boolean noReason, List<String> userId, JsonArray userIdFromClasses, List<String> classes,
+                    Boolean noReason, Boolean noReasonLateness, List<String> userId, JsonArray userIdFromClasses, List<String> classes,
                     List<String> restrictedClasses, Boolean regularized, Boolean followed, Handler<AsyncResult<List<Event>>> handler);
 
     /**
@@ -50,7 +50,7 @@ public interface ExportEventService {
      * @return list of {@link Event}
      */
     Future<List<Event>> getCsvData(String structureId, String startDate, String endDate, List<String> eventType, List<String> listReasonIds,
-                                   Boolean noReason, List<String> userId, JsonArray userIdFromClasses, List<String> classes,
+                                   Boolean noReason, Boolean noReasonLateness, List<String> userId, JsonArray userIdFromClasses, List<String> classes,
                                    Boolean regularized, Boolean followed);
 
     /**
@@ -74,7 +74,7 @@ public interface ExportEventService {
      * ... event type...
      */
     Future<JsonObject> getPdfData(Boolean canSeeAllStudent, String domain, String local, String structureId, String startDate, String endDate,
-                                  List<String> eventType, List<String> listReasonIds, Boolean noReason, List<String> userId,
-                                  JsonArray userIdFromClasses, Boolean regularized);
+                                  List<String> eventType, List<String> listReasonIds, Boolean noReason, Boolean noReasonLateness, List<String> userId,
+                                  JsonArray userIdFromClasses, Boolean regularized, Boolean followed);
 
 }

@@ -292,28 +292,28 @@ public class DefaultEventStudentService implements EventStudentService {
         Promise<JsonArray> promise = Promise.promise();
         switch (type) {
             case NO_REASON:
-                eventService.getEventsByStudent(1, studentIds, structureId, null,
+                eventService.getEventsByStudent(1, studentIds, structureId,
                         new ArrayList<>(), null, start, end, true, HOUR, false,
                         FutureHelper.handlerJsonArray(promise));
                 break;
             case UNREGULARIZED:
-                eventService.getEventsByStudent(1, studentIds, structureId, null,
+                eventService.getEventsByStudent(1, studentIds, structureId,
                         reasonsIds, null, start, end, false, HOUR, false,
                         FutureHelper.handlerJsonArray(promise));
                 break;
             case REGULARIZED:
-                eventService.getEventsByStudent(1, studentIds, structureId, null,
+                eventService.getEventsByStudent(1, studentIds, structureId,
                         reasonsIds, null, start, end, false, HOUR, true,
                         FutureHelper.handlerJsonArray(promise));
                 break;
             case LATENESS:
                 eventService.getEventsByStudent(2, studentIds, structureId,
-                        null, new ArrayList<>(), null, start, end, true, null,
+                        new ArrayList<>(), null, start, end, true, null,
                         limit, offset, null, FutureHelper.handlerJsonArray(promise));
                 break;
             case DEPARTURE:
                 eventService.getEventsByStudent(3, studentIds, structureId,
-                        null, new ArrayList<>(), null, start, end, true, null,
+                        new ArrayList<>(), null, start, end, true, null,
                         limit, offset, null, FutureHelper.handlerJsonArray(promise));
                 break;
             default:

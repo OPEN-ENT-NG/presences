@@ -233,17 +233,17 @@ public class DefaultEventService extends DBService implements EventService {
                 EventQueryHelper.filterTimes(startTime, endTime, params) +
                 EventQueryHelper.filterStudentIds(studentIds, params) +
                 EventQueryHelper.filterFollowed(followed, params) +
-                EventQueryHelper.filterReasons(reasonIds, noAbsenceReason, noLatenessReason, regularized, typeIds, params) +
+                EventQueryHelper.filterReasons(reasonIds, noAbsenceReason, noLatenessReason, regularized, followed, typeIds, params) +
                 " GROUP BY student_id, date ";
     }
 
     @Override
     public void getEvents(String structureId, String startDate, String endDate,
-                          List<String> eventType, List<String> listReasonIds, Boolean noReason, List<String> userId, JsonArray userIdFromClasses,
+                          List<String> eventType, List<String> listReasonIds, Boolean noReason, Boolean noReasonLateness, List<String> userId, JsonArray userIdFromClasses,
                           Boolean regularized, Boolean followed, Integer page, Handler<Either<String, JsonArray>> handler) {
         JsonArray params = new JsonArray();
         sql.prepared(this.getEventsQuery(structureId, startDate, endDate,
-                        eventType, listReasonIds, noReason, regularized, followed, userId, userIdFromClasses, page, params),
+                        eventType, listReasonIds, noReason, noReasonLateness, regularized, followed, userId, userIdFromClasses, page, params),
                 params, SqlResult.validResultHandler(handler));
     }
 
@@ -280,7 +280,7 @@ public class DefaultEventService extends DBService implements EventService {
      * @param params            Json params
      */
     private String getEventsQuery(String structureId, String startDate, String endDate, List<String> eventType,
-                                  List<String> listReasonIds, Boolean noReason, Boolean regularized, Boolean followed,
+                                  List<String> listReasonIds, Boolean noReason, Boolean noReasonLateness, Boolean regularized, Boolean followed,
                                   List<String> userId, JsonArray userIdFromClasses, Integer page, JsonArray params) {
 
         String query = "WITH allevents AS (" +
@@ -304,7 +304,7 @@ public class DefaultEventService extends DBService implements EventService {
         params.add(startDate + " " + defaultStartTime);
         params.add(endDate + " " + defaultEndTime);
 
-        query += setParamsForQueryEvents(listReasonIds, userId, regularized, followed, noReason,
+        query += setParamsForQueryEvents(listReasonIds, userId, regularized, followed, noReason, noReasonLateness,
                 userIdFromClasses, eventType, params);
         query += ") SELECT * FROM allevents " +
                 "GROUP BY id, start_date, end_date, created, comment, student_id, reason_id, owner," +
@@ -336,72 +336,24 @@ public class DefaultEventService extends DBService implements EventService {
                 EventQueryHelper.joinEventType(eventType, params) +
                 EventQueryHelper.filterDates(startDate, endDate, params) +
                 EventQueryHelper.filterTimes(startTime, endTime, params) +
-                EventQueryHelper.filterReasons(listReasonIds, noAbsenceReason, noLatenessReason, regularized, eventType, params) +
+                EventQueryHelper.filterReasons(listReasonIds, noAbsenceReason, noLatenessReason, regularized, followed, eventType, params) +
                 EventQueryHelper.filterStudentIds(userId, params) +
                 EventQueryHelper.filterFollowed(followed, params);
     }
 
     private String setParamsForQueryEvents(List<String> listReasonIds, List<String> userId, Boolean regularized,
-                                           Boolean followed, Boolean noReason, JsonArray userIdFromClasses,
+                                           Boolean followed, Boolean noReason, Boolean noReasonLateness, JsonArray userIdFromClasses,
                                            List<String> typeIds, JsonArray params) {
-        String query = "";
+        List<String> studentId = new ArrayList<>(userId);
+        userIdFromClasses.stream().map(o -> (JsonObject) o).forEach(jsonObject -> studentId.add(jsonObject.getString("studentId")));
+        String query = EventQueryHelper.filterStudentIds(studentId, params);
+        query = query.replaceFirst("AND ", "");
 
-        if (userIdFromClasses != null && !userIdFromClasses.isEmpty()) {
-            query += " AND student_id IN " + Sql.listPrepared(userIdFromClasses.getList());
-            for (int i = 0; i < userIdFromClasses.size(); i++) {
-                params.add(userIdFromClasses.getJsonObject(i).getString("studentId"));
-            }
-        }
-        if (userId != null && !userId.isEmpty()) {
-            query += " AND student_id IN " + Sql.listPrepared(userId.toArray());
-            params.addAll(new JsonArray(userId));
-        }
+        String reasonFilter = EventQueryHelper.filterReasons(listReasonIds, noReason, noReasonLateness, regularized, followed, typeIds, params);
 
-        // this condition occurs when we want to filter no reason and regularized event at the same time
-        if ((noReason != null && noReason) && (regularized != null && regularized)) {
-            query += "AND (reason_id IS NULL OR (reason_id IS NOT NULL AND counsellor_regularisation = true)";
-
-            if (listReasonIds != null && !listReasonIds.isEmpty()) {
-                query += " AND reason_id IN " + Sql.listPrepared(listReasonIds) + ")";
-                params.addAll(new JsonArray(listReasonIds));
-            } else {
-                query += ")";
-            }
-
-            // else is default condition
-        } else {
-            // If we want to fetch events WITH reasonId, array reasonIds fetched is not empty
-            // (optional if we wish noReason fetched at same time then noReason is TRUE)
-            if (listReasonIds != null && !listReasonIds.isEmpty()) {
-                query += " AND ((reason_id IN " + Sql.listPrepared(listReasonIds) + ")";
-
-                if (noReason != null && noReason) {
-                    query += " OR reason_id IS NULL";
-                } else {
-                    query += typeIds.contains(EventType.LATENESS.getType().toString())
-                            ? (" OR type_id = " + EventType.LATENESS.getType()) : "";
-                }
-                query += ")";
-                params.addAll(new JsonArray(listReasonIds));
-            }
-
-            // If we want to fetch events with NO reasonId, array reasonIds fetched is empty
-            // AND noReason is TRUE
-            if ((listReasonIds == null || listReasonIds.isEmpty()) && (noReason != null && noReason)) {
-                query += " AND (reason_id IS NULL " + (regularized != null ? " OR counsellor_regularisation = " + regularized + "" : "") + ") ";
-            }
-
-            if (regularized != null) {
-                query += " AND counsellor_regularisation = " + regularized + " ";
-            }
-        }
-
-        if (followed != null) {
-            query += " AND followed = " + followed + " ";
-        }
-
-        return query;
+        return query.isEmpty() ? reasonFilter : " AND (" + query + reasonFilter + ")";
     }
+
     @Override
     public Future<JsonObject> getAbsencesCountSummary(String structureId, String startAt, String endAt) {
         return getAbsencesCountSummary(structureId, startAt, endAt, Arrays.stream(Markers.values())
@@ -1148,7 +1100,7 @@ public class DefaultEventService extends DBService implements EventService {
             switch (EventRecoveryMethodEnum.getInstanceFromString(recoveryMethod)) {
                 case DAY:
                 case HOUR: {
-                    JsonObject eventsQuery = getEventQuery(eventType, students, structure, justified, reasonsId,
+                    JsonObject eventsQuery = getEventQuery(eventType, students, structure, reasonsId,
                             massmailed, null, startDate, endDate, noReasons, recoveryMethod, null, null, null, null, true, regularized);
                     String query = "WITH count_by_user AS (WITH events as (" + eventsQuery.getString("query") + ") " +
                             "SELECT count(*), student_id FROM events GROUP BY student_id) SELECT * FROM count_by_user WHERE count >= " + startAt;
@@ -1167,9 +1119,9 @@ public class DefaultEventService extends DBService implements EventService {
                         JsonObject slotSetting = evt.right().getValue();
                         if (slotSetting.containsKey("end_of_half_day") && slotSetting.getString("end_of_half_day") != null) {
                             String halfOfDay = slotSetting.getString("end_of_half_day");
-                            JsonObject morningQuery = getEventQuery(eventType, students, structure, justified,
+                            JsonObject morningQuery = getEventQuery(eventType, students, structure,
                                     reasonsId, massmailed, null, startDate, endDate, noReasons, recoveryMethod, defaultStartTime, halfOfDay, null, null, true, regularized);
-                            JsonObject afternoonQuery = getEventQuery(eventType, students, structure, justified,
+                            JsonObject afternoonQuery = getEventQuery(eventType, students, structure,
                                     reasonsId, massmailed, null, startDate, endDate, noReasons, recoveryMethod, halfOfDay, defaultEndTime, null, null, true, regularized);
                             String query = "WITH count_by_user AS (WITH events as (" + morningQuery.getString("query") + " UNION ALL " + afternoonQuery.getString("query") + ") " +
                                     "SELECT count(*), student_id FROM events GROUP BY student_id) SELECT * FROM count_by_user WHERE count >= " + startAt;
@@ -1187,10 +1139,18 @@ public class DefaultEventService extends DBService implements EventService {
         });
     }
 
-    private JsonObject getEventQuery(Integer eventTypes, List<String> students, String structure, Boolean justified,
+    private JsonObject getEventQuery(Integer eventTypes, List<String> students, String structure,
                                      List<Integer> reasonsId, Boolean massmailed, Boolean compliance, String startDate, String endDate,
                                      boolean noReasons, String recoveryMethod, String startTime, String endTime,
                                      String limit, String offset, boolean isCount, Boolean regularized) {
+        return getEventQuery(eventTypes, students, structure, reasonsId, massmailed, compliance, startDate, endDate,
+                noReasons, null, recoveryMethod, startTime, endTime, limit, offset, isCount, regularized, null);
+    }
+
+    private JsonObject getEventQuery(Integer eventTypes, List<String> students, String structure,
+                                     List<Integer> reasonsId, Boolean massmailed, Boolean compliance, String startDate, String endDate,
+                                     boolean noReasons, Boolean noReasonLateness, String recoveryMethod, String startTime, String endTime,
+                                     String limit, String offset, boolean isCount, Boolean regularized, Boolean followed) {
         recoveryMethod = EventRecoveryMethodEnum.getInstanceFromString(recoveryMethod) == null ? EventRecoveryMethodEnum.HOUR.getValue() : recoveryMethod;
         String dateCast = !EventRecoveryMethodEnum.HOUR.getValue().equals(recoveryMethod) ? "::date" : "";
         String periodRangeName = EventRecoveryMethodEnum.HALF_DAY.getValue().equals(recoveryMethod) && endTime.equals(defaultEndTime) ? "AFTERNOON" : "";
@@ -1244,27 +1204,14 @@ public class DefaultEventService extends DBService implements EventService {
             params.addAll(new JsonArray(students));
         }
 
-        // If we want to fetch events WITH reasonId, array reasonIds fetched is not empty 
-        // (optional if we wish noReason fetched at same time then noReason is TRUE)
-        if (reasonsId != null && !reasonsId.isEmpty()) {
-            query += " AND (reason_id IN " + Sql.listPrepared(reasonsId) + (noReasons ? " OR reason_id IS NULL" : "") + ") ";
-            params.addAll(new JsonArray(reasonsId));
-        }
+        List<String> listReasonId = reasonsId.stream().map(Object::toString).collect(Collectors.toList());
+        query += EventQueryHelper.filterReasons(listReasonId, noReasons, noReasonLateness, regularized, followed, Collections.singletonList(eventTypes.toString()), params);
 
-        // If we want to fetch events with NO reasonId, array reasonIds fetched is empty 
-        // AND noReason is TRUE
-        if (reasonsId != null && reasonsId.isEmpty() && noReasons) {
-            query += " AND reason_id IS NULL ";
-        }
+        query += EventQueryHelper.filterFollowed(followed, params);
 
         if (massmailed != null) {
             query += " AND massmailed = ? ";
             params.add(massmailed);
-        }
-
-        if (regularized != null || justified != null) {
-            query += " AND counsellor_regularisation = ?";
-            params.add(regularized != null ? regularized : justified);
         }
 
         query += " GROUP BY event.start_date" + dateCast + ", event.student_id, event.end_date" + dateCast + ", event.type_id ";
@@ -1289,13 +1236,13 @@ public class DefaultEventService extends DBService implements EventService {
     }
 
     @Override
-    public Future<JsonArray> getEventsByStudent(Boolean canSeeAllStudent, Integer eventType, List<String> students, String structure, Boolean justified,
+    public Future<JsonArray> getEventsByStudent(Boolean canSeeAllStudent, Integer eventType, List<String> students, String structure,
                                                 List<Integer> reasonsId, Boolean massmailed, Boolean compliance, String startDate, String endDate,
-                                                boolean noReasons, String recoveryMethodUsed, String limit, String offset,
-                                                Boolean regularized) {
+                                                boolean noReasons, boolean noReasonsLateness, String recoveryMethodUsed, String limit, String offset,
+                                                Boolean regularized, Boolean followed) {
         Promise<JsonArray> promise = Promise.promise();
-        this.getEventsByStudent(canSeeAllStudent, eventType, students, structure, justified, reasonsId, massmailed, compliance, startDate, endDate, noReasons,
-                recoveryMethodUsed, limit, offset, regularized, event -> {
+        this.getEventsByStudent(canSeeAllStudent, eventType, students, structure, reasonsId, massmailed, compliance, startDate, endDate, noReasons,
+                noReasonsLateness, recoveryMethodUsed, limit, offset, regularized, followed, event -> {
                     if (event.isLeft()) {
                         String message = String.format("[Presences@%s::getEventsByStudent] an error has occurred while fetching " +
                                 "events by students: %s", this.getClass().getSimpleName(), event.left().getValue());
@@ -1309,10 +1256,10 @@ public class DefaultEventService extends DBService implements EventService {
     }
 
     @Override
-    public void getEventsByStudent(Boolean canSeeAllStudent, Integer eventType, List<String> students, String structure, Boolean justified,
+    public void getEventsByStudent(Boolean canSeeAllStudent, Integer eventType, List<String> students, String structure,
                                    List<Integer> reasonsId, Boolean massmailed, Boolean compliance, String startDate, String endDate,
-                                   boolean noReasons, String recoveryMethodUsed, String limit, String offset,
-                                   Boolean regularized, Handler<Either<String, JsonArray>> handler) {
+                                   boolean noReasons, Boolean noReasonsLateness, String recoveryMethodUsed, String limit, String offset,
+                                   Boolean regularized, Boolean followed, Handler<Either<String, JsonArray>> handler) {
         Handler<Either<String, JsonArray>> queryHandler = eventsEvt -> {
             if (eventsEvt.isLeft()) {
                 handler.handle(eventsEvt);
@@ -1326,8 +1273,8 @@ public class DefaultEventService extends DBService implements EventService {
         };
 
         if (eventType != 1) {
-            JsonObject eventsQuery = getEventQuery(eventType, students, structure, justified, reasonsId, massmailed, compliance,
-                    startDate, endDate, noReasons, "HOUR", null, null, limit, offset, false, null);
+            JsonObject eventsQuery = getEventQuery(eventType, students, structure, reasonsId, massmailed, compliance,
+                    startDate, endDate, noReasons, noReasonsLateness, "HOUR", null, null, limit, offset, false, regularized, followed);
             Sql.getInstance().prepared(eventsQuery.getString("query"), eventsQuery.getJsonArray("params"), SqlResult.validResultHandler(queryHandler));
             return;
         }
@@ -1343,8 +1290,9 @@ public class DefaultEventService extends DBService implements EventService {
             switch (EventRecoveryMethodEnum.getInstanceFromString(recoveryMethod)) {
                 case DAY:
                 case HOUR: {
-                    JsonObject eventsQuery = getEventQuery(eventType, students, structure, justified, reasonsId,
-                            massmailed, compliance, startDate, endDate, noReasons, recoveryMethod, null, null, limit, offset, false, regularized);
+                    JsonObject eventsQuery = getEventQuery(eventType, students, structure, reasonsId,
+                            massmailed, compliance, startDate, endDate, noReasons, noReasonsLateness, recoveryMethod,
+                            null, null, limit, offset, false, regularized, followed);
                     Sql.getInstance().prepared(eventsQuery.getString("query"), eventsQuery.getJsonArray("params"), SqlResult.validResultHandler(queryHandler));
                     break;
                 }
@@ -1360,10 +1308,10 @@ public class DefaultEventService extends DBService implements EventService {
                         JsonObject slotSetting = evt.right().getValue();
                         if (slotSetting.containsKey("end_of_half_day") && slotSetting.getString("end_of_half_day") != null) {
                             String halfOfDay = slotSetting.getString("end_of_half_day");
-                            JsonObject afternoonQuery = getEventQuery(eventType, students, structure, justified, reasonsId,
-                                    massmailed, compliance, startDate, endDate, noReasons, recoveryMethod, halfOfDay, defaultEndTime, null, null, false, regularized);
-                            JsonObject morningQuery = getEventQuery(eventType, students, structure, justified, reasonsId,
-                                    massmailed, compliance, startDate, endDate, noReasons, recoveryMethod, defaultStartTime, halfOfDay, null, null, false, regularized);
+                            JsonObject afternoonQuery = getEventQuery(eventType, students, structure, reasonsId,
+                                    massmailed, compliance, startDate, endDate, noReasons, noReasonsLateness, recoveryMethod, halfOfDay, defaultEndTime, null, null, false, regularized, followed);
+                            JsonObject morningQuery = getEventQuery(eventType, students, structure, reasonsId,
+                                    massmailed, compliance, startDate, endDate, noReasons, noReasonsLateness, recoveryMethod, defaultStartTime, halfOfDay, null, null, false, regularized, followed);
                             String query = "WITH events as ((" + afternoonQuery.getString("query") + ") UNION ALL (" + morningQuery.getString("query") + ")" +
                                     ") SELECT * FROM events ORDER BY end_date DESC, start_date DESC, period";
 
@@ -1401,29 +1349,29 @@ public class DefaultEventService extends DBService implements EventService {
     }
 
     @Override
-    public void getEventsByStudent(Integer eventType, List<String> students, String structure, Boolean justified,
+    public void getEventsByStudent(Integer eventType, List<String> students, String structure,
                                    List<Integer> reasonsId, Boolean massmailed, String startDate, String endDate,
                                    boolean noReasons, String recoveryMethodUsed, Boolean regularized,
                                    Handler<Either<String, JsonArray>> handler) {
-        this.getEventsByStudent(eventType, students, structure, justified, reasonsId, massmailed, startDate, endDate, noReasons,
+        this.getEventsByStudent(eventType, students, structure, reasonsId, massmailed, startDate, endDate, noReasons,
                 recoveryMethodUsed, null, null, regularized, handler);
     }
 
     @Override
-    public void getEventsByStudent(Integer eventType, List<String> students, String structure, Boolean justified, List<Integer> reasonsId,
+    public void getEventsByStudent(Integer eventType, List<String> students, String structure, List<Integer> reasonsId,
                                    Boolean massmailed, Boolean compliance, String startDate, String endDate, boolean noReasons,
                                    String recoveryMethodUsed, Boolean regularized, Handler<Either<String, JsonArray>> handler) {
-        this.getEventsByStudent(null, eventType, students, structure, justified, reasonsId, massmailed, compliance, startDate,
-                endDate, noReasons, recoveryMethodUsed, null, null, regularized, handler);
+        this.getEventsByStudent(null, eventType, students, structure, reasonsId, massmailed, compliance, startDate,
+                endDate, noReasons, null, recoveryMethodUsed, null, null, regularized, null, handler);
     }
 
     @Override
-    public void getEventsByStudent(Integer eventType, List<String> students, String structure, Boolean justified,
+    public void getEventsByStudent(Integer eventType, List<String> students, String structure,
                                    List<Integer> reasonsId, Boolean massmailed, String startDate, String endDate,
                                    boolean noReasons, String recoveryMethodUsed, String limit, String offset,
                                    Boolean regularized, Handler<Either<String, JsonArray>> handler) {
-        this.getEventsByStudent(null, eventType, students, structure, justified, reasonsId, massmailed, null, startDate,
-                endDate, noReasons, recoveryMethodUsed, null, null, regularized, handler);
+        this.getEventsByStudent(null, eventType, students, structure, reasonsId, massmailed, null, startDate,
+                endDate, noReasons, null, recoveryMethodUsed, null, null, regularized, null, handler);
     }
 
 
