@@ -1197,70 +1197,34 @@ public class DefaultAbsenceService extends DBService implements AbsenceService {
     }
 
     @Override
-    public void getAbsentStudentIds(String structureId, String currentDate, Handler<Either<String, JsonArray>> handler) {
-        JsonArray params = new JsonArray()
-                .add(currentDate)
-                .add(currentDate)
-                .add(structureId)
-                .add(structureId)
-                .add(currentDate)
-                .add(currentDate);
-
-        String query = "SELECT ab.student_id FROM " + Presences.dbSchema + ".absence ab" +
-                " WHERE (ab.start_date < ?" +
-                " AND ab.end_date > ?" +
-                " AND ab.structure_id = ?)" +
-                " UNION" +
-                " SELECT ev.student_id FROM " + Presences.dbSchema + ".event ev" +
-                " INNER JOIN " + Presences.dbSchema + ".register AS r" +
-                " ON (r.id = ev.register_id AND r.structure_id = ?)" +
-                " WHERE (ev.start_date < ? AND ev.end_date > ?)";
-
-        Sql.getInstance().prepared(query, params, SqlResult.validResultHandler(handler));
-    }
-
-    @Override
     public Future<JsonObject> countAbsentStudents(String structureId, List<String> studentIds, String startAt, String endAt) {
         Promise<JsonObject> promise = Promise.promise();
         JsonArray params = new JsonArray();
-        String query = "SELECT COUNT(DISTINCT result.student_id)" +
-                " FROM (" +
-                " SELECT ab.student_id" +
-                " FROM presences.absence ab" +
-                " WHERE ab.structure_id = ?";
-        params.add(structureId);
-        query += countAbsentStudentsWhereFilter(params, "ab", studentIds, startAt, endAt) +
-                " UNION" +
-                " SELECT ev.student_id" +
-                " FROM presences.event ev" +
-                " INNER JOIN presences.register AS r" +
-                " ON (r.id = ev.register_id AND r.structure_id = ?)" +
-                " WHERE ev.type_id = ?";
-        params.add(structureId)
-                .add(EventType.ABSENCE.getType());
-        query += countAbsentStudentsWhereFilter(params, "ev", studentIds, startAt, endAt) +
-                " ) as result";
+        String query = "SELECT COUNT(DISTINCT student_id)" +
+                " FROM presences.absence";
+        query += countAbsentStudentsWhereFilter(params, structureId, studentIds, startAt, endAt);
 
         Sql.getInstance().prepared(query, params, SqlResult.validUniqueResultHandler(FutureHelper.handlerJsonObject(promise)));
 
         return promise.future();
     }
 
-    public String countAbsentStudentsWhereFilter(JsonArray params, String alias, List<String> studentIds,
+    public String countAbsentStudentsWhereFilter(JsonArray params, String structureId, List<String> studentIds,
                                                  String startAt, String endAt) {
-        String query = "";
+        String query = " WHERE structure_id = ?";
+        params.add(structureId);
         if (endAt != null) {
-            query += String.format(" AND %s.start_date < ?", alias);
+            query += " AND start_date < ?";
             params.add(endAt);
         }
 
         if (startAt != null) {
-            query += String.format(" AND %s.end_date > ?", alias);
+            query += " AND end_date > ?";
             params.add(startAt);
         }
 
         if (studentIds != null && !studentIds.isEmpty()) {
-            query += String.format(" AND %s.student_id in %s", alias, Sql.listPrepared(studentIds));
+            query += String.format(" AND student_id in %s", Sql.listPrepared(studentIds));
             params.addAll(new JsonArray(studentIds));
         }
 
