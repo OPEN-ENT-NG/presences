@@ -188,16 +188,6 @@ public interface AbsenceService {
     Future<JsonArray> retrieve(String structure, List<String> students, String start, String end, Boolean regularized,
                                Boolean followed, Boolean noReason, List<Integer> reasons, Integer page);
 
-    /**
-     * Get all student ids for absent students from the structure
-     * in a given period
-     *
-     * @param structureId structure identifier
-     * @param currentDate current date and hour
-     * @param handler     function handler returning data
-     */
-    void getAbsentStudentIds(String structureId, String currentDate, Handler<Either<String, JsonArray>> handler);
-
 
     /**
      * Get all student ids for absent students from the structure
