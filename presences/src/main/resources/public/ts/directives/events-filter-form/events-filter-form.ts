@@ -263,10 +263,15 @@ class Controller implements ng.IController, IViewModel {
         filterResult.notFollowed = this.formFilter.notFollowed;
         filterResult.students = this.studentsSearch.getSelectedStudents();
         filterResult.classes = this.groupsSearch.getSelectedGroups();
+
+        let saveFilter: EventsFilter = Object.assign({}, filterResult);
+        saveFilter.students = [];
+        saveFilter.classes = [];
+
         if (this.absencesOnly) {
-            await PresencesPreferenceUtils.updatePresencesPlannedAbsencesFilter(filterResult, window.structure.id);
+            await PresencesPreferenceUtils.updatePresencesPlannedAbsencesFilter(saveFilter, window.structure.id);
         } else {
-            await PresencesPreferenceUtils.updatePresencesEventListFilter(filterResult, window.structure.id);
+            await PresencesPreferenceUtils.updatePresencesEventListFilter(saveFilter, window.structure.id);
         }
         this.display = false;
         this.$scope.$emit(EVENTS_FORM.SUBMIT, filterResult);

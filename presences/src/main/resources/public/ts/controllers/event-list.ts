@@ -296,7 +296,7 @@ export const eventListController = ng.controller('EventListController', ['$scope
                         regularized: true,
                         followed: true,
                         notFollowed: true,
-                        reasonIds: []
+                        reasonIds: vm.eventReasonsType.map((reason: Reason) => reason.id)
                     }
                 };
             }
