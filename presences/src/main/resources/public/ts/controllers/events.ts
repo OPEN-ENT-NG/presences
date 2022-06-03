@@ -1,10 +1,11 @@
-import {_, ng} from 'entcore';
+import {_, Me, ng} from 'entcore';
 import {IAngularEvent, ILocationService, IScope, IWindowService} from "angular";
 import {Student, Students} from "@common/model/Student";
-import {GroupsSearch, safeApply, StudentsSearch} from "@common/utils";
+import {GroupsSearch, PresencesPreferenceUtils, safeApply, StudentsSearch} from "@common/utils";
 import {Group, GroupService, SearchService} from "@common/services";
 import {EVENTS_DATE, EVENTS_FORM, EVENTS_SEARCH} from "@common/core/enum/presences-event";
 import {EventsFilter} from "@presences/utilities";
+import {EventListCalendarFilter} from "@presences/models";
 
 declare let window: any;
 
@@ -93,8 +94,11 @@ class Controller implements ng.IController, IViewModel {
         });
     }
 
-    $onInit(): void {
+    async $onInit(): Promise<void> {
         this.students = new Students();
+        let calendarFilter: EventListCalendarFilter = JSON.parse(JSON.stringify(await Me.preference(PresencesPreferenceUtils.PREFERENCE_KEYS.PRESENCE_EVENT_LIST_CALENDAR_FILTER)));
+        if (this.studentsSearch) this.studentsSearch.setSelectedStudents(calendarFilter && calendarFilter.students ? calendarFilter.students : []);
+        if (this.groupsSearch) this.groupsSearch.setSelectedGroups(calendarFilter && calendarFilter.classes ? calendarFilter.classes : []);
     }
 
     homeState(): boolean {
