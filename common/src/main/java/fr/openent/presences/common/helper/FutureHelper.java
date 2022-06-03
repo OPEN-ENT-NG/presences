@@ -103,13 +103,13 @@ public class FutureHelper {
     public static void busArrayHandler(Future<JsonArray> future, Message<JsonObject> message) {
         future
                 .onSuccess(result -> message.reply((new JsonObject()).put(Field.STATUS, Field.OK).put(Field.RESULT, result)))
-                .onFailure(error -> message.reply((new JsonObject()).put(Field.STATUS, Field.ERROR).put(Field.MESSAGE, error)));
+                .onFailure(error -> message.reply((new JsonObject()).put(Field.STATUS, Field.ERROR).put(Field.MESSAGE, error.getMessage())));
     }
 
     public static void busObjectHandler(Future<JsonObject> future, Message<JsonObject> message) {
         future
                 .onSuccess(result -> message.reply((new JsonObject()).put(Field.STATUS, Field.OK).put(Field.RESULT, result)))
-                .onFailure(error -> message.reply((new JsonObject()).put(Field.STATUS, Field.ERROR).put(Field.MESSAGE, error)));
+                .onFailure(error -> message.reply((new JsonObject()).put(Field.STATUS, Field.ERROR).put(Field.MESSAGE, error.getMessage())));
     }
 
     public static void handleObjectResult(JsonObject messageBody, Promise<JsonObject> promise) {
