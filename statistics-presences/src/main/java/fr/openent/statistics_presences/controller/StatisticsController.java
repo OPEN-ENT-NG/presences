@@ -225,7 +225,7 @@ public class StatisticsController extends ControllerHelper {
     public void processStatisticsPrefetch(final HttpServerRequest request) {
         RequestUtils.bodyToJson(request, pathPrefix + "processStatisticsPrefetch", body -> {
             List<String> structure = body.getJsonArray("structure").getList();
-            statisticsPresencesService.processStatisticsPrefetch(structure, null, false)
+            statisticsPresencesService.processStatisticsPrefetch(structure, new ArrayList<>(), false)
                     .onSuccess(res -> renderJson(request, res))
                     .onFailure(unused -> renderError(request));
         });
