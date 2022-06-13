@@ -124,7 +124,7 @@ public class RegisterController extends ControllerHelper {
                     }
                 });
                 if (RegisterStatus.DONE.getStatus().equals(state)) {
-                    eventStore.createAndStoreEvent(EventStores.VALIDATE_REGISTER, request);
+                    eventStore.createAndStoreEvent(EventStores.VALID_REGISTER, request);
                 }
             } catch (ClassCastException | NumberFormatException e) {
                 log.error("[Presences@RegisterController::updateStatus] Failed to parse register identifier", e);

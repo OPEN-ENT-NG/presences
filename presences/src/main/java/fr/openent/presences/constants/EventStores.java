@@ -10,5 +10,5 @@ public class EventStores {
     public static final String ACCESS = "ACCESS";
 
     // CREATE EVENT TO STORE REGISTER VALIDATION
-    public static final String VALIDATE_REGISTER = "VALIDATE_REGISTER";
+    public static final String VALID_REGISTER = "VALID_REGISTER";
 }
