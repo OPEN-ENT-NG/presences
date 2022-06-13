@@ -353,11 +353,11 @@ export const eventListController = ng.controller('EventListController', ['$scope
             const calendarFilterKey: string = PresencesPreferenceUtils.PREFERENCE_KEYS.PRESENCE_EVENT_LIST_CALENDAR_FILTER;
             let calendarFilter: EventListCalendarFilter = Me.preferences[calendarFilterKey];
             if (calendarFilter && Object.keys(calendarFilter).length !== 0) {
-                if (calendarFilter.startDate) {
+                if (calendarFilter.startDate && calendarFilter.startDate instanceof Date) {
                     vm.filter.startDate = calendarFilter.startDate;
                     vm.events.startDate = vm.filter.startDate.toDateString();
                 }
-                if (calendarFilter.endDate) {
+                if (calendarFilter.endDate && calendarFilter.startDate instanceof Date) {
                     vm.filter.endDate = calendarFilter.endDate;
                     vm.events.startDate = vm.filter.startDate.toDateString();
                 }
