@@ -166,12 +166,16 @@
   "massmailing.reasons.none": "Sans motif",
   "massmailing.init.template.mail.0.name": "Quotidien MAIL",
   "massmailing.init.template.mail.0.content": "<div>Madame, Monsieur,</div><div></div><div>Votre enfant [NOM ENFANT] en classe de [CLASSE] a été absent ce jour:</div><div>​</div><div>​[RECAPITULATIF]</div><div>​</div><div>Merci de bien vouloir justifier puis régulariser cette absence si cela n'a pas été fait.</div><div>​</div><div>​Cordialement,</div><div>​</div><div>​La Vie Scolaire</div>",
+  "massmailing.init.template.mail.0.category": "ABSENCE",
   "massmailing.init.template.mail.1.name": "Récapitulatif Vie Scolaire",
   "massmailing.init.template.mail.1.content": "<div>Madame, Monsieur,</div><div>​</div><div>Veuillez trouver ci-dessous le récapitulatif de votre enfant [NOM ENFANT] en classe de [CLASSE]:</div><div>Absence(s): [NOMBRE ABSENCE]</div><div>Retard(s): [NOMBRE RETARD]</div><div>​</div><div>[RECAPITULATIF]</div><div>​</div><div>​Nous nous tenons à votre disposition pour des informations complémentaires,</div><div>​</div><div>​Cordialement,</div><div>​</div><div>La Vie Scolaire</div>",
+  "massmailing.init.template.mail.1.category": "ALL",
   "massmailing.init.template.sms.0.name": "Quotidien Absence SMS",
   "massmailing.init.template.sms.0.content": "Bonjour, votre enfant [NOM ENFANT] a été absent le [DATE DERNIERE ABSENCE]. Merci de régulariser cette absence au plus vite. La Vie Scolaire",
+  "massmailing.init.template.sms.0.category": "ABSENCE",
   "massmailing.init.template.sms.1.name": "Quotidien Retard SMS",
   "massmailing.init.template.sms.1.content": "Bonjour, votre enfant [NOM ENFANT] a été en retard le [DATE DERNIER RETARD]. Merci de régulariser ce retard au plus vite. La Vie Scolaire",
+  "massmailing.init.template.sms.1.category": "LATENESS",
   "massmailing.lateness.none": "Sans motif",
   "presences.in.structure": "Présence dans l'établissement"
 }
