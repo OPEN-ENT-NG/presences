@@ -41,14 +41,19 @@ public class EventsHelper {
             JsonObject latestEvent = getLatestEvent(groupEvents);
 
             // we set new Event start date with the earliest events start_date and end date with the latest events end_date
-            if (earliestEvent != null && latestEvent != null)
-                newEvents.add(setGroupedEvent(groupEvents, earliestEvent.getString("start_date"), latestEvent.getString("end_date")));
+            if (earliestEvent != null && latestEvent != null) {
+                groupEvents.stream()
+                        .collect(Collectors.groupingBy(el -> el.getString(Field.STUDENT_ID)))
+                        .forEach((s, studentEvents) -> newEvents.add(
+                                setGroupedEvent(studentEvents, earliestEvent.getString(Field.START_DATE), latestEvent.getString(Field.END_DATE))
+                        ));
+            }
         });
 
         // return events sorted by date desc
         return new JsonArray(
                 newEvents.stream().sorted((JsonObject eventA, JsonObject eventB) ->
-                        DateHelper.isDateBeforeOrEqual(eventB.getString("start_date"), eventA.getString("start_date")) ? -1 : 1
+                        DateHelper.isDateBeforeOrEqual(eventB.getString(Field.START_DATE), eventA.getString(Field.START_DATE)) ? -1 : 1
                 ).collect(Collectors.toList())
         );
     }

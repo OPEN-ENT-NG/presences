@@ -1371,7 +1371,7 @@ public class DefaultEventService extends DBService implements EventService {
                                    boolean noReasons, String recoveryMethodUsed, String limit, String offset,
                                    Boolean regularized, Handler<Either<String, JsonArray>> handler) {
         this.getEventsByStudent(null, eventType, students, structure, reasonsId, massmailed, null, startDate,
-                endDate, noReasons, null, recoveryMethodUsed, null, null, regularized, null, handler);
+                endDate, noReasons, null, recoveryMethodUsed, limit, offset, regularized, null, handler);
     }
 
 
