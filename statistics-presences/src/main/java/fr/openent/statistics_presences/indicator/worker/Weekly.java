@@ -118,8 +118,8 @@ public class Weekly extends IndicatorWorker {
         if (slots == null || slots.isEmpty()) {
             String message = String.format("[StatisticsPresences@%s::getSplitEventsBySlots] " +
                             "Slots not found for event %s",
-                    this.getClass().getSimpleName(), event.getString(Field.ID, ""));
-            log.error(message);
+                    this.getClass().getSimpleName(), event.getJsonArray(Field.EVENTS, new JsonArray()).toString());
+            log.debug(message);
             return Collections.singletonList(new WeeklyStat().setSlotId(null)
                     .setStartDate(event.getString(Field.START_DATE))
                     .setEndDate(event.getString(Field.END_DATE)));
