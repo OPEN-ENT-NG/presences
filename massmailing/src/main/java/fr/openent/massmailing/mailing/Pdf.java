@@ -42,8 +42,9 @@ public class Pdf extends MassMailingProcessor {
     public void massmail(Handler<Either<String, Boolean>> handler) {
         super.process(event -> {
             if (event.isLeft()) {
-                LOGGER.error("[Massmailing@Pdf::massmail] Failed to process pdf", event.left().getValue());
-                handler.handle(new Either.Left<>(event.left().getValue()));
+                String message = "[Massmailing@Pdf::massmail] Failed to process pdf";
+                LOGGER.error(String.format("%s %s", message, event.left().getValue()));
+                handler.handle(new Either.Left<>(message));
                 return;
             }
 
@@ -56,8 +57,9 @@ public class Pdf extends MassMailingProcessor {
 
             send(formattedPdfs.toString(), pdfs, sendAsync -> {
                 if (sendAsync.failed()) {
-                    LOGGER.error("[Massmailing@Pdf::massmail::futureJoin] Failed to send pdf ", sendAsync.cause().getMessage());
-                    handler.handle(new Either.Left<>(sendAsync.cause().getMessage()));
+                    String message = "[Massmailing@Pdf::massmail::futureJoin] Failed to send pdf";
+                    LOGGER.error(String.format("%s %s", message, sendAsync.cause().getMessage()));
+                    handler.handle(new Either.Left<>(message));
                 } else {
                     handler.handle(new Either.Right<>(sendAsync.result()));
                 }
@@ -86,6 +88,8 @@ public class Pdf extends MassMailingProcessor {
 
                     savePdf(buffer, fileName, file -> {
                         if (file.failed()) {
+                            String message = "[Massmailing@Pdf::send] Failed to save pdf mailing";
+                            LOGGER.error(String.format("%s %s", message, file.cause().getMessage()));
                             handler.handle(Future.failedFuture(file.cause().getMessage()));
                             return;
                         }
@@ -116,8 +120,8 @@ public class Pdf extends MassMailingProcessor {
 
         FutureHelper.join(listPdfFuture(pdfs, file_id, metadata)).setHandler(event -> {
             if (event.failed()) {
-                String message = "[Massmailing@Pdf::send] Failed to save pdf mailing";
-                LOGGER.error(message, event.cause().toString());
+                String message = "[Massmailing@Pdf::saveMailings] Failed to save pdf mailing";
+                LOGGER.error(String.format("%s %s", message, event.cause().getMessage()));
                 handler.handle(Future.failedFuture(message));
                 return;
             }

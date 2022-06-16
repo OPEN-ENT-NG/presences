@@ -681,8 +681,11 @@ public class MassmailingController extends ControllerHelper {
             }
 
             mailing.massmail(event -> {
-                if (event.isLeft())
-                    log.error("[Massmailing@MassmailingController] An error occurred with massmailing", event.left().getValue());
+                if (event.isLeft()) {
+                    String message = "[Massmailing@MassmailingController] An error occurred with massmailing";
+                    log.error(String.format("%s %s", message, event.left().getValue()));
+                    renderError(request);
+                }
                 else log.info("[Massmailing@MassmailingController] Massmailing completed with success");
             });
             if (!(mailing instanceof Pdf)) {

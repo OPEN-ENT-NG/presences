@@ -2,6 +2,7 @@ package fr.openent.incidents.controller;
 
 import fr.openent.incidents.security.presence.PresencesManage;
 import fr.openent.presences.common.presences.Presences;
+import fr.openent.presences.enums.ReasonType;
 import fr.wseduc.rs.ApiDoc;
 import fr.wseduc.rs.Get;
 import fr.wseduc.security.ActionType;
@@ -19,6 +20,6 @@ public class PresencesController extends ControllerHelper {
     @SecuredAction(value = "", type = ActionType.RESOURCE)
     public void get(final HttpServerRequest request) {
         String structureId = request.getParam("structureId");
-        Presences.getInstance().getReasons(structureId, DefaultResponseHandler.arrayResponseHandler(request));
+        Presences.getInstance().getReasons(structureId, ReasonType.ABSENCE, DefaultResponseHandler.arrayResponseHandler(request));
     }
 }

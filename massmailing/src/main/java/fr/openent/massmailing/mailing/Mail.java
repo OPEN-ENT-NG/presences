@@ -30,8 +30,9 @@ public class Mail extends MassMailingProcessor {
     public void massmail(Handler<Either<String, Boolean>> handler) {
         super.process(event -> {
             if (event.isLeft()) {
-                LOGGER.error("[Massmailing@Mail] Failed to process mailing", event.left().getValue());
-                handler.handle(new Either.Left<>(event.left().getValue()));
+                String errorMessage = "[Massmailing@Mail] Failed to process mailing";
+                LOGGER.error(String.format("%s %s", errorMessage, event.left().getValue()));
+                handler.handle(new Either.Left<>(errorMessage));
                 return;
             }
 
@@ -44,8 +45,11 @@ public class Mail extends MassMailingProcessor {
             }
 
             CompositeFuture.join(futures).setHandler(asyncEvent -> {
-                //TODO Manage error mails ?
-                if (asyncEvent.failed()) handler.handle(new Either.Left<>(asyncEvent.cause().toString()));
+                if (asyncEvent.failed()) {
+                    String message = "[Massmailing@Mail::send] Failed to send mails";
+                    LOGGER.error(String.format("%s %s", message, asyncEvent.cause().getMessage()));
+                    handler.handle(new Either.Left<>(message));
+                }
                 else handler.handle(new Either.Right<>(asyncEvent.succeeded()));
             });
         });
@@ -57,9 +61,10 @@ public class Mail extends MassMailingProcessor {
         String subject = I18n.getInstance().translate("massmailing.mail.subject", getTemplate().getDomain(), getTemplate().getLocale(), mail.getString("studentDisplayName").toUpperCase());
         emailSender.sendEmail(null, contact, null, null, subject, message, null, false, event -> {
             if (event.failed()) {
+                String errorMessage = "[Massmailing@Mail] Failed to send mail";
                 //TODO Réaliser une sauvegarde
-                LOGGER.error("[Massmailing@Mail] Failed to send mail", event.cause(), mail.toString());
-                handler.handle(new Either.Left<>(event.cause().toString()));
+                LOGGER.error(String.format("%s %s %s", errorMessage, event.cause().getMessage(), mail));
+                handler.handle(new Either.Left<>(errorMessage));
                 return;
             }
 

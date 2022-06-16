@@ -11,6 +11,7 @@ import fr.openent.presences.common.presences.Presences;
 import fr.openent.presences.common.viescolaire.Viescolaire;
 import fr.openent.presences.core.constants.Field;
 import fr.openent.presences.enums.EventType;
+import fr.openent.presences.enums.ReasonType;
 import fr.wseduc.webutils.Either;
 import fr.wseduc.webutils.I18n;
 import io.vertx.core.CompositeFuture;
@@ -84,8 +85,9 @@ public abstract class MassMailingProcessor implements Mailing {
         CompositeFuture.all(Arrays.asList(templateFuture, relativeFuture, eventsFuture, reasonsFuture, slotsFutures,
                 settingFutures, recoveryFuture, hourEventsFuture)).setHandler(asyncResult -> {
             if (asyncResult.failed()) {
-                LOGGER.error("[Massmailing@MassMailingProcessor::process] Failed to process", asyncResult.cause());
-                handler.handle(new Either.Left<>(asyncResult.cause().toString()));
+                String message = "[Massmailing@MassMailingProcessor::process] Failed to process";
+                LOGGER.error(String.format("%s %s", message, asyncResult.cause().getMessage()));
+                handler.handle(new Either.Left<>(message));
             }
 
             JsonObject reasons = reasonsFuture.result();
@@ -473,7 +475,7 @@ public abstract class MassMailingProcessor implements Mailing {
     }
 
     private void fetchReasons(Handler<Either<String, JsonObject>> handler) {
-        Presences.getInstance().getReasons(this.structure, event -> {
+        Presences.getInstance().getReasons(this.structure, ReasonType.ALL, event -> {
             if (event.isLeft()) {
                 LOGGER.error("[Presences@MassMailingProcessor] Failed to retrieve reasons", event.left().getValue());
                 handler.handle(new Either.Left<>(event.left().getValue()));
@@ -628,8 +630,8 @@ public abstract class MassMailingProcessor implements Mailing {
     /**
      * Check if massmailing is justified or not.
      * If massmailingTypeList contains REGULARIZED then the massmailing is justified
-     * If massmailingTypeList contains UNREGULARIZED or NO_REASON then the massmailing is not justified
-     * If massmailingTypeList contains REGULARIZED _AND_ UNREGULARIZED then the massmailing is null
+     * If massmailingTypeList contains UNREGULARIZED then the massmailing is not justified
+     * If massmailingTypeList other is null
      *
      * @return justified status
      */
@@ -639,9 +641,7 @@ public abstract class MassMailingProcessor implements Mailing {
             case REGULARIZED:
                 justified = true;
                 break;
-            case LATENESS:
             case UNREGULARIZED:
-            case NO_REASON:
                 justified = false;
                 break;
         }
@@ -700,17 +700,15 @@ public abstract class MassMailingProcessor implements Mailing {
         List<Future> futures = new ArrayList<>();
         for (MassmailingType type : massmailingTypeList) {
             Future<JsonArray> future = Future.future();
-//            Presences.getInstance().getEventsByStudent(getEventTypeCode(type), getStudentsList(), structure, null,
-//                    (type.equals(NO_REASON) || type.equals(LATENESS) ? new ArrayList<>() : reasons), massmailed, start, end,
-//                    type.equals(NO_REASON) || type.equals(LATENESS), recoveryMethod, isJustified(type), FutureHelper.handlerJsonArray(future));
             futures.add(future);
             getEventsByStudent(type, recoveryMethod, FutureHelper.handlerJsonArray(future));
         }
 
         CompositeFuture.all(futures).setHandler(result -> {
             if (result.failed()) {
-                LOGGER.error("[Presences@MassMailingProcessor] Failed to retrieve events", result.cause());
-                handler.handle(new Either.Left<>(result.cause().toString()));
+                String message = "[Massmailing@MassMailingProcessor] Failed to retrieve events";
+                LOGGER.error(String.format("%s %s", message, result.cause().getMessage()));
+                handler.handle(new Either.Left<>(message));
                 return;
             }
 
@@ -738,9 +736,12 @@ public abstract class MassMailingProcessor implements Mailing {
                         reasons, massmailed, start, end, false, recoveryMethod, isJustified(type), handler);
                 break;
             case NO_REASON:
-            case LATENESS:
                 Presences.getInstance().getEventsByStudent(getEventTypeCode(type), getStudentsList(), structure, null,
                         new ArrayList<>(), massmailed, start, end, true, recoveryMethod, isJustified(type), handler);
+                break;
+            case LATENESS:
+                Presences.getInstance().getEventsByStudent(getEventTypeCode(type), getStudentsList(), structure, null,
+                        reasons, massmailed, start, end, true, recoveryMethod, isJustified(type), handler);
                 break;
             case PUNISHMENT:
                 Incidents.getInstance().getPunishmentsByStudent(structure, start + " 00:00:00", end + " 23:59:59",
@@ -803,7 +804,7 @@ public abstract class MassMailingProcessor implements Mailing {
         List<JsonObject> evts = new ArrayList<>();
         List<String> keys = new ArrayList<>(events.fieldNames());
         for (String key : keys) {
-            JsonArray list = events.getJsonArray(key);
+            JsonArray list = getEventListFromMailingType(key, events);
             for (int i = 0; i < list.size(); i++) {
                 JsonObject item = list.getJsonObject(i);
                 JsonArray embedEvts = getEmbedEventType(item);
@@ -816,6 +817,12 @@ public abstract class MassMailingProcessor implements Mailing {
         }
 
         return evts;
+    }
+
+    private JsonArray getEventListFromMailingType(String type, JsonObject events) {
+        if (EventType.PUNISHMENT.name().equals(type) || EventType.SANCTION.name().equals(type))
+            return events.getJsonObject(type, new JsonObject()).getJsonArray(Field.PUNISHMENTS, new JsonArray());
+        return events.getJsonArray(type, new JsonArray());
     }
 
     private void addEventObject(List<JsonObject> evts, String key, JsonObject evt) {
