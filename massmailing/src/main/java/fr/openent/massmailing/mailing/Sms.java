@@ -4,6 +4,7 @@ import fr.openent.massmailing.Massmailing;
 import fr.openent.massmailing.enums.MailingType;
 import fr.openent.massmailing.enums.MassmailingType;
 import fr.openent.presences.common.helper.FutureHelper;
+import fr.openent.presences.core.constants.Field;
 import fr.wseduc.webutils.Either;
 import io.vertx.core.CompositeFuture;
 import io.vertx.core.Future;
@@ -74,9 +75,12 @@ public class Sms extends MassMailingProcessor {
                 .put("action", "send-sms")
                 .put("parameters", parameters);
 
-        eventBus.send(Massmailing.SMS_ADDRESS, smsObject, handlerToAsyncHandler(event -> {
+        eventBus.request(Massmailing.SMS_ADDRESS, smsObject, handlerToAsyncHandler(event -> {
             if ("error".equals(event.body().getString("status"))) {
-                handler.handle(new Either.Left<>(event.body().getString("message")));
+                String errorMessage = "[Massmailing@Sms::send] Failed to send sms mailing";
+                JsonObject body = event.body();
+                LOGGER.error(String.format("%s %s %s", errorMessage, body.getString(Field.MESSAGE), body.getJsonObject(Field.DATA, new JsonObject()).toString()));
+                handler.handle(new Either.Left<>(errorMessage));
             } else {
                 saveMassmailing(sms, handler);
             }

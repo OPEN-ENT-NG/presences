@@ -46,7 +46,7 @@ export interface IMassmailingBody {
     no_reason: boolean;
     isMultiple?: boolean;
     start_at: number;
-    reasons: Array<string>;
+    reasons: Array<number>;
     punishmentsTypes: Array<number>;
     sanctionsTypes: Array<number>;
     start: string;
@@ -147,9 +147,9 @@ export class Massmailing {
 
     toJson(): IMassmailingBody {
         const event_types = Object.keys(this.filter.status).filter(type => this.filter.status[type]);
-        const reasons: Array<string> = [];
+        const reasons: Array<number> = [];
         Object.keys(this.filter.reasons).forEach((reason: string) => {
-            if (this.filter.reasons[reason]) reasons.push(reason);
+            if (this.filter.reasons[reason]) reasons.push(parseInt(reason));
         });
 
         const punishmentsTypes: Array<number> = this.filter.punishments

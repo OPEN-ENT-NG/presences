@@ -127,16 +127,6 @@ public class Presences {
     }
 
     /**
-     * ⚠ Get only Absence reason from a structure
-     *
-     * @param structure     Structure identifier
-     * @param handler       handler data
-     */
-    public void getReasons(String structure, Handler<Either<String, JsonArray>> handler) {
-        getReasons(structure, ReasonType.ABSENCE, handler);
-    }
-
-    /**
      * Get reason from a structure
      *
      * @param reasonType    Reason type identifier
