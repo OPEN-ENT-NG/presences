@@ -151,5 +151,7 @@
   "incidents.treated": "Traité",
   "incidents.type": "Type",
   "incidents.types": "Types",
-  "incidents.write.text": "Ecrire du texte"
+  "incidents.write.text": "Ecrire du texte",
+  "incidents.seriousness.alert.rules": "Ce niveau de gravité compte dans les alertes",
+  "incidents.seriousness.alert": "Alerte pour ce niveau de gravité"
 }

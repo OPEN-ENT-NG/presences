@@ -7,6 +7,7 @@ import fr.wseduc.webutils.Either;
 import io.vertx.core.CompositeFuture;
 import io.vertx.core.Future;
 import io.vertx.core.Handler;
+import io.vertx.core.Promise;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import io.vertx.core.logging.Logger;
@@ -64,27 +65,36 @@ public class DefaultSeriousnessService implements SeriousnessService {
     }
 
     @Override
-    public void create(JsonObject seriousnessBody, Handler<Either<String, JsonObject>> handler) {
+    public Future<JsonObject> create(JsonObject seriousnessBody) {
+        Promise<JsonObject> promise = Promise.promise();
         String query = "INSERT INTO " + Incidents.dbSchema + ".seriousness " +
-                "(structure_id, label, level, hidden)" +
-                "VALUES (?, ?, ?, false) RETURNING id";
+                "(structure_id, label, level, hidden, exclude_alert_seriousness)" +
+                "VALUES (?, ?, ?, false, ?) RETURNING id";
         JsonArray params = new JsonArray()
                 .add(seriousnessBody.getString("structureId"))
                 .add(seriousnessBody.getString("label"))
-                .add(seriousnessBody.getInteger("level"));
-        Sql.getInstance().prepared(query, params, SqlResult.validUniqueResultHandler(handler));
+                .add(seriousnessBody.getInteger("level"))
+                .add(seriousnessBody.getBoolean("excludeAlertSeriousness"));
+        Sql.getInstance().prepared(query, params, SqlResult.validUniqueResultHandler(FutureHelper.handlerPromise(promise)));
+
+        return promise.future();
     }
 
     @Override
-    public void put(JsonObject seriousnessBody, Handler<Either<String, JsonObject>> handler) {
+    public Future<JsonObject> put(JsonObject seriousnessBody) {
+        Promise<JsonObject> promise = Promise.promise();
+
         String query = "UPDATE " + Incidents.dbSchema + ".seriousness " +
-                "SET label = ?, level = ?, hidden = ? WHERE id = ? RETURNING id";
+                "SET label = ?, level = ?, hidden = ?, exclude_alert_seriousness = ?  WHERE id = ? RETURNING id";
         JsonArray params = new JsonArray()
                 .add(seriousnessBody.getString("label"))
                 .add(seriousnessBody.getInteger("level"))
                 .add(seriousnessBody.getBoolean("hidden"))
+                .add(seriousnessBody.getBoolean("excludeAlertSeriousness"))
                 .add(seriousnessBody.getInteger("id"));
-        Sql.getInstance().prepared(query, params, SqlResult.validUniqueResultHandler(handler));
+        Sql.getInstance().prepared(query, params, SqlResult.validUniqueResultHandler(FutureHelper.handlerPromise(promise)));
+
+        return promise.future();
     }
 
     @Override
