@@ -43,14 +43,16 @@ public class AlertController extends ControllerHelper {
     @SecuredAction(value = "", type = ActionType.RESOURCE)
     @ResourceFilter(DeleteAlertFilter.class)
     @Trace(Actions.ALERT_DELETION)
-    @ApiDoc("Get given structure")
+    @ApiDoc("reset alerts")
     public void delete(HttpServerRequest request) {
-        List<String> alerts = request.params().getAll("id");
-        if (alerts.size() == 0) {
-            badRequest(request);
-        } else {
-            alertService.delete(alerts, defaultResponseHandler(request));
-        }
+        List<String> alertIds = request.params().getAll(Field.ID);
+        String structureId = request.params().get(Field.STRUCTUREID);
+        String startAt = request.params().get(Field.STARTAT);
+        String endAt = request.params().get(Field.ENDAT);
+
+        alertService.delete(structureId, alertIds, startAt, endAt)
+                .onSuccess(result -> renderJson(request, result))
+                .onFailure(err -> renderError(request));
     }
 
     @Get("/structures/:id/alerts/summary")
