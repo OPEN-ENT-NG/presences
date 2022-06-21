@@ -18,6 +18,18 @@ public interface AlertService {
     void delete(List<String> alerts, Handler<Either<String, JsonObject>> handler);
 
     /**
+     * Delete alerts based on filter required
+     * Alert deletion trigger plsql trigger that create a new row in history table.
+     *
+     * @param structureId Structure identifier
+     * @param alertIds    alert identifiers
+     * @param startAt     start date from which we need remove alerts
+     * @param endAt       end date until which we need remove alerts
+     * @return request result Future
+     */
+    Future<JsonObject> delete(String structureId, List<String> alertIds, String startAt, String endAt);
+
+    /**
      * Get alerts count
      *
      * @param structureId structure identifier
@@ -46,10 +58,11 @@ public interface AlertService {
 
     /**
      * Delete alerts of given type for a student
-     * @param structureId   structure identifier
-     * @param studentId     student identifier
-     * @param type          alert type
-     * @return  {@link Future} of {@link JsonObject}
+     *
+     * @param structureId structure identifier
+     * @param studentId   student identifier
+     * @param type        alert type
+     * @return {@link Future} of {@link JsonObject}
      */
     Future<JsonObject> resetStudentAlertsCount(String structureId, String studentId, String type);
 }

@@ -9,13 +9,17 @@ import fr.openent.presences.controller.events.EventController;
 import fr.openent.presences.controller.events.LatenessEventController;
 import fr.openent.presences.cron.CreateDailyRegistersTask;
 import fr.openent.presences.db.DB;
+import fr.openent.presences.event.PresencesRepositoryEvents;
 import fr.openent.presences.service.CommonPresencesServiceFactory;
 import fr.openent.presences.worker.CreateDailyPresenceWorker;
 import fr.openent.presences.worker.EventExportWorker;
+import fr.openent.presences.worker.ResetAlertsWorker;
 import fr.wseduc.cron.CronTrigger;
 import fr.wseduc.mongodb.MongoDb;
 import io.vertx.core.DeploymentOptions;
+import io.vertx.core.eventbus.DeliveryOptions;
 import io.vertx.core.eventbus.EventBus;
+import io.vertx.core.json.JsonObject;
 import org.entcore.common.http.BaseServer;
 import org.entcore.common.neo4j.Neo4j;
 import org.entcore.common.sql.Sql;
@@ -23,6 +27,8 @@ import org.entcore.common.storage.Storage;
 import org.entcore.common.storage.StorageFactory;
 
 import java.text.ParseException;
+
+import static fr.wseduc.webutils.Utils.handlerToAsyncHandler;
 
 public class Presences extends BaseServer {
 
@@ -123,6 +129,9 @@ public class Presences extends BaseServer {
         Massmailing.getInstance().init(eb);
         StatisticsPresences.getInstance().init(eb);
 
+        // Repository Events
+        setRepositoryEvents(new PresencesRepositoryEvents(eb));
+
         if (config.containsKey("registers-cron")) {
             vertx.deployVerticle(CreateDailyPresenceWorker.class, new DeploymentOptions().setConfig(config).setWorker(true));
             try {
@@ -134,6 +143,11 @@ public class Presences extends BaseServer {
 
         // worker to be triggered manually (API will call its worker to send csv's export via email)
         vertx.deployVerticle(EventExportWorker.class, new DeploymentOptions().setConfig(config).setWorker(true));
+        vertx.deployVerticle(ResetAlertsWorker.class, new DeploymentOptions().setConfig(config).setWorker(true));
+    }
+
+    public static void launchResetAlertsWorker(EventBus eb, JsonObject params) {
+        eb.send(ResetAlertsWorker.class.getName(), params, new DeliveryOptions().setSendTimeout(1000 * 1000L));
     }
 
 }

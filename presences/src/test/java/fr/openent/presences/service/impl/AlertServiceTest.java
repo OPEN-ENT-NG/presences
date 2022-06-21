@@ -1,5 +1,6 @@
 package fr.openent.presences.service.impl;
 
+import fr.openent.presences.Presences;
 import fr.openent.presences.core.constants.*;
 import fr.openent.presences.db.*;
 import fr.openent.presences.db.DB;
@@ -15,12 +16,20 @@ import org.mockito.*;
 import org.mockito.stubbing.*;
 import org.powermock.reflect.*;
 
+import java.util.Arrays;
+import java.util.List;
+
 @RunWith(VertxUnitRunner.class)
 public class AlertServiceTest extends DBService {
 
     Sql sql = Mockito.mock(Sql.class);
 
     private AlertService alertService;
+
+    private static final String STRUCTURE_ID = "111";
+    private static final List<String> REASON_IDS = Arrays.asList("222", "333");
+    private static final String START = "2022-06-01 08:00:00";
+    private static final String END = "2022-06-30 23:59:59";
 
     @Before
     public void setUp() {
@@ -45,4 +54,30 @@ public class AlertServiceTest extends DBService {
 
 
     }
+
+    @Test
+    public void testDelete(TestContext ctx) throws Exception {
+        String expectedQuery = String.format("DELETE FROM %s.alerts WHERE structure_id = ? AND id IN (?,?) AND created >= ? AND created <= ? ",
+                Presences.dbSchema
+        );
+
+        Mockito.doAnswer((Answer<Void>) invocation -> {
+            String query = invocation.getArgument(0);
+            JsonArray params = invocation.getArgument(1);
+
+            ctx.assertEquals(query, expectedQuery);
+
+            ctx.assertEquals(params, new JsonArray()
+                    .add(STRUCTURE_ID)
+                    .addAll(new JsonArray(REASON_IDS))
+                    .add(START)
+                    .add(END));
+
+            return null;
+        }).when(sql).prepared(Mockito.anyString(), Mockito.any(JsonArray.class), Mockito.any(Handler.class));
+
+        Whitebox.invokeMethod(alertService, "delete",
+                STRUCTURE_ID, REASON_IDS, START, END);
+    }
+
 }

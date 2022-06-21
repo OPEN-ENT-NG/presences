@@ -1,13 +1,16 @@
 package fr.openent.presences.service.impl;
 
 import fr.openent.presences.Presences;
-import fr.openent.presences.common.helper.*;
+import fr.openent.presences.common.helper.FutureHelper;
 import fr.openent.presences.db.*;
+import fr.openent.presences.event.PresencesRepositoryEvents;
 import fr.openent.presences.service.AlertService;
 import fr.wseduc.webutils.Either;
 import io.vertx.core.*;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
+import io.vertx.core.logging.Logger;
+import io.vertx.core.logging.LoggerFactory;
 import org.entcore.common.neo4j.Neo4j;
 import org.entcore.common.neo4j.Neo4jResult;
 import org.entcore.common.sql.Sql;
@@ -20,13 +23,56 @@ import java.util.Map;
 
 public class DefaultAlertService extends DBService implements AlertService {
 
+    private static final Logger log = LoggerFactory.getLogger(DefaultAlertService.class);
+
     @Override
     public void delete(List<String> alerts, Handler<Either<String, JsonObject>> handler) {
-        String query = "DELETE FROM " + Presences.dbSchema +
-                ".alerts WHERE id IN " + Sql.listPrepared(alerts);
+        delete(null, alerts, null, null)
+                .onSuccess(res -> handler.handle(new Either.Right<>(res)))
+                .onFailure(err -> {
+                    String message = String.format("[Presences@%s::delete] Failed to remove alerts", this.getClass().getSimpleName());
+                    log.error(String.format("%s %s", message, err.getMessage()));
+                    handler.handle(new Either.Left<>(message));
+                });
+    }
 
-        JsonArray params = new JsonArray(alerts);
-        Sql.getInstance().prepared(query, params, SqlResult.validUniqueResultHandler(handler));
+    @Override
+    public Future<JsonObject> delete(String structureId, List<String> alertIds, String startAt, String endAt) {
+        Promise<JsonObject> promise = Promise.promise();
+        JsonArray params = new JsonArray();
+        String query = String.format("DELETE FROM %s.alerts %s",
+                Presences.dbSchema,
+                getWhereDeleteFilter(params, structureId, alertIds, startAt, endAt)
+        );
+
+        sql.prepared(query, params, SqlResult.validUniqueResultHandler(FutureHelper.handlerJsonObject(promise)));
+
+        return promise.future();
+    }
+
+    private String getWhereDeleteFilter(JsonArray params, String structureId, List<String> alertIds, String startAt, String endAt) {
+        String query = "";
+        if (structureId != null) {
+            query += "AND structure_id = ? ";
+            params.add(structureId);
+        }
+
+        if (alertIds != null && !alertIds.isEmpty()) {
+            query += String.format("AND id IN %s ", Sql.listPrepared(alertIds));
+            params.addAll(new JsonArray(alertIds));
+        }
+
+        if (startAt != null) {
+            query += "AND created >= ? ";
+            params.add(startAt);
+        }
+
+        if (endAt != null) {
+            query += "AND created <= ? ";
+            params.add(endAt);
+        }
+
+        return query.replaceFirst("AND", "WHERE");
     }
 
     public void getSummary(String structureId, Handler<Either<String, JsonObject>> handler) {
@@ -117,7 +163,7 @@ public class DefaultAlertService extends DBService implements AlertService {
         Future<JsonObject> futureCount = Future.future();
 
         String queryThreshold = "SELECT alert_forgotten_notebook_threshold as threshold" +
-                " FROM "  + Presences.dbSchema + ".settings " +
+                " FROM " + Presences.dbSchema + ".settings " +
                 " WHERE structure_id = ?";
         JsonArray paramsThreshold = new JsonArray();
         paramsThreshold.add(structureId);
@@ -154,7 +200,7 @@ public class DefaultAlertService extends DBService implements AlertService {
             if (event.succeeded()) {
                 JsonObject result = new JsonObject();
                 result.put("threshold", futureThreshold.result().getValue("threshold"));
-                result.put("count" ,futureCount.result().getValue("count"));
+                result.put("count", futureCount.result().getValue("count"));
                 handler.handle(new Either.Right<>(result));
             } else {
                 handler.handle(new Either.Left<>(event.cause().getMessage()));
@@ -170,16 +216,16 @@ public class DefaultAlertService extends DBService implements AlertService {
                 " WHERE student_id = ? AND structure_id = ? AND type = ? ";
 
         JsonArray params = new JsonArray().add(studentId)
-                        .add(structureId)
-                        .add(type);
+                .add(structureId)
+                .add(type);
 
-       sql.prepared(query, params, SqlResult.validUniqueResultHandler(res -> {
-           if (res.isLeft()) {
-               promise.fail(res.left().getValue());
-           } else {
-               promise.complete(new JsonObject().put("status", "ok"));
-           }
-       }));
+        sql.prepared(query, params, SqlResult.validUniqueResultHandler(res -> {
+            if (res.isLeft()) {
+                promise.fail(res.left().getValue());
+            } else {
+                promise.complete(new JsonObject().put("status", "ok"));
+            }
+        }));
 
         return promise.future();
     }
