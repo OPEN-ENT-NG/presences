@@ -58,7 +58,13 @@
                 <span class="tooltip-top">
                     <span>[[vm.getEventType(event)]]</span> <br>
                     <span class="font-bold"><i18n>presences.hour</i18n>&#58;</span>
-                    <span>[[vm.getEventTypeDate(event)]]</span>
+                    <span>[[vm.getEventTypeDate(event)]]</span><br>
+                    <span class="font-bold"
+                          ng-if="event.comment"><i18n>presences.description.abbr</i18n>&#58;</span>
+                    <span>[[vm.getEventDescription(event)]]</span><br>
+                    <span class="font-bold"
+                          ng-if="event.reason_id"><i18n>presences.absence.reason</i18n>&#58;</span>
+                    <span>[[vm.getEventReason(event)]]</span>
                 </span>
             </div>
         </div>

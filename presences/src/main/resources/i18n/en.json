@@ -107,6 +107,7 @@
   "presences.dashboard.search.placeholder": "Rechercher un élève ou une classe pour saisir une absence",
   "presences.dashboard.search.registry.placeholder": "Rechercher une classe pour accéder au registre",
   "presences.departure.reason": "Motif du départ",
+  "presences.description.abbr": "Descr.",
   "presences.discipline.edit.title": "Modifier la discipline",
   "presences.discipline.edit.warning": "Attention, la modification d'une discipline entraînera une modification sur toutes les présences déjà saisies avec cette discipline.",
   "presences.discipline.form.title": "Lieux, disciplines, autres pour déclarer des présences",

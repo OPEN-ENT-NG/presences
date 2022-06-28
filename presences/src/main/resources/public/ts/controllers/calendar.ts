@@ -34,6 +34,7 @@ import {CalendarAbsenceUtils, CalendarUtils, EventsUtils} from '../utilities';
 import {ABSENCE_FORM_EVENTS, LATENESS_FORM_EVENTS} from '@common/core/enum/presences-event';
 import {IAngularEvent} from 'angular';
 import rights from "../rights";
+import {REASON_TYPE_ID} from "@common/core/enum/reason-type-id";
 
 declare let window: any;
 
@@ -91,6 +92,10 @@ interface ViewModel {
     getEventType(event: CourseEvent): string;
 
     getEventTypeDate(event: CourseEvent): string;
+
+    getEventReason(event: CourseEvent): string;
+
+    getEventDescription(event: CourseEvent): string;
 
     formatPresenceDate(date: string): string;
 
@@ -178,14 +183,14 @@ export const calendarController = ng.controller('CalendarController',
                     CalendarService.loadCourses(student, startWeekDate, structureId),
                     CalendarService.loadPresences(student, startWeekDate, structureId),
                     CalendarService.loadAbsences(student, startWeekDate, structureId),
-                    reasonService.getReasons(structureId)]
+                    reasonService.getReasons(structureId, REASON_TYPE_ID.ALL)]
                 ).then((values: [Array<Course>, Presences, Array<Absence>, Array<Reason>]) => {
                     return {
                         courses: values[0],
                         presences: values[1],
                         absences: values[2],
                         reasons: values[3]
-                    }
+                    };
                 });
             };
 
@@ -386,6 +391,30 @@ export const calendarController = ng.controller('CalendarController',
                     case EventType.DEPARTURE:
                     case EventType.REMARK:
                         return DateUtils.format(event.start_date, DateUtils.FORMAT['HOUR-MINUTES']);
+                }
+            };
+
+            vm.getEventReason = (event: CourseEvent): string => {
+                switch (event.type_id) {
+                    case EventType.LATENESS:
+                        return vm.reasonsMap.get(event.reason_id) ? vm.reasonsMap.get(event.reason_id).label : '';
+                    default:
+                        return '';
+                }
+            };
+
+            vm.getEventDescription = (event: CourseEvent): string => {
+                switch (event.type_id) {
+                    case EventType.LATENESS:
+                    case EventType.DEPARTURE:
+                    case EventType.REMARK:
+                        let comment: string = event.comment ? event.comment.slice(0, 200) : '';
+                        if (event.comment.length > 200) {
+                            comment += '...';
+                        }
+                        return comment;
+                    default:
+                        return '';
                 }
             };
 

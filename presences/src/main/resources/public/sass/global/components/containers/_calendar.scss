@@ -383,7 +383,9 @@ $calendar-user-card-height: 56px;
                 margin-right: 3px;
 
                 .tooltip-top {
-                  width: 90px;
+                  min-width: 90px;
+                  max-width: 450px;
+                  width: fit-content;
                   bottom: 21px;
                   margin-left: -4px;
                 }
