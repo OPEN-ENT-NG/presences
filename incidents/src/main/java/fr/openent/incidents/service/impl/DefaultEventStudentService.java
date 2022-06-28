@@ -279,7 +279,7 @@ public class DefaultEventStudentService implements EventStudentService {
                 break;
             case PUNISHMENT:
                 punishmentService.get(null, null, structureId, startAt, endAt, studentIds, Collections.emptyList(),
-                        Collections.emptyList(), Collections.emptyList(), false, null, limit, offset, result -> {
+                        Collections.emptyList(), Collections.emptyList(), false, null, false, null, limit, offset, result -> {
                             if (result.failed()) {
                                 promise.fail(result.cause().getMessage());
                             }
