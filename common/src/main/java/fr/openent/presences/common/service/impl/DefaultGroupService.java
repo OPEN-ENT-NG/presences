@@ -137,6 +137,11 @@ public class DefaultGroupService extends DBService implements GroupService {
 
     @Override
     public void getGroupStudents(List<String> groups, Handler<Either<String, JsonArray>> handler) {
+        if (groups == null || groups.isEmpty()) {
+            handler.handle(new Either.Right<>(new JsonArray()));
+            return;
+        }
+
         String query = "MATCH (g:Group)<-[:IN]-(u:User)-[:IN]->(:ProfileGroup)-[:DEPENDS]->(c:Class) " +
                 "WHERE u.profiles = ['Student'] " +
                 "AND g.id IN {ids} " +
@@ -149,7 +154,7 @@ public class DefaultGroupService extends DBService implements GroupService {
                 "RETURN distinct u.id as id, (u.lastName + ' ' + u.firstName) as displayName, u.lastName as lastName, u.firstName as firstName, 'USER' as type, c.id as groupId, c.name as groupName " +
                 "ORDER BY displayName";
         JsonObject params = new JsonObject()
-                .put("ids", new JsonArray(groups));
+                .put(Field.IDS, new JsonArray(groups));
 
         neo4j.execute(query, params, Neo4jResult.validResultHandler(handler));
     }

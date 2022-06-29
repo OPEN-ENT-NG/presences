@@ -4,7 +4,8 @@
             <i18n>incidents.title</i18n>
         </h1>
 
-        <div class="cell four">
+        <!-- Student search bar -->
+        <div class="cell four paddingRight">
             <div class="cell twelve search-input">
                 <async-autocomplete data-ng-disabled="false"
                                     data-ng-model="vm.filter.student.search"
@@ -20,6 +21,29 @@
                 <ul class="cell twelve search-input-ul">
                     <li ng-repeat="student in vm.filter.students">
                         [[student.displayName]] <i class="close" data-ng-click="vm.removeStudents(student)"></i>
+                    </li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- Classes/Groups search bar -->
+        <div class="cell four paddingLeft">
+            <div class="cell twelve search-input">
+                <async-autocomplete data-ng-disabled="false"
+                                    data-ng-model="vm.groupsSearch.group"
+                                    data-ng-change="vm.selectGroup"
+                                    data-on-search="vm.searchGroup"
+                                    data-options="vm.groupsSearch.groups"
+                                    data-placeholder="presences.exemptions.search.audience"
+                                    data-search="vm.groupsSearch.group">
+                </async-autocomplete>
+            </div>
+
+            <!-- Group search results -->
+            <div class="cell twelve">
+                <ul class="cell twelve search-input-ul">
+                    <li ng-repeat="class in vm.groupsSearch.selectedGroups">
+                        [[class.name]] <i class="close" data-ng-click="vm.removeSelectedGroups(class)"></i>
                     </li>
                 </ul>
             </div>

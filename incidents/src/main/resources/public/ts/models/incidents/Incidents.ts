@@ -184,6 +184,7 @@ export class Incidents extends LoadingCollection {
     startDate: string;
     endDate: string;
     userId: string;
+    audienceIds: string;
     order: string;
     reverse: boolean;
 
@@ -192,17 +193,21 @@ export class Incidents extends LoadingCollection {
         this.all = [];
     }
 
-    async syncPagination() {
+    async syncPagination(): Promise<void> {
         this.loading = true;
-        let dateFormat = DateUtils.FORMAT['YEAR-MONTH-DAY-HOUR-MIN-SEC'];
+        let dateFormat: string = DateUtils.FORMAT['YEAR-MONTH-DAY-HOUR-MIN-SEC'];
         try {
-            let url =
+            let url: string =
                 `/incidents/incidents?structureId=${this.structureId}` +
                 `&startDate=${DateUtils.format(DateUtils.setFirstTime(this.startDate), dateFormat)}` +
                 `&endDate=${DateUtils.format(DateUtils.setLastTime(this.endDate), dateFormat)}`;
 
             if (this.userId) {
                 url += `&userId=${this.userId}`;
+            }
+
+            if (this.audienceIds) {
+                url += `&audienceId=${this.audienceIds}`;
             }
 
             if (this.order) {
@@ -224,16 +229,21 @@ export class Incidents extends LoadingCollection {
         }
     }
 
-    async export() {
-        let dateFormat = DateUtils.FORMAT['YEAR-MONTH-DAY'];
+    async export(): Promise<void> {
+        let dateFormat: string = DateUtils.FORMAT['YEAR-MONTH-DAY'];
 
-        let url = `/incidents/incidents/export?structureId=${this.structureId}` +
+        let url: string = `/incidents/incidents/export?structureId=${this.structureId}` +
             `&startDate=${DateUtils.format(DateUtils.setFirstTime(this.startDate), dateFormat) + " 00:00:00"}` +
             `&endDate=${DateUtils.format(DateUtils.setLastTime(this.endDate), dateFormat) + " 23:59:59"}`;
 
         if (this.userId) {
             url += `&userId=${this.userId}`;
         }
+
+        if (this.audienceIds) {
+            url += `&audienceId=${this.audienceIds}`;
+        }
+
         window.open(url);
     }
 
