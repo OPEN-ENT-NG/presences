@@ -1,6 +1,7 @@
 package fr.openent.incidents;
 
 import fr.openent.incidents.controller.*;
+import fr.openent.incidents.service.*;
 import fr.openent.presences.common.presences.Presences;
 import fr.openent.presences.common.statistics_presences.StatisticsPresences;
 import fr.openent.presences.db.DB;
@@ -31,13 +32,14 @@ public class Incidents extends BaseServer {
         super.start();
         dbSchema = config.getString("db-schema");
         final EventBus eb = getEventBus(vertx);
+        CommonIncidentsServiceFactory commonIncidentsServiceFactory = new CommonIncidentsServiceFactory(vertx);
 
         DB.getInstance().init(Neo4j.getInstance(), Sql.getInstance(), MongoDb.getInstance());
 
         Presences.getInstance().init(eb);
         StatisticsPresences.getInstance().init(eb);
 
-        addController(new IncidentsController(eb));
+        addController(new IncidentsController(commonIncidentsServiceFactory));
         addController(new PresencesController());
         addController(new IncidentsTypeController());
         addController(new PartnerController());

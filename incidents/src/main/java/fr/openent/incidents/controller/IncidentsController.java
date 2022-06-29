@@ -4,18 +4,16 @@ import fr.openent.incidents.Incidents;
 import fr.openent.incidents.constants.Actions;
 import fr.openent.incidents.export.IncidentsCSVExport;
 import fr.openent.incidents.security.*;
-import fr.openent.incidents.service.IncidentsService;
-import fr.openent.incidents.service.impl.DefaultIncidentsService;
+import fr.openent.incidents.service.*;
 import fr.openent.presences.common.helper.FutureHelper;
+import fr.openent.presences.common.service.*;
 import fr.openent.presences.core.constants.*;
 import fr.wseduc.bus.BusAddress;
 import fr.wseduc.rs.*;
 import fr.wseduc.security.ActionType;
 import fr.wseduc.security.SecuredAction;
 import fr.wseduc.webutils.request.RequestUtils;
-import io.vertx.core.CompositeFuture;
-import io.vertx.core.Future;
-import io.vertx.core.eventbus.EventBus;
+import io.vertx.core.*;
 import io.vertx.core.eventbus.Message;
 import io.vertx.core.http.HttpServerRequest;
 import io.vertx.core.json.JsonArray;
@@ -26,19 +24,17 @@ import org.entcore.common.http.filter.Trace;
 import org.entcore.common.http.response.DefaultResponseHandler;
 import org.entcore.common.user.UserUtils;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
+import java.util.*;
+import java.util.stream.*;
 
 public class IncidentsController extends ControllerHelper {
 
-    private IncidentsService incidentsService;
-    private EventBus eb;
+    private final IncidentsService incidentsService;
+    private final GroupService groupService;
 
-    public IncidentsController(EventBus eb) {
-        super();
-        this.incidentsService = new DefaultIncidentsService(eb);
-        this.eb = eb;
+    public IncidentsController(CommonIncidentsServiceFactory serviceFactory) {
+        this.incidentsService = serviceFactory.incidentsService();
+        this.groupService = serviceFactory.groupService();
     }
 
     @Get("")
@@ -74,72 +70,96 @@ public class IncidentsController extends ControllerHelper {
         boolean reverse = request.params().contains(Field.REVERSE) &&
                 Boolean.parseBoolean(request.getParam(Field.REVERSE));
 
-        List<String> userId = request.getParam("userId") != null ? Arrays.asList(request.getParam("userId").split("\\s*,\\s*")) : null;
+        List<String> userId = request.getParam(Field.USERID) != null ?
+                Arrays.asList(request.getParam(Field.USERID).split("\\s*,\\s*")) : null;
+        List<String> audienceIds = request.getParam(Field.AUDIENCEID) != null ?
+                Arrays.asList(request.getParam(Field.AUDIENCEID).split("\\s*,\\s*")) : null;
 
-        String page = request.getParam("page") != null ? request.getParam("page") : "0";
 
-        if (!request.params().contains("structureId") || !request.params().contains("startDate") ||
-                !request.params().contains("endDate")) {
+        String page = request.getParam(Field.PAGE) != null ? request.getParam(Field.PAGE) : "0";
+
+        if (!request.params().contains(Field.STRUCTUREID) || !request.params().contains(Field.STARTDATE) ||
+                !request.params().contains(Field.ENDDATE)) {
             badRequest(request);
             return;
         }
 
-        Future<JsonArray> incidentsFuture = Future.future();
-        Future<JsonObject> pageNumberFuture = Future.future();
+        groupService.getGroupStudents(audienceIds)
+                .onFailure(fail -> renderError(request, JsonObject.mapFrom(fail.getCause().getMessage())))
+                .onSuccess(groupStudents -> {
+                    Promise<JsonArray> incidentsPromise = Promise.promise();
+                    Promise<JsonObject> pageNumberPromise = Promise.promise();
 
-        CompositeFuture.all(incidentsFuture, pageNumberFuture).setHandler(event -> {
-            if (event.failed()) {
-                renderError(request, JsonObject.mapFrom(event.cause()));
-            } else {
-                JsonObject res = new JsonObject()
-                        .put("page", Integer.parseInt(page))
-                        .put("page_count", (pageNumberFuture.result().getLong("count") <= Incidents.PAGE_SIZE)
-                                ? 0
-                                : (pageNumberFuture.result().getLong("count") / Incidents.PAGE_SIZE) )
-                        .put("all", incidentsFuture.result());
-                renderJson(request, res);
-            }
-        });
+                    List<String> studentIds = ((List<JsonObject>) groupStudents.getList()).stream()
+                            .map((JsonObject s) -> s.getString(Field.ID)).collect(Collectors.toList());
+                    if (userId != null) studentIds.addAll(userId);
+                    studentIds.removeAll(Collections.singletonList(null));
 
-        incidentsService.get(structureId, startDate, endDate,
-                userId, page, false, field, reverse, FutureHelper.handlerJsonArray(incidentsFuture));
-        incidentsService.getPageNumber(structureId, startDate, endDate, userId,
-                page, field, reverse, FutureHelper.handlerJsonObject(pageNumberFuture));
+                    CompositeFuture.all(incidentsPromise.future(), pageNumberPromise.future())
+                            .onFailure(fail -> renderError(request, JsonObject.mapFrom(fail.getCause().getMessage())))
+                            .onSuccess(event -> {
+                                JsonObject res = new JsonObject()
+                                        .put(Field.PAGE, Integer.parseInt(page))
+                                        .put(Field.PAGE_COUNT, (pageNumberPromise.future().result()
+                                                .getLong(Field.COUNT) <= Incidents.PAGE_SIZE) ? 0
+                                                : (pageNumberPromise.future().result().getLong(Field.COUNT) / Incidents.PAGE_SIZE))
+                                        .put(Field.ALL, incidentsPromise.future().result());
+                                renderJson(request, res);
+                            });
+
+                    incidentsService.get(structureId, startDate, endDate,
+                            studentIds, page, false, field, reverse, FutureHelper.handlerJsonArray(incidentsPromise));
+                    incidentsService.getPageNumber(structureId, startDate, endDate, studentIds,
+                            page, field, reverse, FutureHelper.handlerJsonObject(pageNumberPromise));
+
+                });
     }
 
     @Get("/incidents/export")
     @ApiDoc("Export incidents")
     @ResourceFilter(ManageIncidentRight.class)
     @SecuredAction(value = "", type = ActionType.RESOURCE)
+    @SuppressWarnings("unchecked")
     public void exportIncidents(HttpServerRequest request) {
         String structureId = request.getParam(Field.STRUCTUREID);
         String startDate = request.getParam(Field.STARTDATE);
         String endDate = request.getParam(Field.ENDDATE);
         List<String> userId = request.getParam(Field.USERID) != null
                 ? Arrays.asList(request.getParam(Field.USERID).split("\\s*,\\s*")) : null;
+        List<String> audienceIds = request.getParam(Field.AUDIENCEID) != null ?
+                Arrays.asList(request.getParam(Field.AUDIENCEID).split("\\s*,\\s*")) : null;
         String field = request.params().contains(Field.ORDER) ? request.getParam(Field.ORDER) : Field.DATE;
         boolean reverse = request.params().contains(Field.REVERSE) && Boolean.parseBoolean(request.getParam(Field.REVERSE));
 
-        incidentsService.get(structureId, startDate, endDate, userId,
-                null, false, field, reverse, event -> {
-                    if (event.isLeft()) {
-                        String message = String.format("[Incidents@%s::exportIncidents] Failed to fetch incidents",
-                                this.getClass().getSimpleName());
-                        log.error(message, event.left().getValue());
-                        renderError(request);
-                        return;
-                    }
+        groupService.getGroupStudents(audienceIds)
+                .onFailure(fail -> renderError(request, JsonObject.mapFrom(fail.getCause().getMessage())))
+                .onSuccess(groupStudents -> {
+                    List<String> studentIds = ((List<JsonObject>) groupStudents.getList()).stream()
+                            .map((JsonObject s) -> s.getString(Field.ID)).collect(Collectors.toList());
+                    if (userId != null) studentIds.addAll(userId);
+                    studentIds.removeAll(Collections.singletonList(null));
 
-                    JsonArray incidents = event.right().getValue();
-                    List<String> csvHeaders = new ArrayList<>(Arrays.asList(
-                            "incidents.csv.header.date", "incidents.csv.header.place",
-                            "incidents.csv.header.type", "incidents.csv.header.description",
-                            "incidents.csv.header.seriousness", "incidents.csv.header.protagonists",
-                            "incidents.csv.header.partner", "incidents.csv.header.processed"));
-                    IncidentsCSVExport ice = new IncidentsCSVExport(incidents);
-                    ice.setRequest(request);
-                    ice.setHeader(csvHeaders);
-                    ice.export();
+                    incidentsService.get(structureId, startDate, endDate, studentIds,
+                            null, false, field, reverse, event -> {
+                                if (event.isLeft()) {
+                                    String message = String.format("[Incidents@%s::exportIncidents] Failed to fetch incidents",
+                                            this.getClass().getSimpleName());
+                                    log.error(message, event.left().getValue());
+                                    renderError(request);
+                                    return;
+                                }
+
+                                JsonArray incidents = event.right().getValue();
+                                List<String> csvHeaders = new ArrayList<>(Arrays.asList(
+                                        "incidents.csv.header.date", "incidents.csv.header.place",
+                                        "incidents.csv.header.type", "incidents.csv.header.description",
+                                        "incidents.csv.header.seriousness", "incidents.csv.header.protagonists",
+                                        "incidents.csv.header.partner", "incidents.csv.header.processed"));
+                                IncidentsCSVExport ice = new IncidentsCSVExport(incidents);
+                                ice.setRequest(request);
+                                ice.setHeader(csvHeaders);
+                                ice.export();
+                            });
                 });
     }
 
