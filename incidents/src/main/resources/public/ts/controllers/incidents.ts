@@ -1,10 +1,10 @@
 import {_, angular, moment, ng, notify} from 'entcore';
 import {Incident, Incidents, ISchoolYearPeriod, Student, Students} from "../models";
-import {IncidentService, SearchService} from "../services";
+import {Group, GroupService, groupService, IncidentService, SearchService} from "../services";
 import {Toast} from "@common/utils/toast";
 import {Scope} from "./main";
 import {INCIDENTS_FORM_EVENTS} from '../sniplets';
-import {DateUtils, StudentsSearch} from "@common/utils";
+import {DateUtils, GroupsSearch, StudentsSearch} from "@common/utils";
 import {IViescolaireService, ViescolaireService} from "@common/services/ViescolaireService";
 
 declare let window: any;
@@ -13,6 +13,7 @@ interface ViewModel {
     incidents: Incidents;
     notifications: any[];
     studentsSearch: StudentsSearch;
+    groupsSearch: GroupsSearch;
 
     // Collapse
     incidentId: number;
@@ -28,7 +29,12 @@ interface ViewModel {
     exportCsv(): void;
 
     // Filter
-    filter: { startDate: Date, endDate: Date, students: Student[], student: { search: string } };
+    filter: {
+        startDate: Date,
+        endDate: Date,
+        students: Array<Student>,
+        groups: Array<Group>,
+        student: { search: string } };
 
     updateDate(): void;
 
@@ -45,18 +51,26 @@ interface ViewModel {
 
     removeStudents(student: Student): void;
 
+    searchGroup(searchText: string): Promise<void>;
+
+    selectGroup(valueInput: string, groupItem: Group): void;
+
+    removeSelectedGroups(groupItem: Group): void;
+
     editIncidentLightbox(incident: Incident): void;
 }
 
 export const incidentsController = ng.controller('IncidentsController',
-    ['$scope', '$location', 'SearchService', 'IncidentService', 'ViescolaireService',
-        function ($scope: Scope, $location, searchService: SearchService, IncidentService: IncidentService, viescolaireService: IViescolaireService) {
+    ['$scope', '$location', 'SearchService', 'IncidentService', 'ViescolaireService', 'GroupService',
+        function ($scope: Scope, $location, searchService: SearchService, IncidentService: IncidentService,
+                  viescolaireService: IViescolaireService, groupService: GroupService) {
             const vm: ViewModel = this;
             vm.notifications = [];
             vm.filter = {
                 startDate: null,
                 endDate: new Date(),
                 students: [],
+                groups: [],
                 student: {
                     search: ''
                 }
@@ -69,13 +83,12 @@ export const incidentsController = ng.controller('IncidentsController',
             vm.incidents.eventer.on('loading::true', () => $scope.safeApply());
             vm.incidents.eventer.on('loading::false', () => $scope.safeApply());
 
-            const setStudentToSync = () => {
+            const setStudentAndGroupsToSync = () => {
                 vm.incidents.userId = vm.filter.students ? vm.filter.students
-                    .map(students => students.id)
-                    .filter(function () {
-                        return true
-                    })
+                    .map((students: Student) => students.id)
                     .toString() : '';
+
+                vm.incidents.audienceIds = vm.filter.groups ? vm.filter.groups.toString() : '';
             };
 
             const getIncidents = async (): Promise<void> => {
@@ -83,7 +96,7 @@ export const incidentsController = ng.controller('IncidentsController',
 
                 vm.incidents.structureId = window.structure.id;
                 vm.studentsSearch = new StudentsSearch(window.structure.id, searchService);
-
+                vm.groupsSearch = new GroupsSearch(window.structure.id, searchService, groupService);
 
                 if (vm.filter.startDate === null) {
                     const schoolYears: ISchoolYearPeriod = await viescolaireService.getSchoolYearDates(window.structure.id);
@@ -94,7 +107,7 @@ export const incidentsController = ng.controller('IncidentsController',
                 vm.incidents.endDate = moment(vm.filter.endDate).format(DateUtils.FORMAT["YEAR-MONTH-DAY"]);
 
                 setDataFromMemento();
-                setStudentToSync();
+                setStudentAndGroupsToSync();
 
                 // "page" uses sync() method at the same time it sets 0 (See LoadingCollection)
                 vm.incidents.page = 0;
@@ -120,7 +133,9 @@ export const incidentsController = ng.controller('IncidentsController',
                 if (student && !_.find(vm.filter.students, student)) {
                     vm.filter.students.push(student);
                 }
-                setStudentToSync();
+                vm.filter.groups = vm.groupsSearch.getSelectedGroups().map(group => group["id"]);
+
+                setStudentAndGroupsToSync();
                 vm.incidents.page = 0;
                 $scope.safeApply();
             };
@@ -181,6 +196,25 @@ export const incidentsController = ng.controller('IncidentsController',
 
             vm.removeStudents = (student: Student): void => {
                 vm.filter.students = _.without(vm.filter.students, _.findWhere(vm.filter.students, student));
+                vm.updateFilter();
+            };
+
+            /* Search bar groups section */
+            vm.searchGroup = async (searchText: string): Promise<void> => {
+                await vm.groupsSearch.searchGroups(searchText);
+                $scope.safeApply();
+            };
+
+            vm.selectGroup = (valueInput: string, groupForm: Group): void => {
+                vm.groupsSearch.selectGroups(valueInput, groupForm);
+                vm.filter.groups = vm.groupsSearch.getSelectedGroups().map(group => group["id"]);
+                vm.groupsSearch.group = "";
+                vm.updateFilter();
+            };
+
+            vm.removeSelectedGroups = (groupForm: Group): void => {
+                vm.groupsSearch.removeSelectedGroups(groupForm);
+                vm.filter.groups = vm.groupsSearch.getSelectedGroups().map(group => group["id"]);
                 vm.updateFilter();
             };
 
