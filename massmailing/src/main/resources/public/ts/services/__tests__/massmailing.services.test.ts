@@ -105,7 +105,7 @@ describe('SettingsService', () => {
             relative: [],
             selected: false
         };
-        const data = {type: "type", counts: 2, students: [student1]};
+        const data = {type: "type", counts: {massmailing: 0}, students: [student1], isMultiple: undefined};
         const mailType = "mailType";
         const structure: string = "structureId";
         const massmailed: boolean = false;
