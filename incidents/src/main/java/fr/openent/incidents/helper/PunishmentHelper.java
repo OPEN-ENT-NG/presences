@@ -4,8 +4,7 @@ import fr.openent.incidents.Incidents;
 import fr.openent.incidents.enums.PunishmentsProcessState;
 import fr.openent.incidents.enums.WorkflowActions;
 import fr.openent.incidents.model.Punishment;
-import fr.openent.presences.common.helper.DateHelper;
-import fr.openent.presences.common.helper.WorkflowHelper;
+import fr.openent.presences.common.helper.*;
 import fr.openent.presences.common.service.GroupService;
 import fr.openent.presences.common.service.UserService;
 import fr.openent.presences.common.service.impl.DefaultGroupService;
@@ -48,20 +47,6 @@ public class PunishmentHelper {
                     return punishment;
                 })
                 .collect(Collectors.toList());
-    }
-
-    /* QUERY CONSTRUCTION PART */
-    public void getQuery(UserInfos user, MultiMap body, boolean isStudent, Handler<AsyncResult<JsonObject>> handler) {
-        String id = body.get("id");
-        String structureId = body.get("structure_id");
-        String startAt = body.get("start_at");
-        String endAt = body.get("end_at");
-        List<String> studentIds = body.getAll("student_id");
-        List<String> groupIds = body.getAll("group_id");
-        List<String> typeIds = body.getAll("type_id");
-        List<String> processStates = body.getAll("process");
-        getQuery(user, id, null, structureId, startAt, endAt, studentIds, groupIds, typeIds, processStates, isStudent, handler);
-
     }
 
     public void getQuery(UserInfos user, String id, String groupedPunishmentId, String structureId, String startAt, String endAt, List<String> studentIds,
@@ -189,7 +174,7 @@ public class PunishmentHelper {
 
     /* REQUEST MONGODB PART */
 
-    public Future<JsonObject> getPunishment(String tableName, JsonObject query) {
+    public Future<JsonObject> getPunishment(String tableName, String order, boolean reverse, JsonObject query) {
         Promise<JsonObject> promise = Promise.promise();
         MongoDb.getInstance().findOne(tableName, query, message -> {
             Either<String, JsonObject> messageCheck = MongoDbResult.validResult(message);
@@ -200,7 +185,7 @@ public class PunishmentHelper {
                 promise.fail(messageError);
             } else {
                 JsonObject result = messageCheck.right().getValue();
-                mapGetterResults(new JsonArray().add(result), mapResult -> {
+                mapGetterResults(new JsonArray().add(result), order, reverse, mapResult -> {
                     if (mapResult.failed()) {
                         String messageError = String.format("[Incidents@%s::getPunishment] Failed to map punishment."
                                 , this.getClass().getSimpleName());
@@ -215,12 +200,12 @@ public class PunishmentHelper {
         return promise.future();
     }
 
-    public void getPunishments(String tableName, JsonObject query, Integer limit, Integer offset, Handler<AsyncResult<JsonArray>> handler) {
+    public void getPunishments(String tableName, JsonObject query, String order, boolean reverse, Integer limit, Integer offset, Handler<AsyncResult<JsonArray>> handler) {
         JsonObject command = new JsonObject()
                 .put("aggregate", tableName)
                 .put("allowDiskUse", true)
                 .put("cursor", getCursor())
-                .put("pipeline", getPipeline(query, limit, offset));
+                .put("pipeline", getPipeline(query, order, reverse, limit, offset));
 
         MongoDb.getInstance().command(command.toString(), MongoDbResult.validResultHandler(either -> {
             if (either.isLeft()) {
@@ -229,7 +214,7 @@ public class PunishmentHelper {
                 return;
             }
             JsonArray result = either.right().getValue().getJsonObject("cursor", new JsonObject()).getJsonArray("firstBatch", new JsonArray());
-            mapGetterResults(result, mapResult -> {
+            mapGetterResults(result, order, reverse, mapResult -> {
                 if (mapResult.failed()) {
                     log.error("[Incidents@PunishmentHelper::getPunishments] Failed to map punishments.", mapResult.cause());
                     handler.handle(Future.failedFuture(mapResult.cause()));
@@ -269,13 +254,14 @@ public class PunishmentHelper {
         });
     }
 
-    private JsonArray getPipeline(JsonObject query, Integer limit, Integer offset) {
+    private JsonArray getPipeline(JsonObject query, String order, boolean reverse, Integer limit, Integer offset) {
         JsonArray pipeline = new JsonArray()
                 .add(new JsonObject().put("$addFields",
                         addSortField()
                 ))
                 .add(new JsonObject().put("$match", query))
-                .add(new JsonObject().put("$sort", new JsonObject().put("sortField", -1)))
+                .add(new JsonObject().put("$sort",
+                        new JsonObject().put("sortField", (Objects.equals(order, Field.DATE) && reverse) ? 1 : -1)))
                 .add(new JsonObject().put("$project", addProject()));
 
         pipeline.add(new JsonObject().put("$skip", offset));
@@ -385,44 +371,45 @@ public class PunishmentHelper {
         return new JsonObject().put("batchSize", 2147483647);
     }
 
-    private void mapGetterResults(JsonArray result, Handler<AsyncResult<JsonArray>> handler) {
+    @SuppressWarnings("unchecked")
+    private void mapGetterResults(JsonArray result, String order, boolean reverse, Handler<AsyncResult<JsonArray>> handler) {
         if (result.size() == 0) {
             handler.handle(Future.succeededFuture(result));
             return;
         }
 
         List<String> ownerIds = ((List<JsonObject>) result.getList())
-                .stream()
-                .map(res -> res.getString("owner_id"))
-                .collect(Collectors.toList());
+                .stream().map(res -> res.getString(Field.OWNER_ID)).collect(Collectors.toList());
 
         List<String> studentIds = ((List<JsonObject>) result.getList())
-                .stream()
-                .map(res -> res.getString("student_id"))
-                .collect(Collectors.toList());
+                .stream().map(res -> res.getString(Field.STUDENT_ID)).collect(Collectors.toList());
 
         List<Long> typeIds = ((List<JsonObject>) result.getList())
-                .stream()
-                .map(res -> res.getLong("type_id"))
-                .collect(Collectors.toList());
+                .stream().map(res -> res.getLong(Field.TYPE_ID)).collect(Collectors.toList());
 
-        Future<JsonArray> ownersFuture = Future.future();
-        Future<JsonArray> studentsFuture = Future.future();
-        Future<JsonArray> typesFuture = Future.future();
+        Promise<JsonArray> ownersPromise = Promise.promise();
+        Promise<JsonArray> studentsPromise = Promise.promise();
+        Promise<JsonArray> typesPromise = Promise.promise();
 
         userService.getUsers(ownerIds, resUsers -> {
             if (resUsers.isLeft()) {
-                ownersFuture.fail("[Incidents@Punishment::mapGetterResults] Failed to get owners");
+                String message = String.format("[Incidents@%s::mapGetterResults] Failed to get owners: %s",
+                        this.getClass().getSimpleName(), resUsers.left().getValue());
+                log.error(message);
+                ownersPromise.fail(message);
             } else {
-                ownersFuture.complete(resUsers.right().getValue());
+                ownersPromise.complete(resUsers.right().getValue());
             }
         });
 
         userService.getStudents(studentIds, resUsers -> {
             if (resUsers.isLeft()) {
-                studentsFuture.fail("[Incidents@Punishment::mapGetterResults] Failed to get students");
+                String message = String.format("[Incidents@%s::mapGetterResults] Failed to get students: %s",
+                        this.getClass().getSimpleName(), resUsers.left().getValue());
+                log.error(message);
+                studentsPromise.fail(message);
             } else {
-                studentsFuture.complete(resUsers.right().getValue());
+                studentsPromise.complete(resUsers.right().getValue());
             }
         });
 
@@ -431,46 +418,87 @@ public class PunishmentHelper {
 
         Sql.getInstance().prepared(query, params, SqlResult.validResultHandler(resTypes -> {
             if (resTypes.isLeft()) {
-                typesFuture.fail("[Incidents@Punishment::mapGetterResults] Failed to get types");
+                String message = String.format("[Incidents@%s::mapGetterResults] Failed to get types: %s",
+                        this.getClass().getSimpleName(), resTypes.left().getValue());
+                log.error(message);
+                typesPromise.fail(message);
             } else {
-                typesFuture.complete(resTypes.right().getValue());
+                typesPromise.complete(resTypes.right().getValue());
             }
         }));
 
-        CompositeFuture.all(ownersFuture, studentsFuture, typesFuture).setHandler(resultFuture -> {
-            if (resultFuture.failed()) {
-                handler.handle(Future.failedFuture(resultFuture.cause()));
-            } else {
-                Map<String, JsonObject> ownerMap = new HashMap<>();
-                ownersFuture.result().forEach(oOwner -> {
-                    JsonObject owner = (JsonObject) oOwner;
-                    ownerMap.put(owner.getString("id"), owner);
+        CompositeFuture.all(ownersPromise.future(), studentsPromise.future(), typesPromise.future())
+                .onFailure(fail -> handler.handle(Future.failedFuture(fail.getCause().getMessage())))
+                .onSuccess(resultFuture -> {
+                    Map<String, JsonObject> ownerMap = new HashMap<>();
+                    ownersPromise.future().result().forEach(oOwner -> {
+                        JsonObject owner = (JsonObject) oOwner;
+                        ownerMap.put(owner.getString(Field.ID), owner);
+                    });
+
+                    Map<String, JsonObject> studentMap = new HashMap<>();
+                    studentsPromise.future().result().forEach(oStudent -> {
+                        JsonObject student = (JsonObject) oStudent;
+                        studentMap.put(student.getString(Field.ID), student);
+                    });
+
+                    Map<Long, JsonObject> typeMap = new HashMap<>();
+                    typesPromise.future().result().forEach(oType -> {
+                        JsonObject type = (JsonObject) oType;
+                        typeMap.put(type.getLong(Field.ID), type);
+                    });
+
+                    result.forEach(oRes -> {
+                        JsonObject res = (JsonObject) oRes;
+                        res.put(Field.OWNER, ownerMap.get(res.getString(Field.OWNER_ID)));
+                        res.put(Field.STUDENT, studentMap.get(res.getString(Field.STUDENT_ID)));
+                        res.put(Field.TYPE, typeMap.get(res.getLong(Field.TYPE_ID)));
+                        res.put(Field.ID, res.getString(Field._ID));
+                    });
+
+
+                    handler.handle(Future.succeededFuture(sortPunishmentByField(result, order, reverse)));
                 });
+    }
 
-                Map<String, JsonObject> studentMap = new HashMap<>();
-                studentsFuture.result().forEach(oStudent -> {
-                    JsonObject student = (JsonObject) oStudent;
-                    studentMap.put(student.getString("id"), student);
-                });
+    @SuppressWarnings("unchecked")
+    private JsonArray sortPunishmentByField(JsonArray punishments, String order, boolean reverse) {
+        List<JsonObject> list = punishments.getList();
+        switch (order) {
+            case Field.DISPLAYNAME:
+                Collections.sort(list, (o1, o2) -> reverse ?
+                        o1.getJsonObject(Field.STUDENT).getString(Field.NAME)
+                                .compareToIgnoreCase(o2.getJsonObject(Field.STUDENT).getString(Field.NAME)) :
+                        o2.getJsonObject(Field.STUDENT).getString(Field.NAME)
+                                .compareToIgnoreCase(o1.getJsonObject(Field.STUDENT).getString(Field.NAME)));
+                break;
+            case Field.CLASSNAME:
+                Collections.sort(list, (o1, o2) -> reverse ?
+                        o1.getJsonObject(Field.STUDENT).getString(Field.CLASSNAME)
+                                .compareToIgnoreCase(o2.getJsonObject(Field.STUDENT).getString(Field.CLASSNAME)) :
+                        o2.getJsonObject(Field.STUDENT).getString(Field.CLASSNAME)
+                                .compareToIgnoreCase(o1.getJsonObject(Field.STUDENT).getString(Field.CLASSNAME)));
+                break;
+            case Field.OWNER:
+                Collections.sort(list, (o1, o2) -> reverse ?
+                        o1.getJsonObject(Field.OWNER).getString(Field.DISPLAYNAME)
+                                .compareToIgnoreCase(o2.getJsonObject(Field.OWNER).getString(Field.DISPLAYNAME)) :
+                        o2.getJsonObject(Field.OWNER).getString(Field.DISPLAYNAME)
+                                .compareToIgnoreCase(o1.getJsonObject(Field.OWNER).getString(Field.DISPLAYNAME)));
+                break;
 
-                Map<Long, JsonObject> typeMap = new HashMap<>();
-                typesFuture.result().forEach(oType -> {
-                    JsonObject type = (JsonObject) oType;
-                    typeMap.put(type.getLong("id"), type);
-                });
+            case Field.TYPE:
+                Collections.sort(list, (o1, o2) -> reverse ?
+                        o1.getJsonObject(Field.TYPE).getString(Field.LABEL)
+                                .compareToIgnoreCase(o2.getJsonObject(Field.TYPE).getString(Field.LABEL)) :
+                        o2.getJsonObject(Field.TYPE).getString(Field.LABEL)
+                                .compareToIgnoreCase(o1.getJsonObject(Field.TYPE).getString(Field.LABEL)));
+                break;
+            default:
+                break;
+        }
 
-                result.forEach(oRes -> {
-                    JsonObject res = (JsonObject) oRes;
-                    res.put("owner", ownerMap.get(res.getString("owner_id")));
-                    res.put("student", studentMap.get(res.getString("student_id")));
-                    res.put("type", typeMap.get(res.getLong("type_id")));
-
-                    res.put("id", res.getString("_id"));
-                });
-                handler.handle(Future.succeededFuture(result));
-            }
-        });
-
+        return new JsonArray(list);
     }
 }
 
