@@ -11,6 +11,7 @@ import {
 } from "../services";
 import {DateUtils} from "@common/utils";
 import {EventType} from "../models";
+import {EVENT_TYPE} from "@common/core/enum/event-type";
 
 declare let window: any;
 
@@ -84,13 +85,13 @@ interface ViewModel {
     exportCsv(): void;
 }
 
-export const registryController = ng.controller('RegistryController', ['$scope', 'route', '$location',
+export const registryController = ng.controller('RegistryController', ['$scope', '$route', '$location',
     'SearchService', 'GroupService', 'RegistryService',
-    function ($scope, route, $location, SearchService: SearchService, groupService: GroupService, registryService: RegistryService) {
+    function ($scope, $route, $location, SearchService: SearchService, groupService: GroupService, registryService: RegistryService) {
         const vm: ViewModel = this;
 
         /* Fetching information from URL Param and cloning new object RegistryRequest */
-        vm.params = Object.assign({}, $location.search());
+        vm.params = Object.assign({}, $location ? $location.search() : null);
         vm.eventType = [
             EventType[EventType.ABSENCE],
             EventType[EventType.LATENESS],
@@ -100,7 +101,7 @@ export const registryController = ng.controller('RegistryController', ['$scope',
         vm.eventCardId = null;
         vm.eventCardData = {} as EventRegistryCard;
         /* Setting url param default if param not fetched or empty */
-        if (Object.getOwnPropertyNames(vm.params).length === 0) {
+        if ($location && Object.getOwnPropertyNames(vm.params).length === 0) {
             $location.search({
                 month: moment(new Date()).format(DateUtils.FORMAT["YEAR-MONTH"]),
                 type: vm.eventType
@@ -284,11 +285,9 @@ export const registryController = ng.controller('RegistryController', ['$scope',
             return event.some((event: RegistryEvent) => event.hasOwnProperty('reason_id'));
         };
 
-        vm.isAbsenceRegularized = (event: RegistryEvent[]): boolean => {
-            if (event.length === 0) {
-                return false;
-            }
-            return !event.some((event: RegistryEvent) => event.counsellor_regularisation === false);
+        vm.isAbsenceRegularized = (event: Array<RegistryEvent>): boolean => {
+            return (event.length > 0) && !event.some((event: RegistryEvent) => event.type === EVENT_TYPE.ABSENCE &&
+                event.counsellor_regularisation === false);
         };
 
         vm.isAbsenceFollowed = (event: RegistryEvent[]): boolean => {
