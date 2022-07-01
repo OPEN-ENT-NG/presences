@@ -279,7 +279,7 @@ public class DefaultPunishmentService implements PunishmentService {
         category.formatDates();
 
         get(user, punishmentId, null, structureId, null, null, null, null,
-                null, null, false, null, null, null)
+                null, null, false, null, false, null, null, null)
                 .compose(oldPunishmentResult -> {
                     oldPunishment.setFromJson(oldPunishmentResult);
 
@@ -341,45 +341,50 @@ public class DefaultPunishmentService implements PunishmentService {
 
     @Override
     public void get(UserInfos user, MultiMap body, boolean isStudent, Handler<AsyncResult<JsonObject>> handler) {
-        String id = body.get("id");
-        String structureId = body.get("structure_id");
-        String startAt = body.get("start_at");
-        String endAt = body.get("end_at");
-        List<String> studentIds = body.getAll("student_id");
-        List<String> groupIds = body.getAll("group_id");
-        List<String> typeIds = body.getAll("type_id");
-        List<String> processStates = body.getAll("process");
-        String page = body.get("page");
-        String limit = body.get("limit");
-        String offset = body.get("offset");
-        get(user, id, structureId, startAt, endAt, studentIds, groupIds, typeIds, processStates, isStudent, page, limit, offset, handler);
+        String id = body.get(Field.ID);
+        String structureId = body.get(Field.STRUCTURE_ID);
+        String startAt = body.get(Field.START_AT);
+        String endAt = body.get(Field.END_AT);
+        List<String> studentIds = body.getAll(Field.STUDENT_ID);
+        List<String> groupIds = body.getAll(Field.GROUP_ID);
+        List<String> typeIds = body.getAll(Field.TYPE_ID);
+        List<String> processStates = body.getAll(Field.PROCESS);
+        String order = body.get(Field.ORDER) != null ?  body.get(Field.ORDER) : Field.DATE;
+        boolean reverse = body.get(Field.REVERSE) != null && Boolean.parseBoolean(body.get(Field.REVERSE));
+        String page = body.get(Field.PAGE);
+        String limit = body.get(Field.LIMIT);
+        String offset = body.get(Field.OFFSET);
+        get(user, id, structureId, startAt, endAt, studentIds, groupIds, typeIds, processStates,
+                isStudent, order, reverse, page, limit, offset, handler);
     }
 
     @Override
     public void get(UserInfos user, String id, String structureId, String startAt, String endAt, List<String> studentIds, List<String> groupIds,
-                    List<String> typeIds, List<String> processStates, boolean isStudent, String pageString, String limitString, String offsetString,
+                    List<String> typeIds, List<String> processStates, boolean isStudent, String order, boolean reverse, String pageString, String limitString, String offsetString,
                     Handler<AsyncResult<JsonObject>> handler) {
-        get(user, id, null, structureId, startAt, endAt, studentIds, groupIds, typeIds, processStates, isStudent, pageString,
+        get(user, id, null, structureId, startAt, endAt, studentIds, groupIds, typeIds, processStates, isStudent, order, reverse, pageString,
                 limitString, offsetString)
                 .onFailure(error -> handler.handle(Future.failedFuture(error)))
                 .onSuccess(result -> handler.handle(Future.succeededFuture(result)));
     }
 
     @Override
-    public Future<JsonObject> get(UserInfos user, String id, String groupedPunishmentId, String structureId, String startAt, String endAt, List<String> studentIds, List<String> groupIds,
-                                  List<String> typeIds, List<String> processStates, boolean isStudent, String pageString, String limitString, String offsetString) {
+    public Future<JsonObject> get(UserInfos user, String id, String groupedPunishmentId, String structureId,
+                                  String startAt, String endAt, List<String> studentIds, List<String> groupIds,
+                                  List<String> typeIds, List<String> processStates, boolean isStudent, String order, boolean reverse,
+                                  String pageString, String limitString, String offsetString) {
         Promise<JsonObject> promise = Promise.promise();
-        punishmentHelper.getQuery(user, id, groupedPunishmentId, structureId, startAt, endAt, studentIds, groupIds, typeIds, processStates, isStudent, queryResult -> {
+        punishmentHelper.getQuery(user, id, groupedPunishmentId, structureId, startAt, endAt, studentIds, groupIds,
+                typeIds, processStates, isStudent, queryResult -> {
             if (queryResult.failed()) {
-                String message = String.format("[Incidents@%s::getPunishments] Failed to get query"
-                        , this.getClass().getSimpleName());
+                String message = String.format("[Incidents@%s::getPunishments] Failed to get query", this.getClass().getSimpleName());
                 LOGGER.error(String.format("%s %s", message, queryResult.cause().getMessage()));
                 promise.fail(message);
                 return;
             }
 
             if (id != null && !id.equals("")) {
-                punishmentHelper.getPunishment(punishment.getTable(), queryResult.result())
+                punishmentHelper.getPunishment(punishment.getTable(), order, reverse, queryResult.result())
                         .onSuccess(promise::complete)
                         .onFailure(promise::fail);
             } else {
@@ -399,7 +404,7 @@ public class DefaultPunishmentService implements PunishmentService {
                     limit = limitString != null && !limitString.equals("") ? Integer.parseInt(limitString) : -1;
                 }
 
-                punishmentHelper.getPunishments(punishment.getTable(), queryResult.result(), limit, offset, result -> {
+                punishmentHelper.getPunishments(punishment.getTable(), queryResult.result(), order, reverse, limit, offset, result -> {
                     if (result.failed()) {
                         findFuture.fail(result.cause());
                         return;
@@ -692,34 +697,10 @@ public class DefaultPunishmentService implements PunishmentService {
     }
 
     @Override
-    public void count(UserInfos user, MultiMap body, boolean isStudent, Handler<AsyncResult<Long>> handler) {
-        punishmentHelper.getQuery(user, body, isStudent, result -> {
-            if (result.failed()) {
-                handler.handle(Future.failedFuture(result.cause().getMessage()));
-                return;
-            }
-            punishmentHelper.countPunishments(punishment.getTable(), result.result(), handler);
-        });
-    }
-
-    @Override
-    public void count(UserInfos user, String structureId, String startAt, String endAt, List<String> studentIds,
-                      List<String> groupIds, List<String> typeIds, List<String> processStates, boolean isStudent, Handler<AsyncResult<Long>> handler) {
-        punishmentHelper.getQuery(user, null, null, structureId, startAt, endAt, studentIds,
-                groupIds, typeIds, processStates, isStudent, result -> {
-                    if (result.failed()) {
-                        handler.handle(Future.failedFuture(result.cause().getMessage()));
-                        return;
-                    }
-                    punishmentHelper.countPunishments(punishment.getTable(), result.result(), handler);
-                });
-    }
-
-    @Override
     public Future<JsonObject> delete(UserInfos user, String structureId, String punishmentId, String groupedPunishmentId) {
         Promise<JsonObject> promise = Promise.promise();
-        get(user, punishmentId, groupedPunishmentId, structureId, null, null,
-                null, null, null, null, false, null, null, null)
+        get(user, punishmentId, groupedPunishmentId, structureId, null, null, null,
+                null, null, null, false, null, false, null, null, null)
                 .onFailure(error -> {
                     String message = String.format("[Incidents@%s::delete] Fail to delete punishments"
                             , this.getClass().getSimpleName());
