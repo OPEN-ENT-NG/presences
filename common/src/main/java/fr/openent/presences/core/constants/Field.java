@@ -49,6 +49,7 @@ public class Field {
     public static final String TYPEID = "type_id";
     public static final String OWNER = "owner";
     public static final String OWNERID = "ownerId";
+    public static final String OWNER_ID = "owner_id";
     public static final String ACTION_ABBREVIATION = "action_abbreviation";
     public static final String EXPORT_PDF_EVENTS = "export-pdf-events";
     public static final String EXPORT_PDF_ABSENCES = "export-pdf-absences";
@@ -216,6 +217,7 @@ public class Field {
     public static final String GROUPED_PUNISHMENT_ID = "grouped_punishment_id";
     public static final String $GROUPED_PUNISHMENT_ID = "$grouped_punishment_id";
     public static final String GROUP_ID = "group_id";
+    public static final String TYPE_ID = "type_id";
     public static final String PROCESS = "process";
     public static final String PUNISHMENTTYPE = "punishmentType";
     public static final String PUNISHMENTSTYPES = "punishmentsTypes";
