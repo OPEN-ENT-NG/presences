@@ -93,6 +93,10 @@ export class Massmailing {
         this.counts = counts;
         this.students = students;
         this.isMultiple = isMultiple;
+        this.updateStudentRelatives();
+    }
+
+    public updateStudentRelatives(): void {
         this.students.forEach((student: MassmailingStudent) => {
             let primaryRelative: boolean = (student.relative
                 .find((relative: IRelative) => relative.primary === true)) !== undefined;
@@ -110,7 +114,6 @@ export class Massmailing {
                 } else {
                     relative.selected = (relative.contact !== null && relative.contact.trim() !== '') || this.type === MailingType[MailingType.PDF];
                 }
-                if (!relative.selected) this.counts.massmailing--;
             });
             let shouldSelect: boolean = false;
             student.relative.forEach((relative: IRelative) => (shouldSelect = (shouldSelect || relative.selected)));
@@ -119,6 +122,28 @@ export class Massmailing {
             }
             student.opened = false;
         });
+
+        this.updateMassmailingCount();
+    }
+
+    public updateMassmailingCount(): void {
+        let count: number = 0;
+        this.students.forEach((student: MassmailingStudent) => {
+            let countStudent: number = 0;
+            student.relative.forEach((relative: IRelative) => {
+                if (relative.contact !== null) {
+                    countStudent += relative.selected ? 1 : 0;
+                }
+            });
+            if (this.isMultiple) {
+                let nbEvents: number = 0;
+                Object.keys(student.events).forEach((eventType: string) => nbEvents += student.events[eventType]);
+                countStudent *= nbEvents;
+            }
+            count += countStudent;
+        });
+
+        this.counts.massmailing = count;
     }
 
     private getStudents() {

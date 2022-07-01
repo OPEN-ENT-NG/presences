@@ -2,7 +2,7 @@ import {_, idiom as lang, Me, ng, toasts} from 'entcore';
 import {ReasonService} from '@presences/services/ReasonService';
 import {GroupService, SearchService, SettingsService, Template} from '../services';
 import {
-    IMassmailingFilterPreferences,
+    IMassmailingFilterPreferences, IRelative,
     MailingType,
     Massmailing,
     MassmailingAnomaliesResponse,
@@ -146,9 +146,11 @@ interface ViewModel {
 
     massmail(): Promise<void>;
 
+    toggleIsMultiple(): void;
+
     toggleStudent(student): void;
 
-    toggleRelative(relative, student): void;
+    toggleRelative(relative: Array<IRelative>, student: any): void;
 
     filterAnomalies(item: any): boolean;
 }
@@ -725,15 +727,19 @@ export const homeController = ng.controller('HomeController', ['$scope', 'route'
             toasts.info('massmailing.in-progress');
         };
 
-        vm.toggleStudent = function ({selected, relative}) {
-            relative.forEach(rel => rel.selected = selected);
+        vm.toggleIsMultiple = (): void => {
+            vm.massmailing.updateStudentRelatives();
+        };
+
+        vm.toggleStudent = ({selected, relative}): void => {
+            relative.forEach((rel: IRelative) => rel.selected = selected);
+            vm.massmailing.updateMassmailingCount();
             $scope.safeApply();
         };
 
-        vm.toggleRelative = function (relative, student) {
-            let bool = false;
-            student.relative.forEach(relative => (bool = bool || relative.selected));
-            student.selected = bool;
+        vm.toggleRelative = (relative: Array<IRelative>, student: any): void => {
+            student.selected = !!student.relative.find((relative: IRelative): boolean => relative.selected);
+            vm.massmailing.updateMassmailingCount();
             $scope.safeApply();
         };
 
