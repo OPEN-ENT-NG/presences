@@ -46,7 +46,7 @@
         <div bind-html="vm.massmailing.template.content" class="row template-preview"></div>
         <div class="flex-row row__16 vertical-spacing" ng-show="vm.filter.status.PUNISHMENT || vm.filter.status.SANCTION">
             <label class="checkbox flex-col col__1">
-                <input type="checkbox" data-ng-model="vm.massmailing.isMultiple">
+                <input type="checkbox" data-ng-change="vm.toggleIsMultiple()" data-ng-model="vm.massmailing.isMultiple">
                 <span></span>
             </label>
             <span class="text-align-left flex-col col__15">
