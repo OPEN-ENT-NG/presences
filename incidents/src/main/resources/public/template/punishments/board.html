@@ -2,27 +2,40 @@
 <div class="punishment-board flex-table">
     <!-- Add 14 instead of 16 in order to hide incident -->
     <div class="flex-row punishment-board-title flex-head row__16">
-        <div class="flex-col col__3 text-center">
+        <div class="flex-col col__3 text-center" data-ng-click="vm.sortField('displayName')">
             <i18n>presences.exemptions.student</i18n>
+            <span ng-class="{'arrow-up' : (vm.punishmentsRequest.order === 'displayName' && vm.punishmentsRequest.reverse == true),
+                             'arrow-down' : (vm.punishmentsRequest.order === 'displayName' && vm.punishmentsRequest.reverse == false)}">
+            </span>
         </div>
-        <div class="flex-col col__1 text-center">
+        <div class="flex-col col__1 text-center" data-ng-click="vm.sortField('className')">
             <i18n>presences.exemptions.audience</i18n>
+            <span ng-class="{'arrow-up' : (vm.punishmentsRequest.order === 'className' && vm.punishmentsRequest.reverse == true),
+                             'arrow-down' : (vm.punishmentsRequest.order === 'className' && vm.punishmentsRequest.reverse == false)}">
+            </span>
         </div>
-        <div class="flex-col col__2 text-center">
+        <div class="flex-col col__2 text-center" data-ng-click="vm.sortField('type')">
             <i18n>incidents.csv.header.type</i18n>
+            <span ng-class="{'arrow-up' : (vm.punishmentsRequest.order === 'type' && vm.punishmentsRequest.reverse == true),
+            'arrow-down' : (vm.punishmentsRequest.order === 'type' && vm.punishmentsRequest.reverse == false)}">
+            </span>
         </div>
-        <div class="flex-col col__3 text-center">
+        <div class="flex-col col__3 text-center" data-ng-click="vm.sortField('date')">
             <i18n>incidents.csv.header.date</i18n>
+            <span ng-class="{'arrow-up' : (vm.punishmentsRequest.order === 'date' && vm.punishmentsRequest.reverse == true),
+                             'arrow-down' : ((vm.punishmentsRequest.order === 'date' && vm.punishmentsRequest.reverse == false)
+                             || vm.punishmentsRequest.order === undefined)}">
+            </span>
         </div>
         <div class="flex-col col__2 text-center">
             <i18n>incidents.punishments.csv.header.slots</i18n>
         </div>
-        <div class="flex-col col__2 text-center">
+        <div class="flex-col col__2 text-center" data-ng-click="vm.sortField('owner')">
             <i18n>presences.responsible</i18n>
+            <span ng-class="{'arrow-up' : (vm.punishmentsRequest.order === 'owner' && vm.punishmentsRequest.reverse == true),
+            'arrow-down' : (vm.punishmentsRequest.order === 'owner' && vm.punishmentsRequest.reverse == false)}">
+            </span>
         </div>
-        <!--        <div class="flex-col col__2 text-center">-->
-        <!--            <i18n>incidents.linked</i18n>-->
-        <!--        </div>-->
         <div class="flex-col col__2 text-center">
             <i18n>incidents.massmailed</i18n>
         </div>

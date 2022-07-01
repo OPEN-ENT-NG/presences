@@ -64,16 +64,25 @@ export const punishmentService: IPunishmentService = {
                     }
                 });
             }
+
+            let orderParams: string = '';
+            if (punishmentRequest.order) {
+                orderParams += `&order=${punishmentRequest.order}`;
+            }
+
+            if (punishmentRequest.reverse) {
+                orderParams += `&reverse=${punishmentRequest.reverse}`;
+            }
             const structureUrl: string = `?structure_id=${punishmentRequest.structure_id}`;
             const dateUrl: string = `&start_at=${punishmentRequest.start_at}&end_at=${punishmentRequest.end_at}`;
             const urlParams: string = `${typeParams}${studentParams}${groupParams}${stateParams}`;
             const pageUrl: string = `&page=${punishmentRequest.page}`;
-            const {data}: AxiosResponse = await http.get(`/incidents/punishments${structureUrl}${dateUrl}${urlParams}${pageUrl}`);
-            data.all.filter((punishment:IPunishment) => punishment.type.punishment_category_id == PunishmentCategoryType.DETENTION)
-                .forEach((punishment:IPunishment) => {
+            const {data}: AxiosResponse = await http.get(`/incidents/punishments${structureUrl}${dateUrl}${urlParams}${orderParams}${pageUrl}`);
+            data.all.filter((punishment: IPunishment) => punishment.type.punishment_category_id === PunishmentCategoryType.DETENTION)
+                .forEach((punishment: IPunishment) => {
                     punishment.fields = [punishment.fields];
                     punishment.fields[0].id = punishment.id;
-                })
+                });
             return data;
         } catch (err) {
             throw err;
@@ -131,6 +140,13 @@ export const punishmentService: IPunishmentService = {
             punishmentRequest.groups_ids.forEach((groupId: string) => {
                 filterParams += `&group_id=${groupId}`;
             });
+        }
+        if (punishmentRequest.order) {
+            filterParams += `&order=${punishmentRequest.order}`;
+        }
+
+        if (punishmentRequest.reverse) {
+            filterParams += `&reverse=${punishmentRequest.reverse}`;
         }
 
         let url: string = `/incidents/punishments/export?structure_id=${punishmentRequest.structure_id}` +

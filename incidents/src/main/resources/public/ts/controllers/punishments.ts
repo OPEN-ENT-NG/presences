@@ -93,6 +93,8 @@ interface IViewModel {
 
     validFilterLightboxForm(): Promise<void>;
 
+    sortField(field: string): Promise<void>;
+
     /* search bar methods */
     searchStudent(studentForm: string): Promise<void>;
 
@@ -460,6 +462,13 @@ export const punishmentController = ng.controller('PunishmentController',
 
                 vm.updateFilter();
                 vm.filterForm.isOpen = false;
+            };
+
+            vm.sortField = async (field: string): Promise<void> => {
+                vm.punishmentsRequest.order = field;
+                vm.punishmentsRequest.reverse = !vm.punishmentsRequest.reverse;
+                await getPunishments();
+                $scope.safeApply();
             };
 
             /**

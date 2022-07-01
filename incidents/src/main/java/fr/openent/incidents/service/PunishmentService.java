@@ -25,11 +25,12 @@ public interface PunishmentService {
     void get(UserInfos user, MultiMap body, boolean isStudent, Handler<AsyncResult<JsonObject>> handler);
 
     void get(UserInfos user, String id, String structureId, String startAt, String endAt, List<String> studentIds, List<String> groupIds,
-             List<String> typeIds, List<String> processStates, boolean isStudent, String pageString, String limitString, String offsetString,
+             List<String> typeIds, List<String> processStates, boolean isStudent, String order, boolean reverse, String pageString, String limitString, String offsetString,
              Handler<AsyncResult<JsonObject>> handler);
 
     Future<JsonObject> get(UserInfos user, String id, String groupedPunishmentId, String structureId, String startAt, String endAt, List<String> studentIds, List<String> groupIds,
-                           List<String> typeIds, List<String> processStates, boolean isStudent, String pageString, String limitString, String offsetString);
+                           List<String> typeIds, List<String> processStates, boolean isStudent, String order, boolean reverse,
+                           String pageString, String limitString, String offsetString);
 
     /**
      * get Sanctions/Punishments by students
@@ -71,20 +72,6 @@ public interface PunishmentService {
      * @param handler        Function handler returning data
      */
     void updatePunishmentMassmailing(List<String> punishmentsIds, Boolean isMassmailed, Handler<Either<String, JsonObject>> handler);
-
-    /**
-     * get punishment
-     *
-     * @param user      current user logged
-     * @param body      data to filter
-     * @param isStudent if user is a student (and need to be filtered about that).
-     * @param handler   Function handler returning number of punishments
-     */
-    void count(UserInfos user, MultiMap body, boolean isStudent, Handler<AsyncResult<Long>> handler);
-
-
-    void count(UserInfos user, String structureId, String startAt, String endAt, List<String> studentIds,
-               List<String> groupIds, List<String> typeIds, List<String> processStates, boolean isStudent, Handler<AsyncResult<Long>> handler);
 
     /**
      * create punishment

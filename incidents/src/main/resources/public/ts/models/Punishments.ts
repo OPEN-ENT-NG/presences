@@ -27,6 +27,8 @@ export interface IPunishmentRequest {
     type_ids: Array<number>;
     process_state: Array<{ label: string, isSelected: boolean, value?: string }>;
     massmailed?: boolean;
+    order?: string;
+    reverse?: boolean;
     page: number;
 }
 

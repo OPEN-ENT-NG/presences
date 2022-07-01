@@ -51,12 +51,14 @@ public class PunishmentController extends ControllerHelper {
             List<String> groupIds = request.params().getAll(Field.GROUP_ID);
             List<String> typeIds = request.params().getAll(Field.TYPEID);
             List<String> processStates = request.params().getAll(Field.PROCESS);
+            String order = request.params().contains(Field.ORDER) ? request.getParam(Field.ORDER) : Field.DATE;
+            boolean reverse = request.params().contains(Field.REVERSE) && Boolean.parseBoolean(request.getParam(Field.REVERSE));
             String page = request.params().get(Field.PAGE);
             String limit = request.params().get(Field.LIMIT);
             String offset = request.params().get(Field.OFFSET);
 
             punishmentService.get(user, id, groupedPunishmentId, structureId, startAt, endAt, studentIds, groupIds, typeIds,
-                            processStates, false, page, limit, offset)
+                            processStates, false, order, reverse, page, limit, offset)
                     .onFailure(error -> renderError(request))
                     .onSuccess(result -> renderJson(request, result));
         });

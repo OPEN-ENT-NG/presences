@@ -153,8 +153,10 @@ describe('PunishmentService', () => {
             start_at: "start_at",
             structure_id: "structure_id",
             students_ids: ["students_id_1", "students_id_2"],
-            type_ids: [1, 2]
-        }
+            type_ids: [1, 2],
+            order: 'date',
+            reverse: true
+        };
 
         const dataGraph = {
             all: [{type: {punishment_category_id: undefined}}]
@@ -163,8 +165,9 @@ describe('PunishmentService', () => {
         const structureUrl: string = `?structure_id=structure_id`;
         const dateUrl: string = `&start_at=start_at&end_at=end_at`;
         const urlParams: string = `&type_id=1&type_id=2&student_id=students_id_1&student_id=students_id_2&group_id=groups_id_1&group_id=groups_id_2&process=value1&process=value3`;
+        const orderParams: string = `&order=date&reverse=true`;
         const pageUrl: string = `&page=0`;
-        mock.onGet(`/incidents/punishments${structureUrl}${dateUrl}${urlParams}${pageUrl}`)
+        mock.onGet(`/incidents/punishments${structureUrl}${dateUrl}${urlParams}${orderParams}${pageUrl}`)
             .reply(200, dataGraph);
 
         punishmentService.get(punishmentRequest)
@@ -292,14 +295,17 @@ describe('PunishmentService', () => {
             start_at: "start_at",
             structure_id: "structure_id",
             students_ids: ["students_id_1", "students_id_2"],
-            type_ids: [1, 2]
-        }
+            type_ids: [1, 2],
+            order: 'date',
+            reverse: false
+        };
 
         punishmentService.exportCSV(punishmentRequest);
         const structureUrl: string = `?structure_id=structure_id`;
         const dateUrl: string = `&start_at=start_at&end_at=end_at`;
+        const orderParams: string = `&order=date`;
         const urlParams: string = `&type_id=1&type_id=2&student_id=students_id_1&student_id=students_id_2&group_id=groups_id_1&group_id=groups_id_2`;
-        expect(window.open).toHaveBeenCalledWith(`/incidents/punishments/export${structureUrl}${dateUrl}${urlParams}`);
+        expect(window.open).toHaveBeenCalledWith(`/incidents/punishments/export${structureUrl}${dateUrl}${urlParams}${orderParams}`);
         windowSpy.mockRestore();
         done();
     });
