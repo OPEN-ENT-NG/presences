@@ -1,7 +1,7 @@
 import {idiom, model, moment, ng} from 'entcore';
 import {IUserService, IViescolaireService} from "@common/services";
 import {Student} from "@common/model/Student";
-import {DateUtils, UserUtils} from "@common/utils";
+import {DateUtils, PreferencesUtils, safeApply, UserUtils} from "@common/utils";
 import {IPeriod, IPeriodService} from "@presences/services/PeriodService";
 import {ForgottenNotebookService, IncidentService} from "../services";
 import {IColor} from "@common/model/Color";
@@ -137,7 +137,8 @@ export const dashboardStudentController = ng.controller('DashboardStudentControl
                         vm.forgottenNotebook = (<IForgottenNotebookResponse>values[2]); // forgotten notebook events
                         vm.isLoading = false;
                         $scope.safeApply();
-                    });
+                    })
+                    .catch(err => console.log(err));
                 $scope.safeApply();
             };
 
@@ -182,29 +183,31 @@ export const dashboardStudentController = ng.controller('DashboardStudentControl
                     Promise.all([
                         periodService.get(vm.filter.selectedChildren.structure.id, vm.filter.selectedChildren.structure.classes[0].id),
                         viescolaireService.getSchoolYearDates(vm.filter.selectedChildren.structure.id)
-                    ]).then((values: any[]) => {
-                        let periods: Array<IPeriod> = (<Array<IPeriod>>values[0]);
-                        let schoolyear: ISchoolYearPeriod = (<ISchoolYearPeriod>values[1]);
+                    ])
+                        .then((values: any[]) => {
+                            let periods: Array<IPeriod> = (<Array<IPeriod>>values[0]);
+                            let schoolyear: ISchoolYearPeriod = (<ISchoolYearPeriod>values[1]);
 
-                        if (periods.length !== 0) {
-                            periods.forEach((period: IPeriod) => {
-                                period.label = `${idiom.translate(`viescolaire.periode.${period.type}`)}  ${period.ordre}`
-                            });
-                            vm.filter.periods = periods;
-                            let currentPeriod: IPeriod = periods.find((period: IPeriod) =>
-                                moment().isBetween(period.timestamp_dt, period.timestamp_fn)
-                            );
-                            vm.filter.selectedPeriod = currentPeriod != undefined ? currentPeriod : vm.filter.periods[0];
-                        } else {
-                            vm.filter.periods = [];
-                            vm.filter.selectedPeriod = {
-                                timestamp_dt: schoolyear.start_date,
-                                timestamp_fn: schoolyear.end_date
-                            };
-                        }
-                        $scope.safeApply();
-                        resolve(undefined);
-                    });
+                            if (periods.length !== 0) {
+                                periods.forEach((period: IPeriod) => {
+                                    period.label = `${idiom.translate(`viescolaire.periode.${period.type}`)}  ${period.ordre}`
+                                });
+                                vm.filter.periods = periods;
+                                let currentPeriod: IPeriod = periods.find((period: IPeriod) =>
+                                    moment().isBetween(period.timestamp_dt, period.timestamp_fn)
+                                );
+                                vm.filter.selectedPeriod = currentPeriod != undefined ? currentPeriod : vm.filter.periods[0];
+                            } else {
+                                vm.filter.periods = [];
+                                vm.filter.selectedPeriod = {
+                                    timestamp_dt: schoolyear.start_date,
+                                    timestamp_fn: schoolyear.end_date
+                                };
+                            }
+                            $scope.safeApply();
+                            resolve(undefined);
+                        })
+                        .catch(err => console.error(err));
                 });
             };
 
@@ -224,7 +227,8 @@ export const dashboardStudentController = ng.controller('DashboardStudentControl
                             .then((value: IStudentEventResponse) => {
                                 vm.presenceEvents.all[type] = value.all[type];
                                 $scope.safeApply();
-                            });
+                            })
+                            .catch(err => console.error(err));
                         break;
                     }
                     case EVENT_TYPES.NOTEBOOK:
@@ -232,7 +236,8 @@ export const dashboardStudentController = ng.controller('DashboardStudentControl
                             .then((value: IForgottenNotebookResponse) => {
                                 vm.forgottenNotebook.all = value.all;
                                 $scope.safeApply();
-                            });
+                            })
+                            .catch(err => console.error(err));
                         break;
                     case EVENT_TYPES.PUNISHMENT:
                     case EVENT_TYPES.INCIDENT:
@@ -241,7 +246,8 @@ export const dashboardStudentController = ng.controller('DashboardStudentControl
                             .then((value) => {
                                 vm.incidentsEvents.all[type] = value.all[type];
                                 $scope.safeApply();
-                            });
+                            })
+                            .catch(err => console.error(err));
                         break;
                 }
             };
@@ -281,12 +287,13 @@ export const dashboardStudentController = ng.controller('DashboardStudentControl
             };
 
             /* event handler */
-            $scope.$watch(() => window.structure, async () => {
-                if ('structure' in window) {
-                    await Promise.all([load(), getTimeSlots(window.structure.id)]);
-                    await loadEvents();
-                    $scope.safeApply();
-                }
+            $scope.$watch(() => window.structure, () => {
+                load()
+                    .then(() => getTimeSlots((vm.filter.selectedChildren && vm.filter.selectedChildren.structure)
+                        ? vm.filter.selectedChildren.structure.id : window.structure.id))
+                    .then(() => loadEvents())
+                    .then(() => safeApply($scope))
+                    .catch(err => console.error(err))
             });
 
             $scope.$on(DASHBOARD_STUDENT_EVENTS.SEND_TOGGLE, (event: IAngularEvent, isToggleOnce: boolean, type: string) => {
@@ -296,9 +303,12 @@ export const dashboardStudentController = ng.controller('DashboardStudentControl
                 }
             });
 
-            $scope.$on(UPDATE_STUDENTS_EVENTS.UPDATE, async (event: IAngularEvent, child: Student) => {
+            $scope.$on(UPDATE_STUDENTS_EVENTS.UPDATE, (event: IAngularEvent, child: Student) => {
                 vm.filter.selectedChildren = child;
-                await getPeriods();
-                await loadEvents();
+                getTimeSlots((vm.filter.selectedChildren && vm.filter.selectedChildren.structure)
+                    ? vm.filter.selectedChildren.structure.id : window.structure.id)
+                    .then(() => getPeriods())
+                    .then(() => loadEvents())
+                    .catch(err => console.error(err))
             });
         }]);

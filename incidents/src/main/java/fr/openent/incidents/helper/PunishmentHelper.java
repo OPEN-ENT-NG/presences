@@ -464,6 +464,9 @@ public class PunishmentHelper {
     @SuppressWarnings("unchecked")
     private JsonArray sortPunishmentByField(JsonArray punishments, String order, boolean reverse) {
         List<JsonObject> list = punishments.getList();
+        if (order == null) {
+            return new JsonArray(list);
+        }
         switch (order) {
             case Field.DISPLAYNAME:
                 Collections.sort(list, (o1, o2) -> reverse ?
