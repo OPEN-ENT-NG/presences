@@ -587,5 +587,15 @@
   "presences.init.error": "Une erreur est survenue lors de l'initialisation de l'établissement",
   "presences.init.success": "Initialisation réussie",
   "presences.wednesday": "Mercredi",
-  "presences.year": "Année"
+  "presences.year": "Année",
+  "presences.alert.rules": "Ce motif compte dans les alertes",
+  "presences.alert.rules.regularised": "Quand il est régularisé",
+  "presences.alert.rules.no.regularised": "Quand il est non-régularisé",
+  "presences.absence.reason.regularized.and.unregularized": "Alerte lorsque l'absence est régularisé ou non régularisée",
+  "presences.absence.reason.regularized": "Alerte lorsque ce motif est régularisé",
+  "presences.absence.reason.unregularized": "Alerte lorsque ce motif est non régularisé",
+  "presences.absence.reason.lateness": "Alerte pour ce motif",
+  "presences.alerts.exclude.absence.no.reason": "Les absences sans motif comptent dans les alertes",
+  "presences.alerts.exclude.lateness.no.reason": "Les retards sans motif comptent dans les alertes",
+  "presences.alerts.exclude.foregotten.notebook": "Les carnets oubliés comptent dans les alertes"
 }
