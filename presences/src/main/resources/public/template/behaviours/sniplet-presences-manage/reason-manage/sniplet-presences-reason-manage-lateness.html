@@ -50,6 +50,19 @@
             </div>
         </div>
 
+        <!-- Alert rule -->
+        <div class="sniplet-input">
+            <div class="sniplet-input-alert-rule flex-column no-margin">
+                <div class="flex-center-input flex-row">
+                    <label class="checkbox">
+                        <input type="checkbox" ng-model="vm.form.excludeAlertLateness">
+                        <span></span>
+                    </label>
+                    <i18n class="eleven text-align-left">presences.alert.rules</i18n>
+                </div>
+            </div>
+        </div>
+
         <!-- Add reason / Lists -->
         <div class="sniplet-addList">
             <button data-ng-click="vm.createReason()" data-ng-disabled="!vm.isFormValid(vm.form)">
@@ -73,6 +86,10 @@
                             <i title="[[lang.translate('presences.absence.reason.notebook.into.account')]]"
                                class="sniplet-addList-content-list-item-icon-orange file-checked"
                                data-ng-show="reason.absence_compliance"></i>
+                            <i title="[[lang.translate('presences.absence.reason.lateness')]]"
+                               class="sniplet-addList-content-list-item-icon-orange notify-bell"
+                               data-ng-show="vm.getReasonAlertColor(reason)"
+                               ng-style="{ 'color': vm.getReasonAlertColor(reason)}"></i>
                             <i class="presence-edit" data-ng-click="vm.openReasonLightbox(reason)"></i>
                         </div>
 

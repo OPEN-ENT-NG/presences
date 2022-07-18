@@ -1,12 +1,12 @@
 import {INCIDENTS_SERIOUSNESS_EVENT} from "@common/core/enum/incidents-event";
 import {Seriousness, SeriousnessRequest, seriousnessService} from "@incidents/services";
 import {AxiosResponse} from "axios";
+import {idiom as lang} from "entcore";
+import {safeApply} from "@common/utils";
 
 declare let window: any;
 
 interface ViewModel {
-    safeApply(fn?: () => void): void;
-
     form: SeriousnessRequest;
     seriousnessLevel: number
     seriousnesses: Seriousness[];
@@ -28,47 +28,50 @@ interface ViewModel {
     openIncidentsManageLightbox(seriousness: Seriousness): void;
 }
 
-function safeApply() {
-    let that = incidentsSeriousnessManage.that;
-    return new Promise((resolve, reject) => {
-        var phase = that.$root.$$phase;
-        if (phase === '$apply' || phase === '$digest') {
-            if (resolve && (typeof (resolve) === 'function')) resolve();
-        } else {
-            if (resolve && (typeof (resolve) === 'function')) that.$apply(resolve);
-            else that.$apply();
-        }
-    });
-}
+export class IncidentsSeriousnessManage implements ViewModel {
+    lang: typeof lang;
 
-const vm: ViewModel = {
-    safeApply: null,
-    seriousnesses: [],
-    form: {} as SeriousnessRequest,
-    seriousnessLevel: 0,
+    seriousnesses: Array<any>;
+    form: SeriousnessRequest;
+    seriousnessLevel: number;
+
+    constructor(private $scope: any) {
+        this.lang = lang;
+        this.init();
+    }
+
+    init() {
+        this.seriousnesses = [];
+        this.form = {excludeAlertSeriousness: false} as SeriousnessRequest;
+        this.seriousnessLevel = 0;
+
+        this.$scope.$watch(() => window.model.vieScolaire.structure, async () => this.get());
+        this.$scope.$on(INCIDENTS_SERIOUSNESS_EVENT.RESPOND, () => this.get());
+        this.$scope.$on('reload', this.get);
+    }
 
     async create(): Promise<void> {
-        vm.form.structureId = window.model.vieScolaire.structure.id;
-        vm.form.level = vm.seriousnessLevel;
-        let response = await seriousnessService.create(vm.form);
-        vm.proceedAfterAction(response);
-        vm.form.label = '';
-        vm.seriousnessLevel = 0;
-    },
+        this.form.structureId = window.model.vieScolaire.structure.id;
+        this.form.level = this.seriousnessLevel;
+        let response = await seriousnessService.create(this.form);
+        this.proceedAfterAction(response);
+        this.form.label = '';
+        this.seriousnessLevel = 0;
+    }
 
     async delete(incidentType: Seriousness): Promise<void> {
         let response = await seriousnessService.delete(incidentType.id);
-        vm.proceedAfterAction(response);
-    },
+        this.proceedAfterAction(response);
+    }
 
     hasSeriousnesses(): boolean {
-        return vm.seriousnesses && vm.seriousnesses.length !== 0;
-    },
+        return this.seriousnesses && this.seriousnesses.length !== 0;
+    }
 
     async get(): Promise<void> {
-        vm.seriousnesses = await seriousnessService.get(window.model.vieScolaire.structure.id);
-        vm.safeApply();
-    },
+        this.seriousnesses = await seriousnessService.get(window.model.vieScolaire.structure.id);
+        safeApply(this.$scope);
+    }
 
     async toggleVisibility(seriousness: Seriousness): Promise<void> {
         seriousness.hidden = !seriousness.hidden;
@@ -77,41 +80,35 @@ const vm: ViewModel = {
         form.hidden = seriousness.hidden;
         form.label = seriousness.label;
         form.level = seriousness.level;
+        form.excludeAlertSeriousness = seriousness.exclude_alert_seriousness;
         await seriousnessService.update(form);
-    },
+    }
 
     proceedAfterAction(response: AxiosResponse): void {
         if (response.status === 200 || response.status === 201) {
-            vm.get();
+            this.get();
         }
-    },
-
-    openIncidentsManageLightbox(seriousness: Seriousness): void {
-        incidentsSeriousnessManage.that.$emit(INCIDENTS_SERIOUSNESS_EVENT.SEND, seriousness);
-    },
-
-    chooseLevel(level: number): void {
-        vm.seriousnessLevel = level;
     }
 
-};
+    openIncidentsManageLightbox(seriousness: Seriousness): void {
+        this.$scope.$emit(INCIDENTS_SERIOUSNESS_EVENT.SEND, seriousness);
+    }
+
+    chooseLevel(level: number): void {
+        this.seriousnessLevel = level;
+    }
+
+    getSeriousnessAlertColor(seriousness: Seriousness): string {
+        return seriousness.exclude_alert_seriousness ? null : "#d68227";
+    }
+}
 
 export const incidentsSeriousnessManage = {
     title: 'incidents.manage.title',
     public: false,
-    that: null,
     controller: {
         init: async function () {
-            this.vm = vm;
-            this.setHandler();
-            incidentsSeriousnessManage.that = this;
-            vm.safeApply = safeApply;
-        },
-        setHandler: function () {
-            // using vieScolaire.structure to update current structure from viescolaire
-            this.$watch(() => window.model.vieScolaire.structure, async () => vm.get());
-            this.$on(INCIDENTS_SERIOUSNESS_EVENT.RESPOND, () => vm.get());
-            this.$on('reload', vm.get);
+            this.vm = new IncidentsSeriousnessManage(this);
         }
     }
 };
