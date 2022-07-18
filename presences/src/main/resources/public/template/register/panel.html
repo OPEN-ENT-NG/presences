@@ -62,7 +62,7 @@
                     vm.isAbsenceDisabledWithoutWorkFlow(vm.filter.student)"
                     ng-model="vm.filter.student.lateness.end_date_time"
                     ng-change="vm.updateLateness()"></time-picker>
-            <div ng-if="hasRight('managePresences')" class="select-reason-absences right-magnet margin-bottom-md">
+            <div class="select-reason-absences right-magnet margin-bottom-md">
                 <label>
                     <select ng-model="vm.filter.student.lateness.reason_id"
                             ng-disabled="vm.isAbsenceDisabledWithoutWorkFlow(vm.filter.student)"
@@ -74,16 +74,6 @@
                     </select>
                 </label>
             </div>
-        </div>
-        <div ng-if="!hasRight('managePresences')" class="row">
-            <label>
-                <i18n>presences.lateness.reason</i18n>
-                <textarea
-                        ng-disabled="vm.filter.student.lateness === undefined && vm.filter.student.absence !== undefined ||
-                        vm.isAbsenceDisabledWithoutWorkFlow(vm.filter.student)"
-                        ng-model="vm.filter.student.lateness.comment"
-                        end-user-typing="vm.filter.student.lateness.update()"></textarea>
-            </label>
         </div>
     </div>
 
