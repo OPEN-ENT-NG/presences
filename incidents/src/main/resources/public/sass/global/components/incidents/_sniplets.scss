@@ -10,6 +10,21 @@
           background: $disabled-color;
         }
       }
+
+      &-alert {
+        flex-direction: row !important;
+        input[type=checkbox]:checked+span::before {
+          background-color: unset !important;
+          border-color: $orange !important;
+          content: "" !important;
+        }
+        input[type=checkbox]+span::before {
+          border-color: $orange !important;
+          background-color: $orange !important;
+          transform: rotate(0deg);
+          content: "\e871";
+        }
+      }
     }
   }
 }

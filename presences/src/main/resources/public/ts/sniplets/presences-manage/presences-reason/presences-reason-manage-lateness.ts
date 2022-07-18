@@ -5,6 +5,7 @@ import {AxiosError, AxiosResponse} from "axios";
 import {ReasonSnipletModel} from "./presences-reason-manager";
 import {safeApply} from "@common/utils";
 import {REASON_TYPE_ID} from "@common/core/enum/reason-type-id";
+import {ALERT_RULE} from "@common/core/enum/alert-rule";
 
 declare let window: any;
 
@@ -33,7 +34,10 @@ export class LatenessReasonSniplet implements ReasonSnipletModel {
         this.form = {
             label: "",
             absenceCompliance: true,
-            proving: true
+            proving: true,
+            excludeAlertRegularised: false,
+            excludeAlertNoRegularised: false,
+            excludeAlertLateness: false
         }
 
         this.$scope.$watch(() => window.model.vieScolaire.structure, async () => this.getReasons());
@@ -104,6 +108,8 @@ export class LatenessReasonSniplet implements ReasonSnipletModel {
         this.formEdit.hidden = reasonCopy.hidden;
         this.formEdit.proving = reasonCopy.proving;
         this.formEdit.label = reasonCopy.label;
+        this.formEdit.excludeAlertRegularised = (<any>reasonCopy.reason_alert_rules).includes(ALERT_RULE.LATENESS);
+        this.formEdit.structureId = reasonCopy.structure_id;
     }
 
     async updateReason(): Promise<void> {
@@ -135,6 +141,10 @@ export class LatenessReasonSniplet implements ReasonSnipletModel {
         if (response.status === 200 || response.status === 201) {
             this.getReasons().catch((e: AxiosError) => console.error(e));
         }
+    }
+
+    getReasonAlertColor(reason: Reason): string {
+        return (<any>reason.reason_alert_rules).includes(ALERT_RULE.LATENESS) ? null : "#9c29b7";
     }
 }
 

@@ -80,6 +80,29 @@
             </div>
         </div>
 
+        <!-- Alert rule -->
+        <div class="sniplet-input">
+            <label class="sniplet-input-title no-padding">
+                <i18n>presences.alert.rules</i18n>
+            </label>
+            <div class="sniplet-input-alert-rule flex-column no-margin">
+                <div class="flex-center-input flex-row">
+                    <label class="checkbox">
+                        <input type="checkbox" ng-model="vm.form.excludeAlertRegularised">
+                        <span></span>
+                    </label>
+                    <i18n class="eleven text-align-left">presences.alert.rules.regularised</i18n>
+                </div>
+                <div class="flex-center-input flex-row">
+                    <label class="checkbox">
+                        <input type="checkbox" ng-model="vm.form.excludeAlertNoRegularised">
+                        <span></span>
+                    </label>
+                    <i18n class="eleven text-align-left">presences.alert.rules.no.regularised</i18n>
+                </div>
+            </div>
+        </div>
+
         <!-- Add reason / Lists -->
         <div class="sniplet-addList">
             <button data-ng-click="vm.createReason()" data-ng-disabled="!vm.isFormValid(vm.form)">
@@ -103,6 +126,10 @@
                             <i title="[[lang.translate('presences.absence.reason.notebook.into.account')]]"
                                class="sniplet-addList-content-list-item-icon-orange file-checked"
                                data-ng-show="reason.absence_compliance"></i>
+                            <i title="[[vm.getReasonAlertTitle(reason)]]"
+                               class="sniplet-addList-content-list-item-icon-orange notify-bell"
+                               data-ng-show="vm.getReasonAlertColor(reason)"
+                               ng-style="{ 'color': vm.getReasonAlertColor(reason)}"></i>
                             <i class="presence-edit" data-ng-click="vm.openReasonLightbox(reason)"></i>
                         </div>
 

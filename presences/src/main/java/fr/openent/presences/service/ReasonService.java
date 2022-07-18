@@ -15,25 +15,22 @@ public interface ReasonService {
      *
      * @param structureId  Structure Identifier
      * @param reasonTypeId Reason type Identifier
-     * @param handler      Function handler returning data
      */
-    void get(String structureId, Integer reasonTypeId, Handler<Either<String, JsonArray>> handler);
+    Future<JsonArray> get(String structureId, Integer reasonTypeId);
 
     /**
      * create reason
      *
      * @param reasonBody reasonBody fetched
-     * @param handler    Function handler returning data
      */
-    void create(JsonObject reasonBody, Handler<Either<String, JsonObject>> handler);
+    Future<JsonObject> create(JsonObject reasonBody);
 
     /**
      * put reason
      *
      * @param reasonBody reasonBody fetched
-     * @param handler    Function handler returning data
      */
-    void put(JsonObject reasonBody, Handler<Either<String, JsonObject>> handler);
+    Future<JsonObject> put(JsonObject reasonBody);
 
     /**
      * delete reason
