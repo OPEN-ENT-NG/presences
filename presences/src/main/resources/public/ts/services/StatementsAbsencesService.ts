@@ -1,4 +1,4 @@
-import {ng} from 'entcore'
+import {ng} from 'entcore';
 import http, {AxiosResponse} from 'axios';
 import {
     IStatementAbsenceBody,
@@ -22,7 +22,7 @@ export interface IStatementsAbsencesService {
 
     delete(statementsAbsencesId: number): Promise<AxiosResponse>;
 
-    export(statementsAbsences: IStatementsAbsencesRequest): void;
+    export(statementsAbsences: IStatementsAbsencesRequest): string;
 
     getUrl(statementsAbsences: IStatementsAbsencesRequest, page: number, limit: number, offset: number): String;
 }
@@ -73,9 +73,9 @@ export const statementsAbsencesService: IStatementsAbsencesService = {
         return http.delete(`${statementsAbsencesService.baseUrl}/${statementsAbsencesId}`);
     },
 
-    export: async (statementsAbsences: IStatementsAbsencesRequest): Promise<void> => {
-        const urlParams: String = statementsAbsencesService.getUrl(statementsAbsences, statementsAbsences.page, statementsAbsences.limit, statementsAbsences.offset);
-        window.open(`${statementsAbsencesService.baseUrl}/export${urlParams}`);
+    export: (statementsAbsences: IStatementsAbsencesRequest): string => {
+        const urlParams: String = statementsAbsencesService.getUrl(statementsAbsences, null, statementsAbsences.limit, statementsAbsences.offset);
+        return`${statementsAbsencesService.baseUrl}/export${urlParams}`;
     },
 
     getUrl: (statementsAbsences: IStatementsAbsencesRequest, pageNumber: number, limitNumber: number, offsetNumber: number): String => {
