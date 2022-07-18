@@ -7,7 +7,10 @@ export interface Setting {
     alert_incident_threshold?: number
     alert_forgotten_notebook_threshold?: number
     event_recovery_method?: 'HOUR' | 'HALF_DAY' | 'DAY',
-    allow_multiple_slots?: boolean
+    allow_multiple_slots?: boolean,
+    exclude_alert_absence_no_reason?: boolean,
+    exclude_alert_lateness_no_reason?: boolean,
+    exclude_alert_forgotten_notebook?: boolean
 }
 
 export interface SettingsService {

@@ -17,5 +17,5 @@ public interface SettingsService {
      */
     Future<JsonObject> retrieveMultipleSlots(String structureId);
 
-    void put(String structureId, JsonObject settings, Handler<Either<String, JsonObject>> handler);
+    Future<JsonObject> put(String structureId, JsonObject settings);
 }

@@ -38,6 +38,14 @@
             </ul>
         </div>
 
+        <div ng-if="vm.seriousnessMode" class="incident-sniplet-form-alert">
+            <label class="checkbox">
+                <input type="checkbox" ng-model="vm.form.excludeAlertSeriousness">
+                <span></span>
+            </label>
+            <i18n class="eleven text-align-left">incidents.seriousness.alert.rules</i18n>
+        </div>
+
         <!-- Choice category and type mode if sniplet is on punishment -->
         <div ng-if="vm.punishmentMode">
             <!-- category -->

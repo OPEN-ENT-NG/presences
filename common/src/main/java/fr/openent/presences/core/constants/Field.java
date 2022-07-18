@@ -344,6 +344,9 @@ public class Field {
     public static final String ABSENCE_COMPILANCE = "absence_compliance";
     public static final String REASON_TYPE_ID = "reason_type_id";
     public static final String INITIALIZED = "initialized";
+    public static final String REASON_ALERT_RULES = "reason_alert_rules";
+    public static final String USED = "used";
+    public static final String RULE_TYPE = "rule_type";
 
     private Field() {
         throw new IllegalStateException("Utility class");
