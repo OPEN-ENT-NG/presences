@@ -1,6 +1,95 @@
 &.sniplet-presence-form {
-  .sniplet-form {
+  editor {
+    lightbox {
+      .flex-row {
+        text-align: unset;
+        width: 80%;
+      }
 
+      .content {
+        padding: 15px;
+      }
+
+      .close-lightbox {
+        color: unset;
+      }
+    }
+
+    .mathjax {
+      lightbox {
+        .close-lightbox {
+          display: none;
+        }
+      }
+    }
+  }
+
+  .sniplet-form-lightbox {
+    .content {
+      padding: 0;
+    }
+
+    &-head {
+      background: $presences-blue !important;
+      margin-bottom: 8px;
+    }
+
+    &-body {
+      display: flex;
+      flex-direction: column;
+
+      &-warning {
+        color: $presences-red;
+      }
+
+      &-input {
+        margin: 16px 0;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 12%), 0 1px 2px rgba(0, 0, 0, 24%);
+      }
+
+      &-color {
+        ul {
+          display: flex;
+          flex-direction: row;
+          list-style-type: none;
+          padding: 0;
+        }
+
+        li {
+          margin-right: 24px;
+        }
+
+        li.active {
+          border-color: $presences-black;
+          border-style: solid;
+        }
+      }
+
+      &-regularisable,
+      &-compliance,
+      &-alert-rule {
+        display: flex;
+        margin: 16px 0;
+      }
+
+      &-alert-rule {
+        input[type="checkbox"] + span::before {
+          border-color: $presences-orange !important;
+          background-color: $presences-orange !important;
+          transform: rotate(0deg);
+          content: "\e871";
+        }
+
+        input[type="checkbox"]:checked + span::before {
+          background-color: unset !important;
+          border-color: $presences-orange !important;
+          content: "" !important;
+        }
+      }
+    }
+  }
+
+  .sniplet-form {
     /* title */
     .sniplet-header {
       display: flex;
@@ -23,9 +112,24 @@
 
     /* input */
     .sniplet-input {
-      padding: 0 16px 24px 16px;
+      padding: 0 16px 24px;
       display: flex;
       flex-direction: column;
+
+      &-alert-rule {
+        input[type="checkbox"] + span::before {
+          border-color: $presences-orange !important;
+          background-color: $presences-orange !important;
+          transform: rotate(0deg);
+          content: "\e871";
+        }
+
+        input[type="checkbox"]:checked + span::before {
+          background-color: unset !important;
+          border-color: $presences-orange !important;
+          content: "" !important;
+        }
+      }
 
       &-title {
         padding-bottom: 16px;
@@ -59,7 +163,7 @@
 
     /* add / lists */
     .sniplet-addList {
-      padding: 0 16px 32px 16px;
+      padding: 0 16px 32px;
       display: flex;
       flex-direction: column;
 
@@ -89,7 +193,6 @@
             justify-content: space-between;
 
             &-icon {
-
               &-orange {
                 color: $presences-orange;
               }
@@ -117,7 +220,6 @@
               &-color {
                 margin: 0 8px;
               }
-
             }
 
             &-icons {
@@ -148,11 +250,11 @@
     }
 
     .codeMassmailing .tooltiptext {
-      font-family: Roboto;
+      font-family: Roboto, serif;
       visibility: hidden;
       min-width: 120px;
       font-size: 12px;
-      box-shadow: 0 2px 20px rgba(0, 0, 0, 0.26);
+      box-shadow: 0 2px 20px rgba(0, 0, 0, 26%);
       position: absolute;
       background-color: $presences-white;
       color: $presences-black;
@@ -186,79 +288,4 @@
       opacity: 1;
     }
   }
-
-  .sniplet-form-lightbox {
-
-    .content {
-      padding: 0;
-    }
-
-    &-head {
-      background: $presences-blue !important;
-      margin-bottom: 8px;
-    }
-
-    &-body {
-      display: flex;
-      flex-direction: column;
-
-      &-warning {
-        color: $presences-red;
-      }
-
-      &-input {
-        margin: 16px 0;
-        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12), 0 1px 2px rgba(0, 0, 0, 0.24);
-      }
-
-      &-color {
-        ul {
-          display: flex;
-          flex-direction: row;
-          list-style-type: none;
-          padding: 0;
-        }
-
-        li {
-          margin-right: 24px;
-        }
-
-        li.active {
-          border-color: $presences-black;
-          border-style: solid;
-        }
-      }
-
-      &-regularisable, &-compliance {
-        display: flex;
-        margin: 16px 0;
-      }
-    }
-  }
-
-  editor {
-    lightbox {
-      .flex-row {
-        text-align: unset;
-        width: 80%;
-      }
-
-      .content {
-        padding: 15px;
-      }
-
-      .close-lightbox {
-        color: unset;
-      }
-    }
-
-    .mathjax {
-      lightbox {
-        .close-lightbox {
-          display: none;
-        }
-      }
-    }
-  }
-
 }

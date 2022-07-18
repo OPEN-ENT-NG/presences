@@ -1,6 +1,7 @@
 package fr.openent.presences.service.impl;
 
 import fr.openent.presences.Presences;
+import fr.openent.presences.common.helper.FutureHelper;
 import fr.openent.presences.core.constants.Field;
 import fr.openent.presences.db.DBService;
 import fr.openent.presences.enums.SettingsFieldEnum;
@@ -16,10 +17,7 @@ import io.vertx.core.logging.LoggerFactory;
 import org.entcore.common.sql.Sql;
 import org.entcore.common.sql.SqlResult;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.Objects;
+import java.util.*;
 import java.util.stream.Collectors;
 
 public class DefaultSettingsService extends DBService implements SettingsService {
@@ -33,7 +31,10 @@ public class DefaultSettingsService extends DBService implements SettingsService
                 "alert_incident_threshold," +
                 "alert_forgotten_notebook_threshold," +
                 "event_recovery_method," +
-                "allow_multiple_slots " +
+                "allow_multiple_slots, " +
+                "exclude_alert_absence_no_reason, " +
+                "exclude_alert_lateness_no_reason, " +
+                "exclude_alert_forgotten_notebook " +
                 "FROM " + Presences.dbSchema + ".settings WHERE structure_id = ?;";
         JsonArray params = new JsonArray(Collections.singletonList(structureId));
         sql.prepared(query, params, SqlResult.validUniqueResultHandler(handler));
@@ -76,20 +77,24 @@ public class DefaultSettingsService extends DBService implements SettingsService
     }
 
     @Override
-    public void put(String structureId, JsonObject settings, Handler<Either<String, JsonObject>> handler) {
+    public Future<JsonObject> put(String structureId, JsonObject settings) {
+        Promise<JsonObject> promise = Promise.promise();
+
         JsonArray params = new JsonArray().add(structureId);
         String query = "SELECT COUNT(structure_id) FROM " + Presences.dbSchema + ".settings WHERE structure_id = ?";
         sql.prepared(query, params, evt -> {
             Long count = SqlResult.countResult(evt);
             if (count == 0) {
-                create(structureId, settings, handler);
+                create(structureId, settings, promise.future());
             } else {
-                update(structureId, settings, handler);
+                update(structureId, settings, promise.future());
             }
         });
+
+        return promise.future();
     }
 
-    private void create(String structureId, JsonObject settings, Handler<Either<String, JsonObject>> handler) {
+    private void create(String structureId, JsonObject settings, Future<JsonObject> future) {
         List<String> insertValues = new ArrayList<>();
         insertValues.add(Field.STRUCTURE_ID);
         List<String> settingsFields = settings.fieldNames()
@@ -108,10 +113,10 @@ public class DefaultSettingsService extends DBService implements SettingsService
             params.add(settings.getValue(field));
         }
         query += ") VALUES " + Sql.listPrepared(insertValues) + " RETURNING *";
-        sql.prepared(query, params, SqlResult.validUniqueResultHandler(handler));
+        sql.prepared(query, params, SqlResult.validUniqueResultHandler(FutureHelper.handlerJsonObject(future)));
     }
 
-    private void update(String structureId, JsonObject settings, Handler<Either<String, JsonObject>> handler) {
+    private void update(String structureId, JsonObject settings, Future<JsonObject> future) {
         List<String> columns = new ArrayList<>(settings.fieldNames());
         JsonArray params = new JsonArray();
         StringBuilder query = new StringBuilder("UPDATE " + Presences.dbSchema + ".settings SET ");
@@ -122,6 +127,6 @@ public class DefaultSettingsService extends DBService implements SettingsService
 
         params.add(structureId);
         sql.prepared(query.substring(0, query.length() - 1) + " WHERE structure_id = ? RETURNING *;",
-                params, SqlResult.validUniqueResultHandler(handler));
+                params, SqlResult.validUniqueResultHandler(FutureHelper.handlerJsonObject(future)));
     }
 }

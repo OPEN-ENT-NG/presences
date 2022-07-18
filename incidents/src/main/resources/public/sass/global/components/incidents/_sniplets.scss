@@ -1,13 +1,32 @@
 &.incidents {
- .incident-sniplet {
+  .incident-sniplet {
     &-form {
       display: flex;
       align-items: center;
+
       button {
         background-color: $orange;
         margin: 0 ($spacing-M + $spacing-M);
-        &:disabled{
+
+        &:disabled {
           background: $disabled-color;
+        }
+      }
+
+      &-alert {
+        flex-direction: row !important;
+
+        input[type="checkbox"] + span::before {
+          border-color: $orange !important;
+          background-color: $orange !important;
+          transform: rotate(0deg);
+          content: "\e871";
+        }
+
+        input[type="checkbox"]:checked + span::before {
+          background-color: unset !important;
+          border-color: $orange !important;
+          content: "" !important;
         }
       }
     }

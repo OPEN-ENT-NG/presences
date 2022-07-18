@@ -1,0 +1,33 @@
+{
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "id": "http://jsonschema.net",
+  "type": "object",
+  "properties": {
+    "structureId": {
+      "type": "string"
+    },
+    "label": {
+      "type": "string"
+    },
+    "absenceCompliance": {
+      "type": "boolean"
+    },
+    "proving": {
+      "type": "boolean"
+    },
+    "excludeAlertRegularised": {
+      "type": "boolean"
+    },
+    "excludeAlertNoRegularised": {
+      "type": "boolean"
+    }
+  },
+  "required": [
+    "structureId",
+    "label",
+    "absenceCompliance",
+    "proving",
+    "excludeAlertRegularised",
+    "excludeAlertNoRegularised"
+  ]
+}

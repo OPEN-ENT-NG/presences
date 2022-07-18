@@ -43,26 +43,24 @@ public class SeriousnessController extends ControllerHelper {
     @Trace(Actions.INCIDENT_SERIOUSNESS_CREATION)
     @SecuredAction(value = "", type = ActionType.RESOURCE)
     public void post(final HttpServerRequest request) {
-        RequestUtils.bodyToJson(request, seriousnessBody -> {
+        RequestUtils.bodyToJson(request, pathPrefix + "seriousnessCreate", seriousnessBody -> {
             if (isPartnerBodyInvalid(seriousnessBody) || seriousnessBody.getInteger("level") > 7) {
                 badRequest(request);
                 return;
             }
-            seriousnessService.create(seriousnessBody, either -> {
-                if (either.isLeft()) {
-                    log.error("[Incidents@SeriousnessController] failed to create seriousness", either.left().getValue());
-                    renderError(request);
-                } else {
-                    renderJson(request, either.right().getValue());
-                }
-            });
+            seriousnessService.create(seriousnessBody)
+                    .onSuccess(res -> renderJson(request, res))
+                    .onFailure(error -> {
+                        log.error("[Incidents@SeriousnessController] failed to create seriousness", error.getMessage());
+                        renderError(request);
+                    });
         });
     }
 
     private boolean isPartnerBodyInvalid(JsonObject seriousnessBody) {
-        return !seriousnessBody.containsKey("structureId") &&
-                !seriousnessBody.containsKey("label") &&
-                !seriousnessBody.containsKey("level");
+        return !seriousnessBody.containsKey("structureId")
+                && !seriousnessBody.containsKey("label")
+                && !seriousnessBody.containsKey("level");
     }
 
     @Put("/seriousness")
@@ -71,20 +69,18 @@ public class SeriousnessController extends ControllerHelper {
     @SecuredAction(value = "", type = ActionType.RESOURCE)
     @Trace(Actions.INCIDENT_SERIOUSNESS_UPDATE)
     public void put(final HttpServerRequest request) {
-        RequestUtils.bodyToJson(request, seriousnessBody -> {
+        RequestUtils.bodyToJson(request, pathPrefix + "seriousnessUpdate", seriousnessBody -> {
             if (isPartnerBodyInvalid(seriousnessBody) && !seriousnessBody.containsKey("hidden") &&
                     !seriousnessBody.containsKey("id") || seriousnessBody.getInteger("level") > 7) {
                 badRequest(request);
                 return;
             }
-            seriousnessService.put(seriousnessBody, either -> {
-                if (either.isLeft()) {
-                    log.error("[Incidents@SeriousnessController] failed to update seriousness", either.left().getValue());
-                    renderError(request);
-                } else {
-                    renderJson(request, either.right().getValue());
-                }
-            });
+            seriousnessService.put(seriousnessBody)
+                    .onSuccess(res -> renderJson(request, res))
+                    .onFailure(error -> {
+                        log.error("[Incidents@SeriousnessController] failed to update seriousness", error.getMessage());
+                        renderError(request);
+                    });
         });
     }
 

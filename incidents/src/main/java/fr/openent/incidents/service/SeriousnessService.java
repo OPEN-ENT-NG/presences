@@ -1,6 +1,7 @@
 package fr.openent.incidents.service;
 
 import fr.wseduc.webutils.Either;
+import io.vertx.core.Future;
 import io.vertx.core.Handler;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
@@ -18,17 +19,17 @@ public interface SeriousnessService {
      * create seriousness
      *
      * @param seriousnessBody       seriousnessBody fetched
-     * @param handler               Function handler returning data
+     * @return d
      */
-    void create(JsonObject seriousnessBody, Handler<Either<String, JsonObject>> handler);
+    Future<JsonObject> create(JsonObject seriousnessBody);
 
     /**
      * update seriousness
      *
      * @param seriousnessBody   seriousnessBody fetched
-     * @param handler           Function handler returning data
+     * @return d
      */
-    void put(JsonObject seriousnessBody, Handler<Either<String, JsonObject>> handler);
+    Future<JsonObject> put(JsonObject seriousnessBody);
 
     /**
      * delete seriousness

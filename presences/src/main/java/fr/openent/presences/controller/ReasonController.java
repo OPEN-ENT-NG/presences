@@ -1,9 +1,10 @@
 package fr.openent.presences.controller;
 
 import fr.openent.presences.constants.Actions;
-import fr.openent.presences.core.constants.*;
+import fr.openent.presences.core.constants.Field;
 import fr.openent.presences.enums.ReasonType;
-import fr.openent.presences.security.*;
+import fr.openent.presences.security.AbsenceRight;
+import fr.openent.presences.security.Manage;
 import fr.openent.presences.service.ReasonService;
 import fr.openent.presences.service.impl.DefaultReasonService;
 import fr.wseduc.rs.*;
@@ -15,7 +16,6 @@ import io.vertx.core.json.JsonObject;
 import org.entcore.common.controller.ControllerHelper;
 import org.entcore.common.http.filter.ResourceFilter;
 import org.entcore.common.http.filter.Trace;
-import org.entcore.common.http.response.DefaultResponseHandler;
 
 public class ReasonController extends ControllerHelper {
 
@@ -39,7 +39,9 @@ public class ReasonController extends ControllerHelper {
             badRequest(request);
             return;
         }
-        reasonService.get(structureId, reasonTypeId, DefaultResponseHandler.arrayResponseHandler(request));
+        reasonService.get(structureId, reasonTypeId)
+                .onSuccess(res -> renderJson(request, res))
+                .onFailure(error -> renderError(request));
     }
 
     @Post("/reason")
@@ -48,21 +50,16 @@ public class ReasonController extends ControllerHelper {
     @SecuredAction(value = "", type = ActionType.RESOURCE)
     @Trace(Actions.REASON_CREATION)
     public void post(final HttpServerRequest request) {
-        RequestUtils.bodyToJson(request, reasonBody -> {
-            if (isReasonBodyInvalid(reasonBody)) {
-                badRequest(request);
-                return;
-            }
+        RequestUtils.bodyToJson(request, pathPrefix + "reasonCreate", reasonBody -> {
             if (request.params().contains(Field.REASONTYPEID))
                 reasonBody.put(Field.REASONTYPEID, Integer.parseInt(request.getParam(Field.REASONTYPEID)));
-            reasonService.create(reasonBody, either -> {
-                if (either.isLeft()) {
-                    log.error("[Presences@ReasonController] failed to create reason", either.left().getValue());
-                    renderError(request);
-                } else {
-                    renderJson(request, either.right().getValue());
-                }
-            });
+
+            reasonService.create(reasonBody)
+                    .onSuccess(res -> renderJson(request, res))
+                    .onFailure(error -> {
+                        log.error(String.format("[Presences@ReasonController] failed to create reason %s", error.getMessage()));
+                        renderError(request);
+                    });
         });
     }
 
@@ -79,20 +76,18 @@ public class ReasonController extends ControllerHelper {
     @SecuredAction(value = "", type = ActionType.RESOURCE)
     @Trace(Actions.REASON_UPDATE)
     public void put(final HttpServerRequest request) {
-        RequestUtils.bodyToJson(request, reasonBody -> {
+        RequestUtils.bodyToJson(request, pathPrefix + "reasonUpdate", reasonBody -> {
             if (isReasonBodyInvalid(reasonBody) && !reasonBody.containsKey("hidden") &&
                     !reasonBody.containsKey("id")) {
                 badRequest(request);
                 return;
             }
-            reasonService.put(reasonBody, either -> {
-                if (either.isLeft()) {
-                    log.error("[Presences@ReasonController] failed to update reason", either.left().getValue());
-                    renderError(request);
-                } else {
-                    renderJson(request, either.right().getValue());
-                }
-            });
+            reasonService.put(reasonBody)
+                    .onSuccess(reason ->  renderJson(request, reason))
+                    .onFailure(error -> {
+                        log.error(String.format("[Presences@ReasonController] failed to update reason %s", error.getMessage()));
+                        renderError(request);
+                    });
         });
     }
 

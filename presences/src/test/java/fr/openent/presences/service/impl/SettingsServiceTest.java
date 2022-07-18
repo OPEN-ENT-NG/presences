@@ -25,7 +25,7 @@ public class SettingsServiceTest extends DBService {
     private static final String STRUCTURE_ID = "structureId";
     private static final String OTHER_KEY = "otherKey";
     private static final String OTHER_VALUE = "otherValue";
-    Sql sql = Mockito.mock(Sql.class);
+    private final Sql sql = Mockito.mock(Sql.class);
     private DefaultSettingsService settingsService;
 
     @Before
@@ -69,7 +69,7 @@ public class SettingsServiceTest extends DBService {
             return null;
         }).when(sql).prepared(Mockito.anyString(), Mockito.any(JsonArray.class), Mockito.any(Handler.class));
 
-        settingsService.put(STRUCTURE_ID, null, null);
+        settingsService.put(STRUCTURE_ID, null);
     }
 
     @Test

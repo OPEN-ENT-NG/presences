@@ -7,6 +7,11 @@ import io.vertx.core.json.JsonObject;
 public interface SettingsService {
     void retrieve(String structureId, Handler<Either<String, JsonObject>> handler);
 
+
+    /**
+     * @param structureId Structure identifier
+     * @return Future {@link Future<JsonObject>}
+     */
     Future<JsonObject> retrieve(String structureId);
 
     /**
@@ -17,5 +22,10 @@ public interface SettingsService {
      */
     Future<JsonObject> retrieveMultipleSlots(String structureId);
 
-    void put(String structureId, JsonObject settings, Handler<Either<String, JsonObject>> handler);
+    /**
+     * @param structureId Structure identifier
+     * @param settings json representing the settings data
+     * @return Future {@link Future<JsonObject>}
+     */
+    Future<JsonObject> put(String structureId, JsonObject settings);
 }
