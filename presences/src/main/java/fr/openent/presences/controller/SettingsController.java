@@ -48,6 +48,10 @@ public class SettingsController extends ControllerHelper {
     @Trace(Actions.SETTING_UPDATE)
     @ApiDoc("Update settings for given structure identifier")
     public void put(HttpServerRequest request) {
-        RequestUtils.bodyToJson(request, pathPrefix + "settings", settings -> settingsService.put(request.getParam("id"), settings, defaultResponseHandler(request)));
+        RequestUtils.bodyToJson(request, pathPrefix + "settings", settings ->
+                settingsService.put(request.getParam(Field.ID), settings)
+                        .onSuccess(res -> renderJson(request, res, 200))
+                        .onFailure(error -> renderError(request))
+        );
     }
 }

@@ -31,7 +31,29 @@
                 </div>
             </div>
 
-        </div>
+            <div class="sniplet-input-alert-rule margin-top-1em">
+                <label class="checkbox">
+                    <input type="checkbox" ng-model="vm.setting.exclude_alert_absence_no_reason" ng-change="vm.save()">
+                    <span></span>
+                </label>
+                <i18n class="eleven text-align-left">presences.alerts.exclude.absence.no.reason</i18n>
+            </div>
 
+            <div class="sniplet-input-alert-rule margin-top-1em">
+                <label class="checkbox">
+                    <input type="checkbox" ng-model="vm.setting.exclude_alert_lateness_no_reason" ng-change="vm.save()">
+                    <span></span>
+                </label>
+                <i18n class="eleven text-align-left">presences.alerts.exclude.lateness.no.reason</i18n>
+            </div>
+
+            <div class="sniplet-input-alert-rule margin-top-1em">
+                <label class="checkbox">
+                    <input type="checkbox" ng-model="vm.setting.exclude_alert_forgotten_notebook" ng-change="vm.save()">
+                    <span></span>
+                </label>
+                <i18n class="eleven text-align-left">presences.alerts.exclude.foregotten.notebook</i18n>
+            </div>
+        </div>
     </div>
 </div>

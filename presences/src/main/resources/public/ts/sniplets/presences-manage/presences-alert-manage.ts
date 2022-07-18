@@ -1,5 +1,6 @@
 import {Setting, settingService} from '../../services/SettingsService';
-import {idiom as lang, toasts} from "entcore";
+import {Controller, idiom as lang, toasts} from "entcore";
+import {IScope} from "angular";
 
 declare const window;
 
@@ -9,7 +10,7 @@ interface InputObject {
     threshold: number,
 }
 
-interface ViewModel {
+interface IViewModel {
     setting: Setting;
 
     inputThreshold: Array<InputObject>;
@@ -17,7 +18,7 @@ interface ViewModel {
     timer: any;
 
     // interaction
-    getThreshold(): void;
+    getThreshold(alertManage: AlertManage): void;
 
     updateThreshold(input: InputObject, isIncr: Boolean): void;
 
@@ -26,95 +27,103 @@ interface ViewModel {
     save(): void;
 }
 
-const vm: ViewModel = {
-    setting: {},
-    inputThreshold: [],
-    timer: null,
+class AlertManage implements IViewModel {
+    setting: Setting
+    inputThreshold: Array<InputObject>
+    timer: number
 
-    async getThreshold() {
-        try {
-            let defaultSettings = {
-                alert_absence_threshold: 0,
-                alert_lateness_threshold: 0,
-                alert_incident_threshold: 0,
-                alert_forgotten_notebook_threshold: 0
-            };
-            let structureSettings: any = await settingService.retrieve(window.model.vieScolaire.structure.id);
+    constructor(private $scope: IScope) {
+        this.setting = null;
+        this.inputThreshold = [];
+        this.timer = 0;
+        this.setHandler();
+    }
 
-            vm.setting = {...defaultSettings, ...structureSettings};
+    setHandler() {
+        this.$scope.$watch(() => window.model.vieScolaire.structure, () => this.getThreshold());
+        this.$scope.$on('reload', () => this.getThreshold());
+    }
 
-            vm.inputThreshold = [
-                {
-                    label: lang.translate("presences.navigation.absence"),
-                    settingRef: "alert_absence_threshold",
-                    threshold: vm.setting.alert_absence_threshold
-                },
-                {
-                    label: lang.translate("presences.absence.lateness"),
-                    settingRef: "alert_lateness_threshold",
-                    threshold: vm.setting.alert_lateness_threshold
-                },
-                {
-                    label: lang.translate("presences.incidents"),
-                    settingRef: "alert_incident_threshold",
-                    threshold: vm.setting.alert_incident_threshold
-                },
-                {
-                    label: lang.translate("presences.register.event_type.forgotten.notebooks"),
-                    settingRef: "alert_forgotten_notebook_threshold",
-                    threshold: vm.setting.alert_forgotten_notebook_threshold
-                },
-            ];
-            presencesAlertManage.that.$apply();
-        } catch (e) {
-            toasts.warning('error');
-            throw e;
-        }
-    },
+    getThreshold() {
+        let defaultSettings: Setting = {
+            alert_absence_threshold: 0,
+            alert_lateness_threshold: 0,
+            alert_incident_threshold: 0,
+            alert_forgotten_notebook_threshold: 0,
+            exclude_alert_absence_no_reason: false,
+            exclude_alert_lateness_no_reason: false,
+            exclude_alert_forgotten_notebook: false
+        };
+        settingService.retrieve(window.model.vieScolaire.structure.id)
+            .then(structureSettings => {
+                this.setting = {...defaultSettings, ...structureSettings};
 
-    updateThreshold: async function (input, isIncr) {
+                this.inputThreshold = [
+                    {
+                        label: lang.translate("presences.navigation.absence"),
+                        settingRef: "alert_absence_threshold",
+                        threshold: this.setting.alert_absence_threshold
+                    },
+                    {
+                        label: lang.translate("presences.absence.lateness"),
+                        settingRef: "alert_lateness_threshold",
+                        threshold: this.setting.alert_lateness_threshold
+                    },
+                    {
+                        label: lang.translate("presences.incidents"),
+                        settingRef: "alert_incident_threshold",
+                        threshold: this.setting.alert_incident_threshold
+                    },
+                    {
+                        label: lang.translate("presences.register.event_type.forgotten.notebooks"),
+                        settingRef: "alert_forgotten_notebook_threshold",
+                        threshold: this.setting.alert_forgotten_notebook_threshold
+                    },
+                ];
+                this.$scope.$apply();
+            })
+            .catch(e => {
+                toasts.warning('error');
+                throw e;
+            });
+    }
+
+    async updateThreshold(input, isIncr) {
         let threshold = input.threshold;
-        vm.setting[input.settingRef] = isIncr ? (threshold + 1) : (threshold > 0 ? threshold - 1 : 0);
-        await vm.save();
-    },
+        this.setting[input.settingRef] = isIncr ? (threshold + 1) : (threshold > 0 ? threshold - 1 : 0);
+        await this.save();
+    }
 
-    manualUpdateThreshold: async function (input) {
+    async manualUpdateThreshold(input) {
         let threshold = input.threshold;
 
-        if (vm.timer != null) clearTimeout(vm.timer);
-        vm.timer = setTimeout(async () => {
-            vm.setting[input.settingRef] = threshold < 0 ? 0 : threshold;
-            await vm.save();
+        if (this.timer != null) clearTimeout(this.timer);
+        this.timer = setTimeout(async () => {
+            this.setting[input.settingRef] = threshold < 0 ? 0 : threshold;
+            await this.save();
         }, 200);
-    },
+    }
 
     async save() {
         try {
-            await settingService.put(window.model.vieScolaire.structure.id, vm.setting);
+            await settingService.put(window.model.vieScolaire.structure.id, this.setting);
             toasts.confirm('presences.alert.manage.event.method.save.confirm');
         } catch (e) {
             toasts.warning('presences.alert.manage.event.method.save.error');
             throw e;
         }
-        await vm.getThreshold();
+        this.getThreshold();
     }
-};
-
+}
 
 export const presencesAlertManage = {
+    vm: null,
     title: 'presences.alert.title',
     public: false,
-    that: null,
     controller: {
-        init: async function () {
+        init: function (): void {
             console.log('alert');
-            this.vm = vm;
-            this.setHandler();
-            presencesAlertManage.that = this;
-        },
-        setHandler: function () {
-            this.$watch(() => window.model.vieScolaire.structure, vm.getThreshold);
-            this.$on('reload', vm.getThreshold);
+            this.vm = new AlertManage(this);
         }
     }
 };

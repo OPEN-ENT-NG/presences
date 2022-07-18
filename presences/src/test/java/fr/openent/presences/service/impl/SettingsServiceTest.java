@@ -69,7 +69,7 @@ public class SettingsServiceTest extends DBService {
             return null;
         }).when(sql).prepared(Mockito.anyString(), Mockito.any(JsonArray.class), Mockito.any(Handler.class));
 
-        settingsService.put(STRUCTURE_ID, null, null);
+        settingsService.put(STRUCTURE_ID, null);
     }
 
     @Test

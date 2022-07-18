@@ -76,6 +76,33 @@
                 </label>
             </div>
         </div>
+        <!-- Alert rule -->
+        <label ng-if="vm.reasonTypeId == 1">
+            <i18n>presences.alert.rules</i18n>
+        </label>
+        <div class="sniplet-form-lightbox-body-alert-rule flex-column no-margin">
+            <div ng-if="vm.reasonTypeId == 1" class="flex-center-input flex-row">
+                <label class="checkbox">
+                    <input type="checkbox" ng-model="vm.formEdit.excludeAlertRegularised">
+                    <span></span>
+                </label>
+                <i18n class="eleven text-align-left">presences.alert.rules.regularised</i18n>
+            </div>
+            <div ng-if="vm.reasonTypeId == 1" class="flex-center-input flex-row">
+                <label class="checkbox">
+                    <input type="checkbox" ng-model="vm.formEdit.excludeAlertNoRegularised">
+                    <span></span>
+                </label>
+                <i18n class="eleven text-align-left">presences.alert.rules.no.regularised</i18n>
+            </div>
+            <div ng-if="vm.reasonTypeId == 2" class="flex-center-input flex-row">
+                <label class="checkbox">
+                    <input type="checkbox" ng-model="vm.formEdit.excludeAlertLateness">
+                    <span></span>
+                </label>
+                <i18n>presences.alert.rules</i18n>
+            </div>
+        </div>
     </section>
 
     <!-- Footer -->

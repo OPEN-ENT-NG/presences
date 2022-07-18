@@ -1,4 +1,5 @@
 import {REASON_TYPE_ID} from "@common/core/enum/reason-type-id";
+import {ALERT_RULE} from "@common/core/enum/alert-rule";
 
 export interface Reason {
     id: number;
@@ -12,6 +13,7 @@ export interface Reason {
     absence_compliance: boolean;
     isSelected: boolean;
     reason_type_id?: REASON_TYPE_ID;
+    reason_alert_rules?: Array<ALERT_RULE>;
 }
 
 export interface ReasonRequest {
@@ -22,4 +24,7 @@ export interface ReasonRequest {
     structureId?: string;
     proving: boolean;
     reasonTypeId?: REASON_TYPE_ID;
+    excludeAlertRegularised: boolean;
+    excludeAlertNoRegularised: boolean;
+    excludeAlertLateness: boolean;
 }

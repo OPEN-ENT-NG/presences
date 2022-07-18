@@ -15,9 +15,9 @@ INSERT INTO presences.reason_alert_exclude_rules_type(id, rule_type) VALUES (1, 
 -- Add new table for exclude reason
 CREATE TABLE presences.reason_alert
 (
-    structure_id character varying(36),
-    reason_id    bigint REFERENCES presences.reason(id),
-    reason_alert_exclude_rules_type_id bigserial REFERENCES presences.reason_alert_exclude_rules_type(id),
+    structure_id character varying(36) NOT NULL,
+    reason_id    bigint REFERENCES presences.reason(id) NOT NULL ,
+    reason_alert_exclude_rules_type_id bigserial REFERENCES presences.reason_alert_exclude_rules_type(id) NOT NULL,
     created_at timestamp without time zone NOT NULL DEFAULT now(),
     deleted_at timestamp without time zone,
     CONSTRAINT uniq_reason_alert UNIQUE (structure_id, reason_id, reason_alert_exclude_rules_type_id)

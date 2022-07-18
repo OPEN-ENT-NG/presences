@@ -116,7 +116,7 @@ public class DefaultReasonServiceTest extends DBService {
             ctx.assertEquals(expectedParam.toString(), body.getJsonArray("values").toString());
             async.complete();
         });
-        reasonService.create(getReasonBody(), null);
+        reasonService.create(getReasonBody());
     }
 
     @Test
@@ -144,7 +144,7 @@ public class DefaultReasonServiceTest extends DBService {
             ctx.assertEquals(expectedParam.toString(), body.getJsonArray("values").toString());
             async.complete();
         });
-        reasonService.create(getReasonBody(), null);
+        reasonService.create(getReasonBody());
     }
 
     @Test
@@ -188,7 +188,6 @@ public class DefaultReasonServiceTest extends DBService {
         Async async = ctx.async();
 
         String structureId = "structureId";
-
 
         String expectedQuery  = "SELECT DISTINCT r.id, r.label " +
                 "FROM " + Presences.dbSchema + ".reason r " +

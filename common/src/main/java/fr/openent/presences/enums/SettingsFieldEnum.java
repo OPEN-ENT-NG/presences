@@ -8,6 +8,9 @@ public enum SettingsFieldEnum {
     ALERT_INCIDENT_THRESHOLD("alert_incident_threshold"),
     ALERT_FORGOTTEN_NOTEBOOK_THRESHOLD("alert_forgotten_notebook_threshold"),
     EVENT_RECOVERY_METHOD("event_recovery_method"),
+    EXCLUDE_ALERT_ABSENCE_NO_REASON("exclude_alert_absence_no_reason"),
+    EXCLUDE_ALERT_LATENESS_NO_REASON("exclude_alert_lateness_no_reason"),
+    EXCLUDE_ALERT_FORGOTTEN_NOTEBOOK("exclude_alert_forgotten_notebook"),
     INITIALIZED("initialized");
 
     private final String value;

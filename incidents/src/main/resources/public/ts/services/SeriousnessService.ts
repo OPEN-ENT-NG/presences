@@ -8,6 +8,7 @@ export interface Seriousness {
     level: number;
     hidden: boolean;
     used?: boolean;
+    exclude_alert_seriousness: boolean;
 }
 
 export interface SeriousnessRequest {
@@ -16,6 +17,7 @@ export interface SeriousnessRequest {
     label?: string;
     level?: number;
     hidden?: boolean;
+    excludeAlertSeriousness?: boolean;
 }
 
 export interface SeriousnessService {

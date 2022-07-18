@@ -35,6 +35,14 @@
             </ul>
         </div>
 
+        <div class="incident-sniplet-form-alert sniplet-input">
+            <label class="checkbox">
+                <input type="checkbox" ng-model="vm.form.excludeAlertSeriousness">
+                <span></span>
+            </label>
+            <i18n class="eleven text-align-left">incidents.seriousness.alert.rules</i18n>
+        </div>
+
         <!-- Lists -->
         <div class="sniplet-addList">
 
@@ -50,6 +58,10 @@
 
                         <div class="sniplet-addList-content-list-item-title">
                             <label class="sniplet-addList-content-list-item-title-label">[[seriousness.label]]</label>
+                            <i title="[[vm.lang.translate('incidents.seriousness.alert.rules')]]"
+                               class="margin-left-sm sniplet-addList-content-list-item-title-label notify-bell "
+                               data-ng-show="!seriousness.exclude_alert_seriousness"
+                               ng-style="{ 'color': vm.getSeriousnessAlertColor(seriousness)}"></i>
                             <span class="sniplet-addList-content-list-item-title-color seriousness-form-[[seriousness.level]]">&nbsp;</span>
                             <i class="presence-edit" data-ng-click="vm.openIncidentsManageLightbox(seriousness)"></i>
                         </div>

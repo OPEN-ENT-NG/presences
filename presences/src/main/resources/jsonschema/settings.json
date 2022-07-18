@@ -20,6 +20,15 @@
     },
     "allow_multiple_slots": {
       "type": "boolean"
+    },
+    "excludeAbsenceNoReason": {
+      "type": "boolean"
+    },
+    "excludeLatenessNoReason": {
+      "type": "boolean"
+    },
+    "excludeForgottenNotebook": {
+      "type": "boolean"
     }
   }
 }

@@ -27,6 +27,20 @@
       display: flex;
       flex-direction: column;
 
+      &-alert-rule {
+        input[type=checkbox]:checked+span::before {
+          background-color: unset !important;
+          border-color: $presences-orange !important;
+          content: "" !important;
+        }
+        input[type=checkbox]+span::before {
+          border-color: $presences-orange !important;
+          background-color: $presences-orange !important;
+          transform: rotate(0deg);
+          content: "\e871";
+        }
+      }
+
       &-title {
         padding-bottom: 16px;
 
@@ -229,9 +243,22 @@
         }
       }
 
-      &-regularisable, &-compliance {
+      &-regularisable, &-compliance, &-alert-rule {
         display: flex;
         margin: 16px 0;
+      }
+      &-alert-rule {
+        input[type=checkbox]:checked+span::before {
+          background-color: unset !important;
+          border-color: $presences-orange !important;
+          content: "" !important;
+        }
+        input[type=checkbox]+span::before {
+          border-color: $presences-orange !important;
+          background-color: $presences-orange !important;
+          transform: rotate(0deg);
+          content: "\e871";
+        }
       }
     }
   }
