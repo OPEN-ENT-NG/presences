@@ -5,6 +5,7 @@ import {idiom, toasts} from "entcore";
 import {ReasonSnipletModel} from "./presences-reason-manager";
 import {safeApply} from "@common/utils";
 import {REASON_TYPE_ID} from "@common/core/enum/reason-type-id";
+import {ALERT_RULE} from "@common/core/enum/alert-rule";
 
 declare let window: any;
 
@@ -33,7 +34,10 @@ export class AbsenceReasonSniplet implements ReasonSnipletModel {
         this.form = {
             label: "",
             absenceCompliance: true,
-            proving: false
+            proving: false,
+            excludeAlertRegularised: false,
+            excludeAlertNoRegularised: false,
+            excludeAlertLateness: false,
         }
 
         this.$scope.$watch(() => window.model.vieScolaire.structure, async () => this.getReasons());
@@ -104,6 +108,9 @@ export class AbsenceReasonSniplet implements ReasonSnipletModel {
         this.formEdit.hidden = reasonCopy.hidden;
         this.formEdit.proving = reasonCopy.proving;
         this.formEdit.label = reasonCopy.label;
+        this.formEdit.excludeAlertRegularised = (<any>reasonCopy.reason_alert_rules).includes(ALERT_RULE.REGULARIZED);
+        this.formEdit.excludeAlertNoRegularised = (<any>reasonCopy.reason_alert_rules).includes(ALERT_RULE.UNREGULARIZED);
+        this.formEdit.structureId = reasonCopy.structure_id;
     }
 
     async updateReason(): Promise<void> {
@@ -134,6 +141,28 @@ export class AbsenceReasonSniplet implements ReasonSnipletModel {
         if (response.status === 200 || response.status === 201) {
             this.getReasons().catch((e: AxiosError) => console.error(e));
         }
+    }
+
+    getReasonAlertColor(reason: Reason): string {
+        if (!(<any>reason.reason_alert_rules).includes(ALERT_RULE.REGULARIZED) && !(<any>reason.reason_alert_rules).includes(ALERT_RULE.UNREGULARIZED)) {
+            return "#ffb600";
+        } else if (!(<any>reason.reason_alert_rules).includes(ALERT_RULE.REGULARIZED)) {
+            return "#72bb53";
+        } else if (!(<any>reason.reason_alert_rules).includes(ALERT_RULE.UNREGULARIZED)) {
+            return "#ff8a84";
+        }
+        return null;
+    }
+
+    getReasonAlertTitle(reason: Reason): string {
+        if (!(<any>reason.reason_alert_rules).includes(ALERT_RULE.REGULARIZED) && !(<any>reason.reason_alert_rules).includes(ALERT_RULE.UNREGULARIZED)) {
+            return this.lang.translate('presences.absence.reason.regularized.and.unregularized');
+        } else if (!(<any>reason.reason_alert_rules).includes(ALERT_RULE.REGULARIZED)) {
+            return this.lang.translate('presences.absence.reason.regularized');
+        } else if (!(<any>reason.reason_alert_rules).includes(ALERT_RULE.UNREGULARIZED)) {
+            return this.lang.translate('presences.absence.reason.unregularized');
+        }
+        return "";
     }
 }
 

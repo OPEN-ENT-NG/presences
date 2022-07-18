@@ -1,0 +1,24 @@
+{
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "type": "object",
+  "properties": {
+    "structureId": {
+      "type": "string"
+    },
+    "label": {
+      "type": "string"
+    },
+    "level": {
+      "type": "number"
+    },
+    "excludeAlertSeriousness": {
+      "type": "boolean"
+    }
+  },
+  "required": [
+    "structureId",
+    "label",
+    "level",
+    "excludeAlertSeriousness"
+  ]
+}

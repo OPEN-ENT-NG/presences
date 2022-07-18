@@ -3,6 +3,7 @@ package fr.openent.presences.service.impl;
 import fr.openent.presences.Presences;
 import fr.openent.presences.common.helper.FutureHelper;
 import fr.openent.presences.core.constants.Field;
+import fr.openent.presences.enums.ReasonAlertExcludeRulesType;
 import fr.openent.presences.enums.ReasonType;
 import fr.openent.presences.service.ReasonService;
 import fr.wseduc.webutils.Either;
@@ -17,38 +18,68 @@ import io.vertx.core.logging.LoggerFactory;
 import org.entcore.common.sql.Sql;
 import org.entcore.common.sql.SqlResult;
 
-import java.util.List;
+import java.util.*;
+import java.util.stream.Collectors;
 
 public class DefaultReasonService implements ReasonService {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(DefaultReasonService.class);
 
     @Override
-    public void get(String structureId, Integer reasonTypeId, Handler<Either<String, JsonArray>> handler) {
+    public Future<JsonArray> get(String structureId, Integer reasonTypeId) {
+        Promise<JsonArray> promise = Promise.promise();
+
         Future<JsonArray> reasonsFuture = fetchReason(structureId, reasonTypeId);
         Future<JsonArray> reasonsUsedFuture = fetchUsedReason(structureId, reasonTypeId);
+        Future<JsonArray> reasonAlertRuleFuture = this.fetchReasonAlertRule(reasonTypeId);
 
-        CompositeFuture.all(reasonsFuture, reasonsUsedFuture).setHandler(event -> {
-            if (event.failed()) {
-                String message = "[Presences@DefaultReasonService] Failed to fetch reason";
-                LOGGER.error(message);
-                handler.handle(new Either.Left<>(message));
-            } else {
-                JsonArray reasons = reasonsFuture.result();
-                JsonArray reasonsUsed = reasonsUsedFuture.result();
-                for (int i = 0; i < reasons.size(); i++) {
-                    // set used false by default
-                    reasons.getJsonObject(i).put("used", false);
-                    for (int j = 0; j < reasonsUsed.size(); j++) {
-                        if (reasons.getJsonObject(i).getLong("id")
-                                .equals(reasonsUsed.getJsonObject(j).getLong("id"))) {
-                            reasons.getJsonObject(i).put("used", true);
+        CompositeFuture.all(reasonsFuture, reasonsUsedFuture, reasonAlertRuleFuture)
+                .onSuccess(res -> {
+                    JsonArray reasons = reasonsFuture.result();
+                    JsonArray reasonsUsed = reasonsUsedFuture.result();
+                    JsonArray reasonAlertRule = reasonAlertRuleFuture.result();
+                    final Map<Long, JsonArray> mapReasonIdAlertRule = reasonAlertRule.stream()
+                            .map(JsonObject.class::cast)
+                            .collect(Collectors.groupingBy(jsonObject -> jsonObject.getLong(Field.REASON_ID)))
+                            .entrySet()
+                            .stream().collect(Collectors.toMap(Map.Entry::getKey, stringListEntry -> {
+                                List<String> listAlertRule = stringListEntry.getValue().stream().map(jsonObject -> jsonObject.getString(Field.RULE_TYPE)).collect(Collectors.toList());
+                                return new JsonArray(listAlertRule);
+                            }));
+                    for (int i = 0; i < reasons.size(); i++) {
+                        JsonObject jsonObjectReason = reasons.getJsonObject(i);
+                        jsonObjectReason.put(Field.REASON_ALERT_RULES, mapReasonIdAlertRule.getOrDefault(jsonObjectReason.getLong(Field.ID), new JsonArray()));
+                        // set used false by default
+                        jsonObjectReason.put(Field.USED, false);
+                        for (int j = 0; j < reasonsUsed.size(); j++) {
+                            if (jsonObjectReason.getLong(Field.ID)
+                                    .equals(reasonsUsed.getJsonObject(j).getLong(Field.ID))) {
+                                jsonObjectReason.put(Field.USED, true);
+                            }
+
                         }
                     }
-                }
-                handler.handle(new Either.Right<>(reasons));
-            }
-        });
+                    promise.complete(reasons);
+                })
+                .onFailure(err -> {
+                    String message = String.format("[Presences@DefaultReasonService] Failed to fetch reason %s", err.getMessage());
+                    LOGGER.error(message);
+                    promise.fail(message);
+                });
+
+        return promise.future();
+    }
+
+    private Future<JsonArray> fetchReasonAlertRule(Integer reasonTypeId) {
+        Promise<JsonArray> promise = Promise.promise();
+        String query = "SELECT r.rule_type, reason_alert.reason_id FROM " + Presences.dbSchema + ".reason_alert" +
+                " INNER JOIN " + Presences.dbSchema + ".reason_alert_exclude_rules_type as r ON r.id = reason_alert.reason_alert_exclude_rules_type_id" +
+                " INNER JOIN " + Presences.dbSchema + ".reason ON reason.id = reason_alert.reason_id" +
+                " WHERE reason_alert.deleted_at IS NULL" +
+                " AND reason.reason_type_id = ?";
+        JsonArray params = new JsonArray(Collections.singletonList(reasonTypeId));
+        Sql.getInstance().prepared(query, params, SqlResult.validResultHandler(FutureHelper.handlerEitherPromise(promise)));
+        return promise.future();
     }
 
     private Future<JsonArray> fetchUsedReason(String structureId, Integer reasonTypeId) {
@@ -129,8 +160,63 @@ public class DefaultReasonService implements ReasonService {
     }
 
     @Override
-    public void create(JsonObject reasonBody, Handler<Either<String, JsonObject>> handler) {
+    public Future<JsonObject> create(JsonObject reasonBody) {
+        Promise<JsonObject> promiseResult = Promise.promise();
 
+        Future<JsonObject> createReasonFuture = createReason(reasonBody);
+        createReasonFuture
+                .onSuccess(res -> {
+                    Integer reasonId = createReasonFuture.result().getInteger(Field.ID);
+                    String structureId = reasonBody.getString(Field.STRUCTUREID);
+                    List<Future> futureList = new ArrayList<>();
+                    Arrays.stream(ReasonAlertExcludeRulesType.values())
+                            .filter(reasonAlertExcludeRulesType -> reasonBody.getBoolean(reasonAlertExcludeRulesType.getJsonField(), false))
+                            .map(reasonAlertExcludeRulesType -> createOrUpdateReasonAlert(reasonId, structureId, reasonAlertExcludeRulesType, true))
+                            .forEach(futureList::add);
+                    CompositeFuture.all(futureList)
+                            .onSuccess(event -> promiseResult.complete(createReasonFuture.result()))
+                            .onFailure(err -> {
+                                String message = String.format("[Presences@DefaultReasonService] Failed to create reason %s", err.getMessage());
+                                LOGGER.error(message);
+                                promiseResult.fail(message);
+                            });
+                })
+                .onFailure(err -> {
+                    String message = String.format("[Presences@DefaultReasonService] Failed to create reason %s", err.getMessage());
+                    LOGGER.error(message);
+                    promiseResult.fail(message);
+                });
+
+        return promiseResult.future();
+    }
+
+    @Override
+    public Future<JsonObject> put(JsonObject reasonBody) {
+        Promise<JsonObject> promiseResult = Promise.promise();
+
+        Integer reasonId = reasonBody.getInteger(Field.ID);
+        String structureId = reasonBody.getString(Field.STRUCTUREID);
+        Future<JsonObject> updateFuture = this.updateReason(reasonBody);
+        List<Future> futureList = new ArrayList<>();
+        futureList.add(updateFuture);
+        Arrays.stream(ReasonAlertExcludeRulesType.values())
+                .map(reasonAlertExcludeRulesType -> this.createOrUpdateReasonAlert(reasonId, structureId, reasonAlertExcludeRulesType,
+                        reasonBody.getBoolean(reasonAlertExcludeRulesType.getJsonField(), false)))
+                .forEach(futureList::add);
+
+        CompositeFuture.all(futureList)
+                .onSuccess(event -> promiseResult.complete(updateFuture.result()))
+                .onFailure(err -> {
+                    String message = String.format("[Presences@DefaultReasonService] Failed to create reason %s", err.getMessage());
+                    LOGGER.error(message);
+                    promiseResult.fail(message);
+                });
+
+        return promiseResult.future();
+    }
+
+    private Future<JsonObject> createReason(JsonObject reasonBody) {
+        Promise<JsonObject> promise = Promise.promise();
         String query = "INSERT INTO " + Presences.dbSchema + ".reason " +
                 "(structure_id, label, proving, comment, hidden, absence_compliance, reason_type_id) " +
                 "VALUES (?, ?, ?, '', false, ?, ?) RETURNING id";
@@ -140,13 +226,14 @@ public class DefaultReasonService implements ReasonService {
                 .add(reasonBody.getBoolean("proving"))
                 .add(reasonBody.getBoolean("absenceCompliance"))
                 .add(ReasonType.getReasonTypeFromValue(reasonBody.getInteger(Field.REASONTYPEID, ReasonType.ABSENCE.getValue())).getValue());
+        Sql.getInstance().prepared(query, params, SqlResult.validUniqueResultHandler(FutureHelper.handlerJsonObject(promise)));
 
-        Sql.getInstance().prepared(query, params, SqlResult.validUniqueResultHandler(handler));
+        return promise.future();
     }
 
-    @Override
-    public void put(JsonObject reasonBody, Handler<Either<String, JsonObject>> handler) {
-        String query = "UPDATE presences.reason " +
+    private Future<JsonObject> updateReason(JsonObject reasonBody) {
+        Promise<JsonObject> promise = Promise.promise();
+        String query = "UPDATE "+ Presences.dbSchema +".reason " +
                 "SET label = ?, absence_compliance = ?, hidden = ?, proving = ? WHERE id = ? RETURNING id";
         JsonArray params = new JsonArray()
                 .add(reasonBody.getString("label"))
@@ -154,7 +241,30 @@ public class DefaultReasonService implements ReasonService {
                 .add(reasonBody.getBoolean("hidden"))
                 .add(reasonBody.getBoolean("proving"))
                 .add(reasonBody.getInteger("id"));
-        Sql.getInstance().prepared(query, params, SqlResult.validUniqueResultHandler(handler));
+        Sql.getInstance().prepared(query, params, SqlResult.validUniqueResultHandler(FutureHelper.handlerJsonObject(promise)));
+        return promise.future();
+    }
+
+    private Future<JsonObject> createOrUpdateReasonAlert(int reasonId, String structureId, ReasonAlertExcludeRulesType reasonAlertExcludeRulesType, boolean exclude) {
+        Promise<JsonObject> promise = Promise.promise();
+        String query;
+        JsonArray params;
+        if (exclude){
+            query = "INSERT INTO " + Presences.dbSchema + ".reason_alert(structure_id, reason_id, reason_alert_exclude_rules_type_id) VALUES (?, ?, " + reasonAlertExcludeRulesType.getValue() + ") ON CONFLICT ON CONSTRAINT uniq_reason_alert DO UPDATE SET deleted_at = null WHERE reason_alert.structure_id = ? AND reason_alert.reason_id = ? AND reason_alert.reason_alert_exclude_rules_type_id = " + reasonAlertExcludeRulesType.getValue();
+            params = new JsonArray()
+                    .add(structureId)
+                    .add(reasonId)
+                    .add(structureId)
+                    .add(reasonId);
+
+        } else {
+            query = "UPDATE " + Presences.dbSchema + ".reason_alert SET deleted_at = now() WHERE structure_id = ? AND reason_id = ? AND reason_alert_exclude_rules_type_id = " + reasonAlertExcludeRulesType.getValue();
+            params = new JsonArray()
+                    .add(structureId)
+                    .add(reasonId);
+        }
+        Sql.getInstance().prepared(query, params, SqlResult.validUniqueResultHandler(FutureHelper.handlerJsonObject(promise)));
+        return promise.future();
     }
 
     @Override
