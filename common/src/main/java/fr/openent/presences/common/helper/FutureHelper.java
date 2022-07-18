@@ -1,7 +1,7 @@
 package fr.openent.presences.common.helper;
 
-import fr.wseduc.webutils.Either;
 import fr.openent.presences.core.constants.Field;
+import fr.wseduc.webutils.Either;
 import io.vertx.core.*;
 import io.vertx.core.eventbus.Message;
 import io.vertx.core.impl.CompositeFutureImpl;
@@ -30,6 +30,10 @@ public class FutureHelper {
         };
     }
 
+    /**
+     * @deprecated  Replaced by {@link #handlerFuture(Promise)}
+     */
+    @Deprecated
     public static Handler<Either<String, JsonArray>> handlerJsonArray(Promise<JsonArray> promise) {
         return event -> {
             if (event.isRight()) {
@@ -43,6 +47,10 @@ public class FutureHelper {
         };
     }
 
+    /**
+     * @deprecated  Replaced by {@link #handlerFuture(Promise)}
+     */
+    @Deprecated
     public static Handler<Either<String, JsonObject>> handlerJsonObject(Promise<JsonObject> promise) {
         return event -> {
             if (event.isRight()) {
@@ -52,6 +60,19 @@ public class FutureHelper {
                         FutureHelper.class.getSimpleName(), event.left().getValue());
                 LOGGER.error(message);
                 promise.fail(event.left().getValue());
+            }
+        };
+    }
+
+    public static <L, R> Handler<Either<L, R>> handlerPromise(Promise<R> promise) {
+        return event -> {
+            if (event.isRight()) {
+                promise.complete(event.right().getValue());
+            } else {
+                String message = String.format("[PresencesCommon@%s::handlerFuture]: %s",
+                        FutureHelper.class.getSimpleName(), event.left().getValue());
+                LOGGER.error(message);
+                promise.fail(event.left().getValue().toString());
             }
         };
     }
