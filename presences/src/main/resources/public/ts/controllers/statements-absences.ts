@@ -200,7 +200,7 @@ export const statementsAbsencesController = ng.controller('StatementsAbsencesCon
             /* CSV  */
             vm.exportCsv = (): void => {
                 if (vm.statementsAbsences.statementAbsenceResponse.page_count < 50 && vm.statementsAbsences.statementAbsenceResponse.all.length > 0) {
-                    statementAbsenceService.export(vm.statementsAbsencesRequest);
+                    window.open(statementAbsenceService.export(vm.statementsAbsencesRequest));
                     return;
                 }
 
