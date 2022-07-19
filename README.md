@@ -52,6 +52,7 @@ Il est nécessaire de mettre ***massmailing:true*** dans services du module vie 
   ...
   "export-cron": "0 0 0 1/3 * ? *",
   "registers-cron": "0 15,45 7-20 * * ? *",
+  "mails-list-cron": [],
   "mails-list-export": [],
   ...
   "node-pdf-generator" : {
@@ -66,6 +67,11 @@ Dans votre springboard, vous devez inclure des variables d'environnement :
 nodePdfToken=${String}
 nodePdfUri=${String}
 </pre>
+
+`"mails-list-cron"` est nécessaire pour l'envoie de mail pour le worker création d'appels
+
+`"mails-list-export"` est nécessaire l'envoie de mail via l'API `/event/archives/export`
+
 
 Il est nécessaire de mettre ***presences:true*** dans services du module vie scolaire afin de paramétrer les données de configuration de presences.
 <pre>
@@ -94,3 +100,10 @@ aller sur l'onglet Présences dans Vie Scolaire, activer le module et initialise
   }
 }
 </pre>
+
+### Archivage
+
+L'événement `transition` n'a pas encore été implémenté
+l'API `/presences/event/archives/export` est utilisé à la place pour récupérer par établissement (`"structureId" params`) les événements, 
+générer un fichier CSV et envoyer par mail avec la configuration `"mails-list-export"`
+
