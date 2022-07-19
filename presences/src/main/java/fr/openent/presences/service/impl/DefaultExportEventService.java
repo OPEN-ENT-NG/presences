@@ -114,7 +114,7 @@ public class DefaultExportEventService extends DBService implements ExportEventS
         getCsvData(structureId, startDate, endDate, eventType, listReasonIds, noReason, noReasonLateness, userId, userIdFromClasses,
                 classes, null, regularized, followed, event -> {
                     if (event.failed()) {
-                        promise.fail(event.cause());
+                        promise.fail(event.cause().getMessage());
                     } else {
                         promise.complete(event.result());
                     }
