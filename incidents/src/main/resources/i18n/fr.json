@@ -151,5 +151,39 @@
   "incidents.treated": "Traité",
   "incidents.type": "Type",
   "incidents.types": "Types",
-  "incidents.write.text": "Ecrire du texte"
+  "incidents.write.text": "Ecrire du texte",
+  "incident.partner.title": "Partenaires à prévenir en cas d'incidents",
+  "incident.partner.form.input": "Saisissez ici un partenaire à contacter lors d'un incident que vous pourrez utiliser dans l'application Présences",
+  "incident.partner.form.input.placeholder": "Police, association locale...",
+  "incident.partner.lists": "Partenaires existants",
+  "incident.partner.form.input.edit": "Modifier le partenaire",
+  "incident.partner.form.input.edit.warning": "Attention, la modification d'un partenaire entraînera une modification sur tous les incidents déjà saisis avec ce partenaire.",
+
+  "incident.place.title": "Lieux d'incidents",
+  "incident.place.form.input": "Saisissez ici un lieu d'incidents que vous pourrez utiliser dans l'application Présences",
+  "incident.place.lists": "Lieux d'incidents existants",
+  "incident.place.form.input.edit": "Modifier le lieu d'incident",
+  "incident.place.form.input.edit.warning": "Attention, la modification d'un lieu d'incident entraînera une modification sur tous les incidents déjà saisis avec ce lieu d'incident.",
+
+  "incident.protagonist.type.title": "Types de protagonistes",
+  "incident.protagonist.type.form.input": "Saisissez ici un type de protagonistes lors d'un incident que vous pourrez utiliser dans l'application Présences",
+  "incident.protagonist.type.form.input.placeholder": "Victime, agresseur, témoin...",
+  "incident.protagonist.type.lists": "Types d'incidents existants",
+  "incident.protagonist.type.form.input.edit": "Modifier le type de protagonist",
+  "incident.protagonist.type.form.input.edit.warning": "Attention, la modification d'un type de protagonist entraînera une modification sur tous les incidents déjà saisis avec ce type de protagonist.",
+
+  "incident.seriousness.title": "Niveaux de gravité d'un incident",
+  "incident.seriousness.form.input": "Saisissez ici un niveau de gravité d'un incident que vous pourrez utiliser dans l'application Présences",
+  "incident.seriousness.form.input.color": "Sélectionnez la couleur à attribuer à ce niveau de gravité",
+  "incident.seriousness.form.input.placeholder": "Peu grave, grave...",
+  "incident.seriousness.lists": "Niveaux de gravité existants",
+  "incident.seriousness.form.input.edit": "Modifier le niveau de gravité",
+  "incident.seriousness.form.input.edit.warning": "Attention, la modification d'un niveau de gravité entraînera une modification sur tous les incidents déjà saisis avec ce niveau de gravité.",
+
+  "incident.type.title": "Types d'incidents",
+  "incident.type.form.input": "Saisissez ici un type d'incidents que vous pourrez utiliser dans l'application Présences",
+  "incident.type.form.input.placeholder": "Injure, agression...",
+  "incident.type.lists": "Types d'incidents existants",
+  "incident.type.form.input.edit": "Modifier le type d'incident",
+  "incident.type.form.input.edit.warning": "Attention, la modification du type d'incident entraînera une modification sur tous les incidents déjà saisis avec ce type d'incident."
 }
