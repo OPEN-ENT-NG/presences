@@ -19,10 +19,10 @@ DECLARE
     structureId character varying;
     eventIdNeedAlert bigint;
 BEGIN
+    SELECT structure_id FROM presences.register WHERE id = OLD.register_id INTO structureId;
     CASE OLD.type_id
         WHEN 1 THEN -- Absence creation
             -- Retrieve event structure identifier based on new event register identifier
-            SELECT structure_id FROM presences.register WHERE id = OLD.register_id INTO structureId;
 
             SELECT presences.get_id_absence_event_siblings(OLD, structureId, false) INTO eventIdNeedAlert;
             EXECUTE presences.delete_alert(OLD.id, 'ABSENCE', OLD.student_id, structureId);

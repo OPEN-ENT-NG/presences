@@ -106,6 +106,13 @@ do $$
         SELECT count(*) FROM presences.alerts INTO countAlert;
         assert countAlert = 2, 'do not create alert for lateness with reason exclude assert 2 != ' || countAlert;
 
+        INSERT INTO presences.event(id, start_date, end_date, student_id, register_id, type_id, reason_id, owner, counsellor_regularisation)
+        VALUES (9490, now()::date + '09:00:00'::time, now()::date + '09:55:00'::time, studentId1, 9398, 2, 9997, '', false);
+        SELECT count(*) FROM presences.alerts INTO countAlert;
+        assert countAlert = 3;
+        DELETE FROM presences.event WHERE id = 9490;
+        assert countAlert = 2, 'alert is delete when event is delete assert 2 != ' || countAlert;
+
         UPDATE presences.event SET reason_id = 9996 WHERE id = 9498;
         SELECT count(*) FROM presences.alerts INTO countAlert;
         assert countAlert = 1, 'delete alert when update lateness with reason exclude assert 1 != ' || countAlert;
