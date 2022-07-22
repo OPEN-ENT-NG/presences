@@ -1,0 +1,1 @@
+DROP FUNCTION presences.get_alert_thresholder(type character varying, structureId varchar);

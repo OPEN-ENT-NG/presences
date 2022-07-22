@@ -38,7 +38,7 @@ public class ResetAlertsWorker extends BusModBase implements Handler<Message<Jso
     }
 
     private void resetAlerts(String structureId, String structureName) {
-        alertService.delete(structureId, null, null, null)
+        alertService.delete(structureId, null, null, null, null, null)
                 .onSuccess(resultArchive -> log.info(String.format("%s%s Reset alerts end and process complete for structure %s %s",
                         ANSI_CYAN, RESET_ALERTS_FLAG, structureName, ANSI_RESET)))
                 .onFailure(resultArchive -> log.error(String.format("[<worker>Presences@%s] Reset alerts end with a failure process for structure %s: %s",

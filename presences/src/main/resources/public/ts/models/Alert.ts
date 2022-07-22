@@ -12,3 +12,18 @@ export interface Alert {
     classes: any;
     userId: string;
 }
+
+export interface StudentAlert {
+    "student_id": string,
+    "type": string,
+    "count": number,
+    "name": string,
+    "audience": string,
+    selected?: boolean
+}
+
+export interface DeleteAlertRequest {
+    start_at: string,
+    end_at: string,
+    deleted_alert: Array<StudentAlert>,
+}

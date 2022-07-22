@@ -1,11 +1,13 @@
-import {_, Me, model, ng, toasts} from 'entcore';
-import {alertService} from "../services";
-import {AlertType} from "../models";
+import {_, init, Me, model, moment, ng, toasts} from 'entcore';
+import {AlertService, alertService, Group, IViescolaireService} from "../services";
+import {AlertType, ISchoolYearPeriod, Student} from "../models";
 import {SearchService} from "@common/services/SearchService";
 import {GroupService} from "@common/services/GroupService";
 import rights from "../rights";
-import {Alert} from "@presences/models/Alert";
-import {PreferencesUtils} from "@common/utils";
+import {Alert, DeleteAlertRequest, StudentAlert} from "@presences/models/Alert";
+import {DateUtils, PreferencesUtils, safeApply} from "@common/utils";
+import {ILocationService, IScope} from "angular";
+import {IRouting} from "@common/model/Route";
 
 declare let window: any;
 
@@ -20,18 +22,9 @@ interface Filter {
     students: any[];
     class: string;
     classes: any[];
-    selected: { students: any[], classes: any[] };
-}
-
-interface StudentAlert {
-    "id": number,
-    "student_id": string,
-    "type": string,
-    "count": number,
-    "exceed_date": string,
-    "name": string,
-    "audience": string,
-    selected?: boolean
+    selected: { students: any[], classes: any[] }
+    startDate?: Date,
+    endDate?: Date;
 }
 
 interface ViewModel {
@@ -47,44 +40,54 @@ interface ViewModel {
         type: string
     };
 
-    getStudentAlert(students?: any[], classes?: string[]): void;
+    getStudentAlert(students?: string[], classes?: string[]): Promise<void>;
 
-    searchStudent(value: string): void;
+    searchStudent(value: string): Promise<void>;
 
-    selectStudent(model: any, student: any): void;
+    selectStudent(): (model: any, student: any) => Promise<void>;
 
     searchClass(value: string): Promise<void>;
 
-    selectClass(model: any, classObject: any): void;
+    selectClass(): (model: any, classObject: any) => Promise<void>;
 
-    dropFilter(object, list): void;
-
-    excludeClassFromFilter(audience): void;
+    dropFilter(object: any, list: any): void;
 
     /*  switch alert type */
-    switchFilter(filter: string): void;
+    switchFilter(filter: string): Promise<void>;
 
     someSelectedAlert(): boolean;
 
-    updateFilter(student?, audience?): void;
-
     selectAll(): void;
 
-    toggleAlert(alert): void;
+    toggleAlert(alert: StudentAlert): void;
 
-    reset(): void;
+    reset(): Promise<void>;
 
     exportAlertCSV(): void;
 }
 
-export const alertsController = ng.controller('AlertsController', ['$scope', '$route', '$location',
-    'SearchService', 'GroupService',
-    function ($scope, $route, $location, SearchService: SearchService, GroupService: GroupService) {
+class Controller implements ng.IController, ViewModel {
+    $parent: any;
+    alerts: Alert;
+    filters: string[];
+    alertType: string[];
+    filter: Filter;
+    listAlert: StudentAlert[];
+    selection: { all: boolean; };
+    params: { loading: boolean; type: string; };
+
+    constructor(private $scope: IScope,
+                private $route: IRouting,
+                private $location: ILocationService,
+                private searchService: SearchService,
+                private viescolaireService: IViescolaireService,
+                private alertService: AlertService,
+                private groupService: GroupService) {
+        this.$scope['vm'] = this;
         console.log('AlertsController');
-        const vm: ViewModel = this;
-        vm.filters =
+        this.filters =
             [AlertType[AlertType.ABSENCE], AlertType[AlertType.LATENESS], AlertType[AlertType.INCIDENT], AlertType[AlertType.FORGOTTEN_NOTEBOOK]];
-        vm.filter = {
+        this.filter = {
             student: '',
             class: '',
             students: undefined,
@@ -93,166 +96,186 @@ export const alertsController = ng.controller('AlertsController', ['$scope', '$r
                 students: [],
                 classes: [],
             },
-            types: {}
+            types: {},
+            startDate: undefined,
+            endDate: new Date(),
         };
-
-        const initFilter = function (value: boolean) {
-            vm.filters.forEach(filter => vm.filter.types[filter] = value);
-        };
-
-        initFilter(true);
-
-        vm.alertType = [];
-        vm.selection = {all: false};
+        this.alertType = [];
+        this.selection = {all: false};
 
         /* Fetching information from URL Param and cloning new object RegistryRequest */
-        vm.params = Object.assign({loading: false}, $location.search());
+        this.params = Object.assign({loading: false}, $location.search());
+        this.$scope.$watch(() => window.structure, () => this.initAlert());
+    }
 
-        const initData = async () => {
-            if (!window.structure) {
-                window.structure = await Me.preference(PreferencesUtils.PREFERENCE_KEYS.PRESENCE_STRUCTURE);
-            } else {
-                if (vm.params.type) {
-                    initFilter(false);
-                    vm.filter.types[vm.params.type] = true;
-                }
-                await vm.getStudentAlert();
+    async $onInit(): Promise<void> {
+        await this.initAlert().catch(error => console.error(error));
+    };
+
+    async initAlert(): Promise<void> {
+        this.initFilter(true);
+        if (!window.structure) {
+            window.structure = await Me.preference(PreferencesUtils.PREFERENCE_KEYS.PRESENCE_STRUCTURE);
+        } else {
+            if (this.params.type) {
+                this.initFilter(false);
+                this.filter.types[this.params.type] = true;
             }
-        };
-
-        vm.getStudentAlert = async (student, classes) => {
-            vm.params.loading = true;
-            $scope.safeApply();
-            vm.alertType = [];
-            Object.keys(vm.filter.types).forEach(key => {
-                if (vm.filter.types[key]) vm.alertType.push(key);
-            });
-
-            try {
-                if (vm.alertType.length > 0) {
-                    let studentsAlerts: any = await alertService.getStudentsAlerts(window.structure.id, vm.alertType, student, classes);
-                    vm.listAlert = studentsAlerts;
-                } else {
-                    vm.listAlert = [];
-                }
-            } catch (e) {
-                toasts.warning('presences.error.get.alert');
-                throw e;
-            }
-            vm.params.loading = false;
-            $scope.safeApply();
-        };
-
-        vm.searchStudent = async function (value) {
-            const structureId = window.structure.id;
-            try {
-                vm.filter.students = await SearchService.searchUser(structureId, value, 'Student');
-                $scope.safeApply();
-            } catch (err) {
-                vm.filter.students = [];
-                throw err;
-            }
-        };
-
-        vm.someSelectedAlert = function () {
-            return vm.listAlert && vm.listAlert.filter(alert => alert.selected).length > 0;
-        };
-
-        vm.selectStudent = async function (model, student) {
-            if (_.findWhere(vm.filter.selected.students, {id: student.id})) {
-                return;
-            }
-            vm.filter.selected.students.push(student);
-            vm.filter.student = '';
-            vm.filter.students = undefined;
-            await vm.getStudentAlert(extractSelectedStudentIds(), extractSelectedGroupsName());
-            $scope.safeApply();
-        };
-
-        vm.searchClass = async function (value) {
-            const structureId = window.structure.id;
-            try {
-                vm.filter.classes = await GroupService.search(structureId, value);
-                vm.filter.classes.map((obj) => obj.toString = () => obj.name);
-                $scope.safeApply();
-            } catch (err) {
-                vm.filter.classes = [];
-                throw err;
-            }
-            return;
-        };
-
-        vm.selectClass = async function (model, classObject) {
-            if (_.findWhere(vm.filter.selected.students, {id: classObject.id})) {
-                return;
-            }
-            vm.filter.selected.classes.push(classObject);
-            vm.filter.class = '';
-            vm.filter.classes = undefined;
-            await vm.getStudentAlert(extractSelectedStudentIds(), extractSelectedGroupsName());
-            $scope.safeApply();
-        };
-
-        vm.dropFilter = function (object, list) {
-            vm.filter.selected[list] = _.without(vm.filter.selected[list], object);
-            vm.getStudentAlert(extractSelectedStudentIds(), extractSelectedGroupsName());
-        };
-
-        const extractSelectedStudentIds = function () {
-            const ids = [];
-            vm.filter.selected.students.map((student) => ids.push(student.id));
-            return ids;
-        };
-
-        const extractSelectedGroupsName = function (): string[] {
-            const ids = [];
-            if (model.me.hasWorkflow(rights.workflow.search)) {
-                vm.filter.selected.classes.map((group) => ids.push(group.id));
-            }
-            return ids;
-        };
-
-        /* ----------------------------
-           Switch type methods
-          ---------------------------- */
-        vm.switchFilter = async function (type) {
-            vm.filter.types[type] = !vm.filter.types[type];
-            await vm.getStudentAlert();
-        };
-
-        vm.selectAll = function () {
-            vm.listAlert.forEach(alert => alert.selected = vm.selection.all);
-            window.alerts_item = vm.listAlert;
-        };
-
-        vm.toggleAlert = function (alert) {
-            alert.selected = !alert.selected;
-            window.alerts_item = vm.listAlert;
-        };
-
-        vm.reset = async function () {
-            try {
-                let alertsId = [];
-                vm.listAlert.forEach(alert => {
-                    if (alert.selected) alertsId.push(alert.id);
+            await this.viescolaireService.getSchoolYearDates(window.structure.id)
+                .then((schoolYears: ISchoolYearPeriod) => this.filter.startDate = moment(schoolYears.start_date))
+                .catch(error => {
+                    this.filter.startDate = new Date();
+                    console.error(error);
                 });
-                await alertService.reset(alertsId);
-                await vm.getStudentAlert();
-                toasts.confirm('presences.alert.reset.success');
-            } catch (e) {
-                toasts.warning('presences.error.reset.alert');
-                throw e;
+            await this.getStudentAlert();
+        }
+    }
+
+    initFilter(value: boolean): void {
+        this.filters.forEach((filter: string) => this.filter.types[filter] = value);
+    };
+
+    async getStudentAlert(students?: string[], classes?: string[]): Promise<void> {
+        this.params.loading = true;
+        safeApply(this.$scope);
+        this.alertType = [];
+        Object.keys(this.filter.types).forEach(key => {
+            if (this.filter.types[key]) this.alertType.push(key);
+        });
+
+        try {
+            if (this.alertType.length > 0) {
+                const start_at: string = moment(this.filter.startDate).format(DateUtils.FORMAT["YEAR-MONTH-DAY"]);
+                const end_at: string = moment(this.filter.endDate).format(DateUtils.FORMAT["YEAR-MONTH-DAY"]);
+                this.listAlert = await this.alertService.getStudentsAlerts(window.structure.id, this.alertType, students, classes, start_at, end_at);
+            } else {
+                this.listAlert = [];
             }
-        };
+        } catch (e) {
+            toasts.warning('presences.error.get.alert');
+            throw e;
+        }
+        this.params.loading = false;
+        safeApply(this.$scope);
+    }
 
-        /*  ----------------------------
-            Export CSV
-            ---------------------------- */
+    async searchStudent(value: string): Promise<void> {
+        const that: Controller = this.$parent.vm
+        const structureId = window.structure.id;
+        try {
+            that.filter.students = await that.searchService.searchUser(structureId, value, 'Student');
+            safeApply(that.$scope);
+        } catch (err) {
+            that.filter.students = [];
+            throw err;
+        }
+    }
 
-        vm.exportAlertCSV = (): void => {
-            const structureId: string = window.structure.id;
-            alertService.exportCSV(structureId, vm.alertType);
-        };
+    selectStudent(): (model: any, student: any) => Promise<void> {
+        const that: Controller = this
+        return async (model: any, student: any): Promise<void> => {
+            if (_.findWhere(that.filter.selected.students, {id: student.id})) {
+                return;
+            }
+            that.filter.selected.students.push(student);
+            that.filter.student = '';
+            that.filter.students = undefined;
+            await that.getStudentAlert(that.extractSelectedStudentIds(), that.extractSelectedGroupsName());
+            safeApply(that.$scope);
+        }
+    }
 
-        $scope.$watch(() => window.structure, initData);
-    }]);
+    async searchClass(value: string): Promise<void> {
+        const that: Controller = this.$parent.vm
+        const structureId = window.structure.id;
+        try {
+            that.filter.classes = await that.groupService.search(structureId, value);
+            that.filter.classes.map((obj) => obj.toString = () => obj.name);
+            safeApply(that.$scope);
+        } catch (err) {
+            that.filter.classes = [];
+            throw err;
+        }
+        return;
+    }
+
+    selectClass(): (model: any, classObject: any) => Promise<void> {
+        const that: Controller = this;
+        return  async (model: any, classObject: any): Promise<void> => {
+            if (_.findWhere(that.filter.selected.students, {id: classObject.id})) {
+                return;
+            }
+            that.filter.selected.classes.push(classObject);
+            that.filter.class = '';
+            that.filter.classes = undefined;
+            await that.getStudentAlert(that.extractSelectedStudentIds(), that.extractSelectedGroupsName());
+            safeApply(that.$scope);
+        }
+
+    }
+
+    dropFilter(object: any, list: any): void {
+        this.filter.selected[list] = _.without(this.filter.selected[list], object);
+        this.getStudentAlert(this.extractSelectedStudentIds(), this.extractSelectedGroupsName());
+    }
+
+    async switchFilter(filter: string): Promise<void> {
+        this.filter.types[filter] = !this.filter.types[filter];
+        await this.getStudentAlert();
+    }
+
+    someSelectedAlert(): boolean {
+        return this.listAlert && this.listAlert.filter(alert => alert.selected).length > 0;
+    }
+
+    selectAll(): void {
+        this.listAlert.forEach(alert => alert.selected = this.selection.all);
+        window.alerts_item = this.listAlert;
+    }
+
+    toggleAlert(alert: StudentAlert): void {
+        alert.selected = !alert.selected;
+        window.alerts_item = this.listAlert;
+    }
+
+    async reset(): Promise<void> {
+        try {
+            const start_at: string = moment(this.filter.startDate).format(DateUtils.FORMAT["YEAR-MONTH-DAY"]);
+            const end_at: string = moment(this.filter.endDate).format(DateUtils.FORMAT["YEAR-MONTH-DAY"]);
+            const body: DeleteAlertRequest = {
+                start_at: start_at,
+                end_at: end_at,
+                deleted_alert: this.listAlert
+            }
+            await alertService.reset(window.structure.id, body);
+            await this.getStudentAlert();
+            toasts.confirm('presences.alert.reset.success');
+        } catch (e) {
+            toasts.warning('presences.error.reset.alert');
+            throw e;
+        }
+    }
+
+    exportAlertCSV(): void {
+        const structureId: string = window.structure.id;
+        alertService.exportCSV(structureId, this.alertType);
+    }
+
+    extractSelectedStudentIds(): string[] {
+        const ids: string[] = [];
+        this.filter.selected.students.map((student: Student) => ids.push(student.id));
+        return ids;
+    };
+
+    extractSelectedGroupsName(): string[] {
+        const ids: string[] = [];
+        if (model.me.hasWorkflow(rights.workflow.search)) {
+            this.filter.selected.classes.map((group: Group) => ids.push(group.id));
+        }
+        return ids;
+    };
+}
+
+export const alertsController = ng.controller('AlertsController',
+    ['$scope', '$route', '$location',
+        'SearchService', 'ViescolaireService', 'AlertService', "GroupService", Controller]);
