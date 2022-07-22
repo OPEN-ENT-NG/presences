@@ -13,10 +13,14 @@ import java.util.List;
 
 public class PunishmentsCSVExport extends CSVExport {
     private JsonArray punishments;
+    private final String locale;
+    private final String domain;
 
-    public PunishmentsCSVExport(JsonArray punishments) {
+    public PunishmentsCSVExport(JsonArray punishments, String domain, String locale) {
         super();
         this.punishments = sort(punishments);
+        this.domain = domain;
+        this.locale = locale;
         this.filename = "incidents.punishments.csv.filename";
     }
 
@@ -91,10 +95,10 @@ public class PunishmentsCSVExport extends CSVExport {
     private String getProcessed(boolean processed) {
         if (processed) {
             return I18n.getInstance().translate("incidents.punishments.csv.header.processed.done",
-                    Renders.getHost(this.request), I18n.acceptLanguage(this.request));
+                    domain, locale);
         } else {
             return I18n.getInstance().translate("incidents.punishments.csv.header.processed.undone",
-                    Renders.getHost(this.request), I18n.acceptLanguage(this.request));
+                    domain, locale);
         }
     }
 

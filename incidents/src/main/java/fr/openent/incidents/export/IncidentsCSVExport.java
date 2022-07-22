@@ -11,27 +11,27 @@ import java.text.ParseException;
 
 public class IncidentsCSVExport extends CSVExport {
     private JsonArray incidents;
+    private final String locale;
+    private final String domain;
     private String NAMES_SEPARATOR = "-";
 
-    public IncidentsCSVExport(JsonArray incidents) {
+    public IncidentsCSVExport(JsonArray incidents, String domain, String locale) {
         super();
         this.incidents = incidents;
+        this.domain = domain;
+        this.locale = locale;
         this.filename = "incidents.csv.filename";
     }
 
     @Override
     public void generate() {
         for (int i = 0; i < this.incidents.size(); i++) {
-            try {
-                JsonObject incident = this.incidents.getJsonObject(i);
-                this.value.append(getLine(incident));
-            } catch (ParseException e) {
-                LOGGER.error("[Incidents@IncidentsCSVExport] Failed to parse line. Skipped", e);
-            }
+            JsonObject incident = this.incidents.getJsonObject(i);
+            this.value.append(getLine(incident));
         }
     }
 
-    private String getLine(JsonObject incident) throws ParseException {
+    private String getLine(JsonObject incident) {
         String line = DateHelper.getDateString(incident.getString("date"), "dd/MM/YYYY kk'h'mm") + SEPARATOR;
         line += incident.getJsonObject("place").getString("label") + SEPARATOR;
         line += incident.getJsonObject("incident_type").getString("label") + SEPARATOR;
@@ -46,10 +46,10 @@ public class IncidentsCSVExport extends CSVExport {
     private String getProcessed(boolean processed) {
         if (processed) {
             return I18n.getInstance().translate("incidents.csv.header.processed.done",
-                    Renders.getHost(this.request), I18n.acceptLanguage(this.request));
+                    this.domain, this.locale);
         } else {
             return I18n.getInstance().translate("incidents.csv.header.processed.undone",
-                    Renders.getHost(this.request), I18n.acceptLanguage(this.request));
+                    this.domain, this.locale);
         }
     }
 

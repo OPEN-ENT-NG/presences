@@ -1,7 +1,9 @@
 package fr.openent.presences.common.helper;
 
+import fr.openent.presences.model.*;
 import fr.wseduc.webutils.I18n;
 import fr.wseduc.webutils.http.Renders;
+import io.vertx.core.buffer.*;
 import io.vertx.core.http.HttpServerRequest;
 import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
@@ -42,6 +44,13 @@ public abstract class CSVExport {
                 .end(this.value.toString());
     }
 
+    public ExportFile getExportFile(String domain, String local) {
+        this.generate();
+        String name = i18n.translate(this.filename, domain, local);
+        Buffer buffer = Buffer.buffer(this.value.toString());
+        return new ExportFile(buffer, "text/csv; charset=utf-8", name);
+    }
+
     public void export(HttpServerRequest request) {
         this.setRequest(request);
         this.export();
@@ -66,6 +75,15 @@ public abstract class CSVExport {
                 line.append(head)
                         .append(this.SEPARATOR);
             }
+        }
+
+        this.setHeader(line.toString());
+    }
+
+    public void setHeader(List<String> headers, String domain, String locale) {
+        StringBuilder line = new StringBuilder();
+        for (String head : headers) {
+                line.append(i18n.translate(head, domain, locale)).append(this.SEPARATOR);
         }
 
         this.setHeader(line.toString());

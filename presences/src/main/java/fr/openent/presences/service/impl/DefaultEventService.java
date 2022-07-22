@@ -247,6 +247,19 @@ public class DefaultEventService extends DBService implements EventService {
                 params, SqlResult.validResultHandler(handler));
     }
 
+    @Override
+    public Future<JsonObject> getEventsCount(String structureId, String startDate, String endDate,
+                          List<String> eventType, List<String> listReasonIds, Boolean noReason, Boolean noReasonLateness, List<String> userId, JsonArray userIdFromClasses,
+                          Boolean regularized, Boolean followed) {
+        Promise<JsonObject> promise = Promise.promise();
+        JsonArray params = new JsonArray();
+        sql.prepared(this.getEventsQuery(structureId, startDate, endDate,
+                        eventType, listReasonIds, noReason, noReasonLateness, regularized, followed, userId, userIdFromClasses, null, params, true),
+                params, SqlResult.validUniqueResultHandler(FutureHelper.handlerJsonObject(promise)));
+
+        return promise.future();
+    }
+
 
     @Override
     public void get(String startDate, String endDate, List<Number> eventType, List<String> users, Handler<Either<String, JsonArray>> handler) {
@@ -268,6 +281,14 @@ public class DefaultEventService extends DBService implements EventService {
         Sql.getInstance().prepared(query, params, SqlResult.validResultHandler(handler));
     }
 
+    private String getEventsQuery(String structureId, String startDate, String endDate, List<String> eventType,
+                                  List<String> listReasonIds, Boolean noReason, Boolean noReasonLateness, Boolean regularized, Boolean followed,
+                                  List<String> userId, JsonArray userIdFromClasses, Integer page, JsonArray params) {
+
+        return this.getEventsQuery(structureId, startDate, endDate, eventType, listReasonIds, noReason, noReasonLateness, regularized,
+                followed, userId,userIdFromClasses, page, params, false);
+    }
+
     /**
      * GET query to fetch events
      *
@@ -281,7 +302,7 @@ public class DefaultEventService extends DBService implements EventService {
      */
     private String getEventsQuery(String structureId, String startDate, String endDate, List<String> eventType,
                                   List<String> listReasonIds, Boolean noReason, Boolean noReasonLateness, Boolean regularized, Boolean followed,
-                                  List<String> userId, JsonArray userIdFromClasses, Integer page, JsonArray params) {
+                                  List<String> userId, JsonArray userIdFromClasses, Integer page, JsonArray params, Boolean isCount) {
 
         String query = "WITH allevents AS (" +
                 "  SELECT e.id AS id, e.start_date AS start_date, e.end_date AS end_date, " +
@@ -306,14 +327,18 @@ public class DefaultEventService extends DBService implements EventService {
 
         query += setParamsForQueryEvents(listReasonIds, userId, regularized, followed, noReason, noReasonLateness,
                 userIdFromClasses, eventType, params);
-        query += ") SELECT * FROM allevents " +
-                "GROUP BY id, start_date, end_date, created, comment, student_id, reason_id, owner," +
-                "type_id, register_id, counsellor_regularisation, followed, type, register_id " +
-                " ORDER BY start_date DESC, id DESC";
-        if (page != null) {
-            query += " OFFSET ? LIMIT ? ";
-            params.add(Presences.PAGE_SIZE * page);
-            params.add(Presences.PAGE_SIZE);
+        if (Boolean.TRUE.equals(isCount)) {
+            query += ") SELECT COUNT(id) FROM allevents";
+        } else {
+            query += ") SELECT * FROM allevents " +
+                    "GROUP BY id, start_date, end_date, created, comment, student_id, reason_id, owner," +
+                    "type_id, register_id, counsellor_regularisation, followed, type, register_id " +
+                    " ORDER BY start_date DESC, id DESC";
+            if (page != null) {
+                query += " OFFSET ? LIMIT ? ";
+                params.add(Presences.PAGE_SIZE * page);
+                params.add(Presences.PAGE_SIZE);
+            }
         }
 
         return query;
