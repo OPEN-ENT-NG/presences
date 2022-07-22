@@ -2,11 +2,14 @@ package fr.openent.presences.service.impl;
 
 import fr.openent.presences.Presences;
 import fr.openent.presences.common.helper.FutureHelper;
-import fr.openent.presences.db.*;
-import fr.openent.presences.event.PresencesRepositoryEvents;
+import fr.openent.presences.core.constants.Field;
+import fr.openent.presences.db.DBService;
 import fr.openent.presences.service.AlertService;
 import fr.wseduc.webutils.Either;
-import io.vertx.core.*;
+import io.vertx.core.CompositeFuture;
+import io.vertx.core.Future;
+import io.vertx.core.Handler;
+import io.vertx.core.Promise;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import io.vertx.core.logging.Logger;
@@ -17,144 +20,158 @@ import org.entcore.common.sql.Sql;
 import org.entcore.common.sql.SqlResult;
 
 import java.util.Arrays;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 public class DefaultAlertService extends DBService implements AlertService {
 
     private static final Logger log = LoggerFactory.getLogger(DefaultAlertService.class);
 
     @Override
-    public void delete(List<String> alerts, Handler<Either<String, JsonObject>> handler) {
-        delete(null, alerts, null, null)
-                .onSuccess(res -> handler.handle(new Either.Right<>(res)))
-                .onFailure(err -> {
-                    String message = String.format("[Presences@%s::delete] Failed to remove alerts", this.getClass().getSimpleName());
-                    log.error(String.format("%s %s", message, err.getMessage()));
-                    handler.handle(new Either.Left<>(message));
-                });
-    }
-
-    @Override
-    public Future<JsonObject> delete(String structureId, List<String> alertIds, String startAt, String endAt) {
+    public Future<JsonObject> delete(String structureId, Map<String, List<String>> deletedAlertMap, String startAt, String endAt) {
         Promise<JsonObject> promise = Promise.promise();
-        JsonArray params = new JsonArray();
-        String query = String.format("DELETE FROM %s.alerts %s",
-                Presences.dbSchema,
-                getWhereDeleteFilter(params, structureId, alertIds, startAt, endAt)
-        );
+        if (deletedAlertMap.isEmpty()) promise.complete(new JsonObject());
+        else {
+            JsonArray params = new JsonArray();
+            String query = String.format("DELETE FROM %s.alerts %s",
+                    Presences.dbSchema,
+                    getWhereDeleteFilter(params, structureId, deletedAlertMap, startAt, endAt)
+            );
+            sql.prepared(query, params, SqlResult.validUniqueResultHandler(FutureHelper.handlerEitherPromise(promise)));
+        }
 
-        sql.prepared(query, params, SqlResult.validUniqueResultHandler(FutureHelper.handlerJsonObject(promise)));
 
         return promise.future();
     }
 
-    private String getWhereDeleteFilter(JsonArray params, String structureId, List<String> alertIds, String startAt, String endAt) {
-        String query = "";
-        if (structureId != null) {
-            query += "AND structure_id = ? ";
-            params.add(structureId);
-        }
+    public static String getWhereDeleteFilter(JsonArray params, String structureId, Map<String, List<String>> deletedAlertMap, String startAt, String endAt) {
+        String query = "AND structure_id = ? ";
+        params.add(structureId);
 
-        if (alertIds != null && !alertIds.isEmpty()) {
-            query += String.format("AND id IN %s ", Sql.listPrepared(alertIds));
-            params.addAll(new JsonArray(alertIds));
-        }
+        final StringBuilder studentTypeFilterBuilder = new StringBuilder();
+        deletedAlertMap.forEach((studentId, alertType) -> {
+            if (!alertType.isEmpty()) {
+                studentTypeFilterBuilder.append(" OR (student_id = ? AND type IN ").append(Sql.listPrepared(alertType)).append(")");
+                params.add(studentId);
+                params.addAll(new JsonArray(alertType));
+            }
+        });
+        String studentTypeFilter = studentTypeFilterBuilder.toString().replaceFirst("OR ", "AND (");
+        if (!studentTypeFilter.isEmpty()) query += studentTypeFilter + ") ";
 
         if (startAt != null) {
-            query += "AND created >= ? ";
+            query += "AND created >= ?::date + '00:00:00'::time ";
             params.add(startAt);
         }
 
         if (endAt != null) {
-            query += "AND created <= ? ";
+            query += "AND created <= ?::date + '23:59:59'::time ";
             params.add(endAt);
         }
 
         return query.replaceFirst("AND", "WHERE");
     }
 
-    public void getSummary(String structureId, Handler<Either<String, JsonObject>> handler) {
-        String query = "SELECT type, COUNT(student_id) AS count FROM " + Presences.dbSchema +
-                ".alerts WHERE structure_id = ? AND exceed_date is NOT NULL GROUP BY type;";
-        JsonArray params = new JsonArray(Arrays.asList(structureId));
+    @Override
+    public Future<JsonObject> getSummary(String structureId) {
+        Promise<JsonObject> promise = Promise.promise();
+
+        String query = "SELECT tc.type, count(*) AS count FROM (SELECT type, count(*) AS count FROM " +
+                Presences.dbSchema + ".alerts WHERE structure_id = ? GROUP BY student_id, type) as tc" +
+                " WHERE tc.count >= " + Presences.dbSchema + ".get_alert_thresholder(tc.type, ?) GROUP BY tc.type;";
+        JsonArray params = new JsonArray(Arrays.asList(structureId, structureId));
         Sql.getInstance().prepared(query, params, SqlResult.validResultHandler(response -> {
             if (response.isLeft()) {
-                handler.handle(new Either.Left<>(response.left().getValue()));
+                promise.fail(response.left().getValue());
             } else {
                 JsonArray values = response.right().getValue();
                 JsonObject summary = new JsonObject();
-                values.forEach(value -> summary.put(((JsonObject) value).getString("type"), ((JsonObject) value).getLong("count")));
-                handler.handle(new Either.Right<>(summary));
+                values.forEach(value -> summary.put(((JsonObject) value).getString(Field.TYPE), ((JsonObject) value).getLong(Field.COUNT)));
+                promise.complete(summary);
             }
         }));
+
+        return promise.future();
     }
 
     @Override
-    public void getAlertsStudents(String structureId, List<String> types, List<String> students, Handler<Either<String, JsonArray>> handler) {
-        String query = "SELECT id, student_id, type, count, exceed_date " +
-                "FROM " + Presences.dbSchema + ".alerts " +
-                "WHERE structure_id = ? " +
-                "AND exceed_date is NOT NULL " +
-                "AND type IN " + Sql.listPrepared(types);
+    public Future<JsonArray> getAlertsStudents(String structureId, List<String> types, List<String> students, String startAt, String endAt) {
+        Promise<JsonArray> promise = Promise.promise();
+        JsonArray params = new JsonArray()
+                .add(structureId);
+        String query = "SELECT student_id, type, count(*) AS count FROM " +
+                Presences.dbSchema + ".alerts WHERE structure_id = ?";
+        if (!types.isEmpty()) {
+            query += " AND type IN " + Sql.listPrepared(types);
+            params.addAll(new JsonArray(types));
+        }
         if (!students.isEmpty()) {
             query += " AND student_id IN " + Sql.listPrepared(students);
+            params.addAll(new JsonArray(students));
         }
 
-        query += " ORDER BY exceed_date DESC;";
-        JsonArray params = new JsonArray()
-                .add(structureId)
-                .addAll(new JsonArray(types));
-        if (!students.isEmpty()) params.addAll(new JsonArray(students));
+        if (startAt != null) {
+            query += "AND created >= ?::date + '00:00:00'::time ";
+            params.add(startAt);
+        }
 
-        Sql.getInstance().prepared(query, params, SqlResult.validResultHandler(response -> {
-            if (response.isLeft()) {
-                handler.handle(new Either.Left<>(response.left().getValue()));
-                return;
-            }
+        if (endAt != null) {
+            query += "AND created <= ?::date + '23:59:59'::time ";
+            params.add(endAt);
+        }
 
-            JsonArray alerts = response.right().getValue();
-            // Retrieve student's alert present ID with alerts
-            JsonArray studentsAlerts = new JsonArray();
-            for (int i = 0; i < alerts.size(); i++) {
-                studentsAlerts.add(alerts.getJsonObject(i).getString("student_id"));
-            }
+        query += " GROUP BY student_id, type HAVING count(*) >= " + Presences.dbSchema + ".get_alert_thresholder(type, ?);";
+        params.add(structureId);
 
-            // Get names, first names and class name
-            String studentQuery =
-                    "MATCH (u:User)-[:IN]->(:ProfileGroup)-[:DEPENDS]->(c:Class) " +
-                            "WHERE u.id IN {studentsId} " +
-                            "RETURN u.firstName as firstName, u.lastName as lastName, c.name as audience, u.id as student_id;";
+        Promise<JsonArray> alertPromise = Promise.promise();
+        alertPromise.future()
+                .compose(alerts -> {
+                    // Retrieve student's alert present ID with alerts
+                    JsonArray studentsAlerts = new JsonArray();
+                    for (int i = 0; i < alerts.size(); i++) {
+                        studentsAlerts.add(alerts.getJsonObject(i).getString(Field.STUDENT_ID));
+                    }
 
-            JsonObject studentParam = new JsonObject().put("studentsId", studentsAlerts);
+                    // Get names, first names and class name
+                    String studentQuery =
+                            "MATCH (u:User)-[:IN]->(:ProfileGroup)-[:DEPENDS]->(c:Class) " +
+                                    "WHERE u.id IN {studentsId} " +
+                                    "RETURN u.firstName as firstName, u.lastName as lastName, c.name as audience, u.id as student_id;";
 
-            Neo4j.getInstance().execute(studentQuery, studentParam, Neo4jResult.validResultHandler(studentResult -> {
-                if (studentResult.isLeft()) {
-                    handler.handle(new Either.Left<>(response.left().getValue()));
-                    return;
-                }
+                    JsonObject studentParam = new JsonObject().put(Field.STUDENTSID, studentsAlerts);
+                    Promise<JsonArray> studentPromise = Promise.promise();
+                    Neo4j.getInstance().execute(studentQuery, studentParam, Neo4jResult.validResultHandler(FutureHelper.handlerEitherPromise(studentPromise)));
+                    return studentPromise.future();
+                }).onSuccess(studentList -> {
+                    JsonArray alerts = alertPromise.future().result();
+                    Map<String, JsonObject> studentMap = studentList.stream()
+                            .map(JsonObject.class::cast)
+                            .collect(Collectors.groupingBy(student -> student.getString(Field.STUDENT_ID)))
+                            .entrySet()
+                            .stream().collect(Collectors.toMap(Map.Entry::getKey, student -> student.getValue().get(0))); //can not throw OutOfBound thanks to groupingBy
 
-                JsonArray studentList = studentResult.right().getValue();
-                Map<String, JsonObject> studentMap = new HashMap<>();
-                for (int i = 0; i < studentList.size(); i++) {
-                    JsonObject student = studentList.getJsonObject(i);
-                    studentMap.put(student.getString("student_id"), student);
-                }
+                    alerts.stream()
+                            .map(JsonObject.class::cast)
+                            .filter(alert -> studentMap.containsKey(alert.getString(Field.STUDENT_ID)))
+                            .forEach( alert -> {
+                                String studentId = alert.getString(Field.STUDENT_ID);
+                                alert.put(Field.NAME, studentMap.get(studentId).getString(Field.LASTNAME) + " " + studentMap.get(studentId).getString(Field.FIRSTNAME));
+                                alert.put(Field.LASTNAME, studentMap.get(studentId).getString(Field.LASTNAME));
+                                alert.put(Field.FIRSTNAME, studentMap.get(studentId).getString(Field.FIRSTNAME));
+                                alert.put(Field.AUDIENCE, studentMap.get(studentId).getString(Field.AUDIENCE));
+                            });
 
-                for (int i = 0; i < alerts.size(); i++) {
-                    JsonObject alert = alerts.getJsonObject(i);
-                    String studentId = alert.getString("student_id");
-                    if (!studentMap.containsKey(studentId)) continue;
-                    alert.put("name", studentMap.get(studentId).getString("lastName") + " " + studentMap.get(studentId).getString("firstName"));
-                    alert.put("lastName", studentMap.get(studentId).getString("lastName"));
-                    alert.put("firstName", studentMap.get(studentId).getString("firstName"));
-                    alert.put("audience", studentMap.get(studentId).getString("audience"));
-                }
+                    promise.complete(alerts);
+                })
+                .onFailure(error -> {
+                    log.error(String.format("[Presences@DefaultAlertService::getAlertsStudents] Failed to get alert student %s", error.getMessage()));
+                    promise.fail(error.getMessage());
+                });
+        Sql.getInstance().prepared(query, params, SqlResult.validResultHandler(FutureHelper.handlerEitherPromise(alertPromise)));
 
-                handler.handle(new Either.Right<>(alerts));
-            }));
-        }));
+        return promise.future();
     }
 
     @Override
@@ -176,7 +193,7 @@ public class DefaultAlertService extends DBService implements AlertService {
             }
         }));
 
-        String queryCount = "SELECT count " +
+        String queryCount = "SELECT COUNT(*)" +
                 " FROM " + Presences.dbSchema + ".alerts " +
                 " WHERE student_id = ? " +
                 " AND structure_id = ? " +
