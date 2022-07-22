@@ -1,16 +1,18 @@
 package fr.openent.presences.service;
 
+import fr.openent.presences.model.*;
 import fr.openent.presences.model.Event.Event;
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Future;
 import io.vertx.core.Handler;
+import io.vertx.core.http.*;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
+import org.entcore.common.pdf.*;
 
 import java.util.List;
 
 public interface ExportEventService {
-
 
     /**
      * Get events. Will after export this into csv (or PDF)
@@ -53,6 +55,9 @@ public interface ExportEventService {
                                    Boolean noReason, Boolean noReasonLateness, List<String> userId, JsonArray userIdFromClasses, List<String> classes,
                                    Boolean regularized, Boolean followed);
 
+    Future<Void> processCsvEvent(HttpServerRequest request, AsyncResult<List<Event>> event);
+    Future<ExportFile> processCsvEvent(String domain, String local, AsyncResult<List<Event>> event);
+
     /**
      * Get events. Will after export this into csv (or PDF)
      *
@@ -77,4 +82,5 @@ public interface ExportEventService {
                                   List<String> eventType, List<String> listReasonIds, Boolean noReason, Boolean noReasonLateness, List<String> userId,
                                   JsonArray userIdFromClasses, Boolean regularized, Boolean followed);
 
+    Future<Pdf> processPdfEvent(JsonObject events);
 }
