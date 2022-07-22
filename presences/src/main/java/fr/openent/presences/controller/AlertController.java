@@ -62,7 +62,7 @@ public class AlertController extends ControllerHelper {
                             .filter(Alerts.ALERT_LIST::contains)
                             .collect(Collectors.toList())));
 
-            alertService.delete(request.getParam(Field.ID), deletedAlertMap, body.getString(Field.START_AT), body.getString(Field.END_AT))
+            alertService.delete(request.getParam(Field.ID), deletedAlertMap, body.getString(Field.START_AT), body.getString(Field.END_AT), "00:00:00", "23:59:59")
                     .onSuccess(result -> renderJson(request, result))
                     .onFailure(err -> renderError(request));
         });
@@ -96,14 +96,14 @@ public class AlertController extends ControllerHelper {
     }
 
     private void getAlerts(HttpServerRequest request, List<String> types, List<String> students, List<String> classes,
-                           String startAt, String endAt, Handler<Either<String, JsonArray>> handler) {
+                           String startDate, String endDate, Handler<Either<String, JsonArray>> handler) {
         Future<JsonArray> groupStudentFuture = (classes.isEmpty()) ? Future.succeededFuture(new JsonArray()) : groupService.getGroupStudents(classes);
         groupStudentFuture.compose(users -> {
                     users.stream()
                             .map(o -> (JsonObject)o)
                             .map(jsonObject -> jsonObject.getString(Field.ID))
                             .forEach(students::add);
-                    return alertService.getAlertsStudents(request.getParam(Field.ID), types, students, startAt, endAt);
+                    return alertService.getAlertsStudents(request.getParam(Field.ID), types, students, startDate, endDate, "00:00:00", "23:59:59");
                 })
                 .onSuccess(alert -> handler.handle(new Either.Right<>(alert)))
                 .onFailure(error -> {

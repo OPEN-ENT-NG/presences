@@ -22,7 +22,6 @@ import org.entcore.common.sql.SqlResult;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.stream.Collectors;
 
 public class DefaultAlertService extends DBService implements AlertService {
@@ -30,14 +29,14 @@ public class DefaultAlertService extends DBService implements AlertService {
     private static final Logger log = LoggerFactory.getLogger(DefaultAlertService.class);
 
     @Override
-    public Future<JsonObject> delete(String structureId, Map<String, List<String>> deletedAlertMap, String startAt, String endAt) {
+    public Future<JsonObject> delete(String structureId, Map<String, List<String>> deletedAlertMap, String startDate, String endDate, String startTime, String endTime) {
         Promise<JsonObject> promise = Promise.promise();
-        if (deletedAlertMap.isEmpty()) promise.complete(new JsonObject());
+        if (deletedAlertMap != null && deletedAlertMap.isEmpty()) promise.complete(new JsonObject());
         else {
             JsonArray params = new JsonArray();
             String query = String.format("DELETE FROM %s.alerts %s",
                     Presences.dbSchema,
-                    getWhereDeleteFilter(params, structureId, deletedAlertMap, startAt, endAt)
+                    getWhereDeleteFilter(params, structureId, deletedAlertMap, startDate, endDate, startTime, endTime)
             );
             sql.prepared(query, params, SqlResult.validUniqueResultHandler(FutureHelper.handlerEitherPromise(promise)));
         }
@@ -46,29 +45,33 @@ public class DefaultAlertService extends DBService implements AlertService {
         return promise.future();
     }
 
-    public static String getWhereDeleteFilter(JsonArray params, String structureId, Map<String, List<String>> deletedAlertMap, String startAt, String endAt) {
+    public static String getWhereDeleteFilter(JsonArray params, String structureId, Map<String, List<String>> deletedAlertMap, String startDate, String endDate, String startTime, String endTime) {
         String query = "AND structure_id = ? ";
         params.add(structureId);
 
         final StringBuilder studentTypeFilterBuilder = new StringBuilder();
-        deletedAlertMap.forEach((studentId, alertType) -> {
-            if (!alertType.isEmpty()) {
-                studentTypeFilterBuilder.append(" OR (student_id = ? AND type IN ").append(Sql.listPrepared(alertType)).append(")");
-                params.add(studentId);
-                params.addAll(new JsonArray(alertType));
-            }
-        });
+        if (deletedAlertMap != null) {
+            deletedAlertMap.forEach((studentId, alertType) -> {
+                if (!alertType.isEmpty()) {
+                    studentTypeFilterBuilder.append(" OR (student_id = ? AND type IN ").append(Sql.listPrepared(alertType)).append(")");
+                    params.add(studentId);
+                    params.addAll(new JsonArray(alertType));
+                }
+            });
+        }
         String studentTypeFilter = studentTypeFilterBuilder.toString().replaceFirst("OR ", "AND (");
         if (!studentTypeFilter.isEmpty()) query += studentTypeFilter + ") ";
 
-        if (startAt != null) {
-            query += "AND created >= ?::date + '00:00:00'::time ";
-            params.add(startAt);
+        if (startDate != null && startTime != null) {
+            query += "AND created >= ?::date + ?::time ";
+            params.add(startDate);
+            params.add(startTime);
         }
 
-        if (endAt != null) {
-            query += "AND created <= ?::date + '23:59:59'::time ";
-            params.add(endAt);
+        if (endDate != null && endTime != null) {
+            query += "AND created <= ?::date + ?::time ";
+            params.add(endDate);
+            params.add(endTime);
         }
 
         return query.replaceFirst("AND", "WHERE");
@@ -97,7 +100,7 @@ public class DefaultAlertService extends DBService implements AlertService {
     }
 
     @Override
-    public Future<JsonArray> getAlertsStudents(String structureId, List<String> types, List<String> students, String startAt, String endAt) {
+    public Future<JsonArray> getAlertsStudents(String structureId, List<String> types, List<String> students, String startDate, String endDate, String startTime, String endTime) {
         Promise<JsonArray> promise = Promise.promise();
         JsonArray params = new JsonArray()
                 .add(structureId);
@@ -112,14 +115,16 @@ public class DefaultAlertService extends DBService implements AlertService {
             params.addAll(new JsonArray(students));
         }
 
-        if (startAt != null) {
-            query += "AND created >= ?::date + '00:00:00'::time ";
-            params.add(startAt);
+        if (startDate != null && startTime != null) {
+            query += "AND created >= ?::date + ?::time ";
+            params.add(startDate);
+            params.add(startTime);
         }
 
-        if (endAt != null) {
-            query += "AND created <= ?::date + '23:59:59'::time ";
-            params.add(endAt);
+        if (endDate != null && endTime != null) {
+            query += "AND created <= ?::date + ?::time ";
+            params.add(endDate);
+            params.add(endTime);
         }
 
         query += " GROUP BY student_id, type HAVING count(*) >= " + Presences.dbSchema + ".get_alert_thresholder(type, ?);";
