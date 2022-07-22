@@ -5,21 +5,26 @@ import fr.openent.presences.common.service.GroupService;
 import fr.openent.presences.common.service.impl.DefaultGroupService;
 import fr.openent.presences.constants.Actions;
 import fr.openent.presences.constants.Alerts;
-import fr.openent.presences.core.constants.*;
+import fr.openent.presences.core.constants.Field;
 import fr.openent.presences.export.AlertsCSVExport;
 import fr.openent.presences.security.Alert.AlertStudentNumber;
 import fr.openent.presences.security.AlertFilter;
 import fr.openent.presences.security.DeleteAlertFilter;
 import fr.openent.presences.service.AlertService;
 import fr.openent.presences.service.impl.DefaultAlertService;
-import fr.wseduc.rs.*;
+import fr.wseduc.rs.ApiDoc;
+import fr.wseduc.rs.Delete;
+import fr.wseduc.rs.Get;
 import fr.wseduc.security.ActionType;
 import fr.wseduc.security.SecuredAction;
 import fr.wseduc.webutils.Either;
+import fr.wseduc.webutils.request.RequestUtils;
+import io.vertx.core.Future;
 import io.vertx.core.Handler;
 import io.vertx.core.eventbus.EventBus;
 import io.vertx.core.http.HttpServerRequest;
 import io.vertx.core.json.JsonArray;
+import io.vertx.core.json.JsonObject;
 import org.entcore.common.controller.ControllerHelper;
 import org.entcore.common.http.filter.ResourceFilter;
 import org.entcore.common.http.filter.Trace;
@@ -27,6 +32,8 @@ import org.entcore.common.http.filter.Trace;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 import static org.entcore.common.http.response.DefaultResponseHandler.arrayResponseHandler;
 import static org.entcore.common.http.response.DefaultResponseHandler.defaultResponseHandler;
@@ -39,20 +46,26 @@ public class AlertController extends ControllerHelper {
         groupService = new DefaultGroupService(eb);
     }
 
-    @Delete("/alerts")
+    @Delete("/structures/:id/alerts")
     @SecuredAction(value = "", type = ActionType.RESOURCE)
     @ResourceFilter(DeleteAlertFilter.class)
     @Trace(Actions.ALERT_DELETION)
     @ApiDoc("reset alerts")
     public void delete(HttpServerRequest request) {
-        List<String> alertIds = request.params().getAll(Field.ID);
-        String structureId = request.params().get(Field.STRUCTUREID);
-        String startAt = request.params().get(Field.STARTAT);
-        String endAt = request.params().get(Field.ENDAT);
+        RequestUtils.bodyToJson(request, pathPrefix + "alertDelete", body -> {
+            final Map<String, List<String>> deletedAlertMap = body.getJsonArray(Field.DELETED_ALERT).stream().map(JsonObject.class::cast)
+                    .collect(Collectors.groupingBy(jsonObject -> jsonObject.getString(Field.STUDENT_ID)))
+                    .entrySet()
+                    .stream()
+                    .collect(Collectors.toMap(Map.Entry::getKey, stringListEntry -> stringListEntry.getValue().stream()
+                            .map(jsonObject -> jsonObject.getString(Field.TYPE))
+                            .filter(Alerts.ALERT_LIST::contains)
+                            .collect(Collectors.toList())));
 
-        alertService.delete(structureId, alertIds, startAt, endAt)
-                .onSuccess(result -> renderJson(request, result))
-                .onFailure(err -> renderError(request));
+            alertService.delete(request.getParam(Field.ID), deletedAlertMap, body.getString(Field.START_AT), body.getString(Field.END_AT), "00:00:00", "23:59:59")
+                    .onSuccess(result -> renderJson(request, result))
+                    .onFailure(err -> renderError(request));
+        });
     }
 
     @Get("/structures/:id/alerts/summary")
@@ -60,7 +73,9 @@ public class AlertController extends ControllerHelper {
     @ResourceFilter(AlertFilter.class)
     @ApiDoc("Get given structure")
     public void get(HttpServerRequest request) {
-        alertService.getSummary(request.getParam("id"), defaultResponseHandler(request));
+        alertService.getSummary(request.getParam(Field.ID))
+                .onSuccess(result -> renderJson(request, result))
+                .onFailure(err -> renderError(request));
     }
 
     @Get("/structures/:id/alerts")
@@ -68,50 +83,33 @@ public class AlertController extends ControllerHelper {
     @ResourceFilter(AlertFilter.class)
     @ApiDoc("Get given structure")
     public void getStudentsAlerts(HttpServerRequest request) {
-        List<String> types = request.params().getAll("type");
-        List<String> students = request.params().getAll("student");
-        List<String> classes = request.params().getAll("class");
+        List<String> types = request.params().getAll(Field.TYPE);
+        List<String> students = request.params().getAll(Field.STUDENT_ID);
+        List<String> classes = request.params().getAll(Field.CLASS);
+        String startAt = request.params().get(Field.START_AT);
+        String endAt = request.params().get(Field.END_AT);
         if (types.size() == 0) {
             badRequest(request);
             return;
         }
-        getAlerts(request, types, students, classes, arrayResponseHandler(request));
+        getAlerts(request, types, students, classes, startAt, endAt, arrayResponseHandler(request));
     }
 
     private void getAlerts(HttpServerRequest request, List<String> types, List<String> students, List<String> classes,
-                           Handler<Either<String, JsonArray>> handler) {
-        if (classes.isEmpty())
-            alertService.getAlertsStudents(request.getParam("id"), types, students, event -> {
-                if (event.isLeft()) {
-                    String message = "[Presences@AlertController::getAlerts] Failed to retrieve alerts info.";
-                    log.error(message);
-                    handler.handle(new Either.Left(message));
-                } else {
-                    handler.handle(new Either.Right<>(event.right().getValue()));
-                }
-            });
-        else {
-            groupService.getGroupStudents(classes, resp -> {
-                if (resp.isLeft()) {
-                    String message = "[Presences@AlertController::getAlerts] Failed to retrieve groupStudents info.";
-                    log.error(message);
-                    handler.handle(new Either.Left(message));
-                    return;
-                }
-
-                JsonArray users = resp.right().getValue();
-                for (int i = 0; i < users.size(); i++) students.add(users.getJsonObject(i).getString("id"));
-                alertService.getAlertsStudents(request.getParam("id"), types, students, event -> {
-                    if (event.isLeft()) {
-                        String message = "[Presences@AlertsController::getAlerts] Failed to fetch alerts";
-                        log.error(message, event.left().getValue());
-                        handler.handle(new Either.Left(message));
-                    } else {
-                        handler.handle(new Either.Right<>(event.right().getValue()));
-                    }
+                           String startDate, String endDate, Handler<Either<String, JsonArray>> handler) {
+        Future<JsonArray> groupStudentFuture = (classes.isEmpty()) ? Future.succeededFuture(new JsonArray()) : groupService.getGroupStudents(classes);
+        groupStudentFuture.compose(users -> {
+                    users.stream()
+                            .map(o -> (JsonObject)o)
+                            .map(jsonObject -> jsonObject.getString(Field.ID))
+                            .forEach(students::add);
+                    return alertService.getAlertsStudents(request.getParam(Field.ID), types, students, startDate, endDate, "00:00:00", "23:59:59");
+                })
+                .onSuccess(alert -> handler.handle(new Either.Right<>(alert)))
+                .onFailure(error -> {
+                    log.error(String.format("[Presences@AlertController::getAlerts] Failed to retrieve alerts info. %s", error.getMessage()));
+                    handler.handle(new Either.Left<>(error.getMessage()));
                 });
-            });
-        }
     }
 
     @Get("/structures/:id/students/:studentId/alerts")
@@ -151,14 +149,14 @@ public class AlertController extends ControllerHelper {
     @Get("/structures/:id/alerts/export")
     @ApiDoc("Export alerts")
     public void exportAlerts(HttpServerRequest request) {
-        List<String> types = request.params().getAll("type");
-        List<String> students = request.params().getAll("student");
-        List<String> classes = request.params().getAll("class");
+        List<String> types = request.params().getAll(Field.TYPE);
+        List<String> students = request.params().getAll(Field.STUDENT);
+        List<String> classes = request.params().getAll(Field.CLASS);
         if (types.size() == 0) {
             badRequest(request);
             return;
         }
-        getAlerts(request, types, students, classes, event -> {
+        getAlerts(request, types, students, classes, null, null, event -> {
             if (event.isLeft()) {
                 log.error("[Presences@AlertsController::exportAlerts] Failed to fetch alerts", event.left().getValue());
                 renderError(request);
