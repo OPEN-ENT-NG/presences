@@ -1,7 +1,7 @@
 package fr.openent.presences.common.helper;
 
-import fr.openent.presences.core.constants.Field;
 import fr.wseduc.webutils.Either;
+import fr.openent.presences.core.constants.Field;
 import io.vertx.core.*;
 import io.vertx.core.eventbus.Message;
 import io.vertx.core.impl.CompositeFutureImpl;
@@ -31,7 +31,7 @@ public class FutureHelper {
     }
 
     /**
-     * @deprecated  Replaced by {@link #handlerFuture(Promise)}
+     * @deprecated  Replaced by {@link #handlerEitherPromise(Promise)}
      */
     @Deprecated
     public static Handler<Either<String, JsonArray>> handlerJsonArray(Promise<JsonArray> promise) {
@@ -48,7 +48,7 @@ public class FutureHelper {
     }
 
     /**
-     * @deprecated  Replaced by {@link #handlerFuture(Promise)}
+     * @deprecated  Replaced by {@link #handlerEitherPromise(Promise)}
      */
     @Deprecated
     public static Handler<Either<String, JsonObject>> handlerJsonObject(Promise<JsonObject> promise) {
@@ -64,7 +64,7 @@ public class FutureHelper {
         };
     }
 
-    public static <L, R> Handler<Either<L, R>> handlerPromise(Promise<R> promise) {
+    public static <L, R> Handler<Either<L, R>> handlerEitherPromise(Promise<R> promise) {
         return event -> {
             if (event.isRight()) {
                 promise.complete(event.right().getValue());

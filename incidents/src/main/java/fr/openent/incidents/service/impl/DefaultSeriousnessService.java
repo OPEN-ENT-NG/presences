@@ -75,7 +75,7 @@ public class DefaultSeriousnessService implements SeriousnessService {
                 .add(seriousnessBody.getString("label"))
                 .add(seriousnessBody.getInteger("level"))
                 .add(seriousnessBody.getBoolean("excludeAlertSeriousness"));
-        Sql.getInstance().prepared(query, params, SqlResult.validUniqueResultHandler(FutureHelper.handlerPromise(promise)));
+        Sql.getInstance().prepared(query, params, SqlResult.validUniqueResultHandler(FutureHelper.handlerEitherPromise(promise)));
 
         return promise.future();
     }
@@ -92,7 +92,7 @@ public class DefaultSeriousnessService implements SeriousnessService {
                 .add(seriousnessBody.getBoolean("hidden"))
                 .add(seriousnessBody.getBoolean("excludeAlertSeriousness"))
                 .add(seriousnessBody.getInteger("id"));
-        Sql.getInstance().prepared(query, params, SqlResult.validUniqueResultHandler(FutureHelper.handlerPromise(promise)));
+        Sql.getInstance().prepared(query, params, SqlResult.validUniqueResultHandler(FutureHelper.handlerEitherPromise(promise)));
 
         return promise.future();
     }
