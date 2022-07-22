@@ -321,6 +321,10 @@ public class Field {
     public static final String REASON_ALERT_RULES = "reason_alert_rules";
     public static final String USED = "used";
     public static final String RULE_TYPE = "rule_type";
+    public static final String DELETED_ALERT = "deleted_alert";
+    public static final String CLASS = "class";
+    public static final String STUDENTSID = "studentsId";
+    public static final String AUDIENCE = "audience";
 
     private Field() {
         throw new IllegalStateException("Utility class");

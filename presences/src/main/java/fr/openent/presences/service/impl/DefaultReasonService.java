@@ -78,7 +78,7 @@ public class DefaultReasonService implements ReasonService {
                 " WHERE reason_alert.deleted_at IS NULL" +
                 " AND reason.reason_type_id = ?";
         JsonArray params = new JsonArray(Collections.singletonList(reasonTypeId));
-        Sql.getInstance().prepared(query, params, SqlResult.validResultHandler(FutureHelper.handlerPromise(promise)));
+        Sql.getInstance().prepared(query, params, SqlResult.validResultHandler(FutureHelper.handlerEitherPromise(promise)));
         return promise.future();
     }
 
