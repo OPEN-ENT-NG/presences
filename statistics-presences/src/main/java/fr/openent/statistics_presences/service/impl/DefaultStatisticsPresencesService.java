@@ -5,6 +5,8 @@ import fr.openent.presences.common.helper.FutureHelper;
 import fr.openent.presences.core.constants.Field;
 import fr.openent.presences.db.DBService;
 import fr.openent.statistics_presences.StatisticsPresences;
+import fr.openent.statistics_presences.indicator.ComputeStatistics;
+import fr.openent.statistics_presences.indicator.ProcessingScheduledManual;
 import fr.openent.statistics_presences.service.CommonServiceFactory;
 import fr.openent.statistics_presences.service.StatisticsPresencesService;
 import io.vertx.core.AsyncResult;
@@ -34,7 +36,6 @@ public class DefaultStatisticsPresencesService extends DBService implements Stat
     @Override
     public Future<JsonObject> processStatisticsPrefetch(List<String> structures, List<String> studentIds, Boolean isWaitingEndProcess) {
         Promise<JsonObject> promise = Promise.promise();
-        Future<JsonObject> process = null;
         if (structures.isEmpty()) {
             promise.fail("No structure(s) identifier given");
         } else {
@@ -42,11 +43,20 @@ public class DefaultStatisticsPresencesService extends DBService implements Stat
                     .put(Field.STRUCTURE, structures)
                     .put(Field.STUDENTIDS, studentIds)
                     .put(Field.ISWAITINGENDPROCESS, isWaitingEndProcess);
-            process = StatisticsPresences.launchProcessingStatistics(commonServiceFactory.eventBus(), params);
-            promise.complete(new JsonObject().put(Field.STATUS, Field.OK));
+            if (Boolean.TRUE.equals(isWaitingEndProcess)) {
+                ComputeStatistics computeStatistics = new ComputeStatistics(this.commonServiceFactory);
+                computeStatistics.start(structures, studentIds)
+                        .onSuccess(res -> promise.complete(new JsonObject().put(Field.MESSAGE, Field.OK)))
+                        .onFailure(promise::fail);
+            } else {
+                StatisticsPresences.launchProcessingStatistics(commonServiceFactory.eventBus(), params)
+                        .onSuccess(promise::complete)
+                        .onFailure(promise::fail);
+            }
         }
-        return Boolean.TRUE.equals(isWaitingEndProcess) ? process : promise.future();
+        return promise.future();
     }
+
 
     /**
      * Get statement that create statistic user
