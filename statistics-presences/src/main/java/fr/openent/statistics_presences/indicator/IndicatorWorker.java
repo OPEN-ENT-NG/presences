@@ -49,29 +49,6 @@ public abstract class IndicatorWorker extends AbstractVerticle {
     }
 
     /**
-     * Launch indicators process. The process compute values for each user and store it in the database.
-     *
-     * @param structures structure map. Contains in key structure identifier and in value an array containing each structure
-     *                   student to proceed
-     * @return Future handling result
-     */
-    private Future<Void> processManualIndicators(JsonObject structures) {
-        Promise<Void> promise = Promise.promise();
-        List<Future<JsonObject>> indicatorFutures = new ArrayList<>();
-        for (Indicator indicator : StatisticsPresences.indicatorMap.values()) {
-            indicatorFutures.add(indicator.manualProcess(structures));
-        }
-        FutureHelper.join(indicatorFutures)
-                .onSuccess(success -> promise.complete())
-                .onFailure(error -> {
-                    log.error(String.format("[StatisticsPresences@ProcessingScheduledManual::processIndicators] Some indicator failed during processing. %s", error.getMessage()));
-                    promise.fail(error.getMessage());
-                });
-
-        return promise.future();
-    }
-
-    /**
      * Process computing statistics for each student's inside structure within config given (payload)
      * (JsonObject is a map with structure id as key and array of student id and its endpoint (indicator name)
      *
