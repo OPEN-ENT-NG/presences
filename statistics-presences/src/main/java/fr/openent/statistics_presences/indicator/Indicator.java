@@ -1,6 +1,7 @@
 package fr.openent.statistics_presences.indicator;
 
 import fr.openent.presences.common.helper.CSVExport;
+import fr.openent.presences.core.constants.Field;
 import fr.openent.presences.db.DBService;
 import fr.openent.statistics_presences.bean.Report;
 import fr.openent.statistics_presences.model.StatisticsFilter;
@@ -98,5 +99,32 @@ public abstract class Indicator extends DBService {
         vertx.deployVerticle(workerName, new DeploymentOptions().setConfig(config).setWorker(true));
     }
 
+    /**
+     * Process one indicator to run computing statistics
+     * (JsonObject is a map with structure id as key and array of student id)
+     *
+     * @param structures student list group by structure
+     * @return Future ending process
+     */
+    public Future<JsonObject> manualProcess(JsonObject structures) {
+        Promise<JsonObject> promise = Promise.promise();
+        JsonObject config = new JsonObject()
+                .put(Field.STRUCTURES, structures)
+                .put(Field.ENDPOINT, indicatorClassName());
+        String workerName = String.format("%s.worker.%s", Indicator.class.getPackage().getName(), this.name);
+        ClassLoader loader = Indicator.class.getClassLoader();
+        try {
+            IndicatorWorker indicatorWorker = (IndicatorWorker) Class.forName(workerName, true, loader).getConstructors()[0].newInstance();
+            indicatorWorker.manualStart(config)
+                    .onSuccess(promise::complete)
+                    .onFailure(promise::fail);
+        } catch (IllegalAccessException | InstantiationException | InvocationTargetException | ClassNotFoundException e) {
+            String message = String.format("[Presences@%s::manualProcess] An error has occurred when starting process " +
+                    "indicatorWorker manually : %s" , this.getClass().getSimpleName(), e.getMessage());
+            log.error(message);
+            promise.fail(e.getMessage());
+        }
+        return promise.future();
+    }
 
 }
