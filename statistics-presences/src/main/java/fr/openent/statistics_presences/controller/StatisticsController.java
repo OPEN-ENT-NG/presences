@@ -238,8 +238,8 @@ public class StatisticsController extends ControllerHelper {
     @SuppressWarnings("unchecked")
     public void processStudentsStatisticsPrefetch(final HttpServerRequest request) {
         RequestUtils.bodyToJson(request, pathPrefix + "processStudentsStatisticsPrefetch", body -> {
-           String structureId = request.getParam(Field.STRUCTURE);
-            List<String> studentIds = body.getJsonArray("studentIds").getList();
+            String structureId = request.getParam(Field.STRUCTURE);
+            List<String> studentIds = body.getJsonArray(Field.STUDENTIDS).getList();
             statisticsPresencesService.processStatisticsPrefetch(Collections.singletonList(structureId), studentIds, true)
                     .onSuccess(res -> renderJson(request, res))
                     .onFailure(unused -> renderError(request));

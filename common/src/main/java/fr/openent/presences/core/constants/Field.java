@@ -14,6 +14,7 @@ public class Field {
     public static final String COURSES = "courses";
     public static final String GROUP = "group";
     public static final String EXCLUDE = "exclude";
+    public static final String ENDPOINT = "endpoint";
     public static final String GROUPNAMES = "groupNames";
     public static final String GROUPS = "groups";
     public static final String AUDIENCES = "audiences";

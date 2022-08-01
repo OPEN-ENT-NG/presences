@@ -50,9 +50,10 @@ public class ProcessingScheduledManual extends BusModBase implements Handler<Mes
                 .compose(this::processIndicators)
                 .compose(this::generateReport)
                 .onSuccess(success -> {
-                    log.info(success);
                     if (Boolean.TRUE.equals(isWaitingEndProcess))
                         eventMessage.reply(new JsonObject().put(Field.STATUS, Field.OK));
+                    else
+                        log.info(success);
                 })
                 .onFailure(error -> {
                     String message = String.format("[StatisticsPresences@ProcessingScheduledManual::handle] " +
@@ -65,13 +66,13 @@ public class ProcessingScheduledManual extends BusModBase implements Handler<Mes
                 });
     }
 
-    private void initTemplateProcessor() {
+    protected void initTemplateProcessor() {
         templateProcessor = new TemplateProcessor(vertx, "template").escapeHTML(false);
         templateProcessor.setLambda("i18n", new I18nLambda("fr"));
         templateProcessor.setLambda("datetime", new LocaleDateLambda("fr"));
     }
 
-    private Future<JsonObject> fetchUsers(List<String> structureIds, List<String> studentIds) {
+    protected Future<JsonObject> fetchUsers(List<String> structureIds, List<String> studentIds) {
         if (studentIds == null || studentIds.isEmpty()) return fetchUsersFromStructures(structureIds);
         if (structureIds == null || structureIds.isEmpty()) return Future.succeededFuture(new JsonObject());
         return Future.succeededFuture(new JsonObject().put(structureIds.get(0), studentIds));
