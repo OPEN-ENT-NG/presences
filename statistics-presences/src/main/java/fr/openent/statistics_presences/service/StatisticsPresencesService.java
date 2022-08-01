@@ -18,10 +18,13 @@ public interface StatisticsPresencesService {
 
 
     /**
-     * Add user in deleted table.
+     * process statistics task for a structure/student(s)
+     * If we set isWaitingEndprocess 'true', this will simply call a method that will reply at the end
+     * if false, this will call a worker that does the same thing but without replying
      *
-     * @param structure list structure identifier
-     * @param studentIds list student identifiers
+     * @param structure             list structure identifier
+     * @param studentIds            list student identifiers
+     * @param isWaitingEndProcess   state to enable worker mode or not
      * @return Future JsonObject completing process
      */
     Future<JsonObject> processStatisticsPrefetch(List<String> structure, List<String> studentIds, Boolean isWaitingEndProcess);

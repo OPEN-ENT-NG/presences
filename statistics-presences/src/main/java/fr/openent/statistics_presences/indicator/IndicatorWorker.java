@@ -2,6 +2,7 @@ package fr.openent.statistics_presences.indicator;
 
 import fr.openent.presences.common.helper.FutureHelper;
 import fr.openent.presences.common.viescolaire.Viescolaire;
+import fr.openent.presences.core.constants.Field;
 import fr.openent.statistics_presences.StatisticsPresences;
 import fr.openent.statistics_presences.bean.Failure;
 import fr.openent.statistics_presences.bean.Report;
@@ -27,6 +28,7 @@ public abstract class IndicatorWorker extends AbstractVerticle {
     protected final Logger log = LoggerFactory.getLogger(IndicatorWorker.class);
     protected final Map<String, JsonObject> settings = new HashMap<>();
     protected Context indicatorContext;
+    protected JsonObject config;
     protected Report report;
 
     @Override
@@ -34,10 +36,11 @@ public abstract class IndicatorWorker extends AbstractVerticle {
         // for some reason we might lose our verticle's context and might also pick its parent's context to keep it "alive"
         // in order to avoid this behavior, we assign manually its own context to indicatorContext
         indicatorContext = vertx.getOrCreateContext();
+        config = new JsonObject(config().toString());
         log.info(String.format("[StatisticsPresences@IndicatorWorker::start] Launching worker %s, deploy verticle %s",
                 this.indicatorName(), indicatorContext.deploymentID()));
         this.report = new Report(this.indicatorName()).start();
-        JsonObject structures = config().getJsonObject("structures");
+        JsonObject structures = config.getJsonObject(Field.STRUCTURES);
         List<Future<Void>> futures = new ArrayList<>();
         for (String structure : structures.fieldNames()) {
             futures.add(processStructure(structure, structures.getJsonArray(structure)));
@@ -45,12 +48,62 @@ public abstract class IndicatorWorker extends AbstractVerticle {
         FutureHelper.join(futures).onComplete(this::sendSigTerm);
     }
 
+    /**
+     * Launch indicators process. The process compute values for each user and store it in the database.
+     *
+     * @param structures structure map. Contains in key structure identifier and in value an array containing each structure
+     *                   student to proceed
+     * @return Future handling result
+     */
+    private Future<Void> processManualIndicators(JsonObject structures) {
+        Promise<Void> promise = Promise.promise();
+        List<Future<JsonObject>> indicatorFutures = new ArrayList<>();
+        for (Indicator indicator : StatisticsPresences.indicatorMap.values()) {
+            indicatorFutures.add(indicator.manualProcess(structures));
+        }
+        FutureHelper.join(indicatorFutures)
+                .onSuccess(success -> promise.complete())
+                .onFailure(error -> {
+                    log.error(String.format("[StatisticsPresences@ProcessingScheduledManual::processIndicators] Some indicator failed during processing. %s", error.getMessage()));
+                    promise.fail(error.getMessage());
+                });
+
+        return promise.future();
+    }
+
+    /**
+     * Process computing statistics for each student's inside structure within config given (payload)
+     * (JsonObject is a map with structure id as key and array of student id and its endpoint (indicator name)
+     *
+     * @param payload config with endpoint (indicatorName) and structures (Map within id key structure and array as student id)
+     * @return Future ending process
+     */
+    protected Future<JsonObject> manualStart(JsonObject payload) {
+        Promise<JsonObject> promise = Promise.promise();
+        config = new JsonObject(payload.toString());
+        this.report = new Report(this.indicatorName()).start();
+        JsonObject structures = config.getJsonObject(Field.STRUCTURES);
+        List<Future<Void>> futures = new ArrayList<>();
+        for (String structure : structures.fieldNames()) {
+            futures.add(processStructure(structure, structures.getJsonArray(structure)));
+        }
+        FutureHelper.join(futures)
+                .onSuccess(res -> promise.complete(new JsonObject().put(Field.MESSAGE, Field.OK)))
+                .onFailure(err -> {
+                    String message = String.format("[Presences@%s::manualStart] An error has occurred when updating student(s)'s stats : %s, " +
+                            "returning empty list", this.getClass().getSimpleName(), err.getMessage());
+                    log.error(message);
+                    promise.fail(err.getMessage());
+                });
+        return promise.future();
+    }
+
     protected JsonArray reasonIds(String structureId) {
         return settings.get(structureId).getJsonArray("reasonIds", new JsonArray());
     }
 
     protected String indicatorName() {
-        return config().getString("endpoint");
+        return config.getString(Field.ENDPOINT);
     }
 
     protected void save(String id, JsonArray students, List<JsonObject> values, Handler<AsyncResult<Void>> handler) {
@@ -121,7 +174,7 @@ public abstract class IndicatorWorker extends AbstractVerticle {
         log.info(String.format("[StatisticsPresences@IndicatorWorker::sendSigTerm] Sending term signal by %s indicator", this.getClass().getName()));
 
         DeliveryOptions deliveryOptions = new DeliveryOptions().setCodecName(StatisticsPresences.codec.name());
-        vertx.eventBus().send(config().getString("endpoint"), report, deliveryOptions);
+        vertx.eventBus().send(config.getString(Field.ENDPOINT), report, deliveryOptions);
         if (isParentVerticle()) {
             log.info(String.format("[StatisticsPresences@IndicatorWorker::sendSigTerm] Tried to undeploy verticle %s but" +
                     " turns out it is the Parent Verticle...", indicatorContext.deploymentID()));
@@ -138,8 +191,8 @@ public abstract class IndicatorWorker extends AbstractVerticle {
      * @return boolean  true if verticle parent, false if own vertx's context
      */
     private boolean isParentVerticle() {
-        return indicatorContext.config().containsKey("main") &&
-                indicatorContext.config().getString("main").equals(STATISTICS_PRESENCES_CLASS);
+        return config.containsKey("main") &&
+                config.getString("main").equals(STATISTICS_PRESENCES_CLASS);
     }
 
     @SuppressWarnings("unchecked")
@@ -188,7 +241,6 @@ public abstract class IndicatorWorker extends AbstractVerticle {
                                         promise.complete();
                                     }
                                 });
-
                             })
                             .onFailure(ar -> {
                                 reportFailures(id, students, futures);
