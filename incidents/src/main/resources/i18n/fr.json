@@ -26,8 +26,6 @@
   "incidents.create.punishment": "Saisir une punition",
   "incidents.create.sanction": "Saisir une sanction",
   "incidents.csv.empty": "Aucun incident à exporter",
-  "incidents.csv.filename": "export_incidents.csv",
-  "incidents.punishments.csv.filename": "export_punitions.csv",
   "incidents.csv.full": "Vous ne pouvez pas exporter plus de 1 000 incidents, filter votre recherche.",
 
   "incidents.csv.header.date": "Date",
