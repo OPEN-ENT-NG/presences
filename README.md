@@ -103,7 +103,8 @@ aller sur l'onglet Présences dans Vie Scolaire, activer le module et initialise
 
 ### Archivage
 
+**A faire cette action avant la transition** (le fichier csv se base sur les groupes et matières)
+
 L'événement `transition` n'a pas encore été implémenté
 l'API `/presences/event/archives/export` est utilisé à la place pour récupérer par établissement (`"structureId" params`) les événements, 
 générer un fichier CSV et envoyer par mail avec la configuration `"mails-list-export"`
-
