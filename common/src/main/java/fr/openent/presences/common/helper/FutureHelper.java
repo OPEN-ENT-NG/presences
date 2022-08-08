@@ -60,7 +60,7 @@ public class FutureHelper {
             if (event.isRight()) {
                 promise.complete(event.right().getValue());
             } else {
-                String message = String.format("[PresencesCommon@%s::handlerFuture]: %s",
+                String message = String.format("[PresencesCommon@%s::handlerEitherPromise]: %s",
                         FutureHelper.class.getSimpleName(), event.left().getValue());
                 LOGGER.error(message);
                 promise.fail(event.left().getValue().toString());
