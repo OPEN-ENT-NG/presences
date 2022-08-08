@@ -1,5 +1,4 @@
 package fr.openent.presences.common.helper;
-
 import fr.wseduc.webutils.Either;
 import fr.openent.presences.core.constants.Field;
 import io.vertx.core.*;
@@ -9,7 +8,6 @@ import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
-
 import java.util.List;
 
 public class FutureHelper {
@@ -30,6 +28,10 @@ public class FutureHelper {
         };
     }
 
+    /**
+     * @deprecated  Replaced by {@link #handlerEitherPromise(Promise)}
+     */
+    @Deprecated
     public static Handler<Either<String, JsonArray>> handlerJsonArray(Promise<JsonArray> promise) {
         return event -> {
             if (event.isRight()) {
@@ -43,6 +45,10 @@ public class FutureHelper {
         };
     }
 
+    /**
+     * @deprecated  Replaced by {@link #handlerEitherPromise(Promise)}
+     */
+    @Deprecated
     public static Handler<Either<String, JsonObject>> handlerJsonObject(Promise<JsonObject> promise) {
         return event -> {
             if (event.isRight()) {
@@ -52,6 +58,19 @@ public class FutureHelper {
                         FutureHelper.class.getSimpleName(), event.left().getValue());
                 LOGGER.error(message);
                 promise.fail(event.left().getValue());
+            }
+        };
+    }
+
+    public static <L, R> Handler<Either<L, R>> handlerEitherPromise(Promise<R> promise) {
+        return event -> {
+            if (event.isRight()) {
+                promise.complete(event.right().getValue());
+            } else {
+                String message = String.format("[PresencesCommon@%s::handlerEitherPromise]: %s",
+                        FutureHelper.class.getSimpleName(), event.left().getValue());
+                LOGGER.error(message);
+                promise.fail(event.left().getValue().toString());
             }
         };
     }
@@ -128,4 +147,5 @@ public class FutureHelper {
     public static <T> CompositeFuture join(List<Future<T>> futures) {
         return CompositeFutureImpl.join(futures.toArray(new Future[futures.size()]));
     }
+
 }
