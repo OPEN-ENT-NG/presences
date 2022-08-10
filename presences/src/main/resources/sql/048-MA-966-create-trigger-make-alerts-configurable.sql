@@ -1,7 +1,7 @@
 -- Drop old function
 DROP FUNCTION presences.create_alert(varchar, varchar, varchar);
 -- Create a new function that create an alert for given student.
-CREATE OR REPLACE FUNCTION presences.create_alert(eventId bigint, alertType varchar, studentId varchar, structureId varchar) RETURNS void AS
+CREATE OR REPLACE FUNCTION presences.create_alert(eventId bigint, alertType varchar, studentId varchar, structureId varchar, date timestamp without time zone) RETURNS void AS
 $BODY$
 DECLARE
     alertExist boolean;
@@ -13,7 +13,7 @@ BEGIN
 
     -- If not we create one
     IF alertExist IS FALSE THEN
-        INSERT INTO presences.alerts(event_id, type, student_id, structure_id) VALUES (eventId, alertType, studentId, structureId);
+        INSERT INTO presences.alerts(event_id, type, student_id, structure_id, date) VALUES (eventId, alertType, studentId, structureId, date);
     END IF;
     RETURN;
 END;
@@ -29,23 +29,23 @@ DROP FUNCTION presences.increment_event_alert();
 CREATE or replace FUNCTION presences.add_event_alert() RETURNS TRIGGER AS
 $BODY$
 DECLARE
-    structureId character varying;
-    existingAbsenceWithAlert bigint = NULL;
+    register presences.register;
+    existingAbsenceWithAlert presences.event;
 BEGIN
     -- Select the structure associate with the new event
-    SELECT structure_id FROM presences.register WHERE id = NEW.register_id INTO structureId;
+    SELECT * FROM presences.register WHERE id = NEW.register_id LIMIT 1 INTO register;
     CASE NEW.type_id
         WHEN 1 THEN -- Absence creation
-            SELECT presences.get_id_absence_event_siblings(NEW, structureId, true) INTO existingAbsenceWithAlert;
+            SELECT * FROM presences.get_id_absence_event_siblings(NEW, register.structure_id, true) INTO existingAbsenceWithAlert;
             -- If we don't have have other absence with alert and the event is not exclude
-            IF existingAbsenceWithAlert IS NULL AND NOT presences.absence_exclude_alert(NEW, structureId) THEN
+            IF existingAbsenceWithAlert.id IS NULL AND NOT presences.absence_exclude_alert(NEW, register.structure_id) THEN
                 -- Create alert
-                EXECUTE presences.create_alert(NEW.id, 'ABSENCE', NEW.student_id, structureId);
+                EXECUTE presences.create_alert(NEW.id, 'ABSENCE', NEW.student_id, register.structure_id, register.start_date);
             END IF;
         WHEN 2 THEN -- Lateness creation
-            IF NOT presences.lateness_exclude_alert(NEW, structureId) THEN -- If we have no exclude condition
+            IF NOT presences.lateness_exclude_alert(NEW, register.structure_id) THEN -- If we have no exclude condition
                 -- Create alert
-                EXECUTE presences.create_alert(NEW.id, 'LATENESS', NEW.student_id, structureId);
+                EXECUTE presences.create_alert(NEW.id, 'LATENESS', NEW.student_id, register.structure_id, register.start_date);
             END IF;
         END CASE;
     RETURN NEW;
@@ -71,7 +71,7 @@ BEGIN
 
     IF presences.notebook_exclude_alert(structureId) IS FALSE THEN -- If we have no exclude condition
         -- Create alert
-        EXECUTE presences.create_alert(NEW.id, 'FORGOTTEN_NOTEBOOK', NEW.student_id, structureId);
+        EXECUTE presences.create_alert(NEW.id, 'FORGOTTEN_NOTEBOOK', NEW.student_id, structureId, NEW.date);
     END IF;
     RETURN NEW;
 END

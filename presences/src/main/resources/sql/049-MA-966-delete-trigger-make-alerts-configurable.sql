@@ -16,21 +16,22 @@ DROP FUNCTION presences.decrement_event_alert();
 CREATE FUNCTION presences.remove_event_alert() RETURNS TRIGGER AS
 $BODY$
 DECLARE
-    structureId character varying;
-    eventIdNeedAlert bigint;
+    register presences.register;
+    eventNeedAlert presences.event;
 BEGIN
-    SELECT structure_id FROM presences.register WHERE id = OLD.register_id INTO structureId;
+    SELECT * FROM presences.register WHERE id = OLD.register_id LIMIT 1 INTO register;
     CASE OLD.type_id
         WHEN 1 THEN -- Absence creation
             -- Retrieve event structure identifier based on new event register identifier
 
-            SELECT presences.get_id_absence_event_siblings(OLD, structureId, false) INTO eventIdNeedAlert;
-            EXECUTE presences.delete_alert(OLD.id, 'ABSENCE', OLD.student_id, structureId);
-            IF eventIdNeedAlert IS NOT NULL THEN -- If we have other absence in the same time with no alert, we need a alert for this absence
-                EXECUTE presences.create_alert(eventIdNeedAlert, 'ABSENCE', OLD.student_id, structureId);
+            SELECT * FROM presences.get_id_absence_event_siblings(OLD, register.structure_id, false) INTO eventNeedAlert;
+            EXECUTE presences.delete_alert(OLD.id, 'ABSENCE', OLD.student_id, register.structure_id);
+            IF eventNeedAlert.id IS NOT NULL THEN -- If we have other absence in the same time with no alert, we need a alert for this absence
+                SELECT * FROM presences.register WHERE id = eventNeedAlert.register_id LIMIT 1 INTO register;
+                EXECUTE presences.create_alert(eventNeedAlert.id, 'ABSENCE', OLD.student_id, register.structure_id, register.start_date);
             END IF;
         WHEN 2 THEN -- Lateness creation
-            EXECUTE presences.delete_alert(OLD.id, 'LATENESS', OLD.student_id, structureId);
+            EXECUTE presences.delete_alert(OLD.id, 'LATENESS', OLD.student_id, register.structure_id);
         END CASE;
         RETURN OLD;
     END

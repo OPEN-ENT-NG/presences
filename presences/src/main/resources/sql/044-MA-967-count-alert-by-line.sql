@@ -10,6 +10,7 @@ ALTER TABLE presences.alerts ADD COLUMN event_id bigint NOT NULL,
                              DROP COLUMN exceed_date,
                              DROP COLUMN modified,
                              -- Column used in trigger
+                             ADD COLUMN date timestamp without time zone NOT NULL,
                              ADD COLUMN delete_at timestamp without time zone;
 
 ALTER TABLE presences.alert_history DROP COLUMN exceed_date,

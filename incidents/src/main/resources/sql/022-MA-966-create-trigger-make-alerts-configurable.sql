@@ -6,14 +6,14 @@ DROP FUNCTION incidents.increment_incident_alert();
 CREATE FUNCTION incidents.add_incident_alert() RETURNS TRIGGER AS
 $BODY$
 DECLARE
-    structureId character varying;
+    incident incidents.incident;
 BEGIN
     -- Select the structure associate with the new protagonist
-    SELECT structure_id FROM incidents.incident WHERE id = NEW.incident_id INTO structureId;
+    SELECT * FROM incidents.incident WHERE id = NEW.incident_id INTO incident;
 
-    IF incidents.incident_protagonist_exclude_alert(NEW, structureId) IS FALSE THEN -- If we have no exclude condition
+    IF incidents.incident_protagonist_exclude_alert(NEW, incident.structure_id) IS FALSE THEN -- If we have no exclude condition
         -- Create alert
-        EXECUTE presences.create_alert(NEW.incident_id, 'INCIDENT', NEW.user_id, structureId);
+        EXECUTE presences.create_alert(NEW.incident_id, 'INCIDENT', NEW.user_id, incident.structure_id, incident.date);
     END IF;
 
     RETURN NEW;
