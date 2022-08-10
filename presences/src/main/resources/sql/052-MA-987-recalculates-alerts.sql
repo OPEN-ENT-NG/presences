@@ -12,7 +12,7 @@ do $$
                 SELECT structure_id FROM presences.register WHERE id = eventItems.register_id INTO structureId;
                 if (eventItems.type_id = 1) THEN
                     existingAbsenceWithAlert = NULL;
-                    SELECT presences.get_id_absence_event_siblings(eventItems, structureId, true) INTO existingAbsenceWithAlert;
+                    SELECT * FROM presences.get_id_absence_event_siblings(eventItems, structureId, true) INTO existingAbsenceWithAlert;
                     IF existingAbsenceWithAlert IS NULL AND NOT presences.absence_exclude_alert(eventItems, structureId) THEN -- If we have no exclude condition and not siblings
                         INSERT INTO presences.alerts(student_id, structure_id, type, event_id) VALUES (eventItems.student_id , structureId, 'ABSENCE', eventItems.id);
                     END IF;
