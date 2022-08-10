@@ -289,9 +289,10 @@ public abstract class IndicatorWorker extends AbstractVerticle {
                             studentId,
                             structureId,
                             indicatorName(),
-                            ar.getCause().getMessage()
+                            ar.getMessage()
                     ));
-                    promise.fail(ar.getCause());
+                    promise.fail(ar.getMessage());
+                    ar.printStackTrace();
                 })
                 .onSuccess(ar -> {
                     log.debug(String.format("[StatisticsPresences@IndicatorWorker::processStudent] Student %s proceed", studentId));
