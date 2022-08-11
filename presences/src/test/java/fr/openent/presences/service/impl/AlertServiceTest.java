@@ -1,5 +1,6 @@
 package fr.openent.presences.service.impl;
 
+import fr.openent.presences.common.viescolaire.Viescolaire;
 import fr.openent.presences.core.constants.Field;
 import fr.openent.presences.db.DB;
 import fr.openent.presences.db.DBService;
@@ -51,6 +52,7 @@ public class AlertServiceTest extends DBService {
         this.alertService = new DefaultAlertService();
         this.vertx = Vertx.vertx();
         Sql.getInstance().init(vertx.eventBus(), "fr.openent.presences");
+        Viescolaire.getInstance().init(vertx.eventBus());
     }
 
     @Test
@@ -75,7 +77,7 @@ public class AlertServiceTest extends DBService {
     public void testDelete(TestContext ctx) throws Exception {
         Async async = ctx.async();
         String expectedQuery = "DELETE FROM null.alerts WHERE structure_id = ?  AND ((student_id = ? AND type IN (?,?)) " +
-                "OR (student_id = ? AND type IN (?))) AND created >= ?::date + ?::time AND created <= ?::date + ?::time ";
+                "OR (student_id = ? AND type IN (?))) AND date >= ?::date + ?::time AND date <= ?::date + ?::time ";
         String expectedParams = "[\"111\",\"student2\",\"ABSENCE\",\"LATENESS\",\"student1\",\"ABSENCE\",\"2022-06-01\",\"08:00:00\",\"2022-06-30\",\"23:59:59\"]";
 
         Map<String, List<String>> deletedAlertMap = new HashMap<>();
@@ -100,10 +102,14 @@ public class AlertServiceTest extends DBService {
     @Test
     public void testGetSummary(TestContext ctx) {
         Async async = ctx.async();
-        String expectedQuery = "SELECT tc.type, count(*) AS count FROM (SELECT type, count(*) AS count FROM null.alerts" +
-                " WHERE structure_id = ? GROUP BY student_id, type) as tc WHERE tc.count >= null.get_alert_thresholder(tc.type, ?)" +
-                " GROUP BY tc.type;";
-        String expectedParams = "[\"111\",\"111\"]";
+        String expectedQuery = "SELECT tc.type, count(*) AS count FROM (SELECT type, count(*) AS count FROM null.alerts " +
+                "WHERE structure_id = ? AND date >= ? GROUP BY student_id, type) as tc WHERE tc.count >=" +
+                " null.get_alert_thresholder(tc.type, ?) GROUP BY tc.type;";
+        String expectedParams = "[\"111\",\"2021-08-01T00:00:00.000\",\"111\"]";
+
+        vertx.eventBus().consumer("viescolaire", message -> {
+            message.reply((new JsonObject()).put("status", "ok").put("result", new JsonObject().put("start_date", "2021-08-01T00:00:00.000")));
+        });
 
         vertx.eventBus().consumer("fr.openent.presences", message -> {
             JsonObject body = (JsonObject) message.body();
@@ -125,7 +131,7 @@ public class AlertServiceTest extends DBService {
         PowerMockito.when(Neo4j.getInstance()).thenReturn(neo4j);
 
         String expectedQuerySql = "SELECT student_id, type, count(*) AS count FROM null.alerts WHERE structure_id = ? " +
-                "AND type IN (?,?) AND student_id IN (?,?)AND created >= ?::date + ?::time AND created <= ?::date + ?::time" +
+                "AND type IN (?,?) AND student_id IN (?,?)AND date >= ?::date + ?::time AND date <= ?::date + ?::time" +
                 "  GROUP BY student_id, type HAVING count(*) >= null.get_alert_thresholder(type, ?);";
         String expectedParamsSql = "[\"111\",\"ABSENCE\",\"LATENESS\",\"student3\",\"student4\",\"2022-06-01\",\"08:00:00\",\"2022-06-30\",\"23:59:59\",\"111\"]";
         String expectedQueryNeo = "MATCH (u:User)-[:IN]->(:ProfileGroup)-[:DEPENDS]->(c:Class) WHERE u.id IN {studentsId}" +
