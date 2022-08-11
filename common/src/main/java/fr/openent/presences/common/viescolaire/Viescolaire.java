@@ -67,13 +67,7 @@ public class Viescolaire {
                 .put("action", "periode.getSchoolYearPeriod")
                 .put("structureId", structure);
 
-        eb.request("viescolaire", action, MessageResponseHandler.messageJsonObjectHandler(event -> {
-            if (event.isLeft()) {
-                promise.fail(event.left().getValue());
-            } else {
-                promise.complete(event.right().getValue());
-            }
-        }));
+        eb.request("viescolaire", action, MessageResponseHandler.messageJsonObjectHandler(FutureHelper.handlerEitherPromise(promise)));
 
         return promise.future();
     }

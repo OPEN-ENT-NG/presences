@@ -2,9 +2,11 @@ package fr.openent.presences.service.impl;
 
 import fr.openent.presences.Presences;
 import fr.openent.presences.common.helper.FutureHelper;
+import fr.openent.presences.common.viescolaire.Viescolaire;
 import fr.openent.presences.core.constants.Field;
 import fr.openent.presences.db.DBService;
 import fr.openent.presences.service.AlertService;
+import fr.openent.presences.service.SettingsService;
 import fr.wseduc.webutils.Either;
 import io.vertx.core.CompositeFuture;
 import io.vertx.core.Future;
@@ -63,13 +65,13 @@ public class DefaultAlertService extends DBService implements AlertService {
         if (!studentTypeFilter.isEmpty()) query += studentTypeFilter + ") ";
 
         if (startDate != null && startTime != null) {
-            query += "AND created >= ?::date + ?::time ";
+            query += "AND date >= ?::date + ?::time ";
             params.add(startDate);
             params.add(startTime);
         }
 
         if (endDate != null && endTime != null) {
-            query += "AND created <= ?::date + ?::time ";
+            query += "AND date <= ?::date + ?::time ";
             params.add(endDate);
             params.add(endTime);
         }
@@ -80,21 +82,26 @@ public class DefaultAlertService extends DBService implements AlertService {
     @Override
     public Future<JsonObject> getSummary(String structureId) {
         Promise<JsonObject> promise = Promise.promise();
-
-        String query = "SELECT tc.type, count(*) AS count FROM (SELECT type, count(*) AS count FROM " +
-                Presences.dbSchema + ".alerts WHERE structure_id = ? GROUP BY student_id, type) as tc" +
-                " WHERE tc.count >= " + Presences.dbSchema + ".get_alert_thresholder(tc.type, ?) GROUP BY tc.type;";
-        JsonArray params = new JsonArray(Arrays.asList(structureId, structureId));
-        Sql.getInstance().prepared(query, params, SqlResult.validResultHandler(response -> {
-            if (response.isLeft()) {
-                promise.fail(response.left().getValue());
-            } else {
-                JsonArray values = response.right().getValue();
-                JsonObject summary = new JsonObject();
-                values.forEach(value -> summary.put(((JsonObject) value).getString(Field.TYPE), ((JsonObject) value).getLong(Field.COUNT)));
-                promise.complete(summary);
-            }
-        }));
+        Viescolaire.getInstance().getSchoolYear(structureId)
+                .compose(schoolYear -> {
+                    String query = "SELECT tc.type, count(*) AS count FROM (SELECT type, count(*) AS count FROM " +
+                            Presences.dbSchema + ".alerts WHERE structure_id = ? AND date >= ? GROUP BY student_id, type) as tc" +
+                            " WHERE tc.count >= " + Presences.dbSchema + ".get_alert_thresholder(tc.type, ?) GROUP BY tc.type;";
+                    JsonArray params = new JsonArray(Arrays.asList(structureId, schoolYear.getString("start_date"), structureId));
+                    Promise<JsonArray> promiseSql = Promise.promise();
+                    Sql.getInstance().prepared(query, params, SqlResult.validResultHandler(FutureHelper.handlerEitherPromise(promiseSql)));
+                    return promiseSql.future();
+                })
+                .onSuccess(values -> {
+                    JsonObject summary = new JsonObject();
+                    values.forEach(value -> summary.put(((JsonObject) value).getString(Field.TYPE), ((JsonObject) value).getLong(Field.COUNT)));
+                    promise.complete(summary);
+                })
+                .onFailure(error -> {
+                    String message = String.format("[Presences@DefaultAlertService::getSummary] Failed to get alert summary %s", error.getMessage());
+                    log.error(message);
+                    promise.fail(error.getMessage());
+                });
 
         return promise.future();
     }
@@ -116,13 +123,13 @@ public class DefaultAlertService extends DBService implements AlertService {
         }
 
         if (startDate != null && startTime != null) {
-            query += "AND created >= ?::date + ?::time ";
+            query += "AND date >= ?::date + ?::time ";
             params.add(startDate);
             params.add(startTime);
         }
 
         if (endDate != null && endTime != null) {
-            query += "AND created <= ?::date + ?::time ";
+            query += "AND date <= ?::date + ?::time ";
             params.add(endDate);
             params.add(endTime);
         }
@@ -160,7 +167,7 @@ public class DefaultAlertService extends DBService implements AlertService {
                     alerts.stream()
                             .map(JsonObject.class::cast)
                             .filter(alert -> studentMap.containsKey(alert.getString(Field.STUDENT_ID)))
-                            .forEach( alert -> {
+                            .forEach(alert -> {
                                 String studentId = alert.getString(Field.STUDENT_ID);
                                 alert.put(Field.NAME, studentMap.get(studentId).getString(Field.LASTNAME) + " " + studentMap.get(studentId).getString(Field.FIRSTNAME));
                                 alert.put(Field.LASTNAME, studentMap.get(studentId).getString(Field.LASTNAME));
