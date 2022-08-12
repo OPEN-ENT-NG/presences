@@ -84,7 +84,7 @@ public class AlertController extends ControllerHelper {
     @ApiDoc("Get given structure")
     public void getStudentsAlerts(HttpServerRequest request) {
         List<String> types = request.params().getAll(Field.TYPE);
-        List<String> students = request.params().getAll(Field.STUDENT_ID);
+        List<String> students = request.params().getAll(Field.STUDENT);
         List<String> classes = request.params().getAll(Field.CLASS);
         String startAt = request.params().get(Field.START_AT);
         String endAt = request.params().get(Field.END_AT);

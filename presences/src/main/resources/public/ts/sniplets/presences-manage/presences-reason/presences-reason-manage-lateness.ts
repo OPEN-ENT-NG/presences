@@ -108,7 +108,9 @@ export class LatenessReasonSniplet implements ReasonSnipletModel {
         this.formEdit.hidden = reasonCopy.hidden;
         this.formEdit.proving = reasonCopy.proving;
         this.formEdit.label = reasonCopy.label;
-        this.formEdit.excludeAlertRegularised = (<any>reasonCopy.reason_alert_rules).includes(ALERT_RULE.LATENESS);
+        this.formEdit.excludeAlertLateness = (<any>reasonCopy.reason_alert_rules).includes(ALERT_RULE.LATENESS);
+        this.formEdit.excludeAlertRegularised = false;
+        this.formEdit.excludeAlertNoRegularised = false;
         this.formEdit.structureId = reasonCopy.structure_id;
     }
 
