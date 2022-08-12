@@ -225,11 +225,11 @@ class Controller implements ng.IController, ViewModel {
     }
 
     someSelectedAlert(): boolean {
-        return this.listAlert && this.listAlert.filter(alert => alert.selected).length > 0;
+        return this.listAlert && this.listAlert.filter((alert:StudentAlert) => alert.selected).length > 0;
     }
 
     selectAll(): void {
-        this.listAlert.forEach(alert => alert.selected = this.selection.all);
+        this.listAlert.forEach((alert:StudentAlert) => alert.selected = this.selection.all);
         window.alerts_item = this.listAlert;
     }
 
@@ -245,7 +245,7 @@ class Controller implements ng.IController, ViewModel {
             const body: DeleteAlertRequest = {
                 start_at: start_at,
                 end_at: end_at,
-                deleted_alert: this.listAlert
+                deleted_alert: this.listAlert.filter((alert:StudentAlert) => alert.selected)
             }
             await alertService.reset(window.structure.id, body);
             await this.getStudentAlert();

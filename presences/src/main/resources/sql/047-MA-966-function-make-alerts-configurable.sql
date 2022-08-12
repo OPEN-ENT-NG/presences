@@ -57,8 +57,8 @@ DROP FUNCTION presences.get_id_absence_event_siblings_in_same_day(presences.even
 -- startTime        Siblings must be after start time
 -- endTime          Siblings must be before end time
 -- structureId      Structure id of the absenceEvent
--- needAlert        If true, the siblings must be have an associated alert. If false, the siblings must be have no associated alert.
-CREATE OR REPLACE FUNCTION presences.get_id_absence_event_siblings_in_same_day(absenceEvent presences.event, startTime time, endTime time, structureId varchar, needAlert boolean) RETURNS presences.event AS
+-- hasAlert        If true, the siblings must be have an associated alert. If false, the siblings must be have no associated alert.
+CREATE OR REPLACE FUNCTION presences.get_id_absence_event_siblings_in_same_day(absenceEvent presences.event, startTime time, endTime time, structureId varchar, hasAlert boolean) RETURNS presences.event AS
 $BODY$
 DECLARE
     eventResult presences.event;
@@ -74,16 +74,8 @@ BEGIN
       AND event.start_date::time <= endTime
       AND event.student_id = absenceEvent.student_id
       AND type_id = 1
-      -- Check if event is exclude
-      AND ((event.reason_id IS NULL AND NOT noReasonAbsenceExclude) OR
-          (event.reason_id IS NOT NULL AND NOT exists(
-               SELECT * FROM presences.reason_alert as r WHERE r.structure_id = structureId
-                                                       AND r.reason_id = event.reason_id
-                                                       AND deleted_at IS NULL
-                                                       AND ((event.counsellor_regularisation AND r.reason_alert_exclude_rules_type_id = 1) OR (event.counsellor_regularisation AND r.reason_alert_exclude_rules_type_id = 2))
-               )))
       AND event.id != absenceEvent.id
-      AND ((needAlert AND a.event_id IS NOT NULL) OR (NOT needAlert AND a.event_id IS NULL))
+      AND ((hasAlert AND a.event_id IS NOT NULL) OR (NOT hasAlert AND a.event_id IS NULL))
     LIMIT 1 -- Only take one
     INTO eventResult;
     RETURN eventResult;
@@ -96,8 +88,8 @@ DROP FUNCTION presences.get_id_absence_event_siblings(presences.event,character 
 -- If no event is found then we return null.
 -- absenceEvent     The event with absence type of which we must find the siblings
 -- structureId      The structure of the event
--- needAlert        If true, the siblings must be have an associated alert. If false, the siblings must be have no associated alert.
-CREATE FUNCTION presences.get_id_absence_event_siblings(event presences.event, structureId varchar, needAlert boolean) RETURNS presences.event AS
+-- hasAlert        If true, the siblings must be have an associated alert. If false, the siblings must be have no associated alert.
+CREATE or replace FUNCTION presences.get_id_absence_event_siblings(event presences.event, structureId varchar, hasAlert boolean) RETURNS presences.event AS
 $BODY$
 DECLARE
     recoveryMethod character varying;
@@ -110,13 +102,13 @@ BEGIN
             -- First retrieve half day hour
             SELECT time_slots.end_of_half_day FROM viesco.time_slots WHERE id_structure = structureId INTO endOfHalfDay;
             if event.start_date::time < endOfHalfDay THEN -- If we are in morning
-                SELECT * FROM presences.get_id_absence_event_siblings_in_same_day(event, '00:00:00'::time, endOfHalfDay, structureId, needAlert) INTO otherAbsence;
+                SELECT * FROM presences.get_id_absence_event_siblings_in_same_day(event, '00:00:00'::time, endOfHalfDay, structureId, hasAlert) INTO otherAbsence;
             ELSE -- If we are afternoon
-                SELECT * FROM presences.get_id_absence_event_siblings_in_same_day(event, endOfHalfDay,'23:59:59'::time, structureId, needAlert) INTO otherAbsence;
+                SELECT * FROM presences.get_id_absence_event_siblings_in_same_day(event, endOfHalfDay,'23:59:59'::time, structureId, hasAlert) INTO otherAbsence;
             END IF;
         WHEN 'DAY' THEN
             -- Check if student already have absence for the day based on provided structure identifier
-            SELECT * FROM presences.get_id_absence_event_siblings_in_same_day(event, '00:00:00'::time, '23:59:59'::time, structureId, needAlert) INTO otherAbsence;
+            SELECT * FROM presences.get_id_absence_event_siblings_in_same_day(event, '00:00:00'::time, '23:59:59'::time, structureId, hasAlert) INTO otherAbsence;
         -- 'HOUR' is a classic case. No other absence can be on the same date.
         ELSE
         END CASE;

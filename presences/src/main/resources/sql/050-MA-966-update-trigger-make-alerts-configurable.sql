@@ -14,11 +14,12 @@ BEGIN
     SELECT presences.absence_exclude_alert(NEW, register.structure_id) INTO isNewEventExclude;
     -- Check if the old data have alert
     SELECT event_id FROM presences.alerts WHERE event_id = OLD.id AND type = 'ABSENCE' AND student_id = OLD.student_id AND structure_id = register.structure_id INTO oldAlertID;
-
     IF oldAlertID IS NOT NULL AND isNewEventExclude THEN -- If we have previously a alert and now the event is exclude we must delete alert
         SELECT * FROM presences.get_id_absence_event_siblings(OLD, register.structure_id, false) INTO eventToReplace;
         EXECUTE presences.delete_alert(OLD.id, 'ABSENCE', OLD.student_id, register.structure_id);
-        IF eventToReplace.id IS NOT NULL THEN -- If we have a no other absence in the same time with no alert, we need to create a alert for other absence
+        -- The 2 events are necessarily on the same structure, no need to recalculate the register
+        -- If we have a no other absence in the same time with no alert, we need to create a alert for other absence
+        IF eventToReplace.id IS NOT NULL AND NOT presences.absence_exclude_alert(eventToReplace, register.structure_id) THEN
             SELECT * FROM presences.register WHERE id = eventToReplace.register_id LIMIT 1 INTO register;
             EXECUTE presences.create_alert(eventToReplace.id, 'ABSENCE', NEW.student_id, register.structure_id, register.start_date);
         END IF;
