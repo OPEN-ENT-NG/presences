@@ -209,15 +209,31 @@ do $$
         assert countAlert = 3, 'create alert when recoveryMethod HALF_DAY and not same time assert 3 != ' || countAlert;
 
         -- Test absence event recoveryMethod DAY
+        TRUNCATE TABLE presences.alerts;
         UPDATE presences.settings SET event_recovery_method = 'DAY' WHERE structure_id = structureId;
         INSERT INTO presences.event(id, start_date, end_date, student_id, register_id, type_id, reason_id, owner, counsellor_regularisation)
         VALUES (9495, now()::date + '10:00:00'::time, now()::date + '10:55:00'::time, studentId1, 9398, 1, NULL, '', false);
         SELECT count(*) FROM presences.alerts INTO countAlert;
-        assert countAlert = 4, 'create alert when recoveryMethod DAY and not same day assert 4 != ' || countAlert;
+        assert countAlert = 1, 'create alert when recoveryMethod DAY and not same day assert 1 != ' || countAlert;
+
         INSERT INTO presences.event(id, start_date, end_date, student_id, register_id, type_id, reason_id, owner, counsellor_regularisation)
         VALUES (9494, now()::date + '16:00:00'::time, now()::date + '16:55:00'::time, studentId1, 9398, 1, NULL, '', false);
         SELECT count(*) FROM presences.alerts INTO countAlert;
-        assert countAlert = 4, 'do not create alert when recoveryMethod DAY and same day assert 4 != ' || countAlert;
+        assert countAlert = 1, 'do not create alert when recoveryMethod DAY and same day assert 1 != ' || countAlert;
+        SELECT count(*) FROM presences.alerts WHERE event_id = 9495 INTO countAlert;
+        assert countAlert = 1, 'alert is link to the first event != ' || countAlert;
+
+        UPDATE presences.event SET reason_id = 9998 WHERE id = 9495;
+        SELECT count(*) FROM presences.alerts INTO countAlert;
+        assert countAlert = 1, 'do not create alert when alert on same date assert 1 != ' || countAlert;
+        SELECT count(*) FROM presences.alerts WHERE event_id = 9494 INTO countAlert;
+        assert countAlert = 1, 'alert is link to the second event because first is exclude assert 1 != ' || countAlert;
+        UPDATE presences.event SET reason_id = 9998 WHERE id = 9494;
+        SELECT count(*) FROM presences.alerts INTO countAlert;
+        assert countAlert = 0, 'no alert because event is exclude assert 3 != ' || countAlert;
+        SELECT count(*) FROM presences.alerts WHERE event_id = 9496 OR event_id = 9495 INTO countAlert;
+        assert countAlert = 0, 'no alert because event is exclude assert 0 != ' || countAlert;
+
         DELETE FROM presences.event WHERE id IN (9499, 9498, 9497, 9496, 9495, 9494, 9493, 9492, 9491, 9490);
         TRUNCATE TABLE presences.alerts;
 
