@@ -26,7 +26,9 @@ BEGIN
 
             SELECT * FROM presences.get_id_absence_event_siblings(OLD, register.structure_id, false) INTO eventNeedAlert;
             EXECUTE presences.delete_alert(OLD.id, 'ABSENCE', OLD.student_id, register.structure_id);
-            IF eventNeedAlert.id IS NOT NULL THEN -- If we have other absence in the same time with no alert, we need a alert for this absence
+            -- If we have other absence in the same time with no alert, we need a alert for this absence
+            -- The 2 events are necessarily on the same structure, no need to recalculate the register
+            IF eventNeedAlert.id IS NOT NULL AND NOT presences.absence_exclude_alert(eventNeedAlert, register.structure_id) THEN
                 SELECT * FROM presences.register WHERE id = eventNeedAlert.register_id LIMIT 1 INTO register;
                 EXECUTE presences.create_alert(eventNeedAlert.id, 'ABSENCE', OLD.student_id, register.structure_id, register.start_date);
             END IF;

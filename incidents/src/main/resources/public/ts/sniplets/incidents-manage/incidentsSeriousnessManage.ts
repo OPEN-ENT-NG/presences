@@ -99,7 +99,7 @@ export class IncidentsSeriousnessManage implements ViewModel {
     }
 
     getSeriousnessAlertColor(seriousness: Seriousness): string {
-        return seriousness.exclude_alert_seriousness ? null : "#d68227";
+        return seriousness.exclude_alert_seriousness ? null : "#ffb600";
     }
 }
 

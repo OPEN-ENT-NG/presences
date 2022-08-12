@@ -110,6 +110,7 @@ export class AbsenceReasonSniplet implements ReasonSnipletModel {
         this.formEdit.label = reasonCopy.label;
         this.formEdit.excludeAlertRegularised = (<any>reasonCopy.reason_alert_rules).includes(ALERT_RULE.REGULARIZED);
         this.formEdit.excludeAlertNoRegularised = (<any>reasonCopy.reason_alert_rules).includes(ALERT_RULE.UNREGULARIZED);
+        this.formEdit.excludeAlertLateness = false;
         this.formEdit.structureId = reasonCopy.structure_id;
     }
 
