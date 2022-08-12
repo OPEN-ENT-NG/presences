@@ -87,6 +87,7 @@ const vm: ViewModel = {
                 vm.header = 'incident.seriousness.form.input.edit';
                 vm.description = 'incident.seriousness.form.input.edit.warning';
                 (<SeriousnessRequest>vm.form).level = args.level;
+                (<SeriousnessRequest>vm.form).excludeAlertSeriousness = args.exclude_alert_seriousness;
                 vm.seriousnessMode = true;
                 break;
             case INCIDENTS_PUNISHMENT_TYPE_EVENT.TRANSMIT:
