@@ -76,6 +76,11 @@ public class EventController extends ControllerHelper {
             badRequest(request);
             return;
         }
+        if (true) {
+
+        } else {
+            
+        }
         String structureId = request.getParam(Field.STRUCTUREID);
         String startDate = request.getParam(Field.STARTDATE);
         String endDate = request.getParam(Field.ENDDATE);
