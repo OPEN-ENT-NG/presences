@@ -8,8 +8,9 @@ var args = require('yargs').argv;
 
 var apps = ['presences', 'incidents', 'massmailing', 'statistics-presences'];
 
-if (args.module) {
-    apps = [args.module];
+if (args.targetModule) {
+    console.log("using arg:", args.targetModule);
+    apps = [args.targetModule];
 }
 
 gulp.task('drop-cache', function () {
