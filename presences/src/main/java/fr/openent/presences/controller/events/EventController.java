@@ -79,7 +79,7 @@ public class EventController extends ControllerHelper {
         if (true) {
 
         } else {
-            
+
         }
         String structureId = request.getParam(Field.STRUCTUREID);
         String startDate = request.getParam(Field.STARTDATE);
