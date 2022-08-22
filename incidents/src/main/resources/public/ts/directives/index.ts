@@ -7,3 +7,4 @@ export * from '@common/directives/timepicker';
 export * from '@common/directives/toasts';
 export * from '@common/directives/student-name';
 export * from './punishment-form/index';
+export * from '@common/directives/export-form';

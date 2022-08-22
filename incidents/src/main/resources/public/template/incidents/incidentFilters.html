@@ -63,12 +63,14 @@
                 <date-picker ng-change="vm.updateDate();" ng-model="vm.filter.endDate"></date-picker>
             </span>
         </div>
-
         <div class="four cell">
-            <sniplet application="incidents" template="incident-form"></sniplet>
-            <button class="right-magnet" data-ng-click="vm.exportCsv()">
-                <i18n>incidents.export.tocsv</i18n>
-            </button>
+            <!-- export csv/pdf -->
+            <export-form display-pdf="false"
+                         display-csv="true"
+                         is-disabled="vm.incidents.all.length === 0"
+                         on-submit="vm.exportCsv"
+                         lightbox-preference="'INCIDENTS_EXPORT_INCIDENTS_DISPLAY_POPUP'">
+            </export-form>
         </div>
     </div>
 </div>

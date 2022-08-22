@@ -13,14 +13,14 @@
         </span>
     </div>
 
-    <!-- export csv/pdf -->
-    <div class="four cell top5">
-        <button ng-disabled="vm.events.all.length == 0" class="right-magnet" data-ng-click="vm.export(vm.exportType.PDF)">
-            <i18n>presences.export.topdf</i18n>
-        </button>
-        <button ng-disabled="vm.events.all.length == 0" class="right-magnet" data-ng-click="vm.export(vm.exportType.CSV)">
-            <i18n>presences.export.tocsv</i18n>
-        </button>
+    <div class="cell four top5">
+        <!-- export csv/pdf -->
+        <export-form display-pdf="true"
+                     display-csv="true"
+                     is-disabled="vm.events.all.length == 0"
+                     on-submit="vm.export"
+                     lightbox-preference="'PRESENCE_EXPORT_EVENTS_DISPLAY_POPUP'">
+        </export-form>
     </div>
 </div>
 

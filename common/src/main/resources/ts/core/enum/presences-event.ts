@@ -36,7 +36,7 @@ export enum LATENESS_FORM_EVENTS {
 }
 
 export enum EVENTS_FORM {
-    SUBMIT = 'events-form:submit',
+    SUBMIT = 'events-form:submit'
 }
 
 export enum EVENTS_SEARCH {

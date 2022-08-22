@@ -54,7 +54,7 @@ export class PresencesPreferenceUtils extends PreferencesUtils {
      * @param filter    EventListCalendarFilter, containing dates and students
      */
     static async updatePresencesEventListCalendarFilter(filter: EventListCalendarFilter): Promise<void> {
-        const key: string = this.PREFERENCE_KEYS.PRESENCE_EVENT_LIST_CALENDAR_FILTER
+        const key: string = this.PREFERENCE_KEYS.PRESENCE_EVENT_LIST_CALENDAR_FILTER;
         Me.preferences[key] = filter;
         await Me.savePreference(key);
     }

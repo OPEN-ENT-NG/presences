@@ -1,6 +1,6 @@
 import {_, angular, moment, ng, notify} from 'entcore';
 import {Incident, Incidents, ISchoolYearPeriod, Student, Students} from "../models";
-import {Group, GroupService, groupService, IncidentService, SearchService} from "../services";
+import {Group, GroupService, IncidentService, SearchService} from "../services";
 import {Toast} from "@common/utils/toast";
 import {Scope} from "./main";
 import {INCIDENTS_FORM_EVENTS} from '../sniplets';
@@ -279,5 +279,5 @@ export const incidentsController = ng.controller('IncidentsController',
     /* Destroy directive and scope */
     $scope.$on('$destroy', function () {
         angular.element(document.querySelectorAll(".datepicker")).remove();
-    })
+    });
 }]);

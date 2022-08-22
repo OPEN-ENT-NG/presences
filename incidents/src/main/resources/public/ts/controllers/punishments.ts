@@ -15,7 +15,7 @@ import {
     GroupService,
     IPunishmentService,
     IPunishmentsTypeService,
-    IViescolaireService, PunishmentsCategoryService,
+    IViescolaireService,
     SearchService
 } from "@incidents/services";
 import {SNIPLET_FORM_EMIT_PUNISHMENT_EVENTS} from "@common/model";

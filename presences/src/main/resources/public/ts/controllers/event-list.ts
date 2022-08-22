@@ -1,4 +1,4 @@
-import {_, angular, idiom as lang, Me, model, moment, ng} from 'entcore';
+import {_, angular, idiom as lang, Me, model, moment, ng, toasts} from 'entcore';
 import {
     Action,
     ActionBody,
@@ -177,7 +177,7 @@ interface ViewModel {
 
     /* Export*/
     exportType: typeof EXPORT_TYPE;
-    export(exportType: ExportType): void;
+    export(exportType: ExportType): Promise<void>;
 
     createEventRequest(page: any): EventRequest
 }
@@ -187,6 +187,7 @@ export const eventListController = ng.controller('EventListController', ['$scope
     function ($scope, $route, $location, $timeout, GroupService: GroupService,
               ReasonService: ReasonService, eventService: EventService) {
         const vm: ViewModel = this;
+        const MAX_EXPORTED_EVENTS: number = 1000;
         vm.reasonType = REASON_TYPE_ID;
         vm.filter = {
             startDate: DateUtils.add(new Date(), -7, 'd'),
@@ -826,7 +827,7 @@ export const eventListController = ng.controller('EventListController', ['$scope
                 });
         };
 
-        vm.export = (exportType: ExportType): void => {
+        vm.export = async (exportType: ExportType): Promise<void> => {
             const filter: EventRequest = {
                 structureId: vm.events.structureId,
                 startDate: vm.events.startDate,
@@ -843,7 +844,15 @@ export const eventListController = ng.controller('EventListController', ['$scope
                 userId: vm.events.userId,
                 classes: vm.events.classes,
             };
-            window.open(eventService.export(filter, exportType));
+
+            eventService.countEvents(filter).then(async (res: { count: number }) => {
+                if (res.count > MAX_EXPORTED_EVENTS) {
+                    await eventService.export(filter, exportType);
+                    toasts.confirm(lang.translate('presences.export.confirm'));
+                } else {
+                    window.open(eventService.getExportRequest(filter, exportType));
+                }
+            });
         };
 
         vm.getAbsenceReasons = (reasonArray: Array<Reason>): Array<Reason> => {
