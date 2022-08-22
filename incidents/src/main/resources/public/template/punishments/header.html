@@ -66,10 +66,15 @@
     <!-- Button menu -->
     <div class="four cell">
         <sniplet template="punishment-form" application="incidents"></sniplet>
-        <!-- export csv button -->
-        <button class="right-magnet" data-ng-click="vm.exportCsv()">
-            <i18n>presences.export.tocsv</i18n>
-        </button>
+
+        <!-- export csv/pdf -->
+        <export-form display-pdf="false"
+                     display-csv="true"
+                     is-disabled="vm.punishments.punishmentResponse.all.length == 0"
+                     on-submit="vm.exportCsv"
+                     lightbox-preference="'INCIDENTS_EXPORT_PUNISHMENTS_DISPLAY_POPUP'">
+        </export-form>
+
     </div>
 </div>
 

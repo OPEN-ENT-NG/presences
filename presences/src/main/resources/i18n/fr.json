@@ -172,7 +172,6 @@
   "presences.error.get.alert": "Une erreur est survenue lors de la récupération des alertes",
   "presences.error.reset.alert": "Une erreur est survenue lors de la réinitialisation des alertes",
   "presences.events.title": "Evénements",
-  "presences.events.csv.filename": "export_événements.csv",
   "presences.events.form.title": "Informations sur l'événement",
   "presences.event.calendar.title": "Saisir un événement",
   "presences.event.calendar.title.edit": "Modifier un événement",
@@ -588,5 +587,16 @@
   "presences.init.error": "Une erreur est survenue lors de l'initialisation de l'établissement",
   "presences.init.success": "Initialisation réussie",
   "presences.wednesday": "Mercredi",
-  "presences.year": "Année"
+  "presences.year": "Année",
+  "presences.export": "Export",
+  "presences.export.lightbox.warning.1": "Attention, désormais afin de vous permettre d'accéder à des exports de grands fichiers (> 1000 lignes), ",
+  "presences.export.lightbox.warning.2": "le fichier CSV ou PDF sera disponible dans votre ",
+  "presences.export.lightbox.warning.3": "espace documentaire",
+  "presences.export.lightbox.warning.4": "après traitement.",
+  "presences.export.lightbox.warning.5": "Une notification vous sera envoyée quand le fichier sera disponible.",
+  "presences.export.lightbox.warning.6": "Dans le cas d'un petit export (<1000 lignes),",
+  "presences.export.lightbox.warning.7": "le fichier sera directement téléchargeable après validation,",
+  "presences.export.lightbox.warning.8": "une copie sera tout de même à disposition dans l'espace documentaire.",
+  "presences.export.confirm": "Export en cours de génération, vous pourrez bientôt le retrouver dans votre espace documentaire.",
+  "presences.do.not.show.this.message.again": "Ne plus afficher ce message"
 }
