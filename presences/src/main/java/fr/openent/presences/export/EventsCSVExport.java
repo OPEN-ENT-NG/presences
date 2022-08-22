@@ -5,7 +5,7 @@ import fr.openent.presences.common.helper.DateHelper;
 import fr.openent.presences.model.Event.Event;
 import fr.wseduc.webutils.I18n;
 
-import java.util.List;
+import java.util.*;
 
 public class EventsCSVExport extends CSVExport {
 
@@ -18,7 +18,8 @@ public class EventsCSVExport extends CSVExport {
         this.events = events;
         this.domain = domain;
         this.locale = locale;
-        this.filename = "presences.events.csv.filename";
+        String date = DateHelper.getDateString(new Date(), DateHelper.MONGO_FORMAT);
+        this.filename = String.format("%s - %s.csv", "export_événements", date);
     }
 
     @Override

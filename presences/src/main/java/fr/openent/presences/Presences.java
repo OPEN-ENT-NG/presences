@@ -1,5 +1,6 @@
 package fr.openent.presences;
 
+import fr.openent.presences.common.export.*;
 import fr.openent.presences.common.incidents.Incidents;
 import fr.openent.presences.common.massmailing.Massmailing;
 import fr.openent.presences.common.statistics_presences.StatisticsPresences;
@@ -11,9 +12,7 @@ import fr.openent.presences.cron.CreateDailyRegistersTask;
 import fr.openent.presences.db.DB;
 import fr.openent.presences.event.PresencesRepositoryEvents;
 import fr.openent.presences.service.CommonPresencesServiceFactory;
-import fr.openent.presences.worker.CreateDailyPresenceWorker;
-import fr.openent.presences.worker.EventExportWorker;
-import fr.openent.presences.worker.ResetAlertsWorker;
+import fr.openent.presences.worker.*;
 import fr.wseduc.cron.CronTrigger;
 import fr.wseduc.mongodb.MongoDb;
 import io.vertx.core.DeploymentOptions;
@@ -91,8 +90,9 @@ public class Presences extends BaseServer {
         ebViescoAddress = "viescolaire";
         final EventBus eb = getEventBus(vertx);
         Storage storage = new StorageFactory(vertx, config).getStorage();
+        ExportData exportData = new ExportData(vertx);
         DB.getInstance().init(Neo4j.getInstance(), Sql.getInstance(), MongoDb.getInstance());
-        CommonPresencesServiceFactory commonPresencesServiceFactory = new CommonPresencesServiceFactory(vertx, storage, config);
+        CommonPresencesServiceFactory commonPresencesServiceFactory = new CommonPresencesServiceFactory(vertx, storage, config, exportData);
 
 //        final String exportCron = config.getString("export-cron");
 
@@ -146,6 +146,8 @@ public class Presences extends BaseServer {
         // worker to be triggered manually (API will call its worker to send csv's export via email)
         vertx.deployVerticle(EventExportWorker.class, new DeploymentOptions().setConfig(config).setWorker(true));
         vertx.deployVerticle(ResetAlertsWorker.class, new DeploymentOptions().setConfig(config).setWorker(true));
+
+        vertx.deployVerticle(PresencesExportWorker.class, new DeploymentOptions().setConfig(config).setWorker(true));
     }
 
     public static void launchResetAlertsWorker(EventBus eb, JsonObject params) {

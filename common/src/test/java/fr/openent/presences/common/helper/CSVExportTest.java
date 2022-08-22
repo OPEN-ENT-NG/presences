@@ -1,12 +1,13 @@
 package fr.openent.presences.common.helper;
 
+import fr.openent.presences.model.*;
 import org.junit.Test;
 import org.junit.jupiter.api.DisplayName;
 
 import java.util.Arrays;
 import java.util.List;
 
-import static junit.framework.TestCase.assertEquals;
+import static junit.framework.TestCase.*;
 
 public class CSVExportTest {
     CSVExport ce = new CSVExport() {
@@ -40,5 +41,15 @@ public class CSVExportTest {
         List<String> csvHeaders = Arrays.asList("this", "is", "a", "header");
         ce.setHeader(csvHeaders);
         assertEquals(ce.header, "this;is;a;header;\n");
+    }
+
+    @Test
+    @DisplayName("Get export file should return a file")
+    public void getExportFile_should_return_a_file() {
+        ce.setFilename("test.csv");
+        ExportFile exportFile = ce.getExportFile("domain", "fr");
+        assertEquals(exportFile.getContentType(), "text/csv; charset=utf-8");
+        assertEquals(exportFile.getFilename(), "test.csv");
+        assertNotNull(exportFile.getBuffer());
     }
 }

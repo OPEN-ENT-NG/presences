@@ -3,35 +3,34 @@ package fr.openent.incidents.export;
 import fr.openent.presences.common.helper.CSVExport;
 import fr.openent.presences.common.helper.DateHelper;
 import fr.wseduc.webutils.I18n;
-import fr.wseduc.webutils.http.Renders;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
-
-import java.text.ParseException;
+import java.util.*;
 
 public class IncidentsCSVExport extends CSVExport {
-    private JsonArray incidents;
-    private String NAMES_SEPARATOR = "-";
+    private final JsonArray incidents;
+    private final String locale;
+    private final String domain;
+    private static final String NAMES_SEPARATOR = "-";
 
-    public IncidentsCSVExport(JsonArray incidents) {
+    public IncidentsCSVExport(JsonArray incidents, String domain, String locale) {
         super();
         this.incidents = incidents;
-        this.filename = "incidents.csv.filename";
+        this.domain = domain;
+        this.locale = locale;
+        String date = DateHelper.getDateString(new Date(), DateHelper.MONGO_FORMAT);
+        this.filename = String.format("%s - %s.csv", "export_incidents", date);
     }
 
     @Override
     public void generate() {
         for (int i = 0; i < this.incidents.size(); i++) {
-            try {
-                JsonObject incident = this.incidents.getJsonObject(i);
-                this.value.append(getLine(incident));
-            } catch (ParseException e) {
-                LOGGER.error("[Incidents@IncidentsCSVExport] Failed to parse line. Skipped", e);
-            }
+            JsonObject incident = this.incidents.getJsonObject(i);
+            this.value.append(getLine(incident));
         }
     }
 
-    private String getLine(JsonObject incident) throws ParseException {
+    private String getLine(JsonObject incident) {
         String line = DateHelper.getDateString(incident.getString("date"), "dd/MM/YYYY kk'h'mm") + SEPARATOR;
         line += incident.getJsonObject("place").getString("label") + SEPARATOR;
         line += incident.getJsonObject("incident_type").getString("label") + SEPARATOR;
@@ -46,10 +45,10 @@ public class IncidentsCSVExport extends CSVExport {
     private String getProcessed(boolean processed) {
         if (processed) {
             return I18n.getInstance().translate("incidents.csv.header.processed.done",
-                    Renders.getHost(this.request), I18n.acceptLanguage(this.request));
+                    this.domain, this.locale);
         } else {
             return I18n.getInstance().translate("incidents.csv.header.processed.undone",
-                    Renders.getHost(this.request), I18n.acceptLanguage(this.request));
+                    this.domain, this.locale);
         }
     }
 

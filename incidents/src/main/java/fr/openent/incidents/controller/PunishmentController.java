@@ -1,15 +1,22 @@
 package fr.openent.incidents.controller;
 
 import fr.openent.incidents.constants.Actions;
+import fr.openent.incidents.enums.*;
 import fr.openent.incidents.export.PunishmentsCSVExport;
 import fr.openent.incidents.security.punishment.PunishmentsManageRight;
 import fr.openent.incidents.security.punishment.PunishmentsViewRight;
-import fr.openent.incidents.service.PunishmentService;
+import fr.openent.incidents.service.*;
 import fr.openent.incidents.service.impl.DefaultPunishmentService;
-import fr.openent.presences.core.constants.Field;
+import fr.openent.incidents.worker.*;
+import fr.openent.presences.common.export.*;
+import fr.openent.presences.common.helper.*;
+import fr.openent.presences.core.constants.*;
+import fr.openent.presences.enums.*;
 import fr.wseduc.rs.*;
 import fr.wseduc.security.ActionType;
 import fr.wseduc.security.SecuredAction;
+import fr.wseduc.webutils.*;
+import fr.wseduc.webutils.http.*;
 import fr.wseduc.webutils.request.RequestUtils;
 import io.vertx.core.http.HttpServerRequest;
 import io.vertx.core.json.JsonArray;
@@ -26,10 +33,12 @@ import java.util.List;
 public class PunishmentController extends ControllerHelper {
 
     private final PunishmentService punishmentService;
+    private final ExportData exportData;
 
-    public PunishmentController() {
+    public PunishmentController(CommonIncidentsServiceFactory serviceFactory) {
         super();
-        punishmentService = new DefaultPunishmentService(eb);
+        this.punishmentService = serviceFactory.punishmentService();
+        this.exportData = serviceFactory.exportData();
     }
 
     @Get("/punishments")
@@ -139,11 +148,32 @@ public class PunishmentController extends ControllerHelper {
     @ResourceFilter(PunishmentsViewRight.class)
     @ApiDoc("Export punishments")
     public void exportPunishments(HttpServerRequest request) {
-        if (!request.params().contains("structure_id")) {
+        if (!request.params().contains(Field.STRUCTURE_ID)) {
             badRequest(request);
             return;
         }
         UserUtils.getUserInfos(eb, request, user -> {
+
+            String domain = Renders.getHost(request);
+            String locale = I18n.acceptLanguage(request);
+
+            JsonObject params = new JsonObject()
+                    .put(Field.STRUCTURE_ID, request.params().get(Field.STRUCTURE_ID))
+                    .put(Field.START_AT, request.params().get(Field.START_AT))
+                    .put(Field.END_AT, request.params().get(Field.END_AT))
+                    .put(Field.STUDENT_ID, request.params().getAll(Field.STUDENT_ID))
+                    .put(Field.GROUP_ID, request.params().getAll(Field.GROUP_ID))
+                    .put(Field.TYPE_ID, request.params().getAll(Field.TYPE_ID))
+                    .put(Field.PROCESS, request.params().getAll(Field.PROCESS))
+                    .put(Field.ORDER, request.params().get(Field.ORDER))
+                    .put(Field.REVERSE, request.params().get(Field.REVERSE))
+                    .put(Field.USER, UserInfosHelper.toJSON(user))
+                    .put(Field.LOCALE, locale)
+                    .put(Field.DOMAIN, domain);
+
+            exportData.export(IncidentsExportWorker.class.getName(), ExportActions.EXPORT_PUNISHMENTS,
+                    ExportType.CSV.type(), params);
+
             punishmentService.get(user, request.params(), false, result -> {
                 if (result.failed()) {
                     log.error("[PunishmentsController@exportPunishments] Failed to export Punishments" + result.cause().getMessage());
@@ -164,7 +194,7 @@ public class PunishmentController extends ControllerHelper {
                         "incidents.punishments.csv.header.description",
                         "incidents.punishments.csv.header.owner",
                         "incidents.punishments.csv.header.processed"));
-                PunishmentsCSVExport pce = new PunishmentsCSVExport(punishments);
+                PunishmentsCSVExport pce = new PunishmentsCSVExport(punishments, domain, locale);
                 pce.setRequest(request);
                 pce.setHeader(csvHeaders);
                 pce.export();

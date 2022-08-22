@@ -1,19 +1,19 @@
 package fr.openent.presences.controller.events;
 
 import fr.openent.presences.Presences;
+import fr.openent.presences.common.export.*;
 import fr.openent.presences.common.helper.*;
 import fr.openent.presences.common.service.*;
 import fr.openent.presences.constants.Actions;
-import fr.openent.presences.core.constants.Field;
+import fr.openent.presences.core.constants.*;
 import fr.openent.presences.enums.*;
-import fr.openent.presences.export.EventsCSVExport;
-import fr.openent.presences.model.Event.Event;
 import fr.openent.presences.security.ActionRight;
 import fr.openent.presences.security.CreateEventRight;
 import fr.openent.presences.security.Event.EventReadRight;
 import fr.openent.presences.service.CommonPresencesServiceFactory;
 import fr.openent.presences.service.EventService;
 import fr.openent.presences.service.ExportEventService;
+import fr.openent.presences.worker.*;
 import fr.wseduc.rs.*;
 import fr.wseduc.security.ActionType;
 import fr.wseduc.security.SecuredAction;
@@ -21,9 +21,6 @@ import fr.wseduc.webutils.Either;
 import fr.wseduc.webutils.I18n;
 import fr.wseduc.webutils.http.Renders;
 import fr.wseduc.webutils.request.RequestUtils;
-import fr.wseduc.webutils.template.TemplateProcessor;
-import fr.wseduc.webutils.template.lambdas.I18nLambda;
-import fr.wseduc.webutils.template.lambdas.LocaleDateLambda;
 import io.vertx.core.*;
 import io.vertx.core.http.HttpServerRequest;
 import io.vertx.core.json.JsonArray;
@@ -34,7 +31,6 @@ import org.entcore.common.http.filter.Trace;
 import org.entcore.common.http.response.DefaultResponseHandler;
 import org.entcore.common.neo4j.Neo4j;
 import org.entcore.common.neo4j.Neo4jResult;
-import org.entcore.common.pdf.Pdf;
 import org.entcore.common.user.UserUtils;
 
 import java.util.ArrayList;
@@ -48,15 +44,16 @@ public class EventController extends ControllerHelper {
 
     private final EventService eventService;
     private final ExportEventService exportEventService;
-    private final ExportPDFService exportPDFService;
     private final GroupService groupService;
+    private final ExportData exportData;
+    private static final int MAX_EXPORTED_EVENTS = 1000;
 
     public EventController(CommonPresencesServiceFactory commonPresencesServiceFactory) {
         super();
         this.eventService = commonPresencesServiceFactory.eventService();
-        this.exportPDFService = commonPresencesServiceFactory.exportPDFService();
         this.exportEventService = commonPresencesServiceFactory.exportEventService();
         this.groupService = commonPresencesServiceFactory.groupService();
+        this.exportData = commonPresencesServiceFactory.exportData();
     }
 
     @Get("/events")
@@ -185,6 +182,119 @@ public class EventController extends ControllerHelper {
                     .onFailure(fail -> renderError(request, JsonObject.mapFrom(fail.getMessage())))
                     .onSuccess(restrictedClasses -> {
 
+                        List<String> filterClasses;
+
+                        if (restrictedClasses.isEmpty()) {
+                            filterClasses = classes;
+                        } else {
+                            filterClasses = classes.isEmpty() ? restrictedClasses :
+                                    classes.stream().filter(restrictedClasses::contains).collect(Collectors.toList());
+                        }
+
+                        getUserIdFromClasses(filterClasses, userResponse -> {
+                            if (userResponse.isLeft()) {
+                                renderError(request, JsonObject.mapFrom(userResponse.left().getValue()));
+                            } else {
+                                JsonArray userIdFromClasses = userResponse.right().getValue();
+
+                                String domain = Renders.getHost(request);
+                                String locale = I18n.acceptLanguage(request);
+
+                                JsonObject params = new JsonObject()
+                                        .put(Field.STRUCTUREID, structureId)
+                                        .put(Field.STARTDATE, startDate)
+                                        .put(Field.ENDDATE, endDate)
+                                        .put(Field.EVENTTYPE, eventType)
+                                        .put(Field.REASONIDS, reasonIds)
+                                        .put(Field.NOREASON, noReason)
+                                        .put(Field.NOREASONLATENESS, noReasonLateness)
+                                        .put(Field.USERIDS, userId)
+                                        .put(Field.USERIDFROMCLASSES, userIdFromClasses)
+                                        .put(Field.CLASSES, filterClasses)
+                                        .put(Field.RESTRICTEDCLASSES, restrictedClasses)
+                                        .put(Field.REGULARIZED, regularized)
+                                        .put(Field.FOLLOWED, followed)
+                                        .put(Field.CANSEEALLSTUDENT, canSeeAllStudent)
+                                        .put(Field.LOCALE, locale)
+                                        .put(Field.DOMAIN, domain)
+                                        .put(Field.USER, UserInfosHelper.toJSON(userInfos));
+
+                                exportData.export(PresencesExportWorker.class.getName(),
+                                        ExportActions.EXPORT_EVENTS, type, params);
+
+                                eventService.getEventsCount(structureId, startDate, endDate, eventType, reasonIds, noReason, noReasonLateness,
+                                        userId, userIdFromClasses, regularized, followed)
+                                        .onFailure(fail -> renderError(request, new JsonObject().put(Field.MESSAGE, fail.getMessage())))
+                                        .onSuccess(resCount -> {
+                                            if (resCount.getLong(Field.COUNT) < MAX_EXPORTED_EVENTS){
+                                                if (ExportType.CSV.type().equals(type)) {
+                                                    exportEventService.getCsvData(structureId, startDate, endDate, eventType, reasonIds,
+                                                            noReason, noReasonLateness, userId, userIdFromClasses,
+                                                            classes, restrictedClasses, regularized, followed, event ->
+                                                                    exportEventService.processCsvEvent(request, event));
+                                                } else if (ExportType.PDF.type().equals(type)) {
+                                                    exportEventService.getPdfData(canSeeAllStudent, domain, locale, structureId, startDate, endDate, eventType, reasonIds,
+                                                                    noReason, noReasonLateness, userId, userIdFromClasses, regularized, followed)
+                                                            .compose(exportEventService::processPdfEvent)
+                                                            .onSuccess(res -> request.response()
+                                                                    .putHeader("Content-type", "application/pdf; charset=utf-8")
+                                                                    .putHeader("Content-Disposition", "attachment; filename=" + res.getName())
+                                                                    .end(res.getContent())
+                                                            )
+                                                            .onFailure(err -> {
+                                                                String message = "An error has occurred during export pdf process";
+                                                                String logMessage = String.format("[Presences@%s::exportEvents] %s : %s",
+                                                                        this.getClass().getSimpleName(), message, err.getMessage());
+                                                                log.error(logMessage);
+                                                                renderError(request, new JsonObject().put(Field.MESSAGE, message));
+                                                            });
+                                                } else {
+                                                    badRequest(request);
+                                                }
+                                            } else {
+                                                renderJson(request, new JsonObject().put("success", Field.OK));
+                                            }
+                                        });
+                            }
+                        });
+                    });
+        });
+    }
+
+    @Get("/events/count")
+    @ApiDoc("Get count events")
+    @ResourceFilter(EventReadRight.class)
+    @SecuredAction(value = "", type = ActionType.RESOURCE)
+    public void countEvents(HttpServerRequest request) {
+        if (!request.params().contains(Field.STRUCTUREID) || !request.params().contains(Field.STARTDATE) ||
+                !request.params().contains(Field.ENDDATE)) {
+            badRequest(request);
+            return;
+        }
+
+        String structureId = request.getParam(Field.STRUCTUREID);
+        String startDate = request.getParam(Field.STARTDATE);
+        String endDate = request.getParam(Field.ENDDATE);
+        List<String> eventType = request.getParam(Field.EVENTTYPE) != null ? Arrays.asList(request.getParam(Field.EVENTTYPE).split("\\s*,\\s*")) : null;
+        List<String> reasonIds = request.getParam(Field.REASONIDS) != null ? Arrays.asList(request.getParam(Field.REASONIDS).split("\\s*,\\s*")) : null;
+        Boolean noReason = request.params().contains(Field.NOREASON) && Boolean.parseBoolean(request.getParam(Field.NOREASON));
+        Boolean noReasonLateness = request.params().contains(Field.NOREASONLATENESS) && Boolean.parseBoolean(request.getParam(Field.NOREASONLATENESS));
+        List<String> userId = request.getParam(Field.USERID) != null ? Arrays.asList(request.getParam(Field.USERID).split("\\s*,\\s*")) : new ArrayList<>();
+        List<String> classes = request.getParam(Field.CLASSES) != null ?
+                Arrays.asList(request.getParam(Field.CLASSES).split("\\s*,\\s*")) : new ArrayList<>();
+
+        Boolean regularized = request.params().contains(Field.REGULARIZED) ? Boolean.parseBoolean(request.getParam(Field.REGULARIZED)) : null;
+        Boolean followed = request.params().contains(Field.FOLLOWED) ? Boolean.parseBoolean(request.getParam(Field.FOLLOWED)) : null;
+
+        UserUtils.getUserInfos(eb, request, userInfos -> {
+
+            String teacherId = (WorkflowHelper.hasRight(userInfos, WorkflowActions.READ_EVENT_RESTRICTED.toString())
+                    && "Teacher".equals(userInfos.getType())) ?
+                    userInfos.getUserId() : null;
+
+            this.groupService.getGroupsAndClassesFromTeacherId(teacherId, structureId)
+                    .onFailure(fail -> renderError(request, JsonObject.mapFrom(fail.getMessage())))
+                    .onSuccess(restrictedClasses -> {
 
                         List<String> filterClasses;
 
@@ -200,30 +310,16 @@ public class EventController extends ControllerHelper {
                                 renderError(request, JsonObject.mapFrom(userResponse.left().getValue()));
                             } else {
                                 JsonArray userIdFromClasses = userResponse.right().getValue();
-                                if (ExportType.CSV.type().equals(type)) {
-                                    exportEventService.getCsvData(structureId, startDate, endDate, eventType, reasonIds, noReason, noReasonLateness, userId, userIdFromClasses,
-                                            classes, restrictedClasses, regularized, followed, event -> processCsvEvent(request, event));
-                                } else if (ExportType.PDF.type().equals(type)) {
-                                    String domain = Renders.getHost(request);
-                                    String local = I18n.acceptLanguage(request);
-                                    exportEventService.getPdfData(canSeeAllStudent, domain, local, structureId, startDate, endDate, eventType, reasonIds,
-                                                    noReason, noReasonLateness, userId, userIdFromClasses, regularized, followed)
-                                            .compose(this::processPdfEvent)
-                                            .onSuccess(res -> request.response()
-                                                    .putHeader("Content-type", "application/pdf; charset=utf-8")
-                                                    .putHeader("Content-Disposition", "attachment; filename=" + res.getName())
-                                                    .end(res.getContent())
-                                            )
-                                            .onFailure(err -> {
-                                                String message = "An error has occurred during export pdf process";
-                                                String logMessage = String.format("[Presences@%s::processEvents] %s : %s",
-                                                        this.getClass().getSimpleName(), message, err.getMessage());
-                                                log.error(logMessage);
-                                                renderError(request, new JsonObject().put("message", message));
-                                            });
-                                } else {
-                                    badRequest(request);
-                                }
+
+                                eventService.getEventsCount(structureId, startDate, endDate, eventType, reasonIds, noReason, noReasonLateness,
+                                                userId, userIdFromClasses, regularized, followed)
+                                        .onFailure(fail -> {
+                                            String message = String.format("[Presences@%s::countEvents] error counting events : %s",
+                                                    this.getClass().getSimpleName(), fail.getMessage());
+                                            log.error(message);
+                                            renderError(request, new JsonObject().put(Field.MESSAGE, fail.getMessage()));
+                                        })
+                                        .onSuccess(resCount -> renderJson(request, resCount));
                             }
                         });
                     });
@@ -240,54 +336,6 @@ public class EventController extends ControllerHelper {
         JsonObject params = new JsonObject().put("classesId", classes);
 
         Neo4j.getInstance().execute(query, params, Neo4jResult.validResultHandler(handler));
-    }
-
-
-    private void processCsvEvent(HttpServerRequest request, AsyncResult<List<Event>> event) {
-        if (event.failed()) {
-            log.error("[Presences@EventController::exportEvents] Something went wrong while getting CSV data",
-                    event.cause().getMessage());
-            renderError(request);
-        } else {
-            List<Event> events = event.result();
-
-            List<String> csvHeaders = Arrays.asList(
-                    "presences.csv.header.student.lastName",
-                    "presences.csv.header.student.firstName",
-                    "presences.exemptions.csv.header.audiance",
-                    "presences.event.type",
-                    "presences.absence.reason",
-                    "presences.created.by",
-                    "presences.exemptions.dates",
-                    "presences.hour",
-                    "presences.exemptions.csv.header.comment",
-                    "presences.widgets.absences.regularized",
-                    "presences.id");
-
-            EventsCSVExport ece = new EventsCSVExport(events, Renders.getHost(request), I18n.acceptLanguage(request));
-            ece.setRequest(request);
-            ece.setHeader(csvHeaders);
-            ece.export();
-        }
-    }
-
-    private Future<Pdf> processPdfEvent(JsonObject events) {
-        Promise<Pdf> promise = Promise.promise();
-        TemplateProcessor templateProcessor = new TemplateProcessor(vertx, "template").escapeHTML(true);
-        templateProcessor.setLambda("i18n", new I18nLambda("fr"));
-        templateProcessor.setLambda("datetime", new LocaleDateLambda("fr"));
-        templateProcessor.processTemplate("pdf/event-list-recap.xhtml", events, writer -> {
-            if (writer == null) {
-                String message = String.format("[Presences@%s::exportEvents] process template has no buffer result",
-                        this.getClass().getSimpleName());
-                promise.fail(message);
-            } else {
-                exportPDFService.generatePDF(events.getString(Field.TITLE), writer)
-                        .onSuccess(promise::complete)
-                        .onFailure(promise::fail);
-            }
-        });
-        return promise.future();
     }
 
     @Post("/events")

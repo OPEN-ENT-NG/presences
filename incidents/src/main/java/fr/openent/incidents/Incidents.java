@@ -2,10 +2,13 @@ package fr.openent.incidents;
 
 import fr.openent.incidents.controller.*;
 import fr.openent.incidents.service.*;
+import fr.openent.incidents.worker.*;
+import fr.openent.presences.common.export.*;
 import fr.openent.presences.common.presences.Presences;
 import fr.openent.presences.common.statistics_presences.StatisticsPresences;
 import fr.openent.presences.db.DB;
 import fr.wseduc.mongodb.MongoDb;
+import io.vertx.core.*;
 import io.vertx.core.eventbus.EventBus;
 import org.entcore.common.http.BaseServer;
 import org.entcore.common.neo4j.Neo4j;
@@ -47,12 +50,14 @@ public class Incidents extends BaseServer {
         addController(new ProtagonistTypeController());
         addController(new SeriousnessController());
         addController(new StudentController(eb));
-        addController(new PunishmentController());
+        addController(new PunishmentController(commonIncidentsServiceFactory));
         addController(new PunishmentTypeController());
         addController(new PunishmentCategoryController());
         addController(new EventBusController(eb));
         addController(new ConfigController());
         addController(new FakeRight());
+
+        vertx.deployVerticle(IncidentsExportWorker.class, new DeploymentOptions().setConfig(config).setWorker(true));
     }
 
 }

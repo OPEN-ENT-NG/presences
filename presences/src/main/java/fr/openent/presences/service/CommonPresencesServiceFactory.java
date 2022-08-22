@@ -1,5 +1,6 @@
 package fr.openent.presences.service;
 
+import fr.openent.presences.common.export.*;
 import fr.openent.presences.common.helper.PersonHelper;
 import fr.openent.presences.common.service.*;
 import fr.openent.presences.common.service.impl.*;
@@ -17,6 +18,7 @@ public class CommonPresencesServiceFactory {
     private final Vertx vertx;
     private final Storage storage;
     private final JsonObject config;
+    private final ExportData exportData;
 
 
     private final UserService userService;
@@ -26,16 +28,33 @@ public class CommonPresencesServiceFactory {
     private final EventService eventService;
     private final PresenceService presenceService;
 
-    public CommonPresencesServiceFactory(Vertx vertx, Storage storage, JsonObject config) {
+    private final WorkspaceService workspaceService;
+
+    public CommonPresencesServiceFactory(Vertx vertx, Storage storage, JsonObject config, ExportData exportData) {
         this.vertx = vertx;
         this.storage = storage;
         this.config = config;
+        this.exportData = exportData;
 
         this.userService = new DefaultUserService();
         this.groupService = new DefaultGroupService(this.vertx.eventBus());
         this.absenceService = new DefaultAbsenceService(this);
         this.eventService = new DefaultEventService(this);
         this.presenceService = new DefaultPresenceService(this);
+        this.workspaceService = new DefaultWorkspaceService(this.vertx, this.storage, this.config);
+    }
+
+    public CommonPresencesServiceFactory(Vertx vertx, Storage storage, JsonObject config) {
+        this.vertx = vertx;
+        this.storage = storage;
+        this.config = config;
+        this.exportData = null;
+        this.userService = new DefaultUserService();
+        this.groupService = new DefaultGroupService(this.vertx.eventBus());
+        this.absenceService = new DefaultAbsenceService(this);
+        this.eventService = new DefaultEventService(this);
+        this.presenceService = new DefaultPresenceService(this);
+        this.workspaceService = new DefaultWorkspaceService(this.vertx, this.storage, this.config);
     }
 
     // Common
@@ -131,6 +150,9 @@ public class CommonPresencesServiceFactory {
         return new DefaultLatenessEventService(this);
     }
 
+    public WorkspaceService workspaceService() {
+        return workspaceService;
+    }
 
     // Helpers
     public EventBus eventBus() {
@@ -139,5 +161,9 @@ public class CommonPresencesServiceFactory {
 
     public Vertx vertx() {
         return this.vertx;
+    }
+
+    public ExportData exportData() {
+        return exportData;
     }
 }

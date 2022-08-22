@@ -238,7 +238,9 @@ public class EventHelper {
                 }
                 future.complete();
             } else {
-                future.fail("Failed to query reason info");
+                String message = String.format("[Presences@EventHelper::addReasonsToEvents] Failed to query reason info : %s", reasonsResult.left().getValue());
+                LOGGER.error(message);
+                future.fail(reasonsResult.left().getValue());
             }
         });
     }

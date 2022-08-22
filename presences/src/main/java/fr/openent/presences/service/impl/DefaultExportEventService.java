@@ -3,25 +3,31 @@ package fr.openent.presences.service.impl;
 import fr.openent.presences.common.helper.DateHelper;
 import fr.openent.presences.common.helper.EventsHelper;
 import fr.openent.presences.common.helper.PersonHelper;
+import fr.openent.presences.common.service.*;
 import fr.openent.presences.common.viescolaire.Viescolaire;
 import fr.openent.presences.core.constants.Field;
 import fr.openent.presences.db.DBService;
-import fr.openent.presences.enums.EventType;
+import fr.openent.presences.enums.*;
+import fr.openent.presences.export.*;
 import fr.openent.presences.helper.EventByStudentHelper;
 import fr.openent.presences.helper.EventHelper;
 import fr.openent.presences.helper.ReasonHelper;
+import fr.openent.presences.model.*;
 import fr.openent.presences.model.Event.Event;
 import fr.openent.presences.model.Event.EventByStudent;
 import fr.openent.presences.model.Person.Student;
-import fr.openent.presences.model.Reason;
-import fr.openent.presences.model.Settings;
 import fr.openent.presences.service.*;
 import fr.wseduc.webutils.I18n;
+import fr.wseduc.webutils.http.*;
+import fr.wseduc.webutils.template.*;
+import fr.wseduc.webutils.template.lambdas.*;
 import io.vertx.core.*;
+import io.vertx.core.http.*;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
+import org.entcore.common.pdf.*;
 
 import java.util.*;
 import java.util.function.Function;
@@ -31,18 +37,22 @@ import java.util.stream.Stream;
 public class DefaultExportEventService extends DBService implements ExportEventService {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(DefaultExportEventService.class);
+    private final Vertx vertx;
     private final EventService eventService;
     private final SettingsService settingsService;
     private final EventHelper eventHelper;
     private final PersonHelper personHelper;
     private final ReasonService reasonService;
+    private final ExportPDFService exportPDFService;
 
     public DefaultExportEventService(CommonPresencesServiceFactory commonPresencesServiceFactory) {
+        this.vertx = commonPresencesServiceFactory.vertx();
         this.eventService = commonPresencesServiceFactory.eventService();
         this.settingsService = commonPresencesServiceFactory.settingsService();
         this.eventHelper = commonPresencesServiceFactory.eventHelper();
         this.personHelper = commonPresencesServiceFactory.personHelper();
         this.reasonService = commonPresencesServiceFactory.reasonService();
+        this.exportPDFService = commonPresencesServiceFactory.exportPDFService();
     }
 
     @Override
@@ -52,7 +62,7 @@ public class DefaultExportEventService extends DBService implements ExportEventS
         eventService.getEvents(structureId, startDate, endDate, eventType, listReasonIds, noReason, noReasonLateness, userId, userIdFromClasses,
                 regularized, followed, null, eventHandler -> {
                     if (eventHandler.isLeft()) {
-                        String err = "[Presences@DefaultEventService::getCsvData] Failed to fetch events: " + eventHandler.left().getValue();
+                        String err = "[Presences@DefaultExportEventService::getCsvData] Failed to fetch events: " + eventHandler.left().getValue();
                         LOGGER.error(err, eventHandler.left().getValue());
                         handler.handle(Future.failedFuture(eventHandler.left().getValue()));
                     } else {
@@ -64,14 +74,18 @@ public class DefaultExportEventService extends DBService implements ExportEventS
                         List<Integer> eventTypeIds = new ArrayList<>();
 
                         for (Event event : events) {
-                            reasonIds.add(event.getReason().getId());
+                            if (!reasonIds.contains(event.getReason().getId())) {
+                                reasonIds.add(event.getReason().getId());
+                            }
                             if (!studentIds.contains(event.getStudent().getId())) {
                                 studentIds.add(event.getStudent().getId());
                             }
                             if (!ownerIds.contains(event.getOwner().getId())) {
                                 ownerIds.add(event.getOwner().getId());
                             }
-                            eventTypeIds.add(event.getEventType().getId());
+                            if (!eventTypeIds.contains(event.getEventType().getId())) {
+                                eventTypeIds.add(event.getEventType().getId());
+                            }
                         }
 
                         // remove potential null value for each list
@@ -124,6 +138,69 @@ public class DefaultExportEventService extends DBService implements ExportEventS
     }
 
     @Override
+    public Future<Void> processCsvEvent(HttpServerRequest request, AsyncResult<List<Event>> event) {
+        Promise<Void> promise = Promise.promise();
+        if (event.failed()) {
+            LOGGER.error("[Presences@ExportEventController::processCsvEvent] Something went wrong while getting CSV data",
+                    event.cause().getMessage());
+
+            promise.fail(event.cause().getMessage());
+        } else {
+            List<Event> events = event.result();
+
+            List<String> csvHeaders = Arrays.asList(
+                    "presences.csv.header.student.lastName",
+                    "presences.csv.header.student.firstName",
+                    "presences.exemptions.csv.header.audiance",
+                    "presences.event.type",
+                    "presences.absence.reason",
+                    "presences.created.by",
+                    "presences.exemptions.dates",
+                    "presences.hour",
+                    "presences.exemptions.csv.header.comment",
+                    "presences.widgets.absences.regularized",
+                    "presences.id");
+
+            EventsCSVExport ece = new EventsCSVExport(events, Renders.getHost(request), I18n.acceptLanguage(request));
+            ece.setRequest(request);
+            ece.setHeader(csvHeaders);
+            ece.export();
+        }
+        return promise.future();
+    }
+
+    @Override
+    public Future<ExportFile> processCsvEvent(String domain, String local, AsyncResult<List<Event>> event) {
+        Promise<ExportFile> promise = Promise.promise();
+        if (event.failed()) {
+            LOGGER.error("[Presences@ExportEventController::processCsvEvent] Something went wrong while getting CSV data",
+                    event.cause().getMessage());
+
+            promise.fail(event.cause().getMessage());
+        } else {
+            List<Event> events = event.result();
+
+            List<String> csvHeaders = Arrays.asList(
+                    "presences.csv.header.student.lastName",
+                    "presences.csv.header.student.firstName",
+                    "presences.exemptions.csv.header.audiance",
+                    "presences.event.type",
+                    "presences.absence.reason",
+                    "presences.created.by",
+                    "presences.exemptions.dates",
+                    "presences.hour",
+                    "presences.exemptions.csv.header.comment",
+                    "presences.widgets.absences.regularized",
+                    "presences.id");
+
+            EventsCSVExport ece = new EventsCSVExport(events, domain, local);
+            ece.setHeader(csvHeaders, domain, local);
+            promise.complete(ece.getExportFile(domain, local));
+        }
+        return promise.future();
+    }
+
+    @Override
     @SuppressWarnings("unchecked")
     public Future<JsonObject> getPdfData(Boolean canSeeAllStudent, String domain, String local, String structureId, String startDate, String endDate,
                                          List<String> eventType, List<String> listReasonIds, Boolean noReason, Boolean noReasonLateness, List<String> userId,
@@ -168,6 +245,26 @@ public class DefaultExportEventService extends DBService implements ExportEventS
                     promise.fail(err.getMessage());
                 });
 
+        return promise.future();
+    }
+
+    @Override
+    public Future<Pdf> processPdfEvent(JsonObject events) {
+        Promise<Pdf> promise = Promise.promise();
+        TemplateProcessor templateProcessor = new TemplateProcessor(vertx, "template").escapeHTML(true);
+        templateProcessor.setLambda("i18n", new I18nLambda("fr"));
+        templateProcessor.setLambda("datetime", new LocaleDateLambda("fr"));
+        templateProcessor.processTemplate("pdf/event-list-recap.xhtml", events, writer -> {
+            if (writer == null) {
+                String message = String.format("[Presences@%s::processPdfEvent] process template has no buffer result",
+                        this.getClass().getSimpleName());
+                promise.fail(message);
+            } else {
+                exportPDFService.generatePDF(events.getString(Field.TITLE), writer)
+                        .onSuccess(promise::complete)
+                        .onFailure(promise::fail);
+            }
+        });
         return promise.future();
     }
 

@@ -32,6 +32,10 @@ public interface EventService {
                    List<String> eventType, List<String> listReasonIds, Boolean noReason, Boolean noReasonLateness, List<String> userId, JsonArray userIdFromClasses,
                    Boolean regularized, Boolean followed, Integer page, Handler<Either<String, JsonArray>> handler);
 
+    Future<JsonObject> getEventsCount(String structureId, String startDate, String endDate,
+                        List<String> eventType, List<String> listReasonIds, Boolean noReason, Boolean noReasonLateness, List<String> userId, JsonArray userIdFromClasses,
+                        Boolean regularized, Boolean followed);
+
     void get(String structureId, String startDate, String endDate, String startTime, String endTime,
              List<String> eventType, List<String> listReasonIds, Boolean noAbsenceReason, Boolean noLatenessReason, List<String> userId, List<String> restrictedClasses,
              Boolean regularized, Boolean followed, Integer page, Handler<AsyncResult<JsonArray>> handler);

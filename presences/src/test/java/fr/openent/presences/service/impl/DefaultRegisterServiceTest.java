@@ -44,7 +44,7 @@ public class DefaultRegisterServiceTest extends DBService {
         FieldSetter.setField(neo4j, neo4j.getClass().getDeclaredField("database"), neo4jRest);
         Sql.getInstance().init(vertx.eventBus(), "fr.openent.presences");
         this.commonPresencesServiceFactory = new CommonPresencesServiceFactory(Vertx.vertx(),
-                new StorageFactory(Vertx.vertx(), null).getStorage(), null);
+                new StorageFactory(Vertx.vertx(), null).getStorage(), new JsonObject());
         this.registerService = new DefaultRegisterService(commonPresencesServiceFactory);
     }
 

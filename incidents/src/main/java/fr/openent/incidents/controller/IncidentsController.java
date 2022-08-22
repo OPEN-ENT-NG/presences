@@ -5,13 +5,18 @@ import fr.openent.incidents.constants.Actions;
 import fr.openent.incidents.export.IncidentsCSVExport;
 import fr.openent.incidents.security.*;
 import fr.openent.incidents.service.*;
-import fr.openent.presences.common.helper.FutureHelper;
+import fr.openent.incidents.worker.*;
+import fr.openent.presences.common.export.*;
+import fr.openent.presences.common.helper.*;
 import fr.openent.presences.common.service.*;
 import fr.openent.presences.core.constants.*;
+import fr.openent.presences.enums.*;
 import fr.wseduc.bus.BusAddress;
 import fr.wseduc.rs.*;
 import fr.wseduc.security.ActionType;
 import fr.wseduc.security.SecuredAction;
+import fr.wseduc.webutils.*;
+import fr.wseduc.webutils.http.*;
 import fr.wseduc.webutils.request.RequestUtils;
 import io.vertx.core.*;
 import io.vertx.core.eventbus.Message;
@@ -31,10 +36,12 @@ public class IncidentsController extends ControllerHelper {
 
     private final IncidentsService incidentsService;
     private final GroupService groupService;
+    private final ExportData exportData;
 
     public IncidentsController(CommonIncidentsServiceFactory serviceFactory) {
         this.incidentsService = serviceFactory.incidentsService();
         this.groupService = serviceFactory.groupService();
+        this.exportData = serviceFactory.exportData();
     }
 
     @Get("")
@@ -131,36 +138,55 @@ public class IncidentsController extends ControllerHelper {
         String field = request.params().contains(Field.ORDER) ? request.getParam(Field.ORDER) : Field.DATE;
         boolean reverse = request.params().contains(Field.REVERSE) && Boolean.parseBoolean(request.getParam(Field.REVERSE));
 
-        groupService.getGroupStudents(audienceIds)
-                .onFailure(fail -> renderError(request, JsonObject.mapFrom(fail.getCause().getMessage())))
-                .onSuccess(groupStudents -> {
-                    List<String> studentIds = ((List<JsonObject>) groupStudents.getList()).stream()
-                            .map((JsonObject s) -> s.getString(Field.ID)).collect(Collectors.toList());
-                    if (userId != null) studentIds.addAll(userId);
-                    studentIds.removeAll(Collections.singletonList(null));
+        UserUtils.getUserInfos(eb, request, userInfos -> {
+            groupService.getGroupStudents(audienceIds)
+                    .onFailure(fail -> renderError(request, JsonObject.mapFrom(fail.getCause().getMessage())))
+                    .onSuccess(groupStudents -> {
+                        List<String> studentIds = ((List<JsonObject>) groupStudents.getList()).stream()
+                                .map((JsonObject s) -> s.getString(Field.ID)).collect(Collectors.toList());
+                        if (userId != null) studentIds.addAll(userId);
+                        studentIds.removeAll(Collections.singletonList(null));
 
-                    incidentsService.get(structureId, startDate, endDate, studentIds,
-                            null, false, field, reverse, event -> {
-                                if (event.isLeft()) {
-                                    String message = String.format("[Incidents@%s::exportIncidents] Failed to fetch incidents",
-                                            this.getClass().getSimpleName());
-                                    log.error(message, event.left().getValue());
-                                    renderError(request);
-                                    return;
-                                }
+                        String domain = Renders.getHost(request);
+                        String locale = I18n.acceptLanguage(request);
+                        JsonObject params = new JsonObject()
+                                .put(Field.STRUCTUREID, structureId)
+                                .put(Field.STARTDATE, startDate)
+                                .put(Field.ENDDATE, endDate)
+                                .put(Field.STUDENTIDS, new JsonArray(studentIds))
+                                .put(Field.FIELD, field)
+                                .put(Field.REVERSE, reverse)
+                                .put(Field.USER, UserInfosHelper.toJSON(userInfos))
+                                .put(Field.LOCALE, locale)
+                                .put(Field.DOMAIN, domain);
 
-                                JsonArray incidents = event.right().getValue();
-                                List<String> csvHeaders = new ArrayList<>(Arrays.asList(
-                                        "incidents.csv.header.date", "incidents.csv.header.place",
-                                        "incidents.csv.header.type", "incidents.csv.header.description",
-                                        "incidents.csv.header.seriousness", "incidents.csv.header.protagonists",
-                                        "incidents.csv.header.partner", "incidents.csv.header.processed"));
-                                IncidentsCSVExport ice = new IncidentsCSVExport(incidents);
-                                ice.setRequest(request);
-                                ice.setHeader(csvHeaders);
-                                ice.export();
-                            });
-                });
+                        //TODO future.all
+                        exportData.export(IncidentsExportWorker.class.getName(), ExportActions.EXPORT_INCIDENTS,
+                                ExportType.CSV.type(), params);
+
+                        incidentsService.get(structureId, startDate, endDate, studentIds,
+                                null, false, field, reverse, event -> {
+                                    if (event.isLeft()) {
+                                        String message = String.format("[Incidents@%s::exportIncidents] Failed to fetch incidents",
+                                                this.getClass().getSimpleName());
+                                        log.error(message, event.left().getValue());
+                                        renderError(request);
+                                        return;
+                                    }
+
+                                    JsonArray incidents = event.right().getValue();
+                                    List<String> csvHeaders = new ArrayList<>(Arrays.asList(
+                                            "incidents.csv.header.date", "incidents.csv.header.place",
+                                            "incidents.csv.header.type", "incidents.csv.header.description",
+                                            "incidents.csv.header.seriousness", "incidents.csv.header.protagonists",
+                                            "incidents.csv.header.partner", "incidents.csv.header.processed"));
+                                    IncidentsCSVExport ice = new IncidentsCSVExport(incidents, domain, locale);
+                                    ice.setRequest(request);
+                                    ice.setHeader(csvHeaders);
+                                    ice.export();
+                                });
+                    });
+        });
     }
 
     @Get("/incidents/parameter/types")
