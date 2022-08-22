@@ -642,6 +642,7 @@ const vm: ViewModel = {
         if (canReload) {
             eventsForm.that.$emit(SNIPLET_FORM_EMIT_EVENTS.DELETE);
         }
+        vm.closeEventLightbox();
         vm.safeApply();
     },
 
