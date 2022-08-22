@@ -3,21 +3,23 @@ package fr.openent.incidents.export;
 import fr.openent.presences.common.helper.CSVExport;
 import fr.openent.presences.common.helper.DateHelper;
 import fr.wseduc.webutils.I18n;
-import fr.wseduc.webutils.http.Renders;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
-
 import java.text.ParseException;
-import java.util.Collections;
-import java.util.List;
+import java.util.*;
 
 public class PunishmentsCSVExport extends CSVExport {
-    private JsonArray punishments;
+    private final JsonArray punishments;
+    private final String locale;
+    private final String domain;
 
-    public PunishmentsCSVExport(JsonArray punishments) {
+    public PunishmentsCSVExport(JsonArray punishments, String domain, String locale) {
         super();
         this.punishments = sort(punishments);
-        this.filename = "incidents.punishments.csv.filename";
+        this.domain = domain;
+        this.locale = locale;
+        String date = DateHelper.getDateString(new Date(), DateHelper.MONGO_FORMAT);
+        this.filename = String.format("%s - %s.csv", "export_punitions", date);
     }
 
     @Override
@@ -91,10 +93,10 @@ public class PunishmentsCSVExport extends CSVExport {
     private String getProcessed(boolean processed) {
         if (processed) {
             return I18n.getInstance().translate("incidents.punishments.csv.header.processed.done",
-                    Renders.getHost(this.request), I18n.acceptLanguage(this.request));
+                    domain, locale);
         } else {
             return I18n.getInstance().translate("incidents.punishments.csv.header.processed.undone",
-                    Renders.getHost(this.request), I18n.acceptLanguage(this.request));
+                    domain, locale);
         }
     }
 
