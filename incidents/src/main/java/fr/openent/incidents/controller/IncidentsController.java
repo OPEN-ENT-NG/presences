@@ -60,9 +60,10 @@ public class IncidentsController extends ControllerHelper {
 
     @Get("/incidents")
     @ApiDoc("Retrieve incidents")
-    @SecuredAction(Incidents.READ_INCIDENT)
+    @ResourceFilter(ReadIncidentRight.class)
+    @SecuredAction(value = "", type = ActionType.RESOURCE)
     @SuppressWarnings("unchecked")
-    public void getIncidents(final HttpServerRequest request) {
+    public void getListIncidents(final HttpServerRequest request) {
         String structureId = request.getParam(Field.STRUCTUREID);
         String startDate = request.getParam(Field.STARTDATE);
         String endDate = request.getParam(Field.ENDDATE);
@@ -249,5 +250,11 @@ public class IncidentsController extends ControllerHelper {
                 message.reply(json);
             }
         }
+    }
+
+    @Get("/rights/read/incidents")
+    @SecuredAction(Incidents.READ_INCIDENT)
+    public void getIncidents(final HttpServerRequest request) {
+        request.response().setStatusCode(501).end();
     }
 }

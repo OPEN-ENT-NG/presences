@@ -1,7 +1,7 @@
 package fr.openent.incidents.controller;
 
 import fr.openent.incidents.constants.Actions;
-import fr.openent.incidents.security.ManageIncidentRight;
+import fr.openent.incidents.security.*;
 import fr.openent.incidents.service.SeriousnessService;
 import fr.openent.incidents.service.impl.DefaultSeriousnessService;
 import fr.wseduc.rs.*;
@@ -26,7 +26,7 @@ public class SeriousnessController extends ControllerHelper {
 
     @Get("/seriousnesses")
     @ApiDoc("Retrieve incidents seriousnesses")
-    @ResourceFilter(ManageIncidentRight.class)
+    @ResourceFilter(ReadIncidentRight.class)
     @SecuredAction(value = "", type = ActionType.RESOURCE)
     public void get(final HttpServerRequest request) {
         String structureId = request.getParam("structureId");

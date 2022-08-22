@@ -1,7 +1,7 @@
 package fr.openent.incidents.controller;
 
 import fr.openent.incidents.constants.Actions;
-import fr.openent.incidents.security.ManageIncidentRight;
+import fr.openent.incidents.security.*;
 import fr.openent.incidents.service.PlaceService;
 import fr.openent.incidents.service.impl.DefaultPlaceService;
 import fr.wseduc.rs.*;
@@ -26,7 +26,7 @@ public class PlaceController extends ControllerHelper {
 
     @Get("/places")
     @ApiDoc("Retrieve incidents places")
-    @ResourceFilter(ManageIncidentRight.class)
+    @ResourceFilter(ReadIncidentRight.class)
     @SecuredAction(value = "", type = ActionType.RESOURCE)
     public void get(final HttpServerRequest request) {
         String structureId = request.getParam("structureId");
