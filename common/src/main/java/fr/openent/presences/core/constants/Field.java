@@ -6,8 +6,10 @@ public class Field {
     public static final String _ID = "_id";
     public static final String IDS = "ids";
     public static final String TITLE = "title";
+    public static final String BODY = "body";
     public static final String AUDIENCEID = "audienceId";
     public static final String CLASSES = "classes";
+    public static final String RESTRICTEDCLASSES = "restrictedClasses";
     public static final String CREATE = "CREATE";
     public static final String CREATED = "created";
     public static final String CREATED_AT = "created_at";
@@ -49,10 +51,13 @@ public class Field {
     public static final String TEACHERIDS = "teacherIds";
     public static final String TYPEID = "type_id";
     public static final String OWNER = "owner";
+    public static final String OWNERNAME = "ownerName";
     public static final String OWNERID = "ownerId";
     public static final String OWNER_ID = "owner_id";
+    public static final String USERGROUPIDS = "userGroupIds";
     public static final String ACTION_ABBREVIATION = "action_abbreviation";
     public static final String EXPORT_PDF_EVENTS = "export-pdf-events";
+    public static final String CANSEEALLSTUDENT = "canSeeAllStudent";
     public static final String EXPORT_PDF_ABSENCES = "export-pdf-absences";
     public static final String PAGE = "page";
     public static final String PAGE_COUNT = "page_count";
@@ -60,7 +65,11 @@ public class Field {
     public static final String PROFILE = "profile";
     public static final String ORDER = "order";
     public static final String REVERSE = "reverse";
-
+    public static final String PARENTFOLDERID = "parentFolderId";
+    public static final String PUSHNOTIF = "pushNotif";
+    public static final String FILENAME = "fileName";
+    public static final String FOLDERURI = "folderUri";
+    public static final String EPARENT = "eParent";
 
     // Dates
     public static final String END_DATE = "end_date";
@@ -238,12 +247,28 @@ public class Field {
 
     // User
     public static final String USERID = "userId";
+    public static final String USERNAME = "username";
+    public static final String USERIDFROMCLASSES = "userIdFromClasses";
     public static final String USERIDS = "userIds";
     public static final String USERS = "users";
     public static final String USER = "user";
     public static final String HALFBOARDER = "halfBoarder";
     public static final String INTERNAL = "internal";
     public static final String ACCOMMODATION = "accommodation";
+
+
+    // UserInfos
+    public static final String HASAPP = "hasApp";
+    public static final String EXTERNALID = "externalId";
+    public static final String CLASSNAMES = "classNames";
+    public static final String REALCLASSNAMES = "realClassNames";
+    public static final String STRUCTURENAMES = "structureNames";
+    public static final String UAI = "uai";
+    public static final String CHILDRENIDS = "childrenIds";
+    public static final String LEVEL = "level";
+    public static final String LOGIN = "login";
+    public static final String AUTHORIZEDACTIONS = "authorizedActions";
+    public static final String GROUPSIDS = "groupsIds";
 
     //Mongo
     public static final String $_ID = "$_id";
@@ -279,6 +304,7 @@ public class Field {
     public static final String ACTION = "action";
     public static final String PREPARED = "prepared";
     public static final String STATEMENT = "statement";
+    public static final String PARAMS = "params";
 
     // Statistics
     public static final String INDICATOR = "indicator";
