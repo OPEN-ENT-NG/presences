@@ -49,18 +49,22 @@ public class DefaultPlaceService implements PlaceService {
     }
 
     private void fetchPlaces(String structureId, Handler<Either<String, JsonArray>> handler) {
-        String query = "SELECT * FROM " + Incidents.dbSchema + ".place where structure_id = '" + structureId + "'";
-        Sql.getInstance().raw(query, SqlResult.validResultHandler(handler));
+        String query = "SELECT * FROM " + Incidents.dbSchema + ".place where structure_id = ?";
+        JsonArray params = new JsonArray()
+                .add(structureId);
+
+        Sql.getInstance().prepared(query, params, SqlResult.validResultHandler(handler));
     }
 
     private void fetchUsedPlaces(String structureId, Handler<Either<String, JsonArray>> handler) {
         String query = "WITH ids AS (" +
                 "SELECT p.id, p.label FROM " + Incidents.dbSchema + ".place p " +
-                "WHERE structure_id = '" + structureId +
-                "') " +
+                "WHERE structure_id = ?) " +
                 "SELECT DISTINCT i.id, i.label FROM ids i " +
                 "WHERE (i.id IN (SELECT place_id FROM " + Incidents.dbSchema + ".incident))";
-        Sql.getInstance().raw(query, SqlResult.validResultHandler(handler));
+        JsonArray params = new JsonArray()
+                .add(structureId);
+        Sql.getInstance().prepared(query, params, SqlResult.validResultHandler(handler));
     }
 
     @Override
