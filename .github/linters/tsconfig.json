@@ -1,0 +1,41 @@
+{
+  "compilerOptions": {
+    "target": "es5",
+    "module": "commonjs",
+    "declaration": false,
+    "moduleResolution": "node",
+    "sourceMap": true,
+    "noImplicitAny": false,
+    "lib": [
+      "es2015",
+      "dom"
+    ],
+    "types": [
+      "jquery",
+      "core-js",
+      "jest"
+    ],
+    "baseUrl": ".",
+    "paths": {
+      "@presences/*": [
+        "presences/src/main/resources/public/ts/*"
+      ],
+      "@common/*": [
+        "common/src/main/resources/ts/*"
+      ],
+      "@incidents/*": [
+        "incidents/src/main/resources/public/ts/*"
+      ],
+      "@massmailing/*": [
+        "massmailing/src/main/resources/public/ts/*"
+      ],
+      "@statistics/*": [
+        "statistics-presences/src/main/resources/public/ts/*"
+      ]
+    }
+  },
+  "exclude": [
+    "*/build",
+    "node_modules"
+  ]
+}
