@@ -155,6 +155,8 @@ public class SearchController extends ControllerHelper {
 
     @Get("/users")
     @ApiDoc("get students based on group id fetched")
+    @SecuredAction(value = "", type = ActionType.RESOURCE)
+    @ResourceFilter(SearchStudents.class)
     public void getStudentsFromGroupId(HttpServerRequest request) {
         if (request.params().contains("groupId") && request.params().contains("type")) {
             GroupType type = "CLASS".equals(request.getParam("type")) ? GroupType.CLASS : GroupType.GROUP;

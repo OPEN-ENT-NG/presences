@@ -1,7 +1,7 @@
 package fr.openent.incidents.controller;
 
 import fr.openent.incidents.constants.Actions;
-import fr.openent.incidents.security.ManageIncidentRight;
+import fr.openent.incidents.security.*;
 import fr.openent.incidents.service.IncidentsTypeService;
 import fr.openent.incidents.service.impl.DefaultIncidentsTypeService;
 import fr.wseduc.rs.*;
@@ -26,7 +26,7 @@ public class IncidentsTypeController extends ControllerHelper {
 
     @Get("/types")
     @ApiDoc("Retrieve incidents type")
-    @ResourceFilter(ManageIncidentRight.class)
+    @ResourceFilter(ReadIncidentRight.class)
     @SecuredAction(value = "", type = ActionType.RESOURCE)
     public void get(final HttpServerRequest request) {
         String structureId = request.getParam("structureId");

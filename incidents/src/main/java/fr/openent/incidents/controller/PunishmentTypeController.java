@@ -2,7 +2,7 @@ package fr.openent.incidents.controller;
 
 import fr.openent.incidents.constants.Actions;
 import fr.openent.incidents.enums.PunishmentsType;
-import fr.openent.incidents.security.ManageIncidentRight;
+import fr.openent.incidents.security.*;
 import fr.openent.incidents.service.PunishmentTypeService;
 import fr.openent.incidents.service.impl.DefaultPunishmentTypeService;
 import fr.wseduc.rs.*;
@@ -27,7 +27,7 @@ public class PunishmentTypeController extends ControllerHelper {
 
     @Get("/punishments/type")
     @ApiDoc("Retreive punishments types")
-    @ResourceFilter(ManageIncidentRight.class)
+    @ResourceFilter(ReadIncidentRight.class)
     @SecuredAction(value = "", type = ActionType.RESOURCE)
     public void get(final HttpServerRequest request) {
         String structure_id = request.getParam("structure_id");

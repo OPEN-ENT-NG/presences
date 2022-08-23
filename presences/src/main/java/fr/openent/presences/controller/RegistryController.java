@@ -2,16 +2,16 @@ package fr.openent.presences.controller;
 
 import fr.openent.presences.Presences;
 import fr.openent.presences.export.RegistryCSVExport;
+import fr.openent.presences.security.*;
 import fr.openent.presences.service.RegistryService;
 import fr.openent.presences.service.impl.DefaultRegistryService;
 import fr.wseduc.rs.Get;
-import fr.wseduc.security.SecuredAction;
-import fr.wseduc.webutils.Either;
+import fr.wseduc.security.*;
 import io.vertx.core.MultiMap;
 import io.vertx.core.eventbus.EventBus;
 import io.vertx.core.http.HttpServerRequest;
-import io.vertx.core.json.JsonArray;
 import org.entcore.common.controller.ControllerHelper;
+import org.entcore.common.http.filter.*;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -53,6 +53,8 @@ public class RegistryController extends ControllerHelper {
     }
 
     @Get("/registry/export")
+    @ResourceFilter(RegistryRight.class)
+    @SecuredAction(value = "", type = ActionType.RESOURCE)
     public void exportRegistry(HttpServerRequest request) {
         MultiMap params = request.params();
         Pattern p = Pattern.compile("[0-9]{4}-[0-9]{1,2}");
