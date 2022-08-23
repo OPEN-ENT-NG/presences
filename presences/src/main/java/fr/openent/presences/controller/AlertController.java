@@ -149,6 +149,8 @@ public class AlertController extends ControllerHelper {
 
 
     @Get("/structures/:id/alerts/export")
+    @SecuredAction(value = "", type = ActionType.RESOURCE)
+    @ResourceFilter(AlertFilter.class)
     @ApiDoc("Export alerts")
     public void exportAlerts(HttpServerRequest request) {
         List<String> types = request.params().getAll("type");

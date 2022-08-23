@@ -1,7 +1,7 @@
 package fr.openent.presences.controller;
 
 import fr.openent.presences.constants.Actions;
-import fr.openent.presences.security.Manage;
+import fr.openent.presences.security.*;
 import fr.openent.presences.service.ActionService;
 import fr.openent.presences.service.impl.DefaultActionService;
 import fr.wseduc.rs.*;
@@ -20,7 +20,7 @@ public class ActionController extends ControllerHelper {
 
     @Get("/actions")
     @SecuredAction(value = "", type = ActionType.RESOURCE)
-    @ResourceFilter(Manage.class)
+    @ResourceFilter(ReadActionRight.class)
     @ApiDoc("Get given structure")
     public void get(final HttpServerRequest request) {
         String structureId = request.getParam("structureId");

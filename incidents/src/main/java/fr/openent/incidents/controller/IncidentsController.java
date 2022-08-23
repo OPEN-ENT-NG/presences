@@ -64,13 +64,15 @@ public class IncidentsController extends ControllerHelper {
 
     @Get("/incidents")
     @ApiDoc("Retrieve incidents")
-    @SecuredAction(Incidents.READ_INCIDENT)
-    public void getIncidents(final HttpServerRequest request) {
-        String structureId = request.getParam("structureId");
-        String startDate = request.getParam("startDate");
-        String endDate = request.getParam("endDate");
-        String field = request.params().contains("order") ? request.getParam("order") : "date";
-        boolean reverse = request.params().contains("reverse") && Boolean.parseBoolean(request.getParam("reverse"));
+    @ResourceFilter(ReadIncidentRight.class)
+    @SecuredAction(value = "", type = ActionType.RESOURCE)
+    public void getListIncidents(final HttpServerRequest request) {
+        String structureId = request.getParam(Field.STRUCTUREID);
+        String startDate = request.getParam(Field.STARTDATE);
+        String endDate = request.getParam(Field.ENDDATE);
+        String field = request.params().contains(Field.ORDER) ? request.getParam(Field.ORDER) : Field.DATE;
+        boolean reverse = request.params().contains(Field.REVERSE) &&
+                Boolean.parseBoolean(request.getParam(Field.REVERSE));
 
         List<String> userId = request.getParam("userId") != null ? Arrays.asList(request.getParam("userId").split("\\s*,\\s*")) : null;
 
@@ -227,5 +229,11 @@ public class IncidentsController extends ControllerHelper {
                 message.reply(json);
             }
         }
+    }
+
+    @Get("/rights/read/incidents")
+    @SecuredAction(Incidents.READ_INCIDENT)
+    public void getIncidents(final HttpServerRequest request) {
+        request.response().setStatusCode(501).end();
     }
 }

@@ -1,7 +1,7 @@
 package fr.openent.incidents.controller;
 
 import fr.openent.incidents.constants.Actions;
-import fr.openent.incidents.security.ManageIncidentRight;
+import fr.openent.incidents.security.*;
 import fr.openent.incidents.service.ProtagonistTypeService;
 import fr.openent.incidents.service.impl.DefaultProtagonistTypeService;
 import fr.wseduc.rs.*;
@@ -26,7 +26,7 @@ public class ProtagonistTypeController extends ControllerHelper {
 
     @Get("/protagonists/type")
     @ApiDoc("Retrieve incidents places")
-    @ResourceFilter(ManageIncidentRight.class)
+    @ResourceFilter(ReadIncidentRight.class)
     @SecuredAction(value = "", type = ActionType.RESOURCE)
     public void get(final HttpServerRequest request) {
         String structureId = request.getParam("structureId");
