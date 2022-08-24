@@ -503,6 +503,7 @@ export const registersController = ng.controller('RegistersController',
                 }
                 vm.filter.date = moment(course.startDate).toDate();
                 vm.filter.course = course;
+                vm.closePanel();
                 window.filter = vm.filter;
                 if ($route.current.action !== 'getRegister') {
                     $scope.redirectTo(`/registers/${vm.register.id}`);
@@ -660,6 +661,7 @@ export const registersController = ng.controller('RegistersController',
             vm.openPanel = function (student) {
                 vm.filter.student = student;
                 $scope.safeApply();
+
             };
 
             vm.updateLateness = function () {
