@@ -1,6 +1,8 @@
 package fr.openent.presences.common.incidents;
 
 import fr.openent.presences.common.message.MessageResponseHandler;
+import fr.openent.presences.core.constants.Field;
+import fr.openent.presences.enums.InitTypeEnum;
 import fr.wseduc.webutils.Either;
 import io.vertx.core.Handler;
 import io.vertx.core.eventbus.EventBus;
@@ -42,50 +44,56 @@ public class Incidents {
         eb.send(address, action, MessageResponseHandler.messageJsonArrayHandler(handler));
     }
 
-    public void getInitIncidentTypesStatement(String structure, Handler<Either<String, JsonObject>> handler) {
+    public void getInitIncidentTypesStatement(String structure, InitTypeEnum initTypeEnum, Handler<Either<String, JsonObject>> handler) {
         JsonObject action = new JsonObject()
-                .put("action", "init-get-incident-type-statement")
-                .put("structure", structure);
+                .put(Field.ACTION, "init-get-incident-type-statement")
+                .put(Field.INITTYPE, initTypeEnum.getValue())
+                .put(Field.STRUCTURE, structure);
 
         eb.send(address, action, MessageResponseHandler.messageJsonObjectHandler(handler));
     }
 
-    public void getInitIncidentPlacesStatement(String structure, Handler<Either<String, JsonObject>> handler) {
+    public void getInitIncidentPlacesStatement(String structure, InitTypeEnum initTypeEnum, Handler<Either<String, JsonObject>> handler) {
         JsonObject action = new JsonObject()
-                .put("action", "init-get-incident-places-statement")
-                .put("structure", structure);
+                .put(Field.ACTION, "init-get-incident-places-statement")
+                .put(Field.INITTYPE, initTypeEnum.getValue())
+                .put(Field.STRUCTURE, structure);
 
         eb.send(address, action, MessageResponseHandler.messageJsonObjectHandler(handler));
     }
 
-    public void getInitIncidentProtagonistTypeStatement(String structure, Handler<Either<String, JsonObject>> handler) {
+    public void getInitIncidentProtagonistTypeStatement(String structure, InitTypeEnum initTypeEnum, Handler<Either<String, JsonObject>> handler) {
         JsonObject action = new JsonObject()
-                .put("action", "init-get-incident-protagonist-type-statement")
-                .put("structure", structure);
+                .put(Field.ACTION, "init-get-incident-protagonist-type-statement")
+                .put(Field.INITTYPE, initTypeEnum.getValue())
+                .put(Field.STRUCTURE, structure);
 
         eb.send(address, action, MessageResponseHandler.messageJsonObjectHandler(handler));
     }
 
-    public void getInitIncidentSeriousnessStatement(String structure, Handler<Either<String, JsonObject>> handler) {
+    public void getInitIncidentSeriousnessStatement(String structure, InitTypeEnum initTypeEnum, Handler<Either<String, JsonObject>> handler) {
         JsonObject action = new JsonObject()
-                .put("action", "init-get-incident-seriousness-statement")
-                .put("structure", structure);
+                .put(Field.ACTION, "init-get-incident-seriousness-statement")
+                .put(Field.INITTYPE, initTypeEnum.getValue())
+                .put(Field.STRUCTURE, structure);
 
         eb.send(address, action, MessageResponseHandler.messageJsonObjectHandler(handler));
     }
 
-    public void getInitIncidentPartnerStatement(String structure, Handler<Either<String, JsonObject>> handler) {
+    public void getInitIncidentPartnerStatement(String structure, InitTypeEnum initTypeEnum, Handler<Either<String, JsonObject>> handler) {
         JsonObject action = new JsonObject()
-                .put("action", "init-get-incident-partner-statement")
-                .put("structure", structure);
+                .put(Field.ACTION, "init-get-incident-partner-statement")
+                .put(Field.INITTYPE, initTypeEnum.getValue())
+                .put(Field.STRUCTURE, structure);
 
         eb.send(address, action, MessageResponseHandler.messageJsonObjectHandler(handler));
     }
 
-    public void getInitIncidentPunishmentTypeStatement(String structure, Handler<Either<String, JsonObject>> handler) {
+    public void getInitIncidentPunishmentTypeStatement(String structure, InitTypeEnum initTypeEnum, Handler<Either<String, JsonObject>> handler) {
         JsonObject action = new JsonObject()
-                .put("action", "init-get-incident-punishment-type")
-                .put("structure", structure);
+                .put(Field.ACTION, "init-get-incident-punishment-type")
+                .put(Field.INITTYPE, initTypeEnum.getValue())
+                .put(Field.STRUCTURE, structure);
 
         eb.send(address, action, MessageResponseHandler.messageJsonObjectHandler(handler));
     }

@@ -44,39 +44,44 @@ public class Discipline implements Cloneable {
         return id;
     }
 
-    public void setId(Integer id) {
+    public Discipline setId(Integer id) {
         this.id = id;
+        return this;
     }
 
     public String getStructureId() {
         return structureId;
     }
 
-    public void setStructureId(String structureId) {
+    public Discipline setStructureId(String structureId) {
         this.structureId = structureId;
+        return this;
     }
 
     public String getLabel() {
         return label;
     }
 
-    public void setLabel(String label) {
+    public Discipline setLabel(String label) {
         this.label = label;
+        return this;
     }
 
-    public Boolean isUsed() {
+    public Boolean getUsed() {
         return isUsed;
     }
 
-    public void setUsed(Boolean used) {
+    public Discipline setUsed(Boolean used) {
         isUsed = used;
+        return this;
     }
 
     public Boolean getHidden() {
         return isHidden;
     }
 
-    public void setHidden(Boolean hidden) {
+    public Discipline setHidden(Boolean hidden) {
         isHidden = hidden;
+        return this;
     }
 }
