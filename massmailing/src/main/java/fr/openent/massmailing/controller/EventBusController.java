@@ -2,6 +2,8 @@ package fr.openent.massmailing.controller;
 
 import fr.openent.massmailing.service.InitService;
 import fr.openent.massmailing.service.impl.DefaultInitService;
+import fr.openent.presences.core.constants.Field;
+import fr.openent.presences.enums.InitTypeEnum;
 import fr.wseduc.bus.BusAddress;
 import io.vertx.core.eventbus.Message;
 import io.vertx.core.json.JsonObject;
@@ -16,18 +18,19 @@ public class EventBusController extends ControllerHelper {
     @BusAddress("fr.openent.massmailing")
     public void bus(final Message<JsonObject> message) {
         JsonObject body = message.body();
-        String action = body.getString("action");
+        String action = body.getString(Field.ACTION);
         switch (action) {
             case "init-get-templates-statement":
-                JsonHttpServerRequest request = new JsonHttpServerRequest(body.getJsonObject("request", new JsonObject()));
-                String structure = body.getString("structure");
-                String owner = body.getString("owner");
-                initService.getTemplateStatement(request, structure, owner, BusResponseHandler.busResponseHandler(message));
+                JsonHttpServerRequest request = new JsonHttpServerRequest(body.getJsonObject(Field.REQUEST, new JsonObject()));
+                String structure = body.getString(Field.STRUCTURE);
+                String owner = body.getString(Field.OWNER);
+                InitTypeEnum initTypeEnum = InitTypeEnum.getInitType(body.getInteger(Field.INITTYPE));
+                initService.getTemplateStatement(request, structure, owner, initTypeEnum, BusResponseHandler.busResponseHandler(message));
                 break;
             default:
                 message.reply(new JsonObject()
-                        .put("status", "error")
-                        .put("message", "Invalid action."));
+                        .put(Field.STATUS, Field.ERROR)
+                        .put(Field.MESSAGE, "Invalid action."));
         }
     }
 }
