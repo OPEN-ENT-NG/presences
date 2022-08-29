@@ -1,7 +1,13 @@
 package fr.openent.massmailing.service.impl;
 
 import fr.openent.massmailing.Massmailing;
+import fr.openent.massmailing.enums.MailingType;
+import fr.openent.massmailing.helper.init.IInitMassmailingHelper;
+import fr.openent.massmailing.model.Mailing.Mailing;
+import fr.openent.massmailing.model.Mailing.Template;
 import fr.openent.massmailing.service.InitService;
+import fr.openent.presences.core.constants.Field;
+import fr.openent.presences.enums.InitTypeEnum;
 import fr.wseduc.webutils.Either;
 import fr.wseduc.webutils.I18n;
 import fr.wseduc.webutils.http.Renders;
@@ -10,43 +16,32 @@ import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import org.entcore.common.http.request.JsonHttpServerRequest;
 
+import java.util.List;
+
 public class DefaultInitService implements InitService {
     @Override
-    public void getTemplateStatement(JsonHttpServerRequest request, String structure, String owner, Handler<Either<String, JsonObject>> handler) {
-        final int occurrences = 2;
+    public void getTemplateStatement(JsonHttpServerRequest request, String structure, String owner, InitTypeEnum initTypeEnum, Handler<Either<String, JsonObject>> handler) {
         JsonArray params = new JsonArray();
         String query = "INSERT INTO " + Massmailing.dbSchema + ".template(structure_id, name, content, type, owner, category) VALUES ";
 
-        for (int i = 0; i < occurrences; i++) {
-            String mailName = I18n.getInstance().translate("massmailing.init.template.mail." + i + ".name", Renders.getHost(request), I18n.acceptLanguage(request));
-            String mailContent = I18n.getInstance().translate("massmailing.init.template.mail." + i + ".content", Renders.getHost(request), I18n.acceptLanguage(request));
-            String mailCategory = I18n.getInstance().translate("massmailing.init.template.mail." + i + ".category", Renders.getHost(request), I18n.acceptLanguage(request));
+        List<Template> templateList = IInitMassmailingHelper.getInstance(initTypeEnum).getTemplates();
+        for (Template template: templateList) {
+            String mailName = I18n.getInstance().translate(template.getName(), Renders.getHost(request), I18n.acceptLanguage(request));
+            String mailContent = I18n.getInstance().translate(template.getContent(), Renders.getHost(request), I18n.acceptLanguage(request));
+            String mailCategory = I18n.getInstance().translate(template.getCategory(), Renders.getHost(request), I18n.acceptLanguage(request));
             query += "(?, ?, ?, ?, ?, ?),";
             params.add(structure)
                     .add(mailName)
                     .add(mailContent)
-                    .add("MAIL")
+                    .add(template.getType().name())
                     .add(owner)
                     .add(mailCategory);
         }
 
-        for (int i = 0; i < occurrences; i++) {
-            String smsName = I18n.getInstance().translate("massmailing.init.template.sms." + i + ".name", Renders.getHost(request), I18n.acceptLanguage(request));
-            String smsContent = I18n.getInstance().translate("massmailing.init.template.sms." + i + ".content", Renders.getHost(request), I18n.acceptLanguage(request));
-            String smsCategory = I18n.getInstance().translate("massmailing.init.template.sms." + i + ".category", Renders.getHost(request), I18n.acceptLanguage(request));
-            query += "(?, ?, ?, ?, ?, ?),";
-            params.add(structure)
-                    .add(smsName)
-                    .add(smsContent)
-                    .add("SMS")
-                    .add(owner)
-                    .add(smsCategory);
-        }
-
         query = query.substring(0, query.length() - 1) + ";";
         handler.handle(new Either.Right<>(new JsonObject()
-                .put("statement", query)
-                .put("values", params)
-                .put("action", "prepared")));
+                .put(Field.STATEMENT, query)
+                .put(Field.VALUES, params)
+                .put(Field.ACTION, Field.PREPARED)));
     }
 }
