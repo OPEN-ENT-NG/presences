@@ -41,7 +41,7 @@ export class LatenessReasonSniplet implements ReasonSnipletModel {
         }
 
         this.$scope.$watch(() => window.model.vieScolaire.structure, async () => this.getReasons());
-        this.$scope.$on('reload', this.getReasons);
+        this.$scope.$on('reload', () => this.getReasons());
     }
 
     openReasonLightbox(reason: Reason): void {
