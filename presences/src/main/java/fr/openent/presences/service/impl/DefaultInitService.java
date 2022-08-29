@@ -1,14 +1,19 @@
 package fr.openent.presences.service.impl;
 
 import fr.openent.presences.Presences;
-import fr.openent.presences.helper.ReasonHelper;
+import fr.openent.presences.core.constants.Field;
+import fr.openent.presences.enums.InitTypeEnum;
+import fr.openent.presences.helper.init.IInitPresencesHelper;
+import fr.openent.presences.model.Action;
+import fr.openent.presences.model.Discipline;
 import fr.openent.presences.model.Reason;
+import fr.openent.presences.model.Settings;
 import fr.openent.presences.service.InitService;
 import fr.wseduc.webutils.Either;
 import fr.wseduc.webutils.I18n;
 import fr.wseduc.webutils.http.Renders;
-import io.vertx.core.Future;
 import io.vertx.core.Handler;
+import io.vertx.core.Promise;
 import io.vertx.core.http.HttpServerRequest;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
@@ -27,33 +32,35 @@ public class DefaultInitService implements InitService {
     }
 
     @Override
-    public void getReasonsStatement(HttpServerRequest request, String structure, Future<JsonObject> future) {
-        List<Reason> reasons = ReasonHelper.getReasonsInit();
+    public void getReasonsStatement(HttpServerRequest request, String structure, InitTypeEnum initTypeEnum, Promise<JsonObject> promise) {
+        List<Reason> reasons = IInitPresencesHelper.getInstance(initTypeEnum).getReasonsInit();
 
         JsonArray params = new JsonArray();
-        String query = "INSERT INTO " + Presences.dbSchema + ".reason(structure_id, label, proving, comment, absence_compliance) VALUES ";
+        String query = "INSERT INTO " + Presences.dbSchema + ".reason(structure_id, label, proving, comment, absence_compliance, reason_type_id) VALUES ";
         for (Reason reason : reasons) {
-            query += "(?, ?, ?, '', true),";
+            query += "(?, ?, ?, '', ?, ?),";
             params.add(structure)
                     .add(I18n.getInstance().translate(reason.getLabel(), Renders.getHost(request), I18n.acceptLanguage(request)))
-                    .add(reason.isProving());
+                    .add(reason.isProving())
+                    .add(reason.isAbsenceCompliance())
+                    .add(reason.getReasonTypeId());
         }
 
         query = query.substring(0, query.length() - 1) + ";";
-        future.complete(new JsonObject()
-                .put("statement", query)
-                .put("values", params)
-                .put("action", "prepared"));
+        promise.complete(new JsonObject()
+                .put(Field.STATEMENT, query)
+                .put(Field.VALUES, params)
+                .put(Field.ACTION, Field.PREPARED));
     }
 
     @Override
-    public void getActionsStatement(HttpServerRequest request, String structure, Future<JsonObject> future) {
-        int occurrences = 5;
+    public void getActionsStatement(HttpServerRequest request, String structure, InitTypeEnum typeEnum, Promise<JsonObject> promise) {
+        List<Action> actions = IInitPresencesHelper.getInstance(typeEnum).getActionsInit();
         JsonArray params = new JsonArray();
         String query = "INSERT INTO " + Presences.dbSchema + ".actions(structure_id, label, abbreviation) VALUES ";
-        for (int i = 0; i < occurrences; i++) {
-            String label = I18n.getInstance().translate("presences.actions.init." + i, Renders.getHost(request), I18n.acceptLanguage(request));
-            String abbr = I18n.getInstance().translate("presences.actions.abbr.init." + i, Renders.getHost(request), I18n.acceptLanguage(request));
+        for (Action action : actions) {
+            String label = I18n.getInstance().translate(action.getLabel(), Renders.getHost(request), I18n.acceptLanguage(request));
+            String abbr = I18n.getInstance().translate(action.getAbbreviation(), Renders.getHost(request), I18n.acceptLanguage(request));
             query += "(?, ?, ?),";
             params.add(structure)
                     .add(label)
@@ -61,39 +68,41 @@ public class DefaultInitService implements InitService {
         }
 
         query = query.substring(0, query.length() - 1) + ";";
-        future.complete(new JsonObject()
-                .put("statement", query)
-                .put("values", params)
-                .put("action", "prepared"));
+        promise.complete(new JsonObject()
+                .put(Field.STATEMENT, query)
+                .put(Field.VALUES, params)
+                .put(Field.ACTION, Field.PREPARED));
     }
 
     @Override
-    public void getSettingsStatement(String structure, Future<JsonObject> future) {
+    public void getSettingsStatement(String structure, InitTypeEnum typeEnum, Promise<JsonObject> promise) {
+        Settings settings = IInitPresencesHelper.getInstance(typeEnum).getSettingsInit();
         String query = "INSERT INTO " + Presences.dbSchema + ".settings(structure_id, alert_absence_threshold, " +
                 "alert_lateness_threshold, alert_incident_threshold, alert_forgotten_notebook_threshold, initialized, allow_multiple_slots) " +
                 "VALUES (?, ?, ?, ?, ?, true, true) ON CONFLICT ON CONSTRAINT settings_pkey DO UPDATE SET initialized = true WHERE settings.structure_id = ? ;";
-        JsonArray params = new JsonArray().add(structure).add(5).add(3).add(3).add(3).add(structure);
-        future.complete(new JsonObject()
-                .put("statement", query)
-                .put("values", params)
-                .put("action", "prepared"));
+        JsonArray params = new JsonArray().add(structure).add(settings.alertAbsenceThreshold()).add(settings.alertLatenessThreshold())
+                .add(settings.alertIncidentThreshold()).add(settings.alertForgottenThreshold()).add(structure);
+        promise.complete(new JsonObject()
+                .put(Field.STATEMENT, query)
+                .put(Field.VALUES, params)
+                .put(Field.ACTION, Field.PREPARED));
     }
 
     @Override
-    public void getPresencesDisciplinesStatement(HttpServerRequest request, String structure, Future<JsonObject> future) {
-        int occurrences = 4;
+    public void getPresencesDisciplinesStatement(HttpServerRequest request, String structure, InitTypeEnum typeEnum, Promise<JsonObject> promise) {
+        List<Discipline> disciplines = IInitPresencesHelper.getInstance(typeEnum).getDisciplinesInit();
         JsonArray params = new JsonArray();
         String query = "INSERT INTO " + Presences.dbSchema + ".discipline(structure_id, label) VALUES ";
-        for (int i = 0; i < occurrences; i++) {
-            String label = I18n.getInstance().translate("presences.discipline." + i, Renders.getHost(request), I18n.acceptLanguage(request));
+        for (Discipline discipline : disciplines) {
+            String label = I18n.getInstance().translate(discipline.getLabel(), Renders.getHost(request), I18n.acceptLanguage(request));
             query += "(?, ?),";
             params.add(structure).add(label);
         }
 
         query = query.substring(0, query.length() - 1) + ";";
-        future.complete(new JsonObject()
-                .put("statement", query)
-                .put("values", params)
-                .put("action", "prepared"));
+        promise.complete(new JsonObject()
+                .put(Field.STATEMENT, query)
+                .put(Field.VALUES, params)
+                .put(Field.ACTION, Field.PREPARED));
     }
 }
