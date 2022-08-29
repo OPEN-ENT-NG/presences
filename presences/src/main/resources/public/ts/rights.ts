@@ -28,7 +28,9 @@ const rights = {
         createPresences: 'fr.openent.presences.controller.PresencesController|createPresence',
         manageStatementAbsences: 'fr.openent.presences.controller.StatementAbsenceController|validate',
         viewCalendar: 'fr.openent.presences.controller.CalendarController|getCalendarCourses',
-        manageForgottenNotebook: 'fr.openent.presences.controller.NotebookController|worflowManageForgottenNotebook'
+        manageForgottenNotebook: 'fr.openent.presences.controller.NotebookController|worflowManageForgottenNotebook',
+        initSettings1D: 'fr.openent.presences.controller.FakeRight|initSettings1D',
+        initSettings2D: 'fr.openent.presences.controller.FakeRight|initSettings2D'
     }
 };
 

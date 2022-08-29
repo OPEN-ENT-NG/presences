@@ -8,8 +8,10 @@ import {
 } from "@common/core/enum/incidents-event";
 import {PRESENCES_ACTION, PRESENCES_DISCIPLINE} from "@common/core/enum/presences-event";
 import {IAngularEvent} from "angular";
-import {toasts} from "entcore";
+import {model, toasts} from "entcore";
 import http from 'axios';
+import {INIT_TYPE} from "../core/enum/init-type";
+import rights from "../rights";
 
 declare let window: any;
 
@@ -26,7 +28,9 @@ interface ViewModel {
 
     respondEvent(event, data): void;
 
-    init(): Promise<void>;
+    init(initType: INIT_TYPE): Promise<void>;
+
+    hasRight(right: string): boolean;
 }
 
 function safeApply() {
@@ -55,10 +59,10 @@ function fetchInitializationStatus(): void {
 const vm: ViewModel = {
     initialized: true,
     safeApply: null,
-    async init(): Promise<void> {
+    async init(initType: INIT_TYPE): Promise<void> {
         try {
-            await http.post(`/presences/initialization/structures/${window.model.vieScolaire.structure.id}`);
-            toasts.confirm('presences.init.success');
+            await http.post(`/presences/initialization/structures/${window.model.vieScolaire.structure.id}`, {init_type: initType});
+            toasts.confirm(initType == INIT_TYPE.ONE_D ? "presences.init.1d.success" : "presences.init.2d.success");
             vm.initialized = true;
             presencesManage.that.$broadcast('reload');
             vm.safeApply();
@@ -107,6 +111,10 @@ const vm: ViewModel = {
                 presencesManage.that.$broadcast(INCIDENTS_PUNISHMENT_TYPE_EVENT.TRANSMIT, data);
                 break;
         }
+    },
+
+    hasRight(right: string): boolean {
+        return model.me.hasWorkflow(rights.workflow[right]);
     },
 
     respondEvent(event, args): void {
