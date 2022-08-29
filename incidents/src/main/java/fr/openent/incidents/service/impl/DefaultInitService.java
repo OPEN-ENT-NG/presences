@@ -1,8 +1,11 @@
 package fr.openent.incidents.service.impl;
 
 import fr.openent.incidents.Incidents;
-import fr.openent.incidents.model.PunishmentType;
+import fr.openent.incidents.helper.init.IInitIncidentsHelper;
+import fr.openent.incidents.model.*;
 import fr.openent.incidents.service.InitService;
+import fr.openent.presences.core.constants.Field;
+import fr.openent.presences.enums.InitTypeEnum;
 import fr.wseduc.webutils.Either;
 import fr.wseduc.webutils.I18n;
 import fr.wseduc.webutils.http.Renders;
@@ -12,17 +15,16 @@ import io.vertx.core.json.JsonObject;
 import org.entcore.common.http.request.JsonHttpServerRequest;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 
 public class DefaultInitService implements InitService {
     @Override
-    public void getInitIncidentTypesStatement(JsonHttpServerRequest request, String structure, Handler<Either<String, JsonObject>> handler) {
-        Integer occurrences = 6;
+    public void getInitIncidentTypesStatement(JsonHttpServerRequest request, String structure, InitTypeEnum initTypeEnum, Handler<Either<String, JsonObject>> handler) {
         JsonArray params = new JsonArray();
         String query = "INSERT INTO " + Incidents.dbSchema + ".incident_type(structure_id, label) VALUES ";
-        for (int i = 0; i < occurrences; i++) {
-            String i18nLabel = I18n.getInstance().translate("incidents.init.incident.type." + i, Renders.getHost(request), I18n.acceptLanguage(request));
+        List<IncidentType> incidentTypes = IInitIncidentsHelper.getInstance(initTypeEnum).getIncidentTypes();
+        for (IncidentType incidentType : incidentTypes) {
+            String i18nLabel = I18n.getInstance().translate(incidentType.getLabel(), Renders.getHost(request), I18n.acceptLanguage(request));
             query += "(?, ?),";
             params.add(structure)
                     .add(i18nLabel);
@@ -30,18 +32,19 @@ public class DefaultInitService implements InitService {
 
         query = query.substring(0, query.length() - 1) + ";";
         handler.handle(new Either.Right<>(new JsonObject()
-                .put("statement", query)
-                .put("values", params)
-                .put("action", "prepared")));
+                .put(Field.STATEMENT, query)
+                .put(Field.VALUES, params)
+                .put(Field.ACTION, Field.PREPARED)));
     }
 
     @Override
-    public void getInitIncidentPlacesStatement(JsonHttpServerRequest request, String structure, Handler<Either<String, JsonObject>> handler) {
-        Integer occurrences = 6;
+    public void getInitIncidentPlacesStatement(JsonHttpServerRequest request, String structure, InitTypeEnum initTypeEnum, Handler<Either<String, JsonObject>> handler) {
         JsonArray params = new JsonArray();
         String query = "INSERT INTO " + Incidents.dbSchema + ".place(structure_id, label) VALUES ";
-        for (int i = 0; i < occurrences; i++) {
-            String i18nLabel = I18n.getInstance().translate("incidents.init.incident.place." + i, Renders.getHost(request), I18n.acceptLanguage(request));
+
+        List<Place> incidentPlaces = IInitIncidentsHelper.getInstance(initTypeEnum).getPlaces();
+        for (Place place : incidentPlaces) {
+            String i18nLabel = I18n.getInstance().translate(place.getLabel(), Renders.getHost(request), I18n.acceptLanguage(request));
             query += "(?, ?),";
             params.add(structure)
                     .add(i18nLabel);
@@ -49,18 +52,19 @@ public class DefaultInitService implements InitService {
 
         query = query.substring(0, query.length() - 1) + ";";
         handler.handle(new Either.Right<>(new JsonObject()
-                .put("statement", query)
-                .put("values", params)
-                .put("action", "prepared")));
+                .put(Field.STATEMENT, query)
+                .put(Field.VALUES, params)
+                .put(Field.ACTION, Field.PREPARED)));
     }
 
     @Override
-    public void getInitIncidentProtagonistsStatement(JsonHttpServerRequest request, String structure, Handler<Either<String, JsonObject>> handler) {
-        Integer occurrences = 4;
+    public void getInitIncidentProtagonistsStatement(JsonHttpServerRequest request, String structure, InitTypeEnum initTypeEnum, Handler<Either<String, JsonObject>> handler) {
         JsonArray params = new JsonArray();
         String query = "INSERT INTO " + Incidents.dbSchema + ".protagonist_type(structure_id, label) VALUES ";
-        for (int i = 0; i < occurrences; i++) {
-            String i18nLabel = I18n.getInstance().translate("incidents.init.incident.protagonist.type." + i, Renders.getHost(request), I18n.acceptLanguage(request));
+
+        List<ProtagonistType> protagonistTypeList = IInitIncidentsHelper.getInstance(initTypeEnum).getProtagonistTypes();
+        for (ProtagonistType protagonistType : protagonistTypeList) {
+            String i18nLabel = I18n.getInstance().translate(protagonistType.getLabel(), Renders.getHost(request), I18n.acceptLanguage(request));
             query += "(?, ?),";
             params.add(structure)
                     .add(i18nLabel);
@@ -68,38 +72,40 @@ public class DefaultInitService implements InitService {
 
         query = query.substring(0, query.length() - 1) + ";";
         handler.handle(new Either.Right<>(new JsonObject()
-                .put("statement", query)
-                .put("values", params)
-                .put("action", "prepared")));
+                .put(Field.STATEMENT, query)
+                .put(Field.VALUES, params)
+                .put(Field.ACTION, Field.PREPARED)));
     }
 
     @Override
-    public void getInitIncidentSeriousnessStatement(JsonHttpServerRequest request, String structure, Handler<Either<String, JsonObject>> handler) {
-        List<Integer> seriousness = Arrays.asList(0, 2, 4, 5, 7);
+    public void getInitIncidentSeriousnessStatement(JsonHttpServerRequest request, String structure, InitTypeEnum initTypeEnum, Handler<Either<String, JsonObject>> handler) {
         JsonArray params = new JsonArray();
         String query = "INSERT INTO incidents.seriousness(structure_id, label, level) VALUES ";
-        for (int i = 0; i < seriousness.size(); i++) {
-            String i18nLabel = I18n.getInstance().translate("incident.init.incident.seriousness." + i, Renders.getHost(request), I18n.acceptLanguage(request));
+
+        List<Seriousness> seriousnessList = IInitIncidentsHelper.getInstance(initTypeEnum).getSeriousnessTypes();
+        for (Seriousness seriousness : seriousnessList) {
+            String i18nLabel = I18n.getInstance().translate(seriousness.getLabel(), Renders.getHost(request), I18n.acceptLanguage(request));
             query += "(?, ?, ?),";
             params.add(structure)
                     .add(i18nLabel)
-                    .add(seriousness.get(i));
+                    .add(seriousness.getLevel());
         }
 
         query = query.substring(0, query.length() - 1) + ";";
         handler.handle(new Either.Right<>(new JsonObject()
-                .put("statement", query)
-                .put("values", params)
-                .put("action", "prepared")));
+                .put(Field.STATEMENT, query)
+                .put(Field.VALUES, params)
+                .put(Field.ACTION, Field.PREPARED)));
     }
 
     @Override
-    public void getInitIncidentPartnerStatement(JsonHttpServerRequest request, String structure, Handler<Either<String, JsonObject>> handler) {
-        Integer occurrences = 4;
+    public void getInitIncidentPartnerStatement(JsonHttpServerRequest request, String structure, InitTypeEnum initTypeEnum, Handler<Either<String, JsonObject>> handler) {
         JsonArray params = new JsonArray();
         String query = "INSERT INTO " + Incidents.dbSchema + ".partner(structure_id, label) VALUES ";
-        for (int i = 0; i < occurrences; i++) {
-            String i18nLabel = I18n.getInstance().translate("incident.init.incident.partner." + i, Renders.getHost(request), I18n.acceptLanguage(request));
+
+        List<Partner> partnerList = IInitIncidentsHelper.getInstance(initTypeEnum).getPartners();
+        for (Partner partner : partnerList) {
+            String i18nLabel = I18n.getInstance().translate(partner.getLabel(), Renders.getHost(request), I18n.acceptLanguage(request));
             query += "(?, ?),";
             params.add(structure)
                     .add(i18nLabel);
@@ -107,40 +113,29 @@ public class DefaultInitService implements InitService {
 
         query = query.substring(0, query.length() - 1) + ";";
         handler.handle(new Either.Right<>(new JsonObject()
-                .put("statement", query)
-                .put("values", params)
-                .put("action", "prepared")));
+                .put(Field.STATEMENT, query)
+                .put(Field.VALUES, params)
+                .put(Field.ACTION, Field.PREPARED)));
     }
 
     @Override
-    public void getInitIncidentPunishmentType(JsonHttpServerRequest request, String structure, Handler<Either<String, JsonObject>> handler) {
-
-        List<PunishmentType> punishmentTypeList = new ArrayList();
-
-        punishmentTypeList.add(new PunishmentType(structure, "Devoir supplémentaire", "PUNISHMENT", 1, false));
-        punishmentTypeList.add(new PunishmentType(structure, "Retenue", "PUNISHMENT", 2, false));
-        punishmentTypeList.add(new PunishmentType(structure, "Exclusion de cours", "PUNISHMENT", 3, false));
-        punishmentTypeList.add(new PunishmentType(structure, "Avertissement", "SANCTION", 3, false));
-        punishmentTypeList.add(new PunishmentType(structure, "Blâme", "SANCTION", 3, false));
-        punishmentTypeList.add(new PunishmentType(structure, "Mesure de responsabilisation", "SANCTION", 4, false));
-        punishmentTypeList.add(new PunishmentType(structure, "Exclusion temporaire", "SANCTION", 4, false));
-        punishmentTypeList.add(new PunishmentType(structure, "Exclusion définitive", "SANCTION", 4, false));
-
+    public void getInitIncidentPunishmentType(JsonHttpServerRequest request, String structure, InitTypeEnum initTypeEnum, Handler<Either<String, JsonObject>> handler) {
         JsonArray params = new JsonArray();
-
         String query = "INSERT INTO " + Incidents.dbSchema + ".punishment_type(structure_id, label, type, punishment_category_id) VALUES ";
+        List<PunishmentType> punishmentTypeList = IInitIncidentsHelper.getInstance(initTypeEnum).getPunishmentTypes();
         for (PunishmentType punishmentType : punishmentTypeList) {
+            String i18nLabel = I18n.getInstance().translate(punishmentType.getLabel(), Renders.getHost(request), I18n.acceptLanguage(request));
             query += "(?, ?, ?, ?),";
-            params.add(punishmentType.getStructureId())
-                    .add(punishmentType.getLabel())
+            params.add(structure)
+                    .add(i18nLabel)
                     .add(punishmentType.getType())
                     .add(punishmentType.getPunishmentCategoryId());
         }
         query = query.substring(0, query.length() - 1) + ";";
 
         handler.handle(new Either.Right<>(new JsonObject()
-                .put("statement", query)
-                .put("values", params)
-                .put("action", "prepared")));
+                .put(Field.STATEMENT, query)
+                .put(Field.VALUES, params)
+                .put(Field.ACTION, Field.PREPARED)));
     }
 }
