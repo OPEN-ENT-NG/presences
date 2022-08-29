@@ -31,6 +31,10 @@ public class Mailing implements Cloneable {
         this.created = mailing.getString("created", null);
     }
 
+    public Mailing(Integer id) {
+        this.id = id;
+    }
+
     public JsonObject toJSON() {
         return new JsonObject()
                 .put("id", this.id)
