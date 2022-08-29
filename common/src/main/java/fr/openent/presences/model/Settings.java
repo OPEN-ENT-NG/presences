@@ -22,6 +22,15 @@ public class Settings {
         this.multipleSlot = settings.getBoolean(Field.ALLOW_MULTIPLE_SLOTS);
     }
 
+    public Settings(Number alertAbsenceThreshold, Number alertLatenessThreshold, Number alertIncidentThreshold, Number alertForgottenThreshold) {
+        this.alertAbsenceThreshold = alertAbsenceThreshold;
+        this.alertLatenessThreshold = alertLatenessThreshold;
+        this.alertIncidentThreshold = alertIncidentThreshold;
+        this.alertForgottenThreshold = alertForgottenThreshold;
+        this.recoveryMethod = null;
+        this.multipleSlot = null;
+    }
+
     public Number alertAbsenceThreshold() {
         return alertAbsenceThreshold;
     }

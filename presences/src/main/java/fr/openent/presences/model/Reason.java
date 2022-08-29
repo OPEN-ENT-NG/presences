@@ -70,79 +70,89 @@ public class Reason {
         return id;
     }
 
-    public void setId(Integer id) {
+    public Reason setId(Integer id) {
         this.id = id;
-    }
-
-    public Integer getReasonTypeId() {
-        return reasonTypeId;
-    }
-
-    public void setReasonTypeId(Integer reasonTypeId) {
-        this.reasonTypeId = reasonTypeId;
+        return this;
     }
 
     public String getStructureId() {
         return structureId;
     }
 
-    public void setStructureId(String structureId) {
+    public Reason setStructureId(String structureId) {
         this.structureId = structureId;
+        return this;
     }
 
     public String getLabel() {
         return label;
     }
 
-    public void setLabel(String label) {
+    public Reason setLabel(String label) {
         this.label = label;
+        return this;
     }
 
     public Boolean isProving() {
         return isProving;
     }
 
-    public void setProving(Boolean proving) {
+    public Reason setProving(Boolean proving) {
         isProving = proving;
+        return this;
     }
 
     public String getComment() {
         return comment;
     }
 
-    public void setComment(String comment) {
+    public Reason setComment(String comment) {
         this.comment = comment;
+        return this;
     }
 
     public Boolean isDefault() {
         return isDefault;
     }
 
-    public void setDefault(Boolean aDefault) {
+    public Reason setDefault(Boolean aDefault) {
         isDefault = aDefault;
+        return this;
     }
 
     public Boolean isGroup() {
         return isGroup;
     }
 
-    public void setGroup(Boolean group) {
+    public Reason setGroup(Boolean group) {
         isGroup = group;
+        return this;
     }
 
     public Boolean isHidden() {
         return isHidden;
     }
 
-    public void setHidden(Boolean hidden) {
+    public Reason setHidden(Boolean hidden) {
         isHidden = hidden;
+        return this;
     }
 
     public Boolean isAbsenceCompliance() {
         return isAbsenceCompliance;
     }
 
-    public void setAbsenceCompliance(Boolean absenceCompliance) {
+    public Reason setAbsenceCompliance(Boolean absenceCompliance) {
         isAbsenceCompliance = absenceCompliance;
+        return this;
+    }
+
+    public Integer getReasonTypeId() {
+        return reasonTypeId;
+    }
+
+    public Reason setReasonTypeId(Integer reasonTypeId) {
+        this.reasonTypeId = reasonTypeId;
+        return this;
     }
 }
