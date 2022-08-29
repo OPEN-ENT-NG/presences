@@ -99,4 +99,12 @@ public class FakeRight extends ControllerHelper {
     @SecuredAction(Presences.MANAGE_EXEMPTION_RESTRICTED)
     public void manageExemptionRestricted(HttpServerRequest request) {notImplemented(request);}
 
+    @Get("/rights/settings/init/1d")
+    @SecuredAction(Presences.INIT_SETTINGS_1D)
+    public void initSettings1D(HttpServerRequest request) {notImplemented(request);}
+
+    @Get("/rights/settings/init/2d")
+    @SecuredAction(Presences.INIT_SETTINGS_2D)
+    public void initSettings2D(HttpServerRequest request) {notImplemented(request);}
+
 }

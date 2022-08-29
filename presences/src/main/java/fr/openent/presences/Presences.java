@@ -63,6 +63,8 @@ public class Presences extends BaseServer {
     public static final String MANAGE_COLLECTIVE_ABSENCES = "presences.manage.collective.absences";
     public static final String ALERTS_STUDENT_NUMBER = "presences.alerts.students.number";
     public static final String READ_OWN_INFO = "presences.read.own.info";
+    public static final String INIT_SETTINGS_1D = "presences.init.settings.1d";
+    public static final String INIT_SETTINGS_2D = "presences.init.settings.2d";
 
     // Widget rights
     public static final String ALERTS_WIDGET = "presences.widget.alerts";

@@ -2,6 +2,8 @@ package fr.openent.presences.common.massmailing;
 
 import fr.openent.presences.common.helper.RequestHelper;
 import fr.openent.presences.common.message.MessageResponseHandler;
+import fr.openent.presences.core.constants.Field;
+import fr.openent.presences.enums.InitTypeEnum;
 import fr.wseduc.webutils.Either;
 import io.vertx.core.Handler;
 import io.vertx.core.eventbus.EventBus;
@@ -27,12 +29,13 @@ public class Massmailing {
         this.eb = eb;
     }
 
-    public void getInitTemplatesStatement(HttpServerRequest request, String structure, String owner, Handler<Either<String, JsonObject>> handler) {
+    public void getInitTemplatesStatement(HttpServerRequest request, String structure, String owner, InitTypeEnum initTypeEnum, Handler<Either<String, JsonObject>> handler) {
         JsonObject action = new JsonObject()
-                .put("action", "init-get-templates-statement")
-                .put("structure", structure)
-                .put("owner", owner)
-                .put("request", RequestHelper.getJsonRequest(request));
+                .put(Field.ACTION, "init-get-templates-statement")
+                .put(Field.STRUCTURE, structure)
+                .put(Field.OWNER, owner)
+                .put(Field.INITTYPE, initTypeEnum.getValue())
+                .put(Field.REQUEST, RequestHelper.getJsonRequest(request));
 
         eb.send(address, action, MessageResponseHandler.messageJsonObjectHandler(handler));
     }
