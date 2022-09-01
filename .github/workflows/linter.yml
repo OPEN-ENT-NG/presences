@@ -114,7 +114,7 @@ jobs:
           VALIDATE_SNAKEMAKE_LINT: false
           VALIDATE_SNAKEMAKE_SNAKEFMT: false
           VALIDATE_STATES: false
-          VALIDATE_SQL: true
+          VALIDATE_SQL: false
           VALIDATE_SQLFLUFF: true
           VALIDATE_TEKTON: false
           VALIDATE_TERRAFORM_TERRASCAN: false
