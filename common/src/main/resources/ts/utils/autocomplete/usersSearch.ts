@@ -50,12 +50,21 @@ export class UsersSearch extends AutoCompleteUtils {
         this.selectedUsers.push(studentItem);
     }
 
-    public async searchUsers(valueInput: string) {
+    public async searchUsers(valueInput: string, profiles?: Array<string>) {
         try {
-            await Promise.all([
-                this.searchService.searchUser(this.structureId, valueInput, 'Personnel'),
-                this.searchService.searchUser(this.structureId, valueInput, 'Teacher')
-            ]).then(response => {
+            let promiseList: Array<Promise<User[]>> = []
+            if (!profiles) {
+                promiseList = [
+                    this.searchService.searchUser(this.structureId, valueInput, 'Personnel'),
+                    this.searchService.searchUser(this.structureId, valueInput, 'Teacher')
+                ]
+            } else {
+                profiles.forEach(profile => {
+                    promiseList.push(this.searchService.searchUser(this.structureId, valueInput, profile))
+                })
+            }
+
+            await Promise.all(promiseList).then(response => {
                 this.users = [].concat(...response);
             })
         } catch (err) {
