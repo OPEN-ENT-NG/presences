@@ -2,7 +2,7 @@ import {_, Me, ng} from 'entcore';
 import {IAngularEvent, ILocationService, IScope, IWindowService} from "angular";
 import {Student, Students} from "@common/model/Student";
 import {GroupsSearch, PresencesPreferenceUtils, safeApply, StudentsSearch} from "@common/utils";
-import {Group, GroupService, SearchService} from "@common/services";
+import {Group, GroupService, SearchService, GroupingService} from "@common/services";
 import {EVENTS_DATE, EVENTS_FORM, EVENTS_SEARCH} from "@common/core/enum/presences-event";
 import {EventsFilter} from "@presences/utilities";
 import {EventListCalendarFilter} from "@presences/models";
@@ -28,9 +28,7 @@ interface IViewModel {
 
     removeSelectedGroup(group: Group): void;
 
-    students: Students;
     studentsSearch: StudentsSearch;
-    groups: Array<Group>;
     groupsSearch: GroupsSearch;
 }
 
@@ -54,7 +52,8 @@ class Controller implements ng.IController, IViewModel {
                 private $location: ILocationService,
                 private $window: IWindowService,
                 private searchService: SearchService,
-                private groupService: GroupService) {
+                private groupService: GroupService,
+                private groupingService: GroupingService) {
         this.$scope['vm'] = this;
         this.studentsSearch = null;
         this.groupsSearch = null;
@@ -67,7 +66,7 @@ class Controller implements ng.IController, IViewModel {
                 this.studentsSearch = new StudentsSearch(window.structure.id,
                     this.searchService);
                 this.groupsSearch = new GroupsSearch(window.structure.id,
-                    this.searchService, this.groupService);
+                    this.searchService, this.groupService, this.groupingService);
             }
         });
 
@@ -154,4 +153,4 @@ class Controller implements ng.IController, IViewModel {
 }
 
 export const eventsController = ng.controller('EventsController',
-    ['$scope', '$location', '$window', 'SearchService', 'GroupService', Controller]);
+    ['$scope', '$location', '$window', 'SearchService', 'GroupService', 'GroupingService', Controller]);

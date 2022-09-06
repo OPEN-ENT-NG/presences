@@ -24,8 +24,16 @@ export class GroupsSearch extends AutoCompleteUtils {
         this.groupingService = groupingService;
     }
 
-    public getGroups() {
-        return this.groups;
+    public getGroups(): Array<Group> {
+        let groupsResult: Array<Group> = []
+        this.groups.forEach((groupItem: Group | Grouping) => {
+            if (instanceOfGrouping(groupItem)) {
+                groupsResult = (<Grouping>groupItem).groupList.concat(groupsResult);
+            } else {
+                groupsResult.push(groupItem);
+            }
+        })
+        return groupsResult;
     }
 
     public getSelectedGroups() {

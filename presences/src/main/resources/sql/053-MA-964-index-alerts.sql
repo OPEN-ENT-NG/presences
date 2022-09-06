@@ -1,4 +1,5 @@
-CREATE INDEX idx_alert
-    ON presences.alerts
-        USING btree
-        (structure_id ASC, student_id ASC, type ASC, date DESC);
+DROP TABLE viesco.rel_grouping_class;
+DROP TABLE viesco.grouping;
+
+DROP FUNCTION viesco.grouping_date_update();
+DROP FUNCTION viesco.rel_grouping_update();

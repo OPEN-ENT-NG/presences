@@ -1,5 +1,6 @@
 export * from '@common/services/SearchService';
 export * from '@common/services/GroupService';
+export * from '@common/services/GroupingService';
 export * from '@common/services/ViescolaireService';
 export * from '@common/services/UserService';
 export * from './CalendarService';

@@ -1,6 +1,6 @@
 import {Me, model, moment, ng, toasts} from 'entcore';
-import {EventService, Group, GroupService, SearchItem, SearchService} from '../services';
-import {DateUtils, PreferencesUtils} from '@common/utils';
+import {EventService, Group, GroupingService, GroupService, SearchItem, SearchService} from '../services';
+import {DateUtils, GroupsSearch, PreferencesUtils} from '@common/utils';
 import rights from '../rights';
 import {Course, EventType} from '../models';
 import {alertService} from '../services/AlertService';
@@ -16,10 +16,6 @@ interface Filter {
         item: string;
         items: SearchItem[];
     }
-    searchClass: {
-        item: string;
-        items: Group[];
-    }
 }
 
 interface ViewModel {
@@ -29,6 +25,7 @@ interface ViewModel {
     alert: Alert;
     course: Course;
     absencesSummary: EventAbsenceSummary;
+    groupsSearch: GroupsSearch;
 
     selectItem(model: any, student: any): void;
 
@@ -48,15 +45,18 @@ interface ViewModel {
 }
 
 export const dashboardController = ng.controller('DashboardController', ['$scope', '$route', '$location',
-    'SearchService', 'GroupService', 'EventService',
-    function ($scope, $route, $location, SearchService: SearchService, GroupService: GroupService, eventService: EventService) {
+    'SearchService', 'GroupService', 'GroupingService', 'EventService',
+    function ($scope, $route, $location, searchService: SearchService, groupService: GroupService, groupingService: GroupingService,
+              eventService: EventService) {
         const vm: ViewModel = this;
 
         const initData = async (): Promise<void> => {
             if (!window.structure) {
                 window.structure = await Me.preference(PreferencesUtils.PREFERENCE_KEYS.PRESENCE_STRUCTURE);
             } else {
-                await Promise.all([vm.getAlert(), vm.getAbsentsCounts()]);
+                await Promise.all([vm.getAlert(), vm.getAbsentsCounts()])
+                    .catch(error => console.log(error));
+                vm.groupsSearch = new GroupsSearch(window.structure.id, searchService, groupService, groupingService)
             }
             $scope.safeApply();
         };
@@ -64,10 +64,6 @@ export const dashboardController = ng.controller('DashboardController', ['$scope
         vm.date = DateUtils.format(moment(), DateUtils.FORMAT['DATE-FULL-LETTER']);
         vm.filter = {
             search: {
-                item: null,
-                items: null
-            },
-            searchClass: {
                 item: null,
                 items: null
             }
@@ -96,7 +92,7 @@ export const dashboardController = ng.controller('DashboardController', ['$scope
         vm.searchItem = async function (value) {
             const structureId = window.structure.id;
             try {
-                vm.filter.search.items = await SearchService.search(structureId, value);
+                vm.filter.search.items = await searchService.search(structureId, value);
                 $scope.safeApply();
             } catch (err) {
                 vm.filter.search.items = [];
@@ -117,13 +113,11 @@ export const dashboardController = ng.controller('DashboardController', ['$scope
         };
 
         vm.searchItemToRegistry = async (value) => {
-            const structureId = window.structure.id;
             try {
-                vm.filter.searchClass.items = await GroupService.search(structureId, value);
-                vm.filter.searchClass.items.forEach((item) => item.toString = () => item.name);
+                await vm.groupsSearch.searchGroups(value);
                 $scope.safeApply();
             } catch (err) {
-                vm.filter.searchClass.items = [];
+                console.error(err);
             }
         };
 

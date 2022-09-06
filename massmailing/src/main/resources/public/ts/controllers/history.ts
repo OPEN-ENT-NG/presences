@@ -4,6 +4,7 @@ import {Mailing, MailingRequest, Mailings, MailingType, MassmailingStatus} from 
 import {DateUtils, StudentsSearch} from "@common/utils";
 import {GroupsSearch} from "@common/utils/autocomplete/groupsSearch";
 import {EventType} from "@common/model";
+import {GroupingService} from "@common/services";
 
 declare let window: any;
 
@@ -96,9 +97,9 @@ interface ViewModel {
 }
 
 export const historyController = ng.controller('HistoryController',
-    ['$scope', '$timeout', '$route', '$location', 'SearchService', 'GroupService', 'MailingService',
+    ['$scope', '$timeout', '$route', '$location', 'SearchService', 'GroupService', 'GroupingService', 'MailingService',
         function ($scope, $timeout, $route, $location, searchService: SearchService,
-                  groupService: GroupService, mailingService: MailingService) {
+                  groupService: GroupService, groupingService: GroupingService, mailingService: MailingService) {
             const vm: ViewModel = this;
 
             /* Init mailings */
@@ -183,10 +184,10 @@ export const historyController = ng.controller('HistoryController',
                 vm.mailings = new Mailings(window.structure.id);
                 /* Init search bar */
                 vm.studentsSearch = new StudentsSearch(window.structure.id, searchService);
-                vm.groupsSearch = new GroupsSearch(window.structure.id, searchService, groupService);
+                vm.groupsSearch = new GroupsSearch(window.structure.id, searchService, groupService, groupingService);
                 /* Init search bar lightbox */
                 vm.studentsSearchLightbox = new StudentsSearch(window.structure.id, searchService);
-                vm.groupsSearchLightbox = new GroupsSearch(window.structure.id, searchService, groupService);
+                vm.groupsSearchLightbox = new GroupsSearch(window.structure.id, searchService, groupService, groupingService);
             };
 
             const getMailingsHistory = async (): Promise<void> => {

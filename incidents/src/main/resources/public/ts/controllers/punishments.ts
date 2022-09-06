@@ -12,6 +12,7 @@ import {
     Punishments
 } from "@incidents/models";
 import {
+    GroupingService,
     GroupService,
     IPunishmentService,
     IPunishmentsTypeService,
@@ -126,10 +127,10 @@ interface IViewModel {
 }
 
 export const punishmentController = ng.controller('PunishmentController',
-    ['$scope', '$route', '$location', 'SearchService', 'GroupService', 'PunishmentService',
+    ['$scope', '$route', '$location', 'SearchService', 'GroupService', 'GroupingService', 'PunishmentService',
         'PunishmentsTypeService', 'ViescolaireService',
         function ($scope, $route, $location, searchService: SearchService,
-                  groupService: GroupService, punishmentService: IPunishmentService,
+                  groupService: GroupService, groupingService: GroupingService, punishmentService: IPunishmentService,
                   punishmentTypeService: IPunishmentsTypeService, viescolaireService: IViescolaireService) {
             const vm: IViewModel = this;
 
@@ -188,13 +189,13 @@ export const punishmentController = ng.controller('PunishmentController',
 
                 /* Init search bar */
                 vm.studentsSearch = new StudentsSearch(window.structure.id, searchService);
-                vm.groupsSearch = new GroupsSearch(window.structure.id, searchService, groupService);
+                vm.groupsSearch = new GroupsSearch(window.structure.id, searchService, groupService, groupingService);
 
                 setDataFromMemento();
 
                 /* Init search bar lightbox */
                 vm.studentsSearchLightbox = new StudentsSearch(window.structure.id, searchService);
-                vm.groupsSearchLightbox = new GroupsSearch(window.structure.id, searchService, groupService);
+                vm.groupsSearchLightbox = new GroupsSearch(window.structure.id, searchService, groupService, groupingService);
 
                 /* Init date beginning */
                 if (vm.filter.start_date === null) {
