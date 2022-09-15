@@ -14,14 +14,14 @@ export class GroupsSearch extends AutoCompleteUtils {
     private selectedGroups: Array<{}>;
 
     private groupService: GroupService;
-    private groupingService: GroupingService;
+    private _groupingService: GroupingService;
 
     public group: string;
 
     constructor(structureId: string, searchService: SearchService, groupService: GroupService, groupingService?: GroupingService) {
         super(structureId, searchService);
         this.groupService = groupService;
-        this.groupingService = groupingService;
+        this._groupingService = groupingService;
         this.groups = [];
     }
 
@@ -88,8 +88,8 @@ export class GroupsSearch extends AutoCompleteUtils {
         try {
             this.groups = await this.groupService.search(this.structureId, valueInput);
             this.groups.forEach((group: Group) => group.toString = () => group.name);
-            if (this.groupingService) {
-                let groupingList: Array<Grouping> = await this.groupingService.search(this.structureId, valueInput)
+            if (this._groupingService) {
+                let groupingList: Array<Grouping> = await this._groupingService.search(this.structureId, valueInput)
                 groupingList.forEach((grouping: Grouping) => {
                     grouping.toString = () => grouping.name;
                     this.groups.push(grouping)
@@ -100,4 +100,8 @@ export class GroupsSearch extends AutoCompleteUtils {
             throw err;
         }
     };
+
+    set groupingService(value: GroupingService) {
+        this._groupingService = value;
+    }
 }
