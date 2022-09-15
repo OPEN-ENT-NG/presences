@@ -6,8 +6,8 @@ on:
 
 jobs:
   checkstyle_job:
-    runs-on: ubuntu-latest
     name: Checkstyle job
+    runs-on: ubuntu-latest
     steps:
       - name: Checkout
         uses: actions/checkout@v2
@@ -16,5 +16,25 @@ jobs:
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           reporter: 'github-pr-check'
-          tool_name: 'testtool'
+          tool_name: 'github-pr-check'
           checkstyle_config: '.github/linters/sun_checks.xml'
+
+  stylelint:
+    name: Stylelint job
+    runs-on: ubuntu-latest
+    container:
+      image: opendigitaleducation/node:10-alpine
+      options: --user root -v ${{ github.workspace }}:/home/node/:rw
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+      - name: Run npm install
+        run: npm install
+      - name: stylelint
+        uses: reviewdog/action-stylelint@v1
+        with:
+          reporter: github-pr-check
+          stylelint_input: '**/*.scss'
+          filter_mode: file
+          github_token: ${{ secrets.GITHUB_TOKEN }}
