@@ -10,25 +10,25 @@ import {Grouping, instanceOfGrouping} from "@common/model/grouping";
 
 export class GroupsSearch extends AutoCompleteUtils {
 
-    private groups: Array<Group | Grouping>;
-    private selectedGroups: Array<{}>;
+    private _groups: Array<Group | Grouping>;
+    private _selectedGroups: Array<{}>;
 
-    private groupService: GroupService;
-    private groupingService: GroupingService;
+    private readonly _groupService: GroupService;
+    private _groupingService: GroupingService;
 
-    public group: string;
+    private _group: string;
 
     constructor(structureId: string, searchService: SearchService, groupService: GroupService, groupingService?: GroupingService) {
         super(structureId, searchService);
-        this.groupService = groupService;
-        this.groupingService = groupingService;
-        this.groups = [];
+        this._groupService = groupService;
+        this._groupingService = groupingService;
+        this._groups = [];
     }
 
     //Only returns group from grouping, but not the grouping itself
     public getGroups(): Array<Group> {
         let groupsResult: Array<Group> = []
-        this.groups.forEach((groupItem: Group | Grouping) => {
+        this._groups.forEach((groupItem: Group | Grouping) => {
             if (instanceOfGrouping(groupItem)) {
                 groupsResult = (<Grouping>groupItem).groupList.concat(groupsResult);
             } else {
@@ -39,65 +39,109 @@ export class GroupsSearch extends AutoCompleteUtils {
     }
 
     public getSelectedGroups() {
-        return this.selectedGroups ? this.selectedGroups : [];
+        return this._selectedGroups ? this._selectedGroups : [];
     }
 
     public setSelectedGroups(selectedGroups: Array<{}>) {
-        this.selectedGroups = selectedGroups;
+        this._selectedGroups = selectedGroups;
     }
 
     public removeSelectedGroups(groupItem) {
-        this.selectedGroups.splice(this.selectedGroups.indexOf(groupItem), 1);
+        this._selectedGroups.splice(this._selectedGroups.indexOf(groupItem), 1);
     }
 
     public resetGroups() {
-        this.groups = [];
+        this._groups = [];
     }
 
     public resetSelectedGroups() {
-        this.selectedGroups = [];
+        this._selectedGroups = [];
     }
 
     public selectGroups(valueInput: string, groupItem: Group | Grouping) {
-        if (!this.selectedGroups) this.selectedGroups = [];
+        if (!this._selectedGroups) this._selectedGroups = [];
         if (instanceOfGrouping(groupItem)) {
             let that: GroupsSearch = this;
             (<Grouping>groupItem).groupList.forEach((group: Group) => {
                 that.selectGroups(valueInput, group);
             });
         } else {
-            if (this.selectedGroups.find(group => group["id"] === groupItem.id) === undefined) {
-                this.selectedGroups.push(groupItem);
+            if (this._selectedGroups.find(group => group["id"] === groupItem.id) === undefined) {
+                this._selectedGroups.push(groupItem);
             }
         }
     };
 
     public selectGroup(valueInput: string, groupItem: Group | Grouping) {
-        this.selectedGroups = [];
+        this._selectedGroups = [];
         if (instanceOfGrouping(groupItem)) {
             let that: GroupsSearch = this;
             (<Grouping>groupItem).groupList.forEach((group: Group) => {
                 that.selectGroups(valueInput, group);
             });
         } else {
-            this.selectedGroups.push(groupItem);
+            this._selectedGroups.push(groupItem);
         }
     }
 
     public async searchGroups(valueInput: string) {
         try {
-            this.groups = await this.groupService.search(this.structureId, valueInput);
-            this.groups.forEach((group: Group) => group.toString = () => group.name);
-            if (this.groupingService) {
-                let groupingList: Array<Grouping> = await this.groupingService.search(this.structureId, valueInput)
+            this._groups = await this._groupService.search(this.structureId, valueInput);
+            this._groups.forEach((group: Group) => group.toString = () => group.name);
+            if (this._groupingService) {
+                let groupingList: Array<Grouping> = await this._groupingService.search(this.structureId, valueInput)
                 groupingList.forEach((grouping: Grouping) => {
                     grouping.toString = () => grouping.name;
-                    this.groups.push(grouping)
+                    this._groups.push(grouping)
                 });
             }
         } catch (err) {
-            this.groups = [];
+            this._groups = [];
             throw err;
         }
     };
+
+    get groups(): Array<Group | Grouping> {
+        return this._groups;
+    }
+
+    set groups(value: Array<Group | Grouping>) {
+        this._groups = value;
+    }
+
+    get selectedGroups(): Array<{}> {
+        return this._selectedGroups;
+    }
+
+    set selectedGroups(value: Array<{}>) {
+        this._selectedGroups = value;
+    }
+
+    get groupingService(): GroupingService {
+        return this._groupingService;
+    }
+
+    set groupingService(value: GroupingService) {
+        this._groupingService = value;
+    }
+
+    get group(): string {
+        return this._group;
+    }
+
+    set group(value: string) {
+        this._group = value;
+    }
+
+    get groupService(): GroupService {
+        return this._groupService;
+    }
+
+    clone(): GroupsSearch {
+        let groupsSearch: GroupsSearch = new GroupsSearch(this.structureId, this.searchService, this.groupService, this.groupingService);
+        groupsSearch.group = this.group;
+        groupsSearch.groups = this.groups;
+        groupsSearch.selectedGroups = this.selectedGroups;
+        return groupsSearch;
+    }
 }
