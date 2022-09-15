@@ -8,19 +8,19 @@
     <div class="cell four paddingRight">
         <div class="cell twelve search-input">
             <async-autocomplete data-ng-disabled="false"
-                                data-ng-model="vm.search.student.value"
+                                data-ng-model="vm.studentsSearch.student"
                                 data-ng-change="vm.selectStudent"
                                 data-on-search="vm.searchStudent"
-                                data-options="vm.search.student.list"
+                                data-options="vm.studentsSearch.students"
                                 data-placeholder="statistics-presences.search.student"
-                                data-search="vm.search.student.value">
+                                data-search="vm.studentsSearch.student">
             </async-autocomplete>
         </div>
 
         <div class="cell twelve">
             <ul class="cell twelve search-input-ul">
-                <span data-ng-show="vm.filter.students.length === 0">&nbsp;</span>
-                <li ng-repeat="student in vm.filter.students">
+                <span data-ng-show="vm.studentsSearch.getSelectedStudents().length === 0">&nbsp;</span>
+                <li ng-repeat="student in vm.studentsSearch.getSelectedStudents()">
                     [[student.displayName]] <i class="close"
                                                data-ng-click="vm.removeSelection('students', student)"></i>
                 </li>
@@ -32,18 +32,18 @@
     <div class="cell four paddingLeft">
         <div class="cell twelve search-input">
             <async-autocomplete data-ng-disabled="false"
-                                data-ng-model="vm.search.audience.value"
+                                data-ng-model="vm.groupsSearch.group"
                                 data-ng-change="vm.selectAudience"
                                 data-on-search="vm.searchAudience"
-                                data-options="vm.search.audience.list"
+                                data-options="vm.groupsSearch.groups"
                                 data-placeholder="statistics-presences.search.audience"
-                                data-search="vm.search.audience.value">
+                                data-search="vm.groupsSearch.group">
             </async-autocomplete>
         </div>
         <div class="cell twelve">
             <ul class="cell twelve search-input-ul">
-                <span data-ng-show="vm.filter.audiences.length === 0">&nbsp;</span>
-                <li ng-repeat="audience in vm.filter.audiences">
+                <span data-ng-show="vm.groupsSearch.getSelectedGroups().length === 0">&nbsp;</span>
+                <li ng-repeat="audience in vm.groupsSearch.getSelectedGroups()">
                     [[audience.name]] <i class="close"
                                          data-ng-click="vm.removeSelection('audiences', audience)"></i>
                 </li>

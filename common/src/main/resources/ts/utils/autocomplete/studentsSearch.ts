@@ -10,56 +10,56 @@ import {Student} from "@common/model/Student";
 
 export class StudentsSearch extends AutoCompleteUtils {
 
-    private students: Array<User>;
-    private selectedStudents: Array<{}>;
+    private _students: Array<User>;
+    private _selectedStudents: Array<{}>;
 
-    public student: string;
+    private _student: string;
 
     constructor(structureId: string, searchService: SearchService) {
         super(structureId, searchService);
     }
 
     public getStudents() {
-        return this.students;
+        return this._students;
     }
 
     public getSelectedStudents() {
-        return this.selectedStudents ? this.selectedStudents : [];
+        return this._selectedStudents ? this._selectedStudents : [];
     }
 
     public setSelectedStudents(selectedStudents: Array<{}>) {
-        this.selectedStudents = selectedStudents;
+        this._selectedStudents = selectedStudents;
     }
 
     public removeSelectedStudents(studentItem) {
-        this.selectedStudents.splice(this.selectedStudents.indexOf(studentItem), 1);
+        this._selectedStudents.splice(this._selectedStudents.indexOf(studentItem), 1);
     }
 
     public resetStudents() {
-        this.students = [];
+        this._students = [];
     }
 
     public resetSelectedStudents() {
-        this.selectedStudents = [];
+        this._selectedStudents = [];
     }
 
     public selectStudents(valueInput: string, studentItem: Student): void {
-        if (!this.selectedStudents) this.selectedStudents = [];
-        if (this.selectedStudents.find(student => student["id"] === studentItem.id) === undefined) {
-            this.selectedStudents.push(studentItem);
+        if (!this._selectedStudents) this._selectedStudents = [];
+        if (this._selectedStudents.find(student => student["id"] === studentItem.id) === undefined) {
+            this._selectedStudents.push(studentItem);
         }
     }
 
     public selectStudent(valueInput, studentItem) {
-        this.selectedStudents = [];
-        this.selectedStudents.push(studentItem);
+        this._selectedStudents = [];
+        this._selectedStudents.push(studentItem);
     }
 
     public async searchStudents(valueInput: string) {
         try {
-            this.students = await this.searchService.searchStudents(this.structureId, valueInput);
+            this._students = await this.searchService.searchStudents(this.structureId, valueInput);
         } catch (err) {
-            this.students = [];
+            this._students = [];
             throw err;
         }
     };
@@ -71,16 +71,48 @@ export class StudentsSearch extends AutoCompleteUtils {
                 user.id = student.id;
                 user.displayName = student.name;
                 user.toString = () => student.name;
-                this.students.push(user);
+                this._students.push(user);
             });
-            this.students = this.students.filter(
+            this._students = this._students.filter(
                 student =>
                     student.displayName.toUpperCase().indexOf(valueInput) > -1 ||
                     student.displayName.toLowerCase().indexOf(valueInput) > -1
             );
         } catch (err) {
-            this.students = [];
+            this._students = [];
             throw err;
         }
+    }
+
+    get students(): Array<User> {
+        return this._students;
+    }
+
+    set students(value: Array<User>) {
+        this._students = value;
+    }
+
+    get selectedStudents(): Array<{}> {
+        return this._selectedStudents;
+    }
+
+    set selectedStudents(value: Array<{}>) {
+        this._selectedStudents = value;
+    }
+
+    get student(): string {
+        return this._student;
+    }
+
+    set student(value: string) {
+        this._student = value;
+    }
+
+    clone(): StudentsSearch {
+        let studentsSearch: StudentsSearch = new StudentsSearch(this.structureId, this.searchService);
+        studentsSearch.students = this.students;
+        studentsSearch.selectedStudents = this.selectedStudents;
+        studentsSearch.student = this.student;
+        return studentsSearch
     }
 }
