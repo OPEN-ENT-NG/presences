@@ -6,6 +6,7 @@ import {Scope} from "./main";
 import {INCIDENTS_FORM_EVENTS} from '../sniplets';
 import {DateUtils, GroupsSearch, StudentsSearch} from "@common/utils";
 import {IViescolaireService, ViescolaireService} from "@common/services/ViescolaireService";
+import {GroupingService} from "@common/services";
 
 declare let window: any;
 
@@ -60,10 +61,10 @@ interface ViewModel {
     editIncidentLightbox(incident: Incident): void;
 }
 
-export const incidentsController = ng.controller('IncidentsController',
-    ['$scope', '$location', 'SearchService', 'IncidentService', 'ViescolaireService', 'GroupService',
+export const incidentsController = ng.controller('IncidentsController',    ['$scope', '$location',
+        'SearchService', 'IncidentService', 'ViescolaireService', 'GroupService', 'GroupingService',
         function ($scope: Scope, $location, searchService: SearchService, IncidentService: IncidentService,
-                  viescolaireService: IViescolaireService, groupService: GroupService) {
+                  viescolaireService: IViescolaireService, groupService: GroupService, groupingService: GroupingService) {
             const vm: ViewModel = this;
             vm.notifications = [];
             vm.filter = {
@@ -96,7 +97,7 @@ export const incidentsController = ng.controller('IncidentsController',
 
                 vm.incidents.structureId = window.structure.id;
                 vm.studentsSearch = new StudentsSearch(window.structure.id, searchService);
-                vm.groupsSearch = new GroupsSearch(window.structure.id, searchService, groupService);
+                vm.groupsSearch = new GroupsSearch(window.structure.id, searchService, groupService, groupingService);
 
                 if (vm.filter.startDate === null) {
                     const schoolYears: ISchoolYearPeriod = await viescolaireService.getSchoolYearDates(window.structure.id);
