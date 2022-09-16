@@ -2,10 +2,18 @@ import {ng} from 'entcore'
 import http from 'axios';
 import {User} from '@common/model/User';
 import {SearchItem} from "@common/services/SearchService";
+import {StudentDivisionResponse} from "@common/model/grouping";
 
-export interface Group {
+export class Group {
     id: string;
     name: string;
+
+    buildFromStudentDivision(studentDivision: StudentDivisionResponse): Group {
+        this.id = studentDivision.id;
+        this.name = studentDivision.name;
+        this.toString = () => this.name;
+        return this;
+    }
 }
 
 export interface GroupService {
