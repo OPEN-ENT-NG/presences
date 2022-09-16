@@ -2,7 +2,7 @@ import {model, moment, ng, toasts} from 'entcore';
 import {Presence, PresenceRequest, Presences} from "../models";
 import {DateUtils} from "@common/utils";
 import {StudentsSearch, UsersSearch} from "../utilities";
-import {Group, GroupService, PresenceService, SearchService} from "../services";
+import {Group, GroupingService, GroupService, PresenceService, SearchService} from "../services";
 import {SNIPLET_FORM_EMIT_EVENTS, SNIPLET_FORM_EVENTS} from "@common/model";
 import {GroupsSearch} from "@common/utils/autocomplete/groupsSearch";
 
@@ -66,8 +66,9 @@ interface ViewModel {
 }
 
 export const presencesController = ng.controller('PresencesController',
-    ['$scope', '$route', '$location', 'SearchService', 'PresenceService', 'GroupService',
-        function ($scope, $route, $location, searchService: SearchService, presenceService: PresenceService, groupService: GroupService) {
+    ['$scope', '$route', '$location', 'SearchService', 'PresenceService', 'GroupService', 'GroupingService',
+        function ($scope, $route, $location, searchService: SearchService, presenceService: PresenceService,
+                  groupService: GroupService, groupingService: GroupingService) {
             const vm: ViewModel = this;
 
             /* Init filter */
@@ -97,7 +98,7 @@ export const presencesController = ng.controller('PresencesController',
                 vm.presences = new Presences(window.structure.id);
                 vm.studentsSearch = new StudentsSearch(window.structure.id, searchService);
                 vm.usersSearch = new UsersSearch(window.structure.id, searchService);
-                vm.groupsSearch = new GroupsSearch(window.structure.id, searchService, groupService);
+                vm.groupsSearch = new GroupsSearch(window.structure.id, searchService, groupService, groupingService);
 
                 /* event */
                 vm.presences.eventer.on('loading::true', () => $scope.safeApply());
