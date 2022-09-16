@@ -83,4 +83,12 @@ export class StudentsSearch extends AutoCompleteUtils {
             throw err;
         }
     }
+
+    clone(): StudentsSearch {
+        let studentsSearch: StudentsSearch = new StudentsSearch(this.structureId, this.searchService);
+        studentsSearch.students = this.students;
+        studentsSearch.selectedStudents = this.selectedStudents;
+        studentsSearch.student = this.student;
+        return studentsSearch
+    }
 }

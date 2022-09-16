@@ -104,4 +104,12 @@ export class GroupsSearch extends AutoCompleteUtils {
     set groupingService(value: GroupingService) {
         this._groupingService = value;
     }
+
+    clone(): GroupsSearch {
+        let groupsSearch: GroupsSearch = new GroupsSearch(this.structureId, this.searchService, this.groupService, this._groupingService);
+        groupsSearch.group = this.group;
+        groupsSearch.groups = this.groups;
+        groupsSearch.selectedGroups = this.selectedGroups;
+        return groupsSearch;
+    }
 }
