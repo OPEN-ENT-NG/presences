@@ -1,11 +1,11 @@
 import {_, init, Me, model, moment, ng, toasts} from 'entcore';
-import {AlertService, alertService, Group, IViescolaireService} from "../services";
-import {AlertType, ISchoolYearPeriod, Student} from "../models";
+import {AlertService, alertService, Group, GroupingService, IViescolaireService} from "../services";
+import {AlertType, ISchoolYearPeriod, Student, User} from "../models";
 import {SearchService} from "@common/services/SearchService";
 import {GroupService} from "@common/services/GroupService";
 import rights from "../rights";
 import {Alert, DeleteAlertRequest, StudentAlert} from "@presences/models/Alert";
-import {DateUtils, PreferencesUtils, safeApply} from "@common/utils";
+import {DateUtils, GroupsSearch, PreferencesUtils, safeApply, StudentsSearch, UsersSearch} from "@common/utils";
 import {ILocationService, IScope} from "angular";
 import {IRouting} from "@common/model/Route";
 
@@ -18,11 +18,6 @@ interface Filter {
         FORGOTTEN_NOTEBOOK?: boolean;
         INCIDENT?: boolean;
     };
-    student: string;
-    students: any[];
-    class: string;
-    classes: any[];
-    selected: { students: any[], classes: any[] }
     startDate?: Date,
     endDate?: Date;
 }
@@ -34,6 +29,8 @@ interface ViewModel {
     filter: Filter;
     listAlert: Array<StudentAlert>;
     selection: { all: boolean };
+    groupsSearch: GroupsSearch;
+    studentsSearch: StudentsSearch;
 
     params: {
         loading: boolean,
@@ -50,7 +47,9 @@ interface ViewModel {
 
     selectClass(): (model: any, classObject: any) => Promise<void>;
 
-    dropFilter(object: any, list: any): void;
+    removeSelectedGroup(groupItem: Group): void;
+
+    removeSelectedStudent(studentItem: User): void;
 
     /*  switch alert type */
     switchFilter(filter: string): Promise<void>;
@@ -75,6 +74,8 @@ class Controller implements ng.IController, ViewModel {
     listAlert: StudentAlert[];
     selection: { all: boolean; };
     params: { loading: boolean; type: string; };
+    groupsSearch: GroupsSearch;
+    studentsSearch: StudentsSearch;
 
     constructor(private $scope: IScope,
                 private $route: IRouting,
@@ -82,20 +83,13 @@ class Controller implements ng.IController, ViewModel {
                 private searchService: SearchService,
                 private viescolaireService: IViescolaireService,
                 private alertService: AlertService,
-                private groupService: GroupService) {
+                private groupService: GroupService,
+                private groupingService: GroupingService) {
         this.$scope['vm'] = this;
         console.log('AlertsController');
         this.filters =
             [AlertType[AlertType.ABSENCE], AlertType[AlertType.LATENESS], AlertType[AlertType.INCIDENT], AlertType[AlertType.FORGOTTEN_NOTEBOOK]];
         this.filter = {
-            student: '',
-            class: '',
-            students: undefined,
-            classes: undefined,
-            selected: {
-                students: [],
-                classes: [],
-            },
             types: {},
             startDate: undefined,
             endDate: new Date(),
@@ -127,7 +121,10 @@ class Controller implements ng.IController, ViewModel {
                     this.filter.startDate = new Date();
                     console.error(error);
                 });
-            await this.getStudentAlert();
+            await this.getStudentAlert()
+                .catch(error => console.error(error));
+            this.groupsSearch = new GroupsSearch(window.structure.id, this.searchService, this.groupService, this.groupingService);
+            this.studentsSearch = new StudentsSearch(window.structure.id, this.searchService);
         }
     }
 
@@ -161,25 +158,18 @@ class Controller implements ng.IController, ViewModel {
 
     async searchStudent(value: string): Promise<void> {
         const that: Controller = this.$parent.vm
-        const structureId = window.structure.id;
-        try {
-            that.filter.students = await that.searchService.searchUser(structureId, value, 'Student');
-            safeApply(that.$scope);
-        } catch (err) {
-            that.filter.students = [];
-            throw err;
-        }
+        await that.studentsSearch.searchStudents(value);
+        safeApply(that.$scope);
     }
 
     selectStudent(): (model: any, student: any) => Promise<void> {
         const that: Controller = this
         return async (model: any, student: any): Promise<void> => {
-            if (_.findWhere(that.filter.selected.students, {id: student.id})) {
+            if (_.findWhere(that.studentsSearch.getSelectedStudents(), {id: student.id})) {
                 return;
             }
-            that.filter.selected.students.push(student);
-            that.filter.student = '';
-            that.filter.students = undefined;
+            that.studentsSearch.selectStudents(model, student)
+            that.studentsSearch.student = '';
             await that.getStudentAlert(that.extractSelectedStudentIds(), that.extractSelectedGroupsName());
             safeApply(that.$scope);
         }
@@ -187,35 +177,31 @@ class Controller implements ng.IController, ViewModel {
 
     async searchClass(value: string): Promise<void> {
         const that: Controller = this.$parent.vm
-        const structureId = window.structure.id;
-        try {
-            that.filter.classes = await that.groupService.search(structureId, value);
-            that.filter.classes.map((obj) => obj.toString = () => obj.name);
-            safeApply(that.$scope);
-        } catch (err) {
-            that.filter.classes = [];
-            throw err;
-        }
-        return;
+        await that.groupsSearch.searchGroups(value);
+        safeApply(that.$scope);
     }
 
     selectClass(): (model: any, classObject: any) => Promise<void> {
         const that: Controller = this;
         return  async (model: any, classObject: any): Promise<void> => {
-            if (_.findWhere(that.filter.selected.students, {id: classObject.id})) {
+            if (_.findWhere(that.groupsSearch.getSelectedGroups(), {id: classObject.id})) {
                 return;
             }
-            that.filter.selected.classes.push(classObject);
-            that.filter.class = '';
-            that.filter.classes = undefined;
+            that.groupsSearch.selectGroups(model, classObject);
+            that.groupsSearch.group = "";
             await that.getStudentAlert(that.extractSelectedStudentIds(), that.extractSelectedGroupsName());
             safeApply(that.$scope);
         }
 
     }
 
-    dropFilter(object: any, list: any): void {
-        this.filter.selected[list] = _.without(this.filter.selected[list], object);
+    removeSelectedGroup(groupItem: Group): void {
+        this.groupsSearch.removeSelectedGroups(groupItem);
+        this.getStudentAlert(this.extractSelectedStudentIds(), this.extractSelectedGroupsName());
+    }
+
+    removeSelectedStudent(studentItem: User): void {
+        this.studentsSearch.removeSelectedStudents(studentItem);
         this.getStudentAlert(this.extractSelectedStudentIds(), this.extractSelectedGroupsName());
     }
 
@@ -263,14 +249,14 @@ class Controller implements ng.IController, ViewModel {
 
     extractSelectedStudentIds(): string[] {
         const ids: string[] = [];
-        this.filter.selected.students.map((student: Student) => ids.push(student.id));
+        this.studentsSearch.getSelectedStudents().map((student: Student) => ids.push(student.id));
         return ids;
     };
 
     extractSelectedGroupsName(): string[] {
         const ids: string[] = [];
         if (model.me.hasWorkflow(rights.workflow.search)) {
-            this.filter.selected.classes.map((group: Group) => ids.push(group.id));
+            this.groupsSearch.getSelectedGroups().map((group: Group) => ids.push(group.id));
         }
         return ids;
     };
@@ -278,4 +264,4 @@ class Controller implements ng.IController, ViewModel {
 
 export const alertsController = ng.controller('AlertsController',
     ['$scope', '$route', '$location',
-        'SearchService', 'ViescolaireService', 'AlertService', "GroupService", Controller]);
+        'SearchService', 'ViescolaireService', 'AlertService', "GroupService", "GroupingService", Controller]);

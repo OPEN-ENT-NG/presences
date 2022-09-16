@@ -7,20 +7,20 @@
     <!-- Student search bar -->
     <div class="cell four paddingRight">
         <div class="cell twelve search-input">
-            <async-autocomplete data-ng-change="vm.selectStudent()"
-                                data-ng-disabled="false"
-                                data-ng-model="vm.filter.student"
+            <async-autocomplete data-ng-disabled="false"
+                                data-ng-model="vm.studentsSearch.student"
+                                data-ng-change="vm.selectStudent()"
                                 data-on-search="vm.searchStudent"
-                                data-options="vm.filter.students"
+                                data-options="vm.studentsSearch.students"
                                 data-placeholder="presences.exemptions.search.student"
-                                data-search="vm.filter.student">
+                                data-search="vm.studentsSearch.student">
             </async-autocomplete>
         </div>
 
         <div class="cell twelve">
             <ul class="cell twelve search-input-ul">
-                <li ng-click="vm.dropFilter(student, 'students')"
-                    ng-repeat="student in vm.filter.selected.students">
+                <li ng-click="vm.removeSelectedStudent(student)"
+                    ng-repeat="student in vm.studentsSearch.getSelectedStudents()">
                     [[student.displayName]]
                     <i class="close"></i>
                 </li>
@@ -32,21 +32,21 @@
     <!-- Classes/Groups search bar -->
     <div class="cell four paddingLeft">
         <div class="cell twelve search-input">
-            <async-autocomplete data-ng-change="vm.selectClass()"
-                                data-ng-disabled="false"
-                                data-ng-model="vm.filter.class"
+            <async-autocomplete data-ng-disabled="false"
+                                data-ng-model="vm.groupsSearch.group"
+                                data-ng-change="vm.selectClass()"
                                 data-on-search="vm.searchClass"
-                                data-options="vm.filter.classes"
+                                data-options="vm.groupsSearch.groups"
                                 data-placeholder="presences.exemptions.search.audience"
-                                data-search="vm.filter.class">
+                                data-search="vm.groupsSearch.group">
             </async-autocomplete>
 
         </div>
         <div class="cell twelve">
             <ul class="cell twelve search-input-ul">
-                <li ng-repeat="class in vm.filter.selected.classes">
+                <li ng-repeat="class in vm.groupsSearch.getSelectedGroups()">
                     [[class.name]]
-                    <i class="close" ng-click="vm.dropFilter(class, 'classes')"></i>
+                    <i class="close" ng-click="vm.removeSelectedGroup(class)"></i>
                 </li>
             </ul>
         </div>
