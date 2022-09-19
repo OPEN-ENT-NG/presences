@@ -1,12 +1,11 @@
 import {_, idiom as lang, ng} from 'entcore';
 import {Exemptions, Student, Students} from "../models";
 import {EXEMPTIONS_FORM_EVENTS} from '../sniplets';
-import {StudentsSearch, Toast} from "../utilities";
+import {GroupsSearch, StudentsSearch, Toast} from "../utilities";
 import {DateUtils} from "@common/utils"
 import {SNIPLET_FORM_EMIT_EVENTS} from '@common/model';
-import {GroupService} from "@common/services/GroupService";
+import {Group, GroupingService, GroupService, SearchService} from "@common/services";
 import {Scope} from './main'
-import {SearchService} from "@common/services";
 
 declare let window: any;
 
@@ -18,12 +17,8 @@ interface ViewModel {
     notifications: any[];
     createExemptionLightBox: Boolean;
     exemptions: Exemptions;
-    students: Students;
-    studentsFrom: Students;
-    studentsSearching: Students;
+    groupsSearch: GroupsSearch;
     studentsSearch: StudentsSearch;
-    studentsFiltered: any[];
-    classesFiltered: any[];
     form: any;
     formStudentSelected: any[];
 
@@ -33,19 +28,15 @@ interface ViewModel {
 
     dateFormater(date): Date;
 
-    searchByClass(value: string): Promise<void>;
+    searchClass(value: string): Promise<void>;
 
-    searchByStudent(string): void;
+    searchStudent(value: string): Promise<void>;
 
-    selectFilterClass(model: any, option: any): void;
+    selectClass(model: any, option: any): void;
 
-    selectFilterStudent(model: string, option: Student): void;
+    selectStudent(model: string, option: Student): void;
 
     filters(student?, audience?): void;
-
-    excludeClassFromFilter(audience): void;
-
-    excludeStudentFromFilter(audience): void;
 
     selectStudentForm(model: Student, student): void;
 
@@ -61,14 +52,18 @@ interface ViewModel {
 
     excludeStudentFromForm(student): void;
 
+    removeSelectedStudent(student: Student): void
+
+    removeSelectedGroup(group: Group): void
+
     export(): void;
 
     sortField(field: string);
 }
 
 export const exemptionsController = ng.controller('ExemptionsController',
-    ['$scope', '$route', 'GroupService', 'SearchService',
-        function ($scope: Scope, $route, GroupService: GroupService, searchService: SearchService) {
+    ['$scope', '$route', 'GroupService', 'GroupingService', 'SearchService',
+        function ($scope: Scope, $route, groupService: GroupService, groupingService: GroupingService, searchService: SearchService) {
             const vm: ViewModel = this;
 
             console.log('ExemptionsController');
@@ -92,18 +87,15 @@ export const exemptionsController = ng.controller('ExemptionsController',
 
                 vm.classes = undefined;
 
-                vm.students = new Students();
-                vm.studentsFrom = new Students();
-                vm.studentsFiltered = [];
-                vm.classesFiltered = [];
-                vm.studentsSearching = new Students();
                 vm.studentsSearch = new StudentsSearch(window.structure.id, searchService);
+                vm.groupsSearch = new GroupsSearch(window.structure.id, searchService, groupService, groupingService);
                 loadExemptions();
                 $scope.safeApply();
 
             };
             const loadExemptions = async (): Promise<void> => {
-                await vm.exemptions.prepareSyncPaginate(window.structure.id, vm.filter.start_date, vm.filter.end_date, vm.studentsFiltered, vm.classesFiltered);
+                await vm.exemptions.prepareSyncPaginate(window.structure.id, vm.filter.start_date, vm.filter.end_date,
+                    vm.studentsSearch.getSelectedStudents(), vm.groupsSearch.getSelectedGroups());
                 $scope.safeApply();
             };
 
@@ -119,58 +111,52 @@ export const exemptionsController = ng.controller('ExemptionsController',
             /**
              * Init & Manage main filter display PART
              */
-            vm.searchByClass = async function (value) {
-                const structureId = window.structure.id;
-                try {
-                    vm.classes = await GroupService.search(structureId, value);
-                    vm.classes.map((obj) => obj.toString = () => obj.name);
-                    $scope.safeApply();
-                } catch (err) {
-                    vm.classes = [];
-                    throw err;
-                }
-                return;
-            };
-
-            vm.searchByStudent = async (searchText: string) => {
-                await vm.studentsSearch.searchStudents(searchText);
+            vm.searchClass = async (value: string): Promise<void> => {
+                await vm.groupsSearch.searchGroups(value);
                 $scope.safeApply();
             };
 
-            vm.selectFilterClass = function (model: Student, option: Student) {
+            vm.searchStudent = async (value: string): Promise<void> => {
+                await vm.studentsSearch.searchStudents(value);
+                $scope.safeApply();
+            };
+
+            vm.selectClass = async (model: string, option: Group): Promise<void> => {
                 vm.classes = undefined;
                 vm.filter.className = '';
+                vm.groupsSearch.selectGroups(model, option);
+                vm.groupsSearch.group = "";
                 vm.filters(null, option);
             };
 
-            vm.selectFilterStudent = (model: string, option: Student) => {
-                vm.filters(option);
-                vm.students.all = undefined;
-                vm.students.searchValue = '';
+            vm.selectStudent = async (model: string, option: Student): Promise<void> => {
                 vm.studentsSearch.selectStudents(model, option);
                 vm.studentsSearch.student = "";
+                vm.filters(option);
             };
 
             vm.filters = (student?, audience?) => {
-                if (audience && !_.find(vm.classesFiltered, audience)) {
-                    vm.classesFiltered.push(audience);
+                if (audience && !_.find(vm.groupsSearch.getSelectedGroups(), audience)) {
+                    vm.groupsSearch.selectGroups(null, audience);
                 }
-                if (student && !_.find(vm.studentsFiltered, student)) {
-                    vm.studentsFiltered.push(student);
+                if (student && !_.find(vm.studentsSearch.getSelectedStudents(), student)) {
+                    vm.studentsSearch.selectStudents(null, student)
                 }
 
-                vm.exemptions.prepareSyncPaginate(window.structure.id, vm.filter.start_date, vm.filter.end_date, vm.studentsFiltered, vm.classesFiltered);
+                vm.exemptions.prepareSyncPaginate(window.structure.id, vm.filter.start_date, vm.filter.end_date,
+                    vm.studentsSearch.getSelectedStudents(), vm.groupsSearch.getSelectedGroups());
                 $scope.safeApply();
             };
 
-            vm.excludeStudentFromFilter = (student) => {
-                vm.studentsFiltered = _.without(vm.studentsFiltered, _.findWhere(vm.studentsFiltered, student));
+            vm.removeSelectedStudent = (student: Student): void => {
+                this.studentsSearch.removeSelectedStudents(student);
                 vm.filters();
-            };
-            vm.excludeClassFromFilter = (audience) => {
-                vm.classesFiltered = _.without(vm.classesFiltered, _.findWhere(vm.classesFiltered, audience));
+            }
+
+            vm.removeSelectedGroup = (group: Group): void => {
+                this.groupsSearch.removeSelectedGroups(group);
                 vm.filters();
-            };
+            }
 
             vm.export = function () {
                 if (vm.exemptions.all.length == 0) {
@@ -183,7 +169,8 @@ export const exemptionsController = ng.controller('ExemptionsController',
                     $scope.safeApply();
                     return;
                 }
-                vm.exemptions.export(window.structure.id, vm.filter.start_date, vm.filter.end_date, vm.studentsFiltered, vm.classesFiltered);
+                vm.exemptions.export(window.structure.id, vm.filter.start_date, vm.filter.end_date,
+                    vm.studentsSearch.getSelectedStudents(), vm.groupsSearch.getSelectedGroups());
             };
 
 
