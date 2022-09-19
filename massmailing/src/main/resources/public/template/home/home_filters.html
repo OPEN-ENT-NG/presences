@@ -12,16 +12,17 @@
         <div class="cell six paddingRight">
             <div class="cell twelve search-input">
                 <async-autocomplete ng-disabled="false"
-                                    ng-model="vm.formFilter.student"
+                                    ng-model="vm.formFilter.studentsSearch.student"
                                     ng-change="vm.selectStudent"
                                     on-search="vm.searchStudent"
-                                    options="vm.formFilter.students"
+                                    options="vm.formFilter.studentsSearch.students"
                                     placeholder="massmailing.search.student"
-                                    search="vm.formFilter.student"></async-autocomplete>
+                                    search="vm.formFilter.studentsSearch.student">
+                </async-autocomplete>
             </div>
             <div class="cell twelve">
                 <ul class="cell twelve search-input-ul">
-                    <li ng-repeat="student in vm.formFilter.selected.students"
+                    <li ng-repeat="student in vm.formFilter.studentsSearch.getSelectedStudents()"
                         ng-click="vm.dropFilter(student, 'students')">
                         [[student.toString()]]
                         <i class="close"></i>
@@ -32,16 +33,17 @@
         <div class="cell six paddingLeft">
             <div class="cell twelve search-input">
                 <async-autocomplete ng-disabled="false"
-                                    ng-model="vm.formFilter.group"
+                                    ng-model="vm.formFilter.groupsSearch.group"
                                     ng-change="vm.selectGroup"
                                     on-search="vm.searchGroup"
-                                    options="vm.formFilter.groups"
+                                    options="vm.formFilter.groupsSearch.groups"
                                     placeholder="massmailing.search.group"
-                                    search="vm.formFilter.group"></async-autocomplete>
+                                    search="vm.formFilter.groupsSearch.group">
+                </async-autocomplete>
             </div>
             <div class="cell twelve">
                 <ul class="cell twelve search-input-ul">
-                    <li ng-repeat="group in vm.formFilter.selected.groups"
+                    <li ng-repeat="group in vm.formFilter.groupsSearch.getSelectedGroups()"
                         ng-click="vm.dropFilter(group, 'groups')">
                         [[group.toString()]]
                         <i class="close"></i>
