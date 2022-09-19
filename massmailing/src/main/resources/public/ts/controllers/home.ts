@@ -1,15 +1,16 @@
 import {_, idiom as lang, Me, ng, toasts} from 'entcore';
 import {ReasonService} from '@presences/services/ReasonService';
-import {GroupService, SearchService, SettingsService, Template} from '../services';
+import {Group, GroupingService, GroupService, SearchService, SettingsService, Template} from '../services';
 import {
-    IMassmailingFilterPreferences, IRelative,
+    IMassmailingFilterPreferences,
+    IRelative,
     MailingType,
     Massmailing,
     MassmailingAnomaliesResponse,
     MassmailingStatusResponse
 } from '../model';
 import {Reason} from '@presences/models/Reason';
-import {MassmailingPreferenceUtils, PresencesPreferenceUtils} from '@common/utils';
+import {GroupsSearch, MassmailingPreferenceUtils, PresencesPreferenceUtils, StudentsSearch} from '@common/utils';
 import {HomeUtils} from '../utilities';
 import {IPunishmentService, IPunishmentsTypeService} from "@incidents/services";
 import {IPunishmentType} from "@incidents/models/PunishmentType";
@@ -17,6 +18,8 @@ import {EVENT_TYPES} from "@common/model";
 import {MassmailingFilters} from "@massmailing/model/Preferences";
 import {MailTemplateCategory} from "@common/core/enum/mail-template-category";
 import {REASON_TYPE_ID} from "@common/core/enum/reason-type-id";
+import {Student} from "@common/model/Student";
+import {Grouping} from "@common/model/grouping";
 
 interface Filter {
     start_date: Date;
@@ -40,14 +43,8 @@ interface Filter {
     punishments: Array<IPunishmentType>;
     noReasons: boolean;
     noLatenessReasons: boolean;
-    student: any;
-    students: any[];
-    group: any;
-    groups: any[];
-    selected: {
-        students: any[],
-        groups: any[]
-    };
+    groupsSearch: GroupsSearch;
+    studentsSearch: StudentsSearch;
     anomalies: {
         MAIL: boolean,
         SMS: boolean
@@ -158,10 +155,10 @@ interface ViewModel {
 declare let window: any;
 
 export const homeController = ng.controller('HomeController', ['$scope', 'route', 'MassmailingService', 'ReasonService',
-    'SearchService', 'GroupService', 'SettingsService', 'PunishmentService', 'PunishmentsTypeService',
-    function ($scope, route, MassmailingService, reasonService: ReasonService, SearchService: SearchService,
-              GroupService: GroupService, SettingsService: SettingsService, punishmentService: IPunishmentService,
-              punishmentTypeService: IPunishmentsTypeService) {
+    'SearchService', 'GroupService', 'GroupingService', 'SettingsService', 'PunishmentService', 'PunishmentsTypeService',
+    function ($scope, route, MassmailingService, reasonService: ReasonService, searchService: SearchService,
+              groupService: GroupService, groupingService: GroupingService, SettingsService: SettingsService,
+              punishmentService: IPunishmentService, punishmentTypeService: IPunishmentsTypeService) {
         const vm: ViewModel = this;
         vm.massmailingStatus = {};
         vm.templates = [];
@@ -198,18 +195,12 @@ export const homeController = ng.controller('HomeController', ['$scope', 'route'
             noLatenessReasons: true,
             reasons: {},
             punishments: [],
-            students: undefined,
-            student: '',
-            group: '',
-            groups: undefined,
-            selected: {
-                students: [],
-                groups: []
-            },
             anomalies: {
                 MAIL: true,
                 SMS: true
-            }
+            },
+            groupsSearch: undefined,
+            studentsSearch: undefined
         };
         vm.mailingType = MailingType;
 
@@ -227,8 +218,8 @@ export const homeController = ng.controller('HomeController', ['$scope', 'route'
         vm.openForm = function () {
             vm.lightbox.filter = true;
             vm.formFilter = JSON.parse(JSON.stringify(vm.filter));
-            vm.formFilter.selected.students.forEach((item) => item.toString = () => item.displayName);
-            vm.formFilter.selected.groups.forEach((obj) => obj.toString = () => obj.name);
+            vm.formFilter.studentsSearch = vm.filter.studentsSearch.clone();
+            vm.formFilter.groupsSearch = vm.filter.groupsSearch.clone();
             vm.formFilter.allAbsenceReasons = (vm.filter.status.REGULARIZED || vm.filter.status.UNREGULARIZED);
             vm.formFilter.allLatenessReasons = vm.filter.status.LATENESS;
         };
@@ -237,6 +228,8 @@ export const homeController = ng.controller('HomeController', ['$scope', 'route'
             vm.formFilter.punishments = vm.punishmentsTypes.filter((punishmentType: IPunishmentType) => punishmentType.isSelected);
             const {start_date, end_date} = vm.filter;
             vm.filter = {...vm.formFilter, start_date, end_date};
+            vm.filter.studentsSearch = vm.formFilter.studentsSearch;
+            vm.filter.groupsSearch = vm.formFilter.groupsSearch;
             let preferenceFilters: IMassmailingFilterPreferences = {
                 start_at: vm.formFilter.start_at,
                 status: vm.formFilter.status,
@@ -258,6 +251,8 @@ export const homeController = ng.controller('HomeController', ['$scope', 'route'
 
         vm.loadData = async (): Promise<void> => {
             if (!window.structure) return;
+            vm.filter.groupsSearch = new GroupsSearch(window.structure.id, searchService, groupService, groupingService)
+            vm.filter.studentsSearch = new StudentsSearch(window.structure.id, searchService)
             if (!$scope.hasRight('manage')) {
                 $scope.redirectTo(`/history`);
             }
@@ -433,8 +428,8 @@ export const homeController = ng.controller('HomeController', ['$scope', 'route'
             for (let status in vm.filter.status) if (vm.filter.status[status]) types.push(status);
 
             const students = [], groups = [];
-            vm.filter.selected.students.forEach(({id}) => students.push(id));
-            vm.filter.selected.groups.forEach(({id}) => groups.push(id));
+            vm.filter.studentsSearch.getSelectedStudents().forEach((student: Student) => students.push(student.id));
+            vm.filter.groupsSearch.getSelectedGroups().forEach((group: Group) => groups.push(group.id));
             return await MassmailingService[`get${type}`](window.structure.id, massmailedParameter(), reasons, punishmentTypes,
                 sanctionsTypes, vm.filter.start_at, vm.filter.start_date, vm.filter.end_date, groups, students, types, vm.filter.noReasons, vm.filter.noLatenessReasons);
         }
@@ -473,52 +468,44 @@ export const homeController = ng.controller('HomeController', ['$scope', 'route'
             }
         }
 
-        vm.searchStudent = async function (value) {
-            const structureId = window.structure.id;
-            try {
-                vm.formFilter.students = await SearchService.searchUser(structureId, value, 'Student');
-                $scope.safeApply();
-            } catch (err) {
-                vm.formFilter.students = [];
-                throw err;
-            }
-        };
-
-        vm.selectStudent = async function (model, student) {
-            if (_.findWhere(vm.filter.selected.students, {id: student.id})) {
-                return;
-            }
-            vm.formFilter.selected.students.push(student);
-            vm.formFilter.student = '';
-            vm.formFilter.students = undefined;
+        vm.searchStudent = async function (value: string): Promise<void> {
+            await vm.formFilter.studentsSearch.searchStudents(value)
+                .catch(error => console.error(error))
             $scope.safeApply();
         };
 
-        vm.searchGroup = async function (value) {
-            const structureId = window.structure.id;
-            try {
-                vm.formFilter.groups = await GroupService.search(structureId, value);
-                vm.formFilter.groups.map((obj) => obj.toString = () => obj.name);
-                $scope.safeApply();
-            } catch (err) {
-                vm.formFilter.groups = [];
-                throw err;
-            }
-            return;
-        };
-
-        vm.selectGroup = async function (model, group) {
-            if (_.findWhere(vm.filter.selected.groups, {id: group.id})) {
+        vm.selectStudent = async function (model: string, studentSelected: Student) {
+            if (vm.filter.studentsSearch.getSelectedStudents().find((student: Student) => student.id == studentSelected.id)) {
                 return;
             }
-            vm.formFilter.selected.groups.push(group);
-            vm.formFilter.group = '';
-            vm.formFilter.groups = undefined;
+            vm.formFilter.studentsSearch.selectStudent(model, studentSelected);
+            vm.formFilter.studentsSearch.student = '';
+            vm.formFilter.studentsSearch.resetStudents();
             $scope.safeApply();
         };
 
-        vm.dropFilter = function (object, list) {
-            vm.formFilter.selected[list] = _.without(vm.formFilter.selected[list], object);
+        vm.searchGroup = async function (value: string): Promise<void> {
+            await vm.formFilter.groupsSearch.searchGroups(value)
+                .catch(error => console.error(error));
+            $scope.safeApply();
+        };
+
+        vm.selectGroup = async function (model: string, groupSelected: Group | Grouping) {
+            if (vm.filter.groupsSearch.getSelectedGroups().find((group: Group) => group.id == groupSelected.id)) {
+                return;
+            }
+            vm.formFilter.groupsSearch.selectGroups(model, groupSelected)
+            vm.formFilter.groupsSearch.group = '';
+            vm.formFilter.groupsSearch.resetGroups();
+            $scope.safeApply();
+        };
+
+        vm.dropFilter = function (object: Group | Student, type: string) {
+            if (type == "students") {
+                vm.formFilter.studentsSearch.removeSelectedStudents(object);
+            } else {
+                vm.formFilter.groupsSearch.removeSelectedGroups(object);
+            }
             $scope.safeApply();
         };
 
@@ -667,8 +654,8 @@ export const homeController = ng.controller('HomeController', ['$scope', 'route'
                 for (let i = 0; i < vm.reasons.length; i++) if (vm.filter.reasons[vm.reasons[i].id]) reasons.push(vm.reasons[i].id);
                 for (let status in vm.filter.status) if (vm.filter.status[status]) types.push(status);
                 const students = [], groups = [];
-                vm.filter.selected.students.forEach(({id}) => students.push(id));
-                vm.filter.selected.groups.forEach(({id}) => groups.push(id));
+                vm.filter.studentsSearch.getSelectedStudents().forEach((student: Student) => students.push(student.id));
+                vm.filter.groupsSearch.getSelectedGroups().forEach((group: Group) => groups.push(group.id));
                 let category: string = "";
                 if (vm.filter.status["LATENESS"]) {
                     category += MailTemplateCategory.LATENESS + ",";
