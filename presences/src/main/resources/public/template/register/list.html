@@ -5,18 +5,19 @@
     <div class="cell eight" workflow="presences.search">
         <div class="cell six paddingRight">
             <div class="cell twelve search-input">
-                <async-autocomplete ng-disabled="false"
-                                    ng-model="vm.filter.teacher"
-                                    ng-change="vm.selectTeacher"
-                                    on-search="vm.searchTeacher"
-                                    options="vm.filter.teachers"
-                                    placeholder="presences.search.teacher"
-                                    search="vm.filter.teacher"></async-autocomplete>
+                <async-autocomplete data-ng-disabled="false"
+                                    data-ng-model="vm.usersSearch.user"
+                                    data-ng-change="vm.selectTeacher"
+                                    data-on-search="vm.searchTeacher"
+                                    data-options="vm.usersSearch.users"
+                                    data-placeholder="presences.search.teacher"
+                                    data-search="vm.usersSearch.user">
+                </async-autocomplete>
             </div>
             <div class="cell twelve">
                 <ul class="cell twelve search-input-ul">
-                    <li ng-repeat="teacher in vm.filter.selected.teachers"
-                        ng-click="vm.dropFilter(teacher, 'teachers')">
+                    <li ng-repeat="teacher in vm.usersSearch.getSelectedUsers()"
+                        ng-click="vm.removeSelectedTeacher(teacher)">
                         [[teacher.displayName]]
                         <i class="close"></i>
                     </li>
@@ -25,18 +26,19 @@
         </div>
         <div class="cell six paddingLeft">
             <div class="cell twelve search-input">
-                <async-autocomplete ng-disabled="false"
-                                    ng-model="vm.filter.class"
-                                    ng-change="vm.selectClass"
-                                    on-search="vm.searchClass"
-                                    options="vm.filter.classes"
-                                    placeholder="presences.search.class"
-                                    search="vm.filter.class"></async-autocomplete>
+                <async-autocomplete data-ng-disabled="false"
+                                    data-ng-model="vm.groupsSearch.group"
+                                    data-ng-change="vm.selectClass"
+                                    data-on-search="vm.searchClass"
+                                    data-options="vm.groupsSearch.groups"
+                                    data-placeholder="presences.search.class"
+                                    data-search="vm.groupsSearch.group">
+                </async-autocomplete>
             </div>
             <div class="cell twelve">
                 <ul class="cell twelve search-input-ul">
-                    <li ng-repeat="class in vm.filter.selected.classes"
-                        ng-click="vm.dropFilter(class, 'classes')">
+                    <li ng-repeat="class in vm.groupsSearch.getSelectedGroups()"
+                        ng-click="vm.removeSelectedGroup(class)">
                         [[class.toString()]]
                         <i class="close"></i>
                     </li>

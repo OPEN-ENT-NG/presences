@@ -14,14 +14,21 @@ import {
     Remark, User
 } from '../models';
 import {
-    eventService,
+    eventService, Group,
     GroupService,
     ReasonService,
     registerService,
     SearchService,
     settingService
 } from '../services';
-import {CourseUtils, DateUtils, PreferencesUtils, PresencesPreferenceUtils} from '@common/utils';
+import {
+    CourseUtils,
+    DateUtils,
+    GroupsSearch,
+    PreferencesUtils,
+    PresencesPreferenceUtils,
+    safeApply, UsersSearch
+} from '@common/utils';
 import rights from '../rights';
 import {Scope} from './main';
 import http, {AxiosError} from 'axios';
@@ -30,6 +37,7 @@ import {Reason} from '@presences/models/Reason';
 import {SNIPLET_FORM_EMIT_EVENTS, SNIPLET_FORM_EVENTS} from '@common/model';
 import {INFINITE_SCROLL_EVENTER} from '@common/core/enum/infinite-scroll-eventer';
 import {REASON_TYPE_ID} from "@common/core/enum/reason-type-id";
+import { GroupingService } from "@common/services";
 
 declare let window: any;
 
@@ -40,12 +48,8 @@ interface Filter {
     offset?: number;
     limit?: number;
     student: any;
-    teacher: string;
-    teachers: any[];
-    class: string;
-    classes: any[];
     course: Course;
-    selected: { teachers: Array<User>, classes: any[], registerTeacher: any };
+    selected: { registerTeacher: any };
     forgotten: boolean;
     searchTeacher: boolean;
 }
@@ -64,6 +68,8 @@ export interface ViewModel {
     reasons: Reason[];
     isMultipleSlot: boolean;
     isMultipleSlotUserPreference: boolean;
+    groupsSearch: GroupsSearch
+    usersSearch: UsersSearch
     /* search bar auto complete */
 
     searchStudents(value): Promise<void>;
@@ -107,6 +113,10 @@ export interface ViewModel {
 
     closePanel(): void;
 
+    removeSelectedGroup(groupItem: Group): void;
+
+    removeSelectedTeacher(userItem: User): void;
+
     loadCourses(users?: string[], groups?: string[], structure?: string,
                 start_date?: string, end_date?: string, start_time?: string, end_time?: string,
                 forgotten_registers?: boolean, limit?: number, offset?: number,
@@ -123,8 +133,6 @@ export interface ViewModel {
     selectClass(model: any, classObject: any): void;
 
     searchClass(value: string): Promise<void>;
-
-    dropFilter(object, list): void;
 
     isLoading(): boolean;
 
@@ -170,9 +178,9 @@ export interface ViewModel {
 }
 
 export const registersController = ng.controller('RegistersController',
-    ['$scope', '$timeout', '$route', '$location', '$rootScope', 'SearchService', 'GroupService', 'ReasonService',
-        function ($scope: Scope, $timeout, $route, $location, $rootScope,
-                  SearchService: SearchService, GroupService: GroupService, ReasonService: ReasonService) {
+    ['$scope', '$timeout', '$route', '$location', '$rootScope', 'SearchService', 'GroupService', 'GroupingService', 'ReasonService',
+        function ($scope: Scope, $timeout, $route, $location, $rootScope, SearchService: SearchService,
+                  GroupService: GroupService, groupingService: GroupingService, ReasonService: ReasonService) {
             const vm: ViewModel = this;
 
             let registerTimeSlot: any;
@@ -195,16 +203,10 @@ export const registersController = ng.controller('RegistersController',
                     end_date: new Date(),
                     offset: 0,
                     student: undefined,
-                    teacher: "",
-                    teachers: undefined,
-                    class: "",
-                    classes: undefined,
                     forgotten: true,
                     course: undefined,
                     searchTeacher: true,
                     selected: {
-                        teachers: [],
-                        classes: [],
                         registerTeacher: undefined
                     }
                 };
@@ -217,6 +219,9 @@ export const registersController = ng.controller('RegistersController',
                 } catch (e) {
                     vm.isMultipleSlot = true;
                 }
+                vm.groupsSearch = new GroupsSearch(window.structure.id,
+                    SearchService, GroupService, groupingService);
+                vm.usersSearch = new UsersSearch(window.structure.id, SearchService)
 
                 startAction();
                 setHandler();
@@ -254,14 +259,8 @@ export const registersController = ng.controller('RegistersController',
                         delete vm.register;
                         vm.filter = {
                             ...vm.filter,
-                            teacher: '',
-                            class: '',
-                            teachers: undefined,
-                            classes: undefined,
                             searchTeacher: true,
                             selected: {
-                                teachers: vm.filter.selected.teachers,
-                                classes: vm.filter.selected.classes,
                                 registerTeacher: undefined
                             }
                         };
@@ -375,37 +374,23 @@ export const registersController = ng.controller('RegistersController',
             vm.previousDate = () => changeDate(-1);
             vm.changeDate = () => changeDate(0);
 
-            vm.searchTeacher = async function (value) {
-                const structureId = window.structure.id;
-                try {
-                    vm.filter.teachers = await SearchService.searchUser(structureId, value, 'Teacher');
-                    $scope.safeApply();
-                } catch (err) {
-                    vm.filter.teachers = [];
-                    throw err;
-                }
+            vm.searchTeacher = async function (value: string) {
+                await vm.usersSearch.searchUsers(value, ['Teacher']);
+                safeApply($scope);
             };
 
-            vm.searchClass = async function (value) {
-                const structureId = window.structure.id;
-                try {
-                    vm.filter.classes = await GroupService.search(structureId, value);
-                    vm.filter.classes.map((obj) => obj.toString = () => obj.name);
-                    $scope.safeApply();
-                } catch (err) {
-                    vm.filter.classes = [];
-                    throw err;
-                }
-                return;
+            vm.searchClass = async function (value: string) {
+                await vm.groupsSearch.searchGroups(value);
+                safeApply($scope);
             };
 
             vm.selectClass = (model: any, classObject: any): void => {
-                if (_.findWhere(vm.filter.selected.teachers, {id: classObject.id})) {
+                if (_.findWhere(vm.usersSearch.getSelectedUsers(), {id: classObject.id})) {
                     return;
                 }
-                vm.filter.selected.classes.push(classObject);
-                vm.filter.class = '';
-                vm.filter.classes = undefined;
+                vm.groupsSearch.selectGroups(model, classObject);
+                vm.groupsSearch.group = "";
+
                 vm.filter.offset = 0;
                 vm.loadCourses(extractSelectedTeacherIds(), extractSelectedGroupsName(),
                     undefined, undefined, undefined, undefined, undefined,
@@ -419,7 +404,7 @@ export const registersController = ng.controller('RegistersController',
                     if ($route.current.action === 'getRegister') {
                         ids.push(vm.filter.selected.registerTeacher.id || vm.register.teachers[0].id);
                     } else {
-                        vm.filter.selected.teachers.map((teacher: User) => ids.push(teacher.id));
+                        vm.usersSearch.getSelectedUsers().forEach((teacher: User) => ids.push(teacher.id));
                     }
                 } else {
                     ids.push(model.me.userId);
@@ -430,7 +415,7 @@ export const registersController = ng.controller('RegistersController',
             const extractSelectedGroupsName = function (): string[] {
                 const names = [];
                 if (model.me.hasWorkflow(rights.workflow.search)) {
-                    vm.filter.selected.classes.map((group) => names.push(group.name));
+                    vm.groupsSearch.getSelectedGroups().forEach((group: Group) => names.push(group.name));
                 }
                 return names;
             };
@@ -447,12 +432,12 @@ export const registersController = ng.controller('RegistersController',
             };
 
             vm.selectTeacher = (model: any, teacher: any): void => {
-                if (_.findWhere(vm.filter.selected.teachers, {id: teacher.id})) {
+                if (_.findWhere(vm.usersSearch.getSelectedUsers(), {id: teacher.id})) {
                     return;
                 }
-                vm.filter.selected.teachers.push(teacher);
-                vm.filter.teacher = '';
-                vm.filter.teachers = undefined;
+                vm.usersSearch.selectUsers(model, teacher);
+                vm.usersSearch.user = "";
+
                 vm.filter.offset = 0;
                 vm.loadCourses(extractSelectedTeacherIds(), extractSelectedGroupsName(),
                     undefined, undefined, undefined, undefined, undefined,
@@ -460,15 +445,21 @@ export const registersController = ng.controller('RegistersController',
                 $scope.safeApply();
             };
 
-            vm.dropFilter = (object: any, list: any): void => {
-                vm.filter.selected[list] = _.without(vm.filter.selected[list], object);
-                delete vm.register;
-                vm.filter.offset = 0;
+            vm.removeSelectedGroup = (groupItem: Group): void => {
+                vm.groupsSearch.removeSelectedGroups(groupItem);
                 vm.loadCourses(extractSelectedTeacherIds(), extractSelectedGroupsName(),
                     undefined, undefined, undefined, undefined, undefined,
                     undefined, vm.courses.pageSize, vm.filter.offset, false);
                 $scope.safeApply();
-            };
+            }
+
+            vm.removeSelectedTeacher = (userItem: User): void => {
+                vm.usersSearch.removeSelectedUsers(userItem);
+                vm.loadCourses(extractSelectedTeacherIds(), extractSelectedGroupsName(),
+                    undefined, undefined, undefined, undefined, undefined,
+                    undefined, vm.courses.pageSize, vm.filter.offset, false);
+                $scope.safeApply();
+            }
 
             vm.formatHour = (date: string) => DateUtils.format(date, DateUtils.FORMAT["HOUR-MINUTES"]);
 
