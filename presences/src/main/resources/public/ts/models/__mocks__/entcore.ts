@@ -59,3 +59,10 @@ export const model = {
 export const idiom = {
     translate: jest.fn((key : string) => key)
 };
+
+(<any>window).structure = {
+    id: "a5731b13-2d61-4ab3-a1b2-5c5d850ab444"
+};
+(<any>window).item = {
+    groupList: []
+};
