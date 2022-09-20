@@ -7,19 +7,19 @@
         </h1>
         <!-- Classes/Groups search bar -->
         <div class="twelve search-input">
-            <async-autocomplete
-                    ng-disabled="false"
-                    ng-model="vm.filter.searchGroup.item"
-                    ng-change="vm.selectGroup"
-                    on-search="vm.searchGroup"
-                    options="vm.filter.searchGroup.items"
-                    placeholder="presences.dashboard.search.registry.placeholder"
-                    search="vm.filter.searchGroup.item"></async-autocomplete>
+            <async-autocomplete data-ng-disabled="false"
+                                data-ng-model="vm.groupsSearch.group"
+                                data-ng-change="vm.selectGroup"
+                                data-on-search="vm.searchGroup"
+                                data-options="vm.groupsSearch.groups"
+                                data-placeholder="presences.dashboard.search.registry.placeholder"
+                                data-search="vm.groupsSearch.group">
+            </async-autocomplete>
         </div>
         <!-- List group -->
         <div class="twelve">
             <ul class="twelve search-input-ul">
-                <li ng-repeat="group in vm.filter.groups">
+                <li ng-repeat="group in vm.groupsSearch.getSelectedGroups()">
                     [[group.name]] <i class="close" data-ng-click="vm.removeGroup(group)"></i>
                 </li>
             </ul>

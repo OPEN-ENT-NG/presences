@@ -25,13 +25,14 @@
             <!-- Search to access registry -->
             <async-autocomplete workflow="presences.readRegistry"
                                 class="search-registry"
-                                ng-disabled="false"
-                                ng-model="vm.filter.searchClass.item"
-                                ng-change="vm.selectItemToRegistry"
-                                on-search="vm.searchItemToRegistry"
-                                options="vm.filter.searchClass.items"
-                                placeholder="presences.dashboard.search.registry.placeholder"
-                                search="vm.filter.searchClass.item"></async-autocomplete>
+                                data-ng-disabled="false"
+                                data-ng-model="vm.groupsSearch.group"
+                                data-ng-change="vm.selectItemToRegistry"
+                                data-on-search="vm.searchItemToRegistry"
+                                data-options="vm.groupsSearch.groups"
+                                data-placeholder="presences.dashboard.search.registry.placeholder"
+                                data-search="vm.groupsSearch.group">
+            </async-autocomplete>
         </div>
     </div>
 
