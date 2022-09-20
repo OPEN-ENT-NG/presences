@@ -1,7 +1,7 @@
 import {ng} from "@presences/models/__mocks__/entcore"
 import * as angular from 'angular';
 import 'angular-mocks';
-import {GroupService, SearchService} from "@common/services";
+import {GroupingService, GroupService, SearchService} from "@common/services";
 import {ReasonService} from "@presences/services";
 import {MassmailingService, settingsService} from "@massmailing/services";
 import {punishmentService, punishmentsTypeService} from "@incidents/services";
@@ -9,6 +9,8 @@ import {homeController} from "@massmailing/controllers";
 import {IPunishmentType} from "@incidents/models/PunishmentType";
 import {Reason} from '@presences/models/Reason';
 import {REASON_TYPE_ID} from "@common/core/enum/reason-type-id";
+import {GroupsSearch, MassmailingPreferenceUtils, StudentsSearch} from "@common/utils";
+import {IMassmailingFilterPreferences} from "@massmailing/model";
 
 describe('HomeControllers', () => {
     let homeControllerTest: any;
@@ -48,24 +50,30 @@ describe('HomeControllers', () => {
             route: undefined,
             MassmailingService: MassmailingService,
             reasonService: ReasonService,
-            SearchService: SearchService,
+            searchService: SearchService,
             groupService: GroupService,
+            groupingService: GroupingService,
             SettingsService: settingsService,
             punishmentService: punishmentService,
             punishmentTypeService: punishmentsTypeService,
         });
+
+        MassmailingPreferenceUtils.updatePresencesMassmailingFilter = jest.fn((filter: IMassmailingFilterPreferences, structureId: string): void => {});
     })
 
     it('test of the proper functioning of the openForm method', done => {
         homeControllerTest.lightbox.filter = false
-        homeControllerTest.filter.selected.students = [{displayName: "students1"}, {displayName: "students2"}];
-        homeControllerTest.filter.selected.groups = [{name: "name1"}, {name: "name2"}];
+        homeControllerTest.filter.studentsSearch = new StudentsSearch("null", homeControllerTest.searchService);
+        homeControllerTest.filter.groupsSearch = new GroupsSearch("null", homeControllerTest.searchService,
+            homeControllerTest.groupService, homeControllerTest.groupingService);
+        homeControllerTest.filter.studentsSearch._selectedStudents = [{displayName: "students1"}, {displayName: "students2"}];
+        homeControllerTest.filter.groupsSearch._selectedGroups = [{name: "name1"}, {name: "name2"}];
         homeControllerTest.openForm();
         expect(homeControllerTest.lightbox.filter).toEqual(true);
-        expect(homeControllerTest.formFilter.selected.students[0].toString()).toEqual("students1");
-        expect(homeControllerTest.formFilter.selected.students[1].toString()).toEqual("students2");
-        expect(homeControllerTest.formFilter.selected.groups[0].toString()).toEqual("name1");
-        expect(homeControllerTest.formFilter.selected.groups[1].toString()).toEqual("name2");
+        expect(homeControllerTest.formFilter.studentsSearch.getSelectedStudents()[0].displayName).toEqual("students1");
+        expect(homeControllerTest.formFilter.studentsSearch.getSelectedStudents()[1].displayName).toEqual("students2");
+        expect(homeControllerTest.formFilter.groupsSearch.getSelectedGroups()[0].name).toEqual("name1");
+        expect(homeControllerTest.formFilter.groupsSearch.getSelectedGroups()[1].name).toEqual("name2");
         done();
     });
 
@@ -90,10 +98,12 @@ describe('HomeControllers', () => {
         };
         homeControllerTest.punishmentsTypes = [punishment1, punishment2];
         homeControllerTest.lightbox.filter = true
+        homeControllerTest.formFilter = {};
+        homeControllerTest.fetchData = jest.fn((): void => {});
         homeControllerTest.validForm().then(() => {
             expect(homeControllerTest.lightbox.filter).toEqual(false);
+            done();
         });
-        done();
     });
 
     it('test of the proper functioning of the switchAllAbsenceReasons method', done => {
