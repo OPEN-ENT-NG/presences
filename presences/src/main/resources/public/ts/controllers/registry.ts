@@ -1,6 +1,6 @@
 import {_, idiom as lang, moment, ng} from 'entcore';
 import {
-    Group,
+    Group, GroupingService,
     GroupService,
     Registry,
     RegistryDays,
@@ -9,7 +9,7 @@ import {
     RegistryService,
     SearchService
 } from "../services";
-import {DateUtils} from "@common/utils";
+import {DateUtils, GroupsSearch} from "@common/utils";
 import {EventType} from "../models";
 import {EVENT_TYPE} from "@common/core/enum/event-type";
 
@@ -36,24 +36,16 @@ interface EventRegistryCard {
     forgottenNotebook: boolean;
 }
 
-interface Filter {
-    searchGroup: {
-        item: string;
-        items: Group[];
-    }
-    groups: Group[];
-}
-
 interface ViewModel {
     params: RegistryRequest;
     registries: Registry[];
-    filter: Filter;
     emptyState: string;
     months: { name: string, value: string }[];
     monthLength: number[];
     eventType: string[]; /* [0]:ABSENCE, [1]:LATENESS, [2]:INCIDENT, [3]:DEPARTURE */
     eventCardId: number;
     eventCardData: EventRegistryCard;
+    groupsSearch: GroupsSearch;
 
     removeGroup(group: Group): void;
 
@@ -86,8 +78,9 @@ interface ViewModel {
 }
 
 export const registryController = ng.controller('RegistryController', ['$scope', '$route', '$location',
-    'SearchService', 'GroupService', 'RegistryService',
-    function ($scope, $route, $location, SearchService: SearchService, groupService: GroupService, registryService: RegistryService) {
+    'SearchService', 'GroupService', 'GroupingService', 'RegistryService',
+    function ($scope, $route, $location, searchService: SearchService, groupService: GroupService, groupingService: GroupingService,
+              registryService: RegistryService) {
         const vm: ViewModel = this;
 
         /* Fetching information from URL Param and cloning new object RegistryRequest */
@@ -109,14 +102,9 @@ export const registryController = ng.controller('RegistryController', ['$scope',
             vm.params = Object.assign({}, $location.search());
         }
 
-        vm.filter = {
-            searchGroup: {
-                item: null,
-                items: null
-            },
-            groups: [window.item]
-        };
         vm.emptyState = '';
+        vm.groupsSearch = new GroupsSearch(window.structure.id, searchService, groupService, groupingService);
+        vm.groupsSearch.setSelectedGroups(window.item.groupList);
 
         const getDynamicMonths = (): { name: string, value: string }[] => {
             let months = [];
@@ -184,11 +172,7 @@ export const registryController = ng.controller('RegistryController', ['$scope',
         };
 
         const updateGroup = () => {
-            let groups = [];
-            vm.filter.groups.forEach(item => {
-                groups.push(item.id);
-            });
-            vm.params.group = groups;
+            vm.params.group = vm.groupsSearch.getGroups().map((group: Group) => group.id);
         };
 
         const setEmptyState = (): string => {
@@ -206,7 +190,7 @@ export const registryController = ng.controller('RegistryController', ['$scope',
         };
 
         vm.removeGroup = async (item: Group): Promise<void> => {
-            vm.filter.groups = vm.filter.groups.filter(element => element.id !== item.id);
+            vm.groupsSearch.removeSelectedGroups(item);
             updateGroup();
             await resetRegistries()
         };
@@ -247,7 +231,7 @@ export const registryController = ng.controller('RegistryController', ['$scope',
 
         /* Groups interaction */
         vm.selectGroup = (model, item: Group) => {
-            vm.filter.groups.push(item);
+            vm.groupsSearch.selectGroups(model, item);
             updateGroup();
             $location.search(vm.params);
             if (vm.params.type.length === 0 || vm.params.group.length === 0) {
@@ -257,18 +241,11 @@ export const registryController = ng.controller('RegistryController', ['$scope',
                 return;
             }
             getRegisterSummary();
-            vm.filter.searchGroup.item = '';
+            vm.groupsSearch.group = '';
         };
 
         vm.searchGroup = async (value) => {
-            const structureId = window.structure.id;
-            try {
-                vm.filter.searchGroup.items = await groupService.search(structureId, value);
-                vm.filter.searchGroup.items.forEach((item) => item.toString = () => item.name);
-                $scope.safeApply();
-            } catch (err) {
-                vm.filter.searchGroup.items = [];
-            }
+            await vm.groupsSearch.searchGroups(value);
         };
 
         vm.hasEventType = (event: RegistryEvent[], eventTypeName: string): boolean => {
