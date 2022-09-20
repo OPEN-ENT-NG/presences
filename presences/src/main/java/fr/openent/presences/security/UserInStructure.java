@@ -7,7 +7,7 @@ import io.vertx.core.http.HttpServerRequest;
 import org.entcore.common.http.filter.ResourcesProvider;
 import org.entcore.common.user.UserInfos;
 
-public class DeleteAlertFilter implements ResourcesProvider {
+public class UserInStructure implements ResourcesProvider {
     @Override
     public void authorize(HttpServerRequest request, Binding binding, UserInfos user, Handler<Boolean> handler) {
         String structureId = request.getParam(Field.ID);

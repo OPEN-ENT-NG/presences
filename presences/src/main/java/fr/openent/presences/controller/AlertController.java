@@ -9,7 +9,7 @@ import fr.openent.presences.core.constants.Field;
 import fr.openent.presences.export.AlertsCSVExport;
 import fr.openent.presences.security.Alert.AlertStudentNumber;
 import fr.openent.presences.security.AlertFilter;
-import fr.openent.presences.security.DeleteAlertFilter;
+import fr.openent.presences.security.UserInStructure;
 import fr.openent.presences.service.AlertService;
 import fr.openent.presences.service.impl.DefaultAlertService;
 import fr.wseduc.rs.ApiDoc;
@@ -48,7 +48,7 @@ public class AlertController extends ControllerHelper {
 
     @Delete("/structures/:id/alerts")
     @SecuredAction(value = "", type = ActionType.RESOURCE)
-    @ResourceFilter(DeleteAlertFilter.class)
+    @ResourceFilter(UserInStructure.class)
     @Trace(Actions.ALERT_DELETION)
     @ApiDoc("reset alerts")
     public void delete(HttpServerRequest request) {

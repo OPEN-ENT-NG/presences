@@ -23,6 +23,7 @@ public class CommonPresencesServiceFactory {
 
     private final UserService userService;
     private final GroupService groupService;
+    private final GroupingService groupingService;
 
     private final AbsenceService absenceService;
     private final EventService eventService;
@@ -38,6 +39,7 @@ public class CommonPresencesServiceFactory {
 
         this.userService = new DefaultUserService();
         this.groupService = new DefaultGroupService(this.vertx.eventBus());
+        this.groupingService = new DefaultGroupingService();
         this.absenceService = new DefaultAbsenceService(this);
         this.eventService = new DefaultEventService(this);
         this.presenceService = new DefaultPresenceService(this);
@@ -51,6 +53,7 @@ public class CommonPresencesServiceFactory {
         this.exportData = null;
         this.userService = new DefaultUserService();
         this.groupService = new DefaultGroupService(this.vertx.eventBus());
+        this.groupingService = new DefaultGroupingService();
         this.absenceService = new DefaultAbsenceService(this);
         this.eventService = new DefaultEventService(this);
         this.presenceService = new DefaultPresenceService(this);
@@ -63,6 +66,8 @@ public class CommonPresencesServiceFactory {
     }
 
     public GroupService groupService() { return groupService; }
+
+    public GroupingService groupingService() { return groupingService; }
 
     public StructureService structureService() {
         return new DefaultStructureService();

@@ -162,6 +162,17 @@ public class Viescolaire {
         return promise.future();
     }
 
+    public Future<JsonArray> getGroupingStructure(String structureId, String searchValue) {
+        Promise<JsonArray> promise = Promise.promise();
+        JsonObject action = new JsonObject()
+                .put(Field.ACTION, "grouping.getGroupingStructure")
+                .put(Field.STRUCTUREID, structureId)
+                .put(Field.SEARCHVALUE, searchValue);
+
+        eb.request(address, action, MessageResponseHandler.messageJsonArrayHandler(FutureHelper.handlerEitherPromise(promise)));
+        return promise.future();
+    }
+
     private static class ViescolaireHolder {
         private static final Viescolaire instance = new Viescolaire();
 
