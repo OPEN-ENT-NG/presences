@@ -123,6 +123,7 @@ public class Presences extends BaseServer {
         addController(new ArchiveController(commonPresencesServiceFactory));
         addController(new ConfigController());
         addController(new StatisticsController());
+        addController(new GroupingController(commonPresencesServiceFactory));
 
         // Controller that create fake rights for widgets
         addController(new FakeRight());
