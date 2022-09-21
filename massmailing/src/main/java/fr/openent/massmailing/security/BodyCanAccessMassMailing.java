@@ -1,8 +1,7 @@
 package fr.openent.massmailing.security;
 
-import fr.openent.massmailing.actions.WorkflowActions;
-import fr.openent.presences.common.helper.WorkflowHelper;
-import fr.openent.presences.core.constants.*;
+import fr.openent.massmailing.actions.WorkflowActionsCouple;
+import fr.openent.presences.core.constants.Field;
 import fr.wseduc.webutils.http.Binding;
 import fr.wseduc.webutils.request.RequestUtils;
 import io.vertx.core.Handler;
@@ -18,9 +17,7 @@ public class BodyCanAccessMassMailing implements ResourcesProvider {
         RequestUtils.bodyToJson(request, body -> {
             String structureId = body.getString(Field.STRUCTURE);
             List<String> structures = userInfos.getStructures();
-            handler.handle(structures.contains(structureId) &&
-                    (WorkflowHelper.hasRight(userInfos, WorkflowActions.VIEW.toString())
-                    || WorkflowHelper.hasRight(userInfos, WorkflowActions.VIEW_RESTRICTED.toString())));
+            handler.handle(structures.contains(structureId) && WorkflowActionsCouple.VIEW.hasRight(userInfos));
         });
     }
 }

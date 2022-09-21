@@ -1,7 +1,6 @@
 package fr.openent.presences.controller;
 
 import fr.openent.presences.Presences;
-import fr.openent.presences.common.helper.*;
 import fr.openent.presences.common.service.GroupService;
 import fr.openent.presences.common.service.UserService;
 import fr.openent.presences.common.service.impl.DefaultGroupService;
@@ -56,10 +55,8 @@ public class SearchController extends ControllerHelper {
                 && request.params().contains(Field.STRUCTUREID)) {
 
             UserUtils.getUserInfos(eb, request, user -> {
-
-                String restrictedTeacherId = (WorkflowHelper.hasRight(user,
-                        WorkflowActions.SEARCH_RESTRICTED.toString()) && UserType.TEACHER.equals(user.getType())) ?
-                        user.getUserId() : null;
+                boolean hasRestrictedRight = WorkflowActionsCouple.SEARCH.hasOnlyRestrictedRight(user, UserType.TEACHER.equals(user.getType()));
+                String restrictedTeacherId = hasRestrictedRight ? user.getUserId() : null;
 
                 String query = request.getParam(Field.Q);
                 List<String> fields = request.params().getAll(Field.FIELD);
@@ -89,9 +86,8 @@ public class SearchController extends ControllerHelper {
     @ResourceFilter(SearchStudents.class)
     public void searchStudents(HttpServerRequest request) {
         UserUtils.getUserInfos(eb, request, user -> {
-            String userId = (WorkflowHelper.hasRight(user, WorkflowActions.SEARCH_RESTRICTED.toString())
-                    && UserType.TEACHER.equals(user.getType())) ?
-                    user.getUserId() : null;
+            boolean hasRight = WorkflowActionsCouple.SEARCH.hasOnlyRestrictedRight(user, UserType.TEACHER.equals(user.getType()));
+            String userId = hasRight ? user.getUserId() : null;
         if (request.params().contains(Field.Q) && !"".equals(request.params().get(Field.Q).trim())
                 && request.params().contains(Field.FIELD)
                 && request.params().contains(Field.STRUCTUREID)) {
@@ -118,9 +114,8 @@ public class SearchController extends ControllerHelper {
     @ResourceFilter(SearchStudents.class)
     public void searchGroups(HttpServerRequest request) {
         UserUtils.getUserInfos(eb, request, user -> {
-            String userId = (WorkflowHelper.hasRight(user, WorkflowActions.SEARCH_RESTRICTED.toString())
-                            && UserType.TEACHER.equals(user.getType())) ?
-                    user.getUserId() : null;
+            boolean hasRestrictedRight = WorkflowActionsCouple.SEARCH.hasOnlyRestrictedRight(user, UserType.TEACHER.equals(user.getType()));
+            String userId = hasRestrictedRight ? user.getUserId() : null;
             if (request.params().contains(Field.Q)
                     && !"".equals(request.params().get(Field.Q).trim())
                     && request.params().contains(Field.FIELD)
@@ -141,9 +136,8 @@ public class SearchController extends ControllerHelper {
     @SecuredAction(Presences.SEARCH_STUDENTS)
     public void search(HttpServerRequest request) {
         UserUtils.getUserInfos(eb, request, user -> {
-            String userId = (WorkflowHelper.hasRight(user, WorkflowActions.SEARCH_RESTRICTED.toString())
-                    && UserType.TEACHER.equals(user.getType())) ?
-                    user.getUserId() : null;
+            boolean hasRestrictedRight = WorkflowActionsCouple.SEARCH_STUDENTS.hasOnlyRestrictedRight(user, UserType.TEACHER.equals(user.getType()));
+            String userId = hasRestrictedRight ? user.getUserId() : null;
 
             if (request.params().contains(Field.Q) && !"".equals(request.params().get(Field.Q).trim())
                     && request.params().contains(Field.STRUCTUREID)) {
