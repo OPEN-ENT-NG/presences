@@ -37,12 +37,10 @@ public class DefaultGroupingService implements GroupingService {
     }
 
     private List<Grouping> filterGrouping(JsonArray groupingArray, String searchValue) {
-        List<Grouping> groupingList = groupingArray.stream()
+        return groupingArray.stream()
                 .map(JsonObject.class::cast)
                 .map(Grouping::new)
-                .filter(grouping -> grouping.getName().startsWith(searchValue))
+                .filter(grouping -> grouping.getName().toLowerCase().startsWith(searchValue.toLowerCase()))
                 .collect(Collectors.toList());
-
-        return groupingList;
     }
 }
