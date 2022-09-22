@@ -235,10 +235,8 @@ public class MassmailingController extends ControllerHelper {
 
     private void processStudents(HttpServerRequest request, Handler<Either<String, List<String>>> handler) {
         UserUtils.getUserInfos(eb, request, userInfos -> {
-
-            String teacherId = (WorkflowHelper.hasRight(userInfos, WorkflowActions.MANAGE_RESTRICTED.toString())
-                    && UserType.TEACHER.equals(userInfos.getType())) ?
-                    userInfos.getUserId() : null;
+            boolean hasRestrictedRight = WorkflowActionsCouple.MANAGE.hasOnlyRestrictedRight(userInfos, UserType.TEACHER.equals(userInfos.getType()));
+            String teacherId = hasRestrictedRight ? userInfos.getUserId() : null;
 
             String structureId = request.getParam(Field.STRUCTURE);
 

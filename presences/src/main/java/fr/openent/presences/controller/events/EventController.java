@@ -94,11 +94,8 @@ public class EventController extends ControllerHelper {
 
 
         UserUtils.getUserInfos(eb, request, userInfos -> {
-
-            String teacherId = (WorkflowHelper.hasRight(userInfos, WorkflowActions.READ_EVENT_RESTRICTED.toString())
-                    && "Teacher".equals(userInfos.getType())) ?
-                    userInfos.getUserId() : null;
-
+            boolean hasRestrictedRight = WorkflowActionsCouple.READ_EVENT.hasOnlyRestrictedRight(userInfos, UserType.TEACHER.equals(userInfos.getType()));
+            String teacherId = hasRestrictedRight ? userInfos.getUserId() : null;
 
             this.groupService.getGroupsAndClassesFromTeacherId(teacherId, structureId)
                     .onFailure(fail -> renderError(request, JsonObject.mapFrom(fail.getMessage())))
@@ -172,11 +169,9 @@ public class EventController extends ControllerHelper {
 
 
         UserUtils.getUserInfos(eb, request, userInfos -> {
-
-            String teacherId = (WorkflowHelper.hasRight(userInfos, WorkflowActions.READ_EVENT_RESTRICTED.toString())
-                    && "Teacher".equals(userInfos.getType())) ?
-                    userInfos.getUserId() : null;
-            Boolean canSeeAllStudent = teacherId == null;
+            boolean hasRestrictedRight = WorkflowActionsCouple.READ_EVENT.hasOnlyRestrictedRight(userInfos, UserType.TEACHER.equals(userInfos.getType()));
+            String teacherId = hasRestrictedRight ? userInfos.getUserId() : null;
+            Boolean canSeeAllStudent = !hasRestrictedRight;
 
             this.groupService.getGroupsAndClassesFromTeacherId(teacherId, structureId)
                     .onFailure(fail -> renderError(request, JsonObject.mapFrom(fail.getMessage())))
@@ -287,10 +282,8 @@ public class EventController extends ControllerHelper {
         Boolean followed = request.params().contains(Field.FOLLOWED) ? Boolean.parseBoolean(request.getParam(Field.FOLLOWED)) : null;
 
         UserUtils.getUserInfos(eb, request, userInfos -> {
-
-            String teacherId = (WorkflowHelper.hasRight(userInfos, WorkflowActions.READ_EVENT_RESTRICTED.toString())
-                    && "Teacher".equals(userInfos.getType())) ?
-                    userInfos.getUserId() : null;
+            boolean hasRestrictedRight = WorkflowActionsCouple.READ_EVENT.hasOnlyRestrictedRight(userInfos, UserType.TEACHER.equals(userInfos.getType()));
+            String teacherId = hasRestrictedRight ? userInfos.getUserId() : null;
 
             this.groupService.getGroupsAndClassesFromTeacherId(teacherId, structureId)
                     .onFailure(fail -> renderError(request, JsonObject.mapFrom(fail.getMessage())))

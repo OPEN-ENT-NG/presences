@@ -34,6 +34,7 @@ public enum WorkflowActions {
     REGISTRY(Presences.REGISTRY),
     INIT_SETTINGS_1D(Presences.INIT_SETTINGS_1D),
     INIT_SETTINGS_2D(Presences.INIT_SETTINGS_2D),
+    READ_EXEMPTION(Presences.READ_EXEMPTION),
     READ_EXEMPTION_RESTRICTED(Presences.READ_EXEMPTION_RESTRICTED);
 
     private final String actionName;
