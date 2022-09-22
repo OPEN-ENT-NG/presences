@@ -169,10 +169,8 @@ public class StatisticsController extends ControllerHelper {
         Promise<Void> promise = Promise.promise();
 
         UserUtils.getUserInfos(eb, request, userInfos -> {
-            String restrictedTeacherId = (WorkflowHelper.hasRight(userInfos,
-                    WorkflowActions.STATISTICS_PRESENCES_VIEW_RESTRICTED.toString())
-                    && UserType.TEACHER.equals(userInfos.getType())) ?
-                    userInfos.getUserId() : null;
+            boolean hasRestrictedRight = WorkflowActionsCouple.STATISTICS_PRESENCES_VIEW.hasOnlyRestrictedRight(userInfos, UserType.TEACHER.equals(userInfos.getType()));
+            String restrictedTeacherId = hasRestrictedRight ? userInfos.getUserId() : null;
 
             Future<List<String>> restrictedClassesFuture = serviceFactory.groupService()
                     .getGroupsAndClassesFromTeacherId(restrictedTeacherId, request.getParam(Field.STRUCTURE));

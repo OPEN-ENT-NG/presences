@@ -1,12 +1,12 @@
 package fr.openent.presences.controller;
 
-import fr.openent.presences.common.helper.WorkflowHelper;
 import fr.openent.presences.common.security.UserInStructure;
 import fr.openent.presences.constants.Actions;
 import fr.openent.presences.core.constants.Field;
+import fr.openent.presences.core.constants.UserType;
 import fr.openent.presences.enums.EventType;
 import fr.openent.presences.enums.Markers;
-import fr.openent.presences.enums.WorkflowActions;
+import fr.openent.presences.enums.WorkflowActionsCouple;
 import fr.openent.presences.export.AbsencesCSVExport;
 import fr.openent.presences.security.AbsenceRight;
 import fr.openent.presences.security.CreateEventRight;
@@ -244,9 +244,8 @@ public class AbsenceController extends ControllerHelper {
         Integer page = request.getParam(Field.PAGE) != null ? Integer.parseInt(request.getParam(Field.PAGE)) : null;
 
         UserUtils.getUserInfos(eb, request, user -> {
-            String teacherId = (WorkflowHelper.hasRight(user, WorkflowActions.READ_EVENT_RESTRICTED.toString())
-                    && "Teacher".equals(user.getType())) ?
-                    user.getUserId() : null;
+            boolean hasRestrictedRight = WorkflowActionsCouple.READ_EVENT.hasOnlyRestrictedRight(user, UserType.TEACHER.equals(user.getType()));
+            String teacherId = hasRestrictedRight ? user.getUserId() : null;
 
             absenceService
                     .get(structure, teacherId, classes, students, reasons, start, end, (regularized != null ? regularized : justified),
@@ -321,9 +320,8 @@ public class AbsenceController extends ControllerHelper {
                 .collect(ArrayList::new, ArrayList::add, ArrayList::addAll);
 
         UserUtils.getUserInfos(eb, request, user -> {
-            String teacherId = (WorkflowHelper.hasRight(user, WorkflowActions.READ_EVENT_RESTRICTED.toString())
-                    && "Teacher".equals(user.getType())) ?
-                    user.getUserId() : null;
+            boolean hasRestrictedRight = WorkflowActionsCouple.READ_EVENT.hasOnlyRestrictedRight(user, UserType.TEACHER.equals(user.getType()));
+            String teacherId = hasRestrictedRight ? user.getUserId() : null;
 
             String domain = Renders.getHost(request);
             String local = I18n.acceptLanguage(request);
@@ -369,9 +367,8 @@ public class AbsenceController extends ControllerHelper {
                 .collect(ArrayList::new, ArrayList::add, ArrayList::addAll);
 
         UserUtils.getUserInfos(eb, request, user -> {
-            String teacherId = (WorkflowHelper.hasRight(user, WorkflowActions.READ_EVENT_RESTRICTED.toString())
-                    && "Teacher".equals(user.getType())) ?
-                    user.getUserId() : null;
+            boolean hasRestrictedRight = WorkflowActionsCouple.READ_EVENT.hasOnlyRestrictedRight(user, UserType.TEACHER.equals(user.getType()));
+            String teacherId = hasRestrictedRight ? user.getUserId() : null;
 
             String domain = Renders.getHost(request);
             String local = I18n.acceptLanguage(request);

@@ -58,12 +58,10 @@ public class StatementAbsenceController extends ControllerHelper {
     @SecuredAction(value = "", type = ActionType.RESOURCE)
     public void get(HttpServerRequest request) {
         UserUtils.getUserInfos(eb, request, user -> {
-
             String structureId = request.getParam(Field.STRUCTURE_ID);
 
-            String teacherId = (WorkflowHelper.hasRight(user, WorkflowActions.MANAGE_ABSENCE_STATEMENTS_RESTRICTED.toString())
-                    && "Teacher".equals(user.getType())) ?
-                    user.getUserId() : null;
+            boolean hasRestrictedRight = WorkflowActionsCouple.MANAGE_ABSENCE_STATEMENTS.hasOnlyRestrictedRight(user, UserType.TEACHER.equals(user.getType()));
+            String teacherId = hasRestrictedRight ? user.getUserId() : null;
 
             this.userService.getStudentsFromTeacher(teacherId, structureId)
                     .onFailure(fail -> renderError(request))
@@ -84,12 +82,10 @@ public class StatementAbsenceController extends ControllerHelper {
     @SecuredAction(value = "", type = ActionType.RESOURCE)
     public void export(HttpServerRequest request) {
         UserUtils.getUserInfos(eb, request, user -> {
-
             String structureId = request.getParam(Field.STRUCTURE_ID);
 
-            String teacherId = (WorkflowHelper.hasRight(user, WorkflowActions.MANAGE_ABSENCE_STATEMENTS_RESTRICTED.toString())
-                    && "Teacher".equals(user.getType())) ?
-                    user.getUserId() : null;
+            boolean hasRestrictedRight = WorkflowActionsCouple.MANAGE_ABSENCE_STATEMENTS.hasOnlyRestrictedRight(user, UserType.TEACHER.equals(user.getType()));
+            String teacherId = hasRestrictedRight ? user.getUserId() : null;
 
             this.userService.getStudentsFromTeacher(teacherId, structureId)
                     .onFailure(fail -> renderError(request))

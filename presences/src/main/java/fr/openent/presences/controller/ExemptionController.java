@@ -3,7 +3,6 @@ package fr.openent.presences.controller;
 import fr.openent.presences.Presences;
 import fr.openent.presences.common.helper.*;
 import fr.openent.presences.common.service.*;
-import fr.openent.presences.common.service.impl.*;
 import fr.openent.presences.constants.Actions;
 import fr.openent.presences.core.constants.*;
 import fr.openent.presences.enums.*;
@@ -12,14 +11,11 @@ import fr.openent.presences.model.Exemption.ExemptionBody;
 import fr.openent.presences.security.ExportRight;
 import fr.openent.presences.security.ManageExemptionRight;
 import fr.openent.presences.service.*;
-import fr.openent.presences.service.impl.DefaultExemptionService;
 import fr.wseduc.rs.*;
 import fr.wseduc.security.ActionType;
 import fr.wseduc.security.SecuredAction;
-import fr.wseduc.webutils.Either;
 import fr.wseduc.webutils.request.RequestUtils;
 import io.vertx.core.*;
-import io.vertx.core.eventbus.EventBus;
 import io.vertx.core.http.HttpServerRequest;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
@@ -88,9 +84,8 @@ public class ExemptionController extends ControllerHelper {
                 ? new ArrayList<>(Arrays.asList(request.getParam(Field.AUDIENCE_ID).split("\\s*,\\s*"))) : null;
 
         UserUtils.getUserInfos(eb, request, user -> {
-            String restrictedTeacherId = (WorkflowHelper.hasRight(user,
-                    WorkflowActions.READ_EXEMPTION_RESTRICTED.toString()) && UserType.TEACHER.equals(user.getType())) ?
-                    user.getUserId() : null;
+            boolean hasRestrictedRight = WorkflowActionsCouple.READ_EXEMPTION.hasOnlyRestrictedRight(user, UserType.TEACHER.equals(user.getType()));
+            String restrictedTeacherId = hasRestrictedRight ? user.getUserId() : null;
 
             //get class's users
             this.userService.getStudentsFromTeacher(restrictedTeacherId, structureId)
@@ -225,9 +220,8 @@ public class ExemptionController extends ControllerHelper {
     public void createExemptions(final HttpServerRequest request) {
         RequestUtils.bodyToJson(request, pathPrefix + "exemption", exemptions ->
                 UserUtils.getUserInfos(eb, request, user -> {
-                    String restrictedTeacherId = (WorkflowHelper.hasRight(user,
-                            WorkflowActions.MANAGE_EXEMPTION_RESTRICTED.toString()) && UserType.TEACHER.equals(user.getType())) ?
-                            user.getUserId() : null;
+                    boolean hasRestrictedRight = WorkflowActionsCouple.MANAGE_EXEMPTION.hasOnlyRestrictedRight(user, UserType.TEACHER.equals(user.getType()));
+                    String restrictedTeacherId = hasRestrictedRight ? user.getUserId() : null;
 
                     ExemptionBody exemptionBody = new ExemptionBody(exemptions);
 
@@ -265,9 +259,8 @@ public class ExemptionController extends ControllerHelper {
         RequestUtils.bodyToJson(request, pathPrefix + "exemption", exemption -> {
 
             UserUtils.getUserInfos(eb, request, user -> {
-                String restrictedTeacherId = (WorkflowHelper.hasRight(user,
-                        WorkflowActions.MANAGE_EXEMPTION_RESTRICTED.toString()) && UserType.TEACHER.equals(user.getType())) ?
-                        user.getUserId() : null;
+                boolean hasRestrictedRight = WorkflowActionsCouple.MANAGE_EXEMPTION.hasOnlyRestrictedRight(user, UserType.TEACHER.equals(user.getType()));
+                String restrictedTeacherId = hasRestrictedRight ? user.getUserId() : null;
 
                 ExemptionBody exemptionBody = new ExemptionBody(exemption);
                 Integer id = Integer.parseInt(request.params().get(Field.ID));
