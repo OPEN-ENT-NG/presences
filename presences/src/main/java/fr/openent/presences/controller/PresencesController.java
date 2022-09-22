@@ -3,7 +3,9 @@ package fr.openent.presences.controller;
 import fr.openent.presences.Presences;
 import fr.openent.presences.constants.Actions;
 import fr.openent.presences.core.constants.*;
+import fr.openent.presences.enums.WorkflowActionsCouple;
 import fr.openent.presences.export.PresencesCSVExport;
+import fr.openent.presences.security.PresenceReadRight;
 import fr.openent.presences.security.presence.ManagePresenceRight;
 import fr.openent.presences.service.CommonPresencesServiceFactory;
 import fr.openent.presences.service.PresenceService;
@@ -66,7 +68,8 @@ public class PresencesController extends ControllerHelper {
 
     @Get("/presences")
     @ApiDoc("Retrieve presences")
-    @SecuredAction(Presences.READ_PRESENCE)
+    @SecuredAction(value = "", type = ActionType.RESOURCE)
+    @ResourceFilter(PresenceReadRight.class)
     public void getPresences(final HttpServerRequest request) {
         get(request, DefaultResponseHandler.arrayResponseHandler(request));
     }
@@ -124,7 +127,8 @@ public class PresencesController extends ControllerHelper {
 
     @Get("/presences/export")
     @ApiDoc("Export presences")
-    @SecuredAction(Presences.READ_PRESENCE)
+    @SecuredAction(value = "", type = ActionType.RESOURCE)
+    @ResourceFilter(PresenceReadRight.class)
     public void exportPresences(final HttpServerRequest request) {
         get(request, result -> {
             if (result.isLeft()) {
@@ -149,7 +153,8 @@ public class PresencesController extends ControllerHelper {
             List<String> userIds = params.getAll(Field.STUDENTID);
             List<String> audienceIds = params.getAll(Field.AUDIENCEID);
             List<String> ownerIds = params.getAll(Field.OWNERID);
-            ownerIds = UserType.TEACHER.equals(user.getType()) ? Collections.singletonList(user.getUserId()) :
+            boolean hasRestrictedRight = WorkflowActionsCouple.READ_PRESENCE.hasOnlyRestrictedRight(user, UserType.TEACHER.equals(user.getType()));
+            ownerIds = hasRestrictedRight ? Collections.singletonList(user.getUserId()) :
                     ownerIds;
 
             if (!request.params().contains(STRUCTURE_ID) || !request.params().contains(START_DATE) ||
@@ -158,9 +163,7 @@ public class PresencesController extends ControllerHelper {
                 return;
             }
 
-
             presencesService.get(structureId, startDate, endDate, userIds, ownerIds, audienceIds, handler);
-
         });
     }
 
