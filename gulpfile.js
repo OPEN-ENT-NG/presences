@@ -1,8 +1,7 @@
 var gulp = require('gulp');
 var webpack = require('webpack-stream');
 var merge = require('merge2');
-var rev = require('gulp-rev');
-var revReplace = require("gulp-rev-replace");
+const replace = require('gulp-replace');
 var clean = require('gulp-clean');
 var args = require('yargs').argv;
 
@@ -22,17 +21,7 @@ gulp.task('drop-cache', function () {
     return merge(streams);
 });
 
-gulp.task('copy-files', ['drop-cache'], function () {
-    var streams = [];
-    apps.forEach(function (app) {
-        streams
-            .push(gulp.src('./node_modules/entcore/src/template/**/*.html').pipe(gulp.dest('./' + app + '/src/main/resources/public/template/entcore')));
-        streams.push(gulp.src('./node_modules/entcore/bundle/*').pipe(gulp.dest('./' + app + '/src/main/resources/public/dist/entcore')));
-    });
-    return merge(streams);
-});
-
-gulp.task('webpack', ['copy-files'], function () {
+gulp.task('webpack', ['drop-cache'], function () {
     var streams = [];
     apps.forEach(function (app) {
         streams.push(gulp.src('./' + app + '/src/main/resources/public/**/*.ts')
@@ -45,23 +34,11 @@ gulp.task('webpack', ['copy-files'], function () {
     return merge(streams);
 });
 
-gulp.task('rev', ['webpack'], function () {
-    var streams = [];
-    apps.forEach(function (app) {
-        streams.push(gulp.src('./' + app + '/src/main/resources/public/dist/**/*.js')
-            .pipe(rev())
-            .pipe(gulp.dest('./' + app + '/src/main/resources/public/dist'))
-            .pipe(rev.manifest())
-            .pipe(gulp.dest('./' + app)))
-    });
-    return merge(streams);
-});
-
-gulp.task('build', ['rev'], function () {
+gulp.task('build', ['webpack'], function () {
     var streams = [];
     apps.forEach(function (app) {
         streams.push(gulp.src("./" + app + "/src/main/resources/view-src/**/*.html")
-            .pipe(revReplace({manifest: gulp.src("./" + app + "/rev-manifest.json")}))
+            .pipe(replace('@@VERSION', Date.now()))
             .pipe(gulp.dest("./" + app + "/src/main/resources/view")));
         streams.push(gulp.src("./" + app + "/src/main/resources/public/dist/behaviours.js")
             .pipe(gulp.dest("./" + app + "/src/main/resources/public/js")));
