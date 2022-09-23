@@ -5,6 +5,7 @@ import fr.openent.presences.common.security.IWorkflowActionsCouple;
 public enum WorkflowActionsCouple implements IWorkflowActionsCouple {
 
     READ_EVENT(WorkflowActions.READ_EVENT, WorkflowActions.READ_EVENT_RESTRICTED),
+    READ_PRESENCE(WorkflowActions.READ_PRESENCE, WorkflowActions.READ_PRESENCE_RESTRICTED),
     MANAGE_ABSENCE_STATEMENTS(WorkflowActions.MANAGE_ABSENCE_STATEMENTS, WorkflowActions.MANAGE_ABSENCE_STATEMENTS_RESTRICTED),
     MANAGE_EXEMPTION(WorkflowActions.MANAGE_EXEMPTION, WorkflowActions.MANAGE_EXEMPTION_RESTRICTED),
     READ_EXEMPTION(WorkflowActions.READ_EXEMPTION, WorkflowActions.READ_EXEMPTION_RESTRICTED),

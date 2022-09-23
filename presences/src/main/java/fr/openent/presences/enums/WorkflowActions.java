@@ -3,6 +3,8 @@ package fr.openent.presences.enums;
 import fr.openent.presences.Presences;
 
 public enum WorkflowActions {
+    READ_PRESENCE(Presences.READ_PRESENCE),
+    READ_PRESENCE_RESTRICTED(Presences.READ_PRESENCE_RESTRICTED),
     CREATE_REGISTER(Presences.CREATE_REGISTER),
     READ_REGISTER(Presences.READ_REGISTER),
     SEARCH(Presences.SEARCH),

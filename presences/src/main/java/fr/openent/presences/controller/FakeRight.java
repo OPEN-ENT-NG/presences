@@ -107,4 +107,12 @@ public class FakeRight extends ControllerHelper {
     @SecuredAction(Presences.INIT_SETTINGS_2D)
     public void initSettings2D(HttpServerRequest request) {notImplemented(request);}
 
+    @Get("/rights/read/presence")
+    @SecuredAction(Presences.READ_PRESENCE)
+    public void readPresence(HttpServerRequest request) {notImplemented(request);}
+
+    @Get("/rights/read/presence/restricted")
+    @SecuredAction(Presences.READ_PRESENCE_RESTRICTED)
+    public void readPresenceRestricted(HttpServerRequest request) {notImplemented(request);}
+
 }
