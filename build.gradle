@@ -69,6 +69,7 @@ subprojects {
         testCompile "org.powermock:powermock-api-mockito2:$powerMockVersion"
         testCompile "org.powermock:powermock-module-junit4:$powerMockVersion"
         testCompile "org.powermock:powermock-module-testng:$powerMockVersion"
+        testCompile "org.reflections:reflections:$reflectionsVersion"
         compile "fr.wseduc:vertx-cron-timer:$vertxCronTimer"
         testCompile "io.vertx:testtools:$toolsVersion"
     }
