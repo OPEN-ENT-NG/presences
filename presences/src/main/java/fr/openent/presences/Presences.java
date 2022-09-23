@@ -34,6 +34,7 @@ public class Presences extends BaseServer {
 
     public static final String VIEW = "view";
     public static final String READ_PRESENCE = "presences.presence.read";
+    public static final String READ_PRESENCE_RESTRICTED = "presences.presence.read.restricted";
     public static final String CREATE_PRESENCE = "presences.presence.create";
     public static final String MANAGE_PRESENCE = "presences.presence.manage";
     public static final String READ_REGISTER = "presences.register.read";
