@@ -3,8 +3,6 @@ package fr.openent.presences.common.helper;
 import fr.openent.presences.model.IModel;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
-import io.vertx.core.logging.Logger;
-import io.vertx.core.logging.LoggerFactory;
 
 import java.lang.reflect.InvocationTargetException;
 import java.util.List;
