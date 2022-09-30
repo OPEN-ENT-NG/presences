@@ -179,7 +179,6 @@ public interface EventService {
      * @param eventType          Event Type list
      * @param students           Student list. Contains every students identifiers
      * @param structure          Structure identifier
-     * @param justified          Justified events or not ? Can be null if justified event needs to be excluded
      * @param massmailed         Massmailed ? Use by massmailing module. When null, column is excluded
      * @param startDate          Range start date
      * @param endDate            Range end date

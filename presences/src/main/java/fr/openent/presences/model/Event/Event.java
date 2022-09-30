@@ -9,6 +9,10 @@ import io.vertx.core.json.JsonObject;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * @deprecated  Replaced by {@link fr.openent.presences.model.EventModel}
+ */
+@Deprecated
 public class Event {
 
     public static List<String> MANDATORY_ATTRIBUTE = new ArrayList<>();

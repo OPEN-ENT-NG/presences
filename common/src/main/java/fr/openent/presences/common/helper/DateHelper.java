@@ -776,4 +776,34 @@ public class DateHelper {
         return ChronoUnit.DAYS.between(start, end);
     }
 
+    /**
+     * Returns the value of the given calendar field.
+     *
+     * @param stringDate the date in String format
+     * @param format format date to format stringDate
+     * @param field the given calendar field. See {@link Calendar}. Ex: {@link Calendar#YEAR}
+     * @return the value for the given calendar field.
+     * @throws ArrayIndexOutOfBoundsException if the specified field is out of range
+     *             (<code>field &lt; 0 || field &gt;= {@link Calendar#FIELD_COUNT}</code>).
+     */
+    public static int getField(String stringDate, String format, int field) {
+        Date date = DateHelper.parseDate(stringDate, format);
+        return getField(date, field);
+    }
+
+    /**
+     * Returns the value of the given calendar field.
+     *
+     * @param date the date
+     * @param field the given calendar field. See {@link Calendar}. Ex: {@link Calendar#YEAR}
+     * @return the value for the given calendar field.
+     * @throws ArrayIndexOutOfBoundsException if the specified field is out of range
+     *             (<code>field &lt; 0 || field &gt;= {@link Calendar#FIELD_COUNT}</code>).
+     */
+    public static int getField(Date date, int field) {
+        Calendar calendar = Calendar.getInstance();
+        calendar.setTime(date);
+        return calendar.get(field);
+    }
+
 }

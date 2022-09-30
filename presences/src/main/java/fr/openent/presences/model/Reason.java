@@ -6,6 +6,9 @@ import io.vertx.core.json.JsonObject;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * @deprecated  Replaced by {@link fr.openent.presences.model.ReasonModel}
+ */
 public class Reason {
 
     public static List<String> MANDATORY_ATTRIBUTE = new ArrayList<>();

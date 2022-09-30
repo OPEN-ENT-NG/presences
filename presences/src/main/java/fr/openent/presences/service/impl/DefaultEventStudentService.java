@@ -2,12 +2,15 @@ package fr.openent.presences.service.impl;
 
 import fr.openent.presences.common.helper.EventsHelper;
 import fr.openent.presences.common.helper.FutureHelper;
+import fr.openent.presences.common.viescolaire.Viescolaire;
 import fr.openent.presences.core.constants.Field;
+import fr.openent.presences.model.TimeslotModel;
 import fr.openent.presences.service.EventService;
 import fr.openent.presences.service.EventStudentService;
 import fr.openent.presences.service.ReasonService;
 import io.vertx.core.*;
 import io.vertx.core.eventbus.EventBus;
+import io.vertx.core.json.Json;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import io.vertx.core.logging.Logger;
@@ -51,6 +54,7 @@ public class DefaultEventStudentService implements EventStudentService {
         JsonObject settings = new JsonObject();
         Map<Integer, JsonObject> reasons = new HashMap<>();
         setSettingsAndReasons(structureId, types, settings, reasons)
+                .compose(settingsResult -> setStudentTimeslot(settings, Collections.singletonList(studentId)))
                 .compose(res -> getEventsData(types, structureId, Collections.singletonList(studentId), reasons, settings, start, end, limit, offset))
                 .onFailure(promise::fail)
                 .onSuccess(result -> {
@@ -71,6 +75,7 @@ public class DefaultEventStudentService implements EventStudentService {
         JsonObject settings = new JsonObject();
         Map<Integer, JsonObject> reasons = new HashMap<>();
         setSettingsAndReasons(structureId, types, settings, reasons)
+                .compose(settingsResult -> setStudentTimeslot(settings, studentIds))
                 .compose(res -> getEventsData(types, structureId, studentIds, reasons, settings, start, end, limit, offset))
                 .onFailure(promise::fail)
                 .onSuccess(result -> {
@@ -80,6 +85,24 @@ public class DefaultEventStudentService implements EventStudentService {
                             .put(Field.STUDENTS_EVENTS, result)
                             .put(Field.RECOVERY_METHOD, settings.getString(Field.EVENT_RECOVERY_METHOD));
                     promise.complete(response);
+                });
+
+        return promise.future();
+    }
+
+    private Future<JsonObject> setStudentTimeslot(JsonObject settings, List<String> studentIdList) {
+        Promise<JsonObject> promise = Promise.promise();
+
+        Viescolaire.getInstance().getStudentTimeslot(studentIdList)
+                .onSuccess(studentTimeSlotList -> {
+                    settings.put(Field.STUDENT_TIMESLOT, studentTimeSlotList);
+                    promise.complete(settings);
+                })
+                .onFailure(error -> {
+                    String message = String.format("[Presences@%s::setStudentTimeslot] Fail to set settings student timeslot.",
+                                    this.getClass().getSimpleName());
+                    log.error(String.format("%s %s", message, error.getMessage()));
+                    promise.fail(message);
                 });
 
         return promise.future();
@@ -251,7 +274,6 @@ public class DefaultEventStudentService implements EventStudentService {
         for (String type : types)
             futures.add(getEventsByStudent(type, structure, reasonsIds, studentIds, start, end, limit, offset));
 
-
         FutureHelper.all(futures)
                 .onFailure(error -> {
                     String message =
@@ -378,8 +400,12 @@ public class DefaultEventStudentService implements EventStudentService {
                     .flatMap(dataType -> dataType.getJsonArray(Field.EVENTS).getList().stream())
                     .collect(Collectors.toList());
 
-            EventsHelper.mergeEventsByDates(new JsonArray(events), settings.getString(Field.END_OF_HALF_DAY))
-                    .forEach(o -> {
+            Map<String, TimeslotModel> mapStudentIdTimeslot = settings.getJsonObject(Field.STUDENT_TIMESLOT).stream()
+                    .collect(Collectors.toMap(Map.Entry::getKey, stringObjectEntry -> new TimeslotModel((JsonObject) stringObjectEntry.getValue())));
+            JsonArray mergedEvents = mapStudentIdTimeslot.isEmpty() ?
+                    EventsHelper.mergeEventsByDates(new JsonArray(events), settings.getString(Field.END_OF_HALF_DAY)) :
+                    EventsHelper.mergeEventsByDates(new JsonArray(events), settings.getString(Field.END_OF_HALF_DAY), mapStudentIdTimeslot);
+            mergedEvents.forEach(o -> {
                         JsonObject event = (JsonObject) o;
                         event.put(Field.REASON, reasons.get(event.getInteger(Field.REASON_ID)));
                         JsonObject studentEvents = studentsEvents.get(event.getString(Field.STUDENT_ID));

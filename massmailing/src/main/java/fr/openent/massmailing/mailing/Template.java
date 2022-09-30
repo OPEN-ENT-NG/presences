@@ -23,7 +23,6 @@ import java.text.ParseException;
 import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-import java.util.stream.Collectors;
 
 public class Template extends BaseServer {
     private Logger LOGGER = LoggerFactory.getLogger(Template.class);

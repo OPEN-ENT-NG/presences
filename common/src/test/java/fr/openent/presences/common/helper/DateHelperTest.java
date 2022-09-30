@@ -4,7 +4,9 @@ import org.junit.Test;
 import org.junit.jupiter.api.DisplayName;
 
 import java.text.ParseException;
+import java.util.Calendar;
 
+import static junit.framework.TestCase.assertEquals;
 import static junit.framework.TestCase.assertTrue;
 
 public class DateHelperTest {
@@ -54,5 +56,12 @@ public class DateHelperTest {
     @DisplayName("DateHelper.isBefore should throws ParseException")
     public void isBefore_should_throws_ParseException() throws ParseException {
         DateHelper.isBefore(MONGO_SECOND_DATE, THROW_DATE);
+    }
+
+    @Test
+    public void getField() {
+        assertEquals(9, DateHelper.getField("09:30", DateHelper.HOUR_MINUTES, Calendar.HOUR_OF_DAY));
+        assertEquals(30, DateHelper.getField("09:30", DateHelper.HOUR_MINUTES, Calendar.MINUTE));
+        assertEquals(2019, DateHelper.getField(POSTGRES_FIRST_DATE, DateHelper.SQL_FORMAT, Calendar.YEAR));
     }
 }
