@@ -356,8 +356,12 @@ public class Field {
     public static final String INIT_TYPE = "init_type";
     public static final String PUNISHMENTTYPEIDS = "punishmentTypeIds";
     public static final String PROCESSED = "processed";
+    public static final String NOTEMPTYCLASS = "notEmptyClass";
+    public static final String MODIFIED = "modified";
     public static final String SEARCHVALUE = "searchValue";
     public static final String STUDENT_DIVISIONS = "student_divisions";
+    public static final String STUDENT_ID_LIST = "student_id_list";
+    public static final String STUDENT_TIMESLOT = "student_timeslot";
 
     private Field() {
         throw new IllegalStateException("Utility class");
