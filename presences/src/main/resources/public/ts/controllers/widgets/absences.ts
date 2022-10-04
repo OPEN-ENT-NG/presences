@@ -273,8 +273,8 @@ export const absencesController = ng.controller('AbsenceController', ['$scope', 
         /* Events handler */
         $scope.$watch(() => window.structure, async () => {
             if (window.structure) {
-                loadReasons();
-                vm.load();
+                await vm.load();
+                await loadReasons();
             }
         });
     }]);
