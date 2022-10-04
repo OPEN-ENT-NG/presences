@@ -61,6 +61,9 @@ export const asyncAutocomplete = ng.directive('asyncAutocomplete', ['$timeout', 
         };
 
         $scope.$watch('options', (newVal) => {
+            if ((!$scope.search || $scope.search == "") && newVal && newVal.length == 0) {
+                return;
+            }
             $scope.match = newVal;
             cancelAnimationFrame(token);
             setLoadingStatus(false);
