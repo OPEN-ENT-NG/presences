@@ -100,7 +100,11 @@ interface ViewModel {
 
     selectAudience(model: any, audience: any): void;
 
-    removeSelection(type: any, value: any): Promise<void>;
+    removeGroup(value: Group): Promise<void>;
+
+    removeStudent(value: Student): Promise<void>;
+
+    removeSelection(): Promise<void>;
 
     refreshStudentsStatistics(arrayStudentIds: Array<string>): void;
 
@@ -326,8 +330,17 @@ export const mainController = ng.controller('MainController',
                 vm.safeApply();
             };
 
-            vm.removeSelection = async function (type, value): Promise<void> {
-                vm.filter[type] = _.without(vm.filter[type], _.findWhere(vm.filter[type], value));
+            vm.removeGroup = async function (value: Group): Promise<void> {
+                vm.groupsSearch.removeSelectedGroups(value);
+                await vm.removeSelection();
+            }
+
+            vm.removeStudent = async function (value: Student): Promise<void> {
+                vm.studentsSearch.removeSelectedStudents(value);
+                await vm.removeSelection();
+            }
+
+            vm.removeSelection = async function (): Promise<void> {
                 if (vm.isWeekly(vm.indicator)) {
                     (<Weekly>vm.indicator).setUserAndAudienceFilter(vm.studentsSearch.getSelectedStudents()
                             .map((student: Student) => student.id),
