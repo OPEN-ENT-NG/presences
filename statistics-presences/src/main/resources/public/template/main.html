@@ -22,7 +22,7 @@
                 <span data-ng-show="vm.studentsSearch.getSelectedStudents().length === 0">&nbsp;</span>
                 <li ng-repeat="student in vm.studentsSearch.getSelectedStudents()">
                     [[student.displayName]] <i class="close"
-                                               data-ng-click="vm.removeSelection('students', student)"></i>
+                                               data-ng-click="vm.removeStudent(student)"></i>
                 </li>
             </ul>
         </div>
@@ -45,7 +45,7 @@
                 <span data-ng-show="vm.groupsSearch.getSelectedGroups().length === 0">&nbsp;</span>
                 <li ng-repeat="audience in vm.groupsSearch.getSelectedGroups()">
                     [[audience.name]] <i class="close"
-                                         data-ng-click="vm.removeSelection('audiences', audience)"></i>
+                                         data-ng-click="vm.removeGroup(audience)"></i>
                 </li>
             </ul>
         </div>
