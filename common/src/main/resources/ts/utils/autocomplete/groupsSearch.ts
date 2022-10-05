@@ -28,13 +28,15 @@ export class GroupsSearch extends AutoCompleteUtils {
     //Only returns group from grouping, but not the grouping itself
     public getGroups(): Array<Group> {
         let groupsResult: Array<Group> = []
-        this._groups.forEach((groupItem: Group | Grouping) => {
-            if (instanceOfGrouping(groupItem)) {
-                groupsResult = (<Grouping>groupItem).groupList.concat(groupsResult);
-            } else {
-                groupsResult.push(groupItem);
-            }
-        })
+        if (!!this._groups) {
+            this._groups.forEach((groupItem: Group | Grouping) => {
+                if (instanceOfGrouping(groupItem)) {
+                    groupsResult = (<Grouping>groupItem).groupList.concat(groupsResult);
+                } else {
+                    groupsResult.push(groupItem);
+                }
+            })
+        }
         return groupsResult;
     }
 

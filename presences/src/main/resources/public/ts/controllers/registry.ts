@@ -12,6 +12,7 @@ import {
 import {DateUtils, GroupsSearch} from "@common/utils";
 import {EventType} from "../models";
 import {EVENT_TYPE} from "@common/core/enum/event-type";
+import {instanceOfGrouping} from "@common/model/grouping";
 
 declare let window: any;
 
@@ -104,7 +105,7 @@ export const registryController = ng.controller('RegistryController', ['$scope',
 
         vm.emptyState = '';
         vm.groupsSearch = new GroupsSearch(window.structure.id, searchService, groupService, groupingService);
-        vm.groupsSearch.setSelectedGroups(window.item.groupList);
+        vm.groupsSearch.setSelectedGroups(instanceOfGrouping(window.item) ? window.item.groupList : [window.item]);
 
         const getDynamicMonths = (): { name: string, value: string }[] => {
             let months = [];
@@ -245,7 +246,9 @@ export const registryController = ng.controller('RegistryController', ['$scope',
         };
 
         vm.searchGroup = async (value) => {
-            await vm.groupsSearch.searchGroups(value);
+            await vm.groupsSearch.searchGroups(value)
+                .catch(error => console.error(error));
+            $scope.safeApply();
         };
 
         vm.hasEventType = (event: RegistryEvent[], eventTypeName: string): boolean => {
