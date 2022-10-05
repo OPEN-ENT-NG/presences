@@ -80,7 +80,7 @@ routes.define(function ($routeProvider) {
         });
     }
 
-    if (model.me.hasWorkflow(rights.workflow.readPresences)) {
+    if (model.me.hasWorkflow(rights.workflow.readPresences) || model.me.hasWorkflow(rights.workflow.readPresencesRestricted)) {
         $routeProvider
             .when('/presences', {
                 action: 'presences'
