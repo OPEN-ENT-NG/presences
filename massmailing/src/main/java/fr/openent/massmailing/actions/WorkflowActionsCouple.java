@@ -17,11 +17,11 @@ public enum WorkflowActionsCouple implements IWorkflowActionsCouple {
 
     @Override
     public String getUnrestrictedAction() {
-        return unrestrictedAction.name();
+        return unrestrictedAction.toString();
     }
 
     @Override
     public String getRestrictedAction() {
-        return restrictedAction.name();
+        return restrictedAction.toString();
     }
 }
