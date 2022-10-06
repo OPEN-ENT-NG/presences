@@ -49,7 +49,7 @@ public class Monthly extends IndicatorWorker {
                 future = retrieveEventCount(structureId, studentId, 2, reasonIds(structureId).getList());
                 break;
             case NO_REASON:
-                future = fetchEventCountFromPresences(structureId, studentId, new ArrayList<>(), true, false);
+                future = fetchEventCountFromPresences(structureId, studentId, new ArrayList<>(), true, null);
                 break;
             case UNREGULARIZED:
                 future = fetchEventCountFromPresences(structureId, studentId, reasonIds(structureId).getList(), false, false);

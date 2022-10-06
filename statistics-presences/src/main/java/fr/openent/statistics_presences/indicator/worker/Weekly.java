@@ -42,7 +42,7 @@ public class Weekly extends IndicatorWorker {
                 break;
             case NO_REASON:
                 future = fetchEventCountFromPresences(structureId, studentId, new ArrayList<>(), true,
-                        false, timeslot);
+                        null, timeslot);
                 break;
             case UNREGULARIZED:
                 future = fetchEventCountFromPresences(structureId, studentId, reasonIds(structureId).getList(), false,
