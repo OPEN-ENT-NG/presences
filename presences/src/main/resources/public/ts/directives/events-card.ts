@@ -238,7 +238,7 @@ export const EventsCard = ng.directive('eventsCard', () => {
             const vm: IViewModel = $scope.vm;
 
             vm.hasOnlyTwoEvents = (): boolean => {
-                return vm.eventCount <= 2;
+                return !!vm.events ? vm.events.length <= 2 : false;
             };
 
             vm.toggleList = (): void => {
