@@ -20,7 +20,7 @@
   },
   "homepage": "",
   "dependencies": {
-    "entcore": "4.5.0",
+    "entcore": "4.5.1",
     "awesome-typescript-loader": "3.2.1",
     "axios": "0.16.2",
     "core-js": "2.4.1",
