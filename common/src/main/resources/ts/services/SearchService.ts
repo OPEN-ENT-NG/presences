@@ -47,8 +47,11 @@ export const SearchService: SearchService = {
             data.forEach((user) => {
                 if (user.idClasse && user.idClasse != null) {
                     let idClass = user.idClasse;
-                    user.idClasse = idClass.map(id => id.split('$')[1]);
-                    user.toString = () => user.displayName + ' - ' + user.idClasse;
+                    user.idClasse = idClass.map(id => id.split('$').length > 1 ? id.split('$')[1] : id);
+                }
+                if (!!user.classesNames && user.classesNames.length > 0) {
+                    user.classesNames.sort();
+                    user.toString = () => user.displayName + ' - ' + user.classesNames;
                 } else user.toString = () => user.displayName;
             });
 
@@ -65,8 +68,11 @@ export const SearchService: SearchService = {
             data.forEach((user) => {
                 if (user.idClasse && user.idClasse != null) {
                     let idClass = user.idClasse;
-                    user.idClasse = idClass.map(id => id.split('$')[1]);
-                    user.toString = () => user.displayName + ' - ' + user.idClasse;
+                    user.idClasse = idClass.map(id => id.split('$').length > 1 ? id.split('$')[1] : id);
+                }
+                if (!!user.classesNames && user.classesNames.length > 0) {
+                    user.classesNames.sort();
+                    user.toString = () => user.displayName + ' - ' + user.classesNames;
                 } else user.toString = () => user.displayName;
             });
 
