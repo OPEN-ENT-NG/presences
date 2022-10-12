@@ -11,6 +11,7 @@ public enum SettingsFieldEnum {
     EXCLUDE_ALERT_ABSENCE_NO_REASON("exclude_alert_absence_no_reason"),
     EXCLUDE_ALERT_LATENESS_NO_REASON("exclude_alert_lateness_no_reason"),
     EXCLUDE_ALERT_FORGOTTEN_NOTEBOOK("exclude_alert_forgotten_notebook"),
+    ALLOW_MULTIPLE_SLOTS("allow_multiple_slots"),
     INITIALIZED("initialized");
 
     private final String value;

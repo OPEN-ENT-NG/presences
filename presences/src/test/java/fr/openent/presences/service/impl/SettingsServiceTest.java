@@ -4,8 +4,10 @@ import fr.openent.presences.core.constants.Field;
 import fr.openent.presences.db.DB;
 import fr.openent.presences.db.DBService;
 import io.vertx.core.Handler;
+import io.vertx.core.Promise;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
+import io.vertx.ext.unit.Async;
 import io.vertx.ext.unit.TestContext;
 import io.vertx.ext.unit.junit.VertxUnitRunner;
 import org.entcore.common.sql.Sql;
@@ -115,5 +117,25 @@ public class SettingsServiceTest extends DBService {
 
         Whitebox.invokeMethod(settingsService, "update",
                 STRUCTURE_ID, new JsonObject().put(Field.ALERT_ABSENCE_THRESHOLD, true).put(OTHER_KEY, OTHER_VALUE), null);
+    }
+
+    @Test
+    public void testUpdateInvalidSettings(TestContext ctx) throws Exception {
+        Async async = ctx.async(2);
+        String structureId = "structureId";
+        JsonObject settings = new JsonObject();
+        Promise<JsonObject> promise1 = Promise.promise();
+        Promise<JsonObject> promise2 = Promise.promise();
+
+        promise1.future().onFailure(event -> async.countDown());
+        promise2.future().onFailure(event -> async.countDown());
+
+        Whitebox.invokeMethod(this.settingsService, "update", structureId, settings, promise1);
+        settings.put("invalidColumn", "");
+        Whitebox.invokeMethod(this.settingsService, "update", structureId, settings, promise2);
+
+        Mockito.verify(this.sql, Mockito.times(0)).prepared(Mockito.anyString(), Mockito.any(), Mockito.any());
+
+        async.awaitSuccess(1000);
     }
 }
