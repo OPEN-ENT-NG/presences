@@ -47,8 +47,9 @@ public class ExportPDFServiceImpl implements ExportPDFService {
         pdfFactory = new PdfFactory(vertx, new JsonObject().put("node-pdf-generator",
                 config.getJsonObject("node-pdf-generator", new JsonObject())));
         try {
-            this.authHeader = "Basic " + config.getJsonObject("pdf-generator").getString("auth");
-            this.pdfGeneratorURL = config.getJsonObject("pdf-generator").getString("url");
+            this.authHeader = config.getJsonObject("pdf-generator", new JsonObject()).getString("auth", null);
+            this.authHeader = this.authHeader == null ? null : "Basic " + this.authHeader;
+            this.pdfGeneratorURL = config.getJsonObject("pdf-generator", new JsonObject()).getString("url", null);
         } catch (Exception e) {
             LOGGER.info("[Common@ExportPDFServiceImpl::constructor] Failed to get pdf generator credentials");
         }
@@ -123,6 +124,10 @@ public class ExportPDFServiceImpl implements ExportPDFService {
     }
 
     private void webServiceNodePdfGeneratorPost(String file, String token, String nodePdfGeneratorUrl, Handler<Either<String, Buffer>> handler) {
+        if (this.authHeader == null) {
+            handler.handle(new Either.Left<>("[Common@ExportPDFServiceImpl::webServiceNodePdfGeneratorPost] Bad authHeader"));
+            return;
+        }
         AtomicBoolean responseIsSent = new AtomicBoolean(false);
         URI url;
         try {
