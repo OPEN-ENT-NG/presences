@@ -37,7 +37,7 @@ const vm: ViewModel = {
             await settingService.put(window.model.vieScolaire.structure.id, vm.setting);
             toasts.confirm('presences.statistics.manage.event.inventory.method.save.confirm');
         } catch (e) {
-            toasts.confirm('presences.statistics.manage.event.inventory.method.save.error');
+            toasts.warning('presences.statistics.manage.event.inventory.method.save.error');
             throw e;
         }
     }
