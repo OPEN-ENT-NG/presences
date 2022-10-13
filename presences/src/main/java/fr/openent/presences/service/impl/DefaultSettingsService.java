@@ -17,8 +17,10 @@ import io.vertx.core.logging.LoggerFactory;
 import org.entcore.common.sql.Sql;
 import org.entcore.common.sql.SqlResult;
 
-import java.text.SimpleDateFormat;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 public class DefaultSettingsService extends DBService implements SettingsService {
@@ -88,7 +90,7 @@ public class DefaultSettingsService extends DBService implements SettingsService
             if (count == 0) {
                 create(structureId, settings, promise.future());
             } else {
-                update(structureId, settings, promise.future());
+                update(structureId, settings, promise);
             }
         });
 
@@ -117,17 +119,25 @@ public class DefaultSettingsService extends DBService implements SettingsService
         sql.prepared(query, params, SqlResult.validUniqueResultHandler(FutureHelper.handlerJsonObject(future)));
     }
 
-    private void update(String structureId, JsonObject settings, Future<JsonObject> future) {
+    private void update(String structureId, JsonObject settings, Promise<JsonObject> promise) {
         List<String> columns = new ArrayList<>(settings.fieldNames());
         JsonArray params = new JsonArray();
         StringBuilder query = new StringBuilder("UPDATE " + Presences.dbSchema + ".settings SET ");
-        columns.stream().map(SettingsFieldEnum::getSettingsField).filter(Objects::nonNull).forEach(column -> {
+        columns = columns.stream()
+                .map(SettingsFieldEnum::getSettingsField)
+                .filter(Objects::nonNull)
+                .collect(Collectors.toList());
+        if (columns.isEmpty()) {
+            promise.fail("No valid column to update");
+            return;
+        }
+        columns.forEach(column -> {
             query.append(SettingsFieldEnum.getSettingsField(column)).append(" = ?,");
             params.add(settings.getValue(column));
         });
 
         params.add(structureId);
         sql.prepared(query.substring(0, query.length() - 1) + " WHERE structure_id = ? RETURNING *;",
-                params, SqlResult.validUniqueResultHandler(FutureHelper.handlerJsonObject(future)));
+                params, SqlResult.validUniqueResultHandler(FutureHelper.handlerEitherPromise(promise)));
     }
 }
