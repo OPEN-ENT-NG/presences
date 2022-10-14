@@ -147,6 +147,11 @@ do $$
 
         -- Test absence event exclude_alert_absence_no_reason
         INSERT INTO presences.event(id, start_date, end_date, student_id, register_id, type_id, reason_id, owner, counsellor_regularisation)
+        VALUES (9500, now()::date + '10:00:00'::time, now()::date + '10:55:00'::time, studentId2, 9399, 1, -1, '', false);
+        SELECT count(*) FROM presences.alerts INTO countAlert;
+        assert countAlert = 0, 'do not create alert for absence with global reason (reason id < 1) assert 0 != ' || countAlert;
+
+        INSERT INTO presences.event(id, start_date, end_date, student_id, register_id, type_id, reason_id, owner, counsellor_regularisation)
         VALUES (9499, now()::date + '10:00:00'::time, now()::date + '10:55:00'::time, studentId2, 9399, 1, NULL, '', false);
         SELECT count(*) FROM presences.alerts INTO countAlert;
         assert countAlert = 1, 'create alert for absence without reason assert 1 != ' || countAlert;
@@ -234,7 +239,7 @@ do $$
         SELECT count(*) FROM presences.alerts WHERE event_id = 9496 OR event_id = 9495 INTO countAlert;
         assert countAlert = 0, 'no alert because event is exclude assert 0 != ' || countAlert;
 
-        DELETE FROM presences.event WHERE id IN (9499, 9498, 9497, 9496, 9495, 9494, 9493, 9492, 9491, 9490);
+        DELETE FROM presences.event WHERE id IN (9500, 9499, 9498, 9497, 9496, 9495, 9494, 9493, 9492, 9491, 9490);
         TRUNCATE TABLE presences.alerts;
 
         -- Test complex case Update alert when having siblings in same time
