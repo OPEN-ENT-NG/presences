@@ -179,19 +179,39 @@ export const calendarController = ng.controller('CalendarController',
             const hover = document.getElementById('exemption-hover');
 
             const loadCalendarItems = async (student: User, startWeekDate: string, structureId: string): Promise<ICalendarItems> => {
-                return Promise.all([
-                    CalendarService.loadCourses(student, startWeekDate, structureId),
-                    CalendarService.loadPresences(student, startWeekDate, structureId),
-                    CalendarService.loadAbsences(student, startWeekDate, structureId),
-                    reasonService.getReasons(structureId, REASON_TYPE_ID.ALL)]
-                ).then((values: [Array<Course>, Presences, Array<Absence>, Array<Reason>]) => {
-                    return {
-                        courses: values[0],
-                        presences: values[1],
-                        absences: values[2],
-                        reasons: values[3]
-                    };
-                });
+                let courses: Array<Course> = await (CalendarService.loadCourses(student, startWeekDate, structureId)
+                    .then((coursesResult: Array<Course>) => coursesResult)
+                    .catch(e => {
+                        console.error(e);
+                        return [];
+                    }));
+
+                let presences: Presences = await (CalendarService.loadPresences(student, startWeekDate, structureId)
+                    .then((presencesResult: Presences) => presencesResult)
+                    .catch(e => {
+                        console.error(e);
+                        return new Presences(structureId);
+                    }));
+
+                let absences: Array<Absence> = await (CalendarService.loadAbsences(student, startWeekDate, structureId)
+                    .then((absencesResult: Array<Absence>) => absencesResult)
+                    .catch(e => {
+                        console.error(e);
+                        return [];
+                    }));
+
+                let reasons: Array<Reason> = await (reasonService.getReasons(structureId, REASON_TYPE_ID.ALL)
+                    .then((reasonsResult: Array<Reason>) => reasonsResult)
+                    .catch(e => {
+                        console.error(e);
+                        return [];
+                    }));
+                return {
+                    courses: courses,
+                    presences: presences,
+                    absences: absences,
+                    reasons: reasons
+                };
             };
 
             async function initCalendar() {
