@@ -38,6 +38,7 @@ public class ComputeStatistics extends ProcessingScheduledManual {
         initTemplateProcessor();
         fetchUsers(structures, studentIds)
                 .compose(this::processManualIndicators)
+                .compose(res -> this.clearWaitingList(studentIds))
                 .onSuccess(promise::complete)
                 .onFailure(error -> {
                     String message = String.format("[StatisticsPresences@%s@::manualStart] An error has occurred during " +
