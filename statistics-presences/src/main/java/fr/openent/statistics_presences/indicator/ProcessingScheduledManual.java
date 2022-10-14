@@ -16,6 +16,8 @@ import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
+import org.entcore.common.sql.Sql;
+import org.entcore.common.sql.SqlResult;
 import org.vertx.java.busmods.BusModBase;
 
 import java.util.ArrayList;
@@ -46,14 +48,19 @@ public class ProcessingScheduledManual extends BusModBase implements Handler<Mes
         initTemplateProcessor();
         List<String> structures = eventMessage.body().getJsonArray("structure", new JsonArray()).getList();
         List<String> studentIds = eventMessage.body().getJsonArray(Field.STUDENTIDS, new JsonArray()).getList();
+        JsonObject params = new JsonObject();
         fetchUsers(structures, studentIds)
                 .compose(this::processIndicators)
                 .compose(this::generateReport)
+                .compose(report -> {
+                    params.put(Field.RESULT, report);
+                    return this.clearWaitingList(studentIds);
+                })
                 .onSuccess(success -> {
                     if (Boolean.TRUE.equals(isWaitingEndProcess))
                         eventMessage.reply(new JsonObject().put(Field.STATUS, Field.OK));
                     else
-                        log.info(success);
+                        log.info(params.getString(Field.RESULT));
                 })
                 .onFailure(error -> {
                     String message = String.format("[StatisticsPresences@ProcessingScheduledManual::handle] " +
@@ -155,6 +162,22 @@ public class ProcessingScheduledManual extends BusModBase implements Handler<Mes
                 promise.complete(report);
             }
         });
+
+        return promise.future();
+    }
+
+
+    protected Future<Void> clearWaitingList(List<String> studentIds) {
+        if (studentIds.isEmpty()) {
+            return Future.succeededFuture();
+        }
+        Promise<Void> promise = Promise.promise();
+        String query = String.format("DELETE FROM %s.user WHERE id IN " + Sql.listPrepared(studentIds) + " ;", StatisticsPresences.DB_SCHEMA);
+        JsonArray params = new JsonArray().addAll(new JsonArray(studentIds));
+        Sql.getInstance().prepared(query, params, SqlResult.validUniqueResultHandler(either -> {
+            if (either.isLeft()) promise.fail(either.left().getValue());
+            else promise.complete();
+        }));
 
         return promise.future();
     }
