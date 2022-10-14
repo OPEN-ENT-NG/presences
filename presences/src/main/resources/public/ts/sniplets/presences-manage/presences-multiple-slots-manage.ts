@@ -28,7 +28,7 @@ const vm: ViewModel = {
             await settingService.put(window.model.vieScolaire.structure.id, vm.settings);
             toasts.confirm('presences.multiple.slots.manage.save.confirm');
         } catch (e) {
-            toasts.confirm('presences.multiple.slots.manage.save.error');
+            toasts.warning('presences.multiple.slots.manage.save.error');
             throw e;
         }
     }
