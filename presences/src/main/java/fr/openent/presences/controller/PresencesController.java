@@ -85,7 +85,7 @@ public class PresencesController extends ControllerHelper {
                 return;
             }
             UserUtils.getUserInfos(eb, request, user ->
-                    presencesService.create(user, presences, DefaultResponseHandler.defaultResponseHandler(request)));
+                    presencesService.createWithoutUpdateAbsence(user, presences, DefaultResponseHandler.defaultResponseHandler(request)));
         });
     }
 
