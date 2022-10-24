@@ -35,8 +35,8 @@ export interface Filter {
     showCSV: boolean;
     from: Date;
     to: Date;
-    students: Array<any>;
-    audiences: Array<any>;
+    groupsSearch: GroupsSearch;
+    studentsSearch: StudentsSearch;
     filterTypes: FilterType[];
     exportType: string;
 }
@@ -57,8 +57,6 @@ interface ViewModel {
     loading: boolean;
     displayType: typeof DISPLAY_TYPE;
     noLatenessReason: Reason;
-    groupsSearch: GroupsSearch;
-    studentsSearch: StudentsSearch;
 
     safeApply(fn?: () => void): void;
 
@@ -138,8 +136,8 @@ export const mainController = ng.controller('MainController',
                     showCSV: false,
                     from: new Date,
                     to: new Date,
-                    students: undefined,
-                    audiences: undefined,
+                    studentsSearch: undefined,
+                    groupsSearch: undefined,
                     filterTypes: [],
                     exportType: null
                 };
@@ -169,8 +167,8 @@ export const mainController = ng.controller('MainController',
             };
 
             async function init() {
-                vm.groupsSearch = new GroupsSearch(window.structure.id, searchService, groupService, groupingService);
-                vm.studentsSearch = new StudentsSearch(window.structure.id, searchService);
+                vm.filter.groupsSearch = new GroupsSearch(window.structure.id, searchService, groupService, groupingService);
+                vm.filter.studentsSearch = new StudentsSearch(window.structure.id, searchService);
                 await vm.loadData();
                 buildIndicators();
                 vm.filter.filterTypes = vm.indicator.cloneFilterTypes();
@@ -281,70 +279,70 @@ export const mainController = ng.controller('MainController',
             };
 
             vm.searchStudent = async function (value: string) {
-                await vm.studentsSearch.searchStudents(value)
+                await vm.filter.studentsSearch.searchStudents(value)
                     .catch(error => console.error(error));
                 vm.safeApply();
             };
 
             vm.selectStudent = async function (model: string, student: Student) {
                 if (vm.isWeekly(vm.indicator)) {
-                    vm.studentsSearch.resetSelectedStudents();
+                    vm.filter.studentsSearch.resetSelectedStudents();
                 }
-                vm.groupsSearch.resetSelectedGroups();
-                vm.groupsSearch.resetGroups();
-                vm.groupsSearch.group = '';
-                vm.studentsSearch.student = '';
-                vm.studentsSearch.resetStudents();
-                vm.studentsSearch.selectStudents(model, student);
+                vm.filter.groupsSearch.resetSelectedGroups();
+                vm.filter.groupsSearch.resetGroups();
+                vm.filter.groupsSearch.group = '';
+                vm.filter.studentsSearch.student = '';
+                vm.filter.studentsSearch.resetStudents();
+                vm.filter.studentsSearch.selectStudents(model, student);
                 if (vm.isWeekly(vm.indicator)) await (<Weekly>vm.indicator)
                     .initTimeslot(
-                        vm.studentsSearch.getSelectedStudents().map((student: Student) => student.id),
-                        vm.groupsSearch.getSelectedGroups().map((group: Group) => group.id)
+                        vm.filter.studentsSearch.getSelectedStudents().map((student: Student) => student.id),
+                        vm.filter.groupsSearch.getSelectedGroups().map((group: Group) => group.id)
                     )
                 await vm.resetIndicator();
                 vm.safeApply();
             };
 
             vm.searchAudience = async function (value: string) {
-                await vm.groupsSearch.searchGroups(value)
+                await vm.filter.groupsSearch.searchGroups(value)
                     .catch(error => console.error(error));
                 vm.safeApply();
             };
 
             vm.selectAudience = async function (model: string, audience: Group | Grouping) {
                 if (vm.isWeekly(vm.indicator)) {
-                    vm.groupsSearch.resetSelectedGroups()
+                    vm.filter.groupsSearch.resetSelectedGroups()
                 }
-                vm.studentsSearch.resetSelectedStudents();
-                vm.studentsSearch.resetStudents();
-                vm.studentsSearch.student = '';
-                vm.groupsSearch.group = '';
-                vm.groupsSearch.resetGroups();
-                vm.groupsSearch.selectGroups(model, audience);
+                vm.filter.studentsSearch.resetSelectedStudents();
+                vm.filter.studentsSearch.resetStudents();
+                vm.filter.studentsSearch.student = '';
+                vm.filter.groupsSearch.group = '';
+                vm.filter.groupsSearch.resetGroups();
+                vm.filter.groupsSearch.selectGroups(model, audience);
                 if (vm.isWeekly(vm.indicator)) await (<Weekly>vm.indicator)
                     .initTimeslot(
-                        vm.studentsSearch.getSelectedStudents().map((student: Student) => student.id),
-                        vm.groupsSearch.getSelectedGroups().map((group: Group) => group.id)
+                        vm.filter.studentsSearch.getSelectedStudents().map((student: Student) => student.id),
+                        vm.filter.groupsSearch.getSelectedGroups().map((group: Group) => group.id)
                     )
                 await vm.resetIndicator();
                 vm.safeApply();
             };
 
             vm.removeGroup = async function (value: Group): Promise<void> {
-                vm.groupsSearch.removeSelectedGroups(value);
+                vm.filter.groupsSearch.removeSelectedGroups(value);
                 await vm.removeSelection();
             }
 
             vm.removeStudent = async function (value: Student): Promise<void> {
-                vm.studentsSearch.removeSelectedStudents(value);
+                vm.filter.studentsSearch.removeSelectedStudents(value);
                 await vm.removeSelection();
             }
 
             vm.removeSelection = async function (): Promise<void> {
                 if (vm.isWeekly(vm.indicator)) {
-                    (<Weekly>vm.indicator).setUserAndAudienceFilter(vm.studentsSearch.getSelectedStudents()
+                    (<Weekly>vm.indicator).setUserAndAudienceFilter(vm.filter.studentsSearch.getSelectedStudents()
                             .map((student: Student) => student.id),
-                        vm.groupsSearch.getSelectedGroups().map((group: Group) => group.id));
+                        vm.filter.groupsSearch.getSelectedGroups().map((group: Group) => group.id));
                 }
                 await vm.resetIndicator();
             };
@@ -353,15 +351,15 @@ export const mainController = ng.controller('MainController',
                 vm.loading = true;
                 let users: Array<string> = [];
                 let audiences: Array<string> = [];
-                vm.studentsSearch.getSelectedStudents().map((student: Student) => users.push(student.id));
-                vm.groupsSearch.getSelectedGroups().map((group: Group) => audiences.push(group.id));
+                vm.filter.studentsSearch.getSelectedStudents().map((student: Student) => users.push(student.id));
+                vm.filter.groupsSearch.getSelectedGroups().map((group: Group) => audiences.push(group.id));
                 vm.filter.show = false;
                 vm.indicator.from = DateUtils.setFirstTime(vm.filter.from);
                 vm.indicator.to = DateUtils.setLastTime(vm.filter.to);
                 template.open('indicator', `indicator/${vm.indicator.name()}`);
                 try {
                     await vm.indicator.search(vm.indicator.from, vm.indicator.to, users, audiences);
-                    if (vm.studentsSearch.getSelectedStudents().length > 0 && (vm.indicator.values as IMonthly).data) {
+                    if (vm.filter.studentsSearch.getSelectedStudents().length > 0 && (vm.indicator.values as IMonthly).data) {
                         (vm.indicator.values as IMonthly).data.forEach((audience: MonthlyStatistics) => {
                             audience.isClicked = true;
                         });
@@ -409,15 +407,15 @@ export const mainController = ng.controller('MainController',
                 vm.filter.from = vm.indicator.from;
                 vm.filter.to = vm.indicator.to;
                 if (vm.isWeekly(vm.indicator)) {
-                    vm.groupsSearch.groupingService = undefined;
-                    vm.groupsSearch.resetSelectedGroups();
-                    vm.studentsSearch.resetSelectedStudents();
+                    vm.filter.groupsSearch.groupingService = undefined;
+                    vm.filter.groupsSearch.resetSelectedGroups();
+                    vm.filter.studentsSearch.resetSelectedStudents();
                     await (<Weekly>vm.indicator).initTimeslot(
                         [],
                         []
                     );
                 } else {
-                    vm.groupsSearch.groupingService = groupingService;
+                    vm.filter.groupsSearch.groupingService = groupingService;
                 }
                 await vm.launchResearch();
                 vm.safeApply();
@@ -445,8 +443,8 @@ export const mainController = ng.controller('MainController',
             vm.export = (exportType?: string): void => {
                 let users = [];
                 let audiences = [];
-                vm.studentsSearch.getSelectedStudents().map((student: Student) => users.push(student.id));
-                vm.groupsSearch.getSelectedGroups().map((group: Group) => audiences.push(group.id));
+                vm.filter.studentsSearch.getSelectedStudents().map((student: Student) => users.push(student.id));
+                vm.filter.groupsSearch.getSelectedGroups().map((group: Group) => audiences.push(group.id));
                 vm.indicator.export(vm.indicator.from, vm.indicator.to, users, audiences, exportType);
                 if (exportType) {
                     vm.filter.showCSV = false
