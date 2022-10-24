@@ -126,7 +126,7 @@ export const chartStatistics = ng.directive('chartStatistics', () => {
                             categories: vm.indicator.graphValues.months.map((month:string) => vm.getMonthLabel(month))
                         },
                         title: {
-                            text: ((vm.filter.students.length === 0) && (vm.filter.audiences.length === 0)) ?
+                            text: ((vm.filter.studentsSearch.getSelectedStudents().length === 0) && (vm.filter.groupsSearch.getSelectedGroups().length === 0)) ?
                                 vm.translate('statistics-presences.indicator.graph.structure.stats') + ' ' + window.structure.name : ' ',
                             align: 'left'
                         }
