@@ -228,12 +228,16 @@ public class DefaultPresenceService extends DBService implements PresenceService
 
     /**
      * Create presence and update all events and absences that match with presence's creation date
+     * Deprecated because the updating of absences and events is done automatically since the addition of the MA-1020 triggers
      *
      * @param user              user infos {@link UserInfos}
      * @param presenceBody      list of absences identifiers
      * @param handler           Handler sending {@link Either>} reply
+     *
+     * @deprecated Replaced by {@link #createWithoutUpdateAbsence(UserInfos, JsonObject, Handler)}
      */
     @Override
+    @Deprecated
     public void create(UserInfos user, JsonObject presenceBody, Handler<Either<String, JsonObject>> handler) {
 
         List<String> studentIds = presenceBody.getJsonArray(Field.MARKEDSTUDENTS)
@@ -255,6 +259,28 @@ public class DefaultPresenceService extends DBService implements PresenceService
                     }));
                 })
                 .onFailure(fail -> handler.handle(new Either.Left<>(fail.getMessage())));
+    }
+
+    /**
+     * Create presence
+     *
+     * @param user              user infos {@link UserInfos}
+     * @param presenceBody      list of absences identifiers
+     * @param handler           Handler sending {@link Either>} reply
+     */
+    @Override
+    public void createWithoutUpdateAbsence(UserInfos user, JsonObject presenceBody, Handler<Either<String, JsonObject>> handler) {
+        String queryId = "SELECT nextval('" + Presences.dbSchema + ".presence_id_seq') as id";
+        sql.raw(queryId, SqlResult.validUniqueResultHandler(presenceId -> {
+            if (presenceId.isLeft()) {
+                String message = String.format("[Presences@%s::createWithoutUpdateAbsence] Failed to fetch presence id seq :%s",
+                        this.getClass().getSimpleName(), presenceId.left().getValue());
+                LOGGER.error(message);
+                handler.handle(new Either.Left<>(message));
+            } else {
+                processTransactionPresences(user, presenceBody, handler, presenceId);
+            }
+        }));
     }
 
 

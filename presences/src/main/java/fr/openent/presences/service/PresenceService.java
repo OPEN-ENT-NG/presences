@@ -38,6 +38,15 @@ public interface PresenceService {
     void create(UserInfos user, JsonObject presenceBody, Handler<Either<String, JsonObject>> handler);
 
     /**
+     * Create presence
+     *
+     * @param user              user infos {@link UserInfos}
+     * @param presenceBody      list of absences identifiers
+     * @param handler           Handler sending {@link Either>} reply
+     */
+    void createWithoutUpdateAbsence(UserInfos user, JsonObject presenceBody, Handler<Either<String, JsonObject>> handler);
+
+    /**
      * Update an presence
      *
      * @param presenceBody presence object
