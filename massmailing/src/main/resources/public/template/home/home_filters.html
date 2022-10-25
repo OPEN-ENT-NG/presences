@@ -80,12 +80,12 @@
                 <i18n>massmailing.types.LATENESS</i18n>
             </div>
             <!-- filter punishment -->
-            <div class="chip" ng-class="{ selected: vm.formFilter.status.PUNISHMENT }"
+            <div class="chip" ng-if="::hasIncidentRight('access')" ng-class="{ selected: vm.formFilter.status.PUNISHMENT }"
                  data-ng-click="vm.togglePunishmentSanctionFormFilter('PUNISHMENT')">
                 <i18n>massmailing.types.PUNISHMENT</i18n>
             </div>
             <!-- filter sanction -->
-            <div class="chip" ng-class="{ selected: vm.formFilter.status.SANCTION }"
+            <div class="chip" ng-if="::hasIncidentRight('access')" ng-class="{ selected: vm.formFilter.status.SANCTION }"
                  data-ng-click="vm.togglePunishmentSanctionFormFilter('SANCTION')">
                 <i18n>massmailing.types.SANCTION</i18n>
             </div>

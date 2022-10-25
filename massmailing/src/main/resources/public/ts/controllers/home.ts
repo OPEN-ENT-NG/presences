@@ -1,4 +1,4 @@
-import {_, idiom as lang, Me, ng, toasts} from 'entcore';
+import {_, idiom as lang, Me, model, ng, toasts} from 'entcore';
 import {ReasonService} from '@presences/services/ReasonService';
 import {Group, GroupingService, GroupService, SearchService, SettingsService, Template} from '../services';
 import {
@@ -20,6 +20,8 @@ import {MailTemplateCategory} from "@common/core/enum/mail-template-category";
 import {REASON_TYPE_ID} from "@common/core/enum/reason-type-id";
 import {Student} from "@common/model/Student";
 import {Grouping} from "@common/model/grouping";
+import {AxiosError} from "axios";
+import incidentsRights from "@incidents/rights";
 
 interface Filter {
     start_date: Date;
@@ -257,7 +259,10 @@ export const homeController = ng.controller('HomeController', ['$scope', 'route'
                 $scope.redirectTo(`/history`);
             }
             await loadFormFilter();
-            await Promise.all([getReasons(), getPunishmentTypes()]);
+            await getPunishmentTypes().catch((error: AxiosError) => {
+                console.error(error)
+            });
+            await getReasons().catch((error: AxiosError) => console.error(error));
             vm.fetchData();
             $scope.$apply();
         };
@@ -274,7 +279,7 @@ export const homeController = ng.controller('HomeController', ['$scope', 'route'
         };
 
         const getPunishmentTypes = (): Promise<void> => {
-            return new Promise((resolve) => {
+            return new Promise((resolve, reject) => {
                 punishmentTypeService.get(window.structure.id)
                     .then((punishmentTypes: IPunishmentType[]) => {
                         punishmentTypes.forEach((punishmentType: IPunishmentType) => punishmentType.isSelected = false);
@@ -291,6 +296,10 @@ export const homeController = ng.controller('HomeController', ['$scope', 'route'
 
                         $scope.$apply();
                         resolve(undefined);
+                    })
+                    .catch((error: AxiosError) => {
+                        vm.punishmentsTypes = [];
+                        reject(error);
                     });
             });
         };
@@ -597,6 +606,10 @@ export const homeController = ng.controller('HomeController', ['$scope', 'route'
                     });
             }
             let filter: IMassmailingFilterPreferences = {...defaultFilters, ...formFilters}
+            if (!model.me.hasWorkflow(incidentsRights.workflow.access)) {
+                filter.status.PUNISHMENT = false;
+                filter.status.SANCTION = false;
+            }
             let {...toMergeFilters} = filter;
             vm.filter = {...vm.filter, ...toMergeFilters};
             vm.filter.status = {
