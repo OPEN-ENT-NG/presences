@@ -103,7 +103,7 @@ export class Exemption extends ExemptionView {
     toJson() {
         let exemp = {
             "structure_id": this.structureId,
-            "subject_id": this.subject.id,
+            "subject_id": (this.subject) ? this.subject.id : "",
             "start_date": moment(this.startDate)
                 .set({hour:0,minute:0,second:0})
                 .format(DateUtils.FORMAT['YEAR-MONTH-DAY-HOUR-MIN-SEC']),
