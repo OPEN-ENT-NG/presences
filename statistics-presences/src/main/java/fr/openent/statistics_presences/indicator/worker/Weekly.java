@@ -31,26 +31,26 @@ public class Weekly extends IndicatorWorker {
      */
     @Override
     @SuppressWarnings("unchecked")
-    protected Future<List<Stat>> fetchEvent(EventType type, String structureId, String studentId, Timeslot timeslot) {
+    protected Future<List<Stat>> fetchEvent(EventType type, String structureId, String studentId, Timeslot timeslot, String startDate, String endDate) {
         Future<List<Stat>> future;
         switch (type) {
             case DEPARTURE:
-                future = retrieveEventCount(structureId, studentId, 3, null, timeslot);
+                future = retrieveEventCount(structureId, studentId, 3, null, timeslot, startDate, endDate);
                 break;
             case LATENESS:
-                future = retrieveEventCount(structureId, studentId, 2, reasonIds(structureId).getList(), timeslot);
+                future = retrieveEventCount(structureId, studentId, 2, reasonIds(structureId).getList(), timeslot, startDate, endDate);
                 break;
             case NO_REASON:
                 future = fetchEventCountFromPresences(structureId, studentId, new ArrayList<>(), true,
-                        null, timeslot);
+                        null, timeslot, startDate, endDate);
                 break;
             case UNREGULARIZED:
                 future = fetchEventCountFromPresences(structureId, studentId, reasonIds(structureId).getList(), false,
-                        false, timeslot);
+                        false, timeslot, startDate, endDate);
                 break;
             case REGULARIZED:
                 future = fetchEventCountFromPresences(structureId, studentId, reasonIds(structureId).getList(), false,
-                        true, timeslot);
+                        true, timeslot, startDate, endDate);
                 break;
             case INCIDENT:
             case SANCTION:
@@ -80,11 +80,22 @@ public class Weekly extends IndicatorWorker {
         return promise.future();
     }
 
-    @SuppressWarnings("unchecked")
+    /**
+     * No filter date
+     *
+     * @deprecated Replaced by {@link #fetchEventCountFromPresences(String, String, List, Boolean, Boolean, Timeslot, String, String)}
+     */
+    @Deprecated
     private Future<List<Stat>> fetchEventCountFromPresences(String structureId, String studentId, List<Integer> reasonIds,
                                                             Boolean noReasons, Boolean regularized, Timeslot timeslot) {
+        return fetchEventCountFromPresences(structureId, studentId, reasonIds, noReasons, regularized, timeslot, null, null);
+    }
+
+    @SuppressWarnings("unchecked")
+    private Future<List<Stat>> fetchEventCountFromPresences(String structureId, String studentId, List<Integer> reasonIds,
+                                                            Boolean noReasons, Boolean regularized, Timeslot timeslot, String startDate, String endDate) {
         Promise<List<Stat>> promise = Promise.promise();
-        IndicatorGeneric.fetchEventsFromPresences(structureId, studentId, reasonIds, noReasons, regularized)
+        IndicatorGeneric.fetchEventsFromPresences(structureId, studentId, reasonIds, noReasons, regularized, startDate, endDate)
                 .onSuccess(result -> {
                     List<Stat> stats = ((List<JsonObject>) result.getList()).stream()
                             .flatMap(event -> {
@@ -106,9 +117,20 @@ public class Weekly extends IndicatorWorker {
         return promise.future();
     }
 
+    /**
+     * No filter date
+     *
+     * @deprecated Replaced by {@link #retrieveEventCount(String, String, Integer, List, Timeslot, String, String)}
+     */
+    @Deprecated
     private Future<List<Stat>> retrieveEventCount(String structureId, String studentId, Integer eventType, List<Integer> reasonIds, Timeslot timeslot) {
+        return retrieveEventCount(structureId, studentId, eventType, reasonIds, timeslot, null, null);
+    }
+
+    private Future<List<Stat>> retrieveEventCount(String structureId, String studentId, Integer eventType, List<Integer> reasonIds,
+                                                  Timeslot timeslot, String startDate, String endDate) {
         String select = "event.start_date, event.end_date, event.reason_id";
-        return countHandler(IndicatorGeneric.retrieveEventCount(structureId, studentId, eventType, select, null, reasonIds), timeslot);
+        return countHandler(IndicatorGeneric.retrieveEventCount(structureId, studentId, eventType, select, null, reasonIds, startDate, endDate), timeslot);
     }
 
     private List<WeeklyStat> getSplitEventsBySlots(JsonObject event, Timeslot timeslot) {
