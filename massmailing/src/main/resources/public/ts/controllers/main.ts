@@ -1,5 +1,6 @@
 import {idiom, model, ng, template} from 'entcore';
 import rights from "../rights";
+import incidentsRights from "@incidents/rights";
 
 interface ViewModel {
     homeState(): boolean;
@@ -37,8 +38,12 @@ export const mainController = ng.controller('MainController', ['$scope', 'route'
             }
         };
 
-       $scope.hasRight = (right: string): boolean => {
+        $scope.hasRight = (right: string): boolean => {
             return model.me.hasWorkflow(rights.workflow[right]);
+        };
+
+        $scope.hasIncidentRight = (right: string): boolean => {
+            return model.me.hasWorkflow(incidentsRights.workflow[right]);
         };
 
         $scope.redirectTo = (path: string): void => {
