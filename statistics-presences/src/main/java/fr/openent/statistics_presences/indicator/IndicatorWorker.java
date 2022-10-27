@@ -178,12 +178,14 @@ public abstract class IndicatorWorker extends AbstractVerticle {
 
         Future<JsonObject> settingsFuture = IndicatorGeneric.retrieveSettings(id);
         Future<JsonArray> reasonFuture = IndicatorGeneric.retrieveReasons(id);
+        Future<JsonObject> schoolYearFuture = Viescolaire.getInstance().getSchoolYear(id);
 
-        CompositeFuture.all(Arrays.asList(settingsFuture, reasonFuture))
+        CompositeFuture.all(Arrays.asList(settingsFuture, reasonFuture, schoolYearFuture))
                 .onSuccess(res -> {
                     List<Integer> reasonIds = ((List<JsonObject>) reasonFuture.result().getList()).stream()
                             .map(reason -> reason.getInteger("id"))
                             .collect(Collectors.toList());
+                    JsonObject schoolYear = schoolYearFuture.result();
 
                     JsonObject structureSettings = settingsFuture.result()
                             .put("reasonIds", reasonIds);
@@ -196,7 +198,9 @@ public abstract class IndicatorWorker extends AbstractVerticle {
                         current = current.compose(v -> {
                             log.debug(String.format("[StatisticsPresences@IndicatorWorker::processStructure] " +
                                     "Processing student %s for structure %s", students.getString(indice), id));
-                            Future<List<JsonObject>> next = processStudent(id, students.getString(indice));
+                            String startDate = schoolYear.getString(Field.START_DATE, null);
+                            String endDate = schoolYear.getString(Field.END_DATE, null);
+                            Future<List<JsonObject>> next = processStudent(id, students.getString(indice), startDate, endDate);
                             futures.add(next);
                             return next;
                         });
@@ -234,6 +238,11 @@ public abstract class IndicatorWorker extends AbstractVerticle {
         return promise.future();
     }
 
+    @Deprecated
+    private Future<List<JsonObject>> processStudent(String structureId, String studentId) {
+        return processStudent(structureId, studentId, null, null);
+    }
+
     /*
         For each student retrieve :
         - absence count (no reason + unregularized + regularized)
@@ -246,7 +255,7 @@ public abstract class IndicatorWorker extends AbstractVerticle {
         - incident count
      */
     @SuppressWarnings("unchecked")
-    private Future<List<JsonObject>> processStudent(String structureId, String studentId) {
+    private Future<List<JsonObject>> processStudent(String structureId, String studentId, String startDate, String endDate) {
         Promise<List<JsonObject>> promise = Promise.promise();
         List<EventType> eventTypes = Arrays.asList(EventType.values());
         Map<EventType, Future<List<Stat>>> statsByEventTypes = new HashMap<>();
@@ -278,7 +287,7 @@ public abstract class IndicatorWorker extends AbstractVerticle {
                     statProcessSettings.setTimeslot(timeslots.getJsonObject(0));
 
                     for (EventType eventType : eventTypes) {
-                        statsByEventTypes.put(eventType, fetchEvent(eventType, structureId, studentId, statProcessSettings.getTimeslot()));
+                        statsByEventTypes.put(eventType, fetchEvent(eventType, structureId, studentId, statProcessSettings.getTimeslot(), startDate, endDate));
                     }
 
                     return CompositeFuture.all(new ArrayList<>(statsByEventTypes.values()));
@@ -331,5 +340,10 @@ public abstract class IndicatorWorker extends AbstractVerticle {
         }
     }
 
-    protected abstract Future<List<Stat>> fetchEvent(EventType type, String structureId, String studentId, Timeslot timeslot);
+    @Deprecated
+    protected Future<List<Stat>> fetchEvent(EventType type, String structureId, String studentId, Timeslot timeslot) {
+        return this.fetchEvent(type, structureId, studentId, timeslot, null, null);
+    };
+
+    protected abstract Future<List<Stat>> fetchEvent(EventType type, String structureId, String studentId, Timeslot timeslot, String startDate, String endDate);
 }

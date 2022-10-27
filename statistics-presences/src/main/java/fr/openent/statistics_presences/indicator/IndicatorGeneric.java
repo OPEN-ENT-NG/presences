@@ -93,8 +93,13 @@ public class IndicatorGeneric {
         return promise.future();
     }
 
-
+    @Deprecated
     public static Future<JsonArray> fetchIncidentValue(String structureId, String studentId, String select, String group) {
+        return fetchIncidentValue(structureId, studentId, select, group, null, null);
+    }
+
+    public static Future<JsonArray> fetchIncidentValue(String structureId, String studentId, String select, String group,
+                                                       String startDate, String endDate) {
         Promise<JsonArray> promise = Promise.promise();
         String query = "SELECT " + select + " " +
                 "FROM %s.incident " +
@@ -102,13 +107,20 @@ public class IndicatorGeneric {
                 "WHERE incident.structure_id = ? " +
                 "AND protagonist.user_id = ? ";
 
-        if (group != null) {
-            query += "GROUP BY " + group;
-        }
-
         JsonArray params = new JsonArray()
                 .add(structureId)
                 .add(studentId);
+
+        if (startDate != null && endDate != null) {
+            query += "AND incident.date >= ? ";
+            query += "AND incident.date <= ? ";
+            params.add(startDate);
+            params.add(endDate);
+        }
+
+        if (group != null) {
+            query += "GROUP BY " + group;
+        }
 
         Sql.getInstance().prepared(String.format(query, StatisticsPresences.INCIDENTS_SCHEMA, StatisticsPresences.INCIDENTS_SCHEMA), params,
                 SqlResult.validResultHandler(FutureHelper.handlerJsonArray(promise)));
@@ -116,7 +128,13 @@ public class IndicatorGeneric {
         return promise.future();
     }
 
+    @Deprecated
     public static Future<JsonArray> retrieveEventCount(String structureId, String studentId, Integer eventType, String select, String group, List<Integer> reasonIds) {
+        return retrieveEventCount(structureId, studentId, eventType, select, group, reasonIds, null, null);
+    }
+
+    public static Future<JsonArray> retrieveEventCount(String structureId, String studentId, Integer eventType, String select, String group,
+                                                       List<Integer> reasonIds, String startDate, String endDate) {
         Promise<JsonArray> promise = Promise.promise();
         String query = "SELECT " + select + " " +
                 "FROM %s.event " +
@@ -137,6 +155,13 @@ public class IndicatorGeneric {
         }
         query += ") ";
 
+        if (startDate != null && endDate != null) {
+            query += "AND event.start_date = ? ";
+            query += "AND event.end_date = ? ";
+            params.add(startDate);
+            params.add(endDate);
+        }
+
         if (group != null) {
             query += "GROUP BY ? ";
             params.add(group);
@@ -149,18 +174,28 @@ public class IndicatorGeneric {
         return promise.future();
     }
 
+    @Deprecated
     public static Future<JsonArray> fetchEventsFromPresences(String structureId, String studentId, List<Integer> reasonIds, Boolean noReasons, Boolean regularized) {
+        return fetchEventsFromPresences(structureId, studentId, reasonIds, noReasons, regularized, START_DATE, END_DATE);
+    }
+
+    public static Future<JsonArray> fetchEventsFromPresences(String structureId, String studentId, List<Integer> reasonIds,
+                                                             Boolean noReasons, Boolean regularized, String startDate, String endDate) {
         Promise<JsonArray> promise = Promise.promise();
         Presences.getInstance().getEventsByStudent(1, Collections.singletonList(studentId), structureId, null,
-                reasonIds, null, START_DATE, END_DATE, noReasons, "HOUR", regularized,
+                reasonIds, null, startDate, endDate, noReasons, "HOUR", regularized,
                 FutureHelper.handlerJsonArray(promise));
         return promise.future();
     }
 
-
+    @Deprecated
     public static Future<JsonArray> retrievePunishments(String structureId, String studentId, String eventType) {
+        return retrievePunishments(structureId, studentId, eventType, null, null);
+    }
+
+    public static Future<JsonArray> retrievePunishments(String structureId, String studentId, String eventType, String startDate, String endDate) {
         Promise<JsonArray> promise = Promise.promise();
-        Incidents.getInstance().getPunishmentsByStudent(structureId, null, null, Collections.singletonList(studentId),
+        Incidents.getInstance().getPunishmentsByStudent(structureId, startDate, endDate, Collections.singletonList(studentId),
                 null, eventType, null, null, FutureHelper.handlerJsonArray(promise));
         return promise.future();
     }
