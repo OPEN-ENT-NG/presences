@@ -23,7 +23,6 @@ public abstract class Indicator extends DBService {
     private final Logger log = LoggerFactory.getLogger(Indicator.class);
     private final String name;
     private final Vertx vertx;
-    private MessageConsumer<Report> consumer = null;
 
     protected Indicator(Vertx vertx, String name) {
         this.vertx = vertx;
@@ -77,17 +76,18 @@ public abstract class Indicator extends DBService {
     public Future<Report> process(JsonObject structures) {
         log.info(String.format("[StatisticsPresences@Indicator::process] processing indicator %s", this.name));
         String consumerName = indicatorClassName();
-        Future<Report> future = Future.future();
+        Promise<Report> promise = Promise.promise();
 
+        MessageConsumer<Report> consumer = vertx.eventBus().consumer(consumerName);
         Handler<Message<Report>> handler = message -> {
             log.info(String.format("[StatisticsPresences@Indicator::process] SIGTERM sent from %s indicator", this.indicatorClassName()));
             consumer.unregister();
-            future.handle(Future.succeededFuture(message.body()));
+            promise.handle(Future.succeededFuture(message.body()));
         };
 
-        consumer = vertx.eventBus().consumer(consumerName, handler);
+        consumer.handler(handler);
         deployWorker(structures);
-        return future;
+        return promise.future();
     }
 
     private void deployWorker(JsonObject structures) {

@@ -83,9 +83,20 @@ public abstract class IndicatorWorker extends AbstractVerticle {
         return config.getString(Field.ENDPOINT);
     }
 
+    /**
+     * No filter date
+     *
+     * @deprecated Replaced by {@link #save(String, JsonArray, List, String, String, Handler)}
+     */
+    @Deprecated
     protected void save(String id, JsonArray students, List<JsonObject> values, Handler<AsyncResult<Void>> handler) {
+        this.save(id, students, values, null, null, handler);
+    }
+
+    protected void save(String id, JsonArray students, List<JsonObject> values, String startDate, String endDate,
+                        Handler<AsyncResult<Void>> handler) {
         if (values.isEmpty()) {
-            deleteOldValues(id, students, values).setHandler(event -> {
+            deleteOldValues(id, students, values, startDate, endDate).onComplete(event -> {
                 if (event.failed()) {
                     handler.handle(Future.failedFuture(event.cause()));
                 } else {
@@ -95,19 +106,38 @@ public abstract class IndicatorWorker extends AbstractVerticle {
             return;
         }
 
-        deleteOldValues(id, students, values)
+        deleteOldValues(id, students, values, startDate, endDate)
                 .compose(this::storeValues)
-                .setHandler(handler);
+                .onComplete(handler);
     }
 
+    /**
+     * No filter date
+     *
+     * @deprecated Replaced by {@link #deleteOldValues(String, JsonArray, List, String, String)}
+     */
+    @Deprecated
     private Future<List<JsonObject>> deleteOldValues(String id, JsonArray students, List<JsonObject> values) {
+        return deleteOldValues(id, students, values, null, null);
+    }
+
+    private Future<List<JsonObject>> deleteOldValues(String id, JsonArray students, List<JsonObject> values, String startDate, String endDate) {
         Future<List<JsonObject>> future = Future.future();
         JsonObject $in = new JsonObject()
-                .put("$in", students);
+                .put(Field.$IN, students);
         JsonObject selector = new JsonObject()
-                .put("indicator", this.indicatorName())
-                .put("structure", id)
-                .put("user", $in);
+                .put(Field.INDICATOR, this.indicatorName())
+                .put(Field.STRUCTURE, id)
+                .put(Field.USER, $in);
+        if (startDate != null && endDate != null) {
+            JsonObject $gte = new JsonObject()
+                    .put(Field.$GTE, startDate);
+            JsonObject $lte = new JsonObject()
+                    .put(Field.$LTE, endDate);
+            selector.put(Field.START_DATE, $gte)
+                    .put(Field.END_DATE, $lte);
+        }
+
         MongoDb.getInstance().delete(StatisticsPresences.COLLECTION, selector, MongoDbResult.validResultHandler(either -> {
             if (either.isLeft()) {
                 log.error(String.format("[StatisticsPresences@IndicatorWorker::deleteOldValues] " +
@@ -178,12 +208,14 @@ public abstract class IndicatorWorker extends AbstractVerticle {
 
         Future<JsonObject> settingsFuture = IndicatorGeneric.retrieveSettings(id);
         Future<JsonArray> reasonFuture = IndicatorGeneric.retrieveReasons(id);
+        Future<JsonObject> schoolYearFuture = Viescolaire.getInstance().getSchoolYear(id);
 
-        CompositeFuture.all(Arrays.asList(settingsFuture, reasonFuture))
+        CompositeFuture.all(Arrays.asList(settingsFuture, reasonFuture, schoolYearFuture))
                 .onSuccess(res -> {
                     List<Integer> reasonIds = ((List<JsonObject>) reasonFuture.result().getList()).stream()
                             .map(reason -> reason.getInteger("id"))
                             .collect(Collectors.toList());
+                    JsonObject schoolYear = schoolYearFuture.result();
 
                     JsonObject structureSettings = settingsFuture.result()
                             .put("reasonIds", reasonIds);
@@ -196,7 +228,9 @@ public abstract class IndicatorWorker extends AbstractVerticle {
                         current = current.compose(v -> {
                             log.debug(String.format("[StatisticsPresences@IndicatorWorker::processStructure] " +
                                     "Processing student %s for structure %s", students.getString(indice), id));
-                            Future<List<JsonObject>> next = processStudent(id, students.getString(indice));
+                            String startDate = schoolYear.getString(Field.START_DATE, null);
+                            String endDate = schoolYear.getString(Field.END_DATE, null);
+                            Future<List<JsonObject>> next = processStudent(id, students.getString(indice), startDate, endDate);
                             futures.add(next);
                             return next;
                         });
@@ -208,8 +242,9 @@ public abstract class IndicatorWorker extends AbstractVerticle {
                                 for (Future<List<JsonObject>> handler : futures) {
                                     stats.addAll(handler.result());
                                 }
-
-                                save(id, students, stats, saveAr -> {
+                                String startDate = schoolYear.getString(Field.START_DATE, null);
+                                String endDate = schoolYear.getString(Field.END_DATE, null);
+                                save(id, students, stats, startDate, endDate, saveAr -> {
                                     if (saveAr.failed()) {
                                         report.failOnSave();
                                         promise.fail(saveAr.cause());
@@ -234,6 +269,16 @@ public abstract class IndicatorWorker extends AbstractVerticle {
         return promise.future();
     }
 
+    /**
+     * No filter date
+     *
+     * @deprecated Replaced by {@link #processStudent(String, String, String, String)}
+     */
+    @Deprecated
+    private Future<List<JsonObject>> processStudent(String structureId, String studentId) {
+        return processStudent(structureId, studentId, null, null);
+    }
+
     /*
         For each student retrieve :
         - absence count (no reason + unregularized + regularized)
@@ -246,7 +291,7 @@ public abstract class IndicatorWorker extends AbstractVerticle {
         - incident count
      */
     @SuppressWarnings("unchecked")
-    private Future<List<JsonObject>> processStudent(String structureId, String studentId) {
+    private Future<List<JsonObject>> processStudent(String structureId, String studentId, String startDate, String endDate) {
         Promise<List<JsonObject>> promise = Promise.promise();
         List<EventType> eventTypes = Arrays.asList(EventType.values());
         Map<EventType, Future<List<Stat>>> statsByEventTypes = new HashMap<>();
@@ -278,7 +323,7 @@ public abstract class IndicatorWorker extends AbstractVerticle {
                     statProcessSettings.setTimeslot(timeslots.getJsonObject(0));
 
                     for (EventType eventType : eventTypes) {
-                        statsByEventTypes.put(eventType, fetchEvent(eventType, structureId, studentId, statProcessSettings.getTimeslot()));
+                        statsByEventTypes.put(eventType, fetchEvent(eventType, structureId, studentId, statProcessSettings.getTimeslot(), startDate, endDate));
                     }
 
                     return CompositeFuture.all(new ArrayList<>(statsByEventTypes.values()));
@@ -331,5 +376,15 @@ public abstract class IndicatorWorker extends AbstractVerticle {
         }
     }
 
-    protected abstract Future<List<Stat>> fetchEvent(EventType type, String structureId, String studentId, Timeslot timeslot);
+    /**
+     * No filter date
+     *
+     * @deprecated Replaced by {@link #fetchEvent(EventType, String, String, Timeslot, String, String)}
+     */
+    @Deprecated
+    protected Future<List<Stat>> fetchEvent(EventType type, String structureId, String studentId, Timeslot timeslot) {
+        return this.fetchEvent(type, structureId, studentId, timeslot, null, null);
+    };
+
+    protected abstract Future<List<Stat>> fetchEvent(EventType type, String structureId, String studentId, Timeslot timeslot, String startDate, String endDate);
 }
