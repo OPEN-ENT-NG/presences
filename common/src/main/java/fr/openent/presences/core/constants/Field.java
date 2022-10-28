@@ -279,6 +279,8 @@ public class Field {
     public static final String $IN = "$in";
     public static final String $GROUP = "$group";
     public static final String $GT = "$gt";
+    public static final String $GTE = "$gte";
+    public static final String $LTE = "$lte";
     public static final String $COND = "$cond";
     public static final String $ADDFIELDS = "$addFields";
     public static final String ISODAYOFWEEK = "isoDayOfWeek";
