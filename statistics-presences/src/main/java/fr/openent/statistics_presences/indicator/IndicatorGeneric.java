@@ -169,8 +169,8 @@ public class IndicatorGeneric {
         query += ") ";
 
         if (startDate != null && endDate != null) {
-            query += "AND event.start_date = ? ";
-            query += "AND event.end_date = ? ";
+            query += "AND event.start_date >= ? ";
+            query += "AND event.end_date <= ? ";
             params.add(startDate);
             params.add(endDate);
         }
