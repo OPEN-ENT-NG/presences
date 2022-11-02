@@ -15,6 +15,7 @@ import io.vertx.core.Handler;
 import io.vertx.core.Promise;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
+import org.entcore.common.sql.Sql;
 import org.entcore.common.sql.SqlResult;
 
 import java.util.List;
@@ -81,5 +82,13 @@ public class DefaultStatisticsPresencesService extends DBService implements Stat
                 .put("action", "prepared");
     }
 
+    @Override
+    public Future<JsonArray> truncateUserQueue() {
+        Promise<JsonArray> promise = Promise.promise();
+        String query = "TRUNCATE " + StatisticsPresences.DB_SCHEMA + ".user;";
 
+        Sql.getInstance().prepared(query, new JsonArray(), SqlResult.validResultsHandler(FutureHelper.handlerEitherPromise(promise)));
+
+        return promise.future();
+    }
 }
