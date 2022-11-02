@@ -498,8 +498,9 @@ public class DefaultPresenceService extends DBService implements PresenceService
                 String message = "[Presences@DefaultPresenceService] Failed to execute presence update statements";
                 LOGGER.error(message);
                 handler.handle(new Either.Left<>(message));
+            } else {
+                handler.handle(new Either.Right<>(result.right().getValue()));
             }
-            handler.handle(new Either.Right<>(result.right().getValue()));
         });
     }
 
