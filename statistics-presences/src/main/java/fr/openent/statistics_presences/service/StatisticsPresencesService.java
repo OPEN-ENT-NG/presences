@@ -3,6 +3,7 @@ package fr.openent.statistics_presences.service;
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Future;
 import io.vertx.core.Handler;
+import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 
 import java.util.List;
@@ -28,4 +29,11 @@ public interface StatisticsPresencesService {
      * @return Future JsonObject completing process
      */
     Future<JsonObject> processStatisticsPrefetch(List<String> structure, List<String> studentIds, Boolean isWaitingEndProcess);
+
+    /**
+     * Truncate user queue
+     *
+     * @return
+     */
+    Future<JsonArray> truncateUserQueue();
 }

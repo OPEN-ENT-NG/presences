@@ -24,6 +24,7 @@ import io.vertx.core.json.JsonObject;
 import org.entcore.common.controller.ControllerHelper;
 import org.entcore.common.http.filter.AdminFilter;
 import org.entcore.common.http.filter.ResourceFilter;
+import org.entcore.common.http.filter.SuperAdminFilter;
 import org.entcore.common.user.UserUtils;
 
 import java.lang.reflect.InvocationTargetException;
@@ -242,5 +243,14 @@ public class StatisticsController extends ControllerHelper {
                     .onSuccess(res -> renderJson(request, res))
                     .onFailure(unused -> renderError(request));
         });
+    }
+
+    @Get("/user/queue/truncate")
+    @SecuredAction(value = "", type = ActionType.RESOURCE)
+    @ResourceFilter(SuperAdminFilter.class)
+    public void truncateUserQueue(final HttpServerRequest request) {
+        statisticsPresencesService.truncateUserQueue()
+                .onSuccess(res -> Renders.ok(request))
+                .onFailure(error -> renderError(request, new JsonObject().put(Field.MESSAGE, error.getMessage())));
     }
 }
