@@ -43,7 +43,7 @@ public class ProcessingScheduledTask implements Handler<Long> {
                 .compose(this::generateReport)
                 .compose(this::sendReport)
                 .compose(this::clearWaitingList)
-                .setHandler(ar -> {
+                .onComplete(ar -> {
                     if (ar.failed()) {
                         log.error(String.format("[Statistics@ProcessingScheduledTask::handle] " +
                                 "Processing scheduled task failed. See previous logs. %s", ar.cause().getMessage()));
