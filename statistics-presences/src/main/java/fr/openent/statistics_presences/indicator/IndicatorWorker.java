@@ -20,6 +20,7 @@ import io.vertx.core.logging.LoggerFactory;
 import org.entcore.common.mongodb.MongoDbResult;
 
 import java.util.*;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import static fr.openent.statistics_presences.StatisticsPresences.STATISTICS_PRESENCES_CLASS;
@@ -41,11 +42,17 @@ public abstract class IndicatorWorker extends AbstractVerticle {
                 this.indicatorName(), indicatorContext.deploymentID()));
         this.report = new Report(this.indicatorName()).start();
         JsonObject structures = config.getJsonObject(Field.STRUCTURES);
-        List<Future<Void>> futures = new ArrayList<>();
+        Future<Void> current = Future.succeededFuture();
+
         for (String structure : structures.fieldNames()) {
-            futures.add(processStructure(structure, structures.getJsonArray(structure)));
+            current = current.compose(res -> {
+                Promise<Void> promise = Promise.promise();
+                processStructure(structure, structures.getJsonArray(structure)).onComplete(r -> promise.complete());
+                return promise.future();
+            });
         }
-        FutureHelper.join(futures).onComplete(this::sendSigTerm);
+
+        current.onComplete(this::sendSigTerm);
     }
 
     /**
@@ -172,7 +179,7 @@ public abstract class IndicatorWorker extends AbstractVerticle {
         return future;
     }
 
-    private void sendSigTerm(AsyncResult<CompositeFuture> ar) {
+    private void sendSigTerm(AsyncResult<Void> ar) {
         this.report.end();
         if (ar.failed()) {
             log.error(String.format("[StatisticsPresences@IndicatorWorker::sendSigTerm] Some structure failed to process. %s", ar.cause().getMessage()));

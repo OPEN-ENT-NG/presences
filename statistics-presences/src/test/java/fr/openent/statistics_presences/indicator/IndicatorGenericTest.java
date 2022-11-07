@@ -131,11 +131,14 @@ public class IndicatorGenericTest {
         List<Integer> reasonsId = Arrays.asList(8, 9);
         IndicatorGeneric.fetchEventsFromPresences("structureId1", "studentId", reasonsId, false, false);
         IndicatorGeneric.fetchEventsFromPresences("structureId2", "studentId", reasonsId, false, false, "2000-01-01", "2010-10-10");
+        IndicatorGeneric.fetchEventsFromPresences("structureId3", "studentId", reasonsId, false, false, null, null);
 
         Mockito.verify(presences, Mockito.times(1)).getEventsByStudent(Mockito.any(), Mockito.any(), Mockito.eq("structureId1"), Mockito.any(),
                 Mockito.any(), Mockito.any(), Mockito.any(), Mockito.any(), Mockito.any(), Mockito.any(), Mockito.any(), Mockito.any());
         Mockito.verify(presences, Mockito.times(1)).getEventsByStudent(Mockito.any(), Mockito.any(), Mockito.eq("structureId2"), Mockito.any(),
                 Mockito.any(), Mockito.any(), Mockito.any(), Mockito.any(), Mockito.any(), Mockito.any(), Mockito.any(), Mockito.any());
+        Mockito.verify(presences, Mockito.times(1)).getEventsByStudent(Mockito.any(), Mockito.any(), Mockito.eq("structureId3"), Mockito.any(),
+                Mockito.any(), Mockito.any(), Mockito.eq("1969-01-01"), Mockito.eq("2099-12-31"), Mockito.any(), Mockito.any(), Mockito.any(), Mockito.any());
     }
 
     @Test

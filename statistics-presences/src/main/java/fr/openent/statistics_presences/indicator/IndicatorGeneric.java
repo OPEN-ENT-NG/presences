@@ -200,8 +200,8 @@ public class IndicatorGeneric {
     public static Future<JsonArray> fetchEventsFromPresences(String structureId, String studentId, List<Integer> reasonIds,
                                                              Boolean noReasons, Boolean regularized, String startDate, String endDate) {
         Promise<JsonArray> promise = Promise.promise();
-        String startTime = DateHelper.getDateString(startDate, DateHelper.YEAR_MONTH_DAY);
-        String endTime = DateHelper.getDateString(endDate, DateHelper.YEAR_MONTH_DAY);
+        String startTime = startDate == null ? START_DATE : DateHelper.getDateString(startDate, DateHelper.YEAR_MONTH_DAY);
+        String endTime = endDate == null ? END_DATE : DateHelper.getDateString(endDate, DateHelper.YEAR_MONTH_DAY);
         Presences.getInstance().getEventsByStudent(1, Collections.singletonList(studentId), structureId, null,
                 reasonIds, null, startTime, endTime, noReasons, "HOUR", regularized,
                 FutureHelper.handlerJsonArray(promise));
