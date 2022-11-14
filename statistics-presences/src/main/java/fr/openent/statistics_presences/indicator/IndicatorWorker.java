@@ -9,15 +9,15 @@ import fr.openent.statistics_presences.bean.Report;
 import fr.openent.statistics_presences.bean.Stat;
 import fr.openent.statistics_presences.bean.StatProcessSettings;
 import fr.openent.statistics_presences.bean.timeslot.Timeslot;
+import fr.openent.statistics_presences.service.StatisticsService;
+import fr.openent.statistics_presences.service.impl.DefaultStatisticsService;
 import fr.openent.statistics_presences.utils.EventType;
-import fr.wseduc.mongodb.MongoDb;
 import io.vertx.core.*;
 import io.vertx.core.eventbus.DeliveryOptions;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
-import org.entcore.common.mongodb.MongoDbResult;
 
 import java.util.*;
 import java.util.function.Function;
@@ -31,12 +31,14 @@ public abstract class IndicatorWorker extends AbstractVerticle {
     protected Context indicatorContext;
     protected JsonObject config;
     protected Report report;
+    protected StatisticsService statisticsService;
 
     @Override
     public void start() throws Exception {
         // for some reason we might lose our verticle's context and might also pick its parent's context to keep it "alive"
         // in order to avoid this behavior, we assign manually its own context to indicatorContext
         indicatorContext = vertx.getOrCreateContext();
+        this.statisticsService = new DefaultStatisticsService(this.indicatorName());
         config = new JsonObject(config().toString());
         log.info(String.format("[StatisticsPresences@IndicatorWorker::start] Launching worker %s, deploy verticle %s",
                 this.indicatorName(), indicatorContext.deploymentID()));
@@ -88,142 +90,6 @@ public abstract class IndicatorWorker extends AbstractVerticle {
 
     protected String indicatorName() {
         return config.getString(Field.ENDPOINT);
-    }
-
-    /**
-     * No filter date
-     *
-     * @deprecated Replaced by {@link #save(String, JsonArray, List, String, String, Handler)}
-     */
-    @Deprecated
-    protected void save(String id, JsonArray students, List<JsonObject> values, Handler<AsyncResult<Void>> handler) {
-        this.save(id, students, values, null, null, handler);
-    }
-
-    protected Future<List<JsonObject>> overrideStatisticsStudent(String structureId, String studentId, List<JsonObject> values, String startDate,
-                                             String endDate) {
-        Promise<List<JsonObject>> promise = Promise.promise();
-
-        Future<List<JsonObject>> future = deleteOldValuesForStudent(structureId, studentId, values, startDate, endDate);
-
-        if (values.isEmpty()) {
-            future.onComplete(promise);
-        } else {
-            future.compose(this::storeValues)
-                    .onSuccess(res -> promise.complete(values))
-                    .onFailure(promise::fail);
-        }
-
-        return promise.future();
-    }
-
-    protected void save(String id, JsonArray students, List<JsonObject> values, String startDate, String endDate,
-                        Handler<AsyncResult<Void>> handler) {
-        if (values.isEmpty()) {
-            deleteOldValues(id, students, values, startDate, endDate).onComplete(event -> {
-                if (event.failed()) {
-                    handler.handle(Future.failedFuture(event.cause()));
-                } else {
-                    handler.handle(Future.succeededFuture());
-                }
-            });
-            return;
-        }
-
-        deleteOldValues(id, students, values, startDate, endDate)
-                .compose(this::storeValues)
-                .onComplete(handler);
-    }
-
-    /**
-     * No filter date
-     *
-     * @deprecated Replaced by {@link #deleteOldValues(String, JsonArray, List, String, String)}
-     */
-    @Deprecated
-    private Future<List<JsonObject>> deleteOldValues(String id, JsonArray students, List<JsonObject> values) {
-        return deleteOldValues(id, students, values, null, null);
-    }
-
-    private Future<List<JsonObject>> deleteOldValues(String id, JsonArray students, List<JsonObject> values, String startDate, String endDate) {
-        Future<List<JsonObject>> future = Future.future();
-        JsonObject $in = new JsonObject()
-                .put(Field.$IN, students);
-        JsonObject selector = new JsonObject()
-                .put(Field.INDICATOR, this.indicatorName())
-                .put(Field.STRUCTURE, id)
-                .put(Field.USER, $in);
-        if (startDate != null && endDate != null) {
-            JsonObject $gte = new JsonObject()
-                    .put(Field.$GTE, startDate);
-            JsonObject $lte = new JsonObject()
-                    .put(Field.$LTE, endDate);
-            selector.put(Field.START_DATE, $gte)
-                    .put(Field.END_DATE, $lte);
-        }
-
-        MongoDb.getInstance().delete(StatisticsPresences.COLLECTION, selector, MongoDbResult.validResultHandler(either -> {
-            if (either.isLeft()) {
-                log.error(String.format("[StatisticsPresences@IndicatorWorker::deleteOldValues] " +
-                                "Failed to remove old statistics for indicator %s. %s",
-                        this.indicatorName(),
-                        either.left().getValue()
-                ));
-                future.fail(either.left().getValue());
-            } else {
-                future.complete(values);
-            }
-        }));
-
-        return future;
-    }
-
-    private Future<List<JsonObject>> deleteOldValuesForStudent(String id, String studentId, List<JsonObject> values, String startDate, String endDate) {
-        Future<List<JsonObject>> future = Future.future();
-        JsonObject selector = new JsonObject()
-                .put(Field.INDICATOR, this.indicatorName())
-                .put(Field.STRUCTURE, id)
-                .put(Field.USER, studentId);
-        if (startDate != null && endDate != null) {
-            JsonObject $gte = new JsonObject()
-                    .put(Field.$GTE, startDate);
-            JsonObject $lte = new JsonObject()
-                    .put(Field.$LTE, endDate);
-            selector.put(Field.START_DATE, $gte)
-                    .put(Field.END_DATE, $lte);
-        }
-
-        MongoDb.getInstance().delete(StatisticsPresences.COLLECTION, selector, MongoDbResult.validResultHandler(either -> {
-            if (either.isLeft()) {
-                log.error(String.format("[StatisticsPresences@IndicatorWorker::deleteOldValuesForStudent] " +
-                                "Failed to remove old statistics for student %s for indicator %s. %s",
-                        studentId, this.indicatorName(), either.left().getValue()
-                ));
-                future.fail(either.left().getValue());
-            } else {
-                future.complete(values);
-            }
-        }));
-
-        return future;
-    }
-
-    private Future<Void> storeValues(List<JsonObject> values) {
-        Future<Void> future = Future.future();
-        MongoDb.getInstance().insert(StatisticsPresences.COLLECTION, new JsonArray(values), MongoDbResult.validResultHandler(either -> {
-            if (either.isLeft()) {
-                log.error(String.format("[StatisticsPresences@IndicatorWorker::storeValues] " +
-                                "%s indicator failed to store new values. %s",
-                        this.indicatorName(),
-                        either.left().getValue()
-                ));
-                future.fail(either.left().getValue());
-            } else {
-                future.complete();
-            }
-        }));
-
-        return future;
     }
 
     private void sendSigTerm(AsyncResult<Void> ar) {
@@ -376,7 +242,7 @@ public abstract class IndicatorWorker extends AbstractVerticle {
                 .compose(ar -> {
                     log.debug(String.format("[StatisticsPresences@IndicatorWorker::processStudent] Student %s proceed", studentId));
                     List<JsonObject> userStats = collectUserStats(statsByEventTypes, studentFuture.result(), studentId, structureId, audienceFuture.result());
-                    return overrideStatisticsStudent(structureId, studentId, userStats, startDate, endDate);
+                    return this.statisticsService.overrideStatisticsStudent(structureId, studentId, userStats, startDate, endDate);
                 })
                 .onSuccess(promise::complete)
                 .onFailure(ar -> {
