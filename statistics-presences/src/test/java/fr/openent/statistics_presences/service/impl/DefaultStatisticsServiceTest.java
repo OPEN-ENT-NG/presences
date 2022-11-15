@@ -135,7 +135,7 @@ public class DefaultStatisticsServiceTest {
     public void deleteOldValuesForStudentTest(TestContext ctx) throws Exception {
         Async async = ctx.async();
         String expectedCollection = "presences.statistics";
-        String expectedMatcher = "{\"indicator\":\"indicatorName\",\"structure\":\"structureId\",\"user\":\"studentId\"," +
+        String expectedMatcher = "{\"structure\":\"structureId\",\"user\":\"studentId\"," +
                 "\"start_date\":{\"$gte\":\"startDate\"},\"end_date\":{\"$lte\":\"endDate\"}}";
 
         PowerMockito.doAnswer(invocation -> {
