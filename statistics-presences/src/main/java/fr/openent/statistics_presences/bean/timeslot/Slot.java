@@ -3,6 +3,10 @@ package fr.openent.statistics_presences.bean.timeslot;
 import fr.openent.presences.core.constants.Field;
 import io.vertx.core.json.JsonObject;
 
+/**
+ * @deprecated  Replaced by {@link fr.openent.presences.model.SlotModel}
+ */
+@Deprecated
 public class Slot {
     private String id;
     private String name;

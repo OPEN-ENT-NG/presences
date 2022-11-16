@@ -364,6 +364,7 @@ public class Field {
     public static final String STUDENT_DIVISIONS = "student_divisions";
     public static final String STUDENT_ID_LIST = "student_id_list";
     public static final String STUDENT_TIMESLOT = "student_timeslot";
+    public static final String DELAY_AT = "delay_at";
     public static final String REASON_ALERT_EXCLUDE_RULES_TYPE_ID = "reason_alert_exclude_rules_type_id";
 
     private Field() {
