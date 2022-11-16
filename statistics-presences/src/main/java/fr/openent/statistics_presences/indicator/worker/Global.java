@@ -1,8 +1,10 @@
 package fr.openent.statistics_presences.indicator.worker;
 
 import fr.openent.presences.core.constants.Field;
+import fr.openent.presences.model.TimeslotModel;
 import fr.openent.statistics_presences.bean.Stat;
 import fr.openent.statistics_presences.bean.global.GlobalStat;
+import fr.openent.statistics_presences.bean.statistics.StatisticsData;
 import fr.openent.statistics_presences.bean.timeslot.Timeslot;
 import fr.openent.statistics_presences.indicator.IndicatorGeneric;
 import fr.openent.statistics_presences.indicator.IndicatorWorker;
@@ -17,6 +19,10 @@ import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
+/**
+ * @deprecated  Replaced by {@link StatisticsWorker}
+ */
+@Deprecated
 public class Global extends IndicatorWorker {
 
     /**
@@ -29,8 +35,7 @@ public class Global extends IndicatorWorker {
      */
     @Override
     @SuppressWarnings("unchecked")
-    protected Future<List<Stat>> fetchEvent(EventType type, String structureId, String studentId, Timeslot timeslot,
-                                            String startDate, String endDate) {
+    protected Future<List<Stat>> fetchEvent(EventType type, String structureId, String studentId, Timeslot timeslot, String startDate, String endDate) {
         Future<List<Stat>> future;
         switch (type) {
             case INCIDENT:
@@ -61,6 +66,11 @@ public class Global extends IndicatorWorker {
         }
 
         return future;
+    }
+
+    @Override
+    protected Future<List<StatisticsData>> fetchEventData(EventType type, String structureId, String studentId, TimeslotModel timeslot, String startDate, String endDate) {
+        throw new UnsupportedOperationException("Deprecated Class");
     }
 
     private Future<List<Stat>> countHandler(Future<JsonArray> requestResult) {

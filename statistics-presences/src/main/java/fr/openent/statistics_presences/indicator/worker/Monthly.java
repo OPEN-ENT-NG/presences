@@ -1,8 +1,10 @@
 package fr.openent.statistics_presences.indicator.worker;
 
 import fr.openent.presences.core.constants.Field;
+import fr.openent.presences.model.TimeslotModel;
 import fr.openent.statistics_presences.bean.Stat;
 import fr.openent.statistics_presences.bean.monthly.MonthlyStat;
+import fr.openent.statistics_presences.bean.statistics.StatisticsData;
 import fr.openent.statistics_presences.bean.timeslot.Timeslot;
 import fr.openent.statistics_presences.indicator.IndicatorGeneric;
 import fr.openent.statistics_presences.indicator.IndicatorWorker;
@@ -21,8 +23,10 @@ import java.util.stream.Collectors;
 /**
  * We keep the same instruction like the Global Worker as we figured the behavior should be the same
  * We might still be able to "evolve" this behavior
+ *
+ * @deprecated  Replaced by {@link StatisticsWorker}
  */
-
+@Deprecated
 public class Monthly extends IndicatorWorker {
 
     /**
@@ -66,6 +70,11 @@ public class Monthly extends IndicatorWorker {
         }
 
         return future;
+    }
+
+    @Override
+    protected Future<List<StatisticsData>> fetchEventData(EventType type, String structureId, String studentId, TimeslotModel timeslot, String startDate, String endDate) {
+        throw new UnsupportedOperationException("Deprecated Class");
     }
 
     private Future<List<Stat>> countHandler(Future<JsonArray> requestResult) {
