@@ -72,7 +72,9 @@ public abstract class Indicator extends DBService {
      *
      * @param structures student list group by structure
      * @return Future ending process
+     * @deprecated Replaced by {@link IndicatorGeneric#process(Vertx, JsonObject)}
      */
+    @Deprecated
     public Future<Report> process(JsonObject structures) {
         log.info(String.format("[StatisticsPresences@Indicator::process] processing indicator %s", this.name));
         String consumerName = indicatorClassName();
@@ -90,6 +92,10 @@ public abstract class Indicator extends DBService {
         return promise.future();
     }
 
+    /**
+     * @deprecated Replaced by {@link IndicatorGeneric#process(Vertx, JsonObject)}
+     */
+    @Deprecated
     private void deployWorker(JsonObject structures) {
         JsonObject config = new JsonObject()
                 .put("structures", structures)
@@ -105,7 +111,9 @@ public abstract class Indicator extends DBService {
      *
      * @param structures student list group by structure
      * @return Future ending process
+     * @deprecated Replaced by {@link IndicatorGeneric#manualProcess(JsonObject)}
      */
+    @Deprecated
     public Future<JsonObject> manualProcess(JsonObject structures) {
         Promise<JsonObject> promise = Promise.promise();
         JsonObject config = new JsonObject()

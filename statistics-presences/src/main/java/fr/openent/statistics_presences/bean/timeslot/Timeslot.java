@@ -7,6 +7,10 @@ import io.vertx.core.json.JsonObject;
 import java.util.List;
 import java.util.stream.Collectors;
 
+/**
+ * @deprecated  Replaced by {@link fr.openent.presences.model.TimeslotModel}
+ */
+@Deprecated
 public class Timeslot {
     private String id;
     private String structureId;

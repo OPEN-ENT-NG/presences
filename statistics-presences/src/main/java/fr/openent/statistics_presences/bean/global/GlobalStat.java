@@ -5,6 +5,10 @@ import fr.openent.statistics_presences.utils.EventType;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 
+/**
+ * @deprecated  Replaced by {@link fr.openent.statistics_presences.bean.statistics.StatisticsData}
+ */
+@Deprecated
 public class GlobalStat implements Stat {
     private String indicator;
     private EventType type;

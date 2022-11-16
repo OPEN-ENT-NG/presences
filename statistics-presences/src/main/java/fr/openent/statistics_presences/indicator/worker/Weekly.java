@@ -2,10 +2,12 @@ package fr.openent.statistics_presences.indicator.worker;
 
 import fr.openent.presences.common.helper.DateHelper;
 import fr.openent.presences.core.constants.Field;
+import fr.openent.presences.model.TimeslotModel;
 import fr.openent.statistics_presences.bean.Stat;
+import fr.openent.statistics_presences.bean.statistics.StatisticsData;
 import fr.openent.statistics_presences.bean.timeslot.Slot;
-import fr.openent.statistics_presences.bean.weekly.WeeklyStat;
 import fr.openent.statistics_presences.bean.timeslot.Timeslot;
+import fr.openent.statistics_presences.bean.weekly.WeeklyStat;
 import fr.openent.statistics_presences.helper.TimeslotHelper;
 import fr.openent.statistics_presences.indicator.IndicatorGeneric;
 import fr.openent.statistics_presences.indicator.IndicatorWorker;
@@ -15,9 +17,16 @@ import io.vertx.core.Promise;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
+/**
+ * @deprecated  Replaced by {@link StatisticsWorker}
+ */
+@Deprecated
 public class Weekly extends IndicatorWorker {
 
     /**
@@ -62,6 +71,11 @@ public class Weekly extends IndicatorWorker {
         }
 
         return future;
+    }
+
+    @Override
+    protected Future<List<StatisticsData>> fetchEventData(EventType type, String structureId, String studentId, TimeslotModel timeslot, String startDate, String endDate) {
+        throw new UnsupportedOperationException("Deprecated Class");
     }
 
     private Future<List<Stat>> countHandler(Future<JsonArray> requestResult, Timeslot timeslot) {

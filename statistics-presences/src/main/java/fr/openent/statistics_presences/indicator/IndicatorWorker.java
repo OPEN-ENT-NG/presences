@@ -3,11 +3,13 @@ package fr.openent.statistics_presences.indicator;
 import fr.openent.presences.common.helper.FutureHelper;
 import fr.openent.presences.common.viescolaire.Viescolaire;
 import fr.openent.presences.core.constants.Field;
+import fr.openent.presences.model.TimeslotModel;
 import fr.openent.statistics_presences.StatisticsPresences;
 import fr.openent.statistics_presences.bean.Failure;
 import fr.openent.statistics_presences.bean.Report;
 import fr.openent.statistics_presences.bean.Stat;
 import fr.openent.statistics_presences.bean.StatProcessSettings;
+import fr.openent.statistics_presences.bean.statistics.StatisticsData;
 import fr.openent.statistics_presences.bean.timeslot.Timeslot;
 import fr.openent.statistics_presences.service.StatisticsService;
 import fr.openent.statistics_presences.service.impl.DefaultStatisticsService;
@@ -38,8 +40,8 @@ public abstract class IndicatorWorker extends AbstractVerticle {
         // for some reason we might lose our verticle's context and might also pick its parent's context to keep it "alive"
         // in order to avoid this behavior, we assign manually its own context to indicatorContext
         indicatorContext = vertx.getOrCreateContext();
-        this.statisticsService = new DefaultStatisticsService(this.indicatorName());
         config = new JsonObject(config().toString());
+        this.statisticsService = new DefaultStatisticsService(this.indicatorName());
         log.info(String.format("[StatisticsPresences@IndicatorWorker::start] Launching worker %s, deploy verticle %s",
                 this.indicatorName(), indicatorContext.deploymentID()));
         this.report = new Report(this.indicatorName()).start();
@@ -86,6 +88,11 @@ public abstract class IndicatorWorker extends AbstractVerticle {
 
     protected JsonArray reasonIds(String structureId) {
         return settings.get(structureId).getJsonArray("reasonIds", new JsonArray());
+    }
+
+    @SuppressWarnings("unchecked")
+    protected List<Integer> reasonIdList(String structureId) {
+        return reasonIds(structureId).getList();
     }
 
     protected String indicatorName() {
@@ -148,7 +155,7 @@ public abstract class IndicatorWorker extends AbstractVerticle {
                     Function<Integer, Future<List<JsonObject>>> nextProcessFunction = index -> {
                         log.debug(String.format("[StatisticsPresences@IndicatorWorker::processStructure] " +
                                 "Processing student %s for structure %s", students.getString(index), structureId));
-                        return processStudent(structureId, students.getString(index), startDate, endDate);
+                        return taskStudent(structureId, students.getString(index), startDate, endDate);
                     };
 
                     for (int i = 0; i < students.size(); i++) {
@@ -191,17 +198,10 @@ public abstract class IndicatorWorker extends AbstractVerticle {
         return processStudent(structureId, studentId, null, null);
     }
 
-    /*
-        For each student retrieve :
-        - absence count (no reason + unregularized + regularized)
-        - no reason absence count
-        - unregularized absence count
-        - regularized absence count
-        - lateness count
-        - departure count
-        - sanction/punishment count
-        - incident count
+    /**
+     * @deprecated Replaced by {@link #taskStudent(String, String, String, String)}
      */
+    @Deprecated
     private Future<List<JsonObject>> processStudent(String structureId, String studentId, String startDate, String endDate) {
         Promise<List<JsonObject>> promise = Promise.promise();
         EventType[] eventTypes = EventType.values();
@@ -260,7 +260,80 @@ public abstract class IndicatorWorker extends AbstractVerticle {
         return promise.future();
     }
 
+    /*
+    For each student retrieve :
+    - absence count (no reason + unregularized + regularized)
+    - no reason absence count
+    - unregularized absence count
+    - regularized absence count
+    - lateness count
+    - departure count
+    - sanction/punishment count
+    - incident count
+ */
+    private Future<List<JsonObject>> taskStudent(String structureId, String studentId, String startDate, String endDate) {
+        Promise<List<JsonObject>> promise = Promise.promise();
+        EventType[] eventTypes = EventType.values();
+        Map<EventType, Future<List<StatisticsData>>> statsByEventTypes = new HashMap<>();
+
+        StatProcessSettings statProcessSettings = new StatProcessSettings();
+
+        Future<JsonArray> audienceFuture = IndicatorGeneric.retrieveAudiences(structureId, studentId);
+        Future<JsonObject> studentFuture = IndicatorGeneric.retrieveUser(structureId, studentId);
+
+        CompositeFuture.all(audienceFuture, studentFuture)
+                .compose(settingsRes -> {
+                    statProcessSettings.setStudentInfo(studentFuture.result());
+                    statProcessSettings.setAudienceIds(audienceFuture.result());
+
+                    String classId = !statProcessSettings.getStudentClassIds().isEmpty() ?
+                            statProcessSettings.getStudentClassIds().get(0) : null;
+
+                    return Viescolaire.getInstance().getAudienceTimeslots(structureId, Collections.singletonList(classId));
+                })
+                .compose(timeslots -> {
+                    if (timeslots == null || timeslots.isEmpty()) {
+                        String message = String.format("[StatisticsPresences@%s::processStudent] " +
+                                        "%s error: timeslot not found in structure %s",
+                                this.getClass().getSimpleName(), indicatorName(), structureId);
+                        log.error(message);
+                        return Future.failedFuture(message);
+                    }
+
+                    statProcessSettings.setTimeslotModel(timeslots.getJsonObject(0));
+
+                    for (EventType eventType : eventTypes) {
+                        statsByEventTypes.put(eventType, fetchEventData(eventType, structureId, studentId, statProcessSettings.getTimeslotModel(), startDate, endDate));
+                    }
+
+                    return CompositeFuture.all(new ArrayList<>(statsByEventTypes.values()));
+                })
+                .compose(ar -> {
+                    log.debug(String.format("[StatisticsPresences@IndicatorWorker::processStudent] Student %s proceed", studentId));
+                    List<JsonObject> userStats = completeUserStats(statsByEventTypes, studentFuture.result(), studentId, structureId, audienceFuture.result());
+                    return this.statisticsService.overrideStatisticsStudent(structureId, studentId, userStats, startDate, endDate);
+                })
+                .onSuccess(promise::complete)
+                .onFailure(ar -> {
+                    log.error(String.format("[StatisticsPresences@IndicatorWorker::processStudent] " +
+                                    "Failed to process student %s in structure %s for indicator %s. %s",
+                            studentId,
+                            structureId,
+                            indicatorName(),
+                            ar.getMessage()
+                    ));
+                    promise.fail(ar.getMessage());
+                    ar.printStackTrace();
+                });
+
+        return promise.future();
+    }
+
+    /**
+     * @deprecated Replaced by {@link #completeUserStats(Map, JsonObject, String, String, JsonArray)} 
+     */
     @SuppressWarnings("unchecked")
+    @Deprecated
     private List<JsonObject> collectUserStats(Map<EventType, Future<List<Stat>>> statsByEventTypes, JsonObject student, String studentId, String structureId, JsonArray audiencesList) {
         if (!student.containsKey(Field.NAME)) {
             return new ArrayList<>();
@@ -281,6 +354,25 @@ public abstract class IndicatorWorker extends AbstractVerticle {
                 .collect(Collectors.toList());
     }
 
+    private List<JsonObject> completeUserStats(Map<EventType, Future<List<StatisticsData>>> statsByEventTypes, JsonObject student, String studentId, String structureId, JsonArray audiencesList) {
+        if (!student.containsKey(Field.NAME)) {
+            return new ArrayList<>();
+        }
+
+        return statsByEventTypes.entrySet().stream()
+                .flatMap(statsByEventType -> statsByEventType.getValue().result().stream()
+                        .map(statisticsData -> {
+                            statisticsData.setUser(studentId)
+                                    .setName(student.getString(Field.NAME))
+                                    .setClassName(String.join(",", student.getJsonArray(Field.CLASSNAME).getList()))
+                                    .setType(statsByEventType.getKey())
+                                    .setStructure(structureId)
+                                    .setAudiences(audiencesList.getList());
+                            return statisticsData.toJson();
+                        }))
+                .collect(Collectors.toList());
+    }
+
     /**
      * No filter date
      *
@@ -289,7 +381,15 @@ public abstract class IndicatorWorker extends AbstractVerticle {
     @Deprecated
     protected Future<List<Stat>> fetchEvent(EventType type, String structureId, String studentId, Timeslot timeslot) {
         return this.fetchEvent(type, structureId, studentId, timeslot, null, null);
-    };
+    }
 
-    protected abstract Future<List<Stat>> fetchEvent(EventType type, String structureId, String studentId, Timeslot timeslot, String startDate, String endDate);
+    /**
+     * @deprecated Replaced by {@link #fetchEventData(EventType, String, String, TimeslotModel, String, String)}
+     */
+    @Deprecated
+    protected Future<List<Stat>> fetchEvent(EventType type, String structureId, String studentId, Timeslot timeslot, String startDate, String endDate) {
+        throw new UnsupportedOperationException("Deprecated function");
+    }
+
+    protected abstract Future<List<StatisticsData>> fetchEventData(EventType type, String structureId, String studentId, TimeslotModel timeslot, String startDate, String endDate);
 }

@@ -1,14 +1,11 @@
 package fr.openent.statistics_presences.indicator;
 
 
-import fr.openent.presences.common.helper.FutureHelper;
-import fr.openent.statistics_presences.StatisticsPresences;
 import fr.openent.statistics_presences.service.CommonServiceFactory;
 import io.vertx.core.Future;
 import io.vertx.core.Promise;
 import io.vertx.core.json.JsonObject;
 
-import java.util.ArrayList;
 import java.util.List;
 
 public class ComputeStatistics extends ProcessingScheduledManual {
@@ -51,7 +48,7 @@ public class ComputeStatistics extends ProcessingScheduledManual {
     }
 
     /**
-     * Launch indicators manually (meaning without using Verticle context worker)
+     * Launch indicator manually (meaning without using Verticle context worker)
      *
      * @param structures structure map. Contains in key structure identifier and in value an array containing each structure
      *                   student to proceed
@@ -59,11 +56,7 @@ public class ComputeStatistics extends ProcessingScheduledManual {
      */
     private Future<Void> processManualIndicators(JsonObject structures) {
         Promise<Void> promise = Promise.promise();
-        List<Future<JsonObject>> indicatorFutures = new ArrayList<>();
-        for (Indicator indicator : StatisticsPresences.indicatorMap.values()) {
-            indicatorFutures.add(indicator.manualProcess(structures));
-        }
-        FutureHelper.join(indicatorFutures)
+        IndicatorGeneric.manualProcess(structures)
                 .onSuccess(success -> promise.complete())
                 .onFailure(error -> {
                     log.error(String.format("[StatisticsPresences@ProcessingScheduledManual::processIndicators] Some indicator failed during processing. %s", error.getMessage()));

@@ -1,6 +1,5 @@
 package fr.openent.statistics_presences.indicator;
 
-import fr.openent.presences.common.helper.FutureHelper;
 import fr.openent.presences.core.constants.Field;
 import fr.openent.statistics_presences.StatisticsPresences;
 import fr.openent.statistics_presences.bean.Report;
@@ -20,7 +19,7 @@ import org.entcore.common.sql.Sql;
 import org.entcore.common.sql.SqlResult;
 import org.vertx.java.busmods.BusModBase;
 
-import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -118,19 +117,8 @@ public class ProcessingScheduledManual extends BusModBase implements Handler<Mes
      */
     private Future<List<Report>> processIndicators(JsonObject structures) {
         Promise<List<Report>> promise = Promise.promise();
-        List<Future<Report>> indicatorFutures = new ArrayList<>();
-        for (Indicator indicator : StatisticsPresences.indicatorMap.values()) {
-            indicatorFutures.add(indicator.process(structures));
-        }
-
-        FutureHelper.join(indicatorFutures)
-                .onSuccess(success -> {
-                    List<Report> reports = new ArrayList<>();
-                    for (Future<Report> reportFuture : indicatorFutures) {
-                        reports.add(reportFuture.result());
-                    }
-                    promise.complete(reports);
-                })
+        IndicatorGeneric.process(vertx, structures)
+                .onSuccess(report -> promise.complete(Arrays.asList(report)))
                 .onFailure(error -> {
                     log.error(String.format("[StatisticsPresences@ProcessingScheduledManual::processIndicators] Some indicator failed during processing. %s", error.getMessage()));
                     promise.fail(error.getMessage());
