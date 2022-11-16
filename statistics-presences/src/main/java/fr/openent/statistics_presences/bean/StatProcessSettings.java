@@ -1,6 +1,7 @@
 package fr.openent.statistics_presences.bean;
 
 import fr.openent.presences.core.constants.Field;
+import fr.openent.presences.model.TimeslotModel;
 import fr.openent.statistics_presences.bean.timeslot.Timeslot;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
@@ -14,7 +15,14 @@ public class StatProcessSettings {
     private List<String> studentClassNames;
     private List<String> studentClassIds;
     private List<String> audienceIds;
+    /**
+     * Timeslot not implement {@link fr.openent.presences.model.IModel}
+     * 
+     * @deprecated  Replaced by {@link #timeslotModel}
+     */
+    @Deprecated
     private Timeslot timeslot;
+    private TimeslotModel timeslotModel;
 
     @SuppressWarnings("unchecked")
     public void setStudentInfo(JsonObject student) {
@@ -28,6 +36,12 @@ public class StatProcessSettings {
         this.audienceIds = audienceIds != null ? audienceIds.getList() : new ArrayList<>();
     }
 
+    /**
+     * Timeslot not implement {@link fr.openent.presences.model.IModel}
+     *
+     * @deprecated  Replaced by {@link #setTimeslotModel(JsonObject)}
+     */
+    @Deprecated
     public void setTimeslot(JsonObject timeslot) {
         this.timeslot = new Timeslot(timeslot);
     }
@@ -48,9 +62,22 @@ public class StatProcessSettings {
         return audienceIds;
     }
 
+    /**
+     * Timeslot not implement {@link fr.openent.presences.model.IModel}
+     *
+     * @deprecated  Replaced by {@link #getTimeslotModel()}
+     */
+    @Deprecated
     public Timeslot getTimeslot() {
         return timeslot;
     }
 
+    public TimeslotModel getTimeslotModel() {
+        return timeslotModel;
+    }
 
+    public StatProcessSettings setTimeslotModel(JsonObject timeslotModel) {
+        this.timeslotModel = new TimeslotModel(timeslotModel);
+        return this;
+    }
 }

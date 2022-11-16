@@ -113,7 +113,6 @@ public class DefaultStatisticsService implements StatisticsService {
     private Future<List<JsonObject>> deleteOldValuesForStudent(String structureId, String studentId, List<JsonObject> values, String startDate, String endDate) {
         Promise<List<JsonObject>> promise = Promise.promise();
         JsonObject selector = new JsonObject()
-                .put(Field.INDICATOR, this.indicatorName)
                 .put(Field.STRUCTURE, structureId)
                 .put(Field.USER, studentId);
         if (startDate != null && endDate != null) {
