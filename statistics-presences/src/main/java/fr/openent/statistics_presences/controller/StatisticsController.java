@@ -79,9 +79,7 @@ public class StatisticsController extends ControllerHelper {
         }
 
         RequestUtils.bodyToJson(request, pathPrefix + Field.INDICATOR, body -> {
-
                 try {
-
                     Integer page = request.params().contains(Field.PAGE) ? Integer.parseInt(request.getParam(Field.PAGE)) : null;
                     StatisticsFilter filter = new StatisticsFilter(request.getParam(Field.STRUCTURE), body)
                             .setPage(page);
