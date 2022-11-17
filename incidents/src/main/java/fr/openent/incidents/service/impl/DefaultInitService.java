@@ -80,15 +80,15 @@ public class DefaultInitService implements InitService {
     @Override
     public void getInitIncidentSeriousnessStatement(JsonHttpServerRequest request, String structure, InitTypeEnum initTypeEnum, Handler<Either<String, JsonObject>> handler) {
         JsonArray params = new JsonArray();
-        String query = "INSERT INTO incidents.seriousness(structure_id, label, level) VALUES ";
+        String query = "INSERT INTO incidents.seriousness(structure_id, label, level, exclude_alert_seriousness) VALUES ";
 
-        List<Seriousness> seriousnessList = IInitIncidentsHelper.getInstance(initTypeEnum).getSeriousnessTypes();
+        List<Seriousness> seriousnessList = IInitIncidentsHelper.getInstance(initTypeEnum).getSeriousnessTypes(request);
         for (Seriousness seriousness : seriousnessList) {
-            String i18nLabel = I18n.getInstance().translate(seriousness.getLabel(), Renders.getHost(request), I18n.acceptLanguage(request));
-            query += "(?, ?, ?),";
+            query += "(?, ?, ?, ?),";
             params.add(structure)
-                    .add(i18nLabel)
-                    .add(seriousness.getLevel());
+                    .add(seriousness.getLabel())
+                    .add(seriousness.getLevel())
+                    .add(seriousness.isExcludeAlertSeriousness());
         }
 
         query = query.substring(0, query.length() - 1) + ";";

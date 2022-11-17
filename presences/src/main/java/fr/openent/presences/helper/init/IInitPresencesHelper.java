@@ -1,10 +1,7 @@
 package fr.openent.presences.helper.init;
 
 import fr.openent.presences.enums.InitTypeEnum;
-import fr.openent.presences.model.Action;
-import fr.openent.presences.model.Discipline;
-import fr.openent.presences.model.Reason;
-import fr.openent.presences.model.Settings;
+import fr.openent.presences.model.*;
 
 import java.util.List;
 
@@ -12,7 +9,7 @@ public interface IInitPresencesHelper {
     Init1DPresencesHelper init1DPresencesHelper = new Init1DPresencesHelper();
     Init2DPresencesHelper init2DPresencesHelper = new Init2DPresencesHelper();
 
-    List<Reason> getReasonsInit();
+    List<ReasonModel> getReasonsInit();
 
     List<Action> getActionsInit();
 
