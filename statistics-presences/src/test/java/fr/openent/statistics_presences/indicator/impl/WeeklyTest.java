@@ -59,15 +59,22 @@ public class WeeklyTest extends DBService {
 
         search = new WeeklySearch(new StatisticsFilter(STRUCTURE_ID, filter));
 
-        JsonArray expected = expectedStudentsBySlotsPipeline().getJsonArray("pipeline");
+        String expected = "[{\"$match\":{\"structure\":\"111\",\"start_date\":{\"$lt\":\"2021-06-30 23:59:59\"}," +
+                "\"end_date\":{\"$gt\":\"2021-06-01 08:00:00\"},\"audiences\":{\"$in\":[\"222\"]}," +
+                "\"$or\":[{\"type\":\"NO_REASON\"},{\"type\":\"UNREGULARIZED\"," +
+                "\"reason\":{\"$in\":[12,13]}}]}}," +
+                "{\"$addFields\":{\"dayOfWeek\":{\"$isoDayOfWeek\":{\"$dateFromString\":{\"dateString\":\"$start_date\"}}}}}," +
+                "{\"$unwind\":\"$slots\"}," +
+                "{\"$group\":{\"_id\":{\"slot\":\"$slots\",\"dayOfWeek\":\"$dayOfWeek\"},\"count\":{\"$sum\":1}}}," +
+                "{\"$project\":{\"_id\":0,\"slot_id\":\"$_id.slot.id\",\"dayOfWeek\":\"$_id.dayOfWeek\",\"count\":{\"$sum\":\"$count\"}}}]";
 
         Mockito.doAnswer(invocation -> {
             String query = invocation.getArgument(0);
-            ctx.assertEquals(new JsonObject(query).getJsonArray("pipeline", new JsonArray()), expected);
+            ctx.assertEquals(new JsonObject(query).getJsonArray("pipeline", new JsonArray()).toString(), expected);
             return null;
         }).when(mongoDb).command(Mockito.anyString(), Mockito.any(Handler.class));
 
-        Whitebox.invokeMethod(weekly, "retrieveStatistics", search.countEventTypedBySlotsCommand());
+        this.weekly.retrieveStatistics(search.countEventTypedBySlotsCommand());
 
     }
 
@@ -135,29 +142,6 @@ public class WeeklyTest extends DBService {
         double testNaN = Whitebox.invokeMethod(weekly, "getEventRates", 0, 1);
         ctx.assertEquals(testNaN, 0.0);
 
-    }
-
-    private JsonObject expectedStudentsBySlotsPipeline() {
-        return new JsonObject("{" +
-                "\"pipeline\": [{\"$match\": {" +
-                "\"structure\": \"111\"," +
-                "\"indicator\": \"fr.openent.statistics_presences.indicator.impl.Weekly\"," +
-                "\"start_date\": {\"$lt\": \"2021-06-30 23:59:59\"}," +
-                "\"end_date\": {\"$gt\": \"2021-06-01 08:00:00\"}," +
-                "\"audiences\": {\"$in\": [\"222\"]}," +
-                "\"$or\": [{\"type\": \"NO_REASON\"}, {\"type\":\"UNREGULARIZED\",\"reason\":{\"$in\":[12, 13]}}]" +
-                "}}, {\"$addFields\": {" +
-                "\"dayOfWeek\": {\"$isoDayOfWeek\": {\"$dateFromString\": {\"dateString\": \"$start_date\"}}}" +
-                "}}, {\"$group\": {" +
-                "\"_id\": {\"slot_id\": \"$slot_id\",\"dayOfWeek\": \"$dayOfWeek\"}," +
-                "\"count\": {\"$sum\": 1}" +
-                "}}, {\"$project\": {" +
-                "\"_id\": 0," +
-                "\"slot_id\": \"$_id.slot_id\"," +
-                "\"dayOfWeek\": \"$_id.dayOfWeek\"," +
-                "\"count\": {\"$sum\": \"$count\"}" +
-                "}}]" +
-                "}");
     }
 
     private JsonObject expectedCountEventTypedBySlotsPipelineFromStudent() {

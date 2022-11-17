@@ -3,7 +3,6 @@ package fr.openent.statistics_presences.bean.monthly;
 import fr.openent.presences.core.constants.Field;
 import fr.openent.statistics_presences.bean.Audience;
 import fr.openent.statistics_presences.bean.User;
-import fr.openent.statistics_presences.indicator.impl.Monthly;
 import fr.openent.statistics_presences.model.StatisticsFilter;
 import fr.openent.statistics_presences.utils.EventType;
 import io.vertx.core.json.JsonArray;
@@ -179,22 +178,21 @@ public class MonthlySearch {
         }
 
         JsonObject matcher = new JsonObject()
-                .put("structure", this.filter.structure())
-                .put("indicator", Monthly.class.getName())
-                .put("$or", filterType(types))
-                .put("start_date", this.startDateFilter())
-                .put("end_date", this.endDateFilter());
+                .put(Field.STRUCTURE, this.filter.structure())
+                .put(Field.$OR, filterType(types))
+                .put(Field.START_DATE, this.startDateFilter())
+                .put(Field.END_DATE, this.endDateFilter());
 
         if (!this.filter.audiences().isEmpty() && userIdentifiers.isEmpty()) {
-            matcher.put("audiences", audienceFilter());
+            matcher.put(Field.AUDIENCES, audienceFilter());
         }
 
         if (!userIdentifiers.isEmpty()) {
-            matcher.put("user", usersFilter(userIdentifiers));
+            matcher.put(Field.USER, usersFilter(userIdentifiers));
         }
 
         return new JsonObject()
-                .put("$match", matcher);
+                .put(Field.$MATCH, matcher);
     }
 
     private JsonArray filterType(List<String> types) {
