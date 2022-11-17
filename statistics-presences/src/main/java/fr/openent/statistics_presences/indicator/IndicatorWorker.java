@@ -35,13 +35,16 @@ public abstract class IndicatorWorker extends AbstractVerticle {
     protected Report report;
     protected StatisticsService statisticsService;
 
+    public IndicatorWorker() {
+        this.statisticsService = new DefaultStatisticsService(Field.INDICATOR);
+    }
+
     @Override
     public void start() throws Exception {
         // for some reason we might lose our verticle's context and might also pick its parent's context to keep it "alive"
         // in order to avoid this behavior, we assign manually its own context to indicatorContext
         indicatorContext = vertx.getOrCreateContext();
         config = new JsonObject(config().toString());
-        this.statisticsService = new DefaultStatisticsService(this.indicatorName());
         log.info(String.format("[StatisticsPresences@IndicatorWorker::start] Launching worker %s, deploy verticle %s",
                 this.indicatorName(), indicatorContext.deploymentID()));
         this.report = new Report(this.indicatorName()).start();

@@ -3,7 +3,6 @@ package fr.openent.statistics_presences.bean.weekly;
 import com.mongodb.QueryBuilder;
 import fr.openent.presences.core.constants.Field;
 import fr.openent.statistics_presences.StatisticsPresences;
-import fr.openent.statistics_presences.indicator.impl.Weekly;
 import fr.openent.statistics_presences.model.StatisticsFilter;
 import fr.openent.statistics_presences.utils.EventType;
 import fr.wseduc.mongodb.AggregationsBuilder;
@@ -28,6 +27,7 @@ public class WeeklySearch {
                 .withAllowDiskUse(true)
                 .withMatch(matchEvents())
                 .withAddFields(addDayOfWeekField(String.format("$%s", Field.START_DATE)))
+                .withUnwind(String.format("$%s", Field.SLOTS))
                 .withGroup(groupBySlot())
                 .withProjection(project());
 
@@ -41,7 +41,7 @@ public class WeeklySearch {
                 .withMatch(matchCountStudents())
                 .withAddFields(addDayOfWeekField(String.format("$%s.%s", Field._ID, Field.START_AT)))
                 .withGroup(groupStudentCountBySlot())
-                .withProjection(project());
+                .withProjection(projectCountStudents());
 
         return eventsAggregation.getCommand();
     }
@@ -57,7 +57,6 @@ public class WeeklySearch {
 
     private QueryBuilder matchEvents() {
         QueryBuilder matcher = QueryBuilder.start(Field.STRUCTURE).is(this.filter.structure())
-                .and(Field.INDICATOR).is(Weekly.class.getName())
                 .and(Field.START_DATE).lessThan(this.filter.end())
                 .and(Field.END_DATE).greaterThan(this.filter.start());
 
@@ -112,7 +111,7 @@ public class WeeklySearch {
 
     private JsonObject groupBySlot() {
         JsonObject id = new JsonObject()
-                .put(Field.SLOT_ID, String.format("$%s", Field.SLOT_ID))
+                .put(Field.SLOT, String.format("$%s", Field.SLOTS))
                 .put(Field.DAYOFWEEK, String.format("$%s", Field.DAYOFWEEK));
 
         return id(id)
@@ -130,6 +129,15 @@ public class WeeklySearch {
 
 
     private JsonObject project() {
+        return new JsonObject()
+                .put(Field._ID, 0)
+                .put(Field.SLOT_ID, String.format("$%s.%s.%s", Field._ID, Field.SLOT, Field.ID))
+                .put(Field.DAYOFWEEK, String.format("$%s.%s", Field._ID, Field.DAYOFWEEK))
+                .put(Field.COUNT, sum(String.format("$%s", Field.COUNT)));
+
+    }
+
+    private JsonObject projectCountStudents() {
         return new JsonObject()
                 .put(Field._ID, 0)
                 .put(Field.SLOT_ID, String.format("$%s.%s", Field._ID, Field.SLOT_ID))
