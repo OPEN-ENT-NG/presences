@@ -434,22 +434,21 @@ public class GlobalSearch {
                 : this.users().stream().map(User::id).collect(Collectors.toList());
 
         JsonObject matcher = new JsonObject()
-                .put("structure", this.filter.structure())
-                .put("indicator", Global.class.getName())
-                .put("$or", filterType(types, isTotalAbsences))
-                .put("start_date", this.startDateFilter())
-                .put("end_date", this.endDateFilter());
+                .put(Field.STRUCTURE, this.filter.structure())
+                .put(Field.$OR, filterType(types, isTotalAbsences))
+                .put(Field.START_DATE, this.startDateFilter())
+                .put(Field.END_DATE, this.endDateFilter());
 
         if (!this.filter.audiences().isEmpty() && userIdentifiers.isEmpty()) {
-            matcher.put("audiences", audienceFilter());
+            matcher.put(Field.AUDIENCES, audienceFilter());
         }
 
         if (userIdentifiers == null || !userIdentifiers.isEmpty()) {
-            matcher.put("user", usersFilter(userIdentifiers));
+            matcher.put(Field.USER, usersFilter(userIdentifiers));
         }
 
         return new JsonObject()
-                .put("$match", matcher);
+                .put(Field.$MATCH, matcher);
     }
 
 

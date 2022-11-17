@@ -78,7 +78,7 @@ public class MonthlyTest extends DBService {
     }
 
     @Test
-    public void testAbsencesByAudiencesMonthlyPipeline(TestContext ctx) {
+    public void testAbsencesByAudiencesMonthlyPipeline(TestContext ctx) throws Exception {
         JsonObject filter = new JsonObject()
                 .put(StatisticsFilter.StatisticsFilterField.START, START)
                 .put(StatisticsFilter.StatisticsFilterField.END, END)
@@ -96,65 +96,8 @@ public class MonthlyTest extends DBService {
             return null;
         }).when(mongoDb).command(Mockito.anyString(), Mockito.any(Handler.class));
 
-        try {
-            Whitebox.invokeMethod(monthly, "retrieveStatistics", search.searchAbsencesByAudiencePipeline());
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
+        Whitebox.invokeMethod(monthly, "retrieveStatistics", search.searchAbsencesByAudiencePipeline());
     }
-
-   /* @Test
-    public void testBasicTypedEventByStudentsMonthlyPipeline(TestContext ctx) {
-        JsonObject filter = new JsonObject()
-                .put(FilterField.START, START)
-                .put(FilterField.END, END)
-                .put(FilterField.TYPES, Collections.singletonList(NO_REASON));
-
-        search = new MonthlySearch(new Filter(STRUCTURE_ID, filter));
-        search.setHalfDay(HALFDAY);
-        search.setRecoveryMethod(RECOVERY);
-
-        String expected = expectedAbsencesMonthlyPipeline();
-
-        Mockito.doAnswer(invocation -> {
-            String query = invocation.getArgument(0);
-            ctx.assertEquals(query, expected);
-            return null;
-        }).when(mongoDb).command(Mockito.anyString(), Mockito.any(Handler.class));
-
-        try {
-            Whitebox.invokeMethod(monthly, "retrieveStatistics", search.searchBasicEventTypedByStudentPipeline());
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-    }
-
-    @Test
-    public void testAbsencesByStudentsMonthlyPipeline(TestContext ctx) {
-        JsonObject filter = new JsonObject()
-                .put(FilterField.START, START)
-                .put(FilterField.END, END)
-                .put(FilterField.TYPES, Collections.singletonList(NO_REASON));
-
-        search = new MonthlySearch(new Filter(STRUCTURE_ID, filter));
-        search.setHalfDay(HALFDAY);
-        search.setRecoveryMethod(RECOVERY);
-
-        String expected = expectedAbsencesMonthlyPipeline();
-
-        Mockito.doAnswer(invocation -> {
-            String query = invocation.getArgument(0);
-            ctx.assertEquals(query, expected);
-            return null;
-        }).when(mongoDb).command(Mockito.anyString(), Mockito.any(Handler.class));
-
-        try {
-            Whitebox.invokeMethod(monthly, "retrieveStatistics", search.searchAbsencesByAudiencePipeline());
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-    }*/
-
 
     private JsonObject expectedBasicTypedEventMonthlyPipeline() {
         return new JsonObject()
@@ -174,7 +117,6 @@ public class MonthlyTest extends DBService {
                                         new JsonObject()
                                                 .put("$match", new JsonObject()
                                                         .put("structure", STRUCTURE_ID)
-                                                        .put("indicator", "fr.openent.statistics_presences.indicator.impl.Monthly")
                                                         .put("$or", new JsonArray()
                                                                 .add(new JsonObject()
                                                                         .put("type", LATENESS)
@@ -248,7 +190,6 @@ public class MonthlyTest extends DBService {
                                         new JsonObject()
                                                 .put("$match", new JsonObject()
                                                         .put("structure", STRUCTURE_ID)
-                                                        .put("indicator", "fr.openent.statistics_presences.indicator.impl.Monthly")
                                                         .put("$or", new JsonArray().add(new JsonObject().put("type", NO_REASON)))
                                                         .put("start_date", new JsonObject().put("$gte", START))
                                                         .put("end_date", new JsonObject().put("$lte", END))),

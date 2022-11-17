@@ -366,6 +366,9 @@ public class Field {
     public static final String STUDENT_TIMESLOT = "student_timeslot";
     public static final String DELAY_AT = "delay_at";
     public static final String REASON_ALERT_EXCLUDE_RULES_TYPE_ID = "reason_alert_exclude_rules_type_id";
+    public static final String SLOT = "slot";
+    public static final String $OR = "$or";
+    public static final String $MATCH = "$match";
 
     private Field() {
         throw new IllegalStateException("Utility class");
