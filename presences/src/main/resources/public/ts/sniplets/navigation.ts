@@ -25,6 +25,10 @@ function initStructures(): Structure[] {
     return values;
 }
 
+function hasRight(right: string): boolean {
+    return model.me.hasWorkflow(rights.workflow[right]);
+}
+
 export const navigation = {
     title: 'sniplet.navigation.title',
     description: 'sniplet.navigation.description',
@@ -79,6 +83,11 @@ export const navigation = {
         },
         hasStatisticsRight: right => {
             return model.me.hasWorkflow(statisticsRights.workflow[right]);
-        }
+        },
+        hasOneOfEventTabRight: () : boolean => {
+            return hasRight('readEvent') || hasRight('readEventRestricted') || hasRight('widget_alerts') ||
+                hasRight('manageStatementAbsences') || hasRight('manageStatementAbsencesRestricted') ||
+                hasRight('readExemption') || hasRight('readExemptionRestricted') || hasRight('manageCollectiveAbsences');
+        },
     }
 };
