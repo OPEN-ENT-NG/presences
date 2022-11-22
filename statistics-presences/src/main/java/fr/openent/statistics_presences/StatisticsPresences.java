@@ -7,10 +7,7 @@ import fr.openent.presences.common.presences.Presences;
 import fr.openent.presences.common.viescolaire.Viescolaire;
 import fr.openent.presences.db.DB;
 import fr.openent.statistics_presences.bean.Report;
-import fr.openent.statistics_presences.controller.ConfigController;
-import fr.openent.statistics_presences.controller.EventBusController;
-import fr.openent.statistics_presences.controller.StatisticsController;
-import fr.openent.statistics_presences.controller.StatisticsWeeklyAudiencesController;
+import fr.openent.statistics_presences.controller.*;
 import fr.openent.statistics_presences.indicator.*;
 import fr.openent.statistics_presences.service.CommonServiceFactory;
 import fr.wseduc.cron.CronTrigger;
@@ -59,6 +56,8 @@ public class StatisticsPresences extends BaseServer {
         addController(new StatisticsController(commonServiceFactory));
         addController(new StatisticsWeeklyAudiencesController(commonServiceFactory));
         addController(new ConfigController());
+        addController(new WorkerController());
+
 
         setSchemas();
         registerCodec();
