@@ -461,7 +461,7 @@ public class GlobalSearch {
     }
 
     private JsonObject addCountIdField() {
-        JsonObject groupedPunishmentIdExistsQuery = new JsonObject().put(Field.$GT,
+        JsonObject groupedPunishmentIdExistsQuery = new JsonObject().put(Field.$GTE,
                 new JsonArray().add(Field.$GROUPED_PUNISHMENT_ID).addNull()
         );
 
@@ -630,17 +630,17 @@ public class GlobalSearch {
 
     private JsonObject groupByHour() {
         JsonObject id = new JsonObject()
-                .put("user", "$user")
-                .put("type", "$type")
-                .put("name", "$name")
-                .put("class_name", "$class_name");
+                .put(Field.USER, Field.$USER)
+                .put(Field.TYPE, Field.$TYPE)
+                .put(Field.NAME, Field.$NAME)
+                .put(Field.CLASS_NAME, Field.$CLASS_NAME);
 
         JsonObject group = new JsonObject()
-                .put("_id", id)
-                .put("user", first("$user"))
-                .put("type", first("$type"))
-                .put("count", sum())
-                .put("slots", sum());
+                .put(Field._ID, id)
+                .put(Field.USER, first(Field.$USER))
+                .put(Field.TYPE, first(Field.$TYPE))
+                .put(Field.COUNT, new JsonObject().put(Field.$SUM, new JsonObject().put(Field.$SIZE, Field.SLOTS)))
+                .put(Field.SLOTS, new JsonObject().put(Field.$SUM, new JsonObject().put(Field.$SIZE, Field.SLOTS)));
 
         return group(group);
     }
