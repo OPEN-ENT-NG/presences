@@ -9,9 +9,11 @@ import io.vertx.core.eventbus.EventBus;
 
 public class CommonServiceFactory {
     private final Vertx vertx;
+    private final StatisticsPresencesService statisticsPresencesService;
 
     public CommonServiceFactory(Vertx vertx) {
         this.vertx = vertx;
+        statisticsPresencesService = new DefaultStatisticsPresencesService(this);
     }
 
     public UserService userService() {
@@ -34,5 +36,9 @@ public class CommonServiceFactory {
 
     public Vertx vertx() {
         return this.vertx;
+    }
+
+    public StatisticsPresencesService getStatisticsPresencesService() {
+        return statisticsPresencesService;
     }
 }
