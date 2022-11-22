@@ -43,7 +43,7 @@
             </tr>
             </thead>
             <tbody>
-            <tr ng-disabled="hasRight('manageExemption') != true"
+            <tr ng-disabled="::(!hasRight('manageExemption') && !hasRight('manageExemptionRestricted'))"
                 data-ng-repeat="exemption in vm.exemptions.all">
                 <th class="uppercase flex-th">
                     <img class="avatar"
