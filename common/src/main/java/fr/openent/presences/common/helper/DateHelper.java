@@ -683,6 +683,13 @@ public class DateHelper {
         return sdf.format(calendar.getTime());
     }
 
+    public static String getCurrentDate(String format, TimeZone timeZone) {
+        Calendar calendar = Calendar.getInstance();
+        SimpleDateFormat sdf = new SimpleDateFormat(format);
+        sdf.setTimeZone(timeZone);
+        return sdf.format(calendar.getTime());
+    }
+
     /**
      * Fetching current date (now())
      * <p>
