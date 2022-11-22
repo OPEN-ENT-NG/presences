@@ -260,7 +260,7 @@ public class MonthlySearch {
     }
 
     private JsonObject addCountIdField() {
-        JsonObject groupedPunishmentIdExistsQuery = new JsonObject().put(Field.$GT,
+        JsonObject groupedPunishmentIdExistsQuery = new JsonObject().put(Field.$GTE,
                 new JsonArray().add(Field.$GROUPED_PUNISHMENT_ID).addNull()
         );
 
