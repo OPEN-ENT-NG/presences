@@ -28,8 +28,7 @@
                 </a>
                 <div role="menuitem" class="item"
                      ng-class="{active: getCurrentState() === 'exemptions'}"
-                     ng-if="hasRight('readEvent') || hasRight('widget_alerts') || hasRight('manageStatementAbsences') ||
-                        hasRight('readExemption') || hasRight('manageCollectiveAbsences')"
+                     ng-if="::hasOneOfEventTabRight()"
                      data-ng-click="hoverIn('ABSENCES')"
                      data-ng-mouseover="hoverIn('ABSENCES')"
                      data-ng-mouseleave="hoverOut()">
@@ -105,8 +104,7 @@
                 <div class="item"></div>
 
                 <!-- events-->
-                <div class="item" ng-if="hasRight('readEvent') || hasRight('widget_alerts') || hasRight('manageStatementAbsences') ||
-                        hasRight('readExemption') || hasRight('manageCollectiveAbsences')">
+                <div class="item" ng-if="::hasOneOfEventTabRight()">
                     <div class="sub-items" ng-class="{hovered: menu.hovered === 'ABSENCES'}"
                          data-ng-mouseover="hoverIn('ABSENCES')"
                          data-ng-mouseleave="hoverOut()">
@@ -114,7 +112,7 @@
                             <i18n>presences.events.title</i18n>
                         </h2>
                         <a href="/presences#/events" class="sub-item"
-                           ng-if="::hasRight('readEvent')">
+                           ng-if="::(hasRight('readEvent') || hasRight('readEventRestricted'))">
                             <i class="absence" aria-hidden="true"></i>
                             <span><i18n>presences.navigation.event.list</i18n></span>
                         </a>
@@ -124,13 +122,13 @@
                         </a>
                         <!-- sub nav statements absences -->
                         <a href="/presences#/statements-absences"
-                           ng-if="::hasRight('manageStatementAbsences')"
+                           ng-if="::(hasRight('manageStatementAbsences') || hasRight('manageStatementAbsencesRestricted'))"
                            class="sub-item">
                             <i class="testimony" aria-hidden="true"></i>
                             <span><i18n>presences.navigation.statements.online</i18n></span>
                         </a>
                         <a href="/presences#/exemptions"
-                           ng-if="::hasRight('readExemption')"
+                           ng-if="::(hasRight('readExemption') || hasRight('readExemptionRestricted'))"
                            ng-class="{active: getCurrentState() === 'exemptions'}"
                            class="sub-item">
                             <i class="permission" aria-hidden="true"></i>
