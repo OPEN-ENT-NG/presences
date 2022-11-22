@@ -70,7 +70,7 @@ public class StatisticsPresences extends BaseServer {
 
         if (config.containsKey("processing-cron")) {
             String processingCron = config.getString("processing-cron");
-            new CronTrigger(vertx, processingCron).schedule(new ProcessingScheduledTask(vertx, config));
+            new CronTrigger(vertx, processingCron).schedule(new ProcessingScheduledTask(vertx, config, commonServiceFactory));
         }
 
         // worker to be triggered manually
