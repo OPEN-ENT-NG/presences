@@ -1,7 +1,10 @@
 package fr.openent.incidents.helper.init;
 
 import fr.openent.incidents.model.*;
+import fr.wseduc.webutils.I18n;
+import fr.wseduc.webutils.http.Renders;
 import io.vertx.core.json.JsonArray;
+import org.entcore.common.http.request.JsonHttpServerRequest;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -51,13 +54,16 @@ public class Init2DIncidentsHelper implements IInitIncidentsHelper {
     }
 
     @Override
-    public List<Seriousness> getSeriousnessTypes() {
+    public List<Seriousness> getSeriousnessTypes(JsonHttpServerRequest request) {
         List<Integer> seriousnessLevel = Arrays.asList(0, 2, 4, 5, 7);
         List<Seriousness> seriousnessList = new ArrayList<>();
         for (int i = 0; i < seriousnessLevel.size(); i++) {
+            String i18nLabel = I18n.getInstance().translate("incidents.init.2d.incident.seriousness." + i, Renders.getHost(request), I18n.acceptLanguage(request));
+            String i18nExcludeAlert = I18n.getInstance().translate("incidents.init.2d.incident.seriousness.exclude.alert." + i, Renders.getHost(request), I18n.acceptLanguage(request));
             Seriousness seriousness = new Seriousness(i)
                     .setLevel(seriousnessLevel.get(i))
-                    .setLabel("incidents.init.2d.incident.seriousness." + i);
+                    .setLabel(i18nLabel)
+                    .setExcludeAlertSeriousness(Boolean.parseBoolean(i18nExcludeAlert));
             seriousnessList.add(seriousness);
         }
         return seriousnessList;

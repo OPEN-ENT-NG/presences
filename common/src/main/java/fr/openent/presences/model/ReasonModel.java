@@ -19,6 +19,8 @@ public class ReasonModel implements IModel<ReasonModel>{
     private Boolean isAbsenceCompliance;
     private ReasonType reasonType;
 
+    private boolean alertExclude;
+
     public ReasonModel(JsonObject reason) {
         this.id = reason.getInteger(Field.ID, null);
         this.structureId = reason.getString(Field.STRUCTURE_ID, null);
@@ -122,6 +124,19 @@ public class ReasonModel implements IModel<ReasonModel>{
 
     public ReasonModel setReasonTypeId(ReasonType reasonType) {
         this.reasonType = reasonType;
+        return this;
+    }
+
+    public boolean isAlertExclude() {
+        return alertExclude;
+    }
+
+    public boolean isAlertInclude() {
+        return !alertExclude;
+    }
+
+    public ReasonModel setAlertExclude(boolean alertExclude) {
+        this.alertExclude = alertExclude;
         return this;
     }
 

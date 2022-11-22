@@ -1,6 +1,7 @@
 package fr.openent.incidents.helper.init;
 
 import fr.openent.incidents.model.*;
+import org.entcore.common.http.request.JsonHttpServerRequest;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -34,8 +35,8 @@ public class Init1DIncidentsHelper implements IInitIncidentsHelper {
     }
 
     @Override
-    public List<Seriousness> getSeriousnessTypes() {
-        return IInitIncidentsHelper.init2DIncidentsHelper.getSeriousnessTypes();
+    public List<Seriousness> getSeriousnessTypes(JsonHttpServerRequest request) {
+        return IInitIncidentsHelper.init2DIncidentsHelper.getSeriousnessTypes(request);
     }
 
     @Override

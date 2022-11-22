@@ -4,10 +4,7 @@ import fr.openent.presences.Presences;
 import fr.openent.presences.core.constants.Field;
 import fr.openent.presences.enums.InitTypeEnum;
 import fr.openent.presences.helper.init.IInitPresencesHelper;
-import fr.openent.presences.model.Action;
-import fr.openent.presences.model.Discipline;
-import fr.openent.presences.model.Reason;
-import fr.openent.presences.model.Settings;
+import fr.openent.presences.model.*;
 import fr.openent.presences.service.InitService;
 import fr.wseduc.webutils.Either;
 import fr.wseduc.webutils.I18n;
@@ -33,20 +30,33 @@ public class DefaultInitService implements InitService {
 
     @Override
     public void getReasonsStatement(HttpServerRequest request, String structure, InitTypeEnum initTypeEnum, Promise<JsonObject> promise) {
-        List<Reason> reasons = IInitPresencesHelper.getInstance(initTypeEnum).getReasonsInit();
+        List<ReasonModel> reasons = IInitPresencesHelper.getInstance(initTypeEnum).getReasonsInit();
 
         JsonArray params = new JsonArray();
-        String query = "INSERT INTO " + Presences.dbSchema + ".reason(structure_id, label, proving, comment, absence_compliance, reason_type_id) VALUES ";
-        for (Reason reason : reasons) {
-            query += "(?, ?, ?, '', ?, ?),";
-            params.add(structure)
-                    .add(I18n.getInstance().translate(reason.getLabel(), Renders.getHost(request), I18n.acceptLanguage(request)))
-                    .add(reason.isProving())
-                    .add(reason.isAbsenceCompliance())
-                    .add(reason.getReasonTypeId());
-        }
+        StringBuilder query = new StringBuilder();
 
-        query = query.substring(0, query.length() - 1) + ";";
+        reasons.forEach(reasonModel -> {
+            query.append("INSERT INTO ")
+                    .append(Presences.dbSchema)
+                    .append(".reason(id, structure_id, label, proving, comment, absence_compliance, reason_type_id)" +
+                            " VALUES (nextval('presences.reason_id_seq'), ?,?,?,'',?,?);");
+            params.add(structure)
+                    .add(I18n.getInstance().translate(reasonModel.getLabel(), Renders.getHost(request), I18n.acceptLanguage(request)))
+                    .add(reasonModel.isProving())
+                    .add(reasonModel.isAbsenceCompliance())
+                    .add(reasonModel.getReasonTypeId().getValue());
+            if (reasonModel.isAlertExclude()) {
+                query.append("INSERT INTO ")
+                        .append(Presences.dbSchema)
+                        .append(".reason_alert(structure_id, reason_id, reason_alert_exclude_rules_type_id) VALUES " +
+                        "(?, currval('presences.reason_id_seq'), 1)," +
+                        "(?, currval('presences.reason_id_seq'), 2)," +
+                        "(?, currval('presences.reason_id_seq'), 3);");
+                params.add(structure).add(structure).add(structure);
+            }
+
+        });
+
         promise.complete(new JsonObject()
                 .put(Field.STATEMENT, query)
                 .put(Field.VALUES, params)
