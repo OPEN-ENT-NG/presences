@@ -369,6 +369,12 @@ public class Field {
     public static final String SLOT = "slot";
     public static final String $OR = "$or";
     public static final String $MATCH = "$match";
+    public static final String $SUM = "$sum";
+    public static final String $SIZE = "$size";
+    public static final String $USER = "$user";
+    public static final String $TYPE = "$type";
+    public static final String $NAME = "$name";
+    public static final String $CLASS_NAME = "$class_name";
 
     private Field() {
         throw new IllegalStateException("Utility class");

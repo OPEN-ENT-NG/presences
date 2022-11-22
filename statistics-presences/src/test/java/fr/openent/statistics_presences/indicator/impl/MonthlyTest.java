@@ -132,7 +132,7 @@ public class MonthlyTest extends DBService {
                                                 .put("$addFields", new JsonObject()
                                                         .put("countId", new JsonObject()
                                                                 .put("$cond", new JsonArray()
-                                                                        .add(new JsonObject().put("$gt", new
+                                                                        .add(new JsonObject().put("$gte", new
                                                                                 JsonArray()
                                                                                 .add("$grouped_punishment_id")
                                                                                 .addNull()
