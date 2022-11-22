@@ -62,7 +62,7 @@ public class IModelHelper {
                 Object object = field.get(iModel);
                 String fieldName = field.getName();
                 if (object == null) {
-                    if (!ignoreNull) statisticsData.putNull(fieldName);
+                    if (!ignoreNull) statisticsData.putNull(StringHelper.camelToSnake(fieldName));
                 }
                 else if (object instanceof IModel) {
                     statisticsData.put(StringHelper.camelToSnake(fieldName), ((IModel<?>)object).toJson());

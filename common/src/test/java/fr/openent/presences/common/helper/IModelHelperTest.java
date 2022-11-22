@@ -40,10 +40,11 @@ public class IModelHelperTest {
         public List<List<JsonObject>> listList;
         public MyEnum myEnum;
         public List<MyEnum> myEnumList;
+        public MyEnum nullValue = null;
 
         @Override
         public JsonObject toJson() {
-            return IModelHelper.toJson(true, this);
+            return IModelHelper.toJson(false, this);
         }
 
         @Override
@@ -131,8 +132,8 @@ public class IModelHelperTest {
                 "\"type_id_list\":[1,2,3],\"other_i_model_list\":[{\"my_name\":\"otherIModel2\"},{\"my_name\":\"otherIModel3\"}]," +
                 "\"my_class_list\":[],\"list_list\":[[{\"uuid\":\"uuid1\"},{\"uuid\":\"uuid2\"}],[{\"uuid\":\"uuid3\"}," +
                 "{\"uuid\":\"uuid4\"}],[{\"uuid\":\"uuid5\"},{\"uuid\":\"uuid6\"}]],\"my_enum\":\"VALUE1\"," +
-                "\"my_enum_list\":[\"VALUE2\",\"VALUE3\"]}";
-        ctx.assertEquals(expected, IModelHelper.toJson(true, iModel).toString());
+                "\"my_enum_list\":[\"VALUE2\",\"VALUE3\"],\"null_value\":null}";
+        ctx.assertEquals(expected, iModel.toJson().toString());
 
         System.out.println();
     }

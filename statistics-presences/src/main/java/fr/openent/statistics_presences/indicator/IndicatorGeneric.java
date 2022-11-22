@@ -3,11 +3,13 @@ package fr.openent.statistics_presences.indicator;
 
 import fr.openent.presences.common.helper.DateHelper;
 import fr.openent.presences.common.helper.FutureHelper;
+import fr.openent.presences.common.helper.IModelHelper;
 import fr.openent.presences.common.incidents.Incidents;
 import fr.openent.presences.common.presences.Presences;
 import fr.openent.presences.common.viescolaire.Viescolaire;
 import fr.openent.presences.core.constants.Field;
 import fr.openent.presences.enums.ReasonType;
+import fr.openent.presences.model.StructureStatisticsUser;
 import fr.openent.statistics_presences.StatisticsPresences;
 import fr.openent.statistics_presences.bean.Report;
 import fr.openent.statistics_presences.indicator.worker.StatisticsWorker;
@@ -240,9 +242,11 @@ public class IndicatorGeneric {
     /**
      * Process CRON indicator calculation
      *
-     * @param structures student list group by structure
+     * @param structures student stats data group by structure
      * @return Future ending process
+     * @deprecated  Replaced by {@link #process(Vertx, List)}
      */
+    @Deprecated
     public static Future<Report> process(Vertx vertx, JsonObject structures) {
         log.info(String.format("[StatisticsPresences@%s::process] processing all indicator", IndicatorGeneric.class.getName()));
         Promise<Report> promise = Promise.promise();
@@ -260,27 +264,59 @@ public class IndicatorGeneric {
     }
 
     /**
+     * Process CRON indicator calculation
+     *
+     * @param structureStatisticsUserList student stats data group by structure
+     * @return Future ending process
+     */
+    public static Future<Report> process(Vertx vertx, List<StructureStatisticsUser> structureStatisticsUserList) {
+        log.info(String.format("[StatisticsPresences@%s::process] processing all indicator", IndicatorGeneric.class.getName()));
+        Promise<Report> promise = Promise.promise();
+
+        MessageConsumer<Report> consumer = vertx.eventBus().consumer("fr.openent.statistics_presences.indicator.impl.StatisticsWorker");
+        Handler<Message<Report>> handler = message -> {
+            log.info(String.format("[StatisticsPresences@%s::process] SIGTERM sent", IndicatorGeneric.class.getName()));
+            consumer.unregister();
+            promise.handle(Future.succeededFuture(message.body()));
+        };
+
+        consumer.handler(handler);
+        deployWorker(vertx, structureStatisticsUserList);
+        return promise.future();
+    }
+
+    /**
      * Process one indicator to run computing statistics
      * (JsonObject is a map with structure id as key and array of student id)
      *
-     * @param structures student list group by structure
+     * @param structureStatisticsUserList student stats data group by structure
      * @return Future ending process
      */
-    public static Future<JsonObject> manualProcess(JsonObject structures) {
+    public static Future<JsonObject> manualProcess(List<StructureStatisticsUser> structureStatisticsUserList) {
         Promise<JsonObject> promise = Promise.promise();
-        JsonObject config = new JsonObject()
-                .put(Field.STRUCTURES, structures)
-                .put(Field.ENDPOINT, "fr.openent.statistics_presences.indicator.impl.StatisticsWorker");
         StatisticsWorker indicatorWorker = new StatisticsWorker();
-        indicatorWorker.manualStart(config)
+        indicatorWorker.manualStart(structureStatisticsUserList)
                 .onSuccess(promise::complete)
                 .onFailure(promise::fail);
         return promise.future();
     }
 
+    /**
+     * @deprecated  Replaced by {@link #deployWorker(Vertx, List)}
+     */
+    @Deprecated
     private static void deployWorker(Vertx vertx, JsonObject structures) {
         JsonObject config = new JsonObject()
                 .put(Field.STRUCTURES, structures)
+                .put(Field.ENDPOINT, "fr.openent.statistics_presences.indicator.impl.StatisticsWorker");
+
+        String workerName = String.format("%s.worker.StatisticsWorker", Indicator.class.getPackage().getName());
+        vertx.deployVerticle(workerName, new DeploymentOptions().setConfig(config).setWorker(true));
+    }
+
+    private static void deployWorker(Vertx vertx, List<StructureStatisticsUser> structureStatisticsUserList) {
+        JsonObject config = new JsonObject()
+                .put(Field.STRUCTURE_STATISTICS_USERS, IModelHelper.toJsonArray(structureStatisticsUserList))
                 .put(Field.ENDPOINT, "fr.openent.statistics_presences.indicator.impl.StatisticsWorker");
 
         String workerName = String.format("%s.worker.StatisticsWorker", Indicator.class.getPackage().getName());

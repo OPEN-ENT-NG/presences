@@ -1,6 +1,10 @@
 package fr.openent.statistics_presences.indicator;
 
+import fr.openent.presences.common.helper.FutureHelper;
+import fr.openent.presences.common.helper.IModelHelper;
 import fr.openent.presences.core.constants.Field;
+import fr.openent.presences.model.StatisticsUser;
+import fr.openent.presences.model.StructureStatisticsUser;
 import fr.openent.statistics_presences.StatisticsPresences;
 import fr.openent.statistics_presences.bean.Report;
 import fr.openent.statistics_presences.service.CommonServiceFactory;
@@ -19,6 +23,7 @@ import org.entcore.common.sql.Sql;
 import org.entcore.common.sql.SqlResult;
 import org.vertx.java.busmods.BusModBase;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -45,15 +50,28 @@ public class ProcessingScheduledManual extends BusModBase implements Handler<Mes
         log.info("[" + this.getClass().getSimpleName() + "] receiving from route /process/statistics/tasks");
         start = System.currentTimeMillis();
         initTemplateProcessor();
-        List<String> structures = eventMessage.body().getJsonArray("structure", new JsonArray()).getList();
-        List<String> studentIds = eventMessage.body().getJsonArray(Field.STUDENTIDS, new JsonArray()).getList();
+        Future<List<Report>> init;
         JsonObject params = new JsonObject();
-        fetchUsers(structures, studentIds)
-                .compose(this::processIndicators)
-                .compose(this::generateReport)
+        List<String> studentIds;
+        if (eventMessage.body().containsKey(Field.STRUCTURE_STATISTICS_USERS)) {
+            List<StructureStatisticsUser> structureStatisticsUserList = IModelHelper.toList(eventMessage.body().getJsonArray(Field.STRUCTURE_STATISTICS_USERS), StructureStatisticsUser.class);
+            init = this.processIndicators(structureStatisticsUserList);
+            studentIds = structureStatisticsUserList.stream()
+                    .flatMap(structureStatisticsUser -> structureStatisticsUser.getStatisticsUsers().stream())
+                    .map(StatisticsUser::getId)
+                    .collect(Collectors.toList());
+        } else {
+            //Deprecated
+            List<String> structures = eventMessage.body().getJsonArray(Field.STRUCTURE, new JsonArray()).getList();
+            studentIds = eventMessage.body().getJsonArray(Field.STUDENTIDS, new JsonArray()).getList();
+            init = fetchUsers(structures, studentIds)
+                    .compose(this::processIndicators);
+        }
+
+        init.compose(this::generateReport)
                 .compose(report -> {
                     params.put(Field.RESULT, report);
-                    return this.clearWaitingList(studentIds);
+                    return this.commonServiceFactory.getStatisticsPresencesService().clearWaitingList(studentIds);
                 })
                 .onSuccess(success -> {
                     if (Boolean.TRUE.equals(isWaitingEndProcess))
@@ -114,10 +132,41 @@ public class ProcessingScheduledManual extends BusModBase implements Handler<Mes
      * @param structures structure map. Contains in key structure identifier and in value an array containing each structure
      *                   student to proceed
      * @return Future handling result
+     * @deprecated Replaced by {@link #processIndicators(List)}
      */
+    @Deprecated
     private Future<List<Report>> processIndicators(JsonObject structures) {
         Promise<List<Report>> promise = Promise.promise();
-        IndicatorGeneric.process(vertx, structures)
+        List<Future<Report>> indicatorFutures = new ArrayList<>();
+        for (Indicator indicator : StatisticsPresences.indicatorMap.values()) {
+            indicatorFutures.add(indicator.process(structures));
+        }
+
+        FutureHelper.join(indicatorFutures)
+                .onSuccess(success -> {
+                    List<Report> reports = new ArrayList<>();
+                    for (Future<Report> reportFuture : indicatorFutures) {
+                        reports.add(reportFuture.result());
+                    }
+                    promise.complete(reports);
+                })
+                .onFailure(error -> {
+                    log.error(String.format("[StatisticsPresences@ProcessingScheduledManual::processIndicators] Some indicator failed during processing. %s", error.getMessage()));
+                    promise.fail(error.getMessage());
+                });
+
+        return promise.future();
+    }
+
+    /**
+     * Launch indicators process. The process compute values for each user and store it in the database.
+     *
+     * @param structureStatisticsUserList user stats data group by structure
+     * @return Future handling result
+     */
+    private Future<List<Report>> processIndicators(List<StructureStatisticsUser> structureStatisticsUserList) {
+        Promise<List<Report>> promise = Promise.promise();
+        IndicatorGeneric.process(vertx, structureStatisticsUserList)
                 .onSuccess(report -> promise.complete(Arrays.asList(report)))
                 .onFailure(error -> {
                     log.error(String.format("[StatisticsPresences@ProcessingScheduledManual::processIndicators] Some indicator failed during processing. %s", error.getMessage()));
@@ -153,8 +202,10 @@ public class ProcessingScheduledManual extends BusModBase implements Handler<Mes
 
         return promise.future();
     }
-
-
+    
+    /**
+     * @deprecated Replaced by {@link fr.openent.statistics_presences.service.StatisticsPresencesService#clearWaitingList(List)}
+     */
     protected Future<Void> clearWaitingList(List<String> studentIds) {
         if (studentIds.isEmpty()) {
             return Future.succeededFuture();

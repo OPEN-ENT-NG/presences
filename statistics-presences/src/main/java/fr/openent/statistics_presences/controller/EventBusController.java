@@ -2,7 +2,9 @@ package fr.openent.statistics_presences.controller;
 
 import fr.openent.presences.common.bus.BusResultHandler;
 import fr.openent.presences.common.helper.FutureHelper;
+import fr.openent.presences.common.helper.IModelHelper;
 import fr.openent.presences.core.constants.Field;
+import fr.openent.presences.model.StatisticsUser;
 import fr.openent.statistics_presences.StatisticsPresences;
 import fr.openent.statistics_presences.indicator.Indicator;
 import fr.openent.statistics_presences.model.StatisticsFilter;
@@ -34,12 +36,18 @@ public class EventBusController extends ControllerHelper {
     @SuppressWarnings("unchecked")
     public void bus(final Message<JsonObject> message) {
         JsonObject body = message.body();
-        String action = body.getString("action");
+        String action = body.getString(Field.ACTION);
         switch (action) {
             case "post-users":
-                String structure = body.getString("structureId");
-                List<String> student = body.getJsonArray("studentIds").getList();
-                statisticsService.create(structure, student, BusResultHandler.busResponseHandler(message));
+                String structure = body.getString(Field.STRUCTUREID);
+                if (body.containsKey(Field.STATISTICS_USERS)) {
+                    List<StatisticsUser> statisticsUserList = IModelHelper.toList(body.getJsonArray(Field.STATISTICS_USERS), StatisticsUser.class);
+                    statisticsService.createWithModifiedDate(structure, statisticsUserList, BusResultHandler.busResponseHandler(message));
+                } else {
+                    //Deprecated
+                    List<String> student = body.getJsonArray(Field.STUDENTIDS).getList();
+                    statisticsService.create(structure, student, BusResultHandler.busResponseHandler(message));
+                }
                 break;
             case "post-weekly-audiences":
                 String structureId = body.getString(Field.STRUCTUREID);

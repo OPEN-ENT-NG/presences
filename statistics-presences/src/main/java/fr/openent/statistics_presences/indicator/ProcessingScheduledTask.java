@@ -1,7 +1,10 @@
 package fr.openent.statistics_presences.indicator;
 
+import fr.openent.presences.model.StructureStatisticsUser;
 import fr.openent.statistics_presences.StatisticsPresences;
 import fr.openent.statistics_presences.bean.Report;
+import fr.openent.statistics_presences.service.CommonServiceFactory;
+import fr.openent.statistics_presences.service.StatisticsPresencesService;
 import fr.wseduc.webutils.email.EmailSender;
 import fr.wseduc.webutils.template.TemplateProcessor;
 import fr.wseduc.webutils.template.lambdas.I18nLambda;
@@ -27,22 +30,24 @@ public class ProcessingScheduledTask implements Handler<Long> {
     JsonObject config;
     TemplateProcessor templateProcessor;
     Long start = null;
+    StatisticsPresencesService statisticsPresencesService;
 
-    public ProcessingScheduledTask(Vertx vertx, JsonObject config) {
+    public ProcessingScheduledTask(Vertx vertx, JsonObject config, CommonServiceFactory commonServiceFactory) {
         this.vertx = vertx;
         this.config = config;
         this.emailSender = new EmailFactory(vertx, null).getSender();
+        this.statisticsPresencesService = commonServiceFactory.getStatisticsPresencesService();
     }
 
     @Override
     public void handle(Long event) {
         start = System.currentTimeMillis();
         initTemplateProcessor();
-        fetchUsersToProcess()
+        this.statisticsPresencesService.fetchUsers()
                 .compose(this::processIndicators)
                 .compose(this::generateReport)
                 .compose(this::sendReport)
-                .compose(this::clearWaitingList)
+                .compose(result -> this.statisticsPresencesService.clearWaitingList())
                 .onComplete(ar -> {
                     if (ar.failed()) {
                         log.error(String.format("[Statistics@ProcessingScheduledTask::handle] " +
@@ -57,6 +62,9 @@ public class ProcessingScheduledTask implements Handler<Long> {
         templateProcessor.setLambda("datetime", new LocaleDateLambda("fr"));
     }
 
+    /**
+     * @deprecated Replaced by {@link StatisticsPresencesService#clearWaitingList()}
+     */
     private Future<Void> clearWaitingList(Void unused) {
         Future<Void> future = Future.future();
         String query = String.format("TRUNCATE TABLE %s.user;", StatisticsPresences.DB_SCHEMA);
@@ -72,11 +80,13 @@ public class ProcessingScheduledTask implements Handler<Long> {
      * Fetch user list in database. The list contains all users identifier that need to be proceed;
      *
      * @return Future handling result
+     * @deprecated Replaced by {@link StatisticsPresencesService#fetchUsers()}
      */
+    @Deprecated
     private Future<JsonObject> fetchUsersToProcess() {
         Future<JsonObject> future = Future.future();
         String query = String.format("SELECT structure, json_agg(id) as users FROM %s.user GROUP BY structure", StatisticsPresences.DB_SCHEMA);
-        
+
         Sql.getInstance().raw(query, SqlResult.validResultHandler(either -> {
             if (either.isLeft()) {
                 log.error(String.format("[Statistics@ProcessingScheduledTask::fetchUsersToProcess] " +
@@ -104,10 +114,31 @@ public class ProcessingScheduledTask implements Handler<Long> {
      * @param structures structure map. Contains in key structure identifier and in value an array containing each structure
      *                   student to proceed
      * @return Future handling result
+     * @deprecated Replaced by {@link #processIndicators(List)}
      */
+    @Deprecated
     private Future<List<Report>> processIndicators(JsonObject structures) {
         Promise<List<Report>> promise = Promise.promise();
         IndicatorGeneric.process(vertx, structures)
+                .onSuccess(ar -> promise.complete(Arrays.asList(ar)))
+                .onFailure(fail -> {
+                    log.error(String.format("[Statistics@ProcessingScheduledTask::processIndicators] " +
+                            "Failed during processing of StatisticsWorker. %s", fail.getMessage()));
+                    promise.fail(fail.getCause());
+                });
+
+        return promise.future();
+    }
+
+    /**
+     * Launch indicators process. The process compute values for each user and store it in the database.
+     *
+     * @param structureStatisticsUserList user stats data grouped by structure
+     * @return Future handling result
+     */
+    private Future<List<Report>> processIndicators(List<StructureStatisticsUser> structureStatisticsUserList) {
+        Promise<List<Report>> promise = Promise.promise();
+        IndicatorGeneric.process(vertx, structureStatisticsUserList)
                 .onSuccess(ar -> promise.complete(Arrays.asList(ar)))
                 .onFailure(fail -> {
                     log.error(String.format("[Statistics@ProcessingScheduledTask::processIndicators] " +

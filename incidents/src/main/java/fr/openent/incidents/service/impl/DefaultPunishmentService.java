@@ -18,6 +18,7 @@ import fr.openent.presences.common.service.impl.DefaultUserService;
 import fr.openent.presences.common.statistics_presences.StatisticsPresences;
 import fr.openent.presences.core.constants.Field;
 import fr.openent.presences.enums.EventType;
+import fr.openent.presences.model.StatisticsUser;
 import fr.wseduc.mongodb.MongoDb;
 import fr.wseduc.webutils.Either;
 import io.vertx.core.*;
@@ -77,6 +78,14 @@ public class DefaultPunishmentService implements PunishmentService {
     private void createPunishments(UserInfos user, JsonObject body, PunishmentCategory category, Handler<AsyncResult<JsonObject>> handler) {
         List<String> studentIds = body.getJsonArray(Field.STUDENT_IDS).getList();
         List<Punishment> punishments = initPunishmentsFromFields(category, body);
+        String dateFromPunishment = punishments.stream()
+                .map(PunishmentHelper::getStartDateFromPunishment)
+                .min(String.CASE_INSENSITIVE_ORDER)
+                .orElse("2000-01-01 00:00:00");
+        List<StatisticsUser> statisticsUserList = studentIds.stream()
+                .map(studentId -> new StatisticsUser().setId(studentId).setModified(dateFromPunishment))
+                .collect(Collectors.toList());
+
         JsonArray results = new JsonArray();
         FutureHelper.join(createPunishments(user, punishments, studentIds, category, results))
                 .onFailure(error -> {
@@ -86,8 +95,8 @@ public class DefaultPunishmentService implements PunishmentService {
                     handler.handle(Future.failedFuture(message));
                 })
                 .onSuccess(result -> {
-                    StatisticsPresences.getInstance().postUsers(body.getString("structure_id"), studentIds);
-                    handler.handle(Future.succeededFuture(new JsonObject().put("all", results)));
+                    StatisticsPresences.getInstance().postStatisticsUsers(body.getString(Field.STRUCTURE_ID), statisticsUserList);
+                    handler.handle(Future.succeededFuture(new JsonObject().put(Field.ALL, results)));
                 });
     }
 
@@ -216,6 +225,11 @@ public class DefaultPunishmentService implements PunishmentService {
         Promise<JsonObject> promise = Promise.promise();
 
         List<Punishment> punishments = initPunishmentsFromFields(category, body);
+        String dateFromPunishment = punishments.stream()
+                .map(PunishmentHelper::getStartDateFromPunishment)
+                .min(String.CASE_INSENSITIVE_ORDER)
+                .orElse("2000-01-01 00:00:00");
+
         JsonArray results = new JsonArray();
         FutureHelper.join(updatePunishments(user, punishments, category, results))
                 .onFailure(error -> {
@@ -225,8 +239,12 @@ public class DefaultPunishmentService implements PunishmentService {
                     promise.fail(message);
                 })
                 .onSuccess(result -> {
-                    List<String> studentIds = punishments.stream().map(Punishment::getStudentId).collect(Collectors.toList());
-                    StatisticsPresences.getInstance().postUsers(body.getString(Field.STRUCTURE_ID), studentIds);
+                    List<StatisticsUser> statisticsUserList = punishments.stream()
+                            .map(Punishment::getStudentId)
+                            .map(studentId -> new StatisticsUser().setId(studentId).setModified(dateFromPunishment))
+                            .collect(Collectors.toList());
+
+                    StatisticsPresences.getInstance().postStatisticsUsers(body.getString(Field.STRUCTURE_ID), statisticsUserList);
                     promise.complete(new JsonObject().put(Field.ALL, results));
                 });
 
@@ -724,9 +742,13 @@ public class DefaultPunishmentService implements PunishmentService {
     }
 
     public void delete(String structureId, List<Punishment> deletePunishments, Handler<AsyncResult<JsonObject>> handler) {
-        LOGGER.info("delete");
-        List<String> studentIds = deletePunishments.stream()
+        String dateFromPunishment = deletePunishments.stream()
+                .map(PunishmentHelper::getStartDateFromPunishment)
+                .min(String.CASE_INSENSITIVE_ORDER)
+                .orElse(null);
+        List<StatisticsUser> statisticsUserList = deletePunishments.stream()
                 .map(Punishment::getStudentId)
+                .map(studentId -> new StatisticsUser().setId(studentId).setModified(dateFromPunishment))
                 .collect(Collectors.toList());
 
         List<String> punishmentIds = deletePunishments.stream()
@@ -736,14 +758,13 @@ public class DefaultPunishmentService implements PunishmentService {
         Future<JsonObject> punishmentFuture = deletePunishment(punishmentIds);
         Future<JsonObject> absenceFuture = deleteRelatedAbsence(deletePunishments, structureId);
 
-        FutureHelper.all(Arrays.asList(punishmentFuture, absenceFuture)).setHandler(event -> {
-            if (event.failed()) {
-                handler.handle(Future.failedFuture(event.cause().toString()));
-                return;
-            }
-            StatisticsPresences.getInstance().postUsers(structureId, studentIds);
-            handler.handle(Future.succeededFuture(punishmentFuture.result()));
-        });
+        FutureHelper.all(Arrays.asList(punishmentFuture, absenceFuture)).onSuccess(event -> {
+                    StatisticsPresences.getInstance().postStatisticsUsers(structureId, statisticsUserList);
+                    handler.handle(Future.succeededFuture(punishmentFuture.result()));
+                })
+                .onFailure(error -> {
+                    handler.handle(Future.failedFuture(error));
+                });
     }
 
     private Future<JsonObject> deletePunishment(List<String> ids) {

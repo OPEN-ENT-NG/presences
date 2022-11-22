@@ -2,6 +2,8 @@ package fr.openent.statistics_presences.controller;
 
 import fr.openent.presences.common.helper.*;
 import fr.openent.presences.core.constants.*;
+import fr.openent.presences.model.StatisticsUser;
+import fr.openent.presences.model.StructureStatisticsUser;
 import fr.openent.statistics_presences.StatisticsPresences;
 import fr.openent.statistics_presences.controller.security.UserInStructure;
 import fr.openent.statistics_presences.enums.*;
@@ -29,6 +31,7 @@ import org.entcore.common.user.UserUtils;
 
 import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -221,8 +224,9 @@ public class StatisticsController extends ControllerHelper {
     @SuppressWarnings("unchecked")
     public void processStatisticsPrefetch(final HttpServerRequest request) {
         RequestUtils.bodyToJson(request, pathPrefix + "processStatisticsPrefetch", body -> {
-            List<String> structure = body.getJsonArray("structure").getList();
-            statisticsPresencesService.processStatisticsPrefetch(structure, new ArrayList<>(), false)
+            List<String> structures = body.getJsonArray(Field.STRUCTURE).getList();
+            statisticsPresencesService.fetchUsers(structures).compose(structureStatisticsUserList ->
+                            statisticsPresencesService.processStatisticsPrefetch(structureStatisticsUserList, false))
                     .onSuccess(res -> renderJson(request, res))
                     .onFailure(unused -> renderError(request));
         });
@@ -237,7 +241,9 @@ public class StatisticsController extends ControllerHelper {
         RequestUtils.bodyToJson(request, pathPrefix + "processStudentsStatisticsPrefetch", body -> {
             String structureId = request.getParam(Field.STRUCTURE);
             List<String> studentIds = body.getJsonArray(Field.STUDENTIDS).getList();
-            statisticsPresencesService.processStatisticsPrefetch(Collections.singletonList(structureId), studentIds, true)
+            statisticsPresencesService.fetchUsers(structureId, studentIds)
+                    .compose(structureStatisticsUser ->
+                            statisticsPresencesService.processStatisticsPrefetch(Collections.singletonList(structureStatisticsUser), true))
                     .onSuccess(res -> renderJson(request, res))
                     .onFailure(unused -> renderError(request));
         });
@@ -247,7 +253,7 @@ public class StatisticsController extends ControllerHelper {
     @SecuredAction(value = "", type = ActionType.RESOURCE)
     @ResourceFilter(SuperAdminFilter.class)
     public void truncateUserQueue(final HttpServerRequest request) {
-        statisticsPresencesService.truncateUserQueue()
+        statisticsPresencesService.clearWaitingList()
                 .onSuccess(res -> Renders.ok(request))
                 .onFailure(error -> renderError(request, new JsonObject().put(Field.MESSAGE, error.getMessage())));
     }

@@ -1,8 +1,12 @@
 package fr.openent.statistics_presences.indicator;
 
+import fr.openent.presences.common.helper.DateHelper;
 import fr.openent.presences.common.helper.FutureHelper;
+import fr.openent.presences.common.helper.IModelHelper;
 import fr.openent.presences.common.viescolaire.Viescolaire;
 import fr.openent.presences.core.constants.Field;
+import fr.openent.presences.model.StatisticsUser;
+import fr.openent.presences.model.StructureStatisticsUser;
 import fr.openent.presences.model.TimeslotModel;
 import fr.openent.statistics_presences.StatisticsPresences;
 import fr.openent.statistics_presences.bean.Failure;
@@ -44,22 +48,44 @@ public abstract class IndicatorWorker extends AbstractVerticle {
         // for some reason we might lose our verticle's context and might also pick its parent's context to keep it "alive"
         // in order to avoid this behavior, we assign manually its own context to indicatorContext
         indicatorContext = vertx.getOrCreateContext();
-        config = new JsonObject(config().toString());
+        config = config().copy();
         log.info(String.format("[StatisticsPresences@IndicatorWorker::start] Launching worker %s, deploy verticle %s",
                 this.indicatorName(), indicatorContext.deploymentID()));
         this.report = new Report(this.indicatorName()).start();
-        JsonObject structures = config.getJsonObject(Field.STRUCTURES);
+        process().onComplete(this::sendSigTerm);
+    }
+
+    private Future<Void> process() {
+        Promise<Void> voidPromise = Promise.promise();
+
         Future<Void> current = Future.succeededFuture();
 
-        for (String structure : structures.fieldNames()) {
-            current = current.compose(res -> {
-                Promise<Void> promise = Promise.promise();
-                processStructure(structure, structures.getJsonArray(structure)).onComplete(r -> promise.complete());
-                return promise.future();
-            });
+        if (config.containsKey(Field.STRUCTURE_STATISTICS_USERS)) {
+            List<StructureStatisticsUser> structureStatisticsUserList = IModelHelper.toList(config.getJsonArray(Field.STRUCTURE_STATISTICS_USERS), StructureStatisticsUser.class);
+
+            for (StructureStatisticsUser structureStatisticsUser : structureStatisticsUserList) {
+                current = current.compose(res -> {
+                    Promise<Void> promise = Promise.promise();
+                    processStructure(structureStatisticsUser.getStructureId(), structureStatisticsUser.getStatisticsUsers())
+                            .onComplete(r -> promise.complete());
+                    return promise.future();
+                });
+            }
+        } else  {
+            //Deprecated
+            JsonObject structures = config.getJsonObject(Field.STRUCTURES);
+            for (String structure : structures.fieldNames()) {
+                current = current.compose(res -> {
+                    Promise<Void> promise = Promise.promise();
+                    processStructure(structure, structures.getJsonArray(structure)).onComplete(r -> promise.complete());
+                    return promise.future();
+                });
+            }
         }
 
-        current.onComplete(this::sendSigTerm);
+        current.onComplete(voidPromise);
+
+        return voidPromise.future();
     }
 
     /**
@@ -68,10 +94,12 @@ public abstract class IndicatorWorker extends AbstractVerticle {
      *
      * @param payload config with endpoint (indicatorName) and structures (Map within id key structure and array as student id)
      * @return Future ending process
+     * @deprecated Replaced by {@link #manualStart(List)}
      */
+    @Deprecated
     protected Future<JsonObject> manualStart(JsonObject payload) {
         Promise<JsonObject> promise = Promise.promise();
-        config = new JsonObject(payload.toString());
+        config = payload.copy();
         this.report = new Report(this.indicatorName()).start();
         JsonObject structures = config.getJsonObject(Field.STRUCTURES);
         List<Future<Void>> futures = new ArrayList<>();
@@ -86,6 +114,28 @@ public abstract class IndicatorWorker extends AbstractVerticle {
                     log.error(message);
                     promise.fail(err.getMessage());
                 });
+        return promise.future();
+    }
+
+    /**
+     * Process computing statistics for each student's inside structure
+     *
+     * @param structureStatisticsUserList student stats data group by structure
+     * @return Future ending process
+     */
+    protected Future<JsonObject> manualStart(List<StructureStatisticsUser> structureStatisticsUserList) {
+        Promise<JsonObject> promise = Promise.promise();
+        config = new JsonObject().put(Field.STRUCTURE_STATISTICS_USERS, IModelHelper.toJsonArray(structureStatisticsUserList));
+        this.report = new Report(this.indicatorName()).start();
+
+        this.process().onSuccess(res -> promise.complete(new JsonObject().put(Field.MESSAGE, Field.OK)))
+                .onFailure(err -> {
+                    String message = String.format("[Presences@%s::manualStart] An error has occurred when updating student(s)'s stats : %s, " +
+                            "returning empty list", this.getClass().getSimpleName(), err.getMessage());
+                    log.error(message);
+                    promise.fail(err.getMessage());
+                });
+
         return promise.future();
     }
 
@@ -132,6 +182,10 @@ public abstract class IndicatorWorker extends AbstractVerticle {
                 config.getString("main").equals(STATISTICS_PRESENCES_CLASS);
     }
 
+    /**
+     * @deprecated Replaced by {@link #processStructure(String, List)}
+     */
+    @Deprecated
     @SuppressWarnings("unchecked")
     protected Future<Void> processStructure(String structureId, JsonArray students) {
         Promise<Void> promise = Promise.promise();
@@ -172,6 +226,62 @@ public abstract class IndicatorWorker extends AbstractVerticle {
                                             log.error(String.format("[StatisticsPresences@IndicatorWorker::processStructure] " +
                                                     "Processing fail student %s for structure %s %s", students.getString(indice), structureId, ar.cause()));
                                             report.fail(new Failure(students.getString(indice), structureId, ar.cause()));
+                                        }
+                                        otherPromise.complete();
+                                    });
+
+                            return otherPromise.future();
+                        });
+                    }
+
+                    current.onComplete(ar -> promise.complete());
+                    init.complete();
+                })
+                .onFailure(fail -> {
+                    log.debug(String.format("[StatisticsPresences@IndicatorWorker::processStructure] " +
+                            "Failed to retrieve settings from eventBus for structure %s", structureId), fail.getCause());
+                    promise.fail(fail.getCause());
+                });
+        return promise.future();
+    }
+
+    protected Future<Void> processStructure(String structureId, List<StatisticsUser> statisticsUserList) {
+        Promise<Void> promise = Promise.promise();
+
+        Future<JsonObject> settingsFuture = IndicatorGeneric.retrieveSettings(structureId);
+        Future<JsonArray> reasonFuture = IndicatorGeneric.retrieveReasons(structureId);
+
+        CompositeFuture.all(Arrays.asList(settingsFuture, reasonFuture))
+                .onSuccess(res -> {
+                    List<Integer> reasonIds = reasonFuture.result().stream()
+                            .map(JsonObject.class::cast)
+                            .map(reason -> reason.getInteger(Field.ID))
+                            .collect(Collectors.toList());
+
+                    JsonObject structureSettings = settingsFuture.result()
+                            .put(Field.REASONIDS, reasonIds);
+                    settings.put(structureId, structureSettings);
+
+                    Promise<Void> init = Promise.promise();
+                    Future<Void> current = init.future();
+                    String endDate = DateHelper.getCurrentDate(DateHelper.SQL_FORMAT);
+                    Function<Integer, Future<List<JsonObject>>> nextProcessFunction = index -> {
+                        log.debug(String.format("[StatisticsPresences@IndicatorWorker::processStructure] " +
+                                "Processing student %s for structure %s", statisticsUserList.get(index).getId(), structureId));
+                        return taskStudent(structureId, statisticsUserList.get(index).getId(), statisticsUserList.get(index).getModified(), endDate);
+                    };
+
+                    for (int i = 0; i < statisticsUserList.size(); i++) {
+                        int indice = i;
+
+                        current = current.compose(result -> {
+                            Promise<Void> otherPromise = Promise.promise();
+                            nextProcessFunction.apply(indice)
+                                    .onComplete(ar -> {
+                                        if (ar.failed()) {
+                                            log.error(String.format("[StatisticsPresences@IndicatorWorker::processStructure] " +
+                                                    "Processing fail student %s for structure %s %s", statisticsUserList.get(indice).getId(), structureId, ar.cause()));
+                                            report.fail(new Failure(statisticsUserList.get(indice).getId(), structureId, ar.cause()));
                                         }
                                         otherPromise.complete();
                                     });

@@ -1,8 +1,10 @@
 package fr.openent.presences.common.statistics_presences;
 
 import fr.openent.presences.common.helper.FutureHelper;
+import fr.openent.presences.common.helper.IModelHelper;
 import fr.openent.presences.common.message.MessageResponseHandler;
 import fr.openent.presences.core.constants.Field;
+import fr.openent.presences.model.StatisticsUser;
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Future;
 import io.vertx.core.Handler;
@@ -25,12 +27,27 @@ public class StatisticsPresences {
         this.eb = eb;
     }
 
+    /**
+     * @deprecated Replaced by {@link #postStatisticsUsers(String, List)}
+     */
+    @Deprecated
     public Future<JsonObject> postUsers(String structureId, List<String> studentIds) {
         Promise<JsonObject> promise = Promise.promise();
         JsonObject action = new JsonObject()
-                .put("action", "post-users")
-                .put("structureId", structureId)
-                .put("studentIds", studentIds);
+                .put(Field.ACTION, "post-users")
+                .put(Field.STRUCTUREID, structureId)
+                .put(Field.STUDENTIDS, studentIds);
+
+        eb.send(address, action, MessageResponseHandler.messageJsonObjectHandler(FutureHelper.handlerJsonObject(promise)));
+        return promise.future();
+    }
+
+    public Future<JsonObject> postStatisticsUsers(String structureId, List<StatisticsUser> statisticsUsers) {
+        Promise<JsonObject> promise = Promise.promise();
+        JsonObject action = new JsonObject()
+                .put(Field.ACTION, "post-users")
+                .put(Field.STRUCTUREID, structureId)
+                .put(Field.STATISTICS_USERS, IModelHelper.toJsonArray(statisticsUsers));
 
         eb.send(address, action, MessageResponseHandler.messageJsonObjectHandler(FutureHelper.handlerJsonObject(promise)));
         return promise.future();

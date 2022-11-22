@@ -23,6 +23,7 @@ import org.entcore.common.sql.Sql;
 import org.entcore.common.sql.SqlResult;
 import org.entcore.common.user.UserInfos;
 
+import java.time.ZoneId;
 import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -47,6 +48,25 @@ public class PunishmentHelper {
                     return punishment;
                 })
                 .collect(Collectors.toList());
+    }
+
+    public static String getStartDateFromPunishment(Punishment punishment) {
+        JsonObject fields = punishment.getFields();
+
+        String startAt = fields.getString(Field.START_AT);
+        String endAt = fields.getString(Field.END_AT);
+        if (startAt != null && endAt != null) {
+            return startAt;
+        }
+
+        String delayAt = fields.getString(Field.DELAY_AT);
+        if (delayAt != null) {
+            return delayAt;
+        }
+
+        return punishment.getCreated_at() != null ? punishment.getCreated_at() :
+                DateHelper.getDateString(DateHelper.getCurrentDate(DateHelper.YEAR_MONTH_DAY, TimeZone.getTimeZone(Field.UTC)),
+                        DateHelper.YEAR_MONTH_DAY, DateHelper.SQL_DATE_FORMAT);
     }
 
     public void getQuery(UserInfos user, String id, String groupedPunishmentId, String structureId, String startAt, String endAt, List<String> studentIds,

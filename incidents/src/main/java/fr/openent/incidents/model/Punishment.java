@@ -118,6 +118,14 @@ public class Punishment extends Model {
         setGroupedPunishmentId(null);
     }
 
+    public String getCreated_at() {
+        return created_at;
+    }
+
+    public Punishment setCreated_at(String created_at) {
+        this.created_at = created_at;
+        return this;
+    }
 
     public JsonObject toJsonObject(String method) {
         JsonObject result = new JsonObject();
