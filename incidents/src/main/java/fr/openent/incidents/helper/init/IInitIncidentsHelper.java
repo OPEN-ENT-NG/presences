@@ -2,6 +2,7 @@ package fr.openent.incidents.helper.init;
 
 import fr.openent.incidents.model.*;
 import fr.openent.presences.enums.InitTypeEnum;
+import org.entcore.common.http.request.JsonHttpServerRequest;
 
 import java.util.List;
 
@@ -19,7 +20,7 @@ public interface IInitIncidentsHelper {
 
     List<ProtagonistType> getProtagonistTypes();
 
-    List<Seriousness> getSeriousnessTypes();
+    List<Seriousness> getSeriousnessTypes(JsonHttpServerRequest request);
 
     List<Partner> getPartners();
 
