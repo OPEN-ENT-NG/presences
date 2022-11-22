@@ -111,7 +111,7 @@ public abstract class Indicator extends DBService {
      *
      * @param structures student list group by structure
      * @return Future ending process
-     * @deprecated Replaced by {@link IndicatorGeneric#manualProcess(JsonObject)}
+     * @deprecated Replaced by {@link IndicatorGeneric#manualProcess(List)}
      */
     @Deprecated
     public Future<JsonObject> manualProcess(JsonObject structures) {

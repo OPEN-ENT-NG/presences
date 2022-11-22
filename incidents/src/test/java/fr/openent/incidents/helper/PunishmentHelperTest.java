@@ -1,5 +1,7 @@
 package fr.openent.incidents.helper;
 
+import fr.openent.incidents.model.Punishment;
+import fr.openent.presences.common.helper.DateHelper;
 import fr.openent.presences.core.constants.Field;
 import io.vertx.core.Vertx;
 import io.vertx.core.json.JsonArray;
@@ -9,11 +11,18 @@ import io.vertx.ext.unit.junit.VertxUnitRunner;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.mockito.Mockito;
+import org.powermock.api.mockito.PowerMockito;
+import org.powermock.core.classloader.annotations.PrepareForTest;
+import org.powermock.modules.junit4.PowerMockRunner;
+import org.powermock.modules.junit4.PowerMockRunnerDelegate;
 import org.powermock.reflect.Whitebox;
 
 import java.util.Arrays;
 
-@RunWith(VertxUnitRunner.class)
+@RunWith(PowerMockRunner.class) //Using the PowerMock runner
+@PowerMockRunnerDelegate(VertxUnitRunner.class) //And the Vertx runner
+@PrepareForTest({DateHelper.class}) //Prepare the static class you want to test
 public class PunishmentHelperTest {
     private PunishmentHelper punishmentHelper;
 
@@ -67,5 +76,26 @@ public class PunishmentHelperTest {
         ctx.assertEquals("[{\"student\":{\"name\":\"name1\",\"className\":\"class1\"},\"owner\":{\"displayName\":\"displayName1\"}," +
                 "\"type\":{\"label\":\"label2\"}},{\"student\":{\"name\":\"name1\",\"className\":\"class2\"},\"owner\":{\"displayName\":\"displayName2\"}," +
                 "\"type\":{\"label\":\"label1\"}}]", jsonArray.toString());
+    }
+
+    @Test
+    public void testGetStartDateFromPunishment(TestContext ctx) throws Exception {
+        PowerMockito.spy(DateHelper.class);
+        PowerMockito.doReturn("getDateStringMock").when(DateHelper.class, "getDateString", Mockito.anyString(), Mockito.anyString(), Mockito.anyString());
+        PowerMockito.doReturn("").when(DateHelper.class, "getCurrentDate", Mockito.any(), Mockito.any());
+        Punishment punishment = new Punishment();
+        JsonObject fields = new JsonObject().put(Field.START_AT, "startAt").put(Field.END_AT, "endAt");
+        punishment.setFields(fields);
+        ctx.assertEquals(PunishmentHelper.getStartDateFromPunishment(punishment), "startAt");
+
+        fields = new JsonObject().put(Field.DELAY_AT, "delayAt");
+        punishment.setFields(fields);
+        ctx.assertEquals(PunishmentHelper.getStartDateFromPunishment(punishment), "delayAt");
+
+        punishment.setFields(new JsonObject());
+        ctx.assertEquals(PunishmentHelper.getStartDateFromPunishment(punishment), "getDateStringMock");
+
+        punishment.setCreated_at("createAt");
+        ctx.assertEquals(PunishmentHelper.getStartDateFromPunishment(punishment), "createAt");
     }
 }

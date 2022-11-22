@@ -367,6 +367,9 @@ public class Field {
     public static final String DELAY_AT = "delay_at";
     public static final String REASON_ALERT_EXCLUDE_RULES_TYPE_ID = "reason_alert_exclude_rules_type_id";
     public static final String SLOT = "slot";
+    public static final String STATISTICS_USER = "statistics_user";
+    public static final String STATISTICS_USERS = "statistics_users";
+    public static final String STRUCTURE_STATISTICS_USERS = "structure_statistics_users";
     public static final String $OR = "$or";
     public static final String $MATCH = "$match";
     public static final String $SUM = "$sum";
@@ -375,6 +378,7 @@ public class Field {
     public static final String $TYPE = "$type";
     public static final String $NAME = "$name";
     public static final String $CLASS_NAME = "$class_name";
+    public static final String UTC = "UTC";
 
     private Field() {
         throw new IllegalStateException("Utility class");
