@@ -3,6 +3,8 @@ package fr.openent.statistics_presences.service.impl;
 
 import fr.openent.presences.common.helper.FutureHelper;
 import fr.openent.presences.common.helper.IModelHelper;
+import fr.openent.presences.common.service.UserService;
+import fr.openent.presences.common.service.impl.DefaultUserService;
 import fr.openent.presences.common.viescolaire.Viescolaire;
 import fr.openent.presences.core.constants.Field;
 import fr.openent.presences.db.DBService;
@@ -26,6 +28,7 @@ import org.entcore.common.sql.SqlResult;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.powermock.api.mockito.PowerMockito;
 import org.powermock.core.classloader.annotations.PrepareForTest;
@@ -46,6 +49,7 @@ public class DefaultStatisticsPresencesServiceTest {
     private Sql sql;
     private Viescolaire viescolaire;
     private DefaultStatisticsPresencesService defaultStatisticsPresencesService;
+    private UserService userService;
 
     @Before
     public void before() {
@@ -56,7 +60,11 @@ public class DefaultStatisticsPresencesServiceTest {
         PowerMockito.spy(Viescolaire.class);
         viescolaire = PowerMockito.spy(Viescolaire.getInstance());
         PowerMockito.when(Viescolaire.getInstance()).thenReturn(viescolaire);
-        this.defaultStatisticsPresencesService = PowerMockito.spy(new DefaultStatisticsPresencesService(new CommonServiceFactory(vertx)));
+        userService = Mockito.spy(new DefaultUserService());
+        CommonServiceFactory commonServiceFactory = Mockito.spy(new CommonServiceFactory(vertx));
+        Mockito.doReturn(userService).when(commonServiceFactory).userService();
+
+        this.defaultStatisticsPresencesService = PowerMockito.spy(new DefaultStatisticsPresencesService(commonServiceFactory));
         Whitebox.setInternalState(this.defaultStatisticsPresencesService, "sql", this.sql);
     }
 
@@ -129,6 +137,56 @@ public class DefaultStatisticsPresencesServiceTest {
         }).when(sql).raw(Mockito.anyString(), Mockito.any());
 
         this.defaultStatisticsPresencesService.fetchUsers();
+    }
+
+    @Test
+    public void testFetchUsers2(TestContext ctx) {
+        Async async = ctx.async();
+        List<String> structureIdList = Arrays.asList("structure1", "structure2");
+        JsonArray userList1 = new JsonArray().add("user1").add("user2");
+        JsonArray userList2 = new JsonArray().add("user2").add("user3");
+        JsonArray structuresResult = new JsonArray(Arrays.asList(new JsonObject(),
+                new JsonObject().put(Field.USERS, userList1).put(Field.STRUCTURE, "structure1"),
+                new JsonObject().put(Field.USERS, userList2).put(Field.STRUCTURE, "structure2")
+        ));
+        JsonObject schoolDateResult = new JsonObject().put(Field.START_DATE, "2022-01-01 00:00:00");
+        PowerMockito.doReturn(Future.succeededFuture(structuresResult)).when(this.userService).fetchAllStudentsFromStructure(Mockito.anyList());
+        PowerMockito.doReturn(Future.succeededFuture(schoolDateResult)).when(this.viescolaire).getSchoolYear(Mockito.eq("structure1"));
+        PowerMockito.doReturn(Future.succeededFuture(new JsonObject())).when(this.viescolaire).getSchoolYear(Mockito.eq("structure2"));
+
+        this.defaultStatisticsPresencesService.fetchUsers(structureIdList, "startDate")
+                .compose(result -> {
+                    String expectedStructure1 = "{\"statistics_users\":[" +
+                            "{\"id\":\"user1\",\"structure_id\":\"structure1\",\"modified\":\"startDate\"}," +
+                            "{\"id\":\"user2\",\"structure_id\":\"structure1\",\"modified\":\"startDate\"}" +
+                            "],\"structure_id\":\"structure1\"}";
+                    String expectedStructure2 = "{\"statistics_users\":[" +
+                            "{\"id\":\"user2\",\"structure_id\":\"structure2\",\"modified\":\"startDate\"}," +
+                            "{\"id\":\"user3\",\"structure_id\":\"structure2\",\"modified\":\"startDate\"}" +
+                            "],\"structure_id\":\"structure2\"}";
+                    ctx.assertEquals(result.size(), 2);
+                    ctx.assertEquals(result.get(0).toJson().toString(), expectedStructure1);
+                    ctx.assertEquals(result.get(1).toJson().toString(), expectedStructure2);
+                    Mockito.verify(this.viescolaire, Mockito.times(0)).getSchoolYear(Mockito.anyString());
+                    return this.defaultStatisticsPresencesService.fetchUsers(structureIdList);
+                })
+                .onSuccess(result -> {
+                    String expectedStructure1 = "{\"statistics_users\":[" +
+                            "{\"id\":\"user1\",\"structure_id\":\"structure1\",\"modified\":\"2022-01-01 00:00:00\"}," +
+                            "{\"id\":\"user2\",\"structure_id\":\"structure1\",\"modified\":\"2022-01-01 00:00:00\"}" +
+                            "],\"structure_id\":\"structure1\"}";
+                    String expectedStructure2 = "{\"statistics_users\":[" +
+                            "{\"id\":\"user2\",\"structure_id\":\"structure2\",\"modified\":\"2000-01-01 00:00:00\"}," +
+                            "{\"id\":\"user3\",\"structure_id\":\"structure2\",\"modified\":\"2000-01-01 00:00:00\"}" +
+                            "],\"structure_id\":\"structure2\"}";
+                    ctx.assertEquals(result.size(), 2);
+                    ctx.assertEquals(result.get(0).toJson().toString(), expectedStructure1);
+                    ctx.assertEquals(result.get(1).toJson().toString(), expectedStructure2);
+                    Mockito.verify(this.viescolaire, Mockito.times(2)).getSchoolYear(Mockito.anyString());
+                    async.complete();
+                });
+
+        async.awaitSuccess(10000);
     }
 
     @Test
