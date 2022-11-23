@@ -110,8 +110,9 @@ public class DefaultStatisticsService implements StatisticsService {
         return promise.future();
     }
 
-    private Future<List<JsonObject>> deleteOldValuesForStudent(String structureId, String studentId, List<JsonObject> values, String startDate, String endDate) {
-        Promise<List<JsonObject>> promise = Promise.promise();
+    @Override
+    public Future<Void> deleteStudentStats(String structureId, String studentId, String startDate, String endDate) {
+        Promise<Void> promise = Promise.promise();
         JsonObject selector = new JsonObject()
                 .put(Field.STRUCTURE, structureId)
                 .put(Field.USER, studentId);
@@ -126,15 +127,31 @@ public class DefaultStatisticsService implements StatisticsService {
 
         MongoDb.getInstance().delete(StatisticsPresences.COLLECTION, selector, MongoDbResult.validResultHandler(either -> {
             if (either.isLeft()) {
-                log.error(String.format("[StatisticsPresences@DefaultStatisticsService::deleteOldValuesForStudent] " +
-                                "Failed to remove old statistics for student %s for indicator %s. %s",
-                        studentId, this.indicatorName, either.left().getValue()
+                log.error(String.format("[StatisticsPresences@DefaultStatisticsService::deleteStudentStats] " +
+                                "Failed to remove student %s. %s",
+                        studentId, either.left().getValue()
                 ));
                 promise.fail(either.left().getValue());
             } else {
-                promise.complete(values);
+                promise.complete();
             }
         }));
+
+        return promise.future();
+    }
+
+    private Future<List<JsonObject>> deleteOldValuesForStudent(String structureId, String studentId, List<JsonObject> values, String startDate, String endDate) {
+        Promise<List<JsonObject>> promise = Promise.promise();
+
+        this.deleteStudentStats(structureId, studentId, startDate, endDate)
+                .onSuccess(event -> promise.complete(values))
+                .onFailure(error -> {
+                    log.error(String.format("[StatisticsPresences@DefaultStatisticsService::deleteOldValuesForStudent] " +
+                                    "Failed to remove old statistics for student %s for indicator %s. %s",
+                            studentId, this.indicatorName, error.getMessage()
+                    ));
+                    promise.fail(error);
+                });
 
         return promise.future();
     }
