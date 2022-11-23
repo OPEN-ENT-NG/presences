@@ -139,7 +139,7 @@ public class DefaultStatisticsPresencesService extends DBService implements Stat
     }
 
     @Override
-    public Future<List<StructureStatisticsUser>> fetchUsers(List<String> structureIdList) {
+    public Future<List<StructureStatisticsUser>> fetchUsers(List<String> structureIdList, String startDate) {
         Promise<List<StructureStatisticsUser>> promise = Promise.promise();
 
         List<StructureStatisticsUser> structureStatisticsUserList = new ArrayList<>();
@@ -150,29 +150,47 @@ public class DefaultStatisticsPresencesService extends DBService implements Stat
                     structuresResult.stream()
                             .map(JsonObject.class::cast)
                             .forEach(struct -> {
-                                JsonArray users = struct.getJsonArray(Field.USERS);
+                                JsonArray users = struct.getJsonArray(Field.USERS, new JsonArray());
                                 if (!users.isEmpty()) {
                                     StructureStatisticsUser structureStatisticsUser = new StructureStatisticsUser()
                                             .setStructureId(struct.getString(Field.STRUCTURE))
                                             .setStatisticsUsers(
                                                     struct.getJsonArray(Field.USERS).stream()
                                                             .map(String.class::cast)
-                                                            .map(studentId -> new StatisticsUser().setId(studentId))
+                                                            .map(studentId -> new StatisticsUser().setId(studentId)
+                                                                            .setStructureId(struct.getString(Field.STRUCTURE)))
                                                             .collect(Collectors.toList())
                                             );
                                     structureStatisticsUserList.add(structureStatisticsUser);
-                                    Future<JsonObject> schoolDateFuture = Viescolaire.getInstance().getSchoolYear(structureStatisticsUser.getStructureId());
+                                    Future<JsonObject> schoolDateFuture = startDate == null ?
+                                            Viescolaire.getInstance().getSchoolYear(structureStatisticsUser.getStructureId()) :
+                                            Future.succeededFuture(new JsonObject().put(Field.START_DATE, startDate));
                                     futureList.add(schoolDateFuture);
                                     schoolDateFuture.onSuccess(schoolDate -> {
-                                        String startDate = schoolDate.getString(Field.START_DATE, "2000-01-01 00:00:00");
-                                        structureStatisticsUser.getStatisticsUsers().forEach(statisticsUser -> statisticsUser.setModified(startDate));
+                                        String startingDate = schoolDate.getString(Field.START_DATE, "2000-01-01 00:00:00");
+                                        structureStatisticsUser.getStatisticsUsers().forEach(statisticsUser -> statisticsUser.setModified(startingDate));
                                     });
                                 }
                             });
                     return FutureHelper.all(futureList);
                 })
                 .onSuccess(result -> promise.complete(structureStatisticsUserList))
+                .onFailure(error -> {
+                    log.error(String.format("[Statistics@DefaultStatisticsPresencesService::fetchUsers] " +
+                            "Failed to fetch user. %s", error.getMessage()));
+                    promise.fail(error);
+                });
+        return promise.future();
+    }
+
+    @Override
+    public Future<List<StructureStatisticsUser>> fetchUsers(List<String> structureIdList) {
+        Promise<List<StructureStatisticsUser>> promise = Promise.promise();
+
+        this.fetchUsers(structureIdList, null)
+                .onSuccess(promise::complete)
                 .onFailure(promise::fail);
+
         return promise.future();
     }
 

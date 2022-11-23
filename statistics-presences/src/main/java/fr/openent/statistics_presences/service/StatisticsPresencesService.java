@@ -58,6 +58,17 @@ public interface StatisticsPresencesService {
     /**
      * Create a Structure Statistics User from each structure id.
      * In this method we will look for all the students of the structure to create a {@link StatisticsUser}
+     * Each {@link StatisticsUser} have modified date to startDate field
+     *
+     * @param structureIdList structure identifier list
+     * @param startDate modified date for {@link StatisticsUser}
+     * @return Future of result
+     */
+    Future<List<StructureStatisticsUser>> fetchUsers(List<String> structureIdList, String startDate);
+
+    /**
+     * Create a Structure Statistics User from each structure id.
+     * In this method we will look for all the students of the structure to create a {@link StatisticsUser}
      * Each {@link StatisticsUser} have modified date to start school date
      *
      * @param structureIdList structure identifier list
