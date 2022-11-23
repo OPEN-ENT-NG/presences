@@ -380,6 +380,13 @@ public class Field {
     public static final String $CLASS_NAME = "$class_name";
     public static final String UTC = "UTC";
     public static final String ALREADY_STARTED = "already_started";
+    public static final String DURATION = "duration";
+    public static final String ERRORCOUNT = "errorCount";
+    public static final String SAVED = "saved";
+    public static final String FINISH = "finish";
+    public static final String ERRORS = "errors";
+    public static final String NB_STUDENTS = "nb_students";
+    public static final String NB_STUDENTS_PROCESS = "nb_students_process";
 
     private Field() {
         throw new IllegalStateException("Utility class");
