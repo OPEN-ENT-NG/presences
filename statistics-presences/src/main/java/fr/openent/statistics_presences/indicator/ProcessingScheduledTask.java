@@ -23,7 +23,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
 
-public class ProcessingScheduledTask implements Handler<Long> {
+public class ProcessingScheduledTask implements IProcessingScheduled<Long> {
     Logger log = LoggerFactory.getLogger(ProcessingScheduledTask.class);
     Vertx vertx;
     EmailSender emailSender;
@@ -40,7 +40,7 @@ public class ProcessingScheduledTask implements Handler<Long> {
     }
 
     @Override
-    public void handle(Long event) {
+    public void process(Long event) {
         start = System.currentTimeMillis();
         initTemplateProcessor();
         this.statisticsPresencesService.fetchUsers()
@@ -56,6 +56,12 @@ public class ProcessingScheduledTask implements Handler<Long> {
                 });
     }
 
+    @Override
+    public void alreadyInProgress(Long event) {
+        log.info("[Statistics@ProcessingScheduledTask::alreadyInProgress] " +
+                "The worker is already running. Skip this one.");
+    }
+
     private void initTemplateProcessor() {
         templateProcessor = new TemplateProcessor(vertx, "template").escapeHTML(false);
         templateProcessor.setLambda("i18n", new I18nLambda("fr"));
@@ -65,6 +71,7 @@ public class ProcessingScheduledTask implements Handler<Long> {
     /**
      * @deprecated Replaced by {@link StatisticsPresencesService#clearWaitingList()}
      */
+    @Deprecated
     private Future<Void> clearWaitingList(Void unused) {
         Future<Void> future = Future.future();
         String query = String.format("TRUNCATE TABLE %s.user;", StatisticsPresences.DB_SCHEMA);

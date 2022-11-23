@@ -379,6 +379,7 @@ public class Field {
     public static final String $NAME = "$name";
     public static final String $CLASS_NAME = "$class_name";
     public static final String UTC = "UTC";
+    public static final String ALREADY_STARTED = "already_started";
 
     private Field() {
         throw new IllegalStateException("Utility class");

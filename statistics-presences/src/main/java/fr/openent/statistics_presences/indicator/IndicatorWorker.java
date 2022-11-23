@@ -154,6 +154,7 @@ public abstract class IndicatorWorker extends AbstractVerticle {
 
     private void sendSigTerm(AsyncResult<Void> ar) {
         this.report.end();
+        IProcessingScheduled.ProcessingScheduledHolder.finish();
         if (ar.failed()) {
             log.error(String.format("[StatisticsPresences@IndicatorWorker::sendSigTerm] Some structure failed to process. %s", ar.cause().getMessage()));
         }

@@ -1,12 +1,10 @@
 package fr.openent.statistics_presences.controller;
 
-import fr.openent.presences.common.helper.*;
-import fr.openent.presences.core.constants.*;
-import fr.openent.presences.model.StatisticsUser;
-import fr.openent.presences.model.StructureStatisticsUser;
+import fr.openent.presences.core.constants.Field;
+import fr.openent.presences.core.constants.UserType;
 import fr.openent.statistics_presences.StatisticsPresences;
 import fr.openent.statistics_presences.controller.security.UserInStructure;
-import fr.openent.statistics_presences.enums.*;
+import fr.openent.statistics_presences.enums.WorkflowActionsCouple;
 import fr.openent.statistics_presences.indicator.Indicator;
 import fr.openent.statistics_presences.indicator.export.Global;
 import fr.openent.statistics_presences.model.StatisticsFilter;
@@ -19,7 +17,9 @@ import fr.wseduc.security.ActionType;
 import fr.wseduc.security.SecuredAction;
 import fr.wseduc.webutils.http.Renders;
 import fr.wseduc.webutils.request.RequestUtils;
-import io.vertx.core.*;
+import io.vertx.core.CompositeFuture;
+import io.vertx.core.Future;
+import io.vertx.core.Promise;
 import io.vertx.core.http.HttpServerRequest;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
@@ -31,7 +31,6 @@ import org.entcore.common.user.UserUtils;
 
 import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
