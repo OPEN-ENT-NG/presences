@@ -1,5 +1,6 @@
 package fr.openent.statistics_presences.indicator;
 
+import fr.openent.statistics_presences.bean.Report;
 import io.vertx.core.Handler;
 
 public interface IProcessingScheduled<T> extends Handler<T> {
@@ -28,7 +29,6 @@ public interface IProcessingScheduled<T> extends Handler<T> {
      */
     default boolean tryStart(T event) {
         if (ProcessingScheduledHolder.FINISH) {
-            ProcessingScheduledHolder.INSTANCE = this;
             ProcessingScheduledHolder.FINISH = false;
             process(event);
             return true;
@@ -39,14 +39,26 @@ public interface IProcessingScheduled<T> extends Handler<T> {
     }
 
     class ProcessingScheduledHolder {
-        private static IProcessingScheduled<?> INSTANCE = null;
         private static boolean FINISH = true;
+        private static Report report = null;
 
         private ProcessingScheduledHolder() {
         }
 
         public static void finish() {
             ProcessingScheduledHolder.FINISH = true;
+        }
+
+        public static boolean isFinish() {
+            return FINISH;
+        }
+
+        public static Report getReport() {
+            return report;
+        }
+
+        public static void setReport(Report report) {
+            ProcessingScheduledHolder.report = report;
         }
     }
 }
