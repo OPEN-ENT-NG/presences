@@ -224,7 +224,8 @@ public class StatisticsController extends ControllerHelper {
     public void processStatisticsPrefetch(final HttpServerRequest request) {
         RequestUtils.bodyToJson(request, pathPrefix + "processStatisticsPrefetch", body -> {
             List<String> structures = body.getJsonArray(Field.STRUCTURE).getList();
-            statisticsPresencesService.fetchUsers(structures).compose(structureStatisticsUserList ->
+            String startDate = body.getString(Field.START_DATE, null);
+            statisticsPresencesService.fetchUsers(structures, startDate).compose(structureStatisticsUserList ->
                             statisticsPresencesService.processStatisticsPrefetch(structureStatisticsUserList, false))
                     .onSuccess(res -> renderJson(request, res))
                     .onFailure(unused -> renderError(request));
