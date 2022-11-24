@@ -374,8 +374,8 @@ public class Monthly extends Indicator {
         mongoDb.command(request.toString(), MongoDbResult.validResultHandler(either -> {
             if (either.isLeft()) {
                 log.error(String.format("[StatisticsPresences@Monthly::retrieveStatistics] " +
-                                "Indicator %s failed to execute mongodb aggregation pipeline. %s", Monthly.class.getName(),
-                        either.left().getValue()));
+                                "Indicator %s failed to execute mongodb aggregation pipeline. %s %s", Monthly.class.getName(),
+                        either.left().getValue(), request));
                 promise.fail(either.left().getValue());
                 return;
             }
@@ -383,7 +383,7 @@ public class Monthly extends Indicator {
             if (result.getJsonObject("cursor") == null) {
                 String message = either.right().getValue().getString(Field.ERRMSG, "");
                 log.error(String.format("[StatisticsPresences@Monthly::retrieveStatistics] Indicator %s failed to execute " +
-                        "mongodb aggregation pipeline. %s", Monthly.class.getName(), message));
+                        "mongodb aggregation pipeline. %s %s", Monthly.class.getName(), message, request));
                 promise.fail(message);
                 return;
             }
