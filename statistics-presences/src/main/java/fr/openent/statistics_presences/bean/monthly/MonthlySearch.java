@@ -282,7 +282,7 @@ public class MonthlySearch {
                 .put(COUNTID, String.format("$%s", COUNTID));
 
         JsonObject group = id(id)
-                .put(Field.SLOTS, sum(String.format("$%s", Field.SLOTS)))
+                .put(Field.SLOTS, sum(atLeastOne(new JsonObject().put(Field.$SIZE, Field.$SLOTS))))
                 .put(Field.START_AT, first(String.format("$%s", Field.START_AT)));
 
         return group(group);
@@ -295,9 +295,9 @@ public class MonthlySearch {
                 .put(Field.YEAR, String.format("%s.%s", Field.$_ID, Field.YEAR));
 
         JsonObject group = id(id)
-                .put(Field.COUNT, sum())
+                .put(Field.COUNT, sum(Field.$SLOTS))
                 .put(Field.START_AT, first(String.format("$%s", Field.START_AT)))
-                .put(Field.SLOTS, sum());
+                .put(Field.SLOTS, sum(Field.$SLOTS));
 
         return group(group);
     }
@@ -309,9 +309,9 @@ public class MonthlySearch {
                 .put("year", year());
 
         JsonObject group = id(id)
-                .put("count", sum())
+                .put("count", sum(new JsonObject().put(Field.$SIZE, Field.$SLOTS)))
                 .put("start_at", first("$start_at"))
-                .put("slots", sum());
+                .put("slots", sum(new JsonObject().put(Field.$SIZE, Field.$SLOTS)));
 
         return group(group);
     }
@@ -326,7 +326,7 @@ public class MonthlySearch {
                 .put(COUNTID, String.format("$%s", COUNTID));
 
         JsonObject group = id(id)
-                .put(Field.SLOTS, sum())
+                .put(Field.SLOTS, sum(atLeastOne(new JsonObject().put(Field.$SIZE, Field.$SLOTS))))
                 .put(Field.START_AT, first(String.format("$%s", Field.START_AT)));
 
         return group(group);
@@ -342,7 +342,7 @@ public class MonthlySearch {
                 .put(Field.YEAR, String.format("%s.%s", Field.$_ID, Field.YEAR));
 
         JsonObject group = id(id)
-                .put(Field.COUNT, sum())
+                .put(Field.COUNT, sum(String.format("$%s", Field.SLOTS)))
                 .put(Field.START_AT, first(String.format("$%s", Field.START_AT)))
                 .put(Field.SLOTS, sum(String.format("$%s", Field.SLOTS)));
 
@@ -358,9 +358,9 @@ public class MonthlySearch {
                 .put("year", year());
 
         JsonObject group = id(id)
-                .put("count", sum())
+                .put("count", sum(new JsonObject().put(Field.$SIZE, Field.$SLOTS)))
                 .put("start_at", first("$start_at"))
-                .put("slots", sum());
+                .put("slots", sum(new JsonObject().put(Field.$SIZE, Field.$SLOTS)));
 
         return group(group);
     }
@@ -426,6 +426,7 @@ public class MonthlySearch {
     private JsonObject audienceIdByDay() {
         return new JsonObject()
                 .put("class_name", "$class_name")
+                .put("user", "$user")
                 .put("day", day())
                 .put("month", month())
                 .put("year", year());
@@ -552,6 +553,10 @@ public class MonthlySearch {
         return new JsonObject().put("$sum", 1);
     }
 
+    private JsonObject sum(JsonObject value) {
+        return new JsonObject().put("$sum", value);
+    }
+
     private JsonObject id(JsonObject value) {
         return new JsonObject()
                 .put("_id", value);
@@ -560,5 +565,9 @@ public class MonthlySearch {
     private JsonObject group(JsonObject value) {
         return new JsonObject()
                 .put("$group", value);
+    }
+
+    private JsonObject atLeastOne(JsonObject value) {
+        return new JsonObject().put(Field.$MAX, new JsonArray().add(value).add(1));
     }
 }
