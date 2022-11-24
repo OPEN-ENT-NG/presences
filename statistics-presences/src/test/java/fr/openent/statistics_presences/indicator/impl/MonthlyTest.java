@@ -147,7 +147,12 @@ public class MonthlyTest extends DBService {
                                                                 .put("month", new JsonObject().put("$month", "$start_at"))
                                                                 .put("year", new JsonObject().put("$year", "$start_at"))
                                                                 .put("countId", "$countId"))
-                                                        .put("slots", new JsonObject().put("$sum", "$slots"))
+                                                        .put("slots", new JsonObject()
+                                                                .put("$sum", new JsonObject()
+                                                                        .put("$max", new JsonArray()
+                                                                                .add(new JsonObject()
+                                                                                        .put("$size", "$slots"))
+                                                                                .add(1))))
                                                         .put("start_at", new JsonObject().put("$first", "$start_at"))),
                                         new JsonObject()
                                                 .put("$group", new JsonObject()
@@ -155,9 +160,9 @@ public class MonthlyTest extends DBService {
                                                                 .put("class_name", "$_id.class_name")
                                                                 .put("month", "$_id.month")
                                                                 .put("year", "$_id.year"))
-                                                        .put("count", new JsonObject().put("$sum", 1))
+                                                        .put("count", new JsonObject().put("$sum", "$slots"))
                                                         .put("start_at", new JsonObject().put("$first", "$start_at"))
-                                                        .put("slots", new JsonObject().put("$sum", 1))),
+                                                        .put("slots", new JsonObject().put("$sum", "$slots"))),
                                         new JsonObject()
                                                 .put("$project", new JsonObject()
                                                         .put("_id", 0)
