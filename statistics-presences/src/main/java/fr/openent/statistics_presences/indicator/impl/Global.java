@@ -544,7 +544,7 @@ public class Global extends Indicator {
             if (result.getJsonObject("cursor") == null) {
                 String message = either.right().getValue().getString(Field.ERRMSG, "");
                 log.error(String.format("[StatisticsPresences@Global::retrieveStatistics] Indicator %s failed to execute " +
-                        "mongodb aggregation pipeline. %s", Global.class.getName(), message));
+                        "mongodb aggregation pipeline. %s %s", Global.class.getName(), message, request));
                 promise.fail(message);
                 return;
             }

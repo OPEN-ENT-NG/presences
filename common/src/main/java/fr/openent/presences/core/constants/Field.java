@@ -387,6 +387,8 @@ public class Field {
     public static final String ERRORS = "errors";
     public static final String NB_STUDENTS = "nb_students";
     public static final String NB_STUDENTS_PROCESS = "nb_students_process";
+    public static final String $SLOTS = "$slots";
+    public static final String $MAX = "$max";
 
     private Field() {
         throw new IllegalStateException("Utility class");

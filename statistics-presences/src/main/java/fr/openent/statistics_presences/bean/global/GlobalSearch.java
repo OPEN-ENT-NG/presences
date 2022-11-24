@@ -202,8 +202,8 @@ public class GlobalSearch {
                 .put("user", "$user")
                 .put("name", "$name")
         )
-                .put("count", sum())
-                .put("slots", sum());
+                .put("count", sum(new JsonObject().put(Field.$SIZE, Field.$SLOTS)))
+                .put("slots", sum(new JsonObject().put(Field.$SIZE, Field.$SLOTS)));
 
         return new JsonObject().put("$group", group);
     }
@@ -311,7 +311,7 @@ public class GlobalSearch {
                         .put("name", "$name")
                         .put("type", "$type"));
 
-        group.put("count", sum());
+        group.put("count", sum(new JsonObject().put(Field.$SIZE, Field.$SLOTS)));
 
         return new JsonObject().put("$group", group);
     }
@@ -550,7 +550,7 @@ public class GlobalSearch {
                 .put(COUNTID, String.format("$%s", COUNTID));
 
         JsonObject group = id(id)
-                .put(Field.SLOTS, sum(String.format("$%s", Field.SLOTS)));
+                .put(Field.SLOTS, sum(atLeastOne(new JsonObject().put(Field.$SIZE, Field.$SLOTS))));
 
         return group(group);
     }
@@ -563,7 +563,7 @@ public class GlobalSearch {
                 .put(Field.CLASS_NAME, String.format("%s.%s", Field.$_ID, Field.CLASS_NAME));
 
         JsonObject group = id(id)
-                .put(Field.COUNT, sum())
+                .put(Field.COUNT, sum(String.format("$%s", Field.SLOTS)))
                 .put(Field.SLOTS, sum(String.format("$%s", Field.SLOTS)));
 
         return group(group);
@@ -639,8 +639,8 @@ public class GlobalSearch {
                 .put(Field._ID, id)
                 .put(Field.USER, first(Field.$USER))
                 .put(Field.TYPE, first(Field.$TYPE))
-                .put(Field.COUNT, new JsonObject().put(Field.$SUM, new JsonObject().put(Field.$SIZE, Field.SLOTS)))
-                .put(Field.SLOTS, new JsonObject().put(Field.$SUM, new JsonObject().put(Field.$SIZE, Field.SLOTS)));
+                .put(Field.COUNT, new JsonObject().put(Field.$SUM, new JsonObject().put(Field.$SIZE, Field.$SLOTS)))
+                .put(Field.SLOTS, new JsonObject().put(Field.$SUM, new JsonObject().put(Field.$SIZE, Field.$SLOTS)));
 
         return group(group);
     }
@@ -712,8 +712,8 @@ public class GlobalSearch {
                         .put("user", "$user")
                         .put("name", "$name")
                         .put("type", "$type"))
-                .put("count", sum())
-                .put("slots", sum()));
+                .put("count", sum(new JsonObject().put(Field.$SIZE, Field.$SLOTS)))
+                .put("slots", sum(new JsonObject().put(Field.$SIZE, Field.$SLOTS))));
     }
 
 
@@ -787,6 +787,10 @@ public class GlobalSearch {
         return new JsonObject().put("$sum", value);
     }
 
+    private JsonObject sum(JsonObject value) {
+        return new JsonObject().put("$sum", value);
+    }
+
     private JsonObject sum() {
         return new JsonObject().put("$sum", 1);
     }
@@ -794,6 +798,10 @@ public class GlobalSearch {
     private JsonObject id(JsonObject value) {
         return new JsonObject()
                 .put("_id", value);
+    }
+
+    private JsonObject atLeastOne(JsonObject value) {
+        return new JsonObject().put(Field.$MAX, new JsonArray().add(value).add(1));
     }
 
     private JsonObject group(JsonObject value) {
