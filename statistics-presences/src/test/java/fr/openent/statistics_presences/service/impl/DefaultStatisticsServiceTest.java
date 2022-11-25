@@ -154,6 +154,28 @@ public class DefaultStatisticsServiceTest {
     }
 
     @Test
+    public void deleteStudentStatsTest(TestContext ctx) throws Exception {
+        Async async = ctx.async();
+        String expectedCollection = "presences.statistics";
+        String expectedMatcher = "{\"structure\":\"structureId\",\"user\":\"studentId\"," +
+                "\"start_date\":{\"$gte\":\"startDate\"},\"end_date\":{\"$lte\":\"endDate\"}}";
+
+        PowerMockito.doAnswer(invocation -> {
+            String collection = invocation.getArgument(0);
+            JsonObject matcher = invocation.getArgument(1);
+            ctx.assertEquals(expectedCollection, collection);
+            ctx.assertEquals(expectedMatcher, matcher.toString());
+            async.complete();
+            return null;
+        }).when(mongo).delete(Mockito.anyString(), Mockito.any(JsonObject.class), Mockito.any());
+
+        List<JsonObject> values = new ArrayList<>();
+        this.defaultStatisticsService.deleteStudentStats("structureId", "studentId", "startDate", "endDate");
+
+        async.awaitSuccess(10000);
+    }
+
+    @Test
     public void storeValuesTest(TestContext ctx) throws Exception {
         Async async = ctx.async();
         String expectedCollection = "presences.statistics";
