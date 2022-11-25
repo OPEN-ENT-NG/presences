@@ -46,4 +46,15 @@ public interface StatisticsService {
      */
     Future<List<JsonObject>> overrideStatisticsStudent(String structureId, String studentId, List<JsonObject> values, String startDate,
                                                        String endDate);
+
+    /**
+     * Delete statistics for one student
+     *
+     * @param structureId Structure identifier
+     * @param studentId Student identifier
+     * @param startDate Start range date filter for delete statistics
+     * @param endDate End range date filter for delete statistics
+     * @return Future
+     */
+    Future<Void> deleteStudentStats(String structureId, String studentId, String startDate, String endDate);
 }
