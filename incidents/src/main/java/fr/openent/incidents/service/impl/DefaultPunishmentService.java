@@ -17,6 +17,7 @@ import fr.openent.presences.common.service.UserService;
 import fr.openent.presences.common.service.impl.DefaultUserService;
 import fr.openent.presences.common.statistics_presences.StatisticsPresences;
 import fr.openent.presences.core.constants.Field;
+import fr.openent.presences.core.constants.MongoField;
 import fr.openent.presences.enums.EventType;
 import fr.openent.presences.model.StatisticsUser;
 import fr.wseduc.mongodb.MongoDb;
@@ -620,68 +621,68 @@ public class DefaultPunishmentService implements PunishmentService {
                 typeIds, processed, massmailed);
 
         return new JsonArray()
-                .add(new JsonObject().put("$match", $queryMatch))
+                .add(new JsonObject().put(MongoField.$MATCH, $queryMatch))
                 .add(addCountIdField())
-                .add(new JsonObject().put(Field.$GROUP,
+                .add(new JsonObject().put(MongoField.$GROUP,
                                 new JsonObject().put(Field._ID, new JsonObject()
-                                        .put(Field.STUDENT_ID, "$student_id")
+                                        .put(Field.STUDENT_ID, MongoField.$ + Field.STUDENT_ID)
                                         .put(COUNTID, $COUNTID)
                                 )
                         )
                 )
-                .add(new JsonObject().put("$group",
+                .add(new JsonObject().put(MongoField.$GROUP,
                                 new JsonObject()
-                                        .put("_id", String.format("%s.%s", Field.$_ID, Field.STUDENT_ID))
-                                        .put("count", new JsonObject().put("$sum", 1))
+                                        .put(Field._ID, String.format("%s.%s", MongoField.$ + Field._ID, Field.STUDENT_ID))
+                                        .put(Field.COUNT, new JsonObject().put(MongoField.$SUM, 1))
                         )
                 )
-                .add(new JsonObject().put("$project", new JsonObject()
-                        .put("_id", 1)
-                        .put("student_id", "$_id")
-                        .put("count", 1))
+                .add(new JsonObject().put(MongoField.$PROJECT, new JsonObject()
+                        .put(Field._ID, 1)
+                        .put(Field.STUDENT_ID, MongoField.$ + Field._ID)
+                        .put(Field.COUNT, 1))
                 );
     }
 
     private JsonObject getQueryMatchPunishmentByStudent(String structure, String startAt, String endAt, List<String> students,
                                                         List<Integer> typeIds, Boolean processed, Boolean massmailed) {
         JsonObject $queryMatch = new JsonObject()
-                .put("structure_id", structure);
+                .put(Field.STRUCTURE_ID, structure);
 
         JsonArray matchingDates = punishmentHelper.getPunishmentMatchingDate(startAt, endAt);
-        if (matchingDates != null && !matchingDates.isEmpty()) $queryMatch.put("$or", matchingDates);
+        if (matchingDates != null && !matchingDates.isEmpty()) $queryMatch.put(MongoField.$OR, matchingDates);
 
         if (students != null && !students.isEmpty()) {
-            $queryMatch.put("student_id", new JsonObject().put("$in", new JsonArray(students)));
+            $queryMatch.put(Field.STUDENT_ID, new JsonObject().put(MongoField.$IN, new JsonArray(students)));
         }
 
         if (typeIds != null && !typeIds.isEmpty()) {
-            $queryMatch.put("type_id", new JsonObject().put("$in", new JsonArray(typeIds)));
+            $queryMatch.put(Field.TYPE_ID, new JsonObject().put(MongoField.$IN, new JsonArray(typeIds)));
         }
 
         if (processed != null) {
-            $queryMatch.put("processed", processed);
+            $queryMatch.put(Field.PROCESSED, processed);
         }
 
         if (massmailed != null) {
-            $queryMatch.put("massmailed", massmailed ? massmailed : new JsonObject().put("$in", new JsonArray().addNull().add(false)));
+            $queryMatch.put(Field.MASSMAILED, massmailed ? massmailed : new JsonObject().put(MongoField.$IN, new JsonArray().addNull().add(false)));
         }
 
         return $queryMatch;
     }
 
     private JsonObject addCountIdField() {
-        JsonObject groupedPunishmentIdExistsQuery = new JsonObject().put(Field.$GT,
-                new JsonArray().add(Field.$GROUPED_PUNISHMENT_ID).addNull()
+        JsonObject groupedPunishmentIdExistsQuery = new JsonObject().put(MongoField.$GT,
+                new JsonArray().add(MongoField.$ + Field.GROUPED_PUNISHMENT_ID).addNull()
         );
 
         JsonObject cond = new JsonObject()
-                .put(Field.$COND, new JsonArray()
+                .put(MongoField.$COND, new JsonArray()
                         .add(groupedPunishmentIdExistsQuery)
-                        .add(Field.$GROUPED_PUNISHMENT_ID)
-                        .add(Field.$_ID)
+                        .add(MongoField.$ + Field.GROUPED_PUNISHMENT_ID)
+                        .add(MongoField.$ + Field._ID)
                 );
 
-        return new JsonObject().put(Field.$ADDFIELDS, new JsonObject().put(COUNTID, cond));
+        return new JsonObject().put(MongoField.$ADDFIELDS, new JsonObject().put(COUNTID, cond));
     }
 
     private void formatPunishmentsResult(Long punishmentsNumber, JsonArray punishments,
@@ -691,15 +692,15 @@ public class DefaultPunishmentService implements PunishmentService {
             Long pageCount = punishmentsNumber <= Incidents.PAGE_SIZE ?
                     0 : (long) Math.ceil(punishmentsNumber / (double) Incidents.PAGE_SIZE);
             finalResult
-                    .put("page", page)
-                    .put("page_count", pageCount);
+                    .put(Field.PAGE, page)
+                    .put(Field.PAGE_COUNT, pageCount);
         } else {
             finalResult
-                    .put("limit", limit)
-                    .put("offset", offset);
+                    .put(Field.LIMIT, limit)
+                    .put(Field.OFFSET, offset);
         }
 
-        finalResult.put("all", punishments);
+        finalResult.put(Field.ALL, punishments);
         handler.handle(Future.succeededFuture(finalResult));
     }
 
@@ -707,9 +708,9 @@ public class DefaultPunishmentService implements PunishmentService {
     public void updatePunishmentMassmailing(List<String> punishmentsIds, Boolean isMassmailed, Handler<Either<String, JsonObject>> handler) {
 
         JsonObject selectIds = new JsonObject()
-                .put("_id", new JsonObject().put("$in", new JsonArray(punishmentsIds)));
+                .put(Field._ID, new JsonObject().put(MongoField.$IN, new JsonArray(punishmentsIds)));
 
-        JsonObject updatedPunishment = new JsonObject().put("$set", new JsonObject().put("massmailed", true));
+        JsonObject updatedPunishment = new JsonObject().put(MongoField.$SET, new JsonObject().put(Field.MASSMAILED, true));
 
         MongoDb.getInstance().update(punishment.getTable(), selectIds, updatedPunishment, MongoDbResult.validResultHandler(handler));
     }
@@ -770,7 +771,7 @@ public class DefaultPunishmentService implements PunishmentService {
     private Future<JsonObject> deletePunishment(List<String> ids) {
         Promise<JsonObject> promise = Promise.promise();
         JsonObject query = new JsonObject()
-                .put(Field._ID, new JsonObject().put(Field.$IN, ids));
+                .put(Field._ID, new JsonObject().put(MongoField.$IN, ids));
 
         MongoDb.getInstance().delete(punishment.getTable(), query, MongoDbResult.validResultHandler(FutureHelper.handlerJsonObject(result -> {
             if (result.failed()) {

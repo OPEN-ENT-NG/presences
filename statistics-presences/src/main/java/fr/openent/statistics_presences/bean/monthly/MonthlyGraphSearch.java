@@ -1,6 +1,7 @@
 package fr.openent.statistics_presences.bean.monthly;
 
 import fr.openent.presences.core.constants.Field;
+import fr.openent.presences.core.constants.MongoField;
 import fr.openent.statistics_presences.bean.User;
 import fr.openent.statistics_presences.model.StatisticsFilter;
 import fr.openent.statistics_presences.utils.EventType;
@@ -97,13 +98,13 @@ public class MonthlyGraphSearch {
         JsonObject dateString = new JsonObject().put("dateString", "$start_date");
 
         JsonObject dateFromString = new JsonObject()
-                .put("$dateFromString", dateString);
+                .put(MongoField.$DATEFROMSTRING, dateString);
 
         JsonObject statAtField = new JsonObject()
-                .put("start_at", dateFromString);
+                .put(Field.START_AT, dateFromString);
 
         return new JsonObject()
-                .put("$addFields", statAtField);
+                .put(MongoField.$ADDFIELDS, statAtField);
     }
 
     private JsonObject match(List<String> types) {
@@ -119,7 +120,7 @@ public class MonthlyGraphSearch {
 
         JsonObject matcher = new JsonObject()
                 .put(Field.STRUCTURE, this.filter.structure())
-                .put(Field.$OR, filterType(types))
+                .put(MongoField.$OR, filterType(types))
                 .put(Field.START_DATE, this.startDateFilter())
                 .put(Field.END_DATE, this.endDateFilter());
 
@@ -132,14 +133,14 @@ public class MonthlyGraphSearch {
         }
 
         return new JsonObject()
-                .put(Field.$MATCH, matcher);
+                .put(MongoField.$MATCH, matcher);
     }
 
     private JsonArray filterType(List<String> types) {
         List<String> typesToUse = types != null ? types : this.filter().types();
         JsonArray filters = new JsonArray();
         for (String type : typesToUse) {
-            filters.add(new JsonObject().put("type", type));
+            filters.add(new JsonObject().put(Field.TYPE, type));
         }
 
         return filters;
@@ -147,22 +148,22 @@ public class MonthlyGraphSearch {
 
     private JsonObject audienceFilter() {
         return new JsonObject()
-                .put("$in", this.filter().audiences());
+                .put(MongoField.$IN, this.filter().audiences());
     }
 
     private JsonObject usersFilter(List<String> users) {
         return new JsonObject()
-                .put("$in", users);
+                .put(MongoField.$IN, users);
     }
 
     private JsonObject startDateFilter() {
         return new JsonObject()
-                .put("$gte", this.filter().start());
+                .put(MongoField.$GTE, this.filter().start());
     }
 
     private JsonObject endDateFilter() {
         return new JsonObject()
-                .put("$lte", this.filter().end());
+                .put(MongoField.$LTE, this.filter().end());
     }
 
 
@@ -249,22 +250,22 @@ public class MonthlyGraphSearch {
 
     private JsonObject project() {
         JsonObject project = new JsonObject()
-                .put("_id", 0)
-                .put("month", dateToString("$start_at", "%Y-%m"))
-                .put("type", "$_id.type")
-                .put("count", 1);
+                .put(Field._ID, 0)
+                .put(Field.MONTH, dateToString(MongoField.$ + Field.START_AT, "%Y-%m"))
+                .put(Field.TYPE, "$_id.type")
+                .put(Field.COUNT, 1);
 
         return new JsonObject()
-                .put("$project", project);
+                .put(MongoField.$PROJECT, project);
     }
 
     private JsonObject isBeforeHalfday() {
         JsonArray lt = new JsonArray()
-                .add(dateToString("$start_at", "%H:%M:%S"))
+                .add(dateToString(MongoField.$ + Field.START_AT, "%H:%M:%S"))
                 .add(halfDay);
 
         return new JsonObject()
-                .put("$lt", lt);
+                .put(MongoField.$LT, lt);
     }
 
     /*
@@ -279,47 +280,47 @@ public class MonthlyGraphSearch {
 
     private JsonObject dateToString(String dateParam, String format) {
         JsonObject dateToString = new JsonObject()
-                .put("format", format)
-                .put("date", dateParam);
+                .put(Field.FORMAT, format)
+                .put(Field.DATE, dateParam);
 
-        return new JsonObject().put("$dateToString", dateToString);
+        return new JsonObject().put(MongoField.$DATETOSTRING, dateToString);
     }
 
     private JsonObject day() {
         return new JsonObject()
-                .put("$dayOfMonth", "$start_at");
+                .put(MongoField.$DAYOFMONTH, MongoField.$ + Field.START_AT);
     }
 
     private JsonObject month() {
         return new JsonObject()
-                .put("$month", "$start_at");
+                .put(MongoField.$MONTH, MongoField.$ + Field.START_AT);
     }
 
     private JsonObject year() {
         return new JsonObject()
-                .put("$year", "$start_at");
+                .put(MongoField.$YEAR, MongoField.$ + Field.START_AT);
     }
 
     private JsonObject first(String value) {
         return new JsonObject()
-                .put("$first", value);
+                .put(MongoField.$FIRST, value);
     }
 
     private JsonObject sum(String value) {
-        return new JsonObject().put("$sum", value);
+        return new JsonObject().put(MongoField.$SUM, value);
     }
 
     private JsonObject sum() {
-        return new JsonObject().put("$sum", 1);
+        return new JsonObject().put(MongoField.$SUM, 1);
     }
 
     private JsonObject id(JsonObject value) {
         return new JsonObject()
-                .put("_id", value);
+                .put(Field._ID, value);
     }
 
     private JsonObject group(JsonObject value) {
         return new JsonObject()
-                .put("$group", value);
+                .put(MongoField.$GROUP, value);
     }
 }
