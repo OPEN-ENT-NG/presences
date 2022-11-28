@@ -1,6 +1,7 @@
 package fr.openent.statistics_presences.bean.monthly;
 
 import fr.openent.presences.core.constants.Field;
+import fr.openent.presences.core.constants.MongoField;
 import fr.openent.statistics_presences.bean.Audience;
 import fr.openent.statistics_presences.bean.User;
 import fr.openent.statistics_presences.model.StatisticsFilter;
@@ -154,16 +155,16 @@ public class MonthlySearch {
      * @return field start_at
      */
     private JsonObject addStartAtField() {
-        JsonObject dateString = new JsonObject().put("dateString", "$start_date");
+        JsonObject dateString = new JsonObject().put(Field.DATESTRING, MongoField.$ + Field.START_DATE);
 
         JsonObject dateFromString = new JsonObject()
-                .put("$dateFromString", dateString);
+                .put(MongoField.$DATEFROMSTRING, dateString);
 
         JsonObject statAtField = new JsonObject()
-                .put("start_at", dateFromString);
+                .put(Field.START_AT, dateFromString);
 
         return new JsonObject()
-                .put("$addFields", statAtField);
+                .put(MongoField.$ADDFIELDS, statAtField);
     }
 
     private JsonObject match(List<String> types) {
@@ -179,7 +180,7 @@ public class MonthlySearch {
 
         JsonObject matcher = new JsonObject()
                 .put(Field.STRUCTURE, this.filter.structure())
-                .put(Field.$OR, filterType(types))
+                .put(MongoField.$OR, filterType(types))
                 .put(Field.START_DATE, this.startDateFilter())
                 .put(Field.END_DATE, this.endDateFilter());
 
@@ -192,7 +193,7 @@ public class MonthlySearch {
         }
 
         return new JsonObject()
-                .put(Field.$MATCH, matcher);
+                .put(MongoField.$MATCH, matcher);
     }
 
     private JsonArray filterType(List<String> types) {
@@ -200,25 +201,25 @@ public class MonthlySearch {
         JsonArray filters = new JsonArray();
         for (String type : typesToUse) {
             JsonObject filterType = new JsonObject()
-                    .put("type", type);
+                    .put(Field.TYPE, type);
 
             EventType eventType = EventType.valueOf(type);
             switch (eventType) {
                 case UNREGULARIZED:
                 case REGULARIZED:
                     JsonObject inFilterReasons = new JsonObject()
-                            .put("$in", this.filter().reasons());
+                            .put(MongoField.$IN, this.filter().reasons());
                     filterType.put(Field.REASON, inFilterReasons);
                     break;
                 case SANCTION:
                     JsonObject inFilterSanctionTypes = new JsonObject()
-                            .put("$in", this.filter.sanctionTypes());
-                    filterType.put("punishment_type", inFilterSanctionTypes);
+                            .put(MongoField.$IN, this.filter.sanctionTypes());
+                    filterType.put(Field.PUNISHMENT_TYPE, inFilterSanctionTypes);
                     break;
                 case PUNISHMENT:
                     JsonObject inFilterPunishmentTypes = new JsonObject()
-                            .put("$in", this.filter.punishmentTypes());
-                    filterType.put("punishment_type", inFilterPunishmentTypes);
+                            .put(MongoField.$IN, this.filter.punishmentTypes());
+                    filterType.put(Field.PUNISHMENT_TYPE, inFilterPunishmentTypes);
                     break;
                 case LATENESS:
                     List<Integer> list = this.filter().reasons();
@@ -226,7 +227,7 @@ public class MonthlySearch {
                         list.add(null);
                     }
                     JsonObject inFilterLatenessReasons = new JsonObject()
-                            .put("$in", list);
+                            .put(MongoField.$IN, list);
                     filterType.put(Field.REASON, inFilterLatenessReasons );
                     break;
                 default:
@@ -241,37 +242,37 @@ public class MonthlySearch {
 
     private JsonObject audienceFilter() {
         return new JsonObject()
-                .put("$in", this.filter().audiences());
+                .put(MongoField.$IN, this.filter().audiences());
     }
 
     private JsonObject usersFilter(List<String> users) {
         return new JsonObject()
-                .put("$in", users);
+                .put(MongoField.$IN, users);
     }
 
     private JsonObject startDateFilter() {
         return new JsonObject()
-                .put("$gte", this.filter().start());
+                .put(MongoField.$GTE, this.filter().start());
     }
 
     private JsonObject endDateFilter() {
         return new JsonObject()
-                .put("$lte", this.filter().end());
+                .put(MongoField.$LTE, this.filter().end());
     }
 
     private JsonObject addCountIdField() {
-        JsonObject groupedPunishmentIdExistsQuery = new JsonObject().put(Field.$GTE,
-                new JsonArray().add(Field.$GROUPED_PUNISHMENT_ID).addNull()
+        JsonObject groupedPunishmentIdExistsQuery = new JsonObject().put(MongoField.$GTE,
+                new JsonArray().add(MongoField.$ + Field.GROUPED_PUNISHMENT_ID).addNull()
         );
 
         JsonObject cond = new JsonObject()
-                .put(Field.$COND, new JsonArray()
+                .put(MongoField.$COND, new JsonArray()
                         .add(groupedPunishmentIdExistsQuery)
-                        .add(Field.$GROUPED_PUNISHMENT_ID)
-                        .add(Field.$_ID)
+                        .add(MongoField.$ + Field.GROUPED_PUNISHMENT_ID)
+                        .add(MongoField.$ + Field._ID)
                 );
 
-        return new JsonObject().put(Field.$ADDFIELDS, new JsonObject().put(COUNTID, cond));
+        return new JsonObject().put(MongoField.$ADDFIELDS, new JsonObject().put(COUNTID, cond));
     }
 
     private JsonObject audienceGroupByCountId() {
@@ -282,7 +283,7 @@ public class MonthlySearch {
                 .put(COUNTID, String.format("$%s", COUNTID));
 
         JsonObject group = id(id)
-                .put(Field.SLOTS, sum(atLeastOne(new JsonObject().put(Field.$SIZE, Field.$SLOTS))))
+                .put(Field.SLOTS, sum(atLeastOne(new JsonObject().put(MongoField.$SIZE, MongoField.$ + Field.SLOTS))))
                 .put(Field.START_AT, first(String.format("$%s", Field.START_AT)));
 
         return group(group);
@@ -290,28 +291,28 @@ public class MonthlySearch {
 
     private JsonObject audienceGroupById() {
         JsonObject id = new JsonObject()
-                .put(Field.CLASS_NAME, String.format("%s.%s", Field.$_ID, Field.CLASS_NAME))
-                .put(Field.MONTH, String.format("%s.%s", Field.$_ID, Field.MONTH))
-                .put(Field.YEAR, String.format("%s.%s", Field.$_ID, Field.YEAR));
+                .put(Field.CLASS_NAME, String.format("%s.%s", MongoField.$ + Field._ID, Field.CLASS_NAME))
+                .put(Field.MONTH, String.format("%s.%s", MongoField.$ + Field._ID, Field.MONTH))
+                .put(Field.YEAR, String.format("%s.%s", MongoField.$ + Field._ID, Field.YEAR));
 
         JsonObject group = id(id)
-                .put(Field.COUNT, sum(Field.$SLOTS))
+                .put(Field.COUNT, sum(MongoField.$ + Field.SLOTS))
                 .put(Field.START_AT, first(String.format("$%s", Field.START_AT)))
-                .put(Field.SLOTS, sum(Field.$SLOTS));
+                .put(Field.SLOTS, sum(MongoField.$ + Field.SLOTS));
 
         return group(group);
     }
 
     private JsonObject audienceGroup() {
         JsonObject id = new JsonObject()
-                .put("class_name", "$class_name")
-                .put("month", month())
-                .put("year", year());
+                .put(Field.CLASS_NAME, MongoField.$ + Field.CLASS_NAME)
+                .put(Field.MONTH, month())
+                .put(Field.YEAR, year());
 
         JsonObject group = id(id)
-                .put("count", sum(new JsonObject().put(Field.$SIZE, Field.$SLOTS)))
-                .put("start_at", first("$start_at"))
-                .put("slots", sum(new JsonObject().put(Field.$SIZE, Field.$SLOTS)));
+                .put(Field.COUNT, sum(new JsonObject().put(MongoField.$SIZE, MongoField.$ + Field.SLOTS)))
+                .put(Field.START_AT, first(MongoField.$ + Field.START_AT))
+                .put(Field.SLOTS, sum(new JsonObject().put(MongoField.$SIZE, MongoField.$ + Field.SLOTS)));
 
         return group(group);
     }
@@ -326,7 +327,7 @@ public class MonthlySearch {
                 .put(COUNTID, String.format("$%s", COUNTID));
 
         JsonObject group = id(id)
-                .put(Field.SLOTS, sum(atLeastOne(new JsonObject().put(Field.$SIZE, Field.$SLOTS))))
+                .put(Field.SLOTS, sum(atLeastOne(new JsonObject().put(MongoField.$SIZE, MongoField.$ + Field.SLOTS))))
                 .put(Field.START_AT, first(String.format("$%s", Field.START_AT)));
 
         return group(group);
@@ -335,11 +336,11 @@ public class MonthlySearch {
 
     private JsonObject studentGroupById() {
         JsonObject id = new JsonObject()
-                .put(Field.USER, String.format("%s.%s", Field.$_ID, Field.USER))
-                .put(Field.NAME, String.format("%s.%s", Field.$_ID, Field.NAME))
-                .put(Field.CLASS_NAME, String.format("%s.%s", Field.$_ID, Field.CLASS_NAME))
-                .put(Field.MONTH, String.format("%s.%s", Field.$_ID, Field.MONTH))
-                .put(Field.YEAR, String.format("%s.%s", Field.$_ID, Field.YEAR));
+                .put(Field.USER, String.format("%s.%s", MongoField.$ + Field._ID, Field.USER))
+                .put(Field.NAME, String.format("%s.%s", MongoField.$ + Field._ID, Field.NAME))
+                .put(Field.CLASS_NAME, String.format("%s.%s", MongoField.$ + Field._ID, Field.CLASS_NAME))
+                .put(Field.MONTH, String.format("%s.%s", MongoField.$ + Field._ID, Field.MONTH))
+                .put(Field.YEAR, String.format("%s.%s", MongoField.$ + Field._ID, Field.YEAR));
 
         JsonObject group = id(id)
                 .put(Field.COUNT, sum(String.format("$%s", Field.SLOTS)))
@@ -351,45 +352,45 @@ public class MonthlySearch {
 
     private JsonObject studentGroup() {
         JsonObject id = new JsonObject()
-                .put("user", "$user")
-                .put("name", "$name")
-                .put("class_name", "$class_name")
-                .put("month", month())
-                .put("year", year());
+                .put(Field.USER, MongoField.$ + Field.USER)
+                .put(Field.NAME, MongoField.$ + Field.NAME)
+                .put(Field.CLASS_NAME, MongoField.$ + Field.CLASS_NAME)
+                .put(Field.MONTH, month())
+                .put(Field.YEAR, year());
 
         JsonObject group = id(id)
-                .put("count", sum(new JsonObject().put(Field.$SIZE, Field.$SLOTS)))
-                .put("start_at", first("$start_at"))
-                .put("slots", sum(new JsonObject().put(Field.$SIZE, Field.$SLOTS)));
+                .put(Field.COUNT, sum(new JsonObject().put(MongoField.$SIZE, MongoField.$ + Field.SLOTS)))
+                .put(Field.START_AT, first(MongoField.$ + Field.START_AT))
+                .put(Field.SLOTS, sum(new JsonObject().put(MongoField.$SIZE, MongoField.$ + Field.SLOTS)));
 
         return group(group);
     }
 
     private JsonObject audienceProject() {
         JsonObject project = new JsonObject()
-                .put("_id", 0)
-                .put("month", dateToString("$start_at", "%Y-%m"))
-                .put("class_name", "$_id.class_name")
-                .put("count", sum("$count"))
-                .put("slots", sum("$slots"));
+                .put(Field._ID, 0)
+                .put(Field.MONTH, dateToString(MongoField.$ + Field.START_AT, "%Y-%m"))
+                .put(Field.CLASS_NAME, "$_id.class_name")
+                .put(Field.COUNT, sum(MongoField.$ + Field.COUNT))
+                .put(Field.SLOTS, sum(MongoField.$ + Field.SLOTS));
 
         return new JsonObject()
-                .put("$project", project);
+                .put(MongoField.$PROJECT, project);
 
     }
 
     private JsonObject studentProject() {
         JsonObject project = new JsonObject()
-                .put("_id", 0)
-                .put("month", dateToString("$start_at", "%Y-%m"))
-                .put("class_name", "$_id.class_name")
-                .put("user", "$_id.user")
-                .put("name", "$_id.name")
-                .put("count", sum("$count"))
-                .put("slots", sum("$slots"));
+                .put(Field._ID, 0)
+                .put(Field.MONTH, dateToString(MongoField.$ + Field.START_AT, "%Y-%m"))
+                .put(Field.CLASS_NAME, "$_id.class_name")
+                .put(Field.USER, "$_id.user")
+                .put(Field.NAME, "$_id.name")
+                .put(Field.COUNT, sum(MongoField.$ + Field.COUNT))
+                .put(Field.SLOTS, sum(MongoField.$ + Field.SLOTS));
 
         return new JsonObject()
-                .put("$project", project);
+                .put(MongoField.$PROJECT, project);
 
     }
 
@@ -500,11 +501,11 @@ public class MonthlySearch {
 
     private JsonObject isBeforeHalfday() {
         JsonArray lt = new JsonArray()
-                .add(dateToString("$start_at", "%H:%M:%S"))
+                .add(dateToString(MongoField.$ + Field.START_AT, "%H:%M:%S"))
                 .add(halfDay);
 
         return new JsonObject()
-                .put("$lt", lt);
+                .put(MongoField.$LT, lt);
     }
 
     /*
@@ -519,55 +520,55 @@ public class MonthlySearch {
 
     private JsonObject dateToString(String dateParam, String format) {
         JsonObject dateToString = new JsonObject()
-                .put("format", format)
-                .put("date", dateParam);
+                .put(Field.FORMAT, format)
+                .put(Field.DATE, dateParam);
 
-        return new JsonObject().put("$dateToString", dateToString);
+        return new JsonObject().put(MongoField.$DATETOSTRING, dateToString);
     }
 
     private JsonObject day() {
         return new JsonObject()
-                .put("$dayOfMonth", "$start_at");
+                .put(MongoField.$DAYOFMONTH, MongoField.$ + Field.START_AT);
     }
 
     private JsonObject month() {
         return new JsonObject()
-                .put("$month", "$start_at");
+                .put(MongoField.$MONTH, MongoField.$ + Field.START_AT);
     }
 
     private JsonObject year() {
         return new JsonObject()
-                .put("$year", "$start_at");
+                .put(MongoField.$YEAR, MongoField.$ + Field.START_AT);
     }
 
     private JsonObject first(String value) {
         return new JsonObject()
-                .put("$first", value);
+                .put(MongoField.$FIRST, value);
     }
 
     private JsonObject sum(String value) {
-        return new JsonObject().put("$sum", value);
+        return new JsonObject().put(MongoField.$SUM, value);
     }
 
     private JsonObject sum() {
-        return new JsonObject().put("$sum", 1);
+        return new JsonObject().put(MongoField.$SUM, 1);
     }
 
     private JsonObject sum(JsonObject value) {
-        return new JsonObject().put("$sum", value);
+        return new JsonObject().put(MongoField.$SUM, value);
     }
 
     private JsonObject id(JsonObject value) {
         return new JsonObject()
-                .put("_id", value);
+                .put(Field._ID, value);
     }
 
     private JsonObject group(JsonObject value) {
         return new JsonObject()
-                .put("$group", value);
+                .put(MongoField.$GROUP, value);
     }
 
     private JsonObject atLeastOne(JsonObject value) {
-        return new JsonObject().put(Field.$MAX, new JsonArray().add(value).add(1));
+        return new JsonObject().put(MongoField.$MAX, new JsonArray().add(value).add(1));
     }
 }
