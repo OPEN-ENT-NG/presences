@@ -7,11 +7,16 @@ import org.entcore.common.http.request.JsonHttpServerRequest;
 import java.util.List;
 
 public interface IInitIncidentsHelper {
-    Init1DIncidentsHelper init1DIncidentsHelper = new Init1DIncidentsHelper();
-    Init2DIncidentsHelper init2DIncidentsHelper = new Init2DIncidentsHelper();
+    DefaultInit1DIncidentsHelper defaultInit1DIncidentsHelper = new DefaultInit1DIncidentsHelper();
+    DefaultInit2DIncidentsHelper defaultInit2DIncidentsHelper = new DefaultInit2DIncidentsHelper();
 
-    static IInitIncidentsHelper getInstance(InitTypeEnum initTypeEnum) {
-        return (initTypeEnum == InitTypeEnum.ONE_D) ? init1DIncidentsHelper : init2DIncidentsHelper;
+    //Must be changed if implementing a different function per platform
+    static IInitIncidentsHelper getInstance(InitTypeEnum initTypeEnum, String ignoredPlatform) {
+        return getDefaultInstance(initTypeEnum);
+    }
+
+    static IInitIncidentsHelper getDefaultInstance(InitTypeEnum initTypeEnum) {
+        return (initTypeEnum == InitTypeEnum.ONE_D) ? defaultInit1DIncidentsHelper : defaultInit2DIncidentsHelper;
     }
 
     List<IncidentType> getIncidentTypes();

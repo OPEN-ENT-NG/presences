@@ -6,16 +6,16 @@ import org.entcore.common.http.request.JsonHttpServerRequest;
 import java.util.ArrayList;
 import java.util.List;
 
-public class Init1DIncidentsHelper implements IInitIncidentsHelper {
+public class DefaultInit1DIncidentsHelper implements IInitIncidentsHelper {
     private static final int NB_INCIDENT_PLACE = 6;
     private static final int NB_PARTNERS = 3;
 
-    protected Init1DIncidentsHelper() {
+    protected DefaultInit1DIncidentsHelper() {
     }
 
     @Override
     public List<IncidentType> getIncidentTypes() {
-        return IInitIncidentsHelper.init2DIncidentsHelper.getIncidentTypes();
+        return IInitIncidentsHelper.defaultInit2DIncidentsHelper.getIncidentTypes();
     }
 
     @Override
@@ -31,12 +31,12 @@ public class Init1DIncidentsHelper implements IInitIncidentsHelper {
 
     @Override
     public List<ProtagonistType> getProtagonistTypes() {
-        return IInitIncidentsHelper.init2DIncidentsHelper.getProtagonistTypes();
+        return IInitIncidentsHelper.defaultInit2DIncidentsHelper.getProtagonistTypes();
     }
 
     @Override
     public List<Seriousness> getSeriousnessTypes(JsonHttpServerRequest request) {
-        return IInitIncidentsHelper.init2DIncidentsHelper.getSeriousnessTypes(request);
+        return IInitIncidentsHelper.defaultInit2DIncidentsHelper.getSeriousnessTypes(request);
     }
 
     @Override
