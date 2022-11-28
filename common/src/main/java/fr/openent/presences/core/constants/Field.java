@@ -225,7 +225,6 @@ public class Field {
     public static final String PUNISHMENTS = "punishments";
     public static final String FIELDS = "fields";
     public static final String GROUPED_PUNISHMENT_ID = "grouped_punishment_id";
-    public static final String $GROUPED_PUNISHMENT_ID = "$grouped_punishment_id";
     public static final String GROUP_ID = "group_id";
     public static final String TYPE_ID = "type_id";
     public static final String PROCESS = "process";
@@ -271,22 +270,12 @@ public class Field {
     public static final String GROUPSIDS = "groupsIds";
 
     //Mongo
-    public static final String $_ID = "$_id";
-    public static final String $PROJECT = "$project";
     public static final String CURSOR = "cursor";
     public static final String ERRMSG = "errmsg";
     public static final String FIRSTBATCH = "firstBatch";
-    public static final String $IN = "$in";
-    public static final String $GROUP = "$group";
-    public static final String $GT = "$gt";
-    public static final String $GTE = "$gte";
-    public static final String $LTE = "$lte";
-    public static final String $COND = "$cond";
-    public static final String $ADDFIELDS = "$addFields";
     public static final String ISODAYOFWEEK = "isoDayOfWeek";
     public static final String SUM = "sum";
     public static final String DATESTRING = "dateString";
-    public static final String DATEFROMSTRING = "dateFromString";
     public static final String OK = "ok";
 
     //Viescolaire
@@ -370,14 +359,6 @@ public class Field {
     public static final String STATISTICS_USER = "statistics_user";
     public static final String STATISTICS_USERS = "statistics_users";
     public static final String STRUCTURE_STATISTICS_USERS = "structure_statistics_users";
-    public static final String $OR = "$or";
-    public static final String $MATCH = "$match";
-    public static final String $SUM = "$sum";
-    public static final String $SIZE = "$size";
-    public static final String $USER = "$user";
-    public static final String $TYPE = "$type";
-    public static final String $NAME = "$name";
-    public static final String $CLASS_NAME = "$class_name";
     public static final String UTC = "UTC";
     public static final String ALREADY_STARTED = "already_started";
     public static final String DURATION = "duration";
@@ -387,8 +368,7 @@ public class Field {
     public static final String ERRORS = "errors";
     public static final String NB_STUDENTS = "nb_students";
     public static final String NB_STUDENTS_PROCESS = "nb_students_process";
-    public static final String $SLOTS = "$slots";
-    public static final String $MAX = "$max";
+    public static final String FORMAT = "format";
 
     private Field() {
         throw new IllegalStateException("Utility class");

@@ -2,6 +2,7 @@ package fr.openent.statistics_presences.bean.weekly;
 
 import com.mongodb.QueryBuilder;
 import fr.openent.presences.core.constants.Field;
+import fr.openent.presences.core.constants.MongoField;
 import fr.openent.statistics_presences.StatisticsPresences;
 import fr.openent.statistics_presences.model.StatisticsFilter;
 import fr.openent.statistics_presences.utils.EventType;
@@ -159,7 +160,7 @@ public class WeeklySearch {
         JsonObject dateString = new JsonObject().put(Field.DATESTRING, dateParam);
 
         return new JsonObject()
-                .put(String.format("$%s", Field.DATEFROMSTRING), dateString);
+                .put(MongoField.$DATEFROMSTRING, dateString);
     }
 
     private JsonObject sum(String value) {

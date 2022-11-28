@@ -1,6 +1,7 @@
 package fr.openent.statistics_presences.service.impl;
 
 import fr.openent.presences.core.constants.Field;
+import fr.openent.presences.core.constants.MongoField;
 import fr.openent.statistics_presences.StatisticsPresences;
 import fr.openent.statistics_presences.service.StatisticsService;
 import fr.wseduc.mongodb.MongoDb;
@@ -80,16 +81,16 @@ public class DefaultStatisticsService implements StatisticsService {
     private Future<List<JsonObject>> deleteOldValues(String structureId, JsonArray students, List<JsonObject> values, String startDate, String endDate) {
         Promise<List<JsonObject>> promise = Promise.promise();
         JsonObject $in = new JsonObject()
-                .put(Field.$IN, students);
+                .put(MongoField.$IN, students);
         JsonObject selector = new JsonObject()
                 .put(Field.INDICATOR, this.indicatorName)
                 .put(Field.STRUCTURE, structureId)
                 .put(Field.USER, $in);
         if (startDate != null && endDate != null) {
             JsonObject $gte = new JsonObject()
-                    .put(Field.$GTE, startDate);
+                    .put(MongoField.$GTE, startDate);
             JsonObject $lte = new JsonObject()
-                    .put(Field.$LTE, endDate);
+                    .put(MongoField.$LTE, endDate);
             selector.put(Field.START_DATE, $gte)
                     .put(Field.END_DATE, $lte);
         }
@@ -118,9 +119,9 @@ public class DefaultStatisticsService implements StatisticsService {
                 .put(Field.USER, studentId);
         if (startDate != null && endDate != null) {
             JsonObject $gte = new JsonObject()
-                    .put(Field.$GTE, startDate);
+                    .put(MongoField.$GTE, startDate);
             JsonObject $lte = new JsonObject()
-                    .put(Field.$LTE, endDate);
+                    .put(MongoField.$LTE, endDate);
             selector.put(Field.START_DATE, $gte)
                     .put(Field.END_DATE, $lte);
         }
