@@ -3,20 +3,19 @@ package fr.openent.incidents.helper.init;
 import fr.openent.incidents.model.*;
 import fr.wseduc.webutils.I18n;
 import fr.wseduc.webutils.http.Renders;
-import io.vertx.core.json.JsonArray;
 import org.entcore.common.http.request.JsonHttpServerRequest;
 
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-public class Init2DIncidentsHelper implements IInitIncidentsHelper {
+public class DefaultInit2DIncidentsHelper implements IInitIncidentsHelper {
     private static final int NB_INCIDENT_TYPE = 6;
     private static final int NB_INCIDENT_PLACE = 6;
     private static final int NB_PROTAGONIST_TYPES = 4;
     private static final int NB_PARTNERS = 5;
 
-    protected Init2DIncidentsHelper() {
+    protected DefaultInit2DIncidentsHelper() {
     }
 
     @Override
