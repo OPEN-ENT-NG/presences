@@ -1,6 +1,7 @@
 package fr.openent.statistics_presences.bean.global;
 
 import fr.openent.presences.core.constants.Field;
+import fr.openent.presences.core.constants.MongoField;
 import fr.openent.statistics_presences.bean.Audience;
 import fr.openent.statistics_presences.bean.User;
 import fr.openent.statistics_presences.indicator.impl.Global;
@@ -132,12 +133,12 @@ public class GlobalSearch {
 
     private JsonObject prefetchUserProject() {
         JsonObject project = new JsonObject()
-                .put("_id", "$_id.user")
-                .put("name", "$_id.name")
-                .put("class_name", "$_id.class_name");
+                .put(Field._ID, "$_id.user")
+                .put(Field.NAME, "$_id.name")
+                .put(Field.CLASS_NAME, "$_id.class_name");
 
         return new JsonObject()
-                .put("$project", project);
+                .put(MongoField.$PROJECT, project);
     }
 
     private JsonObject countUsersWithStatisticsProject() {
@@ -146,23 +147,23 @@ public class GlobalSearch {
                 .put(Field.COUNT, 1);
 
         return new JsonObject()
-                .put(Field.$PROJECT, project);
+                .put(MongoField.$PROJECT, project);
     }
 
     private JsonObject prefetchUserSort() {
         JsonObject sort = new JsonObject()
-                .put("class_name", 1)
-                .put("name", 1);
+                .put(Field.CLASS_NAME, 1)
+                .put(Field.NAME, 1);
 
         return new JsonObject()
-                .put("$sort", sort);
+                .put(MongoField.$SORT, sort);
     }
 
     private JsonObject prefetchDistinct() {
         JsonObject id = new JsonObject()
-                .put("user", "$_id.user")
-                .put("name", "$_id.name")
-                .put("class_name", "$_id.class_name");
+                .put(Field.USER, "$_id.user")
+                .put(Field.NAME, "$_id.name")
+                .put(Field.CLASS_NAME, "$_id.class_name");
 
         return group(id(id));
     }
@@ -186,26 +187,26 @@ public class GlobalSearch {
 
 
     private JsonObject totalGroupByUser() {
-        JsonObject group = id(new JsonObject().put("type", "$_id.type")
-                .put("user", "$_id.user")
-                .put("name", "$_id.name")
+        JsonObject group = id(new JsonObject().put(Field.TYPE, "$_id.type")
+                .put(Field.USER, "$_id.user")
+                .put(Field.NAME, "$_id.name")
         )
-                .put("count", sum())
-                .put("slots", sum("$slots"));
+                .put(Field.COUNT, sum())
+                .put(Field.SLOTS, sum(MongoField.$ + Field.SLOTS));
 
-        return new JsonObject().put("$group", group);
+        return new JsonObject().put(MongoField.$GROUP, group);
     }
 
     private JsonObject totalGroupByUserHourly() {
 
-        JsonObject group = id(new JsonObject().put("type", "$type")
-                .put("user", "$user")
-                .put("name", "$name")
+        JsonObject group = id(new JsonObject().put(Field.TYPE, MongoField.$ + Field.TYPE)
+                .put(Field.USER, MongoField.$ + Field.USER)
+                .put(Field.NAME, MongoField.$ + Field.NAME)
         )
-                .put("count", sum(new JsonObject().put(Field.$SIZE, Field.$SLOTS)))
-                .put("slots", sum(new JsonObject().put(Field.$SIZE, Field.$SLOTS)));
+                .put(Field.COUNT, sum(new JsonObject().put(MongoField.$SIZE, MongoField.$ + Field.SLOTS)))
+                .put(Field.SLOTS, sum(new JsonObject().put(MongoField.$SIZE, MongoField.$ + Field.SLOTS)));
 
-        return new JsonObject().put("$group", group);
+        return new JsonObject().put(MongoField.$GROUP, group);
     }
 
     public JsonArray totalAbsenceUserPipeline() {
@@ -228,10 +229,10 @@ public class GlobalSearch {
 
     private JsonObject groupAbsenceTotalByUser() {
         JsonObject group = id(new JsonObject()
-                .put("user", "$_id.user")
-                .put("name", "$_id.name")
+                .put(Field.USER, "$_id.user")
+                .put(Field.NAME, "$_id.name")
         )
-                .put("count", sum("$count"));
+                .put(Field.COUNT, sum(MongoField.$ + Field.COUNT));
         return group(group);
     }
 
@@ -278,82 +279,82 @@ public class GlobalSearch {
 
     private JsonObject countTotalTypes() {
         JsonObject group = new JsonObject()
-                .put("_id", "$_id.type")
-                .put("count", sum("$count"))
-                .put("slots", sum("$slots"));
+                .put(Field._ID, "$_id.type")
+                .put(Field.COUNT, sum(MongoField.$ + Field.COUNT))
+                .put(Field.SLOTS, sum(MongoField.$ + Field.SLOTS));
 
-        return new JsonObject().put("$group", group);
+        return new JsonObject().put(MongoField.$GROUP, group);
     }
 
     private JsonObject countTotalUser(String userParameter) {
         JsonObject group = new JsonObject()
-                .put("_id", userParameter);
+                .put(Field._ID, userParameter);
 
-        group.put("count", sum());
+        group.put(Field.COUNT, sum());
 
-        return new JsonObject().put("$group", group);
+        return new JsonObject().put(MongoField.$GROUP, group);
     }
 
     private JsonObject countTotalUserNameType() {
         JsonObject group = new JsonObject()
-                .put("_id", new JsonObject().put("user", "$_id.user")
-                        .put("name", "$_id.name")
-                        .put("type", "$_id.type"));
+                .put(Field._ID, new JsonObject().put(Field.USER, "$_id.user")
+                        .put(Field.NAME, "$_id.name")
+                        .put(Field.TYPE, "$_id.type"));
 
-        group.put("count", sum());
+        group.put(Field.COUNT, sum());
 
-        return new JsonObject().put("$group", group);
+        return new JsonObject().put(MongoField.$GROUP, group);
     }
 
     private JsonObject countTotalUserNameTypeHourly() {
         JsonObject group = new JsonObject()
-                .put("_id", new JsonObject().put("user", "$user")
-                        .put("name", "$name")
-                        .put("type", "$type"));
+                .put(Field._ID, new JsonObject().put(Field.USER, MongoField.$ + Field.USER)
+                        .put(Field.NAME, MongoField.$ + Field.NAME)
+                        .put(Field.TYPE, MongoField.$ + Field.TYPE));
 
-        group.put("count", sum(new JsonObject().put(Field.$SIZE, Field.$SLOTS)));
+        group.put(Field.COUNT, sum(new JsonObject().put(MongoField.$SIZE, MongoField.$ + Field.SLOTS)));
 
-        return new JsonObject().put("$group", group);
+        return new JsonObject().put(MongoField.$GROUP, group);
     }
 
     private JsonObject projectTotalUser() {
         JsonObject project = new JsonObject()
-                .put("_id", 0)
-                .put("user", "$_id.user")
-                .put("count", sum("$count"));
+                .put(Field._ID, 0)
+                .put(Field.USER, "$_id.user")
+                .put(Field.COUNT, sum(MongoField.$ + Field.COUNT));
 
-        return new JsonObject().put("$project", project);
+        return new JsonObject().put(MongoField.$PROJECT, project);
     }
 
     private JsonObject countGroup() {
         JsonObject group = new JsonObject()
-                .put("_id", "$_id.type");
+                .put(Field._ID, "$_id.type");
 
         JsonObject count = new JsonObject()
-                .put("$sum", "$count");
-        group.put("count", count);
+                .put(MongoField.$SUM, MongoField.$ + Field.COUNT);
+        group.put(Field.COUNT, count);
 
         return group(group);
     }
 
     private JsonObject projectCount() {
         JsonObject project = new JsonObject()
-                .put("_id", 0)
-                .put("type", "$_id")
-                .put("count", "$count")
-                .put("slots", "$slots");
+                .put(Field._ID, 0)
+                .put(Field.TYPE, MongoField.$ + Field._ID)
+                .put(Field.COUNT, MongoField.$ + Field.COUNT)
+                .put(Field.SLOTS, MongoField.$ + Field.SLOTS);
 
-        return new JsonObject().put("$project", project);
+        return new JsonObject().put(MongoField.$PROJECT, project);
     }
 
     private JsonObject projectAbsenceCount() {
         JsonObject project = new JsonObject()
-                .put("_id", 0)
-                .put("type", "$_id")
-                .put("count", sum("$count"))
-                .put("slots", sum("$slots"));
+                .put(Field._ID, 0)
+                .put(Field.TYPE, MongoField.$ + Field._ID)
+                .put(Field.COUNT, sum(MongoField.$ + Field.COUNT))
+                .put(Field.SLOTS, sum(MongoField.$ + Field.SLOTS));
 
-        return new JsonObject().put("$project", project);
+        return new JsonObject().put(MongoField.$PROJECT, project);
     }
 
     public JsonArray searchBasicEventTypedPipeline() {
@@ -399,33 +400,33 @@ public class GlobalSearch {
      * @return field start_at
      */
     private JsonObject addStartAtField() {
-        JsonObject dateString = new JsonObject().put("dateString", "$start_date");
+        JsonObject dateString = new JsonObject().put(Field.DATESTRING, MongoField.$ + Field.START_DATE);
 
         JsonObject dateFromString = new JsonObject()
-                .put("$dateFromString", dateString);
+                .put(MongoField.$DATEFROMSTRING, dateString);
 
         JsonObject statAtField = new JsonObject()
-                .put("start_at", dateFromString);
+                .put(Field.START_AT, dateFromString);
 
         return new JsonObject()
-                .put("$addFields", statAtField);
+                .put(MongoField.$ADDFIELDS, statAtField);
     }
 
     private JsonObject fromToMatcher() {
         JsonObject filterMatcher = new JsonObject();
         if (this.filter().from() != null) {
-            filterMatcher.put("$gte", this.filter().from());
+            filterMatcher.put(MongoField.$GTE, this.filter().from());
         }
 
         if (this.filter().to() != null) {
-            filterMatcher.put("$lte", this.filter().to());
+            filterMatcher.put(MongoField.$LTE, this.filter().to());
         }
 
         JsonObject count = new JsonObject()
-                .put("count", filterMatcher);
+                .put(Field.COUNT, filterMatcher);
 
         return new JsonObject()
-                .put("$match", count);
+                .put(MongoField.$MATCH, count);
     }
 
     private JsonObject match(List<String> types, boolean isTotalAbsences) {
@@ -435,7 +436,7 @@ public class GlobalSearch {
 
         JsonObject matcher = new JsonObject()
                 .put(Field.STRUCTURE, this.filter.structure())
-                .put(Field.$OR, filterType(types, isTotalAbsences))
+                .put(MongoField.$OR, filterType(types, isTotalAbsences))
                 .put(Field.START_DATE, this.startDateFilter())
                 .put(Field.END_DATE, this.endDateFilter());
 
@@ -448,7 +449,7 @@ public class GlobalSearch {
         }
 
         return new JsonObject()
-                .put(Field.$MATCH, matcher);
+                .put(MongoField.$MATCH, matcher);
     }
 
 
@@ -461,18 +462,18 @@ public class GlobalSearch {
     }
 
     private JsonObject addCountIdField() {
-        JsonObject groupedPunishmentIdExistsQuery = new JsonObject().put(Field.$GTE,
-                new JsonArray().add(Field.$GROUPED_PUNISHMENT_ID).addNull()
+        JsonObject groupedPunishmentIdExistsQuery = new JsonObject().put(MongoField.$GTE,
+                new JsonArray().add(MongoField.$ + Field.GROUPED_PUNISHMENT_ID).addNull()
         );
 
         JsonObject cond = new JsonObject()
-                .put(Field.$COND, new JsonArray()
+                .put(MongoField.$COND, new JsonArray()
                         .add(groupedPunishmentIdExistsQuery)
-                        .add(Field.$GROUPED_PUNISHMENT_ID)
-                        .add(Field.$_ID)
+                        .add(MongoField.$ + Field.GROUPED_PUNISHMENT_ID)
+                        .add(MongoField.$ + Field._ID)
                 );
 
-        return new JsonObject().put(Field.$ADDFIELDS, new JsonObject().put(COUNTID, cond));
+        return new JsonObject().put(MongoField.$ADDFIELDS, new JsonObject().put(COUNTID, cond));
     }
 
     private JsonArray filterType(List<String> types, boolean isTotalAbsences) {
@@ -480,7 +481,7 @@ public class GlobalSearch {
         JsonArray filters = new JsonArray();
         for (String type : typesToUse) {
             JsonObject filterType = new JsonObject()
-                    .put("type", type);
+                    .put(Field.TYPE, type);
 
             if (!isTotalAbsences) {
                 EventType eventType = EventType.valueOf(type);
@@ -488,18 +489,18 @@ public class GlobalSearch {
                     case UNREGULARIZED:
                     case REGULARIZED:
                         JsonObject inFilterReasons = new JsonObject()
-                                .put("$in", this.filter().reasons());
+                                .put(MongoField.$IN, this.filter().reasons());
                         filterType.put(Field.REASON, inFilterReasons);
                         break;
                     case SANCTION:
                         JsonObject inFilterSanctionTypes = new JsonObject()
-                                .put("$in", this.filter.sanctionTypes());
-                        filterType.put("punishment_type", inFilterSanctionTypes);
+                                .put(MongoField.$IN, this.filter.sanctionTypes());
+                        filterType.put(Field.PUNISHMENT_TYPE, inFilterSanctionTypes);
                         break;
                     case PUNISHMENT:
                         JsonObject inFilterPunishmentTypes = new JsonObject()
-                                .put("$in", this.filter.punishmentTypes());
-                        filterType.put("punishment_type", inFilterPunishmentTypes);
+                                .put(MongoField.$IN, this.filter.punishmentTypes());
+                        filterType.put(Field.PUNISHMENT_TYPE, inFilterPunishmentTypes);
                         break;
                     case LATENESS:
                         List<Integer> list = this.filter().reasons();
@@ -507,7 +508,7 @@ public class GlobalSearch {
                             list.add(null);
                         }
                         JsonObject inFilterLatenessReasons = new JsonObject()
-                                .put("$in", list);
+                                .put(MongoField.$IN, list);
                         filterType.put(Field.REASON, inFilterLatenessReasons);
                         break;
                     default:
@@ -523,44 +524,44 @@ public class GlobalSearch {
 
     private JsonObject audienceFilter() {
         return new JsonObject()
-                .put("$in", this.filter().audiences());
+                .put(MongoField.$IN, this.filter().audiences());
     }
 
     private JsonObject usersFilter(List<String> users) {
         return new JsonObject()
-                .put("$in", users);
+                .put(MongoField.$IN, users);
     }
 
     private JsonObject startDateFilter() {
         return new JsonObject()
-                .put("$gte", this.filter().start());
+                .put(MongoField.$GTE, this.filter().start());
     }
 
     private JsonObject endDateFilter() {
         return new JsonObject()
-                .put("$lte", this.filter().end());
+                .put(MongoField.$LTE, this.filter().end());
     }
 
     private JsonObject groupByCountId() {
         JsonObject id = new JsonObject()
-                .put("user", "$user")
-                .put("type", "$type")
-                .put("name", "$name")
+                .put(Field.USER, MongoField.$ + Field.USER)
+                .put(Field.TYPE, MongoField.$ + Field.TYPE)
+                .put(Field.NAME, MongoField.$ + Field.NAME)
                 .put(Field.CLASS_NAME, String.format("$%s", Field.CLASS_NAME))
                 .put(COUNTID, String.format("$%s", COUNTID));
 
         JsonObject group = id(id)
-                .put(Field.SLOTS, sum(atLeastOne(new JsonObject().put(Field.$SIZE, Field.$SLOTS))));
+                .put(Field.SLOTS, sum(atLeastOne(new JsonObject().put(MongoField.$SIZE, MongoField.$ + Field.SLOTS))));
 
         return group(group);
     }
 
     private JsonObject group() {
         JsonObject id = new JsonObject()
-                .put(Field.USER, String.format("%s.%s", Field.$_ID, Field.USER))
-                .put(Field.TYPE, String.format("%s.%s", Field.$_ID, Field.TYPE))
-                .put(Field.NAME, String.format("%s.%s", Field.$_ID, Field.NAME))
-                .put(Field.CLASS_NAME, String.format("%s.%s", Field.$_ID, Field.CLASS_NAME));
+                .put(Field.USER, String.format("%s.%s", MongoField.$ + Field._ID, Field.USER))
+                .put(Field.TYPE, String.format("%s.%s", MongoField.$ + Field._ID, Field.TYPE))
+                .put(Field.NAME, String.format("%s.%s", MongoField.$ + Field._ID, Field.NAME))
+                .put(Field.CLASS_NAME, String.format("%s.%s", MongoField.$ + Field._ID, Field.CLASS_NAME));
 
         JsonObject group = id(id)
                 .put(Field.COUNT, sum(String.format("$%s", Field.SLOTS)))
@@ -571,14 +572,14 @@ public class GlobalSearch {
 
     private JsonObject project() {
         JsonObject project = new JsonObject()
-                .put("_id", 0)
-                .put("user", "$_id.user")
-                .put("type", "$_id.type")
-                .put("count", "$count")
-                .put("slots", "$slots");
+                .put(Field._ID, 0)
+                .put(Field.USER, "$_id.user")
+                .put(Field.TYPE, "$_id.type")
+                .put(Field.COUNT, MongoField.$ + Field.COUNT)
+                .put(Field.SLOTS, MongoField.$ + Field.SLOTS);
 
         return new JsonObject()
-                .put("$project", project);
+                .put(MongoField.$PROJECT, project);
     }
 
     private JsonArray groupAbsences() {
@@ -630,17 +631,17 @@ public class GlobalSearch {
 
     private JsonObject groupByHour() {
         JsonObject id = new JsonObject()
-                .put(Field.USER, Field.$USER)
-                .put(Field.TYPE, Field.$TYPE)
-                .put(Field.NAME, Field.$NAME)
-                .put(Field.CLASS_NAME, Field.$CLASS_NAME);
+                .put(Field.USER, MongoField.$ + Field.USER)
+                .put(Field.TYPE, MongoField.$ + Field.TYPE)
+                .put(Field.NAME, MongoField.$ + Field.NAME)
+                .put(Field.CLASS_NAME, MongoField.$ + Field.CLASS_NAME);
 
         JsonObject group = new JsonObject()
                 .put(Field._ID, id)
-                .put(Field.USER, first(Field.$USER))
-                .put(Field.TYPE, first(Field.$TYPE))
-                .put(Field.COUNT, new JsonObject().put(Field.$SUM, new JsonObject().put(Field.$SIZE, Field.$SLOTS)))
-                .put(Field.SLOTS, new JsonObject().put(Field.$SUM, new JsonObject().put(Field.$SIZE, Field.$SLOTS)));
+                .put(Field.USER, first(MongoField.$ + Field.USER))
+                .put(Field.TYPE, first(MongoField.$ + Field.TYPE))
+                .put(Field.COUNT, new JsonObject().put(MongoField.$SUM, new JsonObject().put(MongoField.$SIZE, MongoField.$ + Field.SLOTS)))
+                .put(Field.SLOTS, new JsonObject().put(MongoField.$SUM, new JsonObject().put(MongoField.$SIZE, MongoField.$ + Field.SLOTS)));
 
         return group(group);
     }
@@ -708,39 +709,39 @@ public class GlobalSearch {
 
     private JsonObject groupByTypeTotalHourly() {
         return group(new JsonObject()
-                .put("_id", new JsonObject()
-                        .put("user", "$user")
-                        .put("name", "$name")
-                        .put("type", "$type"))
-                .put("count", sum(new JsonObject().put(Field.$SIZE, Field.$SLOTS)))
-                .put("slots", sum(new JsonObject().put(Field.$SIZE, Field.$SLOTS))));
+                .put(Field._ID, new JsonObject()
+                        .put(Field.USER, MongoField.$ + Field.USER)
+                        .put(Field.NAME, MongoField.$ + Field.NAME)
+                        .put(Field.TYPE, MongoField.$ + Field.TYPE))
+                .put(Field.COUNT, sum(new JsonObject().put(MongoField.$SIZE, MongoField.$ + Field.SLOTS)))
+                .put(Field.SLOTS, sum(new JsonObject().put(MongoField.$SIZE, MongoField.$ + Field.SLOTS))));
     }
 
 
     private JsonObject isBeforeHalfday() {
         JsonObject dateToString = new JsonObject()
-                .put("format", "%H:%M:%S")
-                .put("date", "$start_at");
+                .put(Field.FORMAT, "%H:%M:%S")
+                .put(Field.DATE, MongoField.$ + Field.START_AT);
 
 
         JsonArray lt = new JsonArray()
-                .add(new JsonObject().put("$dateToString", dateToString))
+                .add(new JsonObject().put(MongoField.$DATETOSTRING, dateToString))
                 .add(halfDay);
 
         return new JsonObject()
-                .put("$lt", lt);
+                .put(MongoField.$LT, lt);
     }
 
     private JsonObject projectAbsence() {
         JsonObject project = new JsonObject()
-                .put("_id", 0)
-                .put("user", "$_id.user")
-                .put("type", "$_id.type")
-                .put("count", 1)
-                .put("slots", 1);
+                .put(Field._ID, 0)
+                .put(Field.USER, "$_id.user")
+                .put(Field.TYPE, "$_id.type")
+                .put(Field.COUNT, 1)
+                .put(Field.SLOTS, 1);
 
         return new JsonObject()
-                .put("$project", project);
+                .put(MongoField.$PROJECT, project);
     }
 
     /*
@@ -755,57 +756,57 @@ public class GlobalSearch {
 
     private JsonObject day() {
         return new JsonObject()
-                .put("$dayOfMonth", "$start_at");
+                .put(MongoField.$DAYOFMONTH, MongoField.$ + Field.START_AT);
     }
 
     private JsonObject month() {
         return new JsonObject()
-                .put("$month", "$start_at");
+                .put(MongoField.$MONTH, MongoField.$ + Field.START_AT);
     }
 
     private JsonObject year() {
         return new JsonObject()
-                .put("$year", "$start_at");
+                .put(MongoField.$YEAR, MongoField.$ + Field.START_AT);
     }
 
     private JsonObject limit() {
         return new JsonObject()
-                .put("$limit", Global.PAGE_SIZE);
+                .put(MongoField.$LIMIT, Global.PAGE_SIZE);
     }
 
     private JsonObject skip() {
         return new JsonObject()
-                .put("$skip", this.filter().page() * Global.PAGE_SIZE);
+                .put(MongoField.$SKIP, this.filter().page() * Global.PAGE_SIZE);
     }
 
     private JsonObject first(String value) {
         return new JsonObject()
-                .put("$first", value);
+                .put(MongoField.$FIRST, value);
     }
 
     private JsonObject sum(String value) {
-        return new JsonObject().put("$sum", value);
+        return new JsonObject().put(MongoField.$SUM, value);
     }
 
     private JsonObject sum(JsonObject value) {
-        return new JsonObject().put("$sum", value);
+        return new JsonObject().put(MongoField.$SUM, value);
     }
 
     private JsonObject sum() {
-        return new JsonObject().put("$sum", 1);
+        return new JsonObject().put(MongoField.$SUM, 1);
     }
 
     private JsonObject id(JsonObject value) {
         return new JsonObject()
-                .put("_id", value);
+                .put(Field._ID, value);
     }
 
     private JsonObject atLeastOne(JsonObject value) {
-        return new JsonObject().put(Field.$MAX, new JsonArray().add(value).add(1));
+        return new JsonObject().put(MongoField.$MAX, new JsonArray().add(value).add(1));
     }
 
     private JsonObject group(JsonObject value) {
         return new JsonObject()
-                .put("$group", value);
+                .put(MongoField.$GROUP, value);
     }
 }
