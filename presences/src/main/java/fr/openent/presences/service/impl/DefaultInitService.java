@@ -89,9 +89,20 @@ public class DefaultInitService implements InitService {
         Settings settings = IInitPresencesHelper.getDefaultInstance(typeEnum).getSettingsInit();
         String query = "INSERT INTO " + Presences.dbSchema + ".settings(structure_id, alert_absence_threshold, " +
                 "alert_lateness_threshold, alert_incident_threshold, alert_forgotten_notebook_threshold, initialized, allow_multiple_slots) " +
-                "VALUES (?, ?, ?, ?, ?, true, true) ON CONFLICT ON CONSTRAINT settings_pkey DO UPDATE SET initialized = true WHERE settings.structure_id = ? ;";
-        JsonArray params = new JsonArray().add(structure).add(settings.alertAbsenceThreshold()).add(settings.alertLatenessThreshold())
-                .add(settings.alertIncidentThreshold()).add(settings.alertForgottenThreshold()).add(structure);
+                "VALUES (?, ?, ?, ?, ?, true, true) ON CONFLICT ON CONSTRAINT settings_pkey DO UPDATE SET initialized = true," +
+                " alert_absence_threshold = ?, alert_lateness_threshold = ?, alert_incident_threshold = ?," +
+                " alert_forgotten_notebook_threshold = ? WHERE settings.structure_id = ? ;";
+        JsonArray params = new JsonArray()
+                .add(structure)
+                .add(settings.alertAbsenceThreshold())
+                .add(settings.alertLatenessThreshold())
+                .add(settings.alertIncidentThreshold())
+                .add(settings.alertForgottenThreshold())
+                .add(settings.alertAbsenceThreshold())
+                .add(settings.alertLatenessThreshold())
+                .add(settings.alertIncidentThreshold())
+                .add(settings.alertForgottenThreshold())
+                .add(structure);
         promise.complete(new JsonObject()
                 .put(Field.STATEMENT, query)
                 .put(Field.VALUES, params)
