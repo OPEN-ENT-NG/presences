@@ -46,96 +46,126 @@ public class DefaultInitServiceTest {
         JsonHttpServerRequest request = Mockito.mock(JsonHttpServerRequest.class);
         String structure = "structureId";
         InitTypeEnum initTypeEnum = InitTypeEnum.TWO_D;
-        String statement = "INSERT INTO null.reason(id, structure_id, label, proving, comment, absence_compliance, reason_type_id)" +
-                " VALUES (nextval('presences.reason_id_seq'), ?,?,?,'',?,?);" +
-                "INSERT INTO null.reason(id, structure_id, label, proving, comment, absence_compliance, reason_type_id) " +
-                "VALUES (nextval('presences.reason_id_seq'), ?,?,?,'',?,?);" +
-                "INSERT INTO null.reason(id, structure_id, label, proving, comment, absence_compliance, reason_type_id) " +
-                "VALUES (nextval('presences.reason_id_seq'), ?,?,?,'',?,?);" +
-                "INSERT INTO null.reason(id, structure_id, label, proving, comment, absence_compliance, reason_type_id) " +
-                "VALUES (nextval('presences.reason_id_seq'), ?,?,?,'',?,?);" +
-                "INSERT INTO null.reason(id, structure_id, label, proving, comment, absence_compliance, reason_type_id) " +
-                "VALUES (nextval('presences.reason_id_seq'), ?,?,?,'',?,?);" +
-                "INSERT INTO null.reason(id, structure_id, label, proving, comment, absence_compliance, reason_type_id) " +
-                "VALUES (nextval('presences.reason_id_seq'), ?,?,?,'',?,?);" +
-                "INSERT INTO null.reason(id, structure_id, label, proving, comment, absence_compliance, reason_type_id) " +
-                "VALUES (nextval('presences.reason_id_seq'), ?,?,?,'',?,?);" +
-                "INSERT INTO null.reason(id, structure_id, label, proving, comment, absence_compliance, reason_type_id) " +
-                "VALUES (nextval('presences.reason_id_seq'), ?,?,?,'',?,?);" +
-                "INSERT INTO null.reason(id, structure_id, label, proving, comment, absence_compliance, reason_type_id) " +
-                "VALUES (nextval('presences.reason_id_seq'), ?,?,?,'',?,?);" +
-                "INSERT INTO null.reason(id, structure_id, label, proving, comment, absence_compliance, reason_type_id) " +
-                "VALUES (nextval('presences.reason_id_seq'), ?,?,?,'',?,?);" +
-                "INSERT INTO null.reason(id, structure_id, label, proving, comment, absence_compliance, reason_type_id) " +
-                "VALUES (nextval('presences.reason_id_seq'), ?,?,?,'',?,?);" +
-                "INSERT INTO null.reason(id, structure_id, label, proving, comment, absence_compliance, reason_type_id) " +
-                "VALUES (nextval('presences.reason_id_seq'), ?,?,?,'',?,?);" +
-                "INSERT INTO null.reason(id, structure_id, label, proving, comment, absence_compliance, reason_type_id) " +
-                "VALUES (nextval('presences.reason_id_seq'), ?,?,?,'',?,?);" +
-                "INSERT INTO null.reason(id, structure_id, label, proving, comment, absence_compliance, reason_type_id) " +
-                "VALUES (nextval('presences.reason_id_seq'), ?,?,?,'',?,?);" +
-                "INSERT INTO null.reason_alert(structure_id, reason_id, reason_alert_exclude_rules_type_id) " +
+        String statement = "INSERT INTO null.reason(id, structure_id, label, proving, comment, absence_compliance, reason_type_id) VALUES " +
+                "(nextval('presences.reason_id_seq'), ?,?,?,'',?,?);INSERT INTO null.reason_alert(structure_id, reason_id, reason_alert_exclude_rules_type_id) " +
                 "VALUES (?, currval('presences.reason_id_seq'), 1),(?, currval('presences.reason_id_seq'), 2),(?, currval('presences.reason_id_seq'), 3);" +
                 "INSERT INTO null.reason(id, structure_id, label, proving, comment, absence_compliance, reason_type_id) " +
-                "VALUES (nextval('presences.reason_id_seq'), ?,?,?,'',?,?);" +
-                "INSERT INTO null.reason(id, structure_id, label, proving, comment, absence_compliance, reason_type_id) " +
-                "VALUES (nextval('presences.reason_id_seq'), ?,?,?,'',?,?);" +
-                "INSERT INTO null.reason(id, structure_id, label, proving, comment, absence_compliance, reason_type_id) " +
-                "VALUES (nextval('presences.reason_id_seq'), ?,?,?,'',?,?);" +
-                "INSERT INTO null.reason(id, structure_id, label, proving, comment, absence_compliance, reason_type_id) " +
-                "VALUES (nextval('presences.reason_id_seq'), ?,?,?,'',?,?);" +
-                "INSERT INTO null.reason(id, structure_id, label, proving, comment, absence_compliance, reason_type_id) " +
-                "VALUES (nextval('presences.reason_id_seq'), ?,?,?,'',?,?);" +
-                "INSERT INTO null.reason(id, structure_id, label, proving, comment, absence_compliance, reason_type_id) " +
-                "VALUES (nextval('presences.reason_id_seq'), ?,?,?,'',?,?);" +
-                "INSERT INTO null.reason(id, structure_id, label, proving, comment, absence_compliance, reason_type_id) " +
-                "VALUES (nextval('presences.reason_id_seq'), ?,?,?,'',?,?);" +
-                "INSERT INTO null.reason(id, structure_id, label, proving, comment, absence_compliance, reason_type_id) " +
-                "VALUES (nextval('presences.reason_id_seq'), ?,?,?,'',?,?);" +
-                "INSERT INTO null.reason(id, structure_id, label, proving, comment, absence_compliance, reason_type_id) " +
-                "VALUES (nextval('presences.reason_id_seq'), ?,?,?,'',?,?);" +
-                "INSERT INTO null.reason(id, structure_id, label, proving, comment, absence_compliance, reason_type_id) " +
-                "VALUES (nextval('presences.reason_id_seq'), ?,?,?,'',?,?);" +
-                "INSERT INTO null.reason(id, structure_id, label, proving, comment, absence_compliance, reason_type_id) " +
-                "VALUES (nextval('presences.reason_id_seq'), ?,?,?,'',?,?);" +
-                "INSERT INTO null.reason_alert(structure_id, reason_id, reason_alert_exclude_rules_type_id) " +
+                "VALUES (nextval('presences.reason_id_seq'), ?,?,?,'',?,?);INSERT INTO null.reason_alert(structure_id, reason_id, reason_alert_exclude_rules_type_id) " +
                 "VALUES (?, currval('presences.reason_id_seq'), 1),(?, currval('presences.reason_id_seq'), 2),(?, currval('presences.reason_id_seq'), 3);" +
                 "INSERT INTO null.reason(id, structure_id, label, proving, comment, absence_compliance, reason_type_id) " +
-                "VALUES (nextval('presences.reason_id_seq'), ?,?,?,'',?,?);" +
-                "INSERT INTO null.reason(id, structure_id, label, proving, comment, absence_compliance, reason_type_id) " +
-                "VALUES (nextval('presences.reason_id_seq'), ?,?,?,'',?,?);" +
-                "INSERT INTO null.reason(id, structure_id, label, proving, comment, absence_compliance, reason_type_id) " +
-                "VALUES (nextval('presences.reason_id_seq'), ?,?,?,'',?,?);" +
-                "INSERT INTO null.reason(id, structure_id, label, proving, comment, absence_compliance, reason_type_id) " +
-                "VALUES (nextval('presences.reason_id_seq'), ?,?,?,'',?,?);" +
-                "INSERT INTO null.reason_alert(structure_id, reason_id, reason_alert_exclude_rules_type_id) " +
+                "VALUES (nextval('presences.reason_id_seq'), ?,?,?,'',?,?);INSERT INTO null.reason_alert(structure_id, reason_id, reason_alert_exclude_rules_type_id) " +
                 "VALUES (?, currval('presences.reason_id_seq'), 1),(?, currval('presences.reason_id_seq'), 2),(?, currval('presences.reason_id_seq'), 3);" +
                 "INSERT INTO null.reason(id, structure_id, label, proving, comment, absence_compliance, reason_type_id) " +
-                "VALUES (nextval('presences.reason_id_seq'), ?,?,?,'',?,?);" +
+                "VALUES (nextval('presences.reason_id_seq'), ?,?,?,'',?,?);INSERT INTO null.reason_alert(structure_id, reason_id, reason_alert_exclude_rules_type_id) " +
+                "VALUES (?, currval('presences.reason_id_seq'), 1),(?, currval('presences.reason_id_seq'), 2),(?, currval('presences.reason_id_seq'), 3);" +
                 "INSERT INTO null.reason(id, structure_id, label, proving, comment, absence_compliance, reason_type_id) " +
-                "VALUES (nextval('presences.reason_id_seq'), ?,?,?,'',?,?);" +
+                "VALUES (nextval('presences.reason_id_seq'), ?,?,?,'',?,?);INSERT INTO null.reason_alert(structure_id, reason_id, reason_alert_exclude_rules_type_id) " +
+                "VALUES (?, currval('presences.reason_id_seq'), 1),(?, currval('presences.reason_id_seq'), 2),(?, currval('presences.reason_id_seq'), 3);" +
                 "INSERT INTO null.reason(id, structure_id, label, proving, comment, absence_compliance, reason_type_id) " +
-                "VALUES (nextval('presences.reason_id_seq'), ?,?,?,'',?,?);" +
-                "INSERT INTO null.reason_alert(structure_id, reason_id, reason_alert_exclude_rules_type_id) " +
-                "VALUES (?, currval('presences.reason_id_seq'), 1),(?, currval('presences.reason_id_seq'), 2),(?, currval('presences.reason_id_seq'), 3);";
-        String values = "[\"structureId\",\"presences.reasons.init.2d.0\",false,true,1,\"structureId\",\"presences.reasons.init.2d.1\"," +
-                "true,false,1,\"structureId\",\"presences.reasons.init.2d.2\",true,false,1,\"structureId\",\"presences.reasons.init.2d.3\"," +
-                "false,false,1,\"structureId\",\"presences.reasons.init.2d.4\",false,false,1,\"structureId\",\"presences.reasons.init.2d.5\"," +
-                "true,false,1,\"structureId\",\"presences.reasons.init.2d.6\",false,false,1,\"structureId\",\"presences.reasons.init.2d.7\"," +
-                "false,true,1,\"structureId\",\"presences.reasons.init.2d.8\",false,true,1,\"structureId\",\"presences.reasons.init.2d.9\"," +
-                "true,false,1,\"structureId\",\"presences.reasons.init.2d.10\",true,true,1,\"structureId\",\"presences.reasons.init.2d.11\"," +
-                "true,true,1,\"structureId\",\"presences.reasons.init.2d.12\",false,true,1,\"structureId\",\"presences.reasons.init.2d.13\"," +
-                "false,true,1,\"structureId\",\"structureId\",\"structureId\",\"structureId\",\"presences.reasons.init.2d.14\",true,true,1," +
-                "\"structureId\",\"presences.reasons.init.2d.15\",true,true,1,\"structureId\",\"presences.reasons.init.2d.16\",true,true,1," +
-                "\"structureId\",\"presences.reasons.init.2d.17\",false,true,1,\"structureId\",\"presences.reasons.init.2d.18\",true,false,1," +
-                "\"structureId\",\"presences.reasons.init.2d.19\",true,false,1,\"structureId\",\"presences.reasons.init.2d.20\",false,true,1," +
-                "\"structureId\",\"presences.reasons.init.2d.21\",false,true,1,\"structureId\",\"presences.reasons.init.2d.22\",true,false,1," +
-                "\"structureId\",\"presences.reasons.init.2d.23\",true,false,1,\"structureId\",\"presences.reasons.init.2d.24\",false,true,1," +
-                "\"structureId\",\"structureId\",\"structureId\",\"structureId\",\"presences.reasons.init.2d.25\",true,false,1,\"structureId\"," +
-                "\"presences.reasons.init.2d.26\",true,false,1,\"structureId\",\"presences.reasons.init.2d.27\",true,false,1,\"structureId\"," +
-                "\"presences.reasons.init.2d.28\",false,true,1,\"structureId\",\"structureId\",\"structureId\",\"structureId\"," +
-                "\"presences.reasons.init.2d.29\",true,false,2,\"structureId\",\"presences.reasons.init.2d.30\",true,false,2,\"structureId\"," +
-                "\"presences.reasons.init.2d.31\",true,true,2,\"structureId\",\"structureId\",\"structureId\"]";
+                "VALUES (nextval('presences.reason_id_seq'), ?,?,?,'',?,?);INSERT INTO null.reason_alert(structure_id, reason_id, reason_alert_exclude_rules_type_id) " +
+                "VALUES (?, currval('presences.reason_id_seq'), 1),(?, currval('presences.reason_id_seq'), 2),(?, currval('presences.reason_id_seq'), 3);" +
+                "INSERT INTO null.reason(id, structure_id, label, proving, comment, absence_compliance, reason_type_id) " +
+                "VALUES (nextval('presences.reason_id_seq'), ?,?,?,'',?,?);INSERT INTO null.reason_alert(structure_id, reason_id, reason_alert_exclude_rules_type_id) " +
+                "VALUES (?, currval('presences.reason_id_seq'), 1),(?, currval('presences.reason_id_seq'), 2),(?, currval('presences.reason_id_seq'), 3);" +
+                "INSERT INTO null.reason(id, structure_id, label, proving, comment, absence_compliance, reason_type_id) " +
+                "VALUES (nextval('presences.reason_id_seq'), ?,?,?,'',?,?);INSERT INTO null.reason_alert(structure_id, reason_id, reason_alert_exclude_rules_type_id) " +
+                "VALUES (?, currval('presences.reason_id_seq'), 1),(?, currval('presences.reason_id_seq'), 2),(?, currval('presences.reason_id_seq'), 3);" +
+                "INSERT INTO null.reason(id, structure_id, label, proving, comment, absence_compliance, reason_type_id) " +
+                "VALUES (nextval('presences.reason_id_seq'), ?,?,?,'',?,?);INSERT INTO null.reason_alert(structure_id, reason_id, reason_alert_exclude_rules_type_id) " +
+                "VALUES (?, currval('presences.reason_id_seq'), 1),(?, currval('presences.reason_id_seq'), 2),(?, currval('presences.reason_id_seq'), 3);" +
+                "INSERT INTO null.reason(id, structure_id, label, proving, comment, absence_compliance, reason_type_id) " +
+                "VALUES (nextval('presences.reason_id_seq'), ?,?,?,'',?,?);INSERT INTO null.reason_alert(structure_id, reason_id, reason_alert_exclude_rules_type_id) " +
+                "VALUES (?, currval('presences.reason_id_seq'), 1),(?, currval('presences.reason_id_seq'), 2),(?, currval('presences.reason_id_seq'), 3);" +
+                "INSERT INTO null.reason(id, structure_id, label, proving, comment, absence_compliance, reason_type_id) " +
+                "VALUES (nextval('presences.reason_id_seq'), ?,?,?,'',?,?);INSERT INTO null.reason_alert(structure_id, reason_id, reason_alert_exclude_rules_type_id) " +
+                "VALUES (?, currval('presences.reason_id_seq'), 1),(?, currval('presences.reason_id_seq'), 2),(?, currval('presences.reason_id_seq'), 3);" +
+                "INSERT INTO null.reason(id, structure_id, label, proving, comment, absence_compliance, reason_type_id) " +
+                "VALUES (nextval('presences.reason_id_seq'), ?,?,?,'',?,?);INSERT INTO null.reason_alert(structure_id, reason_id, reason_alert_exclude_rules_type_id) " +
+                "VALUES (?, currval('presences.reason_id_seq'), 1),(?, currval('presences.reason_id_seq'), 2),(?, currval('presences.reason_id_seq'), 3);" +
+                "INSERT INTO null.reason(id, structure_id, label, proving, comment, absence_compliance, reason_type_id) " +
+                "VALUES (nextval('presences.reason_id_seq'), ?,?,?,'',?,?);INSERT INTO null.reason_alert(structure_id, reason_id, reason_alert_exclude_rules_type_id) " +
+                "VALUES (?, currval('presences.reason_id_seq'), 1),(?, currval('presences.reason_id_seq'), 2),(?, currval('presences.reason_id_seq'), 3);" +
+                "INSERT INTO null.reason(id, structure_id, label, proving, comment, absence_compliance, reason_type_id) " +
+                "VALUES (nextval('presences.reason_id_seq'), ?,?,?,'',?,?);INSERT INTO null.reason(id, structure_id, label, proving, comment, absence_compliance, reason_type_id)" +
+                " VALUES (nextval('presences.reason_id_seq'), ?,?,?,'',?,?);INSERT INTO null.reason_alert(structure_id, reason_id, reason_alert_exclude_rules_type_id)" +
+                " VALUES (?, currval('presences.reason_id_seq'), 1),(?, currval('presences.reason_id_seq'), 2),(?, currval('presences.reason_id_seq'), 3);" +
+                "INSERT INTO null.reason(id, structure_id, label, proving, comment, absence_compliance, reason_type_id) " +
+                "VALUES (nextval('presences.reason_id_seq'), ?,?,?,'',?,?);INSERT INTO null.reason_alert(structure_id, reason_id, reason_alert_exclude_rules_type_id) " +
+                "VALUES (?, currval('presences.reason_id_seq'), 1),(?, currval('presences.reason_id_seq'), 2),(?, currval('presences.reason_id_seq'), 3);" +
+                "INSERT INTO null.reason(id, structure_id, label, proving, comment, absence_compliance, reason_type_id) " +
+                "VALUES (nextval('presences.reason_id_seq'), ?,?,?,'',?,?);INSERT INTO null.reason_alert(structure_id, reason_id, reason_alert_exclude_rules_type_id) " +
+                "VALUES (?, currval('presences.reason_id_seq'), 1),(?, currval('presences.reason_id_seq'), 2),(?, currval('presences.reason_id_seq'), 3);" +
+                "INSERT INTO null.reason(id, structure_id, label, proving, comment, absence_compliance, reason_type_id) " +
+                "VALUES (nextval('presences.reason_id_seq'), ?,?,?,'',?,?);INSERT INTO null.reason_alert(structure_id, reason_id, reason_alert_exclude_rules_type_id) " +
+                "VALUES (?, currval('presences.reason_id_seq'), 1),(?, currval('presences.reason_id_seq'), 2),(?, currval('presences.reason_id_seq'), 3);" +
+                "INSERT INTO null.reason(id, structure_id, label, proving, comment, absence_compliance, reason_type_id) " +
+                "VALUES (nextval('presences.reason_id_seq'), ?,?,?,'',?,?);INSERT INTO null.reason_alert(structure_id, reason_id, reason_alert_exclude_rules_type_id) " +
+                "VALUES (?, currval('presences.reason_id_seq'), 1),(?, currval('presences.reason_id_seq'), 2),(?, currval('presences.reason_id_seq'), 3);" +
+                "INSERT INTO null.reason(id, structure_id, label, proving, comment, absence_compliance, reason_type_id) " +
+                "VALUES (nextval('presences.reason_id_seq'), ?,?,?,'',?,?);INSERT INTO null.reason_alert(structure_id, reason_id, reason_alert_exclude_rules_type_id) " +
+                "VALUES (?, currval('presences.reason_id_seq'), 1),(?, currval('presences.reason_id_seq'), 2),(?, currval('presences.reason_id_seq'), 3);" +
+                "INSERT INTO null.reason(id, structure_id, label, proving, comment, absence_compliance, reason_type_id) " +
+                "VALUES (nextval('presences.reason_id_seq'), ?,?,?,'',?,?);INSERT INTO null.reason_alert(structure_id, reason_id, reason_alert_exclude_rules_type_id) " +
+                "VALUES (?, currval('presences.reason_id_seq'), 1),(?, currval('presences.reason_id_seq'), 2),(?, currval('presences.reason_id_seq'), 3);" +
+                "INSERT INTO null.reason(id, structure_id, label, proving, comment, absence_compliance, reason_type_id) " +
+                "VALUES (nextval('presences.reason_id_seq'), ?,?,?,'',?,?);INSERT INTO null.reason_alert(structure_id, reason_id, reason_alert_exclude_rules_type_id) " +
+                "VALUES (?, currval('presences.reason_id_seq'), 1),(?, currval('presences.reason_id_seq'), 2),(?, currval('presences.reason_id_seq'), 3);" +
+                "INSERT INTO null.reason(id, structure_id, label, proving, comment, absence_compliance, reason_type_id) " +
+                "VALUES (nextval('presences.reason_id_seq'), ?,?,?,'',?,?);INSERT INTO null.reason_alert(structure_id, reason_id, reason_alert_exclude_rules_type_id)" +
+                " VALUES (?, currval('presences.reason_id_seq'), 1),(?, currval('presences.reason_id_seq'), 2),(?, currval('presences.reason_id_seq'), 3);" +
+                "INSERT INTO null.reason(id, structure_id, label, proving, comment, absence_compliance, reason_type_id) " +
+                "VALUES (nextval('presences.reason_id_seq'), ?,?,?,'',?,?);INSERT INTO null.reason_alert(structure_id, reason_id, reason_alert_exclude_rules_type_id) " +
+                "VALUES (?, currval('presences.reason_id_seq'), 1),(?, currval('presences.reason_id_seq'), 2),(?, currval('presences.reason_id_seq'), 3);" +
+                "INSERT INTO null.reason(id, structure_id, label, proving, comment, absence_compliance, reason_type_id) " +
+                "VALUES (nextval('presences.reason_id_seq'), ?,?,?,'',?,?);INSERT INTO null.reason(id, structure_id, label, proving, comment, absence_compliance, reason_type_id) " +
+                "VALUES (nextval('presences.reason_id_seq'), ?,?,?,'',?,?);INSERT INTO null.reason_alert(structure_id, reason_id, reason_alert_exclude_rules_type_id) " +
+                "VALUES (?, currval('presences.reason_id_seq'), 1),(?, currval('presences.reason_id_seq'), 2),(?, currval('presences.reason_id_seq'), 3);" +
+                "INSERT INTO null.reason(id, structure_id, label, proving, comment, absence_compliance, reason_type_id) " +
+                "VALUES (nextval('presences.reason_id_seq'), ?,?,?,'',?,?);INSERT INTO null.reason_alert(structure_id, reason_id, reason_alert_exclude_rules_type_id) " +
+                "VALUES (?, currval('presences.reason_id_seq'), 1),(?, currval('presences.reason_id_seq'), 2),(?, currval('presences.reason_id_seq'), 3);" +
+                "INSERT INTO null.reason(id, structure_id, label, proving, comment, absence_compliance, reason_type_id) " +
+                "VALUES (nextval('presences.reason_id_seq'), ?,?,?,'',?,?);INSERT INTO null.reason_alert(structure_id, reason_id, reason_alert_exclude_rules_type_id) " +
+                "VALUES (?, currval('presences.reason_id_seq'), 1),(?, currval('presences.reason_id_seq'), 2),(?, currval('presences.reason_id_seq'), 3);" +
+                "INSERT INTO null.reason(id, structure_id, label, proving, comment, absence_compliance, reason_type_id) " +
+                "VALUES (nextval('presences.reason_id_seq'), ?,?,?,'',?,?);INSERT INTO null.reason(id, structure_id, label, proving, comment, absence_compliance, reason_type_id) " +
+                "VALUES (nextval('presences.reason_id_seq'), ?,?,?,'',?,?);INSERT INTO null.reason_alert(structure_id, reason_id, reason_alert_exclude_rules_type_id) " +
+                "VALUES (?, currval('presences.reason_id_seq'), 1),(?, currval('presences.reason_id_seq'), 2),(?, currval('presences.reason_id_seq'), 3);" +
+                "INSERT INTO null.reason(id, structure_id, label, proving, comment, absence_compliance, reason_type_id) " +
+                "VALUES (nextval('presences.reason_id_seq'), ?,?,?,'',?,?);INSERT INTO null.reason_alert(structure_id, reason_id, reason_alert_exclude_rules_type_id) " +
+                "VALUES (?, currval('presences.reason_id_seq'), 1),(?, currval('presences.reason_id_seq'), 2),(?, currval('presences.reason_id_seq'), 3);" +
+                "INSERT INTO null.reason(id, structure_id, label, proving, comment, absence_compliance, reason_type_id) VALUES (nextval('presences.reason_id_seq'), ?,?,?,'',?,?);";
+        String values = "[\"structureId\",\"presences.reasons.init.2d.0\",false,true,1,\"structureId\",\"structureId\"," +
+                "\"structureId\",\"structureId\",\"presences.reasons.init.2d.1\",true,false,1,\"structureId\",\"structureId\"," +
+                "\"structureId\",\"structureId\",\"presences.reasons.init.2d.2\",true,false,1,\"structureId\",\"structureId\"," +
+                "\"structureId\",\"structureId\",\"presences.reasons.init.2d.3\",false,false,1,\"structureId\",\"structureId\"," +
+                "\"structureId\",\"structureId\",\"presences.reasons.init.2d.4\",false,false,1,\"structureId\",\"structureId\"," +
+                "\"structureId\",\"structureId\",\"presences.reasons.init.2d.5\",true,false,1,\"structureId\",\"structureId\"," +
+                "\"structureId\",\"structureId\",\"presences.reasons.init.2d.6\",false,false,1,\"structureId\",\"structureId\"," +
+                "\"structureId\",\"structureId\",\"presences.reasons.init.2d.7\",false,true,1,\"structureId\",\"structureId\"," +
+                "\"structureId\",\"structureId\",\"presences.reasons.init.2d.8\",false,true,1,\"structureId\",\"structureId\"," +
+                "\"structureId\",\"structureId\",\"presences.reasons.init.2d.9\",true,false,1,\"structureId\",\"structureId\"," +
+                "\"structureId\",\"structureId\",\"presences.reasons.init.2d.10\",true,true,1,\"structureId\",\"structureId\"," +
+                "\"structureId\",\"structureId\",\"presences.reasons.init.2d.11\",true,true,1,\"structureId\",\"structureId\"," +
+                "\"structureId\",\"structureId\",\"presences.reasons.init.2d.12\",false,true,1,\"structureId\",\"structureId\"," +
+                "\"structureId\",\"structureId\",\"presences.reasons.init.2d.13\",false,true,1,\"structureId\"," +
+                "\"presences.reasons.init.2d.14\",true,true,1,\"structureId\",\"structureId\",\"structureId\",\"structureId\"," +
+                "\"presences.reasons.init.2d.15\",true,true,1,\"structureId\",\"structureId\",\"structureId\",\"structureId\"," +
+                "\"presences.reasons.init.2d.16\",true,true,1,\"structureId\",\"structureId\",\"structureId\",\"structureId\"," +
+                "\"presences.reasons.init.2d.17\",false,true,1,\"structureId\",\"structureId\",\"structureId\",\"structureId\"," +
+                "\"presences.reasons.init.2d.18\",true,false,1,\"structureId\",\"structureId\",\"structureId\",\"structureId\"," +
+                "\"presences.reasons.init.2d.19\",true,false,1,\"structureId\",\"structureId\",\"structureId\",\"structureId\"," +
+                "\"presences.reasons.init.2d.20\",false,true,1,\"structureId\",\"structureId\",\"structureId\",\"structureId\"," +
+                "\"presences.reasons.init.2d.21\",false,true,1,\"structureId\",\"structureId\",\"structureId\",\"structureId\"," +
+                "\"presences.reasons.init.2d.22\",true,false,1,\"structureId\",\"structureId\",\"structureId\",\"structureId\"," +
+                "\"presences.reasons.init.2d.23\",true,false,1,\"structureId\",\"structureId\",\"structureId\",\"structureId\"," +
+                "\"presences.reasons.init.2d.24\",false,true,1,\"structureId\"," +
+                "\"presences.reasons.init.2d.25\",true,false,1,\"structureId\",\"structureId\",\"structureId\",\"structureId\"," +
+                "\"presences.reasons.init.2d.26\",true,false,1,\"structureId\",\"structureId\",\"structureId\",\"structureId\"," +
+                "\"presences.reasons.init.2d.27\",true,false,1,\"structureId\",\"structureId\",\"structureId\",\"structureId\"," +
+                "\"presences.reasons.init.2d.28\",false,true,1,\"structureId\"," +
+                "\"presences.reasons.init.2d.29\",true,false,2,\"structureId\",\"structureId\",\"structureId\",\"structureId\"," +
+                "\"presences.reasons.init.2d.30\",true,false,2,\"structureId\",\"structureId\",\"structureId\",\"structureId\"," +
+                "\"presences.reasons.init.2d.31\",true,true,2]";
         Promise<JsonObject> promise = Promise.promise();
         promise.future().onSuccess(result -> {
             ctx.assertEquals(result.getString(Field.STATEMENT), statement);

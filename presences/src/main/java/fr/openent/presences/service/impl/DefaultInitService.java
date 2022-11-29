@@ -30,7 +30,7 @@ public class DefaultInitService implements InitService {
 
     @Override
     public void getReasonsStatement(HttpServerRequest request, String structure, InitTypeEnum initTypeEnum, Promise<JsonObject> promise) {
-        List<ReasonModel> reasons = IInitPresencesHelper.getInstance(initTypeEnum).getReasonsInit();
+        List<ReasonModel> reasons = IInitPresencesHelper.getDefaultInstance(initTypeEnum).getReasonsInit();
 
         JsonArray params = new JsonArray();
         StringBuilder query = new StringBuilder();
@@ -65,7 +65,7 @@ public class DefaultInitService implements InitService {
 
     @Override
     public void getActionsStatement(HttpServerRequest request, String structure, InitTypeEnum typeEnum, Promise<JsonObject> promise) {
-        List<Action> actions = IInitPresencesHelper.getInstance(typeEnum).getActionsInit();
+        List<Action> actions = IInitPresencesHelper.getDefaultInstance(typeEnum).getActionsInit();
         JsonArray params = new JsonArray();
         String query = "INSERT INTO " + Presences.dbSchema + ".actions(structure_id, label, abbreviation) VALUES ";
         for (Action action : actions) {
@@ -86,7 +86,7 @@ public class DefaultInitService implements InitService {
 
     @Override
     public void getSettingsStatement(String structure, InitTypeEnum typeEnum, Promise<JsonObject> promise) {
-        Settings settings = IInitPresencesHelper.getInstance(typeEnum).getSettingsInit();
+        Settings settings = IInitPresencesHelper.getDefaultInstance(typeEnum).getSettingsInit();
         String query = "INSERT INTO " + Presences.dbSchema + ".settings(structure_id, alert_absence_threshold, " +
                 "alert_lateness_threshold, alert_incident_threshold, alert_forgotten_notebook_threshold, initialized, allow_multiple_slots) " +
                 "VALUES (?, ?, ?, ?, ?, true, true) ON CONFLICT ON CONSTRAINT settings_pkey DO UPDATE SET initialized = true WHERE settings.structure_id = ? ;";
@@ -100,7 +100,7 @@ public class DefaultInitService implements InitService {
 
     @Override
     public void getPresencesDisciplinesStatement(HttpServerRequest request, String structure, InitTypeEnum typeEnum, Promise<JsonObject> promise) {
-        List<Discipline> disciplines = IInitPresencesHelper.getInstance(typeEnum).getDisciplinesInit();
+        List<Discipline> disciplines = IInitPresencesHelper.getDefaultInstance(typeEnum).getDisciplinesInit();
         JsonArray params = new JsonArray();
         String query = "INSERT INTO " + Presences.dbSchema + ".discipline(structure_id, label) VALUES ";
         for (Discipline discipline : disciplines) {
