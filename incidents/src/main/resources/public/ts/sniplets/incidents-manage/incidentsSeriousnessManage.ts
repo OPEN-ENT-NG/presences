@@ -47,7 +47,7 @@ export class IncidentsSeriousnessManage implements ViewModel {
 
         this.$scope.$watch(() => window.model.vieScolaire.structure, async () => this.get());
         this.$scope.$on(INCIDENTS_SERIOUSNESS_EVENT.RESPOND, () => this.get());
-        this.$scope.$on('reload', this.get);
+        this.$scope.$on('reload', () => this.get());
     }
 
     async create(): Promise<void> {
