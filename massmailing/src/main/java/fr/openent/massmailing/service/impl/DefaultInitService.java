@@ -24,7 +24,7 @@ public class DefaultInitService implements InitService {
         JsonArray params = new JsonArray();
         String query = "INSERT INTO " + Massmailing.dbSchema + ".template(structure_id, name, content, type, owner, category) VALUES ";
 
-        List<Template> templateList = IInitMassmailingHelper.getInstance(initTypeEnum).getTemplates();
+        List<Template> templateList = IInitMassmailingHelper.getDefaultInstance(initTypeEnum).getTemplates();
         for (Template template: templateList) {
             String mailName = I18n.getInstance().translate(template.getName(), Renders.getHost(request), I18n.acceptLanguage(request));
             String mailContent = I18n.getInstance().translate(template.getContent(), Renders.getHost(request), I18n.acceptLanguage(request));
