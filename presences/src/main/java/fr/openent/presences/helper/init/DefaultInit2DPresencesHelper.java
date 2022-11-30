@@ -7,7 +7,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class DefaultInit2DPresencesHelper implements IInitPresencesHelper {
-    private static final Integer NB_ACTIONS = 5;
+    private static final Integer NB_ACTIONS = 8;
     private static final Integer NB_DISCIPLINES = 4;
 
     protected DefaultInit2DPresencesHelper() {

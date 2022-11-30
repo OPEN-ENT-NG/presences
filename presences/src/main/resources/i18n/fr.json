@@ -572,7 +572,7 @@
   "presences.reasons.init.2d.9": "Inclusion SEGPA/Ulis",
   "presences.reasons.init.2d.10": "Infirmerie",
   "presences.reasons.init.2d.11": "Maladie avec certificat",
-  "presences.reasons.init.2d.12": "Maladie",
+  "presences.reasons.init.2d.12": "Maladie sans certificat",
   "presences.reasons.init.2d.13": "Panne de réveil",
   "presences.reasons.init.2d.14": "Problèmes transports",
   "presences.reasons.init.2d.15": "Prise en charge familiale",

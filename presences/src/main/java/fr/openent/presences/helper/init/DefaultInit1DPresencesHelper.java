@@ -42,7 +42,7 @@ public class DefaultInit1DPresencesHelper implements IInitPresencesHelper {
 
         //Lateness reason
         reasons.add(new ReasonModel().setLabel("presences.reasons.init.1d.22").setProving(true).setAbsenceCompliance(false).setReasonTypeId(ReasonType.LATENESS));
-        reasons.add(new ReasonModel().setLabel("presences.reasons.init.1d.23").setProving(true).setAbsenceCompliance(false).setReasonTypeId(ReasonType.LATENESS));
+        reasons.add(new ReasonModel().setLabel("presences.reasons.init.1d.23").setLatenessAlertExclude(false).setProving(true).setAbsenceCompliance(false).setReasonTypeId(ReasonType.LATENESS));
         reasons.add(new ReasonModel().setLabel("presences.reasons.init.1d.24").setLatenessAlertExclude(false).setProving(true).setAbsenceCompliance(false).setReasonTypeId(ReasonType.LATENESS));
 
         return reasons;
