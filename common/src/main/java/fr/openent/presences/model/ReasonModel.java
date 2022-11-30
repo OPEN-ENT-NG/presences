@@ -4,9 +4,6 @@ import fr.openent.presences.core.constants.Field;
 import fr.openent.presences.enums.ReasonType;
 import io.vertx.core.json.JsonObject;
 
-import java.util.ArrayList;
-import java.util.List;
-
 public class ReasonModel implements IModel<ReasonModel>{
     private Integer id;
     private String structureId;
@@ -19,7 +16,9 @@ public class ReasonModel implements IModel<ReasonModel>{
     private Boolean isAbsenceCompliance;
     private ReasonType reasonType;
 
-    private boolean alertExclude;
+    private boolean regularizedAlertExclude = true;
+    private boolean unregularizedAlertExclude = true;
+    private boolean latenessAlertExclude = true;
 
     public ReasonModel(JsonObject reason) {
         this.id = reason.getInteger(Field.ID, null);
@@ -127,16 +126,29 @@ public class ReasonModel implements IModel<ReasonModel>{
         return this;
     }
 
-    public boolean isAlertExclude() {
-        return alertExclude;
+    public boolean isRegularizedAlertExclude() {
+        return regularizedAlertExclude;
     }
 
-    public boolean isAlertInclude() {
-        return !alertExclude;
+    public boolean isUnregularizedAlertExclude() {
+        return unregularizedAlertExclude;
+    }
+    public boolean isLatenessAlertExclude() {
+        return latenessAlertExclude;
     }
 
-    public ReasonModel setAlertExclude(boolean alertExclude) {
-        this.alertExclude = alertExclude;
+    public ReasonModel setRegularizedAlertExclude(boolean regularizedAlertExclude) {
+        this.regularizedAlertExclude = regularizedAlertExclude;
+        return this;
+    }
+
+    public ReasonModel setUnregularizedAlertExclude(boolean unregularizedAlertExclude) {
+        this.unregularizedAlertExclude = unregularizedAlertExclude;
+        return this;
+    }
+
+    public ReasonModel setLatenessAlertExclude(boolean latenessAlertExclude) {
+        this.latenessAlertExclude = latenessAlertExclude;
         return this;
     }
 

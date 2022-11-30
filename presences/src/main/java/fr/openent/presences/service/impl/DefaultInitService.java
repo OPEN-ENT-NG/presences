@@ -45,16 +45,25 @@ public class DefaultInitService implements InitService {
                     .add(reasonModel.isProving())
                     .add(reasonModel.isAbsenceCompliance())
                     .add(reasonModel.getReasonTypeId().getValue());
-            if (reasonModel.isAlertExclude()) {
+            if (reasonModel.isRegularizedAlertExclude() || reasonModel.isUnregularizedAlertExclude() || reasonModel.isLatenessAlertExclude()) {
                 query.append("INSERT INTO ")
                         .append(Presences.dbSchema)
-                        .append(".reason_alert(structure_id, reason_id, reason_alert_exclude_rules_type_id) VALUES " +
-                        "(?, currval('presences.reason_id_seq'), 1)," +
-                        "(?, currval('presences.reason_id_seq'), 2)," +
-                        "(?, currval('presences.reason_id_seq'), 3);");
-                params.add(structure).add(structure).add(structure);
+                        .append(".reason_alert(structure_id, reason_id, reason_alert_exclude_rules_type_id) VALUES ");
+                if (reasonModel.isRegularizedAlertExclude()) {
+                    query.append("(?, currval('presences.reason_id_seq'), 1),");
+                    params.add(structure);
+                }
+                if (reasonModel.isUnregularizedAlertExclude()) {
+                    query.append("(?, currval('presences.reason_id_seq'), 2),");
+                    params.add(structure);
+                }
+                if (reasonModel.isLatenessAlertExclude()) {
+                    query.append("(?, currval('presences.reason_id_seq'), 3),");
+                    params.add(structure);
+                }
+                query.deleteCharAt(query.length() - 1);
+                query.append(";");
             }
-
         });
 
         promise.complete(new JsonObject()

@@ -17,33 +17,33 @@ public class DefaultInit1DPresencesHelper implements IInitPresencesHelper {
         List<ReasonModel> reasons = new ArrayList<>();
 
         //Absence reason
-        reasons.add(new ReasonModel().setLabel("presences.reasons.init.1d.0").setAlertExclude(true).setProving(false).setAbsenceCompliance(true).setReasonTypeId(ReasonType.ABSENCE));
-        reasons.add(new ReasonModel().setLabel("presences.reasons.init.1d.1").setAlertExclude(true).setProving(true).setAbsenceCompliance(false).setReasonTypeId(ReasonType.ABSENCE));
-        reasons.add(new ReasonModel().setLabel("presences.reasons.init.1d.2").setAlertExclude(true).setProving(false).setAbsenceCompliance(false).setReasonTypeId(ReasonType.ABSENCE));
-        reasons.add(new ReasonModel().setLabel("presences.reasons.init.1d.3").setAlertExclude(true).setProving(true).setAbsenceCompliance(false).setReasonTypeId(ReasonType.ABSENCE));
-        reasons.add(new ReasonModel().setLabel("presences.reasons.init.1d.4").setAlertExclude(true).setProving(false).setAbsenceCompliance(true).setReasonTypeId(ReasonType.ABSENCE));
-        reasons.add(new ReasonModel().setLabel("presences.reasons.init.1d.5").setAlertExclude(true).setProving(false).setAbsenceCompliance(true).setReasonTypeId(ReasonType.ABSENCE));
-        reasons.add(new ReasonModel().setLabel("presences.reasons.init.1d.6").setAlertExclude(true).setProving(true).setAbsenceCompliance(false).setReasonTypeId(ReasonType.ABSENCE));
-        reasons.add(new ReasonModel().setLabel("presences.reasons.init.1d.7").setAlertExclude(true).setProving(true).setAbsenceCompliance(true).setReasonTypeId(ReasonType.ABSENCE));
-        reasons.add(new ReasonModel().setLabel("presences.reasons.init.1d.8").setAlertExclude(true).setProving(true).setAbsenceCompliance(true).setReasonTypeId(ReasonType.ABSENCE));
-        reasons.add(new ReasonModel().setLabel("presences.reasons.init.1d.9").setAlertExclude(true).setProving(false).setAbsenceCompliance(true).setReasonTypeId(ReasonType.ABSENCE));
-        reasons.add(new ReasonModel().setLabel("presences.reasons.init.1d.10").setAlertExclude(false).setProving(false).setAbsenceCompliance(true).setReasonTypeId(ReasonType.ABSENCE));
-        reasons.add(new ReasonModel().setLabel("presences.reasons.init.1d.11").setAlertExclude(true).setProving(true).setAbsenceCompliance(true).setReasonTypeId(ReasonType.ABSENCE));
-        reasons.add(new ReasonModel().setLabel("presences.reasons.init.1d.12").setAlertExclude(true).setProving(true).setAbsenceCompliance(true).setReasonTypeId(ReasonType.ABSENCE));
-        reasons.add(new ReasonModel().setLabel("presences.reasons.init.1d.13").setAlertExclude(true).setProving(true).setAbsenceCompliance(true).setReasonTypeId(ReasonType.ABSENCE));
-        reasons.add(new ReasonModel().setLabel("presences.reasons.init.1d.14").setAlertExclude(true).setProving(false).setAbsenceCompliance(true).setReasonTypeId(ReasonType.ABSENCE));
-        reasons.add(new ReasonModel().setLabel("presences.reasons.init.1d.15").setAlertExclude(true).setProving(true).setAbsenceCompliance(false).setReasonTypeId(ReasonType.ABSENCE));
-        reasons.add(new ReasonModel().setLabel("presences.reasons.init.1d.16").setAlertExclude(true).setProving(true).setAbsenceCompliance(false).setReasonTypeId(ReasonType.ABSENCE));
-        reasons.add(new ReasonModel().setLabel("presences.reasons.init.1d.17").setAlertExclude(true).setProving(false).setAbsenceCompliance(true).setReasonTypeId(ReasonType.ABSENCE));
-        reasons.add(new ReasonModel().setLabel("presences.reasons.init.1d.18").setAlertExclude(true).setProving(false).setAbsenceCompliance(true).setReasonTypeId(ReasonType.ABSENCE));
-        reasons.add(new ReasonModel().setLabel("presences.reasons.init.1d.19").setAlertExclude(true).setProving(true).setAbsenceCompliance(false).setReasonTypeId(ReasonType.ABSENCE));
-        reasons.add(new ReasonModel().setLabel("presences.reasons.init.1d.20").setAlertExclude(true).setProving(true).setAbsenceCompliance(false).setReasonTypeId(ReasonType.ABSENCE));
-        reasons.add(new ReasonModel().setLabel("presences.reasons.init.1d.21").setAlertExclude(false).setProving(false).setAbsenceCompliance(true).setReasonTypeId(ReasonType.ABSENCE));
+        reasons.add(new ReasonModel().setLabel("presences.reasons.init.1d.0").setProving(false).setAbsenceCompliance(true).setReasonTypeId(ReasonType.ABSENCE));
+        reasons.add(new ReasonModel().setLabel("presences.reasons.init.1d.1").setProving(true).setAbsenceCompliance(false).setReasonTypeId(ReasonType.ABSENCE));
+        reasons.add(new ReasonModel().setLabel("presences.reasons.init.1d.2").setProving(false).setAbsenceCompliance(false).setReasonTypeId(ReasonType.ABSENCE));
+        reasons.add(new ReasonModel().setLabel("presences.reasons.init.1d.3").setProving(true).setAbsenceCompliance(false).setReasonTypeId(ReasonType.ABSENCE));
+        reasons.add(new ReasonModel().setLabel("presences.reasons.init.1d.4").setUnregularizedAlertExclude(false).setProving(false).setAbsenceCompliance(true).setReasonTypeId(ReasonType.ABSENCE));
+        reasons.add(new ReasonModel().setLabel("presences.reasons.init.1d.5").setProving(false).setAbsenceCompliance(true).setReasonTypeId(ReasonType.ABSENCE));
+        reasons.add(new ReasonModel().setLabel("presences.reasons.init.1d.6").setProving(true).setAbsenceCompliance(false).setReasonTypeId(ReasonType.ABSENCE));
+        reasons.add(new ReasonModel().setLabel("presences.reasons.init.1d.7").setProving(true).setAbsenceCompliance(true).setReasonTypeId(ReasonType.ABSENCE));
+        reasons.add(new ReasonModel().setLabel("presences.reasons.init.1d.8").setProving(true).setAbsenceCompliance(true).setReasonTypeId(ReasonType.ABSENCE));
+        reasons.add(new ReasonModel().setLabel("presences.reasons.init.1d.9").setUnregularizedAlertExclude(false).setProving(false).setAbsenceCompliance(true).setReasonTypeId(ReasonType.ABSENCE));
+        reasons.add(new ReasonModel().setLabel("presences.reasons.init.1d.10").setUnregularizedAlertExclude(false).setRegularizedAlertExclude(false).setProving(false).setAbsenceCompliance(true).setReasonTypeId(ReasonType.ABSENCE));
+        reasons.add(new ReasonModel().setLabel("presences.reasons.init.1d.11").setProving(true).setAbsenceCompliance(true).setReasonTypeId(ReasonType.ABSENCE));
+        reasons.add(new ReasonModel().setLabel("presences.reasons.init.1d.12").setProving(true).setAbsenceCompliance(true).setReasonTypeId(ReasonType.ABSENCE));
+        reasons.add(new ReasonModel().setLabel("presences.reasons.init.1d.13").setProving(true).setAbsenceCompliance(true).setReasonTypeId(ReasonType.ABSENCE));
+        reasons.add(new ReasonModel().setLabel("presences.reasons.init.1d.14").setUnregularizedAlertExclude(false).setProving(false).setAbsenceCompliance(true).setReasonTypeId(ReasonType.ABSENCE));
+        reasons.add(new ReasonModel().setLabel("presences.reasons.init.1d.15").setProving(true).setAbsenceCompliance(false).setReasonTypeId(ReasonType.ABSENCE));
+        reasons.add(new ReasonModel().setLabel("presences.reasons.init.1d.16").setProving(true).setAbsenceCompliance(false).setReasonTypeId(ReasonType.ABSENCE));
+        reasons.add(new ReasonModel().setLabel("presences.reasons.init.1d.17").setUnregularizedAlertExclude(false).setProving(false).setAbsenceCompliance(true).setReasonTypeId(ReasonType.ABSENCE));
+        reasons.add(new ReasonModel().setLabel("presences.reasons.init.1d.18").setProving(false).setAbsenceCompliance(true).setReasonTypeId(ReasonType.ABSENCE));
+        reasons.add(new ReasonModel().setLabel("presences.reasons.init.1d.19").setProving(true).setAbsenceCompliance(false).setReasonTypeId(ReasonType.ABSENCE));
+        reasons.add(new ReasonModel().setLabel("presences.reasons.init.1d.20").setProving(true).setAbsenceCompliance(false).setReasonTypeId(ReasonType.ABSENCE));
+        reasons.add(new ReasonModel().setLabel("presences.reasons.init.1d.21").setUnregularizedAlertExclude(false).setRegularizedAlertExclude(false).setProving(false).setAbsenceCompliance(true).setReasonTypeId(ReasonType.ABSENCE));
 
         //Lateness reason
-        reasons.add(new ReasonModel().setLabel("presences.reasons.init.1d.22").setAlertExclude(true).setProving(true).setAbsenceCompliance(false).setReasonTypeId(ReasonType.LATENESS));
-        reasons.add(new ReasonModel().setLabel("presences.reasons.init.1d.23").setAlertExclude(true).setProving(true).setAbsenceCompliance(false).setReasonTypeId(ReasonType.LATENESS));
-        reasons.add(new ReasonModel().setLabel("presences.reasons.init.1d.24").setAlertExclude(false).setProving(true).setAbsenceCompliance(false).setReasonTypeId(ReasonType.LATENESS));
+        reasons.add(new ReasonModel().setLabel("presences.reasons.init.1d.22").setProving(true).setAbsenceCompliance(false).setReasonTypeId(ReasonType.LATENESS));
+        reasons.add(new ReasonModel().setLabel("presences.reasons.init.1d.23").setProving(true).setAbsenceCompliance(false).setReasonTypeId(ReasonType.LATENESS));
+        reasons.add(new ReasonModel().setLabel("presences.reasons.init.1d.24").setLatenessAlertExclude(false).setProving(true).setAbsenceCompliance(false).setReasonTypeId(ReasonType.LATENESS));
 
         return reasons;
     }
