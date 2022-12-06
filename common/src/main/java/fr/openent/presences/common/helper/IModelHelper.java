@@ -1,12 +1,14 @@
 package fr.openent.presences.common.helper;
 
 import fr.openent.presences.model.IModel;
+import io.vertx.core.json.Json;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.util.Arrays;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
@@ -27,7 +29,9 @@ public class IModelHelper {
 
     @SuppressWarnings("unchecked")
     public static <T extends IModel<T>> List<T> toList(JsonArray results, Class<T> modelClass) {
-        return ((List<JsonObject>) results.getList()).stream()
+        return results.stream()
+                .filter(JsonObject.class::isInstance)
+                .map(JsonObject.class::cast)
                 .map(iModel -> {
                     try {
                         return modelClass.getConstructor(JsonObject.class).newInstance(iModel);
