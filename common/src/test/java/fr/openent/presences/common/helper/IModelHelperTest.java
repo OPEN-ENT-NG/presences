@@ -1,6 +1,7 @@
 package fr.openent.presences.common.helper;
 
 import fr.openent.presences.model.IModel;
+import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
@@ -12,6 +13,7 @@ import org.reflections.Reflections;
 
 import java.lang.reflect.Constructor;
 import java.util.Arrays;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -26,10 +28,10 @@ public class IModelHelperTest {
         VALUE3
     }
 
-    class MyClass {
+    static class MyClass {
         public String id;
     }
-    class MyIModel implements IModel<MyIModel> {
+    static class MyIModel implements IModel<MyIModel> {
         public String id;
         public boolean isGood;
         public MyOtherIModel otherIModel;
@@ -53,8 +55,15 @@ public class IModelHelperTest {
         }
     }
 
-    class MyOtherIModel implements IModel<MyOtherIModel> {
+    static class MyOtherIModel implements IModel<MyOtherIModel> {
         public String myName;
+
+        public MyOtherIModel() {
+        }
+
+        public MyOtherIModel(JsonObject jsonObject) {
+            this.myName = jsonObject.getString("my_name");
+        }
 
         @Override
         public JsonObject toJson() {
@@ -136,5 +145,26 @@ public class IModelHelperTest {
         ctx.assertEquals(expected, iModel.toJson().toString());
 
         System.out.println();
+    }
+
+    @Test
+    public void testLinkedMap(TestContext ctx) {
+        LinkedHashMap<Object, Object> linkedHashMap = new LinkedHashMap<>();
+        LinkedHashMap<Object, Object> linkedHashMap2 = new LinkedHashMap<>();
+        LinkedHashMap<Object, Object> linkedHashMap3 = new LinkedHashMap<>();
+        LinkedHashMap<Object, Object> linkedHashMap4 = new LinkedHashMap<>();
+        linkedHashMap.put("my_name", "name1");
+        linkedHashMap2.put("my_name", "name2");
+        //Is instance is not a MyOtherIModel, so it will not be added to the list
+        linkedHashMap3.put("my_name", new MyClass());
+        linkedHashMap4.put(3, "name3");
+
+        List<MyOtherIModel> list = IModelHelper.toList(new JsonArray(Arrays.asList(linkedHashMap, linkedHashMap2, linkedHashMap3,
+                linkedHashMap4)), MyOtherIModel.class);
+
+        ctx.assertEquals(list.size(), 3);
+        ctx.assertEquals(list.get(0).myName, "name1");
+        ctx.assertEquals(list.get(1).myName, "name2");
+        ctx.assertEquals(list.get(2).myName, null);
     }
 }
