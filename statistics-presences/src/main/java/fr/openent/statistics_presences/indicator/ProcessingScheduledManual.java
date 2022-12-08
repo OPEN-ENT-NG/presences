@@ -83,6 +83,7 @@ public class ProcessingScheduledManual extends BusModBase implements Handler<Mes
                     String message = String.format("[StatisticsPresences@ProcessingScheduledManual::handle] " +
                             "Processing scheduled manual task failed. See previous logs. %s", error.getMessage());
                     log.error(message);
+                    error.printStackTrace();
                     if (Boolean.TRUE.equals(isWaitingEndProcess))
                         eventMessage.reply(new JsonObject()
                                 .put(Field.STATUS, Field.ERROR)

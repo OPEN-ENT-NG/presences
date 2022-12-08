@@ -52,6 +52,7 @@ public class ProcessingScheduledTask implements Handler<Long> {
                     if (ar.failed()) {
                         log.error(String.format("[Statistics@ProcessingScheduledTask::handle] " +
                                 "Processing scheduled task failed. See previous logs. %s", ar.cause().getMessage()));
+                        ar.cause().printStackTrace();
                     }
                 });
     }
