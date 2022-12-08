@@ -29,7 +29,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 
-public class ProcessingScheduledManual extends BusModBase implements IProcessingScheduled<Message<JsonObject>> {
+public class ProcessingScheduledManual extends BusModBase implements Handler<Message<JsonObject>> {
     Logger log = LoggerFactory.getLogger(ProcessingScheduledManual.class);
     private CommonServiceFactory commonServiceFactory;
     TemplateProcessor templateProcessor;
@@ -44,7 +44,7 @@ public class ProcessingScheduledManual extends BusModBase implements IProcessing
 
     @Override
     @SuppressWarnings("unchecked")
-    public void process(Message<JsonObject> eventMessage) {
+    public void handle(Message<JsonObject> eventMessage) {
         Boolean isWaitingEndProcess = eventMessage.body().getBoolean(Field.ISWAITINGENDPROCESS, false);
         if (Boolean.FALSE.equals(isWaitingEndProcess)) eventMessage.reply(new JsonObject().put(Field.STATUS, Field.OK));
         log.info("[" + this.getClass().getSimpleName() + "] receiving from route /process/statistics/tasks");
@@ -83,18 +83,12 @@ public class ProcessingScheduledManual extends BusModBase implements IProcessing
                     String message = String.format("[StatisticsPresences@ProcessingScheduledManual::handle] " +
                             "Processing scheduled manual task failed. See previous logs. %s", error.getMessage());
                     log.error(message);
+                    error.printStackTrace();
                     if (Boolean.TRUE.equals(isWaitingEndProcess))
                         eventMessage.reply(new JsonObject()
                                 .put(Field.STATUS, Field.ERROR)
                                 .put(Field.MESSAGE, message));
                 });
-    }
-
-    @Override
-    public void alreadyInProgress(Message<JsonObject> eventMessage) {
-        log.info("[Statistics@ProcessingScheduledManual::failStart] " +
-                "The worker is already running. Skip this one.");
-        eventMessage.reply(new JsonObject().put(Field.STATUS, Field.OK).put(Field.RESULT, new JsonObject().put(Field.RESULT, Field.ALREADY_STARTED)));
     }
 
     protected void initTemplateProcessor() {

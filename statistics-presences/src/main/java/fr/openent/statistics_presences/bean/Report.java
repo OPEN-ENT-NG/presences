@@ -5,7 +5,6 @@ import fr.openent.presences.core.constants.Field;
 import fr.openent.presences.model.IModel;
 import fr.openent.presences.model.StatisticsUser;
 import fr.openent.presences.model.StructureStatisticsUser;
-import fr.openent.statistics_presences.indicator.IProcessingScheduled;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 
@@ -23,10 +22,7 @@ public class Report {
     private List<Failure> failures = new ArrayList<>();
     private List<ReportStructure> reportStructureList = null;
 
-    /**
-     * @deprecated Replaced by {@link Report#Report(String, List)}
-     */
-    @Deprecated
+
     public Report(String indicator) {
         this.indicator = indicator;
     }
@@ -69,7 +65,6 @@ public class Report {
                 .put(Field.DURATION, this.duration())
                 .put(Field.ERRORCOUNT, this.failures.size())
                 .put(Field.SAVED, !this.failureOnSave)
-                .put(Field.FINISH, IProcessingScheduled.ProcessingScheduledHolder.isFinish())
                 .put(Field.ERRORS, errors);
         if (this.reportStructureList != null) {
             result.put(Field.NB_STUDENTS, this.reportStructureList.stream()
