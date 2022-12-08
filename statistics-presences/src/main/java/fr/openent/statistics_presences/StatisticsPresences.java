@@ -57,7 +57,7 @@ public class StatisticsPresences extends BaseServer {
         addController(new StatisticsController(commonServiceFactory));
         addController(new StatisticsWeeklyAudiencesController(commonServiceFactory));
         addController(new ConfigController());
-        addController(new WorkerController());
+//        addController(new WorkerController()); todo for next step to monitor/secure worker usage
 
         setRepositoryEvents(new StatisticsRepositoryEvents(commonServiceFactory));
 
