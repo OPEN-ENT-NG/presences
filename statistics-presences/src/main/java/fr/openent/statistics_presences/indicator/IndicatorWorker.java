@@ -36,9 +36,10 @@ public abstract class IndicatorWorker extends AbstractVerticle {
     protected final Map<String, JsonObject> settings = new HashMap<>();
     protected Context indicatorContext;
     protected JsonObject config;
+    protected Report report;
     protected StatisticsService statisticsService;
 
-    public IndicatorWorker() {
+    protected IndicatorWorker() {
         this.statisticsService = new DefaultStatisticsService(Field.INDICATOR);
     }
 
@@ -50,6 +51,7 @@ public abstract class IndicatorWorker extends AbstractVerticle {
         config = config().copy();
         log.info(String.format("[StatisticsPresences@IndicatorWorker::start] Launching worker %s, deploy verticle %s",
                 this.indicatorName(), indicatorContext.deploymentID()));
+        this.report = new Report(this.indicatorName()).start();
         process().onComplete(this::sendSigTerm);
     }
 
@@ -60,8 +62,6 @@ public abstract class IndicatorWorker extends AbstractVerticle {
 
         if (config.containsKey(Field.STRUCTURE_STATISTICS_USERS)) {
             List<StructureStatisticsUser> structureStatisticsUserList = IModelHelper.toList(config.getJsonArray(Field.STRUCTURE_STATISTICS_USERS), StructureStatisticsUser.class);
-            Report report = new Report(this.indicatorName(), structureStatisticsUserList);
-            IProcessingScheduled.ProcessingScheduledHolder.setReport(report.start());
 
             for (StructureStatisticsUser structureStatisticsUser : structureStatisticsUserList) {
                 current = current.compose(res -> {
@@ -73,7 +73,6 @@ public abstract class IndicatorWorker extends AbstractVerticle {
             }
         } else  {
             //Deprecated
-            IProcessingScheduled.ProcessingScheduledHolder.setReport(new Report(this.indicatorName()).start());
             JsonObject structures = config.getJsonObject(Field.STRUCTURES);
             for (String structure : structures.fieldNames()) {
                 current = current.compose(res -> {
@@ -101,7 +100,7 @@ public abstract class IndicatorWorker extends AbstractVerticle {
     protected Future<JsonObject> manualStart(JsonObject payload) {
         Promise<JsonObject> promise = Promise.promise();
         config = payload.copy();
-        IProcessingScheduled.ProcessingScheduledHolder.setReport(new Report(this.indicatorName()).start());
+        this.report = new Report(this.indicatorName()).start();
         JsonObject structures = config.getJsonObject(Field.STRUCTURES);
         List<Future<Void>> futures = new ArrayList<>();
         for (String structure : structures.fieldNames()) {
@@ -127,8 +126,7 @@ public abstract class IndicatorWorker extends AbstractVerticle {
     protected Future<JsonObject> manualStart(List<StructureStatisticsUser> structureStatisticsUserList) {
         Promise<JsonObject> promise = Promise.promise();
         config = new JsonObject().put(Field.STRUCTURE_STATISTICS_USERS, IModelHelper.toJsonArray(structureStatisticsUserList));
-        Report report = new Report(this.indicatorName(), structureStatisticsUserList);
-        IProcessingScheduled.ProcessingScheduledHolder.setReport(report.start());
+        this.report = new Report(this.indicatorName()).start();
 
         this.process()
                 .onSuccess(res -> promise.complete(new JsonObject().put(Field.MESSAGE, Field.OK)))
@@ -156,8 +154,7 @@ public abstract class IndicatorWorker extends AbstractVerticle {
     }
 
     private void sendSigTerm(AsyncResult<Void> ar) {
-        IProcessingScheduled.ProcessingScheduledHolder.getReport().end();
-        IProcessingScheduled.ProcessingScheduledHolder.finish();
+        this.report.end();
         if (ar.failed()) {
             log.error(String.format("[StatisticsPresences@IndicatorWorker::sendSigTerm] Some structure failed to process. %s", ar.cause().getMessage()));
         }
@@ -165,7 +162,7 @@ public abstract class IndicatorWorker extends AbstractVerticle {
         log.info(String.format("[StatisticsPresences@IndicatorWorker::sendSigTerm] Sending term signal by %s indicator", this.getClass().getName()));
 
         DeliveryOptions deliveryOptions = new DeliveryOptions().setCodecName(StatisticsPresences.codec.name());
-        vertx.eventBus().send(config.getString(Field.ENDPOINT), IProcessingScheduled.ProcessingScheduledHolder.getReport(), deliveryOptions);
+        vertx.eventBus().send(config.getString(Field.ENDPOINT), report, deliveryOptions);
         if (isParentVerticle()) {
             log.info(String.format("[StatisticsPresences@IndicatorWorker::sendSigTerm] Tried to undeploy verticle %s but" +
                     " turns out it is the Parent Verticle...", indicatorContext.deploymentID()));
@@ -229,9 +226,7 @@ public abstract class IndicatorWorker extends AbstractVerticle {
                                         if (ar.failed()) {
                                             log.error(String.format("[StatisticsPresences@IndicatorWorker::processStructure] " +
                                                     "Processing fail student %s for structure %s %s", students.getString(indice), structureId, ar.cause()));
-                                            IProcessingScheduled.ProcessingScheduledHolder.getReport().fail(new Failure(students.getString(indice), structureId, ar.cause()));
-                                        } else {
-                                            IProcessingScheduled.ProcessingScheduledHolder.getReport().completeStudent(structureId, students.getString(indice));
+                                            report.fail(new Failure(students.getString(indice), structureId, ar.cause()));
                                         }
                                         otherPromise.complete();
                                     });
@@ -287,9 +282,7 @@ public abstract class IndicatorWorker extends AbstractVerticle {
                                         if (ar.failed()) {
                                             log.error(String.format("[StatisticsPresences@IndicatorWorker::processStructure] " +
                                                     "Processing fail student %s for structure %s %s", statisticsUserList.get(indice).getId(), structureId, ar.cause()));
-                                            IProcessingScheduled.ProcessingScheduledHolder.getReport().fail(new Failure(statisticsUserList.get(indice).getId(), structureId, ar.cause()));
-                                        } else {
-                                            IProcessingScheduled.ProcessingScheduledHolder.getReport().completeStudent(structureId, statisticsUserList.get(indice).getId());
+                                            report.fail(new Failure(statisticsUserList.get(indice).getId(), structureId, ar.cause()));
                                         }
                                         otherPromise.complete();
                                     });
