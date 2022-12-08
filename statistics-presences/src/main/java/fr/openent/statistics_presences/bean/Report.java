@@ -23,10 +23,7 @@ public class Report {
     private List<Failure> failures = new ArrayList<>();
     private List<ReportStructure> reportStructureList = null;
 
-    /**
-     * @deprecated Replaced by {@link Report#Report(String, List)}
-     */
-    @Deprecated
+
     public Report(String indicator) {
         this.indicator = indicator;
     }
