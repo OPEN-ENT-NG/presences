@@ -23,7 +23,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
 
-public class ProcessingScheduledTask implements IProcessingScheduled<Long> {
+public class ProcessingScheduledTask implements Handler<Long> {
     Logger log = LoggerFactory.getLogger(ProcessingScheduledTask.class);
     Vertx vertx;
     EmailSender emailSender;
@@ -40,7 +40,7 @@ public class ProcessingScheduledTask implements IProcessingScheduled<Long> {
     }
 
     @Override
-    public void process(Long event) {
+    public void handle(Long event) {
         start = System.currentTimeMillis();
         initTemplateProcessor();
         this.statisticsPresencesService.fetchUsers()
@@ -52,14 +52,9 @@ public class ProcessingScheduledTask implements IProcessingScheduled<Long> {
                     if (ar.failed()) {
                         log.error(String.format("[Statistics@ProcessingScheduledTask::handle] " +
                                 "Processing scheduled task failed. See previous logs. %s", ar.cause().getMessage()));
+                        ar.cause().printStackTrace();
                     }
                 });
-    }
-
-    @Override
-    public void alreadyInProgress(Long event) {
-        log.info("[Statistics@ProcessingScheduledTask::alreadyInProgress] " +
-                "The worker is already running. Skip this one.");
     }
 
     private void initTemplateProcessor() {

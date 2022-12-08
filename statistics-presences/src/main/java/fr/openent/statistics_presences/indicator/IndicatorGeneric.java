@@ -295,6 +295,7 @@ public class IndicatorGeneric {
     public static Future<JsonObject> manualProcess(List<StructureStatisticsUser> structureStatisticsUserList) {
         Promise<JsonObject> promise = Promise.promise();
         StatisticsWorker indicatorWorker = new StatisticsWorker();
+        // todo to change indicatorWorker, should not be named "worker" as it is not the case
         indicatorWorker.manualStart(structureStatisticsUserList)
                 .onSuccess(promise::complete)
                 .onFailure(promise::fail);
