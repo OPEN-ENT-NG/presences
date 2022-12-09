@@ -5,7 +5,7 @@
       align-items: center;
       button {
         background-color: $orange;
-        margin: 0 ($spacing-M + $spacing-M);
+        margin: 0 calc($spacing-M + $spacing-M);
         &:disabled{
           background: $disabled-color;
         }
