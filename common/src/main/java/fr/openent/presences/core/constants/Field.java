@@ -369,6 +369,10 @@ public class Field {
     public static final String NB_STUDENTS = "nb_students";
     public static final String NB_STUDENTS_PROCESS = "nb_students_process";
     public static final String FORMAT = "format";
+    public static final String FAILURE_ON_SAVE = "failure_on_save";
+    public static final String PRESENCES_SHARED_DATA_MAP_NAME = "PresencesSharedDataMap";
+    public static final String REPORT_STRUCTURE_LIST = "reportStructureList";
+    public static final String FAILURES = "failures";
 
     private Field() {
         throw new IllegalStateException("Utility class");
