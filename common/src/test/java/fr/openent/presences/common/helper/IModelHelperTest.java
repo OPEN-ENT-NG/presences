@@ -12,6 +12,7 @@ import org.junit.runner.RunWith;
 import org.reflections.Reflections;
 
 import java.lang.reflect.Constructor;
+import java.lang.reflect.Modifier;
 import java.util.Arrays;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -22,6 +23,13 @@ import static org.reflections.scanners.Scanners.SubTypes;
 
 @RunWith(VertxUnitRunner.class)
 public class IModelHelperTest {
+    interface MyInterface extends IModel<MyInterface> {
+        void myMethod();
+    }
+
+    static abstract class MyAbstractClass implements IModel<MyAbstractClass>{
+    }
+
     enum MyEnum {
         VALUE1,
         VALUE2,
@@ -86,6 +94,7 @@ public class IModelHelperTest {
         Set<Class<?>> subTypes =
                 reflections.get(SubTypes.of(IModel.class).asClass());
         List<Class<?>> invalidModel = subTypes.stream()
+                .filter(modelClass -> !Modifier.isAbstract(modelClass.getModifiers()) && !Modifier.isInterface(modelClass.getModifiers()))
                 .filter(modelClass -> !ignoredClassList.contains(modelClass))
                 .filter(modelClass -> {
             Constructor<?> emptyConstructor = Arrays.stream(modelClass.getConstructors())
