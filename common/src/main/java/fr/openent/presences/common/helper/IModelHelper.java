@@ -7,6 +7,7 @@ import io.vertx.core.json.JsonObject;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
+import java.time.Instant;
 import java.util.Arrays;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -21,7 +22,7 @@ import java.util.stream.Collectors;
 public class IModelHelper {
     private final static List<Class<?>> validJsonClasses = Arrays.asList(String.class, boolean.class, Boolean.class,
             double.class, Double.class, float.class, Float.class, Integer.class, int.class, CharSequence.class,
-            JsonObject.class, JsonArray.class, Long.class, long.class);
+            JsonObject.class, JsonArray.class, Long.class, long.class, Instant.class);
 
     private IModelHelper() {
         throw new IllegalStateException("Utility class");
