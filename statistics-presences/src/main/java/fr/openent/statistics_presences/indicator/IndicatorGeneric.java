@@ -53,6 +53,8 @@ public class IndicatorGeneric {
 
         Neo4j.getInstance().execute(query, params, Neo4jResult.validResultHandler(either -> {
             if (either.isLeft()) {
+                log.error(String.format("[Statistics@%s::retrieveAudiences] Fail to retrieve audiences %s",
+                        IndicatorGeneric.class.getSimpleName(), either.left().getValue()));
                 promise.fail(either.left().getValue());
             } else {
                 List<String> audiences = ((List<JsonObject>) either.right().getValue().getList()).stream().map(g -> g.getString("id")).collect(Collectors.toList());
@@ -75,6 +77,8 @@ public class IndicatorGeneric {
 
         Neo4j.getInstance().execute(query, params, Neo4jResult.validUniqueResultHandler(either -> {
             if (either.isLeft()) {
+                log.error(String.format("[Statistics@%s::retrieveUser] Fail to retrieve user %s",
+                        IndicatorGeneric.class.getSimpleName(), either.left().getValue()));
                 promise.fail(either.left().getValue());
             } else {
                 promise.complete(either.right().getValue());

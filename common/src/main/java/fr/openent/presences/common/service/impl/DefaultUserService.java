@@ -117,6 +117,8 @@ public class DefaultUserService extends DBService implements UserService {
 
             Neo4j.getInstance().execute(query, params, Neo4jResult.validResultHandler(res -> {
                 if (res.isLeft()) {
+                    log.error(String.format("[Common@%s::getStudentsFromTeacher] Failed to get students from teacher %s",
+                            this.getClass().getSimpleName(), res.left().getValue()));
                     promise.fail(res.left().getValue());
                 } else {
                     promise.complete(((List<JsonObject>) res.right().getValue().getList())

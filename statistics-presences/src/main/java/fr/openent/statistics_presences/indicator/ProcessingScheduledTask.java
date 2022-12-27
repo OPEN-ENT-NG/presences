@@ -10,6 +10,7 @@ import fr.wseduc.webutils.template.TemplateProcessor;
 import fr.wseduc.webutils.template.lambdas.I18nLambda;
 import fr.wseduc.webutils.template.lambdas.LocaleDateLambda;
 import io.vertx.core.*;
+import io.vertx.core.eventbus.Message;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import io.vertx.core.logging.Logger;
@@ -71,7 +72,11 @@ public class ProcessingScheduledTask implements Handler<Long> {
         Future<Void> future = Future.future();
         String query = String.format("TRUNCATE TABLE %s.user;", StatisticsPresences.DB_SCHEMA);
         Sql.getInstance().raw(query, SqlResult.validUniqueResultHandler(either -> {
-            if (either.isLeft()) future.fail(either.left().getValue());
+            if (either.isLeft()) {
+                log.error(String.format("[Statistics@%s::clearWaitingList] Fail to clear waiting list %s",
+                        this.getClass().getSimpleName(), either.left().getValue()));
+                future.fail(either.left().getValue());
+            }
             else future.complete();
         }));
 
@@ -190,8 +195,10 @@ public class ProcessingScheduledTask implements Handler<Long> {
 
         String title = String.format("[%s] Rapport de calcul statistiques", config.getString("host"));
         for (int i = 0; i < recipients.size(); i++) {
-            Future emailFuture = Promise.promise().future();
-            futures.add(emailFuture);
+            Promise<Message<JsonObject>> emailFuture = Promise.promise();
+            emailFuture.future().onFailure(error -> log.error(String.format("[Statistics@%s::generateReport] Fail to send email %s",
+                    this.getClass().getSimpleName(), error.getMessage())));
+            futures.add(emailFuture.future());
             emailSender.sendEmail(null, recipients.getString(i), null, null, title, report, null, false, emailFuture);
         }
 
