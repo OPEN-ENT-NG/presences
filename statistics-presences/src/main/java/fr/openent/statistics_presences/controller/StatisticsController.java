@@ -206,12 +206,9 @@ public class StatisticsController extends ControllerHelper {
                                 }
                             }
                         }
-
                         promise.complete();
                     });
-
         });
-
 
         return promise.future();
     }
@@ -228,7 +225,11 @@ public class StatisticsController extends ControllerHelper {
             statisticsPresencesService.fetchUsers(structures, startDate).compose(structureStatisticsUserList ->
                             statisticsPresencesService.processStatisticsPrefetch(structureStatisticsUserList, false))
                     .onSuccess(res -> renderJson(request, res))
-                    .onFailure(unused -> renderError(request));
+                    .onFailure(fail -> {
+                        log.error(String.format("[StatisticsPresences@%s::export] Failed to set restricted teacher filter %s",
+                                this.getClass().getSimpleName(), fail.getMessage()));
+                        renderError(request);
+                    });
         });
     }
 
@@ -245,7 +246,11 @@ public class StatisticsController extends ControllerHelper {
                     .compose(structureStatisticsUser ->
                             statisticsPresencesService.processStatisticsPrefetch(Collections.singletonList(structureStatisticsUser), true))
                     .onSuccess(res -> renderJson(request, res))
-                    .onFailure(unused -> renderError(request));
+                    .onFailure(fail -> {
+                        log.error(String.format("[StatisticsPresences@%s::export] Failed to set restricted teacher filter %s",
+                                this.getClass().getSimpleName(), fail.getMessage()));
+                        renderError(request);
+                    });
         });
     }
 

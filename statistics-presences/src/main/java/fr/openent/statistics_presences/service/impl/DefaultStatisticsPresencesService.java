@@ -42,6 +42,11 @@ public class DefaultStatisticsPresencesService extends DBService implements Stat
                     String startDate = schoolYear.getString(Field.START_DATE, "now()");
                     JsonArray statements = new JsonArray(studentIds.stream().map(studentId -> createStatisticsUserStatement(structureId, studentId, startDate)).collect(Collectors.toList()));
                     sql.transaction(statements, SqlResult.validUniqueResultHandler(FutureHelper.handlerJsonObject(handler)));
+                })
+                .onFailure(error -> {
+                    log.error(String.format("[StatisticsPresences@%s::create] Failed to get school year %s",
+                            this.getClass().getSimpleName(), error.getMessage()));
+                    handler.handle(Future.failedFuture(error));
                 });
     }
 
@@ -70,7 +75,11 @@ public class DefaultStatisticsPresencesService extends DBService implements Stat
             } else {
                 StatisticsPresences.launchProcessingStatistics(commonServiceFactory.eventBus(), params)
                         .onSuccess(promise::complete)
-                        .onFailure(promise::fail);
+                        .onFailure(error -> {
+                            log.error(String.format("[StatisticsPresences@%s::processStatisticsPrefetch] Failed to launch processing statistics %s",
+                                    this.getClass().getSimpleName(), error.getMessage()));
+                            promise.fail(error);
+                        });
             }
         }
         return promise.future();
@@ -85,10 +94,14 @@ public class DefaultStatisticsPresencesService extends DBService implements Stat
             List<Future<JsonObject>> futureList = new ArrayList<>();
 
             for (StructureStatisticsUser structureStatisticsUser : structureStatisticsUserList) {
-                futureList.add(Viescolaire.getInstance().getSchoolYear(structureStatisticsUser.getStructureId()).onSuccess(schoolYear -> {
-                    String startDate = schoolYear.getString(Field.START_DATE, "2000-01-01T00:00:00");
-                    structureStatisticsUser.getStatisticsUsers().forEach(statisticsUser -> statisticsUser.setModified(startDate));
-                }));
+                futureList.add(Viescolaire.getInstance().getSchoolYear(structureStatisticsUser.getStructureId())
+                        .onSuccess(schoolYear -> {
+                            String startDate = schoolYear.getString(Field.START_DATE, "2000-01-01T00:00:00");
+                            structureStatisticsUser.getStatisticsUsers().forEach(statisticsUser -> statisticsUser.setModified(startDate));
+                        })
+                        .onFailure(error -> log.error(String.format("[StatisticsPresences@%s::processStatisticsPrefetch] Failed to get school year for id %s %s",
+                                this.getClass().getSimpleName(), structureStatisticsUser.getStructureId(), error.getMessage())))
+                );
             }
 
             FutureHelper.all(futureList)
@@ -104,7 +117,11 @@ public class DefaultStatisticsPresencesService extends DBService implements Stat
                         } else {
                             StatisticsPresences.launchProcessingStatistics(commonServiceFactory.eventBus(), params)
                                     .onSuccess(promise::complete)
-                                    .onFailure(promise::fail);
+                                    .onFailure(error -> {
+                                        log.error(String.format("[StatisticsPresences@%s::processStatisticsPrefetch] Failed to launch processing statistics %s",
+                                                this.getClass().getSimpleName(), error.getMessage()));
+                                        promise.fail(error);
+                                    });
                         }
                     })
                     .onFailure(promise::fail);
@@ -166,10 +183,16 @@ public class DefaultStatisticsPresencesService extends DBService implements Stat
                                             Viescolaire.getInstance().getSchoolYear(structureStatisticsUser.getStructureId()) :
                                             Future.succeededFuture(new JsonObject().put(Field.START_DATE, startDate));
                                     futureList.add(schoolDateFuture);
-                                    schoolDateFuture.onSuccess(schoolDate -> {
-                                        String startingDate = schoolDate.getString(Field.START_DATE, "2000-01-01 00:00:00");
-                                        structureStatisticsUser.getStatisticsUsers().forEach(statisticsUser -> statisticsUser.setModified(startingDate));
-                                    });
+                                    schoolDateFuture
+                                            .onSuccess(schoolDate -> {
+                                                String startingDate = schoolDate.getString(Field.START_DATE, "2000-01-01 00:00:00");
+                                                structureStatisticsUser.getStatisticsUsers().forEach(statisticsUser -> statisticsUser.setModified(startingDate));
+                                            })
+                                            .onFailure(error -> {
+                                                log.error(String.format("[StatisticsPresences@%s::fetchUsers] Fail to fetch users %s",
+                                                        this.getClass().getSimpleName(), error.getMessage()));
+                                                promise.fail(error);
+                                            });
                                 }
                             });
                     return FutureHelper.all(futureList);
@@ -210,7 +233,12 @@ public class DefaultStatisticsPresencesService extends DBService implements Stat
                             );
                     promise.complete(structureStatisticsUser);
                 })
-                .onFailure(promise::fail);
+                .onFailure(error -> {
+                    log.error(String.format("[StatisticsPresences@%s::fetchUsers] Failed to get school year for id %s %s",
+                            this.getClass().getSimpleName(), structureId, error.getMessage()));
+                    promise.fail(error);
+                });
+
         return promise.future();
     }
 
@@ -258,7 +286,11 @@ public class DefaultStatisticsPresencesService extends DBService implements Stat
         String query = String.format("DELETE FROM %s.user WHERE id IN " + Sql.listPrepared(studentIdList) + " ;", StatisticsPresences.DB_SCHEMA);
         JsonArray params = new JsonArray().addAll(new JsonArray(studentIdList));
         Sql.getInstance().prepared(query, params, SqlResult.validUniqueResultHandler(either -> {
-            if (either.isLeft()) promise.fail(either.left().getValue());
+            if (either.isLeft()) {
+                log.error(String.format("[Statistics@%s::clearWaitingList] Fail to clear waiting list %s",
+                        this.getClass().getSimpleName(), either.left().getValue()));
+                promise.fail(either.left().getValue());
+            }
             else promise.complete();
         }));
 
@@ -270,7 +302,11 @@ public class DefaultStatisticsPresencesService extends DBService implements Stat
         Promise<Void> promise = Promise.promise();
         String query = String.format("TRUNCATE TABLE %s.user;", StatisticsPresences.DB_SCHEMA);
         Sql.getInstance().raw(query, SqlResult.validUniqueResultHandler(either -> {
-            if (either.isLeft()) promise.fail(either.left().getValue());
+            if (either.isLeft()) {
+                log.error(String.format("[Statistics@%s::clearWaitingList] Fail to clear waiting list %s",
+                        this.getClass().getSimpleName(), either.left().getValue()));
+                promise.fail(either.left().getValue());
+            }
             else promise.complete();
         }));
 

@@ -62,6 +62,7 @@ public class DefaultStatisticsWeeklyAudiencesService extends DBService implement
                         if (structureIds.size() != 1) {
                             String message = String.format("[StatisticsPresences@%s::create] " +
                                     "Can not save registers from different structures", this.getClass().getSimpleName());
+                            log.error(message);
                             return Future.failedFuture(message);
                         }
                         resStructureId = structureIds.get(0);
@@ -69,7 +70,11 @@ public class DefaultStatisticsWeeklyAudiencesService extends DBService implement
 
                     return createFromRegisters(resStructureId, RegisterHelper.getRegistersFromArray(registerResults));
                 })
-                .onFailure(promise::fail)
+                .onFailure(error -> {
+                    log.error(String.format("[StatisticsPresences@%s::create] Failed to create statistics weekly audiences %s",
+                            this.getClass().getSimpleName(), error.getMessage()));
+                    promise.fail(error);
+                })
                 .onSuccess(createResults -> promise.complete());
 
         return promise.future();
@@ -245,7 +250,13 @@ public class DefaultStatisticsWeeklyAudiencesService extends DBService implement
                     .put(Field.ENDAT, endAt);
 
             commonServiceFactory.eventBus().request(ProcessingWeeklyAudiencesManual.class.getName(),
-                    params, new DeliveryOptions(), handlerToAsyncHandler(res -> promise.complete(res.body())));
+                    params, new DeliveryOptions(), handlerToAsyncHandler(res -> {
+                        if (Field.ERROR.equals(res.body().getString(Field.STATUS))) {
+                            log.error(String.format("[StatisticsPresences@%s::processWeeklyAudiencesPrefetch] Fail to process weekly %s",
+                                    this.getClass().getSimpleName(), res.body().getString(Field.MESSAGE, "null")));
+                        }
+                        promise.complete(res.body());
+                    }));
         }
 
         return promise.future();

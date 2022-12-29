@@ -20,7 +20,7 @@ import java.util.List;
 public abstract class Indicator extends DBService {
     private static final String NAME_FORMATTER = "fr.openent.statistics_presences.indicator.impl.%s";
     private final String CSV_EXPORT_FORMATTER = "fr.openent.statistics_presences.indicator.export.%s";
-    private final Logger log = LoggerFactory.getLogger(Indicator.class);
+    private static final Logger log = LoggerFactory.getLogger(Indicator.class);
     private final String name;
     private final Vertx vertx;
 
@@ -37,7 +37,11 @@ public abstract class Indicator extends DBService {
 
     public static Handler<AsyncResult<JsonObject>> handler(HttpServerRequest request) {
         return ar -> {
-            if (ar.failed()) Renders.renderError(request);
+            if (ar.failed()) {
+                log.error(String.format("[Presences@%s::handler] Failed to handler %s",
+                        Indicator.class.getSimpleName(), ar.cause() == null ? ar.cause() : ar.cause().getMessage()));
+                Renders.renderError(request);
+            }
             else Renders.renderJson(request, ar.result());
         };
     }

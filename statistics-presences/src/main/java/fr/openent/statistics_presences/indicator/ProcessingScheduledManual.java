@@ -215,7 +215,11 @@ public class ProcessingScheduledManual extends BusModBase implements Handler<Mes
         String query = String.format("DELETE FROM %s.user WHERE id IN " + Sql.listPrepared(studentIds) + " ;", StatisticsPresences.DB_SCHEMA);
         JsonArray params = new JsonArray().addAll(new JsonArray(studentIds));
         Sql.getInstance().prepared(query, params, SqlResult.validUniqueResultHandler(either -> {
-            if (either.isLeft()) promise.fail(either.left().getValue());
+            if (either.isLeft()) {
+                log.error(String.format("[Statistics@%s::clearWaitingList] Fail to clear waiting list %s",
+                        this.getClass().getSimpleName(), either.left().getValue()));
+                promise.fail(either.left().getValue());
+            }
             else promise.complete();
         }));
 

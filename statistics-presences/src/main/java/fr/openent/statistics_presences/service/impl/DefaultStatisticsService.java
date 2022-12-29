@@ -35,13 +35,13 @@ public class DefaultStatisticsService implements StatisticsService {
     public void save(String structureId, JsonArray students, List<JsonObject> values, String startDate, String endDate,
                         Handler<AsyncResult<Void>> handler) {
         if (values == null || values.isEmpty()) {
-            deleteOldValues(structureId, students, values, startDate, endDate).onComplete(event -> {
-                if (event.failed()) {
-                    handler.handle(Future.failedFuture(event.cause()));
-                } else {
-                    handler.handle(Future.succeededFuture());
-                }
-            });
+            deleteOldValues(structureId, students, values, startDate, endDate)
+                    .onFailure(error -> {
+                        log.error(String.format("[Statistics@%s::save] Fail to delete old values %s",
+                                this.getClass().getSimpleName(), error.getMessage()));
+                        handler.handle(Future.failedFuture(error));
+                    })
+                    .onSuccess(event -> handler.handle(Future.succeededFuture()));
             return;
         }
 
