@@ -468,7 +468,12 @@ public class Global extends Indicator {
         Promise<Number> promise = Promise.promise();
         JsonObject request = commandObject(search.countUsersWithStatisticsPipeline());
         mongoDb.command(request.toString(), MongoDbResult.validResultHandler(FutureHelper.handlerJsonObject(res -> {
-            if (res.failed()) promise.fail(res.cause().getMessage());
+            if (res.failed()) {
+                log.error(String.format("[StatisticsPresences@Global::prefetchUsers] " +
+                                "Indicator %s failed to execute prefetch user mongodb aggregation pipeline. %s", Global.class.getName(),
+                        res.cause().getMessage()));
+                promise.fail(res.cause());
+            }
             else promise.complete(res.result().getJsonObject(Field.CURSOR).getJsonArray(Field.FIRSTBATCH, new JsonArray())
                     .getJsonObject(0)
                     .getInteger(Field.COUNT));

@@ -248,6 +248,8 @@ public class DefaultGroupService extends DBService implements GroupService {
                     .put(Field.STRUCTUREID, structureId);
             Neo4j.getInstance().execute(query, params, Neo4jResult.validResultHandler(res -> {
                 if (res.isLeft()) {
+                    LOGGER.error(String.format("[Common@%s::getGroupsAndClassesFromTeacherId] Failed to get groups and classes from teacher id %s",
+                            this.getClass().getSimpleName(), res.left().getValue()));
                     promise.fail(res.left().getValue());
                 } else {
                     promise.complete(((List<JsonObject>) res.right().getValue().getList())

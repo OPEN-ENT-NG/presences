@@ -75,7 +75,11 @@ public class StatisticsWorker extends IndicatorWorker {
                             .collect(Collectors.toList());
                     promise.complete(stats);
                 })
-                .onFailure(promise::fail);
+                .onFailure(error -> {
+                    log.error(String.format("[StatisticsPresences@%s::countHandler] Failed %s",
+                            IndicatorGeneric.class.getSimpleName(), error.getMessage()));
+                    promise.fail(error);
+                });
         return promise.future();
     }
 
@@ -133,7 +137,11 @@ public class StatisticsWorker extends IndicatorWorker {
                             .collect(Collectors.toList());
                     promise.complete(stats);
                 })
-                .onFailure(promise::fail);
+                .onFailure(error -> {
+                    log.error(String.format("[StatisticsPresences@%s::fetchEventCountFromPresences] Failed to fetch events from presences %s",
+                            IndicatorGeneric.class.getSimpleName(), error.getMessage()));
+                    promise.fail(error);
+                });
 
         return promise.future();
     }
@@ -164,7 +172,12 @@ public class StatisticsWorker extends IndicatorWorker {
                             .collect(Collectors.toList());
                     promise.complete(stats);
                 })
-                .onFailure(promise::fail);
+                .onFailure(error -> {
+                    log.error(String.format("[StatisticsPresences@%s::retrievePunishmentCount] Failed to retrieve punishments %s",
+                            IndicatorGeneric.class.getSimpleName(), error.getMessage()));
+                    promise.fail(error);
+                });
+
         return promise.future();
     }
 
