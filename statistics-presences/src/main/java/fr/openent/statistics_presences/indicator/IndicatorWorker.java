@@ -265,7 +265,7 @@ public abstract class IndicatorWorker extends AbstractVerticle {
 
                     Promise<Void> init = Promise.promise();
                     Future<Void> current = init.future();
-                    String endDate = DateHelper.getCurrentDate(DateHelper.SQL_FORMAT);
+                    String endDate = DateHelper.getCurrentDate(DateHelper.SQL_FORMAT_END_DAY);
                     Function<Integer, Future<List<JsonObject>>> nextProcessFunction = index -> {
                         log.debug(String.format("[StatisticsPresences@IndicatorWorker::processStructure] " +
                                 "Processing student %s for structure %s", statisticsUserList.get(index).getId(), structureId));
