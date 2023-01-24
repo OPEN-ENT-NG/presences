@@ -1,6 +1,7 @@
-import {ng} from 'entcore'
+import {model, ng} from 'entcore'
 import http, {AxiosResponse} from 'axios';
 import {IPunishmentType, IPunishmentTypeBody} from "@incidents/models/PunishmentType";
+import rights from "@incidents/rights";
 
 export interface IPunishmentsTypeService {
     get(structure_id: string): Promise<IPunishmentType[]>;
@@ -15,6 +16,7 @@ export interface IPunishmentsTypeService {
 export const punishmentsTypeService: IPunishmentsTypeService = {
     get: async (structure_id: string): Promise<IPunishmentType[]> => {
         try {
+            if (!model.me.hasWorkflow(rights.workflow.incidentRead)) return [];
             const {data} = await http.get(`/incidents/punishments/type?structure_id=${structure_id}`);
             return data;
         } catch (err) {
