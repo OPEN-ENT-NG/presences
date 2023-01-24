@@ -47,6 +47,7 @@
                     </span>
                 </a>
                 <div role="menuitem" class="item"
+                     ng-if="hasIncidentRight('access') || hasIncidentRight('readPunishment') || hasIncidentRight('readSanction')"
                      ng-class="{active: getCurrentState() === 'incidents'}"
                      data-ng-click="hoverIn('INCIDENTS')"
                      data-ng-mouseover="hoverIn('INCIDENTS')"
