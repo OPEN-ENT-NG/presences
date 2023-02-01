@@ -64,7 +64,7 @@
 
     <!-- Students statistics -->
     <div class="tbody">
-        <div class="tr" ng-repeat="student in vm.indicator.values.students">
+        <div class="cell-values tr" ng-repeat="student in vm.indicator.values.students">
             <!-- Audience name -->
             <div class="td text-center flex-row row__6">
                 <span class="flex-col col__1 justify-center">
@@ -76,11 +76,11 @@
                 </span>
             </div>
             <!-- Student name -->
-            <div class="td student ellipsis">
-                <student-name name="student.name" id="student.id"></student-name>
+            <div class="td student ellipsis flex-row text-center">
+                <student-name name="student.name" id="student.id" class="ellipsis"></student-name>
             </div>
             <!-- Total absences -->
-            <div ng-if="vm.indicator.absenceSelected()" class="td text-center indicator-value">
+            <div ng-if="vm.indicator.absenceSelected()" class="td flex-row text-center indicator-value">
                 <span ng-if="student.statistics.ABSENCE_TOTAL !== undefined">
                     [[vm.indicator.displayStudentValue(student, 'ABSENCE_TOTAL')]]
                 </span>
@@ -90,7 +90,7 @@
             </div>
             <!-- Other event types -->
             <div ng-repeat="type in vm.indicator._filterTypes" ng-if="type.selected()"
-                 class="td text-center indicator-value"
+                 class="cell-values td flex-row text-center indicator-value"
                  ng-class="{'max-value': student.statistics[type.name()].max}">
                 <span ng-if="student.statistics[type.name()] !== undefined">
                     [[vm.indicator.displayStudentValue(student, type.name())]]
