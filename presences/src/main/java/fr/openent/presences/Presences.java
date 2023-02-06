@@ -113,7 +113,6 @@ public class Presences extends BaseServer {
         addController(new NotebookController());
         addController(new SettingsController());
         addController(new AlertController(eb));
-        addController(new MementoController(eb));
         addController(new ActionController());
         addController(new DisciplineController());
         addController(new InitController(eb));
