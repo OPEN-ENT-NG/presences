@@ -7,6 +7,7 @@ import fr.openent.presences.core.constants.*;
 import fr.openent.presences.export.RegisterCSVExport;
 import fr.openent.presences.helper.CourseHelper;
 import fr.openent.presences.model.*;
+import fr.openent.presences.security.RegisterViewRight;
 import fr.openent.presences.service.*;
 import fr.openent.presences.service.impl.*;
 import fr.wseduc.rs.ApiDoc;
@@ -22,6 +23,7 @@ import io.vertx.core.http.HttpServerRequest;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import org.entcore.common.controller.ControllerHelper;
+import org.entcore.common.http.filter.ResourceFilter;
 import org.entcore.common.http.filter.Trace;
 import org.entcore.common.user.UserInfos;
 import org.entcore.common.user.UserUtils;
@@ -52,7 +54,8 @@ public class CourseController extends ControllerHelper {
 
     @Get("/courses")
     @ApiDoc("Get courses")
-    @SecuredAction(value = "", type = ActionType.AUTHENTICATED)
+    @SecuredAction(value = "", type = ActionType.RESOURCE)
+    @ResourceFilter(RegisterViewRight.class)
     public void getCourses(HttpServerRequest request) {
         MultiMap params = request.params();
         if (!courseHelper.checkParams(params)) {
