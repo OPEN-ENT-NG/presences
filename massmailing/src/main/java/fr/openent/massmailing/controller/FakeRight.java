@@ -15,12 +15,6 @@ public class FakeRight extends ControllerHelper {
         request.response().setStatusCode(501).end();
     }
 
-    @Get("/rights/view/restricted")
-    @SecuredAction(Massmailing.VIEW_RESTRICTED)
-    public void viewRestricted(HttpServerRequest request) {
-        notImplemented(request);
-    }
-
     @Get("/rights/manage/restricted")
     @SecuredAction(Massmailing.MANAGE_RESTRICTED)
     public void manageRestricted(HttpServerRequest request) {

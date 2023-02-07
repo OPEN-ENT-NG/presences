@@ -4,7 +4,6 @@ import fr.openent.massmailing.Massmailing;
 
 public enum WorkflowActions {
     VIEW(Massmailing.VIEW),
-    VIEW_RESTRICTED(Massmailing.VIEW_RESTRICTED),
     MANAGE(Massmailing.MANAGE),
     MANAGE_RESTRICTED(Massmailing.MANAGE_RESTRICTED);
 
