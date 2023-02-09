@@ -65,7 +65,7 @@ public class MailingController extends ControllerHelper {
 
 
         UserUtils.getUserInfos(eb, request, userInfos -> {
-            boolean hasRestrictedRight = WorkflowActionsCouple.VIEW.hasOnlyRestrictedRight(userInfos, UserType.TEACHER.equals(userInfos.getType()));
+            boolean hasRestrictedRight = WorkflowActionsCouple.MANAGE.hasOnlyRestrictedRight(userInfos, UserType.TEACHER.equals(userInfos.getType()));
             String teacherId = hasRestrictedRight ? userInfos.getUserId() : null;
 
             Future<List<String>> studentsFromTeacherFuture = this.userService.getStudentsFromTeacher(teacherId, structureId);

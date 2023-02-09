@@ -17,7 +17,7 @@ public class BodyCanAccessMassMailing implements ResourcesProvider {
         RequestUtils.bodyToJson(request, body -> {
             String structureId = body.getString(Field.STRUCTURE);
             List<String> structures = userInfos.getStructures();
-            handler.handle(structures.contains(structureId) && WorkflowActionsCouple.VIEW.hasRight(userInfos));
+            handler.handle(structures.contains(structureId) && WorkflowActionsCouple.MANAGE.hasRight(userInfos));
         });
     }
 }
