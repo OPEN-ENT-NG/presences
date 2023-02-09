@@ -3,8 +3,6 @@ package fr.openent.massmailing.actions;
 import fr.openent.presences.common.security.IWorkflowActionsCouple;
 
 public enum WorkflowActionsCouple implements IWorkflowActionsCouple {
-
-    VIEW(WorkflowActions.VIEW, WorkflowActions.VIEW_RESTRICTED),
     MANAGE(WorkflowActions.MANAGE, WorkflowActions.MANAGE_RESTRICTED);
 
     private final WorkflowActions unrestrictedAction;
