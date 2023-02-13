@@ -8,11 +8,11 @@ import fr.openent.presences.common.service.UserService;
 import fr.openent.presences.common.service.impl.DefaultGroupService;
 import fr.openent.presences.common.service.impl.DefaultUserService;
 import fr.openent.presences.constants.Reasons;
-import fr.openent.presences.core.constants.*;
+import fr.openent.presences.core.constants.Field;
 import fr.openent.presences.db.DBService;
 import fr.openent.presences.enums.EventType;
-import fr.openent.presences.helper.*;
-import fr.openent.presences.model.*;
+import fr.openent.presences.helper.AbsenceHelper;
+import fr.openent.presences.model.Absence;
 import fr.openent.presences.model.Event.Event;
 import fr.openent.presences.service.AbsenceService;
 import fr.openent.presences.service.CommonPresencesServiceFactory;
@@ -28,7 +28,10 @@ import org.entcore.common.sql.SqlResult;
 import org.entcore.common.user.UserInfos;
 
 import java.text.ParseException;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 public class DefaultAbsenceService extends DBService implements AbsenceService {
@@ -1200,11 +1203,17 @@ public class DefaultAbsenceService extends DBService implements AbsenceService {
     public Future<JsonObject> countAbsentStudents(String structureId, List<String> studentIds, String startAt, String endAt) {
         Promise<JsonObject> promise = Promise.promise();
         JsonArray params = new JsonArray();
-        String query = "SELECT COUNT(DISTINCT student_id)" +
-                " FROM presences.absence";
-        query += countAbsentStudentsWhereFilter(params, structureId, studentIds, startAt, endAt);
+        String query = String.format("SELECT COUNT(*)" +
+                        " FROM (SELECT DISTINCT student_id" +
+                        " FROM presences.absence a %s" +
+                        " UNION DISTINCT " +
+                        " SELECT DISTINCT student_id " +
+                        " FROM presences.event a " +
+                        " INNER JOIN presences.register r on a.register_id = r.id %s) as student_ids ",
+                countAbsentStudentsWhereFilter(params, structureId, studentIds, startAt, endAt),
+                countAbsentStudentsWhereFilter(params, structureId, studentIds, startAt, endAt));
 
-        Sql.getInstance().prepared(query, params, SqlResult.validUniqueResultHandler(FutureHelper.handlerJsonObject(promise)));
+        sql.prepared(query, params, SqlResult.validUniqueResultHandler(FutureHelper.handlerJsonObject(promise)));
 
         return promise.future();
     }
@@ -1214,12 +1223,12 @@ public class DefaultAbsenceService extends DBService implements AbsenceService {
         String query = " WHERE structure_id = ?";
         params.add(structureId);
         if (endAt != null) {
-            query += " AND start_date < ?";
+            query += " AND a.start_date < ?";
             params.add(endAt);
         }
 
         if (startAt != null) {
-            query += " AND end_date > ?";
+            query += " AND a.end_date > ?";
             params.add(startAt);
         }
 
