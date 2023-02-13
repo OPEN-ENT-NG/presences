@@ -249,8 +249,8 @@ public class DefaultEventService extends DBService implements EventService {
 
     @Override
     public Future<JsonObject> getEventsCount(String structureId, String startDate, String endDate,
-                          List<String> eventType, List<String> listReasonIds, Boolean noReason, Boolean noReasonLateness, List<String> userId, JsonArray userIdFromClasses,
-                          Boolean regularized, Boolean followed) {
+                                             List<String> eventType, List<String> listReasonIds, Boolean noReason, Boolean noReasonLateness, List<String> userId, JsonArray userIdFromClasses,
+                                             Boolean regularized, Boolean followed) {
         Promise<JsonObject> promise = Promise.promise();
         JsonArray params = new JsonArray();
         sql.prepared(this.getEventsQuery(structureId, startDate, endDate,
@@ -286,7 +286,7 @@ public class DefaultEventService extends DBService implements EventService {
                                   List<String> userId, JsonArray userIdFromClasses, Integer page, JsonArray params) {
 
         return this.getEventsQuery(structureId, startDate, endDate, eventType, listReasonIds, noReason, noReasonLateness, regularized,
-                followed, userId,userIdFromClasses, page, params, false);
+                followed, userId, userIdFromClasses, page, params, false);
     }
 
     /**
@@ -498,17 +498,12 @@ public class DefaultEventService extends DBService implements EventService {
                     .filter(Objects::nonNull)
                     .collect(Collectors.toList());
 
-            String query = "MATCH (u:User {profiles: ['Student']})-[:ADMINISTRATIVE_ATTACHMENT]->(s:Structure {id:{structureId}})" +
-                    " MATCH (c:Class)<-[:DEPENDS]-(:ProfileGroup)<-[:IN]-(u)" +
-                    " WHERE c.name IN {classesName}" +
-                    " RETURN distinct(u.id) AS id" +
-                    " UNION ALL" +
-                    " MATCH (fg:FunctionalGroup)<-[:IN]-(u)" +
-                    " WHERE fg.name IN {groupsName}" +
-                    " RETURN distinct(u.id) AS id" +
-                    " UNION ALL" +
-                    " MATCH (mg:ManualGroup)<-[:IN]-(u)" +
-                    " WHERE mg.name IN {groupsName}" +
+            String query = "MATCH (u:User {profiles: ['Student']})-[:IN]->(pg:ProfileGroup)-[:DEPENDS]->(s:Structure {id:{structureId}})" +
+                    " OPTIONAL MATCH (c:Class)<-[:DEPENDS]-(:ProfileGroup)<-[:IN]-(u)" +
+                    " OPTIONAL MATCH (fg:FunctionalGroup)<-[:IN]-(u)" +
+                    " OPTIONAL MATCH (mg:ManualGroup)<-[:IN]-(u)" +
+                    " WITH u, c, fg, mg" +
+                    " WHERE c.name IN {classesName} OR fg.name IN {groupsName} OR mg.name IN {groupsName}" +
                     " RETURN distinct(u.id) AS id";
 
 
