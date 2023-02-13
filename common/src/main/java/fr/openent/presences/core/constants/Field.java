@@ -92,6 +92,7 @@ public class Field {
     public static final String DISPLAY_END_DATE = "display_end_date";
     public static final String CURRENTDATE = "currentDate";
 
+    public static final String CATEGORY = "category";
 
     // School
     public static final String SCHOOL_YEAR = "schoolYear";

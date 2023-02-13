@@ -255,7 +255,7 @@ export const homeController = ng.controller('HomeController', ['$scope', 'route'
             if (!window.structure) return;
             vm.filter.groupsSearch = new GroupsSearch(window.structure.id, searchService, groupService, groupingService)
             vm.filter.studentsSearch = new StudentsSearch(window.structure.id, searchService)
-            if (!$scope.hasRight('manage')) {
+            if (!$scope.hasRight('manage') && !$scope.hasRight('manageRestricted')) {
                 $scope.redirectTo(`/history`);
             }
             await loadFormFilter();
