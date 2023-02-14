@@ -4,9 +4,10 @@ import fr.openent.massmailing.Massmailing;
 import fr.openent.massmailing.actions.Action;
 import fr.openent.massmailing.enums.MailingCategory;
 import fr.openent.massmailing.enums.MailingType;
-import fr.openent.massmailing.security.Manage;
+import fr.openent.massmailing.security.*;
 import fr.openent.massmailing.service.SettingsService;
 import fr.openent.massmailing.service.impl.DefaultSettingsService;
+import fr.openent.presences.core.constants.*;
 import fr.wseduc.rs.*;
 import fr.wseduc.security.ActionType;
 import fr.wseduc.security.SecuredAction;
@@ -34,12 +35,12 @@ public class SettingsController extends ControllerHelper {
     }
 
     @Get("/settings/templates/:type")
-    @SecuredAction(Massmailing.MANAGE)
+    @ResourceFilter(CanAccessMassMailing.class)
     @ApiDoc("Get all templates for given types")
-    public void getTemplates(HttpServerRequest request) {
-        String mailingType = request.getParam("type");
-        String structure = request.getParam("structure");
-        String category = request.getParam("category") == null ? MailingCategory.ALL.name() : request.getParam("category");
+    public void getAllTemplates(HttpServerRequest request) {
+        String mailingType = request.getParam(Field.TYPE);
+        String structure = request.getParam(Field.STRUCTURE);
+        String category = request.getParam(Field.CATEGORY) == null ? MailingCategory.ALL.name() : request.getParam(Field.CATEGORY);
         List<String> listCategory = Arrays.asList(category.split(","));
 
         if (structure == null ||
@@ -91,5 +92,9 @@ public class SettingsController extends ControllerHelper {
             log.error("[Massmailing@SettingsController] Failed to parse template identifier", e);
             badRequest(request);
         }
+    }
+    @SecuredAction(Massmailing.MANAGE)
+    public void getTemplates(HttpServerRequest request) {
+        request.response().setStatusCode(501).end();
     }
 }
