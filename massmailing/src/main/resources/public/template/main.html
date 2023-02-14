@@ -6,14 +6,14 @@
 <div class="row menu">
     <!-- massmailing -->
     <div class="cell menu-item"
-         ng-if="hasRight('manage')">
+         ng-if="hasRight('manage') || hasRight('manageRestricted')">
         <a href="#/" ng-class="{'current-state': vm.homeState()}">
             <i18n>massmailing.home.title</i18n>
         </a>
     </div>
     <!-- massmailing history -->
     <div class="cell menu-item"
-         ng-if="hasRight('access') || hasRight('viewRestricted')">
+         ng-if="hasRight('access')">
         <a href="#/history" ng-class="{'current-state': vm.historyState()}">
             <i18n>massmailing.history.title</i18n>
         </a>
