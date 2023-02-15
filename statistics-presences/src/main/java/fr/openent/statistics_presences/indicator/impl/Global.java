@@ -419,7 +419,7 @@ public class Global extends Indicator {
         Promise<Number> promise = Promise.promise();
         JsonObject params = new JsonObject();
         String query = matchUsersFromProvidedAudiencesQuery(search, params);
-        query += "RETURN count(u) as count";
+        query += "RETURN count(DISTINCT u.id) as count";
         neo4j.execute(query, params, countUserHandler(promise));
         return promise.future();
     }
@@ -690,7 +690,7 @@ public class Global extends Indicator {
         // Warning: search.filter().users() could be fulfilled
         JsonObject params = new JsonObject();
         String query = matchUserInClassQuery(search, users, params);
-        query += "RETURN count(u) as count";
+        query += "RETURN count(DISTINCT u.id) as count";
         neo4j.execute(query, params, countUserHandler(promise));
         return promise.future();
     }
