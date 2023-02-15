@@ -3,12 +3,12 @@ import {Group} from "@common/services";
 export interface GroupingResponse {
     id: string,
     name: string,
-    student_divisions: Array<StudentDivisionResponse>
+    student_divisions?: Array<StudentDivisionResponse>
 }
 
 export interface StudentDivisionResponse {
     id: string,
-    name : string
+    name: string
 }
 
 export class Grouping {
@@ -27,4 +27,12 @@ export class Grouping {
 
 export function instanceOfGrouping(object: any): object is Grouping {
     return 'name' in object && 'groupList' in object;
+}
+
+export function toModelList(groupingResponses: GroupingResponse[]): Array<Group | Grouping> {
+    return groupingResponses
+        .map((groupingResponse: GroupingResponse) => !!groupingResponse.student_divisions ?
+            new Grouping().buildFromResponse(groupingResponse) :
+            new Group().buildFromStudentDivision(groupingResponse)
+        );
 }

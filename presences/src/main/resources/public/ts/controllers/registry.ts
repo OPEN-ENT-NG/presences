@@ -1,6 +1,7 @@
 import {_, idiom as lang, moment, ng} from 'entcore';
 import {
-    Group, GroupingService,
+    Group,
+    GroupingService,
     GroupService,
     Registry,
     RegistryDays,
@@ -12,7 +13,7 @@ import {
 import {DateUtils, GroupsSearch} from "@common/utils";
 import {EventType} from "../models";
 import {EVENT_TYPE} from "@common/core/enum/event-type";
-import {instanceOfGrouping} from "@common/model/grouping";
+import {Grouping, instanceOfGrouping} from "@common/model/grouping";
 
 declare let window: any;
 
@@ -59,6 +60,7 @@ interface ViewModel {
     toggleForgottenNotebookFilter(): void;
 
     selectGroup(model: any, student: any): void;
+
     searchGroup(value: string): Promise<void>;
 
     hasEventType(event: RegistryEvent[], eventTypeName: string): boolean;
@@ -72,6 +74,7 @@ interface ViewModel {
     openEventCard($event, student: string, day: RegistryDays, events: RegistryEvent[]): void;
 
     formatDate(date: string): string;
+
     closeEventCard(): void;
 
     // CSV
@@ -173,7 +176,7 @@ export const registryController = ng.controller('RegistryController', ['$scope',
         };
 
         const updateGroup = () => {
-            vm.params.group = vm.groupsSearch.getGroups().map((group: Group) => group.id);
+            vm.params.group = vm.groupsSearch.getSelectedGroups().map((group: Group) => group.id);
         };
 
         const setEmptyState = (): string => {
@@ -231,7 +234,7 @@ export const registryController = ng.controller('RegistryController', ['$scope',
         }
 
         /* Groups interaction */
-        vm.selectGroup = (model, item: Group) => {
+        vm.selectGroup = (model, item: Group | Grouping) => {
             vm.groupsSearch.selectGroups(model, item);
             updateGroup();
             $location.search(vm.params);
