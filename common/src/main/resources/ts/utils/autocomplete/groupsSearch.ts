@@ -1,7 +1,7 @@
 import {SearchService} from "@common/services/SearchService";
 import {AutoCompleteUtils} from "./auto-complete";
 import {Group, GroupingService, GroupService} from "@common/services";
-import {Grouping, instanceOfGrouping} from "@common/model/grouping";
+import {Grouping, instanceOfGrouping, toModelList} from "@common/model/grouping";
 
 /**
  * ⚠ This class is used for the directive async-autocomplete
@@ -62,34 +62,23 @@ export class GroupsSearch extends AutoCompleteUtils {
 
     public selectGroups(valueInput: string, groupItem: Group | Grouping) {
         if (!this._selectedGroups) this._selectedGroups = [];
-        if (instanceOfGrouping(groupItem)) {
-            let that: GroupsSearch = this;
-            (<Grouping>groupItem).groupList.forEach((group: Group) => {
-                that.selectGroups(valueInput, group);
-            });
-        } else {
-            if (this._selectedGroups.find(group => group["id"] === groupItem.id) === undefined) {
-                this._selectedGroups.push(groupItem);
-            }
-        }
+        this._selectedGroups = !(groupItem instanceof Group) ? [...this._selectedGroups, ...groupItem.groupList] :
+            [...this._selectedGroups, ...[groupItem]];
+        this._selectedGroups = Array.from(new Set(this._selectedGroups.map((selectedGroups: Group) => selectedGroups.id)))
+            .map((selectedGroupId: string) => this._selectedGroups.find((group: Group) => group.id === selectedGroupId))
+            .filter((selectedGroup: string) => !!selectedGroup);
     };
-
-    public selectGroup(valueInput: string, groupItem: Group | Grouping) {
-        this._selectedGroups = [];
-        if (instanceOfGrouping(groupItem)) {
-            let that: GroupsSearch = this;
-            (<Grouping>groupItem).groupList.forEach((group: Group) => {
-                that.selectGroups(valueInput, group);
-            });
-        } else {
-            this._selectedGroups.push(groupItem);
-        }
-    }
 
     public async searchGroups(valueInput: string) {
         try {
-            this._groups = await this._groupService.search(this.structureId, valueInput);
-            this._groups.forEach((group: Group) => group.toString = () => group.name);
+            this._groups = toModelList(await this._groupService.search(this.structureId, valueInput))
+                .filter((group: Group) =>
+                    !this.selectedGroups ||
+                    !this.selectedGroups.find((selectGroup: Group) => selectGroup.id === group.id)
+                ).map((group: Group) => {
+                    group.toString = () => group.name;
+                    return group
+                });
             if (this._groupingService) {
                 let groupingList: Array<Grouping> = await this._groupingService.search(this.structureId, valueInput)
                 groupingList.forEach((grouping: Grouping) => {
