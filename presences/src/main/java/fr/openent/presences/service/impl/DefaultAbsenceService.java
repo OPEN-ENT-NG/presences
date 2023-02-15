@@ -64,11 +64,11 @@ public class DefaultAbsenceService extends DBService implements AbsenceService {
         JsonArray params = new JsonArray();
         String query = "SELECT * FROM " + Presences.dbSchema + ".absence";
 
-        query += " WHERE structure_id = ? AND start_date > ? AND end_date < ? OR ? > start_date ";
+        query += " WHERE structure_id = ? AND (start_date <= ? AND end_date >= ?) ";
+
         params.add(structureId)
-                .add(startDate + " " + defaultStartTime)
                 .add(endDate + " " + defaultEndTime)
-                .add(endDate + " " + defaultEndTime);
+                .add(startDate + " " + defaultStartTime);
         if (!users.isEmpty()) {
             query += " AND student_id IN " + Sql.listPrepared(users.toArray());
             params.addAll(new JsonArray(users));
