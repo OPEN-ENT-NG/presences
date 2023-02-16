@@ -77,6 +77,7 @@ public class Field {
     public static final String END_AT = "end_at";
     public static final String ENDAT = "endAt";
     public static final String DATE = "date";
+    public static final String DAYS = "days";
     public static final String START_DATE = "start_date";
     public static final String STARTDATE = "startDate";
     public static final String START = "start";
@@ -200,6 +201,7 @@ public class Field {
     public static final String DEPARTURE = "departure";
     public static final String REMARK = "remark";
     public static final String FORGOTTEN_NOTEBOOK = "forgotten_notebook";
+    public static final String FORGOTTENNOTEBOOK = "forgottenNotebook";
     public static final String SANCTION = "sanction";
     public static final String FOLLOWED = "followed";
     public static final String MASSMAILED = "massmailed";
@@ -255,6 +257,7 @@ public class Field {
     public static final String HALFBOARDER = "halfBoarder";
     public static final String INTERNAL = "internal";
     public static final String ACCOMMODATION = "accommodation";
+    public static final String GROUPIDS = "groupIds";
 
 
     // UserInfos

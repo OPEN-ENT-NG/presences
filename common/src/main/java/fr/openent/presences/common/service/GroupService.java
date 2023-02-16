@@ -61,6 +61,7 @@ public interface GroupService {
      * @param handler FUnction handler returning data
      */
     void getGroupStudents(List<String> groups, Handler<Either<String, JsonArray>> handler);
+    Future<JsonArray> getGroupStudents(String structureId, List<String> groups);
 
     Future<JsonArray> getGroupStudents(List<String> groups);
 
