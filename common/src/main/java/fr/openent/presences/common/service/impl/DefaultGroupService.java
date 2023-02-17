@@ -2,7 +2,7 @@ package fr.openent.presences.common.service.impl;
 
 import fr.openent.presences.common.helper.FutureHelper;
 import fr.openent.presences.common.service.GroupService;
-import fr.openent.presences.core.constants.*;
+import fr.openent.presences.core.constants.Field;
 import fr.openent.presences.db.DBService;
 import fr.openent.presences.enums.GroupType;
 import fr.wseduc.webutils.Either;
@@ -15,8 +15,11 @@ import io.vertx.core.logging.LoggerFactory;
 import org.entcore.common.neo4j.Neo4j;
 import org.entcore.common.neo4j.Neo4jResult;
 
-import java.util.*;
-import java.util.stream.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Objects;
+import java.util.stream.Collectors;
 
 public class DefaultGroupService extends DBService implements GroupService {
 
@@ -61,23 +64,23 @@ public class DefaultGroupService extends DBService implements GroupService {
         } else {
             getGroupsId(structureId, new JsonArray(groupClassNames),
                     new JsonArray(groupClassNames), res -> {
-                if (res.isLeft()) {
-                    promise.fail(res.left().getValue());
-                } else {
-                    JsonArray classes = res.right().getValue().getJsonArray(Field.CLASSES);
-                    JsonArray groups = res.right().getValue().getJsonArray(Field.GROUPS);
-                    JsonArray manualGroups = res.right().getValue().getJsonArray(Field.MANUALGROUPS);
-                    JsonArray audiences = new JsonArray().addAll(classes).addAll(groups).addAll(manualGroups);
-                    List<String> audienceIds = ((List<JsonObject>) audiences.getList())
-                            .stream()
-                            .map(audience -> audience.getString(Field.ID))
-                            .filter(Objects::nonNull)
-                            .distinct()
-                            .collect(Collectors.toList());
+                        if (res.isLeft()) {
+                            promise.fail(res.left().getValue());
+                        } else {
+                            JsonArray classes = res.right().getValue().getJsonArray(Field.CLASSES);
+                            JsonArray groups = res.right().getValue().getJsonArray(Field.GROUPS);
+                            JsonArray manualGroups = res.right().getValue().getJsonArray(Field.MANUALGROUPS);
+                            JsonArray audiences = new JsonArray().addAll(classes).addAll(groups).addAll(manualGroups);
+                            List<String> audienceIds = ((List<JsonObject>) audiences.getList())
+                                    .stream()
+                                    .map(audience -> audience.getString(Field.ID))
+                                    .filter(Objects::nonNull)
+                                    .distinct()
+                                    .collect(Collectors.toList());
 
-                    promise.complete(audienceIds);
-                }
-            });
+                            promise.complete(audienceIds);
+                        }
+                    });
         }
         return promise.future();
     }
@@ -136,6 +139,7 @@ public class DefaultGroupService extends DBService implements GroupService {
     }
 
     @Override
+    @Deprecated
     public void getGroupStudents(List<String> groups, Handler<Either<String, JsonArray>> handler) {
         if (groups == null || groups.isEmpty()) {
             handler.handle(new Either.Right<>(new JsonArray()));
@@ -160,6 +164,38 @@ public class DefaultGroupService extends DBService implements GroupService {
     }
 
     @Override
+    public Future<JsonArray> getGroupStudents(String structureId, List<String> groups) {
+        Promise<JsonArray> promise = Promise.promise();
+
+        if (groups == null || groups.isEmpty() || structureId == null || "".equals(structureId.trim())) {
+            String message = String.format("[Presences@%s::getGroupStudents] Missing parameters",
+                    this.getClass().getSimpleName());
+            LOGGER.error(message);
+            promise.fail(message);
+            return promise.future();
+        }
+
+        String query = String.format("MATCH (u:User {profiles: ['Student']})-[:IN]->(pg:ProfileGroup)-[:DEPENDS]" +
+                "->(s:Structure {id:{%s}}) " +
+                " OPTIONAL MATCH (c:Class)<-[:DEPENDS]-(:ProfileGroup)<-[:IN]-(u)" +
+                " OPTIONAL MATCH (g:Group)<-[:IN]-(u)" +
+                " WITH u, c, g" +
+                " WHERE c.id IN {%s} OR g.id IN {%s}" +
+                " RETURN DISTINCT u.id as id, (u.lastName + ' ' + u.firstName) as displayName, u.lastName as lastName," +
+                " u.firstName as firstName, 'USER' as type, COLLECT(DISTINCT {id: c.id, name: c.name}) as classes, " +
+                " COLLECT(DISTINCT {id: g.id, name: g.name}) as groups" +
+                " ORDER BY displayName", Field.STRUCTUREID, Field.GROUPIDS, Field.GROUPIDS);
+
+        JsonObject params = new JsonObject()
+                .put(Field.GROUPIDS, new JsonArray(groups))
+                .put(Field.STRUCTUREID, structureId);
+
+        neo4j.execute(query, params, Neo4jResult.validResultHandler(FutureHelper.handlerEitherPromise(promise)));
+
+        return promise.future();
+    }
+
+    @Override
     public Future<JsonArray> getGroupStudents(List<String> groups) {
         Promise<JsonArray> promise = Promise.promise();
         getGroupStudents(groups, FutureHelper.handlerJsonArray(promise));
@@ -168,7 +204,7 @@ public class DefaultGroupService extends DBService implements GroupService {
 
     @Override
     public void getAudiences(String structureId, List<String> audienceIds, Handler<AsyncResult<JsonArray>> handler) {
-        String query =  "MATCH (s:Structure {id: {structureId}}) " +
+        String query = "MATCH (s:Structure {id: {structureId}}) " +
                 "MATCH (s)<-[:BELONGS|DEPENDS]-(g:Group)<-[:IN]-(u:User {profiles:['Student']}) " +
                 "WHERE g.id IN {audienceIds} " +
                 "RETURN g.id as id, g.name as name, count(DISTINCT u) as countStudents " +
@@ -193,7 +229,7 @@ public class DefaultGroupService extends DBService implements GroupService {
 
     @Override
     public void getAudiencesFromNames(String structureId, List<String> audienceNames, Handler<AsyncResult<JsonArray>> handler) {
-        String query =  "MATCH (s:Structure {id: {structureId}})<-[:BELONGS|DEPENDS]-(g:Group) " +
+        String query = "MATCH (s:Structure {id: {structureId}})<-[:BELONGS|DEPENDS]-(g:Group) " +
                 "WHERE g.name IN {audienceNames} " +
                 "RETURN g.id as id, g.name as name " +
                 "ORDER BY name " +

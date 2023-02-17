@@ -6,6 +6,7 @@ import fr.openent.presences.common.incidents.Incidents;
 import fr.openent.presences.common.service.GroupService;
 import fr.openent.presences.common.service.impl.DefaultGroupService;
 import fr.openent.presences.common.viescolaire.Viescolaire;
+import fr.openent.presences.core.constants.Field;
 import fr.openent.presences.enums.EventType;
 import fr.openent.presences.enums.Events;
 import fr.openent.presences.helper.CalendarHelper;
@@ -24,6 +25,7 @@ import io.vertx.core.logging.LoggerFactory;
 
 import java.text.ParseException;
 import java.util.*;
+import java.util.stream.Collectors;
 
 public class DefaultRegistryService implements RegistryService {
 
@@ -60,9 +62,8 @@ public class DefaultRegistryService implements RegistryService {
         }
 
         Future<JsonArray> daysFuture = Future.future();
-        Future<JsonArray> studentFuture = Future.future();
+        Future<JsonArray> studentFuture = groupService.getGroupStudents(structureId, groups);
 
-        groupService.getGroupStudents(groups, FutureHelper.handlerJsonArray(studentFuture));
         generateMonthDaysArray(monthDate, structureId, daysFuture);
 
         CompositeFuture.all(daysFuture, studentFuture).setHandler(event -> {
@@ -76,7 +77,6 @@ public class DefaultRegistryService implements RegistryService {
             JsonArray users = studentFuture.result();
             JsonArray days = daysFuture.result();
 
-            //Todo : Process events
             List<String> userIds = new ArrayList<>();
             for (int i = 0; i < users.size(); i++) {
                 userIds.add(users.getJsonObject(i).getString("id"));
@@ -131,20 +131,20 @@ public class DefaultRegistryService implements RegistryService {
 
                         for (int eventIndex = 0; eventIndex < ev.size(); eventIndex++) {
                             JsonObject event = ev.getJsonObject(eventIndex);
-                            event.put("lastName",student.getString("lastName"));
-                            event.put("firstName",student.getString("firstName"));
-                            event.put("className", student.getString("className"));
+                            event.put(Field.LASTNAME, student.getString(Field.LASTNAME));
+                            event.put(Field.FIRSTNAME, student.getString(Field.FIRSTNAME));
+                            event.put(Field.CLASSNAME, getClassNames(student));
                             events.add(event);
                         }
 
-                        if(day.getBoolean("forgottenNotebook")) {
+                        if (day.getBoolean(Field.FORGOTTENNOTEBOOK)) {
                             JsonObject event = new JsonObject();
-                            event.put("lastName",student.getString("lastName"));
-                            event.put("firstName",student.getString("firstName"));
-                            event.put("className", student.getString("className"));
-                            event.put("start_date", day.getString("date"));
-                            event.put("end_date", (byte[]) null);
-                            event.put("type", EventType.FORGOTTEN_NOTEBOOK.toString());
+                            event.put(Field.LASTNAME, student.getString(Field.LASTNAME));
+                            event.put(Field.FIRSTNAME, student.getString(Field.FIRSTNAME));
+                            event.put(Field.CLASSNAME, getClassNames(student));
+                            event.put(Field.START_DATE, day.getString(Field.DATE));
+                            event.put(Field.END_DATE, (byte[]) null);
+                            event.put(Field.TYPE, EventType.FORGOTTEN_NOTEBOOK.toString());
                             events.add(event);
                         }
                     }
@@ -154,43 +154,42 @@ public class DefaultRegistryService implements RegistryService {
         });
     }
 
+    private String getClassNames(JsonObject student) {
+        return student.getJsonArray(Field.CLASSES, new JsonArray()).stream()
+                .map(classesObject -> ((JsonObject)classesObject).getString(Field.NAME, ""))
+                .filter(className -> !"".equals(className))
+                .collect(Collectors.joining(", "));
+    }
+
     /**
      * Format users as renderer list
      *
-     * @param users                         User list
-     * @param daysResult                    Month days list
-     * @param forgottenNotebookFilter       forgotten notebook filter
+     * @param users                   User list
+     * @param daysResult              Month days list
+     * @param forgottenNotebookFilter forgotten notebook filter
      * @return User                         list that contains formatted users
      */
+    @SuppressWarnings("unchecked")
     private JsonArray formatUsers(JsonArray users, JsonArray daysResult, JsonArray studentsForgottenNotebook,
                                   boolean forgottenNotebookFilter) {
-        JsonArray userList = new JsonArray();
-        for (int i = 0; i < users.size(); i++) {
-            JsonObject u = users.getJsonObject(i);
-            JsonArray days = copyDays(daysResult, u, studentsForgottenNotebook, forgottenNotebookFilter);
-            JsonObject user = new JsonObject();
-            user.put("id", u.getString("id", ""))
-                    .put("displayName", u.getString("displayName", ""))
-                    .put("lastName", u.getString("lastName", ""))
-                    .put("firstName", u.getString("firstName", ""))
-                    .put("className", u.getString("groupName", ""))
-                    .put("days", days);
-
-            userList.add(user);
-        }
-
-        return userList;
+        return new JsonArray(((List<JsonObject>) users.getList())
+                .stream()
+                .map(user -> {
+                    user.put(Field.DAYS, copyDays(daysResult, user, studentsForgottenNotebook, forgottenNotebookFilter));
+                    return user;
+                })
+                .collect(Collectors.toList()));
     }
 
     /**
      * Copy new days object
      *
-     * @param daysResults                   Month days list
-     * @param user                          user info
-     * @param studentsForgottenNotebook     list of all student forgotten notebook
-     * @param forgottenNotebookFilter       forgotten notebook filter
+     * @param daysResults               Month days list
+     * @param user                      user info
+     * @param studentsForgottenNotebook list of all student forgotten notebook
+     * @param forgottenNotebookFilter   forgotten notebook filter
      * @return days                         New List with specific value for each day
-     *                                      and add forgottenNotebook if current student has forgotten its notebook
+     * and add forgottenNotebook if current student has forgotten its notebook
      */
     private JsonArray copyDays(JsonArray daysResults, JsonObject user, JsonArray studentsForgottenNotebook,
                                boolean forgottenNotebookFilter) {
