@@ -67,6 +67,8 @@ public class Presences extends BaseServer {
     public static final String INIT_SETTINGS_1D = "presences.init.settings.1d";
     public static final String INIT_SETTINGS_2D = "presences.init.settings.2d";
 
+    public static final String INIT_POPUP = "presences.init.popup";
+
     // Widget rights
     public static final String ALERTS_WIDGET = "presences.widget.alerts";
     public static final String FORGOTTEN_REGISTERS_WIDGET = "presences.widget.forgotten_registers";
