@@ -3,7 +3,7 @@ import {ILocationService, IParseService, IScope, IWindowService} from "angular";
 import {ROOTS} from "../../core/enum/roots";
 import {IInitFormDay, InitForm} from "../../models/init-form.model";
 import {safeApply} from "@common/utils";
-import {initService} from "../../services";
+import {IInitTeachersResponse, initService} from "../../services";
 import {INIT_TYPE} from "../../core/enum/init-type";
 
 declare let window: any;
@@ -12,9 +12,16 @@ interface IViewModel extends ng.IController, IInitLightboxProps {
     form: InitForm;
     lang: typeof lang;
 
+    teachers: Array<{ id: string, displayName: string }>;
+    numberOfTeachers: number;
+
     setDay(day: IInitFormDay, isFullDay: boolean);
 
     submitInit(): Promise<void>;
+
+    initViesco(): Promise<void>;
+
+    fetchTeachers(): Promise<void>;
 
     closeForm(): void;
 }
@@ -30,6 +37,10 @@ interface IInitLightboxScope extends IScope, IInitLightboxProps {
 class Controller implements IViewModel {
 
     display: boolean;
+    displayTeachers: boolean;
+
+    teachers: Array<{ id: string, displayName: string }>;
+    numberOfTeachers: number;
 
     form: InitForm;
 
@@ -39,10 +50,12 @@ class Controller implements IViewModel {
                 private $location: ILocationService,
                 private $window: IWindowService) {
         this.form = new InitForm();
+        this.displayTeachers = false;
     }
 
     $onInit() {
         this.lang = lang;
+        this.fetchTeachers();
     }
 
     closeForm = (): void => {
@@ -53,7 +66,29 @@ class Controller implements IViewModel {
     }
 
     submitInit = async (): Promise<void> => {
+        if (this.numberOfTeachers > 0) {
+            this.displayTeachers = true;
+            return;
+        }
+        await this.initViesco();
+    }
+
+    initViesco = async (): Promise<void> => {
         await initService.initViesco(window.structure.id, INIT_TYPE.ONE_D, this.form);
+        this.closeForm();
+        safeApply(this.$scope);
+    }
+
+    fetchTeachers = async (): Promise<void> => {
+        try {
+            initService.getTeachersInitializationStatus(window.structure.id).then((res: IInitTeachersResponse) => {
+                this.teachers = res.teachers;
+                this.numberOfTeachers = this.teachers.length;
+                safeApply(this.$scope);
+            });
+        } catch (error) {
+            console.error("Error fetching teachers:", error);
+        }
     }
 
     setDay = (day: IInitFormDay, isFullDay: boolean): void => {
