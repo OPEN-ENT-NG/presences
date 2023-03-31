@@ -88,4 +88,8 @@
             <div ng-include="'/presences/public/template/widgets/register.html'" class="height-100"></div>
         </side-widget>
     </div>
+    <init-lightbox
+            ng-if="vm.hasRight('initPopup') && vm.hasRight('initSettings1D')"
+            display="vm.isInit">
+    </init-lightbox>
 </div>
