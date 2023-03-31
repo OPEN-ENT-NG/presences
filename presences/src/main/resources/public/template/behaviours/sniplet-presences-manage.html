@@ -3,7 +3,7 @@
         <button ng-if="vm.hasRight('initSettings1D') && !vm.hasRight('initSettings2D')" data-ng-click="vm.init('ONE_D')" class="right-spacing-twice" style="margin-bottom: 0;">
             <i18n>presences.init.button</i18n>
         </button>
-        <button workflow="presences.initSettings2D" data-ng-click="vm.init('TWO_D')" class="right-spacing-twice" style="margin-bottom: 0;">
+        <button ng-if="vm.hasRight('initSettings2D')" data-ng-click="vm.init('TWO_D')" class="right-spacing-twice" style="margin-bottom: 0;">
             <i18n>presences.init.button</i18n>
         </button>
         <span class="right-spacing-four sniplet-input-title"><i18n>presences.init.title</i18n></span>
