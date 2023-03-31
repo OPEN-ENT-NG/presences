@@ -9,9 +9,9 @@ import {
 import {PRESENCES_ACTION, PRESENCES_DISCIPLINE} from "@common/core/enum/presences-event";
 import {IAngularEvent} from "angular";
 import {model, toasts} from "entcore";
-import http from 'axios';
 import {INIT_TYPE} from "../core/enum/init-type";
 import rights from "../rights";
+import {IInitStatusResponse, initService} from "../services";
 
 declare let window: any;
 
@@ -47,13 +47,12 @@ function safeApply() {
 }
 
 function fetchInitializationStatus(): void {
-    http.get(`/presences/initialization/structures/${window.model.vieScolaire.structure.id}`)
-        .then(({data}) => {
-            if ('initialized' in data) vm.initialized = data.initialized;
-            else vm.initialized = false;
-            vm.safeApply();
-        })
-        .catch(err => console.error('Failed to retrieve structure initialization status', err));
+    initService.getPresencesInitStatus(window.model.vieScolaire.structure.id).then((status: IInitStatusResponse) => {
+        if (status.initialized !== undefined) vm.initialized = status.initialized;
+        else vm.initialized = false;
+        vm.safeApply();
+    })
+    .catch(err => console.error('Failed to retrieve structure initialization status', err));
 }
 
 const vm: ViewModel = {
@@ -61,11 +60,12 @@ const vm: ViewModel = {
     safeApply: null,
     async init(initType: INIT_TYPE): Promise<void> {
         try {
-            await http.post(`/presences/initialization/structures/${window.model.vieScolaire.structure.id}`, {init_type: initType});
-            toasts.confirm(initType == INIT_TYPE.ONE_D ? "presences.init.1d.success" : "presences.init.2d.success");
-            vm.initialized = true;
-            presencesManage.that.$broadcast('reload');
-            vm.safeApply();
+            initService.initPresences(window.model.vieScolaire.structure.id, initType).then(() => {
+                toasts.confirm(initType == INIT_TYPE.ONE_D ? "presences.init.1d.success" : "presences.init.2d.success");
+                vm.initialized = true;
+                presencesManage.that.$broadcast('reload');
+                vm.safeApply();
+            });
         } catch (err) {
             toasts.warning('presences.init.error');
             throw err;
