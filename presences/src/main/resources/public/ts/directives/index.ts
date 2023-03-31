@@ -22,3 +22,4 @@ export * from '@common/directives/select-children';
 export * from './events-table/events-table';
 export * from './events-filter-form/events-filter-form';
 export * from '@common/directives/export-form';
+export * from './init-lightbox/init-lightbox.directive';

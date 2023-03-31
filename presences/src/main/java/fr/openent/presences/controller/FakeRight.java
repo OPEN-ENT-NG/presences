@@ -115,6 +115,10 @@ public class FakeRight extends ControllerHelper {
     @SecuredAction(Presences.READ_PRESENCE_RESTRICTED)
     public void readPresenceRestricted(HttpServerRequest request) {notImplemented(request);}
 
+    @Get("/rights/init/popup")
+    @SecuredAction(Presences.INIT_POPUP)
+    public void initPopup(HttpServerRequest request) {notImplemented(request);}
+
     @Get("/rights/settings/get")
     @SecuredAction(Presences.SETTINGS_GET)
     public void getSettings(HttpServerRequest request) {notImplemented(request);}

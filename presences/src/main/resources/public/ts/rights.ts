@@ -35,7 +35,8 @@ const rights = {
         viewCalendar: 'fr.openent.presences.controller.CalendarController|getCalendarCourses',
         manageForgottenNotebook: 'fr.openent.presences.controller.NotebookController|worflowManageForgottenNotebook',
         initSettings1D: 'fr.openent.presences.controller.FakeRight|initSettings1D',
-        initSettings2D: 'fr.openent.presences.controller.FakeRight|initSettings2D'
+        initSettings2D: 'fr.openent.presences.controller.FakeRight|initSettings2D',
+        initPopup: 'fr.openent.presences.controller.FakeRight|initPopup'
     }
 };
 

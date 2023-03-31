@@ -1,0 +1,179 @@
+<lightbox class="presenceLightbox init-1d-lightbox"
+          show="vm.display"
+          on-close="vm.display = false">
+    <section class="head init-1d-lightbox-head">
+        <h3>
+            <i18n>presences.init.1d.form.header</i18n>
+        </h3>
+    </section>
+
+    <section class="init-1d-lightbox-body">
+        <div class="init-1d-lightbox-body-warning">
+            <i18n>presences.init.1d.form.warning</i18n>
+        </div>
+
+
+        <div class="init-1d-lightbox-body-title">
+            <h2>
+                <i18n>presences.init.1d.form.dates.and.schedule</i18n>
+            </h2>
+        </div>
+
+        <!-- School Year -->
+        <div class="init-1d-lightbox-body-schoolyear">
+            <span class="init-1d-lightbox-body-schoolyear-title">
+                <i18n>presences.init.1d.form.schoolyear</i18n> :
+            </span>
+            <div class="init-1d-lightbox-body-schoolyear-content">
+                <!-- School year start -->
+                <div class="init-1d-lightbox-body-schoolyear-content-date">
+                    <span><i18n>presences.init.1d.form.schoolyear.start</i18n> :</span>
+                    <span class="card date-picker">
+                        <date-picker required ng-model="vm.form.schoolYear.startDate"></date-picker>
+                    </span>
+                </div>
+                <!-- School year end -->
+                <div class="init-1d-lightbox-body-schoolyear-content-date">
+                    <span><i18n>presences.init.1d.form.schoolyear.end</i18n> :</span>
+                    <span class="card date-picker">
+                        <date-picker required ng-model="vm.form.schoolYear.endDate"></date-picker>
+                    </span>
+                </div>
+            </div>
+        </div>
+        <!-- Timetable -->
+        <div class="init-1d-lightbox-body-timetable">
+            <span class="init-1d-lightbox-body-timetable-title">
+                <i18n>presences.init.1d.form.schoolyear.timetable</i18n> :
+            </span>
+
+            <div class="init-1d-lightbox-body-timetable-content">
+                <!-- Select hours -->
+                <div class="init-1d-lightbox-body-timetable-content-hours">
+                    <span><i18n>presences.init.1d.form.schoolyear.timetable.morning.start</i18n> :</span>
+                    <span class="card">
+                        <time-picker required ng-model="vm.form.timetable.morning.startHour"
+                                         data-ng-change="vm.changeTime()"></time-picker>
+                    </span>
+                    <span><i18n>presences.init.1d.form.schoolyear.timetable.morning.end</i18n> :</span>
+                    <span class="card">
+                        <time-picker required ng-model="vm.form.timetable.morning.endHour"
+                                     data-ng-change="vm.changeTime()"></time-picker>
+                    </span>
+                    <span><i18n>presences.init.1d.form.schoolyear.timetable.afternoon.start</i18n> :</span>
+                    <span class="card">
+                        <time-picker required ng-model="vm.form.timetable.afternoon.startHour"
+                                     data-ng-change="vm.changeTime()"></time-picker>
+                    </span>
+                    <span><i18n>presences.init.1d.form.schoolyear.timetable.afternoon.end</i18n> :</span>
+                    <span class="card">
+                        <time-picker required ng-model="vm.form.timetable.afternoon.endHour"
+                                     data-ng-change="vm.changeTime()"></time-picker>
+                    </span>
+                </div>
+
+                <!-- Full days -->
+                <div class="init-1d-lightbox-body-timetable-content-days">
+                    <span><i18n>presences.init.1d.form.schoolyear.full.days</i18n> :</span>
+                    <!-- List of full days -->
+                    <div class="chips">
+                        <div class="chip"
+                             ng-repeat="day in vm.form.timetable.fullDays"
+                             ng-class="{ selected: day.isChecked }"
+                             data-ng-click="vm.setDay(day, true)">
+                            <span>[[vm.lang.translate(day.label).toUpperCase()]]</span>
+                        </div>
+                    </div>
+                </div>
+                <!-- Half days -->
+                <div class="init-1d-lightbox-body-timetable-content-days">
+                    <span><i18n>presences.init.1d.form.schoolyear.half.days</i18n> :</span>
+                    <!-- List of half days -->
+                    <div class="chips">
+                        <div class="chip"
+                             ng-repeat="day in vm.form.timetable.halfDays"
+                             ng-class="{ selected: day.isChecked }"
+                             data-ng-click="vm.setDay(day, false)">
+                            <span>[[vm.lang.translate(day.label).toUpperCase()]]</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Holidays -->
+        <div class="init-1d-lightbox-body-holidays">
+            <span class="init-1d-lightbox-body-holidays-title">
+                <i18n>presences.init.1d.form.holidays</i18n> :
+            </span>
+
+            <div class="init-1d-lightbox-body-holidays-content">
+                <div class="init-1d-lightbox-body-holidays-content-system-select">
+                    <div class="md-radio md-radio-inline">
+                        <input type="radio" ng-model="vm.form.holidays.system"
+                               ng-value="'FRENCH'"
+                               id="system-select-french">
+                        <label for="system-select-french">
+                            <i18n>presences.init.1d.form.holidays.french.system</i18n>
+                        </label>
+                    </div>
+
+                    <div class="md-radio md-radio-inline">
+                        <input type="radio" ng-model="vm.form.holidays.system"
+                               ng-value="'OTHER'"
+                               id="system-select-other">
+                        <label for="system-select-other">
+                            <i18n>presences.init.1d.form.holidays.other.system</i18n>
+                        </label>
+                    </div>
+                </div>
+                <div class="init-1d-lightbox-body-holidays-content-zone-select">
+                    <span><i18n>presences.init.1d.form.holidays.detected.zone</i18n> :</span>
+                    <div class="init-1d-lightbox-body-holidays-content-zone-select-zones">
+                        <div class="md-radio md-radio-inline">
+                            <input type="radio" ng-model="vm.form.holidays.zone"
+                                   ng-value="'A'"
+                                   id="zone-select-a">
+                            <label for="zone-select-a">
+                                <i18n>presences.init.1d.form.holidays.detected.zone.A</i18n>
+                            </label>
+                        </div>
+                        <div class="md-radio md-radio-inline">
+                            <input type="radio" ng-model="vm.form.holidays.zone"
+                                   ng-value="'B'"
+                                   id="zone-select-b">
+                            <label for="zone-select-b">
+                                <i18n>presences.init.1d.form.holidays.detected.zone.B</i18n>
+                            </label>
+                        </div>
+                        <div class="md-radio md-radio-inline">
+                            <input type="radio" ng-model="vm.form.holidays.zone"
+                                   ng-value="'C'"
+                                   id="zone-select-c">
+                            <label for="zone-select-c">
+                                <i18n>presences.init.1d.form.holidays.detected.zone.C</i18n>
+                            </label>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+    </section>
+    <!-- Form submit/cancel buttons -->
+    <section class="presenceLightbox-footer">
+        <div class="row horizontal-spacing">
+            <div class="twelve cell">
+                <button class="right-magnet" data-ng-click="vm.submitInit()"
+                        ng-disabled="!vm.form.isValid()">
+                    <i18n>presences.init.1d.form.init</i18n>
+                </button>
+                <button class="right-magnet cancel"
+                        data-ng-click="vm.closeForm()">
+                    <i18n>presences.exemptions.form.cancel</i18n>
+                </button>
+            </div>
+        </div>
+    </section>
+</lightbox>
