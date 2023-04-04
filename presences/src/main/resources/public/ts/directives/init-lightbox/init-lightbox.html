@@ -52,23 +52,19 @@
                 <div class="init-1d-lightbox-body-timetable-content-hours">
                     <span><i18n>presences.init.1d.form.schoolyear.timetable.morning.start</i18n> :</span>
                     <span class="card">
-                        <time-picker required ng-model="vm.form.timetable.morning.startHour"
-                                         data-ng-change="vm.changeTime()"></time-picker>
+                        <time-picker required ng-model="vm.form.timetable.morning.startHour"></time-picker>
                     </span>
                     <span><i18n>presences.init.1d.form.schoolyear.timetable.morning.end</i18n> :</span>
                     <span class="card">
-                        <time-picker required ng-model="vm.form.timetable.morning.endHour"
-                                     data-ng-change="vm.changeTime()"></time-picker>
+                        <time-picker required ng-model="vm.form.timetable.morning.endHour"></time-picker>
                     </span>
                     <span><i18n>presences.init.1d.form.schoolyear.timetable.afternoon.start</i18n> :</span>
                     <span class="card">
-                        <time-picker required ng-model="vm.form.timetable.afternoon.startHour"
-                                     data-ng-change="vm.changeTime()"></time-picker>
+                        <time-picker required ng-model="vm.form.timetable.afternoon.startHour"></time-picker>
                     </span>
                     <span><i18n>presences.init.1d.form.schoolyear.timetable.afternoon.end</i18n> :</span>
                     <span class="card">
-                        <time-picker required ng-model="vm.form.timetable.afternoon.endHour"
-                                     data-ng-change="vm.changeTime()"></time-picker>
+                        <time-picker required ng-model="vm.form.timetable.afternoon.endHour"></time-picker>
                     </span>
                 </div>
 
@@ -127,12 +123,13 @@
                         </label>
                     </div>
                 </div>
-                <div class="init-1d-lightbox-body-holidays-content-zone-select">
-                    <span><i18n>presences.init.1d.form.holidays.detected.zone</i18n> :</span>
+                <div class="init-1d-lightbox-body-holidays-content-zone-select" ng-show="vm.form.holidays.system == 'FRENCH'">
+                    <span><i18n>presences.init.1d.form.holidays.school.zone</i18n> :</span>
                     <div class="init-1d-lightbox-body-holidays-content-zone-select-zones">
                         <div class="md-radio md-radio-inline">
                             <input type="radio" ng-model="vm.form.holidays.zone"
                                    ng-value="'A'"
+                                   ng-click="vm.form.holidays.system = 'FRENCH'"
                                    id="zone-select-a">
                             <label for="zone-select-a">
                                 <i18n>presences.init.1d.form.holidays.detected.zone.A</i18n>
@@ -141,6 +138,7 @@
                         <div class="md-radio md-radio-inline">
                             <input type="radio" ng-model="vm.form.holidays.zone"
                                    ng-value="'B'"
+                                   ng-click="vm.form.holidays.system = 'FRENCH'"
                                    id="zone-select-b">
                             <label for="zone-select-b">
                                 <i18n>presences.init.1d.form.holidays.detected.zone.B</i18n>
@@ -149,6 +147,7 @@
                         <div class="md-radio md-radio-inline">
                             <input type="radio" ng-model="vm.form.holidays.zone"
                                    ng-value="'C'"
+                                   ng-click="vm.form.holidays.system = 'FRENCH'"
                                    id="zone-select-c">
                             <label for="zone-select-c">
                                 <i18n>presences.init.1d.form.holidays.detected.zone.C</i18n>
@@ -176,4 +175,11 @@
             </div>
         </div>
     </section>
+
+    <init-teachers-check-lightbox
+        display="vm.displayTeachers"
+        teachers="vm.teachers"
+        number-of-teachers="vm.numberOfTeachers"
+        on-submit="vm.initViesco">
+    </init-teachers-check-lightbox>
 </lightbox>

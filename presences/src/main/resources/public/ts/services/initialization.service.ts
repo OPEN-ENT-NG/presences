@@ -5,12 +5,21 @@ import {InitForm} from "@presences/models/init-form.model";
 export interface IInitStatusResponse {
     initialized: boolean;
 }
+
+export interface IInitTeachersResponse {
+    teachers: Array<{id: string, displayName: string}>;
+    count: number;
+}
+
+
 export interface IInitService {
     getPresencesInitStatus(structureId: string): Promise<IInitStatusResponse>;
     getViescoInitStatus(structureId: string): Promise<IInitStatusResponse>;
 
     initPresences(structureId: string, initType: INIT_TYPE): Promise<AxiosResponse>;
     initViesco(structureId: string, initType: INIT_TYPE, initForm: InitForm): Promise<AxiosResponse>;
+
+    getTeachersInitializationStatus(structureId: string): Promise<IInitTeachersResponse>;
 
 }
 
@@ -33,6 +42,11 @@ export const initService: IInitService = {
     initViesco: async (structureId: string, initType: INIT_TYPE, initForm: InitForm): Promise<AxiosResponse> => {
         initForm.initType = initType;
         return http.post(`/viescolaire/structures/${structureId}/initialize`, initForm.toJSON());
+    },
+
+    getTeachersInitializationStatus: async (structureId: string): Promise<IInitTeachersResponse> => {
+        return http.get(`/viescolaire/structures/${structureId}/initialization/teachers`)
+            .then((res: AxiosResponse) => res.data);
     }
 
 };

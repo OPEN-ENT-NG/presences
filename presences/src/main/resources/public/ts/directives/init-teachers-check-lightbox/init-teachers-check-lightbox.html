@@ -1,0 +1,53 @@
+<lightbox class="presenceLightbox init-teachers-lightbox"
+          show="vm.display"
+          on-close="vm.display = false">
+  <section class="head init-teachers-lightbox-head">
+    <h3>
+      <i18n>presences.init.check.teachers.header</i18n>
+    </h3>
+  </section>
+
+  <section class="init-teachers-lightbox-body">
+    <div class="init-teachers-lightbox-body-info">
+      <i18n>presences.init.check.teachers.warning</i18n>
+      <b><i18n>presences.init.check.teachers.warning.2</i18n></b>
+      <b><i18n>presences.init.check.teachers.warning.3</i18n></b>
+    </div>
+
+    <div class="init-teachers-lightbox-body-teachers">
+      <h2>
+        <i18n>presences.init.check.teachers.unattached</i18n>
+      </h2>
+
+      <div class="init-teachers-lightbox-body-teachers-list">
+        <ul>
+          <li class="init-teachers-lightbox-body-teachers-list-item" ng-repeat="teacher in vm.teachers">
+            <!-- Teacher picture -->
+            <div class="init-teachers-lightbox-body-teachers-list-item-picture">
+              <img ng-src="/viescolaire/structures/[[vm.structureId]]/students/[[teacher.id]]/picture" height="30" width="30">
+            </div>
+            <span>[[teacher.displayName]]</span>
+          </li>
+        </ul>
+      </div>
+      <div class="init-teachers-lightbox-body-teachers-count">
+        <span>[[vm.numberOfTeachers]]</span> &nbsp; <i18n>presences.init.check.teachers</i18n>
+      </div>
+    </div>
+  </section>
+
+  <!-- Form submit/cancel buttons -->
+  <section class="presenceLightbox-footer">
+    <div class="row horizontal-spacing">
+      <div class="twelve cell">
+        <button class="right-magnet" data-ng-click="vm.submitInit()">
+          <i18n>presences.init.check.teachers.confirm</i18n>
+        </button>
+        <button class="right-magnet cancel"
+                data-ng-click="vm.closeForm()">
+          <i18n>presences.exemptions.form.cancel</i18n>
+        </button>
+      </div>
+    </div>
+  </section>
+</lightbox>
