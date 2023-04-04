@@ -52,23 +52,19 @@
                 <div class="init-1d-lightbox-body-timetable-content-hours">
                     <span><i18n>presences.init.1d.form.schoolyear.timetable.morning.start</i18n> :</span>
                     <span class="card">
-                        <time-picker required ng-model="vm.form.timetable.morning.startHour"
-                                         data-ng-change="vm.changeTime()"></time-picker>
+                        <time-picker required ng-model="vm.form.timetable.morning.startHour"></time-picker>
                     </span>
                     <span><i18n>presences.init.1d.form.schoolyear.timetable.morning.end</i18n> :</span>
                     <span class="card">
-                        <time-picker required ng-model="vm.form.timetable.morning.endHour"
-                                     data-ng-change="vm.changeTime()"></time-picker>
+                        <time-picker required ng-model="vm.form.timetable.morning.endHour"></time-picker>
                     </span>
                     <span><i18n>presences.init.1d.form.schoolyear.timetable.afternoon.start</i18n> :</span>
                     <span class="card">
-                        <time-picker required ng-model="vm.form.timetable.afternoon.startHour"
-                                     data-ng-change="vm.changeTime()"></time-picker>
+                        <time-picker required ng-model="vm.form.timetable.afternoon.startHour"></time-picker>
                     </span>
                     <span><i18n>presences.init.1d.form.schoolyear.timetable.afternoon.end</i18n> :</span>
                     <span class="card">
-                        <time-picker required ng-model="vm.form.timetable.afternoon.endHour"
-                                     data-ng-change="vm.changeTime()"></time-picker>
+                        <time-picker required ng-model="vm.form.timetable.afternoon.endHour"></time-picker>
                     </span>
                 </div>
 
@@ -176,4 +172,11 @@
             </div>
         </div>
     </section>
+
+    <init-teachers-check-lightbox
+        display="vm.displayTeachers"
+        teachers="vm.teachers"
+        number-of-teachers="vm.numberOfTeachers"
+        on-submit="vm.initViesco">
+    </init-teachers-check-lightbox>
 </lightbox>

@@ -209,8 +209,14 @@ export class InitFormTimetable {
 
     toJSON(): IInitFormTimetable {
         return {
-            morning: this.morning,
-            afternoon: this.afternoon,
+            morning: {
+                startHour: DateUtils.format(this.morning.startHour, DateUtils.FORMAT['HOUR-MIN']),
+                endHour: DateUtils.format(this.morning.endHour, DateUtils.FORMAT['HOUR-MIN'])
+            },
+            afternoon: {
+                startHour: DateUtils.format(this.afternoon.startHour, DateUtils.FORMAT['HOUR-MIN']),
+                endHour: DateUtils.format(this.afternoon.endHour, DateUtils.FORMAT['HOUR-MIN'])
+            },
             fullDays: this.fullDays
                 .filter((day: IInitFormDay) => day.isChecked)
                 .map((day: IInitFormDay) => day.value),
