@@ -83,8 +83,8 @@ export class InitFormYear {
 
     toJSON(): IInitFormYear {
         return {
-            startDate: this.startDate,
-            endDate: this.endDate
+            startDate: DateUtils.format(this.startDate,DateUtils.FORMAT["YEAR-MONTH-DAY-HOUR-MIN-SEC"]),
+            endDate: DateUtils.format(this.endDate,DateUtils.FORMAT["YEAR-MONTH-DAY-HOUR-MIN-SEC"])
         };
     }
 }
@@ -209,8 +209,14 @@ export class InitFormTimetable {
 
     toJSON(): IInitFormTimetable {
         return {
-            morning: this.morning,
-            afternoon: this.afternoon,
+            morning: {
+                startHour: DateUtils.format(this.morning.startHour, DateUtils.FORMAT['HOUR-MIN']),
+                endHour: DateUtils.format(this.morning.endHour, DateUtils.FORMAT['HOUR-MIN'])
+            },
+            afternoon: {
+                startHour: DateUtils.format(this.afternoon.startHour, DateUtils.FORMAT['HOUR-MIN']),
+                endHour: DateUtils.format(this.afternoon.endHour, DateUtils.FORMAT['HOUR-MIN'])
+            },
             fullDays: this.fullDays
                 .filter((day: IInitFormDay) => day.isChecked)
                 .map((day: IInitFormDay) => day.value),
