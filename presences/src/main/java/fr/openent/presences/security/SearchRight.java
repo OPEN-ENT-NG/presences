@@ -10,6 +10,6 @@ import org.entcore.common.user.UserInfos;
 public class SearchRight implements ResourcesProvider {
     @Override
     public void authorize(HttpServerRequest request, Binding binding, UserInfos user, Handler<Boolean> handler) {
-        handler.handle(WorkflowActionsCouple.SEARCH.hasRight(user));
+        handler.handle(WorkflowActionsCouple.SEARCH.hasRight(user) || WorkflowActionsCouple.SEARCH_VIESCO.hasRight(user));
     }
 }
