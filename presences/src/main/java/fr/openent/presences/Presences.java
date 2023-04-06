@@ -41,6 +41,8 @@ public class Presences extends BaseServer {
     public static final String CREATE_REGISTER = "presences.register.create";
     public static final String SEARCH = "presences.search";
     public static final String SEARCH_RESTRICTED = "presences.search.restricted";
+    public static final String SEARCH_VIESCO = "viescolaire.search";
+    public static final String SEARCH_VIESCO_RESTRICTED = "viescolaire.search.restricted";
     public static final String SEARCH_STUDENTS = "presences.search.students";
     public static final String READ_CHILDREN = "presences.children.read";
     public static final String EXPORT = "presences.export";
