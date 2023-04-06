@@ -11,6 +11,7 @@ public enum WorkflowActionsCouple implements IWorkflowActionsCouple {
     READ_EXEMPTION(WorkflowActions.READ_EXEMPTION, WorkflowActions.READ_EXEMPTION_RESTRICTED),
     SEARCH_STUDENTS(WorkflowActions.SEARCH_STUDENTS, WorkflowActions.SEARCH_RESTRICTED),
     SEARCH(WorkflowActions.SEARCH, WorkflowActions.SEARCH_RESTRICTED),
+    SEARCH_VIESCO(WorkflowActions.SEARCH_VIESCO, WorkflowActions.SEARCH_VIESCO_RESTRICTED),
     VIEW_STATISTICS(WorkflowActions.VIEW_STATISTICS, WorkflowActions.VIEW_STATISTICS_RESTRICTED);
 
     private final WorkflowActions unrestrictedAction;
