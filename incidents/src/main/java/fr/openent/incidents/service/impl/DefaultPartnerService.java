@@ -49,18 +49,19 @@ public class DefaultPartnerService implements PartnerService {
     }
 
     private void fetchPartners(String structureId, Handler<Either<String, JsonArray>> handler) {
-        String query = "SELECT * FROM " + Incidents.dbSchema + ".partner where structure_id = '" + structureId + "'";
-        Sql.getInstance().raw(query, SqlResult.validResultHandler(handler));
+        String query = "SELECT * FROM " + Incidents.dbSchema + ".partner where structure_id = ?";
+        JsonArray params = new JsonArray().add(structureId);
+        Sql.getInstance().prepared(query, params, SqlResult.validResultHandler(handler));
     }
 
     private void fetchUsedPartners(String structureId, Handler<Either<String, JsonArray>> handler) {
         String query = "WITH ids AS (" +
                 "SELECT p.id, p.label FROM " + Incidents.dbSchema + ".partner p " +
-                "WHERE structure_id = '" + structureId +
-                "') " +
+                "WHERE structure_id = ?) " +
                 "SELECT DISTINCT i.id, i.label FROM ids i " +
                 "WHERE (i.id IN (SELECT partner_id FROM " + Incidents.dbSchema + ".incident))";
-        Sql.getInstance().raw(query, SqlResult.validResultHandler(handler));
+        JsonArray params = new JsonArray().add(structureId);
+        Sql.getInstance().prepared(query, params, SqlResult.validResultHandler(handler));
     }
 
     @Override
