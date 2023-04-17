@@ -79,6 +79,9 @@ public class Presences extends BaseServer {
     public static final Integer PAGE_SIZE = 20;
     // Statistics
     public static final String STATISTICS_ACCESS_DATA = "presences.statistics.access_data";
+    public static final String VIEW_STATISTICS = "statistics_presences.view";
+    public static final String VIEW_STATISTICS_RESTRICTED = "statistics_presences.view.restricted";
+
     public static String dbSchema;
     public static String ebViescoAddress = "viescolaire";
 
