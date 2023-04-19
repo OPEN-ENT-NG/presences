@@ -11,9 +11,7 @@ import org.entcore.common.user.UserInfos;
 public class StatisticsViewRightAndStruct implements ResourcesProvider {
     @Override
     public void authorize(HttpServerRequest request, Binding binding, UserInfos user, Handler<Boolean> handler) {
-        String structure = request.getParam(Field.STRUCTUREID);
-        structure = structure != null ? structure : request.getParam(Field.STRUCTURE_ID);
-        structure = structure != null ? structure : request.getParam(Field.STRUCTURE);
+        String structure = request.getParam(Field.STRUCTURE);
 
         handler.handle(
                 user.getStructures().contains(structure) &&
