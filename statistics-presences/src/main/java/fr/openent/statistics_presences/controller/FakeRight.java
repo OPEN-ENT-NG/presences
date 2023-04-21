@@ -15,10 +15,9 @@ public class FakeRight extends ControllerHelper {
         request.response().setStatusCode(501).end();
     }
 
-    @Get("/rights/view/restricted")
-    @SecuredAction(StatisticsPresences.VIEW_RESTRICTED)
-    public void viewRestricted(HttpServerRequest request) {
+    @Get("/rights/manage")
+    @SecuredAction(StatisticsPresences.MANAGE)
+    public void manage(HttpServerRequest request) {
         notImplemented(request);
     }
-
 }
