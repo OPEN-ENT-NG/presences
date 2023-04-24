@@ -37,6 +37,8 @@ public class StatisticsPresences extends BaseServer {
     public static final String WEEKLY_AUDIENCES_COLLECTION = "presences.statistics_weekly_audiences";
     public static final String VIEW = "statistics_presences.view";
     public static final String VIEW_RESTRICTED = "statistics_presences.view.restricted";
+    public static final String MANAGE = "statistics_presences.manage";
+    public static final String MANAGE_RESTRICTED = "statistics_presences.manage.restricted";
 
     public static final GenericCodec codec = new GenericCodec(Report.class);
     public static final String STATISTICS_PRESENCES_CLASS = StatisticsPresences.class.getName();

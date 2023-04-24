@@ -3,7 +3,7 @@ package fr.openent.statistics_presences.enums;
 import fr.openent.presences.common.security.IWorkflowActionsCouple;
 
 public enum WorkflowActionsCouple implements IWorkflowActionsCouple {
-    STATISTICS_PRESENCES_VIEW(WorkflowActions.STATISTICS_PRESENCES_VIEW, WorkflowActions.STATISTICS_PRESENCES_VIEW_RESTRICTED);
+    STATISTICS_PRESENCES_MANAGE(WorkflowActions.STATISTICS_PRESENCES_MANAGE, WorkflowActions.STATISTICS_PRESENCES_MANAGE_RESTRICTED);
 
     private final WorkflowActions unrestrictedAction;
     private final WorkflowActions restrictedAction;
