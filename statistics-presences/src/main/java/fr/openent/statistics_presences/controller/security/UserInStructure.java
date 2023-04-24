@@ -15,6 +15,6 @@ public class UserInStructure implements ResourcesProvider {
     public void authorize(HttpServerRequest request, Binding binding, UserInfos user, Handler<Boolean> handler) {
         String structure = request.getParam(Field.STRUCTURE);
         handler.handle(user.getStructures().contains(structure)
-                && WorkflowActionsCouple.STATISTICS_PRESENCES_VIEW.hasRight(user));
+                && WorkflowActionsCouple.STATISTICS_PRESENCES_MANAGE.hasRight(user));
     }
 }
