@@ -125,18 +125,23 @@ export class AbsenceReasonSniplet implements ReasonSnipletModel {
     }
 
     async toggleVisibility(reason: Reason): Promise<void> {
-        reason.hidden = !reason.hidden;
         let form: ReasonRequest = {} as ReasonRequest;
+        reason.hidden = !reason.hidden;
         form.id = reason.id;
         form.absenceCompliance = reason.absence_compliance;
         form.hidden = reason.hidden;
         form.proving = reason.proving;
         form.label = reason.label;
+        form.excludeAlertLateness = (<any>reason.reason_alert_rules).includes(ALERT_RULE.LATENESS);
+        form.excludeAlertRegularised = (<any>reason.reason_alert_rules).includes(ALERT_RULE.REGULARIZED);
+        form.excludeAlertNoRegularised = (<any>reason.reason_alert_rules).includes(ALERT_RULE.UNREGULARIZED);
+        form.structureId = reason.structure_id;
         await this.reasonService.update(form).catch((err: AxiosError) => {
             toasts.warning('presences.reason.error');
             console.error(err)
         });
     }
+
 
     proceedAfterAction(response: AxiosResponse): void {
         if (response.status === 200 || response.status === 201) {
