@@ -132,11 +132,14 @@ export class LatenessReasonSniplet implements ReasonSnipletModel {
         form.hidden = reason.hidden;
         form.proving = reason.proving;
         form.label = reason.label;
+        form.excludeAlertLateness = (<any>reason.reason_alert_rules).includes(ALERT_RULE.LATENESS);
+        form.excludeAlertRegularised = (<any>reason.reason_alert_rules).includes(ALERT_RULE.REGULARIZED);
+        form.excludeAlertNoRegularised = (<any>reason.reason_alert_rules).includes(ALERT_RULE.UNREGULARIZED);
+        form.structureId = reason.structure_id;
         await this.reasonService.update(form).catch((err: AxiosError) => {
             toasts.warning('presences.reason.error');
             console.error(err)
         });
-
     }
 
     proceedAfterAction(response: AxiosResponse): void {
