@@ -25,7 +25,7 @@ public class SettingsController extends ControllerHelper {
 
     @Get("/structures/:id/settings")
     @SecuredAction(value = "", type = ActionType.RESOURCE)
-    @ResourceFilter(Manage.class)
+    @ResourceFilter(SettingsGetRight.class)
     @ApiDoc("Retrieve given structure settings")
     public void retrieve(HttpServerRequest request) {
         settingsService.retrieve(request.getParam("id"), defaultResponseHandler(request));
