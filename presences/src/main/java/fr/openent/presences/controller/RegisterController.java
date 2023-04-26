@@ -6,6 +6,7 @@ import fr.openent.presences.constants.EventStores;
 import fr.openent.presences.core.constants.*;
 import fr.openent.presences.enums.RegisterStatus;
 import fr.openent.presences.security.CreateRegisterRight;
+import fr.openent.presences.security.RegisterViewRight;
 import fr.openent.presences.service.*;
 import fr.openent.presences.service.impl.*;
 import fr.wseduc.rs.ApiDoc;
@@ -135,7 +136,8 @@ public class RegisterController extends ControllerHelper {
 
     @Get("/structures/:structureId/registers/forgotten")
     @ApiDoc("Get last forgotten registers of the current day")
-    @SecuredAction(value = "", type = ActionType.AUTHENTICATED)
+    @SecuredAction(value = "", type = ActionType.RESOURCE)
+    @ResourceFilter(RegisterViewRight.class)
     public void getLastForgottenRegisters(HttpServerRequest request) {
 
         if (!request.params().contains("startDate") || !request.params().contains("endDate")) {
