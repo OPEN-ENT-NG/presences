@@ -10,7 +10,8 @@ public enum WorkflowActionsCouple implements IWorkflowActionsCouple {
     MANAGE_EXEMPTION(WorkflowActions.MANAGE_EXEMPTION, WorkflowActions.MANAGE_EXEMPTION_RESTRICTED),
     READ_EXEMPTION(WorkflowActions.READ_EXEMPTION, WorkflowActions.READ_EXEMPTION_RESTRICTED),
     SEARCH_STUDENTS(WorkflowActions.SEARCH_STUDENTS, WorkflowActions.SEARCH_RESTRICTED),
-    SEARCH(WorkflowActions.SEARCH, WorkflowActions.SEARCH_RESTRICTED);
+    SEARCH(WorkflowActions.SEARCH, WorkflowActions.SEARCH_RESTRICTED),
+    VIEW_STATISTICS(WorkflowActions.VIEW_STATISTICS, WorkflowActions.VIEW_STATISTICS_RESTRICTED);
 
     private final WorkflowActions unrestrictedAction;
     private final WorkflowActions restrictedAction;
