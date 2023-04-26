@@ -4,7 +4,7 @@ import fr.openent.presences.Presences;
 import fr.openent.presences.common.security.UserInStructure;
 import fr.openent.presences.common.statistics_presences.StatisticsPresences;
 import fr.openent.presences.core.constants.Field;
-import fr.openent.presences.security.StatisticsAccessData;
+import fr.openent.presences.security.StatisticsViewRightAndStruct;
 import fr.wseduc.rs.Post;
 import fr.wseduc.security.ActionType;
 import fr.wseduc.security.SecuredAction;
@@ -21,8 +21,8 @@ import org.entcore.common.user.UserUtils;
 public class StatisticsController extends ControllerHelper {
 
     @Post("/statistics/structures/:structure/student/:student/graph")
-    @ResourceFilter(StatisticsAccessData.class)
-    @SecuredAction(value = "", type = ActionType.AUTHENTICATED)
+    @SecuredAction(value = "", type = ActionType.RESOURCE)
+    @ResourceFilter(StatisticsViewRightAndStruct.class)
     public void getStatisticsGraph(HttpServerRequest request) {
         request.pause();
         UserUtils.getUserInfos(eb, request, user ->
