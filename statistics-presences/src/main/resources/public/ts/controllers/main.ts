@@ -106,6 +106,8 @@ interface ViewModel {
 
     refreshStudentsStatistics(arrayStudentIds: Array<string>): void;
 
+    toggleReason(reason: Reason): void;
+
     getAbsenceReasons(): Array<Reason>;
 
     getLatenessReasons(): Array<Reason>;
@@ -466,6 +468,22 @@ export const mainController = ng.controller('MainController',
                     console.error(err, err.message);
                     vm.loading = false;
                 });
+            }
+
+            vm.toggleReason = (reason: Reason): void => {
+                vm.indicator._factoryFilter.reasonsMap[reason.id]  = !vm.indicator._factoryFilter.reasonsMap[reason.id];
+
+                if (vm.indicator._factoryFilter.reasonsMap[reason.id]) {
+                    vm.filter.filterTypes.forEach((filterType: FilterType) => {
+                        if (filterType.name() == FILTER_TYPE.REGULARIZED) {
+                            filterType.select(true);
+                        }
+
+                        if (!reason.proving && filterType.name() == FILTER_TYPE.UNREGULARIZED) {
+                            filterType.select(true);
+                        }
+                    });
+                }
             }
 
             vm.getAbsenceReasons = ():Array<Reason> => {
