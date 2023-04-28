@@ -43,7 +43,7 @@ public class GlobalSearchTest {
                 .add(new JsonObject("{\"type\":\"PUNISHMENT\",\"punishment_type\":{\"$in\":[11,12]}}"))
                 .add(new JsonObject("{\"type\":\"LATENESS\",\"reason\":{\"$in\":[1,2]}}"));
 
-        JsonArray result = Whitebox.invokeMethod(search, "filterType", TYPES, false);
+        JsonArray result = Whitebox.invokeMethod(search, "filterType", TYPES);
 
         ctx.assertEquals(expected, result);
     }
