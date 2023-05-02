@@ -20,7 +20,7 @@ public class GlobalSearch {
     private static final String DAY = "DAY";
     private static final String COUNTID = "countId";
     private final StatisticsFilter filter;
-    List<String> totalAbsenceTypes = Arrays.asList(EventType.NO_REASON.name(), EventType.UNREGULARIZED.name(), EventType.REGULARIZED.name());
+    List<String> totalAbsenceTypes;
     private List<Audience> audiences = new ArrayList<>();
     private List<User> users = new LinkedList<>();
     private Map<String, List<JsonObject>> statisticsMapped;
@@ -31,6 +31,8 @@ public class GlobalSearch {
 
     public GlobalSearch(StatisticsFilter filter) {
         this.filter = filter;
+        List<String> absencesTypes = Arrays.asList(EventType.NO_REASON.name(), EventType.UNREGULARIZED.name(), EventType.REGULARIZED.name());
+        this.totalAbsenceTypes = absencesTypes.stream().filter(filter.types()::contains).collect(Collectors.toList());
     }
 
     public StatisticsFilter filter() {
@@ -170,7 +172,7 @@ public class GlobalSearch {
 
     public JsonArray totalAbsenceGlobalPipeline() {
         JsonArray pipeline = initAbsencePipeline()
-                .add(match(totalAbsenceTypes, true));
+                .add(match(totalAbsenceTypes));
 
         JsonObject group = groupCountAbsences();
         if (group != null && !group.isEmpty()) {
@@ -211,7 +213,7 @@ public class GlobalSearch {
 
     public JsonArray totalAbsenceUserPipeline() {
         JsonArray pipeline = initAbsencePipeline()
-                .add(match(totalAbsenceTypes, true));
+                .add(match(totalAbsenceTypes));
 
         JsonObject group = groupCountAbsences();
         if (group != null && !group.isEmpty()) {
@@ -429,14 +431,14 @@ public class GlobalSearch {
                 .put(MongoField.$MATCH, count);
     }
 
-    private JsonObject match(List<String> types, boolean isTotalAbsences) {
+    private JsonObject match(List<String> types) {
         List<String> userIdentifiers = (this.filter().users() == null || !this.filter().users().isEmpty())
                 ? this.filter().users()
                 : this.users().stream().map(User::id).collect(Collectors.toList());
 
         JsonObject matcher = new JsonObject()
                 .put(Field.STRUCTURE, this.filter.structure())
-                .put(MongoField.$OR, filterType(types, isTotalAbsences))
+                .put(MongoField.$OR, filterType(types))
                 .put(Field.START_DATE, this.startDateFilter())
                 .put(Field.END_DATE, this.endDateFilter());
 
@@ -450,11 +452,6 @@ public class GlobalSearch {
 
         return new JsonObject()
                 .put(MongoField.$MATCH, matcher);
-    }
-
-
-    private JsonObject match(List<String> types) {
-        return match(types, false);
     }
 
     private JsonObject match() {
@@ -476,44 +473,42 @@ public class GlobalSearch {
         return new JsonObject().put(MongoField.$ADDFIELDS, new JsonObject().put(COUNTID, cond));
     }
 
-    private JsonArray filterType(List<String> types, boolean isTotalAbsences) {
+    private JsonArray filterType(List<String> types) {
         List<String> typesToUse = types != null ? types : this.filter().types();
         JsonArray filters = new JsonArray();
         for (String type : typesToUse) {
             JsonObject filterType = new JsonObject()
                     .put(Field.TYPE, type);
 
-            if (!isTotalAbsences) {
-                EventType eventType = EventType.valueOf(type);
-                switch (eventType) {
-                    case UNREGULARIZED:
-                    case REGULARIZED:
-                        JsonObject inFilterReasons = new JsonObject()
-                                .put(MongoField.$IN, this.filter().reasons());
-                        filterType.put(Field.REASON, inFilterReasons);
-                        break;
-                    case SANCTION:
-                        JsonObject inFilterSanctionTypes = new JsonObject()
-                                .put(MongoField.$IN, this.filter.sanctionTypes());
-                        filterType.put(Field.PUNISHMENT_TYPE, inFilterSanctionTypes);
-                        break;
-                    case PUNISHMENT:
-                        JsonObject inFilterPunishmentTypes = new JsonObject()
-                                .put(MongoField.$IN, this.filter.punishmentTypes());
-                        filterType.put(Field.PUNISHMENT_TYPE, inFilterPunishmentTypes);
-                        break;
-                    case LATENESS:
-                        List<Integer> list = this.filter().reasons();
-                        if (Boolean.TRUE.equals(this.filter().getNoLatenessReason())) {
-                            list.add(null);
-                        }
-                        JsonObject inFilterLatenessReasons = new JsonObject()
-                                .put(MongoField.$IN, list);
-                        filterType.put(Field.REASON, inFilterLatenessReasons);
-                        break;
-                    default:
-                        break;
-                }
+            EventType eventType = EventType.valueOf(type);
+            switch (eventType) {
+                case UNREGULARIZED:
+                case REGULARIZED:
+                    JsonObject inFilterReasons = new JsonObject()
+                            .put(MongoField.$IN, this.filter().reasons());
+                    filterType.put(Field.REASON, inFilterReasons);
+                    break;
+                case SANCTION:
+                    JsonObject inFilterSanctionTypes = new JsonObject()
+                            .put(MongoField.$IN, this.filter.sanctionTypes());
+                    filterType.put(Field.PUNISHMENT_TYPE, inFilterSanctionTypes);
+                    break;
+                case PUNISHMENT:
+                    JsonObject inFilterPunishmentTypes = new JsonObject()
+                            .put(MongoField.$IN, this.filter.punishmentTypes());
+                    filterType.put(Field.PUNISHMENT_TYPE, inFilterPunishmentTypes);
+                    break;
+                case LATENESS:
+                    List<Integer> list = this.filter().reasons();
+                    if (Boolean.TRUE.equals(this.filter().getNoLatenessReason())) {
+                        list.add(null);
+                    }
+                    JsonObject inFilterLatenessReasons = new JsonObject()
+                            .put(MongoField.$IN, list);
+                    filterType.put(Field.REASON, inFilterLatenessReasons);
+                    break;
+                default:
+                    break;
             }
 
             filters.add(filterType);
@@ -551,8 +546,12 @@ public class GlobalSearch {
                 .put(COUNTID, String.format("$%s", COUNTID));
 
         JsonObject group = id(id)
-                .put(Field.SLOTS, sum(atLeastOne(new JsonObject().put(MongoField.$SIZE, MongoField.$ + Field.SLOTS))));
-
+                .put(Field.SLOTS, sum(atLeastOne(new JsonObject().put(MongoField.$SIZE,
+                        new JsonObject().put(MongoField.$IFNULL,
+                                new JsonArray()
+                                        .add(MongoField.$ + Field.SLOTS)
+                                        .add(new JsonArray()))
+                ))));
         return group(group);
     }
 
