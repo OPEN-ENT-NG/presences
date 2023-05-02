@@ -16,6 +16,7 @@ public class MongoField {
     public static final String $SUM = "$sum";
     public static final String $SIZE = "$size";
     public static final String $MAX = "$max";
+    public static final String $IFNULL = "$ifNull";
     public static final String $ = "$";
     public static final String $SET = "$set";
     public static final String $SORT = "$sort";
