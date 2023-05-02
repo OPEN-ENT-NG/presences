@@ -22,7 +22,7 @@
                 <div class="chip"
                      ng-repeat="reason in vm.getAbsenceReasons() | orderBy:'label' track by $index"
                      ng-class="{ selected: vm.indicator._factoryFilter.reasonsMap[reason.id] }"
-                     data-ng-click="vm.indicator._factoryFilter.reasonsMap[reason.id]  = !vm.indicator._factoryFilter.reasonsMap[reason.id]">
+                     data-ng-click="vm.toggleReason(reason)">
                     <span class="no-style">[[reason.label]]</span>
                 </div>
             </div>
@@ -37,7 +37,7 @@
                 <div class="chip"
                      ng-repeat="reason in vm.getLatenessReasons() track by $index"
                      ng-class="{ selected: vm.indicator._factoryFilter.reasonsMap[reason.id] }"
-                     data-ng-click="vm.indicator._factoryFilter.reasonsMap[reason.id]  = !vm.indicator._factoryFilter.reasonsMap[reason.id]">
+                     data-ng-click="vm.toggleReason(reason)">
                     <span class="no-style">[[reason.label]]</span>
                 </div>
             </div>
