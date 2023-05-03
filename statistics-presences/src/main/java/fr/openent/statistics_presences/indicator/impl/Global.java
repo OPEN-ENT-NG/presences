@@ -474,9 +474,14 @@ public class Global extends Indicator {
                         res.cause().getMessage()));
                 promise.fail(res.cause());
             }
-            else promise.complete(res.result().getJsonObject(Field.CURSOR).getJsonArray(Field.FIRSTBATCH, new JsonArray())
-                    .getJsonObject(0)
-                    .getInteger(Field.COUNT));
+            else {
+                JsonArray countArray = res.result().getJsonObject(Field.CURSOR).getJsonArray(Field.FIRSTBATCH, new JsonArray());
+                if (countArray.isEmpty()) {
+                    promise.complete(0);
+                } else {
+                    promise.complete(countArray.getJsonObject(0).getInteger(Field.COUNT, 0));
+                }
+            }
         })));
 
         return promise.future();
