@@ -51,7 +51,8 @@ export class StudentsSearch extends AutoCompleteUtils {
     }
 
     public selectStudent(valueInput, studentItem) {
-        this._selectedStudents = [];
+        if (this._selectedStudents == null)
+            this._selectedStudents = [];
         this._selectedStudents.push(studentItem);
     }
 
