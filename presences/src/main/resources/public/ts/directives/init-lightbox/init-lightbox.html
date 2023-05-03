@@ -123,12 +123,13 @@
                         </label>
                     </div>
                 </div>
-                <div class="init-1d-lightbox-body-holidays-content-zone-select">
+                <div class="init-1d-lightbox-body-holidays-content-zone-select" ng-show="vm.form.holidays.system == 'FRENCH'">
                     <span><i18n>presences.init.1d.form.holidays.detected.zone</i18n> :</span>
                     <div class="init-1d-lightbox-body-holidays-content-zone-select-zones">
                         <div class="md-radio md-radio-inline">
                             <input type="radio" ng-model="vm.form.holidays.zone"
                                    ng-value="'A'"
+                                   ng-click="vm.form.holidays.system = 'FRENCH'"
                                    id="zone-select-a">
                             <label for="zone-select-a">
                                 <i18n>presences.init.1d.form.holidays.detected.zone.A</i18n>
@@ -137,6 +138,7 @@
                         <div class="md-radio md-radio-inline">
                             <input type="radio" ng-model="vm.form.holidays.zone"
                                    ng-value="'B'"
+                                   ng-click="vm.form.holidays.system = 'FRENCH'"
                                    id="zone-select-b">
                             <label for="zone-select-b">
                                 <i18n>presences.init.1d.form.holidays.detected.zone.B</i18n>
@@ -145,6 +147,7 @@
                         <div class="md-radio md-radio-inline">
                             <input type="radio" ng-model="vm.form.holidays.zone"
                                    ng-value="'C'"
+                                   ng-click="vm.form.holidays.system = 'FRENCH'"
                                    id="zone-select-c">
                             <label for="zone-select-c">
                                 <i18n>presences.init.1d.form.holidays.detected.zone.C</i18n>
