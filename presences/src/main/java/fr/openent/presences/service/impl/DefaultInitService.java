@@ -1,6 +1,9 @@
 package fr.openent.presences.service.impl;
 
 import fr.openent.presences.Presences;
+import fr.openent.presences.common.helper.*;
+import fr.openent.presences.common.incidents.*;
+import fr.openent.presences.common.massmailing.*;
 import fr.openent.presences.core.constants.Field;
 import fr.openent.presences.enums.InitTypeEnum;
 import fr.openent.presences.helper.init.IInitPresencesHelper;
@@ -9,17 +12,82 @@ import fr.openent.presences.service.InitService;
 import fr.wseduc.webutils.Either;
 import fr.wseduc.webutils.I18n;
 import fr.wseduc.webutils.http.Renders;
-import io.vertx.core.Handler;
-import io.vertx.core.Promise;
+import io.vertx.core.*;
 import io.vertx.core.http.HttpServerRequest;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
+import io.vertx.core.logging.*;
 import org.entcore.common.sql.Sql;
 import org.entcore.common.sql.SqlResult;
 
-import java.util.List;
+import java.util.*;
+
+import static org.entcore.common.http.response.DefaultResponseHandler.defaultResponseHandler;
 
 public class DefaultInitService implements InitService {
+
+    private static final Logger log = LoggerFactory.getLogger(DefaultInitService.class);
+
+    public DefaultInitService() {
+
+    }
+
+    @Override
+    public Future<JsonObject> initPresences(HttpServerRequest request, String structureId, String userId,
+                                            Optional<InitTypeEnum> initTypeEnum) {
+        Promise<JsonObject> promise = Promise.promise();
+
+        Promise<JsonObject> reasonsFuture = Promise.promise();
+        Promise<JsonObject> actionsFuture = Promise.promise();
+        Promise<JsonObject> settingsFuture = Promise.promise();
+        Promise<JsonObject> disciplinesFuture = Promise.promise();
+        Promise<JsonObject> massmailingTemplatesFuture = Promise.promise();
+        Promise<JsonObject> incidentTypeFuture = Promise.promise();
+        Promise<JsonObject> incidentPlacesFuture = Promise.promise();
+        Promise<JsonObject> incidentProtagonists = Promise.promise();
+        Promise<JsonObject> incidentSeriousness = Promise.promise();
+        Promise<JsonObject> incidentPartner = Promise.promise();
+        Promise<JsonObject> incidentPunishmentType = Promise.promise();
+        List<Future> futures = Arrays.asList(reasonsFuture.future(), actionsFuture.future(), settingsFuture.future(),
+                disciplinesFuture.future(), massmailingTemplatesFuture.future(), incidentTypeFuture.future(),
+                incidentPlacesFuture.future(), incidentProtagonists.future(), incidentSeriousness.future(),
+                incidentPartner.future(), incidentPunishmentType.future());
+        CompositeFuture.all(futures).onComplete(res -> {
+            JsonArray statements = new JsonArray();
+            for (Future<JsonObject> future : futures) {
+                if (future.succeeded()) {
+                    statements.add(future.result());
+                } else {
+                    String message = String.format("[Presences@%s::init] Failed to init %s ",
+                            this.getClass().getSimpleName(), future.cause().getCause());
+                    log.error(message);
+                }
+            }
+
+            Sql.getInstance().transaction(statements, SqlResult.validUniqueResultHandler(FutureHelper.handlerEitherPromise(promise)));
+        });
+
+        this.getReasonsStatement(request, structureId, initTypeEnum.get(), reasonsFuture);
+        this.getActionsStatement(request, structureId, initTypeEnum.get(), actionsFuture);
+        this.getSettingsStatement(structureId, initTypeEnum.get(), settingsFuture);
+        this.getPresencesDisciplinesStatement(request, structureId, initTypeEnum.get(), disciplinesFuture);
+        Massmailing.getInstance().getInitTemplatesStatement(request, structureId, userId, initTypeEnum.get(),
+                FutureHelper.handlerEitherPromise(massmailingTemplatesFuture));
+        Incidents.getInstance().getInitIncidentTypesStatement(structureId, initTypeEnum.get(),
+                FutureHelper.handlerEitherPromise(incidentTypeFuture));
+        Incidents.getInstance().getInitIncidentPlacesStatement(structureId, initTypeEnum.get(),
+                FutureHelper.handlerEitherPromise(incidentPlacesFuture));
+        Incidents.getInstance().getInitIncidentProtagonistTypeStatement(structureId, initTypeEnum.get(),
+                FutureHelper.handlerEitherPromise(incidentProtagonists));
+        Incidents.getInstance().getInitIncidentSeriousnessStatement(structureId, initTypeEnum.get(),
+                FutureHelper.handlerEitherPromise(incidentSeriousness));
+        Incidents.getInstance().getInitIncidentPartnerStatement(structureId, initTypeEnum.get(),
+                FutureHelper.handlerEitherPromise(incidentPartner));
+        Incidents.getInstance().getInitIncidentPunishmentTypeStatement(structureId, initTypeEnum.get(),
+                FutureHelper.handlerEitherPromise(incidentPunishmentType));
+
+        return promise.future();
+    }
 
     @Override
     public void retrieveInitializationStatus(String structure, Handler<Either<String, JsonObject>> handler) {
@@ -27,6 +95,25 @@ public class DefaultInitService implements InitService {
         JsonArray params = new JsonArray().add(structure);
         Sql.getInstance().prepared(query, params, SqlResult.validUniqueResultHandler(handler));
     }
+
+    @Override
+    public Future<Boolean> retrieveInitializationStatus(String structureId) {
+        Promise<Boolean> promise = Promise.promise();
+
+        this.retrieveInitializationStatus(structureId, res -> {
+            if (res.isLeft()) {
+                String message = String.format("[Presences@%s::retrieveInitializationStatus] Failed to retrieve " +
+                                "initialization status for structure %s : %s",
+                        this.getClass().getSimpleName(), structureId, res.left().getValue());
+                log.error(message);
+                promise.fail(res.left().getValue());
+            } else {
+                promise.complete(res.right().getValue().getBoolean(Field.INITIALIZED));
+            }
+        });
+        return promise.future();
+    }
+
 
     @Override
     public void getReasonsStatement(HttpServerRequest request, String structure, InitTypeEnum initTypeEnum, Promise<JsonObject> promise) {
