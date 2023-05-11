@@ -16,6 +16,7 @@ public abstract class CSVExport {
     public StringBuilder value;
     public String SEPARATOR;
     public String EOL;
+    public String SPACE;
     public String header;
     public String filename;
 
@@ -27,6 +28,7 @@ public abstract class CSVExport {
         this.value = new StringBuilder(UTF8_BOM);
         this.SEPARATOR = ";";
         this.EOL = "\n";
+        this.SPACE = " ";
         this.header = "";
         this.filename = "";
     }

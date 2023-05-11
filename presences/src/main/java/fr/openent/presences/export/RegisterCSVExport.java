@@ -41,7 +41,7 @@ public class RegisterCSVExport extends CSVExport {
         String line = getRegisterDate(register.getStartDate()) + SEPARATOR;
         line += getRegisterTime(register.getStartDate(), register.getEndDate()) + SEPARATOR;
         line += getTeachersNames(register.getTeachers()) + SEPARATOR;
-        line += getGroupsNames(register.getClasses(), register.getGroups()) + SEPARATOR;
+        line += SPACE + getGroupsNames(register.getClasses(), register.getGroups()) + SEPARATOR;
         line += register.getSubjectName() + SEPARATOR;
         line += getForgottenRegister();
         return line + EOL;

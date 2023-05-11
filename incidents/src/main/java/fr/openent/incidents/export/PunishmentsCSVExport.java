@@ -42,7 +42,7 @@ public class PunishmentsCSVExport extends CSVExport {
 
         String line = student.getString("lastName") + SEPARATOR;
         line += student.getString("firstName") + SEPARATOR;
-        line += student.getString("className") + SEPARATOR;
+        line += SPACE + student.getString("className") + SEPARATOR;
         line += punishment.getJsonObject("type").getString("label") + SEPARATOR;
 
         String startAt = fields.getString("start_at");

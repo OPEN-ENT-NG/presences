@@ -82,7 +82,7 @@ public class Global extends IndicatorExport {
 
     private String getLine(JsonObject value) {
         StringBuilder line = new StringBuilder();
-        line.append(value.getString("audience")).append(SEPARATOR)
+        line.append(SPACE).append(value.getString("audience")).append(SEPARATOR)
                 .append(value.getString(Field.NAME)).append(SEPARATOR);
 
         JsonObject statistics = value.getJsonObject("statistics", new JsonObject());

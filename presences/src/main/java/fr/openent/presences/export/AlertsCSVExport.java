@@ -63,7 +63,7 @@ public class AlertsCSVExport extends CSVExport {
     private String getLine(JsonObject alert, String type) throws ParseException {
         String line = alert.getString("lastName") + SEPARATOR;
         line += alert.getString("firstName") + SEPARATOR;
-        line += alert.getString("audience") + SEPARATOR;
+        line += SPACE + alert.getString("audience") + SEPARATOR;
         line += getStringType(type) + SEPARATOR;
         line += alert.getLong("count") + SEPARATOR;
         return line + EOL;

@@ -53,7 +53,7 @@ public class PresencesCSVExport extends CSVExport {
         JsonObject student = markedStudent.getJsonObject(STUDENT);
         String line = student.getString("firstName") + SEPARATOR;
         line += student.getString("lastName") + SEPARATOR;
-        line += student.getString("classeName") + SEPARATOR;
+        line += SPACE + student.getString("classeName") + SEPARATOR;
         line += markedStudent.getString("comment") + SEPARATOR;
         return line + EOL;
     }
