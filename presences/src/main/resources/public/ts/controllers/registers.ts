@@ -282,6 +282,7 @@ export const registersController = ng.controller('RegistersController',
                     getReasons();
                     if (vm.register !== undefined && vm.register.id !== undefined) {
                         await vm.register.sync();
+                        vm.filter.date = moment(vm.register.start_date).toDate();
                         await initCourses();
                         if (vm.register.teachers.length > 0) vm.filter.selected.registerTeacher = vm.register.teachers[0];
                         $scope.safeApply();
@@ -291,6 +292,7 @@ export const registersController = ng.controller('RegistersController',
                         vm.register.eventer.once('loading::true', () => $scope.safeApply());
                         vm.register.eventer.once('loading::false', () => $scope.safeApply());
                         await vm.register.sync();
+                        vm.filter.date = moment(vm.register.start_date).toDate();
                         await initCourses();
                     }
                 },
