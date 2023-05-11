@@ -25,7 +25,7 @@ public class ExemptionCSVExport extends CSVExport {
     private String getLine(JsonObject exemption) {
         String line = exemption.getJsonObject("student").getString("firstName") + SEPARATOR;
         line += exemption.getJsonObject("student").getString("lastName") + SEPARATOR;
-        line += exemption.getJsonObject("student").getString("classeName") + SEPARATOR;
+        line += SPACE + exemption.getJsonObject("student").getString("classeName") + SEPARATOR;
         line += exemption.getJsonObject("subject").getString("name") + SEPARATOR;
         line += DateHelper.getDateString(exemption.getString("start_date"), "dd/MM/yyyy") + SEPARATOR;
         line += DateHelper.getDateString(exemption.getString("end_date"), "dd/MM/yyyy") + SEPARATOR;

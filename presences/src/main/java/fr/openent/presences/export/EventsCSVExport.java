@@ -32,7 +32,7 @@ public class EventsCSVExport extends CSVExport {
     private String getLine(Event event) {
         String line = event.getStudent().getLastName() + SEPARATOR;
         line += event.getStudent().getFirstName() + SEPARATOR;
-        line += event.getStudent().getClassName() + SEPARATOR;
+        line += SPACE + event.getStudent().getClassName() + SEPARATOR;
         line += I18n.getInstance().translate(event.getEventType().getLabel(), domain, locale) + SEPARATOR;
         line += getReason(event) + SEPARATOR;
         line += event.getOwner().getName() + SEPARATOR;
