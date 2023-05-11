@@ -45,7 +45,7 @@ public class RegistryCSVExport extends CSVExport {
         String line = "";
         line += getLineFromJSON(event,"lastName");
         line += getLineFromJSON(event,"firstName");
-        line += getLineFromJSON(event,"className");
+        line += SPACE + getLineFromJSON(event,"className");
         line += getType(event.getString("type"));
         line += getLineFromJSON(event,"reason");
 

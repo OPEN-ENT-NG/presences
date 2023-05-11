@@ -59,7 +59,7 @@ public class CollectiveAbsencesCSVExport extends CSVExport {
         }
         line += student.getString("lastName", "") + SEPARATOR;
         line += student.getString("firstName", "") + SEPARATOR;
-        line += student.getString("audienceName", "") + SEPARATOR;
+        line += SPACE + student.getString("audienceName", "") + SEPARATOR;
 
         return line + EOL;
     }
