@@ -487,7 +487,7 @@ export const homeController = ng.controller('HomeController', ['$scope', 'route'
             if (vm.filter.studentsSearch.getSelectedStudents().find((student: Student) => student.id == studentSelected.id)) {
                 return;
             }
-            vm.formFilter.studentsSearch.selectStudent(model, studentSelected);
+            vm.formFilter.studentsSearch.selectStudents(model, studentSelected);
             vm.formFilter.studentsSearch.student = '';
             vm.formFilter.studentsSearch.resetStudents();
             $scope.safeApply();
