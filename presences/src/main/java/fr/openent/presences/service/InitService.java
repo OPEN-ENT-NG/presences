@@ -8,9 +8,15 @@ import io.vertx.core.Promise;
 import io.vertx.core.http.HttpServerRequest;
 import io.vertx.core.json.JsonObject;
 
+import java.util.*;
+
 public interface InitService {
 
+    Future<JsonObject> initPresences(HttpServerRequest request, String structureId, String userId,
+                                     Optional<InitTypeEnum> initTypeEnum);
     void retrieveInitializationStatus(String structure, Handler<Either<String, JsonObject>> handler);
+
+    Future<Boolean> retrieveInitializationStatus(String structureId);
 
     void getReasonsStatement(HttpServerRequest request, String structure, InitTypeEnum initTypeEnum, Promise<JsonObject> promise);
 

@@ -3,21 +3,22 @@ package fr.openent.presences.controller;
 import fr.openent.presences.common.bus.BusResultHandler;
 import fr.openent.presences.common.helper.FutureHelper;
 import fr.openent.presences.core.constants.Field;
-import fr.openent.presences.enums.EventType;
+import fr.openent.presences.enums.*;
 import fr.openent.presences.service.*;
 import fr.openent.presences.service.impl.*;
 import fr.wseduc.bus.BusAddress;
 import fr.wseduc.webutils.Either;
+import io.vertx.core.*;
 import io.vertx.core.eventbus.EventBus;
 import io.vertx.core.eventbus.Message;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import org.entcore.common.bus.BusResponseHandler;
 import org.entcore.common.controller.ControllerHelper;
+import org.entcore.common.http.request.*;
 import org.entcore.common.user.UserInfos;
 
-import java.util.Collections;
-import java.util.List;
+import java.util.*;
 
 public class EventBusController extends ControllerHelper {
 
@@ -26,12 +27,15 @@ public class EventBusController extends ControllerHelper {
     private final SettingsService settingsService = new DefaultSettingsService();
     private final AbsenceService absenceService;
     private final RegisterService registerService;
+
+    private final InitService initService;
     private UserInfos user;
 
     public EventBusController(EventBus eb, CommonPresencesServiceFactory commonPresencesServiceFactory) {
         this.eventService = new DefaultEventService(eb);
         this.absenceService = new DefaultAbsenceService(eb);
         this.registerService = new DefaultRegisterService(commonPresencesServiceFactory);
+        this.initService = commonPresencesServiceFactory.initService();
     }
 
     @BusAddress("fr.openent.presences")
@@ -137,6 +141,29 @@ public class EventBusController extends ControllerHelper {
                         body.getJsonArray(Field.STATEIDS).getList();
                 endDate = body.getString(Field.ENDAT);
                 FutureHelper.busArrayHandler(this.registerService.listWithGroups(structure, registerIds, stateIds, startDate, endDate), message);
+                break;
+            case "init-presences":
+                structure = body.getString(Field.STRUCTUREID);
+                userId = body.getString(Field.USERID);
+                JsonHttpServerRequest request = new JsonHttpServerRequest(body.getJsonObject(Field.REQUEST, new JsonObject()));
+
+                this.initService.retrieveInitializationStatus(structure)
+                        .compose(status -> {
+                           if (status) {
+                               return Future.succeededFuture();
+                           } else {
+                               return this.initService.initPresences(request, structure, userId, Optional.of(InitTypeEnum.ONE_D));
+                           }
+                        })
+                        .onFailure(err -> BusResponseHandler.busResponseHandler(message).handle(new Either.Left<>(err.getMessage())))
+                        .onSuccess(res -> BusResponseHandler.busResponseHandler(message).handle(new Either.Right<>(res)));
+
+                break;
+            case "update-settings":
+                structure = body.getString(Field.STRUCTUREID);
+                this.settingsService.put(structure, body.getJsonObject(Field.SETTINGS))
+                        .onFailure(err -> BusResponseHandler.busResponseHandler(message).handle(new Either.Left<>(err.getMessage())))
+                        .onSuccess(res -> BusResponseHandler.busResponseHandler(message).handle(new Either.Right<>(res)));
                 break;
             default:
                 message.reply(new JsonObject()
