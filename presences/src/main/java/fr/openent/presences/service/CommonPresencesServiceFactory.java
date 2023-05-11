@@ -29,6 +29,8 @@ public class CommonPresencesServiceFactory {
     private final EventService eventService;
     private final PresenceService presenceService;
 
+    private final InitService initService;
+
     private final WorkspaceService workspaceService;
 
     public CommonPresencesServiceFactory(Vertx vertx, Storage storage, JsonObject config, ExportData exportData) {
@@ -44,6 +46,7 @@ public class CommonPresencesServiceFactory {
         this.eventService = new DefaultEventService(this);
         this.presenceService = new DefaultPresenceService(this);
         this.workspaceService = new DefaultWorkspaceService(this.vertx, this.storage, this.config);
+        this.initService = new DefaultInitService();
     }
 
     public CommonPresencesServiceFactory(Vertx vertx, Storage storage, JsonObject config) {
@@ -58,6 +61,7 @@ public class CommonPresencesServiceFactory {
         this.eventService = new DefaultEventService(this);
         this.presenceService = new DefaultPresenceService(this);
         this.workspaceService = new DefaultWorkspaceService(this.vertx, this.storage, this.config);
+        this.initService = new DefaultInitService();
     }
 
     // Common
@@ -157,6 +161,10 @@ public class CommonPresencesServiceFactory {
 
     public WorkspaceService workspaceService() {
         return workspaceService;
+    }
+
+    public InitService initService() {
+        return initService;
     }
 
     // Helpers
