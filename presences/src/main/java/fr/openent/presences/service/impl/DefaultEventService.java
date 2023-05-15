@@ -1086,11 +1086,16 @@ public class DefaultEventService extends DBService implements EventService {
                      List<String> userId, Handler<Either<String, JsonArray>> handler) {
         String query = "SELECT event.id, event.start_date, event.end_date, event.type_id, event.reason_id, " +
                 "event.counsellor_input, event.counsellor_regularisation, event.followed, event.comment, " +
-                "(SELECT to_char(MIN(r.start_date), 'YYYY-MM-DD HH24:MI:SS') FROM " + Presences.dbSchema + ".register r WHERE r.course_id = register.course_id) as course_start_date, " +
-                "(SELECT to_char(MAX(r.end_date), 'YYYY-MM-DD HH24:MI:SS') FROM " + Presences.dbSchema + ".register r WHERE r.course_id = register.course_id) as course_end_date, " +
+                "to_char(course_dates.course_start_date, 'YYYY-MM-DD HH24:MI:SS') as course_start_date, " +
+                "to_char(course_dates.course_end_date, 'YYYY-MM-DD HH24:MI:SS') as course_end_date, " +
                 "register.course_id " +
                 "FROM  " + Presences.dbSchema + ".event " +
                 "INNER JOIN " + Presences.dbSchema + ".register ON (event.register_id = register.id) " +
+                "INNER JOIN (" +
+                "SELECT r.course_id, MIN(r.start_date) as course_start_date, MAX(r.end_date) as course_end_date " +
+                "FROM " + Presences.dbSchema + ".register r " +
+                "GROUP BY r.course_id" +
+                ") as course_dates ON (course_dates.course_id = register.course_id) " +
                 "WHERE student_id IN " + Sql.listPrepared(userId) +
                 " AND event.start_date >= ? " +
                 "AND event.end_date <= ? " +
