@@ -470,7 +470,10 @@ public class DefaultIncidentsService extends SqlCrudService implements Incidents
 
         Sql.getInstance().raw(queryId, SqlResult.validUniqueResultHandler(idEvent -> {
             if (idEvent.isLeft()) {
-                handler.handle(new Either.Left<>("Failed to query next incident identifier"));
+                String message = String.format("[Incidents@%s::create] Failed to query next incident identifier : %s",
+                        this.getClass().getSimpleName(), idEvent.left().getValue());
+                log.error(message);
+                handler.handle(new Either.Left<>(message));
                 return;
             }
             Number id = idEvent.right().getValue().getInteger("id");
