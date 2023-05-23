@@ -34,7 +34,7 @@ public class IncidentsExportWorker extends ExportWorker {
     protected Future<ExportFile> getData(String action, String exportType, JsonObject params) {
         switch (action) {
             case ExportActions.EXPORT_INCIDENTS:
-                this.exportNotification = "incidents.export_incidents";
+                this.exportNotification = "presences.export_incidents";
                 return getIncidents(params);
             case ExportActions.EXPORT_PUNISHMENTS:
                 this.exportNotification = "incidents.export_punishments";
