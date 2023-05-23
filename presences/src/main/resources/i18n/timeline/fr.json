@@ -5,5 +5,13 @@
   "presences.timeline.concerning.the": "concernant les",
   "presences.timeline.events": "évènements",
   "presences.timeline.is.now.available.in.your.workspace": "est désormais disponible dans votre espace documentaire",
-  "presences.timeline.link.workspace": "lien du dossier"
+  "presences.timeline.link.workspace": "lien du dossier",
+
+  "incidents.push.notif.title": "Export Incidents terminé",
+  "incidents.timeline.the.export": "L'export",
+  "incidents.timeline.concerning.the": "concernant les",
+  "incidents.timeline.incidents": "incidents",
+  "incidents.timeline.punishments": "punitions/sanctions",
+  "incidents.timeline.is.now.available.in.your.workspace": "est désormais disponible dans votre espace documentaire",
+  "incidents.timeline.link.workspace": "lien du dossier"
 }
