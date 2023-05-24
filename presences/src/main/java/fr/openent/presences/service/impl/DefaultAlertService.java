@@ -2,11 +2,14 @@ package fr.openent.presences.service.impl;
 
 import fr.openent.presences.Presences;
 import fr.openent.presences.common.helper.FutureHelper;
+import fr.openent.presences.common.helper.IModelHelper;
 import fr.openent.presences.common.viescolaire.Viescolaire;
 import fr.openent.presences.core.constants.Field;
 import fr.openent.presences.db.DBService;
+import fr.openent.presences.helper.SQLHelper;
+import fr.openent.presences.model.Alert;
+import fr.openent.presences.model.AlertFilterModel;
 import fr.openent.presences.service.AlertService;
-import fr.openent.presences.service.SettingsService;
 import fr.wseduc.webutils.Either;
 import io.vertx.core.CompositeFuture;
 import io.vertx.core.Future;
@@ -21,7 +24,9 @@ import org.entcore.common.neo4j.Neo4jResult;
 import org.entcore.common.sql.Sql;
 import org.entcore.common.sql.SqlResult;
 
+
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -107,35 +112,19 @@ public class DefaultAlertService extends DBService implements AlertService {
     }
 
     @Override
-    public Future<JsonArray> getAlertsStudents(String structureId, List<String> types, List<String> students, String startDate, String endDate, String startTime, String endTime) {
-        Promise<JsonArray> promise = Promise.promise();
-        JsonArray params = new JsonArray()
-                .add(structureId);
+    public Future<List<Alert>> getAlertsStudents(AlertFilterModel alertFilter) {
+        Promise<List<Alert>> promise = Promise.promise();
+        JsonArray params = new JsonArray();
         String query = "SELECT student_id, type, count(*) AS count FROM " +
-                Presences.dbSchema + ".alerts WHERE structure_id = ?";
-        if (!types.isEmpty()) {
-            query += " AND type IN " + Sql.listPrepared(types);
-            params.addAll(new JsonArray(types));
-        }
-        if (!students.isEmpty()) {
-            query += " AND student_id IN " + Sql.listPrepared(students);
-            params.addAll(new JsonArray(students));
-        }
+                Presences.dbSchema + ".alerts";
 
-        if (startDate != null && startTime != null) {
-            query += "AND date >= ?::date + ?::time ";
-            params.add(startDate);
-            params.add(startTime);
-        }
+        query += alertsFiltersQuery(alertFilter, params);
 
-        if (endDate != null && endTime != null) {
-            query += "AND date <= ?::date + ?::time ";
-            params.add(endDate);
-            params.add(endTime);
-        }
+        query += " GROUP BY student_id, type HAVING count(*) >= " + Presences.dbSchema + ".get_alert_thresholder(type, ?)";
+        params.add(alertFilter.getStructureId());
 
-        query += " GROUP BY student_id, type HAVING count(*) >= " + Presences.dbSchema + ".get_alert_thresholder(type, ?);";
-        params.add(structureId);
+
+        query += SQLHelper.addLimitOffset(Presences.ALERT_PAGE_SIZE, Presences.ALERT_PAGE_SIZE * alertFilter.getPage(), params) + ";";
 
         Promise<JsonArray> alertPromise = Promise.promise();
         alertPromise.future()
@@ -175,7 +164,7 @@ public class DefaultAlertService extends DBService implements AlertService {
                                 alert.put(Field.AUDIENCE, studentMap.get(studentId).getString(Field.AUDIENCE));
                             });
 
-                    promise.complete(alerts);
+                    promise.complete(IModelHelper.toList(alerts, Alert.class));
                 })
                 .onFailure(error -> {
                     log.error(String.format("[Presences@DefaultAlertService::getAlertsStudents] Failed to get alert student %s", error.getMessage()));
@@ -185,6 +174,8 @@ public class DefaultAlertService extends DBService implements AlertService {
 
         return promise.future();
     }
+
+
 
     @Override
     public void getStudentAlertNumberWithThreshold(String structureId, String studentId, String type, Handler<Either<String, JsonObject>> handler) {
@@ -258,4 +249,52 @@ public class DefaultAlertService extends DBService implements AlertService {
 
         return promise.future();
     }
+
+
+    public Future<Integer> getPageCount(AlertFilterModel alertFilter){
+        Promise<Integer> promise = Promise.promise();
+        JsonArray params = new JsonArray();
+
+        String query = " SELECT count(distinct(student_id, type)) as count from "
+                + Presences.dbSchema +  ".alerts ";
+
+        query += alertsFiltersQuery(alertFilter, params);
+
+        Sql.getInstance().prepared(query,params,SqlResult.validUniqueResultHandler(res -> {
+            if (res.isLeft()) {
+                promise.fail(res.left().getValue());
+            } else {
+                promise.complete(res.right().getValue().getInteger(Field.COUNT, 0));
+            }
+        }));
+        return promise.future();
+    }
+
+    private String alertsFiltersQuery(AlertFilterModel alertFilter, JsonArray params) {
+        StringBuilder conditions = new StringBuilder();
+        if (alertFilter.getStructureId() != null) {
+            conditions.append(" AND");
+            conditions.append(SQLHelper.structureId(alertFilter.getStructureId(), params));
+        }
+        if (!alertFilter.getTypes().isEmpty()) {
+            conditions.append(" AND");
+            conditions.append(SQLHelper.filterList("type", alertFilter.getTypes(), params));
+        }
+        if (!alertFilter.getStudents().isEmpty()) {
+            conditions.append(" AND");
+            conditions.append(SQLHelper.filterList("student_id", alertFilter.getStudents(), params));
+        }
+        if (alertFilter.getStartDate() != null && alertFilter.getStartTime() != null) {
+            conditions.append(" AND");
+            conditions.append(SQLHelper.startDateStartTime(alertFilter.getStartDate(), alertFilter.getStartTime(), params));
+        }
+        if (alertFilter.getEndDate() != null && alertFilter.getEndTime() != null) {
+            conditions.append(" AND");
+            conditions.append(SQLHelper.endDateEndTime(alertFilter.getEndDate(), alertFilter.getEndTime(), params));
+        }
+
+        return conditions.toString().replaceFirst("AND", "WHERE");
+    }
+
+
 }
