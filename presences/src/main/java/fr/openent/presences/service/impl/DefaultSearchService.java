@@ -121,8 +121,8 @@ public class DefaultSearchService implements SearchService {
     private void searchUserAndGroup(String query, String structureId, String userId, Handler<Either<String, JsonArray>> handler) {
         String searchQuery = "MATCH (u:User {profiles: ['Student']})-[:IN]->(:ProfileGroup)-[:DEPENDS]->" +
                 "(c:Class)-[:BELONGS]->(s:Structure {id:{structureId}}) " +
-                "WHERE toLower(u.firstName) CONTAINS {query} " +
-                "OR toLower(u.lastName) CONTAINS {query} " +
+                "WHERE (toLower(u.firstName) + ' ' + toLower(u.lastName)) CONTAINS {query} " +
+                "OR (toLower(u.lastName) + ' ' + toLower(u.firstName)) CONTAINS {query} " +
                 "RETURN distinct u.id as id, (u.lastName + ' ' + u.firstName) as displayName, " +
                 "'USER' as type, c.id as groupId, c.name as groupName " +
                 "UNION " +
