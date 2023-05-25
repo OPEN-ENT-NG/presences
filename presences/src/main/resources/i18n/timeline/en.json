@@ -4,5 +4,9 @@
   "presences.timeline.concerning.the": "concernant les",
   "presences.timeline.events": "évènements",
   "presences.timeline.is.now.available.in.your.workspace": "est désormais disponible dans votre espace documentaire",
-  "presences.timeline.link.workspace": "lien du dossier"
+  "presences.timeline.link.workspace": "lien du dossier",
+  "presences.export_events": "Export des évènements",
+  "presences.export_incidents": "Export des incidents",
+  "incidents.export_incidents": "Export des incidents",
+  "incidents.export_punishments": "Export des punitions"
 }
