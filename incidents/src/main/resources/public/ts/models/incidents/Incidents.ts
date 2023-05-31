@@ -86,7 +86,7 @@ export class Incident {
             response.protagonists.forEach(protagonist => {
                 let protagonistForm = {} as ProtagonistForm;
                 protagonistForm.userId = protagonist.user_id;
-                protagonistForm.label = protagonist.student.displayName;
+                protagonistForm.label = protagonist.student != null ? protagonist.student.displayName : "";
                 protagonistForm.protagonistType = protagonist.type;
                 protagonists.push(protagonistForm);
             });
