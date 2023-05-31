@@ -64,15 +64,14 @@ export const dashboardController = ng.controller('DashboardController', ['$scope
               eventService: EventService, initService: IInitService) {
         const vm: ViewModel = this;
 
-        vm.isInit = null;
+        vm.isInit = undefined;
 
         const initData = async (): Promise<void> => {
             if (!window.structure) {
                 window.structure = await Me.preference(PreferencesUtils.PREFERENCE_KEYS.PRESENCE_STRUCTURE);
             } else {
                 initService.getViescoInitStatus(window.structure.id).then((r: IInitStatusResponse) => {
-                    if (r.initialized !== undefined) vm.isInit = !r.initialized;
-                    else vm.isInit = false;
+                    vm.isInit = (r.initialized !== undefined && r.initialized !== null) ? !r.initialized : null;
                 });
                 await Promise.all([vm.getAlert(), vm.getAbsentsCounts()])
                     .catch(error => {

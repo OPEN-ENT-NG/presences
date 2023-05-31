@@ -621,6 +621,7 @@
   "presences.init.1d.success": "Initialisation Premier degré réussie",
   "presences.init.2d.success": "Initialisation Second degré réussie",
   "presences.init.1d.form.header": "Bienvenue dans Présences - Initialisation du module",
+  "presences.init.1d.form.header.2": "Réinitialisation du module",
   "presences.init.1d.form.warning": "Attention, le rattachement des enseignants aux classes doit avoir été effectué au préalable en console par un administrateur.",
   "presences.init.1d.form.dates.and.schedule": "Dates et horaires",
   "presences.init.1d.form.schoolyear": "Année scolaire",

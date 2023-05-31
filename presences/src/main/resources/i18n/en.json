@@ -520,6 +520,7 @@
   "presences.init.1d.success": "First degree initialization successful",
   "presences.init.2d.success": "Second degree initialization successful",
   "presences.init.1d.form.header": "Welcome to Présences - Module Initialization",
+  "presences.init.1d.form.header.2": "Module reinitialization",
   "presences.init.1d.form.warning": "Please note that teachers must have been attached to classes beforehand by an administrator in the console.",
   "presences.init.1d.form.dates.and.schedule": "Dates and Schedule",
   "presences.init.1d.form.schoolyear": "School Year",
