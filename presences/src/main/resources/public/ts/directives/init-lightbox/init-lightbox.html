@@ -1,9 +1,12 @@
 <lightbox class="presenceLightbox init-1d-lightbox"
-          show="vm.display"
+          show="vm.display || vm.display === null"
           on-close="vm.display = false">
     <section class="head init-1d-lightbox-head">
-        <h3>
+        <h3 ng-if="vm.display === null">
             <i18n>presences.init.1d.form.header</i18n>
+        </h3>
+        <h3 ng-if="vm.display !== null">
+            <i18n>presences.init.1d.form.header.2</i18n>
         </h3>
     </section>
 
