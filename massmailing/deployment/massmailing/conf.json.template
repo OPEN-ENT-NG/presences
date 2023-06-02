@@ -1,5 +1,5 @@
 {
-  "name": "fr.openent~massmailing~1.4.9",
+  "name": "fr.openent~massmailing~1.4.10",
   "config": {
     "main" : "fr.openent.massmailing.Massmailing",
     "port" : 8065,
