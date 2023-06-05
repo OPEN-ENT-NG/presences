@@ -467,6 +467,7 @@
   "presences.absences.update_reason.error": "An error has occurred while updating the reason for the absence",
   "presences.absences.update.error": "An error has occurred while updating the absence",
   "presences.absences.update_regularized.error": "An error has occurred while regularizing the absence",
+  "presences.absences.update_regularized": "The absence has been properly justified.",
   "presences.reasons.init.0": "Absence cantine",
   "presences.reasons.init.1": "CDI",
   "presences.reasons.init.2": "Classe relais",

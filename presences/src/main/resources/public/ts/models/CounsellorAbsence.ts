@@ -1,5 +1,5 @@
 import http from 'axios';
-import {model, notify} from 'entcore';
+import {model, notify, toasts} from 'entcore';
 
 declare let window: any;
 
@@ -41,14 +41,18 @@ export class CounsellorAbsence {
         }
     }
 
-    async updateRegularisation() {
+    async updateRegularisation() : Promise<boolean> {
         try {
             await http.put('/presences/absence/regularized', {
                 regularized: this.counsellor_regularisation,
                 ids: [this.id]
-            });
+            })
+            toasts.confirm('presences.absences.update_regularized');
+            return true;
         } catch (err) {
-            notify.error('presences.absences.update_regularized.error');
+            toasts.warning('presences.absences.update_regularized.error');
+            this.counsellor_regularisation = !this.counsellor_regularisation;
+            return false;
         }
     }
 

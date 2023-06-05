@@ -71,7 +71,7 @@
                     <label class="checkbox">
                         <input type="checkbox" data-ng-model="absence.counsellor_regularisation"
                                ng-disabled="!(absence.reason_id !== null && !vm.provingReasonsMap[absence.reason_id])"
-                               data-ng-change="vm.updateRegularisationAbsenceEvent(absence); vm.regularizeAbsence(absence)">
+                               data-ng-change="vm.updateRegularisationAbsenceEvent(absence)">
                         <span ng-style="{cursor: absence.reason_id !== null && !vm.provingReasonsMap[absence.reason_id] ? 'pointer' : 'default'}"></span>
                     </label>
                 </div>
