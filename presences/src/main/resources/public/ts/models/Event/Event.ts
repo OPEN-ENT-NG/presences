@@ -1,5 +1,5 @@
 import http, {AxiosResponse} from 'axios';
-import {moment} from 'entcore';
+import {moment, toasts} from 'entcore';
 import {DateUtils} from '@common/utils';
 import {EventType, LoadingCollection} from '@common/model';
 import {Reason} from '@presences/models/Reason';
@@ -317,13 +317,18 @@ export class Events extends LoadingCollection {
         }
     }
 
-    async updateRegularized(events, regularized, studentId, structureId): Promise<void> {
+    async updateRegularized(events, regularized, studentId, structureId): Promise<boolean> {
         if (events.length === 0) return;
         try {
             events.forEach(e => delete e.$$hashKey);
             await http.put(`/presences/events/regularized`, {events: events, regularized: regularized, student_id: studentId, structure_id: structureId});
+            toasts.confirm('presences.absences.update_regularized');
+            return true
         } catch (err) {
             throw err;
+            toasts.warning('presences.absences.update_regularized.error');
+            this.events[0].counsellor_regularisation = !this.events[0].counsellor_regularisation;
+            return false;
         }
     }
 }

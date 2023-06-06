@@ -1,4 +1,4 @@
-import {_, moment, ng, notify} from 'entcore';
+import {_, moment, ng, notify, toasts} from 'entcore';
 import {AbsenceService, EventRequest, EventService, IViescolaireService, ReasonService,
     SearchItem, SearchService} from '../../services';
 import {CounsellorAbsence, EventResponse, Events, ITimeSlot, Reason, Students, IEvent} from '../../models';
@@ -254,11 +254,16 @@ export const absencesController = ng.controller('AbsenceController', ['$scope', 
          * @param absence absence an absence, can be an absence event.
          */
         vm.updateRegularisationAbsenceEvent = async (absence: CounsellorAbsence | IEvent): Promise<void> => {
+            let res: boolean;
             if (absence instanceof CounsellorAbsence) {
-                await absence.updateRegularisation();
+                res = await absence.updateRegularisation();
             } else {
-                await new Events().updateRegularized([absence], absence.counsellor_regularisation, absence.student.id, window.structure.id);
+                res = await new Events().updateRegularized([absence], absence.counsellor_regularisation, absence.student.id, window.structure.id)
             }
+            if(res){
+                vm.regularizeAbsence(absence)
+            }
+            $scope.safeApply();
         };
 
         /**
