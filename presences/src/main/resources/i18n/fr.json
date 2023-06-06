@@ -536,6 +536,7 @@
   "presences.absences.update_reason.error": "Une erreur est survenue lors de la modification du motif",
   "presences.absences.update.error": "Une erreur est survenue lors de la modification de l'absence",
   "presences.absences.update_regularized.error": "Une erreur est survenue lors de la régularisation de l'absence",
+  "presences.absences.update_regularized": "La régularisation a bien été effectuée",
   "presences.reasons.init.1d.0": "Absence cantine",
   "presences.reasons.init.1d.1": "Classe relais",
   "presences.reasons.init.1d.2": "Compétition sportive",
