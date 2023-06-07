@@ -8,6 +8,7 @@ import fr.openent.presences.model.TimeslotModel;
 import fr.openent.presences.service.EventService;
 import fr.openent.presences.service.EventStudentService;
 import fr.openent.presences.service.ReasonService;
+import fr.openent.presences.service.SettingsService;
 import io.vertx.core.*;
 import io.vertx.core.eventbus.EventBus;
 import io.vertx.core.json.Json;
@@ -39,6 +40,7 @@ public class DefaultEventStudentService implements EventStudentService {
 
     private final EventService eventService;
     private final ReasonService reasonService = new DefaultReasonService();
+    private final SettingsService settingsService = new DefaultSettingsService();
     private final EventBus eb;
 
     public DefaultEventStudentService(EventBus eventBus) {
@@ -123,6 +125,8 @@ public class DefaultEventStudentService implements EventStudentService {
 
         // Get reasons types to map it thanks reason_id on absences justified events results
         Future<Map<Integer, JsonObject>> reasonFuture = getReasons(structureId);
+        // Get presence settings to get recovery method (for absences events configuration retrieving)
+        Future<JsonObject> presencesSettingsFuture = settingsService.retrieve(structureId);
         // Get viscolaire settings to get Half Day Date configured by the current structure
         //  (if absences events are configured by Half Days).
         Future<JsonObject> viscoSettingsFuture = getHalfDay(structureId);
@@ -130,7 +134,7 @@ public class DefaultEventStudentService implements EventStudentService {
         // (if they are retrieved by Half Days or by Days)
         Future<JsonObject> timeSlotsFuture = getTimeSlots(structureId);
 
-        CompositeFuture.all(reasonFuture, viscoSettingsFuture, timeSlotsFuture)
+        CompositeFuture.all(reasonFuture, presencesSettingsFuture, viscoSettingsFuture, timeSlotsFuture)
                 .onFailure(error -> {
                     String message =
                             String.format("[Presences@%s::setSettingsAndReasons] Fail to get settings.",
@@ -142,6 +146,7 @@ public class DefaultEventStudentService implements EventStudentService {
                     reasons.putAll(reasonFuture.result());
                     settings.mergeIn(viscoSettingsFuture.result());
                     settings.mergeIn(timeSlotsFuture.result());
+                    settings.put(Field.EVENT_RECOVERY_METHOD, presencesSettingsFuture.result().getString(Field.EVENT_RECOVERY_METHOD));
                     promise.complete(settings);
                 });
         return promise.future();
