@@ -571,5 +571,21 @@
   "presences.export.lightbox.warning.6": "Dans le cas d'un petit export (<1000 lignes),",
   "presences.export.lightbox.warning.7": "le fichier sera directement téléchargeable après validation,",
   "presences.export.lightbox.warning.8": "une copie sera tout de même à disposition dans l'espace documentaire.",
-  "presences.do.not.show.this.message.again": "Ne plus afficher ce message"
+  "presences.do.not.show.this.message.again": "Ne plus afficher ce message",
+  "presences.absence.edit.warning": "Attention, la modification du motif entraînera une modification sur toutes les absences déjà saisies avec ce motif.",
+  "presences.absence.reason.edit": "Modifier le motif",
+  "presences.absence.reason.form.input": "Saisissez ici un motif d'absence individuelle que vous pourrez utiliser dans l'application Présences",
+  "presences.absence.reason.form.input.edit": "Modifier le motif",
+  "presences.absence.reason.form.input.edit.warning": "Attention, la modification du motif entraînera une modification sur toutes les absences déjà saisies avec ce motif. ",
+  "presences.data.init": "Initialisation des données",
+  "presences.data.init.are": "Les données suivantes seront initialisées",
+  "presences.data.init.success": "Les données ont été correctement initialisées",
+  "presences.data.init.error": "Une erreur est survenue lors de l'initialisation des données",
+  "presence.existed.reasons": "Motifs existants",
+  "presences.motifs": "Motifs",
+  "presences.state.call": "Etat de l'appel",
+  "presences.setting.data.init": "Initialisation des données de l'application",
+  "presences.start.init": "Lancer l'initialisation",
+  "presences.compliance.absence": "Ce motif doit-il être pris en compte dans la comptatibilité des absences pour le bulletin de l'élève ?",
+  "presences.regularisable": "Ce motif nécessite-t-il une régularisation pour être justifié ?"
 }
