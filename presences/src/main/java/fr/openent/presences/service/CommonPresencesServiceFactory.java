@@ -140,7 +140,7 @@ public class CommonPresencesServiceFactory {
     }
 
     public EventStudentService eventStudentService() {
-        return new DefaultEventStudentService(this.vertx.eventBus());
+        return new DefaultEventStudentService(this);
     }
 
     public RegisterService registerService() {

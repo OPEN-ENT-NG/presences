@@ -3,7 +3,7 @@ package fr.openent.presences.model;
 import fr.openent.presences.core.constants.Field;
 import io.vertx.core.json.JsonObject;
 
-public class Settings {
+public class Settings implements IModel<Settings> {
 
     private final Number alertAbsenceThreshold;
     private final Number alertLatenessThreshold;
@@ -64,6 +64,26 @@ public class Settings {
         return endOfHalfDayTimeSlot;
     }
 
+    @Override
+    public JsonObject toJson() {
+        return new JsonObject()
+                .put(Field.ALERT_ABSENCE_THRESHOLD, this.alertAbsenceThreshold)
+                .put(Field.ALERT_LATENESS_THRESHOLD, this.alertLatenessThreshold)
+                .put(Field.ALERT_INCIDENT_THRESHOLD, this.alertIncidentThreshold)
+                .put(Field.ALERT_FORGOTTEN_NOTEBOOK_THRESHOLD, this.alertForgottenThreshold)
+                .put(Field.EVENT_RECOVERY_METHOD, this.recoveryMethod)
+                .put(Field.ALLOW_MULTIPLE_SLOTS, this.multipleSlot);
+    }
+
+    @Override
+    public boolean validate() {
+        return this.alertAbsenceThreshold != null
+                && this.alertLatenessThreshold != null
+                && this.alertIncidentThreshold != null
+                && this.alertForgottenThreshold != null
+                && this.recoveryMethod != null && !this.recoveryMethod.isEmpty()
+                && this.multipleSlot != null;
+    }
 }
 
 

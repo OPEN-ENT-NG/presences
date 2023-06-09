@@ -3,6 +3,7 @@ package fr.openent.presences.controller;
 import fr.openent.presences.core.constants.Field;
 import fr.openent.presences.security.StudentEventsViewRight;
 import fr.openent.presences.security.StudentsEventsViewRight;
+import fr.openent.presences.service.CommonPresencesServiceFactory;
 import fr.openent.presences.service.EventStudentService;
 import fr.openent.presences.service.impl.DefaultEventStudentService;
 import fr.wseduc.rs.*;
@@ -21,9 +22,9 @@ public class StudentController extends ControllerHelper {
 
     private final EventStudentService eventStudentService;
 
-    public StudentController(EventBus eb) {
+    public StudentController(CommonPresencesServiceFactory commonPresencesServiceFactory) {
         super();
-        this.eventStudentService = new DefaultEventStudentService(eb);
+        this.eventStudentService = commonPresencesServiceFactory.eventStudentService();
     }
 
     @Get("/students/:id/events")

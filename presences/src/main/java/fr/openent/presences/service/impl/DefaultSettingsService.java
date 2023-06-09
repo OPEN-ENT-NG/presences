@@ -2,9 +2,11 @@ package fr.openent.presences.service.impl;
 
 import fr.openent.presences.Presences;
 import fr.openent.presences.common.helper.FutureHelper;
+import fr.openent.presences.common.helper.IModelHelper;
 import fr.openent.presences.core.constants.Field;
 import fr.openent.presences.db.DBService;
 import fr.openent.presences.enums.SettingsFieldEnum;
+import fr.openent.presences.model.Settings;
 import fr.openent.presences.service.SettingsService;
 import fr.wseduc.webutils.Either;
 import io.vertx.core.Future;
@@ -27,8 +29,34 @@ public class DefaultSettingsService extends DBService implements SettingsService
 
     private final Logger log = LoggerFactory.getLogger(DefaultSettingsService.class);
 
+    /**
+     * @deprecated Use {@link #retrieveSettings(String)}
+     */
+    @Deprecated
     @Override
     public void retrieve(String structureId, Handler<Either<String, JsonObject>> handler) {
+        retrieveSettings(structureId)
+                .onSuccess(settings -> handler.handle(new Either.Right<>(settings.toJson())))
+                .onFailure(err -> handler.handle(new Either.Left<>(err.getMessage())));
+    }
+
+    /**
+     * @deprecated Use {@link #retrieveSettings(String)}
+     */
+    @Deprecated
+    @Override
+    public Future<JsonObject> retrieve(String structureId) {
+        Promise<JsonObject> promise = Promise.promise();
+        retrieveSettings(structureId)
+        .onComplete(hand -> promise.complete(hand.result().toJson()))
+        .onFailure(promise::fail);
+        return promise.future();
+    }
+
+    @Override
+    public Future<Settings> retrieveSettings(String structureId) {
+        Promise<Settings> promise = Promise.promise();
+
         String query = "SELECT alert_absence_threshold," +
                 "alert_lateness_threshold," +
                 "alert_incident_threshold," +
@@ -40,22 +68,9 @@ public class DefaultSettingsService extends DBService implements SettingsService
                 "exclude_alert_forgotten_notebook " +
                 "FROM " + Presences.dbSchema + ".settings WHERE structure_id = ?;";
         JsonArray params = new JsonArray(Collections.singletonList(structureId));
-        sql.prepared(query, params, SqlResult.validUniqueResultHandler(handler));
-    }
 
-    @Override
-    public Future<JsonObject> retrieve(String structureId) {
-        Promise<JsonObject> promise = Promise.promise();
-        retrieve(structureId, event -> {
-            if (event.isLeft()) {
-                String message = String.format("[Presences@%s::retrieve] an error has occurred during retrieving settings: %s",
-                        this.getClass().getSimpleName(), event.left().getValue());
-                log.error(message, event.left());
-                promise.fail(event.left().getValue());
-            } else {
-                promise.complete(event.right().getValue());
-            }
-        });
+        sql.prepared(query, params, SqlResult.validUniqueResultHandler(IModelHelper.sqlUniqueResultToIModel(promise, Settings.class, "[Presences@%s::retrieveSettings] an error has occurred during retrieving settings")));
+
         return promise.future();
     }
 

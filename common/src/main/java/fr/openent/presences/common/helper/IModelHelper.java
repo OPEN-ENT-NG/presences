@@ -1,15 +1,18 @@
 package fr.openent.presences.common.helper;
 
 import fr.openent.presences.model.IModel;
-import io.vertx.core.json.Json;
+import fr.wseduc.webutils.Either;
+import io.vertx.core.Handler;
+import io.vertx.core.Promise;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
+import io.vertx.core.logging.Logger;
+import io.vertx.core.logging.LoggerFactory;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.time.Instant;
 import java.util.Arrays;
-import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
@@ -23,12 +26,12 @@ public class IModelHelper {
     private final static List<Class<?>> validJsonClasses = Arrays.asList(String.class, boolean.class, Boolean.class,
             double.class, Double.class, float.class, Float.class, Integer.class, int.class, CharSequence.class,
             JsonObject.class, JsonArray.class, Long.class, long.class, Instant.class);
+    private final static Logger log = LoggerFactory.getLogger(IModelHelper.class);
 
     private IModelHelper() {
         throw new IllegalStateException("Utility class");
     }
 
-    @SuppressWarnings("unchecked")
     public static <T extends IModel<T>> List<T> toList(JsonArray results, Class<T> modelClass) {
         return results.stream()
                 .filter(JsonObject.class::isInstance)
@@ -111,5 +114,70 @@ public class IModelHelper {
                     }
                 });
         return res;
+    }
+
+    /**
+     * See {@link #sqlResultToIModel(Promise, Class, String)}
+     */
+    public static <T extends IModel<T>> Handler<Either<String, JsonArray>> sqlResultToIModel(Promise<List<T>> promise, Class<T> modelClass) {
+        return sqlResultToIModel(promise, modelClass, null);
+    }
+
+    /**
+     * Complete a promise from the result of a sql query, while converting this result into a list of model.
+     *
+     * @param promise the promise we want to complete
+     * @param modelClass the class of the model we want to convert
+     * @param errorMessage a message logged when the sql query fail
+     * @param <T> the type of the model
+     */
+    public static <T extends IModel<T>> Handler<Either<String, JsonArray>> sqlResultToIModel(Promise<List<T>> promise, Class<T> modelClass, String errorMessage) {
+        return event -> {
+            if (event.isLeft()) {
+                if (errorMessage != null) {
+                    log.error(errorMessage + " " + event.left().getValue());
+                }
+                promise.fail(event.left().getValue());
+            } else {
+                promise.complete(toList(event.right().getValue(), modelClass));
+            }
+        };
+    }
+
+    /**
+     * See {@link #sqlUniqueResultToIModel(Promise, Class, String)}
+     */
+    public static <T extends IModel<T>> Handler<Either<String, JsonObject>> sqlUniqueResultToIModel(Promise<T> promise, Class<T> modelClass) {
+        return sqlUniqueResultToIModel(promise, modelClass, null);
+    }
+
+    /**
+     * Complete a promise from the result of a sql query, while converting this result into a model.
+     *
+     * @param promise the promise we want to complete
+     * @param modelClass the class of the model we want to convert
+     * @param errorMessage a message logged when the sql query fail
+     * @param <T> the type of the model
+     */
+    public static <T extends IModel<T>> Handler<Either<String, JsonObject>> sqlUniqueResultToIModel(Promise<T> promise, Class<T> modelClass, String errorMessage) {
+        return event -> {
+            if (event.isLeft()) {
+                if (errorMessage != null) {
+                    log.error(errorMessage + " " + event.left().getValue());
+                }
+                promise.fail(event.left().getValue());
+            } else {
+                promise.complete(toModel(event.right().getValue(), modelClass));
+            }
+        };
+    }
+
+    public static <T extends IModel<T>> T toModel(JsonObject iModel, Class<T> modelClass) {
+        try {
+            return modelClass.getConstructor(JsonObject.class).newInstance(iModel);
+        } catch (NoSuchMethodException | InstantiationException | IllegalAccessException |
+                InvocationTargetException e) {
+            return null;
+        }
     }
 }
