@@ -18,6 +18,7 @@ public interface SettingsService {
      * @param handler handler
      * @deprecated Replaced by {@link #retrieveSettings(String)}
      */
+    @Deprecated
     void retrieve(String structureId, Handler<Either<String, JsonObject>> handler);
 
     /**
@@ -26,6 +27,7 @@ public interface SettingsService {
      * @param structureId Structure identifier
      * @deprecated Replaced by {@link #retrieveSettings(String)}
      */
+    @Deprecated
     Future<JsonObject> retrieve(String structureId);
 
     /**
