@@ -4,11 +4,9 @@ import fr.openent.presences.common.helper.EventsHelper;
 import fr.openent.presences.common.helper.FutureHelper;
 import fr.openent.presences.common.viescolaire.Viescolaire;
 import fr.openent.presences.core.constants.Field;
+import fr.openent.presences.model.Settings;
 import fr.openent.presences.model.TimeslotModel;
-import fr.openent.presences.service.EventService;
-import fr.openent.presences.service.EventStudentService;
-import fr.openent.presences.service.ReasonService;
-import fr.openent.presences.service.SettingsService;
+import fr.openent.presences.service.*;
 import io.vertx.core.*;
 import io.vertx.core.eventbus.EventBus;
 import io.vertx.core.json.Json;
@@ -39,14 +37,16 @@ public class DefaultEventStudentService implements EventStudentService {
     private final String AFTERNOON = "AFTERNOON";
 
     private final EventService eventService;
-    private final ReasonService reasonService = new DefaultReasonService();
-    private final SettingsService settingsService = new DefaultSettingsService();
+    private final ReasonService reasonService;
+    private final SettingsService settingsService;
     private final EventBus eb;
 
-    public DefaultEventStudentService(EventBus eventBus) {
+    public DefaultEventStudentService(CommonPresencesServiceFactory commonPresencesServiceFactory) {
         super();
-        eb = eventBus;
-        eventService = new DefaultEventService(eventBus);
+        this.eb = commonPresencesServiceFactory.eventBus();
+        this.eventService = commonPresencesServiceFactory.eventService();
+        this.reasonService = commonPresencesServiceFactory.reasonService();
+        this.settingsService = commonPresencesServiceFactory.settingsService();
     }
 
     @Override
@@ -126,7 +126,7 @@ public class DefaultEventStudentService implements EventStudentService {
         // Get reasons types to map it thanks reason_id on absences justified events results
         Future<Map<Integer, JsonObject>> reasonFuture = getReasons(structureId);
         // Get presence settings to get recovery method (for absences events configuration retrieving)
-        Future<JsonObject> presencesSettingsFuture = settingsService.retrieve(structureId);
+        Future<Settings> presencesSettingsFuture = settingsService.retrieveSettings(structureId);
         // Get viscolaire settings to get Half Day Date configured by the current structure
         //  (if absences events are configured by Half Days).
         Future<JsonObject> viscoSettingsFuture = getHalfDay(structureId);
@@ -143,10 +143,11 @@ public class DefaultEventStudentService implements EventStudentService {
                     promise.fail(message);
                 })
                 .onSuccess(settingsResult -> {
+                    Settings presencesSettings = presencesSettingsFuture.result();
                     reasons.putAll(reasonFuture.result());
                     settings.mergeIn(viscoSettingsFuture.result());
                     settings.mergeIn(timeSlotsFuture.result());
-                    settings.put(Field.EVENT_RECOVERY_METHOD, presencesSettingsFuture.result().getString(Field.EVENT_RECOVERY_METHOD));
+                    settings.put(Field.EVENT_RECOVERY_METHOD, presencesSettings.recoveryMethod());
                     promise.complete(settings);
                 });
         return promise.future();

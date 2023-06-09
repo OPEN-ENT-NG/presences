@@ -122,7 +122,7 @@ public class Presences extends BaseServer {
         addController(new ActionController());
         addController(new DisciplineController());
         addController(new InitController(eb));
-        addController(new StudentController(eb));
+        addController(new StudentController(commonPresencesServiceFactory));
         addController(new StatementAbsenceController(eb, storage));
         addController(new CollectiveAbsenceController());
         addController(new ArchiveController(commonPresencesServiceFactory));
