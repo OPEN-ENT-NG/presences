@@ -8,5 +8,6 @@
   "presences.export_events": "Export des évènements",
   "presences.export_incidents": "Export des incidents",
   "incidents.export_incidents": "Export des incidents",
-  "incidents.export_punishments": "Export des punitions"
+  "incidents.export_punishments": "Export des punitions",
+  "presences.export_punishments": "Export des punitions"
 }

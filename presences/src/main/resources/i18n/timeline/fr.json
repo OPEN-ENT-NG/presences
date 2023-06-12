@@ -8,6 +8,7 @@
   "presences.timeline.link.workspace": "lien du dossier",
   "presences.export_events": "Export des évènements",
   "presences.export_incidents": "Export des incidents",
+  "presences.export_punishments": "Export des punitions",
 
   "incidents.push.notif.title": "Export Incidents terminé",
   "incidents.timeline.the.export": "L'export",
