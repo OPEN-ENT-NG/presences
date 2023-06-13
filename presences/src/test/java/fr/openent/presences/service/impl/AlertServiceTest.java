@@ -4,6 +4,7 @@ import fr.openent.presences.common.viescolaire.Viescolaire;
 import fr.openent.presences.core.constants.Field;
 import fr.openent.presences.db.DB;
 import fr.openent.presences.db.DBService;
+import fr.openent.presences.model.AlertFilterModel;
 import fr.openent.presences.service.AlertService;
 import fr.wseduc.webutils.eventbus.ResultMessage;
 import io.vertx.core.Handler;
@@ -131,9 +132,9 @@ public class AlertServiceTest extends DBService {
         PowerMockito.when(Neo4j.getInstance()).thenReturn(neo4j);
 
         String expectedQuerySql = "SELECT student_id, type, count(*) AS count FROM null.alerts WHERE structure_id = ? " +
-                "AND type IN (?,?) AND student_id IN (?,?)AND date >= ?::date + ?::time AND date <= ?::date + ?::time" +
-                "  GROUP BY student_id, type HAVING count(*) >= null.get_alert_thresholder(type, ?);";
-        String expectedParamsSql = "[\"111\",\"ABSENCE\",\"LATENESS\",\"student3\",\"student4\",\"2022-06-01\",\"08:00:00\",\"2022-06-30\",\"23:59:59\",\"111\"]";
+                "AND type IN (?,?) AND student_id IN (?,?) AND date >= ?::date + ?::time AND date <= ?::date + ?::time" +
+                " GROUP BY student_id, type HAVING count(*) >= null.get_alert_thresholder(type, ?) OFFSET ? LIMIT ?;";
+        String expectedParamsSql = "[\"111\",\"ABSENCE\",\"LATENESS\",\"student3\",\"student4\",\"2022-06-01\",\"08:00:00\",\"2022-06-30\",\"23:59:59\",\"111\",0,30]";
         String expectedQueryNeo = "MATCH (u:User)-[:IN]->(:ProfileGroup)-[:DEPENDS]->(c:Class) WHERE u.id IN {studentsId}" +
                 " RETURN u.firstName as firstName, u.lastName as lastName, c.name as audience, u.id as student_id;";
         String expectedParamsNeo = "{\"studentsId\":[\"student1\",\"student2\"]}";
@@ -162,7 +163,8 @@ public class AlertServiceTest extends DBService {
             async.countDown();
             return null;
         }).when(neo4j).execute(Mockito.anyString(), Mockito.any(JsonObject.class), Mockito.any(Handler.class));
-        this.alertService.getAlertsStudents(STRUCTURE_ID, Arrays.asList("ABSENCE", "LATENESS"), Arrays.asList("student3", "student4"), STARTDATE, ENDDATE, STARTTIME, ENDTIME);
+        AlertFilterModel alertFilter = new AlertFilterModel(STRUCTURE_ID, Arrays.asList("ABSENCE", "LATENESS"), Arrays.asList("student3", "student4"), STARTDATE, ENDDATE, STARTTIME, ENDTIME, 0);
+        this.alertService.getAlertsStudents(alertFilter);
         async.awaitSuccess(100000);
     }
 

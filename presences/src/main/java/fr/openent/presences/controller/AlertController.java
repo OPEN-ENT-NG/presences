@@ -1,12 +1,15 @@
 package fr.openent.presences.controller;
 
 import fr.openent.presences.Presences;
+import fr.openent.presences.common.helper.DateHelper;
+import fr.openent.presences.helper.PaginationHelper;
 import fr.openent.presences.common.service.GroupService;
 import fr.openent.presences.common.service.impl.DefaultGroupService;
 import fr.openent.presences.constants.Actions;
 import fr.openent.presences.constants.Alerts;
 import fr.openent.presences.core.constants.Field;
 import fr.openent.presences.export.AlertsCSVExport;
+import fr.openent.presences.model.AlertFilterModel;
 import fr.openent.presences.security.Alert.AlertStudentNumber;
 import fr.openent.presences.security.AlertFilter;
 import fr.openent.presences.security.UserInStructure;
@@ -19,6 +22,7 @@ import fr.wseduc.security.ActionType;
 import fr.wseduc.security.SecuredAction;
 import fr.wseduc.webutils.Either;
 import fr.wseduc.webutils.request.RequestUtils;
+import io.vertx.core.CompositeFuture;
 import io.vertx.core.Future;
 import io.vertx.core.Handler;
 import io.vertx.core.eventbus.EventBus;
@@ -88,24 +92,31 @@ public class AlertController extends ControllerHelper {
         List<String> classes = request.params().getAll(Field.CLASS);
         String startAt = request.params().get(Field.START_AT);
         String endAt = request.params().get(Field.END_AT);
+        Integer page = request.params().get(Field.PAGE) != null ? Integer.parseInt(request.getParam(Field.PAGE)) : 0;
         if (types.size() == 0) {
             badRequest(request);
             return;
         }
-        getAlerts(request, types, students, classes, startAt, endAt, arrayResponseHandler(request));
+        getAlerts(request, types, students, classes, startAt, endAt, page, arrayResponseHandler(request));
     }
 
     private void getAlerts(HttpServerRequest request, List<String> types, List<String> students, List<String> classes,
-                           String startDate, String endDate, Handler<Either<String, JsonArray>> handler) {
+                           String startDate, String endDate, Integer page, Handler<Either<String, JsonArray>> handler) {
+        AlertFilterModel alertFilter = new AlertFilterModel(request.getParam(Field.ID), types, students, startDate, endDate, DateHelper.DEFAULT_START_TIME, DateHelper.DEFAULT_END_TIME, page);
         Future<JsonArray> groupStudentFuture = (classes.isEmpty()) ? Future.succeededFuture(new JsonArray()) : groupService.getGroupStudents(classes);
-        groupStudentFuture.compose(users -> {
-                    users.stream()
-                            .map(o -> (JsonObject)o)
-                            .map(jsonObject -> jsonObject.getString(Field.ID))
-                            .forEach(students::add);
-                    return alertService.getAlertsStudents(request.getParam(Field.ID), types, students, startDate, endDate, "00:00:00", "23:59:59");
+        Future<Integer> pageCountFuture = alertService.getPageCount(alertFilter);
+        CompositeFuture.all(groupStudentFuture,pageCountFuture)
+                        .compose(futures -> {
+                            groupStudentFuture.result().stream()
+                                    .filter(JsonObject.class::isInstance)
+                                    .map(JsonObject.class::cast)
+                                    .map(jsonObject -> jsonObject.getString(Field.ID))
+                                    .forEach(students::add);
+                            return alertService.getAlertsStudents(alertFilter);
+                        })
+                .onSuccess(alert -> {
+                    renderJson(request,PaginationHelper.getPaginationResponse(page,pageCountFuture.result(),alert));
                 })
-                .onSuccess(alert -> handler.handle(new Either.Right<>(alert)))
                 .onFailure(error -> {
                     log.error(String.format("[Presences@AlertController::getAlerts] Failed to retrieve alerts info. %s", error.getMessage()));
                     handler.handle(new Either.Left<>(error.getMessage()));
@@ -158,7 +169,7 @@ public class AlertController extends ControllerHelper {
             badRequest(request);
             return;
         }
-        getAlerts(request, types, students, classes, null, null, event -> {
+        getAlerts(request, types, students, classes, null, null, null, event -> {
             if (event.isLeft()) {
                 log.error("[Presences@AlertsController::exportAlerts] Failed to fetch alerts", event.left().getValue());
                 renderError(request);
