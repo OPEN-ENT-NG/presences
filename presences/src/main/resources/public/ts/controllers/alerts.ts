@@ -4,10 +4,12 @@ import {AlertType, ISchoolYearPeriod, Student, User} from "../models";
 import {SearchService} from "@common/services/SearchService";
 import {GroupService} from "@common/services/GroupService";
 import rights from "../rights";
-import {Alert, DeleteAlertRequest, StudentAlert} from "@presences/models/Alert";
+import {Alert, DeleteAlertRequest, InfiniteScrollAlert, StudentAlert} from "@presences/models/Alert";
 import {DateUtils, GroupsSearch, PreferencesUtils, safeApply, StudentsSearch, UsersSearch} from "@common/utils";
 import {ILocationService, IScope} from "angular";
 import {IRouting} from "@common/model/Route";
+import {INFINITE_SCROLL_EVENTER} from '@common/core/enum/infinite-scroll-eventer';
+
 
 declare let window: any;
 
@@ -19,7 +21,8 @@ interface Filter {
         INCIDENT?: boolean;
     };
     startDate?: Date,
-    endDate?: Date;
+    endDate?: Date,
+    page?:number;
 }
 
 interface ViewModel {
@@ -63,6 +66,8 @@ interface ViewModel {
     reset(): Promise<void>;
 
     exportAlertCSV(): void;
+
+    onScroll(): void;
 }
 
 class Controller implements ng.IController, ViewModel {
@@ -76,6 +81,8 @@ class Controller implements ng.IController, ViewModel {
     params: { loading: boolean; type: string; };
     groupsSearch: GroupsSearch;
     studentsSearch: StudentsSearch;
+    pageCount: number;
+    alertsRes:InfiniteScrollAlert
 
     constructor(private $scope: IScope,
                 private $route: IRouting,
@@ -93,9 +100,15 @@ class Controller implements ng.IController, ViewModel {
             types: {},
             startDate: undefined,
             endDate: new Date(),
+            page: 0,
         };
         this.alertType = [];
         this.selection = {all: false};
+        this.alertsRes = {
+            all: [],
+            page:0,
+            page_count:0,
+        }
 
         /* Fetching information from URL Param and cloning new object RegistryRequest */
         this.params = Object.assign({loading: false}, $location.search());
@@ -142,10 +155,18 @@ class Controller implements ng.IController, ViewModel {
 
         try {
             if (this.alertType.length > 0) {
+                this.filter.page = 0;
                 const start_at: string = moment(this.filter.startDate).format(DateUtils.FORMAT["YEAR-MONTH-DAY"]);
                 const end_at: string = moment(this.filter.endDate).format(DateUtils.FORMAT["YEAR-MONTH-DAY"]);
-                this.listAlert = await this.alertService.getStudentsAlerts(window.structure.id, this.alertType, students, classes, start_at, end_at);
+                this.alertsRes = await this.alertService.getStudentsAlerts(window.structure.id, this.alertType, students, classes, start_at, end_at, this.filter.page);
+                this.listAlert = this.alertsRes.all;
+                this.alertsRes = await this.alertService.getStudentsAlerts(window.structure.id, this.alertType, students, classes, start_at, end_at, this.filter.page);
+                if (this.alertsRes.all.length > 0) {
+                    this.listAlert = this.listAlert.concat(this.alertsRes.all)
+                }
+                this.pageCount = this.alertsRes.page_count;
             } else {
+                this.pageCount = 0;
                 this.listAlert = [];
             }
         } catch (e) {
@@ -153,6 +174,7 @@ class Controller implements ng.IController, ViewModel {
             throw e;
         }
         this.params.loading = false;
+        this.$scope.$broadcast(INFINITE_SCROLL_EVENTER.UPDATE);
         safeApply(this.$scope);
     }
 
@@ -260,6 +282,19 @@ class Controller implements ng.IController, ViewModel {
         }
         return ids;
     };
+
+    async onScroll(): Promise<void> {
+        this.filter.page++;
+        if (this.alertType.length > 0) {
+            const start_at: string = moment(this.filter.startDate).format(DateUtils.FORMAT["YEAR-MONTH-DAY"]);
+            const end_at: string = moment(this.filter.endDate).format(DateUtils.FORMAT["YEAR-MONTH-DAY"]);
+            this.alertsRes = await this.alertService.getStudentsAlerts(window.structure.id, this.alertType, this.extractSelectedStudentIds(), this.extractSelectedGroupsName(), start_at, end_at, this.filter.page)
+            if (this.alertsRes.all.length > 0) {
+                this.listAlert = this.listAlert.concat(this.alertsRes.all)
+            }
+        }
+        safeApply(this.$scope);
+    }
 }
 
 export const alertsController = ng.controller('AlertsController',

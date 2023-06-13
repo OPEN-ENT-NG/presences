@@ -27,3 +27,9 @@ export interface DeleteAlertRequest {
     end_at: string,
     deleted_alert: Array<StudentAlert>,
 }
+
+export interface InfiniteScrollAlert {
+    page_count:number,
+    page:number,
+    all: Array<StudentAlert>,
+}

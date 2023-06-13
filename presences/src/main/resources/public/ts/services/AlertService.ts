@@ -1,11 +1,11 @@
 import {ng} from 'entcore';
 import http, {AxiosResponse} from 'axios';
-import {Alert, DeleteAlertRequest, StudentAlert} from "@presences/models/Alert";
+import {Alert, DeleteAlertRequest, InfiniteScrollAlert, StudentAlert} from "@presences/models/Alert";
 
 export interface AlertService {
     getAlerts(structureId: string): Promise<Alert>;
 
-    getStudentsAlerts(structureId: string, type: string[], students: string[], classes: string[], start_at: string, end_at: string): Promise<Array<StudentAlert>>;
+    getStudentsAlerts(structureId: string, type: string[], students: string[], classes: string[], start_at: string, end_at: string, page?: number): Promise<InfiniteScrollAlert>;
 
     getStudentAlerts(structureId: string, studentId: string, type: string): Promise<{ count: number, threshold: number }>;
 
@@ -37,11 +37,12 @@ export const alertService: AlertService = {
         }
     },
 
-    async getStudentsAlerts(structureId: string, types: string[], students: string[] = null, groups: string[], start_at: string, end_at: string): Promise<Array<StudentAlert>> {
+    async getStudentsAlerts(structureId: string, types: string[], students: string[] = null, groups: string[], start_at: string, end_at: string, page?: number): Promise<InfiniteScrollAlert> {
         try {
             let studentsFilter: string = '';
             let groupsFilter: string = '';
-            let dateFilter: string = ''
+            let dateFilter: string = '';
+            let pageFilter: string = page != null ? `page=${page}&` : '';
             if (students && students.length > 0) {
                 students.map((student) => studentsFilter += `student=${student}&`);
             }
@@ -54,7 +55,7 @@ export const alertService: AlertService = {
                 dateFilter = `start_at=${start_at}&end_at=${end_at}&`;
             }
 
-            let url: string = `/presences/structures/${structureId}/alerts?${studentsFilter}${groupsFilter}${dateFilter}`;
+            let url: string = `/presences/structures/${structureId}/alerts?${studentsFilter}${groupsFilter}${dateFilter}${pageFilter}`;
             types.forEach(type => {
                 url += `&type=${type}`;
             });

@@ -81,6 +81,7 @@ public class Presences extends BaseServer {
     public static final String CURRENT_COURSE_WIDGET = "presences.widget.current_course";
     public static final String DAY_PRESENCES_WIDGET = "presences.widget.day_presences";
     public static final Integer PAGE_SIZE = 20;
+    public static final Integer ALERT_PAGE_SIZE = 30;
     // Statistics
     public static final String STATISTICS_ACCESS_DATA = "presences.statistics.access_data";
     public static final String SETTINGS_GET = "presences.settings.get";

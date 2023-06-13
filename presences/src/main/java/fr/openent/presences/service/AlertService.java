@@ -1,9 +1,10 @@
 package fr.openent.presences.service;
 
+import fr.openent.presences.model.Alert;
+import fr.openent.presences.model.AlertFilterModel;
 import fr.wseduc.webutils.Either;
 import io.vertx.core.Future;
 import io.vertx.core.Handler;
-import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 
 import java.util.List;
@@ -35,15 +36,9 @@ public interface AlertService {
     /**
      * Get alerts for all students
      *
-     * @param structureId structure identifier
-     * @param types       alert types
-     * @param students    list students
-     * @param startDate   start date from which we need remove alerts
-     * @param endDate     end date until which we need remove alerts
-     * @param startTime   start time from which we need remove alerts
-     * @param endTime     end time until which we need remove alerts
+     * @param alertFilter model containing all filters
      */
-    Future<JsonArray> getAlertsStudents(String structureId, List<String> types, List<String> students, String startDate, String endDate, String startTime, String endTime);
+    Future<List<Alert>> getAlertsStudents(AlertFilterModel alertFilter);
 
     /**
      * Get student alert number by given type with the corresponding threshold
@@ -64,4 +59,12 @@ public interface AlertService {
      * @return {@link Future} of {@link JsonObject}
      */
     Future<JsonObject> resetStudentAlertsCount(String structureId, String studentId, String type);
+
+    /**
+     * Get count of alert for pagination
+     *
+     * @param alertFilter model containing all filters
+     * @return {@link Future} of {@link Integer}
+     */
+    Future<Integer> getPageCount(AlertFilterModel alertFilter);
 }
