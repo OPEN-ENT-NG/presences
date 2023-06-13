@@ -62,7 +62,7 @@ public class IncidentsCSVExport extends CSVExport {
                     .append(" ")
                     .append(protagonist.getJsonObject("type").getString("label"))
                     .append(": ")
-                    .append(protagonist.getJsonObject("student").getString("displayName"))
+                    .append(protagonist.getJsonObject("student") != null ? protagonist.getJsonObject("student").getString("displayName") : "")
                     .append(" ");
         }
 
