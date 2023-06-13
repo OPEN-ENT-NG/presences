@@ -111,6 +111,8 @@ interface ViewModel {
     getAbsenceReasons(): Array<Reason>;
 
     getLatenessReasons(): Array<Reason>;
+
+    translate(key: string): string;
 }
 
 export const mainController = ng.controller('MainController',
@@ -204,6 +206,9 @@ export const mainController = ng.controller('MainController',
                 proceedOnChangeFilterMonth();
                 await vm.resetIndicator();
             };
+
+            vm.translate = (key: string): string => idiom.translate(key);
+
 
             const proceedOnChangeFilterMonth = (): void => {
 

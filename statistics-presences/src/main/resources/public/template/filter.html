@@ -23,7 +23,7 @@
                      ng-repeat="reason in vm.getAbsenceReasons() | orderBy:'label' track by $index"
                      ng-class="{ selected: vm.indicator._factoryFilter.reasonsMap[reason.id] }"
                      data-ng-click="vm.toggleReason(reason)">
-                    <span class="no-style">[[reason.label]]</span>
+                    <span class="no-style">[[vm.translate(reason.label)]]</span>
                 </div>
             </div>
         </div>
