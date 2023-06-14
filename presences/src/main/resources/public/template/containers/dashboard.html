@@ -79,11 +79,11 @@
 
     <!-- Side bar widgets -->
     <div class="sidebar-widgets">
-        <side-widget name="'presences.widgets.absences'" opened="true"
+        <side-widget name="'presences.widgets.absences'"
                      ng-if="::hasRight('widget_absences')" workflow="presences.widget_absences">
             <div ng-include="'/presences/public/template/widgets/absences.html'" class="height-100"></div>
         </side-widget>
-        <side-widget name="'presences.widgets.register'" course="vm.course" opened="true"
+        <side-widget name="'presences.widgets.register'" course="vm.course"
                      ng-if="::hasRight('widget_current_course')">
             <div ng-include="'/presences/public/template/widgets/register.html'" class="height-100"></div>
         </side-widget>

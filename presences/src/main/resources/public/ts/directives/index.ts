@@ -2,7 +2,7 @@ export * from './panel';
 export * from './end-user-typing';
 export * from './toasts';
 export * from './user-cards';
-export * from './side-widget';
+export * from './side-widget/side-widget';
 export * from '@common/directives/async-autocomplete';
 export * from '@common/directives/loader';
 export * from '@common/directives/timepicker';

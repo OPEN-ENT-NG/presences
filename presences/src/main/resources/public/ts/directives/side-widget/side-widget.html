@@ -1,0 +1,16 @@
+<aside class="side-widget" ng-class="{opened: opened}">
+    <div class="title">
+        <h2 title="[[::translatedTitle]]" >
+            <span class="triangle open-button" ng-click="changePanelState()" role="button">&nbsp;</span>
+            [[::translatedTitle]]
+
+            <!-- see current register -->
+            <span class="course" ngModel="course" ng-show="opened && hasCourse()" ng-click="openRegister()">
+                         [[::seeMoreText]]
+                    </span>
+        </h2>
+    </div>
+    <div class="content">
+        <div ng-transclude/>
+    </div>
+</aside>
