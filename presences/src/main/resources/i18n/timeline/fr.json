@@ -16,7 +16,5 @@
   "incidents.timeline.incidents": "incidents",
   "incidents.timeline.punishments": "punitions/sanctions",
   "incidents.timeline.is.now.available.in.your.workspace": "est désormais disponible dans votre espace documentaire",
-  "incidents.timeline.link.workspace": "lien du dossier",
-  "incidents.export_incidents": "Export des incidents",
-  "incidents.export_punishments": "Export des punitions"
+  "incidents.timeline.link.workspace": "lien du dossier"
 }
