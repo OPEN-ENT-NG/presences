@@ -173,11 +173,12 @@ public class Viescolaire {
         return promise.future();
     }
 
-    public Future<JsonObject> getStudentTimeslot(List<String> studentIds) {
+    public Future<JsonObject> getStudentTimeslot(List<String> studentIds, String structureId) {
         Promise<JsonObject> promise = Promise.promise();
         JsonObject action = new JsonObject()
                 .put(Field.ACTION, "timeslot.getTimeslotFromStudentIds")
-                .put(Field.STUDENT_ID_LIST, studentIds);
+                .put(Field.STUDENT_ID_LIST, studentIds)
+                .put(Field.STRUCTUREID, structureId);
 
         eb.request(address, action, MessageResponseHandler.messageJsonObjectHandler(FutureHelper.handlerEitherPromise(promise)));
         return promise.future();
