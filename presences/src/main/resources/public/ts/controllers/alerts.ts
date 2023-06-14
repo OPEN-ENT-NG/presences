@@ -160,10 +160,6 @@ class Controller implements ng.IController, ViewModel {
                 const end_at: string = moment(this.filter.endDate).format(DateUtils.FORMAT["YEAR-MONTH-DAY"]);
                 this.alertsRes = await this.alertService.getStudentsAlerts(window.structure.id, this.alertType, students, classes, start_at, end_at, this.filter.page);
                 this.listAlert = this.alertsRes.all;
-                this.alertsRes = await this.alertService.getStudentsAlerts(window.structure.id, this.alertType, students, classes, start_at, end_at, this.filter.page);
-                if (this.alertsRes.all.length > 0) {
-                    this.listAlert = this.listAlert.concat(this.alertsRes.all)
-                }
                 this.pageCount = this.alertsRes.page_count;
             } else {
                 this.pageCount = 0;
