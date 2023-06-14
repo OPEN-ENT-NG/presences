@@ -37,7 +37,7 @@ public class IncidentsExportWorker extends ExportWorker {
                 this.exportNotification = "presences.export_incidents";
                 return getIncidents(params);
             case ExportActions.EXPORT_PUNISHMENTS:
-                this.exportNotification = "incidents.export_punishments";
+                this.exportNotification = "presences.export_punishments";
                 return getPunishments(params);
             default:
                 String message = String.format("[Incidents@%s::getData] invalid action %s", this.getClass().getName(), action);
