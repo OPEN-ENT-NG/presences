@@ -9,7 +9,6 @@ import fr.openent.presences.model.TimeslotModel;
 import fr.openent.presences.service.*;
 import io.vertx.core.*;
 import io.vertx.core.eventbus.EventBus;
-import io.vertx.core.json.Json;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import io.vertx.core.logging.Logger;
@@ -56,7 +55,7 @@ public class DefaultEventStudentService implements EventStudentService {
         JsonObject settings = new JsonObject();
         Map<Integer, JsonObject> reasons = new HashMap<>();
         setSettingsAndReasons(structureId, types, settings, reasons)
-                .compose(settingsResult -> setStudentTimeslot(settings, Collections.singletonList(studentId)))
+                .compose(settingsResult -> setStudentTimeslot(settings, Collections.singletonList(studentId), structureId))
                 .compose(res -> getEventsData(types, structureId, Collections.singletonList(studentId), reasons, settings, start, end, limit, offset))
                 .onFailure(promise::fail)
                 .onSuccess(result -> {
@@ -77,7 +76,7 @@ public class DefaultEventStudentService implements EventStudentService {
         JsonObject settings = new JsonObject();
         Map<Integer, JsonObject> reasons = new HashMap<>();
         setSettingsAndReasons(structureId, types, settings, reasons)
-                .compose(settingsResult -> setStudentTimeslot(settings, studentIds))
+                .compose(settingsResult -> setStudentTimeslot(settings, studentIds, structureId))
                 .compose(res -> getEventsData(types, structureId, studentIds, reasons, settings, start, end, limit, offset))
                 .onFailure(promise::fail)
                 .onSuccess(result -> {
@@ -92,10 +91,10 @@ public class DefaultEventStudentService implements EventStudentService {
         return promise.future();
     }
 
-    private Future<JsonObject> setStudentTimeslot(JsonObject settings, List<String> studentIdList) {
+    private Future<JsonObject> setStudentTimeslot(JsonObject settings, List<String> studentIdList, String structureId) {
         Promise<JsonObject> promise = Promise.promise();
 
-        Viescolaire.getInstance().getStudentTimeslot(studentIdList)
+        Viescolaire.getInstance().getStudentTimeslot(studentIdList, structureId)
                 .onSuccess(studentTimeSlotList -> {
                     settings.put(Field.STUDENT_TIMESLOT, studentTimeSlotList);
                     promise.complete(settings);
