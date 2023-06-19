@@ -3,6 +3,7 @@ package fr.openent.presences.service.impl;
 import fr.openent.presences.Presences;
 import fr.openent.presences.common.helper.DateHelper;
 import fr.openent.presences.common.helper.FutureHelper;
+import fr.openent.presences.common.message.MessageResponseHandler;
 import fr.openent.presences.common.service.GroupService;
 import fr.openent.presences.common.service.UserService;
 import fr.openent.presences.common.service.impl.DefaultGroupService;
@@ -19,6 +20,7 @@ import fr.openent.presences.helper.EventHelper;
 import fr.openent.presences.helper.EventQueryHelper;
 import fr.openent.presences.helper.SlotHelper;
 import fr.openent.presences.model.Event.Event;
+import fr.openent.presences.model.Exemption.ExemptionView;
 import fr.openent.presences.model.Slot;
 import fr.openent.presences.service.*;
 import fr.wseduc.webutils.Either;
@@ -37,6 +39,8 @@ import org.entcore.common.user.UserInfos;
 import java.text.ParseException;
 import java.util.*;
 import java.util.stream.Collectors;
+
+import static fr.wseduc.webutils.Utils.handlerToAsyncHandler;
 
 public class DefaultEventService extends DBService implements EventService {
 
@@ -1516,5 +1520,18 @@ public class DefaultEventService extends DBService implements EventService {
                 .put("statement", query)
                 .put("values", values)
                 .put("action", "prepared");
+    }
+
+    public Future<JsonArray> getStudentsInfos(List<String> studentIds, String structureId) {
+        Promise<JsonArray> promise = Promise.promise();
+
+        JsonObject action = new JsonObject()
+                .put("action", "eleve.getInfoEleve")
+                .put("idEleves", studentIds)
+                .put("idEtablissement", structureId);
+
+        eb.request("viescolaire", action, MessageResponseHandler.messageJsonArrayHandler(FutureHelper.handlerEitherPromise(promise)));
+
+        return promise.future();
     }
 }

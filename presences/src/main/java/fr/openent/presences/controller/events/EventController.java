@@ -7,6 +7,7 @@ import fr.openent.presences.common.service.*;
 import fr.openent.presences.constants.Actions;
 import fr.openent.presences.core.constants.*;
 import fr.openent.presences.enums.*;
+import fr.openent.presences.helper.EventTypeHelper;
 import fr.openent.presences.security.ActionRight;
 import fr.openent.presences.security.CreateEventRight;
 import fr.openent.presences.security.Event.EventReadRight;
@@ -31,10 +32,12 @@ import org.entcore.common.http.filter.Trace;
 import org.entcore.common.http.response.DefaultResponseHandler;
 import org.entcore.common.neo4j.Neo4j;
 import org.entcore.common.neo4j.Neo4jResult;
+import org.entcore.common.notification.TimelineHelper;
 import org.entcore.common.user.UserUtils;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -46,6 +49,8 @@ public class EventController extends ControllerHelper {
     private final ExportEventService exportEventService;
     private final GroupService groupService;
     private final ExportData exportData;
+    private final TimelineHelper timelineHelper;
+    private final UserService userService;
     private static final int MAX_EXPORTED_EVENTS = 1000;
 
     public EventController(CommonPresencesServiceFactory commonPresencesServiceFactory) {
@@ -54,6 +59,8 @@ public class EventController extends ControllerHelper {
         this.exportEventService = commonPresencesServiceFactory.exportEventService();
         this.groupService = commonPresencesServiceFactory.groupService();
         this.exportData = commonPresencesServiceFactory.exportData();
+        this.timelineHelper = commonPresencesServiceFactory.timelineHelper();
+        this.userService = commonPresencesServiceFactory.userService();
     }
 
     @Get("/events")
@@ -346,6 +353,22 @@ public class EventController extends ControllerHelper {
                     log.error("[Presences@EventController] failed to create event", either.left().getValue());
                     renderError(request);
                 } else {
+                    JsonObject params = new JsonObject();
+                    userService.getStudents(Collections.singletonList(event.getString(Field.STUDENT_ID)))
+                            .compose(res -> {
+                                params.put(Field.STUDENTNAME, res.getJsonObject(0).getString(Field.DISPLAYNAME));
+                                EventTypeHelper.getEventType(event.getInteger(Field.TYPE_ID))
+                            .compose(eventType -> {
+                                params.put(Field.EVENTTYPE, I18n.getInstance().translate(eventType.getLabel(), Renders.getHost(request), I18n.acceptLanguage(request)).toLowerCase())
+                                        .put(Field.PUSHNOTIF, new JsonObject()
+                                        .put(Field.TITLE,"presences.push.event.created")
+                                        .put(Field.BODY, ""));
+                                timelineHelper.notifyTimeline(null, "presences.event_creation", user,
+                                        Collections.singletonList(user.getUserId()), "", params); //FIXME Chercher les ids des parents
+                            }).onSuccess(suc -> )
+                            .onFailure(err -> {
+                                renderError(request);
+                            });
                     renderJson(request, either.right().getValue(), 201);
                 }
             }));
