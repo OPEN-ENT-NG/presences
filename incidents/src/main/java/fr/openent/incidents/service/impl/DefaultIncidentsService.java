@@ -258,7 +258,7 @@ public class DefaultIncidentsService extends SqlCrudService implements Incidents
 
         // Retrieve number of incidents if in pagination mode
         if (paginationMode) {
-            query += "SELECT COUNT(*) ";
+            query += "SELECT COUNT(DISTINCT i.id) ";
         }
         // Retrieve incidents
         else {
