@@ -6,6 +6,7 @@ import fr.openent.massmailing.starter.DatabaseStarter;
 import fr.openent.presences.common.incidents.Incidents;
 import fr.openent.presences.common.presences.Presences;
 import fr.openent.presences.common.viescolaire.Viescolaire;
+import fr.openent.presences.core.constants.Field;
 import fr.openent.presences.db.DB;
 import fr.wseduc.mongodb.MongoDb;
 import fr.wseduc.webutils.email.EmailSender;
@@ -47,6 +48,7 @@ public class Massmailing extends BaseServer {
         types = mailingsConfig();
         emailSender = new EmailFactory(vertx, config).getSender();
         workspaceHelper = new WorkspaceHelper(eb, storage);
+        Sql sqlAdmin = Sql.createInstance(vertx.eventBus(), Field.SQLPERSISTORADMIN);
 
         DB.getInstance().init(Neo4j.getInstance(), Sql.getInstance(), MongoDb.getInstance());
 
@@ -60,7 +62,7 @@ public class Massmailing extends BaseServer {
         Incidents.getInstance().init(eb);
         Viescolaire.getInstance().init(eb);
 
-        vertx.setTimer(30000, handle -> new DatabaseStarter().init());
+        vertx.setTimer(30000, handle -> new DatabaseStarter().init(sqlAdmin));
         setEbAddresses();
     }
 
