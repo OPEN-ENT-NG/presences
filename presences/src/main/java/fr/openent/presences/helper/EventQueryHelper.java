@@ -1,6 +1,6 @@
 package fr.openent.presences.helper;
 
-import fr.openent.presences.enums.EventType;
+import fr.openent.presences.enums.EventTypeEnum;
 import io.vertx.core.json.JsonArray;
 import org.entcore.common.sql.Sql;
 
@@ -177,11 +177,11 @@ public class EventQueryHelper {
     public static String filterReasons(List<String> reasonIds, Boolean noAbsenceReason, Boolean noLatenessReason, Boolean regularized,
                                        Boolean followed, List<String> typeIds, JsonArray params) {
         String reasonFilter = "";
-        if (typeIds.contains(EventType.LATENESS.getType().toString())){
+        if (typeIds.contains(EventTypeEnum.LATENESS.getType().toString())){
             reasonFilter += filterLatenessReasons(reasonIds, noLatenessReason, params);
         }
 
-        if (typeIds.contains(EventType.ABSENCE.getType().toString())){
+        if (typeIds.contains(EventTypeEnum.ABSENCE.getType().toString())){
             String connector = reasonFilter.isEmpty() ? "" : " OR ";
             reasonFilter += connector + filterAbsenceReasons(reasonIds, regularized, followed, noAbsenceReason, params);
         }
@@ -189,7 +189,7 @@ public class EventQueryHelper {
         if (!typeIds.isEmpty()) {
             String connector = reasonFilter.isEmpty() ? "" : " OR ";
             //If we want other than absence and lateness
-            reasonFilter += connector + "(type_id IN " + Sql.listPrepared(typeIds) + " AND type_id NOT IN (" + EventType.ABSENCE.getType() + "," + EventType.LATENESS.getType() + "))";
+            reasonFilter += connector + "(type_id IN " + Sql.listPrepared(typeIds) + " AND type_id NOT IN (" + EventTypeEnum.ABSENCE.getType() + "," + EventTypeEnum.LATENESS.getType() + "))";
             params.addAll(new JsonArray(typeIds));
         }
         return reasonFilter.isEmpty() ? "" : " AND (" + reasonFilter + ")";
@@ -198,7 +198,7 @@ public class EventQueryHelper {
     private static String filterLatenessReasons(List<String> listReasonIds, Boolean noReasonLateness, JsonArray params) {
         String latenessFilter = "";
         if (noReasonLateness == null) {
-            return "(type_id = " + EventType.LATENESS.getType() + ")";
+            return "(type_id = " + EventTypeEnum.LATENESS.getType() + ")";
         }
 
         if (listReasonIds != null && !listReasonIds.isEmpty()) {
@@ -213,7 +213,7 @@ public class EventQueryHelper {
 
 
         if (!latenessFilter.isEmpty()) {
-            latenessFilter = "(" + latenessFilter + ") AND type_id = " + EventType.LATENESS.getType();
+            latenessFilter = "(" + latenessFilter + ") AND type_id = " + EventTypeEnum.LATENESS.getType();
         }
         return latenessFilter.isEmpty() ? "" : "(" + latenessFilter + ")";
     }
@@ -249,7 +249,7 @@ public class EventQueryHelper {
         }
 
         if (!absenceFilter.isEmpty()) {
-            absenceFilter = "(" + absenceFilter + ") AND type_id = " + EventType.ABSENCE.getType();
+            absenceFilter = "(" + absenceFilter + ") AND type_id = " + EventTypeEnum.ABSENCE.getType();
         }
         return absenceFilter.isEmpty() ? "" : "(" + absenceFilter + ")";
     }
@@ -279,7 +279,7 @@ public class EventQueryHelper {
     public static String filterFollowed(Boolean followed, JsonArray params) {
         if (followed != null) {
             params.add(followed);
-            return " AND (followed = ? OR type_id != " + EventType.ABSENCE.getType() + ")";
+            return " AND (followed = ? OR type_id != " + EventTypeEnum.ABSENCE.getType() + ")";
         }
         return "";
     }

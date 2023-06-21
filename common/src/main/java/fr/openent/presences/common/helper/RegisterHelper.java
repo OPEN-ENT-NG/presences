@@ -1,6 +1,6 @@
 package fr.openent.presences.common.helper;
 
-import fr.openent.presences.enums.EventType;
+import fr.openent.presences.enums.EventTypeEnum;
 import fr.wseduc.webutils.Either;
 import io.vertx.core.Future;
 import io.vertx.core.Handler;
@@ -155,10 +155,10 @@ public class RegisterHelper {
      * @throws ParseException Throws when dates can not be parsed
      */
     private Boolean matchSlot(Integer type, JsonObject event, JsonObject slot) throws ParseException {
-        boolean lateness = type.equals(EventType.LATENESS.getType()) &&
+        boolean lateness = type.equals(EventTypeEnum.LATENESS.getType()) &&
                 DateHelper.isBetween(event.getString("start_date"), event.getString("end_date"), slot.getString("start"), slot.getString("end"));
 
-        boolean departure = type.equals(EventType.DEPARTURE.getType())
+        boolean departure = type.equals(EventTypeEnum.DEPARTURE.getType())
                 && DateHelper.getAbsTimeDiff(event.getString("end_date"), slot.getString("end")) < DateHelper.TOLERANCE
                 && DateHelper.isAfter(event.getString("start_date"), slot.getString("start"));
 
@@ -166,7 +166,7 @@ public class RegisterHelper {
 //                && DateHelper.getAbsTimeDiff(event.getString("start_date"), slot.getString("start")) < DateHelper.TOLERANCE
 //                && DateHelper.getAbsTimeDiff(event.getString("end_date"), slot.getString("end")) < DateHelper.TOLERANCE;
 
-        boolean absence_remark = (type.equals(EventType.ABSENCE.getType()) || type.equals(EventType.REMARK.getType()))
+        boolean absence_remark = (type.equals(EventTypeEnum.ABSENCE.getType()) || type.equals(EventTypeEnum.REMARK.getType()))
                 && DateHelper.isBetween(event.getString("start_date"), event.getString("end_date"), slot.getString("start"), slot.getString("end"));
 
         return lateness || departure || absence_remark;

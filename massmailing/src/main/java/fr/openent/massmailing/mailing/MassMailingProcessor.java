@@ -10,7 +10,7 @@ import fr.openent.presences.common.incidents.Incidents;
 import fr.openent.presences.common.presences.Presences;
 import fr.openent.presences.common.viescolaire.Viescolaire;
 import fr.openent.presences.core.constants.Field;
-import fr.openent.presences.enums.EventType;
+import fr.openent.presences.enums.EventTypeEnum;
 import fr.openent.presences.enums.ReasonType;
 import fr.wseduc.webutils.Either;
 import fr.wseduc.webutils.I18n;
@@ -134,11 +134,11 @@ public abstract class MassMailingProcessor implements Mailing {
                 massmailingsHour.get(key), slots, "hour", settings.getString("end_of_half_day"));
         JsonObject massmailingHourEvents = massmailingHour.getJsonObject("events", new JsonObject());
 
-        JsonArray absences = massmailingEvents.getJsonArray(EventType.ABSENCE.name(), new JsonArray());
-        JsonObject punishments = massmailingEvents.getJsonObject(EventType.PUNISHMENT.name(), new JsonObject());
-        JsonObject sanctions = massmailingEvents.getJsonObject(EventType.SANCTION.name(), new JsonObject());
-        JsonArray absencesHour = massmailingHourEvents.getJsonArray(EventType.ABSENCE.name(), new JsonArray());
-        JsonArray latenessesHour = massmailingHourEvents.getJsonArray(EventType.LATENESS.name(), new JsonArray());
+        JsonArray absences = massmailingEvents.getJsonArray(EventTypeEnum.ABSENCE.name(), new JsonArray());
+        JsonObject punishments = massmailingEvents.getJsonObject(EventTypeEnum.PUNISHMENT.name(), new JsonObject());
+        JsonObject sanctions = massmailingEvents.getJsonObject(EventTypeEnum.SANCTION.name(), new JsonObject());
+        JsonArray absencesHour = massmailingHourEvents.getJsonArray(EventTypeEnum.ABSENCE.name(), new JsonArray());
+        JsonArray latenessesHour = massmailingHourEvents.getJsonArray(EventTypeEnum.LATENESS.name(), new JsonArray());
 
         JsonObject punishment = punishments.getJsonObject(Field.PUNISHMENT, new JsonObject());
         JsonObject sanction = sanctions.getJsonObject(Field.PUNISHMENT, new JsonObject());
@@ -207,11 +207,11 @@ public abstract class MassMailingProcessor implements Mailing {
             case PDF:
             case MAIL:
                 JsonObject absencesLatenessEvents = new JsonObject()
-                        .put(EventType.ABSENCE.name(), massmailingHourEvents.getJsonArray(EventType.ABSENCE.name()))
-                        .put(EventType.LATENESS.name(), massmailingHourEvents.getJsonArray(EventType.LATENESS.name()));
+                        .put(EventTypeEnum.ABSENCE.name(), massmailingHourEvents.getJsonArray(EventTypeEnum.ABSENCE.name()))
+                        .put(EventTypeEnum.LATENESS.name(), massmailingHourEvents.getJsonArray(EventTypeEnum.LATENESS.name()));
                 JsonObject punishmentEvents = new JsonObject()
-                        .put(EventType.PUNISHMENT.name(), punishments.getJsonArray(Field.PUNISHMENTS))
-                        .put(EventType.SANCTION.name(), sanctions.getJsonArray(Field.PUNISHMENTS));
+                        .put(EventTypeEnum.PUNISHMENT.name(), punishments.getJsonArray(Field.PUNISHMENTS))
+                        .put(EventTypeEnum.SANCTION.name(), sanctions.getJsonArray(Field.PUNISHMENTS));
 
 
                 // Absence and lateness summary code implemented
@@ -366,10 +366,10 @@ public abstract class MassMailingProcessor implements Mailing {
     private List<JsonObject> formatFromPunishments(JsonObject massmailing) {
         JsonObject events = massmailing.getJsonObject(Field.EVENTS, new JsonObject());
         List<JsonObject> punishments = mergeDetentionWithSlots(
-                events.getJsonArray(EventType.PUNISHMENT.name(), new JsonArray()));
+                events.getJsonArray(EventTypeEnum.PUNISHMENT.name(), new JsonArray()));
 
         List<JsonObject> sanctions = mergeDetentionWithSlots(
-                events.getJsonArray(EventType.SANCTION.name(), new JsonArray()));
+                events.getJsonArray(EventTypeEnum.SANCTION.name(), new JsonArray()));
 
         if (Boolean.TRUE.equals(this.isMultiple))
             return duplicatePunishmentsMailing(massmailing, punishments, sanctions);
@@ -379,8 +379,8 @@ public abstract class MassMailingProcessor implements Mailing {
     private List<JsonObject> duplicatePunishmentsMailing(JsonObject massmailing, List<JsonObject> punishments,
                                                          List<JsonObject> sanctions) {
         JsonObject firstMailing = formatFirstPunishmentMailing(massmailing, punishments, sanctions);
-        List<JsonObject> resultsMailings = formatSinglePunishmentsByMail(massmailing, punishments, EventType.PUNISHMENT.name());
-        resultsMailings.addAll(formatSinglePunishmentsByMail(massmailing, sanctions, EventType.SANCTION.name()));
+        List<JsonObject> resultsMailings = formatSinglePunishmentsByMail(massmailing, punishments, EventTypeEnum.PUNISHMENT.name());
+        resultsMailings.addAll(formatSinglePunishmentsByMail(massmailing, sanctions, EventTypeEnum.SANCTION.name()));
         resultsMailings.add(firstMailing);
         return resultsMailings;
     }
@@ -390,12 +390,12 @@ public abstract class MassMailingProcessor implements Mailing {
         return massmailing
                 .copy()
                 .put(Field.EVENTS, massmailing.getJsonObject(Field.EVENTS, new JsonObject())
-                        .put(EventType.PUNISHMENT.name(),
+                        .put(EventTypeEnum.PUNISHMENT.name(),
                                 new JsonObject()
                                         .put(Field.PUNISHMENT, !punishments.isEmpty() ? punishments.get(0) : new JsonObject())
                                         .put(Field.PUNISHMENTS, punishments)
                         )
-                        .put(EventType.SANCTION.name(),
+                        .put(EventTypeEnum.SANCTION.name(),
                                 new JsonObject()
                                         .put(Field.PUNISHMENT, !sanctions.isEmpty() ? sanctions.get(0) : new JsonObject())
                                         .put(Field.PUNISHMENTS, sanctions)
@@ -558,13 +558,13 @@ public abstract class MassMailingProcessor implements Mailing {
         JsonObject res = new JsonObject();
         for (MassmailingType type : massmailingTypeList) {
             if (type.equals(REGULARIZED) || type.equals(UNREGULARIZED) || type.equals(NO_REASON)) {
-                res.put(EventType.ABSENCE.name(), new JsonArray());
+                res.put(EventTypeEnum.ABSENCE.name(), new JsonArray());
             } else {
                 res.put(type.name(), new JsonArray());
             }
         }
 
-        List<EventType> EventTypeDescriptor = Arrays.asList(EventType.ABSENCE, EventType.LATENESS, EventType.PUNISHMENT, EventType.SANCTION);
+        List<EventTypeEnum> EventTypeDescriptor = Arrays.asList(EventTypeEnum.ABSENCE, EventTypeEnum.LATENESS, EventTypeEnum.PUNISHMENT, EventTypeEnum.SANCTION);
         for (int i = 0; i < events.size(); i++) {
             JsonObject event = events.getJsonObject(i);
 
@@ -581,7 +581,7 @@ public abstract class MassMailingProcessor implements Mailing {
                 }
             }
 
-            EventType evtType = getEventType(EventTypeDescriptor, event);
+            EventTypeEnum evtType = getEventType(EventTypeDescriptor, event);
             res.getJsonArray(evtType.name()).add(event);
         }
 
@@ -593,12 +593,12 @@ public abstract class MassMailingProcessor implements Mailing {
      *
      * @return EventType number
      */
-    private EventType getEventType(List<EventType> EventTypeDescriptor, JsonObject event) {
+    private EventTypeEnum getEventType(List<EventTypeEnum> EventTypeDescriptor, JsonObject event) {
         /* Case we find events for its treatment */
         if (event.containsKey("events")) {
             return EventTypeDescriptor.get(event.getInteger("type_id") - 1);
         } else {
-            return event.getString("type").equals(EventType.PUNISHMENT.toString()) ? EventTypeDescriptor.get(2) : EventTypeDescriptor.get(3);
+            return event.getString("type").equals(EventTypeEnum.PUNISHMENT.toString()) ? EventTypeDescriptor.get(2) : EventTypeDescriptor.get(3);
         }
     }
 
@@ -617,10 +617,10 @@ public abstract class MassMailingProcessor implements Mailing {
             case REGULARIZED:
             case UNREGULARIZED:
             case NO_REASON:
-                code = EventType.ABSENCE.getType();
+                code = EventTypeEnum.ABSENCE.getType();
                 break;
             case LATENESS:
-                code = EventType.LATENESS.getType();
+                code = EventTypeEnum.LATENESS.getType();
                 break;
         }
 
@@ -788,8 +788,8 @@ public abstract class MassMailingProcessor implements Mailing {
         ArrayList<String> punishmentsIds = new ArrayList<>();
 
         for (JsonObject event : savedEvents) {
-            if (event.getString("type").equals(EventType.SANCTION.name())
-                    || event.getString("type").equals(EventType.PUNISHMENT.name())) {
+            if (event.getString("type").equals(EventTypeEnum.SANCTION.name())
+                    || event.getString("type").equals(EventTypeEnum.PUNISHMENT.name())) {
                 punishmentsIds.add(event.getString("id"));
             }
         }
@@ -820,7 +820,7 @@ public abstract class MassMailingProcessor implements Mailing {
     }
 
     private JsonArray getEventListFromMailingType(String type, JsonObject events) {
-        if (EventType.PUNISHMENT.name().equals(type) || EventType.SANCTION.name().equals(type))
+        if (EventTypeEnum.PUNISHMENT.name().equals(type) || EventTypeEnum.SANCTION.name().equals(type))
             return events.getJsonObject(type, new JsonObject()).getJsonArray(Field.PUNISHMENTS, new JsonArray());
         return events.getJsonArray(type, new JsonArray());
     }

@@ -13,25 +13,26 @@ import fr.openent.presences.constants.Reasons;
 import fr.openent.presences.core.constants.Field;
 import fr.openent.presences.db.DBService;
 import fr.openent.presences.enums.EventRecoveryMethodEnum;
-import fr.openent.presences.enums.EventType;
 import fr.openent.presences.enums.Markers;
-import fr.openent.presences.helper.CourseHelper;
-import fr.openent.presences.helper.EventHelper;
-import fr.openent.presences.helper.EventQueryHelper;
-import fr.openent.presences.helper.SlotHelper;
+import fr.openent.presences.helper.*;
+import fr.openent.presences.model.Event.EventType;
 import fr.openent.presences.model.Event.Event;
-import fr.openent.presences.model.Exemption.ExemptionView;
+import fr.openent.presences.enums.EventTypeEnum;
 import fr.openent.presences.model.Slot;
 import fr.openent.presences.service.*;
 import fr.wseduc.webutils.Either;
+import fr.wseduc.webutils.I18n;
+import fr.wseduc.webutils.http.Renders;
 import io.vertx.core.*;
 import io.vertx.core.eventbus.EventBus;
+import io.vertx.core.http.HttpServerRequest;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
 import org.entcore.common.neo4j.Neo4j;
 import org.entcore.common.neo4j.Neo4jResult;
+import org.entcore.common.notification.TimelineHelper;
 import org.entcore.common.sql.Sql;
 import org.entcore.common.sql.SqlResult;
 import org.entcore.common.user.UserInfos;
@@ -39,8 +40,6 @@ import org.entcore.common.user.UserInfos;
 import java.text.ParseException;
 import java.util.*;
 import java.util.stream.Collectors;
-
-import static fr.wseduc.webutils.Utils.handlerToAsyncHandler;
 
 public class DefaultEventService extends DBService implements EventService {
 
@@ -56,6 +55,7 @@ public class DefaultEventService extends DBService implements EventService {
     private final SlotHelper slotHelper;
     private final UserService userService;
     private final RegisterService registerService;
+    private final TimelineHelper timelineHelper;
     private final CommonPresencesServiceFactory commonPresencesServiceFactory;
 
     public DefaultEventService(EventBus eb) {
@@ -70,6 +70,7 @@ public class DefaultEventService extends DBService implements EventService {
         // todo spread new class CommonPresencesServiceFactory toward other classes that use EventService
         this.registerService = null;
         this.commonPresencesServiceFactory = null;
+        this.timelineHelper = null;
     }
 
     public DefaultEventService(CommonPresencesServiceFactory commonPresencesServiceFactory) {
@@ -81,6 +82,7 @@ public class DefaultEventService extends DBService implements EventService {
         this.groupService = commonPresencesServiceFactory.groupService();
         this.userService = commonPresencesServiceFactory.userService();
         this.registerService = commonPresencesServiceFactory.registerService();
+        this.timelineHelper = commonPresencesServiceFactory.timelineHelper();
         this.commonPresencesServiceFactory = commonPresencesServiceFactory;
     }
 
@@ -526,7 +528,7 @@ public class DefaultEventService extends DBService implements EventService {
                     JsonArray statements = new JsonArray();
                     statements.add(eventHelper.getCreationStatement(event, user));
 
-                    if (EventType.ABSENCE.getType().equals(event.getInteger("type_id"))) {
+                    if (EventTypeEnum.ABSENCE.getType().equals(event.getInteger("type_id"))) {
                         statements.add(eventHelper.getDeletionEventStatement(event));
                     }
 
@@ -554,7 +556,7 @@ public class DefaultEventService extends DBService implements EventService {
     @SuppressWarnings("unchecked")
     private Future<Void> checkPresenceEvent(JsonObject event) {
         Promise<Void> promise = Promise.promise();
-        if (!event.getInteger(Field.TYPEID, 0).equals(EventType.ABSENCE.getType())) {
+        if (!event.getInteger(Field.TYPEID, 0).equals(EventTypeEnum.ABSENCE.getType())) {
             promise.complete();
             return promise.future();
         }
@@ -617,22 +619,22 @@ public class DefaultEventService extends DBService implements EventService {
         JsonArray params = new JsonArray();
 
         String setter = "";
-        if (EventType.DEPARTURE.getType().equals(eventType)) {
+        if (EventTypeEnum.DEPARTURE.getType().equals(eventType)) {
             setter = "start_date = ?";
             params.add(event.getString("start_date"));
-        } else if (EventType.LATENESS.getType().equals(eventType)) {
+        } else if (EventTypeEnum.LATENESS.getType().equals(eventType)) {
             setter = "end_date = ?";
             params.add(event.getString("end_date"));
             if (event.containsKey(Field.REASON_ID)) {
                 setter += ", reason_id = ?";
                 params.add(event.getInteger(Field.REASON_ID));
             }
-        } else if (EventType.REMARK.getType().equals(eventType)) {
+        } else if (EventTypeEnum.REMARK.getType().equals(eventType)) {
             setter += "comment = ?";
             params.add(event.getString("comment"));
         }
 
-        if (!EventType.REMARK.getType().equals(eventType) && event.containsKey("comment")) {
+        if (!EventTypeEnum.REMARK.getType().equals(eventType) && event.containsKey("comment")) {
             setter += ", comment = ?";
             params.add(event.getString("comment"));
         }
@@ -709,7 +711,7 @@ public class DefaultEventService extends DBService implements EventService {
                 handler.handle(new Either.Left<>(message));
                 return;
             }
-            List<Event> absenceEvent = events.stream().filter(event -> event.getEventType() != null && EventType.ABSENCE.getType().equals(event.getEventType().getId()))
+            List<Event> absenceEvent = events.stream().filter(event -> event.getEventType() != null && EventTypeEnum.ABSENCE.getType().equals(event.getEventType().getId()))
                     .collect(Collectors.toList());
             if (absenceEvent.isEmpty()) {
                 handler.handle(new Either.Right<>(new JsonObject().put(Field.STATUS, Field.OK)));
@@ -1531,6 +1533,60 @@ public class DefaultEventService extends DBService implements EventService {
                 .put("idEtablissement", structureId);
 
         eb.request("viescolaire", action, MessageResponseHandler.messageJsonArrayHandler(FutureHelper.handlerEitherPromise(promise)));
+
+        return promise.future();
+    }
+
+    private Future<EventType> a(JsonObject params, JsonArray res, Integer typeId){
+        Promise<EventType> promise = Promise.promise();
+
+        params.put(Field.STUDENTNAME, res.getJsonObject(0).getString(Field.NAME));
+        EventTypeHelper.getEventType(typeId)
+                .onSuccess(promise::complete)
+                .onFailure(promise::fail);
+
+        return promise.future();
+    }
+
+    private Future<JsonArray> b(JsonObject params, EventType eventType, HttpServerRequest request, String studentId){
+        Promise<JsonArray> promise = Promise.promise();
+
+        params.put(Field.EVENTTYPE, I18n.getInstance().translate(eventType.getLabel(), Renders.getHost(request), I18n.acceptLanguage(request)).toLowerCase());
+        Viescolaire.getInstance().getResponsables(studentId)
+                .onSuccess(promise::complete)
+                .onFailure(promise::fail);
+
+        return promise.future();
+    }
+
+    public Future<Void> sendEventNotification (JsonObject event, UserInfos user, HttpServerRequest request,
+                                               String notificationName, String notificationTitle) {
+        Promise<Void> promise = Promise.promise();
+
+        JsonObject params = new JsonObject()
+                .put(Field.PUSHNOTIF, new JsonObject()
+                        .put(Field.TITLE, notificationTitle)
+                        .put(Field.BODY, ""))
+                .put(Field.RESOURCEURI, "/presences#/dashboard");
+        userService.getStudents(Collections.singletonList(event.getString(Field.STUDENT_ID)))
+                .compose(res -> a(params, res, event.getInteger(Field.TYPE_ID)))
+                .compose(eventType -> b(params, eventType, request, event.getString(Field.STUDENT_ID)))
+                .onSuccess(responsablesIds -> {
+                    List<String> ids = responsablesIds.stream()
+                            .map(responsable -> ((JsonObject) responsable).getString(Field.IDRESPONSABLE))
+                            .filter(Objects::nonNull)
+                            .distinct()
+                            .collect(Collectors.toList());
+                    timelineHelper.notifyTimeline(null, notificationName, user,
+                            ids, "", params);
+                    promise.complete();
+                })
+                .onFailure(err -> {
+                    String message = "An error has occurred during event notification";
+                    String logMessage = String.format("[Presences@%s::sendEventNotification] %s: %s",
+                            this.getClass().getSimpleName(), message, err.getMessage());
+                    promise.fail(logMessage);
+                });
 
         return promise.future();
     }

@@ -1,9 +1,11 @@
 package fr.openent.presences.common.viescolaire;
 
 import fr.openent.presences.common.helper.DateHelper;
+import fr.openent.presences.common.helper.EventBusHelper;
 import fr.openent.presences.common.helper.FutureHelper;
 import fr.openent.presences.common.message.MessageResponseHandler;
 import fr.openent.presences.core.constants.Field;
+import fr.openent.presences.enums.EventBusActions;
 import fr.wseduc.webutils.Either;
 import io.vertx.core.Future;
 import io.vertx.core.Handler;
@@ -181,6 +183,24 @@ public class Viescolaire {
                 .put(Field.STRUCTUREID, structureId);
 
         eb.request(address, action, MessageResponseHandler.messageJsonObjectHandler(FutureHelper.handlerEitherPromise(promise)));
+        return promise.future();
+    }
+
+    public Future<JsonArray> getResponsables(String studentId){
+        Promise<JsonArray> promise = Promise.promise();
+
+        JsonObject action = new JsonObject()
+                .put(Field.ACTION, EventBusActions.GETRESPONSABLES.action())
+                .put(Field.IDELEVE, studentId);
+
+        EventBusHelper.requestJsonArray(EventBusActions.EventBusAddresses.VIESCOLAIRE_BUS_ADDRESS.address(), eb, action)
+                .onFailure(fail -> {
+                    String message = String.format("[Presences@%s::getResponsables]Error while getting responsables",
+                            this.getClass().getSimpleName());
+                    promise.fail(message);
+                })
+                .onSuccess(promise::complete);
+
         return promise.future();
     }
 

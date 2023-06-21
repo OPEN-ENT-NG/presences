@@ -4,6 +4,7 @@ import fr.wseduc.webutils.Either;
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Future;
 import io.vertx.core.Handler;
+import io.vertx.core.http.HttpServerRequest;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import org.entcore.common.user.UserInfos;
@@ -253,4 +254,7 @@ public interface EventService {
      * @param handler   function handler returning data
      */
     void getAbsenceRate(String student, String structure, String start, String end, Handler<Either<String, JsonObject>> handler);
+
+    Future<Void> sendEventNotification (JsonObject event, UserInfos user, HttpServerRequest request, String notificationName,
+                                        String notificationTitle);
 }
