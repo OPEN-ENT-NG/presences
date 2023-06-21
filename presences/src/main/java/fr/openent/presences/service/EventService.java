@@ -111,6 +111,8 @@ public interface EventService {
      */
     void update(Integer id, JsonObject event, Handler<Either<String, JsonObject>> handler);
 
+    Future<JsonObject> update(Integer id, JsonObject event);
+
     void updateEvent(Integer id, JsonObject event, Handler<Either<String, JsonObject>> handler);
 
     /**
@@ -255,6 +257,7 @@ public interface EventService {
      */
     void getAbsenceRate(String student, String structure, String start, String end, Handler<Either<String, JsonObject>> handler);
 
-    Future<Void> sendEventNotification (JsonObject event, UserInfos user, HttpServerRequest request, String notificationName,
-                                        String notificationTitle);
+    Future<Void> sendEventNotification (JsonObject event, UserInfos user, HttpServerRequest request);
+
+    Future<JsonObject> getEvent (Integer eventId);
 }

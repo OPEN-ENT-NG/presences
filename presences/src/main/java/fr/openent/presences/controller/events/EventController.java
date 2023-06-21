@@ -7,6 +7,7 @@ import fr.openent.presences.common.service.*;
 import fr.openent.presences.constants.Actions;
 import fr.openent.presences.core.constants.*;
 import fr.openent.presences.enums.*;
+import fr.openent.presences.helper.EventTypeHelper;
 import fr.openent.presences.security.ActionRight;
 import fr.openent.presences.security.CreateEventRight;
 import fr.openent.presences.security.Event.EventReadRight;
@@ -344,7 +345,7 @@ public class EventController extends ControllerHelper {
                     log.error("[Presences@EventController] failed to create event", either.left().getValue());
                     renderError(request);
                 } else {
-                    eventService.sendEventNotification(event, user, request, "presences.event_creation", "presences.push.event.created")
+                    eventService.sendEventNotification(event, user, request)
                     .onSuccess(suc -> renderJson(request, either.right().getValue(), 201))
                     .onFailure(err -> renderError(request));
                 }
@@ -393,8 +394,25 @@ public class EventController extends ControllerHelper {
             }
 
             try {
-                Integer eventId = Integer.parseInt(request.getParam("id"));
-                eventService.update(eventId, event, defaultResponseHandler(request));
+                Integer eventId = Integer.parseInt(request.getParam(Field.ID));
+                eventService.getEvent(eventId)
+                        .compose(studentEvent ->
+                            EventTypeHelper.getEventType(studentEvent.getInteger(Field.TYPE_ID)))
+                        .compose(eventType -> {
+                            event.put(Field.OLDEVENTTYPE, I18n.getInstance().translate(eventType.getLabel(), Renders.getHost(request), I18n.acceptLanguage(request)).toLowerCase());
+                            return eventService.update(eventId, event);
+                        })
+                        .onFailure(err -> {
+                            String message = String.format("[Presences@%s::putEvent] error updating event : %s",
+                                    this.getClass().getSimpleName(), err.getMessage());
+                            log.error(message);
+                            renderError(request, new JsonObject().put(Field.MESSAGE, err.getMessage()));
+                        })
+                        .onSuccess(update ->
+                            UserUtils.getUserInfos(eb, request, user -> eventService.sendEventNotification(event, user, request)
+                                .onSuccess(suc -> renderJson(request, update, 204))
+                                .onFailure(err -> renderError(request)))
+                        );
             } catch (ClassCastException e) {
                 log.error("[Presences@EventController] Failed to cast event identifier");
                 badRequest(request);

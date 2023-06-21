@@ -614,6 +614,13 @@ public class DefaultEventService extends DBService implements EventService {
     }
 
     @Override
+    public Future<JsonObject> update(Integer id, JsonObject event){
+        Promise<JsonObject> promise = Promise.promise();
+        update(id, event, FutureHelper.handlerEitherPromise(promise));
+        return promise.future();
+    }
+
+    @Override
     public void update(Integer id, JsonObject event, Handler<Either<String, JsonObject>> handler) {
         Integer eventType = event.getInteger("type_id");
         JsonArray params = new JsonArray();
@@ -1537,40 +1544,36 @@ public class DefaultEventService extends DBService implements EventService {
         return promise.future();
     }
 
-    private Future<EventType> a(JsonObject params, JsonArray res, Integer typeId){
-        Promise<EventType> promise = Promise.promise();
-
-        params.put(Field.STUDENTNAME, res.getJsonObject(0).getString(Field.NAME));
-        EventTypeHelper.getEventType(typeId)
-                .onSuccess(promise::complete)
-                .onFailure(promise::fail);
-
-        return promise.future();
-    }
-
-    private Future<JsonArray> b(JsonObject params, EventType eventType, HttpServerRequest request, String studentId){
-        Promise<JsonArray> promise = Promise.promise();
-
-        params.put(Field.EVENTTYPE, I18n.getInstance().translate(eventType.getLabel(), Renders.getHost(request), I18n.acceptLanguage(request)).toLowerCase());
-        Viescolaire.getInstance().getResponsables(studentId)
-                .onSuccess(promise::complete)
-                .onFailure(promise::fail);
-
-        return promise.future();
-    }
-
-    public Future<Void> sendEventNotification (JsonObject event, UserInfos user, HttpServerRequest request,
-                                               String notificationName, String notificationTitle) {
+    public Future<Void> sendEventNotification(JsonObject event, UserInfos user, HttpServerRequest request) {
         Promise<Void> promise = Promise.promise();
 
-        JsonObject params = new JsonObject()
-                .put(Field.PUSHNOTIF, new JsonObject()
-                        .put(Field.TITLE, notificationTitle)
-                        .put(Field.BODY, ""))
+        JsonObject params = new JsonObject();
+        String notificationTitle, notificationName;
+
+        if(event.getString(Field.OLDEVENTTYPE) != null){ //If we have the oldEventType, it means we are in edition mode, else in creation
+            notificationTitle = "presences.push.event.edited";
+            notificationName = "presences.event_update";
+            params.put(Field.OLDEVENTTYPE, event.getString(Field.OLDEVENTTYPE));
+        }
+        else {
+            notificationTitle = "presences.push.event.created";
+            notificationName = "presences.event_creation";
+        }
+
+        params.put(Field.PUSHNOTIF, new JsonObject()
+                .put(Field.TITLE, notificationTitle)
+                .put(Field.BODY, ""))
                 .put(Field.RESOURCEURI, "/presences#/dashboard");
+
         userService.getStudents(Collections.singletonList(event.getString(Field.STUDENT_ID)))
-                .compose(res -> a(params, res, event.getInteger(Field.TYPE_ID)))
-                .compose(eventType -> b(params, eventType, request, event.getString(Field.STUDENT_ID)))
+                .compose(students -> {
+                    params.put(Field.STUDENTNAME, students.getJsonObject(0).getString(Field.NAME));
+                    return EventTypeHelper.getEventType(event.getInteger(Field.TYPE_ID));
+                })
+                .compose(eventType -> {
+                    params.put(Field.EVENTTYPE, I18n.getInstance().translate(eventType.getLabel(), Renders.getHost(request), I18n.acceptLanguage(request)).toLowerCase());
+                    return Viescolaire.getInstance().getResponsables(event.getString(Field.STUDENT_ID));
+                })
                 .onSuccess(responsablesIds -> {
                     List<String> ids = responsablesIds.stream()
                             .map(responsable -> ((JsonObject) responsable).getString(Field.IDRESPONSABLE))
@@ -1583,10 +1586,22 @@ public class DefaultEventService extends DBService implements EventService {
                 })
                 .onFailure(err -> {
                     String message = "An error has occurred during event notification";
-                    String logMessage = String.format("[Presences@%s::sendEventNotification] %s: %s",
+                    String logMessage = String.format("[Presences@%s::sendEventNotificationCreate] %s: %s",
                             this.getClass().getSimpleName(), message, err.getMessage());
                     promise.fail(logMessage);
                 });
+
+        return promise.future();
+    }
+
+    public Future<JsonObject> getEvent (Integer eventId) {
+        Promise<JsonObject> promise = Promise.promise();
+
+        String query = "SELECT * FROM " + Presences.dbSchema + ".event" +
+                " WHERE id = ?";
+        JsonArray params = new JsonArray().add(eventId);
+
+        Sql.getInstance().prepared(query, params, SqlResult.validUniqueResultHandler(FutureHelper.handlerEitherPromise(promise)));
 
         return promise.future();
     }

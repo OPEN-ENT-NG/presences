@@ -19,7 +19,13 @@
   "incidents.timeline.link.workspace": "lien du dossier",
 
   "presences.push.event.created": "Event créé",
-  "presences.push.notif.event.title": "Création d'événement terminée",
+  "presences.push.notif.event.created.title": "Création d'événement terminée",
   "presences.timeline.a": "Un/Une",
-  "presences.timeline.has.been.declared": "a été déclaré dans l'application Présences pour l'élève"
+  "presences.timeline.has.been.declared": "a été déclaré dans l'application Présences pour l'élève",
+  "presences.push.event.edited": "Event modifié",
+  "presences.push.notif.event.edited.title": "Modification d'événement terminée",
+  "presences.timeline.the": "Le/La",
+  "presences.timeline.has.been.edited": "a été modifié par un/une",
+  "presences.timeline.in.presences.for": "dans l'application Présences pour l'élève"
+
 }
