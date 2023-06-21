@@ -28,7 +28,7 @@ public class LatenessEventController extends ControllerHelper {
         this.latenessService = commonPresencesServiceFactory.latenessEventService();
     }
 
-    @Post("/events/:structureId/lateness") //TODO : notif ici
+    @Post("/events/:structureId/lateness")
     @ApiDoc("Create lateness event")
     @ResourceFilter(CreateEventRight.class)
     @SecuredAction(value = "", type = ActionType.RESOURCE)

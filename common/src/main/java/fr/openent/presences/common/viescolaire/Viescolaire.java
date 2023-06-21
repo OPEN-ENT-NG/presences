@@ -194,9 +194,9 @@ public class Viescolaire {
                 .put(Field.IDELEVE, studentId);
 
         EventBusHelper.requestJsonArray(EventBusActions.EventBusAddresses.VIESCOLAIRE_BUS_ADDRESS.address(), eb, action)
-                .onFailure(fail -> {
-                    String message = String.format("[Presences@%s::getResponsables]Error while getting responsables",
-                            this.getClass().getSimpleName());
+                .onFailure(err -> {
+                    String message = String.format("[Presences@%s::getResponsables]Error while getting responsables : %s",
+                            this.getClass().getSimpleName(), err.getMessage());
                     promise.fail(message);
                 })
                 .onSuccess(promise::complete);
