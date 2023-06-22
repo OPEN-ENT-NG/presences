@@ -399,7 +399,7 @@ public class EventController extends ControllerHelper {
                         .compose(studentEvent ->
                             EventTypeHelper.getEventType(studentEvent.getInteger(Field.TYPE_ID)))
                         .compose(eventType -> {
-                            event.put(Field.OLDEVENTTYPE, I18n.getInstance().translate(eventType.getLabel(), Renders.getHost(request), I18n.acceptLanguage(request)).toLowerCase());
+                            event.put(Field.OLDEVENTTYPE, I18n.getInstance().translate(eventType.getLabel() + Field.DOTNOTIFICATION, Renders.getHost(request), I18n.acceptLanguage(request)));
                             return eventService.update(eventId, event);
                         })
                         .onFailure(err -> {
