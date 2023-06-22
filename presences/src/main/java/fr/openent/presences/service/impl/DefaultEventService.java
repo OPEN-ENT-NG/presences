@@ -1552,18 +1552,17 @@ public class DefaultEventService extends DBService implements EventService {
 
         if(event.getString(Field.OLDEVENTTYPE) != null){ //If we have the oldEventType, it means we are in edition mode, else in creation
             notificationTitle = "presences.push.event.edited";
-            notificationName = "presences.event_update";
+            notificationName = "presences.event-update";
             params.put(Field.OLDEVENTTYPE, event.getString(Field.OLDEVENTTYPE));
         }
         else {
             notificationTitle = "presences.push.event.created";
-            notificationName = "presences.event_creation";
+            notificationName = "presences.event-creation";
         }
 
         params.put(Field.PUSHNOTIF, new JsonObject()
                 .put(Field.TITLE, notificationTitle)
-                .put(Field.BODY, ""))
-                .put(Field.RESOURCEURI, "/presences#/dashboard");
+                .put(Field.BODY, ""));
 
         userService.getStudents(Collections.singletonList(event.getString(Field.STUDENT_ID)))
                 .compose(students -> {
@@ -1571,7 +1570,8 @@ public class DefaultEventService extends DBService implements EventService {
                     return EventTypeHelper.getEventType(event.getInteger(Field.TYPE_ID));
                 })
                 .compose(eventType -> {
-                    params.put(Field.EVENTTYPE, I18n.getInstance().translate(eventType.getLabel(), Renders.getHost(request), I18n.acceptLanguage(request)).toLowerCase());
+                    params.put(Field.EVENTTYPE, I18n.getInstance()
+                            .translate(eventType.getLabel() + Field.DOTNOTIFICATION, Renders.getHost(request), I18n.acceptLanguage(request)).toLowerCase());
                     return Viescolaire.getInstance().getResponsables(event.getString(Field.STUDENT_ID));
                 })
                 .onSuccess(responsablesIds -> {

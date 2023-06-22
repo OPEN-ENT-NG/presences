@@ -7,5 +7,7 @@
   "presences.timeline.link.workspace": "lien du dossier",
   "presences.export_events": "Export des évènements",
   "presences.export_incidents": "Export des incidents",
-  "presences.export_punishments": "Export des punitions"
+  "presences.export_punishments": "Export des punitions",
+  "presences.event-creation": "Notification de création d'événement",
+  "presences.event-update": "Notification de modification d'événement"
 }

@@ -20,6 +20,8 @@ import java.util.List;
 
 public class EventTypeHelper {
 
+    private final static String DATABASE_EVENT_TYPE = ".event_type";
+
     public static List<EventType> getEventTypeListFromJsonArray(JsonArray eventTypeJsonArray, List<String> mandatoryAttributes) {
         List<EventType> eventTypes = new ArrayList<>();
         for (Object o : eventTypeJsonArray) {
@@ -31,7 +33,7 @@ public class EventTypeHelper {
     }
 
     public void getEventType(List<Integer> eventTypeIds, Handler<Either<String, JsonArray>> handler) {
-        String query = "SELECT * FROM " + Presences.dbSchema + ".event_type where id IN " + Sql.listPrepared(eventTypeIds);
+        String query = "SELECT * FROM " + Presences.dbSchema + DATABASE_EVENT_TYPE + " where id IN " + Sql.listPrepared(eventTypeIds);
         JsonArray params = new JsonArray().addAll(new JsonArray(eventTypeIds));
         Sql.getInstance().prepared(query, params, SqlResult.validResultHandler(handler));
     }
@@ -39,7 +41,7 @@ public class EventTypeHelper {
     public static Future<EventType> getEventType(Integer eventTypeId) {
         Promise<EventType> promise = Promise.promise();
 
-        String query = "SELECT * FROM " + Presences.dbSchema + ".event_type where id = ? ";
+        String query = "SELECT * FROM " + Presences.dbSchema + DATABASE_EVENT_TYPE + " where id = ? ";
         JsonArray params = new JsonArray().add(eventTypeId);
 
         Sql.getInstance().prepared(query, params, SqlResult.validUniqueResultHandler(IModelHelper.sqlUniqueResultToIModel(promise, EventType.class, "[Presences@%s::getEventType] an error has occurred during retrieving event types")));

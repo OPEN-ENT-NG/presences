@@ -379,6 +379,7 @@ public class Field {
     public static final String RESOURCEURI = "resourceUri";
     public static final String IDRESPONSABLE = "idResponsable";
     public static final String OLDEVENTTYPE = "oldEventType";
+    public static final String DOTNOTIFICATION = ".notification";
     public static final String SQLPERSISTORADMIN = "sql.persistor.admin";
 
     private Field() {
