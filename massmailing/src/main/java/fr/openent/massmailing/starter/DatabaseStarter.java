@@ -13,13 +13,13 @@ import java.util.Arrays;
 public class DatabaseStarter {
     private static final Logger LOGGER = LoggerFactory.getLogger(DatabaseStarter.class);
 
-    public void init() {
+    public void init(Sql sqlAdmin) {
         checkStarterState(state -> {
             if (!state) {
                 checkPresencesSchema(exists -> {
                     if (exists) {
                         JsonArray statements = new JsonArray(Arrays.asList(eventStatement(), scriptStatement()));
-                        Sql.getInstance().transaction(statements, SqlResult.validResultHandler(event -> {
+                        sqlAdmin.transaction(statements, SqlResult.validResultHandler(event -> {
                             if (event.isLeft()) {
                                 LOGGER.error("[Massmailing@DatabaseStarter] Failed to init Massmailing database", event.left().getValue());
                             } else {
