@@ -5,7 +5,7 @@ import fr.openent.presences.common.service.ExportPDFService;
 import fr.openent.presences.common.service.impl.DefaultUserService;
 import fr.openent.presences.core.constants.Field;
 import fr.openent.presences.db.DBService;
-import fr.openent.presences.enums.EventType;
+import fr.openent.presences.enums.EventTypeEnum;
 import fr.openent.presences.helper.ReasonHelper;
 import fr.openent.presences.model.Reason;
 import fr.openent.presences.service.*;
@@ -68,7 +68,7 @@ public class DefaultExportAbsenceService extends DBService implements ExportAbse
                                               Boolean followed, Boolean halfBoarder, Boolean internal) {
         Promise<JsonObject> promise = Promise.promise();
 
-        Future<JsonArray> reasonsFuture = reasonService.fetchReason(structureId, EventType.ABSENCE.getType());
+        Future<JsonArray> reasonsFuture = reasonService.fetchReason(structureId, EventTypeEnum.ABSENCE.getType());
         Future<JsonObject> absencesFuture = absenceService
                 .get(structureId, teacherId, audienceIds, studentIds, reasonIds,
                         startAt, endAt, regularized, noReason, followed, halfBoarder, internal, null);
@@ -124,7 +124,7 @@ public class DefaultExportAbsenceService extends DBService implements ExportAbse
                             I18n.getInstance().translate("presences.exemptions.csv.attendance.false", domain, local));
         });
 
-        return new JsonObject().put(EventType.ABSENCE.name(), absences);
+        return new JsonObject().put(EventTypeEnum.ABSENCE.name(), absences);
     }
 
 }

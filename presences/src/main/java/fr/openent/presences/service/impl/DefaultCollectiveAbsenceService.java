@@ -7,7 +7,7 @@ import fr.openent.presences.common.service.UserService;
 import fr.openent.presences.common.service.impl.DefaultGroupService;
 import fr.openent.presences.common.service.impl.DefaultUserService;
 import fr.openent.presences.db.DBService;
-import fr.openent.presences.enums.EventType;
+import fr.openent.presences.enums.EventTypeEnum;
 import fr.openent.presences.helper.AbsenceHelper;
 import fr.openent.presences.model.Absence;
 import fr.openent.presences.model.Audience;
@@ -884,7 +884,7 @@ public class DefaultCollectiveAbsenceService extends DBService implements Collec
     private JsonObject getResetEventsOnDeleteStatement(Absence absence) {
         String query = "UPDATE " + Presences.dbSchema + ".event SET reason_id = null " +
                 "WHERE student_id = ? AND start_date < ? AND end_date > ? AND counsellor_input = false AND type_id = "
-                + EventType.ABSENCE.getType();
+                + EventTypeEnum.ABSENCE.getType();
 
         JsonArray params = new JsonArray()
                 .add(absence.getStudentId())

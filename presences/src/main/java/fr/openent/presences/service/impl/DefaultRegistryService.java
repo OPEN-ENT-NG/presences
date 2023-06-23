@@ -7,7 +7,7 @@ import fr.openent.presences.common.service.GroupService;
 import fr.openent.presences.common.service.impl.DefaultGroupService;
 import fr.openent.presences.common.viescolaire.Viescolaire;
 import fr.openent.presences.core.constants.Field;
-import fr.openent.presences.enums.EventType;
+import fr.openent.presences.enums.EventTypeEnum;
 import fr.openent.presences.enums.Events;
 import fr.openent.presences.helper.CalendarHelper;
 import fr.openent.presences.service.EventService;
@@ -144,7 +144,7 @@ public class DefaultRegistryService implements RegistryService {
                             event.put(Field.CLASSNAME, getClassNames(student));
                             event.put(Field.START_DATE, day.getString(Field.DATE));
                             event.put(Field.END_DATE, (byte[]) null);
-                            event.put(Field.TYPE, EventType.FORGOTTEN_NOTEBOOK.toString());
+                            event.put(Field.TYPE, EventTypeEnum.FORGOTTEN_NOTEBOOK.toString());
                             events.add(event);
                         }
                     }
@@ -363,7 +363,7 @@ public class DefaultRegistryService implements RegistryService {
     }
 
     private String getEventTypeName(int type) {
-        for (EventType t : EventType.values()) {
+        for (EventTypeEnum t : EventTypeEnum.values()) {
             if (t.getType().equals(type)) return t.name();
         }
 
@@ -420,7 +420,7 @@ public class DefaultRegistryService implements RegistryService {
         List<Number> types = new ArrayList<>();
         for (String type : stringTypes) {
             if (!type.equals(Events.INCIDENT.toString())) {
-                types.add(EventType.valueOf(type).getType());
+                types.add(EventTypeEnum.valueOf(type).getType());
             }
         }
 

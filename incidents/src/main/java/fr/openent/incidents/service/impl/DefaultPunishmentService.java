@@ -18,7 +18,7 @@ import fr.openent.presences.common.service.impl.DefaultUserService;
 import fr.openent.presences.common.statistics_presences.StatisticsPresences;
 import fr.openent.presences.core.constants.Field;
 import fr.openent.presences.core.constants.MongoField;
-import fr.openent.presences.enums.EventType;
+import fr.openent.presences.enums.EventTypeEnum;
 import fr.openent.presences.model.StatisticsUser;
 import fr.wseduc.mongodb.MongoDb;
 import fr.wseduc.webutils.Either;
@@ -561,11 +561,11 @@ public class DefaultPunishmentService implements PunishmentService {
         boolean findPunishment = false;
         for (JsonObject punishment : ((List<JsonObject>) punishmentStudent.getJsonArray("punishments").getList())) {
             Integer punishmentType = punishment.getInteger("type_id");
-            if (punishmentTypeMap.containsKey(punishmentType) && punishmentTypeMap.get(punishmentType).getType().equals(EventType.PUNISHMENT.toString())) {
+            if (punishmentTypeMap.containsKey(punishmentType) && punishmentTypeMap.get(punishmentType).getType().equals(EventTypeEnum.PUNISHMENT.toString())) {
                 findPunishment = true;
             }
         }
-        return findPunishment ? EventType.PUNISHMENT.name() : EventType.SANCTION.name();
+        return findPunishment ? EventTypeEnum.PUNISHMENT.name() : EventTypeEnum.SANCTION.name();
     }
 
     @Override
