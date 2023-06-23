@@ -1052,7 +1052,7 @@ public class DefaultRegisterService extends DBService implements RegisterService
                 .add(registerIdentifier)
                 .add(registerIdentifier)
                 .add(start_date)
-                .add(EventType.ABSENCE.getType());
+                .add(EventTypeEnum.ABSENCE.getType());
 
         Sql.getInstance().prepared(query, params, SqlResult.validResultHandler(handler));
     }

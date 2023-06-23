@@ -4,7 +4,7 @@ import fr.openent.presences.common.security.UserInStructure;
 import fr.openent.presences.constants.Actions;
 import fr.openent.presences.core.constants.Field;
 import fr.openent.presences.core.constants.UserType;
-import fr.openent.presences.enums.EventType;
+import fr.openent.presences.enums.EventTypeEnum;
 import fr.openent.presences.enums.Markers;
 import fr.openent.presences.enums.WorkflowActionsCouple;
 import fr.openent.presences.export.AbsencesCSVExport;
@@ -377,7 +377,7 @@ public class AbsenceController extends ControllerHelper {
                             (regularized != null ? regularized : justified), noReason, followed, halfBoarder, internal)
                     .onSuccess(absences -> {
                         AbsencesCSVExport ace =
-                                new AbsencesCSVExport(absences.getJsonArray(EventType.ABSENCE.name(), new JsonArray()).getList(), request);
+                                new AbsencesCSVExport(absences.getJsonArray(EventTypeEnum.ABSENCE.name(), new JsonArray()).getList(), request);
                         ace.export();
                     })
                     .onFailure(err -> {

@@ -2,8 +2,8 @@ package fr.openent.presences.export;
 
 import fr.openent.presences.common.helper.CSVExport;
 import fr.openent.presences.common.helper.DateHelper;
-import fr.openent.presences.enums.EventType;
-import static fr.openent.presences.enums.EventType.*;
+import fr.openent.presences.enums.EventTypeEnum;
+import static fr.openent.presences.enums.EventTypeEnum.*;
 import fr.wseduc.webutils.I18n;
 import fr.wseduc.webutils.http.Renders;
 import io.vertx.core.json.JsonArray;
@@ -50,7 +50,7 @@ public class RegistryCSVExport extends CSVExport {
         line += getLineFromJSON(event,"reason");
 
         //Start date and time
-        if (event.getString("start_date") != null && EventType.valueOf(event.getString("type")) != LATENESS) {
+        if (event.getString("start_date") != null && EventTypeEnum.valueOf(event.getString("type")) != LATENESS) {
             line += DateHelper.getDateString(event.getString("start_date"), DateHelper.SQL_FORMAT, DateHelper.DAY_MONTH_YEAR) + SEPARATOR;
             line += DateHelper.getTimeString(event.getString("start_date"), DateHelper.SQL_FORMAT) + SEPARATOR;
         } else {
@@ -59,7 +59,7 @@ public class RegistryCSVExport extends CSVExport {
         }
 
         //End date and time
-        if (event.getString("end_date") != null && EventType.valueOf(event.getString("type")) != LATENESS) {
+        if (event.getString("end_date") != null && EventTypeEnum.valueOf(event.getString("type")) != LATENESS) {
             line += DateHelper.getDateString(event.getString("end_date"), DateHelper.SQL_FORMAT, DateHelper.DAY_MONTH_YEAR) + SEPARATOR;
             line += DateHelper.getTimeString(event.getString("end_date"), DateHelper.SQL_FORMAT) + SEPARATOR;
         } else {
@@ -69,7 +69,7 @@ public class RegistryCSVExport extends CSVExport {
 
 
         //Date and time of lateness
-        if(EventType.valueOf(event.getString("type")) == LATENESS) {
+        if(EventTypeEnum.valueOf(event.getString("type")) == LATENESS) {
             line += DateHelper.getDateString(event.getString("end_date"), DateHelper.SQL_FORMAT, DateHelper.DAY_MONTH_YEAR) + SEPARATOR;
             line += DateHelper.getTimeString(event.getString("end_date"), DateHelper.SQL_FORMAT) + SEPARATOR;
         } else {
@@ -90,7 +90,7 @@ public class RegistryCSVExport extends CSVExport {
      */
     private String getType(String type) {
         String line = "";
-        switch (EventType.valueOf(type)) {
+        switch (EventTypeEnum.valueOf(type)) {
             case ABSENCE:
                 line += I18n.getInstance().translate("presences.registry.csv.absence",
                         Renders.getHost(this.request), I18n.acceptLanguage(this.request)) + SEPARATOR;

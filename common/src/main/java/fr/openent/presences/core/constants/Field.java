@@ -374,6 +374,12 @@ public class Field {
     public static final String NB_STUDENTS_PROCESS = "nb_students_process";
     public static final String FORMAT = "format";
     public static final String SETTINGS = "settings";
+    public static final String STUDENTNAME = "studentName";
+    public static final String IDELEVE = "idEleve";
+    public static final String RESOURCEURI = "resourceUri";
+    public static final String IDRESPONSABLE = "idResponsable";
+    public static final String OLDEVENTTYPE = "oldEventType";
+    public static final String DOTNOTIFICATION = ".notification";
     public static final String SQLPERSISTORADMIN = "sql.persistor.admin";
 
     private Field() {

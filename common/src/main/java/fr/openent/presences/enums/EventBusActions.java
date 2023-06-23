@@ -5,7 +5,9 @@ public enum EventBusActions {
     ADDFOLDER("addFolder"),
     DELETE("delete"),
     GETDOCUMENT("getDocument"),
-    LIST("list");
+    LIST("list"),
+
+    GETRESPONSABLES("eleve.getResponsables");
 
     private final String action;
 
@@ -19,7 +21,8 @@ public enum EventBusActions {
 
     public static enum EventBusAddresses {
 
-        WORKSPACE_BUS_ADDRESS("org.entcore.workspace");
+        WORKSPACE_BUS_ADDRESS("org.entcore.workspace"),
+        VIESCOLAIRE_BUS_ADDRESS("viescolaire");
 
         private final String address;
 

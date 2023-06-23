@@ -1,7 +1,7 @@
 package fr.openent.presences.model;
 
 import fr.openent.presences.core.constants.Field;
-import fr.openent.presences.enums.EventType;
+import fr.openent.presences.enums.EventTypeEnum;
 import fr.openent.presences.model.Person.Student;
 import fr.openent.presences.model.Person.User;
 import io.vertx.core.json.JsonObject;
@@ -17,7 +17,7 @@ public class EventModel implements IModel<EventModel> {
     private Boolean massmailed;
     private Student student;
     private Integer registerId;
-    private EventType type;
+    private EventTypeEnum type;
     private ReasonModel reason;
     private User owner;
     private String created;
@@ -33,7 +33,7 @@ public class EventModel implements IModel<EventModel> {
         this.counsellorInput = event.getBoolean(Field.COUNSELLOR_INPUT);
         this.student = new Student(event.getString(Field.STUDENT_ID));
         this.registerId = event.getInteger(Field.REGISTER_ID);
-        this.type = EventType.getEventType(event.getInteger(Field.TYPE_ID, 1));
+        this.type = EventTypeEnum.getEventType(event.getInteger(Field.TYPE_ID, 1));
         this.reason = new ReasonModel().setId(event.getInteger(Field.REASON_ID));
         this.owner = event.getValue(Field.OWNER) instanceof String ? new User(event.getString(Field.OWNER)) :
                 new User(event.getJsonObject(Field.OWNER, new JsonObject()));
@@ -133,11 +133,11 @@ public class EventModel implements IModel<EventModel> {
         return this;
     }
 
-    public EventType getType() {
+    public EventTypeEnum getType() {
         return type;
     }
 
-    public EventModel setType(EventType type) {
+    public EventModel setType(EventTypeEnum type) {
         this.type = type;
         return this;
     }

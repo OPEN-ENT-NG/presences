@@ -6,7 +6,7 @@ import fr.openent.massmailing.service.MassmailingService;
 import fr.openent.presences.common.helper.FutureHelper;
 import fr.openent.presences.common.incidents.Incidents;
 import fr.openent.presences.common.presences.Presences;
-import fr.openent.presences.enums.EventType;
+import fr.openent.presences.enums.EventTypeEnum;
 import fr.wseduc.webutils.Either;
 import io.vertx.core.CompositeFuture;
 import io.vertx.core.Future;
@@ -20,7 +20,6 @@ import org.entcore.common.neo4j.Neo4j;
 import org.entcore.common.neo4j.Neo4jResult;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 
 public class DefaultMassmailingService implements MassmailingService {
@@ -67,19 +66,19 @@ public class DefaultMassmailingService implements MassmailingService {
                                        boolean noReasons, Handler<Either<String, JsonArray>> handler) {
         switch (type) {
             case REGULARIZED:
-                Presences.getInstance().getCountEventByStudent(EventType.ABSENCE.getType(), students, structure, null, startAt,
+                Presences.getInstance().getCountEventByStudent(EventTypeEnum.ABSENCE.getType(), students, structure, null, startAt,
                         reasons, massmailed, startDate, endDate, false, true, handler);
                 break;
             case UNREGULARIZED:
-                Presences.getInstance().getCountEventByStudent(EventType.ABSENCE.getType(), students, structure, null, startAt,
+                Presences.getInstance().getCountEventByStudent(EventTypeEnum.ABSENCE.getType(), students, structure, null, startAt,
                         reasons, massmailed, startDate, endDate, false, false, handler);
                 break;
             case NO_REASON:
-                Presences.getInstance().getCountEventByStudent(EventType.ABSENCE.getType(), students, structure, null, startAt,
+                Presences.getInstance().getCountEventByStudent(EventTypeEnum.ABSENCE.getType(), students, structure, null, startAt,
                         new ArrayList<>(), massmailed, startDate, endDate, true, null, handler);
                 break;
             case LATENESS:
-                Presences.getInstance().getCountEventByStudent(EventType.LATENESS.getType(), students, structure, null, startAt,
+                Presences.getInstance().getCountEventByStudent(EventTypeEnum.LATENESS.getType(), students, structure, null, startAt,
                         reasons, massmailed, startDate, endDate, noReasons, "HOUR", null, handler);
                 break;
             case PUNISHMENT:

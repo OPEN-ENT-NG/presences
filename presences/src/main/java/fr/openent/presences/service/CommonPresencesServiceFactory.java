@@ -12,6 +12,7 @@ import fr.openent.presences.service.impl.*;
 import io.vertx.core.Vertx;
 import io.vertx.core.eventbus.EventBus;
 import io.vertx.core.json.JsonObject;
+import org.entcore.common.notification.TimelineHelper;
 import org.entcore.common.storage.Storage;
 
 public class CommonPresencesServiceFactory {
@@ -178,5 +179,9 @@ public class CommonPresencesServiceFactory {
 
     public ExportData exportData() {
         return exportData;
+    }
+
+    public TimelineHelper timelineHelper() {
+        return new TimelineHelper(vertx, vertx.eventBus(), vertx.getOrCreateContext().config());
     }
 }

@@ -339,7 +339,7 @@ public class DefaultExportEventService extends DBService implements ExportEventS
             JsonArray mergeEventsByDates = getFormattedEventByStudents(settings, eventByStudents, type);
             // process absence event to display extra data
             addDataToAbsenceEvent(type, mergeEventsByDates, reasons, domain, local);
-            formatPdf.put(EventType.getEventType(Integer.parseInt(type)).name(), mergeEventsByDates);
+            formatPdf.put(EventTypeEnum.getEventType(Integer.parseInt(type)).name(), mergeEventsByDates);
         }
         formatPdf.put(Field.TITLE, Field.EXPORT_PDF_EVENTS + "_" + startDate + "_" + endDate);
         promise.complete(formatPdf);
@@ -363,7 +363,7 @@ public class DefaultExportEventService extends DBService implements ExportEventS
             event.put(Field.DISPLAY_START_DATE, DateHelper.getDateString(event.getString(Field.DISPLAY_START_DATE), DateHelper.HOUR_MINUTES));
             event.put(Field.DISPLAY_END_DATE, DateHelper.getDateString(event.getString(Field.DISPLAY_END_DATE), DateHelper.HOUR_MINUTES));
 
-            if (EventType.ABSENCE.getType().equals(Integer.parseInt(type))) {
+            if (EventTypeEnum.ABSENCE.getType().equals(Integer.parseInt(type))) {
                 List<Event> events = EventHelper.getEventListFromJsonArray(event.getJsonArray(Field.EVENTS, new JsonArray()));
                 events.forEach(e -> {
                     if (e.getReason().getId() != null) {

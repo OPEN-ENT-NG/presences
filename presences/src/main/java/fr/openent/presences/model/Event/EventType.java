@@ -1,11 +1,14 @@
 package fr.openent.presences.model.Event;
 
+import fr.openent.presences.core.constants.Field;
+import fr.openent.presences.model.IModel;
+import fr.openent.presences.model.Settings;
 import io.vertx.core.json.JsonObject;
 
 import java.util.ArrayList;
 import java.util.List;
 
-public class EventType {
+public class EventType implements IModel<EventType> {
 
     public static List<String> MANDATORY_ATTRIBUTE = new ArrayList<>();
 
@@ -24,6 +27,16 @@ public class EventType {
 
     public EventType(Integer id) {
         this.id = id;
+    }
+
+    public EventType(Integer id, String label) {
+        this.id = id;
+        this.label = label;
+    }
+
+    public EventType(JsonObject eventType) {
+        this.id = eventType.getInteger(Field.ID);
+        this.label = eventType.getString(Field.LABEL);
     }
 
     public JsonObject toJSON() {
@@ -46,5 +59,17 @@ public class EventType {
 
     public void setLabel(String label) {
         this.label = label;
+    }
+
+    @Override
+    public JsonObject toJson() {
+        return new JsonObject()
+                .put(Field.ID, this.id)
+                .put(Field.LABEL, this.label);
+    }
+
+    @Override
+    public boolean validate() {
+        return this.id != null && this.label != null;
     }
 }

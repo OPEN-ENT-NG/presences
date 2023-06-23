@@ -1,7 +1,7 @@
 package fr.openent.presences.controller.events;
 
 import fr.openent.presences.constants.Actions;
-import fr.openent.presences.enums.EventType;
+import fr.openent.presences.enums.EventTypeEnum;
 import fr.openent.presences.model.Event.EventBody;
 import fr.openent.presences.security.CreateEventRight;
 import fr.openent.presences.service.CommonPresencesServiceFactory;
@@ -53,7 +53,7 @@ public class LatenessEventController extends ControllerHelper {
             Integer eventId = Integer.parseInt(request.getParam("id"));
             RequestUtils.bodyToJson(request, pathPrefix + "event", event -> {
                 EventBody eventBody = new EventBody(event);
-                if (!EventType.LATENESS.getType().equals(eventBody.getTypeId())) {
+                if (!EventTypeEnum.LATENESS.getType().equals(eventBody.getTypeId())) {
                     badRequest(request);
                     return;
                 }

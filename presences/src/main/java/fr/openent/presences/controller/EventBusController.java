@@ -122,7 +122,7 @@ public class EventBusController extends ControllerHelper {
                 break;
             case "get-reasons":
                 structure = body.getString("structure");
-                Integer reason = body.getInteger(Field.REASONTYPE, EventType.ABSENCE.getType());
+                Integer reason = body.getInteger(Field.REASONTYPE, EventTypeEnum.ABSENCE.getType());
 
                 this.reasonService.fetchReason(structure, reason)
                         .onSuccess(res -> BusResponseHandler.busArrayHandler(message).handle(new Either.Right<>(res)))

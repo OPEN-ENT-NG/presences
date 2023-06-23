@@ -7,6 +7,7 @@ import fr.openent.presences.common.service.*;
 import fr.openent.presences.constants.Actions;
 import fr.openent.presences.core.constants.*;
 import fr.openent.presences.enums.*;
+import fr.openent.presences.helper.EventTypeHelper;
 import fr.openent.presences.security.ActionRight;
 import fr.openent.presences.security.CreateEventRight;
 import fr.openent.presences.security.Event.EventReadRight;
@@ -33,9 +34,7 @@ import org.entcore.common.neo4j.Neo4j;
 import org.entcore.common.neo4j.Neo4jResult;
 import org.entcore.common.user.UserUtils;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
+import java.util.*;
 import java.util.stream.Collectors;
 
 import static org.entcore.common.http.response.DefaultResponseHandler.defaultResponseHandler;
@@ -346,7 +345,9 @@ public class EventController extends ControllerHelper {
                     log.error("[Presences@EventController] failed to create event", either.left().getValue());
                     renderError(request);
                 } else {
-                    renderJson(request, either.right().getValue(), 201);
+                    eventService.sendEventNotification(event, user, request)
+                    .onSuccess(suc -> renderJson(request, either.right().getValue(), 201))
+                    .onFailure(err -> renderError(request));
                 }
             }));
         });
@@ -386,15 +387,32 @@ public class EventController extends ControllerHelper {
     public void putEvent(HttpServerRequest request) {
         RequestUtils.bodyToJson(request, pathPrefix + "event", event -> {
             if (!isValidBody(event)
-                    && !EventType.LATENESS.getType().equals(event.getInteger("type_id"))
-                    && !EventType.DEPARTURE.getType().equals(event.getInteger("type_id"))) {
+                    && !EventTypeEnum.LATENESS.getType().equals(event.getInteger("type_id"))
+                    && !EventTypeEnum.DEPARTURE.getType().equals(event.getInteger("type_id"))) {
                 badRequest(request);
                 return;
             }
 
             try {
-                Integer eventId = Integer.parseInt(request.getParam("id"));
-                eventService.update(eventId, event, defaultResponseHandler(request));
+                Integer eventId = Integer.parseInt(request.getParam(Field.ID));
+                eventService.getEvent(eventId)
+                        .compose(studentEvent ->
+                            EventTypeHelper.getEventType(studentEvent.getInteger(Field.TYPE_ID)))
+                        .compose(eventType -> {
+                            event.put(Field.OLDEVENTTYPE, I18n.getInstance().translate(eventType.getLabel() + Field.DOTNOTIFICATION, Renders.getHost(request), I18n.acceptLanguage(request)));
+                            return eventService.update(eventId, event);
+                        })
+                        .onFailure(err -> {
+                            String message = String.format("[Presences@%s::putEvent] error updating event : %s",
+                                    this.getClass().getSimpleName(), err.getMessage());
+                            log.error(message);
+                            renderError(request, new JsonObject().put(Field.MESSAGE, err.getMessage()));
+                        })
+                        .onSuccess(update ->
+                            UserUtils.getUserInfos(eb, request, user -> eventService.sendEventNotification(event, user, request)
+                                .onSuccess(suc -> renderJson(request, update, 204))
+                                .onFailure(err -> renderError(request)))
+                        );
             } catch (ClassCastException e) {
                 log.error("[Presences@EventController] Failed to cast event identifier");
                 badRequest(request);
@@ -405,7 +423,7 @@ public class EventController extends ControllerHelper {
     private Boolean isValidBody(JsonObject event) {
         boolean valid = event.containsKey("student_id") && event.containsKey("type_id") && event.containsKey("register_id");
         Integer type = event.getInteger("type_id");
-        if (!EventType.ABSENCE.getType().equals(type)) {
+        if (!EventTypeEnum.ABSENCE.getType().equals(type)) {
             valid = valid && event.containsKey("start_date") && event.containsKey("end_date");
         }
         return valid;

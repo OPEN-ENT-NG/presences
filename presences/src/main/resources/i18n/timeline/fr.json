@@ -9,6 +9,8 @@
   "presences.export_events": "Export des évènements",
   "presences.export_incidents": "Export des incidents",
   "presences.export_punishments": "Export des punitions",
+  "presences.event-creation": "Création d'événement",
+  "presences.event-update": "Modification d'événement",
 
   "incidents.push.notif.title": "Export Incidents terminé",
   "incidents.timeline.the.export": "L'export",
@@ -16,5 +18,13 @@
   "incidents.timeline.incidents": "incidents",
   "incidents.timeline.punishments": "punitions/sanctions",
   "incidents.timeline.is.now.available.in.your.workspace": "est désormais disponible dans votre espace documentaire",
-  "incidents.timeline.link.workspace": "lien du dossier"
+  "incidents.timeline.link.workspace": "lien du dossier",
+
+  "presences.push.event.created": "Event créé",
+  "presences.push.notif.event.created.title": "Nouvel événement créé",
+  "presences.timeline.a": "Un/Une",
+  "presences.timeline.has.been.declared": "a été déclaré dans l'application Présences pour l'élève",
+  "presences.push.event.edited": "Event modifié",
+  "presences.push.notif.event.edited.title": "Événement modifié",
+  "presences.timeline.has.been.edited": "a été modifié dans l'application Présences pour l'élève"
 }

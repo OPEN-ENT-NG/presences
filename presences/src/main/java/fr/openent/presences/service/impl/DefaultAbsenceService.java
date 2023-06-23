@@ -10,7 +10,7 @@ import fr.openent.presences.common.service.impl.DefaultUserService;
 import fr.openent.presences.constants.Reasons;
 import fr.openent.presences.core.constants.Field;
 import fr.openent.presences.db.DBService;
-import fr.openent.presences.enums.EventType;
+import fr.openent.presences.enums.EventTypeEnum;
 import fr.openent.presences.helper.AbsenceHelper;
 import fr.openent.presences.model.Absence;
 import fr.openent.presences.model.Event.Event;
@@ -1075,7 +1075,7 @@ public class DefaultAbsenceService extends DBService implements AbsenceService {
     private void resetEventsOnDelete(JsonObject absenceResult, Handler<Either<String, JsonObject>> handler) {
         String query = "UPDATE " + Presences.dbSchema + ".event SET reason_id = null, followed = false " +
                 "WHERE student_id = ? AND start_date >= ? AND end_date <= ? AND counsellor_input = false AND type_id = "
-                + EventType.ABSENCE.getType();
+                + EventTypeEnum.ABSENCE.getType();
 
         JsonArray params = new JsonArray()
                 .add(absenceResult.getString("student_id"))
