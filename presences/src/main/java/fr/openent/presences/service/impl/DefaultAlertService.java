@@ -124,7 +124,10 @@ public class DefaultAlertService extends DBService implements AlertService {
         params.add(alertFilter.getStructureId());
 
 
-        query += SQLHelper.addLimitOffset(Presences.ALERT_PAGE_SIZE, Presences.ALERT_PAGE_SIZE * alertFilter.getPage(), params) + ";";
+        if (alertFilter.getPage() != null) {
+            query += SQLHelper.addLimitOffset(Presences.ALERT_PAGE_SIZE, Presences.ALERT_PAGE_SIZE * alertFilter.getPage(), params);
+        }
+        query += ";";
 
         Promise<JsonArray> alertPromise = Promise.promise();
         alertPromise.future()

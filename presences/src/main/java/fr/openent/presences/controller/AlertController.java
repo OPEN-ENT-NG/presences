@@ -97,11 +97,11 @@ public class AlertController extends ControllerHelper {
             badRequest(request);
             return;
         }
-        getAlerts(request, types, students, classes, startAt, endAt, page, arrayResponseHandler(request));
+        getAlerts(request, types, students, classes, startAt, endAt, page, defaultResponseHandler(request));
     }
 
     private void getAlerts(HttpServerRequest request, List<String> types, List<String> students, List<String> classes,
-                           String startDate, String endDate, Integer page, Handler<Either<String, JsonArray>> handler) {
+                           String startDate, String endDate, Integer page, Handler<Either<String, JsonObject>> handler) {
         AlertFilterModel alertFilter = new AlertFilterModel(request.getParam(Field.ID), types, students, startDate, endDate, DateHelper.DEFAULT_START_TIME, DateHelper.DEFAULT_END_TIME, page);
         Future<JsonArray> groupStudentFuture = (classes.isEmpty()) ? Future.succeededFuture(new JsonArray()) : groupService.getGroupStudents(classes);
         Future<Integer> pageCountFuture = alertService.getPageCount(alertFilter);
@@ -115,7 +115,7 @@ public class AlertController extends ControllerHelper {
                             return alertService.getAlertsStudents(alertFilter);
                         })
                 .onSuccess(alert -> {
-                    renderJson(request,PaginationHelper.getPaginationResponse(page,pageCountFuture.result(),alert));
+                    handler.handle(new Either.Right<>(PaginationHelper.getPaginationResponse(page,pageCountFuture.result(),alert)));
                 })
                 .onFailure(error -> {
                     log.error(String.format("[Presences@AlertController::getAlerts] Failed to retrieve alerts info. %s", error.getMessage()));
@@ -176,7 +176,7 @@ public class AlertController extends ControllerHelper {
                 return;
             }
 
-            JsonArray alerts = event.right().getValue();
+            JsonArray alerts = event.right().getValue().getJsonArray(Field.ALL);
             List<String> csvHeader = new ArrayList<>(Arrays.asList(
                     "presences.alerts.csv.header.student.lastName",
                     "presences.alerts.csv.header.student.firstName",
