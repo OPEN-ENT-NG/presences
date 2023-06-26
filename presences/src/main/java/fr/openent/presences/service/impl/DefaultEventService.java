@@ -1547,7 +1547,7 @@ public class DefaultEventService extends DBService implements EventService {
     public Future<Void> sendEventNotification(JsonObject event, UserInfos user, HttpServerRequest request) {
         Promise<Void> promise = Promise.promise();
 
-        JsonObject params = new JsonObject();
+        JsonObject params = new JsonObject().put(Field.RESOURCEURI, "/presences#/dashboard");
         String notificationTitle, notificationName;
 
         if(event.getString(Field.OLDEVENTTYPE) != null){ //If we have the oldEventType, it means we are in edition mode, else in creation
