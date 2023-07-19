@@ -44,7 +44,7 @@
         <div class="card">
             <i18n>presences.absence.number.total</i18n> &#58; <b>[[vm.absencesSummary.nb_absents]]</b>
         </div>
-        <div class="card">
+        <div class="card" ng-if="!hasRight('presences1D')">
             <i18n>presences.absence.number.day.student</i18n> &#58; <b>[[vm.absencesSummary.nb_day_students]]</b>
         </div>
         <div class="card">
