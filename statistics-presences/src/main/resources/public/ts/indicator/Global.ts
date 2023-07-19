@@ -8,6 +8,8 @@ import {GlobalResponse, GlobalStatistics, IGlobal} from "../model/Global";
 import {AxiosError} from "axios";
 import {DISPLAY_TYPE} from "../core/constants/DisplayMode";
 import {DateUtils} from "@common/utils";
+import {model} from "entcore";
+import rights from "../rights";
 
 export class Global extends Indicator {
     _filterTypes: FilterType[]
@@ -16,15 +18,20 @@ export class Global extends Indicator {
     constructor(reasons: Reason[], punishmentTypes: IPunishmentType[]) {
         super(INDICATOR_TYPE.global, reasons, punishmentTypes);
         this.resetValues();
-        this.setFilterTypes([
+        let filterTypes: FilterType[] = [
             this._factoryFilter.getFilter(FILTER_TYPE.NO_REASON, null),
             this._factoryFilter.getFilter(FILTER_TYPE.UNREGULARIZED, (value: boolean) => this._factoryFilter.changeUnProvingAbsences(value)),
             this._factoryFilter.getFilter(FILTER_TYPE.REGULARIZED, (value: boolean) => this._factoryFilter.changeProvingAbsences(value)),
             this._factoryFilter.getFilter(FILTER_TYPE.LATENESS, (value: boolean) => this._factoryFilter.changeLateness(value)),
-            this._factoryFilter.getFilter(FILTER_TYPE.DEPARTURE, null),
-            this._factoryFilter.getFilter(FILTER_TYPE.PUNISHMENT, (value: boolean) => this._factoryFilter.changePunishmentFilter(value)),
-            this._factoryFilter.getFilter(FILTER_TYPE.SANCTION, (value: boolean) => this._factoryFilter.changeSanctionFilter(value))
-        ]);
+            this._factoryFilter.getFilter(FILTER_TYPE.DEPARTURE, null)
+        ];
+
+        if (!model.me.hasWorkflow(rights.workflow['statisticsPresences1d'])) {
+            filterTypes.push(this._factoryFilter.getFilter(FILTER_TYPE.PUNISHMENT, (value: boolean) => this._factoryFilter.changePunishmentFilter(value)));
+            filterTypes.push(this._factoryFilter.getFilter(FILTER_TYPE.SANCTION, (value: boolean) => this._factoryFilter.changeSanctionFilter(value)))
+        }
+
+        this.setFilterTypes(filterTypes);
 
         this.enableFilter(Filter.FROM, false);
         this.enableFilter(Filter.TO, false);

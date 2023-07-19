@@ -40,6 +40,7 @@ public class StatisticsPresences extends BaseServer {
     public static final String MANAGE = "statistics_presences.manage";
     public static final String MANAGE_RESTRICTED = "statistics_presences.manage.restricted";
 
+    public static final String STATISTICS_PRESENCES_1D = "statistics_presences.1d";
     public static final GenericCodec codec = new GenericCodec(Report.class);
     public static final String STATISTICS_PRESENCES_CLASS = StatisticsPresences.class.getName();
     public static String DB_SCHEMA = null;
