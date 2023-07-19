@@ -65,7 +65,7 @@
         </div>
         <!-- EVENT LEGENDS -->
         <events-legend absence="true" lateness="true" departure="true" remark="true" previously-absent="true"
-                       widget-forgotten-notebook="true">
+                       widget-forgotten-notebook="!hasRight('presences1D')">
         </events-legend>
 
         <div ng-show="vm.register && !vm.register.loading" class="valid-content flex-column flex-one right-magnet">

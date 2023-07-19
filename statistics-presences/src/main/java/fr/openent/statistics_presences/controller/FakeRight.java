@@ -32,4 +32,10 @@ public class FakeRight extends ControllerHelper {
     public void manageRestricted(HttpServerRequest request) {
         notImplemented(request);
     }
+
+    @Get("/rights/statistics-presences/1d")
+    @SecuredAction(StatisticsPresences.STATISTICS_PRESENCES_1D)
+    public void statisticsPresences1d(HttpServerRequest request) {
+        notImplemented(request);
+    }
 }

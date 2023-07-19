@@ -78,7 +78,8 @@
         </div>
     </div>
 
-    <div class="planned-absences-legend event-legend">
+
+    <div class="planned-absences-legend event-legend" ng-if="!hasRight('presences1D')">
         <ul class="vertical-spacing-twice">
             <li class="planned-absences-legend-day-students">
                 <i class="silverware"></i>

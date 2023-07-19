@@ -74,7 +74,8 @@
         </events-card>
 
         <!-- incident -->
-        <events-card event-title="vm.eventsTitle.incidents"
+        <events-card ng-if="!hasRight('presences1D')"
+                     event-title="vm.eventsTitle.incidents"
                      student="vm.filter.selectedChildren"
                      period="vm.filter.selectedPeriod"
                      class="top20"
@@ -85,7 +86,8 @@
         </events-card>
 
         <!-- punishments -->
-        <events-card event-title="vm.eventsTitle.punishments"
+        <events-card ng-if="!hasRight('presences1D')"
+                     event-title="vm.eventsTitle.punishments"
                      student="vm.filter.selectedChildren"
                      period="vm.filter.selectedPeriod"
                      class="top20"
@@ -96,7 +98,8 @@
         </events-card>
 
         <!-- forgotten notebook -->
-        <events-card event-title="vm.eventsTitle.forgottenNotebook"
+        <events-card ng-if="!hasRight('presences1D')"
+                     event-title="vm.eventsTitle.forgottenNotebook"
                      student="vm.filter.selectedChildren"
                      period="vm.filter.selectedPeriod"
                      class="top20"
