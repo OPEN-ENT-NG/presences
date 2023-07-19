@@ -36,7 +36,8 @@ const rights = {
         manageForgottenNotebook: 'fr.openent.presences.controller.NotebookController|worflowManageForgottenNotebook',
         initSettings1D: 'fr.openent.presences.controller.FakeRight|initSettings1D',
         initSettings2D: 'fr.openent.presences.controller.FakeRight|initSettings2D',
-        initPopup: 'fr.openent.presences.controller.FakeRight|initPopup'
+        initPopup: 'fr.openent.presences.controller.FakeRight|initPopup',
+        presences1D: 'fr.openent.presences.controller.FakeRight|presences1D'
     }
 };
 
