@@ -12,13 +12,13 @@
                 <i18n>presences.widgets.alerts.lateness</i18n>
             </div>
         </div>
-        <div class="widget-alert incidents" ng-click="vm.goToAlerts('INCIDENT')">
+        <div ng-if="!hasRight('presences1D')" class="widget-alert incidents" ng-click="vm.goToAlerts('INCIDENT')">
             <div class="value">[[vm.alert.INCIDENT]]</div>
             <div class="subtitle">
                 <i18n>presences.widgets.alerts.incidents</i18n>
             </div>
         </div>
-        <div workflow="presences.manageForgottenNotebook"
+        <div ng-if="!hasRight('presences1D')" workflow="presences.manageForgottenNotebook"
              class="widget-alert textbooks" ng-click="vm.goToAlerts('FORGOTTEN_NOTEBOOK')">
             <div class="value">[[vm.alert.FORGOTTEN_NOTEBOOK]]</div>
             <div class="subtitle">
