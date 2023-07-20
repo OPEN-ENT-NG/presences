@@ -207,7 +207,10 @@ export class InitFormTimetable {
         return this.morning.startHour != null
             && this.morning.endHour != null
             && this.afternoon.startHour != null
-            && this.afternoon.endHour != null;
+            && this.afternoon.endHour != null
+            && DateUtils.isPeriodValid(this.morning.startHour, this.morning.endHour)
+            && DateUtils.isPeriodValid(this.afternoon.startHour, this.afternoon.endHour)
+            && DateUtils.isPeriodValid(this.morning.endHour, this.afternoon.startHour);
     }
 
     toJSON(): IInitFormTimetable {
