@@ -93,7 +93,7 @@
   "massmailing.prefetch.title.SMS": "Envoyer un SMS",
   "massmailing.prefetch.title.PDF": "Publiposter en PDF",
   "massmailing.prefetch.MAIL.count": "mail(s) à envoyer",
-  "massmailing.prefetch.SMS.count": "SMS(s) à envoyer",
+  "massmailing.prefetch.SMS.count": "SMS à envoyer",
   "massmailing.prefetch.students.count": "élève(s) concernés",
   "massmailing.prefetch.anomalies.MAIL.count": "anomalie(s) mail",
   "massmailing.prefetch.anomalies.SMS.count": "anomalie(s) SMS",
