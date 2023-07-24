@@ -156,7 +156,7 @@ export interface ViewModel {
 
     changeDate(): void;
 
-    changeFiltersDate(): void;
+    changeFiltersDate(dates: {startDate: Date, endDate: Date}): void;
 
     switchRegisterTeacher(teacher): void;
 
@@ -349,8 +349,11 @@ export const registersController = ng.controller('RegistersController',
             };
 
 
-            vm.changeFiltersDate = async (): Promise<void> => {
+            vm.changeFiltersDate = async (dates: {startDate: Date, endDate: Date}): Promise<void> => {
                 vm.filter.offset = 0;
+                vm.filter.start_date = dates.startDate;
+                vm.filter.end_date = dates.endDate;
+
                 vm.loadCourses(extractSelectedTeacherIds(), extractSelectedGroupsName(),
                     undefined, undefined, undefined, undefined,
                     undefined, undefined, vm.courses.pageSize, vm.filter.offset, false);

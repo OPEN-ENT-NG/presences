@@ -79,7 +79,7 @@ interface ViewModel {
 
     punishmentsTypes: IPunishmentType[];
 
-    fetchData(): void;
+    fetchData(dates?: {startDate: Date, endDate: Date}): void;
 
     loadData(): Promise<void>;
 
@@ -212,7 +212,11 @@ export const homeController = ng.controller('HomeController', ['$scope', 'route'
 
         vm.punishmentsTypes = [];
 
-        vm.fetchData = function () {
+        vm.fetchData = function (dates?: {startDate: Date, endDate: Date}) {
+            if (dates) {
+                vm.filter.start_date = dates.startDate;
+                vm.filter.end_date = dates.endDate;
+            }
             fetchMassmailingAnomalies();
             fetchMassmailingStatus();
         };

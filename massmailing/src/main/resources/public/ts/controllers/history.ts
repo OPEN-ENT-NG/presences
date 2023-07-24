@@ -55,7 +55,7 @@ interface ViewModel {
 
     changePagination(): Promise<void>;
 
-    updateFilter(): Promise<void>;
+    updateFilter(dates?: {startDate: string, endDate: string}): Promise<void>;
 
     /* lightbox methods */
     openMailingLightbox(): void;
@@ -262,7 +262,12 @@ export const historyController = ng.controller('HistoryController',
                 await getMailingsHistory();
             };
 
-            vm.updateFilter = async (): Promise<void> => {
+            vm.updateFilter = async (dates?: {startDate: string, endDate: string}): Promise<void> => {
+                if (dates) {
+                    vm.filter.start_date = dates.startDate;
+                    vm.filter.end_date = dates.endDate;
+                }
+
                 /* Retrieving our search bar info */
                 vm.filter.students = vm.studentsSearch.getSelectedStudents().map(student => student["id"]);
                 vm.filter.groups = vm.groupsSearch.getSelectedGroups().map(group => group["id"]);

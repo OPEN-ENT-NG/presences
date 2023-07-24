@@ -50,15 +50,11 @@
 
     <!-- Date filter -->
     <div class="row">
-        <div class="date-filters cell">
-            <span><i18n>massmailing.from</i18n> &#58;</span>
-            <span class="card date-picker">
-            <date-picker ng-model="vm.filter.start_date" ng-change="vm.updateFilter()"></date-picker></span>
-            <span><i18n>massmailing.to</i18n> &#58;</span>
-            <span class="card date-picker">
-                <date-picker ng-model="vm.filter.end_date" ng-change="vm.updateFilter()"></date-picker>
-            </span>
-        </div>
+        <date-range-picker
+                start-date="vm.filter.start_date"
+                end-date="vm.filter.end_date"
+                on-update="vm.updateFilter">
+        </date-range-picker>
     </div>
 
     <!-- Filter -->
