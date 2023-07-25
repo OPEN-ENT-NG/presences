@@ -58,7 +58,7 @@ export class InitFormYear {
 
     constructor(initFormYear?: IInitFormYear) {
         const currentYear: number = new Date().getFullYear();
-        this._startDate = initFormYear ? initFormYear.startDate : moment(`${currentYear}-08-01 ${DateUtils.START_DAY_TIME}`,
+        this._startDate = initFormYear ? initFormYear.startDate : moment(`${currentYear}-09-01 ${DateUtils.START_DAY_TIME}`,
             DateUtils.FORMAT["YEAR-MONTH-DAY-HOUR-MIN-SEC"]);
         this._endDate = initFormYear ? initFormYear.endDate : moment(`${currentYear + 1}-07-31 ${DateUtils.END_DAY_TIME}`,
             DateUtils.FORMAT["YEAR-MONTH-DAY-HOUR-MIN-SEC"]);
