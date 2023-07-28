@@ -51,18 +51,12 @@
     </div>
 
     <div class="incident-filters-options row top5">
-        <div class="incident-filters-options-date cell eight">
-            <i18n>incident.date.from</i18n>
-            :
-            <span class="card date-picker">
-                 <date-picker ng-change="vm.updateDate();" ng-model="vm.filter.startDate"></date-picker>
-            </span>
-            <i18n>incident.date.to</i18n>
-            :
-            <span class="card date-picker">
-                <date-picker ng-change="vm.updateDate();" ng-model="vm.filter.endDate"></date-picker>
-            </span>
-        </div>
+        <date-range-picker
+                start-date="vm.filter.startDate"
+                end-date="vm.filter.endDate"
+                on-update="vm.updateDate">
+        </date-range-picker>
+
         <div class="four cell">
             <sniplet application="incidents" template="incident-form"></sniplet>
             <!-- export csv/pdf -->

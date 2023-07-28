@@ -20,7 +20,7 @@ interface ViewModel {
     };
     provingReasonMap: any;
 
-    load(): Promise<void>;
+    load(changedDate?: Date): Promise<void>;
 
     searchStudentOrGroup(searchText: string): Promise<void>;
 
@@ -71,10 +71,16 @@ export const absencesController = ng.controller('AbsenceController', ['$scope', 
         /**
          * Load all absences.
          */
-        vm.load = async (): Promise<void> => {
+        vm.load = async (changedDate?: Date): Promise<void> => {
             try {
-                let start: string = moment(vm.params.start).format(DateUtils.FORMAT['YEAR-MONTH-DAY']);
-                let end: string = moment(vm.params.end).format(DateUtils.FORMAT['YEAR-MONTH-DAY']);
+                let start: string = moment(vm.params.start).format(DateUtils.FORMAT['YEAR-MONTH-DAY-HOUR-MIN-SEC']);
+                let end: string = moment(vm.params.end).format(DateUtils.FORMAT['YEAR-MONTH-DAY-HOUR-MIN-SEC']);
+
+                if (changedDate && !DateUtils.isPeriodValid(start, end)) {
+                    vm.params.start = changedDate;
+                    vm.params.end = changedDate;
+                }
+
                 let students: string[] = [];
                 let groups: string[] = [];
                 vm.params.students.forEach(student => students.push(student.id));

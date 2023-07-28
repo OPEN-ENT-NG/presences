@@ -72,18 +72,12 @@
 
 <!-- Date filter -->
 <div class="row top5">
-    <div class="cell eight">
-        <i18n>presences.from</i18n>
-        :
-        <span class="card date-picker">
-             <date-picker ng-change="vm.updateFilter();" ng-model="vm.filter.startDate"></date-picker>
-        </span>
-        <i18n>presences.to</i18n>
-        :
-        <span class="card date-picker">
-            <date-picker ng-change="vm.updateFilter();" ng-model="vm.filter.endDate"></date-picker>
-        </span>
-    </div>
+
+    <date-range-picker
+            start-date="vm.filter.startDate"
+            end-date="vm.filter.endDate"
+            on-update="vm.updateFilter">
+    </date-range-picker>
 
     <!-- Button menu -->
     <div class="four cell">

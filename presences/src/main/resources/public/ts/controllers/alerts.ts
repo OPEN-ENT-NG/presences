@@ -42,6 +42,8 @@ interface ViewModel {
 
     getStudentAlert(students?: string[], classes?: string[]): Promise<void>;
 
+    updateDates(dates?: { startDate: Date, endDate: Date }): Promise<void>;
+
     searchStudent(value: string): Promise<void>;
 
     selectStudent(): (model: any, student: any) => Promise<void>;
@@ -144,6 +146,16 @@ class Controller implements ng.IController, ViewModel {
     initFilter(value: boolean): void {
         this.filters.forEach((filter: string) => this.filter.types[filter] = value);
     };
+
+    updateDates = async (dates?: { startDate: Date, endDate: Date }): Promise<void> => {
+        if (dates) {
+            this.filter.startDate = dates.startDate;
+            this.filter.endDate = dates.endDate;
+        }
+
+        await this.getStudentAlert(this.extractSelectedStudentIds(), this.extractSelectedGroupsName());
+    };
+
 
     async getStudentAlert(students?: string[], classes?: string[]): Promise<void> {
         this.params.loading = true;

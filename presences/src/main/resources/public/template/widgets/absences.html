@@ -11,12 +11,12 @@
         <div class="row">
             <div class="cell six">
                 <span class="date-picker">
-                    <date-picker ng-change="vm.load();" ng-model="vm.params.start"></date-picker>
+                    <date-picker ng-change="vm.load(vm.params.start);" ng-model="vm.params.start"></date-picker>
                 </span>
             </div>
             <div class="cell six">
                 <span class="date-picker">
-                    <date-picker ng-change="vm.load();" ng-model="vm.params.end"></date-picker>
+                    <date-picker ng-change="vm.load(vm.params.end);" ng-model="vm.params.end"></date-picker>
                 </span>
             </div>
         </div>

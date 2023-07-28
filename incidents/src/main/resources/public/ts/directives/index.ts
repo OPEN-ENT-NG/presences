@@ -8,3 +8,4 @@ export * from '@common/directives/toasts';
 export * from '@common/directives/student-name';
 export * from './punishment-form/index';
 export * from '@common/directives/export-form';
+export * from '@common/directives/date-range-picker.directive';
