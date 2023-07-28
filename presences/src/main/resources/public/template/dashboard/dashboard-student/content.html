@@ -98,7 +98,7 @@
         </events-card>
 
         <!-- forgotten notebook -->
-        <events-card ng-if="!hasRight('presences1D')"
+        <events-card ng-if="hasRight('manageForgottenNotebook')"
                      event-title="vm.eventsTitle.forgottenNotebook"
                      student="vm.filter.selectedChildren"
                      period="vm.filter.selectedPeriod"

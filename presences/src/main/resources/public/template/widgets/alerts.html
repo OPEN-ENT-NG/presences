@@ -18,7 +18,7 @@
                 <i18n>presences.widgets.alerts.incidents</i18n>
             </div>
         </div>
-        <div ng-if="!hasRight('presences1D')" workflow="presences.manageForgottenNotebook"
+        <div workflow="presences.manageForgottenNotebook"
              class="widget-alert textbooks" ng-click="vm.goToAlerts('FORGOTTEN_NOTEBOOK')">
             <div class="value">[[vm.alert.FORGOTTEN_NOTEBOOK]]</div>
             <div class="subtitle">
