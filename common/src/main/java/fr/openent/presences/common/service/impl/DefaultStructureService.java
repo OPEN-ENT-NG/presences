@@ -64,4 +64,38 @@ public class DefaultStructureService extends DBService implements StructureServi
 
         return promise.future();
     }
+
+    @Override
+    public Future<JsonArray> activateStructures(List<String> structureIds) {
+        Promise<JsonArray> promise = Promise.promise();
+
+        if (structureIds.isEmpty()) {
+            promise.complete(new JsonArray());
+        } else {
+            String query = "INSERT INTO presences.etablissements_actifs (id_etablissement, actif) VALUES ";
+            JsonArray params = new JsonArray();
+
+            for (String structureId : structureIds) {
+                query += "(?, true),";
+                params.add(structureId);
+            }
+
+            query = query.substring(0, query.length() - 1);
+
+            query += " RETURNING id_etablissement";
+
+            sql.prepared(query, params, SqlResult.validResultHandler(event -> {
+                if (event.isLeft()) {
+                    String message = String.format("[PresencesCommon@%s] Failed to activate structures: %s",
+                            this.getClass().getSimpleName(), event.left().getValue());
+                    log.error(message, event.left().getValue());
+                    promise.fail(event.left().getValue());
+                } else {
+                    promise.complete(event.right().getValue());
+                }
+            }));
+        }
+
+        return promise.future();
+    }
 }
