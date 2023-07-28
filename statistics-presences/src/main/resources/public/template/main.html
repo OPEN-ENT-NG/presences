@@ -63,19 +63,14 @@
                         ng-change="vm.switchIndicator()"
                         ng-options="indicator as indicator.i18nName() for indicator in vm.indicators"></select>
             </div>
-
-            <!-- date picker -->
-            <div class="date-filters cell">
-                <span><i18n>massmailing.from</i18n></span>
-                <span class="card date-picker">
-                    <date-picker ng-model="vm.filter.from" ng-change="vm.updateDate();"></date-picker>
-                </span>
-                <span><i18n>massmailing.to</i18n></span>
-                <span class="card date-picker">
-                    <date-picker ng-model="vm.filter.to" ng-change="vm.updateDate();"></date-picker>
-                </span>
-            </div>
         </div>
+
+        <!-- date picker -->
+        <date-range-picker
+                start-date="vm.filter.from"
+                end-date="vm.filter.to"
+                on-update="vm.updateDate">
+        </date-range-picker>
 
         <div class="right-magnet">
             <!-- export CSV -->

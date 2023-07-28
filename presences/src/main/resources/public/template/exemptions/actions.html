@@ -1,28 +1,14 @@
 <div class="row top5">
-    <div class="cell six">
-        <p>
-            <i18n>presences.from</i18n>
-            <span class="card date-picker">
-                    <date-picker ng-change="vm.updateDate();" ng-model="vm.filter.start_date"></date-picker>
-                </span>
-            <i18n>presences.to</i18n>
-            <span class="card date-picker">
-                    <date-picker ng-change="vm.updateDate();" ng-model="vm.filter.end_date"></date-picker>
-                </span>
-        </p>
-    </div>
-    <div class="cell six">
-        <!--        <button class="right-magnet"-->
-        <!--                ng-click="vm.createExemption()"-->
-        <!--                ng-if="::hasRight('manageExemption')"-->
-        <!--        >-->
-        <!--            <i18n>presences.exemptions.create</i18n>-->
-        <!--        </button>-->
+    <date-range-picker
+            start-date="vm.filter.start_date"
+            end-date="vm.filter.end_date"
+            on-update="vm.updateDate">
+    </date-range-picker>
+    <div class="cell four">
         <sniplet template="exemption-form" application="presences"></sniplet>
         <button class="right-magnet"
                 ng-click="vm.export()"
-                workflow="presences.export"
-        >
+                workflow="presences.export">
             <i18n>presences.export.tocsv</i18n>
         </button>
 
