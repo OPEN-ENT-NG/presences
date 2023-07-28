@@ -29,16 +29,10 @@
 
 <!-- Date filter -->
 <div class="row top5">
-    <div class="cell eight">
-        <i18n>presences.from</i18n>&#58;
-        <span class="card date-picker">
-             <date-picker ng-model="vm.filter.start_at"></date-picker>
-        </span>
-        <i18n class="paddingLeft">presences.to</i18n>&#58;
-        <span class="card date-picker">
-            <date-picker ng-model="vm.filter.end_at"></date-picker>
-        </span>
-    </div>
+    <date-range-picker
+            start-date="vm.filter.start_at"
+            end-date="vm.filter.end_at">
+    </date-range-picker>
 
     <!-- Button menu -->
     <div class="four cell">

@@ -26,7 +26,7 @@ interface IViewModel {
 
     getAbsenceMarkers(): Promise<void>;
 
-    updateDate(): Promise<void>;
+    updateDate(dates?: {startDate: Date, endDate: Date}): Promise<void>;
 
     export(exportType: ExportType): void;
 }
@@ -224,7 +224,12 @@ class Controller implements ng.IController, IViewModel {
         }
     }
 
-    async updateDate(): Promise<void> {
+    updateDate = async (dates?: {startDate: Date, endDate: Date}): Promise<void> => {
+        if (dates) {
+            this.filter.startDate = dates.startDate;
+            this.filter.endDate = dates.endDate;
+        }
+
         if (this.filter.startDate && this.filter.endDate) {
             await Promise.all([this.getAbsenceMarkers(), this.getPlannedAbsences()]);
             safeApply(this.$scope);

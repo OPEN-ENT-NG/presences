@@ -24,3 +24,4 @@ export * from './events-filter-form/events-filter-form';
 export * from '@common/directives/export-form';
 export * from './init-lightbox/init-lightbox.directive';
 export * from './init-teachers-check-lightbox/init-teachers-check-lightbox.directive';
+export * from '@common/directives/date-range-picker.directive';

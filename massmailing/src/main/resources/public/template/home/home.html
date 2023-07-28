@@ -2,18 +2,11 @@
     <!--  Header -->
     <div class="row">
         <!--  Date picker filter -->
-        <div class="date-filters cell">
-            <span><i18n>massmailing.from</i18n></span>
-            <span class="card date-picker">
-            <date-picker ng-model="vm.filter.start_date"
-                         ng-change="vm.fetchData()"></date-picker>
-        </span>
-            <span><i18n>massmailing.to</i18n></span>
-            <span class="card date-picker">
-            <date-picker ng-model="vm.filter.end_date"
-                         ng-change="vm.fetchData()"></date-picker>
-        </span>
-        </div>
+        <date-range-picker
+                start-date="vm.filter.start_date"
+                end-date="vm.filter.end_date"
+                on-update="vm.fetchData">
+        </date-range-picker>
 
         <!--  Button send PDF | SMS | MAIL MODE -->
         <div class="right-magnet">

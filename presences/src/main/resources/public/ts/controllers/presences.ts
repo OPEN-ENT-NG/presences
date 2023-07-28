@@ -32,7 +32,7 @@ interface ViewModel {
     usersSearch: UsersSearch;
     groupsSearch: GroupsSearch;
 
-    updateFilter(): Promise<void>;
+    updateFilter(dates?: {startDate: string, endDate: string}): Promise<void>;
 
     formatHour(date: string): string;
 
@@ -155,7 +155,13 @@ export const presencesController = ng.controller('PresencesController',
                 }
             };
 
-            vm.updateFilter = async (): Promise<void> => {
+            vm.updateFilter = async (dates?: {startDate: string, endDate: string}): Promise<void> => {
+
+                if (dates) {
+                    vm.filter.startDate = dates.startDate;
+                    vm.filter.endDate = dates.endDate;
+                }
+
                 /* get our search bar info */
                 vm.filter.studentsIds = vm.studentsSearch.getSelectedStudents().map(student => student['id']);
                 vm.filter.personalIds = vm.usersSearch.getSelectedUsers().map(user => user['id']);

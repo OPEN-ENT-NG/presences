@@ -3,6 +3,7 @@ export * from '@common/directives/infinite-scroll';
 export * from '@common/directives/loader';
 export * from '@common/directives/student-name';
 export * from '@common/directives/tagged-filter';
+export * from '@common/directives/date-range-picker.directive';
 export * from './display-statistics-mode';
 export * from './monthly-table';
 export * from './chart-statistics';

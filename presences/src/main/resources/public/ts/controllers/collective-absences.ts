@@ -35,7 +35,7 @@ interface IViewModel {
 
     openCreateCollectiveAbsence(): void;
 
-    updateFilter(): Promise<void>;
+    updateFilter(dates?: {startDate: Date, endDate: Date}): Promise<void>;
 
     changePagination(): Promise<void>;
 
@@ -107,7 +107,13 @@ export const collectiveAbsencesController = ng.controller('CollectiveAbsencesCon
                 return DateUtils.format(date, DateUtils.FORMAT['DAY-MONTH-YEAR']);
             };
 
-            vm.updateFilter = async (): Promise<void> => {
+            vm.updateFilter = async (dates?: {startDate: Date, endDate: Date}): Promise<void> => {
+                if (dates) {
+                    vm.filter.startDate = dates.startDate;
+                    vm.filter.endDate = dates.endDate;
+                }
+
+
                 if (vm.groupsSearch) {
                     vm.filter.groups = vm.groupsSearch.getSelectedGroups().map(group => group['name']);
                 }
