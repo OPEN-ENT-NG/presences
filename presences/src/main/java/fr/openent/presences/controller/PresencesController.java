@@ -1,9 +1,11 @@
 package fr.openent.presences.controller;
 
 import fr.openent.presences.Presences;
+import fr.openent.presences.common.helper.*;
+import fr.openent.presences.common.service.*;
 import fr.openent.presences.constants.Actions;
 import fr.openent.presences.core.constants.*;
-import fr.openent.presences.enums.WorkflowActionsCouple;
+import fr.openent.presences.enums.*;
 import fr.openent.presences.export.PresencesCSVExport;
 import fr.openent.presences.security.PresenceReadRight;
 import fr.openent.presences.security.presence.ManagePresenceRight;
@@ -37,10 +39,12 @@ public class PresencesController extends ControllerHelper {
     private static final String STRUCTURE_ID = "structureId";
 
     private final PresenceService presencesService;
+    private final StructureService structureService;
     private final EventStore eventStore;
 
     public PresencesController(CommonPresencesServiceFactory commonPresencesServiceFactory) {
         this.presencesService = commonPresencesServiceFactory.presenceService();
+        this.structureService = commonPresencesServiceFactory.structureService();
         this.eventStore = EventStoreFactory.getFactory().getEventStore(Presences.class.getSimpleName());
     }
 
@@ -50,16 +54,30 @@ public class PresencesController extends ControllerHelper {
     public void view(HttpServerRequest request) {
         UserUtils.getUserInfos(eb, request, user -> {
             JsonObject action = new JsonObject()
-                    .put("action", "user.getActivesStructure")
-                    .put("module", Presences.dbSchema)
-                    .put("structures", new JsonArray(user.getStructures()));
-            eb.send(Presences.ebViescoAddress, action, event -> {
+                    .put(Field.ACTION, "user.getActivesStructure")
+                    .put(Field.MODULE, Presences.dbSchema)
+                    .put(Field.STRUCTURES, new JsonArray(user.getStructures()));
+            eb.request(Presences.ebViescoAddress, action, event -> {
                 JsonObject body = (JsonObject) event.result().body();
-                if (event.failed() || "error".equals(body.getString("status"))) {
+                if (event.failed() || Field.ERROR.equals(body.getString(Field.STATUS))) {
                     log.error("[Presences@PresencesController] Failed to retrieve actives structures");
                     renderError(request);
                 } else {
-                    renderView(request, new JsonObject().put("structures", body.getJsonArray("results", new JsonArray())));
+                    if (WorkflowHelper.hasRight(user, WorkflowActions.INIT_POPUP.toString()) &&
+                            body.getJsonArray(Field.RESULTS, new JsonArray()).isEmpty()) {
+                        this.structureService.activateStructures(user.getStructures())
+                                .onFailure(fail -> {
+                                    String message = String.format("[Presences@%s] Failed to activate structures : %s",
+                                            this.getClass().getSimpleName(), fail.getMessage());
+                                    log.error(message, fail.getMessage());
+                                    renderError(request);
+                                })
+                                .onSuccess(structureIds -> renderView(request, new JsonObject()
+                                        .put(Field.STRUCTURES, structureIds)));
+                    } else {
+                        renderView(request, new JsonObject().put(Field.STRUCTURES,
+                                body.getJsonArray(Field.RESULTS, new JsonArray())));
+                    }
                 }
             });
         });

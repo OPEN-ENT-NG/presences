@@ -30,4 +30,11 @@ public interface StructureService {
      * @return {@link Future<JsonArray>}
      */
     Future<JsonArray> fetchActiveStructure();
+
+    /**
+     * Activate structures
+     * @param structureIds list of structure identifier
+     * @return {@link Future<JsonArray>} activated structures
+     */
+    Future<JsonArray> activateStructures(List<String> structureIds);
 }

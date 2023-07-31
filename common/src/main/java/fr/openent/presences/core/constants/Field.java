@@ -374,6 +374,8 @@ public class Field {
     public static final String NB_STUDENTS_PROCESS = "nb_students_process";
     public static final String FORMAT = "format";
     public static final String SETTINGS = "settings";
+
+    public static final String MODULE = "module";
     public static final String STUDENTNAME = "studentName";
     public static final String IDELEVE = "idEleve";
     public static final String RESOURCEURI = "resourceUri";
