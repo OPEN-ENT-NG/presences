@@ -37,7 +37,7 @@ gulp.task('webpack', ['drop-cache'], function () {
 gulp.task('build', ['webpack'], function () {
     var streams = [];
     apps.forEach(function (app) {
-        streams.push(gulp.src("./" + app + "/src/main/resources/view-src/**/*.html")
+        streams.push(gulp.src("./" + app + "/src/main/resources/view-src/**/*.+(html|json)")
             .pipe(replace('@@VERSION', Date.now()))
             .pipe(gulp.dest("./" + app + "/src/main/resources/view")));
         streams.push(gulp.src("./" + app + "/src/main/resources/public/dist/behaviours.js")
