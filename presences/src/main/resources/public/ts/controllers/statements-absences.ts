@@ -14,8 +14,8 @@ import {IViescolaireService, ViescolaireService} from "@common/services/Viescola
 declare let window: any;
 
 interface IFilter {
-    start_at: string;
-    end_at: string;
+    start_at: Date;
+    end_at: Date;
     student_ids: Array<string>;
     isTreated: boolean;
     page: number;
@@ -64,7 +64,7 @@ export const statementsAbsencesController = ng.controller('StatementsAbsencesCon
 
             /* Init filter */
             vm.filter = {
-                start_at: moment().startOf('day'),
+                start_at: DateUtils.add(new Date(), -7, 'd'),
                 end_at: moment().endOf('day'),
                 student_ids: [],
                 isTreated: false,
