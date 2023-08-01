@@ -2,7 +2,7 @@ import {idiom as lang, ng, toasts} from "entcore";
 import {ILocationService, IParseService, IScope, IWindowService} from "angular";
 import {ROOTS} from "../../core/enum/roots";
 import {IInitFormDay, InitForm} from "../../models/init-form.model";
-import {safeApply} from "@common/utils";
+import {DateUtils, safeApply} from "@common/utils";
 import {IInitTeachersResponse, initService} from "../../services";
 import {INIT_TYPE} from "../../core/enum/init-type";
 
@@ -16,6 +16,7 @@ interface IViewModel extends ng.IController, IInitLightboxProps {
     numberOfTeachers: number;
 
     setDay(day: IInitFormDay, isFullDay: boolean);
+    updateDate(date: string);
 
     submitInit(): Promise<void>;
 
@@ -99,6 +100,14 @@ class Controller implements IViewModel {
             this.form.timetable.setHalfDay(day);
         }
         safeApply(this.$scope);
+    }
+
+    updateDate = (date: string): void => {
+        if (!DateUtils.isPeriodValid(this.form.schoolYear.startDate,
+            this.form.schoolYear.endDate)) {
+            this.form.schoolYear.startDate = date;
+            this.form.schoolYear.endDate = date;
+        }
     }
 
 }
