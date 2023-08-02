@@ -58,11 +58,11 @@
             <i18n>presences.register.event_type.lateness</i18n>
         </label>
         <label class="chip" ng-class="{selected: vm.params.forgottenNotebook}"
-               data-ng-click="vm.toggleForgottenNotebookFilter()">
+               data-ng-click="vm.toggleForgottenNotebookFilter()" ng-if="hasRight('manageForgottenNotebook')">
             <i18n>presences.register.event_type.forgotten.notebook</i18n>
         </label>
         <label class="chip" ng-class="{selected: vm.isFilterActive(vm.eventType[2])}"
-               data-ng-click="vm.toggleFilter(vm.eventType[2])">
+               data-ng-click="vm.toggleFilter(vm.eventType[2])" ng-if="!hasRight('presences1D')">
             <i18n>incidents.incident</i18n>
         </label>
         <label class="chip" ng-class="{selected: vm.isFilterActive(vm.eventType[3])}"
