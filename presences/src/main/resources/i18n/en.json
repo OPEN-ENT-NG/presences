@@ -554,6 +554,7 @@
   "presences.init.check.teachers.unattached": "Unassigned Teachers",
   "presences.init.check.teachers": "teachers",
   "presences.init.check.teachers.confirm": "Initialize Anyway",
+  "presences.init.state.warning": "The application has not been initialized.",
   "presences.wednesday": "Wednesday",
   "presences.year": "Year",
   "presences.alert.rules": "This reason is part of the alerts",

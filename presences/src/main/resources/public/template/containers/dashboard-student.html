@@ -1,13 +1,23 @@
-<div class="dashboard-student" data-ng-controller="DashboardStudentController as vm">
+<div class="dashboard-student dashboard" data-ng-controller="DashboardStudentController as vm">
 
-    <loader data-ng-show="vm.isLoading" min-height="'250px'"></loader>
+    <loader data-ng-show="vm.isLoading"
+            min-height="'250px'"></loader>
 
-    <presences-nav-bar data-ng-if="!vm.isLoading && vm.isRelative()"
+    <div class="empty-state flex-inline twelve top-spacing-25vh justify-center"
+         ng-if="!vm.isLoading && !vm.hasInitializedStructure()">
+        <div class="tick-color red">&nbsp;</div>
+        <div class="empty-title">
+            <i18n>presences.init.state.warning</i18n>
+        </div>
+        <div class="tick-color purple">&nbsp;</div>
+    </div>
+
+    <presences-nav-bar data-ng-if="!vm.isLoading && vm.isRelative() && vm.hasInitializedStructure()"
                        routing-keys="vm.routing"
                        mobile-mode="true">
     </presences-nav-bar>
 
-    <div class="presences-flex" data-ng-show="!vm.isLoading">
+    <div class="presences-flex" data-ng-show="!vm.isLoading && vm.hasInitializedStructure()">
         <div class="dashboard-student-main margin-right-lg" data-ng-show="vm.isCurrentMobileRoute(vm.routing[0])">
             <!-- content dashboard inside -->
             <div ng-include="'/presences/public/template/dashboard/dashboard-student/header.html'"></div>
