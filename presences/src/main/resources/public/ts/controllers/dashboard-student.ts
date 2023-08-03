@@ -69,6 +69,8 @@ interface IViewModel {
 
     switchPeriod(): void;
 
+    hasInitializedStructure(): boolean;
+
     isLoading: boolean;
 }
 
@@ -172,8 +174,16 @@ export const dashboardStudentController = ng.controller('DashboardStudentControl
                     vm.filter.children.forEach((child: Student) => child.structure = child.structures[0]);
                     vm.filter.selectedChildren = vm.filter.children[0];
                 } else {
+
                     /* Set student info */
                     vm.filter.selectedChildren = await userService.getChildUser(model.me.userId);
+
+                    if (window.structure == undefined) {
+                        vm.isLoading = false;
+                        $scope.safeApply();
+                        return;
+                    }
+
                     vm.filter.selectedChildren.structure = vm.filter.selectedChildren.structures[0];
                 }
             };
@@ -285,6 +295,10 @@ export const dashboardStudentController = ng.controller('DashboardStudentControl
             vm.switchPeriod = (): void => {
                 loadEvents();
             };
+
+            vm.hasInitializedStructure = (): boolean => {
+                return window.structure != undefined;
+            }
 
             /* event handler */
             $scope.$watch(() => window.structure, () => {

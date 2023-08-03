@@ -655,6 +655,7 @@
   "presences.init.check.teachers.unattached": "Enseignants non rattachés",
   "presences.init.check.teachers": "enseignants",
   "presences.init.check.teachers.confirm": "Initialiser quand même",
+  "presences.init.state.warning": "L’application n’a pas encore été initialisée par l’établissement.",
   "presences.wednesday": "Mercredi",
   "presences.year": "Année",
   "presences.export": "Export",
