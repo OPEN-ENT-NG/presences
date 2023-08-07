@@ -627,6 +627,7 @@
   "presences.init.2d.success": "Initialisation Second degré réussie",
   "presences.init.1d.form.header": "Bienvenue dans Présences - Initialisation du module",
   "presences.init.1d.form.header.2": "Réinitialisation du module",
+  "presences.init.1d.form.intro": "L’application Présences permet de faciliter la gestion des absences au sein de l’école. Afin de prendre en main l'application de manière optimale, vous pouvez accéder à toute la documentation en suivant <a href=\"https://one-opendigitaleducation.zendesk.com/hc/fr/sections/8691539827356-Pr%C3%A9sences\" target=\"_blank\">ce lien</a>.<br><br>Cette première étape vous permet en tant qu’administrateur de paramétrer facilement les informations sur l'emploi du temps de votre école.",
   "presences.init.1d.form.warning": "Attention, le rattachement des enseignants aux classes doit avoir été effectué au préalable en console par un administrateur.",
   "presences.init.1d.form.dates.and.schedule": "Dates et horaires",
   "presences.init.1d.form.schoolyear": "Année scolaire",
