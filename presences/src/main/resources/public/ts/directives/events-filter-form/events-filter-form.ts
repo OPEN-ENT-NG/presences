@@ -329,6 +329,12 @@ class Controller implements ng.IController, IViewModel {
     switchReason(reason: Reason): void {
         if (this.formFilter.notRegularized || this.formFilter.regularized || reason.reason_type_id === REASON_TYPE_ID.LATENESS)
             reason.isSelected = !reason.isSelected;
+
+        if (!this.formFilter.notRegularized && !this.formFilter.regularized && reason.reason_type_id !== REASON_TYPE_ID.LATENESS) {
+            reason.isSelected = !reason.isSelected;
+            this.formFilter.regularized = true;
+            this.formFilter.notRegularized = true;
+        }
         if (this.formFilter.late && reason.id === this.noReason.id && reason.reason_type_id === REASON_TYPE_ID.LATENESS)
             this.formFilter.noReasonsLateness = reason.isSelected;
     }
