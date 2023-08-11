@@ -128,10 +128,10 @@ export const dashboardStudentController = ng.controller('DashboardStudentControl
                 const promises: Promise<any>[] = [];
                 let eventsType: Array<string> = [EVENT_TYPES.NO_REASON, EVENT_TYPES.UNREGULARIZED, EVENT_TYPES.REGULARIZED, EVENT_TYPES.LATENESS, EVENT_TYPES.DEPARTURE];
                 let incidentsEventsType: Array<string> = [EVENT_TYPES.INCIDENT, EVENT_TYPES.PUNISHMENT];
-                promises.push(eventService.getStudentEvent(prepareEventRequest(eventsType, 2, 0)));
-                promises.push(incidentService.getStudentEvents(prepareEventRequest(incidentsEventsType, 2, 0,
+                promises.push(eventService.getStudentEvent(prepareEventRequest(eventsType, null, 0)));
+                promises.push(incidentService.getStudentEvents(prepareEventRequest(incidentsEventsType, null, 0,
                     DateUtils.START_DAY_TIME, DateUtils.END_DAY_TIME)));
-                promises.push(forgottenNotebookService.getStudentNotebooks(prepareEventRequest([], 2, 0)));
+                promises.push(forgottenNotebookService.getStudentNotebooks(prepareEventRequest([], null, 0)));
                 Promise.all(promises)
                     .then((values: any[]) => {
                         vm.presenceEvents = (<IStudentEventResponse>values[0]); // presences events
