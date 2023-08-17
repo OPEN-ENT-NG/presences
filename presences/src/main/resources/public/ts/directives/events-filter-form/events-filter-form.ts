@@ -335,8 +335,15 @@ class Controller implements ng.IController, IViewModel {
             this.formFilter.regularized = true;
             this.formFilter.notRegularized = true;
         }
+
         if (this.formFilter.late && reason.id === this.noReason.id && reason.reason_type_id === REASON_TYPE_ID.LATENESS)
             this.formFilter.noReasonsLateness = reason.isSelected;
+
+        //If all reasons with reason_type_id = absences are unselected then formFilter.regularized get false and formFilter.notRegularized get false
+        if (!this.reasons.some((reason: Reason) => reason.reason_type_id === REASON_TYPE_ID.ABSENCE && reason.isSelected)) {
+            this.formFilter.regularized = false;
+            this.formFilter.notRegularized = false;
+        }
     }
 
     switchAllAbsenceReasons(isAllAbsenceReason?: boolean): void {
