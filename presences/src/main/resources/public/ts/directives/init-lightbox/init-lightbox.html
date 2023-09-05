@@ -177,7 +177,12 @@
             <div class="twelve cell">
                 <button class="right-magnet" data-ng-click="vm.submitInit()"
                         ng-disabled="!vm.form.isValid()">
-                    <i18n>presences.init.1d.form.init</i18n>
+                    <i18n ng-if="vm.display === null">
+                        presences.init.1d.form.init
+                    </i18n>
+                    <i18n ng-if="vm.display !== null">
+                        presences.init.1d.form.init.2
+                    </i18n>
                 </button>
                 <button class="right-magnet cancel"
                         data-ng-click="vm.closeForm()">
