@@ -7,7 +7,7 @@ import fr.openent.presences.common.massmailing.Massmailing;
 import fr.openent.presences.core.constants.Field;
 import fr.openent.presences.enums.InitTypeEnum;
 import fr.openent.presences.enums.WorkflowActions;
-import fr.openent.presences.security.Manage;
+import fr.openent.presences.security.*;
 import fr.openent.presences.service.InitService;
 import fr.openent.presences.service.impl.DefaultAbsenceService;
 import fr.openent.presences.service.impl.DefaultInitService;
@@ -53,7 +53,7 @@ public class InitController extends ControllerHelper {
 
     @Get("/initialization/structures/:id")
     @SecuredAction(value = "", type = ActionType.RESOURCE)
-    @ResourceFilter(Manage.class)
+    @ResourceFilter(ViewRight.class)
     @ApiDoc("Retrieve structure initialization status")
     public void getInitializationStatus(HttpServerRequest request) {
         String structure = request.getParam("id");
