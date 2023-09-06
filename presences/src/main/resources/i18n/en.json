@@ -546,6 +546,7 @@
   "presences.init.1d.form.holidays.detected.zone.C": "Zone C",
   "presences.init.1d.form.holidays.other.system": "Other system",
   "presences.init.1d.form.init": "Initialize",
+  "presences.init.1d.form.init.2": "Reinitialize",
   "presences.init.1d.form.confirm": "The initialization has been successfully launched. You will be notified in the notification feed when it is completed.",
   "presences.init.check.teachers.header": "Verification - Teacher Assignment",
   "presences.init.check.teachers.warning": "Warning! There are teachers who are not assigned to any class. By starting the initialization, classes for these teachers will not be generated.",

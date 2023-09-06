@@ -648,6 +648,7 @@
   "presences.init.1d.form.holidays.detected.zone.C": "Zone C",
   "presences.init.1d.form.holidays.other.system": "Autre système",
   "presences.init.1d.form.init": "Initialiser",
+  "presences.init.1d.form.init.2": "Réinitialiser",
   "presences.init.1d.form.confirm": "L'initialisation a bien été lancée. Vous serez informé sur le fil de nouveautés lorsqu'elle sera terminée.",
   "presences.init.check.teachers.header": "Vérification - Rattachement des enseignants",
   "presences.init.check.teachers.warning": "Attention ! Il existe des enseignants qui ne sont rattachés à aucune classe. En lançant l'initialisation, les cours pour ces enseignants ne seront pas générés.",
