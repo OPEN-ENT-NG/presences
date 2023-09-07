@@ -37,7 +37,7 @@ export const navigation = {
         init: async function () {
             this.structures = initStructures();
             let preferenceStructure = await Me.preference(PreferencesUtils.PREFERENCE_KEYS.PRESENCE_STRUCTURE);
-            let preferenceStructureId = preferenceStructure ? preferenceStructure['id'] : null;
+            let preferenceStructureId = null;
             let structure = this.structures.length > 1 && preferenceStructureId ? this.structures.find((s) => s.id === preferenceStructureId) : this.structures[0];
             this.menu = {
                 structure: structure,
@@ -49,7 +49,9 @@ export const navigation = {
             this.$apply();
         },
         setStructure: async function (structure: Structure) {
+            console.log("Navigation Ancienne valeur :", window.structure);
             window.structure = structure;
+            console.log("Navigation Nouvelle valeur :", window.structure);
             this.menu.structure = structure;
             await PreferencesUtils.updateStructure(structure);
             this.$apply();

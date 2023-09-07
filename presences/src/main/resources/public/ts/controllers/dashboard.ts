@@ -68,7 +68,9 @@ export const dashboardController = ng.controller('DashboardController', ['$scope
 
         const initData = async (): Promise<void> => {
             if (!window.structure) {
+                console.log("Dashboard Ancienne valeur :", window.structure);
                 window.structure = await Me.preference(PreferencesUtils.PREFERENCE_KEYS.PRESENCE_STRUCTURE);
+                console.log("Dashboard Nouvelle valeur :", window.structure);
             } else {
                 initService.getViescoInitStatus(window.structure.id).then((r: IInitStatusResponse) => {
                     vm.isInit = (r.initialized !== undefined && r.initialized !== null) ? !r.initialized : null;

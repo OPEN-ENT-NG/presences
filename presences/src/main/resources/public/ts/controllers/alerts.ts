@@ -124,7 +124,9 @@ class Controller implements ng.IController, ViewModel {
     async initAlert(): Promise<void> {
         this.initFilter(true);
         if (!window.structure) {
+            console.log("Alert Ancienne valeur :", window.structure);
             window.structure = await Me.preference(PreferencesUtils.PREFERENCE_KEYS.PRESENCE_STRUCTURE);
+            console.log("Alert Nouvelle valeur :", window.structure);
         } else {
             if (this.params.type) {
                 this.initFilter(false);

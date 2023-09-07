@@ -37,11 +37,25 @@ declare let window: any;
 
 export const dayCourse = ng.controller('DayCourse', ['$scope', function ($scope) {
     const vm: DayCourseVm = this;
-
+    $scope.$watch(() => window.structure, (nouvelleValeur, ancienneValeur) => {
+        try {
+            console.log("Watcher Ancienne valeur :", ancienneValeur);
+            console.log("Watcher Nouvelle valeur :", nouvelleValeur);
+            // Lancer une exception pour capturer la stack trace
+            throw new Error('Capture de la stack trace');
+        } catch (e) {
+            console.error('Erreur:', e);
+            console.error('Stack trace:', e.stack);
+        }
+    });
     vm.$onInit = async (): Promise<void> => {
         vm.dayCourse = new Courses();
         vm.register = new Register();
+        /* on (watch) */
+
         try {
+            console.log("1");
+            console.log(window.structure);
             vm.isMultipleSlot = await settingService.retrieveMultipleSlotSetting(window.structure.id);
 
             let registerTimeSlot: any = await Me.preference(PreferencesUtils.PREFERENCE_KEYS.PRESENCE_REGISTER);
@@ -49,16 +63,10 @@ export const dayCourse = ng.controller('DayCourse', ['$scope', function ($scope)
                 registerTimeSlot.multipleSlot : await initMultipleSlotPreference();
 
         } catch (e) {
+            console.error(e);
+            notify.error(e);
             vm.isMultipleSlot = true;
         }
-
-        /* on (watch) */
-        $scope.$watch(() => window.structure, async () => {
-            if (window.structure) {
-                loadCourses();
-            }
-        });
-
     };
 
     const initMultipleSlotPreference = async (): Promise<boolean> => {
