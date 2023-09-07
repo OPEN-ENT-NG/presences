@@ -335,8 +335,11 @@ export const presenceForm = {
         setHandler: async function () {
             this.$on(SNIPLET_FORM_EVENTS.SET_PARAMS, (event: IAngularEvent, presence: Presence) => vm.openEditPresence(presence));
             this.$watch(() => window.structure, async () => {
-                this.getDisciplines();
-                this.getStructureTimeSlot();
+                if (window.structure !== undefined) {
+                    this.getDisciplines();
+                    this.getStructureTimeSlot();
+                }
+
                 vm.safeApply();
             });
         },
