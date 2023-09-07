@@ -254,7 +254,7 @@ export const presencesController = ng.controller('PresencesController',
 
             /* on  (watch) */
             $scope.$watch(() => window.structure, () => {
-                if ('structure' in window) {
+                if ('structure' in window && window.structure !== undefined) {
                     startAction();
                 }
             });

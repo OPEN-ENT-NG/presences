@@ -39,7 +39,13 @@ interface ViewModel {
 
     isInit: Boolean;
 
+    isPresencesInitialized: Boolean;
+
     hasRight(right: string): boolean;
+
+    getPresencesInitStatus(): Promise<void>;
+
+    hasInitializedStructure(): Boolean;
 
     selectItem(model: any, student: any): void;
 
@@ -65,6 +71,7 @@ export const dashboardController = ng.controller('DashboardController', ['$scope
         const vm: ViewModel = this;
 
         vm.isInit = undefined;
+        vm.isPresencesInitialized = undefined;
 
         const initData = async (): Promise<void> => {
             if (!window.structure) {
@@ -73,7 +80,7 @@ export const dashboardController = ng.controller('DashboardController', ['$scope
                 initService.getViescoInitStatus(window.structure.id).then((r: IInitStatusResponse) => {
                     vm.isInit = (r.initialized !== undefined && r.initialized !== null) ? !r.initialized : null;
                 });
-                await Promise.all([vm.getAlert(), vm.getAbsentsCounts()])
+                await Promise.all([vm.getAlert(), vm.getAbsentsCounts(), vm.getPresencesInitStatus()])
                     .catch(error => {
                         console.log(error);
                         notify.error("presences.error.get.alert");
@@ -107,7 +114,15 @@ export const dashboardController = ng.controller('DashboardController', ['$scope
         vm.hasRight = (right: string): boolean => {
             return model.me.hasWorkflow(rights.workflow[right]);
         };
-        
+
+        vm.getPresencesInitStatus = async (): Promise<void> => {
+            vm.isPresencesInitialized = await initService.getPresencesInitStatus(window.structure.id);
+        }
+
+        vm.hasInitializedStructure = (): Boolean => {
+            if (vm.isPresencesInitialized === undefined) return true; //prevents displaying empty page while waiting for init status
+            else return window.structure !== undefined && vm.isPresencesInitialized;
+        }
 
         /* Calendar interaction */
         vm.selectItem = function (model, item) {

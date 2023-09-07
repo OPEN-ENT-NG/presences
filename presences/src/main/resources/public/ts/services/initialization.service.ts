@@ -13,7 +13,7 @@ export interface IInitTeachersResponse {
 
 
 export interface IInitService {
-    getPresencesInitStatus(structureId: string): Promise<IInitStatusResponse>;
+    getPresencesInitStatus(structureId: string): Promise<boolean>;
     getViescoInitStatus(structureId: string): Promise<IInitStatusResponse>;
 
     initPresences(structureId: string, initType: INIT_TYPE): Promise<AxiosResponse>;
@@ -25,9 +25,9 @@ export interface IInitService {
 
 export const initService: IInitService = {
 
-    getPresencesInitStatus: async (structureId: string): Promise<IInitStatusResponse> => {
+    getPresencesInitStatus: async (structureId: string): Promise<boolean> => {
         return http.get(`/presences/initialization/structures/${structureId}`)
-            .then((res: AxiosResponse) => res.data);
+            .then((res: AxiosResponse) => res.data.initialized);
     },
 
     getViescoInitStatus: async (structureId: string): Promise<IInitStatusResponse> => {

@@ -3,7 +3,7 @@ import {IUserService, IViescolaireService} from "@common/services";
 import {Student} from "@common/model/Student";
 import {DateUtils, PreferencesUtils, safeApply, UserUtils} from "@common/utils";
 import {IPeriod, IPeriodService} from "@presences/services/PeriodService";
-import {ForgottenNotebookService, IncidentService} from "../services";
+import {ForgottenNotebookService, IInitService, IInitStatusResponse, IncidentService} from "../services";
 import {IColor} from "@common/model/Color";
 import {COLOR_TYPE} from "@common/core/constants/ColorType";
 import {IAngularEvent} from "angular";
@@ -57,6 +57,8 @@ interface IViewModel {
     forgottenNotebook: IForgottenNotebookResponse;
     structureTimeSlot: IStructureSlot;
 
+    isPresencesInitialized: boolean;
+
     isMobile(): boolean;
 
     isCurrentMobileRoute(routing: IRouting): boolean;
@@ -70,18 +72,18 @@ interface IViewModel {
     switchPeriod(): void;
 
     hasInitializedStructure(): boolean;
-
     isLoading: boolean;
 }
 
 export const dashboardStudentController = ng.controller('DashboardStudentController',
     ['$scope', '$route', '$location', 'UserService', 'PeriodService', 'EventService', 'IncidentService',
-        'ForgottenNotebookService', 'ViescolaireService',
+        'ForgottenNotebookService', 'ViescolaireService', 'InitService',
         function ($scope, $route, $location, userService: IUserService, periodService: IPeriodService,
                   eventService: EventService, incidentService: IncidentService, forgottenNotebookService: ForgottenNotebookService,
-                  viescolaireService: IViescolaireService) {
+                  viescolaireService: IViescolaireService, initService: IInitService) {
             const vm: IViewModel = this;
             vm.isLoading = true;
+            vm.isPresencesInitialized = true;
             vm.filter = {
                 children: [],
                 selectedChildren: null,
@@ -168,6 +170,10 @@ export const dashboardStudentController = ng.controller('DashboardStudentControl
                 }
             };
 
+            const getPresencesInitStatus = async (structureId: string): Promise<void> => {
+                vm.isPresencesInitialized = await initService.getPresencesInitStatus(structureId);
+            }
+
             const getChildrenData = async (): Promise<void> => {
                 if (vm.isRelative() && vm.filter.children.length === 0) {
                     vm.filter.children = await userService.getChildrenUser(model.me.userId);
@@ -177,14 +183,13 @@ export const dashboardStudentController = ng.controller('DashboardStudentControl
 
                     /* Set student info */
                     vm.filter.selectedChildren = await userService.getChildUser(model.me.userId);
+                    vm.filter.selectedChildren.structure = vm.filter.selectedChildren.structures[0];
 
-                    if (window.structure == undefined) {
+                    if (!vm.hasInitializedStructure()) {
                         vm.isLoading = false;
                         $scope.safeApply();
                         return;
                     }
-
-                    vm.filter.selectedChildren.structure = vm.filter.selectedChildren.structures[0];
                 }
             };
 
@@ -297,7 +302,7 @@ export const dashboardStudentController = ng.controller('DashboardStudentControl
             };
 
             vm.hasInitializedStructure = (): boolean => {
-                return window.structure != undefined;
+                return window.structure !== undefined && vm.isPresencesInitialized;
             }
 
             /* event handler */
@@ -306,6 +311,7 @@ export const dashboardStudentController = ng.controller('DashboardStudentControl
                     .then(() => getTimeSlots((vm.filter.selectedChildren && vm.filter.selectedChildren.structure)
                         ? vm.filter.selectedChildren.structure.id : window.structure.id))
                     .then(() => loadEvents())
+                    .then(() => getPresencesInitStatus(window.structure.id))
                     .then(() => safeApply($scope))
                     .catch(err => console.error(err))
             });

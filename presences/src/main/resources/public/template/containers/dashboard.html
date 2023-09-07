@@ -1,95 +1,108 @@
 <div class="dashboard" ng-controller="DashboardController as vm" ng-style="{width: vm.getSubSize()}">
-    <div class="row presences-title">
-        <div>
-            <img src="/presences/public/img/uni-presence.svg" alt="Présences">
-        </div>
-        <h1 class="horizontal-spacing-twice">
-            <i18n>presences.title</i18n>
-        </h1>
-        <div class="structure">
-            [[structure.name]]
-        </div>
-    </div>
-    <div class="dashboard-search-row">
-        <div class="dashboard-search-row-searchs">
-            <!-- Search to access calendar -->
-            <async-autocomplete workflow="presences.viewCalendar"
-                                ng-disabled="false"
-                                ng-model="vm.filter.search.item"
-                                ng-change="vm.selectItem"
-                                on-search="vm.searchItem"
-                                options="vm.filter.search.items"
-                                placeholder="presences.dashboard.search.placeholder"
-                                search="vm.filter.search.item"></async-autocomplete>
 
-            <!-- Search to access registry -->
-            <async-autocomplete workflow="presences.readRegistry"
-                                class="search-registry"
-                                data-ng-disabled="false"
-                                data-ng-model="vm.groupsSearch.group"
-                                data-ng-change="vm.selectItemToRegistry"
-                                data-on-search="vm.searchItemToRegistry"
-                                data-options="vm.groupsSearch.groups"
-                                data-placeholder="presences.dashboard.search.registry.placeholder"
-                                data-search="vm.groupsSearch.group">
-            </async-autocomplete>
+    <div class="empty-state flex-inline twelve top-spacing-25vh justify-center"
+         ng-if="!vm.hasInitializedStructure() && !vm.hasRight('initPopup') && !vm.hasRight('initSettings1D')">
+        <div class="tick-color red">&nbsp;</div>
+        <div class="empty-title">
+            <i18n>presences.init.state.warning</i18n>
         </div>
+        <div class="tick-color purple">&nbsp;</div>
     </div>
 
-    <!--Date-->
-    <h2 class="current-date" ng-bind="::vm.date"></h2>
+    <div class="dashboard-content" ng-if="vm.hasInitializedStructure() || (vm.hasRight('initPopup') && vm.hasRight('initSettings1D'))">
+        <div class="row presences-title">
+            <div>
+                <img src="/presences/public/img/uni-presence.svg" alt="Présences">
+            </div>
+            <h1 class="horizontal-spacing-twice">
+                <i18n>presences.title</i18n>
+            </h1>
+            <div class="structure">
+                [[structure.name]]
+            </div>
+        </div>
+        <div class="dashboard-search-row">
+            <div class="dashboard-search-row-searchs">
+                <!-- Search to access calendar -->
+                <async-autocomplete workflow="presences.viewCalendar"
+                                    ng-disabled="false"
+                                    ng-model="vm.filter.search.item"
+                                    ng-change="vm.selectItem"
+                                    on-search="vm.searchItem"
+                                    options="vm.filter.search.items"
+                                    placeholder="presences.dashboard.search.placeholder"
+                                    search="vm.filter.search.item"></async-autocomplete>
 
-    <!--COUNTS OF CURRENT PRESENCES IN STRUCTURE-->
-    <div workflow="presences.readAbsentsCounts" class="dashboard-absences-counts">
-        <div class="card">
-            <i18n>presences.absence.number.total</i18n> &#58; <b>[[vm.absencesSummary.nb_absents]]</b>
+                <!-- Search to access registry -->
+                <async-autocomplete workflow="presences.readRegistry"
+                                    class="search-registry"
+                                    data-ng-disabled="false"
+                                    data-ng-model="vm.groupsSearch.group"
+                                    data-ng-change="vm.selectItemToRegistry"
+                                    data-on-search="vm.searchItemToRegistry"
+                                    data-options="vm.groupsSearch.groups"
+                                    data-placeholder="presences.dashboard.search.registry.placeholder"
+                                    data-search="vm.groupsSearch.group">
+                </async-autocomplete>
+            </div>
         </div>
-        <div class="card" ng-if="!hasRight('presences1D')">
-            <i18n>presences.absence.number.day.student</i18n> &#58; <b>[[vm.absencesSummary.nb_day_students]]</b>
+
+        <!--Date-->
+        <h2 class="current-date" ng-bind="::vm.date"></h2>
+
+        <!--COUNTS OF CURRENT PRESENCES IN STRUCTURE-->
+        <div workflow="presences.readAbsentsCounts" class="dashboard-absences-counts">
+            <div class="card">
+                <i18n>presences.absence.number.total</i18n> &#58; <b>[[vm.absencesSummary.nb_absents]]</b>
+            </div>
+            <div class="card" ng-if="!hasRight('presences1D')">
+                <i18n>presences.absence.number.day.student</i18n> &#58; <b>[[vm.absencesSummary.nb_day_students]]</b>
+            </div>
+            <div class="card">
+                <i18n>presences.absence.number.presents</i18n> &#58; <b>[[vm.absencesSummary.nb_presents]]</b>
+            </div>
         </div>
-        <div class="card">
-            <i18n>presences.absence.number.presents</i18n> &#58; <b>[[vm.absencesSummary.nb_presents]]</b>
+
+        <!-- Alerts -->
+        <div ng-include="'/presences/public/template/widgets/alerts.html'" class="vertical-spacing-six"
+             ng-if="::hasRight('widget_alerts')" workflow="presences.widget_alerts"></div>
+
+        <!-- forgotten register -->
+        <div ng-include="'/presences/public/template/widgets/forgotten_registers.html'" class="vertical-spacing-six"
+             ng-if="::hasRight('widget_forgotten_registers')" workflow="presences.widget_forgotten_registers"></div>
+
+        <!-- widget statements absences -->
+        <widget-statements-absences data-workflow="presences.widget_statements"
+                                    data-ng-if="::hasRight('widget_statements')">
+        </widget-statements-absences>
+
+        <!-- widget remarks -->
+        <!--    <div ng-include="'/presences/public/template/widgets/remarks.html'" class="vertical-spacing-six"-->
+        <!--         ng-if="::hasRight('widget_remarks')" workflow="presences.widget_remarks"></div>-->
+
+        <!-- day course as a teacher -->
+        <div ng-include="'/presences/public/template/widgets/day_courses.html'" class="vertical-spacing-six"
+             ng-if="::hasRight('widget_day_courses')"></div>
+
+        <!-- presence area -->
+        <div ng-include="'/presences/public/template/widgets/day_presences.html'" class="vertical-spacing-six"
+             ng-if="::hasRight('widget_day_presences')"></div>
+
+        <!-- Side bar widgets -->
+        <div class="sidebar-widgets">
+            <side-widget name="'presences.widgets.absences'"
+                         ng-if="::hasRight('widget_absences')" workflow="presences.widget_absences">
+                <div ng-include="'/presences/public/template/widgets/absences.html'" class="height-100"></div>
+            </side-widget>
+            <side-widget name="'presences.widgets.register'" course="vm.course"
+                         ng-if="::hasRight('widget_current_course')">
+                <div ng-include="'/presences/public/template/widgets/register.html'" class="height-100"></div>
+            </side-widget>
         </div>
+        <init-lightbox
+                ng-if="vm.hasRight('initPopup') && vm.hasRight('initSettings1D')"
+                display="vm.isInit">
+        </init-lightbox>
     </div>
 
-    <!-- Alerts -->
-    <div ng-include="'/presences/public/template/widgets/alerts.html'" class="vertical-spacing-six"
-         ng-if="::hasRight('widget_alerts')" workflow="presences.widget_alerts"></div>
-
-    <!-- forgotten register -->
-    <div ng-include="'/presences/public/template/widgets/forgotten_registers.html'" class="vertical-spacing-six"
-         ng-if="::hasRight('widget_forgotten_registers')" workflow="presences.widget_forgotten_registers"></div>
-
-    <!-- widget statements absences -->
-    <widget-statements-absences data-workflow="presences.widget_statements"
-                                data-ng-if="::hasRight('widget_statements')">
-    </widget-statements-absences>
-
-    <!-- widget remarks -->
-    <!--    <div ng-include="'/presences/public/template/widgets/remarks.html'" class="vertical-spacing-six"-->
-    <!--         ng-if="::hasRight('widget_remarks')" workflow="presences.widget_remarks"></div>-->
-
-    <!-- day course as a teacher -->
-    <div ng-include="'/presences/public/template/widgets/day_courses.html'" class="vertical-spacing-six"
-         ng-if="::hasRight('widget_day_courses')"></div>
-
-    <!-- presence area -->
-    <div ng-include="'/presences/public/template/widgets/day_presences.html'" class="vertical-spacing-six"
-         ng-if="::hasRight('widget_day_presences')"></div>
-
-    <!-- Side bar widgets -->
-    <div class="sidebar-widgets">
-        <side-widget name="'presences.widgets.absences'"
-                     ng-if="::hasRight('widget_absences')" workflow="presences.widget_absences">
-            <div ng-include="'/presences/public/template/widgets/absences.html'" class="height-100"></div>
-        </side-widget>
-        <side-widget name="'presences.widgets.register'" course="vm.course"
-                     ng-if="::hasRight('widget_current_course')">
-            <div ng-include="'/presences/public/template/widgets/register.html'" class="height-100"></div>
-        </side-widget>
-    </div>
-    <init-lightbox
-            ng-if="vm.hasRight('initPopup') && vm.hasRight('initSettings1D')"
-            display="vm.isInit">
-    </init-lightbox>
 </div>

@@ -47,8 +47,8 @@ function safeApply() {
 }
 
 function fetchInitializationStatus(): void {
-    initService.getPresencesInitStatus(window.model.vieScolaire.structure.id).then((status: IInitStatusResponse) => {
-        if (status.initialized !== undefined) vm.initialized = status.initialized;
+    initService.getPresencesInitStatus(window.model.vieScolaire.structure.id).then((status: boolean) => {
+        if (status !== undefined) vm.initialized = status;
         else vm.initialized = false;
         vm.safeApply();
     })
