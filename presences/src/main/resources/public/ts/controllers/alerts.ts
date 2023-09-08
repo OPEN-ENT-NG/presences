@@ -123,24 +123,20 @@ class Controller implements ng.IController, ViewModel {
 
     async initAlert(): Promise<void> {
         this.initFilter(true);
-        if (!window.structure) {
-            window.structure = await Me.preference(PreferencesUtils.PREFERENCE_KEYS.PRESENCE_STRUCTURE);
-        } else {
-            if (this.params.type) {
-                this.initFilter(false);
-                this.filter.types[this.params.type] = true;
-            }
-            await this.viescolaireService.getSchoolYearDates(window.structure.id)
-                .then((schoolYears: ISchoolYearPeriod) => this.filter.startDate = moment(schoolYears.start_date))
-                .catch(error => {
-                    this.filter.startDate = new Date();
-                    console.error(error);
-                });
-            await this.getStudentAlert()
-                .catch(error => console.error(error));
-            this.groupsSearch = new GroupsSearch(window.structure.id, this.searchService, this.groupService, this.groupingService);
-            this.studentsSearch = new StudentsSearch(window.structure.id, this.searchService);
+        if (this.params.type) {
+            this.initFilter(false);
+            this.filter.types[this.params.type] = true;
         }
+        await this.viescolaireService.getSchoolYearDates(window.structure.id)
+            .then((schoolYears: ISchoolYearPeriod) => this.filter.startDate = moment(schoolYears.start_date))
+            .catch(error => {
+                this.filter.startDate = new Date();
+                console.error(error);
+            });
+        await this.getStudentAlert()
+            .catch(error => console.error(error));
+        this.groupsSearch = new GroupsSearch(window.structure.id, this.searchService, this.groupService, this.groupingService);
+        this.studentsSearch = new StudentsSearch(window.structure.id, this.searchService);
     }
 
     initFilter(value: boolean): void {

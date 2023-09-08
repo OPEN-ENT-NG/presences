@@ -44,7 +44,7 @@ export const navigation = {
                 timeout: null
             };
 
-            let preferenceStructure: Structure = await Me.preference(PreferencesUtils.PREFERENCE_KEYS.PRESENCE_STRUCTURE);
+            let preferenceStructure: Structure = window.structure ? window.structure : await Me.preference(PreferencesUtils.PREFERENCE_KEYS.PRESENCE_STRUCTURE);
             let preferenceStructureId: string = preferenceStructure ? preferenceStructure.id : null;
             let structure: IStructure = this.structures.length > 1 && preferenceStructureId ?
                 this.structures.find((s: IStructure) => s.id === preferenceStructureId) : this.structures[0];
@@ -54,10 +54,12 @@ export const navigation = {
             this.$apply();
         },
         setStructure: async function (structure: Structure) {
-            window.structure = structure;
-            this.menu.structure = structure;
-            await PreferencesUtils.updateStructure(structure);
-            this.$apply();
+            if (!!structure) {
+                window.structure = structure;
+                this.menu.structure = structure;
+                await PreferencesUtils.updateStructure(structure);
+                this.$apply();
+            }
         },
         hoverIn: function (menuItem) {
             this.menu.hovered = menuItem;

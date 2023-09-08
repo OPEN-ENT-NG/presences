@@ -23,3 +23,4 @@ presences/src/main/resources/public/font
 /gradle/wrapper/gradle-wrapper.properties
 /gradlew
 /gradlew.bat
+package-lock.json

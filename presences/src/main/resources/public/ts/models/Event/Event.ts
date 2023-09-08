@@ -325,7 +325,7 @@ export class Events extends LoadingCollection {
             toasts.confirm('presences.absences.update_regularized');
             return true
         } catch (err) {
-            throw err;
+            console.error(err);
             toasts.warning('presences.absences.update_regularized.error');
             this.events[0].counsellor_regularisation = !this.events[0].counsellor_regularisation;
             return false;
