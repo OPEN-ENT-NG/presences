@@ -4,6 +4,7 @@ import incidentsRights from '@incidents/rights'
 import massmailingRights from '@massmailing/rights';
 import statisticsRights from '@statistics/rights';
 import {PreferencesUtils} from "@common/utils";
+import {IStructure} from "@common/model";
 
 declare let window: any;
 
@@ -36,16 +37,20 @@ export const navigation = {
     controller: {
         init: async function () {
             this.structures = initStructures();
-            let preferenceStructure = await Me.preference(PreferencesUtils.PREFERENCE_KEYS.PRESENCE_STRUCTURE);
-            let preferenceStructureId = preferenceStructure ? preferenceStructure['id'] : null;
-            let structure = this.structures.length > 1 && preferenceStructureId ? this.structures.find((s) => s.id === preferenceStructureId) : this.structures[0];
             this.menu = {
-                structure: structure,
+                structure: null,
                 hovered: '',
                 active: '',
                 timeout: null
             };
+
+            let preferenceStructure: Structure = await Me.preference(PreferencesUtils.PREFERENCE_KEYS.PRESENCE_STRUCTURE);
+            let preferenceStructureId: string = preferenceStructure ? preferenceStructure.id : null;
+            let structure: IStructure = this.structures.length > 1 && preferenceStructureId ?
+                this.structures.find((s: IStructure) => s.id === preferenceStructureId) : this.structures[0];
+            this.menu.structure = structure;
             await this.setStructure(structure);
+
             this.$apply();
         },
         setStructure: async function (structure: Structure) {
