@@ -2,9 +2,11 @@ package fr.openent.massmailing.service.impl;
 
 import fr.openent.massmailing.Massmailing;
 import fr.openent.massmailing.enums.MailingType;
+import fr.openent.massmailing.model.Mailing.*;
 import fr.openent.massmailing.service.SettingsService;
+import fr.openent.presences.common.helper.*;
 import fr.wseduc.webutils.Either;
-import io.vertx.core.Handler;
+import io.vertx.core.*;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import org.entcore.common.sql.Sql;
@@ -17,7 +19,8 @@ public class DefaultSettingsService implements SettingsService {
     private String returningValues = "id, name, content, type, structure_id, category";
 
     @Override
-    public void getTemplates(MailingType type, String structure, List<String> listCategory, Handler<Either<String, JsonArray>> handler) {
+    public Future<List<Template>> getTemplates(MailingType type, String structure, List<String> listCategory) {
+        Promise<List<Template>> promise = Promise.promise();
         final StringBuilder queryBuilder = new StringBuilder("SELECT id, name, content, type, structure_id, category FROM " + Massmailing.dbSchema + ".template WHERE structure_id = ? AND type = ?");
         JsonArray params = new JsonArray()
                 .add(structure)
@@ -33,7 +36,13 @@ public class DefaultSettingsService implements SettingsService {
         }
         queryBuilder.append(";");
 
-        Sql.getInstance().prepared(queryBuilder.toString(), params, SqlResult.validResultHandler(handler));
+
+        Sql.getInstance().prepared(queryBuilder.toString(), params,
+                SqlResult.validResultHandler(IModelHelper.sqlResultToIModel(promise, Template.class,
+                        String.format("[Massmailing@%s::getTemplates] Failed to get templates", this.getClass().getSimpleName())
+                )));
+
+        return promise.future();
     }
 
     @Override

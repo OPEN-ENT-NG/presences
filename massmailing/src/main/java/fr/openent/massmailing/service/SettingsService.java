@@ -1,9 +1,9 @@
 package fr.openent.massmailing.service;
 
 import fr.openent.massmailing.enums.MailingType;
+import fr.openent.massmailing.model.Mailing.*;
 import fr.wseduc.webutils.Either;
-import io.vertx.core.Handler;
-import io.vertx.core.json.JsonArray;
+import io.vertx.core.*;
 import io.vertx.core.json.JsonObject;
 
 import java.util.List;
@@ -16,9 +16,8 @@ public interface SettingsService {
      * @param type      Mailing type
      * @param structure Structure identifier
      * @param listCategory list of category
-     * @param handler   Function handler returning data
      */
-    void getTemplates(MailingType type, String structure, List<String> listCategory, Handler<Either<String, JsonArray>> handler);
+    Future<List<Template>> getTemplates(MailingType type, String structure, List<String> listCategory);
 
     /**
      * Create given template.  Must contains structure identifier, template name, template content et template type

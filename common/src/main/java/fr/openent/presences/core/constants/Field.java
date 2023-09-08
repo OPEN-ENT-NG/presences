@@ -197,6 +197,9 @@ public class Field {
     // event || event type
     public static final String EVENTTYPE = "eventType";
     public static final String ABSENCE = "absence";
+
+    public static final String ABSENCE_UPPERCASE = "ABSENCE";
+    public static final String ABSENCES_UPPERCASE = "ABSENCES";
     public static final String LATENESS = "lateness";
     public static final String DEPARTURE = "departure";
     public static final String REMARK = "remark";
