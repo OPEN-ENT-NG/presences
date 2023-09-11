@@ -7,6 +7,7 @@ import fr.openent.massmailing.enums.MailingType;
 import fr.openent.massmailing.security.*;
 import fr.openent.massmailing.service.SettingsService;
 import fr.openent.massmailing.service.impl.DefaultSettingsService;
+import fr.openent.presences.common.helper.*;
 import fr.openent.presences.core.constants.*;
 import fr.wseduc.rs.*;
 import fr.wseduc.security.ActionType;
@@ -50,7 +51,9 @@ public class SettingsController extends ControllerHelper {
         }
 
         MailingType type = MailingType.valueOf(mailingType);
-        settingsService.getTemplates(type, structure, listCategory, arrayResponseHandler(request));
+        settingsService.getTemplates(type, structure, listCategory)
+                .onFailure(fail -> renderError(request))
+                .onSuccess(response -> renderJson(request, IModelHelper.toJsonArray(response)));
     }
 
     @Post("/settings/templates")

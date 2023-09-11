@@ -50,8 +50,7 @@ public class DefaultSettingsServiceTest {
             async.complete();
         });
 
-        settingsService.getTemplates(MailingType.MAIL, "STRUCTURE_ID", Collections.singletonList("ALL"), (Handler) e -> {
-        });
+        settingsService.getTemplates(MailingType.MAIL, "STRUCTURE_ID", Collections.singletonList("ALL"));
     }
 
     @Test
@@ -75,8 +74,7 @@ public class DefaultSettingsServiceTest {
             async.complete();
         });
 
-        settingsService.getTemplates(MailingType.MAIL, "STRUCTURE_ID", Arrays.asList("LATENESS", "PUNISHMENT_SANCTION"), (Handler) e -> {
-        });
+        settingsService.getTemplates(MailingType.MAIL, "STRUCTURE_ID", Arrays.asList("LATENESS", "PUNISHMENT_SANCTION"));
     }
 
     @Test
