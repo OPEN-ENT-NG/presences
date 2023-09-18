@@ -308,10 +308,17 @@ export const dashboardStudentController = ng.controller('DashboardStudentControl
             /* event handler */
             $scope.$watch(() => window.structure, () => {
                 load()
-                    .then(() => getTimeSlots((vm.filter.selectedChildren && vm.filter.selectedChildren.structure)
-                        ? vm.filter.selectedChildren.structure.id : window.structure.id))
-                    .then(() => loadEvents())
                     .then(() => getPresencesInitStatus(window.structure.id))
+                    .then(() => {
+                        if (vm.isPresencesInitialized) {
+                            getTimeSlots((vm.filter.selectedChildren && vm.filter.selectedChildren.structure)
+                                ? vm.filter.selectedChildren.structure.id : window.structure.id)
+                                .then(() => loadEvents())
+                                .catch(err => console.error(err))
+                        } else {
+                            vm.isLoading = false;
+                        }
+                    })
                     .then(() => safeApply($scope))
                     .catch(err => console.error(err))
             });
