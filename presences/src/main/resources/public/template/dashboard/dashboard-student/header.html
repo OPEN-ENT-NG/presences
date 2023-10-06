@@ -1,16 +1,19 @@
 <div class="dashboard-student-main-header margin-bottom-md">
-    <!-- title content-->
-    <app-title class="dashboard-student-main-header-title paddingRight">
-        <!-- logo -->
-        <div data-ng-show="!vm.isMobile()">
-            <img src="/presences/public/img/uni-presence.svg" alt="Présences">
-        </div>
+  <!-- title content-->
+  <app-title class="dashboard-student-main-header-title paddingRight">
+    <!-- logo -->
+    <div data-ng-show="!vm.isMobile()">
+      <img src="/presences/public/img/presences.png" alt="Présences" />
+    </div>
 
-        <!-- module title name -->
-        <h1>
-            <i18n>presences.title</i18n>
-        </h1>
-    </app-title>
+    <!-- module title name -->
+    <h1>
+      <i18n>presences.title</i18n>
+    </h1>
+  </app-title>
 
-    <select-children child="vm.filter.selectedChildren" children="vm.filter.children"></select-children>
+  <select-children
+    child="vm.filter.selectedChildren"
+    children="vm.filter.children"
+  ></select-children>
 </div>
