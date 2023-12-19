@@ -93,8 +93,9 @@ public class EventController extends ControllerHelper {
 
 
         UserUtils.getUserInfos(eb, request, userInfos -> {
-            boolean hasRestrictedRight = WorkflowActionsCouple.READ_EVENT.hasOnlyRestrictedRight(userInfos, UserType.TEACHER.equals(userInfos.getType()));
-            String teacherId = hasRestrictedRight ? userInfos.getUserId() : null;
+            boolean hasRestrictedRightRead = WorkflowActionsCouple.READ_EVENT.hasOnlyRestrictedRight(userInfos, UserType.TEACHER.equals(userInfos.getType()));
+            boolean hasRestrictedRightAbsenceManage = WorkflowActionsCouple.MANAGE_ABSENCE_STATEMENTS.hasOnlyRestrictedRight(userInfos, UserType.TEACHER.equals(userInfos.getType()));
+            String teacherId = hasRestrictedRightRead || hasRestrictedRightAbsenceManage ? userInfos.getUserId() : null;
 
             this.groupService.getGroupsAndClassesFromTeacherId(teacherId, structureId)
                     .onFailure(fail -> renderError(request, JsonObject.mapFrom(fail.getMessage())))
