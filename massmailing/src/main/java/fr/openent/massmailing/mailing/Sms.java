@@ -4,19 +4,19 @@ import fr.openent.massmailing.Massmailing;
 import fr.openent.massmailing.enums.MailingType;
 import fr.openent.massmailing.enums.MassmailingType;
 import fr.openent.presences.common.helper.FutureHelper;
-import fr.openent.presences.core.constants.Field;
 import fr.wseduc.webutils.Either;
 import io.vertx.core.CompositeFuture;
 import io.vertx.core.Future;
 import io.vertx.core.Handler;
 import io.vertx.core.eventbus.EventBus;
-import io.vertx.core.json.JsonArray;
+import io.vertx.core.http.HttpServerRequest;
 import io.vertx.core.json.JsonObject;
+import org.entcore.common.events.EventStoreFactory;
+import org.entcore.common.sms.SmsSender;
+import org.entcore.common.sms.SmsSenderFactory;
 
 import java.util.ArrayList;
 import java.util.List;
-
-import static fr.wseduc.webutils.Utils.handlerToAsyncHandler;
 
 public class Sms extends MassMailingProcessor {
     private EventBus eventBus;
@@ -31,7 +31,7 @@ public class Sms extends MassMailingProcessor {
 
 
     @Override
-    public void massmail(Handler<Either<String, Boolean>> handler) {
+    public void massmail(HttpServerRequest request, Handler<Either<String, Boolean>> handler) {
         super.process(event -> {
             if (event.isLeft()) {
                 LOGGER.error("[Massmailing@Sms] Failed to process mailing", event.left().getValue());
@@ -45,7 +45,7 @@ public class Sms extends MassMailingProcessor {
                 if (sms.containsKey("contact") && !"".equals(sms.getString("contact"))) {
                     Future<JsonObject> future = Future.future();
                     futures.add(future);
-                    send(sms, FutureHelper.handlerJsonObject(future));
+                    send(request, sms, FutureHelper.handlerJsonObject(future));
                 }
             });
 
@@ -56,7 +56,7 @@ public class Sms extends MassMailingProcessor {
         });
     }
 
-    private void send(JsonObject sms, Handler<Either<String, JsonObject>> handler) {
+    private void send(HttpServerRequest request, JsonObject sms, Handler<Either<String, JsonObject>> handler) {
 
         String message = sms.getString("message");
         int maxLength = 160;
@@ -65,25 +65,13 @@ public class Sms extends MassMailingProcessor {
             message += "...";
         }
 
-        JsonObject parameters = new JsonObject()
-                .put("receivers", new JsonArray().add(sms.getString("contact")))
-                .put("message", message)
-                .put("senderForResponse", true)
-                .put("noStopClause", true);
-        JsonObject smsObject = new JsonObject()
-                .put("provider", "OVH")
-                .put("action", "send-sms")
-                .put("parameters", parameters);
-
-        eventBus.request(Massmailing.SMS_ADDRESS, smsObject, handlerToAsyncHandler(event -> {
-            if ("error".equals(event.body().getString("status"))) {
-                String errorMessage = "[Massmailing@Sms::send] Failed to send sms mailing";
-                JsonObject body = event.body();
-                LOGGER.error(String.format("%s %s %s", errorMessage, body.getString(Field.MESSAGE), body.getJsonObject(Field.DATA, new JsonObject()).toString()));
-                handler.handle(new Either.Left<>(errorMessage));
-            } else {
-                saveMassmailing(sms, handler);
-            }
-        }));
+        final SmsSender smsSender = SmsSenderFactory.getInstance().newInstance(EventStoreFactory.getFactory().getEventStore(Sms.class.getSimpleName()));
+        smsSender.send(request, sms.getString("contact"), message, Massmailing.MODULE)
+                .onSuccess(report -> saveMassmailing(sms, handler))
+                .onFailure(failure -> {
+                    String errorMessage = "[Massmailing@Sms::send] Failed to send sms mailing";
+                    LOGGER.error(errorMessage, failure);
+                    handler.handle(new Either.Left<>(errorMessage));
+                });
     }
 }

@@ -1,7 +1,8 @@
 package fr.openent.massmailing.controller;
 
 import fr.openent.massmailing.Massmailing;
-import fr.openent.massmailing.actions.*;
+import fr.openent.massmailing.actions.Action;
+import fr.openent.massmailing.actions.WorkflowActionsCouple;
 import fr.openent.massmailing.enums.MailingType;
 import fr.openent.massmailing.enums.MassmailingType;
 import fr.openent.massmailing.mailing.*;
@@ -9,10 +10,14 @@ import fr.openent.massmailing.security.BodyCanAccessMassMailing;
 import fr.openent.massmailing.security.CanAccessMassMailing;
 import fr.openent.massmailing.service.MassmailingService;
 import fr.openent.massmailing.service.impl.DefaultMassmailingService;
-import fr.openent.presences.common.helper.*;
-import fr.openent.presences.common.service.*;
-import fr.openent.presences.common.service.impl.*;
-import fr.openent.presences.core.constants.*;
+import fr.openent.presences.common.helper.ArrayHelper;
+import fr.openent.presences.common.helper.FutureHelper;
+import fr.openent.presences.common.service.GroupService;
+import fr.openent.presences.common.service.UserService;
+import fr.openent.presences.common.service.impl.DefaultGroupService;
+import fr.openent.presences.common.service.impl.DefaultUserService;
+import fr.openent.presences.core.constants.Field;
+import fr.openent.presences.core.constants.UserType;
 import fr.wseduc.rs.ApiDoc;
 import fr.wseduc.rs.Get;
 import fr.wseduc.rs.Post;
@@ -36,7 +41,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
-import java.util.stream.*;
+import java.util.stream.Collectors;
 
 public class MassmailingController extends ControllerHelper {
     private final GroupService groupService;
@@ -678,7 +683,7 @@ public class MassmailingController extends ControllerHelper {
                     return;
             }
 
-            mailing.massmail(event -> {
+            mailing.massmail(request, event -> {
                 if (event.isLeft()) {
                     String message = "[Massmailing@MassmailingController] An error occurred with massmailing";
                     log.error(String.format("%s %s", message, event.left().getValue()));
