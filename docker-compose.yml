@@ -9,8 +9,11 @@ services:
       - ~/.gradle:/home/gradle/.gradle
 
   node:
-    image: opendigitaleducation/node:16-alpine-pnpm
+    image: opendigitaleducation/node:10
     working_dir: /home/node/app
     volumes:
       - ./:/home/node/app
       - ~/.npm:/.npm
+      - ~/.npmrc:/home/node/.npmrc
+      - ~/.bowerrc:/home/node/.bowerrc
+      - ~/.gitconfig:/home/node/.gitconfig
