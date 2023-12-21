@@ -93,7 +93,7 @@ routes.define(function ($routeProvider) {
             });
     }
 
-    if (model.me.hasWorkflow(rights.workflow.manageStatementAbsences)) {
+    if (model.me.hasWorkflow(rights.workflow.manageStatementAbsences) || model.me.hasWorkflow(rights.workflow.manageStatementAbsencesRestricted)) {
         $routeProvider
             .when('/statements-absences', {
                 action: 'statements-absences'
