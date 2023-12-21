@@ -20,6 +20,7 @@ import java.util.List;
 
 public class Sms extends MassMailingProcessor {
     private EventBus eventBus;
+    private final SmsSender smsSender;
 
     public Sms(EventBus eb, String structure, Template template, Boolean massmailed, List<MassmailingType> massmailingTypeList,
                List<Integer> reasons, List<Integer> punishmentsTypes, List<Integer> sanctionsTypes, String start, String end,
@@ -27,6 +28,7 @@ public class Sms extends MassMailingProcessor {
         super(MailingType.SMS, structure, template, massmailed, massmailingTypeList, reasons, punishmentsTypes, sanctionsTypes,
                 start, end, noReason,  isMultiple, students);
         this.eventBus = eb;
+        smsSender = SmsSenderFactory.getInstance().newInstance(EventStoreFactory.getFactory().getEventStore(Sms.class.getSimpleName()));
     }
 
 
@@ -65,7 +67,6 @@ public class Sms extends MassMailingProcessor {
             message += "...";
         }
 
-        final SmsSender smsSender = SmsSenderFactory.getInstance().newInstance(EventStoreFactory.getFactory().getEventStore(Sms.class.getSimpleName()));
         smsSender.send(request, sms.getString("contact"), message, Massmailing.MODULE)
                 .onSuccess(report -> saveMassmailing(sms, handler))
                 .onFailure(failure -> {
