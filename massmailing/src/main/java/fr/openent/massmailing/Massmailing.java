@@ -12,11 +12,11 @@ import fr.wseduc.mongodb.MongoDb;
 import fr.wseduc.webutils.email.EmailSender;
 import io.vertx.core.eventbus.EventBus;
 import io.vertx.core.json.JsonObject;
-import io.vertx.core.shareddata.LocalMap;
 import org.entcore.common.bus.WorkspaceHelper;
 import org.entcore.common.email.EmailFactory;
 import org.entcore.common.http.BaseServer;
 import org.entcore.common.neo4j.Neo4j;
+import org.entcore.common.sms.SmsSenderFactory;
 import org.entcore.common.sql.Sql;
 import org.entcore.common.storage.Storage;
 import org.entcore.common.storage.StorageFactory;
@@ -32,7 +32,7 @@ public class Massmailing extends BaseServer {
     public static final String MANAGE_RESTRICTED = "massmailing.manage.restricted";
     public static final String VIEW = "massmailing.view";
 
-    public static String SMS_ADDRESS = "entcore.sms";
+    public static String MODULE = "PRESENCES";
 
     public static Integer PAGE_SIZE = 20;
 
@@ -47,6 +47,7 @@ public class Massmailing extends BaseServer {
         Storage storage = new StorageFactory(vertx, config).getStorage();
         types = mailingsConfig();
         emailSender = new EmailFactory(vertx, config).getSender();
+        SmsSenderFactory.getInstance().init(vertx, config);
         workspaceHelper = new WorkspaceHelper(eb, storage);
         Sql sqlAdmin = Sql.createInstance(vertx.eventBus(), Field.SQLPERSISTORADMIN);
 
@@ -63,15 +64,6 @@ public class Massmailing extends BaseServer {
         Viescolaire.getInstance().init(eb);
 
         vertx.setTimer(30000, handle -> new DatabaseStarter().init(sqlAdmin));
-        setEbAddresses();
-    }
-
-    private void setEbAddresses() {
-        LocalMap<Object, Object> server = vertx.sharedData().getLocalMap("server");
-        if (server != null) {
-            final String node = (String) server.get("node");
-            SMS_ADDRESS = (node != null ? node : "") + SMS_ADDRESS;
-        }
     }
 
     private HashMap<MailingType, Boolean> mailingsConfig() {

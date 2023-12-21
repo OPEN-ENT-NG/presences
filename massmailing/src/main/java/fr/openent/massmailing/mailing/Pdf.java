@@ -39,7 +39,7 @@ public class Pdf extends MassMailingProcessor {
     }
 
     @Override
-    public void massmail(Handler<Either<String, Boolean>> handler) {
+    public void massmail(HttpServerRequest request, Handler<Either<String, Boolean>> handler) {
         super.process(event -> {
             if (event.isLeft()) {
                 String message = "[Massmailing@Pdf::massmail] Failed to process pdf";

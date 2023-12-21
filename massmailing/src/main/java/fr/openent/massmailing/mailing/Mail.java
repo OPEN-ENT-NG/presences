@@ -10,6 +10,7 @@ import fr.wseduc.webutils.email.EmailSender;
 import io.vertx.core.CompositeFuture;
 import io.vertx.core.Future;
 import io.vertx.core.Handler;
+import io.vertx.core.http.HttpServerRequest;
 import io.vertx.core.json.JsonObject;
 
 import java.util.ArrayList;
@@ -27,7 +28,7 @@ public class Mail extends MassMailingProcessor {
     }
 
     @Override
-    public void massmail(Handler<Either<String, Boolean>> handler) {
+    public void massmail(HttpServerRequest request, Handler<Either<String, Boolean>> handler) {
         super.process(event -> {
             if (event.isLeft()) {
                 String errorMessage = "[Massmailing@Mail] Failed to process mailing";
