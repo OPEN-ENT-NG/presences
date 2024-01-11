@@ -6,7 +6,7 @@ import fr.openent.statistics_presences.bean.Report;
 import fr.openent.statistics_presences.service.CommonServiceFactory;
 import fr.openent.statistics_presences.service.StatisticsPresencesService;
 import fr.wseduc.webutils.email.EmailSender;
-import fr.wseduc.webutils.template.TemplateProcessor;
+import fr.wseduc.webutils.template.FileTemplateProcessor;
 import fr.wseduc.webutils.template.lambdas.I18nLambda;
 import fr.wseduc.webutils.template.lambdas.LocaleDateLambda;
 import io.vertx.core.*;
@@ -29,7 +29,7 @@ public class ProcessingScheduledTask implements Handler<Long> {
     Vertx vertx;
     EmailSender emailSender;
     JsonObject config;
-    TemplateProcessor templateProcessor;
+    FileTemplateProcessor templateProcessor;
     Long start = null;
     StatisticsPresencesService statisticsPresencesService;
 
@@ -59,7 +59,8 @@ public class ProcessingScheduledTask implements Handler<Long> {
     }
 
     private void initTemplateProcessor() {
-        templateProcessor = new TemplateProcessor(vertx, "template").escapeHTML(false);
+        templateProcessor = new FileTemplateProcessor(vertx, "template");
+        templateProcessor.escapeHTML(false);
         templateProcessor.setLambda("i18n", new I18nLambda("fr"));
         templateProcessor.setLambda("datetime", new LocaleDateLambda("fr"));
     }

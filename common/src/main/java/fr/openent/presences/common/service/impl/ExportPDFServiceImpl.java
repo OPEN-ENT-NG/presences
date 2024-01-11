@@ -2,7 +2,7 @@ package fr.openent.presences.common.service.impl;
 
 import fr.openent.presences.common.service.ExportPDFService;
 import fr.wseduc.webutils.Either;
-import fr.wseduc.webutils.template.TemplateProcessor;
+import fr.wseduc.webutils.template.FileTemplateProcessor;
 import fr.wseduc.webutils.template.lambdas.I18nLambda;
 import fr.wseduc.webutils.template.lambdas.LocaleDateLambda;
 import io.vertx.core.Future;
@@ -210,8 +210,9 @@ public class ExportPDFServiceImpl implements ExportPDFService {
     }
 
 
-    private TemplateProcessor initTemplateProcessor() {
-        TemplateProcessor templateProcessor = new TemplateProcessor(vertx, "template").escapeHTML(false);
+    private FileTemplateProcessor initTemplateProcessor() {
+        FileTemplateProcessor templateProcessor = new FileTemplateProcessor(vertx, "template");
+        templateProcessor.escapeHTML(false);
         templateProcessor.setLambda("i18n", new I18nLambda("fr"));
         templateProcessor.setLambda("datetime", new LocaleDateLambda("fr"));
         return templateProcessor;

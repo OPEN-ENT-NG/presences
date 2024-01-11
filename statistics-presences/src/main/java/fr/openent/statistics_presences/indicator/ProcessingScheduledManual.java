@@ -8,7 +8,7 @@ import fr.openent.presences.model.StructureStatisticsUser;
 import fr.openent.statistics_presences.StatisticsPresences;
 import fr.openent.statistics_presences.bean.Report;
 import fr.openent.statistics_presences.service.CommonServiceFactory;
-import fr.wseduc.webutils.template.TemplateProcessor;
+import fr.wseduc.webutils.template.FileTemplateProcessor;
 import fr.wseduc.webutils.template.lambdas.I18nLambda;
 import fr.wseduc.webutils.template.lambdas.LocaleDateLambda;
 import io.vertx.core.Future;
@@ -32,7 +32,7 @@ import java.util.stream.Collectors;
 public class ProcessingScheduledManual extends BusModBase implements Handler<Message<JsonObject>> {
     Logger log = LoggerFactory.getLogger(ProcessingScheduledManual.class);
     private CommonServiceFactory commonServiceFactory;
-    TemplateProcessor templateProcessor;
+    FileTemplateProcessor templateProcessor;
     Long start = null;
 
     @Override
@@ -92,7 +92,8 @@ public class ProcessingScheduledManual extends BusModBase implements Handler<Mes
     }
 
     protected void initTemplateProcessor() {
-        templateProcessor = new TemplateProcessor(vertx, "template").escapeHTML(false);
+        templateProcessor = new FileTemplateProcessor(vertx, "template");
+        templateProcessor.escapeHTML(false);
         templateProcessor.setLambda("i18n", new I18nLambda("fr"));
         templateProcessor.setLambda("datetime", new LocaleDateLambda("fr"));
     }
