@@ -43,8 +43,8 @@ $md-radio-ripple-size: 15px;
       border: 2px solid $md-radio-border-color;
     }
     &:after {
-      top: calc($md-radio-size / 2 - $md-radio-checked-size / 2 - 0.2);
-      left: calc($md-radio-size / 2 - $md-radio-checked-size / 2 - 0.2);
+      top: calc($md-radio-size / 2 - $md-radio-checked-size / 2 - 0.2px);
+      left: calc($md-radio-size / 2 - $md-radio-checked-size / 2 - 0.2px);
       width:$md-radio-checked-size;
       height:$md-radio-checked-size;
       transform: scale(0);
