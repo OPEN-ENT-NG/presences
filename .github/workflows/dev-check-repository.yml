@@ -7,17 +7,19 @@ jobs:
     runs-on: ubuntu-latest
 
     container:
-      image: opendigitaleducation/node:10-alpine
+      image: opendigitaleducation/node:16-alpine
       options: --user root -v ${{ github.workspace }}:/home/node/:rw
 
     steps:
       - uses: actions/checkout@v1
-      - name: Run npm install
-        run: npm install
+      - name: Run yarn install
+        run: yarn install
       - name: Run build node with Gulp
         run: node_modules/gulp/bin/gulp.js build
       - name: Run test
-        run: npm test
+        run: yarn test
+      - name: Run build node sass
+        run: yarn run build:sass
 
   build-gradle-test:
     runs-on: ubuntu-latest
