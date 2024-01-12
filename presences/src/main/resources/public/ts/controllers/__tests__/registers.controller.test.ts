@@ -1,6 +1,6 @@
 import {ng} from '@presences/models/__mocks__/entcore';
 import * as angular from 'angular';
-import 'angular-mocks';
+import * as angularMock from 'angular-mocks/angular-mocks';
 import {Course} from "@presences/models";
 import DoneCallback = jest.DoneCallback;
 import {registersController, ViewModel} from "@presences/controllers";
@@ -15,14 +15,14 @@ describe('RegistersController', () => {
         const testApp = angular.module('app', []);
         let $controller, $rootScope;
 
-        angular.mock.module('app');
+        angularMock.module('app');
 
         registersController;
 
         ng.initMockedModules(testApp);
 
         // Controller Injection
-        angular.mock.inject((_$controller_, _$rootScope_) => {
+        angularMock.inject((_$controller_, _$rootScope_) => {
             // The injector unwraps the underscores (_) from around the parameter names when matching
             $controller = _$controller_;
             $rootScope = _$rootScope_;
