@@ -7,7 +7,8 @@
     "coverage": "./node_modules/.bin/jest --config jest.config.js --coverage",
     "test": "npm run coverage",
     "coverage:dev": "./node_modules/.bin/jest --config jest.config.js --coverage --watch --verbose false",
-    "test:dev": "npm run coverage:dev"
+    "test:dev": "npm run coverage:dev",
+    "build:sass": "sass --load-path=node_modules/ --no-source-map presences/src/main/resources/public/sass/index.scss presences/src/main/resources/public/css/presences.css"
   },
   "repository": {
     "type": "git",
@@ -19,6 +20,9 @@
     "url": ""
   },
   "homepage": "",
+  "resolutions": {
+    "graceful-fs": "^4.2.11"
+  },
   "dependencies": {
     "entcore": "4.8.0",
     "awesome-typescript-loader": "3.2.1",
@@ -38,6 +42,8 @@
     "apexcharts": "^3.26.0"
   },
   "devDependencies": {
+    "sass": "^1.49.9",
+    "entcore-css-lib": "npm:ode-csslib@4.0.12",
     "@types/angular": "1.8.3",
     "@types/angular-mocks": "1.7.4",
     "@types/core-js": "0.9.42",

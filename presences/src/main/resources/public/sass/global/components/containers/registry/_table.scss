@@ -151,7 +151,7 @@ ul {
 
         @for $i from 1 through 6 {
           .h#{$i} {
-            height: $registry-line-height / $i;
+            height: calc($registry-line-height / $i);
           }
         }
       }
