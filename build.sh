@@ -95,6 +95,14 @@ buildCss() {
     docker-compose run --rm -u "$USER_UID:$GROUP_GID" node sh -c "yarn run build:sass"
 }
 
+buildGulp() {
+    docker-compose run --rm -u "$USER_UID:$GROUP_GID" node sh -c "yarn install --no-bin-links && node_modules/gulp/bin/gulp.js build"
+}
+
+buildCss() {
+    docker-compose run --rm -u "$USER_UID:$GROUP_GID" node sh -c "yarn run build:sass"
+}
+
 publish() {
   version=`docker compose run --rm maven mvn $MVN_OPTS help:evaluate -Dexpression=project.version -q -DforceStdout`
   level=`echo $version | cut -d'-' -f3`
@@ -193,6 +201,12 @@ for param in "$@"; do
     ;;
   buildMaven)
     install
+    ;;
+  buildGulp)
+    buildGulp
+    ;;
+  buildCss)
+    buildCss
     ;;
   buildGulp)
     buildGulp
