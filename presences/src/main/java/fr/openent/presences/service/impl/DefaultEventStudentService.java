@@ -96,8 +96,12 @@ public class DefaultEventStudentService implements EventStudentService {
 
         Viescolaire.getInstance().getStudentTimeslot(studentIdList, structureId)
                 .onSuccess(studentTimeSlotList -> {
-                    settings.put(Field.STUDENT_TIMESLOT, studentTimeSlotList);
-                    promise.complete(settings);
+                    /*settings.put(Field.STUDENT_TIMESLOT, studentTimeSlotList);
+                    promise.complete(settings);*/
+                    String message = String.format("[Presences@%s::setStudentTimeslot] Fail to set settings student timeslot.",
+                            this.getClass().getSimpleName());
+                    log.error(String.format("%s %s", message));
+                    promise.fail(message);
                 })
                 .onFailure(error -> {
                     String message = String.format("[Presences@%s::setStudentTimeslot] Fail to set settings student timeslot.",
