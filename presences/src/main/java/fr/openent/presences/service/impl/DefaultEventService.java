@@ -1572,6 +1572,8 @@ public class DefaultEventService extends DBService implements EventService {
                 .compose(eventType -> {
                     params.put(Field.EVENTTYPE, I18n.getInstance()
                             .translate(eventType.getLabel() + Field.DOTNOTIFICATION, Renders.getHost(request), I18n.acceptLanguage(request)));
+                    params.put(Field.EVENTTYPEDECLARATION, I18n.getInstance()
+                            .translate(eventType.getLabel() + Field.DOTNOTIFICATION + Field.DOTDECLARATION, Renders.getHost(request), I18n.acceptLanguage(request)));
                     return Viescolaire.getInstance().getResponsables(event.getString(Field.STUDENT_ID));
                 })
                 .onSuccess(responsablesIds -> {

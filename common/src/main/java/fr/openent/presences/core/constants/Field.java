@@ -385,7 +385,9 @@ public class Field {
     public static final String IDRESPONSABLE = "idResponsable";
     public static final String OLDEVENTTYPE = "oldEventType";
     public static final String DOTNOTIFICATION = ".notification";
+    public static final String DOTDECLARATION = ".declaration";
     public static final String SQLPERSISTORADMIN = "sql.persistor.admin";
+    public static final String EVENTTYPEDECLARATION = "eventTypeDeclaration";
 
     private Field() {
         throw new IllegalStateException("Utility class");
