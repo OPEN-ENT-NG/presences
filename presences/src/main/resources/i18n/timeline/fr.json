@@ -23,8 +23,7 @@
   "presences.push.event.created": "Event créé",
   "presences.push.notif.event.created.title": "Nouvel événement créé",
   "presences.timeline.a": "Un/Une",
-  "presences.timeline.has.been.declared": "a été déclaré dans l'application Présences pour l'élève",
+  "presences.timeline.has.been.for.student": "dans l'application Présences pour l'élève",
   "presences.push.event.edited": "Event modifié",
-  "presences.push.notif.event.edited.title": "Événement modifié",
-  "presences.timeline.has.been.edited": "a été modifié dans l'application Présences pour l'élève"
+  "presences.push.notif.event.edited.title": "Événement modifié"
 }
