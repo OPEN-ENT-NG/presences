@@ -1548,16 +1548,18 @@ public class DefaultEventService extends DBService implements EventService {
         Promise<Void> promise = Promise.promise();
 
         JsonObject params = new JsonObject().put(Field.RESOURCEURI, "/presences#/dashboard");
-        String notificationTitle, notificationName;
+        String notificationTitle, notificationName, eventMode;
 
         if(event.getString(Field.OLDEVENTTYPE) != null){ //If we have the oldEventType, it means we are in edition mode, else in creation
             notificationTitle = "presences.push.event.edited";
             notificationName = "presences.event-update";
+            eventMode = ".edition";
             params.put(Field.OLDEVENTTYPE, event.getString(Field.OLDEVENTTYPE));
         }
         else {
             notificationTitle = "presences.push.event.created";
             notificationName = "presences.event-creation";
+            eventMode = ".creation";
         }
 
         params.put(Field.PUSHNOTIF, new JsonObject()
@@ -1571,7 +1573,7 @@ public class DefaultEventService extends DBService implements EventService {
                 })
                 .compose(eventType -> {
                     params.put(Field.EVENTTYPE, I18n.getInstance()
-                            .translate(eventType.getLabel() + Field.DOTNOTIFICATION, Renders.getHost(request), I18n.acceptLanguage(request)));
+                            .translate(eventType.getLabel() + Field.DOTNOTIFICATION + eventMode, Renders.getHost(request), I18n.acceptLanguage(request)));
                     return Viescolaire.getInstance().getResponsables(event.getString(Field.STUDENT_ID));
                 })
                 .onSuccess(responsablesIds -> {
