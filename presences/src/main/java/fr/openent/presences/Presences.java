@@ -9,6 +9,7 @@ import fr.openent.presences.controller.*;
 import fr.openent.presences.controller.events.EventController;
 import fr.openent.presences.controller.events.LatenessEventController;
 import fr.openent.presences.cron.CreateDailyRegistersTask;
+import fr.openent.presences.cron.UpdateEventRegularizationTask;
 import fr.openent.presences.db.DB;
 import fr.openent.presences.event.PresencesRepositoryEvents;
 import fr.openent.presences.service.CommonPresencesServiceFactory;
@@ -150,6 +151,14 @@ public class Presences extends BaseServer {
             vertx.deployVerticle(CreateDailyPresenceWorker.class, new DeploymentOptions().setConfig(config).setWorker(true));
             try {
                 new CronTrigger(vertx, config.getString("registers-cron")).schedule(new CreateDailyRegistersTask(vertx.eventBus()));
+            } catch (ParseException e) {
+                log.fatal(e.getMessage(), e);
+            }
+        }
+
+        if (config.containsKey("cron-check-regularization") && config.getJsonObject("cron-check-regularization").getBoolean("enabled")) {
+            try {
+                new CronTrigger(vertx, config.getJsonObject("cron-check-regularization").getString("cron")).schedule(new UpdateEventRegularizationTask(vertx.eventBus()));
             } catch (ParseException e) {
                 log.fatal(e.getMessage(), e);
             }
