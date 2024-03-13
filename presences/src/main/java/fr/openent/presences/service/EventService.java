@@ -245,7 +245,6 @@ public interface EventService {
      */
     void createAction(JsonObject actionBody, Handler<Either<String, JsonObject>> handler);
 
-
     /**
      * Retrieve student absence rate for given period
      *
@@ -260,4 +259,6 @@ public interface EventService {
     Future<Void> sendEventNotification (JsonObject event, UserInfos user, HttpServerRequest request);
 
     Future<JsonObject> getEvent (Integer eventId);
+
+    Future<JsonObject> updateEventRegularization();
 }
