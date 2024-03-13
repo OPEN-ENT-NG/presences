@@ -32,6 +32,10 @@
         {% else %}
         "registers-cron": "0 15 * * * ? 2099",
         {% endif %}
+        "cron-check-regularization" : {
+            "enabled": true,
+            "cron": "0 0 7,10,13,16,19 ? * * *"
+        },
         "mails-list-cron": {{ presencesMailListCron }},
         {% if presencesMailListExport is defined %}
         "mails-list-export" : {{ presencesMailListExport }},

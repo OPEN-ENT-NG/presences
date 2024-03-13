@@ -12,6 +12,10 @@
         "userbook-host": "${host}",
         "export-cron": "0 0 0 1/3 * ? *",
         "registers-cron": "0 15,45 7-20 * * ? *",
+        "cron-check-regularization" : {
+                    "enabled": true,
+                    "cron": "0 0 7,10,13,16,19 ? * * *"
+        },
         "mails-list-cron": ["support.ent.fr@cgi.com"],
         "mails-list-export": [],
         "integration-mode" : "HTTP",

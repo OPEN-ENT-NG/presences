@@ -1544,6 +1544,22 @@ public class DefaultEventService extends DBService implements EventService {
         return promise.future();
     }
 
+    @Override
+    public Future<JsonObject> updateEventRegularization() {
+        Promise<JsonObject> promise = Promise.promise();
+
+        JsonArray params = new JsonArray();
+        String query = "UPDATE " + Presences.dbSchema + ".event" +
+                " SET counsellor_regularisation = true" +
+                " FROM " + Presences.dbSchema + ".absence" +
+                " WHERE event.counsellor_regularisation = false and absence.counsellor_regularisation = true and event.start_date >= absence.start_date and event.end_date <= absence.end_date and event.student_id = absence.student_id;";
+
+        sql.prepared(query, params, SqlResult.validUniqueResultHandler(FutureHelper.handlerEitherPromise(promise)));
+
+        return promise.future();
+    }
+
+
     public Future<Void> sendEventNotification(JsonObject event, UserInfos user, HttpServerRequest request) {
         Promise<Void> promise = Promise.promise();
 
