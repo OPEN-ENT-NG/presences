@@ -1,6 +1,6 @@
 import {ng} from "@presences/models/__mocks__/entcore"
 import * as angular from 'angular';
-import * as angularMock from 'angular-mocks/angular-mocks';
+import 'angular-mocks';
 import {GroupingService, GroupService, SearchService} from "@common/services";
 import {ReasonService} from "@presences/services";
 import {MassmailingService, settingsService} from "@massmailing/services";
@@ -21,7 +21,7 @@ describe('HomeControllers', () => {
         let $controller, $rootScope;
 
         //Mockup test module
-        angularMock.module('app');
+        angular.mock.module('app');
 
         //Instantiation of the services, controllers, directives we need
         homeController;
@@ -30,7 +30,7 @@ describe('HomeControllers', () => {
         ng.initMockedModules(testApp);
 
         //Controller Injection
-        angularMock.inject(function (_$controller_, _$rootScope_) {
+        angular.mock.inject(function (_$controller_, _$rootScope_) {
             // The injector unwraps the underscores (_) from around the parameter names when matching
             $controller = _$controller_;
             $rootScope = _$rootScope_;

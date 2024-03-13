@@ -1,7 +1,7 @@
 import {ng} from "@presences/models/__mocks__/entcore"
 import {PunishmentDetentionForm} from "@incidents/directives/punishment-form";
 import * as angular from 'angular';
-import * as angularMock from 'angular-mocks/angular-mocks';
+import 'angular-mocks';
 
 
 //TODO not functional
@@ -16,7 +16,7 @@ describe('PunishmentsDetentionForm', () => {
         let $compile, $rootScope;
 
         //Mockup test module
-        angularMock.module('app');
+        angular.mock.module('app');
 
         //Instantiation of the services, controllers, directives we need
         PunishmentDetentionForm;
@@ -25,7 +25,7 @@ describe('PunishmentsDetentionForm', () => {
         ng.initMockedModules(testApp);
 
         //Controller Injection
-        angularMock.inject(function (_$compile_, _$rootScope_) {
+        angular.mock.inject(function (_$compile_, _$rootScope_) {
             // The injector unwraps the underscores (_) from around the parameter names when matching
             $compile = _$compile_;
             $rootScope = _$rootScope_;

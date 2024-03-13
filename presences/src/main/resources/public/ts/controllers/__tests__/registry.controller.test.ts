@@ -1,6 +1,6 @@
 import {ng} from "@presences/models/__mocks__/entcore";
 import * as angular from 'angular';
-import * as angularMock from 'angular-mocks/angular-mocks';
+import 'angular-mocks';
 import {registryController} from "@presences/controllers";
 import {GroupService, SearchService} from "@common/services";
 import {RegistryEvent, registryService} from "@presences/services";
@@ -41,7 +41,7 @@ describe('RegistryController', () => {
         let $controller, $rootScope;
 
         // Mockup test module
-        angularMock.module('app');
+        angular.mock.module('app');
 
         // Instantiation of the services, controllers, directives we need
         registryController;
@@ -50,7 +50,7 @@ describe('RegistryController', () => {
         ng.initMockedModules(testApp);
 
         // Controller Injection
-        angularMock.inject((_$controller_, _$rootScope_) => {
+        angular.mock.inject((_$controller_, _$rootScope_) => {
             // The injector unwraps the underscores (_) from around the parameter names when matching
             $controller = _$controller_;
             $rootScope = _$rootScope_;
