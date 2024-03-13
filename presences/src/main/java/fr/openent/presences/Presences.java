@@ -156,7 +156,7 @@ public class Presences extends BaseServer {
             }
         }
 
-        if (config.containsKey("cron-check-regularization") && config.getJsonObject("cron-check-regularization").getBoolean("enabled")) {
+        if (config.containsKey("cron-check-regularization") && Boolean.TRUE.equals(config.getJsonObject("cron-check-regularization").getBoolean("enabled"))) {
             try {
                 new CronTrigger(vertx, config.getJsonObject("cron-check-regularization").getString("cron")).schedule(new UpdateEventRegularizationTask(vertx.eventBus()));
             } catch (ParseException e) {
