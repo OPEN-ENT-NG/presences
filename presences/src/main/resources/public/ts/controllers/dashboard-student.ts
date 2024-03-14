@@ -259,6 +259,7 @@ export const dashboardStudentController = ng.controller('DashboardStudentControl
                         incidentService.getStudentEvents(prepareEventRequest([type], 0, 0,
                             DateUtils.START_DAY_TIME, DateUtils.END_DAY_TIME))
                             .then((value) => {
+                                // @ts-ignore
                                 vm.incidentsEvents.all[type] = value.all[type];
                                 $scope.safeApply();
                             })

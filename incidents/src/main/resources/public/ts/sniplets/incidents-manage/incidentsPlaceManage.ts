@@ -27,7 +27,7 @@ interface ViewModel {
 
 function safeApply() {
     let that = incidentsPlaceManage.that;
-    return new Promise((resolve, reject) => {
+    return new Promise<void>((resolve, reject) => {
         var phase = that.$root.$$phase;
         if (phase === '$apply' || phase === '$digest') {
             if (resolve && (typeof (resolve) === 'function')) resolve();

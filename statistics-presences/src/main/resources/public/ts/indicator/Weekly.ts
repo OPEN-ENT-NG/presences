@@ -54,7 +54,7 @@ export class Weekly extends Indicator {
     }
 
     async search(start: Date, end: Date, users: string[], audiences: string[]): Promise<void> {
-        await new Promise((resolve, reject) => {
+        await new Promise<void>((resolve, reject) => {
             if (audiences.length == 0 && users.length == 0) {
                 this.values = {slots: []};
                 resolve();
