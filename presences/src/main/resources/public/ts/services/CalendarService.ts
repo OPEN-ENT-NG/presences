@@ -108,6 +108,7 @@ export const calendarService = ng.service('CalendarService', (): CalendarService
                 course.events = course.events.sort((a, b) => {
                     return moment(a.start_date) - moment(b.start_date);
                 });
+                // @ts-ignore: Unreachable code error
                 this.locked = true;
             });
             return buildCalendarCourses(data);

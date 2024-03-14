@@ -50,7 +50,7 @@ export class Global extends Indicator {
     }
 
     async search(start: Date, end: Date, users: Array<string>, audiences: Array<string>): Promise<void> {
-        await new Promise((resolve, reject) => {
+        await new Promise<void>((resolve, reject) => {
             super.fetchIndicator(start, end, users, audiences)
                 .then((res: GlobalResponse): void => {
                     this.values = {

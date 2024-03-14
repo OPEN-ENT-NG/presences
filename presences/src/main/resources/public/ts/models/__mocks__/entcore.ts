@@ -23,19 +23,19 @@ const services: Array<IService> = [];
 
 export const ng = {
     service: jest.fn((name: string, contents: any): void => {
-        this.ng.services.push({name, contents});
+        ng.services.push({name, contents});
     }),
     directive: jest.fn((name: string, contents: any): void => {
-        this.ng.directives.push({name, contents});
+        ng.directives.push({name, contents});
     }),
     controller: jest.fn((name: string, contents: any): void => {
-        this.ng.controllers.push({name, contents});
+        ng.controllers.push({name, contents});
     }),
     // init services, controller and directives
     initMockedModules: jest.fn((app: any): void => {
-        this.ng.services.forEach((s) => app.service(s.name, s.contents));
-        this.ng.directives.forEach((d) => app.directive(d.name, d.contents));
-        this.ng.controllers.forEach((c) => app.controller(c.name, c.contents));
+        ng.services.forEach((s) => app.service(s.name, s.contents));
+        ng.directives.forEach((d) => app.directive(d.name, d.contents));
+        ng.controllers.forEach((c) => app.controller(c.name, c.contents));
     }),
     controllers: controllers,
     directives: directives,

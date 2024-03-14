@@ -52,7 +52,7 @@ export class Monthly extends Indicator {
     }
 
     async searchTable(start: Date, end: Date, users: string[], audiences: string[]): Promise<void> {
-        await new Promise((resolve, reject) => {
+        await new Promise<void>((resolve, reject) => {
             super.fetchIndicator(start, end, users, audiences)
                 .then((res: IMonthly) => {
                     this._mapResults(res);
@@ -66,7 +66,7 @@ export class Monthly extends Indicator {
 
 
     async searchGraph(start: Date, end: Date, users: string[], audiences: string[]): Promise<void> {
-        await new Promise((resolve, reject) => {
+        await new Promise<void>((resolve, reject) => {
             super.fetchGraphIndicator(start, end, users, audiences)
                 .then((res: IMonthlyGraph) => {
                     this.graphValues = res;

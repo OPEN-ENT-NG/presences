@@ -1,6 +1,6 @@
 import {ng} from '@presences/models/__mocks__/entcore';
 import * as angular from 'angular';
-import * as angularMock from 'angular-mocks/angular-mocks';
+import 'angular-mocks';
 
 import {DayCourseVm, dayCourse} from '@presences/controllers/widgets/day-course';
 import {Course} from "@presences/models";
@@ -14,14 +14,15 @@ describe('DayCourse', () => {
         const testApp = angular.module('app', []);
         let $controller, $rootScope;
 
-        angularMock.module('app');
+        angular.mock.module('app');
+
 
         dayCourse;
 
         ng.initMockedModules(testApp);
 
         // Controller Injection
-        angularMock.inject((_$controller_, _$rootScope_) => {
+        angular.mock.inject((_$controller_, _$rootScope_) => {
             // The injector unwraps the underscores (_) from around the parameter names when matching
             $controller = _$controller_;
             $rootScope = _$rootScope_;
