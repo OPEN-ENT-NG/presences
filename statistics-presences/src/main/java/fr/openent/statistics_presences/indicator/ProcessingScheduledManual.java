@@ -143,7 +143,7 @@ public class ProcessingScheduledManual extends BusModBase implements Handler<Mes
             indicatorFutures.add(indicator.process(structures));
         }
 
-        FutureHelper.join(indicatorFutures)
+        Future.join(indicatorFutures)
                 .onSuccess(success -> {
                     List<Report> reports = new ArrayList<>();
                     for (Future<Report> reportFuture : indicatorFutures) {

@@ -70,7 +70,7 @@ public class MassmailingController extends ControllerHelper {
                     .put("action", "user.getActivesStructure")
                     .put("module", "presences")
                     .put("structures", new JsonArray(user.getStructures()));
-            eb.send("viescolaire", action, event -> {
+            eb.request("viescolaire", action, event -> {
                 JsonObject body = (JsonObject) event.result().body();
                 if (event.failed() || "error".equals(body.getString("status"))) {
                     log.error("[Massmailer@MassmailerController] Failed to retrieve actives structures");
@@ -209,10 +209,10 @@ public class MassmailingController extends ControllerHelper {
             Promise<JsonObject> promise = Promise.promise();
             futures.add(promise.future());
             massmailingService.getStatus(structure, type, massmailed, reasons, punishmentsTypes, sanctionsTypes, startAt, startDate,
-                    endDate, students, noLatenessReasons, FutureHelper.handlerJsonObject(promise));
+                    endDate, students, noLatenessReasons, FutureHelper.handlerEitherPromise(promise));
         }
 
-        FutureHelper.all(futures)
+        Future.all(futures)
                 .onFailure(fail -> {
                     String message = String.format("[Massmailing@%s::processMassmailingStatus] Failed to retrieve status]",
                             this.getClass().getSimpleName());
@@ -326,10 +326,10 @@ public class MassmailingController extends ControllerHelper {
                 Promise<JsonArray> promise = Promise.promise();
                 futures.add(promise.future());
                 massmailingService.getCountEventByStudent(structure, type, massmailed, reasons, punishmentsTypes, sanctionsTypes,
-                        startAt, startDate, endDate, students, noReasons, FutureHelper.handlerJsonArray(promise));
+                        startAt, startDate, endDate, students, noReasons, FutureHelper.handlerEitherPromise(promise));
             }
 
-            FutureHelper.all(futures)
+            Future.all(futures)
                     .onFailure(fail -> {
                         String message = String.format("[Massmailing@%s::getMassmailingsAnomalies] Failed to retrieve count " +
                                 "event for anomalies request", this.getClass().getSimpleName());
@@ -379,15 +379,15 @@ public class MassmailingController extends ControllerHelper {
      * @param handler  Function handler returning data
      */
     private void processAnomalies(List<String> students, Handler<Either<String, JsonArray>> handler) {
-        List<Future> futures = new ArrayList<>();
+        List<Future<JsonArray>> futures = new ArrayList<>();
 
         for (MailingType type : typesToCheck) {
-            Future<JsonArray> future = Future.future();
-            futures.add(future);
-            massmailingService.getAnomalies(type, students, FutureHelper.handlerJsonArray(future));
+            Promise<JsonArray> promise = Promise.promise();
+            futures.add(promise.future());
+            massmailingService.getAnomalies(type, students, FutureHelper.handlerEitherPromise(promise));
         }
 
-        CompositeFuture.all(futures).setHandler(event -> {
+        Future.all(futures).onComplete(event -> {
             if (event.failed()) {
                 String message = "[Massmailing@MassmailingController] Failed to retrieve anomalies";
                 log.error(message, event.cause());
@@ -482,10 +482,10 @@ public class MassmailingController extends ControllerHelper {
                 Promise<JsonArray> promise = Promise.promise();
                 futures.add(promise.future());
                 massmailingService.getCountEventByStudent(structure, type, massmailed, reasons, punishmentsTypes, sanctionsTypes,
-                        startAt, startDate, endDate, students, noReasons, FutureHelper.handlerJsonArray(promise));
+                        startAt, startDate, endDate, students, noReasons, FutureHelper.handlerEitherPromise(promise));
             }
 
-            FutureHelper.all(futures)
+            Future.all(futures)
                     .onFailure(fail -> {
                         String message = String.format("[Massmailing@%s::prefetch] Failed to retrieve count " +
                                 "event for prefetch request", this.getClass().getSimpleName());
@@ -570,11 +570,11 @@ public class MassmailingController extends ControllerHelper {
     }
 
     private void processRelatives(MailingType mailingType, List<String> students, Handler<Either<String, JsonObject>> handler) {
-        Future<JsonArray> anomaliesFuture = Future.future();
-        Future<JsonArray> relativesFuture = Future.future();
-        massmailingService.getAnomalies(mailingType, students, FutureHelper.handlerJsonArray(anomaliesFuture));
-        massmailingService.getRelatives(mailingType, students, FutureHelper.handlerJsonArray(relativesFuture));
-        CompositeFuture.all(anomaliesFuture, relativesFuture).setHandler(futureEvent -> {
+        Promise<JsonArray> anomaliesPromise = Promise.promise();
+        Promise<JsonArray> relativesPromise = Promise.promise();
+        massmailingService.getAnomalies(mailingType, students, FutureHelper.handlerEitherPromise(anomaliesPromise));
+        massmailingService.getRelatives(mailingType, students, FutureHelper.handlerEitherPromise(relativesPromise));
+        Future.all(anomaliesPromise.future(), relativesPromise.future()).onComplete(futureEvent -> {
             if (futureEvent.failed()) {
                 String message = "[Massmailing@processRelatives] Failed to retrieve data";
                 log.error(message, futureEvent.cause());
@@ -582,9 +582,9 @@ public class MassmailingController extends ControllerHelper {
                 return;
             }
 
-            List<String> anomalies = getIdsList(anomaliesFuture.result());
+            List<String> anomalies = getIdsList(anomaliesPromise.future().result());
             JsonObject result = new JsonObject()
-                    .put("values", filterRelatives(relativesFuture.result(), anomalies))
+                    .put("values", filterRelatives(relativesPromise.future().result(), anomalies))
                     .put("anomalies_count", anomalies.size());
             handler.handle(new Either.Right<>(result));
         });

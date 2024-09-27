@@ -118,7 +118,7 @@ public class Pdf extends MassMailingProcessor {
         String file_id = file.getString("_id");
         String metadata = file.getJsonObject("metadata").toString();
 
-        FutureHelper.join(listPdfFuture(pdfs, file_id, metadata)).setHandler(event -> {
+        Future.join(listPdfFuture(pdfs, file_id, metadata)).onComplete(event -> {
             if (event.failed()) {
                 String message = "[Massmailing@Pdf::saveMailings] Failed to save pdf mailing";
                 LOGGER.error(String.format("%s %s", message, event.cause().getMessage()));
@@ -133,11 +133,11 @@ public class Pdf extends MassMailingProcessor {
     private List<Future<JsonObject>> listPdfFuture(List<JsonObject> pdfs, String file_id, String metadata) {
         List<Future<JsonObject>> futures = new ArrayList<>();
         for (JsonObject pdf : pdfs) {
-            Future<JsonObject> future = Future.future();
-            futures.add(future);
+            Promise<JsonObject> promise = Promise.promise();
+            futures.add(promise.future());
             pdf.put("file_id", file_id);
             pdf.put("metadata", metadata);
-            saveMassmailing(pdf, FutureHelper.handlerJsonObject(future));
+            saveMassmailing(pdf, FutureHelper.handlerEitherPromise(promise));
         }
         return futures;
     }

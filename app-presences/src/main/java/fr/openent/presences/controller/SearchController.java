@@ -186,7 +186,7 @@ public class SearchController extends ControllerHelper {
     }
 
     private void callViescolaireEventBus(JsonObject action, HttpServerRequest request) {
-        eb.send("viescolaire", action, handlerToAsyncHandler(event -> {
+        eb.request("viescolaire", action, handlerToAsyncHandler(event -> {
             JsonObject body = event.body();
             if (!"ok".equals(body.getString("status"))) {
                 log.error("[Presences@SearchController::callViescolaireEventBus] An error has occured while using viescolaire eb");

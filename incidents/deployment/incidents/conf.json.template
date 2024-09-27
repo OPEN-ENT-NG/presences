@@ -1,5 +1,5 @@
     {
-      "name": "fr.openent~incidents~1.6-SNAPSHOT",
+      "name": "fr.openent~incidents~2.0-b2school-SNAPSHOT",
       "config": {
         "main" : "fr.openent.incidents.Incidents",
         "port" : 8063,

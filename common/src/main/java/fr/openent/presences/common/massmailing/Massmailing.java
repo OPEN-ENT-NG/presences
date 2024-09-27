@@ -37,7 +37,7 @@ public class Massmailing {
                 .put(Field.INITTYPE, initTypeEnum.getValue())
                 .put(Field.REQUEST, RequestHelper.getJsonRequest(request));
 
-        eb.send(address, action, MessageResponseHandler.messageJsonObjectHandler(handler));
+        eb.request(address, action, MessageResponseHandler.messageJsonObjectHandler(handler));
     }
 
     private static class ViescolaireHolder {

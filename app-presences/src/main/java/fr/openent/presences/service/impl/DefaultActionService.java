@@ -7,6 +7,7 @@ import fr.wseduc.webutils.Either;
 import io.vertx.core.CompositeFuture;
 import io.vertx.core.Future;
 import io.vertx.core.Handler;
+import io.vertx.core.Promise;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import io.vertx.core.logging.Logger;
@@ -22,20 +23,20 @@ public class DefaultActionService implements ActionService {
 
     @Override
     public void get(String structureId, Handler<Either<String, JsonArray>> handler) {
-        Future<JsonArray> actionsFuture = Future.future();
-        Future<JsonArray> actionsUsedFuture = Future.future();
+        Promise<JsonArray> actionsPromise = Promise.promise();
+        Promise<JsonArray> actionsUsedPromise = Promise.promise();
 
-        fetchActions(structureId, FutureHelper.handlerJsonArray(actionsFuture));
-        fetchUsedAction(structureId, FutureHelper.handlerJsonArray(actionsUsedFuture));
+        fetchActions(structureId, FutureHelper.handlerEitherPromise(actionsPromise));
+        fetchUsedAction(structureId, FutureHelper.handlerEitherPromise(actionsUsedPromise));
 
-        CompositeFuture.all(actionsFuture, actionsUsedFuture).setHandler(event -> {
+        Future.all(actionsPromise.future(), actionsUsedPromise.future()).onComplete(event -> {
             if (event.failed()) {
                 String message = "[Presences@DefaultActionService] Failed to fetch action";
                 LOGGER.error(message);
                 handler.handle(new Either.Left<>(message));
             } else {
-                JsonArray actions = actionsFuture.result();
-                JsonArray actionUsed = actionsUsedFuture.result();
+                JsonArray actions = actionsPromise.future().result();
+                JsonArray actionUsed = actionsUsedPromise.future().result();
                 for (int i = 0; i < actions.size(); i++) {
                     // set used false by default
                     actions.getJsonObject(i).put("used", false);

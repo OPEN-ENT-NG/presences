@@ -52,13 +52,13 @@ public class DefaultIncidentsService extends SqlCrudService implements Incidents
                 }
 
 
-                Future<JsonArray> protagonistsFuture = Future.future();
-                Future<JsonArray> ownersFuture = Future.future();
+                Promise<JsonArray> protagonistsPromise = Promise.promise();
+                Promise<JsonArray> ownersPromise = Promise.promise();
 
-                setProtagonists(arrayIncidents, protagonistsFuture);
-                setOwners(arrayIncidents, ownersFuture);
+                setProtagonists(arrayIncidents, protagonistsPromise);
+                setOwners(arrayIncidents, ownersPromise);
 
-                CompositeFuture.all(protagonistsFuture, ownersFuture).setHandler(resultUsers -> {
+                Future.all(protagonistsPromise.future(), ownersPromise.future()).onComplete(resultUsers -> {
                     if (resultUsers.failed()) {
                         handler.handle(new Either.Left<>(resultUsers.cause().getMessage()));
                         return;
@@ -335,9 +335,9 @@ public class DefaultIncidentsService extends SqlCrudService implements Incidents
      * Get user infos from neo4j
      *
      * @param arrayIncidents incidents []
-     * @param future         future
+     * @param promise         promise
      */
-    private void setProtagonists(JsonArray arrayIncidents, Future<JsonArray> future) {
+    private void setProtagonists(JsonArray arrayIncidents, Promise<JsonArray> promise) {
         JsonArray protagonists = new JsonArray();
         for (int i = 0; i < arrayIncidents.size(); i++) {
             JsonArray protagonist = arrayIncidents.getJsonObject(i).getJsonArray("protagonists");
@@ -367,14 +367,14 @@ public class DefaultIncidentsService extends SqlCrudService implements Incidents
                         }
                     }
                 }
-                future.complete(arrayIncidents);
+                promise.complete(arrayIncidents);
             } else {
-                future.fail("Failed to query protagonist info");
+                promise.fail("Failed to query protagonist info");
             }
         }));
     }
 
-    private void setOwners(JsonArray arrayIncidents, Future<JsonArray> future) {
+    private void setOwners(JsonArray arrayIncidents, Promise<JsonArray> promise) {
         List<String> ownerIds = ((List<JsonObject>) arrayIncidents.getList())
                 .stream()
                 .map(res -> res.getString("owner"))
@@ -384,7 +384,7 @@ public class DefaultIncidentsService extends SqlCrudService implements Incidents
             if (resUsers.isLeft()) {
                 String message = "[Incidents@DefaultIncidentsService::setOwner] Failed to get Owners";
                 log.error(message);
-                future.fail(message);
+                promise.fail(message);
                 return;
             }
 
@@ -398,36 +398,37 @@ public class DefaultIncidentsService extends SqlCrudService implements Incidents
                 JsonObject res = (JsonObject) oRes;
                 res.put("owner", ownerMap.get(res.getString("owner")));
             });
-            future.complete(arrayIncidents);
+            promise.complete(arrayIncidents);
         });
     }
 
     @Override
     public void getIncidentParameter(String structureId, Handler<Either<String, JsonObject>> handler) {
-        Future<JsonArray> placeTypeFuture = Future.future();
-        Future<JsonArray> partnerTypeFuture = Future.future();
-        Future<JsonArray> incidentTypeFuture = Future.future();
-        Future<JsonArray> seriousnessLevelFuture = Future.future();
-        Future<JsonArray> protagonistTypeFuture = Future.future();
+        Promise<JsonArray> placeTypePromise = Promise.promise();
+        Promise<JsonArray> partnerTypePromise = Promise.promise();
+        Promise<JsonArray> incidentTypePromise = Promise.promise();
+        Promise<JsonArray> seriousnessLevelPromise = Promise.promise();
+        Promise<JsonArray> protagonistTypePromise = Promise.promise();
 
-        CompositeFuture.all(placeTypeFuture, partnerTypeFuture, incidentTypeFuture, seriousnessLevelFuture, protagonistTypeFuture).setHandler(event -> {
+        Future.all(placeTypePromise.future(), partnerTypePromise.future(), incidentTypePromise.future(),
+                seriousnessLevelPromise.future(), protagonistTypePromise.future()).onComplete(event -> {
             if (event.failed()) {
                 handler.handle(new Either.Left<>(event.cause().toString()));
             } else {
                 JsonObject res = new JsonObject()
-                        .put("place", placeTypeFuture.result())
-                        .put("partner", partnerTypeFuture.result())
-                        .put("incidentType", incidentTypeFuture.result())
-                        .put("protagonistType", protagonistTypeFuture.result())
-                        .put("seriousnessLevel", seriousnessLevelFuture.result());
+                        .put("place", placeTypePromise.future().result())
+                        .put("partner", partnerTypePromise.future().result())
+                        .put("incidentType", incidentTypePromise.future().result())
+                        .put("protagonistType", protagonistTypePromise.future().result())
+                        .put("seriousnessLevel", seriousnessLevelPromise.future().result());
                 handler.handle(new Either.Right<>(res));
             }
         });
-        getPlaceType(structureId, FutureHelper.handlerJsonArray(placeTypeFuture));
-        getPartnerType(structureId, FutureHelper.handlerJsonArray(partnerTypeFuture));
-        getIncidentType(structureId, FutureHelper.handlerJsonArray(incidentTypeFuture));
-        getProtagonistType(structureId, FutureHelper.handlerJsonArray(protagonistTypeFuture));
-        getSeriousnessLevel(structureId, FutureHelper.handlerJsonArray(seriousnessLevelFuture));
+        getPlaceType(structureId, FutureHelper.handlerEitherPromise(placeTypePromise));
+        getPartnerType(structureId, FutureHelper.handlerEitherPromise(partnerTypePromise));
+        getIncidentType(structureId, FutureHelper.handlerEitherPromise(incidentTypePromise));
+        getProtagonistType(structureId, FutureHelper.handlerEitherPromise(protagonistTypePromise));
+        getSeriousnessLevel(structureId, FutureHelper.handlerEitherPromise(seriousnessLevelPromise));
     }
 
     private void getPlaceType(String structureId, Handler<Either<String, JsonArray>> handler) {

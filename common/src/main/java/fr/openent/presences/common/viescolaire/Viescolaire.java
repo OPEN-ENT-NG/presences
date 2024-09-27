@@ -46,7 +46,7 @@ public class Viescolaire {
                 .put("action", "periode.getExclusionDays")
                 .put("idEtablissement", structureId);
 
-        eb.send(address, action, result -> {
+        eb.request(address, action, result -> {
             JsonObject body = (JsonObject) result.result().body();
             if (result.failed() || "error".equals(body.getString("status"))) {
                 String err = "[Common@ViescolaireHelper] Failed to retrieve exclusion days";
@@ -79,12 +79,12 @@ public class Viescolaire {
                 .put("action", "timeslot.getSlotProfileSettings")
                 .put("structureId", structureId);
 
-        eb.send(address, action, MessageResponseHandler.messageJsonObjectHandler(handler));
+        eb.request(address, action, MessageResponseHandler.messageJsonObjectHandler(handler));
     }
 
     public Future<JsonObject> getSlotProfileSetting(String structureId) {
         Promise<JsonObject> promise = Promise.promise();
-        getSlotProfileSetting(structureId, FutureHelper.handlerJsonObject(promise));
+        getSlotProfileSetting(structureId, FutureHelper.handlerEitherPromise(promise));
         return promise.future();
     }
 
@@ -93,7 +93,7 @@ public class Viescolaire {
                 .put("action", "timeslot.getSlotProfiles")
                 .put("structureId", structureId);
 
-        eb.send(address, action, MessageResponseHandler.messageJsonObjectHandler(handler));
+        eb.request(address, action, MessageResponseHandler.messageJsonObjectHandler(handler));
     }
 
     public void getSlotsFromProfile(String structureId, Handler<Either<String, JsonArray>> handler) {
@@ -101,7 +101,7 @@ public class Viescolaire {
                 .put("action", "timeslot.getSlotProfiles")
                 .put("structureId", structureId);
 
-        eb.send(address, action, MessageResponseHandler.messageJsonObjectHandler(event -> {
+        eb.request(address, action, MessageResponseHandler.messageJsonObjectHandler(event -> {
             if (event.isLeft()) {
                 String err = "[Common@ViescolaireHelper::getSlotsFromProfile] Failed to retrieve slots from profile";
                 LOGGER.error(err);
@@ -131,7 +131,7 @@ public class Viescolaire {
                 .put("action", "timeslot.getDefaultSlots")
                 .put("structureId", structureId);
 
-        eb.send(address, action, result -> {
+        eb.request(address, action, result -> {
             JsonObject body = (JsonObject) result.result().body();
             if (result.failed() || "error".equals(body.getString("status"))) {
                 String err = "[Common@ViescolaireHelper] Failed to retrieve default slots";
@@ -149,7 +149,7 @@ public class Viescolaire {
                 .put(Field.ACTION, "classe.getNbElevesGroupe")
                 .put(Field.IDGROUPES, audienceIds);
 
-        eb.request(address, action, MessageResponseHandler.messageJsonArrayHandler(FutureHelper.handlerJsonArray(promise)));
+        eb.request(address, action, MessageResponseHandler.messageJsonArrayHandler(FutureHelper.handlerEitherPromise(promise)));
         return promise.future();
     }
 
@@ -160,7 +160,7 @@ public class Viescolaire {
                 .put(Field.STRUCTUREID, structureId)
                 .put(Field.AUDIENCEIDS, audienceIds);
 
-        eb.request(address, action, MessageResponseHandler.messageJsonArrayHandler(FutureHelper.handlerJsonArray(promise)));
+        eb.request(address, action, MessageResponseHandler.messageJsonArrayHandler(FutureHelper.handlerEitherPromise(promise)));
         return promise.future();
     }
 

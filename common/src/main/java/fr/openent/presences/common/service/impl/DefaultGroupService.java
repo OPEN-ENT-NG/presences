@@ -34,24 +34,24 @@ public class DefaultGroupService extends DBService implements GroupService {
     @Override
     public void getGroupsId(String structureId, JsonArray groups, JsonArray classes,
                             Handler<Either<String, JsonObject>> handler) {
-        Future<JsonArray> groupFuture = Future.future();
-        Future<JsonArray> classFuture = Future.future();
-        Future<JsonArray> manualGroupFuture = Future.future();
-        CompositeFuture.all(groupFuture, classFuture, manualGroupFuture).setHandler(event -> {
+        Promise<JsonArray> groupPromise = Promise.promise();
+        Promise<JsonArray> classPromise = Promise.promise();
+        Promise<JsonArray> manualGroupPromise = Promise.promise();
+        Future.all(groupPromise.future(), classPromise.future(), manualGroupPromise.future()).onComplete(event -> {
             if (event.failed()) {
                 LOGGER.error(event.cause());
                 handler.handle(new Either.Left<>(event.cause().toString()));
             } else {
                 JsonObject res = new JsonObject()
-                        .put("classes", classFuture.result())
-                        .put("groups", groupFuture.result())
-                        .put("manualGroups", manualGroupFuture.result());
+                        .put("classes", classPromise.future().result())
+                        .put("groups", groupPromise.future().result())
+                        .put("manualGroups", manualGroupPromise.future().result());
                 handler.handle(new Either.Right<>(res));
             }
         });
-        getIdsFromClassOrGroups(structureId, groups, GroupType.GROUP, FutureHelper.handlerJsonArray(groupFuture));
-        getIdsFromClassOrGroups(structureId, classes, GroupType.CLASS, FutureHelper.handlerJsonArray(classFuture));
-        getIdsFromClassOrGroups(structureId, groups, GroupType.MANUAL_GROUP, FutureHelper.handlerJsonArray(manualGroupFuture));
+        getIdsFromClassOrGroups(structureId, groups, GroupType.GROUP, FutureHelper.handlerEitherPromise(groupPromise));
+        getIdsFromClassOrGroups(structureId, classes, GroupType.CLASS, FutureHelper.handlerEitherPromise(classPromise));
+        getIdsFromClassOrGroups(structureId, groups, GroupType.MANUAL_GROUP, FutureHelper.handlerEitherPromise(manualGroupPromise));
     }
 
     @Override
@@ -97,7 +97,7 @@ public class DefaultGroupService extends DBService implements GroupService {
                     .put("idClasse", id);
         }
 
-        eb.send("viescolaire", action, event -> {
+        eb.request("viescolaire", action, event -> {
             JsonObject body = (JsonObject) event.result().body();
             if (event.failed() || "error".equals(body.getString("status"))) {
                 String message = "[Presences@DefaultGroupService] Failed to retrieve users;";

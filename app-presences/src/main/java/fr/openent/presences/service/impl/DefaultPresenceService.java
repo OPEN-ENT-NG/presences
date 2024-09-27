@@ -53,17 +53,17 @@ public class DefaultPresenceService extends DBService implements PresenceService
     public void get(String structureId, String startDate, String endDate, List<String> userId,
                     List<String> ownerIds, List<String> audienceIds, Handler<Either<String, JsonArray>> handler) {
 
-        Future<JsonArray> presencesFuture = Future.future();
-        Future<JsonArray> disciplinesFuture = Future.future();
+        Promise<JsonArray> presencesPromise = Promise.promise();
+        Promise<JsonArray> disciplinesPromise = Promise.promise();
 
-        CompositeFuture.all(presencesFuture, disciplinesFuture).setHandler(presenceAsync -> {
+        Future.all(presencesPromise.future(), disciplinesPromise.future()).onComplete(presenceAsync -> {
             if (presenceAsync.failed()) {
                 String message = "[Presences@DefaultPresenceService] Failed to fetch presences or disciplines";
                 LOGGER.error(message + presenceAsync.cause());
                 handler.handle(new Either.Left<>(message + presenceAsync.cause()));
             } else {
-                List<Presence> presences = PresenceHelper.getPresenceListFromJsonArray(presencesFuture.result());
-                List<Discipline> disciplines = DisciplineHelper.getDisciplineListFromJsonArray(disciplinesFuture.result());
+                List<Presence> presences = PresenceHelper.getPresenceListFromJsonArray(presencesPromise.future().result());
+                List<Discipline> disciplines = DisciplineHelper.getDisciplineListFromJsonArray(disciplinesPromise.future().result());
 
                 List<String> usersId = new ArrayList<>();
                 List<Integer> presenceIds = new ArrayList<>();
@@ -73,10 +73,10 @@ public class DefaultPresenceService extends DBService implements PresenceService
                     presenceIds.add(presence.getId());
                 }
 
-                Future<JsonObject> userInfoFuture = Future.future();
-                Future<JsonObject> disciplineActionFuture = Future.future();
+                Promise<JsonObject> userInfoPromise = Promise.promise();
+                Promise<JsonObject> disciplineActionPromise = Promise.promise();
 
-                CompositeFuture.all(userInfoFuture, disciplineActionFuture).setHandler(dataAsync -> {
+                Future.all(userInfoPromise.future(), disciplineActionPromise.future()).onComplete(dataAsync -> {
                     if (dataAsync.failed()) {
                         String message = "[Presences@DefaultPresenceService] Failed to manipulate data while " +
                                 "using discipline and user info";
@@ -86,60 +86,60 @@ public class DefaultPresenceService extends DBService implements PresenceService
                         handler.handle(new Either.Right<>(PresenceHelper.toPresencesJsonArray(presences)));
                     }
                 });
-                interactUserInfo(structureId, presences, usersId, presenceIds, userInfoFuture);
-                presenceHelper.addDisciplineToPresence(presences, disciplines, disciplineActionFuture);
+                interactUserInfo(structureId, presences, usersId, presenceIds, userInfoPromise);
+                presenceHelper.addDisciplineToPresence(presences, disciplines, disciplineActionPromise);
             }
         });
-        fetchPresence(structureId, startDate, endDate, userId, ownerIds, audienceIds, FutureHelper.handlerJsonArray(presencesFuture));
-        disciplineService.get(structureId, FutureHelper.handlerJsonArray(disciplinesFuture));
+        fetchPresence(structureId, startDate, endDate, userId, ownerIds, audienceIds, FutureHelper.handlerEitherPromise(presencesPromise));
+        disciplineService.get(structureId, FutureHelper.handlerEitherPromise(disciplinesPromise));
     }
 
     @Override
     public Future<JsonArray> fetchPresence(String structureId, String startDate, String endDate, List<String> userId,
                                            List<String> ownerIds, List<String> audienceIds) {
         Promise<JsonArray> promise = Promise.promise();
-        fetchPresence(structureId, startDate, endDate, userId, ownerIds, audienceIds, FutureHelper.handlerJsonArray(promise));
+        fetchPresence(structureId, startDate, endDate, userId, ownerIds, audienceIds, FutureHelper.handlerEitherPromise(promise));
         return promise.future();
     }
 
     private void interactUserInfo(String structureId, List<Presence> presences, List<String> usersId,
-                                  List<Integer> presenceIds, Future<JsonObject> future) {
+                                  List<Integer> presenceIds, Promise<JsonObject> promise) {
 
         if (presenceIds.isEmpty()) {
-            future.complete();
+            promise.complete();
             return;
         }
-        Future<List<MarkedStudent>> markedStudentsFuture = Future.future();
-        Future<JsonArray> ownerFuture = Future.future();
+        Promise<List<MarkedStudent>> markedStudentsPromise = Promise.promise();
+        Promise<JsonArray> ownerPromise = Promise.promise();
 
-        CompositeFuture.all(markedStudentsFuture, ownerFuture).setHandler(userAsync -> {
+        Future.all(markedStudentsPromise.future(), ownerPromise.future()).onComplete(userAsync -> {
             if (userAsync.failed()) {
                 String message = "[Presences@DefaultPresenceService] Failed to fetch user or students info";
                 LOGGER.error(message + userAsync.cause());
-                future.fail(message + userAsync.cause());
+                promise.fail(message + userAsync.cause());
             } else {
-                Future<JsonObject> actionMarkedStudentsFuture = Future.future();
-                Future<JsonObject> actionOwnerFuture = Future.future();
+                Promise<JsonObject> actionMarkedStudentsPromise = Promise.promise();
+                Promise<JsonObject> actionOwnerPromise = Promise.promise();
 
-                List<MarkedStudent> markedStudents = markedStudentsFuture.result();
-                List<User> users = personHelper.getUserListFromJsonArray(ownerFuture.result());
+                List<MarkedStudent> markedStudents = markedStudentsPromise.future().result();
+                List<User> users = personHelper.getUserListFromJsonArray(ownerPromise.future().result());
 
-                CompositeFuture.all(actionMarkedStudentsFuture, actionOwnerFuture).setHandler(finalResultAsync -> {
+                Future.all(actionMarkedStudentsPromise.future(), actionOwnerPromise.future()).onComplete(finalResultAsync -> {
                     if (finalResultAsync.failed()) {
                         String message = "[Presences@DefaultPresenceService] Failed to add user or students to presences";
                         LOGGER.error(message + finalResultAsync.cause());
-                        future.fail(message + finalResultAsync.cause());
+                        promise.fail(message + finalResultAsync.cause());
                     } else {
-                        future.complete();
+                        promise.complete();
                     }
                 });
-                presenceHelper.addMarkedStudentsToPresence(presences, markedStudents, actionMarkedStudentsFuture);
-                presenceHelper.addOwnerToPresence(presences, users, actionOwnerFuture);
+                presenceHelper.addMarkedStudentsToPresence(presences, markedStudents, actionMarkedStudentsPromise);
+                presenceHelper.addOwnerToPresence(presences, users, actionOwnerPromise);
             }
         });
 
-        fetchPresenceStudents(structureId, presenceIds, markedStudentsFuture);
-        userService.getUsers(usersId, FutureHelper.handlerJsonArray(ownerFuture));
+        fetchPresenceStudents(structureId, presenceIds, markedStudentsPromise);
+        userService.getUsers(usersId, FutureHelper.handlerEitherPromise(ownerPromise));
     }
     private void fetchPresence(String structureId, String startDate, String endDate, List<String> userId,
                                List<String> ownerIds, List<String> audienceIds, Handler<Either<String, JsonArray>> handler) {

@@ -69,18 +69,18 @@ public class ProcessingScheduledTask implements Handler<Long> {
      */
     @Deprecated
     private Future<Void> clearWaitingList(Void unused) {
-        Future<Void> future = Future.future();
+        Promise<Void> promise = Promise.promise();
         String query = String.format("TRUNCATE TABLE %s.user;", StatisticsPresences.DB_SCHEMA);
         Sql.getInstance().raw(query, SqlResult.validUniqueResultHandler(either -> {
             if (either.isLeft()) {
                 log.error(String.format("[Statistics@%s::clearWaitingList] Fail to clear waiting list %s",
                         this.getClass().getSimpleName(), either.left().getValue()));
-                future.fail(either.left().getValue());
+                promise.fail(either.left().getValue());
             }
-            else future.complete();
+            else promise.complete();
         }));
 
-        return future;
+        return promise.future();
     }
 
     /**
@@ -91,14 +91,14 @@ public class ProcessingScheduledTask implements Handler<Long> {
      */
     @Deprecated
     private Future<JsonObject> fetchUsersToProcess() {
-        Future<JsonObject> future = Future.future();
+        Promise<JsonObject> promise = Promise.promise();
         String query = String.format("SELECT structure, json_agg(id) as users FROM %s.user GROUP BY structure", StatisticsPresences.DB_SCHEMA);
 
         Sql.getInstance().raw(query, SqlResult.validResultHandler(either -> {
             if (either.isLeft()) {
                 log.error(String.format("[Statistics@ProcessingScheduledTask::fetchUsersToProcess] " +
                         "Failed to retrieve users to process. %s", either.left().getValue()));
-                future.fail(either.left().getValue());
+                promise.fail(either.left().getValue());
             } else {
                 JsonArray result = either.right().getValue();
                 JsonObject structures = new JsonObject();
@@ -108,11 +108,11 @@ public class ProcessingScheduledTask implements Handler<Long> {
                         structures.put(structure.getString("structure"), users);
                     }
                 });
-                future.complete(structures);
+                promise.complete(structures);
             }
         }));
 
-        return future;
+        return promise.future();
     }
 
     /**
@@ -163,7 +163,7 @@ public class ProcessingScheduledTask implements Handler<Long> {
      * @return Future handling result
      */
     private Future<String> generateReport(List<Report> reports) {
-        Future<String> future = Future.future();
+        Promise<String> promise = Promise.promise();
         Long end = System.currentTimeMillis();
         JsonObject params = new JsonObject()
                 .put("date", start)
@@ -174,14 +174,14 @@ public class ProcessingScheduledTask implements Handler<Long> {
 
         templateProcessor.processTemplate("indicators/report.txt", params, report -> {
             if (report == null) {
-                future.fail(new RuntimeException("[Statistics@ProcessingScheduledTask::generateReport] " +
+                promise.fail(new RuntimeException("[Statistics@ProcessingScheduledTask::generateReport] " +
                         "Report is null. Maybe template is not found? Please check logs."));
             } else {
-                future.complete(report);
+                promise.complete(report);
             }
         });
 
-        return future;
+        return promise.future();
     }
 
     private Future<Void> sendReport(String report) {

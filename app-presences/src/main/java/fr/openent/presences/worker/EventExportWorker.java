@@ -81,7 +81,7 @@ public class EventExportWorker extends BusModBase implements Handler<Message<Jso
             futures.add(sendMail(recipients.getString(i), title, filesToSend));
         }
 
-        FutureHelper.join(futures)
+        Future.join(futures)
                 .onSuccess(ar -> promise.complete())
                 .onFailure(promise::fail);
 

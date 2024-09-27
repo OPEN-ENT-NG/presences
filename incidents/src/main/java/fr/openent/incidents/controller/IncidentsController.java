@@ -53,7 +53,7 @@ public class IncidentsController extends ControllerHelper {
                     .put("action", "user.getActivesStructure")
                     .put("module", "presences")
                     .put("structures", new JsonArray(user.getStructures()));
-            eb.send("viescolaire", action, event -> {
+            eb.request("viescolaire", action, event -> {
                 JsonObject body = (JsonObject) event.result().body();
                 if (event.failed() || "error".equals(body.getString("status"))) {
                     log.error("[Incidents@IncidentsController] Failed to retrieve actives structures");

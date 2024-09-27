@@ -8,6 +8,7 @@ import fr.wseduc.webutils.Either;
 import io.vertx.core.CompositeFuture;
 import io.vertx.core.Future;
 import io.vertx.core.Handler;
+import io.vertx.core.Promise;
 import io.vertx.core.eventbus.EventBus;
 import io.vertx.core.http.HttpServerRequest;
 import io.vertx.core.json.JsonObject;
@@ -42,16 +43,16 @@ public class Sms extends MassMailingProcessor {
             }
 
             List<JsonObject> smsList = event.right().getValue();
-            List<Future> futures = new ArrayList<>();
+            List<Future<JsonObject>> futures = new ArrayList<>();
             smsList.forEach(sms -> {
                 if (sms.containsKey("contact") && !"".equals(sms.getString("contact"))) {
-                    Future<JsonObject> future = Future.future();
-                    futures.add(future);
-                    send(request, sms, FutureHelper.handlerJsonObject(future));
+                    Promise<JsonObject> promise = Promise.promise();
+                    futures.add(promise.future());
+                    send(request, sms, FutureHelper.handlerEitherPromise(promise));
                 }
             });
 
-            CompositeFuture.join(futures).setHandler(asyncEvent -> {
+            Future.join(futures).onComplete(asyncEvent -> {
                 if (asyncEvent.failed()) handler.handle(new Either.Left<>(asyncEvent.cause().toString()));
                 else handler.handle(new Either.Right<>(asyncEvent.succeeded()));
             });

@@ -103,7 +103,7 @@ public class DefaultSettingsService extends DBService implements SettingsService
         sql.prepared(query, params, evt -> {
             Long count = SqlResult.countResult(evt);
             if (count == 0) {
-                create(structureId, settings, promise.future());
+                create(structureId, settings, promise);
             } else {
                 update(structureId, settings, promise);
             }
@@ -112,7 +112,7 @@ public class DefaultSettingsService extends DBService implements SettingsService
         return promise.future();
     }
 
-    private void create(String structureId, JsonObject settings, Future<JsonObject> future) {
+    private void create(String structureId, JsonObject settings, Promise<JsonObject> promise) {
         List<String> insertValues = new ArrayList<>();
         insertValues.add(Field.STRUCTURE_ID);
         List<String> settingsFields = settings.fieldNames()
@@ -131,7 +131,7 @@ public class DefaultSettingsService extends DBService implements SettingsService
             params.add(settings.getValue(field));
         }
         query += ") VALUES " + Sql.listPrepared(insertValues) + " RETURNING *";
-        sql.prepared(query, params, SqlResult.validUniqueResultHandler(FutureHelper.handlerJsonObject(future)));
+        sql.prepared(query, params, SqlResult.validUniqueResultHandler(FutureHelper.handlerEitherPromise(promise)));
     }
 
     private void update(String structureId, JsonObject settings, Promise<JsonObject> promise) {

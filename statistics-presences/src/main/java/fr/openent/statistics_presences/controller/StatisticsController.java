@@ -52,7 +52,7 @@ public class StatisticsController extends ControllerHelper {
                     .put("action", "user.getActivesStructure")
                     .put("module", "presences")
                     .put("structures", new JsonArray(user.getStructures()));
-            eb.send("viescolaire", action, event -> {
+            eb.request("viescolaire", action, event -> {
                 JsonObject body = (JsonObject) event.result().body();
                 if (event.failed() || "error".equals(body.getString("status"))) {
                     log.error("[Presences@PresencesController] Failed to retrieve actives structures");

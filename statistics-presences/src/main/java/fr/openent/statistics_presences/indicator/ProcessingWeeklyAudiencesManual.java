@@ -61,7 +61,7 @@ public class ProcessingWeeklyAudiencesManual extends BusModBase implements Handl
             structuresFutures.add(processStructure(structureId, startAt, endAt));
         }
 
-        FutureHelper.join(structuresFutures)
+        Future.join(structuresFutures)
                 .onFailure(err -> {
                     String message = String.format("[StatisticsPresences@%s::sendSigTerm] Some structures failed during processing. %s",
                             this.getClass().getSimpleName(),

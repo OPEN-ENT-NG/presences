@@ -17,6 +17,7 @@ import fr.wseduc.webutils.Either;
 import io.vertx.core.CompositeFuture;
 import io.vertx.core.Future;
 import io.vertx.core.Handler;
+import io.vertx.core.Promise;
 import io.vertx.core.eventbus.EventBus;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
@@ -61,12 +62,12 @@ public class DefaultRegistryService implements RegistryService {
             return;
         }
 
-        Future<JsonArray> daysFuture = Future.future();
+        Promise<JsonArray> daysPromise = Promise.promise();
         Future<JsonArray> studentFuture = groupService.getGroupStudents(structureId, groups);
 
-        generateMonthDaysArray(monthDate, structureId, daysFuture);
+        generateMonthDaysArray(monthDate, structureId, daysPromise);
 
-        CompositeFuture.all(daysFuture, studentFuture).setHandler(event -> {
+        Future.all(daysPromise.future(), studentFuture).onComplete(event -> {
             if (event.failed()) {
                 String message = "[Presences@DefaultRegistryService] Failed to retrieve user groups or generate month days for register summary";
                 LOGGER.error(message);
@@ -75,7 +76,7 @@ public class DefaultRegistryService implements RegistryService {
             }
 
             JsonArray users = studentFuture.result();
-            JsonArray days = daysFuture.result();
+            JsonArray days = daysPromise.future().result();
 
             List<String> userIds = new ArrayList<>();
             for (int i = 0; i < users.size(); i++) {
@@ -241,25 +242,25 @@ public class DefaultRegistryService implements RegistryService {
             userIds.add(users.getJsonObject(i).getString("id"));
         }
 
-        List<Future> futures = new ArrayList<>();
-        Future<JsonArray> eventsFuture = Future.future();
-        Future<JsonArray> incidentsFuture = Future.future();
+        List<Future<JsonArray>> futures = new ArrayList<>();
+        Promise<JsonArray> eventsPromise = Promise.promise();
+        Promise<JsonArray> incidentsPromise = Promise.promise();
 
         if (needsIncident) {
-            futures.add(incidentsFuture);
-            Incidents.getInstance().getIncidents(startDate, endDate, userIds, FutureHelper.handlerJsonArray(incidentsFuture));
+            futures.add(incidentsPromise.future());
+            Incidents.getInstance().getIncidents(startDate, endDate, userIds, FutureHelper.handlerEitherPromise(incidentsPromise));
         }
 
         if (needsEvents) {
-            futures.add(eventsFuture);
-            eventService.get(startDate, endDate, types, userIds, FutureHelper.handlerJsonArray(eventsFuture));
+            futures.add(eventsPromise.future());
+            eventService.get(startDate, endDate, types, userIds, FutureHelper.handlerEitherPromise(eventsPromise));
         }
 
         if (futures.isEmpty()) {
             handler.handle(new Either.Right<>(new JsonArray()));
         }
 
-        CompositeFuture.all(futures).setHandler(event -> {
+        Future.all(futures).onComplete(event -> {
             if (event.failed()) {
                 String message = "[Presences@DefaultRegistryService] Failed to retrieve events or incidents for register summary";
                 LOGGER.error(message, event.cause());
@@ -268,8 +269,8 @@ public class DefaultRegistryService implements RegistryService {
             }
 
             JsonArray finalEvents = new JsonArray();
-            finalEvents.addAll(needsEvents ? formatEvents(eventsFuture.result()) : new JsonArray());
-            finalEvents.addAll(needsIncident ? formatIncidents(incidentsFuture.result()) : new JsonArray());
+            finalEvents.addAll(needsEvents ? formatEvents(eventsPromise.future().result()) : new JsonArray());
+            finalEvents.addAll(needsIncident ? formatIncidents(incidentsPromise.future().result()) : new JsonArray());
 
             handler.handle(new Either.Right<>(finalEvents));
         });
@@ -377,27 +378,27 @@ public class DefaultRegistryService implements RegistryService {
      *                    day in expected month)
      * @param structureId structure identifier used to ask all exclusions days in order
      *                    to position our day if it an exclusion day
-     * @param future      Future to complete the process
+     * @param promise      Promise to complete the process
      */
-    private void generateMonthDaysArray(Date month, String structureId, Future<JsonArray> future) {
+    private void generateMonthDaysArray(Date month, String structureId, Promise<JsonArray> promise) {
 
-        Future<JsonArray> exclusionDays = Future.future();
-        Future<JsonObject> saturdayCoursesCount = Future.future();
-        Future<JsonObject> sundayCoursesCount = Future.future();
+        Promise<JsonArray> exclusionDaysPromise = Promise.promise();
+        Promise<JsonObject> saturdayCoursesCountPromise = Promise.promise();
+        Promise<JsonObject> sundayCoursesCountPromise = Promise.promise();
 
-        Viescolaire.getInstance().getExclusionDays(structureId, FutureHelper.handlerJsonArray(exclusionDays));
-        CalendarHelper.getWeekEndCourses(structureId, CalendarHelper.SATURDAY_OF_WEEK, FutureHelper.handlerJsonObject(saturdayCoursesCount));
-        CalendarHelper.getWeekEndCourses(structureId, CalendarHelper.SUNDAY_OF_WEEK, FutureHelper.handlerJsonObject(sundayCoursesCount));
+        Viescolaire.getInstance().getExclusionDays(structureId, FutureHelper.handlerEitherPromise(exclusionDaysPromise));
+        CalendarHelper.getWeekEndCourses(structureId, CalendarHelper.SATURDAY_OF_WEEK, FutureHelper.handlerEitherPromise(saturdayCoursesCountPromise));
+        CalendarHelper.getWeekEndCourses(structureId, CalendarHelper.SUNDAY_OF_WEEK, FutureHelper.handlerEitherPromise(sundayCoursesCountPromise));
 
-        CompositeFuture.all(exclusionDays, saturdayCoursesCount, sundayCoursesCount).setHandler(result -> {
+        Future.all(exclusionDaysPromise.future(), saturdayCoursesCountPromise.future(), sundayCoursesCountPromise.future()).onComplete(result -> {
             if (result.failed()) {
                 String message = "[Presences@DefaultRegistryService] Failed to fetch exclusion days or week-end courses";
                 LOGGER.error(message);
-                future.fail(message);
+                promise.fail(message);
             } else {
                 JsonArray days = new JsonArray();
-                long saturdayCourses = saturdayCoursesCount.result().getLong("count");
-                long sundayCourses = sundayCoursesCount.result().getLong("count");
+                long saturdayCourses = saturdayCoursesCountPromise.future().result().getLong("count");
+                long sundayCourses = sundayCoursesCountPromise.future().result().getLong("count");
                 Calendar cal = CalendarHelper.resetDay(month);
                 int min = cal.getActualMinimum(Calendar.DAY_OF_MONTH);
                 int max = cal.getActualMaximum(Calendar.DAY_OF_MONTH);
@@ -406,12 +407,12 @@ public class DefaultRegistryService implements RegistryService {
                     String date = DateHelper.getPsqlSimpleDateFormat().format(cal.getTime());
                     day.put("date", date);
                     day.put("events", new JsonArray());
-                    CalendarHelper.setExcludeDay(day, date, exclusionDays.result(), CalendarHelper.SATURDAY_OF_WEEK,
+                    CalendarHelper.setExcludeDay(day, date, exclusionDaysPromise.future().result(), CalendarHelper.SATURDAY_OF_WEEK,
                             saturdayCourses, CalendarHelper.SUNDAY_OF_WEEK, sundayCourses);
                     days.add(day);
                     cal.add(Calendar.DAY_OF_MONTH, 1);
                 }
-                future.complete(days);
+                promise.complete(days);
             }
         });
     }

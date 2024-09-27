@@ -5,6 +5,7 @@ import fr.openent.presences.model.Person.User;
 import fr.openent.presences.model.Presence.MarkedStudent;
 import fr.openent.presences.model.Presence.Presence;
 import io.vertx.core.Future;
+import io.vertx.core.Promise;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 
@@ -74,7 +75,7 @@ public class PresenceHelper {
     }
 
     public void addMarkedStudentsToPresence(List<Presence> presences, List<MarkedStudent> markedStudents,
-                                            Future<JsonObject> future) {
+                                            Promise<JsonObject> promise) {
         for (Presence presence : presences) {
             for (MarkedStudent markedStudent : markedStudents) {
                 if (presence.getId().equals(markedStudent.getPresenceId())) {
@@ -82,10 +83,10 @@ public class PresenceHelper {
                 }
             }
         }
-        future.complete();
+        promise.complete();
     }
 
-    public void addOwnerToPresence(List<Presence> presences, List<User> owners, Future<JsonObject> future) {
+    public void addOwnerToPresence(List<Presence> presences, List<User> owners, Promise<JsonObject> promise) {
         for (Presence presence : presences) {
             for (User owner : owners) {
                 if (presence.getOwner().getId().equals(owner.getId())) {
@@ -93,10 +94,10 @@ public class PresenceHelper {
                 }
             }
         }
-        future.complete();
+        promise.complete();
     }
 
-    public void addDisciplineToPresence(List<Presence> presences, List<Discipline> disciplines, Future<JsonObject> future) {
+    public void addDisciplineToPresence(List<Presence> presences, List<Discipline> disciplines, Promise<JsonObject> promise) {
         for (Presence presence : presences) {
             for (Discipline discipline : disciplines) {
                 if (presence.getDiscipline().getId() != null) {
@@ -106,7 +107,7 @@ public class PresenceHelper {
                 }
             }
         }
-        future.complete();
+        promise.complete();
     }
 
 }

@@ -23,6 +23,7 @@ import fr.wseduc.security.SecuredAction;
 import io.vertx.core.CompositeFuture;
 import io.vertx.core.Future;
 import io.vertx.core.MultiMap;
+import io.vertx.core.Promise;
 import io.vertx.core.eventbus.EventBus;
 import io.vertx.core.http.HttpServerRequest;
 import io.vertx.core.json.JsonArray;
@@ -78,57 +79,61 @@ public class CalendarController extends ControllerHelper {
                 return;
             }
             List<String> groups = CalendarHelper.getGroupsName(groupEvent.right().getValue());
-            Future<List<Course>> coursesFuture = Future.future();
-            Future<JsonArray> slotsFuture = Future.future();
+            Promise<List<Course>> coursesPromise = Promise.promise();
+            Promise<JsonArray> slotsPromise = Promise.promise();
 
-            CompositeFuture.all(coursesFuture, slotsFuture).setHandler(futureCourses -> {
+            Future.all(coursesPromise.future(), slotsPromise.future()).onComplete(futureCourses -> {
                 if (futureCourses.failed()) {
                     log.error("[CalendarController@getCalendarCourses] Failed to retrieve courses", futureCourses.cause());
                     renderError(request);
                     return;
                 }
-                List<Course> courses = coursesFuture.result();
-                List<Slot> slots = SlotHelper.getSlotListFromJsonArray(slotsFuture.result(), Slot.MANDATORY_ATTRIBUTE);
+                List<Course> courses = coursesPromise.future().result();
+                List<Slot> slots = SlotHelper.getSlotListFromJsonArray(slotsPromise.future().result(), Slot.MANDATORY_ATTRIBUTE);
                 List<String> subjects = new ArrayList<>();
 
                 HashMap<String, Map<String, Course>> eventList = CalendarHelper.hashCourses(courses, slots, subjects);
 
                 List<Integer> eventTypes = Arrays.asList(1, 2, 3, 4);
-                Future<JsonArray> eventsFuture = Future.future();
-                Future<JsonArray> exemptionsFuture = Future.future();
-                Future<JsonArray> incidentsFuture = Future.future();
-                Future<JsonArray> punishmentsFuture = Future.future();
-                Future<JsonArray> absentFuture = Future.future();
+                Promise<JsonArray> eventsPromise = Promise.promise();
+                Promise<JsonArray> exemptionsPromise = Promise.promise();
+                Promise<JsonArray> incidentsPromise = Promise.promise();
+                Promise<JsonArray> punishmentsPromise = Promise.promise();
+                Promise<JsonArray> absentPromise = Promise.promise();
 
-                CompositeFuture.all(eventsFuture, exemptionsFuture, incidentsFuture, punishmentsFuture, absentFuture)
-                        .setHandler(futureEvent -> {
+                Future.all(eventsPromise.future(),
+                                exemptionsPromise.future(),
+                                incidentsPromise.future(),
+                                punishmentsPromise.future(),
+                                absentPromise.future())
+                        .onComplete(futureEvent -> {
                             if (futureEvent.failed()) {
                                 log.error("[CalendarController@getCalendarCourses] Failed to retrieve information", futureEvent.cause());
                                 renderError(request);
                                 return;
                             }
 
-                            JsonArray punishmentsResult = punishmentsFuture.result() != null ? punishmentsFuture.result() : new JsonArray();
+                            JsonArray punishmentsResult = punishmentsPromise.future().result() != null ? punishmentsPromise.future().result() : new JsonArray();
                             List<JsonObject> punishments = (List<JsonObject>) ((List<JsonObject>) punishmentsResult.getList()).stream()
                                     .flatMap(punishment -> punishment.getJsonArray("punishments").getList().stream())
                                     .collect(Collectors.toList());
 
-                            renderJson(request, formatCalendar(punishments, eventsFuture.result().getList(), eventList, courses,
-                                    exemptionsFuture.result(), slots, incidentsFuture.result())
+                            renderJson(request, formatCalendar(punishments, eventsPromise.future().result().getList(), eventList, courses,
+                                    exemptionsPromise.future().result(), slots, incidentsPromise.future().result())
                             );
                         });
 
                 String startTime = " 00:00:00";
                 String endTime = " 23:59:59";
-                getEvents(structure, start + startTime, end + endTime, eventTypes, users, eventsFuture);
-                getExemptions(structure, start + startTime, end + endTime, user, exemptionsFuture);
-                getIncidents(structure, start + startTime, end + endTime, user, incidentsFuture);
-                getPunishments(structure, start + startTime, end + endTime, users, punishmentsFuture);
-                getAbsences(start, end, user, absentFuture);
+                getEvents(structure, start + startTime, end + endTime, eventTypes, users, eventsPromise);
+                getExemptions(structure, start + startTime, end + endTime, user, exemptionsPromise);
+                getIncidents(structure, start + startTime, end + endTime, user, incidentsPromise);
+                getPunishments(structure, start + startTime, end + endTime, users, punishmentsPromise);
+                getAbsences(start, end, user, absentPromise);
             });
             courseHelper.getCoursesList(structure, params.getAll("teacher"), groups,
-                    start, end, coursesFuture);
-            Viescolaire.getInstance().getDefaultSlots(structure, FutureHelper.handlerJsonArray(slotsFuture));
+                    start, end, coursesPromise);
+            Viescolaire.getInstance().getDefaultSlots(structure, FutureHelper.handlerEitherPromise(slotsPromise));
         });
     }
 
@@ -209,7 +214,7 @@ public class CalendarController extends ControllerHelper {
         }
     }
 
-    private void getIncidents(String structureId, String startDate, String endDate, String userId, Future<JsonArray> future) {
+    private void getIncidents(String structureId, String startDate, String endDate, String userId, Promise<JsonArray> promise) {
         JsonObject action = new JsonObject()
                 .put("action", "getUserIncident")
                 .put("structureId", structureId)
@@ -217,18 +222,18 @@ public class CalendarController extends ControllerHelper {
                 .put("start_date", startDate)
                 .put("end_date", endDate);
 
-        eb.send("fr.openent.incident", action, handlerToAsyncHandler(event -> {
+        eb.request("fr.openent.incident", action, handlerToAsyncHandler(event -> {
             if (!"ok".equals(event.body().getString("status"))) {
                 log.error("[Presences@CalendarController] Failed to retrieve incidents", event.body().getString("error"));
-                future.fail(event.body().getString("error"));
+                promise.fail(event.body().getString("error"));
                 return;
             }
 
-            future.complete(event.body().getJsonArray("results"));
+            promise.complete(event.body().getJsonArray("results"));
         }));
     }
 
-    private void getPunishments(String structureId, String startDate, String endDate, List<String> students, Future<JsonArray> future) {
+    private void getPunishments(String structureId, String startDate, String endDate, List<String> students, Promise<JsonArray> promise) {
         JsonObject action = new JsonObject()
                 .put("action", "get-punishment-by-student")
                 .put("structure", structureId)
@@ -236,29 +241,29 @@ public class CalendarController extends ControllerHelper {
                 .put("start_at", startDate)
                 .put("end_at", endDate);
 
-        eb.send("fr.openent.incidents", action, handlerToAsyncHandler(event -> {
+        eb.request("fr.openent.incidents", action, handlerToAsyncHandler(event -> {
             if (!"ok".equals(event.body().getString("status"))) {
                 log.error("[Presences@CalendarController] Failed to retrieve punishments", event.body().getString("error"));
-                future.fail(event.body().getString("error"));
+                promise.fail(event.body().getString("error"));
                 return;
             }
 
-            future.complete(event.body().getJsonArray("result"));
+            promise.complete(event.body().getJsonArray("result"));
         }));
     }
 
-    private void getExemptions(String structureId, String startDate, String endDate, String users, Future<JsonArray> future) {
-        exemptionService.get(structureId, startDate, endDate, users, null, FutureHelper.handlerJsonArray(future));
+    private void getExemptions(String structureId, String startDate, String endDate, String users, Promise<JsonArray> promise) {
+        exemptionService.get(structureId, startDate, endDate, users, null, FutureHelper.handlerEitherPromise(promise));
     }
 
-    private void getEvents(String structureId, String startDate, String endDate, List<Integer> eventType, List<String> users, Future<JsonArray> future) {
-        eventService.list(structureId, startDate, endDate, eventType, users, FutureHelper.handlerJsonArray(future));
+    private void getEvents(String structureId, String startDate, String endDate, List<Integer> eventType, List<String> users, Promise<JsonArray> promise) {
+        eventService.list(structureId, startDate, endDate, eventType, users, FutureHelper.handlerEitherPromise(promise));
     }
 
-    private void getAbsences(String start, String end, String userId, Future<JsonArray> future) {
+    private void getAbsences(String start, String end, String userId, Promise<JsonArray> promise) {
         List<String> users = new ArrayList<>();
         users.add(userId);
-        absenceService.getAbsencesBetween(start, end, users, FutureHelper.handlerJsonArray(future));
+        absenceService.getAbsencesBetween(start, end, users, FutureHelper.handlerEitherPromise(promise));
     }
 
     @Get("/calendar/groups/:id/students")

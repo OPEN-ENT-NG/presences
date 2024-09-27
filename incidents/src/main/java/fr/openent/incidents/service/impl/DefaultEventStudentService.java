@@ -193,7 +193,7 @@ public class DefaultEventStudentService implements EventStudentService {
         for (String type : types)
             futures.add(getTypedEventsByStudent(type, structureId, studentIds, start, end, limit, offset));
 
-        FutureHelper.all(futures)
+        Future.all(futures)
                 .onSuccess(result -> promise.complete(getSortedByTypesEventsFromFutures(types, protagonists, incidentTypes, futures, studentsEvents)))
                 .onFailure(error -> {
                     String message =
@@ -213,7 +213,7 @@ public class DefaultEventStudentService implements EventStudentService {
         for (String type : types)
             futures.add(getCount(type, structureId, studentIds, start, end));
 
-        FutureHelper.all(futures)
+        Future.all(futures)
                 .onSuccess(result -> promise.complete(setCountEventsByStudents(types, futures, studentsEvents)))
                 .onFailure(error -> {
                     String message =

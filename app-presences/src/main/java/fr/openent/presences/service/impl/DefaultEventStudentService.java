@@ -242,7 +242,7 @@ public class DefaultEventStudentService implements EventStudentService {
                 .put("action", "timeslot.getSlotProfileSettings")
                 .put("structureId", structure);
 
-        eb.send("viescolaire", action, event -> {
+        eb.request("viescolaire", action, event -> {
             if (event.failed() || event.result() == null || "error".equals(((JsonObject) event.result().body()).getString("status"))) {
                 String err = "[Presences@DefaultEventStudentService::getViscoSettings] Failed to retrieve courses";
                 log.error(err);
@@ -258,7 +258,7 @@ public class DefaultEventStudentService implements EventStudentService {
                 .put("action", "timeslot.getSlotProfiles")
                 .put("structureId", structure);
 
-        eb.send("viescolaire", action, event -> {
+        eb.request("viescolaire", action, event -> {
             if (event.failed() || event.result() == null || "error".equals(((JsonObject) event.result().body()).getString("status"))) {
                 String err = "[Presences@DefaultEventStudentService::getTimeSlots] Failed to retrieve courses";
                 log.error(err);
@@ -279,7 +279,7 @@ public class DefaultEventStudentService implements EventStudentService {
         for (String type : types)
             futures.add(getEventsByStudent(type, structure, reasonsIds, studentIds, start, end, limit, offset));
 
-        FutureHelper.all(futures)
+        Future.all(futures)
                 .onFailure(error -> {
                     String message =
                             String.format("[Presences@%s::getEvents] Fail to retrieve events info.",
@@ -300,7 +300,7 @@ public class DefaultEventStudentService implements EventStudentService {
         for (String type : types)
             futures.add(getCountEventsByStudent(type, structure, reasonsIds, studentIds, start, end));
 
-        FutureHelper.all(futures)
+        Future.all(futures)
                 .onFailure(error -> {
                     String message =
                             String.format("[Presences@%s::getCountEvents] Fail to retrieve count events info.",

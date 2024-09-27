@@ -46,7 +46,7 @@ public class Presences {
                 .put("noReasons", noReasons)
                 .put("recoveryMethod", recoveryMethod)
                 .put("action", "get-count-event-by-student");
-        eb.send(address, action, MessageResponseHandler.messageJsonArrayHandler(handler));
+        eb.request(address, action, MessageResponseHandler.messageJsonArrayHandler(handler));
     }
 
     public void getCountEventByStudent(Integer eventType, List<String> students, String structure, Boolean justified, Integer startAt, List<Integer> reasonsId, Boolean massmailed,
@@ -70,7 +70,7 @@ public class Presences {
                 .put("recoveryMethod", recoveryMethod)
                 .put("regularized", regularized)
                 .put("action", "get-events-by-student");
-        eb.send(address, action, MessageResponseHandler.messageJsonArrayHandler(handler));
+        eb.request(address, action, MessageResponseHandler.messageJsonArrayHandler(handler));
     }
 
 
@@ -85,7 +85,7 @@ public class Presences {
                 .put("endDate", endDate)
                 .put("studentIds", studentIds)
                 .put("action", "get-absences");
-        eb.send(address, action, MessageResponseHandler.messageJsonArrayHandler(FutureHelper.handlerJsonArray(handler)));
+        eb.request(address, action, MessageResponseHandler.messageJsonArrayHandler(FutureHelper.handlerJsonArray(handler)));
     }
 
     public void createAbsences(String structureId, List<String> studentIds, String userInfoId, Long reasonId, String startDate,
@@ -101,7 +101,7 @@ public class Presences {
                 .put("editEvents", editEvents)
                 .put("followed", followed)
                 .put("action", "create-absences");
-        eb.send(address, action, MessageResponseHandler.messageJsonObjectHandler(FutureHelper.handlerJsonObject(handler)));
+        eb.request(address, action, MessageResponseHandler.messageJsonObjectHandler(FutureHelper.handlerJsonObject(handler)));
     }
 
     public void updateAbsence(String structureId, Long absenceId, String userInfoId, Long reasonId, String studentId,
@@ -116,14 +116,14 @@ public class Presences {
                 .put("absenceId", absenceId)
                 .put("editEvents", editEvents)
                 .put("action", "update-absence");
-        eb.send(address, action, MessageResponseHandler.messageJsonObjectHandler(FutureHelper.handlerJsonObject(handler)));
+        eb.request(address, action, MessageResponseHandler.messageJsonObjectHandler(FutureHelper.handlerJsonObject(handler)));
     }
 
     public void deleteAbsence(Long absenceId, Handler<AsyncResult<JsonObject>> handler) {
         JsonObject action = new JsonObject()
                 .put("absenceId", absenceId)
                 .put("action", "delete-absence");
-        eb.send(address, action, MessageResponseHandler.messageJsonObjectHandler(FutureHelper.handlerJsonObject(handler)));
+        eb.request(address, action, MessageResponseHandler.messageJsonObjectHandler(FutureHelper.handlerJsonObject(handler)));
     }
 
     /**
@@ -138,14 +138,14 @@ public class Presences {
                 .put(Field.STRUCTURE, structure)
                 .put(Field.REASONTYPE, reasonType.getValue())
                 .put(Field.ACTION, "get-reasons");
-        eb.send(address, action, MessageResponseHandler.messageJsonArrayHandler(handler));
+        eb.request(address, action, MessageResponseHandler.messageJsonArrayHandler(handler));
     }
 
     public void getSettings(String structure, Handler<Either<String, JsonObject>> handler) {
         JsonObject action = new JsonObject()
                 .put("structure", structure)
                 .put("action", "get-settings");
-        eb.send(address, action, MessageResponseHandler.messageJsonObjectHandler(handler));
+        eb.request(address, action, MessageResponseHandler.messageJsonObjectHandler(handler));
     }
 
     public Future<JsonArray> getRegistersWithGroups(String structureId, List<Integer> registerIds, List<Integer> stateIds,
@@ -158,7 +158,7 @@ public class Presences {
                 .put(Field.STARTAT, startAt)
                 .put(Field.ENDAT, endAt)
                 .put("action", "get-registers-with-groups");
-        eb.send(address, action, MessageResponseHandler.messageJsonArrayHandler(FutureHelper.handlerJsonArray(promise)));
+        eb.request(address, action, MessageResponseHandler.messageJsonArrayHandler(FutureHelper.handlerJsonArray(promise)));
 
         return promise.future();
     }
