@@ -153,24 +153,24 @@ public class Global extends Indicator {
      * @return Future completing search values
      */
     private Future<List<JsonObject>> searchValues(GlobalSearch search) {
-        Future<List<JsonObject>> future = Future.future();
+        Promise<List<JsonObject>> promise = Promise.promise();
         preStatisticsStage(search)
                 .compose(this::statisticStage)
                 .compose(this::totalAbsenceStage)
                 .compose(this::postStatisticStage)
                 .compose(this::mergeStage)
-                .setHandler(ar -> {
+                .onComplete(ar -> {
                     if (ar.failed()) {
                         log.error(String.format("[StatisticsPresences@Global::searchValues] " +
                                 "Indicator %s failed to complete search values. %s", Global.class.getName(), ar.cause().getMessage()));
-                        future.handle(Future.failedFuture(ar.cause()));
+                        promise.handle(Future.failedFuture(ar.cause()));
                     } else {
                         GlobalSearch completedSearch = ar.result();
-                        future.handle(Future.succeededFuture(completedSearch.users().stream().map(User::toJSON).collect(Collectors.toList())));
+                        promise.handle(Future.succeededFuture(completedSearch.users().stream().map(User::toJSON).collect(Collectors.toList())));
                     }
                 });
 
-        return future;
+        return promise.future();
     }
 
     private Future<GlobalSearch> totalAbsenceStage(GlobalSearch search) {
@@ -178,14 +178,14 @@ public class Global extends Indicator {
             return Future.succeededFuture(search);
         }
 
-        Future<GlobalSearch> future = Future.future();
+        Promise<GlobalSearch> promise = Promise.promise();
         JsonObject request = commandObject(search.totalAbsenceUserPipeline());
         mongoDb.command(request.toString(), MongoDbResult.validResultHandler(either -> {
             if (either.isLeft()) {
                 log.error(String.format("[StatisticsPresences@Global::totalAbsenceStage] " +
                                 "Indicator %s failed to execute mongodb total absence aggregation pipeline. %s", Global.class.getName(),
                         either.left().getValue()));
-                future.fail(either.left().getValue());
+                promise.fail(either.left().getValue());
                 return;
             }
 
@@ -197,10 +197,10 @@ public class Global extends Indicator {
             }
 
             search.setTotalAbsMap(totalAbsMap);
-            future.complete(search);
+            promise.complete(search);
         }));
 
-        return future;
+        return promise.future();
     }
 
     /**
@@ -443,14 +443,14 @@ public class Global extends Indicator {
      */
     @SuppressWarnings("unchecked")
     private Future<GlobalSearch> prefetchUsers(GlobalSearch search) {
-        Future<GlobalSearch> future = Future.future();
+        Promise<GlobalSearch> promise = Promise.promise();
         JsonObject request = commandObject(search.prefetchUserPipeline());
         mongoDb.command(request.toString(), MongoDbResult.validResultHandler(either -> {
             if (either.isLeft()) {
                 log.error(String.format("[StatisticsPresences@Global::prefetchUsers] " +
                                 "Indicator %s failed to execute prefetch user mongodb aggregation pipeline. %s", Global.class.getName(),
                         either.left().getValue()));
-                future.fail(either.left().getValue());
+                promise.fail(either.left().getValue());
                 return;
             }
 
@@ -458,10 +458,10 @@ public class Global extends Indicator {
             List<String> users = ((List<JsonObject>) result.getList()).stream().map(user -> user.getString(Field._ID)).collect(Collectors.toList());
             search.filter().setUsers(users)
                     .setPage(null);
-            future.complete(search);
+            promise.complete(search);
         }));
 
-        return future;
+        return promise.future();
     }
 
     private Future<Number> countUsersWithStatistics(GlobalSearch search) {

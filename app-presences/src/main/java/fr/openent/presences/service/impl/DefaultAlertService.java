@@ -182,8 +182,8 @@ public class DefaultAlertService extends DBService implements AlertService {
 
     @Override
     public void getStudentAlertNumberWithThreshold(String structureId, String studentId, String type, Handler<Either<String, JsonObject>> handler) {
-        Future<JsonObject> futureThreshold = Future.future();
-        Future<JsonObject> futureCount = Future.future();
+        Promise<JsonObject> thresholdPromise = Promise.promise();
+        Promise<JsonObject> countPromise = Promise.promise();
 
         String queryThreshold = "SELECT alert_forgotten_notebook_threshold as threshold" +
                 " FROM " + Presences.dbSchema + ".settings " +
@@ -193,9 +193,9 @@ public class DefaultAlertService extends DBService implements AlertService {
 
         Sql.getInstance().prepared(queryThreshold, paramsThreshold, SqlResult.validUniqueResultHandler(result -> {
             if (result.isRight()) {
-                futureThreshold.complete(result.right().getValue());
+                thresholdPromise.complete(result.right().getValue());
             } else {
-                futureThreshold.fail((result.left().getValue()));
+                thresholdPromise.fail((result.left().getValue()));
             }
         }));
 
@@ -212,18 +212,18 @@ public class DefaultAlertService extends DBService implements AlertService {
 
         Sql.getInstance().prepared(queryCount, paramsCount, SqlResult.validUniqueResultHandler(result -> {
             if (result.isRight()) {
-                futureCount.complete(result.right().getValue());
+                countPromise.complete(result.right().getValue());
             } else {
-                futureCount.fail((result.left().getValue()));
+                countPromise.fail((result.left().getValue()));
             }
         }));
 
 
-        CompositeFuture.all(futureThreshold, futureCount).setHandler(event -> {
+        Future.all(thresholdPromise.future(), countPromise.future()).onComplete(event -> {
             if (event.succeeded()) {
                 JsonObject result = new JsonObject();
-                result.put("threshold", futureThreshold.result().getValue("threshold"));
-                result.put("count", futureCount.result().getValue("count"));
+                result.put("threshold", thresholdPromise.future().result().getValue("threshold"));
+                result.put("count", countPromise.future().result().getValue("count"));
                 handler.handle(new Either.Right<>(result));
             } else {
                 handler.handle(new Either.Left<>(event.cause().getMessage()));

@@ -10,6 +10,7 @@ import fr.wseduc.webutils.email.EmailSender;
 import io.vertx.core.CompositeFuture;
 import io.vertx.core.Future;
 import io.vertx.core.Handler;
+import io.vertx.core.Promise;
 import io.vertx.core.http.HttpServerRequest;
 import io.vertx.core.json.JsonObject;
 
@@ -38,14 +39,14 @@ public class Mail extends MassMailingProcessor {
             }
 
             List<JsonObject> mails = event.right().getValue();
-            List<Future> futures = new ArrayList<>();
+            List<Future<JsonObject>> futures = new ArrayList<>();
             for (JsonObject mail : mails) {
-                Future<JsonObject> future = Future.future();
-                futures.add(future);
-                send(mail, FutureHelper.handlerJsonObject(future));
+                Promise<JsonObject> promise = Promise.promise();
+                futures.add(promise.future());
+                send(mail, FutureHelper.handlerEitherPromise(promise));
             }
 
-            CompositeFuture.join(futures).setHandler(asyncEvent -> {
+            Future.join(futures).onComplete(asyncEvent -> {
                 if (asyncEvent.failed()) {
                     String message = "[Massmailing@Mail::send] Failed to send mails";
                     LOGGER.error(String.format("%s %s", message, asyncEvent.cause().getMessage()));

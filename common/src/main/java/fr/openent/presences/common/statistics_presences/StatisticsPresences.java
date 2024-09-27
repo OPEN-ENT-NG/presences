@@ -38,7 +38,7 @@ public class StatisticsPresences {
                 .put(Field.STRUCTUREID, structureId)
                 .put(Field.STUDENTIDS, studentIds);
 
-        eb.send(address, action, MessageResponseHandler.messageJsonObjectHandler(FutureHelper.handlerJsonObject(promise)));
+        eb.request(address, action, MessageResponseHandler.messageJsonObjectHandler(FutureHelper.handlerEitherPromise(promise)));
         return promise.future();
     }
 
@@ -49,7 +49,7 @@ public class StatisticsPresences {
                 .put(Field.STRUCTUREID, structureId)
                 .put(Field.STATISTICS_USERS, IModelHelper.toJsonArray(statisticsUsers));
 
-        eb.send(address, action, MessageResponseHandler.messageJsonObjectHandler(FutureHelper.handlerJsonObject(promise)));
+        eb.request(address, action, MessageResponseHandler.messageJsonObjectHandler(FutureHelper.handlerEitherPromise(promise)));
         return promise.future();
     }
 
@@ -60,7 +60,7 @@ public class StatisticsPresences {
                 .put("indicator", indicator)
                 .put("page", page)
                 .put("filter", statisticsFilterJson);
-        eb.send(address, action, MessageResponseHandler.messageJsonObjectHandler(FutureHelper.handlerJsonObject(handler)));
+        eb.request(address, action, MessageResponseHandler.messageJsonObjectHandler(FutureHelper.handlerJsonObject(handler)));
     }
 
     public void getStatisticsGraph(JsonObject statisticsFilterJson, String structureId, String indicator, Handler<AsyncResult<JsonObject>> handler) {
@@ -69,7 +69,7 @@ public class StatisticsPresences {
                 .put("structureId", structureId)
                 .put("indicator", indicator)
                 .put("filter", statisticsFilterJson);
-        eb.send(address, action, MessageResponseHandler.messageJsonObjectHandler(FutureHelper.handlerJsonObject(handler)));
+        eb.request(address, action, MessageResponseHandler.messageJsonObjectHandler(FutureHelper.handlerJsonObject(handler)));
     }
 
     public void getStatisticsIndicator(Handler<AsyncResult<JsonObject>> handler) {
@@ -85,7 +85,7 @@ public class StatisticsPresences {
                 .put(Field.STRUCTUREID, structureId)
                 .put(Field.REGISTERIDS, registerIds);
 
-        eb.request(address, action, MessageResponseHandler.messageJsonObjectHandler(FutureHelper.handlerJsonObject(promise)));
+        eb.request(address, action, MessageResponseHandler.messageJsonObjectHandler(FutureHelper.handlerEitherPromise(promise)));
         return promise.future();
     }
 

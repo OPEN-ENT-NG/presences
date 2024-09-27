@@ -51,8 +51,8 @@ public class StatisticsPresences extends BaseServer {
     public static final Map<String, Indicator> indicatorMap = new HashMap<>();
 
     @Override
-    public void start() throws Exception {
-        super.start();
+    public void start(Promise<Void> startPromise) throws Exception {
+        super.start(startPromise);
         DB.getInstance().init(Neo4j.getInstance(), Sql.getInstance(), MongoDb.getInstance());
         CommonServiceFactory commonServiceFactory = new CommonServiceFactory(vertx);
 
@@ -81,6 +81,8 @@ public class StatisticsPresences extends BaseServer {
         // worker to be triggered manually
         vertx.deployVerticle(ProcessingScheduledManual.class, new DeploymentOptions().setConfig(config).setWorker(true));
         vertx.deployVerticle(ProcessingWeeklyAudiencesManual.class, new DeploymentOptions().setConfig(config).setWorker(true));
+        startPromise.tryComplete();
+        startPromise.tryFail("[StatisticsPresences@StatisticsPresences::start] Failed to start module StatisticsPresences.");
     }
 
     private void registerCodec() {

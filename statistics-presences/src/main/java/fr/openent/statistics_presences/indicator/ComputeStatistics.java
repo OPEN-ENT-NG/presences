@@ -99,7 +99,7 @@ public class ComputeStatistics extends ProcessingScheduledManual {
         for (Indicator indicator : StatisticsPresences.indicatorMap.values()) {
             indicatorFutures.add(indicator.manualProcess(structures));
         }
-        FutureHelper.join(indicatorFutures)
+        Future.join(indicatorFutures)
                 .onSuccess(success -> promise.complete())
                 .onFailure(error -> {
                     log.error(String.format("[StatisticsPresences@ProcessingScheduledManual::processManualIndicators] Some indicator failed during processing. %s", error.getMessage()));

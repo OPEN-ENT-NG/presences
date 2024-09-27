@@ -9,6 +9,7 @@ import fr.wseduc.webutils.Either;
 import io.vertx.core.CompositeFuture;
 import io.vertx.core.Future;
 import io.vertx.core.Handler;
+import io.vertx.core.Promise;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import io.vertx.core.logging.Logger;
@@ -24,20 +25,20 @@ public class DefaultDisciplineService implements DisciplineService {
 
     @Override
     public void get(String structureId, Handler<Either<String, JsonArray>> handler) {
-        Future<JsonArray> disciplinesFuture = Future.future();
-        Future<JsonArray> disciplinesUsedFuture = Future.future();
+        Promise<JsonArray> disciplinesPromise = Promise.promise();
+        Promise<JsonArray> disciplinesUsedPromise = Promise.promise();
 
-        fetchDiscipline(structureId, FutureHelper.handlerJsonArray(disciplinesFuture));
-        fetchUsedDiscipline(structureId, FutureHelper.handlerJsonArray(disciplinesUsedFuture));
+        fetchDiscipline(structureId, FutureHelper.handlerEitherPromise(disciplinesPromise));
+        fetchUsedDiscipline(structureId, FutureHelper.handlerEitherPromise(disciplinesUsedPromise));
 
-        CompositeFuture.all(disciplinesFuture, disciplinesUsedFuture).setHandler(event -> {
+        Future.all(disciplinesPromise.future(), disciplinesUsedPromise.future()).onComplete(event -> {
             if (event.failed()) {
                 String message = "[Presences@DefaultDisciplineService] Failed to fetch discipline";
                 LOGGER.error(message);
                 handler.handle(new Either.Left<>(message));
             } else {
-                List<Discipline> disciplines = DisciplineHelper.getDisciplineListFromJsonArray(disciplinesFuture.result());
-                List<Discipline> disciplinesUsed = DisciplineHelper.getDisciplineListFromJsonArray(disciplinesUsedFuture.result());
+                List<Discipline> disciplines = DisciplineHelper.getDisciplineListFromJsonArray(disciplinesPromise.future().result());
+                List<Discipline> disciplinesUsed = DisciplineHelper.getDisciplineListFromJsonArray(disciplinesUsedPromise.future().result());
 
                 for (Discipline discipline : disciplines) {
                     discipline.setUsed(false);

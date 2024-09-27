@@ -50,10 +50,10 @@ public class CreateDailyPresenceWorker extends BusModBase implements Handler<Mes
         processCreateDailyPresences();
     }
 
-    private void getStructures(JsonArray ids, Future<JsonArray> future) {
+    private void getStructures(JsonArray ids, Promise<JsonArray> promise) {
         String query = "MATCH (s:Structure) WHERE s.id IN {ids} RETURN s.name as name, s.id as id;";
         JsonObject params = new JsonObject().put("ids", ids);
-        Neo4j.getInstance().execute(query, params, Neo4jResult.validResultHandler(FutureHelper.handlerJsonArray(future)));
+        Neo4j.getInstance().execute(query, params, Neo4jResult.validResultHandler(FutureHelper.handlerEitherPromise(promise)));
     }
 
     @SuppressWarnings("unchecked")
@@ -64,7 +64,7 @@ public class CreateDailyPresenceWorker extends BusModBase implements Handler<Mes
         String queryStructures = "SELECT id_etablissement as id FROM " + Presences.dbSchema + " .etablissements_actifs";
 
         JsonObject result = new JsonObject();
-        List<Future> futures = new ArrayList<>();
+        List<Future<?>> futures = new ArrayList<>();
         Sql.getInstance().prepared(queryStructures, new JsonArray(), SqlResult.validResultHandler(resultStructures -> {
             Promise<JsonArray> structurePromise = Promise.promise();
             if (resultStructures.isLeft()) {
@@ -80,7 +80,7 @@ public class CreateDailyPresenceWorker extends BusModBase implements Handler<Mes
                 List<String> stuctures = ((List<JsonObject>) structureIds.getList()).stream().map(structure -> structure.getString("id")).collect(Collectors.toList());
                 if (!structureIds.isEmpty()) {
                     futures.add(structurePromise.future());
-                    getStructures(new JsonArray(stuctures), structurePromise.future());
+                    getStructures(new JsonArray(stuctures), structurePromise);
                 }
                 for (int i = 0; i < structureIds.size(); i++) {
                     String structureId = structureIds.getJsonObject(i).getString(Field.ID);
@@ -91,7 +91,7 @@ public class CreateDailyPresenceWorker extends BusModBase implements Handler<Mes
                 }
             }
 
-            CompositeFuture.join(futures).onComplete(resultFutures -> {
+            Future.join(futures).onComplete(resultFutures -> {
                 String title = "[" + config.getString("host") + "][Présences] Rapport d'ouverture des appels: " +
                         ((getRegistersCreationWorked(result) == Boolean.TRUE) ? "succès." : "échec.");
                 JsonObject structureMap = structurePromise.future() != null && structurePromise.future().succeeded()

@@ -61,10 +61,10 @@ public class DefaultExemptionService extends SqlCrudService implements Exemption
                     Promise<JsonObject> userInfoPromise = Promise.promise();
                     Promise<JsonObject> subjectInfoPromise = Promise.promise();
 
-                    exemptionHelper.addUsersInfo(structureId, exemptions, userInfoPromise.future());
-                    exemptionHelper.addSubjectsInfo(exemptions, subjectInfoPromise.future());
+                    exemptionHelper.addUsersInfo(structureId, exemptions, userInfoPromise);
+                    exemptionHelper.addSubjectsInfo(exemptions, subjectInfoPromise);
 
-                    CompositeFuture.all(userInfoPromise.future(), subjectInfoPromise.future())
+                    Future.all(userInfoPromise.future(), subjectInfoPromise.future())
                             .onFailure(fail -> handler.handle(new Either.Left<>(fail.getMessage())))
                             .onSuccess(evt -> handler.handle(new Either.Right<>(ModelHelper.convertToJsonArray(exemptions))));
                 }

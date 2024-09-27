@@ -11,6 +11,7 @@ import fr.wseduc.webutils.Either;
 import io.vertx.core.CompositeFuture;
 import io.vertx.core.Future;
 import io.vertx.core.Handler;
+import io.vertx.core.Promise;
 import io.vertx.core.eventbus.EventBus;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
@@ -130,18 +131,18 @@ public class DefaultMassmailingService implements MassmailingService {
     @Override
     public void getRelatives(MailingType type, List<String> students, Handler<Either<String, JsonArray>> handler) {
 
-        Future<JsonArray> relativesFuture = Future.future();
-        Future<JsonArray> relativesIdsFuture = Future.future();
+        Promise<JsonArray> relativesPromise = Promise.promise();
+        Promise<JsonArray> relativesIdsPromise = Promise.promise();
 
-        CompositeFuture.all(relativesFuture, relativesIdsFuture).setHandler(asyncHandler -> {
+        Future.all(relativesPromise.future(), relativesIdsPromise.future()).onComplete(asyncHandler -> {
 
             if (asyncHandler.failed()) {
                 handler.handle(new Either.Left<>(asyncHandler.cause().toString()));
                 return;
             }
 
-            JsonArray studentsRelatives = relativesFuture.result();
-            JsonArray studentPrimaryRelatives = relativesIdsFuture.result();
+            JsonArray studentsRelatives = relativesPromise.future().result();
+            JsonArray studentPrimaryRelatives = relativesIdsPromise.future().result();
 
             for (int i = 0; i < studentsRelatives.size(); i++) {
                 JsonObject student = studentsRelatives.getJsonObject(i);
@@ -168,8 +169,8 @@ public class DefaultMassmailingService implements MassmailingService {
             handler.handle(new Either.Right<>(studentsRelatives));
         });
 
-        getStudentRelatives(type, students, FutureHelper.handlerJsonArray(relativesFuture));
-        getStudentsPrimaryRelativesIds(students, FutureHelper.handlerJsonArray(relativesIdsFuture));
+        getStudentRelatives(type, students, FutureHelper.handlerJsonArray(relativesPromise));
+        getStudentsPrimaryRelativesIds(students, FutureHelper.handlerJsonArray(relativesIdsPromise));
     }
 
 
@@ -212,7 +213,7 @@ public class DefaultMassmailingService implements MassmailingService {
                 .put("action", "eleve.getPrimaryRelatives")
                 .put("studentIds", students);
 
-        eb.send("viescolaire", action, relativeRes -> {
+        eb.request("viescolaire", action, relativeRes -> {
 
             JsonObject body = (JsonObject) relativeRes.result().body();
 

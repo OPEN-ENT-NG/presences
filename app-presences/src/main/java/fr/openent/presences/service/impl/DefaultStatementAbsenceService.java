@@ -60,9 +60,9 @@ public class DefaultStatementAbsenceService implements StatementAbsenceService {
         }
 
         getRequest(page, limit, offset, structureId, id, startAt, endAt, studentIds, isTreated, listResultsPromise);
-        countRequest(structureId, id, startAt, endAt, studentIds, isTreated, countResultsPromise.future());
+        countRequest(structureId, id, startAt, endAt, studentIds, isTreated, countResultsPromise);
 
-        CompositeFuture.all(listResultsPromise.future(), countResultsPromise.future())
+        Future.all(listResultsPromise.future(), countResultsPromise.future())
                 .onFailure(fail -> handler.handle(Future.failedFuture(fail.getMessage())))
                 .onSuccess(eventResult -> {
 
@@ -219,36 +219,36 @@ public class DefaultStatementAbsenceService implements StatementAbsenceService {
     }
 
     private void getRequest(Integer page, String limit, String offset, String structure_id, String id, String start_at, String end_at,
-                            List<String> student_ids, Boolean is_treated, Future<JsonArray> future) {
+                            List<String> student_ids, Boolean is_treated, Promise<JsonArray> promise) {
         JsonArray params = new JsonArray();
         Sql.getInstance().prepared(queryGetter(false, page, limit, offset, structure_id, id, start_at, end_at, student_ids, is_treated, params),
                 params, SqlResult.validResultHandler(eventResult -> {
                     if (eventResult.isLeft()) {
                         String message = "[Presences@DefaultStatementAbsenceService:getRequest] Failed to retrieve absence statements.";
                         log.error(message + " " + eventResult.left().getValue());
-                        future.fail(message);
+                        promise.fail(message);
                         return;
                     }
                     setStudents(eventResult.right().getValue(), result -> {
                         if (result.failed()) {
-                            future.fail(result.cause().getMessage());
+                            promise.fail(result.cause().getMessage());
                             return;
                         }
-                        future.complete(result.result());
+                        promise.complete(result.result());
                     });
 
                 }));
     }
 
     private void countRequest(String structure_id, String id, String start_at, String end_at,
-                              List<String> student_ids, Boolean is_treated, Future<Long> future) {
+                              List<String> student_ids, Boolean is_treated, Promise<Long> promise) {
         JsonArray params = new JsonArray();
         Sql.getInstance().prepared(queryGetter(true, null, null, null, structure_id, id, start_at, end_at, student_ids, is_treated, params),
                 params, SqlResult.validUniqueResultHandler(eventResult -> {
                     if (eventResult.isLeft()) {
                         String message = "[Presences@DefaultStatementAbsenceService:countRequest] Failed to count absence statements.";
                         log.error(message + " " + eventResult.left().getValue());
-                        future.fail(message);
+                        promise.fail(message);
                         return;
                     }
 
@@ -256,7 +256,7 @@ public class DefaultStatementAbsenceService implements StatementAbsenceService {
                     Long countPageNumber = count / Presences.PAGE_SIZE;
                     if (count % 20 == 0) countPageNumber--;
 
-                    future.complete(countPageNumber);
+                    promise.complete(countPageNumber);
                 }));
     }
 

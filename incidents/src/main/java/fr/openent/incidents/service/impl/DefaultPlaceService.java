@@ -7,6 +7,7 @@ import fr.wseduc.webutils.Either;
 import io.vertx.core.CompositeFuture;
 import io.vertx.core.Future;
 import io.vertx.core.Handler;
+import io.vertx.core.Promise;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import io.vertx.core.logging.Logger;
@@ -19,20 +20,20 @@ public class DefaultPlaceService implements PlaceService {
 
     @Override
     public void get(String structureId, Handler<Either<String, JsonArray>> handler) {
-        Future<JsonArray> placesFuture = Future.future();
-        Future<JsonArray> placesUsedFuture = Future.future();
+        Promise<JsonArray> placesPromise = Promise.promise();
+        Promise<JsonArray> placesUsedPromise = Promise.promise();
 
-        fetchPlaces(structureId, FutureHelper.handlerJsonArray(placesFuture));
-        fetchUsedPlaces(structureId, FutureHelper.handlerJsonArray(placesUsedFuture));
+        fetchPlaces(structureId, FutureHelper.handlerEitherPromise(placesPromise));
+        fetchUsedPlaces(structureId, FutureHelper.handlerEitherPromise(placesPromise));
 
-        CompositeFuture.all(placesFuture, placesUsedFuture).setHandler(event -> {
+        Future.all(placesPromise.future(), placesUsedPromise.future()).onComplete(event -> {
             if (event.failed()) {
                 String message = "[Incidents@PlaceController] Failed to fetch places";
                 LOGGER.error(message);
                 handler.handle(new Either.Left<>(message));
             } else {
-                JsonArray place = placesFuture.result();
-                JsonArray placesUsed = placesUsedFuture.result();
+                JsonArray place = placesPromise.future().result();
+                JsonArray placesUsed = placesUsedPromise.future().result();
                 for (int i = 0; i < place.size(); i++) {
                     // set used false by default
                     place.getJsonObject(i).put("used", false);

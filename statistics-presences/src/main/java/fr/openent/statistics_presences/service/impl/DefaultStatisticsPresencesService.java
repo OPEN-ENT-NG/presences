@@ -104,7 +104,7 @@ public class DefaultStatisticsPresencesService extends DBService implements Stat
                 );
             }
 
-            FutureHelper.all(futureList)
+            Future.all(futureList)
                     .onSuccess(result -> {
                         JsonObject params = new JsonObject()
                                 .put(Field.STRUCTURE_STATISTICS_USERS, IModelHelper.toJsonArray(structureStatisticsUserList))
@@ -195,7 +195,7 @@ public class DefaultStatisticsPresencesService extends DBService implements Stat
                                             });
                                 }
                             });
-                    return FutureHelper.all(futureList);
+                    return Future.all(futureList);
                 })
                 .onSuccess(result -> promise.complete(structureStatisticsUserList))
                 .onFailure(error -> {

@@ -7,6 +7,7 @@ import fr.wseduc.webutils.Either;
 import io.vertx.core.CompositeFuture;
 import io.vertx.core.Future;
 import io.vertx.core.Handler;
+import io.vertx.core.Promise;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import io.vertx.core.logging.Logger;
@@ -20,20 +21,20 @@ public class DefaultProtagonistTypeService implements ProtagonistTypeService {
 
     @Override
     public void get(String structureId, Handler<Either<String, JsonArray>> handler) {
-        Future<JsonArray> protagonistsTypeFuture = Future.future();
-        Future<JsonArray> protagonistsTypeUsedFuture = Future.future();
+        Promise<JsonArray> protagonistsTypePromise = Promise.promise();
+        Promise<JsonArray> protagonistsTypeUsedPromise = Promise.promise();
 
-        fetchProtagonistsType(structureId, FutureHelper.handlerJsonArray(protagonistsTypeFuture));
-        fetchUsedProtagonistsType(structureId, FutureHelper.handlerJsonArray(protagonistsTypeUsedFuture));
+        fetchProtagonistsType(structureId, FutureHelper.handlerEitherPromise(protagonistsTypePromise));
+        fetchUsedProtagonistsType(structureId, FutureHelper.handlerEitherPromise(protagonistsTypeUsedPromise));
 
-        CompositeFuture.all(protagonistsTypeFuture, protagonistsTypeUsedFuture).setHandler(event -> {
+        Future.all(protagonistsTypePromise.future(), protagonistsTypeUsedPromise.future()).onComplete(event -> {
             if (event.failed()) {
                 String message = "[Incidents@ProtagonistTypeController] Failed to fetch protagonistsType";
                 LOGGER.error(message);
                 handler.handle(new Either.Left<>(message));
             } else {
-                JsonArray protagonistType = protagonistsTypeFuture.result();
-                JsonArray protagonistsTypeUsed = protagonistsTypeUsedFuture.result();
+                JsonArray protagonistType = protagonistsTypePromise.future().result();
+                JsonArray protagonistsTypeUsed = protagonistsTypeUsedPromise.future().result();
                 for (int i = 0; i < protagonistType.size(); i++) {
                     // set used false by default
                     protagonistType.getJsonObject(i).put("used", false);

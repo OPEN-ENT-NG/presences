@@ -1,7 +1,7 @@
 package fr.openent.statistics_presences.service.impl;
 
 
-import com.mongodb.QueryBuilder;
+import com.mongodb.client.model.Filters;
 import fr.openent.presences.common.helper.DateHelper;
 import fr.openent.presences.common.helper.FutureHelper;
 import fr.openent.presences.common.presences.Presences;
@@ -27,6 +27,7 @@ import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
+import org.bson.conversions.Bson;
 import org.entcore.common.mongodb.MongoDbResult;
 
 import java.util.*;
@@ -230,9 +231,9 @@ public class DefaultStatisticsWeeklyAudiencesService extends DBService implement
 
     private Future<JsonArray> getWeeklyAudiences(List<Integer> registerIds) {
         Promise<JsonArray> promise = Promise.promise();
-        QueryBuilder matcher = QueryBuilder.start(String.format("%s.%s", Field._ID, Field.REGISTER_ID)).in(registerIds);
+        Bson matcher = Filters.in(String.format("%s.%s", Field._ID, Field.REGISTER_ID), registerIds);
         mongoDb.find(StatisticsPresences.WEEKLY_AUDIENCES_COLLECTION, MongoQueryBuilder.build(matcher),
-                MongoDbResult.validResultsHandler(FutureHelper.handlerJsonArray(promise)));
+                MongoDbResult.validResultsHandler(FutureHelper.handlerEitherPromise(promise)));
         return promise.future();
     }
 

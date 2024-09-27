@@ -20,6 +20,7 @@ import fr.wseduc.webutils.Either;
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Future;
 import io.vertx.core.Handler;
+import io.vertx.core.Promise;
 import io.vertx.core.eventbus.EventBus;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
@@ -54,7 +55,7 @@ public class DefaultCollectiveAbsenceService extends DBService implements Collec
         getAudiencesIdsFromNames(structureId, audienceNames)
                 .compose(audienceIds -> getPaginatedCollectives(structureId, startDate, endDate, reasonId, regularized,
                         audienceIds, page))
-                .setHandler(result -> {
+                .onComplete(result -> {
                     if (result.failed()) {
                         log.error(result.cause());
                         handler.handle(Future.failedFuture(result.cause().getMessage()));
@@ -66,53 +67,53 @@ public class DefaultCollectiveAbsenceService extends DBService implements Collec
 
     @SuppressWarnings("unchecked")
     private Future<List<String>> getAudiencesIdsFromNames(String structureId, List<String> audienceNames) {
-        Future<List<String>> future = Future.future();
+        Promise<List<String>> promise = Promise.promise();
         groupService.getAudiencesFromNames(structureId, audienceNames, audiencesResult -> {
             if (audiencesResult.failed()) {
                 String message = "[Presences@DefaultCollectiveAbsenceService::getCollectives] Failed to get audiences.";
                 log.error(message, audiencesResult.cause());
-                future.fail(message);
+                promise.fail(message);
                 return;
             }
 
             List<String> audienceIds = ((List<JsonObject>) audiencesResult.result().getList()).stream()
                     .map(audience -> audience.getString("id"))
                     .collect(Collectors.toList());
-            future.complete(audienceIds);
+            promise.complete(audienceIds);
         });
-        return future;
+        return promise.future();
     }
 
     private Future<JsonObject> getPaginatedCollectives(String structureId, String startDate, String endDate, Long reasonId, Boolean regularized,
                                                        List<String> audienceIds, Integer page) {
-        Future<JsonObject> future = Future.future();
+        Promise<JsonObject> promise = Promise.promise();
 
-        Future<JsonObject> allFutures = Future.future();
-        Future<JsonObject> countFutures = Future.future();
+        Promise<JsonObject> allPromise = Promise.promise();
+        Promise<JsonObject> countPromise = Promise.promise();
 
-        getAll(structureId, startDate, endDate, reasonId, regularized, audienceIds, page, allFutures);
-        countTotalPages(structureId, startDate, endDate, reasonId, regularized, audienceIds, countFutures);
+        getAll(structureId, startDate, endDate, reasonId, regularized, audienceIds, page, allPromise);
+        countTotalPages(structureId, startDate, endDate, reasonId, regularized, audienceIds, countPromise);
 
-        FutureHelper.all(Arrays.asList(allFutures, countFutures)).setHandler(resultRequests -> {
+        Future.all(Arrays.asList(allPromise.future(), countPromise.future())).onComplete(resultRequests -> {
             if (resultRequests.failed()) {
-                future.fail(resultRequests.cause().getMessage());
+                promise.fail(resultRequests.cause().getMessage());
                 return;
             }
 
-            JsonObject result = allFutures.result();
+            JsonObject result = allPromise.future().result();
             result.put("page", page);
-            result = countFutures.result().mergeIn(result);
+            result = countPromise.future().result().mergeIn(result);
 
-            future.complete(result);
+            promise.complete(result);
         });
-        return future;
+        return promise.future();
     }
 
     private void getAll(String structureId, String startDate, String endDate, Long reasonId, Boolean regularized,
                         List<String> audienceIdsFilter, Integer page, Handler<AsyncResult<JsonObject>> handler) {
         getCollectives(structureId, startDate, endDate, reasonId, regularized, audienceIdsFilter, page)
                 .compose(collectives -> setCollectivesRelatives(structureId, collectives))
-                .setHandler(result -> {
+                .onComplete(result -> {
                     if (result.failed()) {
                         String message = "[Presences@DefaultCollectiveAbsenceService::getAll] An error has occured while getting collectives.";
                         log.error(message, result.cause());
@@ -126,7 +127,7 @@ public class DefaultCollectiveAbsenceService extends DBService implements Collec
     @SuppressWarnings("unchecked")
     private Future<List<JsonObject>> getCollectives(String structureId, String startDate, String endDate, Long reasonId, Boolean regularized,
                                                     List<String> audienceIdsFilter, Integer page) {
-        Future<List<JsonObject>> future = Future.future();
+        Promise<List<JsonObject>> promise = Promise.promise();
 
         JsonArray params = new JsonArray();
 
@@ -158,41 +159,41 @@ public class DefaultCollectiveAbsenceService extends DBService implements Collec
             if (result.isLeft()) {
                 String message = "[Presences@DefaultCollectiveAbsenceService::getCollectives] Failed to get collectives.";
                 log.error(message, result.left().getValue());
-                future.fail(message);
+                promise.fail(message);
                 return;
             }
 
             List<JsonObject> collectives = result.right().getValue().getList();
-            future.complete(collectives);
+            promise.complete(collectives);
         }));
 
-        return future;
+        return promise.future();
     }
 
     @SuppressWarnings("unchecked")
     private Future<JsonArray> setCollectivesRelatives(String structureId, List<JsonObject> collectives) {
-        Future<JsonArray> future = Future.future();
+        Promise<JsonArray> promise = Promise.promise();
 
         List<String> audienceIds = collectives.stream()
                 .flatMap(collective -> ((List<String>) new JsonArray(collective.getString("audienceids")).getList()).stream())
                 .collect(Collectors.toList());
         List<String> ownerIds = collectives.stream().map(collective -> collective.getString("owner_id")).collect(Collectors.toList());
 
-        Future<JsonArray> ownersFuture = Future.future();
-        Future<JsonArray> audiencesFuture = Future.future();
+        Promise<JsonArray> ownersPromise = Promise.promise();
+        Promise<JsonArray> audiencesPromise = Promise.promise();
 
-        userService.getUsers(ownerIds, FutureHelper.handlerJsonArray(ownersFuture));
-        groupService.getAudiences(structureId, audienceIds, audiencesFuture);
+        userService.getUsers(ownerIds, FutureHelper.handlerEitherPromise(ownersPromise));
+        groupService.getAudiences(structureId, audienceIds, audiencesPromise);
 
-        FutureHelper.all(Arrays.asList(ownersFuture, audiencesFuture)).setHandler(relativesResult -> {
+        Future.all(Arrays.asList(ownersPromise.future(), audiencesPromise.future())).onComplete(relativesResult -> {
             if (relativesResult.failed()) {
-                future.fail(relativesResult.cause().getMessage());
+                promise.fail(relativesResult.cause().getMessage());
                 return;
             }
-            future.complete(new JsonArray(formatCollectives(collectives, ownersFuture.result().getList(), audiencesFuture.result().getList())));
+            promise.complete(new JsonArray(formatCollectives(collectives, ownersPromise.future().result().getList(), audiencesPromise.future().result().getList())));
         });
 
-        return future;
+        return promise.future();
     }
 
     private Map<String, JsonObject> getOwnersById(List<JsonObject> owners) {
@@ -288,7 +289,7 @@ public class DefaultCollectiveAbsenceService extends DBService implements Collec
     public void get(String structureId, Long collectiveId, Handler<AsyncResult<JsonObject>> handler) {
         getCollective(structureId, collectiveId)
                 .compose(collective -> setCollectiveRelatives(structureId, collective))
-                .setHandler(result -> {
+                .onComplete(result -> {
                     if (result.failed()) {
                         log.error(result.cause());
                         handler.handle(Future.failedFuture(result.cause().getMessage()));
@@ -299,7 +300,7 @@ public class DefaultCollectiveAbsenceService extends DBService implements Collec
     }
 
     private Future<JsonObject> getCollective(String structureId, Long collectiveId) {
-        Future<JsonObject> future = Future.future();
+        Promise<JsonObject> promise = Promise.promise();
         String query = " SELECT ca.*, " +
                 "        array_to_json(array_agg(a.student_id)) as studentids, " +
                 "        array_to_json(array_agg(rac.audience_id)) as audienceids " +
@@ -313,45 +314,45 @@ public class DefaultCollectiveAbsenceService extends DBService implements Collec
                 .add(structureId)
                 .add(collectiveId);
 
-        sql.prepared(query, params, SqlResult.validUniqueResultHandler(FutureHelper.handlerJsonObject(future)));
+        sql.prepared(query, params, SqlResult.validUniqueResultHandler(FutureHelper.handlerEitherPromise(promise)));
 
-        return future;
+        return promise.future();
     }
 
     @SuppressWarnings("unchecked")
     private Future<JsonObject> setCollectiveRelatives(String structureId, JsonObject collective) {
-        Future<JsonObject> future = Future.future();
+        Promise<JsonObject> promise = Promise.promise();
 
         List<String> audienceIds = new JsonArray(collective.getString("audienceids")).getList();
         List<String> studentIds = new JsonArray(collective.getString("studentids")).getList();
 
-        Future<JsonArray> ownerFuture = Future.future();
-        Future<JsonArray> studentsFuture = Future.future();
-        Future<JsonArray> audiencesFuture = Future.future();
+        Promise<JsonArray> ownerPromise = Promise.promise();
+        Promise<JsonArray> studentsPromise = Promise.promise();
+        Promise<JsonArray> audiencesPromise = Promise.promise();
 
-        userService.getUsers(Collections.singletonList(collective.getString("owner_id")), FutureHelper.handlerJsonArray(ownerFuture));
-        userService.getStudentsWithAudiences(structureId, studentIds, studentsFuture);
-        groupService.getAudiences(structureId, audienceIds, audiencesFuture);
+        userService.getUsers(Collections.singletonList(collective.getString("owner_id")), FutureHelper.handlerEitherPromise(ownerPromise));
+        userService.getStudentsWithAudiences(structureId, studentIds, studentsPromise);
+        groupService.getAudiences(structureId, audienceIds, audiencesPromise);
 
-        FutureHelper.all(Arrays.asList(studentsFuture, audiencesFuture, ownerFuture)).setHandler(relatedResult -> {
+        Future.all(Arrays.asList(studentsPromise.future(), audiencesPromise.future(), ownerPromise.future())).onComplete(relatedResult -> {
             if (relatedResult.failed()) {
-                future.fail(relatedResult.cause().getMessage());
+                promise.fail(relatedResult.cause().getMessage());
                 return;
             }
 
-            List<Audience> audiences = Audience.audiences(audiencesFuture.result());
-            List<Student> students = Student.students(studentsFuture.result());
+            List<Audience> audiences = Audience.audiences(audiencesPromise.future().result());
+            List<Student> students = Student.students(studentsPromise.future().result());
 
             addStudentsInAudiences(audiences, students);
 
             JsonObject collectiveResult = new CollectiveAbsence(collective).toCamelJSON()
-                    .put("owner", ownerFuture.result().getJsonObject(0))
+                    .put("owner", ownerPromise.future().result().getJsonObject(0))
                     .put("audiences", Audience.toJSON(audiences));
 
-            future.complete(collectiveResult);
+            promise.complete(collectiveResult);
         });
 
-        return future;
+        return promise.future();
     }
 
     private void addStudentsInAudiences(List<Audience> audiences, List<Student> students) {
@@ -397,22 +398,22 @@ public class DefaultCollectiveAbsenceService extends DBService implements Collec
     public void getAbsencesStatus(String structureId, List<String> studentIds, String startDate, String endDate,
                                   Long collectiveId, Handler<AsyncResult<JsonObject>> handler) {
 
-        Future<JsonObject> absencesFuture = Future.future();
-        Future<JsonObject> collectiveFuture = Future.future();
-        Future<JsonObject> absencesCollectiveFuture = Future.future();
+        Promise<JsonObject> absencesPromise = Promise.promise();
+        Promise<JsonObject> collectivePromise = Promise.promise();
+        Promise<JsonObject> absencesCollectivePromise = Promise.promise();
 
         getAbsencesStatusFutures(structureId, collectiveId, studentIds, startDate, endDate,
-                absencesFuture, absencesCollectiveFuture, collectiveFuture);
+                absencesPromise, collectivePromise, absencesCollectivePromise);
 
-        FutureHelper.all(Arrays.asList(absencesFuture, collectiveFuture, absencesCollectiveFuture)).setHandler(result -> {
+        Future.all(Arrays.asList(absencesPromise.future(), collectivePromise.future(), absencesCollectivePromise.future())).onComplete(result -> {
             if (result.failed()) {
                 handler.handle(Future.failedFuture(result.cause().getMessage()));
                 return;
             }
 
-            List<Absence> absences = AbsenceHelper.getAbsenceListFromJsonArray(absencesFuture.result().getJsonArray("all", new JsonArray()), Collections.emptyList());
-            List<Absence> absencesCollective = AbsenceHelper.getAbsenceListFromJsonArray(absencesCollectiveFuture.result().getJsonArray("all", new JsonArray()), Collections.emptyList());
-            CollectiveAbsence collective = new CollectiveAbsence(collectiveFuture.result());
+            List<Absence> absences = AbsenceHelper.getAbsenceListFromJsonArray(absencesPromise.future().result().getJsonArray("all", new JsonArray()), Collections.emptyList());
+            List<Absence> absencesCollective = AbsenceHelper.getAbsenceListFromJsonArray(absencesCollectivePromise.future().result().getJsonArray("all", new JsonArray()), Collections.emptyList());
+            CollectiveAbsence collective = new CollectiveAbsence(collectivePromise.future().result());
 
             List<JsonObject> status = studentIds.stream().map(studentId -> setStatusStudent(studentId, absencesCollective, absences, collective)).collect(Collectors.toList());
 
@@ -457,27 +458,27 @@ public class DefaultCollectiveAbsenceService extends DBService implements Collec
     }
 
     private void getAbsencesStatusFutures(String structureId, Long collectiveId, List<String> studentIds,
-                                          String startDate, String endDate, Future<JsonObject> absencesFuture,
-                                          Future<JsonObject> absencesCollectiveFuture, Future<JsonObject> collectiveFuture) {
+                                          String startDate, String endDate, Promise<JsonObject> absencesPromise,
+                                          Promise<JsonObject> absencesCollectivePromise, Promise<JsonObject> collectivePromise) {
 
         absenceService.getAbsencesBetweenDates(startDate, endDate, studentIds, absencesResult -> {
             if (absencesResult.isLeft()) {
-                absencesFuture.fail(absencesResult.left().getValue());
+                absencesPromise.fail(absencesResult.left().getValue());
                 return;
             }
 
-            absencesFuture.complete(new JsonObject().put("all", absencesResult.right().getValue()));
+            absencesPromise.complete(new JsonObject().put("all", absencesResult.right().getValue()));
         });
 
         getCollectiveAbsences(structureId, collectiveId, absencesResult -> {
             if (absencesResult.failed()) {
-                absencesCollectiveFuture.fail(absencesResult.cause().getMessage());
+                absencesCollectivePromise.fail(absencesResult.cause().getMessage());
                 return;
             }
 
-            absencesCollectiveFuture.complete(new JsonObject().put("all", absencesResult.result()));
+            absencesCollectivePromise.complete(new JsonObject().put("all", absencesResult.result()));
         });
-        getCollective(structureId, collectiveId, collectiveFuture);
+        getCollective(structureId, collectiveId, collectivePromise);
     }
 
     private void getCollectiveAbsences(String structureId, Long collectiveId, Handler<AsyncResult<JsonArray>> handler) {
@@ -559,10 +560,10 @@ public class DefaultCollectiveAbsenceService extends DBService implements Collec
             }
             collective.setCounsellorRegularisation(regularizedResult.result().getBoolean("regularized"));
 
-            Future<JsonObject> updateCollectiveFuture = Future.future();
-            Future<JsonObject> updateAbsencesFuture = Future.future();
+            Promise<JsonObject> updateCollectivePromise = Promise.promise();
+            Promise<JsonObject> updateAbsencesPromise = Promise.promise();
 
-            update(collective, structureId, collectiveId, updateCollectiveFuture);
+            update(collective, structureId, collectiveId, updateCollectivePromise);
 
             List<String> studentIds = (List<String>) collectiveBody.getJsonArray("audiences")
                     .stream()
@@ -572,10 +573,10 @@ public class DefaultCollectiveAbsenceService extends DBService implements Collec
             JsonObject absenceBody = collective.toJSON()
                     .put("structure_id", structureId)
                     .put("student_id", studentIds);
-            absenceService.updateFromCollective(absenceBody, user, collectiveId, true, updateAbsencesFuture);
+            absenceService.updateFromCollective(absenceBody, user, collectiveId, true, updateAbsencesPromise);
 
 
-            FutureHelper.all(Arrays.asList(updateCollectiveFuture, updateAbsencesFuture)).setHandler(updateResult -> {
+            Future.all(Arrays.asList(updateCollectivePromise.future(), updateAbsencesPromise.future())).onComplete(updateResult -> {
                 if (updateResult.failed()) {
                     handler.handle(Future.failedFuture(updateResult.cause().getMessage()));
                     return;
@@ -616,20 +617,20 @@ public class DefaultCollectiveAbsenceService extends DBService implements Collec
         }
         List<String> studentIds = students.getJsonArray("studentIds").getList();
 
-        Future<JsonObject> collectiveFuture = Future.future();
-        Future<JsonObject> absencesFuture = Future.future();
+        Promise<JsonObject> collectivePromise = Promise.promise();
+        Promise<JsonObject> absencesPromise = Promise.promise();
 
-        get(structureId, collectiveId, collectiveFuture);
-        getAbsencesFromStudentIds(studentIds, structureId, collectiveId, absencesFuture);
+        get(structureId, collectiveId, collectivePromise);
+        getAbsencesFromStudentIds(studentIds, structureId, collectiveId, absencesPromise);
 
-        FutureHelper.all(Arrays.asList(collectiveFuture, absencesFuture)).setHandler(result -> {
+        Future.all(Arrays.asList(collectivePromise.future(), absencesPromise.future())).onComplete(result -> {
             if (result.failed()) {
                 String message = "[Presences@DefaultCollectiveAbsenceService::removeAbsenceFromCollectiveAbsence] Failed to get data relative to collective";
                 log.error(message, result.cause());
                 handler.handle(Future.failedFuture(result.cause().getMessage()));
             } else {
-                List<Absence> absences = AbsenceHelper.getAbsenceListFromJsonArray(absencesFuture.result().getJsonArray("all", new JsonArray()), Collections.emptyList());
-                CollectiveAbsence collective = new CollectiveAbsence(collectiveFuture.result());
+                List<Absence> absences = AbsenceHelper.getAbsenceListFromJsonArray(absencesPromise.future().result().getJsonArray("all", new JsonArray()), Collections.emptyList());
+                CollectiveAbsence collective = new CollectiveAbsence(collectivePromise.future().result());
                 deleteAbsences(absences, collective, deleteRes -> {
                     if (deleteRes.failed()) {
                         String message = "[Presences@DefaultCollectiveAbsenceService::removeAbsenceFromCollectiveAbsence] Failed to delete absence from collective absence.";
@@ -702,13 +703,13 @@ public class DefaultCollectiveAbsenceService extends DBService implements Collec
                 .flatMap(audience -> ((JsonObject) audience).getJsonArray("studentIds").getList().stream())
                 .collect(Collectors.toList());
 
-        Future<JsonObject> collectiveAudiencesFuture = Future.future();
-        Future<JsonObject> collectiveAbsencesFuture = Future.future();
+        Promise<JsonObject> collectiveAudiencesPromise = Promise.promise();
+        Promise<JsonObject> collectiveAbsencesPromise = Promise.promise();
 
-        createRelativeAudiences(collectiveId, audienceIds, collectiveAudiencesFuture);
-        createRelativeAbsences(collectiveId, user, collective, structureId, studentIds, collectiveAbsencesFuture);
+        createRelativeAudiences(collectiveId, audienceIds, collectiveAudiencesPromise);
+        createRelativeAbsences(collectiveId, user, collective, structureId, studentIds, collectiveAbsencesPromise);
 
-        FutureHelper.all(Arrays.asList(collectiveAudiencesFuture, collectiveAbsencesFuture)).setHandler(relativesResult -> {
+        Future.all(Arrays.asList(collectiveAudiencesPromise.future(), collectiveAbsencesPromise.future())).onComplete(relativesResult -> {
             if (relativesResult.failed()) {
                 handler.handle(Future.failedFuture(relativesResult.cause().getMessage()));
                 return;
@@ -796,20 +797,20 @@ public class DefaultCollectiveAbsenceService extends DBService implements Collec
 
     @Override
     public void delete(Long id, String structureId, Handler<AsyncResult<JsonObject>> handler) {
-        Future<JsonObject> collectiveFuture = Future.future();
-        Future<JsonObject> absencesFuture = Future.future();
+        Promise<JsonObject> collectivePromise = Promise.promise();
+        Promise<JsonObject> absencesPromise = Promise.promise();
 
-        getCollective(structureId, id, collectiveFuture);
+        getCollective(structureId, id, collectivePromise);
         absenceService.getAbsencesFromCollective(structureId, id, FutureHelper.handlerJsonArray(result -> {
             if (result.failed()) {
-                absencesFuture.fail(result.cause().getMessage());
+                absencesPromise.fail(result.cause().getMessage());
                 return;
             }
 
-            absencesFuture.complete(new JsonObject().put("all", result.result() != null ? result.result() : new JsonArray()));
+            absencesPromise.complete(new JsonObject().put("all", result.result() != null ? result.result() : new JsonArray()));
         }));
 
-        FutureHelper.all(Arrays.asList(collectiveFuture, absencesFuture)).setHandler(result -> {
+        Future.all(Arrays.asList(collectivePromise.future(), absencesPromise.future())).onComplete(result -> {
             if (result.failed()) {
                 String message = "[Presences@DefaultCollectiveAbsenceService::delete] Failed to get data relative to collective.";
                 log.error(message, result.cause());
@@ -817,8 +818,8 @@ public class DefaultCollectiveAbsenceService extends DBService implements Collec
                 return;
             }
 
-            List<Absence> absences = AbsenceHelper.getAbsenceListFromJsonArray(absencesFuture.result().getJsonArray("all", new JsonArray()), Collections.emptyList());
-            CollectiveAbsence collective = new CollectiveAbsence(collectiveFuture.result());
+            List<Absence> absences = AbsenceHelper.getAbsenceListFromJsonArray(absencesPromise.future().result().getJsonArray("all", new JsonArray()), Collections.emptyList());
+            CollectiveAbsence collective = new CollectiveAbsence(collectivePromise.future().result());
 
             deleteAbsences(absences, collective, deleteRes -> {
                 if (deleteRes.failed()) {
@@ -943,8 +944,8 @@ public class DefaultCollectiveAbsenceService extends DBService implements Collec
 
             for (int collectiveIndex = 0; collectiveIndex < collectivesRes.size(); collectiveIndex++) {
 
-                Future<Void> future = Future.future();
-                futures.add(future);
+                Promise<Void> promise = Promise.promise();
+                futures.add(promise.future());
 
                 JsonObject collectiveRes = collectivesRes.getJsonObject(collectiveIndex);
                 JsonObject collective = new JsonObject();
@@ -980,11 +981,11 @@ public class DefaultCollectiveAbsenceService extends DBService implements Collec
                     collective.put("students", students);
                     collectives.add(collective);
 
-                    future.complete();
+                    promise.complete();
                 });
             }
 
-            FutureHelper.all(futures).setHandler(res -> {
+            Future.all(futures).onComplete(res -> {
                 if (res.failed()) {
                     String message = "[Presences@DefaultCollectiveAbsenceService::getCSV] Failed to generate CSV file.";
                     handler.handle(Future.failedFuture(message + " " + result.cause()));

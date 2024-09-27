@@ -9,6 +9,7 @@ import fr.wseduc.mongodb.MongoDb;
 import fr.wseduc.webutils.Either;
 import io.vertx.core.Future;
 import io.vertx.core.Handler;
+import io.vertx.core.Promise;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import io.vertx.core.logging.Logger;
@@ -41,12 +42,12 @@ public class DefaultPunishmentTypeService implements PunishmentTypeService {
                 List<Future<JsonObject>> futures = new ArrayList<>();
 
                 for (Integer punishmentId : punishmentsIds) {
-                    Future<JsonObject> future = Future.future();
-                    futures.add(future);
-                    findPunishmentTypeIdIfExist(structure_id, punishmentId, FutureHelper.handlerJsonObject(future));
+                    Promise<JsonObject> promise = Promise.promise();
+                    futures.add(promise.future());
+                    findPunishmentTypeIdIfExist(structure_id, punishmentId, FutureHelper.handlerEitherPromise(promise));
                 }
 
-                FutureHelper.all(futures).setHandler(event -> {
+                Future.all(futures).onComplete(event -> {
                     if (event.failed()) {
                         String message = "[Incidents@PunishementsTypeService::get] Failed to " +
                                 "fetch used punishments type in mongodb" + " " + event.cause().toString();

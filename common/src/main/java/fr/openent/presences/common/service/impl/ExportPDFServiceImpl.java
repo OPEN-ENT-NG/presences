@@ -137,8 +137,22 @@ public class ExportPDFServiceImpl implements ExportPDFService {
             return;
         }
         HttpClient httpClient = createHttpClient(this.vertx);
-        HttpClientRequest httpClientRequest =
-                httpClient.postAbs(url.toString(), response -> {
+
+        final String boundary = UUID.randomUUID().toString();
+        RequestOptions requestOptions = new RequestOptions()
+                .setAbsoluteURI(url.toString())
+                .setMethod(HttpMethod.POST)
+                .setFollowRedirects(true)
+                .putHeader(HttpHeaders.CONTENT_TYPE, "multipart/form-data; boundary=" + boundary)
+                .putHeader("Authorization", authHeader)
+                .putHeader(HttpHeaders.ACCEPT, "*/*");
+
+        httpClient.request(requestOptions)
+                .compose(request -> {
+                    request.setChunked(true);
+                    return request.send(multipartBody(file, token, boundary));
+                })
+                .onSuccess(response -> {
                     if (response.statusCode() == 200) {
                         final Buffer buff = Buffer.buffer();
                         response.handler(buff::appendBuffer);
@@ -159,25 +173,14 @@ public class ExportPDFServiceImpl implements ExportPDFService {
                             }
                         });
                     }
+                })
+                .onFailure(event -> {
+                    LOGGER.error(event.getMessage(), event);
+                    if (!responseIsSent.getAndSet(true)) {
+                        handler.handle(new Either.Left<>(event.getMessage()));
+                        httpClient.close();
+                    }
                 });
-
-        httpClientRequest.exceptionHandler(new Handler<Throwable>() {
-            @Override
-            public void handle(Throwable event) {
-                LOGGER.error(event.getMessage(), event);
-                if (!responseIsSent.getAndSet(true)) {
-                    handle(event);
-                    httpClient.close();
-                }
-            }
-        }).setFollowRedirects(true);
-        final String boundary = UUID.randomUUID().toString();
-        httpClientRequest.setChunked(true)
-                .putHeader(HttpHeaders.CONTENT_TYPE, "multipart/form-data; boundary=" + boundary)
-                .putHeader("Authorization", authHeader)
-                .putHeader(HttpHeaders.ACCEPT, "*/*")
-                .end(multipartBody(file, token, boundary));
-
     }
 
     private void callNodePdfGenerator(byte[] bytes, UserInfos user, Handler<Either<String, Buffer>> asyncResultHandler) {

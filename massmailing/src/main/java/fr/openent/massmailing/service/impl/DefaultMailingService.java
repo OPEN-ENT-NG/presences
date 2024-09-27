@@ -6,10 +6,7 @@ import fr.openent.massmailing.model.Mailing.Mailing;
 import fr.openent.massmailing.service.MailingService;
 import fr.openent.presences.common.helper.FutureHelper;
 import fr.wseduc.webutils.Either;
-import io.vertx.core.AsyncResult;
-import io.vertx.core.CompositeFuture;
-import io.vertx.core.Future;
-import io.vertx.core.Handler;
+import io.vertx.core.*;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import io.vertx.core.logging.Logger;
@@ -43,8 +40,8 @@ public class DefaultMailingService implements MailingService {
             }
             List<Mailing> mailings = mailingAsync.result();
 
-            Future<JsonObject> studentFuture = Future.future();
-            Future<JsonObject> recipientFuture = Future.future();
+            Promise<JsonObject> studentPromise = Promise.promise();
+            Promise<JsonObject> recipientPromise = Promise.promise();
 
             List<String> studentIds = new ArrayList<>();
             List<String> recipientIds = new ArrayList<>();
@@ -54,7 +51,7 @@ public class DefaultMailingService implements MailingService {
                 recipientIds.add(mailing.getRecipient().getId());
             });
 
-            CompositeFuture.all(studentFuture, recipientFuture).setHandler(finalResultAsync -> {
+            Future.all(studentPromise.future(), recipientPromise.future()).onComplete(finalResultAsync -> {
                 if (finalResultAsync.failed()) {
                     String message = "[Presences@DefaultPresenceService] Failed to add mailingEvent, Students or Recipient to mailing";
                     LOGGER.error(message + finalResultAsync.cause());
@@ -64,8 +61,8 @@ public class DefaultMailingService implements MailingService {
                 }
             });
 
-            mailingHelper.addStudentToMailing(structureId, mailings, studentIds, studentFuture);
-            mailingHelper.addRecipientToMailing(mailings, recipientIds, recipientFuture);
+            mailingHelper.addStudentToMailing(structureId, mailings, studentIds, studentPromise);
+            mailingHelper.addRecipientToMailing(mailings, recipientIds, recipientPromise);
         });
     }
 

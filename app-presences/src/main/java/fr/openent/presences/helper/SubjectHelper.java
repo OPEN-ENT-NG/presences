@@ -28,7 +28,7 @@ public class SubjectHelper {
                 .put("action", "matiere.getMatieres")
                 .put("idMatieres", subjects);
 
-        eb.send("viescolaire", action, event -> {
+        eb.request("viescolaire", action, event -> {
             JsonObject body = (JsonObject) event.result().body();
             if (event.failed() || "error".equals(body.getString("status"))) {
                 String err = "[SubjectHelper@getSubjects] Failed to retrieve subjects";

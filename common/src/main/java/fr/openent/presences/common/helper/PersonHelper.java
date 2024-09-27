@@ -81,7 +81,7 @@ public class PersonHelper {
 
     public Future<JsonArray> getStudentsInfo(String structureId, List<String> studentIds) {
         Promise<JsonArray> promise = Promise.promise();
-        getStudentsInfo(structureId, studentIds, null, FutureHelper.handlerJsonArray(promise));
+        getStudentsInfo(structureId, studentIds, null, FutureHelper.handlerEitherPromise(promise));
         return promise.future();
     }
 

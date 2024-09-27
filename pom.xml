@@ -44,7 +44,6 @@
 
     <properties>
         <revision>2.0-b2school-SNAPSHOT</revision>
-        <vertxVersion>3.9.5</vertxVersion>
         <toolsVersion>2.0.0-final</toolsVersion>
         <junitVersion>5.1.0</junitVersion>
         <vertxCronTimer>2.0.0</vertxCronTimer>

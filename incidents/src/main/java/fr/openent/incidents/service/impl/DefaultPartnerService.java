@@ -7,6 +7,7 @@ import fr.wseduc.webutils.Either;
 import io.vertx.core.CompositeFuture;
 import io.vertx.core.Future;
 import io.vertx.core.Handler;
+import io.vertx.core.Promise;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import io.vertx.core.logging.Logger;
@@ -19,20 +20,20 @@ public class DefaultPartnerService implements PartnerService {
 
     @Override
     public void get(String structureId, Handler<Either<String, JsonArray>> handler) {
-        Future<JsonArray> partnersFuture = Future.future();
-        Future<JsonArray> partnersUsedFuture = Future.future();
+        Promise<JsonArray> partnersPromise = Promise.promise();
+        Promise<JsonArray> partnersUsedPromise = Promise.promise();
 
-        fetchPartners(structureId, FutureHelper.handlerJsonArray(partnersFuture));
-        fetchUsedPartners(structureId, FutureHelper.handlerJsonArray(partnersUsedFuture));
+        fetchPartners(structureId, FutureHelper.handlerEitherPromise(partnersPromise));
+        fetchUsedPartners(structureId, FutureHelper.handlerEitherPromise(partnersUsedPromise));
 
-        CompositeFuture.all(partnersFuture, partnersUsedFuture).setHandler(event -> {
+        Future.all(partnersPromise.future(), partnersUsedPromise.future()).onComplete(event -> {
             if (event.failed()) {
                 String message = "[Incidents@PartnerController] Failed to fetch partners";
                 LOGGER.error(message);
                 handler.handle(new Either.Left<>(message));
             } else {
-                JsonArray partner = partnersFuture.result();
-                JsonArray partnersUsed = partnersUsedFuture.result();
+                JsonArray partner = partnersPromise.future().result();
+                JsonArray partnersUsed = partnersUsedPromise.future().result();
                 for (int i = 0; i < partner.size(); i++) {
                     // set used false by default
                     partner.getJsonObject(i).put("used", false);
