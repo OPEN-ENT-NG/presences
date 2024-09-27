@@ -94,18 +94,18 @@ public class DefaultExportEventService extends DBService implements ExportEventS
                         ownerIds.removeAll(Collections.singletonList(null));
                         eventTypeIds.removeAll(Collections.singletonList(null));
 
-                        Future<JsonObject> reasonFuture = Future.future();
-                        Future<JsonObject> studentFuture = Future.future();
-                        Future<JsonObject> ownerFuture = Future.future();
-                        Future<JsonObject> eventTypeFuture = Future.future();
+                        Promise<JsonObject> reasonPromise = Promise.promise();
+                        Promise<JsonObject> studentPromise = Promise.promise();
+                        Promise<JsonObject> ownerPromise = Promise.promise();
+                        Promise<JsonObject> eventTypePromise = Promise.promise();
 
-                        eventHelper.addReasonsToEvents(events, reasonIds, reasonFuture);
-                        eventHelper.addStudentsToEvents(events, studentIds, restrictedClasses, structureId, studentFuture);
-                        eventHelper.addOwnerToEvents(events, ownerIds, ownerFuture);
-                        eventHelper.addEventTypeToEvents(events, eventTypeIds, eventTypeFuture);
+                        eventHelper.addReasonsToEvents(events, reasonIds, reasonPromise);
+                        eventHelper.addStudentsToEvents(events, studentIds, restrictedClasses, structureId, studentPromise);
+                        eventHelper.addOwnerToEvents(events, ownerIds, ownerPromise);
+                        eventHelper.addEventTypeToEvents(events, eventTypeIds, eventTypePromise);
 
-                        CompositeFuture.all(reasonFuture, eventTypeFuture, studentFuture, ownerFuture)
-                                .setHandler(eventResult -> {
+                        Future.all(reasonPromise.future(), eventTypePromise.future(), studentPromise.future(), ownerPromise.future())
+                                .onComplete(eventResult -> {
                                     if (eventResult.failed()) {
                                         String message = "[Presences@DefaultEventService::getCsvData] Failed to add " +
                                                 "reasons, eventType, students or owner to corresponding event ";

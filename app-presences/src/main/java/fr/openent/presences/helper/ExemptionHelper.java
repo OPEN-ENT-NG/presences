@@ -9,6 +9,7 @@ import fr.openent.presences.model.Exemption.ExemptionView;
 import fr.wseduc.webutils.Either;
 import io.vertx.core.Future;
 import io.vertx.core.Handler;
+import io.vertx.core.Promise;
 import io.vertx.core.eventbus.EventBus;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
@@ -77,7 +78,7 @@ public class ExemptionHelper {
      * @param structure_id structure identifier
      * @param exemptions   list of exemption
      */
-    public void addUsersInfo(String structure_id, List<ExemptionView> exemptions, Future<JsonObject> future) {
+    public void addUsersInfo(String structure_id, List<ExemptionView> exemptions, Promise<JsonObject> promise) {
         JsonArray student_ids = new JsonArray();
 
         for (ExemptionView exemption : exemptions) {
@@ -89,7 +90,7 @@ public class ExemptionHelper {
                 .put("idEleves", student_ids)
                 .put("idEtablissement", structure_id);
 
-        eb.send(Presences.ebViescoAddress, action, handlerToAsyncHandler(message -> {
+        eb.request(Presences.ebViescoAddress, action, handlerToAsyncHandler(message -> {
             JsonObject body = message.body();
             if ("ok".equals(body.getString("status"))) {
                 JsonArray student_ids_fromClasses = body.getJsonArray("results");
@@ -105,11 +106,11 @@ public class ExemptionHelper {
                         }
                     }
                 }
-                future.complete();
+                promise.complete();
             } else {
                 String error = "[Presences@ExemptionHelper] Exemption: Can't get student info";
                 LOGGER.error(error);
-                future.fail(error);
+                promise.fail(error);
             }
         }));
     }
@@ -120,7 +121,7 @@ public class ExemptionHelper {
      * @param exemptions list of exemption
      * @param future     future used for a composite future
      */
-    public void addSubjectsInfo(List<ExemptionView> exemptions, Future<JsonObject> future) {
+    public void addSubjectsInfo(List<ExemptionView> exemptions, Promise<JsonObject> promise) {
         JsonArray subject_ids = new JsonArray();
 
         for (ExemptionView exemption : exemptions) {
@@ -133,7 +134,7 @@ public class ExemptionHelper {
                 .put("action", "matiere.getMatieres")
                 .put("idMatieres", subject_ids);
 
-        eb.send(Presences.ebViescoAddress, action, handlerToAsyncHandler(message -> {
+        eb.request(Presences.ebViescoAddress, action, handlerToAsyncHandler(message -> {
             JsonObject body = message.body();
             if ("ok".equals(body.getString("status"))) {
                 JsonArray matieresInfo = body.getJsonArray("results");
@@ -151,11 +152,11 @@ public class ExemptionHelper {
                         }
                     }
                 }
-                future.complete();
+                promise.complete();
             } else {
                 String error = "[Presences@ExemptionHelper] Exemption: Can't get subject info";
                 LOGGER.error(error);
-                future.fail(error);
+                promise.fail(error);
             }
         }));
     }

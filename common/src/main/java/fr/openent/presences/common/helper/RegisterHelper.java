@@ -4,6 +4,7 @@ import fr.openent.presences.enums.EventTypeEnum;
 import fr.wseduc.webutils.Either;
 import io.vertx.core.Future;
 import io.vertx.core.Handler;
+import io.vertx.core.Promise;
 import io.vertx.core.eventbus.EventBus;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
@@ -100,10 +101,10 @@ public class RegisterHelper {
      * @param startDate     startDate absence
      * @param endDate       endDate absence
      * @param idStudents    Users list retrieved
-     * @param future        Function handler returning data
+     * @param promise       Promise handler returning data
      */
-    public void getAbsence(String startDate, String endDate, JsonArray idStudents, Future<JsonArray> future) {
-        getAbsence(startDate, endDate, idStudents, FutureHelper.handlerJsonArray(future));
+    public void getAbsence(String startDate, String endDate, JsonArray idStudents, Promise<JsonArray> promise) {
+        getAbsence(startDate, endDate, idStudents, FutureHelper.handlerEitherPromise(promise));
     }
 
     /**

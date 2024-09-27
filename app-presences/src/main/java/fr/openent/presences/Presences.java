@@ -19,7 +19,10 @@ import fr.openent.presences.worker.PresencesExportWorker;
 import fr.openent.presences.worker.ResetAlertsWorker;
 import fr.wseduc.cron.CronTrigger;
 import fr.wseduc.mongodb.MongoDb;
+import io.vertx.core.AbstractVerticle;
 import io.vertx.core.DeploymentOptions;
+import io.vertx.core.Promise;
+import io.vertx.core.Verticle;
 import io.vertx.core.eventbus.DeliveryOptions;
 import io.vertx.core.eventbus.EventBus;
 import io.vertx.core.json.JsonObject;
@@ -28,6 +31,7 @@ import org.entcore.common.neo4j.Neo4j;
 import org.entcore.common.sql.Sql;
 import org.entcore.common.storage.Storage;
 import org.entcore.common.storage.StorageFactory;
+import org.vertx.java.busmods.BusModBase;
 
 import java.text.ParseException;
 
@@ -97,8 +101,8 @@ public class Presences extends BaseServer {
     public static final String CALENDAR_VIEW = "presences.calendar.view";
 
     @Override
-    public void start() throws Exception {
-        super.start();
+    public void start(Promise<Void> startPromise) throws Exception {
+        super.start(startPromise);
         dbSchema = config.getString("db-schema");
         ebViescoAddress = "viescolaire";
         final EventBus eb = getEventBus(vertx);
@@ -169,6 +173,8 @@ public class Presences extends BaseServer {
         vertx.deployVerticle(ResetAlertsWorker.class, new DeploymentOptions().setConfig(config).setWorker(true));
 
         vertx.deployVerticle(PresencesExportWorker.class, new DeploymentOptions().setConfig(config).setWorker(true));
+        startPromise.tryComplete();
+        startPromise.tryFail("[Presences@Presences::start] Failed to start module Presences.");
     }
 
     public static void launchResetAlertsWorker(EventBus eb, JsonObject params) {

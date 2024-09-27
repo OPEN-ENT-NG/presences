@@ -62,7 +62,7 @@ public class DefaultCourseService extends DBService implements CourseService {
                 .put("idMatieres", new JsonArray()
                         .add(course.getString("subjectId", course.getString("timetableSubjectId", ""))));
 
-        eb.send("viescolaire", action, subjectsAsync -> {
+        eb.request("viescolaire", action, subjectsAsync -> {
             if (subjectsAsync.failed() || subjectsAsync.result() == null ||
                     "error".equals(((JsonObject) subjectsAsync.result().body()).getString("status"))) {
                 handler.handle(new Either.Left<>(subjectsAsync.cause().getMessage()));
@@ -189,7 +189,7 @@ public class DefaultCourseService extends DBService implements CourseService {
             futures.add(noTeacherFuture);
         }
 
-        FutureHelper.all(futures)
+        Future.all(futures)
                 .onFailure(fail -> promise.fail(fail.getCause().getMessage()))
                 .onSuccess(ar -> {
                     if ((isWithTeacherFilter != null) && BooleanUtils.toBooleanObject(isWithTeacherFilter).equals(Boolean.FALSE)

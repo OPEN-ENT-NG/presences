@@ -188,7 +188,7 @@ public class CourseController extends ControllerHelper {
                             .put("username", user.getUsername())
                             .put("message", message);
 
-                    eb.send("org.entcore.conversation", action, handlerToAsyncHandler(messageEvent -> {
+                    eb.request("org.entcore.conversation", action, handlerToAsyncHandler(messageEvent -> {
                         if (!"ok".equals(messageEvent.body().getString("status"))) {
                             log.error("[Presences@CourseController] Failed to send message", messageEvent.body().getString("error"));
                             renderError(request);

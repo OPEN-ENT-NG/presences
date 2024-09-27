@@ -81,7 +81,7 @@ public class DefaultLatenessEventService extends DBService implements LatenessEv
     }
 
     private Future<JsonObject> getStudentGroups(JsonObject registerProcess) {
-        Future<JsonObject> future = Future.future();
+        Promise<JsonObject> promise = Promise.promise();
         JsonObject body = registerProcess.getJsonObject("body");
         JsonObject res = registerProcess.getJsonObject("res");
 
@@ -93,7 +93,7 @@ public class DefaultLatenessEventService extends DBService implements LatenessEv
             if (groups.isLeft() || groups.right().getValue().isEmpty()) {
                 LOGGER.error("[Presences@LatenessEventService::getStudentGroups] Failed to fetch student groups",
                         groups.left().getValue());
-                future.fail(groups.left().getValue());
+                promise.fail(groups.left().getValue());
             } else {
                 JsonArray groupNames = new JsonArray();
 
@@ -103,11 +103,11 @@ public class DefaultLatenessEventService extends DBService implements LatenessEv
 
                 res.put("groupNames", groupNames);
 
-                future.complete(registerProcess);
+                promise.complete(registerProcess);
             }
         });
 
-        return future;
+        return promise.future();
     }
 
     @SuppressWarnings("unchecked")

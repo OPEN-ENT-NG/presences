@@ -30,9 +30,8 @@ public class Incidents extends BaseServer {
     public static Integer PAGE_SIZE = 20;
 
     @Override
-    public void start() throws Exception {
-
-        super.start();
+    public void start(Promise<Void> startPromise) throws Exception {
+        super.start(startPromise);
         dbSchema = config.getString("db-schema");
         final EventBus eb = getEventBus(vertx);
         CommonIncidentsServiceFactory commonIncidentsServiceFactory = new CommonIncidentsServiceFactory(vertx);
@@ -58,6 +57,8 @@ public class Incidents extends BaseServer {
         addController(new FakeRight());
 
         vertx.deployVerticle(IncidentsExportWorker.class, new DeploymentOptions().setConfig(config).setWorker(true));
+        startPromise.tryComplete();
+        startPromise.tryFail("[Incidents@Incidents::start] Failed to start module Incidents.");
     }
 
 }

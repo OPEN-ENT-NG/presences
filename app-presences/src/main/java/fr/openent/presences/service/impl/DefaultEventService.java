@@ -91,21 +91,21 @@ public class DefaultEventService extends DBService implements EventService {
                     List<String> eventType, List<String> listReasonIds, Boolean noAbsenceReason, Boolean noLatenessReason, List<String> userId,
                     List<String> restrictedClasses, Boolean regularized, Boolean followed, Integer page, Handler<AsyncResult<JsonArray>> handler) {
 
-        Future<JsonArray> eventsFuture = Future.future();
-        Future<JsonObject> slotsFuture = Future.future();
+        Promise<JsonArray> eventsPromise = Promise.promise();
+        Promise<JsonObject> slotsPromise = Promise.promise();
 
         getDayMainEvents(structureId, startDate, endDate, startTime, endTime, userId, eventType, listReasonIds, noAbsenceReason,
-                noLatenessReason, regularized, followed, page, eventsFuture);
-        slotHelper.getTimeSlots(structureId, FutureHelper.handlerJsonObject(slotsFuture));
+                noLatenessReason, regularized, followed, page, eventsPromise);
+        slotHelper.getTimeSlots(structureId, FutureHelper.handlerEitherPromise(slotsPromise));
 
 
-        CompositeFuture.all(eventsFuture, slotsFuture).setHandler(eventAsyncResult -> {
+        Future.all(eventsPromise.future(), slotsPromise.future()).onComplete(eventAsyncResult -> {
             if (eventAsyncResult.failed()) {
                 String message = "[Presences@DefaultEventService] Failed to retrieve events info and slotProfile";
                 LOGGER.error(message + eventAsyncResult.cause().getMessage());
                 handler.handle(Future.failedFuture(message));
             } else {
-                List<Event> events = EventHelper.getEventListFromJsonArray(eventsFuture.result(), Event.MANDATORY_ATTRIBUTE);
+                List<Event> events = EventHelper.getEventListFromJsonArray(eventsPromise.future().result(), Event.MANDATORY_ATTRIBUTE);
 
                 if (events.isEmpty()) { //no need to proceed treatment if no events
                     handler.handle(Future.succeededFuture(new JsonArray(events)));
@@ -119,40 +119,40 @@ public class DefaultEventService extends DBService implements EventService {
                 reasonIds.removeAll(Collections.singletonList(null));
                 studentIds.removeAll(Collections.singletonList(null));
 
-                Future<JsonArray> absencesFuture = Future.future();
-                Future<JsonObject> reasonFuture = Future.future();
+                Promise<JsonArray> absencesPromise = Promise.promise();
+                Promise<JsonObject> reasonPromise = Promise.promise();
 
-                absenceService.get(structureId, startDate, endDate, studentIds, FutureHelper.handlerJsonArray(absencesFuture));
-                eventHelper.addReasonsToEvents(events, reasonIds, reasonFuture);
+                absenceService.get(structureId, startDate, endDate, studentIds, FutureHelper.handlerEitherPromise(absencesPromise));
+                eventHelper.addReasonsToEvents(events, reasonIds, reasonPromise);
 
-                CompositeFuture.all(absencesFuture, reasonFuture).setHandler(asyncResult -> {
+                Future.all(absencesPromise.future(), reasonPromise.future()).onComplete(asyncResult -> {
                     if (asyncResult.failed()) {
                         String message = "[Presences@DefaultEventService] Failed to retrieve absences, " +
                                 "reason or event type";
                         LOGGER.error(message);
                         handler.handle(Future.failedFuture(message));
                     } else {
-                        JsonArray absences = absencesFuture.result();
+                        JsonArray absences = absencesPromise.future().result();
 
-                        Future<JsonObject> studentFuture = Future.future();
+                        Promise<JsonObject> studentPromise = Promise.promise();
 
                         eventHelper.addStudentsToEvents(structureId, events, studentIds, restrictedClasses, startDate, endDate, startTime,
                                 endTime, eventType, listReasonIds, noAbsenceReason, noLatenessReason, regularized, followed, absences,
-                                slotsFuture.result(), studentFuture);
+                                slotsPromise.future().result(), studentPromise);
 
-                        studentFuture.setHandler(addInfoResult -> {
+                        studentPromise.future().onComplete(addInfoResult -> {
                             if (addInfoResult.failed()) {
                                 String message = "[Presences@DefaultEventService] Failed to retrieve student info";
                                 LOGGER.error(message);
                                 handler.handle(Future.failedFuture(message));
                             } else {
-                                Future<JsonObject> actionFuture = Future.future();
-                                Future<JsonObject> ownerFuture = Future.future();
+                                Promise<JsonObject> actionPromise = Promise.promise();
+                                Promise<JsonObject> ownerPromise = Promise.promise();
 
-                                eventHelper.addLastActionAbbreviation(events, actionFuture);
-                                eventHelper.addOwnerToEvents(events, ownerFuture);
+                                eventHelper.addLastActionAbbreviation(events, actionPromise);
+                                eventHelper.addOwnerToEvents(events, ownerPromise);
 
-                                CompositeFuture.all(actionFuture, ownerFuture).setHandler(eventResult -> {
+                                Future.all(actionPromise.future(), ownerPromise.future()).onComplete(eventResult -> {
                                     if (eventResult.failed()) {
                                         String message = "[Presences@DefaultEventService::get] Failed to retrieve owners " +
                                                 "or add last action abbreviation to existing event";
@@ -791,13 +791,13 @@ public class DefaultEventService extends DBService implements EventService {
     @SuppressWarnings("unchecked")
     private void editCorrespondingAbsences(List<Event> editedEvents, UserInfos user, String studentId, String structureId,
                                            Boolean regularized, Integer reasonId, Handler<Either<String, JsonObject>> handler) {
-        Future<JsonArray> slotsFuture = Future.future();
-        Future<JsonArray> absencesFuture = Future.future();
+        Promise<JsonArray> slotsPromise = Promise.promise();
+        Promise<JsonArray> absencesPromise = Promise.promise();
 
-        getAbsenceWithEvents(editedEvents, studentId, absencesFuture);
-        getTimeSlots(structureId, slotsFuture);
+        getAbsenceWithEvents(editedEvents, studentId, absencesPromise);
+        getTimeSlots(structureId, slotsPromise);
 
-        FutureHelper.all(Arrays.asList(slotsFuture, absencesFuture)).setHandler(result -> {
+        Future.all(Arrays.asList(slotsPromise.future(), absencesPromise.future())).onComplete(result -> {
             if (result.failed()) {
                 String message = "[Presences@DefaultEventService::editCorrespondingAbsences] Failed to retrieve data";
                 LOGGER.error(message, result.cause().getMessage());
@@ -805,8 +805,8 @@ public class DefaultEventService extends DBService implements EventService {
                 return;
             }
 
-            JsonArray absences = absencesFuture.result();
-            List<Slot> slots = SlotHelper.getSlotListFromJsonArray(slotsFuture.result());
+            JsonArray absences = absencesPromise.future().result();
+            List<Slot> slots = SlotHelper.getSlotListFromJsonArray(slotsPromise.future().result());
 
             JsonObject nullAbsenceEvents = ((List<JsonObject>) absences.getList()).stream()
                     .filter(absence -> absence.getInteger("id") == null)
@@ -820,17 +820,17 @@ public class DefaultEventService extends DBService implements EventService {
             List<Future<JsonObject>> futures = new ArrayList<>();
 
             if (nullAbsenceEvents != null) {
-                Future<JsonObject> future = Future.future();
-                futures.add(future);
-                createAbsencesFromEvents(slots, nullAbsenceEvents, regularized, reasonId, user, studentId, structureId, future);
+                Promise<JsonObject> promise = Promise.promise();
+                futures.add(promise.future());
+                createAbsencesFromEvents(slots, nullAbsenceEvents, regularized, reasonId, user, studentId, structureId, promise);
             }
 
             for (JsonObject absence : absencesWithEvents) {
-                Future<JsonObject> future = Future.future();
-                updateAbsenceFromEvents(absence, regularized, reasonId, user, future);
+                Promise<JsonObject> promise = Promise.promise();
+                updateAbsenceFromEvents(absence, regularized, reasonId, user, promise);
             }
 
-            FutureHelper.all(futures).setHandler(event -> {
+            Future.all(futures).onComplete(event -> {
                 if (event.failed()) {
                     LOGGER.info("[Presences@DefaultEventService::editCorrespondingAbsences::CompositeFuture]: " +
                             "An error has occured)");
@@ -914,7 +914,7 @@ public class DefaultEventService extends DBService implements EventService {
     }
 
     private void createAbsencesFromEvents(List<Slot> slots, JsonObject nullAbsenceEvents, Boolean regularized, Integer reasonId,
-                                          UserInfos user, String studentId, String structureId, Future<JsonObject> future) {
+                                          UserInfos user, String studentId, String structureId, Promise<JsonObject> promise) {
 
         ArrayList<Event> independentEvents = (ArrayList<Event>) new JsonArray(nullAbsenceEvents.getString("events"))
                 .stream()
@@ -955,7 +955,7 @@ public class DefaultEventService extends DBService implements EventService {
         }
 
         createAbsencesFromChainedEvents(listChainedEvents, regularized, reasonId,
-                user, studentId, structureId, future);
+                user, studentId, structureId, promise);
     }
 
     private Event getNextEvent(Event event, List<Event> independentEvents) {
@@ -982,12 +982,12 @@ public class DefaultEventService extends DBService implements EventService {
 
     private void createAbsencesFromChainedEvents(List<Map<Integer, Event>> listChainedEvents, Boolean regularized,
                                                  Integer reasonId, UserInfos user, String studentId, String structureId,
-                                                 Future<JsonObject> future) {
+                                                 Promise<JsonObject> promise) {
         List<Future<JsonObject>> absencesFutures = new ArrayList<>();
         for (Map<Integer, Event> eventsMap : listChainedEvents) {
             List<Event> events = new ArrayList<>(eventsMap.values());
-            Future<JsonObject> absenceFuture = Future.future();
-            absencesFutures.add(absenceFuture);
+            Promise<JsonObject> absencePromise = Promise.promise();
+            absencesFutures.add(absencePromise.future());
             Date startDate = events.stream()
                     .map(event -> DateHelper.parseDate(event.getStartDate()))
                     .min(Date::compareTo)
@@ -1001,7 +1001,7 @@ public class DefaultEventService extends DBService implements EventService {
             if (startDate == null || endDate == null) {
                 String message = "[Presences@DefaultEventService::editCorrespondingAbsences] Failed to get absence date range";
                 LOGGER.error(message);
-                absenceFuture.fail(message);
+                absencePromise.fail(message);
                 continue;
             }
 
@@ -1015,28 +1015,28 @@ public class DefaultEventService extends DBService implements EventService {
             absenceService.create(createAbsence, user, false, resultCreate -> {
                 if (resultCreate.isLeft()) {
                     String message = "[Presences@DefaultEventService::editCorrespondingAbsences] Failed to create absence";
-                    absenceFuture.fail(message);
+                    absencePromise.fail(message);
                     LOGGER.error(message);
                     return;
                 }
                 createAbsence.put("id", resultCreate.right().getValue().getInteger("id"));
                 // Here we update twice because of 013-MA-403-sync-absence-with-events.sql trigger.
-                updateRegularizationAbsence(createAbsence, regularized, user, absenceFuture);
+                updateRegularizationAbsence(createAbsence, regularized, user, absencePromise);
             });
         }
 
-        FutureHelper.all(absencesFutures).setHandler(result -> {
+        Future.all(absencesFutures).onComplete(result -> {
             if (result.failed()) {
                 String message = "[Presences@DefaultEventService::editCorrespondingAbsences] Failed to create absences";
                 LOGGER.error(message + " " + result.cause().getMessage());
-                future.fail(message);
+                promise.fail(message);
                 return;
             }
-            future.complete(new JsonObject().put("success", "ok"));
+            promise.complete(new JsonObject().put("success", "ok"));
         });
     }
 
-    private void updateAbsenceFromEvents(JsonObject absence, Boolean regularized, Integer reason_id, UserInfos user, Future<JsonObject> future) {
+    private void updateAbsenceFromEvents(JsonObject absence, Boolean regularized, Integer reason_id, UserInfos user, Promise<JsonObject> promise) {
         ArrayList<Event> events = (ArrayList<Event>) new JsonArray(absence.getString("events"))
                 .stream()
                 .map((oEvent) -> new Event((JsonObject) oEvent, new ArrayList<>()))
@@ -1051,7 +1051,7 @@ public class DefaultEventService extends DBService implements EventService {
                 LOGGER.error(message);
             } else {
                 // Here we update twice because of 013-MA-403-sync-absence-with-events.sql trigger.
-                updateRegularizationAbsence(absence, regularized, user, future);
+                updateRegularizationAbsence(absence, regularized, user, promise);
             }
         });
     }
@@ -1067,7 +1067,7 @@ public class DefaultEventService extends DBService implements EventService {
         return null;
     }
 
-    private void updateRegularizationAbsence(JsonObject absence, Boolean regularized, UserInfos user, Future<JsonObject> future) {
+    private void updateRegularizationAbsence(JsonObject absence, Boolean regularized, UserInfos user, Promise<JsonObject> promise) {
         if (regularized != null) {
             absence.put("regularized", regularized);
             absence.put("ids", (new JsonArray()).add(absence.getInteger("id")));
@@ -1075,13 +1075,13 @@ public class DefaultEventService extends DBService implements EventService {
                 if (resultUpdate.isLeft()) {
                     String message = "[Presences@DefaultEventService::editCorrespondingAbsences] Failed to update absence";
                     LOGGER.error(message);
-                    future.fail(resultUpdate.left().getValue());
+                    promise.fail(resultUpdate.left().getValue());
                 } else {
-                    future.complete();
+                    promise.complete();
                 }
             });
         } else {
-            future.complete();
+            promise.complete();
         }
     }
 

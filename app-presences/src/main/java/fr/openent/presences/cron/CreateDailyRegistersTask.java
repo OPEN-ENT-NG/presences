@@ -21,7 +21,7 @@ public class CreateDailyRegistersTask implements Handler<Long> {
 
     @Override
     public void handle(Long event) {
-        eventBus.send(CreateDailyPresenceWorker.class.getName(),
+        eventBus.request(CreateDailyPresenceWorker.class.getName(),
                 new JsonObject(),
                 new DeliveryOptions().setSendTimeout(1000 * 1000L),
                 Utils.handlerToAsyncHandler(eventExport ->{

@@ -41,7 +41,7 @@ public class Incidents {
                 .put("endDate", endDate)
                 .put("users", new JsonArray(users));
 
-        eb.send(address, action, MessageResponseHandler.messageJsonArrayHandler(handler));
+        eb.request(address, action, MessageResponseHandler.messageJsonArrayHandler(handler));
     }
 
     public void getInitIncidentTypesStatement(String structure, InitTypeEnum initTypeEnum, Handler<Either<String, JsonObject>> handler) {
@@ -50,7 +50,7 @@ public class Incidents {
                 .put(Field.INITTYPE, initTypeEnum.getValue())
                 .put(Field.STRUCTURE, structure);
 
-        eb.send(address, action, MessageResponseHandler.messageJsonObjectHandler(handler));
+        eb.request(address, action, MessageResponseHandler.messageJsonObjectHandler(handler));
     }
 
     public void getInitIncidentPlacesStatement(String structure, InitTypeEnum initTypeEnum, Handler<Either<String, JsonObject>> handler) {
@@ -59,7 +59,7 @@ public class Incidents {
                 .put(Field.INITTYPE, initTypeEnum.getValue())
                 .put(Field.STRUCTURE, structure);
 
-        eb.send(address, action, MessageResponseHandler.messageJsonObjectHandler(handler));
+        eb.request(address, action, MessageResponseHandler.messageJsonObjectHandler(handler));
     }
 
     public void getInitIncidentProtagonistTypeStatement(String structure, InitTypeEnum initTypeEnum, Handler<Either<String, JsonObject>> handler) {
@@ -68,7 +68,7 @@ public class Incidents {
                 .put(Field.INITTYPE, initTypeEnum.getValue())
                 .put(Field.STRUCTURE, structure);
 
-        eb.send(address, action, MessageResponseHandler.messageJsonObjectHandler(handler));
+        eb.request(address, action, MessageResponseHandler.messageJsonObjectHandler(handler));
     }
 
     public void getInitIncidentSeriousnessStatement(String structure, InitTypeEnum initTypeEnum, Handler<Either<String, JsonObject>> handler) {
@@ -77,7 +77,7 @@ public class Incidents {
                 .put(Field.INITTYPE, initTypeEnum.getValue())
                 .put(Field.STRUCTURE, structure);
 
-        eb.send(address, action, MessageResponseHandler.messageJsonObjectHandler(handler));
+        eb.request(address, action, MessageResponseHandler.messageJsonObjectHandler(handler));
     }
 
     public void getInitIncidentPartnerStatement(String structure, InitTypeEnum initTypeEnum, Handler<Either<String, JsonObject>> handler) {
@@ -86,7 +86,7 @@ public class Incidents {
                 .put(Field.INITTYPE, initTypeEnum.getValue())
                 .put(Field.STRUCTURE, structure);
 
-        eb.send(address, action, MessageResponseHandler.messageJsonObjectHandler(handler));
+        eb.request(address, action, MessageResponseHandler.messageJsonObjectHandler(handler));
     }
 
     public void getInitIncidentPunishmentTypeStatement(String structure, InitTypeEnum initTypeEnum, Handler<Either<String, JsonObject>> handler) {
@@ -95,7 +95,7 @@ public class Incidents {
                 .put(Field.INITTYPE, initTypeEnum.getValue())
                 .put(Field.STRUCTURE, structure);
 
-        eb.send(address, action, MessageResponseHandler.messageJsonObjectHandler(handler));
+        eb.request(address, action, MessageResponseHandler.messageJsonObjectHandler(handler));
     }
 
     /**
@@ -106,7 +106,7 @@ public class Incidents {
         JsonObject action = new JsonObject()
                 .put("action", "get-punishment-type")
                 .put("structure", structure);
-        eb.send(address, action, MessageResponseHandler.messageJsonArrayHandler(handler));
+        eb.request(address, action, MessageResponseHandler.messageJsonArrayHandler(handler));
     }
 
     public void getPunishmentsCountByStudent(String structure, String start_at, String end_at, List<String> students, List<Integer> type_id,
@@ -120,7 +120,7 @@ public class Incidents {
                 .put("processed", processed)
                 .put("massmailed", massmailed)
                 .put("action", "get-count-punishment-by-student");
-        eb.send(address, action, MessageResponseHandler.messageJsonArrayHandler(handler));
+        eb.request(address, action, MessageResponseHandler.messageJsonArrayHandler(handler));
     }
 
     public void getPunishmentsByStudent(String structure, String start_at, String end_at, List<String> students, List<Integer> type_id,
@@ -140,7 +140,7 @@ public class Incidents {
                 .put("processed", processed)
                 .put("massmailed", massmailed)
                 .put("action", "get-punishment-by-student");
-        eb.send(address, action, MessageResponseHandler.messageJsonArrayHandler(handler));
+        eb.request(address, action, MessageResponseHandler.messageJsonArrayHandler(handler));
     }
 
     public void updatePunishmentMassmailing(List<String> punishmentsIds, Boolean isMassmailed, Handler<Either<String, JsonObject>> handler) {
@@ -148,7 +148,7 @@ public class Incidents {
                 .put("punishmentsIds", punishmentsIds)
                 .put("massmailed", isMassmailed)
                 .put("action", "update-punishments-massmailing");
-        eb.send(address, action, MessageResponseHandler.messageJsonObjectHandler(handler));
+        eb.request(address, action, MessageResponseHandler.messageJsonObjectHandler(handler));
     }
 
 

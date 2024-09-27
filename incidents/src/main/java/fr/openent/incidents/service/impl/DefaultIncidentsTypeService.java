@@ -7,6 +7,7 @@ import fr.wseduc.webutils.Either;
 import io.vertx.core.CompositeFuture;
 import io.vertx.core.Future;
 import io.vertx.core.Handler;
+import io.vertx.core.Promise;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import io.vertx.core.logging.Logger;
@@ -20,20 +21,20 @@ public class DefaultIncidentsTypeService implements IncidentsTypeService {
 
     @Override
     public void get(String structureId, Handler<Either<String, JsonArray>> handler) {
-        Future<JsonArray> incidentsTypeFuture = Future.future();
-        Future<JsonArray> incidentsTypeUsedFuture = Future.future();
+        Promise<JsonArray> incidentsTypePromise = Promise.promise();
+        Promise<JsonArray> incidentsTypeUsedPromise = Promise.promise();
 
-        fetchIncidentsType(structureId, FutureHelper.handlerJsonArray(incidentsTypeFuture));
-        fetchUsedIncidentsType(structureId, FutureHelper.handlerJsonArray(incidentsTypeUsedFuture));
+        fetchIncidentsType(structureId, FutureHelper.handlerEitherPromise(incidentsTypePromise));
+        fetchUsedIncidentsType(structureId, FutureHelper.handlerEitherPromise(incidentsTypeUsedPromise));
 
-        CompositeFuture.all(incidentsTypeFuture, incidentsTypeUsedFuture).setHandler(event -> {
+        Future.all(incidentsTypePromise.future(), incidentsTypeUsedPromise.future()).onComplete(event -> {
             if (event.failed()) {
                 String message = "[Incidents@IncidentsTypeService] Failed to fetch Incidents type";
                 LOGGER.error(message);
                 handler.handle(new Either.Left<>(message));
             } else {
-                JsonArray incidentsType = incidentsTypeFuture.result();
-                JsonArray incidentsTypeUsed = incidentsTypeUsedFuture.result();
+                JsonArray incidentsType = incidentsTypePromise.future().result();
+                JsonArray incidentsTypeUsed = incidentsTypeUsedPromise.future().result();
                 for (int i = 0; i < incidentsType.size(); i++) {
                     // set used false by default
                     incidentsType.getJsonObject(i).put("used", false);

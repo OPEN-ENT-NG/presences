@@ -41,14 +41,14 @@ public class CourseHelper {
     }
 
     public void getCoursesList(String structure, List<String> teachers, List<String> groups,
-                               String start, String end, Future<List<Course>> handler) {
+                               String start, String end, Promise<List<Course>> promise) {
         getCoursesList(structure, teachers, groups, start, end, result -> {
             if (result.failed()) {
                 String err = "[CourseHelper@getCourses] Failed to retrieve list courses";
                 LOGGER.error(err);
-                handler.fail(err + " " + result.cause());
+                promise.fail(err + " " + result.cause());
             } else {
-                handler.complete(result.result());
+                promise.complete(result.result());
             }
         });
     }
@@ -178,7 +178,7 @@ public class CourseHelper {
                 .put("endTime", endTime)
                 .put("crossDateFilter", crossDateFilter);
 
-        eb.send("viescolaire", action, event -> {
+        eb.request("viescolaire", action, event -> {
             if (event.failed() || event.result() == null || "error".equals(((JsonObject) event.result().body()).getString("status"))) {
                 String err = "[CourseHelper@getCourses] Failed to retrieve courses " + event.cause().getMessage();
                 LOGGER.error(err);
@@ -194,7 +194,7 @@ public class CourseHelper {
                 .put("action", "course.getCoursesByIds")
                 .put("courseIds", courseIds);
 
-        eb.send("viescolaire", action, courseAsync -> {
+        eb.request("viescolaire", action, courseAsync -> {
             if (courseAsync.failed() || courseAsync.result() == null || "error".equals(((JsonObject) courseAsync.result().body()).getString("status"))) {
                 String message = "[CourseHelper@getCoursesByIds] Failed to retrieve courses by ids: " + courseAsync.cause().getMessage();
                 handler.handle(new Either.Left<>(message));

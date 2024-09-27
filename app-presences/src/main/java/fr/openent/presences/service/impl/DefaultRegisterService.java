@@ -511,7 +511,7 @@ public class DefaultRegisterService extends DBService implements RegisterService
                 futures.add(promise.future());
                 createRegisterFuture(result, course, register, promise, personnelId);
             }
-            FutureHelper.join(futures)
+            Future.join(futures)
                     .onSuccess(resultFutures -> handler.handle(Future.succeededFuture(result)))
                     .onFailure(fail -> handler.handle(Future.failedFuture(fail.getCause())));
         });
@@ -620,13 +620,13 @@ public class DefaultRegisterService extends DBService implements RegisterService
 
     @Override
     public void get(Integer id, Handler<Either<String, JsonObject>> handler) {
-        Future<JsonObject> registerFuture = Future.future();
-        Future<JsonObject> registerGroupFuture = Future.future();
+        Promise<JsonObject> registerPromise = Promise.promise();
+        Promise<JsonObject> registerGroupPromise = Promise.promise();
 
-        fetchRegister(id, FutureHelper.handlerJsonObject(registerFuture));
-        fetchGroupRegister(id, FutureHelper.handlerJsonObject(registerGroupFuture));
+        fetchRegister(id, FutureHelper.handlerEitherPromise(registerPromise));
+        fetchGroupRegister(id, FutureHelper.handlerEitherPromise(registerGroupPromise));
 
-        CompositeFuture.all(registerFuture, registerGroupFuture).setHandler(registerAsync -> {
+        Future.all(registerPromise.future(), registerGroupPromise.future()).onComplete(registerAsync -> {
             if (registerAsync.failed()) {
                 String message = "[Presences@DefaultRegisterService::get] Failed to retrieve register " + id;
                 LOGGER.error(message);
@@ -634,7 +634,7 @@ public class DefaultRegisterService extends DBService implements RegisterService
                 return;
             }
 
-            JsonObject register = registerFuture.result().put("groups", registerGroupFuture.result().getString("groups"));
+            JsonObject register = registerPromise.future().result().put("groups", registerGroupPromise.future().result().getString("groups"));
             if (!register.containsKey("start_date")) {
                 handler.handle(new Either.Left<>("404"));
                 return;
@@ -661,21 +661,21 @@ public class DefaultRegisterService extends DBService implements RegisterService
 
                 List<Future<JsonArray>> futures = new ArrayList<>();
 
-                Future<JsonArray> lastAbsentsFuture = Future.future();
-                Future<JsonArray> groupsNameFuture = Future.future();
-                Future<JsonArray> teachersFuture = Future.future();
-                Future<JsonArray> exemptionFuture = Future.future();
-                Future<JsonArray> forgottenNotebookFuture = Future.future();
-                Future<JsonArray> registerEventHistoryFuture = Future.future();
+                Promise<JsonArray> lastAbsentsPromise = Promise.promise();
+                Promise<JsonArray> groupsNamePromise = Promise.promise();
+                Promise<JsonArray> teachersPromise = Promise.promise();
+                Promise<JsonArray> exemptionPromise = Promise.promise();
+                Promise<JsonArray> forgottenNotebookPromise = Promise.promise();
+                Promise<JsonArray> registerEventHistoryPromise = Promise.promise();
 
-                futures.add(lastAbsentsFuture);
-                futures.add(groupsNameFuture);
-                futures.add(teachersFuture);
-                futures.add(exemptionFuture);
-                futures.add(forgottenNotebookFuture);
-                futures.add(registerEventHistoryFuture);
+                futures.add(lastAbsentsPromise.future());
+                futures.add(groupsNamePromise.future());
+                futures.add(teachersPromise.future());
+                futures.add(exemptionPromise.future());
+                futures.add(forgottenNotebookPromise.future());
+                futures.add(registerEventHistoryPromise.future());
 
-                FutureHelper.all(futures).setHandler(asyncEvent -> {
+                Future.all(futures).onComplete(asyncEvent -> {
                     if (asyncEvent.failed()) {
                         String message = "[Presences@DefaultRegisterService::get] Failed to retrieve groups users " +
                                 "or last absents students";
@@ -684,15 +684,15 @@ public class DefaultRegisterService extends DBService implements RegisterService
                         return;
                     }
 
-                    JsonArray exemptions = exemptionFuture.result();
-                    JsonArray lastAbsentUsers = reduce(lastAbsentsFuture.result(), "student_id");
-                    JsonArray forgottenNotebooks = forgottenNotebookFuture.result();
-                    JsonObject groupsNameMap = mapGroupsName(groupsNameFuture.result());
+                    JsonArray exemptions = exemptionPromise.future().result();
+                    JsonArray lastAbsentUsers = reduce(lastAbsentsPromise.future().result(), "student_id");
+                    JsonArray forgottenNotebooks = forgottenNotebookPromise.future().result();
+                    JsonObject groupsNameMap = mapGroupsName(groupsNamePromise.future().result());
 
-                    JsonArray events = registerEventHistoryFuture.result();
+                    JsonArray events = registerEventHistoryPromise.future().result();
                     JsonObject historyMap = extractUsersEvents(events);
 
-                    formatRegister(id, register, groups, users, teachersFuture, exemptions, lastAbsentUsers,
+                    formatRegister(id, register, groups, users, teachersPromise.future(), exemptions, lastAbsentUsers,
                             forgottenNotebooks, groupsNameMap, historyMap);
 
                     matchSlots(register, register.getString("structure_id"), slotEvent -> {
@@ -713,17 +713,18 @@ public class DefaultRegisterService extends DBService implements RegisterService
                         }
                     });
                 });
-                exemptionService.getRegisterExemptions(userIds, register.getString("structure_id"), register.getString("start_date"), register.getString("end_date"), FutureHelper.handlerJsonArray(exemptionFuture));
+                exemptionService.getRegisterExemptions(userIds, register.getString("structure_id"),
+                        register.getString("start_date"), register.getString("end_date"), FutureHelper.handlerEitherPromise(exemptionPromise));
                 getLastAbsentsStudent(register.getString("subject_id"),
                         DateHelper.getDateString(register.getString("start_date"), DateHelper.MONGO_FORMAT),
                         id,
-                        FutureHelper.handlerJsonArray(lastAbsentsFuture)
+                        FutureHelper.handlerEitherPromise(lastAbsentsPromise)
                 );
-                notebookService.get(userIds, day, day, FutureHelper.handlerJsonArray(forgottenNotebookFuture));
-                getGroupsName(groups, FutureHelper.handlerJsonArray(groupsNameFuture));
-                getCourseTeachers(register.getString("course_id"), FutureHelper.handlerJsonArray(teachersFuture));
+                notebookService.get(userIds, day, day, FutureHelper.handlerEitherPromise(forgottenNotebookPromise));
+                getGroupsName(groups, FutureHelper.handlerEitherPromise(groupsNamePromise));
+                getCourseTeachers(register.getString("course_id"), FutureHelper.handlerEitherPromise(teachersPromise));
                 registerHelper.getRegisterEventHistory(register.getString("structure_id"), day, null, new JsonArray(userIds),
-                        FutureHelper.handlerJsonArray(registerEventHistoryFuture));
+                        FutureHelper.handlerEitherPromise(registerEventHistoryPromise));
             });
         });
     }
@@ -971,9 +972,9 @@ public class DefaultRegisterService extends DBService implements RegisterService
      * @param handler Function handler returning data
      */
     private void getUsers(JsonArray groups, Handler<Either<String, JsonArray>> handler) {
-        List<Future> futures = new ArrayList<>();
-        List<Future> groupsFutures = new ArrayList<>();
-        List<Future> classesFutures = new ArrayList<>();
+        List<Future<JsonArray>> futures = new ArrayList<>();
+        List<Future<JsonArray>> groupsFutures = new ArrayList<>();
+        List<Future<JsonArray>> classesFutures = new ArrayList<>();
         List<String> groupIdentifiers = new ArrayList<>();
         List<String> classIdentifiers = new ArrayList<>();
         for (int i = 0; i < groups.size(); i++) {
@@ -983,17 +984,17 @@ public class DefaultRegisterService extends DBService implements RegisterService
         }
 
         if (!groupIdentifiers.isEmpty()) {
-            Future future = Future.future();
-            futures.add(future);
-            groupsFutures.add(future);
-            groupService.getFunctionalAndManualGroupsStudents(groupIdentifiers, FutureHelper.handlerJsonArray(future));
+            Promise<JsonArray> promise = Promise.promise();
+            futures.add(promise.future());
+            groupsFutures.add(promise.future());
+            groupService.getFunctionalAndManualGroupsStudents(groupIdentifiers, FutureHelper.handlerEitherPromise(promise));
         }
 
         if (!classIdentifiers.isEmpty()) {
-            Future future = Future.future();
-            futures.add(future);
-            classesFutures.add(future);
-            groupService.getClassesStudents(classIdentifiers, FutureHelper.handlerJsonArray(future));
+            Promise<JsonArray> promise = Promise.promise();
+            futures.add(promise.future());
+            classesFutures.add(promise.future());
+            groupService.getClassesStudents(classIdentifiers, FutureHelper.handlerEitherPromise(promise));
         }
 
         if (futures.isEmpty()) {
@@ -1001,7 +1002,7 @@ public class DefaultRegisterService extends DBService implements RegisterService
             return;
         }
 
-        CompositeFuture.all(futures).setHandler(event -> {
+        Future.all(futures).onComplete(event -> {
             if (event.failed()) {
                 LOGGER.error(event.cause());
                 handler.handle(new Either.Left<>(event.cause().toString()));
@@ -1195,7 +1196,7 @@ public class DefaultRegisterService extends DBService implements RegisterService
 
         getLastForgottenRegisters(structureId, startDate, endDate)
                 .compose(registers -> getCoursesFromRegisters(structureId, registers, teacherIds, groupNames, multipleSlot))
-                .setHandler(ar -> {
+                .onComplete(ar -> {
                     if (ar.failed()) {
                         String message = "[Presences@DefaultCourseService::getLastForgottenRegistersCourses] " +
                                 "Error fetching courses with last forgotten registers: " + ar.cause().getMessage();
@@ -1208,7 +1209,7 @@ public class DefaultRegisterService extends DBService implements RegisterService
     }
 
     private Future<JsonArray> getLastForgottenRegisters(String structureId, String startDate, String endDate) {
-        Future<JsonArray> future = Future.future();
+        Promise<JsonArray> promise = Promise.promise();
         String query = "SELECT id, start_date, end_date, course_id, state_id, notified, split_slot FROM "
                 + Presences.dbSchema + ".register WHERE structure_id = ? AND state_id != 3 " +
                 "AND start_date > ? AND start_date < ? ORDER BY start_date DESC";
@@ -1222,14 +1223,14 @@ public class DefaultRegisterService extends DBService implements RegisterService
                 String message = "[Presences@DefaultCourseService::getLastForgottenRegisters] Failed to get " +
                         "last forgotten registers.";
                 LOGGER.error(message, result.left().getValue());
-                future.fail(result.left().getValue());
+                promise.fail(result.left().getValue());
 
             } else {
-                future.complete(result.right().getValue());
+                promise.complete(result.right().getValue());
             }
         }));
 
-        return future;
+        return promise.future();
     }
 
     @SuppressWarnings("unchecked")

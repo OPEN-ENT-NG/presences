@@ -106,7 +106,7 @@ public abstract class IndicatorWorker extends AbstractVerticle {
         for (String structure : structures.fieldNames()) {
             futures.add(processStructure(structure, structures.getJsonArray(structure)));
         }
-        FutureHelper.join(futures)
+        Future.join(futures)
                 .onSuccess(res -> promise.complete(new JsonObject().put(Field.MESSAGE, Field.OK)))
                 .onFailure(err -> {
                     String message = String.format("[Presences@%s::manualStart] An error has occurred when updating student(s)'s stats : %s, " +

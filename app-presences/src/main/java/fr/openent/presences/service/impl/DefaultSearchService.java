@@ -6,6 +6,7 @@ import fr.wseduc.webutils.Either;
 import io.vertx.core.CompositeFuture;
 import io.vertx.core.Future;
 import io.vertx.core.Handler;
+import io.vertx.core.Promise;
 import io.vertx.core.eventbus.EventBus;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
@@ -30,51 +31,51 @@ public class DefaultSearchService implements SearchService {
 
     @Override
     public void search(String query, String structureId, String userId, Handler<Either<String, JsonArray>> handler) {
-        Future<JsonArray> userAndGroupFuture = Future.future();
-        Future<JsonArray> manualGroup = Future.future();
+        Promise<JsonArray> userAndGroupPromise = Promise.promise();
+        Promise<JsonArray> manualGroupPromise = Promise.promise();
 
-        CompositeFuture.all(userAndGroupFuture, manualGroup).setHandler(event -> {
+        Future.all(userAndGroupPromise.future(), manualGroupPromise.future()).onComplete(event -> {
             if (event.failed()) {
                 String message = "[Presences@DefaultSearchService::search] Failed to retrieve users and groups " + event.cause();
                 LOGGER.error(message);
                 handler.handle(new Either.Left<>(message));
             } else {
-                List items = Stream.concat(userAndGroupFuture.result().stream(), manualGroup.result().stream())
+                List items = Stream.concat(userAndGroupPromise.future().result().stream(), manualGroupPromise.future().result().stream())
                         .collect(Collectors.toList());
                 items.sort((Comparator<JsonObject>) (o1, o2) -> o1.getString("displayName").compareToIgnoreCase(o2.getString("displayName")));
                 handler.handle(new Either.Right<>(new JsonArray(items)));
             }
         });
-        searchUserAndGroup(query, structureId, userId, FutureHelper.handlerJsonArray(userAndGroupFuture));
-        searchManualGroup(query, structureId, userId, FutureHelper.handlerJsonArray(manualGroup));
+        searchUserAndGroup(query, structureId, userId, FutureHelper.handlerEitherPromise(userAndGroupPromise));
+        searchManualGroup(query, structureId, userId, FutureHelper.handlerEitherPromise(manualGroupPromise));
     }
 
     @Override
     public void searchGroups(String query, List<String> fields, String structure_id,
                              String userId, Handler<Either<String, JsonArray>> handler) {
-        Future<JsonArray> groups = Future.future();
-        Future<JsonArray> manualGroups = Future.future();
+        Promise<JsonArray> groupsPromise = Promise.promise();
+        Promise<JsonArray> manualGroupsPromise = Promise.promise();
 
-        CompositeFuture.all(groups, manualGroups).setHandler(event -> {
+        Future.all(groupsPromise.future(), manualGroupsPromise.future()).onComplete(event -> {
             if (event.failed()) {
                 String message = "[Presences@DefaultSearchService::searchGroups] Failed to retrieve groups " + event.cause();
                 LOGGER.error(message);
                 handler.handle(new Either.Left<>(message));
             } else {
                 // correct format like groupsFuture.result() {id, name}
-                manualGroups.result().forEach(manualGroup -> {
+                manualGroupsPromise.future().result().forEach(manualGroup -> {
                     ((JsonObject) manualGroup).put("name", ((JsonObject) manualGroup).getString("displayName"));
                     ((JsonObject) manualGroup).remove("groupId");
                     ((JsonObject) manualGroup).remove("groupName");
                     ((JsonObject) manualGroup).remove("type");
                     ((JsonObject) manualGroup).remove("displayName");
                 });
-                handler.handle(new Either.Right<>(groups.result().addAll(manualGroups.result())));
+                handler.handle(new Either.Right<>(groupsPromise.future().result().addAll(manualGroupsPromise.future().result())));
             }
         });
 
-        searchGroupsEventBus(query, fields, structure_id, userId, FutureHelper.handlerJsonArray(groups));
-        searchManualGroup(query, structure_id, userId, FutureHelper.handlerJsonArray(manualGroups));
+        searchGroupsEventBus(query, fields, structure_id, userId, FutureHelper.handlerEitherPromise(groupsPromise));
+        searchManualGroup(query, structure_id, userId, FutureHelper.handlerEitherPromise(manualGroupsPromise));
     }
 
     private void searchGroupsEventBus(String query, List<String> fields, String structureId,

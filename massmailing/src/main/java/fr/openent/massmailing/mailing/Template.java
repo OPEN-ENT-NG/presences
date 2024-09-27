@@ -1,5 +1,6 @@
 package fr.openent.massmailing.mailing;
 
+import com.sun.org.apache.xpath.internal.objects.XString;
 import fr.openent.massmailing.Massmailing;
 import fr.openent.massmailing.enums.MailingType;
 import fr.openent.massmailing.enums.TemplateCode;
@@ -12,6 +13,7 @@ import fr.wseduc.webutils.I18n;
 import io.vertx.core.CompositeFuture;
 import io.vertx.core.Future;
 import io.vertx.core.Handler;
+import io.vertx.core.Promise;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import io.vertx.core.logging.Logger;
@@ -69,14 +71,14 @@ public class Template extends BaseServer {
         Pattern globalPattern = Pattern.compile("<img src=\\\"\\/workspace\\/document\\/[0-9a-fA-F]{8}\\-[0-9a-fA-F]{4}\\-[0-9a-fA-F]{4}\\-[0-9a-fA-F]{4}\\-[0-9a-fA-F]{12}.*>");
         Pattern idPattern = Pattern.compile("[0-9a-fA-F]{8}\\-[0-9a-fA-F]{4}\\-[0-9a-fA-F]{4}\\-[0-9a-fA-F]{4}\\-[0-9a-fA-F]{12}");
         Matcher matcher = globalPattern.matcher(this.content);
-        List<Future> futures = new ArrayList<>();
+        List<Future<String>> futures = new ArrayList<>();
         while (matcher.find()) {
             String img = matcher.group();
             Matcher idMatch = idPattern.matcher(img);
             if (!idMatch.find()) continue;
-            Future<String> future = Future.future();
-            getBase64File(idMatch.group(), future);
-            futures.add(future);
+            Promise<String> promise = Promise.promise();
+            getBase64File(idMatch.group(), promise);
+            futures.add(promise.future());
         }
 
         if (futures.isEmpty()) {
@@ -84,7 +86,7 @@ public class Template extends BaseServer {
             return;
         }
 
-        CompositeFuture.all(futures).setHandler(asyncHandler -> {
+        Future.all(futures).onComplete(asyncHandler -> {
             if (asyncHandler.failed()) {
                 handler.handle(new Either.Left<>(asyncHandler.cause().toString()));
                 return;
@@ -99,13 +101,13 @@ public class Template extends BaseServer {
         });
     }
 
-    private void getBase64File(String id, Future<String> future) {
+    private void getBase64File(String id, Promise<String> promise) {
         workspaceHelper.readDocument(id, document -> {
-            if (document == null) future.fail("Document not found");
+            if (document == null) promise.fail("Document not found");
             else {
                 String base64 = Base64.getEncoder().encodeToString(document.getData().getBytes());
                 imageMap.put(id, "data:" + document.getDocument().getJsonObject("metadata").getString("content-type") + ";base64," + base64);
-                future.complete(base64);
+                promise.complete(base64);
             }
         });
     }

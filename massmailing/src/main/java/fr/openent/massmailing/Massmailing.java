@@ -10,6 +10,7 @@ import fr.openent.presences.core.constants.Field;
 import fr.openent.presences.db.DB;
 import fr.wseduc.mongodb.MongoDb;
 import fr.wseduc.webutils.email.EmailSender;
+import io.vertx.core.Promise;
 import io.vertx.core.eventbus.EventBus;
 import io.vertx.core.json.JsonObject;
 import org.entcore.common.bus.WorkspaceHelper;
@@ -41,8 +42,8 @@ public class Massmailing extends BaseServer {
     public static WorkspaceHelper workspaceHelper;
 
     @Override
-    public void start() throws Exception {
-        super.start();
+    public void start(Promise<Void> startPromise) throws Exception {
+        super.start(startPromise);
         EventBus eb = getEventBus(vertx);
         Storage storage = new StorageFactory(vertx, config).getStorage();
         types = mailingsConfig();
@@ -64,6 +65,8 @@ public class Massmailing extends BaseServer {
         Viescolaire.getInstance().init(eb);
 
         vertx.setTimer(30000, handle -> new DatabaseStarter().init(sqlAdmin));
+        startPromise.tryComplete();
+        startPromise.tryFail("[Massmailling@Massmailling::start] Failed to start module Massmailling.");
     }
 
     private HashMap<MailingType, Boolean> mailingsConfig() {

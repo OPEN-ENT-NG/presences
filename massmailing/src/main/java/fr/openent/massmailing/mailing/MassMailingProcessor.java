@@ -17,6 +17,7 @@ import fr.wseduc.webutils.I18n;
 import io.vertx.core.CompositeFuture;
 import io.vertx.core.Future;
 import io.vertx.core.Handler;
+import io.vertx.core.Promise;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import io.vertx.core.logging.Logger;
@@ -73,32 +74,53 @@ public abstract class MassMailingProcessor implements Mailing {
     }
 
     public void process(Handler<Either<String, List<JsonObject>>> handler) {
-        Future<JsonObject> templateFuture = Future.future();
-        Future<JsonArray> relativeFuture = Future.future();
-        Future<JsonObject> eventsFuture = Future.future();
-        Future<JsonObject> hourEventsFuture = Future.future();
-        Future<JsonObject> reasonsFuture = Future.future();
-        Future<JsonArray> slotsFutures = Future.future();
-        Future<JsonObject> settingFutures = Future.future();
-        Future<JsonObject> recoveryFuture = Future.future();
+        Promise<JsonObject> templatePromise = Promise.promise();
+        Promise<JsonArray> relativePromise = Promise.promise();
+        Promise<JsonObject> eventsPromise = Promise.promise();
+        Promise<JsonObject> hourEventsPromise = Promise.promise();
+        Promise<JsonObject> reasonsPromise = Promise.promise();
+        Promise<JsonArray> slotsPromise = Promise.promise();
+        Promise<JsonObject> settingPromise = Promise.promise();
+        Promise<JsonObject> recoveryPromise = Promise.promise();
 
-        CompositeFuture.all(Arrays.asList(templateFuture, relativeFuture, eventsFuture, reasonsFuture, slotsFutures,
-                settingFutures, recoveryFuture, hourEventsFuture)).setHandler(asyncResult -> {
-            if (asyncResult.failed()) {
-                String message = "[Massmailing@MassMailingProcessor::process] Failed to process";
-                LOGGER.error(String.format("%s %s", message, asyncResult.cause().getMessage()));
-                handler.handle(new Either.Left<>(message));
-            }
+        List<Future> futuresList = Arrays.asList(
+                templatePromise.future(),
+                relativePromise.future(),
+                eventsPromise.future(),
+                reasonsPromise.future(),
+                slotsPromise.future(),
+                settingPromise.future(),
+                recoveryPromise.future(),
+                hourEventsPromise.future()
+        );
 
-            JsonObject reasons = reasonsFuture.result();
-            JsonObject events = eventsFuture.result();
-            JsonObject hourEvents = hourEventsFuture.result();
-            JsonArray relatives = relativeFuture.result();
+        Future.all(
+                        Arrays.asList(
+                                templatePromise.future(),
+                                relativePromise.future(),
+                                eventsPromise.future(),
+                                reasonsPromise.future(),
+                                slotsPromise.future(),
+                                settingPromise.future(),
+                                recoveryPromise.future(),
+                                hourEventsPromise.future()
+                        ))
+                .onComplete(asyncResult -> {
+                    if (asyncResult.failed()) {
+                        String message = "[Massmailing@MassMailingProcessor::process] Failed to process";
+                        LOGGER.error(String.format("%s %s", message, asyncResult.cause().getMessage()));
+                        handler.handle(new Either.Left<>(message));
+                    }
+
+            JsonObject reasons = reasonsPromise.future().result();
+            JsonObject events = eventsPromise.future().result();
+            JsonObject hourEvents = hourEventsPromise.future().result();
+            JsonArray relatives = relativePromise.future().result();
             HashMap<String, JsonObject> massmailings = formatData(events, relatives.copy(), reasons);
             HashMap<String, JsonObject> massmailingsHour = formatData(hourEvents, relatives.copy(), reasons);
-            JsonArray slots = slotsFutures.result();
-            JsonObject settings = settingFutures.result();
-            String recoveryMethod = recoveryFuture.result().containsKey("event_recovery_method") ? recoveryFuture.result().getString("event_recovery_method") : "HALF_DAY";
+            JsonArray slots = slotsPromise.future().result();
+            JsonObject settings = settingPromise.future().result();
+            String recoveryMethod = recoveryPromise.future().result().containsKey("event_recovery_method") ? recoveryPromise.future().result().getString("event_recovery_method") : "HALF_DAY";
 
             List<JsonObject> result = new ArrayList<>();
             for (Map.Entry<String, JsonObject> entry : massmailings.entrySet()) {
@@ -114,14 +136,14 @@ public abstract class MassMailingProcessor implements Mailing {
             handler.handle(new Either.Right<>(result));
         });
 
-        retrieveEvents(null, FutureHelper.handlerJsonObject(eventsFuture));
-        retrieveEvents("HOUR", FutureHelper.handlerJsonObject(hourEventsFuture));
-        retrieveRelatives(FutureHelper.handlerJsonArray(relativeFuture));
-        template.init(FutureHelper.handlerJsonObject(templateFuture));
-        fetchReasons(FutureHelper.handlerJsonObject(reasonsFuture));
-        Viescolaire.getInstance().getDefaultSlots(this.structure, FutureHelper.handlerJsonArray(slotsFutures));
-        Viescolaire.getInstance().getSlotProfileSetting(this.structure, FutureHelper.handlerJsonObject(settingFutures));
-        Presences.getInstance().getSettings(this.structure, FutureHelper.handlerJsonObject(recoveryFuture));
+        retrieveEvents(null, FutureHelper.handlerEitherPromise(eventsPromise));
+        retrieveEvents("HOUR", FutureHelper.handlerEitherPromise(hourEventsPromise));
+        retrieveRelatives(FutureHelper.handlerEitherPromise(relativePromise));
+        template.init(FutureHelper.handlerEitherPromise(templatePromise));
+        fetchReasons(FutureHelper.handlerEitherPromise(reasonsPromise));
+        Viescolaire.getInstance().getDefaultSlots(this.structure, FutureHelper.handlerEitherPromise(slotsPromise));
+        Viescolaire.getInstance().getSlotProfileSetting(this.structure, FutureHelper.handlerEitherPromise(settingPromise));
+        Presences.getInstance().getSettings(this.structure, FutureHelper.handlerJsonObject(recoveryPromise));
     }
 
     private void setCodeValues(HashMap<String, JsonObject> massmailingsHour, JsonArray slots, JsonObject settings,
@@ -697,14 +719,14 @@ public abstract class MassMailingProcessor implements Mailing {
      * @param handler        Function handler returning data
      */
     void retrieveEvents(String recoveryMethod, Handler<Either<String, JsonObject>> handler) {
-        List<Future> futures = new ArrayList<>();
+        List<Future<JsonArray>> futures = new ArrayList<>();
         for (MassmailingType type : massmailingTypeList) {
-            Future<JsonArray> future = Future.future();
-            futures.add(future);
-            getEventsByStudent(type, recoveryMethod, FutureHelper.handlerJsonArray(future));
+            Promise<JsonArray> promise = Promise.promise();
+            futures.add(promise.future());
+            getEventsByStudent(type, recoveryMethod, FutureHelper.handlerEitherPromise(promise));
         }
 
-        CompositeFuture.all(futures).setHandler(result -> {
+        Future.all(futures).onComplete(result -> {
             if (result.failed()) {
                 String message = "[Massmailing@MassMailingProcessor] Failed to retrieve events";
                 LOGGER.error(String.format("%s %s", message, result.cause().getMessage()));

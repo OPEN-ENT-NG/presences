@@ -61,7 +61,7 @@ public class SlotHelper {
                 .put("action", "timeslot.getSlotProfiles")
                 .put("structureId", structureId);
 
-        eb.send("viescolaire", action, MessageResponseHandler.messageJsonObjectHandler(handler));
+        eb.request("viescolaire", action, MessageResponseHandler.messageJsonObjectHandler(handler));
     }
 
     public Future<JsonObject> getTimeSlots(String structureId) {

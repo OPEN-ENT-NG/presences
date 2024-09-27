@@ -20,20 +20,20 @@ public class DefaultSeriousnessService implements SeriousnessService {
 
     @Override
     public void get(String structureId, Handler<Either<String, JsonArray>> handler) {
-        Future<JsonArray> seriousnessesFuture = Future.future();
-        Future<JsonArray> seriousnessesUsedFuture = Future.future();
+        Promise<JsonArray> seriousnessesPromise = Promise.promise();
+        Promise<JsonArray> seriousnessesUsedPromise = Promise.promise();
 
-        fetchSeriousnesses(structureId, FutureHelper.handlerJsonArray(seriousnessesFuture));
-        fetchUsedSeriousnesses(structureId, FutureHelper.handlerJsonArray(seriousnessesUsedFuture));
+        fetchSeriousnesses(structureId, FutureHelper.handlerEitherPromise(seriousnessesPromise));
+        fetchUsedSeriousnesses(structureId, FutureHelper.handlerEitherPromise(seriousnessesUsedPromise));
 
-        CompositeFuture.all(seriousnessesFuture, seriousnessesUsedFuture).setHandler(event -> {
+        Future.all(seriousnessesPromise.future(), seriousnessesUsedPromise.future()).onComplete(event -> {
             if (event.failed()) {
                 String message = "[Incidents@SeriousnessController] Failed to fetch seriousnesses";
                 LOGGER.error(message);
                 handler.handle(new Either.Left<>(message));
             } else {
-                JsonArray seriousnesses = seriousnessesFuture.result();
-                JsonArray seriousnessesUsed = seriousnessesUsedFuture.result();
+                JsonArray seriousnesses = seriousnessesPromise.future().result();
+                JsonArray seriousnessesUsed = seriousnessesUsedPromise.future().result();
                 for (int i = 0; i < seriousnesses.size(); i++) {
                     // set used false by default
                     seriousnesses.getJsonObject(i).put("used", false);

@@ -8,6 +8,7 @@ import fr.openent.presences.common.service.impl.DefaultUserService;
 import fr.openent.presences.model.Person.Student;
 import fr.openent.presences.model.Person.User;
 import io.vertx.core.Future;
+import io.vertx.core.Promise;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 
@@ -91,11 +92,11 @@ public class MailingHelper {
      * @param structureId Structure identifier
      * @param mailings    Mailings list
      * @param studentIds  Students list
-     * @param future      Future to complete
+     * @param promise      Promise to complete
      */
-    public void addStudentToMailing(String structureId, List<Mailing> mailings, List<String> studentIds, Future<JsonObject> future) {
+    public void addStudentToMailing(String structureId, List<Mailing> mailings, List<String> studentIds, Promise<JsonObject> promise) {
         if (studentIds.isEmpty()) {
-            future.complete();
+            promise.complete();
             return;
         }
         personHelper.getStudentsInfo(structureId, studentIds, studentAsync -> {
@@ -107,7 +108,7 @@ public class MailingHelper {
                     }
                 }
             }
-            future.complete();
+            promise.complete();
         });
     }
 
@@ -116,11 +117,11 @@ public class MailingHelper {
      *
      * @param mailings     Mailings list
      * @param recipientIds Recipients | relatives | users list
-     * @param future       Future to complete
+     * @param promise       Promise to complete
      */
-    public void addRecipientToMailing(List<Mailing> mailings, List<String> recipientIds, Future<JsonObject> future) {
+    public void addRecipientToMailing(List<Mailing> mailings, List<String> recipientIds, Promise<JsonObject> promise) {
         if (recipientIds.isEmpty()) {
-            future.complete();
+            promise.complete();
             return;
         }
         userService.getUsers(recipientIds, recipientAsync -> {
@@ -132,7 +133,7 @@ public class MailingHelper {
                     }
                 }
             }
-            future.complete();
+            promise.complete();
         });
     }
 }

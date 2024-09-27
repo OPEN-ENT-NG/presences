@@ -615,16 +615,16 @@ public class DefaultAbsenceService extends DBService implements AbsenceService {
                     List<Future<JsonObject>> futures = new ArrayList<>();
 
                     for (JsonObject oldAbsence : oldAbsences) {
-                        Future<JsonObject> future = Future.future();
-                        futures.add(future);
+                        Promise<JsonObject> promise = Promise.promise();
+                        futures.add(promise.future());
 
                         absenceBody.put("student_id", oldAbsence.getString("student_id"));
 
                         afterPersistAbsence(oldAbsence.getLong("id"), absenceBody, oldAbsence, editEvents, user.getUserId(),
-                                FutureHelper.handlerJsonObject(future), absenceResult);
+                                FutureHelper.handlerEitherPromise(promise), absenceResult);
                     }
 
-                    FutureHelper.all(futures).setHandler(result -> {
+                    Future.all(futures).onComplete(result -> {
                         if (result.failed()) {
                             handler.handle(Future.failedFuture(result.cause().getMessage()));
                             return;
@@ -716,16 +716,16 @@ public class DefaultAbsenceService extends DBService implements AbsenceService {
             } else if (editEvents) {
                 JsonArray absences = result.right().getValue();
 
-                List<Future> futures = new ArrayList<>();
+                List<Future<JsonObject>> futures = new ArrayList<>();
 
                 absences.forEach(oAbsence -> {
-                    Future<JsonObject> future = Future.future();
-                    futures.add(future);
+                    Promise<JsonObject> promise = Promise.promise();
+                    futures.add(promise.future());
                     JsonObject absence = (JsonObject) oAbsence;
-                    interactingEvents(absence, userInfoId, future);
+                    interactingEvents(absence, userInfoId, promise);
                 });
 
-                CompositeFuture.all(futures).setHandler(event -> {
+                Future.all(futures).onComplete(event -> {
                     if (event.failed()) {
                         LOGGER.info("[Presences@DefaultAbsenceService::afterPersistAbsences::CompositeFuture]: " +
                                 "An error has occured)");
@@ -758,22 +758,22 @@ public class DefaultAbsenceService extends DBService implements AbsenceService {
         });
     }
 
-    private void interactingEvents(JsonObject absenceBody, String userInfoId, Future<JsonObject> future) {
-        interactingEvents(absenceBody, null, userInfoId, FutureHelper.handlerJsonObject(future));
+    private void interactingEvents(JsonObject absenceBody, String userInfoId, Promise<JsonObject> promise) {
+        interactingEvents(absenceBody, null, userInfoId, FutureHelper.handlerEitherPromise(promise));
     }
 
     private void matchEventsWithAbsents(JsonObject absenceBody, JsonObject oldAbsence, List<String> groupIds, String userInfoId, Handler<Either<String, JsonObject>> handler) {
-        Future<JsonArray> createEventsFuture = Future.future();
-        Future<JsonArray> updateEventsFuture = Future.future();
-        Future<JsonObject> deleteEventsFuture = Future.future();
+        Promise<JsonArray> createEventsPromise = Promise.promise();
+        Promise<JsonArray> updateEventsPromise = Promise.promise();
+        Promise<JsonObject> deleteEventsPromise = Promise.promise();
 
         Boolean isRegularized = absenceBody.getBoolean("counsellor_regularisation", false);
-        createEventsWithAbsents(absenceBody, isRegularized, groupIds, userInfoId, FutureHelper.handlerJsonArray(createEventsFuture));
-        updateEventsWithAbsents(absenceBody, isRegularized, groupIds, FutureHelper.handlerJsonArray(updateEventsFuture));
-        deleteEventsFromAbsence(absenceBody, oldAbsence, FutureHelper.handlerJsonObject(deleteEventsFuture));
+        createEventsWithAbsents(absenceBody, isRegularized, groupIds, userInfoId, FutureHelper.handlerEitherPromise(createEventsPromise));
+        updateEventsWithAbsents(absenceBody, isRegularized, groupIds, FutureHelper.handlerEitherPromise(updateEventsPromise));
+        deleteEventsFromAbsence(absenceBody, oldAbsence, FutureHelper.handlerEitherPromise(deleteEventsPromise));
 
 
-        CompositeFuture.all(createEventsFuture, updateEventsFuture, deleteEventsFuture).setHandler(event -> {
+        Future.all(createEventsPromise.future(), updateEventsPromise.future(), deleteEventsPromise.future()).onComplete(event -> {
             if (event.failed()) {
                 String message = "[Presences@DefaultAbsenceService] Failed to create or update events from absent";
                 LOGGER.error(message);
@@ -781,11 +781,11 @@ public class DefaultAbsenceService extends DBService implements AbsenceService {
             } else {
                 List<Long> updatedRegisterId = new ArrayList<>();
                 List<Long> createdRegisterId = new ArrayList<>();
-                for (int i = 0; i < updateEventsFuture.result().size(); i++) {
-                    updatedRegisterId.add(updateEventsFuture.result().getJsonObject(i).getLong("register_id"));
+                for (int i = 0; i < updateEventsPromise.future().result().size(); i++) {
+                    updatedRegisterId.add(updateEventsPromise.future().result().getJsonObject(i).getLong("register_id"));
                 }
-                for (int j = 0; j < createEventsFuture.result().size(); j++) {
-                    createdRegisterId.add(createEventsFuture.result().getJsonObject(j).getLong("register_id"));
+                for (int j = 0; j < createEventsPromise.future().result().size(); j++) {
+                    createdRegisterId.add(createEventsPromise.future().result().getJsonObject(j).getLong("register_id"));
                 }
                 handler.handle(new Either.Right<>(new JsonObject()
                         .put("updatedRegisterId", updatedRegisterId)
@@ -951,8 +951,8 @@ public class DefaultAbsenceService extends DBService implements AbsenceService {
             return;
         }
 
-        Future<JsonObject> beforeEventsRemovalFuture = Future.future();
-        Future<JsonObject> afterEventsRemovalFuture = Future.future();
+        Promise<JsonObject> beforeEventsRemovalPromise = Promise.promise();
+        Promise<JsonObject> afterEventsRemovalPromise = Promise.promise();
 
         // Here if the new period start later than the oldest one, we remove events corresponding to the period it no longer covers
         // so we check if oldAbsence.start_date < (plus tôt que..) newAbsence.start_date
@@ -960,7 +960,7 @@ public class DefaultAbsenceService extends DBService implements AbsenceService {
                 oldAbsence.getString("start_date"),
                 newAbsence.getString("start_date"),
                 oldAbsence.getString("student_id"),
-                FutureHelper.handlerJsonObject(beforeEventsRemovalFuture)
+                FutureHelper.handlerEitherPromise(beforeEventsRemovalPromise)
         );
 
         // Here if the new period start later than the oldest one, we remove events corresponding to the period it no longer covers
@@ -969,10 +969,10 @@ public class DefaultAbsenceService extends DBService implements AbsenceService {
                 newAbsence.getString("end_date"),
                 oldAbsence.getString("end_date"),
                 oldAbsence.getString("student_id"),
-                FutureHelper.handlerJsonObject(afterEventsRemovalFuture)
+                FutureHelper.handlerEitherPromise(afterEventsRemovalPromise)
         );
 
-        CompositeFuture.all(beforeEventsRemovalFuture, afterEventsRemovalFuture).setHandler(event -> {
+        Future.all(beforeEventsRemovalPromise.future(), afterEventsRemovalPromise.future()).onComplete(event -> {
             if (event.failed()) {
                 String message = "[Presences@DefaultAbsenceService::deleteEventsFromAbsence] Failed to delete events";
                 LOGGER.error(message);
@@ -1041,15 +1041,15 @@ public class DefaultAbsenceService extends DBService implements AbsenceService {
                 LOGGER.error(message, absenceResult.left().getValue());
                 handler.handle(new Either.Left<>(message));
             } else {
-                Future<JsonObject> deleteEventsFuture = Future.future();
-                Future<JsonObject> resetEventsFuture = Future.future();
-                Future<JsonObject> deleteAbsenceFuture = Future.future();
+                Promise<JsonObject> deleteEventsPromise = Promise.promise();
+                Promise<JsonObject> resetEventsPromise = Promise.promise();
+                Promise<JsonObject> deleteAbsencePromise = Promise.promise();
 
-                deleteEventsOnDelete(absenceResult.right().getValue(), FutureHelper.handlerJsonObject(deleteEventsFuture));
-                resetEventsOnDelete(absenceResult.right().getValue(), FutureHelper.handlerJsonObject(resetEventsFuture));
-                deleteAbsence(absenceId, FutureHelper.handlerJsonObject(deleteAbsenceFuture));
+                deleteEventsOnDelete(absenceResult.right().getValue(), FutureHelper.handlerEitherPromise(deleteEventsPromise));
+                resetEventsOnDelete(absenceResult.right().getValue(), FutureHelper.handlerEitherPromise(resetEventsPromise));
+                deleteAbsence(absenceId, FutureHelper.handlerEitherPromise(deleteAbsencePromise));
 
-                CompositeFuture.all(deleteEventsFuture, resetEventsFuture, deleteAbsenceFuture).setHandler(event -> {
+                Future.all(deleteEventsPromise.future(), resetEventsPromise.future(), deleteAbsencePromise.future()).onComplete(event -> {
                     if (event.failed()) {
                         String message = "[Presences@DefaultAbsenceService] Failed to delete events or absence";
                         LOGGER.error(message);

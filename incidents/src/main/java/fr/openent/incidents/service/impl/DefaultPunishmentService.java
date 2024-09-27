@@ -62,15 +62,15 @@ public class DefaultPunishmentService implements PunishmentService {
                     handler.handle(Future.failedFuture(message));
                 })
                 .onSuccess(category -> {
-                    Future<JsonObject> punishmentsFuture = Future.future();
-                    Future<JsonObject> absencesFuture = Future.future();
-                    createPunishments(user, body, category, punishmentsFuture);
-                    createRelatedAbsences(structureId, user, body, category.getLabel(), absencesFuture);
+                    Promise<JsonObject> punishmentsPromise = Promise.promise();
+                    Promise<JsonObject> absencesPromise = Promise.promise();
+                    createPunishments(user, body, category, punishmentsPromise);
+                    createRelatedAbsences(structureId, user, body, category.getLabel(), absencesPromise);
 
-                    FutureHelper.all(Arrays.asList(punishmentsFuture, absencesFuture))
+                    Future.all(punishmentsPromise.future(), absencesPromise.future())
                             .onFailure(error -> handler.handle(Future.failedFuture(error.getMessage())))
                             .onSuccess(result -> handler.handle(Future.succeededFuture(
-                                    punishmentsFuture.result().getJsonArray(Field.ALL, new JsonArray())
+                                    punishmentsPromise.future().result().getJsonArray(Field.ALL, new JsonArray())
                             )));
                 });
     }
@@ -88,7 +88,7 @@ public class DefaultPunishmentService implements PunishmentService {
                 .collect(Collectors.toList());
 
         JsonArray results = new JsonArray();
-        FutureHelper.join(createPunishments(user, punishments, studentIds, category, results))
+        Future.join(createPunishments(user, punishments, studentIds, category, results))
                 .onFailure(error -> {
                     String message = String.format("[Incidents@%s::createPunishments] Fail to create punishments"
                             , this.getClass().getSimpleName());
@@ -158,7 +158,7 @@ public class DefaultPunishmentService implements PunishmentService {
         String startAt = fields.getString("start_at").replace("/", "-");
         String endAt = fields.getString("end_at").replace("/", "-");
 
-        getStudentsWithoutAbsences(body, startAt, endAt).setHandler(resultStudentIds -> {
+        getStudentsWithoutAbsences(body, startAt, endAt).onComplete(resultStudentIds -> {
             if (resultStudentIds.failed()) {
                 handler.handle(Future.failedFuture(resultStudentIds.cause().getMessage()));
                 return;
@@ -176,18 +176,18 @@ public class DefaultPunishmentService implements PunishmentService {
 
     @SuppressWarnings("unchecked")
     private Future<List<String>> getStudentsWithoutAbsences(JsonObject body, String startAt, String endAt) {
-        Future<List<String>> future = Future.future();
+        Promise<List<String>> promise = Promise.promise();
         if (startAt == null || endAt == null) {
-            future.fail("[Incidents@DefaultPunishmentService::getStudentsWithoutAbsences] Missing period dates to retrieve absences");
-            return future;
+            promise.fail("[Incidents@DefaultPunishmentService::getStudentsWithoutAbsences] Missing period dates to retrieve absences");
+            return promise.future();
         }
 
         getAbsencesByStudentIds(body.getJsonArray("student_ids").getList(), startAt, endAt, absencesByStudentIds -> {
             if (absencesByStudentIds.failed()) {
-                future.fail(absencesByStudentIds.cause().getMessage());
+                promise.fail(absencesByStudentIds.cause().getMessage());
                 return;
             }
-            future.complete(
+            promise.complete(
                     absencesByStudentIds.result()
                             .entrySet().stream()
                             .filter(absences -> absences.getValue().isEmpty())
@@ -196,7 +196,7 @@ public class DefaultPunishmentService implements PunishmentService {
             );
         });
 
-        return future;
+        return promise.future();
     }
 
     @Override
@@ -214,7 +214,7 @@ public class DefaultPunishmentService implements PunishmentService {
                     Future<JsonObject> punishmentsFuture = updatePunishments(user, body, category);
                     Future<JsonObject> absencesFuture = updateRelatedAbsence(structureId, user, body, category.getLabel());
 
-                    FutureHelper.all(Arrays.asList(punishmentsFuture, absencesFuture))
+                    Future.all(Arrays.asList(punishmentsFuture, absencesFuture))
                             .onFailure(error -> handler.handle(Future.failedFuture(error.getMessage())))
                             .onSuccess(result -> handler.handle(Future.succeededFuture(
                                     punishmentsFuture.result().getJsonArray(Field.ALL, new JsonArray())
@@ -232,7 +232,7 @@ public class DefaultPunishmentService implements PunishmentService {
                 .orElse("2000-01-01 00:00:00");
 
         JsonArray results = new JsonArray();
-        FutureHelper.join(updatePunishments(user, punishments, category, results))
+        Future.join(updatePunishments(user, punishments, category, results))
                 .onFailure(error -> {
                     String message = String.format("[Incidents@%s::createPunishments] Fail to create punishments"
                             , this.getClass().getSimpleName());
@@ -334,24 +334,24 @@ public class DefaultPunishmentService implements PunishmentService {
 
     @SuppressWarnings("unchecked")
     private Future<List<JsonObject>> getStudentAbsences(String studentId, String startAt, String endAt) {
-        Future<List<JsonObject>> future = Future.future();
+        Promise<List<JsonObject>> promise = Promise.promise();
         if (startAt == null || endAt == null) {
-            future.fail("[Incidents@DefaultPunishmentService::getStudentAbsences] Missing period dates to retrieve absences");
-            return future;
+            promise.fail("[Incidents@DefaultPunishmentService::getStudentAbsences] Missing period dates to retrieve absences");
+            return promise.future();
         }
 
         getAbsencesByStudentIds(Collections.singletonList(studentId), startAt, endAt, absencesByStudentIdsResult -> {
             if (absencesByStudentIdsResult.failed()) {
-                future.fail(absencesByStudentIdsResult.cause().getMessage());
+                promise.fail(absencesByStudentIdsResult.cause().getMessage());
                 return;
             }
 
             List<JsonObject> absences = absencesByStudentIdsResult.result().getOrDefault(studentId, new ArrayList<>());
 
-            future.complete(absences);
+            promise.complete(absences);
         });
 
-        return future;
+        return promise.future();
     }
 
     private boolean areAbsenceDatesCorresponding(JsonObject absence, String startAt, String endAt) {
@@ -407,8 +407,8 @@ public class DefaultPunishmentService implements PunishmentService {
                         .onSuccess(promise::complete)
                         .onFailure(promise::fail);
             } else {
-                Future<Long> countFuture = Future.future();
-                Future<JsonArray> findFuture = Future.future();
+                Promise<Long> countPromise = Promise.promise();
+                Promise<JsonArray> findPromise = Promise.promise();
 
                 /* PAGINATE QUERY PUNISHMENTS */
                 Integer limit, offset, page = null;
@@ -425,29 +425,29 @@ public class DefaultPunishmentService implements PunishmentService {
 
                 punishmentHelper.getPunishments(punishment.getTable(), queryResult.result(), order, reverse, limit, offset, result -> {
                     if (result.failed()) {
-                        findFuture.fail(result.cause());
+                        findPromise.fail(result.cause());
                         return;
                     }
-                    findFuture.complete(result.result());
+                    findPromise.complete(result.result());
                 });
 
                 punishmentHelper.countPunishments(punishment.getTable(), queryResult.result(), result -> {
                     if (result.failed()) {
-                        countFuture.fail(result.cause());
+                        countPromise.fail(result.cause());
                         return;
                     }
-                    countFuture.complete(result.result());
+                    countPromise.complete(result.result());
                 });
 
                 Integer finalPage = page;
-                CompositeFuture.all(countFuture, findFuture).setHandler(resultFuture -> {
+                Future.all(countPromise.future(), findPromise.future()).onComplete(resultFuture -> {
                     if (resultFuture.failed()) {
                         String message = String.format("[Incidents@%s::specifyCategoryFromType] fail to get punishments."
                                 , this.getClass().getSimpleName());
                         LOGGER.error(String.format("%s %s", message, resultFuture.cause().getMessage()));
                         promise.fail(resultFuture.cause());
                     } else {
-                        formatPunishmentsResult(countFuture.result(), findFuture.result(), finalPage, limit, offset, promise);
+                        formatPunishmentsResult(countPromise.future().result(), findPromise.future().result(), finalPage, limit, offset, promise);
                     }
                 });
             }
@@ -759,7 +759,7 @@ public class DefaultPunishmentService implements PunishmentService {
         Future<JsonObject> punishmentFuture = deletePunishment(punishmentIds);
         Future<JsonObject> absenceFuture = deleteRelatedAbsence(deletePunishments, structureId);
 
-        FutureHelper.all(Arrays.asList(punishmentFuture, absenceFuture)).onSuccess(event -> {
+        Future.all(Arrays.asList(punishmentFuture, absenceFuture)).onSuccess(event -> {
                     StatisticsPresences.getInstance().postStatisticsUsers(structureId, statisticsUserList);
                     handler.handle(Future.succeededFuture(punishmentFuture.result()));
                 })
@@ -806,7 +806,7 @@ public class DefaultPunishmentService implements PunishmentService {
                     category.setFromJson(deletePunishment.getFields());
                     category.formatDates();
 
-                    getStudentAbsences(deletePunishment.getStudentId(), category.getStartAt(), category.getEndAt()).setHandler(absencesResult -> {
+                    getStudentAbsences(deletePunishment.getStudentId(), category.getStartAt(), category.getEndAt()).onComplete(absencesResult -> {
                         if (absencesResult.failed()) {
                             promise.fail(absencesResult.cause().getMessage());
                             return;

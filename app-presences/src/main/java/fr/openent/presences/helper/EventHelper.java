@@ -21,6 +21,7 @@ import fr.openent.presences.service.impl.DefaultActionService;
 import fr.openent.presences.service.impl.DefaultReasonService;
 import io.vertx.core.CompositeFuture;
 import io.vertx.core.Future;
+import io.vertx.core.Promise;
 import io.vertx.core.eventbus.EventBus;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
@@ -90,11 +91,11 @@ public class EventHelper {
     }
 
     @SuppressWarnings("unchecked")
-    public void addLastActionAbbreviation(List<Event> events, Future<JsonObject> future) {
+    public void addLastActionAbbreviation(List<Event> events, Promise<JsonObject> promise) {
         List<Integer> ids = this.getAllEventsIds(events);
         actionService.getLastAbbreviations(ids, res -> {
             if (res.isLeft()) {
-                future.fail(res.left().getValue());
+                promise.fail(res.left().getValue());
                 return;
             }
 
@@ -125,7 +126,7 @@ public class EventHelper {
                 else if (actionAbbreviations.size() > 1) event.setActionAbbreviation("MULTIPLES");
 
             });
-            future.complete();
+            promise.complete();
         });
     }
 
@@ -212,9 +213,9 @@ public class EventHelper {
     }
 
     @SuppressWarnings("unchecked")
-    public void addReasonsToEvents(List<Event> events, List<Integer> reasonIds, Future<JsonObject> future) {
+    public void addReasonsToEvents(List<Event> events, List<Integer> reasonIds, Promise<JsonObject> promise) {
         if (reasonIds.isEmpty()) {
-            future.complete();
+            promise.complete();
             return;
         }
         reasonService.getReasons(reasonIds, reasonsResult -> {
@@ -236,18 +237,18 @@ public class EventHelper {
                         );
                     }
                 }
-                future.complete();
+                promise.complete();
             } else {
                 String message = String.format("[Presences@EventHelper::addReasonsToEvents] Failed to query reason info : %s", reasonsResult.left().getValue());
                 LOGGER.error(message);
-                future.fail(reasonsResult.left().getValue());
+                promise.fail(reasonsResult.left().getValue());
             }
         });
     }
 
-    public void addEventTypeToEvents(List<Event> events, List<Integer> eventTypeIds, Future<JsonObject> eventTypeFuture) {
+    public void addEventTypeToEvents(List<Event> events, List<Integer> eventTypeIds, Promise<JsonObject> eventTypePromise) {
         if (eventTypeIds.isEmpty()) {
-            eventTypeFuture.complete();
+            eventTypePromise.complete();
             return;
         }
         eventTypeHelper.getEventType(eventTypeIds, eventTypeResult -> {
@@ -265,9 +266,9 @@ public class EventHelper {
                         );
                     }
                 }
-                eventTypeFuture.complete();
+                eventTypePromise.complete();
             } else {
-                eventTypeFuture.fail("Failed to query event type info");
+                eventTypePromise.fail("Failed to query event type info");
             }
         });
     }
@@ -276,26 +277,26 @@ public class EventHelper {
                                     List<String> restrictedClasses, String startDate, String endDate,
                                     String startTime, String endTime, List<String> typeIds, List<String> reasonIds,
                                     Boolean noAbsenceReason, Boolean noLatenessReason, Boolean regularized, Boolean followed, JsonArray absences,
-                                    JsonObject slots, Future<JsonObject> studentFuture) {
+                                    JsonObject slots, Promise<JsonObject> studentPromise) {
 
-        Future<JsonArray> registerEventFuture = Future.future();
-        Future<JsonArray> studentsInfosFuture = Future.future();
+        Promise<JsonArray> registerEventPromise = Promise.promise();
+        Promise<JsonArray> studentsInfosPromise = Promise.promise();
 
         RegisterPresenceHelper.getEventHistory(structureId, startDate, endDate, startTime, endTime,
                 studentIds, typeIds, reasonIds, noAbsenceReason, noLatenessReason, regularized,
-                followed, registerEventFuture);
+                followed, registerEventPromise);
 
-        personHelper.getStudentsInfo(structureId, studentIds, restrictedClasses, FutureHelper.handlerJsonArray(studentsInfosFuture));
+        personHelper.getStudentsInfo(structureId, studentIds, restrictedClasses, FutureHelper.handlerEitherPromise(studentsInfosPromise));
 
-        CompositeFuture.all(registerEventFuture, studentsInfosFuture).setHandler(eventResult -> {
+        Future.all(registerEventPromise.future(), studentsInfosPromise.future()).onComplete(eventResult -> {
             if (eventResult.failed()) {
                 String message = "[Presences@EventHelper] Failed to retrieve registerEvent or student info";
                 LOGGER.error(message);
-                studentFuture.fail(message);
+                studentPromise.fail(message);
             } else {
-                List<RegisterEvent> registerEvents = RegisterPresenceHelper.getRegisterEventListFromJsonArray(registerEventFuture.result());
+                List<RegisterEvent> registerEvents = RegisterPresenceHelper.getRegisterEventListFromJsonArray(registerEventPromise.future().result());
                 List<Student> students = personHelper.getStudentListFromJsonArray(
-                        studentsInfosFuture.result()
+                        studentsInfosPromise.future().result()
                 );
 
                 for (Event event : events) {
@@ -314,18 +315,18 @@ public class EventHelper {
                 }
                 // Filter events w/ empty students => works only for infinite scroll paging
                 events.removeIf(event -> event.getStudent().getName() == null);
-                matchSlots(slots, events, absences, studentFuture);
+                matchSlots(slots, events, absences, studentPromise);
             }
         });
     }
 
     public void addStudentsToEvents(List<Event> events, List<String> studentIds, List<String> restrictedClasses, String structureId,
-                                    Future<JsonObject> studentFuture) {
+                                    Promise<JsonObject> studentPromise) {
         personHelper.getStudentsInfo(structureId, studentIds, restrictedClasses, studentResp -> {
             if (studentResp.isLeft()) {
                 String message = "[Presences@EventHelper::addStudentsToEvents] Failed to retrieve students info";
                 LOGGER.error(message);
-                studentFuture.fail(message);
+                studentPromise.fail(message);
             } else {
                 List<Student> students = personHelper.getStudentListFromJsonArray(studentResp.right().getValue());
                 // for some reason, we still manage to find some "duplicate" data so we use mergeFunction (see collectors.toMap)
@@ -337,37 +338,37 @@ public class EventHelper {
                                         new Student(event.getStudent().getId()))
                         )
                 );
-                studentFuture.complete();
+                studentPromise.complete();
             }
         });
     }
 
-    public void addOwnerToEvents(List<Event> events, List<String> ownerIds, Future<JsonObject> ownerFuture) {
+    public void addOwnerToEvents(List<Event> events, List<String> ownerIds, Promise<JsonObject> ownerPromise) {
         userService.getUsers(ownerIds, ownerRes -> {
             if (ownerRes.isLeft()) {
                 String message = "[Presences@EventHelper::addOwnerToEvents] Failed to retrieve owner info";
                 LOGGER.error(message);
-                ownerFuture.fail(message);
+                ownerPromise.fail(message);
             } else {
                 List<User> owners = personHelper.getUserListFromJsonArray(ownerRes.right().getValue());
                 Map<String, User> ownersMap = owners.stream().collect(Collectors.toMap(User::getId, User::clone));
                 events.forEach(
                         event -> event.setOwner(ownersMap.getOrDefault(event.getOwner().getId(), new User(event.getOwner().getId())))
                 );
-                ownerFuture.complete();
+                ownerPromise.complete();
             }
         });
     }
 
 
     @SuppressWarnings("unchecked")
-    public void addOwnerToEvents(List<Event> events, Future<JsonObject> future) {
+    public void addOwnerToEvents(List<Event> events, Promise<JsonObject> promise) {
         List<String> userIds = this.getAllOwnerIds(events);
         userService.getUsers(userIds, result -> {
             if (result.isLeft()) {
                 String message = "[Presences@EventHelper] Failed to retrieve users info";
                 LOGGER.error(message);
-                future.fail(message);
+                promise.fail(message);
             }
             List<User> owners = personHelper.getUserListFromJsonArray(result.right().getValue());
             Map<String, User> userMap = new HashMap<>();
@@ -381,7 +382,7 @@ public class EventHelper {
                             }
                         }));
             });
-            future.complete();
+            promise.complete();
         });
     }
 
@@ -427,9 +428,9 @@ public class EventHelper {
      * @param slotsBody Time slots object
      * @param events    Events list
      * @param absences  Absences list
-     * @param future    Function handler returning data
+     * @param promise   Promise handler returning data
      */
-    private void matchSlots(JsonObject slotsBody, List<Event> events, JsonArray absences, Future<JsonObject> future) {
+    private void matchSlots(JsonObject slotsBody, List<Event> events, JsonArray absences, Promise<JsonObject> promise) {
         List<Slot> slots = SlotHelper.getSlotListFromJsonArray(slotsBody.getJsonArray("slots", new JsonArray()));
         List<Absence> absencesList = AbsenceHelper.getAbsenceListFromJsonArray(absences, Absence.MANDATORY_ATTRIBUTE);
         for (Event event : events) {
@@ -458,11 +459,11 @@ public class EventHelper {
             } catch (Exception e) {
                 String message = "[Presences@EventHelper] Failed to parse slots";
                 LOGGER.error(message, e);
-                future.fail(message);
+                promise.fail(message);
                 return;
             }
         }
-        future.complete();
+        promise.complete();
     }
 
     /**
