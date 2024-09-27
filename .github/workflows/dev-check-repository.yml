@@ -21,16 +21,16 @@ jobs:
       - name: Run build node sass
         run: yarn run build:sass
 
-  build-gradle-test:
+  build-maven-test:
     runs-on: ubuntu-latest
 
     container:
-      image: gradle:4.5-alpine
-      options: --user root -v ${{ github.workspace }}:/home/gradle/:rw
+      image: maven:3.8.6-jdk-8
+      options: --user root -v ${{ github.workspace }}:/home/maven/:rw
 
     steps:
       - uses: actions/checkout@v1
-      - name: Run build gradle
-        run: gradle assemble -g gradle-user-home
-      - name: Run gradle test
-        run: gradle test  -g gradle-user-home --no-build-cache --rerun-tasks
+      - name: Run build maven
+        run: mvn -Duser.home=/var/maven clean install
+      - name: Run maven test
+        run: mvn -Duser.home=/var/maven test

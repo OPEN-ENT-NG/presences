@@ -5,7 +5,7 @@ const replace = require('gulp-replace');
 var clean = require('gulp-clean');
 var args = require('yargs').argv;
 
-var apps = ['presences', 'incidents', 'massmailing', 'statistics-presences'];
+var apps = ['app-presences', 'incidents', 'massmailing', 'statistics-presences'];
 
 if (args.targetModule) {
     console.log("using arg:", args.targetModule);
