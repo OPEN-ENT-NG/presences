@@ -18,9 +18,14 @@ node_modules
 */rev-manifest.json
 */out
 coverage/
-presences/src/main/resources/public/font
+app-presences/src/main/resources/public/font
 /gradle/wrapper/gradle-wrapper.jar
 /gradle/wrapper/gradle-wrapper.properties
 /gradlew
 /gradlew.bat
 package-lock.json
+.env
+target
+*/target
+.flattened-pom.xml
+*/.flattened-pom.xml
