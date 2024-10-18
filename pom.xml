@@ -50,7 +50,7 @@
         <vertxCronTimer>2.0.0</vertxCronTimer>
         <powerMockVersion>2.0.2</powerMockVersion>
         <mockitoVersion>[2.0,3.0)</mockitoVersion>
-        <entCoreVersion>4.12-SNAPSHOT</entCoreVersion>
+        <entCoreVersion>5.0-b2school-SNAPSHOT</entCoreVersion>
         <reflectionsVersion>0.10.2</reflectionsVersion>
         <gatlingHighchartsVersion>2.2.2</gatlingHighchartsVersion>
     </properties>
