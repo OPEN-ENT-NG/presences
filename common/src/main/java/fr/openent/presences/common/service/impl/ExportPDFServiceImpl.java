@@ -214,7 +214,7 @@ public class ExportPDFServiceImpl implements ExportPDFService {
 
 
     private TemplateProcessor initTemplateProcessor() {
-        TemplateProcessor templateProcessor = new TemplateProcessor(vertx, "template").escapeHTML(false);
+        TemplateProcessor templateProcessor = new TemplateProcessor().escapeHTML(false);
         templateProcessor.setLambda("i18n", new I18nLambda("fr"));
         templateProcessor.setLambda("datetime", new LocaleDateLambda("fr"));
         return templateProcessor;
