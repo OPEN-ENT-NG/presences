@@ -92,7 +92,7 @@ public class ProcessingScheduledManual extends BusModBase implements Handler<Mes
     }
 
     protected void initTemplateProcessor() {
-        templateProcessor = new TemplateProcessor(vertx, "template").escapeHTML(false);
+        templateProcessor = new TemplateProcessor().escapeHTML(false);
         templateProcessor.setLambda("i18n", new I18nLambda("fr"));
         templateProcessor.setLambda("datetime", new LocaleDateLambda("fr"));
     }
