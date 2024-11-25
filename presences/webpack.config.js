@@ -2,8 +2,8 @@ var path = require('path');
 
 module.exports = {
     entry: {
-        application: './app-presences/src/main/resources/public/ts/app.ts',
-        behaviours: './app-presences/src/main/resources/public/ts/behaviours.ts'
+        application: './presences/src/main/resources/public/ts/app.ts',
+        behaviours: './presences/src/main/resources/public/ts/behaviours.ts'
     },
     output: {
         filename: '[name].js',

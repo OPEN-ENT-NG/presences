@@ -1,5 +1,5 @@
     {
-      "name": "fr.openent~presences~2.0-b2school-SNAPSHOT",
+      "name": "fr.openent~presences~${presencesVersion}",
       "config": {
         "main" : "fr.openent.presences.Presences",
         "port" : 8062,

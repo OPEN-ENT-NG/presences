@@ -113,7 +113,7 @@ public class SettingsServiceTest extends DBService {
             ctx.assertEquals(query, queryExpected);
             ctx.assertEquals(params, new JsonArray(Arrays.asList(true, STRUCTURE_ID)));
             return null;
-        }).when(sql).prepared(Mockito.anyString(), Mockito.any(), Mockito.any());
+        }).when(sql).prepared(Mockito.anyString(), Mockito.any(), Mockito.any(Handler.class));
 
         Whitebox.invokeMethod(settingsService, "update",
                 STRUCTURE_ID, new JsonObject().put(Field.ALERT_ABSENCE_THRESHOLD, true).put(OTHER_KEY, OTHER_VALUE), null);
@@ -134,7 +134,7 @@ public class SettingsServiceTest extends DBService {
         settings.put("invalidColumn", "");
         Whitebox.invokeMethod(this.settingsService, "update", structureId, settings, promise2);
 
-        Mockito.verify(this.sql, Mockito.times(0)).prepared(Mockito.anyString(), Mockito.any(), Mockito.any());
+        Mockito.verify(this.sql, Mockito.times(0)).prepared(Mockito.anyString(), Mockito.any(), Mockito.any(Handler.class));
 
         async.awaitSuccess(1000);
     }

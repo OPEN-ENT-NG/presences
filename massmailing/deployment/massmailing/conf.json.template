@@ -1,5 +1,5 @@
 {
-  "name": "fr.openent~massmailing~2.0-b2school-SNAPSHOT",
+  "name": "fr.openent~massmailing~${presencesVersion}",
   "config": {
     "main" : "fr.openent.massmailing.Massmailing",
     "port" : 8065,
