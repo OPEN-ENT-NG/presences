@@ -18,7 +18,7 @@ node_modules
 */rev-manifest.json
 */out
 coverage/
-app-presences/src/main/resources/public/font
+presences/src/main/resources/public/font
 /gradle/wrapper/gradle-wrapper.jar
 /gradle/wrapper/gradle-wrapper.properties
 /gradlew

@@ -204,7 +204,7 @@ public class DefaultStatisticsPresencesServiceTest {
             ctx.assertEquals(params.toString(), expectedParams);
             async.complete();
             return null;
-        }).when(sql).prepared(Mockito.anyString(), Mockito.any(), Mockito.any());
+        }).when(sql).prepared(Mockito.anyString(), Mockito.any(), Mockito.any(Handler.class));
 
         this.defaultStatisticsPresencesService.clearWaitingList(studentIdList);
     }

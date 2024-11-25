@@ -11,7 +11,7 @@
     </parent>
 
     <groupId>fr.openent</groupId>
-    <artifactId>presences</artifactId>
+    <artifactId>presences-parent</artifactId>
     <version>${revision}</version>
     <packaging>pom</packaging>
 
@@ -38,18 +38,18 @@
         <module>common</module>
         <module>incidents</module>
         <module>massmailing</module>
-        <module>app-presences</module>
+        <module>presences</module>
         <module>statistics-presences</module>
     </modules>
 
     <properties>
-        <revision>2.0-b2school-SNAPSHOT</revision>
+        <revision>2.0-SNAPSHOT</revision>
         <toolsVersion>2.0.0-final</toolsVersion>
         <junitVersion>5.1.0</junitVersion>
         <vertxCronTimer>2.0.0</vertxCronTimer>
         <powerMockVersion>2.0.2</powerMockVersion>
         <mockitoVersion>[2.0,3.0)</mockitoVersion>
-        <entCoreVersion>5.0-b2school-SNAPSHOT</entCoreVersion>
+        <entCoreVersion>6.0-SNAPSHOT</entCoreVersion>
         <reflectionsVersion>0.10.2</reflectionsVersion>
         <gatlingHighchartsVersion>2.2.2</gatlingHighchartsVersion>
     </properties>
