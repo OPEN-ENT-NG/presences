@@ -108,18 +108,18 @@ publish() {
 presences() {
   case $(uname -s) in
   MINGW*)
-    docker-compose run --rm -u "$USER_UID:$GROUP_GID" node sh -c "yarn install --no-bin-links && node_modules/gulp/bin/gulp.js build --targetModule=app-presences && yarn run build:sass"
+    docker-compose run --rm -u "$USER_UID:$GROUP_GID" node sh -c "yarn install --no-bin-links && node_modules/gulp/bin/gulp.js build --targetModule=presences && yarn run build:sass"
     ;;
   *)
-    docker-compose run --rm -u "$USER_UID:$GROUP_GID" node sh -c "yarn install && node_modules/gulp/bin/gulp.js build --targetModule=app-presences && yarn run build:sass"
+    docker-compose run --rm -u "$USER_UID:$GROUP_GID" node sh -c "yarn install && node_modules/gulp/bin/gulp.js build --targetModule=presences && yarn run build:sass"
     ;;
   esac
-  docker-compose run --rm maven mvn $MVN_OPTS -pl app-presences -am install -DskipTests
+  docker-compose run --rm maven mvn $MVN_OPTS -pl presences -am install -DskipTests
 
 }
 
 presences:buildMaven() {
-  docker-compose run --rm maven mvn $MVN_OPTS -pl app-presences -am install -DskipTests
+  docker-compose run --rm maven mvn $MVN_OPTS -pl presences -am install -DskipTests
 }
 
 incidents() {

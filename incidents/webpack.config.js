@@ -24,7 +24,7 @@ module.exports = {
         alias: {
             "@common": path.resolve(__dirname, '../common/src/main/resources/ts'),
             "@incidents": path.resolve(__dirname, '../incidents/src/main/resources/public/ts'),
-            "@presences": path.resolve(__dirname, '../app-presences/src/main/resources/public/ts')
+            "@presences": path.resolve(__dirname, '../presences/src/main/resources/public/ts')
         }
     },
     devtool: "source-map",
