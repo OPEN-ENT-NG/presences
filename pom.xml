@@ -43,7 +43,8 @@
     </modules>
 
     <properties>
-        <revision>2.0-dev-sre-SNAPSHOT</revision>
+	<revision>2.0-dev-sre-SNAPSHOT</revision>
+	<vertxVersion>3.9.5</vertxVersion>
         <toolsVersion>2.0.0-final</toolsVersion>
         <junitVersion>5.1.0</junitVersion>
         <vertxCronTimer>2.0.0</vertxCronTimer>
