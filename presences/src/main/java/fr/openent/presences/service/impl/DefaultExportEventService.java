@@ -251,10 +251,10 @@ public class DefaultExportEventService extends DBService implements ExportEventS
     @Override
     public Future<Pdf> processPdfEvent(JsonObject events) {
         Promise<Pdf> promise = Promise.promise();
-        TemplateProcessor templateProcessor = new TemplateProcessor().escapeHTML(true);
+        TemplateProcessor templateProcessor = new FileTemplateProcessor(vertx, "template/pdf").escapeHTML(true);
         templateProcessor.setLambda("i18n", new I18nLambda("fr"));
         templateProcessor.setLambda("datetime", new LocaleDateLambda("fr"));
-        templateProcessor.processTemplate("pdf/event-list-recap.xhtml", events, writer -> {
+        templateProcessor.processTemplate("event-list-recap.xhtml", events, writer -> {
             if (writer == null) {
                 String message = String.format("[Presences@%s::processPdfEvent] process template has no buffer result",
                         this.getClass().getSimpleName());

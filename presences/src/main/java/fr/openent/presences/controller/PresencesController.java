@@ -29,8 +29,10 @@ import org.entcore.common.http.filter.Trace;
 import org.entcore.common.http.response.DefaultResponseHandler;
 import org.entcore.common.user.UserUtils;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.stream.Collectors;
 
 public class PresencesController extends ControllerHelper {
 
@@ -168,7 +170,8 @@ public class PresencesController extends ControllerHelper {
             String structureId = params.get(STRUCTURE_ID);
             String startDate = params.get(START_DATE);
             String endDate = params.get(END_DATE);
-            List<String> userIds = params.getAll(Field.STUDENTID);
+            // The list of user ids is completed later and then must be modifiable
+            List<String> userIds = new ArrayList<>(params.getAll(Field.STUDENTID));
             List<String> audienceIds = params.getAll(Field.AUDIENCEID);
             List<String> ownerIds = params.getAll(Field.OWNERID);
             boolean hasRestrictedRight = WorkflowActionsCouple.READ_PRESENCE.hasOnlyRestrictedRight(user, UserType.TEACHER.equals(user.getType()));
