@@ -227,7 +227,8 @@ public class AbsenceController extends ControllerHelper {
         String structure = request.getParam(Field.STRUCTURE);
         String start = request.getParam(Field.START);
         String end = request.getParam(Field.END);
-        List<String> students = request.params().getAll(Field.STUDENT);
+        // The list of user ids is completed later and then must be modifiable
+        List<String> students = new ArrayList<>(request.params().getAll(Field.STUDENT));
         List<String> classes = request.params().getAll(Field.CLASSES);
         Boolean halfBoarder = request.params().contains(Field.HALFBOARDER) ? Boolean.parseBoolean(request.getParam(Field.HALFBOARDER)) : null;
         Boolean internal = request.params().contains(Field.INTERNAL) ? Boolean.parseBoolean(request.getParam(Field.INTERNAL)) : null;
