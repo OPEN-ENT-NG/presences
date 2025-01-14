@@ -29,6 +29,10 @@ import org.entcore.common.http.filter.Trace;
 import org.entcore.common.http.response.DefaultResponseHandler;
 import org.entcore.common.user.UserUtils;
 
+import org.entcore.common.events.EventHelper;
+import org.entcore.common.events.EventStore;
+import org.entcore.common.events.EventStoreFactory;
+
 import java.util.*;
 import java.util.stream.*;
 
@@ -37,11 +41,14 @@ public class IncidentsController extends ControllerHelper {
     private final IncidentsService incidentsService;
     private final GroupService groupService;
     private final ExportData exportData;
+    private EventHelper eventHelper;
 
     public IncidentsController(CommonIncidentsServiceFactory serviceFactory) {
         this.incidentsService = serviceFactory.incidentsService();
         this.groupService = serviceFactory.groupService();
         this.exportData = serviceFactory.exportData();
+        final EventStore eventStore = EventStoreFactory.getFactory().getEventStore(Incidents.class.getSimpleName());
+		this.eventHelper =  new EventHelper(eventStore);
     }
 
     @Get("")
@@ -60,6 +67,7 @@ public class IncidentsController extends ControllerHelper {
                     renderError(request);
                 } else {
                     renderView(request, new JsonObject().put("structures", body.getJsonArray("results", new JsonArray())));
+                    eventHelper.onAccess(request);
                 }
             });
         });
