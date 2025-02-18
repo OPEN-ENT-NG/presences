@@ -34,14 +34,21 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
+import org.entcore.common.events.EventHelper;
+import org.entcore.common.events.EventStore;
+import org.entcore.common.events.EventStoreFactory;
 
 public class StatisticsController extends ControllerHelper {
     private final StatisticsPresencesService statisticsPresencesService;
     private final CommonServiceFactory serviceFactory;
+    private EventHelper eventHelper;
 
     public StatisticsController(CommonServiceFactory serviceFactory) {
         this.serviceFactory = serviceFactory;
         this.statisticsPresencesService = serviceFactory.statisticsPresencesService();
+
+        final EventStore eventStore = EventStoreFactory.getFactory().getEventStore(StatisticsPresences.class.getSimpleName());
+		this.eventHelper =  new EventHelper(eventStore);
     }
 
     @Get("")
@@ -61,6 +68,7 @@ public class StatisticsController extends ControllerHelper {
                     JsonObject params = new JsonObject().put("structures", body.getJsonArray("results", new JsonArray()));
                     params.put("indicators", indicatorList());
                     renderView(request, params);
+                    eventHelper.onAccess(request);
                 }
             });
         });
