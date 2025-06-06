@@ -21,7 +21,8 @@
   },
   "homepage": "",
   "resolutions": {
-    "graceful-fs": "^4.2.11"
+    "graceful-fs": "^4.2.11",
+    "**/yargs-parser": "21.1.1"
   },
   "dependencies": {
     "entcore": "dev",
