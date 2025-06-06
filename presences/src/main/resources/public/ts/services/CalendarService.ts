@@ -109,7 +109,7 @@ export const calendarService = ng.service('CalendarService', (): CalendarService
                     return moment(a.start_date) - moment(b.start_date);
                 });
                 // @ts-ignore: Unreachable code error
-                this.locked = true;
+                course.locked = true;
             });
             return buildCalendarCourses(data);
         } catch (err) {
