@@ -222,4 +222,30 @@ public class DefaultInitService implements InitService {
                 .put(Field.VALUES, params)
                 .put(Field.ACTION, Field.PREPARED));
     }
+
+    @Override
+    public Future<Void> setInitializationStatus(String structureId, boolean status) {
+        Promise<Void> promise = Promise.promise();
+
+        String query = "INSERT INTO " + Presences.dbSchema + ".settings(structure_id, initialized) " +
+                "VALUES (?, ?) ON CONFLICT (structure_id) DO UPDATE SET initialized = ? WHERE settings.structure_id = ?;";
+
+        JsonArray params = new JsonArray()
+                .add(structureId)
+                .add(status)
+                .add(status)
+                .add(structureId);
+
+        Sql.getInstance().prepared(query, params, SqlResult.validUniqueResultHandler(res -> {
+            if (res.isLeft()) {
+                String message = String.format("[Presences@%s::setInitializationStatus] Failed to set initialization status for structure %s : %s",
+                        this.getClass().getSimpleName(), structureId, res.left().getValue());
+                log.error(message);
+                promise.fail(res.left().getValue());
+            } else {
+                promise.complete();
+            }
+        }));
+        return promise.future();
+    }
 }
