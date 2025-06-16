@@ -25,4 +25,6 @@ public interface InitService {
     void getSettingsStatement(String structure, InitTypeEnum initTypeEnum, Promise<JsonObject> promise);
 
     void getPresencesDisciplinesStatement(HttpServerRequest request, String structure, InitTypeEnum initTypeEnum, Promise<JsonObject> promise);
+
+    Future<Void> setInitializationStatus(String structureId, boolean status);
 }

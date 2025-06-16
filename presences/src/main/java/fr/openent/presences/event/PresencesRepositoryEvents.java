@@ -2,6 +2,7 @@ package fr.openent.presences.event;
 
 import fr.openent.presences.Presences;
 import fr.openent.presences.core.constants.Field;
+import fr.openent.presences.service.impl.DefaultInitService;
 import io.vertx.core.eventbus.EventBus;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
@@ -32,5 +33,16 @@ public class PresencesRepositoryEvents implements RepositoryEvents {
     @Override
     public void transition(JsonObject structure) {
         Presences.launchResetAlertsWorker(eb, new JsonObject().put(Field.STRUCTURE, structure));
+
+        // Reset initialization status
+        new DefaultInitService().setInitializationStatus(structure.getString(Field.ID), false)
+                .onFailure(fail -> {
+                    String message = String.format("[Presences@%s::transition] An error occurred when setting " +
+                            "initialization status : %s", this.getClass().getSimpleName(), fail.getMessage());
+                    log.error(message);
+                })
+                .onSuccess(success -> log.info(String.format("[Presences@%s::transition] Initialization status " +
+                                "successfully set to false for structure %s", this.getClass().getSimpleName(),
+                        structure.getString(Field.ID))));
     }
 }
