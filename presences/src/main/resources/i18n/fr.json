@@ -637,6 +637,7 @@
   "presences.init.1d.form.schoolyear": "Année scolaire",
   "presences.init.1d.form.schoolyear.start": "Date de début de l'année scolaire",
   "presences.init.1d.form.schoolyear.end": "Date de fin de l'année scolaire",
+  "presences.init.1d.form.schoolyear.placeholder": "JJ/MM/AAAA",
   "presences.init.1d.form.schoolyear.timetable": "Emploi du temps",
   "presences.init.1d.form.schoolyear.timetable.morning.start": "Début de la matinée",
   "presences.init.1d.form.schoolyear.timetable.morning.end": "Fin de la matinée",
