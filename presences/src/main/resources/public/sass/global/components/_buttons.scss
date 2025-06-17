@@ -4,6 +4,8 @@ button, a.button {
   box-shadow: none;
 
   &:disabled {
+    cursor: not-allowed;
+    color: $presences-grey-disabled;
     background: $presences-black-light;
   }
 

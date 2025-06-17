@@ -35,18 +35,21 @@
                 <div class="init-1d-lightbox-body-schoolyear-content-date">
                     <span><i18n>presences.init.1d.form.schoolyear.start</i18n> :</span>
                     <span class="card date-picker">
-                        <date-picker ng-change="vm.updateDate(vm.form.schoolYear.startDate)"
-                                     required
-                                     ng-model="vm.form.schoolYear.startDate"></date-picker>
+                        <date-picker
+                            ng-model="vm.form.schoolYear.startDate"
+                            required
+                        >
+                        </date-picker>
                     </span>
                 </div>
                 <!-- School year end -->
                 <div class="init-1d-lightbox-body-schoolyear-content-date">
                     <span><i18n>presences.init.1d.form.schoolyear.end</i18n> :</span>
                     <span class="card date-picker">
-                        <date-picker ng-change="vm.updateDate(vm.form.schoolYear.endDate)"
-                                     required
-                                     ng-model="vm.form.schoolYear.endDate">
+                        <date-picker
+                            ng-model="vm.form.schoolYear.endDate"
+                            required
+                        >
                         </date-picker>
                     </span>
                 </div>
