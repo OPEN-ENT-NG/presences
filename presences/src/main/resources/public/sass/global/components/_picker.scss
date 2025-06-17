@@ -11,9 +11,13 @@
   }
 
   input[type="text"] {
-    width: 80px !important;
+    width: 90px !important;
     margin-bottom: 0;
     box-sizing: border-box;
+  }
+
+  input[type="text"]::placeholder {
+    font-size: 0.8rem;
   }
 
   input[type="text"], input[type="time"] {
