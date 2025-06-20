@@ -8,10 +8,24 @@ export enum HOLIDAY_SYSTEM {
     OTHER = "OTHER"
 }
 
-export enum HOLIDAY_ZONE {
-    A = "A",
-    B = "B",
-    C = "C"
+// Zone values that will be passed to the https://data.education.gouv.fr/ API.
+// Values are validated by the backend in viescolaire module in file:
+// "vie-scolaire/src/main/resources/jsonschema/init_structure.json" 
+// So values in this enum and values in backend validator must match! :)
+export enum HOLIDAYS_ZONE {
+    ZONE_A = "Zone A",
+    ZONE_B = "Zone B",
+    ZONE_C = "Zone C",
+    CORSE = "Corse",
+    GUADELOUPE = "Guadeloupe",
+    GUYANE = "Guyane",
+    MARTINIQUE = "Martinique",
+    MAYOTTE = "Mayotte",
+    // NOUVELLE_CALEDONIE = "Nouvelle Calédonie",
+    POLYNESIE = "Polynésie",
+    REUNION = "Réunion",
+    SAINT_PIERRE_ET_MIQUELON = "Saint Pierre et Miquelon",
+    // WALLIS_ET_FUTUNA = "Wallis et Futuna",
 }
 
 export interface IInitFormDay {
@@ -49,6 +63,11 @@ export interface IInitFormDayHours {
 export interface IInitFormHolidays {
     system: string;
     zone: string;
+}
+
+export interface IInitFormZone {
+    value: string;
+    label: string;
 }
 
 export class InitFormYear {
@@ -236,7 +255,7 @@ export class InitFormHolidays {
 
     constructor() {
         this._system = HOLIDAY_SYSTEM.FRENCH;
-        this._zone = HOLIDAY_ZONE.A;
+        this._zone = null;
     }
 
     get system(): string {
@@ -259,25 +278,11 @@ export class InitFormHolidays {
     }
 
     set zone(value: string) {
-        switch (value) {
-            case HOLIDAY_ZONE.A:
-                this._zone = HOLIDAY_ZONE.A;
-                break;
-            case HOLIDAY_ZONE.B:
-                this._zone = HOLIDAY_ZONE.B;
-                break;
-            case HOLIDAY_ZONE.C:
-                this._zone = HOLIDAY_ZONE.C;
-                break;
-            default:
-                this._zone = null;
-                this._system = HOLIDAY_SYSTEM.OTHER;
-                break;
-        }
+        this._zone = value;
     }
 
     isValid(): boolean {
-        return this.system != null && this.zone != null;
+        return (this.system === HOLIDAY_SYSTEM.FRENCH && this.zone != null) || this.system === HOLIDAY_SYSTEM.OTHER;
     }
 
     toJSON(): IInitFormHolidays {

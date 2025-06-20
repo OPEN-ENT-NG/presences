@@ -1,7 +1,7 @@
 import {idiom as lang, ng, toasts} from "entcore";
 import {ILocationService, IParseService, IScope, IWindowService} from "angular";
 import {ROOTS} from "../../core/enum/roots";
-import {IInitFormDay, InitForm} from "../../models/init-form.model";
+import {IInitFormDay, IInitFormZone, InitForm} from "../../models/init-form.model";
 import {safeApply} from "@common/utils";
 import {IInitTeachersResponse, initService} from "../../services";
 import {INIT_TYPE} from "../../core/enum/init-type";
@@ -46,6 +46,8 @@ class Controller implements IViewModel {
 
     lang: typeof lang;
 
+    zones: IInitFormZone[];
+
     constructor(private $scope: IInitLightboxScope,
                 private $location: ILocationService,
                 private $window: IWindowService) {
@@ -56,6 +58,7 @@ class Controller implements IViewModel {
     $onInit() {
         this.lang = lang;
         this.fetchTeachers();
+        this.initZones();
     }
 
     closeForm = (): void => {
@@ -90,6 +93,10 @@ class Controller implements IViewModel {
         } catch (error) {
             console.error("Error fetching teachers:", error);
         }
+    }
+
+    initZones = (): void => {
+        this.zones = initService.getZones();
     }
 
     setDay = (day: IInitFormDay, isFullDay: boolean): void => {

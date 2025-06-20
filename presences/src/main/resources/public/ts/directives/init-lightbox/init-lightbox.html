@@ -121,13 +121,22 @@
 
             <div class="init-1d-lightbox-body-holidays-content">
                 <div class="init-1d-lightbox-body-holidays-content-system-select">
-                    <div class="md-radio md-radio-inline">
+                    <div class="md-radio display-flex align-items-center">
                         <input type="radio" ng-model="vm.form.holidays.system"
                                ng-value="'FRENCH'"
                                id="system-select-french">
-                        <label for="system-select-french">
-                            <i18n>presences.init.1d.form.holidays.french.system</i18n>
+                        <label for="system-select-french" class="pr-8">
+                            <i18n>presences.init.1d.form.holidays.french.system</i18n> :
                         </label>
+                        <select 
+                            class="card" 
+                            ng-model="vm.form.holidays.zone" 
+                            ng-options="zone.value as zone.label for zone in vm.zones"
+                        >
+                            <option value="" disabled>
+                                <i18n>presences.init.1d.form.holidays.select.zone</i18n>
+                            </option>
+                        </select>
                     </div>
 
                     <div class="md-radio md-radio-inline">
@@ -137,38 +146,6 @@
                         <label for="system-select-other">
                             <i18n>presences.init.1d.form.holidays.other.system</i18n>
                         </label>
-                    </div>
-                </div>
-                <div class="init-1d-lightbox-body-holidays-content-zone-select" ng-show="vm.form.holidays.system == 'FRENCH'">
-                    <span><i18n>presences.init.1d.form.holidays.school.zone</i18n> :</span>
-                    <div class="init-1d-lightbox-body-holidays-content-zone-select-zones">
-                        <div class="md-radio md-radio-inline">
-                            <input type="radio" ng-model="vm.form.holidays.zone"
-                                   ng-value="'A'"
-                                   ng-click="vm.form.holidays.system = 'FRENCH'"
-                                   id="zone-select-a">
-                            <label for="zone-select-a">
-                                <i18n>presences.init.1d.form.holidays.detected.zone.A</i18n>
-                            </label>
-                        </div>
-                        <div class="md-radio md-radio-inline">
-                            <input type="radio" ng-model="vm.form.holidays.zone"
-                                   ng-value="'B'"
-                                   ng-click="vm.form.holidays.system = 'FRENCH'"
-                                   id="zone-select-b">
-                            <label for="zone-select-b">
-                                <i18n>presences.init.1d.form.holidays.detected.zone.B</i18n>
-                            </label>
-                        </div>
-                        <div class="md-radio md-radio-inline">
-                            <input type="radio" ng-model="vm.form.holidays.zone"
-                                   ng-value="'C'"
-                                   ng-click="vm.form.holidays.system = 'FRENCH'"
-                                   id="zone-select-c">
-                            <label for="zone-select-c">
-                                <i18n>presences.init.1d.form.holidays.detected.zone.C</i18n>
-                            </label>
-                        </div>
                     </div>
                 </div>
             </div>
