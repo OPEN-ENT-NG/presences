@@ -63,29 +63,13 @@ export const initService: IInitService = {
         zones.push({value: HOLIDAYS_ZONE.GUYANE, label: idiom.translate("presences.init.1d.form.holidays.detected.zone.Guyane")});
         zones.push({value: HOLIDAYS_ZONE.MARTINIQUE, label: idiom.translate("presences.init.1d.form.holidays.detected.zone.Martinique")});
         zones.push({value: HOLIDAYS_ZONE.MAYOTTE, label: idiom.translate("presences.init.1d.form.holidays.detected.zone.Mayotte")});
-        // zones.push({value: HOLIDAYS_ZONE.NOUVELLE_CALEDONIE, label: idiom.translate("presences.init.1d.form.holidays.detected.zone.NouvelleCaledonie")});
+        zones.push({value: HOLIDAYS_ZONE.NOUVELLE_CALEDONIE, label: idiom.translate("presences.init.1d.form.holidays.detected.zone.NouvelleCaledonie")});
         zones.push({value: HOLIDAYS_ZONE.POLYNESIE, label: idiom.translate("presences.init.1d.form.holidays.detected.zone.Polynesie")});
         zones.push({value: HOLIDAYS_ZONE.REUNION, label: idiom.translate("presences.init.1d.form.holidays.detected.zone.Reunion")});
         zones.push({value: HOLIDAYS_ZONE.SAINT_PIERRE_ET_MIQUELON, label: idiom.translate("presences.init.1d.form.holidays.detected.zone.SaintPierreEtMiquelon")});
-        // zones.push({value: HOLIDAYS_ZONE.WALLIS_ET_FUTUNA, label: idiom.translate("presences.init.1d.form.holidays.detected.zone.WallisEtFutuna")});
+        zones.push({value: HOLIDAYS_ZONE.WALLIS_ET_FUTUNA, label: idiom.translate("presences.init.1d.form.holidays.detected.zone.WallisEtFutuna")});
 
         return zones;
-
-        
-        // const currentYear = new Date().getFullYear();
-        // const schoolYear = `${currentYear}-${currentYear + 1}`;
-        // const dataGouvAPIUrl = `https://data.education.gouv.fr/api/records/1.0/search/?dataset=fr-en-calendrier-scolaire&refine.annee_scolaire=${schoolYear}&rows=1000`;
-
-        // const zonesResponse = await http.get(dataGouvAPIUrl);
-        // const zones = new Set<string>();
-        // zonesResponse?.data?.records.forEach(record => {
-        //     console.log(record);
-        //     if (record.fields.zones) {
-        //         zones.add(record.fields.zones);
-        //     }
-        // });
-        // console.log(Array.from(zones));
-        // return zones;
     }
 };
 
