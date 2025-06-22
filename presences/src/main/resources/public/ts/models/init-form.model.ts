@@ -21,11 +21,11 @@ export enum HOLIDAYS_ZONE {
     GUYANE = "Guyane",
     MARTINIQUE = "Martinique",
     MAYOTTE = "Mayotte",
-    // NOUVELLE_CALEDONIE = "Nouvelle Calédonie",
+    NOUVELLE_CALEDONIE = "Nouvelle Calédonie",
     POLYNESIE = "Polynésie",
     REUNION = "Réunion",
     SAINT_PIERRE_ET_MIQUELON = "Saint Pierre et Miquelon",
-    // WALLIS_ET_FUTUNA = "Wallis et Futuna",
+    WALLIS_ET_FUTUNA = "Wallis et Futuna",
 }
 
 export interface IInitFormDay {
