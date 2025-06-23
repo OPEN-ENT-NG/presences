@@ -4,7 +4,16 @@
             min-height="'250px'"></loader>
 
     <div class="empty-state flex-inline twelve top-spacing-25vh justify-center"
-         ng-if="!vm.isLoading && !vm.hasInitializedStructure()">
+         ng-if="!vm.isLoading && !vm.hasInitializedStructure() && vm.isChildrenEmpty">
+        <div class="tick-color red">&nbsp;</div>
+        <div class="empty-title">
+            <i18n>presences.init.state.warning.noChildren</i18n>
+        </div>
+        <div class="tick-color purple">&nbsp;</div>
+    </div>
+
+    <div class="empty-state flex-inline twelve top-spacing-25vh justify-center"
+         ng-if="!vm.isLoading && !vm.hasInitializedStructure() && !vm.isChildrenEmpty">
         <div class="tick-color red">&nbsp;</div>
         <div class="empty-title">
             <i18n>presences.init.state.warning</i18n>

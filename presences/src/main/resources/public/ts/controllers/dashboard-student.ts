@@ -73,6 +73,7 @@ interface IViewModel {
 
     hasInitializedStructure(): boolean;
     isLoading: boolean;
+    isChildrenEmpty: boolean;
 }
 
 export const dashboardStudentController = ng.controller('DashboardStudentController',
@@ -83,6 +84,7 @@ export const dashboardStudentController = ng.controller('DashboardStudentControl
                   viescolaireService: IViescolaireService, initService: IInitService) {
             const vm: IViewModel = this;
             vm.isLoading = true;
+            vm.isChildrenEmpty = false;
             vm.isPresencesInitialized = true;
             vm.filter = {
                 children: [],
@@ -121,7 +123,17 @@ export const dashboardStudentController = ng.controller('DashboardStudentControl
             };
 
             const load = async (): Promise<void> => {
-                await getChildrenData();
+                const studentData: Student = await getStudentData();
+
+                // If user is a Relative but has no children and the structure is not initialized
+                // then show empty screen and stop execution
+                if (vm.isRelative() && !studentData && !vm.hasInitializedStructure()) {
+                    vm.isChildrenEmpty = true;
+                    vm.isLoading = false;
+                    $scope.safeApply();
+                    throw Error("User has no children");
+                }
+
                 await getPeriods();
             };
 
@@ -174,23 +186,18 @@ export const dashboardStudentController = ng.controller('DashboardStudentControl
                 vm.isPresencesInitialized = await initService.getPresencesInitStatus(structureId);
             }
 
-            const getChildrenData = async (): Promise<void> => {
+            const getStudentData = async (): Promise<Student> => {
+                // If the user is a relative, get child info
                 if (vm.isRelative() && vm.filter.children.length === 0) {
                     vm.filter.children = await userService.getChildrenUser(model.me.userId);
                     vm.filter.children.forEach((child: Student) => child.structure = child.structures[0]);
                     vm.filter.selectedChildren = vm.filter.children[0];
                 } else {
-
-                    /* Set student info */
+                    // if the user is a student, get info about the student itself
                     vm.filter.selectedChildren = await userService.getChildUser(model.me.userId);
                     vm.filter.selectedChildren.structure = vm.filter.selectedChildren.structures[0];
-
-                    if (!vm.hasInitializedStructure()) {
-                        vm.isLoading = false;
-                        $scope.safeApply();
-                        return;
-                    }
                 }
+                return vm.filter.selectedChildren;
             };
 
             const getPeriods = (): Promise<void> => {
@@ -308,8 +315,8 @@ export const dashboardStudentController = ng.controller('DashboardStudentControl
 
             /* event handler */
             $scope.$watch(() => window.structure, () => {
-                load()
-                    .then(() => getPresencesInitStatus(window.structure.id))
+                getPresencesInitStatus(window.structure.id)
+                    .then(() => load())
                     .then(() => {
                         if (vm.isPresencesInitialized) {
                             getTimeSlots((vm.filter.selectedChildren && vm.filter.selectedChildren.structure)
