@@ -675,6 +675,7 @@
   "presences.init.check.teachers": "enseignants",
   "presences.init.check.teachers.confirm": "Initialiser quand même",
   "presences.init.state.warning": "L’application n’a pas encore été initialisée par l’établissement.",
+  "presences.init.state.warning.noChildren": "L'application n'a pas encore été initialisée par l'établissement. Si c'est le cas, demandez à votre établissement de vérifier les rattachements de classe.",
   "presences.wednesday": "Mercredi",
   "presences.year": "Année",
   "presences.export": "Export",
