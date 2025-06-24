@@ -5,7 +5,7 @@
 >
   <div
     class="empty-state flex-inline twelve top-spacing-25vh justify-center"
-    ng-if="!vm.hasInitializedStructure() && !vm.hasRight('initPopup') && !vm.hasRight('initSettings1D')"
+    ng-if="!vm.hasInitializedStructure()"
   >
     <div class="tick-color red">&nbsp;</div>
     <div class="empty-title">
@@ -16,7 +16,7 @@
 
   <div
     class="dashboard-content"
-    ng-if="vm.hasInitializedStructure() || (vm.hasRight('initPopup') && vm.hasRight('initSettings1D'))"
+    ng-if="vm.hasInitializedStructure() && vm.hasRight('initPopup') && vm.hasRight('initSettings1D')"
   >
     <div class="row presences-title">
       <div>
@@ -143,10 +143,10 @@
         ></div>
       </side-widget>
     </div>
+  </div>
     <init-lightbox
-      ng-if="vm.hasRight('initPopup') && vm.hasRight('initSettings1D')"
+      ng-if="!vm.hasInitializedStructure() && vm.hasRight('initPopup') && vm.hasRight('initSettings1D')"
       display="vm.isInit"
     >
     </init-lightbox>
-  </div>
 </div>
