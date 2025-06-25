@@ -9,7 +9,7 @@ import {
     InitService,
     IInitService, IInitStatusResponse
 } from '../services';
-import {DateUtils, GroupsSearch, PreferencesUtils} from '@common/utils';
+import {DateUtils, GroupsSearch, PreferencesUtils, safeApply} from '@common/utils';
 import rights from '../rights';
 import {Course, EventType} from '../models';
 import {alertService} from '../services/AlertService';
@@ -38,8 +38,8 @@ interface ViewModel {
     groupsSearch: GroupsSearch;
 
     isInit: Boolean;
-
     isPresencesInitialized: Boolean;
+    hasJustLaunchedInitialization: boolean;
 
     hasRight(right: string): boolean;
 
@@ -72,6 +72,12 @@ export const dashboardController = ng.controller('DashboardController', ['$scope
 
         vm.isInit = undefined;
         vm.isPresencesInitialized = undefined;
+        vm.hasJustLaunchedInitialization = false;
+
+        $scope.$on('presences:refreshDashboard', function() {
+            vm.hasJustLaunchedInitialization = initService.hasJustLaunchedInitialization;
+            safeApply($scope);
+        });
 
         const initData = async (): Promise<void> => {
             initService.getViescoInitStatus(window.structure.id).then((r: IInitStatusResponse) => {
