@@ -78,9 +78,13 @@ class Controller implements IViewModel {
 
     initViesco = async (): Promise<void> => {
         await initService.initViesco(window.structure.id, INIT_TYPE.ONE_D, this.form);
+        initService.hasJustLaunchedInitialization = true;
         toasts.confirm('presences.init.1d.form.confirm');
         this.closeForm();
         safeApply(this.$scope);
+
+        // Broadcast event to refresh dashboard
+        this.$scope.$root.$broadcast('presences:refreshDashboard');
     }
 
     fetchTeachers = async (): Promise<void> => {
