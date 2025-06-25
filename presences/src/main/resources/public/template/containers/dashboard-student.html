@@ -48,7 +48,7 @@
         </div>
 
         <!-- form via relative -->
-        <statements-absence-form data-ng-show="vm.isRelative() && vm.isCurrentMobileRoute(vm.routing[1])"
+        <statements-absence-form data-ng-show="vm.isRelative() && vm.hasInitializedStructure() && !vm.isChildrenEmpty && vm.isCurrentMobileRoute(vm.routing[1])"
                                  class="dashboard-student-statementAbsence"
                                  timeslots="vm.structureTimeSlot"
                                  student="vm.filter.selectedChildren">

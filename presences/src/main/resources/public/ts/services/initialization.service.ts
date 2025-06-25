@@ -14,6 +14,7 @@ export interface IInitTeachersResponse {
 
 
 export interface IInitService {
+    hasJustLaunchedInitialization: boolean;
     getPresencesInitStatus(structureId: string): Promise<boolean>;
     getViescoInitStatus(structureId: string): Promise<IInitStatusResponse>;
 
@@ -26,6 +27,7 @@ export interface IInitService {
 }
 
 export const initService: IInitService = {
+    hasJustLaunchedInitialization: false,
 
     getPresencesInitStatus: async (structureId: string): Promise<boolean> => {
         return http.get(`/presences/initialization/structures/${structureId}`)
