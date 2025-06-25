@@ -125,9 +125,9 @@ export const dashboardStudentController = ng.controller('DashboardStudentControl
             const load = async (): Promise<void> => {
                 const studentData: Student = await getStudentData();
 
-                // If user is a Relative but has no children and the structure is not initialized
+                // If user is a Relative but has no children
                 // then show empty screen and stop execution
-                if (vm.isRelative() && !studentData && !vm.hasInitializedStructure()) {
+                if (vm.isRelative() && !studentData) {
                     vm.isChildrenEmpty = true;
                     vm.isLoading = false;
                     $scope.safeApply();

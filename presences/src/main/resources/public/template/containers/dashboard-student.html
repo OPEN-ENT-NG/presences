@@ -3,15 +3,27 @@
     <loader data-ng-show="vm.isLoading"
             min-height="'250px'"></loader>
 
+    <!-- EMPTY STATE structure initialisée et vérification des rattachements -->
     <div class="empty-state flex-inline twelve top-spacing-25vh justify-center"
-         ng-if="!vm.isLoading && !vm.hasInitializedStructure() && vm.isChildrenEmpty">
+         ng-if="!vm.isLoading && vm.hasInitializedStructure() && vm.isChildrenEmpty">
         <div class="tick-color red">&nbsp;</div>
         <div class="empty-title">
-            <i18n>presences.init.state.warning.noChildren</i18n>
+            <i18n>presences.init.state.warning.initialized.noChildren</i18n>
         </div>
         <div class="tick-color purple">&nbsp;</div>
     </div>
 
+    <!-- EMPTY STATE structure non initialisée et vérification des rattachements -->
+    <div class="empty-state flex-inline twelve top-spacing-25vh justify-center"
+         ng-if="!vm.isLoading && !vm.hasInitializedStructure() && vm.isChildrenEmpty">
+        <div class="tick-color red">&nbsp;</div>
+        <div class="empty-title">
+            <i18n>presences.init.state.warning.notInitialized.noChildren</i18n>
+        </div>
+        <div class="tick-color purple">&nbsp;</div>
+    </div>
+
+    <!-- EMPTY STATE structure non initialisée -->
     <div class="empty-state flex-inline twelve top-spacing-25vh justify-center"
          ng-if="!vm.isLoading && !vm.hasInitializedStructure() && !vm.isChildrenEmpty">
         <div class="tick-color red">&nbsp;</div>
@@ -21,12 +33,12 @@
         <div class="tick-color purple">&nbsp;</div>
     </div>
 
-    <presences-nav-bar data-ng-if="!vm.isLoading && vm.isRelative() && vm.hasInitializedStructure()"
+    <presences-nav-bar data-ng-if="!vm.isLoading && vm.isRelative() && vm.hasInitializedStructure() && !vm.isChildrenEmpty"
                        routing-keys="vm.routing"
                        mobile-mode="true">
     </presences-nav-bar>
 
-    <div class="presences-flex" data-ng-show="!vm.isLoading && vm.hasInitializedStructure()">
+    <div class="presences-flex" data-ng-show="!vm.isLoading && vm.hasInitializedStructure() && !vm.isChildrenEmpty">
         <div class="dashboard-student-main margin-right-lg" data-ng-show="vm.isCurrentMobileRoute(vm.routing[0])">
             <!-- content dashboard inside -->
             <div ng-include="'/presences/public/template/dashboard/dashboard-student/header.html'"></div>
