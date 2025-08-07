@@ -148,7 +148,7 @@ public class Template extends BaseServer {
                     value = value.replaceAll(Pattern.quote(systemCodes.get(code)), codeValues.get(code).toString());
                 }
             } catch (Exception e) {
-                LOGGER.error("[Massmailing@Template] Failed to replace code for code : " + code);
+                LOGGER.error("[Massmailing@Template] Failed to replace code for code : " + code, e);
             }
         }
 
