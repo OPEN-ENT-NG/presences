@@ -103,9 +103,11 @@ public class DefaultMassmailingService implements MassmailingService {
             case MAIL:
                 query = "MATCH (u:User)-[:RELATED]->(r:User) " +
                         "WHERE u.id IN {users} " +
+                        " WITH u, r " +
+                        " MATCH (u)-[:IN]->(:ProfileGroup)-[:DEPENDS]->(c:Class) " +
                         "WITH u, collect(r.email) as emails " +
                         "WHERE size(coalesce(emails)) = 0 " +
-                        "RETURN DISTINCT u.id as id, (u.lastName + ' ' + u.firstName) as displayName, split(u.classes[0],'$')[1] as className";
+                        "RETURN DISTINCT u.id as id, (u.lastName + ' ' + u.firstName) as displayName, c.name as className";
                 params = new JsonObject()
                         .put("users", new JsonArray(students));
                 Neo4j.getInstance().execute(query, params, Neo4jResult.validResultHandler(handler));
@@ -113,9 +115,11 @@ public class DefaultMassmailingService implements MassmailingService {
             case SMS:
                 query = "MATCH (u:User)-[:RELATED]->(r:User) " +
                         "WHERE u.id IN {users} " +
-                        "WITH u, collect(r.mobile) as mobiles " +
+                        " WITH u, r " +
+                        " MATCH (u)-[:IN]->(:ProfileGroup)-[:DEPENDS]->(c:Class) " +
+                        "WITH u, collect(r.mobile) as mobiles, c " +
                         "WHERE size(coalesce(mobiles)) = 0 OR ALL(x IN mobiles WHERE trim(x) = '')" +
-                        "RETURN DISTINCT u.id as id, (u.lastName + ' ' + u.firstName) as displayName, split(u.classes[0],'$')[1] as className";
+                        "RETURN DISTINCT u.id as id, (u.lastName + ' ' + u.firstName) as displayName, c.name as className";
                 params = new JsonObject()
                         .put("users", new JsonArray(students));
                 Neo4j.getInstance().execute(query, params, Neo4jResult.validResultHandler(handler));
@@ -188,8 +192,11 @@ public class DefaultMassmailingService implements MassmailingService {
                 contactValue = "";
         }
 
-        String query = "MATCH (u:User)-[:RELATED]->(r:User) WHERE u.id IN {students} RETURN u.id as id, " +
-                "(u.lastName + ' ' + u.firstName) AS displayName, split(u.classes[0],'$')[1] AS className, " +
+        String query = "MATCH (u:User)-[:RELATED]->(r:User) WHERE u.id IN {students} " +
+                " WITH u, r " +
+                " MATCH (u)-[:IN]->(:ProfileGroup)-[:DEPENDS]->(c:Class) " +
+                " RETURN u.id as id, " +
+                "(u.lastName + ' ' + u.firstName) AS displayName, c.name AS className, " +
                 "collect({id: r.id, displayName: (r.lastName + ' ' + r.firstName), " +
                 "contact: " + contactValue + "}) AS relative";
         JsonObject params = new JsonObject()

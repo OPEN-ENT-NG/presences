@@ -134,8 +134,11 @@ public class DefaultMassmailingServiceTest {
         List<String> students = Arrays.asList("student1", "student2");
         MailingType type = MailingType.MAIL;
 
-        String expectedQuery = "MATCH (u:User)-[:RELATED]->(r:User) WHERE u.id IN {users} WITH u, collect(r.email) as emails " +
-                "WHERE size(coalesce(emails)) = 0 RETURN DISTINCT u.id as id, (u.lastName + ' ' + u.firstName) as displayName, split(u.classes[0],'$')[1] as className";
+        String expectedQuery = "MATCH (u:User)-[:RELATED]->(r:User) WHERE u.id IN {users} " +
+                " WITH u, r " +
+                " MATCH (u)-[:IN]->(:ProfileGroup)-[:DEPENDS]->(c:Class) " +
+                "WITH u, collect(r.email) as emails " +
+                "WHERE size(coalesce(emails)) = 0 RETURN DISTINCT u.id as id, (u.lastName + ' ' + u.firstName) as displayName, c.name as className";
 
         String expectedParams = "{\"users\":[\"student1\",\"student2\"]}";
 
@@ -156,8 +159,11 @@ public class DefaultMassmailingServiceTest {
         List<String> students = Arrays.asList("student1", "student2");
         MailingType type = MailingType.MAIL;
 
-        String expectedQuery = "MATCH (u:User)-[:RELATED]->(r:User) WHERE u.id IN {students} RETURN u.id as id, (u.lastName + ' ' + u.firstName)" +
-                " AS displayName, split(u.classes[0],'$')[1] AS className, collect({id: r.id, displayName: (r.lastName + ' ' + r.firstName)," +
+        String expectedQuery = "MATCH (u:User)-[:RELATED]->(r:User) WHERE u.id IN {students} " +
+                " WITH u, r " +
+                " MATCH (u)-[:IN]->(:ProfileGroup)-[:DEPENDS]->(c:Class) " +
+                " RETURN u.id as id, (u.lastName + ' ' + u.firstName)" +
+                " AS displayName, c.name AS className, collect({id: r.id, displayName: (r.lastName + ' ' + r.firstName)," +
                 " contact: r.email}) AS relative";
 
         String expectedParams = "{\"students\":[\"student1\",\"student2\"]}";
