@@ -1610,12 +1610,9 @@ body.presences .date-picker:before, body.presences .time-picker:before, .sniplet
   font-size: 20px;
 }
 body.presences .date-picker input[type=text], body.presences .time-picker input[type=text], .sniplet.presences .date-picker input[type=text], .sniplet.presences .time-picker input[type=text] {
-  width: 90px !important;
+  width: 80px !important;
   margin-bottom: 0;
   box-sizing: border-box;
-}
-body.presences .date-picker input[type=text]::placeholder, body.presences .time-picker input[type=text]::placeholder, .sniplet.presences .date-picker input[type=text]::placeholder, .sniplet.presences .time-picker input[type=text]::placeholder {
-  font-size: 0.8rem;
 }
 body.presences .date-picker input[type=text], body.presences .date-picker input[type=time], body.presences .time-picker input[type=text], body.presences .time-picker input[type=time], .sniplet.presences .date-picker input[type=text], .sniplet.presences .date-picker input[type=time], .sniplet.presences .time-picker input[type=text], .sniplet.presences .time-picker input[type=time] {
   background-color: #ffffff;
