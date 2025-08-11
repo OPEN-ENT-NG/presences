@@ -1,7 +1,7 @@
 # À propos de l'application Présences
 * Licence : [AGPL v3](http://www.gnu.org/licenses/agpl.txt) - Copyright CGI, Région Nouvelle Aquitaine, Département Seine et Marne
-* Développeur(s) : CGI
-* Financeur(s) : CGI, Région Nouvelle Aquitaine, Département Seine et marne, Mairie De Paris
+* Développeur(s) : CGI, Edifice
+* Financeur(s) : CGI, Région Nouvelle Aquitaine, Département Seine et marne, Mairie De Paris, Edifice
 * Description : Présences est un module de vie scolaire qui permet de gérer tous les événements ayant
   lieu au sein de l’établissement scolaire:
   - La gestion des absences et des appels,
