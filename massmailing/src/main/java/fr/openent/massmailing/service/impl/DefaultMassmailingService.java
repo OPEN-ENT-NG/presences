@@ -105,7 +105,7 @@ public class DefaultMassmailingService implements MassmailingService {
                         "WHERE u.id IN {users} " +
                         " WITH u, r " +
                         " MATCH (u)-[:IN]->(:ProfileGroup)-[:DEPENDS]->(c:Class) " +
-                        "WITH u, collect(r.email) as emails " +
+                        "WITH u, collect(r.email) as emails, c " +
                         "WHERE size(coalesce(emails)) = 0 " +
                         "RETURN DISTINCT u.id as id, (u.lastName + ' ' + u.firstName) as displayName, c.name as className";
                 params = new JsonObject()

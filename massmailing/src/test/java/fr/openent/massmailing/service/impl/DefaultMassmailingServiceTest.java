@@ -137,7 +137,7 @@ public class DefaultMassmailingServiceTest {
         String expectedQuery = "MATCH (u:User)-[:RELATED]->(r:User) WHERE u.id IN {users} " +
                 " WITH u, r " +
                 " MATCH (u)-[:IN]->(:ProfileGroup)-[:DEPENDS]->(c:Class) " +
-                "WITH u, collect(r.email) as emails " +
+                "WITH u, collect(r.email) as emails, c " +
                 "WHERE size(coalesce(emails)) = 0 RETURN DISTINCT u.id as id, (u.lastName + ' ' + u.firstName) as displayName, c.name as className";
 
         String expectedParams = "{\"users\":[\"student1\",\"student2\"]}";
