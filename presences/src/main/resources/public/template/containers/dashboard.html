@@ -29,7 +29,7 @@
 
   <div
     class="dashboard-content"
-    ng-if="vm.hasInitializedStructure() && vm.hasRight('initPopup') && vm.hasRight('initSettings1D')"
+    ng-if="vm.hasInitializedStructure() || (vm.hasRight('initPopup') && vm.hasRight('initSettings1D'))"
   >
     <div class="row presences-title">
       <div>
