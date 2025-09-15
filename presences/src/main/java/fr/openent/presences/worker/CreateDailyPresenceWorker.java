@@ -7,6 +7,7 @@ import fr.openent.presences.core.constants.*;
 import fr.openent.presences.helper.MapHelper;
 import fr.openent.presences.service.*;
 import fr.openent.presences.service.impl.*;
+import fr.wseduc.webutils.collections.SharedDataHelper;
 import fr.wseduc.webutils.email.EmailSender;
 import io.vertx.core.*;
 import io.vertx.core.eventbus.Message;
@@ -34,13 +35,22 @@ public class CreateDailyPresenceWorker extends BusModBase implements Handler<Mes
 
 
     @Override
-    public void start() {
+    public void start(final Promise<Void> startPromise) {
         super.start();
-        this.commonPresencesServiceFactory = new CommonPresencesServiceFactory(vertx,
-                new StorageFactory(vertx, config).getStorage(), config);
-        this.registerService = new DefaultRegisterService(commonPresencesServiceFactory);
-        this.emailSender = new EmailFactory(vertx, config).getSender();
-        eb.consumer(this.getClass().getName(), this);
+        final List<Future<?>> futures = new ArrayList<>();
+        futures.add(StorageFactory.build(vertx, config));
+        futures.add(SharedDataHelper.getInstance().<String, String>getMulti("server", "node"));
+        Future.all(futures).compose(storageFactoryAndNode -> {
+          final Storage storage = ((StorageFactory)storageFactoryAndNode.resultAt(0)).getStorage();
+          final String node = ((Map<String, String>) storageFactoryAndNode.resultAt(1)).get("node");
+          this.commonPresencesServiceFactory = new CommonPresencesServiceFactory(vertx, storage, config, node);
+          this.registerService = new DefaultRegisterService(commonPresencesServiceFactory);
+          this.emailSender = EmailFactory.getInstance().getSender();
+          eb.consumer(this.getClass().getName(), this);
+          return Future.succeededFuture();
+        })
+        .onSuccess(e -> startPromise.complete())
+        .onFailure(startPromise::fail);
     }
 
     @Override

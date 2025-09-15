@@ -19,10 +19,8 @@ import fr.openent.presences.worker.PresencesExportWorker;
 import fr.openent.presences.worker.ResetAlertsWorker;
 import fr.wseduc.cron.CronTrigger;
 import fr.wseduc.mongodb.MongoDb;
-import io.vertx.core.AbstractVerticle;
-import io.vertx.core.DeploymentOptions;
-import io.vertx.core.Promise;
-import io.vertx.core.Verticle;
+import fr.wseduc.webutils.collections.SharedDataHelper;
+import io.vertx.core.*;
 import io.vertx.core.eventbus.DeliveryOptions;
 import io.vertx.core.eventbus.EventBus;
 import io.vertx.core.json.JsonObject;
@@ -34,6 +32,9 @@ import org.entcore.common.storage.StorageFactory;
 import org.vertx.java.busmods.BusModBase;
 
 import java.text.ParseException;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
 
 public class Presences extends BaseServer {
 
@@ -102,79 +103,91 @@ public class Presences extends BaseServer {
 
     @Override
     public void start(Promise<Void> startPromise) throws Exception {
-        super.start(startPromise);
+      final Promise<Void> promise = Promise.promise();
+      super.start(promise);
+      promise.future()
+        .compose(e -> this.initPresences())
+        .onComplete(startPromise);
+    }
+    public Future<Void> initPresences() {
         dbSchema = config.getString("db-schema");
         ebViescoAddress = "viescolaire";
         final EventBus eb = getEventBus(vertx);
-        Storage storage = new StorageFactory(vertx, config).getStorage();
-        ExportData exportData = new ExportData(vertx);
-        DB.getInstance().init(Neo4j.getInstance(), Sql.getInstance(), MongoDb.getInstance());
-        CommonPresencesServiceFactory commonPresencesServiceFactory = new CommonPresencesServiceFactory(vertx, storage, config, exportData);
+        final List<Future<?>> storageAndNodefutures = new ArrayList<>();
+        storageAndNodefutures.add(StorageFactory.build(vertx, config));
+        storageAndNodefutures.add(SharedDataHelper.getInstance().<String, String>getMulti("server", "node"));
+        return Future.all(storageAndNodefutures).compose(storageFactoryAndNode -> {
+          final Storage storage = ((StorageFactory)storageFactoryAndNode.resultAt(0)).getStorage();
+          final String node = ((Map<String, String>) storageFactoryAndNode.resultAt(1)).get("node");
+          ExportData exportData = new ExportData(vertx);
+          DB.getInstance().init(Neo4j.getInstance(), Sql.getInstance(), MongoDb.getInstance());
+          CommonPresencesServiceFactory commonPresencesServiceFactory = new CommonPresencesServiceFactory(vertx, storage, config, exportData, node);
 
-//        final String exportCron = config.getString("export-cron");
+          //        final String exportCron = config.getString("export-cron");
 
-        addController(new PresencesController(commonPresencesServiceFactory));
-        addController(new CourseController(commonPresencesServiceFactory));
-        addController(new RegisterController(commonPresencesServiceFactory));
-        addController(new AbsenceController(commonPresencesServiceFactory));
-        addController(new EventController(commonPresencesServiceFactory));
-        addController(new LatenessEventController(commonPresencesServiceFactory));
-        addController(new ExemptionController(commonPresencesServiceFactory));
-        addController(new SearchController(eb));
-        addController(new CalendarController(eb));
-        addController(new ReasonController());
-        addController(new RegistryController(eb));
-        addController(new EventBusController(eb, commonPresencesServiceFactory));
-        addController(new NotebookController());
-        addController(new SettingsController());
-        addController(new AlertController(eb));
-        addController(new ActionController());
-        addController(new DisciplineController());
-        addController(new InitController(eb));
-        addController(new StudentController(commonPresencesServiceFactory));
-        addController(new StatementAbsenceController(eb, storage));
-        addController(new CollectiveAbsenceController());
-        addController(new ArchiveController(commonPresencesServiceFactory));
-        addController(new ConfigController());
-        addController(new StatisticsController());
-        addController(new GroupingController(commonPresencesServiceFactory));
+          addController(new PresencesController(commonPresencesServiceFactory));
+          addController(new CourseController(commonPresencesServiceFactory));
+          addController(new RegisterController(commonPresencesServiceFactory));
+          addController(new AbsenceController(commonPresencesServiceFactory));
+          addController(new EventController(commonPresencesServiceFactory));
+          addController(new LatenessEventController(commonPresencesServiceFactory));
+          addController(new ExemptionController(commonPresencesServiceFactory));
+          addController(new SearchController(eb));
+          addController(new CalendarController(eb));
+          addController(new ReasonController());
+          addController(new RegistryController(eb));
+          addController(new EventBusController(eb, commonPresencesServiceFactory));
+          addController(new NotebookController());
+          addController(new SettingsController());
+          addController(new AlertController(eb));
+          addController(new ActionController());
+          addController(new DisciplineController());
+          addController(new InitController(eb));
+          addController(new StudentController(commonPresencesServiceFactory));
+          addController(new StatementAbsenceController(eb, storage));
+          addController(new CollectiveAbsenceController());
+          addController(new ArchiveController(commonPresencesServiceFactory));
+          addController(new ConfigController());
+          addController(new StatisticsController());
+          addController(new GroupingController(commonPresencesServiceFactory));
 
-        // Controller that create fake rights for widgets
-        addController(new FakeRight());
+          // Controller that create fake rights for widgets
+          addController(new FakeRight());
 
-        //Init incident
-        Incidents.getInstance().init(eb);
-        Viescolaire.getInstance().init(eb);
-        Massmailing.getInstance().init(eb);
-        StatisticsPresences.getInstance().init(eb);
+          //Init incident
+          Incidents.getInstance().init(eb);
+          Viescolaire.getInstance().init(eb);
+          Massmailing.getInstance().init(eb);
+          StatisticsPresences.getInstance().init(eb);
 
-        // Repository Events
-        setRepositoryEvents(new PresencesRepositoryEvents(eb));
+          // Repository Events
+          setRepositoryEvents(new PresencesRepositoryEvents(eb));
+          final List<Future<?>> futures = new ArrayList<>();
 
-        if (config.containsKey("registers-cron")) {
-            vertx.deployVerticle(CreateDailyPresenceWorker.class, new DeploymentOptions().setConfig(config).setWorker(true));
+          if (config.containsKey("registers-cron")) {
+            futures.add(vertx.deployVerticle(CreateDailyPresenceWorker.class, new DeploymentOptions().setConfig(config).setWorker(true)));
             try {
-                new CronTrigger(vertx, config.getString("registers-cron")).schedule(new CreateDailyRegistersTask(vertx.eventBus()));
+              new CronTrigger(vertx, config.getString("registers-cron")).schedule(new CreateDailyRegistersTask(vertx.eventBus()));
             } catch (ParseException e) {
-                log.fatal(e.getMessage(), e);
+              log.fatal("Error while parsing registers-cron cron expression", e);
             }
-        }
+          }
 
-        if (config.containsKey("cron-check-regularization") && Boolean.TRUE.equals(config.getJsonObject("cron-check-regularization").getBoolean("enabled"))) {
+          if (config.containsKey("cron-check-regularization") && Boolean.TRUE.equals(config.getJsonObject("cron-check-regularization").getBoolean("enabled"))) {
             try {
-                new CronTrigger(vertx, config.getJsonObject("cron-check-regularization").getString("cron")).schedule(new UpdateEventRegularizationTask(vertx.eventBus()));
+              new CronTrigger(vertx, config.getJsonObject("cron-check-regularization").getString("cron")).schedule(new UpdateEventRegularizationTask(vertx.eventBus()));
             } catch (ParseException e) {
-                log.fatal(e.getMessage(), e);
+              log.fatal("Error while parsing cron-check-regularization cron expression", e);
             }
-        }
+          }
 
-        // worker to be triggered manually (API will call its worker to send csv's export via email)
-        vertx.deployVerticle(EventExportWorker.class, new DeploymentOptions().setConfig(config).setWorker(true));
-        vertx.deployVerticle(ResetAlertsWorker.class, new DeploymentOptions().setConfig(config).setWorker(true));
+          // worker to be triggered manually (API will call its worker to send csv's export via email)
+          futures.add(vertx.deployVerticle(EventExportWorker.class, new DeploymentOptions().setConfig(config).setWorker(true)));
+          futures.add(vertx.deployVerticle(ResetAlertsWorker.class, new DeploymentOptions().setConfig(config).setWorker(true)));
 
-        vertx.deployVerticle(PresencesExportWorker.class, new DeploymentOptions().setConfig(config).setWorker(true));
-        startPromise.tryComplete();
-        startPromise.tryFail("[Presences@Presences::start] Failed to start module Presences.");
+          futures.add(vertx.deployVerticle(PresencesExportWorker.class, new DeploymentOptions().setConfig(config).setWorker(true)));
+          return Future.all(futures);
+        }).mapEmpty();
     }
 
     public static void launchResetAlertsWorker(EventBus eb, JsonObject params) {

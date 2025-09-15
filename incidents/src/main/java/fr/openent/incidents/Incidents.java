@@ -31,7 +31,13 @@ public class Incidents extends BaseServer {
 
     @Override
     public void start(Promise<Void> startPromise) throws Exception {
-        super.start(startPromise);
+      final Promise<Void> promise = Promise.promise();
+      super.start(promise);
+      promise.future()
+        .compose(e -> this.init())
+        .onComplete(startPromise);
+    }
+    public Future<Void> init() {
         dbSchema = config.getString("db-schema");
         final EventBus eb = getEventBus(vertx);
         CommonIncidentsServiceFactory commonIncidentsServiceFactory = new CommonIncidentsServiceFactory(vertx);
@@ -56,9 +62,7 @@ public class Incidents extends BaseServer {
         addController(new ConfigController());
         addController(new FakeRight());
 
-        vertx.deployVerticle(IncidentsExportWorker.class, new DeploymentOptions().setConfig(config).setWorker(true));
-        startPromise.tryComplete();
-        startPromise.tryFail("[Incidents@Incidents::start] Failed to start module Incidents.");
+        return vertx.deployVerticle(IncidentsExportWorker.class, new DeploymentOptions().setConfig(config).setWorker(true)).mapEmpty();
     }
 
 }

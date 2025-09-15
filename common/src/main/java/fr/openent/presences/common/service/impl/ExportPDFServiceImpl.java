@@ -116,7 +116,7 @@ public class ExportPDFServiceImpl implements ExportPDFService {
     }
 
     public String createToken(UserInfos user) throws Exception {
-        String token = UserUtils.createJWTToken(vertx, user, null, null);
+        String token = UserUtils.createJWTToken(vertx, user, null, null, null);
         if (isEmpty(token)) {
             throw new PdfException("[Common@ExportPDFServiceImpl::createToken] invalid.token");
         }
