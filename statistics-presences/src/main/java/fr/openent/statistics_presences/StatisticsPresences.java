@@ -25,6 +25,8 @@ import org.entcore.common.neo4j.Neo4j;
 import org.entcore.common.sql.Sql;
 
 import java.lang.reflect.InvocationTargetException;
+import java.text.ParseException;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -52,7 +54,13 @@ public class StatisticsPresences extends BaseServer {
 
     @Override
     public void start(Promise<Void> startPromise) throws Exception {
-        super.start(startPromise);
+      final Promise<Void> promise = Promise.promise();
+      super.start(promise);
+      promise.future().compose(e -> this.initStatisticsPresences())
+        .onComplete(startPromise)
+      ;
+    }
+    public Future<Void> initStatisticsPresences() {
         DB.getInstance().init(Neo4j.getInstance(), Sql.getInstance(), MongoDb.getInstance());
         CommonServiceFactory commonServiceFactory = new CommonServiceFactory(vertx);
 
@@ -60,7 +68,7 @@ public class StatisticsPresences extends BaseServer {
         addController(new StatisticsController(commonServiceFactory));
         addController(new StatisticsWeeklyAudiencesController(commonServiceFactory));
         addController(new ConfigController());
-//        addController(new WorkerController()); todo for next step to monitor/secure worker usage
+        //        addController(new WorkerController()); todo for next step to monitor/secure worker usage
 
         setRepositoryEvents(new StatisticsRepositoryEvents(commonServiceFactory));
 
@@ -74,15 +82,19 @@ public class StatisticsPresences extends BaseServer {
         Incidents.getInstance().init(vertx.eventBus());
 
         if (config.containsKey("processing-cron")) {
-            String processingCron = config.getString("processing-cron");
+          String processingCron = config.getString("processing-cron");
+          try {
             new CronTrigger(vertx, processingCron).schedule(new ProcessingScheduledTask(vertx, config, commonServiceFactory));
+          } catch (ParseException ex) {
+            return Future.failedFuture(ex);
+          }
         }
 
         // worker to be triggered manually
-        vertx.deployVerticle(ProcessingScheduledManual.class, new DeploymentOptions().setConfig(config).setWorker(true));
-        vertx.deployVerticle(ProcessingWeeklyAudiencesManual.class, new DeploymentOptions().setConfig(config).setWorker(true));
-        startPromise.tryComplete();
-        startPromise.tryFail("[StatisticsPresences@StatisticsPresences::start] Failed to start module StatisticsPresences.");
+        final List<Future<?>> futures = new ArrayList<>();
+        futures.add(vertx.deployVerticle(ProcessingScheduledManual.class, new DeploymentOptions().setConfig(config).setWorker(true)));
+        futures.add(vertx.deployVerticle(ProcessingWeeklyAudiencesManual.class, new DeploymentOptions().setConfig(config).setWorker(true)));
+        return Future.all(futures).mapEmpty();
     }
 
     private void registerCodec() {

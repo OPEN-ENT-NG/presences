@@ -5,10 +5,12 @@ import fr.openent.presences.common.service.*;
 import fr.openent.presences.common.service.impl.*;
 import fr.openent.presences.core.constants.*;
 import fr.openent.presences.model.*;
+import fr.wseduc.webutils.collections.SharedDataHelper;
 import io.vertx.core.*;
 import io.vertx.core.eventbus.*;
 import io.vertx.core.json.*;
 import io.vertx.core.logging.*;
+import org.apache.commons.lang3.tuple.Pair;
 import org.entcore.common.bus.*;
 import org.entcore.common.notification.*;
 import org.entcore.common.storage.*;
@@ -32,7 +34,7 @@ public abstract class ExportWorker extends AbstractVerticle {
 
 
     @Override
-    public void start() {
+    public void start(final Promise<Void> promise) {
         exportContext = vertx.getOrCreateContext();
         exportLogs = new ExportLogs(this.getClass().getSimpleName() + ".log");
         String launchLog = String.format("[Common@%s::start] Launching worker %s, deploy verticle %s",
@@ -40,13 +42,22 @@ public abstract class ExportWorker extends AbstractVerticle {
         log.info(launchLog);
         exportLogs.addLog(launchLog);
 
-        Storage storage = new StorageFactory(vertx, new JsonObject()).getStorage();
-        workspaceService = new DefaultWorkspaceService(this.vertx, storage, config());
+      StorageFactory.build(vertx, new JsonObject())
+      .map(StorageFactory::getStorage)
+      .map(storage -> {
         fileService = new DefaultFileService(storage);
         workspaceHelper = new WorkspaceHelper(vertx.eventBus(), storage);
         timelineHelper = new TimelineHelper(this.vertx, this.vertx.eventBus(), config());
-
         vertx.eventBus().consumer(this.getClass().getName(), this::run);
+        return storage;
+      }).compose(storage ->
+            SharedDataHelper.getInstance().<String, String>getMulti("server", "node")
+              .map(map -> Pair.of(storage, map.get("node")))
+        ).map(storageAndNode ->
+          workspaceService = new DefaultWorkspaceService(this.vertx, storageAndNode.getKey(), config(), storageAndNode.getValue())
+        )
+      .onSuccess(e -> promise.complete())
+      .onFailure(promise::fail);
     }
 
     protected void run(Message<JsonObject> event) {

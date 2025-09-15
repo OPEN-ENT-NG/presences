@@ -19,14 +19,16 @@ public class DefaultWorkspaceService implements WorkspaceService  {
     private final EventBus eb;
     private final FolderManager folderManager;
 
-    public DefaultWorkspaceService (Vertx vertx, Storage storage, JsonObject config) {
+    public DefaultWorkspaceService (Vertx vertx, Storage storage, JsonObject config, final String node) {
         this.eb = vertx.eventBus();
 
-        String node = (String) vertx.sharedData().getLocalMap("server").get("node");
+        final String nodeValue;
         if (node == null) {
-            node = "";
+            nodeValue = "";
+        } else {
+          nodeValue = "";
         }
-        String imageResizerAddress = node + config.getString("image-resizer-address", "wse.image.resizer");
+        String imageResizerAddress = nodeValue + config.getString("image-resizer-address", "wse.image.resizer");
         final boolean useOldQueryChildren = config.getBoolean("old-query", false);
         GenericShareService shareService = new MongoDbShareService(vertx.eventBus(), MongoDb.getInstance(), "documents", null, new HashMap<>());
 

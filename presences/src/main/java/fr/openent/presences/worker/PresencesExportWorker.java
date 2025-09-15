@@ -5,6 +5,7 @@ import fr.openent.presences.core.constants.*;
 import fr.openent.presences.enums.*;
 import fr.openent.presences.model.*;
 import fr.openent.presences.service.*;
+import fr.wseduc.webutils.collections.SharedDataHelper;
 import io.vertx.core.*;
 import io.vertx.core.json.*;
 import org.entcore.common.storage.*;
@@ -21,11 +22,19 @@ public class PresencesExportWorker extends ExportWorker {
 
     protected Future<Void> init(JsonObject config) {
         Promise<Void> promise = Promise.promise();
-        Storage storage = new StorageFactory(vertx, new JsonObject()).getStorage();
-        CommonPresencesServiceFactory commonPresencesServiceFactory = new CommonPresencesServiceFactory(vertx,
-                storage, config);
-        exportEventService = commonPresencesServiceFactory.exportEventService();
-        promise.complete();
+        final List<Future<?>> futures = new ArrayList<>();
+        futures.add(StorageFactory.build(vertx, config));
+        futures.add(SharedDataHelper.getInstance().<String, String>getMulti("server", "node"));
+        Future.all(futures).compose(storageFactoryAndNode -> {
+          final Storage storage = ((StorageFactory)storageFactoryAndNode.resultAt(0)).getStorage();
+          final String node = ((Map<String, String>) storageFactoryAndNode.resultAt(1)).get("node");
+          CommonPresencesServiceFactory commonPresencesServiceFactory = new CommonPresencesServiceFactory(vertx,
+            storage, config, node);
+          exportEventService = commonPresencesServiceFactory.exportEventService();
+          return Future.succeededFuture();
+        })
+        .onSuccess(e -> promise.complete())
+        .onFailure(promise::fail);
         return promise.future();
     }
 
