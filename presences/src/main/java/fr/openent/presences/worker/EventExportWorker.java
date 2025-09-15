@@ -1,11 +1,11 @@
 package fr.openent.presences.worker;
 
 import fr.openent.presences.common.helper.DateHelper;
-import fr.openent.presences.common.helper.FutureHelper;
 import fr.openent.presences.core.constants.Field;
 import fr.openent.presences.service.ArchiveService;
 import fr.openent.presences.service.CommonPresencesServiceFactory;
 import fr.wseduc.webutils.I18n;
+import fr.wseduc.webutils.collections.SharedDataHelper;
 import fr.wseduc.webutils.email.EmailSender;
 import io.vertx.core.*;
 import io.vertx.core.eventbus.Message;
@@ -22,6 +22,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Base64;
 import java.util.List;
+import java.util.Map;
 
 public class EventExportWorker extends BusModBase implements Handler<Message<JsonObject>> {
 
@@ -32,13 +33,26 @@ public class EventExportWorker extends BusModBase implements Handler<Message<Jso
     String domain;
 
     @Override
-    public void start() {
+    public void start(final Promise<Void> startPromise) {
+      try {
         super.start();
-        Storage storage = new StorageFactory(vertx, config).getStorage();
-        CommonPresencesServiceFactory commonPresencesServiceFactory = new CommonPresencesServiceFactory(vertx, storage, config);
-        this.emailSender = new EmailFactory(vertx, config).getSender();
-        this.archiveService = commonPresencesServiceFactory.archiveService();
-        eb.consumer(this.getClass().getName(), this);
+        final List<Future<?>> futures = new ArrayList<>();
+        futures.add(StorageFactory.build(vertx, config));
+        futures.add(SharedDataHelper.getInstance().<String, String>getMulti("server", "node"));
+        Future.all(futures).compose(storageFactoryAndNode -> {
+          final Storage storage = ((StorageFactory)storageFactoryAndNode.resultAt(0)).getStorage();
+          final String node = ((Map<String, String>) storageFactoryAndNode.resultAt(1)).get("node");
+          CommonPresencesServiceFactory commonPresencesServiceFactory = new CommonPresencesServiceFactory(vertx, storage, config, node);
+          this.emailSender = EmailFactory.getInstance().getSender();
+          this.archiveService = commonPresencesServiceFactory.archiveService();
+          eb.consumer(this.getClass().getName(), this);
+          return Future.succeededFuture();
+        })
+          .onSuccess(e -> startPromise.complete())
+          .onFailure(startPromise::fail);
+      } catch(Exception e) {
+        startPromise.fail(e);
+      }
     }
 
     @Override

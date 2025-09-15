@@ -36,7 +36,7 @@ public class ProcessingScheduledTask implements Handler<Long> {
     public ProcessingScheduledTask(Vertx vertx, JsonObject config, CommonServiceFactory commonServiceFactory) {
         this.vertx = vertx;
         this.config = config;
-        this.emailSender = new EmailFactory(vertx, null).getSender();
+        this.emailSender = EmailFactory.getInstance().getSender();
         this.statisticsPresencesService = commonServiceFactory.getStatisticsPresencesService();
     }
 

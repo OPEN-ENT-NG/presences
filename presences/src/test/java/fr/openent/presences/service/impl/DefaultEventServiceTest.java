@@ -40,7 +40,7 @@ public class DefaultEventServiceTest extends DBService {
     @Before
     public void setUp() {
         DB.getInstance().init(null, sql, null);
-        CommonPresencesServiceFactory commonPresencesServiceFactory = new CommonPresencesServiceFactory(Vertx.vertx(), null, new JsonObject());
+        CommonPresencesServiceFactory commonPresencesServiceFactory = new CommonPresencesServiceFactory(Vertx.vertx(), null, new JsonObject(), "");
         this.eventService = PowerMockito.spy(new DefaultEventService(commonPresencesServiceFactory));
     }
 

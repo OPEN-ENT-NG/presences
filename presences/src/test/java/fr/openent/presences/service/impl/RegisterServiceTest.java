@@ -26,7 +26,7 @@ public class RegisterServiceTest {
 
     @Before
     public void setUp() {
-        CommonPresencesServiceFactory commonPresencesServiceFactory = new CommonPresencesServiceFactory(Vertx.vertx(), null, new JsonObject());
+        CommonPresencesServiceFactory commonPresencesServiceFactory = new CommonPresencesServiceFactory(Vertx.vertx(), null, new JsonObject(), "");
         this.registerService = new DefaultRegisterService(commonPresencesServiceFactory);
     }
 

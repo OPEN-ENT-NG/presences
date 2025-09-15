@@ -10,6 +10,7 @@ import fr.openent.presences.core.constants.Field;
 import fr.openent.presences.db.DB;
 import fr.wseduc.mongodb.MongoDb;
 import fr.wseduc.webutils.email.EmailSender;
+import io.vertx.core.Future;
 import io.vertx.core.Promise;
 import io.vertx.core.eventbus.EventBus;
 import io.vertx.core.json.JsonObject;
@@ -43,30 +44,37 @@ public class Massmailing extends BaseServer {
 
     @Override
     public void start(Promise<Void> startPromise) throws Exception {
-        super.start(startPromise);
+      final Promise<Void> promise = Promise.promise();
+      super.start(promise);
+      promise.future()
+        .compose(e -> this.init())
+        .onComplete(startPromise);
+    }
+    public Future<Void> init() {
         EventBus eb = getEventBus(vertx);
-        Storage storage = new StorageFactory(vertx, config).getStorage();
-        types = mailingsConfig();
-        emailSender = new EmailFactory(vertx, config).getSender();
-        SmsSenderFactory.getInstance().init(vertx, config);
-        workspaceHelper = new WorkspaceHelper(eb, storage);
-        Sql sqlAdmin = Sql.createInstance(vertx.eventBus(), Field.SQLPERSISTORADMIN);
+        return StorageFactory.build(vertx, config).compose(storageFactory -> {
+            final Storage storage = storageFactory.getStorage();
+            types = mailingsConfig();
+            emailSender = EmailFactory.getInstance().getSender();
+            SmsSenderFactory.getInstance().init(vertx, config);
+            workspaceHelper = new WorkspaceHelper(eb, storage);
+            Sql sqlAdmin = Sql.createInstance(vertx.eventBus(), Field.SQLPERSISTORADMIN);
 
-        DB.getInstance().init(Neo4j.getInstance(), Sql.getInstance(), MongoDb.getInstance());
+            DB.getInstance().init(Neo4j.getInstance(), Sql.getInstance(), MongoDb.getInstance());
 
-        addController(new MassmailingController(eb, vertx, config, storage));
-        addController(new SettingsController(eb));
-        addController(new EventBusController());
-        addController(new MailingController(eb, storage));
-        addController(new ConfigController());
+            addController(new MassmailingController(eb, vertx, config, storage));
+            addController(new SettingsController(eb));
+            addController(new EventBusController());
+            addController(new MailingController(eb, storage));
+            addController(new ConfigController());
 
-        Presences.getInstance().init(eb);
-        Incidents.getInstance().init(eb);
-        Viescolaire.getInstance().init(eb);
+            Presences.getInstance().init(eb);
+            Incidents.getInstance().init(eb);
+            Viescolaire.getInstance().init(eb);
 
-        vertx.setTimer(30000, handle -> new DatabaseStarter().init(sqlAdmin));
-        startPromise.tryComplete();
-        startPromise.tryFail("[Massmailling@Massmailling::start] Failed to start module Massmailling.");
+            vertx.setTimer(30000, handle -> new DatabaseStarter().init(sqlAdmin));
+            return Future.succeededFuture();
+          });
     }
 
     private HashMap<MailingType, Boolean> mailingsConfig() {
