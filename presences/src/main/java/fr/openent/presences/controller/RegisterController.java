@@ -25,6 +25,8 @@ import org.entcore.common.http.filter.*;
 import org.entcore.common.user.UserUtils;
 
 import java.util.List;
+import java.util.Collections;
+import java.util.function.Consumer;
 
 public class RegisterController extends ControllerHelper {
 
@@ -151,23 +153,33 @@ public class RegisterController extends ControllerHelper {
         List<String> groupNames = request.params().getAll("groupName");
         List<String> teacherIds = request.params().getAll("teacherId");
 
-        settingsService.retrieveMultipleSlots(request.getParam("structureId"))
+        Consumer<List<String>> processWithTeacherIds = teacherIdsToUse ->
+            settingsService.retrieveMultipleSlots(request.getParam("structureId"))
                 .onFailure(fail -> {
-                    String message = String.format("[Presences@%s::getLastForgottenRegisters] Failed to get " +
-                            "multiple slot setting : %s", this.getClass().getSimpleName(), fail.getMessage());
+                    String message = String.format("[Presences@%s::getLastForgottenRegisters] Failed to get multiple slot setting : %s", this.getClass().getSimpleName(), fail.getMessage());
                     log.error(message, fail.getMessage());
                     renderError(request);
                 })
-                .onSuccess(res -> registerService.getLastForgottenRegistersCourses(structureId, teacherIds, groupNames,
-                        startDate, endDate, res.getBoolean(Field.ALLOW_MULTIPLE_SLOTS, true),
-                        either -> {
-                            if (either.failed()) {
-                                log.error("[Presences@CourseController::getLastForgottenRegisters] Failed to retrieve " +
-                                        "last forgotten course registers: " + either.cause().getMessage());
-                                renderError(request);
-                            } else {
-                                renderJson(request, either.result());
-                            }
-                        }));
+                .onSuccess(res -> registerService.getLastForgottenRegistersCourses(structureId, teacherIdsToUse, groupNames, startDate, endDate, res.getBoolean(Field.ALLOW_MULTIPLE_SLOTS, true),
+                    either -> {
+                        if (either.failed()) {
+                            log.error("[Presences@CourseController::getLastForgottenRegisters] Failed to retrieve last forgotten course registers: " + either.cause().getMessage());
+                            renderError(request);
+                        } else {
+                            renderJson(request, either.result());
+                        }
+                    }));
+
+        if (teacherIds == null || teacherIds.isEmpty()) {
+            UserUtils.getUserInfos(eb, request, userInfos -> {
+                if (userInfos != null && userInfos.getFunctions().containsKey("teacher")) {
+                    processWithTeacherIds.accept(Collections.singletonList(userInfos.getUserId()));
+                } else {
+                    processWithTeacherIds.accept(teacherIds);
+                }
+            });
+        } else {
+            processWithTeacherIds.accept(teacherIds);
+        }
     }
 }
