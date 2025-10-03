@@ -333,7 +333,8 @@ public class EventController extends ControllerHelper {
 
     @Post("/events")
     @ApiDoc("Create event")
-    @SecuredAction(Presences.CREATE_EVENT)
+    @ResourceFilter(CreateEventRight.class)
+    @SecuredAction(value = "", type = ActionType.RESOURCE)
     @Trace(Actions.EVENT_CREATION)
     public void postEvent(HttpServerRequest request) {
         RequestUtils.bodyToJson(request, pathPrefix + "event", event -> {
