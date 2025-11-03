@@ -226,7 +226,7 @@ public class DefaultEventService extends DBService implements EventService {
                                          List<String> studentIds, List<String> typeIds, List<String> reasonIds, Boolean noAbsenceReason,
                                          Boolean noLatenessReason, Boolean regularized, Boolean followed, JsonArray params) {
         return "SELECT e.student_id AS student_id, " +
-                " e.start_date::date AS date, " +
+                " to_char(e.start_date, 'YYYY-MM-DD') AS date, " +
                 " 'event'::text AS TYPE, " +
                 " MAX(e.created) AS created, " +
                 EventQueryHelper.addMainReasonEvent() +
