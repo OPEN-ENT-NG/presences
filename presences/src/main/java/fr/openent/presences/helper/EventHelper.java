@@ -435,7 +435,7 @@ public class EventHelper {
         List<Absence> absencesList = AbsenceHelper.getAbsenceListFromJsonArray(absences, Absence.MANDATORY_ATTRIBUTE);
         for (Event event : events) {
             try {
-                String eventDate = DateHelper.getDateString(event.getDate(), DateHelper.SQL_DATE_FORMAT, DateHelper.SQL_FORMAT);
+                String eventDate = DateHelper.getDateString(event.getDate(), DateHelper.YEAR_MONTH_DAY, DateHelper.SQL_FORMAT);
                 JsonArray clone = registerHelper.cloneSlots(SlotHelper.getSlotJsonArrayFromList(slots), eventDate);
                 Student student = event.getStudent();
                 JsonArray history = student.getDayHistory();
