@@ -1,6 +1,6 @@
 {
   "name": "Presences",
-  "version": "2.0.14",
+  "version": "2.0.14-dev.0",
   "description": "Presences",
   "main": "gulpfile.js",
   "scripts": {
@@ -25,7 +25,7 @@
     "**/yargs-parser": "21.1.1"
   },
   "dependencies": {
-    "entcore": "4.8.14",
+    "entcore": "dev",
     "awesome-typescript-loader": "3.2.1",
     "axios": "0.16.2",
     "core-js": "2.4.1",
