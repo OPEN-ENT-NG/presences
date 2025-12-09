@@ -537,8 +537,11 @@ public class DefaultEventService extends DBService implements EventService {
                         if (either.isLeft()) {
                             String err = "[Presences@DefaultEventService] Failed to create event";
                             LOGGER.error(err, either.left().getValue());
+                            handler.handle(either);
+                            return;
                         }
-                        handler.handle(either);
+
+                        createAbsenceForProvingReason(event, user).onComplete(ar -> handler.handle(either));
                     });
                 })
                 .onFailure(err -> handler.handle(new Either.Left<>(err.getMessage())));
@@ -609,6 +612,53 @@ public class DefaultEventService extends DBService implements EventService {
                     LOGGER.error(message, err);
                     promise.fail(err.getMessage());
                 });
+
+        return promise.future();
+    }
+    
+    /**
+     * Create absence if the reason linked to the event is a proving reason
+     *
+     * @param event event JsonObject
+     * @param user  user infos
+     * @return Future<Void>
+     */
+    private Future<Void> createAbsenceForProvingReason(JsonObject event, UserInfos userInfos) {
+        Promise<Void> promise = Promise.promise();
+        Integer reasonId = event.getInteger(Field.REASON_ID);
+
+        if (!EventTypeEnum.ABSENCE.getType().equals(event.getInteger(Field.TYPE_ID)) || reasonId == null || reasonId == -1 || commonPresencesServiceFactory == null || registerService == null) {
+            return Future.succeededFuture();
+        }
+
+        commonPresencesServiceFactory.reasonService().getReasons(Collections.singletonList(reasonId), res -> {
+            if (res.isLeft() || res.right().getValue().isEmpty()) {
+                promise.complete();
+                return;
+            }
+
+            JsonObject reason = new JsonObject(res.right().getValue().getJsonObject(0).getString(Field.REASON));
+            if (!Boolean.TRUE.equals(reason.getBoolean(Field.PROVING))) {
+                promise.complete();
+                return;
+            }
+
+            registerService.fetchRegister(event.getInteger(Field.REGISTER_ID))
+                .onSuccess(reg -> {
+                    if (reg.isEmpty() || !reg.containsKey(Field.STRUCTURE_ID)) {
+                        promise.complete();
+                        return;
+                    }
+                    
+                    absenceService.create(new JsonObject()
+                        .put(Field.STRUCTURE_ID, reg.getString(Field.STRUCTURE_ID))
+                        .put(Field.STUDENT_ID, event.getString(Field.STUDENT_ID))
+                        .put(Field.START_DATE, event.getString(Field.START_DATE))
+                        .put(Field.END_DATE, event.getString(Field.END_DATE))
+                        .put(Field.REASON_ID, reasonId), userInfos, false, ar -> promise.complete());
+                })
+                .onFailure(err -> promise.complete());
+        });
 
         return promise.future();
     }
