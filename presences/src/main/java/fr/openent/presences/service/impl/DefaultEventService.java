@@ -57,6 +57,7 @@ public class DefaultEventService extends DBService implements EventService {
     private final RegisterService registerService;
     private final TimelineHelper timelineHelper;
     private final CommonPresencesServiceFactory commonPresencesServiceFactory;
+    private final ReasonService reasonService;
 
     public DefaultEventService(EventBus eb) {
         this.eb = eb;
@@ -71,6 +72,7 @@ public class DefaultEventService extends DBService implements EventService {
         this.registerService = null;
         this.commonPresencesServiceFactory = null;
         this.timelineHelper = null;
+        this.reasonService = new DefaultReasonService();
     }
 
     public DefaultEventService(CommonPresencesServiceFactory commonPresencesServiceFactory) {
@@ -84,6 +86,7 @@ public class DefaultEventService extends DBService implements EventService {
         this.registerService = commonPresencesServiceFactory.registerService();
         this.timelineHelper = commonPresencesServiceFactory.timelineHelper();
         this.commonPresencesServiceFactory = commonPresencesServiceFactory;
+        this.reasonService = new DefaultReasonService();
     }
 
     @Override
@@ -523,8 +526,9 @@ public class DefaultEventService extends DBService implements EventService {
 
     @Override
     public void create(JsonObject event, UserInfos user, Handler<Either<String, JsonObject>> handler) {
-        checkPresenceEvent(event)
-                .onSuccess(aVoid -> {
+        prepareAbsenceStatementIfNeeded(event, user)
+                .compose(absenceStatement -> checkPresenceEvent(event).map(v -> absenceStatement))
+                .onSuccess(absenceStatement -> {
                     JsonArray statements = new JsonArray();
                     statements.add(eventHelper.getCreationStatement(event, user));
 
@@ -532,16 +536,17 @@ public class DefaultEventService extends DBService implements EventService {
                         statements.add(eventHelper.getDeletionEventStatement(event));
                     }
 
+                    if (absenceStatement != null) {
+                        statements.add(absenceStatement);
+                    }
+
                     Sql.getInstance().transaction(statements, statementEvent -> {
                         Either<String, JsonObject> either = SqlResult.validUniqueResult(0, statementEvent);
                         if (either.isLeft()) {
                             String err = "[Presences@DefaultEventService] Failed to create event";
                             LOGGER.error(err, either.left().getValue());
-                            handler.handle(either);
-                            return;
                         }
-
-                        createAbsenceForProvingReason(event, user).onComplete(ar -> handler.handle(either));
+                        handler.handle(either);
                     });
                 })
                 .onFailure(err -> handler.handle(new Either.Left<>(err.getMessage())));
@@ -615,52 +620,108 @@ public class DefaultEventService extends DBService implements EventService {
 
         return promise.future();
     }
-    
+
     /**
-     * Create absence if the reason linked to the event is a proving reason
+     * Prepare absence creation statement if the reason linked to the event is a proving reason.
+     * This allows the absence to be created in the same transaction as the event.
      *
-     * @param event event JsonObject
-     * @param user  user infos
-     * @return Future<Void>
+     * @param event     event JsonObject
+     * @param userInfos user infos
+     * @return Future containing the SQL statement or null if no absence should be created
      */
-    private Future<Void> createAbsenceForProvingReason(JsonObject event, UserInfos userInfos) {
-        Promise<Void> promise = Promise.promise();
+    private Future<JsonObject> prepareAbsenceStatementIfNeeded(JsonObject event, UserInfos userInfos) {
+        Promise<JsonObject> promise = Promise.promise();
         Integer reasonId = event.getInteger(Field.REASON_ID);
 
-        if (!EventTypeEnum.ABSENCE.getType().equals(event.getInteger(Field.TYPE_ID)) || reasonId == null || reasonId == -1 || commonPresencesServiceFactory == null || registerService == null) {
-            return Future.succeededFuture();
+        if (!EventTypeEnum.ABSENCE.getType().equals(event.getInteger(Field.TYPE_ID)) || reasonId == null || reasonId == -1) {
+            promise.complete(null);
+            return promise.future();
         }
 
-        commonPresencesServiceFactory.reasonService().getReasons(Collections.singletonList(reasonId), res -> {
-            if (res.isLeft() || res.right().getValue().isEmpty()) {
-                promise.complete();
+        if (registerService == null) {
+            String msg = "[Presences@DefaultEventService::prepareAbsenceStatementIfNeeded] RegisterService is not initialized";
+            LOGGER.error(msg);
+            promise.complete(null);
+            return promise.future();
+        }
+
+        reasonService.getReasons(Collections.singletonList(reasonId), res -> {
+            if (res.isLeft()) {
+                String msg = String.format("[Presences@DefaultEventService::prepareAbsenceStatementIfNeeded] Failed to get reason: %s", res.left().getValue());
+                LOGGER.error(msg);
+                promise.fail(msg);
+                return;
+            }
+
+            if (res.right().getValue().isEmpty()) {
+                promise.complete(null);
                 return;
             }
 
             JsonObject reason = new JsonObject(res.right().getValue().getJsonObject(0).getString(Field.REASON));
             if (!Boolean.TRUE.equals(reason.getBoolean(Field.PROVING))) {
-                promise.complete();
+                promise.complete(null);
                 return;
             }
 
             registerService.fetchRegister(event.getInteger(Field.REGISTER_ID))
                 .onSuccess(reg -> {
                     if (reg.isEmpty() || !reg.containsKey(Field.STRUCTURE_ID)) {
-                        promise.complete();
+                        String msg = "[Presences@DefaultEventService::prepareAbsenceStatementIfNeeded] Register not found or missing structure_id";
+                        LOGGER.error(msg);
+                        promise.fail(msg);
                         return;
                     }
-                    
-                    absenceService.create(new JsonObject()
-                        .put(Field.STRUCTURE_ID, reg.getString(Field.STRUCTURE_ID))
-                        .put(Field.STUDENT_ID, event.getString(Field.STUDENT_ID))
-                        .put(Field.START_DATE, event.getString(Field.START_DATE))
-                        .put(Field.END_DATE, event.getString(Field.END_DATE))
-                        .put(Field.REASON_ID, reasonId), userInfos, false, ar -> promise.complete());
+
+                    JsonObject statement = getAbsenceCreationStatement(
+                        reg.getString(Field.STRUCTURE_ID),
+                        event.getString(Field.STUDENT_ID),
+                        event.getString(Field.START_DATE),
+                        event.getString(Field.END_DATE),
+                        reasonId,
+                        userInfos.getUserId()
+                    );
+                    promise.complete(statement);
                 })
-                .onFailure(err -> promise.complete());
+                .onFailure(err -> {
+                    String msg = String.format("[Presences@DefaultEventService::prepareAbsenceStatementIfNeeded] Failed to fetch register: %s", err.getMessage());
+                    LOGGER.error(msg, err);
+                    promise.fail(msg);
+                }
+            );
         });
 
         return promise.future();
+    }
+
+    /**
+     * Build the SQL statement for creating an absence record.
+     *
+     * @param structureId structure identifier
+     * @param studentId   student identifier
+     * @param startDate   absence start date
+     * @param endDate     absence end date
+     * @param reasonId    reason identifier
+     * @param userId      owner user identifier
+     * @return JsonObject containing the prepared SQL statement
+     */
+    private JsonObject getAbsenceCreationStatement(String structureId, String studentId, String startDate, String endDate, Integer reasonId, String userId) {
+        String query = "INSERT INTO " + Presences.dbSchema + ".absence" +
+                       "(structure_id, student_id, start_date, end_date, reason_id, owner) " +
+                       "VALUES (?, ?, ?, ?, ?, ?)";
+
+        JsonArray params = new JsonArray()
+            .add(structureId)
+            .add(studentId)
+            .add(startDate)
+            .add(endDate)
+            .add(reasonId)
+            .add(userId);
+
+        return new JsonObject()
+            .put("statement", query)
+            .put("values", params)
+            .put("action", "prepared");
     }
 
     @Override
