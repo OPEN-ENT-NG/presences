@@ -1,0 +1,33 @@
+{
+  "name": "fr.openent~statistics-presences",
+  "config": {
+    "main" : "fr.openent.statistics_presences.StatisticsPresences",
+    "port" : 8065,
+    "app-name" : "Statistics-presences",
+    "app-address" : "/statistics-presences",
+    "path-prefix" : "statistics-presences",
+    "app-icon" : "Statistics-presences-large",
+    "host": "{{ host }}",
+    "ssl" : true,
+    {% if overrideTheme %} "override-theme": {{ override2d }}, {% endif %}
+    "auto-redeploy": false,
+    "userbook-host": "{{ host }}",
+    "integration-mode": "{{ integration_mode|default('HTTP') }}",
+    "app-registry.port" : 8012,
+    "mode" : "prod",
+    "sql": true,
+    "db-schema": "presences_statistics",
+    "entcore.port" : 8009,
+    "report-recipients": [],
+    {% if ha is defined and ha and inventory_hostname_short is defined and inventory_hostname_short != 'jobs' %}
+        "processing-cron": "0 0/30 7-20 * * ? 2099",
+    {% else %}
+        "processing-cron": "0 0/30 7-20 * * ? *",
+    {% endif %}
+    "indicators": [
+      "Global",
+      "Monthly",
+      "Weekly" 
+    ]
+  }
+}

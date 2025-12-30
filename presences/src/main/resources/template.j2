@@ -1,0 +1,38 @@
+{
+  "name": "fr.openent~presences",
+  "config": {
+    "main" : "fr.openent.presences.Presences",
+    "port" : 8062,
+    "app-name" : "Presences",
+    "app-address" : "/presences",
+    "app-icon" : "absences",
+    "host": "https://{{ host }}",
+    "ssl" : true,
+    {% if overrideTheme %} "override-theme": {{ override2d }}, {% endif %}
+    "auto-redeploy": false,
+    "userbook-host": "https://{{ host }}",
+    "integration-mode": "{{ integration_mode|default('HTTP') }}",
+    "app-registry.port" : 8012,
+    "mode" : "prod",
+    "entcore.port" : 8009,
+    "sql": true,
+    "db-schema": "presences",
+    {% if (platform_name is defined and not(platform_name.startswith('prod'))) or (ha is defined and ha and inventory_hostname_short is defined and inventory_hostname_short != 'jobs') %}
+      "cron-check-regularization" : {
+        "enabled": false,
+        "cron": "0 0 7,10,13,16,19 ? * * 2099"
+      },
+      "export-cron": "{{ presencesExportCron | default('0 0 1/3 * *') }} ? 2099",
+      "registers-cron": "0 15 * * * ? 2099",
+    {% else %}
+      "cron-check-regularization" : {
+        "enabled": true,
+        "cron": "0 0 7,10,13,16,19 ? * * *"
+      },
+      "export-cron": "{{ presencesExportCron | default('0 0 1/3 * *') }} ? *",
+      "registers-cron": "0 15,45 7-20 * * ? *",
+    {% endif %}
+    "mails-list-export" : {{ presencesMailListExport | default('[]') }},
+    "mails-list-cron": {{ presencesMailListCron | default('[]') }}
+  }
+}
