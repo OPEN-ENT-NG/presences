@@ -1,0 +1,30 @@
+{
+  "name": "fr.openent~massmailing",
+  "config": {
+    "main" : "fr.openent.massmailing.Massmailing",
+    "port" : 8066,
+    "app-name" : "Massmailing",
+    "app-address" : "/massmailing",
+    "app-icon" : "Massmailer-large",
+    "host": "https://{{ host }}",
+    "ssl" : true,
+    {% if overrideTheme %} "override-theme": {{ override2d }}, {% endif %}
+    "auto-redeploy": false,
+    "userbook-host": "https://{{ host }}",
+    "integration-mode": "{{ integration_mode|default('HTTP') }}",
+    "app-registry.port" : 8012,
+    "mode" : "prod",
+    "sql": true,
+    "entcore.port" : 8009,
+    "mail-max-length": 160,
+    "pdf-generator" : {
+      "auth" : "{{ nodePdfToken }}",
+      "url": "{{ nodePdfUrl }}generate/pdf"
+    },
+    "mailings": {
+        "MAIL": true,
+        "PDF": false,
+        "SMS": true
+    }
+  }
+}

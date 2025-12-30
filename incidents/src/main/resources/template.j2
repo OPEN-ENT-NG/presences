@@ -1,0 +1,21 @@
+{
+  "name": "fr.openent~incidents",
+  "config": {
+    "main" : "fr.openent.incidents.Incidents",
+    "port" : 8063,
+    "app-name" : "Incidents",
+    "app-address" : "/incidents",
+    "app-icon" : "Incidents-larges",
+    "host": "https://{{ host }}",
+    "ssl" : true,
+    {% if overrideTheme %} "override-theme": {{ override2d }}, {% endif %}
+    "auto-redeploy": false,
+    "userbook-host": "https://{{ host }}",
+    "integration-mode": "{{ integration_mode|default('HTTP') }}",
+    "app-registry.port" : 8012,
+    "mode" : "prod",
+    "sql": true,
+    "entcore.port" : 8009,
+    "db-schema": "incidents"
+  }
+}
