@@ -902,55 +902,78 @@ public class DefaultEventService extends DBService implements EventService {
     @SuppressWarnings("unchecked")
     private void editCorrespondingAbsences(List<Event> editedEvents, UserInfos user, String studentId, String structureId,
                                            Boolean regularized, Integer reasonId, Handler<Either<String, JsonObject>> handler) {
-        Promise<JsonArray> slotsPromise = Promise.promise();
-        Promise<JsonArray> absencesPromise = Promise.promise();
+        // Check if reasonId is valid before proceeding
+        if (reasonId == null || reasonId == -1) {
+            // No reason provided, do not create absence in presences.absence table
+            handler.handle(new Either.Right<>(new JsonObject().put(Field.STATUS, Field.OK)));
+            return;
+        }
 
-        getAbsenceWithEvents(editedEvents, studentId, absencesPromise);
-        getTimeSlots(structureId, slotsPromise);
-
-        Future.all(Arrays.asList(slotsPromise.future(), absencesPromise.future())).onComplete(result -> {
-            if (result.failed()) {
-                String message = "[Presences@DefaultEventService::editCorrespondingAbsences] Failed to retrieve data";
-                LOGGER.error(message, result.cause().getMessage());
-                handler.handle(new Either.Left<>(message));
+        // Verify if the reason has proving = true before creating absence
+        reasonService.getReasons(Collections.singletonList(reasonId), reasonResult -> {
+            if (reasonResult.isLeft() || reasonResult.right().getValue().isEmpty()) {
+                // Reason not found, do not create absence
+                handler.handle(new Either.Right<>(new JsonObject().put(Field.STATUS, Field.OK)));
                 return;
             }
 
-            JsonArray absences = absencesPromise.future().result();
-            List<Slot> slots = SlotHelper.getSlotListFromJsonArray(slotsPromise.future().result());
-
-            JsonObject nullAbsenceEvents = ((List<JsonObject>) absences.getList()).stream()
-                    .filter(absence -> absence.getInteger("id") == null)
-                    .findFirst()
-                    .orElse(null);
-
-            List<JsonObject> absencesWithEvents = ((List<JsonObject>) absences.getList()).stream()
-                    .filter(absence -> absence.getInteger("id") != null)
-                    .collect(Collectors.toList());
-
-            List<Future<JsonObject>> futures = new ArrayList<>();
-
-            if (nullAbsenceEvents != null) {
-                Promise<JsonObject> promise = Promise.promise();
-                futures.add(promise.future());
-                createAbsencesFromEvents(slots, nullAbsenceEvents, regularized, reasonId, user, studentId, structureId, promise);
+            JsonObject reason = new JsonObject(reasonResult.right().getValue().getJsonObject(0).getString(Field.REASON));
+            if (!Boolean.TRUE.equals(reason.getBoolean(Field.PROVING))) {
+                // Reason does not require regularization (proving = false), do not create absence
+                handler.handle(new Either.Right<>(new JsonObject().put(Field.STATUS, Field.OK)));
+                return;
             }
 
-            for (JsonObject absence : absencesWithEvents) {
-                Promise<JsonObject> promise = Promise.promise();
-                updateAbsenceFromEvents(absence, regularized, reasonId, user, promise);
-            }
+            // Reason has proving = true, proceed with absence creation
+            Promise<JsonArray> slotsPromise = Promise.promise();
+            Promise<JsonArray> absencesPromise = Promise.promise();
 
-            Future.all(futures).onComplete(event -> {
-                if (event.failed()) {
-                    LOGGER.info("[Presences@DefaultEventService::editCorrespondingAbsences::CompositeFuture]: " +
-                            "An error has occured)");
-                    handler.handle(new Either.Left<>(event.cause().getMessage()));
-                } else {
-                    handler.handle(new Either.Right<>(new JsonObject().put("status", "ok")));
+            getAbsenceWithEvents(editedEvents, studentId, absencesPromise);
+            getTimeSlots(structureId, slotsPromise);
+
+            Future.all(Arrays.asList(slotsPromise.future(), absencesPromise.future())).onComplete(result -> {
+                if (result.failed()) {
+                    String message = "[Presences@DefaultEventService::editCorrespondingAbsences] Failed to retrieve data";
+                    LOGGER.error(message, result.cause().getMessage());
+                    handler.handle(new Either.Left<>(message));
+                    return;
                 }
-            });
 
+                JsonArray absences = absencesPromise.future().result();
+                List<Slot> slots = SlotHelper.getSlotListFromJsonArray(slotsPromise.future().result());
+
+                JsonObject nullAbsenceEvents = ((List<JsonObject>) absences.getList()).stream()
+                        .filter(absence -> absence.getInteger("id") == null)
+                        .findFirst()
+                        .orElse(null);
+
+                List<JsonObject> absencesWithEvents = ((List<JsonObject>) absences.getList()).stream()
+                        .filter(absence -> absence.getInteger("id") != null)
+                        .collect(Collectors.toList());
+
+                List<Future<JsonObject>> futures = new ArrayList<>();
+
+                if (nullAbsenceEvents != null) {
+                    Promise<JsonObject> promise = Promise.promise();
+                    futures.add(promise.future());
+                    createAbsencesFromEvents(slots, nullAbsenceEvents, regularized, reasonId, user, studentId, structureId, promise);
+                }
+
+                for (JsonObject absence : absencesWithEvents) {
+                    Promise<JsonObject> promise = Promise.promise();
+                    updateAbsenceFromEvents(absence, regularized, reasonId, user, promise);
+                }
+
+                Future.all(futures).onComplete(event -> {
+                    if (event.failed()) {
+                        LOGGER.info("[Presences@DefaultEventService::editCorrespondingAbsences::CompositeFuture]: " +
+                                "An error has occured)");
+                        handler.handle(new Either.Left<>(event.cause().getMessage()));
+                    } else {
+                        handler.handle(new Either.Right<>(new JsonObject().put("status", "ok")));
+                    }
+                });
+            });
         });
     }
 
