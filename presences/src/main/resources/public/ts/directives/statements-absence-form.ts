@@ -258,7 +258,7 @@ export const StatementsAbsenceForm = ng.directive('statementsAbsenceForm',
                 let form: IStatementAbsenceBody = JSON.parse(JSON.stringify(vm.form));
                 form.student_id = vm.student.id;
                 form.file = vm.form.file;
-                form.structure_id = window.structure.id;
+                form.structure_id = vm.student.structure.id;
                 form.start_at = date.start;
                 form.end_at = date.end;
                 if (!vm.isFormValid(form)) {
