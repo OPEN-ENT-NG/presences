@@ -43,7 +43,7 @@
     </modules>
 
     <properties>
-        <revision>2.1-SNAPSHOT</revision>
+        <revision>2.1-develop-b2school-SNAPSHOT</revision>
         <toolsVersion>2.0.0-final</toolsVersion>
         <junitVersion>5.1.0</junitVersion>
         <vertxCronTimerVersion>3.0-SNAPSHOT</vertxCronTimerVersion>
