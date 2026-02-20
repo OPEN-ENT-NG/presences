@@ -43,13 +43,13 @@
     </modules>
 
     <properties>
-        <revision>2.1.4</revision>
+        <revision>2.1-SNAPSHOT</revision>
         <toolsVersion>2.0.0-final</toolsVersion>
         <junitVersion>5.1.0</junitVersion>
-        <vertxCronTimerVersion>3.0.0</vertxCronTimerVersion>
+        <vertxCronTimerVersion>3.0-SNAPSHOT</vertxCronTimerVersion>
         <powerMockVersion>2.0.2</powerMockVersion>
         <mockitoVersion>[2.0,3.0)</mockitoVersion>
-        <entCoreVersion>6.14.2</entCoreVersion>
+        <entCoreVersion>6.14-SNAPSHOT</entCoreVersion>
         <reflectionsVersion>0.10.2</reflectionsVersion>
         <gatlingHighchartsVersion>2.2.2</gatlingHighchartsVersion>
     </properties>
