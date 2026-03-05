@@ -12,7 +12,7 @@ import io.vertx.core.logging.LoggerFactory;
     private final EventBus eb;
     private EventService eventService;
 
-    private final Logger log = LoggerFactory.getLogger(AbsenceRemovalTask.class);
+    private final Logger log = LoggerFactory.getLogger(UpdateEventRegularizationTask.class);
 
     public UpdateEventRegularizationTask(EventBus eb) {
         this.eb = eb;
