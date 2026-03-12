@@ -3,6 +3,8 @@ package fr.openent.presences.controller;
 import fr.openent.presences.cron.CreateDailyRegistersTask;
 import fr.openent.presences.cron.UpdateEventRegularizationTask;
 import fr.wseduc.rs.Post;
+import fr.wseduc.security.ActionType;
+import fr.wseduc.security.SecuredAction;
 import fr.wseduc.webutils.http.BaseController;
 import io.vertx.core.http.HttpServerRequest;
 import io.vertx.core.impl.logging.Logger;
@@ -20,6 +22,7 @@ public class TaskController extends BaseController {
 	}
 
 	@Post("api/internal/create-daily-registers")
+	@SecuredAction(value = "", type = ActionType.RESOURCE)
 	public void createDailyRegisters(HttpServerRequest request) {
 		log.info("triggered daily registers creation task");
 		createDailyRegistersTask.handle(0L);
@@ -27,6 +30,7 @@ public class TaskController extends BaseController {
 	}
 
 	@Post("api/internal/update-event-regularization")
+	@SecuredAction(value = "", type = ActionType.RESOURCE)
 	public void setUpdateEventRegularization(HttpServerRequest request) {
 		log.info("Triggered event regularization update task");
 		updateEventRegularizationTask.handle(0L);
