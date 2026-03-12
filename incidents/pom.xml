@@ -14,7 +14,7 @@
 
     <dependencies>
         <dependency>
-            <groupId>fr.openent</groupId>
+            <groupId>fr.openent.presences</groupId>
             <artifactId>common</artifactId>
             <version>${revision}</version>
             <scope>compile</scope>
