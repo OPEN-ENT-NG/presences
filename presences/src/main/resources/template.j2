@@ -14,6 +14,11 @@
     "integration-mode": "{{ integration_mode|default('HTTP') }}",
     "app-registry.port" : 8012,
     "mode" : "prod",
+    "probes": [
+      "org.entcore.common.http.health.Neo4jProbe",
+      "org.entcore.common.http.health.MongoProbe",
+      "org.entcore.common.http.health.PostgresProbe"
+    ],
     "entcore.port" : 8009,
     "sql": true,
     "db-schema": "presences",

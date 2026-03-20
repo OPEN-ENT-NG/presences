@@ -15,6 +15,11 @@
     "app-registry.port" : 8012,
     "mode" : "prod",
     "sql": true,
+    "probes": [
+      "org.entcore.common.http.health.Neo4jProbe",
+      "org.entcore.common.http.health.MongoProbe",
+      "org.entcore.common.http.health.PostgresProbe"
+    ],
     "entcore.port" : 8009,
     "db-schema": "incidents"
   }
