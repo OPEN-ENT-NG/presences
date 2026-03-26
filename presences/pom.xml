@@ -40,6 +40,9 @@
                                     <Main-Verticle>service:mod</Main-Verticle>
                                     <SCM-Commit-Id>${buildNumber}</SCM-Commit-Id>
                                     <SCM-Branch>${scmBranch}</SCM-Branch>
+                                    <Implementation-Title>${project.name}</Implementation-Title>
+                                    <Implementation-Version>${project.version}</Implementation-Version>
+                                    <Implementation-Vendor>${project.organization.name}</Implementation-Vendor>
                                 </manifestEntries>
                             </archive>
                         </configuration>
