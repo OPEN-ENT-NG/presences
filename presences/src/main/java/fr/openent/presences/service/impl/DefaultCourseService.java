@@ -142,9 +142,20 @@ public class DefaultCourseService extends DBService implements CourseService {
                     }
                     JsonArray courses = event.right().getValue();
 
-                    List<String> coursesIds = ((List<JsonObject>) courses.getList())
+                    List<String> coursesIds = (List<String>) courses.getList()
                             .stream()
-                            .map(course -> course.getString(Field._ID))
+                            .map(course -> {
+                                if (course instanceof JsonObject) {
+                                    return ((JsonObject) course).getString(Field._ID);
+                                } else if (course instanceof Map) {
+                                    Object id = ((Map) course).get(Field._ID);
+                                    return id == null ? null : String.valueOf(id);
+                                } else {
+                                    LOGGER.warn("[Presences@DefaultCourseService::listRegistersWithCourses] Unexpected course type: " + course.getClass());
+                                    return null;
+                                }
+                            })
+                            .filter(Objects::nonNull)
                             .distinct()
                             .collect(Collectors.toList());
 
