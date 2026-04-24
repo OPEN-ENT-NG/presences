@@ -1253,7 +1253,7 @@ public class DefaultRegisterService extends DBService implements RegisterService
                 Promise<JsonArray> slotsFuture = Promise.promise();
 
                 CompositeFuture.all(teachersSubjectsTagsFuture, slotsFuture.future())
-                        .onFailure(fail -> promise.fail(fail.getCause().getMessage()))
+                        .onFailure(fail -> promise.fail(fail.getCause() == null ? fail.getMessage() : fail.getCause().getMessage()))
                         .onSuccess(ar -> {
                             List<Slot> slots = SlotHelper.getSlotListFromJsonArray(slotsFuture.future().result(),
                                     Slot.MANDATORY_ATTRIBUTE);
