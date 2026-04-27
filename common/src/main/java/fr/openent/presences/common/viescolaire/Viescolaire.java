@@ -53,7 +53,12 @@ public class Viescolaire {
                 LOGGER.error(err);
                 handler.handle(new Either.Left<>(err));
             } else {
-                handler.handle(new Either.Right<>(body.getJsonArray("results")));
+                JsonArray rawResults = body.getJsonArray("results", new JsonArray());
+                JsonArray results = new JsonArray();
+                for (int i = 0; i < rawResults.size(); i++) {
+                    results.add(rawResults.getJsonObject(i));
+                }
+                handler.handle(new Either.Right<>(results));
             }
         });
     }
@@ -113,14 +118,13 @@ public class Viescolaire {
                     handler.handle(new Either.Right<>(new JsonArray()));
                 } else {
                     // change format start and end Hour ( e.g old "08:25" => into now "08:25:00")
-                    event.right().getValue().getJsonArray("slots").forEach(slotObj -> {
-                        JsonObject slot = ((JsonObject) slotObj);
-                        String parsedStartHour = DateHelper.fetchTimeString(slot.getString("startHour"), DateHelper.HOUR_MINUTES);
-                        String parsedEndHour = DateHelper.fetchTimeString(slot.getString("endHour"), DateHelper.HOUR_MINUTES);
-                        slot.put("startHour", parsedStartHour);
-                        slot.put("endHour", parsedEndHour);
-                    });
-                    handler.handle(new Either.Right<>(event.right().getValue().getJsonArray("slots")));
+                    JsonArray slots = event.right().getValue().getJsonArray("slots");
+                    for (int i = 0; i < slots.size(); i++) {
+                        JsonObject slot = slots.getJsonObject(i);
+                        slot.put("startHour", DateHelper.fetchTimeString(slot.getString("startHour"), DateHelper.HOUR_MINUTES));
+                        slot.put("endHour", DateHelper.fetchTimeString(slot.getString("endHour"), DateHelper.HOUR_MINUTES));
+                    }
+                    handler.handle(new Either.Right<>(slots));
                 }
             }
         }));
@@ -138,7 +142,12 @@ public class Viescolaire {
                 LOGGER.error(err);
                 handler.handle(new Either.Left<>(err));
             } else {
-                handler.handle(new Either.Right<>(body.getJsonArray("results")));
+                JsonArray rawResults = body.getJsonArray("results", new JsonArray());
+                JsonArray results = new JsonArray();
+                for (int i = 0; i < rawResults.size(); i++) {
+                    results.add(rawResults.getJsonObject(i));
+                }
+                handler.handle(new Either.Right<>(results));
             }
         });
     }
