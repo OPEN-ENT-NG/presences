@@ -13,7 +13,9 @@ public class DutyCategory extends PunishmentCategory {
 
     @Override
     public void formatDates() {
-        delay_at = delay_at.replace("/", "-");
+        if (delay_at != null) {
+            delay_at = delay_at.replace("/", "-");
+        }
     }
 
     @Override
