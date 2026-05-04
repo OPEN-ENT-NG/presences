@@ -15,8 +15,8 @@ public class DetentionCategory extends PunishmentCategory {
 
     @Override
     public void formatDates() {
-        start_at = start_at.replace("/", "-");
-        end_at = end_at.replace("/", "-");
+        if (start_at != null) start_at = start_at.replace("/", "-");
+        if (end_at != null) end_at = end_at.replace("/", "-");
     }
 
     @Override
