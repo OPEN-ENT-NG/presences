@@ -11,6 +11,9 @@ public class Settings implements IModel<Settings> {
     private final Number alertForgottenThreshold;
     private final String recoveryMethod;
     private final Boolean multipleSlot;
+    private final Boolean excludeAlertAbsenceNoReason;
+    private final Boolean excludeAlertLatenessNoReason;
+    private final Boolean excludeAlertForgottenNotebook;
     private String endOfHalfDayTimeSlot;
 
     public Settings(JsonObject settings) {
@@ -20,6 +23,9 @@ public class Settings implements IModel<Settings> {
         this.alertForgottenThreshold = settings.getInteger(Field.ALERT_FORGOTTEN_NOTEBOOK_THRESHOLD);
         this.recoveryMethod = settings.getString(Field.EVENT_RECOVERY_METHOD);
         this.multipleSlot = settings.getBoolean(Field.ALLOW_MULTIPLE_SLOTS);
+        this.excludeAlertAbsenceNoReason = settings.getBoolean(Field.EXCLUDE_ALERT_ABSENCE_NO_REASON);
+        this.excludeAlertLatenessNoReason = settings.getBoolean(Field.EXCLUDE_ALERT_LATENESS_NO_REASON);
+        this.excludeAlertForgottenNotebook = settings.getBoolean(Field.EXCLUDE_ALERT_FORGOTTEN_NOTEBOOK);
     }
 
     public Settings(Number alertAbsenceThreshold, Number alertLatenessThreshold, Number alertIncidentThreshold, Number alertForgottenThreshold) {
@@ -29,6 +35,9 @@ public class Settings implements IModel<Settings> {
         this.alertForgottenThreshold = alertForgottenThreshold;
         this.recoveryMethod = null;
         this.multipleSlot = null;
+        this.excludeAlertAbsenceNoReason = null;
+        this.excludeAlertLatenessNoReason = null;
+        this.excludeAlertForgottenNotebook = null;
     }
 
     public Number alertAbsenceThreshold() {
@@ -72,7 +81,10 @@ public class Settings implements IModel<Settings> {
                 .put(Field.ALERT_INCIDENT_THRESHOLD, this.alertIncidentThreshold)
                 .put(Field.ALERT_FORGOTTEN_NOTEBOOK_THRESHOLD, this.alertForgottenThreshold)
                 .put(Field.EVENT_RECOVERY_METHOD, this.recoveryMethod)
-                .put(Field.ALLOW_MULTIPLE_SLOTS, this.multipleSlot);
+                .put(Field.ALLOW_MULTIPLE_SLOTS, this.multipleSlot)
+                .put(Field.EXCLUDE_ALERT_ABSENCE_NO_REASON, this.excludeAlertAbsenceNoReason)
+                .put(Field.EXCLUDE_ALERT_LATENESS_NO_REASON, this.excludeAlertLatenessNoReason)
+                .put(Field.EXCLUDE_ALERT_FORGOTTEN_NOTEBOOK, this.excludeAlertForgottenNotebook);
     }
 
     @Override

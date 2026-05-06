@@ -185,6 +185,9 @@ public class Field {
     public static final String ALERT_LATENESS_THRESHOLD = "alert_lateness_threshold";
     public static final String ALERT_INCIDENT_THRESHOLD = "alert_incident_threshold";
     public static final String ALERT_FORGOTTEN_NOTEBOOK_THRESHOLD = "alert_forgotten_notebook_threshold";
+    public static final String EXCLUDE_ALERT_ABSENCE_NO_REASON = "exclude_alert_absence_no_reason";
+    public static final String EXCLUDE_ALERT_LATENESS_NO_REASON = "exclude_alert_lateness_no_reason";
+    public static final String EXCLUDE_ALERT_FORGOTTEN_NOTEBOOK = "exclude_alert_forgotten_notebook";
 
     // Presence
     public static final String COMMENT = "comment";
