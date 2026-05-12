@@ -78,7 +78,8 @@ interface ViewModel {
     closeEventCard(): void;
 
     // CSV
-    exportCsv(): void;
+    exportEventListCsv(): void;
+    exportCallRegisterCsv(): void;
 }
 
 export const registryController = ng.controller('RegistryController', ['$scope', '$route', '$location',
@@ -317,8 +318,12 @@ export const registryController = ng.controller('RegistryController', ['$scope',
         };
 
         /* CSV  */
-        vm.exportCsv = (): void => {
-            registryService.exportCSV(vm.params);
+        vm.exportEventListCsv = (): void => {
+            registryService.exportEventListCSV(vm.params);
+        };
+
+        vm.exportCallRegisterCsv = (): void => {
+            registryService.exportCallRegisterCSV(vm.params);
         };
 
         /* on switch (watch) */

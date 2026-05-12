@@ -328,6 +328,19 @@ public class CalendarHelper {
     }
 
     /**
+     * Whether the given date falls within a holiday / vacation exclusion period.
+     * Public wrapper over the internal matcher so callers (e.g. the registry board export)
+     * can apply the same holiday rule without going through setExcludeDay's weekend logic.
+     *
+     * @param exclusionDays Array of several exclusions dates
+     * @param date          current date
+     * @return true if the date is within an exclusion period
+     */
+    public static boolean isWithinExclusions(JsonArray exclusionDays, String date) {
+        return isMatchWithExclusionsDate(exclusionDays, date);
+    }
+
+    /**
      * Checking if the current date is between these exclusions date
      *
      * @param exclusionsDate Array of several exclusions dates

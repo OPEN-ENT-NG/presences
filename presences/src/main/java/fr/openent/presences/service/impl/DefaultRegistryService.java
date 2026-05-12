@@ -1,5 +1,6 @@
 package fr.openent.presences.service.impl;
 
+import fr.openent.presences.Presences;
 import fr.openent.presences.common.helper.DateHelper;
 import fr.openent.presences.common.helper.FutureHelper;
 import fr.openent.presences.common.incidents.Incidents;
@@ -23,6 +24,8 @@ import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
+import fr.wseduc.mongodb.MongoDb;
+import org.entcore.common.mongodb.MongoDbResult;
 
 import java.text.ParseException;
 import java.util.*;
@@ -415,6 +418,128 @@ public class DefaultRegistryService implements RegistryService {
                 promise.complete(days);
             }
         });
+    }
+
+    @Override
+    public void getForExport(String month, List<String> groups, String structureId,
+                             Handler<Either<String, JsonArray>> handler) {
+        getStudents(month, groups, Collections.singletonList(Events.ABSENCE.toString()), structureId, false, studentsResult -> {
+            if (studentsResult.isLeft()) {
+                handler.handle(studentsResult);
+                return;
+            }
+            JsonArray students = studentsResult.right().getValue();
+
+            // Board CSV export only: derive each student-day's schedule directly from the Mongo
+            // timetable (courses), keyed by the actual date — not by weekday. Courses are stored one
+            // document per occurrence, so a recurring weekly course marks every date it runs while a
+            // one-off course marks only its single date (it does not bleed onto other same-weekday
+            // dates). This reflects the EDT exactly and does not depend on the daily register cron.
+            // Holidays / vacations stay governed by the exclusion-days system, fetched in parallel.
+            Promise<JsonArray> exclusionDaysPromise = Promise.promise();
+            Viescolaire.getInstance().getExclusionDays(structureId, FutureHelper.handlerEitherPromise(exclusionDaysPromise));
+
+            buildDailyCourseSchedule(structureId, groups, month, scheduleResult -> {
+                if (scheduleResult.isLeft()) {
+                    handler.handle(new Either.Left<>(scheduleResult.left().getValue()));
+                    return;
+                }
+                JsonObject schedule = scheduleResult.right().getValue();
+
+                exclusionDaysPromise.future().onComplete(exclusionResult -> {
+                    JsonArray exclusionDays = exclusionResult.succeeded() && exclusionResult.result() != null
+                            ? exclusionResult.result() : new JsonArray();
+                    applyScheduleToStudents(students, schedule, exclusionDays);
+                    handler.handle(new Either.Right<>(students));
+                });
+            });
+        });
+    }
+
+    /**
+     * Build the exported groups' per-date session schedule from the Mongo timetable (courses):
+     * for each calendar date, whether it has a morning course (start hour &lt; 12) and / or an
+     * afternoon course. Keyed by date (yyyy-MM-dd), not by weekday, so a non-recurring course marks
+     * only its own date instead of every same-weekday date. Scoped to the exported groups via
+     * classesIds / groupsIds, over the exported month. Board CSV export only.
+     *
+     * @return JsonObject keyed by date "yyyy-MM-dd" → { "m": true?, "a": true? }
+     */
+    private void buildDailyCourseSchedule(String structureId, List<String> groupIds, String month,
+                                          Handler<Either<String, JsonObject>> handler) {
+        String windowStart = month + "-01T00:00:00";
+        String windowEnd = month + "-31T23:59:59";
+
+        JsonObject query = new JsonObject().put("structureId", structureId);
+        if (groupIds != null && !groupIds.isEmpty()) {
+            JsonArray ids = new JsonArray(new ArrayList<>(groupIds));
+            query.put("$or", new JsonArray()
+                    .add(new JsonObject().put("classesIds", new JsonObject().put("$in", ids)))
+                    .add(new JsonObject().put("groupsIds", new JsonObject().put("$in", ids))));
+        }
+        query.put("startDate", new JsonObject().put("$gte", windowStart).put("$lte", windowEnd));
+
+        JsonObject keys = new JsonObject().put("startDate", 1);
+
+        MongoDb.getInstance().find("courses", query, new JsonObject(), keys, MongoDbResult.validResultsHandler(result -> {
+            if (result.isLeft()) {
+                LOGGER.error("[Presences@DefaultRegistryService::buildDailyCourseSchedule] Failed to retrieve courses: "
+                        + result.left().getValue());
+                handler.handle(new Either.Left<>(result.left().getValue()));
+                return;
+            }
+            JsonArray courses = result.right().getValue();
+            JsonObject schedule = new JsonObject();
+            for (int i = 0; i < courses.size(); i++) {
+                String startDate = courses.getJsonObject(i).getString("startDate", "");
+                if (startDate.length() < 13) continue;
+                try {
+                    String dayKey = startDate.substring(0, 10);
+                    int hour = Integer.parseInt(startDate.substring(11, 13));
+                    JsonObject entry = schedule.getJsonObject(dayKey, new JsonObject());
+                    entry.put(hour < 12 ? "m" : "a", true);
+                    schedule.put(dayKey, entry);
+                } catch (Exception ignored) { }
+            }
+            handler.handle(new Either.Right<>(schedule));
+        }));
+    }
+
+    /**
+     * Board CSV export only. Recompute exclude / hasMorning / hasAfternoon for every student-day
+     * from the timetable-derived per-date schedule, overriding the structure-wide weekend gate used
+     * by the on-screen views. The export reflects the timetable (EDT) exactly:
+     *  - holiday / vacation (exclusion days) → excluded (blank), unchanged behaviour;
+     *  - a date is a school day only when the exported groups have a course on that exact date; any
+     *    date with no course — mid-week gap, weekend, or a weekday whose only course is non-recurring
+     *    and falls on a different date — stays blank. There is no Mon–Fri fallback: the register
+     *    mirrors the EDT.
+     */
+    private void applyScheduleToStudents(JsonArray students, JsonObject schedule, JsonArray exclusionDays) {
+        for (int i = 0; i < students.size(); i++) {
+            JsonArray days = students.getJsonObject(i).getJsonArray(Field.DAYS, new JsonArray());
+            for (int j = 0; j < days.size(); j++) {
+                JsonObject day = days.getJsonObject(j);
+                String date = day.getString("date", "");
+                boolean hasMorning = false;
+                boolean hasAfternoon = false;
+                boolean exclude = true;
+                if (date.length() >= 10) {
+                    JsonObject entry = schedule.getJsonObject(date.substring(0, 10));
+                    hasMorning = entry != null && entry.getBoolean("m", false);
+                    hasAfternoon = entry != null && entry.getBoolean("a", false);
+                    boolean holiday = CalendarHelper.isWithinExclusions(exclusionDays, date);
+                    exclude = holiday || (!hasMorning && !hasAfternoon);
+                    if (exclude) {
+                        hasMorning = false;
+                        hasAfternoon = false;
+                    }
+                }
+                day.put("exclude", exclude);
+                day.put("hasMorning", hasMorning);
+                day.put("hasAfternoon", hasAfternoon);
+            }
+        }
     }
 
     private List<Number> mapStringTypesToNumberTypes(List<String> stringTypes) {

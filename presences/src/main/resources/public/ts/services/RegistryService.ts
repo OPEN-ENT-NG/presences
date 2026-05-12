@@ -45,7 +45,8 @@ export interface RegistryRequest {
 export interface RegistryService {
     getRegisterSummary(registryParam: RegistryRequest): Promise<Registry[]>;
 
-    exportCSV(registryParam: RegistryRequest) : void;
+    exportEventListCSV(registryParam: RegistryRequest): void;
+    exportCallRegisterCSV(registryParam: RegistryRequest): void;
 }
 
 export const registryService: RegistryService = {
@@ -72,7 +73,7 @@ export const registryService: RegistryService = {
         }
     },
 
-    exportCSV: async (registryParam: RegistryRequest) : Promise<void> => {
+    exportEventListCSV: async (registryParam: RegistryRequest): Promise<void> => {
         try {
             let groupParams : string = '';
             registryParam.group.forEach(groupId => {
@@ -87,6 +88,20 @@ export const registryService: RegistryService = {
             const urlParams : string = `?structureId=${registryParam.structureId}&month=${registryParam.month}${groupParams}${typeParams}`;
             const forgottenNotebookParam : string = `&forgottenNotebook=${registryParam.forgottenNotebook}`;
             window.open(`/presences/registry/export${urlParams}${forgottenNotebookParam}`)
+        } catch (err) {
+            throw err;
+        }
+    },
+
+    exportCallRegisterCSV: async (registryParam: RegistryRequest): Promise<void> => {
+        try {
+            let groupParams: string = '';
+            registryParam.group.forEach(groupId => {
+                groupParams += `&group=${groupId}`;
+            });
+
+            const urlParams: string = `?structureId=${registryParam.structureId}&month=${registryParam.month}${groupParams}`;
+            window.open(`/presences/registry/export/new${urlParams}`)
         } catch (err) {
             throw err;
         }
