@@ -1,6 +1,8 @@
 package fr.openent.presences.controller;
 
 import fr.openent.presences.Presences;
+import fr.openent.presences.enums.Events;
+import fr.openent.presences.export.RegistryBoardCSVExport;
 import fr.openent.presences.export.RegistryCSVExport;
 import fr.openent.presences.security.*;
 import fr.openent.presences.service.RegistryService;
@@ -23,7 +25,7 @@ import static org.entcore.common.http.response.DefaultResponseHandler.arrayRespo
 
 public class RegistryController extends ControllerHelper {
 
-    private RegistryService registryService;
+    private final RegistryService registryService;
 
     public RegistryController(EventBus eb) {
         super();
@@ -89,15 +91,40 @@ public class RegistryController extends ControllerHelper {
                     "presences.registry.csv.header.incident.protagonist.type"
                     ));
 
-
             RegistryCSVExport rce = new RegistryCSVExport(result.right().getValue());
             rce.setRequest(request);
             rce.setHeader(csvHeaders);
             rce.export();
         });
-
-
     }
 
+    @Get("/registry/export/new")
+    @ResourceFilter(RegistryRight.class)
+    @SecuredAction(value = "", type = ActionType.RESOURCE)
+    public void exportRegistryBoard(HttpServerRequest request) {
+        MultiMap params = request.params();
+        Pattern p = Pattern.compile("[0-9]{4}-[0-9]{1,2}");
+        String monthParams = params.contains("month") ? params.get("month") : "";
+        Matcher m = p.matcher(monthParams);
+        if (!params.contains("structureId") || !params.contains("month") ||
+                !params.contains("group") || !m.matches()) {
+            badRequest(request);
+            return;
+        }
 
+        List<String> groups = params.getAll("group");
+        String month = params.get("month");
+        String structureId = params.get("structureId");
+
+        registryService.getForExport(month, groups, structureId, result -> {
+            if (result.isLeft()) {
+                badRequest(request);
+                return;
+            }
+
+            RegistryBoardCSVExport rbe = new RegistryBoardCSVExport(result.right().getValue(), month);
+            rbe.setRequest(request);
+            rbe.export();
+        });
+    }
 }

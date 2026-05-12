@@ -40,9 +40,14 @@
     </div>
 
     <div class="four cell">
-        <button class="right-magnet" data-ng-click="vm.exportCsv()">
-            <i18n>presences.export.tocsv</i18n>
-        </button>
+        <div style="float:right; display:flex; gap:8px;">
+            <button class="right-magnet" style="white-space:nowrap;" data-ng-click="vm.exportEventListCsv()">
+                <i18n>presences.export.tocsv</i18n>
+            </button>
+            <button class="right-magnet" style="white-space:nowrap;" data-ng-click="vm.exportCallRegisterCsv()">
+                <i18n>presences.export.new.csv</i18n>
+            </button>
+        </div>
     </div>
 </div>
 
