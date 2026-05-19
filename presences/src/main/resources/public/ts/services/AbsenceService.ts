@@ -137,4 +137,4 @@ export const absenceService: AbsenceService = {
 
 };
 
-export const AbsenceService = ng.service('AbsenceService', (): AbsenceService => absenceService);
+export const AbsenceService = ng.service('AbsenceService', function(): AbsenceService { return absenceService; });

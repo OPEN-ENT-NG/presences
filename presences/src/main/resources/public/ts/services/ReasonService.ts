@@ -44,4 +44,4 @@ export const reasonService: ReasonService = {
     },
 };
 
-export const ReasonService = ng.service('ReasonService', (): ReasonService => reasonService);
+export const ReasonService = ng.service('ReasonService', function(): ReasonService { return reasonService; });
