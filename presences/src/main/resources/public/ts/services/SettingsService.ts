@@ -44,4 +44,4 @@ export const settingService: SettingsService = {
     }
 };
 
-export const SettingService = ng.service('SettingService', (): SettingsService => settingService);
+export const SettingService = ng.service('SettingService', function(): SettingsService { return settingService; });

@@ -1,0 +1,11 @@
+{
+  "permissions": {
+    "allow": [
+      "Read(//Users/macbook2/.claude/plugins/marketplaces/claude-plugins-official/**)",
+      "Bash(python3 -m json.tool)",
+      "Bash(mkdir -p ~/.claude/plugins/local/vite-migration/.claude-plugin)",
+      "Bash(mkdir -p ~/.claude/plugins/local/vite-migration/skills/vite-migration-build)",
+      "Bash(python3 -m json.tool ~/.claude/plugins/installed_plugins.json)"
+    ]
+  }
+}

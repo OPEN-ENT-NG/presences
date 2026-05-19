@@ -67,4 +67,4 @@ export const mailingService: MailingService = {
     }
 };
 
-export const MailingService = ng.service('MailingService', (): MailingService => mailingService);
+export const MailingService = ng.service('MailingService', function(): MailingService { return mailingService; });

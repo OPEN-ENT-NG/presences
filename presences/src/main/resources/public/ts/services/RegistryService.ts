@@ -108,4 +108,4 @@ export const registryService: RegistryService = {
     },
 };
 
-export const RegistryService = ng.service('RegistryService', (): RegistryService => registryService);
+export const RegistryService = ng.service('RegistryService', function(): RegistryService { return registryService; });
