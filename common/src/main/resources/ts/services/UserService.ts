@@ -28,5 +28,5 @@ export const UserService: IUserService = {
     }
 };
 
-export const userService = ng.service('UserService', (): IUserService => UserService);
+export const userService = ng.service('UserService', function(): IUserService { return UserService; });
 

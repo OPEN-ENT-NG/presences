@@ -17,4 +17,4 @@ export const punishmentsCategoryService: IPunishmentsCategoryService = {
     }
 };
 
-export const PunishmentsCategoryService = ng.service('PunishmentsTypeService', (): IPunishmentsCategoryService => punishmentsCategoryService);
+export const PunishmentsCategoryService = ng.service('PunishmentsTypeService', function(): IPunishmentsCategoryService { return punishmentsCategoryService; });

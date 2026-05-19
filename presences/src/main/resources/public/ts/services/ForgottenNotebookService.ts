@@ -79,4 +79,4 @@ export const forgottenNotebookService: ForgottenNotebookService = {
 };
 
 export const ForgottenNotebookService = ng.service('ForgottenNotebookService',
-    (): ForgottenNotebookService => forgottenNotebookService);
+    function(): ForgottenNotebookService { return forgottenNotebookService; });

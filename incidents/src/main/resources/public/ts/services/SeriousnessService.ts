@@ -50,4 +50,4 @@ export const seriousnessService : SeriousnessService = {
     },
 };
 
-export const SeriousnessService = ng.service('SeriousnessService', (): SeriousnessService => seriousnessService);
+export const SeriousnessService = ng.service('SeriousnessService', function(): SeriousnessService { return seriousnessService; });

@@ -37,4 +37,4 @@ export const registerService: RegisterService = {
     }
 };
 
-export const RegisterService = ng.service('RegisterService', (): RegisterService => registerService);
+export const RegisterService = ng.service('RegisterService', function(): RegisterService { return registerService; });

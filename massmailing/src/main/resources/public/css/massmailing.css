@@ -1,0 +1,387 @@
+/* ENTCORE CSS LIB */
+/* Generic Icons */
+@font-face {
+  font-family: "generic-icons";
+  font-display: swap;
+  font-style: normal;
+  font-weight: normal;
+  src: url(fonts/generic-icons/generic-icons.woff);
+}
+/* ----------------------------
+    Spacing
+---------------------------- */
+body.massmailing .massmail-status.grid, .sniplet.presences .massmail-status.grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(auto, 250px));
+  grid-column-gap: 25px;
+  grid-gap: 16px;
+  grid-template-rows: 120px;
+}
+body.massmailing .massmail-status.grid .widget-alert, .sniplet.presences .massmail-status.grid .widget-alert {
+  height: 100%;
+}
+body.massmailing .massmail-status.grid .widget-alert .value, .sniplet.presences .massmail-status.grid .widget-alert .value {
+  font-size: 33px;
+  color: #000000;
+  margin-top: 20px;
+}
+body.massmailing .massmail-status.grid .widget-alert .subtitle, .sniplet.presences .massmail-status.grid .widget-alert .subtitle {
+  width: 85%;
+  text-align: center;
+  font-size: 15px;
+}
+body.massmailing .massmail-status .empty-content, .sniplet.presences .massmail-status .empty-content {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+body.massmailing .massmail-status .empty-content .description, .sniplet.presences .massmail-status .empty-content .description {
+  height: 120px;
+}
+body.massmailing .massmail-status .empty-content-evenly, .sniplet.presences .massmail-status .empty-content-evenly {
+  display: flex;
+  align-items: center;
+  justify-content: space-evenly;
+}
+body.massmailing .massmail-status .empty-content-evenly .empty-content, .sniplet.presences .massmail-status .empty-content-evenly .empty-content {
+  margin: 0;
+}
+body.massmailing .massmail-anomalies .title, .sniplet.presences .massmail-anomalies .title {
+  font-size: 18px;
+  font-weight: normal;
+}
+body.massmailing .massmailing-prefetch table, .sniplet.presences .massmailing-prefetch table {
+  margin-bottom: 0;
+}
+body.massmailing .massmailing-prefetch .head-table, .sniplet.presences .massmailing-prefetch .head-table {
+  z-index: 1;
+  position: relative;
+}
+body.massmailing .massmailing-prefetch .list-table, .sniplet.presences .massmailing-prefetch .list-table {
+  z-index: 0;
+  position: relative;
+}
+body.massmailing .massmailing-prefetch .students, .sniplet.presences .massmailing-prefetch .students {
+  max-height: 200px;
+  overflow-y: auto;
+}
+body.massmailing .massmailing-prefetch .sub-row, .sniplet.presences .massmailing-prefetch .sub-row {
+  background: rgba(235, 235, 235, 0.4);
+}
+body.massmailing .massmailing-prefetch i.mail::before, .sniplet.presences .massmailing-prefetch i.mail::before {
+  font-family: "material-icons";
+  content: "\f1ee";
+  color: rgba(0, 0, 0, 0.87);
+}
+body.massmailing .massmailing-prefetch .massmailing-counters .counter, .sniplet.presences .massmailing-prefetch .massmailing-counters .counter {
+  height: 53px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 16px;
+  margin-right: 25px;
+}
+body.massmailing .massmailing-prefetch .massmailing-counters .counter i.incident, .sniplet.presences .massmailing-prefetch .massmailing-counters .counter i.incident {
+  color: #e61610;
+  margin-right: 10px;
+  font-size: 20px;
+}
+body.massmailing .massmailing-prefetch .massmailing-counters .counter .number, .sniplet.presences .massmailing-prefetch .massmailing-counters .counter .number {
+  font-size: 30px;
+  margin-right: 5px;
+  font-weight: bold;
+}
+body.massmailing .massmailing-prefetch .template-preview, .sniplet.presences .massmailing-prefetch .template-preview {
+  height: 75px;
+  overflow-y: auto;
+  padding: 5px;
+  color: rgba(0, 0, 0, 0.4);
+  border: solid 1px rgba(192, 192, 192, 0.25);
+  border-radius: 5px;
+  font-size: 14px;
+}
+body.massmailing .massmailing-card, .sniplet.presences .massmailing-card {
+  background-color: #ffffff;
+  color: rgba(0, 0, 0, 0.87);
+  border-radius: 5px;
+  box-shadow: 0 14px 28px rgba(0, 0, 0, 0.25), 0 10px 10px rgba(0, 0, 0, 0.22);
+}
+body.massmailing .massmailing-card-header, .sniplet.presences .massmailing-card-header {
+  background-color: #ffb600;
+  color: #ffffff;
+  border-top-left-radius: inherit;
+  border-top-right-radius: inherit;
+  display: flex;
+  padding: 8px 16px;
+  flex-direction: column;
+}
+body.massmailing .massmailing-card-header-title, .sniplet.presences .massmailing-card-header-title {
+  display: flex;
+}
+body.massmailing .massmailing-card-body, .sniplet.presences .massmailing-card-body {
+  display: flex;
+  padding: 8px 16px;
+  overflow-y: auto;
+  max-height: 400px;
+}
+body.massmailing .massmailing-card-body-descriptionHTML tr, .sniplet.presences .massmailing-card-body-descriptionHTML tr {
+  background: none;
+  box-shadow: none;
+  color: unset;
+}
+body.massmailing .massmailing-card-body-descriptionHTML a, .sniplet.presences .massmailing-card-body-descriptionHTML a {
+  color: #5b6472;
+}
+body.massmailing .massmailing-card-body-descriptionHTML a:hover, .sniplet.presences .massmailing-card-body-descriptionHTML a:hover {
+  color: #ffb600;
+}
+body.massmailing .massmailing-card-stats-item, .sniplet.presences .massmailing-card-stats-item {
+  height: 120px;
+  border-radius: 7px;
+  background-color: #ffffff;
+  position: relative;
+  box-shadow: 0 5px 5px rgba(0, 0, 0, 0.21);
+  display: flex;
+  flex-direction: column;
+  justify-content: space-around;
+  align-items: center;
+}
+body.massmailing .massmailing-card-stats-item:after, .sniplet.presences .massmailing-card-stats-item:after {
+  content: " ";
+  width: 100%;
+  height: 10px;
+  position: absolute;
+  border-bottom-left-radius: 7px;
+  border-bottom-right-radius: 7px;
+  display: block;
+  bottom: 0;
+  right: 0;
+}
+body.massmailing .massmailing-card-stats-item.absences:after, body.massmailing .massmailing-card-stats-item.NO_REASON:after, body.massmailing .massmailing-card-stats-item.ABSENCE:after, .sniplet.presences .massmailing-card-stats-item.absences:after, .sniplet.presences .massmailing-card-stats-item.NO_REASON:after, .sniplet.presences .massmailing-card-stats-item.ABSENCE:after {
+  background-color: #e61610;
+}
+body.massmailing .massmailing-card-stats-item.REGULARIZED:after, .sniplet.presences .massmailing-card-stats-item.REGULARIZED:after {
+  background-color: #72bb53;
+}
+body.massmailing .massmailing-card-stats-item.PUNISHMENT:after, body.massmailing .massmailing-card-stats-item.SANCTION:after, .sniplet.presences .massmailing-card-stats-item.PUNISHMENT:after, .sniplet.presences .massmailing-card-stats-item.SANCTION:after {
+  background-color: #ffb600;
+}
+body.massmailing .massmailing-card-stats-item.UNREGULARIZED:after, .sniplet.presences .massmailing-card-stats-item.UNREGULARIZED:after {
+  background-color: #ff8a84;
+}
+body.massmailing .massmailing-card-stats-item.lateness:after, body.massmailing .massmailing-card-stats-item.LATENESS:after, .sniplet.presences .massmailing-card-stats-item.lateness:after, .sniplet.presences .massmailing-card-stats-item.LATENESS:after {
+  background-color: #9c29b7;
+}
+body.massmailing .massmailing-card-stats-item.bold, .sniplet.presences .massmailing-card-stats-item.bold {
+  font-weight: bold;
+}
+body.massmailing .massmailing-card-stats-item .value, .sniplet.presences .massmailing-card-stats-item .value {
+  color: #000000;
+  font-size: 33px;
+  font-weight: bold;
+  margin-top: 20px;
+}
+body.massmailing .massmailing-card-stats-item .subtitle, .sniplet.presences .massmailing-card-stats-item .subtitle {
+  font-size: 14px;
+  margin: 8px 0;
+  text-align: center;
+}
+body.massmailing .sniplet-massmailing .massmailing, .sniplet.presences .sniplet-massmailing .massmailing {
+  display: flex;
+  justify-content: space-between;
+}
+body.massmailing .sniplet-massmailing .massmailing-editor, .sniplet.presences .sniplet-massmailing .massmailing-editor {
+  width: 100%;
+  margin-right: 32px;
+  flex: 2;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  justify-content: space-between;
+}
+body.massmailing .sniplet-massmailing .massmailing-editor button, .sniplet.presences .sniplet-massmailing .massmailing-editor button {
+  margin: 0;
+}
+body.massmailing .sniplet-massmailing .massmailing-editor editor, .sniplet.presences .sniplet-massmailing .massmailing-editor editor {
+  flex: 1 1 auto;
+  display: flex;
+  flex-direction: column;
+}
+body.massmailing .sniplet-massmailing .massmailing-editor editor popover + div, .sniplet.presences .sniplet-massmailing .massmailing-editor editor popover + div {
+  flex: 1;
+}
+body.massmailing .sniplet-massmailing .massmailing-editor editor popover + div .drawing-zone, .sniplet.presences .sniplet-massmailing .massmailing-editor editor popover + div .drawing-zone {
+  height: 100%;
+  flex: 1;
+}
+body.massmailing .sniplet-massmailing .massmailing-editor-textarea, .sniplet.presences .sniplet-massmailing .massmailing-editor-textarea {
+  width: 100%;
+  flex: 1 1 auto;
+  margin-bottom: 20px;
+  display: flex;
+  flex-direction: column;
+}
+body.massmailing .sniplet-massmailing .massmailing-editor-textarea textarea, .sniplet.presences .sniplet-massmailing .massmailing-editor-textarea textarea {
+  flex: 1;
+}
+body.massmailing .sniplet-massmailing .massmailing-codes, .sniplet.presences .sniplet-massmailing .massmailing-codes {
+  flex: 1;
+  font-size: 15px;
+}
+body.massmailing .sniplet-massmailing .massmailing-codes .content, .sniplet.presences .sniplet-massmailing .massmailing-codes .content {
+  display: flex;
+  flex-direction: column;
+}
+body.massmailing .sniplet-massmailing .massmailing .massmailing-type-content, .sniplet.presences .sniplet-massmailing .massmailing .massmailing-type-content {
+  padding-bottom: 8px;
+}
+body.massmailing .history-header-search, .sniplet.presences .history-header-search {
+  padding: 8px 0 0 0;
+  display: flex;
+  justify-content: space-between;
+}
+body.massmailing .history-header-search-bar, .sniplet.presences .history-header-search-bar {
+  width: 45%;
+}
+body.massmailing, .sniplet.presences {
+  /* body */
+}
+body.massmailing .history-body .pagination, .sniplet.presences .history-body .pagination {
+  margin: 0 8px 8px;
+}
+body.massmailing, .sniplet.presences {
+  /* history-list */
+}
+body.massmailing .history-body-content, .sniplet.presences .history-body-content {
+  display: flex;
+  justify-content: center;
+  align-items: start;
+}
+body.massmailing .history-body-content-history, .sniplet.presences .history-body-content-history {
+  margin-right: 16px;
+  flex: 1 0 auto;
+  width: 60em !important;
+}
+body.massmailing .history-body-content-history.flex-table, .sniplet.presences .history-body-content-history.flex-table {
+  background-color: #ffffff;
+}
+body.massmailing .history-body-content-history-list-date, .sniplet.presences .history-body-content-history-list-date {
+  background-color: #eeeeee;
+  border-bottom: 1px solid #ffffff;
+}
+body.massmailing .history-body-content-history-list-student, .sniplet.presences .history-body-content-history-list-student {
+  border-bottom: solid 1px #eeeeee;
+}
+body.massmailing .history-body-content-history-list-student.active, .sniplet.presences .history-body-content-history-list-student.active {
+  background-color: #eeeeee;
+  border-bottom: solid 1px #ffffff;
+}
+body.massmailing .history-body-content-history-list-student-info, .sniplet.presences .history-body-content-history-list-student-info {
+  text-align: center !important;
+  justify-content: space-around !important;
+}
+body.massmailing .history-body-content-card, .sniplet.presences .history-body-content-card {
+  padding-left: 16px;
+  display: flex;
+  flex: 0 1 auto;
+  width: 100%;
+}
+body.massmailing .history-body-content-card-clickDisplay, .sniplet.presences .history-body-content-card-clickDisplay {
+  display: flex;
+  flex-direction: column;
+  text-align: center;
+  margin: 72px;
+}
+body.massmailing .history-body-content-card .arrow-right, .sniplet.presences .history-body-content-card .arrow-right {
+  margin-top: 24px;
+  font-size: 24px;
+  transform: rotate(180deg);
+}
+body.massmailing .history-lightbox .header-lightbox, .sniplet.presences .history-lightbox .header-lightbox {
+  margin-bottom: 0;
+}
+body.massmailing .history-lightbox, .sniplet.presences .history-lightbox {
+  /* reajdust padding list students/groups */
+}
+body.massmailing .history-lightbox .search-input-ul, .sniplet.presences .history-lightbox .search-input-ul {
+  padding: 8px 0 0 0;
+}
+body.massmailing .history-lightbox input, .sniplet.presences .history-lightbox input {
+  margin-bottom: 0;
+}
+body.massmailing .text-align-left, .sniplet.presences .text-align-left {
+  text-align: left;
+}
+body.massmailing .text-align-right, .sniplet.presences .text-align-right {
+  text-align: right;
+}
+body.massmailing .red-text, .sniplet.presences .red-text {
+  color: #e61610;
+}
+body.massmailing .hr, .sniplet.presences .hr {
+  width: 100%;
+  height: 2px;
+  background: #c0c0c0;
+  opacity: 0.5;
+  border-radius: 1px;
+}
+body.massmailing h1.title, .sniplet.presences h1.title {
+  padding: 0 10px;
+  margin-left: 5px;
+}
+body.massmailing .massmailing-content, .sniplet.presences .massmailing-content {
+  padding: 0 10px;
+  margin: 0 5px;
+  background-color: rgba(255, 255, 255, 0.6);
+}
+body.massmailing .date-filters, .sniplet.presences .date-filters {
+  padding-top: 10px;
+}
+body.massmailing i.filter, .sniplet.presences i.filter {
+  font-size: 26px;
+}
+body.massmailing .massmailing-filters h4, .sniplet.presences .massmailing-filters h4 {
+  font-size: 20px;
+  font-weight: normal;
+}
+body.massmailing .massmailing-filters h4 input[type=number], .sniplet.presences .massmailing-filters h4 input[type=number] {
+  width: 50px;
+  font-size: 20px;
+}
+body.massmailing .counters-cell, .sniplet.presences .counters-cell {
+  padding: 0;
+  position: relative;
+}
+body.massmailing .counters-cell .counters, .sniplet.presences .counters-cell .counters {
+  height: 100%;
+  display: flex;
+  position: absolute;
+  top: 0;
+  left: 0;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+}
+body.massmailing .counters-cell .counters .counter, .sniplet.presences .counters-cell .counters .counter {
+  width: 40px;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #ffffff;
+}
+body.massmailing .counters-cell .counters .counter.REGULARIZED, .sniplet.presences .counters-cell .counters .counter.REGULARIZED {
+  background: #72bb53;
+}
+body.massmailing .counters-cell .counters .counter.UNREGULARIZED, .sniplet.presences .counters-cell .counters .counter.UNREGULARIZED {
+  background: #ff8a84;
+}
+body.massmailing .counters-cell .counters .counter.PUNISHMENT, body.massmailing .counters-cell .counters .counter.SANCTION, .sniplet.presences .counters-cell .counters .counter.PUNISHMENT, .sniplet.presences .counters-cell .counters .counter.SANCTION {
+  background: #ffb600;
+}
+body.massmailing .counters-cell .counters .counter.NO_REASON, .sniplet.presences .counters-cell .counters .counter.NO_REASON {
+  background: #e61610;
+}
+body.massmailing .counters-cell .counters .counter.LATENESS, .sniplet.presences .counters-cell .counters .counter.LATENESS {
+  background: #9c29b7;
+}

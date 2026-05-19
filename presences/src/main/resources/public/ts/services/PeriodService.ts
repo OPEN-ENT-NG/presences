@@ -48,4 +48,4 @@ export const PeriodService: IPeriodService = {
     }
 };
 
-export const periodeService = ng.service('PeriodService', (): IPeriodService => PeriodService);
+export const periodeService = ng.service('PeriodService', function(): IPeriodService { return PeriodService; });

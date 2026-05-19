@@ -47,4 +47,4 @@ export const partnerService : PartnerService = {
     },
 };
 
-export const PartnerService = ng.service('PartnerService', (): PartnerService => partnerService);
+export const PartnerService = ng.service('PartnerService', function(): PartnerService { return partnerService; });

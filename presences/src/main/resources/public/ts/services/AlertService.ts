@@ -93,4 +93,4 @@ export const alertService: AlertService = {
 
 };
 
-export const AlertService = ng.service('AlertService', (): AlertService => alertService);
+export const AlertService = ng.service('AlertService', function(): AlertService { return alertService; });

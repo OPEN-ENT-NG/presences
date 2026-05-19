@@ -156,10 +156,12 @@ export const mainController = ng.controller('MainController', ['$scope', 'route'
         };
 
         $scope.hasSearchRight = function () {
+            if (!model.me) return false;
             return model.me.hasWorkflow(rights.workflow.search);
         };
 
         $scope.hasRight = function (right: string) {
+            if (!model.me) return false;
             return model.me.hasWorkflow(rights.workflow[right]);
         };
 

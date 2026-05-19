@@ -38,4 +38,4 @@ export const timeslotClasseService: TimeslotClasseService =  {
     }
 }
 
-export const TimeslotClasseService = ng.service('TimeslotClasseService', (): TimeslotClasseService => timeslotClasseService);
+export const TimeslotClasseService = ng.service('TimeslotClasseService', function(): TimeslotClasseService { return timeslotClasseService; });

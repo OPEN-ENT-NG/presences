@@ -29,4 +29,4 @@ export const indicatorService: IndicatorService = {
     }
 
 };
-export const IndicatorService = ng.service('IndicatorService', (): IndicatorService => indicatorService);
+export const IndicatorService = ng.service('IndicatorService', function(): IndicatorService { return indicatorService; });

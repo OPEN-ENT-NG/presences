@@ -47,4 +47,4 @@ export const protagonistTypeService : ProtagonistTypeService = {
     },
 };
 
-export const ProtagonistTypeService = ng.service('ProtagonistTypeService', (): ProtagonistTypeService => protagonistTypeService);
+export const ProtagonistTypeService = ng.service('ProtagonistTypeService', function(): ProtagonistTypeService { return protagonistTypeService; });

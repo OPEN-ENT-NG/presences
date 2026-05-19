@@ -10,8 +10,10 @@ services:
       MAVEN_CONFIG: /var/maven/.m2
 
   node:
-    image: opendigitaleducation/node:16-alpine-pnpm
+    image: opendigitaleducation/node:22-alpine-pnpm
     working_dir: /home/node/app
+    environment:
+      GIT_CONFIG_GLOBAL: /home/node/app/.docker/gitconfig
     volumes:
       - ./:/home/node/app
       - ~/.npm:/.npm

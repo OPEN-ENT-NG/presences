@@ -45,4 +45,4 @@ export const ViescolaireService: IViescolaireService = {
     }
 };
 
-export const viescolaireService = ng.service('ViescolaireService', (): IViescolaireService => ViescolaireService);
+export const viescolaireService = ng.service('ViescolaireService', function(): IViescolaireService { return ViescolaireService; });

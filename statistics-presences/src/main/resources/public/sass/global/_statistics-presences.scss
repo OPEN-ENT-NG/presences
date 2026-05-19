@@ -12,7 +12,6 @@ $statistics-presences-light-purple: #f2c9fb;
 $statistics-presences-green: #72bb53;
 
 body.statistics-presences {
-  @import "../../../sass/global/common";
   @import "components/index";
   @import "indicators/index";
 }

@@ -78,4 +78,4 @@ export const presenceService: PresenceService = {
     }
 };
 
-export const PresenceService = ng.service('PresenceService', (): PresenceService => presenceService);
+export const PresenceService = ng.service('PresenceService', function(): PresenceService { return presenceService; });

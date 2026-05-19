@@ -18,4 +18,4 @@ export const GroupingService: GroupingService = {
     }
 };
 
-export const groupingService = ng.service('GroupingService', (): GroupingService => GroupingService);
+export const groupingService = ng.service('GroupingService', function(): GroupingService { return GroupingService; });
