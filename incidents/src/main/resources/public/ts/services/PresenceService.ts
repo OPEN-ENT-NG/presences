@@ -14,4 +14,4 @@ export const presenceService: IPresenceService = {
     },
 };
 
-export const PresenceService = ng.service('PresenceService', (): IPresenceService => presenceService);
+export const PresenceService = ng.service('PresenceService', function(): IPresenceService { return presenceService; });

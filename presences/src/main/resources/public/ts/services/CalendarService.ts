@@ -64,7 +64,7 @@ export interface CalendarService {
     loadAbsences(student: User, startWeekDate: string, structureId: string): Promise<Array<Absence>>;
 }
 
-export const calendarService = ng.service('CalendarService', (): CalendarService => ({
+export const calendarService = ng.service('CalendarService', function(): CalendarService { return ({
     loadCourses: async (student: User, startWeekDate: string, structureId): Promise<Array<Course>> => {
         const start = DateUtils.format(startWeekDate, DateUtils.FORMAT["YEAR-MONTH-DAY"]);
         const end = DateUtils.format(DateUtils.add(startWeekDate, 1, 'w'), DateUtils.FORMAT["YEAR-MONTH-DAY"]);
@@ -158,5 +158,5 @@ export const calendarService = ng.service('CalendarService', (): CalendarService
         }
     },
 
-}));
+}); });
 

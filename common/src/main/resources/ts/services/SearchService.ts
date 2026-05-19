@@ -83,4 +83,4 @@ export const SearchService: SearchService = {
     }
 };
 
-export const searchService = ng.service('SearchService', (): SearchService => SearchService);
+export const searchService = ng.service('SearchService', function(): SearchService { return SearchService; });

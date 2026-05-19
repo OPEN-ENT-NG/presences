@@ -55,4 +55,4 @@ export const GroupService: GroupService = {
     },
 };
 
-export const groupService = ng.service('GroupService', (): GroupService => GroupService);
+export const groupService = ng.service('GroupService', function(): GroupService { return GroupService; });
