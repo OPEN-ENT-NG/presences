@@ -47,4 +47,4 @@ export const incidentsTypeService : IncidentsTypeService = {
     },
 };
 
-export const IncidentsTypeService = ng.service('IncidentsTypeService', (): IncidentsTypeService => incidentsTypeService);
+export const IncidentsTypeService = ng.service('IncidentsTypeService', function(): IncidentsTypeService { return incidentsTypeService; });

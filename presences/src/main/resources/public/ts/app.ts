@@ -1,3 +1,4 @@
+import "../sass/index.scss";
 import {Me, model, ng, routes} from 'entcore';
 import rights from './rights';
 import * as controllers from './controllers';

@@ -75,4 +75,4 @@ export const initService: IInitService = {
     }
 };
 
-export const InitService = ng.service('InitService', (): IInitService => initService);
+export const InitService = ng.service('InitService', function(): IInitService { return initService; });

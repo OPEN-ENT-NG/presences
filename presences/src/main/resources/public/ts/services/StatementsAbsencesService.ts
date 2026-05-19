@@ -104,4 +104,4 @@ export const statementsAbsencesService: IStatementsAbsencesService = {
 };
 
 export const StatementsAbsencesService = ng.service('StatementsAbsencesService',
-    (): IStatementsAbsencesService => statementsAbsencesService);
+    function(): IStatementsAbsencesService { return statementsAbsencesService; });

@@ -21,17 +21,57 @@ MINGW*)
 esac
 
 clean () {
-  docker-compose run --rm maven mvn $MVN_OPT clean
+  echo "Cleaning front files"
+  rm -rf ./presences/src/main/resources/public/dist
+  rm -rf ./presences/src/main/resources/public/js
+  rm -rf ./presences/src/main/resources/public/build
+  if [ "$NO_DOCKER" = "true" ] ; then
+    mvn clean
+  else
+    docker compose run --rm maven mvn $MVN_OPTS clean
+  fi
 }
 
+
+# Build frontend du module presences uniquement (migré sur Vite).
+# Les autres modules (incidents, massmailing, statistics) utilisent encore buildNode/gulp.
+buildFrontend () {
+  if [ ! -e "yarn.lock" ] ; then
+    echo "Running yarn install..."
+    if [ "$NO_DOCKER" = "true" ] ; then
+      yarn install
+    else
+      docker compose run -e NPM_TOKEN --rm -u "$USER_UID:$GROUP_GID" node sh -c "yarn install"
+    fi
+  fi
+  if [ ! -e "./presences/src/main/resources/view" ] ; then
+    mkdir "./presences/src/main/resources/view"
+  fi
+  VERSION=$(date +%s)
+  find ./presences/src/main/resources/view-src -type f \( -name "*.html" -o -name "*.json" \) | while read -r file; do
+    dest="./presences/src/main/resources/view/${file#./presences/src/main/resources/view-src/}"
+    mkdir -p "$(dirname "$dest")"
+    sed "s/@@VERSION/$VERSION/g" "$file" > "$dest"
+  done
+  echo "Building frontend presences..."
+  if [ "$NO_DOCKER" = "true" ] ; then
+    yarn build:presences
+  else
+    docker compose run -e NPM_TOKEN --rm -u "$USER_UID:$GROUP_GID" node sh -c "yarn build:presences"
+  fi
+  status=$?
+  if [ $status != 0 ] ; then
+    exit $status
+  fi
+}
 
 buildNode() {
   case $(uname -s) in
   MINGW*)
-    docker-compose run --rm -u "$USER_UID:$GROUP_GID" node sh -c "yarn install --no-bin-links && node_modules/gulp/bin/gulp.js build && yarn run build:sass"
+    docker compose run --rm -u "$USER_UID:$GROUP_GID" node sh -c "yarn install --no-bin-links && node_modules/gulp/bin/gulp.js build && yarn run build:sass"
     ;;
   *)
-    docker-compose run --rm -u "$USER_UID:$GROUP_GID" node sh -c "yarn install && node_modules/gulp/bin/gulp.js build && yarn run build:sass"
+    docker compose run --rm -u "$USER_UID:$GROUP_GID" node sh -c "yarn install && node_modules/gulp/bin/gulp.js build && yarn run build:sass"
     ;;
   esac
 }
@@ -41,10 +81,10 @@ test() {
   rm -rf */build
   case $(uname -s) in
   MINGW*)
-    docker-compose run --rm -u "$USER_UID:$GROUP_GID" node sh -c "yarn install --no-bin-links && node_modules/gulp/bin/gulp.js drop-cache &&  yarn test"
+    docker compose run --rm -u "$USER_UID:$GROUP_GID" node sh -c "yarn install --no-bin-links && node_modules/gulp/bin/gulp.js drop-cache &&  yarn test"
     ;;
   *)
-    docker-compose run --rm -u "$USER_UID:$GROUP_GID" node sh -c "yarn install && node_modules/gulp/bin/gulp.js drop-cache && yarn test"
+    docker compose run --rm -u "$USER_UID:$GROUP_GID" node sh -c "yarn install && node_modules/gulp/bin/gulp.js drop-cache && yarn test"
     ;;
   esac
 }
@@ -54,10 +94,10 @@ testNode () {
   rm -rf */build
   case `uname -s` in
     MINGW*)
-      docker-compose run --rm -u "$USER_UID:$GROUP_GID" node sh -c "yarn install --no-bin-links && node_modules/gulp/bin/gulp.js drop-cache && yarn test"
+      docker compose run --rm -u "$USER_UID:$GROUP_GID" node sh -c "yarn install --no-bin-links && node_modules/gulp/bin/gulp.js drop-cache && yarn test"
       ;;
     *)
-      docker-compose run --rm -u "$USER_UID:$GROUP_GID" node sh -c "yarn install && node_modules/gulp/bin/gulp.js drop-cache && yarn test"
+      docker compose run --rm -u "$USER_UID:$GROUP_GID" node sh -c "yarn install && node_modules/gulp/bin/gulp.js drop-cache && yarn test"
   esac
 }
 
@@ -66,10 +106,10 @@ testNodeDev () {
   rm -rf */build
   case `uname -s` in
     MINGW*)
-      docker-compose run --rm -u "$USER_UID:$GROUP_GID" node sh -c "yarn install --no-bin-links && node_modules/gulp/bin/gulp.js drop-cache && yarn run test:dev"
+      docker compose run --rm -u "$USER_UID:$GROUP_GID" node sh -c "yarn install --no-bin-links && node_modules/gulp/bin/gulp.js drop-cache && yarn run test:dev"
       ;;
     *)
-      docker-compose run --rm -u "$USER_UID:$GROUP_GID" node sh -c "yarn install && node_modules/gulp/bin/gulp.js drop-cache && yarn run test:dev"
+      docker compose run --rm -u "$USER_UID:$GROUP_GID" node sh -c "yarn install && node_modules/gulp/bin/gulp.js drop-cache && yarn run test:dev"
   esac
 }
 
@@ -83,11 +123,11 @@ install () {
 }
 
 buildGulp() {
-    docker-compose run --rm -u "$USER_UID:$GROUP_GID" node sh -c "yarn install --no-bin-links && node_modules/gulp/bin/gulp.js build"
+    docker compose run --rm -u "$USER_UID:$GROUP_GID" node sh -c "yarn install --no-bin-links && node_modules/gulp/bin/gulp.js build"
 }
 
 buildCss() {
-    docker-compose run --rm -u "$USER_UID:$GROUP_GID" node sh -c "yarn run build:sass"
+    docker compose run --rm -u "$USER_UID:$GROUP_GID" node sh -c "yarn run build:sass"
 }
 
 publish() {
@@ -101,68 +141,60 @@ publish() {
 }
 
 presences() {
-  case $(uname -s) in
-  MINGW*)
-    docker-compose run --rm -u "$USER_UID:$GROUP_GID" node sh -c "yarn install --no-bin-links && node_modules/gulp/bin/gulp.js build --targetModule=presences && yarn run build:sass"
-    ;;
-  *)
-    docker-compose run --rm -u "$USER_UID:$GROUP_GID" node sh -c "yarn install && node_modules/gulp/bin/gulp.js build --targetModule=presences && yarn run build:sass"
-    ;;
-  esac
-  docker-compose run --rm maven mvn $MVN_OPTS -pl presences -am install -DskipTests
-
+  buildFrontend
+  docker compose run --rm maven mvn $MVN_OPTS -pl presences -am install -DskipTests
 }
 
 presences:buildMaven() {
-  docker-compose run --rm maven mvn $MVN_OPTS -pl presences -am install -DskipTests
+  docker compose run --rm maven mvn $MVN_OPTS -pl presences -am install -DskipTests
 }
 
 incidents() {
   case $(uname -s) in
   MINGW*)
-    docker-compose run --rm -u "$USER_UID:$GROUP_GID" node sh -c "yarn install --no-bin-links && node_modules/gulp/bin/gulp.js build --targetModule=incidents && yarn run build:sass"
+    docker compose run --rm -u "$USER_UID:$GROUP_GID" node sh -c "yarn install --no-bin-links && node_modules/gulp/bin/gulp.js build --targetModule=incidents && yarn run build:sass"
     ;;
   *)
-    docker-compose run --rm -u "$USER_UID:$GROUP_GID" node sh -c "yarn install && node_modules/gulp/bin/gulp.js build --targetModule=incidents && yarn run build:sass"
+    docker compose run --rm -u "$USER_UID:$GROUP_GID" node sh -c "yarn install && node_modules/gulp/bin/gulp.js build --targetModule=incidents && yarn run build:sass"
     ;;
   esac
-  docker-compose run --rm -u "$USER_UID:$GROUP_GID" gradle gradle :incidents:shadowJar :incidents:install :incidents:publishToMavenLocal
+  docker compose run --rm -u "$USER_UID:$GROUP_GID" gradle gradle :incidents:shadowJar :incidents:install :incidents:publishToMavenLocal
 }
 
 incidents:buildGradle() {
-  docker-compose run --rm -u "$USER_UID:$GROUP_GID" gradle gradle :incidents:shadowJar :incidents:install :incidents:publishToMavenLocal
+  docker compose run --rm -u "$USER_UID:$GROUP_GID" gradle gradle :incidents:shadowJar :incidents:install :incidents:publishToMavenLocal
 }
 
 massmailing() {
   case $(uname -s) in
   MINGW*)
-    docker-compose run --rm -u "$USER_UID:$GROUP_GID" node sh -c "yarn install --no-bin-links && node_modules/gulp/bin/gulp.js build --targetModule=massmailing && yarn run build:sass"
+    docker compose run --rm -u "$USER_UID:$GROUP_GID" node sh -c "yarn install --no-bin-links && node_modules/gulp/bin/gulp.js build --targetModule=massmailing && yarn run build:sass"
     ;;
   *)
-    docker-compose run --rm -u "$USER_UID:$GROUP_GID" node sh -c "yarn install && node_modules/gulp/bin/gulp.js build --targetModule=massmailing && yarn run build:sass"
+    docker compose run --rm -u "$USER_UID:$GROUP_GID" node sh -c "yarn install && node_modules/gulp/bin/gulp.js build --targetModule=massmailing && yarn run build:sass"
     ;;
   esac
-  docker-compose run --rm -u "$USER_UID:$GROUP_GID" gradle gradle :massmailing:shadowJar :massmailing:install :massmailing:publishToMavenLocal
+  docker compose run --rm -u "$USER_UID:$GROUP_GID" gradle gradle :massmailing:shadowJar :massmailing:install :massmailing:publishToMavenLocal
 }
 
 massmailing:buildGradle() {
-  docker-compose run --rm -u "$USER_UID:$GROUP_GID" gradle gradle :massmailing:shadowJar :massmailing:install :massmailing:publishToMavenLocal
+  docker compose run --rm -u "$USER_UID:$GROUP_GID" gradle gradle :massmailing:shadowJar :massmailing:install :massmailing:publishToMavenLocal
 }
 
 statistics() {
   case $(uname -s) in
   MINGW*)
-    docker-compose run --rm -u "$USER_UID:$GROUP_GID" node sh -c "yarn install --no-bin-links && node_modules/gulp/bin/gulp.js build --targetModule=statistics-presences && yarn run build:sass"
+    docker compose run --rm -u "$USER_UID:$GROUP_GID" node sh -c "yarn install --no-bin-links && node_modules/gulp/bin/gulp.js build --targetModule=statistics-presences && yarn run build:sass"
     ;;
   *)
-    docker-compose run --rm -u "$USER_UID:$GROUP_GID" node sh -c "yarn install && node_modules/gulp/bin/gulp.js build --targetModule=statistics-presences && yarn run build:sass"
+    docker compose run --rm -u "$USER_UID:$GROUP_GID" node sh -c "yarn install && node_modules/gulp/bin/gulp.js build --targetModule=statistics-presences && yarn run build:sass"
     ;;
   esac
-  docker-compose run --rm -u "$USER_UID:$GROUP_GID" gradle gradle :statistics:shadowJar :statistics:install :statistics:publishToMavenLocal
+  docker compose run --rm -u "$USER_UID:$GROUP_GID" gradle gradle :statistics:shadowJar :statistics:install :statistics:publishToMavenLocal
 }
 
 statistics:buildGradle() {
-  docker-compose run --rm -u "$USER_UID:$GROUP_GID" gradle gradle :statistics:shadowJar :statistics:install :statistics:publishToMavenLocal
+  docker compose run --rm -u "$USER_UID:$GROUP_GID" gradle gradle :statistics:shadowJar :statistics:install :statistics:publishToMavenLocal
 }
 
 publishNexus() {
@@ -219,6 +251,9 @@ for param in "$@"; do
   clean)
     clean
     ;;
+  buildFrontend)
+    buildFrontend
+    ;;
   buildNode)
     buildNode
     ;;
@@ -232,7 +267,7 @@ for param in "$@"; do
     buildCss
     ;;
   install)
-    buildNode && install
+    buildNode && buildFrontend && install
     ;;
   publish)
     publish

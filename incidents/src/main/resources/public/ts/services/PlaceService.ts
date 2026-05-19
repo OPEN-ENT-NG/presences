@@ -47,4 +47,4 @@ export const placeService : PlaceService = {
     },
 };
 
-export const PlaceService = ng.service('PlaceService', (): PlaceService => placeService);
+export const PlaceService = ng.service('PlaceService', function(): PlaceService { return placeService; });
