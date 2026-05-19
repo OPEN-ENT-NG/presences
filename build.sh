@@ -25,6 +25,8 @@ clean () {
   rm -rf ./presences/src/main/resources/public/dist
   rm -rf ./presences/src/main/resources/public/js
   rm -rf ./presences/src/main/resources/public/build
+  rm -rf node_modules
+  rm -f yarn.lock
   if [ "$NO_DOCKER" = "true" ] ; then
     mvn clean
   else
