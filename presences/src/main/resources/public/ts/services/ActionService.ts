@@ -36,4 +36,4 @@ export const actionService: ActionService = {
         return http.delete(`/presences/action?id=${actionId}`);
     }
 };
-export const ActionService = ng.service('ActionService', (): ActionService => actionService);
+export const ActionService = ng.service('ActionService', function(): ActionService { return actionService; });

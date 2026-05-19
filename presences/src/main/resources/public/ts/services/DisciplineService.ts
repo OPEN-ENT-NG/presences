@@ -35,4 +35,4 @@ export const disciplineService: DisciplineService = {
     },
 };
 
-export const DisciplineService = ng.service('DisciplineService', (): DisciplineService => disciplineService);
+export const DisciplineService = ng.service('DisciplineService', function(): DisciplineService { return disciplineService; });

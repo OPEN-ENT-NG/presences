@@ -262,4 +262,4 @@ export const eventService: EventService = {
     }
 };
 
-export const EventService = ng.service('EventService', (): EventService => eventService);
+export const EventService = ng.service('EventService', function(): EventService { return eventService; });

@@ -123,4 +123,4 @@ export const collectiveAbsenceService: CollectiveAbsenceService = {
 };
 
 export const CollectiveAbsenceService = ng.service('CollectiveAbsenceService',
-    (): CollectiveAbsenceService => collectiveAbsenceService);
+    function(): CollectiveAbsenceService { return collectiveAbsenceService; });

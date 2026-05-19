@@ -3,12 +3,15 @@
   "version": "2.1.9-dev.0",
   "description": "Presences",
   "main": "gulpfile.js",
+  "engines": {
+    "node": ">=20 <=22"
+  },
   "scripts": {
     "coverage": "./node_modules/.bin/jest --config jest.config.js --coverage",
     "test": "npm run coverage",
     "coverage:dev": "./node_modules/.bin/jest --config jest.config.js --coverage --watch --verbose false",
     "test:dev": "npm run coverage:dev",
-    "build:sass": "sass --load-path=node_modules/ --no-source-map presences/src/main/resources/public/sass/index.scss presences/src/main/resources/public/css/presences.css"
+    "build:presences": "vite build --config presences/vite.config.application.ts && vite build --config presences/vite.config.behaviours.ts"
   },
   "repository": {
     "type": "git",
@@ -43,6 +46,7 @@
     "apexcharts": "^3.26.0"
   },
   "devDependencies": {
+    "vite": "5.4.6",
     "sass": "^1.49.9",
     "entcore-css-lib": "npm:ode-csslib@4.0.12",
     "@types/angular": "1.8.9",

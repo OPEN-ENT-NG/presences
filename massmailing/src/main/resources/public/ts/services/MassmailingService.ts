@@ -84,4 +84,4 @@ export const massmailingService: MassmailingService = {
     }
 };
 
-export const MassmailingService = ng.service('MassmailingService', (): MassmailingService => massmailingService);
+export const MassmailingService = ng.service('MassmailingService', function(): MassmailingService { return massmailingService; });
