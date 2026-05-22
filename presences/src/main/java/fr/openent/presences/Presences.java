@@ -8,6 +8,7 @@ import fr.openent.presences.common.viescolaire.Viescolaire;
 import fr.openent.presences.controller.*;
 import fr.openent.presences.controller.events.EventController;
 import fr.openent.presences.controller.events.LatenessEventController;
+import fr.openent.presences.cron.AbsenceRemovalTask;
 import fr.openent.presences.cron.CreateDailyRegistersTask;
 import fr.openent.presences.cron.UpdateEventRegularizationTask;
 import fr.openent.presences.db.DB;
@@ -164,10 +165,13 @@ public class Presences extends BaseServer {
           setRepositoryEvents(new PresencesRepositoryEvents(eb));
           final List<Future<?>> futures = new ArrayList<>();
 
+          final CreateDailyRegistersTask createDailyRegistersTask = new CreateDailyRegistersTask(vertx.eventBus());
+          final UpdateEventRegularizationTask updateEventRegularizationTask = new UpdateEventRegularizationTask(vertx.eventBus());
+          addController(new TaskController(createDailyRegistersTask, updateEventRegularizationTask));
+          futures.add(vertx.deployVerticle(CreateDailyPresenceWorker.class, new DeploymentOptions().setConfig(config).setWorker(true)));
           if (config.containsKey("registers-cron")) {
-            futures.add(vertx.deployVerticle(CreateDailyPresenceWorker.class, new DeploymentOptions().setConfig(config).setWorker(true)));
             try {
-              new CronTrigger(vertx, config.getString("registers-cron")).schedule(new CreateDailyRegistersTask(vertx.eventBus()));
+              new CronTrigger(vertx, config.getString("registers-cron")).schedule(createDailyRegistersTask);
             } catch (ParseException e) {
               log.fatal("Error while parsing registers-cron cron expression", e);
             }
@@ -175,11 +179,12 @@ public class Presences extends BaseServer {
 
           if (config.containsKey("cron-check-regularization") && Boolean.TRUE.equals(config.getJsonObject("cron-check-regularization").getBoolean("enabled"))) {
             try {
-              new CronTrigger(vertx, config.getJsonObject("cron-check-regularization").getString("cron")).schedule(new UpdateEventRegularizationTask(vertx.eventBus()));
+              new CronTrigger(vertx, config.getJsonObject("cron-check-regularization").getString("cron")).schedule(updateEventRegularizationTask);
             } catch (ParseException e) {
               log.fatal("Error while parsing cron-check-regularization cron expression", e);
             }
           }
+
 
           // worker to be triggered manually (API will call its worker to send csv's export via email)
           futures.add(vertx.deployVerticle(EventExportWorker.class, new DeploymentOptions().setConfig(config).setWorker(true)));
