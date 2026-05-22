@@ -2,6 +2,8 @@ package fr.openent.statistics_presences.controller;
 
 import fr.openent.statistics_presences.indicator.ProcessingScheduledTask;
 import fr.wseduc.rs.Post;
+import fr.wseduc.security.ActionType;
+import fr.wseduc.security.SecuredAction;
 import fr.wseduc.webutils.http.BaseController;
 import io.vertx.core.http.HttpServerRequest;
 import io.vertx.core.logging.Logger;
@@ -17,6 +19,7 @@ public class TaskController extends BaseController {
     }
 
     @Post("api/internal/process")
+    @SecuredAction(value = "", type = ActionType.RESOURCE)
     public void process(final HttpServerRequest request) {
         log.info("Triggered process task");
         processingScheduledTask.handle(0L);
