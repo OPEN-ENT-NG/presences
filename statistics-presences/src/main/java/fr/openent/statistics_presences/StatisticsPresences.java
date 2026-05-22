@@ -81,10 +81,12 @@ public class StatisticsPresences extends BaseServer {
         Viescolaire.getInstance().init(vertx.eventBus());
         Incidents.getInstance().init(vertx.eventBus());
 
+        final ProcessingScheduledTask processingTask = new ProcessingScheduledTask(vertx, config, commonServiceFactory);
+        addController(new TaskController(processingTask));
         if (config.containsKey("processing-cron")) {
           String processingCron = config.getString("processing-cron");
           try {
-            new CronTrigger(vertx, processingCron).schedule(new ProcessingScheduledTask(vertx, config, commonServiceFactory));
+            new CronTrigger(vertx, processingCron).schedule(processingTask);
           } catch (ParseException ex) {
             return Future.failedFuture(ex);
           }
