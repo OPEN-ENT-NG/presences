@@ -1,6 +1,6 @@
 {
   "name": "Presences",
-  "version": "2.1.9-dev.0",
+  "version": "2.1.9-dev.1",
   "description": "Presences",
   "main": "gulpfile.js",
   "scripts": {
