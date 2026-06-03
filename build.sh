@@ -119,6 +119,7 @@ test () {
 
 
 install () {
+  buildFrontend
   docker compose run --rm maven mvn $MVN_OPTS clean install -U -DskipTests
 }
 
