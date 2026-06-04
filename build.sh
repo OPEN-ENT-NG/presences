@@ -36,18 +36,21 @@ clean () {
 # Build frontend du module presences uniquement (migré sur Vite).
 # Les autres modules (incidents, massmailing, statistics) utilisent encore buildNode/gulp.
 buildFrontend () {
-  if [ ! -e "yarn.lock" ] ; then
-    echo "Running yarn install..."
-    if [ "$NO_DOCKER" = "true" ] ; then
-      yarn install
-    else
-      docker compose run -e NPM_TOKEN --rm -u "$USER_UID:$GROUP_GID" node sh -c "yarn install"
-    fi
+  echo "Running yarn install..."
+  if [ "$NO_DOCKER" = "true" ] ; then
+    yarn install
+  else
+    docker compose run -e NPM_TOKEN --rm -u "$USER_UID:$GROUP_GID" node sh -c "yarn install"
   fi
   if [ ! -e "./presences/src/main/resources/view" ] ; then
     mkdir "./presences/src/main/resources/view"
   fi
-  VERSION=$(date +%s)
+  VERSION=$(git rev-parse --short HEAD 2>/dev/null || date +%s 2>/dev/null)
+  if [ -z "$VERSION" ]; then
+    echo "ERROR: could not generate VERSION for @@VERSION replacement" >&2
+    exit 1
+  fi
+  echo "Building view with VERSION=$VERSION"
   find ./presences/src/main/resources/view-src -type f \( -name "*.html" -o -name "*.json" \) | while read -r file; do
     dest="./presences/src/main/resources/view/${file#./presences/src/main/resources/view-src/}"
     mkdir -p "$(dirname "$dest")"
@@ -119,6 +122,7 @@ test () {
 
 
 install () {
+  buildFrontend
   docker compose run --rm maven mvn $MVN_OPTS clean install -U -DskipTests
 }
 

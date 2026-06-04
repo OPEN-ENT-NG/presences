@@ -1,8 +1,20 @@
 import path = require("path");
-import type { UserConfig } from "vite";
+import type { Plugin, UserConfig } from "vite";
+
+const viteBannerPlugin: Plugin = {
+  name: "vite-banner",
+  generateBundle(_, bundle) {
+    Object.values(bundle).forEach((chunk) => {
+      if (chunk.type === "chunk") {
+        chunk.code = "/* Built with Vite */\n" + chunk.code;
+      }
+    });
+  },
+};
 
 export default {
   root: path.resolve(__dirname, "./src/main/resources/public/"),
+  plugins: [viteBannerPlugin],
   build: {
     outDir: ".",
     sourcemap: true,
@@ -10,7 +22,6 @@ export default {
     emptyOutDir: false,
     rollupOptions: {
       output: {
-        banner: "/* Built with Vite */",
         entryFileNames: "dist/[name].js",
         format: "umd",
         globals: {
