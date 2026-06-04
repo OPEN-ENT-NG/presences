@@ -50,7 +50,7 @@
     <modMongoVersion>4.2-SNAPSHOT</modMongoVersion>
     <modPostgresVersion>2.2-develop-b2school-SNAPSHOT</modPostgresVersion>
     <modJsonSchemaValidatorVersion>2.2-SNAPSHOT</modJsonSchemaValidatorVersion>
-    <entCoreLibsVersion>6.15-SNAPSHOT</entCoreLibsVersion>
+    <entCoreLibsVersion>6.15-develop-b2school-SNAPSHOT</entCoreLibsVersion>
   </properties>
   <dependencies>
     <dependency>
