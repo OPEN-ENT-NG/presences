@@ -36,13 +36,11 @@ clean () {
 # Build frontend du module presences uniquement (migré sur Vite).
 # Les autres modules (incidents, massmailing, statistics) utilisent encore buildNode/gulp.
 buildFrontend () {
-  if [ ! -e "yarn.lock" ] ; then
-    echo "Running yarn install..."
-    if [ "$NO_DOCKER" = "true" ] ; then
-      yarn install
-    else
-      docker compose run -e NPM_TOKEN --rm -u "$USER_UID:$GROUP_GID" node sh -c "yarn install"
-    fi
+  echo "Running yarn install..."
+  if [ "$NO_DOCKER" = "true" ] ; then
+    yarn install
+  else
+    docker compose run -e NPM_TOKEN --rm -u "$USER_UID:$GROUP_GID" node sh -c "yarn install"
   fi
   if [ ! -e "./presences/src/main/resources/view" ] ; then
     mkdir "./presences/src/main/resources/view"
@@ -119,7 +117,6 @@ test () {
 
 
 install () {
-  buildFrontend
   docker compose run --rm maven mvn $MVN_OPTS clean install -U -DskipTests
 }
 
