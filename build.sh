@@ -45,7 +45,12 @@ buildFrontend () {
   if [ ! -e "./presences/src/main/resources/view" ] ; then
     mkdir "./presences/src/main/resources/view"
   fi
-  VERSION=$(date +%s)
+  VERSION=$(git rev-parse --short HEAD 2>/dev/null || date +%s 2>/dev/null)
+  if [ -z "$VERSION" ]; then
+    echo "ERROR: could not generate VERSION for @@VERSION replacement" >&2
+    exit 1
+  fi
+  echo "Building view with VERSION=$VERSION"
   find ./presences/src/main/resources/view-src -type f \( -name "*.html" -o -name "*.json" \) | while read -r file; do
     dest="./presences/src/main/resources/view/${file#./presences/src/main/resources/view-src/}"
     mkdir -p "$(dirname "$dest")"
