@@ -6,6 +6,7 @@ import fr.openent.presences.model.*;
 import fr.wseduc.webutils.Either;
 import io.vertx.core.*;
 import io.vertx.core.eventbus.EventBus;
+import io.vertx.core.eventbus.Message;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import io.vertx.core.logging.Logger;
@@ -17,6 +18,8 @@ import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.stream.Collectors;
+
+import static fr.openent.presences.common.bus.BusResultHandler.getResults;
 
 public class CourseHelper {
 
@@ -160,7 +163,7 @@ public class CourseHelper {
                 LOGGER.error(err);
                 handler.handle(new Either.Left<>(err));
             } else {
-                handler.handle(new Either.Right<>(((JsonObject) event.result().body()).getJsonArray("results")));
+                handler.handle(new Either.Right<>(getResults(event)));
             }
         });
     }
@@ -184,7 +187,7 @@ public class CourseHelper {
                 LOGGER.error(err);
                 handler.handle(new Either.Left<>(err));
             } else {
-                handler.handle(new Either.Right<>(((JsonObject) event.result().body()).getJsonArray("results")));
+                handler.handle(new Either.Right<>(getResults(event)));
             }
         });
     }
@@ -199,7 +202,7 @@ public class CourseHelper {
                 String message = "[CourseHelper@getCoursesByIds] Failed to retrieve courses by ids: " + courseAsync.cause().getMessage();
                 handler.handle(new Either.Left<>(message));
             } else {
-                handler.handle(new Either.Right<>(((JsonObject) courseAsync.result().body()).getJsonArray("result")));
+                handler.handle(new Either.Right<>(getResults(courseAsync, "result")));
             }
         });
     }
@@ -218,7 +221,7 @@ public class CourseHelper {
                         this.getClass().getSimpleName(), tags.cause().getMessage());
                 promise.fail(message);
             } else {
-                promise.complete(((JsonObject) tags.result().body()).getJsonArray("result"));
+                promise.complete(getResults(tags, "result"));
             }
         });
         return promise.future();

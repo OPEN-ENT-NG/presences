@@ -16,7 +16,17 @@ public class MessageResponseHandler {
     public static Handler<AsyncResult<Message<JsonObject>>> messageJsonArrayHandler(Handler<Either<String, JsonArray>> handler) {
         return event -> {
             if (event.succeeded() && Field.OK.equals(event.result().body().getString(Field.STATUS))) {
-                handler.handle(new Either.Right<>(event.result().body().getJsonArray(Field.RESULT, event.result().body().getJsonArray(Field.RESULTS))));
+                // In a clustered deployment results are not JsonObject but Map so we need to "transform" them back to
+                // JsonObject so downstream process do not get cast errors, and JsonArray.stream() returns an iterator
+                // that wraps values in Json when they are Maps
+                JsonArray raw = event.result().body().getJsonArray(Field.RESULT,
+                    event.result().body().getJsonArray(Field.RESULTS));
+                JsonArray formatedArray = null;
+                if (raw != null) {
+                    formatedArray = new JsonArray();
+                    raw.stream().forEach(formatedArray::add);
+                }
+                handler.handle(new Either.Right<>(formatedArray));
             } else {
                 if (event.failed()) {
                     handler.handle(new Either.Left<>(event.cause().getMessage()));

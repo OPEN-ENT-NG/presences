@@ -189,7 +189,7 @@ public class ExportPDFServiceImpl implements ExportPDFService {
             token = createToken(user);
         } catch (Exception e) {
             LOGGER.error("[Common@ExportPDFServiceImpl::callNodePdfGenerator] Failed to generate token " +
-                    e.getCause().getMessage() + " processing pdf without token");
+                    e.getCause().getMessage() + " processing pdf without token", e);
         }
         String nodePdfGeneratorUrl = pdfGeneratorURL;
         webServiceNodePdfGeneratorPost(Buffer.buffer(bytes).toString(), token, nodePdfGeneratorUrl, asyncResultHandler);

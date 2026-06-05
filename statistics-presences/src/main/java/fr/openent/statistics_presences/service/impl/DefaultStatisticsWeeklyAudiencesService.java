@@ -73,7 +73,7 @@ public class DefaultStatisticsWeeklyAudiencesService extends DBService implement
                 })
                 .onFailure(error -> {
                     log.error(String.format("[StatisticsPresences@%s::create] Failed to create statistics weekly audiences %s",
-                            this.getClass().getSimpleName(), error.getMessage()));
+                            this.getClass().getSimpleName(), error), error);
                     promise.fail(error);
                 })
                 .onSuccess(createResults -> promise.complete());
@@ -106,7 +106,7 @@ public class DefaultStatisticsWeeklyAudiencesService extends DBService implement
                 .onFailure(error -> {
                     String message = String.format("[StatisticsPresences@%s::createFromRegisters] " +
                             "Failed create weekly audiences from registers", this.getClass().getSimpleName());
-                    log.error(String.format("%s. %s", message, error));
+                    log.error(message, error);
                     promise.fail(message);
                 });
 

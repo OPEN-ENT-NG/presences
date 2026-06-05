@@ -10,6 +10,8 @@ import io.vertx.core.logging.LoggerFactory;
 
 import java.util.List;
 
+import static fr.openent.presences.common.bus.BusResultHandler.getResults;
+
 public class SubjectHelper {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(SubjectHelper.class);
@@ -35,7 +37,7 @@ public class SubjectHelper {
                 LOGGER.error(err);
                 handler.handle(new Either.Left<>(err));
             } else {
-                handler.handle(new Either.Right<>(body.getJsonArray("results")));
+                handler.handle(new Either.Right<>(getResults(event)));
             }
         });
     }

@@ -8,6 +8,8 @@ import io.vertx.core.json.JsonObject;
 import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
 
+import java.util.Map;
+
 public class FutureHelper {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(FutureHelper.class);
@@ -24,7 +26,12 @@ public class FutureHelper {
     public static Handler<Either<String, JsonArray>> handlerJsonArray(Promise<JsonArray> promise) {
         return event -> {
             if (event.isRight()) {
-                promise.complete(event.right().getValue());
+                // In a clustered deployment results are not JsonObject but Map so we need to "transform" them back to
+                // JsonObject so downstream process do not get cast errors, and JsonArray.stream() returns an iterator
+                // that wraps values in Json when they are Maps
+                final JsonArray formatedArray = new JsonArray();
+                event.right().getValue().stream().forEach(formatedArray::add);
+                promise.complete(formatedArray);
             } else {
                 String message = String.format("[PresencesCommon@%s::handlerJsonArray]: %s",
                         FutureHelper.class.getSimpleName(), event.left().getValue());
@@ -54,7 +61,18 @@ public class FutureHelper {
     public static <L, R> Handler<Either<L, R>> handlerEitherPromise(Promise<R> promise) {
         return event -> {
             if (event.isRight()) {
-                promise.complete(event.right().getValue());
+                R value = event.right().getValue();
+                // In a clustered deployment results are not JsonObject but Map so we need to "transform" them back to
+                // JsonObject so downstream process do not get cast errors
+                if (value instanceof JsonArray) {
+                    // JsonArray.stream() returns an iterator that wraps values in Json when they are Maps
+                    final JsonArray array = (JsonArray) value;
+                    for (int i = 0; i < array.size(); i++) {
+                        // getValue internally transforms a Map into a JsonObject
+                        array.set(i, array.getValue(i));
+                    }
+                }
+                promise.complete(value);
             } else {
                 String message = String.format("[PresencesCommon@%s::handlerEitherPromise]: %s",
                         FutureHelper.class.getSimpleName(), event.left().getValue());
@@ -67,7 +85,15 @@ public class FutureHelper {
     public static Handler<Either<String, JsonArray>> handlerJsonArray(Handler<AsyncResult<JsonArray>> handler) {
         return event -> {
             if (event.isRight()) {
-                handler.handle(Future.succeededFuture(event.right().getValue()));
+                // In a clustered deployment results are not JsonObject but Map so we need to "transform" them back to
+                // JsonObject so downstream process do not get cast errors, and JsonArray.stream() returns an iterator
+                // that wraps values in Json when they are Maps
+                JsonArray formatedArray = null;
+                if(event.right().getValue() != null) {
+                    formatedArray = new JsonArray();
+                    event.right().getValue().stream().forEach(formatedArray::add);
+                }
+                handler.handle(Future.succeededFuture(formatedArray));
             } else {
                 LOGGER.error(event.left().getValue());
                 handler.handle(Future.failedFuture(event.left().getValue()));
