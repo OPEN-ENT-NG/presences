@@ -1,0 +1,299 @@
+/* ENTCORE CSS LIB */
+/* Generic Icons */
+@font-face {
+  font-family: "generic-icons";
+  font-display: swap;
+  font-style: normal;
+  font-weight: normal;
+  src: url(fonts/generic-icons/generic-icons.woff);
+}
+body.statistics-presences .filter-row {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+  align-items: center;
+}
+body.statistics-presences .filter-row i {
+  font-size: 26px;
+}
+body.statistics-presences .filter-row .indicator-switch select {
+  margin: 5px 0;
+}
+body.statistics-presences .filter-row .displayRate.selected {
+  color: #ffb600;
+}
+body.statistics-presences .filter-row .displayRate i {
+  position: relative;
+}
+body.statistics-presences .filter-row .displayRate i:hover .tooltip-top {
+  visibility: visible;
+  opacity: 1;
+  transition: opacity 0.6s;
+}
+body.statistics-presences .filter-row .displayRate i .tooltip-top {
+  font-family: Roboto;
+  visibility: hidden;
+  width: 190px;
+  font-size: 12px;
+  box-shadow: 0 2px 20px rgba(0, 0, 0, 0.26);
+  position: absolute;
+  background-color: #ffffff;
+  color: rgba(68, 68, 68, 0.87);
+  padding: 10px;
+  border-radius: 5px;
+  z-index: 1;
+  opacity: 0;
+  bottom: 33px;
+  margin-left: -47px;
+}
+body.statistics-presences .filter-row .displayRate i .tooltip-top:after {
+  content: " ";
+  position: absolute;
+  border-left: 5px solid transparent;
+  border-right: 5px solid transparent;
+  border-top: 10px solid #ffffff;
+  top: 100%;
+  left: 15%;
+}
+body.statistics-presences .statistics-presences-filters h4.disabled {
+  color: #929292 !important;
+}
+body.statistics-presences .statistics-presences-filters h4 input[type=number] {
+  width: 30px;
+  text-align: center;
+}
+body.statistics-presences .displayStatisticsMode i {
+  font-size: 26px;
+  margin-right: 8px;
+  opacity: 50%;
+}
+body.statistics-presences .displayStatisticsMode i:last-child {
+  margin: 0;
+}
+body.statistics-presences .displayStatisticsMode i.selected {
+  opacity: 100%;
+}
+body.statistics-presences .displayStatisticsMode i:hover {
+  opacity: 100%;
+}
+body.statistics-presences .monthly-indicator .flex-table .flex-head {
+  z-index: 1;
+}
+body.statistics-presences .monthly-indicator .flex-table .flex-head .audience-student-header {
+  justify-content: flex-start;
+}
+body.statistics-presences .monthly-indicator .flex-table .flex-head .audience-student-header span {
+  padding-left: 20px;
+}
+body.statistics-presences .monthly-indicator .flex-table .flex-col {
+  flex: 1;
+}
+body.statistics-presences .monthly-indicator .flex-table .indicator-values-months {
+  padding: 0;
+  flex-grow: 0;
+  flex-shrink: 0;
+  flex-basis: 70%;
+}
+body.statistics-presences .monthly-indicator .flex-table .flex-body {
+  background-color: #ffffff;
+}
+body.statistics-presences .monthly-indicator .flex-table .flex-body .flex-collapse .student-name {
+  justify-content: flex-start;
+  white-space: nowrap;
+  overflow: hidden;
+}
+body.statistics-presences .monthly-indicator .flex-table .flex-body .flex-collapse .student-name span {
+  padding-left: 20px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+body.statistics-presences .monthly-indicator .flex-table .flex-body .max-value {
+  background-color: #ffb600 !important;
+  color: #ffffff;
+  font-weight: bold;
+}
+body.statistics-presences .monthly-indicator .flex-table .flex-body .total-count {
+  font-size: 18px;
+  font-weight: bold;
+  background-color: #ffffff;
+}
+body.statistics-presences .monthly-indicator .flex-table .flex-body .audience-name {
+  justify-content: flex-start;
+}
+body.statistics-presences .monthly-indicator .flex-table .flex-body .audience-name span {
+  font-weight: bold;
+  padding-left: 20px;
+}
+body.statistics-presences .monthly-indicator .flex-table .flex-body .indicator-value:nth-child(odd) {
+  background-color: #f7f6f6;
+}
+body.statistics-presences .statistics-chart {
+  background-color: #ffffff;
+  display: flex;
+}
+body.statistics-presences .statistics-chart-graph {
+  margin: 20px;
+}
+body.statistics-presences .statistics-chart-legend {
+  margin: 20px;
+  width: 100%;
+}
+body.statistics-presences .statistics-chart-legend-item {
+  margin-top: 20px;
+  margin-bottom: 20px;
+}
+body.statistics-presences .statistics-chart-legend label.checkbox input[type=checkbox].UNREGULARIZED + span:before {
+  border: 2px solid #ff8a84;
+}
+body.statistics-presences .statistics-chart-legend label.checkbox input[type=checkbox].UNREGULARIZED:checked + span::before {
+  border-color: #ff8a84;
+  background-color: #ff8a84;
+}
+body.statistics-presences .statistics-chart-legend label.checkbox input[type=checkbox].REGULARIZED + span:before {
+  border: 2px solid #72bb53;
+}
+body.statistics-presences .statistics-chart-legend label.checkbox input[type=checkbox].REGULARIZED:checked + span::before {
+  border-color: #72bb53;
+  background-color: #72bb53;
+}
+body.statistics-presences .statistics-chart-legend label.checkbox input[type=checkbox].NO_REASON + span:before {
+  border: 2px solid #e61610;
+}
+body.statistics-presences .statistics-chart-legend label.checkbox input[type=checkbox].NO_REASON:checked + span::before {
+  border-color: #e61610;
+  background-color: #e61610;
+}
+body.statistics-presences .statistics-chart-legend label.checkbox input[type=checkbox].DEPARTURE + span:before {
+  border: 2px solid #f2c9fb;
+}
+body.statistics-presences .statistics-chart-legend label.checkbox input[type=checkbox].DEPARTURE:checked + span::before {
+  border-color: #f2c9fb;
+  background-color: #f2c9fb;
+}
+body.statistics-presences .statistics-chart-legend label.checkbox input[type=checkbox].LATENESS + span:before {
+  border: 2px solid #9c29b7;
+}
+body.statistics-presences .statistics-chart-legend label.checkbox input[type=checkbox].LATENESS:checked + span::before {
+  border-color: #9c29b7;
+  background-color: #9c29b7;
+}
+body.statistics-presences .statistics-chart-legend label.checkbox input[type=checkbox].PUNISHMENT + span:before {
+  border: 2px solid #ffb600;
+}
+body.statistics-presences .statistics-chart-legend label.checkbox input[type=checkbox].PUNISHMENT:checked + span::before {
+  border-color: #ffb600;
+  background-color: #ffb600;
+}
+body.statistics-presences .statistics-chart-legend label.checkbox input[type=checkbox].SANCTION + span:before {
+  border: 2px solid #d68227;
+}
+body.statistics-presences .statistics-chart-legend label.checkbox input[type=checkbox].SANCTION:checked + span::before {
+  border-color: #d68227;
+  background-color: #d68227;
+}
+body.statistics-presences .exportCSVLightbox {
+  /* Header part */
+}
+body.statistics-presences .exportCSVLightbox {
+  /* Body part */
+}
+body.statistics-presences .exportCSVLightbox-body {
+  padding: 20px;
+  background: #f7f7f7;
+  justify-content: center;
+  display: flex;
+}
+body.statistics-presences .exportCSVLightbox {
+  /* Footer part */
+}
+body.statistics-presences .exportCSVLightbox-footer {
+  padding: 8px 8px 0 8px;
+}
+body.statistics-presences .calendar.calendar-statistics .week-switcher {
+  display: none;
+}
+body.statistics-presences .calendar.calendar-statistics .calendar-current-week {
+  display: none;
+}
+body.statistics-presences .calendar.calendar-statistics .schedule .days .day legend {
+  top: -60px;
+  height: 40px;
+}
+body.statistics-presences .calendar.calendar-statistics .schedule .days .day legend div:nth-child(2) {
+  display: none;
+}
+body.statistics-presences .calendar calendar .schedule .schedule-item .statistics-item-container {
+  display: flex;
+  flex-direction: row;
+  width: 100%;
+  height: 100%;
+}
+body.statistics-presences .calendar calendar .schedule .schedule-item .statistics-item {
+  font-size: 11px;
+  display: flex;
+  width: 100%;
+  background-color: rgb(247, 246, 246);
+  border: solid 1px rgba(96, 96, 96, 0.15);
+  border-radius: 5px;
+  flex-direction: column;
+  justify-content: center;
+}
+body.statistics-presences .calendar calendar .schedule .schedule-item .statistics-item.important {
+  background-color: #ffb600;
+  color: #ffffff;
+}
+body.statistics-presences .calendar calendar .schedule .schedule-item .statistics-item .data p {
+  font-size: 2em;
+}
+body.statistics-presences .global-indicator {
+  font-size: 16px;
+}
+body.statistics-presences .global-indicator.table {
+  position: relative;
+  padding-top: 45px;
+}
+body.statistics-presences .global-indicator.table .thead {
+  position: absolute;
+  width: 100%;
+  top: 0;
+}
+body.statistics-presences .global-indicator.table .th.student, body.statistics-presences .global-indicator.table .td.student {
+  flex: 1;
+}
+body.statistics-presences .global-indicator .indicator-value:nth-child(odd) {
+  background-color: #f7f6f6;
+}
+body.statistics-presences .global-indicator .max-value {
+  background-color: #ffb600 !important;
+  color: #ffffff;
+  font-weight: bold;
+}
+body.statistics-presences .global-indicator .tbody.count {
+  font-size: 18px;
+  font-weight: bold;
+  background-color: #ffffff;
+}
+body.statistics-presences .global-indicator .tbody.count .student-count {
+  flex: 2;
+  padding: 10px 20px;
+}
+body.statistics-presences .global-indicator .em-slots-rate {
+  font-size: 9px;
+}
+body.statistics-presences .global-indicator .reload {
+  cursor: pointer;
+}
+body.statistics-presences .global-indicator .reload:hover {
+  color: #ffb600;
+}
+body.statistics-presences .global-indicator .reload.disabled {
+  color: #929292;
+}
+body.statistics-presences .global-indicator .reload.disabled:hover {
+  color: #929292;
+}
+body.statistics-presences .global-indicator .flex-row {
+  min-height: 0 !important;
+  padding-top: 0 !important;
+  padding-bottom: 0 !important;
+}
