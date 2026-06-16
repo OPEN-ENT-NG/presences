@@ -33,8 +33,7 @@ clean () {
 }
 
 
-# Build frontend des modules migrés sur Vite (presences, incidents, statistics-presences).
-# Les autres modules (massmailing) utilisent encore buildNode/gulp.
+# Build frontend des 4 modules migrés sur Vite (presences, incidents, statistics-presences, massmailing).
 buildFrontend () {
   echo "Running yarn install..."
   if [ "$NO_DOCKER" = "true" ] ; then
@@ -45,7 +44,7 @@ buildFrontend () {
 
   VERSION=$(date +%s)
 
-  for module in presences incidents statistics-presences; do
+  for module in presences incidents statistics-presences massmailing; do
     if [ ! -e "./$module/src/main/resources/view" ] ; then
       mkdir "./$module/src/main/resources/view"
     fi
