@@ -1,0 +1,619 @@
+/* ENTCORE CSS LIB */
+/* Generic Icons */
+@font-face {
+  font-family: "generic-icons";
+  font-display: swap;
+  font-style: normal;
+  font-weight: normal;
+  src: url(fonts/generic-icons/generic-icons.woff);
+}
+body.presences, .sniplet.presences {
+  /* ----------------------------
+      Colors
+  ---------------------------- */
+  /* ----------------------------
+      Seriousness type colors
+  ---------------------------- */
+  /* ----------------------------
+      Spacing
+  ---------------------------- */
+}
+body.presences .seriousness-0, .sniplet.presences .seriousness-0 {
+  color: #fff;
+  background: #ffdad8;
+}
+body.presences .seriousness-1, .sniplet.presences .seriousness-1 {
+  color: #fff;
+  background: #ffb4ad;
+}
+body.presences .seriousness-2, .sniplet.presences .seriousness-2 {
+  color: #fff;
+  background: #ff8a84;
+}
+body.presences .seriousness-3, .sniplet.presences .seriousness-3 {
+  color: #fff;
+  background: #ff5d55;
+}
+body.presences .seriousness-4, .sniplet.presences .seriousness-4 {
+  color: #fff;
+  background: #ff3823;
+}
+body.presences .seriousness-5, .sniplet.presences .seriousness-5 {
+  color: #fff;
+  background: #e61610;
+}
+body.presences .seriousness-6, .sniplet.presences .seriousness-6 {
+  color: #fff;
+  background: #b70f0a;
+}
+body.presences .seriousness-7, .sniplet.presences .seriousness-7 {
+  color: #fff;
+  background: #840705;
+}
+body.presences .seriousness-form-0, .sniplet.presences .seriousness-form-0 {
+  background-color: #ffdad8;
+  width: 24px;
+  border-radius: 50%;
+  height: 24px;
+  box-sizing: border-box;
+  border: solid 2px #ffdad8;
+}
+body.presences .seriousness-form-1, .sniplet.presences .seriousness-form-1 {
+  background-color: #ffb4ad;
+  width: 24px;
+  border-radius: 50%;
+  height: 24px;
+  box-sizing: border-box;
+  border: solid 2px #ffb4ad;
+}
+body.presences .seriousness-form-2, .sniplet.presences .seriousness-form-2 {
+  background-color: #ff8a84;
+  width: 24px;
+  border-radius: 50%;
+  height: 24px;
+  box-sizing: border-box;
+  border: solid 2px #ff8a84;
+}
+body.presences .seriousness-form-3, .sniplet.presences .seriousness-form-3 {
+  background-color: #ff5d55;
+  width: 24px;
+  border-radius: 50%;
+  height: 24px;
+  box-sizing: border-box;
+  border: solid 2px #ff5d55;
+}
+body.presences .seriousness-form-4, .sniplet.presences .seriousness-form-4 {
+  background-color: #ff3823;
+  width: 24px;
+  border-radius: 50%;
+  height: 24px;
+  box-sizing: border-box;
+  border: solid 2px #ff3823;
+}
+body.presences .seriousness-form-5, .sniplet.presences .seriousness-form-5 {
+  background-color: #e61610;
+  width: 24px;
+  border-radius: 50%;
+  height: 24px;
+  box-sizing: border-box;
+  border: solid 2px #e61610;
+}
+body.presences .seriousness-form-6, .sniplet.presences .seriousness-form-6 {
+  background-color: #b70f0a;
+  width: 24px;
+  border-radius: 50%;
+  height: 24px;
+  box-sizing: border-box;
+  border: solid 2px #b70f0a;
+}
+body.presences .seriousness-form-7, .sniplet.presences .seriousness-form-7 {
+  background-color: #840705;
+  width: 24px;
+  border-radius: 50%;
+  height: 24px;
+  box-sizing: border-box;
+  border: solid 2px #840705;
+}
+body.presences, .sniplet.presences {
+  /* filters */
+}
+body.presences .incident-filters-options-date span.date-picker input[type=text], .sniplet.presences .incident-filters-options-date span.date-picker input[type=text] {
+  background: none;
+}
+body.presences, .sniplet.presences {
+  /* content */
+}
+body.presences .incident-content-empty, .sniplet.presences .incident-content-empty {
+  text-align: center;
+}
+body.presences .incident-content-empty-description, .sniplet.presences .incident-content-empty-description {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding-bottom: 24px;
+}
+body.presences .incident-content-empty-description-title, .sniplet.presences .incident-content-empty-description-title {
+  color: #929292;
+  padding: 0 12px;
+}
+body.presences .incident-content-empty img, .sniplet.presences .incident-content-empty img {
+  width: 32%;
+}
+body.presences .incident-content-table-body-row, .sniplet.presences .incident-content-table-body-row {
+  display: none;
+  background: #FBFBFB;
+}
+body.presences .incident-content-table-body-row:hover, .sniplet.presences .incident-content-table-body-row:hover {
+  background: #f7f7f7 !important;
+}
+body.presences .incident-content-table-body-row.open, .sniplet.presences .incident-content-table-body-row.open {
+  display: table-row;
+}
+body.presences .incident-content-table-body-row-collapsible, .sniplet.presences .incident-content-table-body-row-collapsible {
+  display: flex;
+  align-content: center;
+}
+body.presences .incident-content-table-body-row-collapsible-edit, .sniplet.presences .incident-content-table-body-row-collapsible-edit {
+  cursor: pointer;
+  align-self: center;
+  text-align: center;
+  flex: 0.04;
+}
+body.presences .incident-content-table-body-row-collapsible-protagonist, .sniplet.presences .incident-content-table-body-row-collapsible-protagonist {
+  flex: 0.61;
+  padding-left: 0;
+}
+body.presences .incident-content-table-body-row-collapsible-protagonist li, .sniplet.presences .incident-content-table-body-row-collapsible-protagonist li {
+  list-style-type: none;
+}
+body.presences .incident-content-table-body-row-collapsible-protagonist li:hover, .sniplet.presences .incident-content-table-body-row-collapsible-protagonist li:hover {
+  background: #f7f7f7 !important;
+}
+body.presences .incident-content-table-body-row-collapsible-description, .sniplet.presences .incident-content-table-body-row-collapsible-description {
+  flex: 1;
+}
+body.presences .incident-content-table-body-seriousness, .sniplet.presences .incident-content-table-body-seriousness {
+  display: flex;
+  align-items: center;
+}
+body.presences .incident-content-table-body-seriousness-label, .sniplet.presences .incident-content-table-body-seriousness-label {
+  flex: 0.9;
+}
+body.presences .incident-content-table-body-treated switch .switch, .sniplet.presences .incident-content-table-body-treated switch .switch {
+  float: none;
+}
+body.presences .incident-content-table-body-treated switch .switch input[type=checkbox]:checked + .tick, .sniplet.presences .incident-content-table-body-treated switch .switch input[type=checkbox]:checked + .tick {
+  background: #98dfd6;
+}
+body.presences .incident-content-table-body-treated switch .switch input[type=checkbox]:checked + .tick:before, .sniplet.presences .incident-content-table-body-treated switch .switch input[type=checkbox]:checked + .tick:before {
+  background: #46bfaf;
+}
+body.presences .incident-content-bold, .sniplet.presences .incident-content-bold {
+  font-weight: bold;
+}
+body.presences, .sniplet.presences {
+  /* lightbox */
+}
+body.presences .incident-lightbox.editMode .content, .sniplet.presences .incident-lightbox.editMode .content {
+  width: 740px;
+}
+body.presences .incident-lightbox-body, .sniplet.presences .incident-lightbox-body {
+  background: #F5F5F5;
+}
+body.presences .incident-lightbox-body-title, .sniplet.presences .incident-lightbox-body-title {
+  color: #000000;
+  margin-top: 0;
+}
+body.presences .incident-lightbox-body-dateAndPlace, .sniplet.presences .incident-lightbox-body-dateAndPlace {
+  display: flex;
+}
+body.presences .incident-lightbox-body-dateAndPlace.row:after, .sniplet.presences .incident-lightbox-body-dateAndPlace.row:after {
+  width: unset;
+}
+body.presences .incident-lightbox-body-dateAndPlace-date, .sniplet.presences .incident-lightbox-body-dateAndPlace-date {
+  display: flex;
+  flex-direction: column;
+  flex: 0.6;
+}
+body.presences .incident-lightbox-body-dateAndPlace-date-content, .sniplet.presences .incident-lightbox-body-dateAndPlace-date-content {
+  display: flex;
+  justify-content: space-between;
+}
+body.presences .incident-lightbox-body-dateAndPlace-date-content-timePicker, .sniplet.presences .incident-lightbox-body-dateAndPlace-date-content-timePicker {
+  background-color: #fff;
+  display: inline-block;
+}
+body.presences .incident-lightbox-body-dateAndPlace-date-content-timePicker input, .sniplet.presences .incident-lightbox-body-dateAndPlace-date-content-timePicker input {
+  font-family: Roboto;
+}
+body.presences .incident-lightbox-body-dateAndPlace-place, .sniplet.presences .incident-lightbox-body-dateAndPlace-place {
+  padding-left: 24px;
+  flex: 1;
+  align-self: flex-end;
+}
+body.presences .incident-lightbox-body-dateAndPlace-place select, .sniplet.presences .incident-lightbox-body-dateAndPlace-place select {
+  margin-top: 10px;
+}
+body.presences .incident-lightbox-body-parameter, .sniplet.presences .incident-lightbox-body-parameter {
+  display: flex;
+}
+body.presences .incident-lightbox-body-parameter.row:after, .sniplet.presences .incident-lightbox-body-parameter.row:after {
+  width: unset;
+}
+body.presences .incident-lightbox-body-parameter select, .sniplet.presences .incident-lightbox-body-parameter select {
+  margin-top: 10px;
+  width: 172px;
+}
+body.presences .incident-lightbox-body-responsible label, .sniplet.presences .incident-lightbox-body-responsible label {
+  overflow: inherit;
+}
+body.presences .incident-lightbox-body-descriptionTreated-content, .sniplet.presences .incident-lightbox-body-descriptionTreated-content {
+  margin-top: 10px;
+  display: flex;
+}
+body.presences .incident-lightbox-body-descriptionTreated-content.row:after, .sniplet.presences .incident-lightbox-body-descriptionTreated-content.row:after {
+  width: unset;
+}
+body.presences .incident-lightbox-body-descriptionTreated-content-description, .sniplet.presences .incident-lightbox-body-descriptionTreated-content-description {
+  background: #fff;
+  flex: 5;
+}
+body.presences .incident-lightbox-body-descriptionTreated-content-description textarea, .sniplet.presences .incident-lightbox-body-descriptionTreated-content-description textarea {
+  height: 50px;
+  resize: none;
+  border: none;
+  font-family: Roboto;
+}
+body.presences .incident-lightbox-body-descriptionTreated-content-treated, .sniplet.presences .incident-lightbox-body-descriptionTreated-content-treated {
+  align-self: flex-end;
+  flex: 2;
+}
+body.presences .incident-lightbox-body-descriptionTreated-content-treated switch .switch, .sniplet.presences .incident-lightbox-body-descriptionTreated-content-treated switch .switch {
+  float: none;
+}
+body.presences .incident-lightbox-body-descriptionTreated-content-treated switch .switch input[type=checkbox]:checked + .tick, .sniplet.presences .incident-lightbox-body-descriptionTreated-content-treated switch .switch input[type=checkbox]:checked + .tick {
+  background: #98dfd6;
+}
+body.presences .incident-lightbox-body-descriptionTreated-content-treated switch .switch input[type=checkbox]:checked + .tick:before, .sniplet.presences .incident-lightbox-body-descriptionTreated-content-treated switch .switch input[type=checkbox]:checked + .tick:before {
+  background: #46bfaf;
+}
+body.presences .incident-lightbox-footer-protagonist-search, .sniplet.presences .incident-lightbox-footer-protagonist-search {
+  align-items: center;
+  display: flex;
+  padding-bottom: 8px;
+}
+body.presences .incident-lightbox-footer-protagonist-search-title, .sniplet.presences .incident-lightbox-footer-protagonist-search-title {
+  color: #000000;
+  flex: 2;
+}
+body.presences .incident-lightbox-footer-protagonist-search-input, .sniplet.presences .incident-lightbox-footer-protagonist-search-input {
+  flex: 3;
+}
+body.presences .incident-lightbox-footer-protagonist-search-space, .sniplet.presences .incident-lightbox-footer-protagonist-search-space {
+  flex: 2;
+  visibility: collapse;
+}
+body.presences .incident-lightbox-footer-protagonist-list.search-input-ul, .sniplet.presences .incident-lightbox-footer-protagonist-list.search-input-ul {
+  display: flex;
+  flex-direction: column;
+  max-height: 140px;
+  overflow-y: auto;
+}
+body.presences .incident-lightbox-footer-protagonist-list-item, .sniplet.presences .incident-lightbox-footer-protagonist-list-item {
+  display: block !important;
+}
+body.presences .incident-lightbox-footer-protagonist-list-item-content, .sniplet.presences .incident-lightbox-footer-protagonist-list-item-content {
+  display: flex;
+  align-items: baseline;
+  padding-bottom: 8px;
+}
+body.presences .incident-lightbox-footer-protagonist-list-item-content select, .sniplet.presences .incident-lightbox-footer-protagonist-list-item-content select {
+  width: 172px;
+  margin: 0 24px;
+}
+body.presences .incident-lightbox-footer-protagonist-list-item-content i, .sniplet.presences .incident-lightbox-footer-protagonist-list-item-content i {
+  float: right;
+}
+body.presences .incident-lightbox-footer-submit, .sniplet.presences .incident-lightbox-footer-submit {
+  padding-right: 12px;
+}
+body.presences .lightbox-form .row.spacing .cell.twelve, .sniplet.presences .lightbox-form .row.spacing .cell.twelve {
+  padding: 5px 10px !important;
+}
+body.presences.incidents .incident-sniplet-form, .sniplet.presences.incidents .incident-sniplet-form {
+  display: flex;
+  align-items: center;
+}
+body.presences.incidents .incident-sniplet-form button, .sniplet.presences.incidents .incident-sniplet-form button {
+  background-color: #FF8500;
+  margin: 0 32px;
+}
+body.presences.incidents .incident-sniplet-form button:disabled, .sniplet.presences.incidents .incident-sniplet-form button:disabled {
+  background: #8c939e;
+}
+body.presences.incidents .incident-sniplet-form-alert, .sniplet.presences.incidents .incident-sniplet-form-alert {
+  flex-direction: row !important;
+}
+body.presences.incidents .incident-sniplet-form-alert input[type=checkbox]:checked + span::before, .sniplet.presences.incidents .incident-sniplet-form-alert input[type=checkbox]:checked + span::before {
+  background-color: unset !important;
+  border-color: #FF8500 !important;
+  content: "" !important;
+}
+body.presences.incidents .incident-sniplet-form-alert input[type=checkbox] + span::before, .sniplet.presences.incidents .incident-sniplet-form-alert input[type=checkbox] + span::before {
+  border-color: #FF8500 !important;
+  background-color: #FF8500 !important;
+  transform: rotate(0deg);
+  content: "\e871";
+}
+body.presences .arrow-up, .sniplet.presences .arrow-up {
+  display: inline-block;
+  width: 0;
+  height: 0;
+  border-left: 6px solid transparent;
+  border-right: 6px solid transparent;
+  border-bottom: 10px solid #aaa;
+  margin-left: 5px;
+}
+body.presences .arrow-down, .sniplet.presences .arrow-down {
+  display: inline-block;
+  width: 0;
+  height: 0;
+  border-left: 6px solid transparent;
+  border-right: 6px solid transparent;
+  border-top: 10px solid #aaa;
+  margin-left: 5px;
+}
+body.presences #memento-incidents-sniplet, .sniplet.presences #memento-incidents-sniplet {
+  position: relative;
+}
+body.presences #memento-incidents-sniplet .disabled, .sniplet.presences #memento-incidents-sniplet .disabled {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: rgba(255, 255, 255, 0.8);
+  z-index: 1;
+}
+body.presences #memento-incidents-sniplet .text-align-center, .sniplet.presences #memento-incidents-sniplet .text-align-center {
+  text-align: center;
+}
+body.presences #memento-incidents-sniplet .background-yellow, .sniplet.presences #memento-incidents-sniplet .background-yellow {
+  background-color: #ffb600;
+}
+body.presences #memento-incidents-sniplet .text-white, .sniplet.presences #memento-incidents-sniplet .text-white {
+  color: #fff;
+}
+body.presences #memento-incidents-sniplet .min-height-45, .sniplet.presences #memento-incidents-sniplet .min-height-45 {
+  min-height: 45px !important;
+}
+body.presences #memento-incidents-sniplet .max-height-80, .sniplet.presences #memento-incidents-sniplet .max-height-80 {
+  max-height: 80px !important;
+}
+body.presences #memento-incidents-sniplet .overflow-y, .sniplet.presences #memento-incidents-sniplet .overflow-y {
+  overflow: auto;
+  max-height: 200px;
+}
+body.presences #memento-incidents-sniplet .pagination-sniplet > ul, .sniplet.presences #memento-incidents-sniplet .pagination-sniplet > ul {
+  float: none !important;
+  text-align: right;
+}
+body.presences #memento-incidents-sniplet .open-in-new::before, .sniplet.presences #memento-incidents-sniplet .open-in-new::before {
+  font-size: 25px;
+  margin-right: 0;
+}
+body.presences #memento-incidents-sniplet .incident-flex, .sniplet.presences #memento-incidents-sniplet .incident-flex {
+  display: flex;
+  justify-content: space-between;
+}
+body.presences #memento-incidents-sniplet .incident-filters, .sniplet.presences #memento-incidents-sniplet .incident-filters {
+  font-size: 14px;
+}
+body.presences #memento-incidents-sniplet .checkbox, .sniplet.presences #memento-incidents-sniplet .checkbox {
+  margin-left: 20px;
+}
+body.presences #memento-incidents-sniplet .check-circle::before, .sniplet.presences #memento-incidents-sniplet .check-circle::before {
+  font-size: 25px;
+  color: #98dfd6;
+}
+body.presences #memento-incidents-sniplet .absences::before, .sniplet.presences #memento-incidents-sniplet .absences::before {
+  font-size: 25px;
+  color: #aaaaaa;
+}
+body.presences .punishment-board, .sniplet.presences .punishment-board {
+  background: #F5F5F5;
+}
+body.presences .punishment-board-title, .sniplet.presences .punishment-board-title {
+  background: #fff;
+}
+body.presences .punishment-board .student, .sniplet.presences .punishment-board .student {
+  justify-content: flex-start !important;
+}
+body.presences .punishment-board switch .switch input[type=checkbox]:checked + .tick, .sniplet.presences .punishment-board switch .switch input[type=checkbox]:checked + .tick {
+  background: #98dfd6;
+}
+body.presences .punishment-board switch .switch input[type=checkbox]:checked + .tick:before, .sniplet.presences .punishment-board switch .switch input[type=checkbox]:checked + .tick:before {
+  background: #46bfaf;
+}
+body.presences .punishment-form-lightbox, .sniplet.presences .punishment-form-lightbox {
+  /* Body part */
+}
+body.presences .punishment-form-lightbox-body, .sniplet.presences .punishment-form-lightbox-body {
+  padding: 16px;
+  background: #f7f7f7;
+}
+body.presences .punishment-form-lightbox-body-student, .sniplet.presences .punishment-form-lightbox-body-student {
+  font-size: 16px;
+  font-weight: bold;
+}
+body.presences .punishment-form-lightbox-body-type, .sniplet.presences .punishment-form-lightbox-body-type {
+  display: flex;
+  padding-top: 12px;
+}
+body.presences .punishment-form-lightbox-body-type-select, .sniplet.presences .punishment-form-lightbox-body-type-select {
+  display: flex;
+  flex-direction: column;
+}
+body.presences .punishment-form-lightbox-body-form, .sniplet.presences .punishment-form-lightbox-body-form {
+  padding: 16px 0;
+}
+body.presences .punishment-form-lightbox-body-form-custom-fields, .sniplet.presences .punishment-form-lightbox-body-form-custom-fields {
+  display: flex;
+  flex-direction: column;
+}
+body.presences .punishment-form-lightbox-body-form-custom-fields label, .sniplet.presences .punishment-form-lightbox-body-form-custom-fields label {
+  overflow: inherit;
+}
+body.presences .punishment-form-lightbox, .sniplet.presences .punishment-form-lightbox {
+  /* Footer part */
+}
+body.presences .punishment-form-lightbox-footer, .sniplet.presences .punishment-form-lightbox-footer {
+  padding: 8px 8px 0 8px;
+}
+body.presences .punishment-form-lightbox-footer-body, .sniplet.presences .punishment-form-lightbox-footer-body {
+  margin: 16px 16px 0 8px;
+}
+body.presences .punishment-form-lightbox-footer-body-search, .sniplet.presences .punishment-form-lightbox-footer-body-search {
+  display: flex;
+  align-items: center;
+}
+body.presences .punishment-form-lightbox-footer-body-search-title, .sniplet.presences .punishment-form-lightbox-footer-body-search-title {
+  margin-top: 0;
+  color: #000000;
+}
+body.presences .punishment-form-lightbox-footer-submit, .sniplet.presences .punishment-form-lightbox-footer-submit {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  padding-top: 16px;
+}
+body.presences .punishment-form-lightbox-footer-submit-right, .sniplet.presences .punishment-form-lightbox-footer-submit-right {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+body.presences .punishment-form-lightbox-footer-submit.create, .sniplet.presences .punishment-form-lightbox-footer-submit.create {
+  justify-content: flex-end;
+}
+body.presences .punishment-form-lightbox-footer-submit .button, .sniplet.presences .punishment-form-lightbox-footer-submit .button {
+  padding: 8px;
+}
+body.presences .punishment-form-lightbox textarea, .sniplet.presences .punishment-form-lightbox textarea {
+  border: none;
+  border-bottom: 1px dotted #7a7a7a;
+  padding: 0;
+  height: 24px;
+}
+body.presences .punishment-form-lightbox textarea:focus, .sniplet.presences .punishment-form-lightbox textarea:focus {
+  border: none;
+}
+body.presences .punishment-type-punishment, body.presences .punishment-type-sanction, .sniplet.presences .punishment-type-punishment, .sniplet.presences .punishment-type-sanction {
+  text-align: center !important;
+  color: #fff;
+}
+body.presences .punishment-type-punishment, .sniplet.presences .punishment-type-punishment {
+  background-color: #ffb600;
+}
+body.presences .punishment-type-sanction, .sniplet.presences .punishment-type-sanction {
+  background-color: #d68227;
+}
+body.presences .punishment-duty-form-date, .sniplet.presences .punishment-duty-form-date {
+  padding-bottom: 16px;
+}
+body.presences .punishment-duty-form-instruction, .sniplet.presences .punishment-duty-form-instruction {
+  padding: 8px 0 16px 0;
+}
+body.presences .punishment-duty-form-instruction textarea, .sniplet.presences .punishment-duty-form-instruction textarea {
+  background: none;
+  margin: 16px 0;
+}
+body.presences .punishment-exclude-form-date, .sniplet.presences .punishment-exclude-form-date {
+  padding-bottom: 16px;
+}
+body.presences .punishment-exclude-form-date date-picker, .sniplet.presences .punishment-exclude-form-date date-picker {
+  margin-right: 24px;
+}
+body.presences .punishment-exclude-form-mandatory, .sniplet.presences .punishment-exclude-form-mandatory {
+  padding: 8px 0 24px 0;
+  display: inline-flex;
+  align-items: center;
+}
+body.presences .punishment-exclude-form-absence, .sniplet.presences .punishment-exclude-form-absence {
+  display: inline-flex;
+  align-items: center;
+  margin-bottom: 24px;
+}
+body.presences .punishment-exclude-form-absence.add-absence, .sniplet.presences .punishment-exclude-form-absence.add-absence {
+  margin-bottom: 4px;
+}
+body.presences .punishment-exclude-form-absence-anomaly, .sniplet.presences .punishment-exclude-form-absence-anomaly {
+  color: #e61610;
+}
+body.presences .punishment-exclude-form-absence-anomaly span, .sniplet.presences .punishment-exclude-form-absence-anomaly span {
+  font-weight: bold;
+  color: #b70f0a;
+}
+body.presences .punishment-exclude-form-absence-reason, .sniplet.presences .punishment-exclude-form-absence-reason {
+  margin-top: 8px;
+  margin-bottom: 24px;
+}
+body.presences .punishment-exclude-form-absence-reason-follow, .sniplet.presences .punishment-exclude-form-absence-reason-follow {
+  padding-left: 16px;
+}
+body.presences .punishment-exclude-form switch .switch input[type=checkbox]:checked + .tick, .sniplet.presences .punishment-exclude-form switch .switch input[type=checkbox]:checked + .tick {
+  background: #98dfd6;
+}
+body.presences .punishment-exclude-form switch .switch input[type=checkbox]:checked + .tick:before, .sniplet.presences .punishment-exclude-form switch .switch input[type=checkbox]:checked + .tick:before {
+  background: #46bfaf;
+}
+body.presences .punishment-detention-form-dates, .sniplet.presences .punishment-detention-form-dates {
+  margin: 8px 0;
+}
+body.presences .punishment-detention-form-dates-date, .sniplet.presences .punishment-detention-form-dates-date {
+  padding-bottom: 8px;
+}
+body.presences .punishment-detention-form-dates-date .timeslot-select, .sniplet.presences .punishment-detention-form-dates-date .timeslot-select {
+  margin-right: 16px;
+}
+body.presences .punishment-detention-form-dates-place input, .sniplet.presences .punishment-detention-form-dates-place input {
+  border: none;
+  background: none;
+  border-bottom: 1px dotted #7a7a7a;
+}
+body.presences .punishment-detention-form-dates-place input:focus, .sniplet.presences .punishment-detention-form-dates-place input:focus {
+  outline: none;
+}
+body.presences .punishment-detention-form-createSlot, .sniplet.presences .punishment-detention-form-createSlot {
+  margin-bottom: 24px;
+}
+body.presences .punishment-detention-form-createSlot:hover, .sniplet.presences .punishment-detention-form-createSlot:hover {
+  color: #ffb600;
+}
+body.presences .punishment-detention-form-createSlot-icon, .sniplet.presences .punishment-detention-form-createSlot-icon {
+  font-size: 2em;
+  margin-right: 8px;
+}
+body.presences .pagination, .sniplet.presences .pagination {
+  float: right;
+}
+body.presences .pagination.lightbox, .sniplet.presences .pagination.lightbox {
+  float: none;
+}
+body.presences .playdown, .sniplet.presences .playdown {
+  font-size: 16px !important;
+}
+body.presences i.seriousness:before, .sniplet.presences i.seriousness:before {
+  content: "\e903";
+  font-size: 24px;
+}
+body.presences i.edit:before, .sniplet.presences i.edit:before {
+  font-size: 24px;
+  color: #7a7a7a;
+}
+body.presences section.lightbox, .sniplet.presences section.lightbox {
+  overflow: unset;
+}
