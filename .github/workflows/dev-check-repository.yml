@@ -12,12 +12,12 @@ jobs:
 
     steps:
       - uses: actions/checkout@v1
-      - name: Run yarn install
-        run: yarn install
+      - name: Run pnpm install
+        run: pnpm install
       - name: Run build with Vite
-        run: yarn build:presences && yarn build:incidents && yarn build:statistics-presences && yarn build:massmailing
+        run: pnpm run build:presences && pnpm run build:incidents && pnpm run build:statistics-presences && pnpm run build:massmailing
       - name: Run test
-        run: yarn test
+        run: pnpm test
 
   build-maven-test:
     runs-on: ubuntu-latest

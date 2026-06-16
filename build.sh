@@ -35,11 +35,11 @@ clean () {
 
 # Build frontend des 4 modules migrés sur Vite (presences, incidents, statistics-presences, massmailing).
 buildFrontend () {
-  echo "Running yarn install..."
+  echo "Running pnpm install..."
   if [ "$NO_DOCKER" = "true" ] ; then
-    yarn install
+    pnpm install
   else
-    docker compose run -e NPM_TOKEN --rm -u "$USER_UID:$GROUP_GID" node sh -c "yarn install"
+    docker compose run -e NPM_TOKEN --rm -u "$USER_UID:$GROUP_GID" node sh -c "pnpm install"
   fi
 
   VERSION=$(date +%s)
@@ -55,9 +55,9 @@ buildFrontend () {
     done
     echo "Building frontend $module..."
     if [ "$NO_DOCKER" = "true" ] ; then
-      yarn "build:$module"
+      pnpm run "build:$module"
     else
-      docker compose run -e NPM_TOKEN --rm -u "$USER_UID:$GROUP_GID" node sh -c "yarn build:$module"
+      docker compose run -e NPM_TOKEN --rm -u "$USER_UID:$GROUP_GID" node sh -c "pnpm run build:$module"
     fi
     status=$?
     if [ $status != 0 ] ; then
@@ -71,10 +71,10 @@ testNode () {
   rm -rf */build
   case `uname -s` in
     MINGW*)
-      docker compose run --rm -u "$USER_UID:$GROUP_GID" node sh -c "yarn install --no-bin-links && yarn test"
+      docker compose run --rm -u "$USER_UID:$GROUP_GID" node sh -c "pnpm install --no-bin-links && pnpm test"
       ;;
     *)
-      docker compose run --rm -u "$USER_UID:$GROUP_GID" node sh -c "yarn install && yarn test"
+      docker compose run --rm -u "$USER_UID:$GROUP_GID" node sh -c "pnpm install && pnpm test"
   esac
 }
 
@@ -83,10 +83,10 @@ testNodeDev () {
   rm -rf */build
   case `uname -s` in
     MINGW*)
-      docker compose run --rm -u "$USER_UID:$GROUP_GID" node sh -c "yarn install --no-bin-links && yarn run test:dev"
+      docker compose run --rm -u "$USER_UID:$GROUP_GID" node sh -c "pnpm install --no-bin-links && pnpm run test:dev"
       ;;
     *)
-      docker compose run --rm -u "$USER_UID:$GROUP_GID" node sh -c "yarn install && yarn run test:dev"
+      docker compose run --rm -u "$USER_UID:$GROUP_GID" node sh -c "pnpm install && pnpm run test:dev"
   esac
 }
 
@@ -120,9 +120,9 @@ presences:buildMaven() {
 
 incidents() {
   if [ "$NO_DOCKER" = "true" ] ; then
-    yarn install && yarn build:incidents
+    pnpm install && pnpm run build:incidents
   else
-    docker compose run -e NPM_TOKEN --rm -u "$USER_UID:$GROUP_GID" node sh -c "yarn install && yarn build:incidents"
+    docker compose run -e NPM_TOKEN --rm -u "$USER_UID:$GROUP_GID" node sh -c "pnpm install && pnpm run build:incidents"
   fi
   docker compose run --rm -u "$USER_UID:$GROUP_GID" gradle gradle :incidents:shadowJar :incidents:install :incidents:publishToMavenLocal
 }
@@ -133,9 +133,9 @@ incidents:buildGradle() {
 
 massmailing() {
   if [ "$NO_DOCKER" = "true" ] ; then
-    yarn install && yarn build:massmailing
+    pnpm install && pnpm run build:massmailing
   else
-    docker compose run -e NPM_TOKEN --rm -u "$USER_UID:$GROUP_GID" node sh -c "yarn install && yarn build:massmailing"
+    docker compose run -e NPM_TOKEN --rm -u "$USER_UID:$GROUP_GID" node sh -c "pnpm install && pnpm run build:massmailing"
   fi
   docker compose run --rm -u "$USER_UID:$GROUP_GID" gradle gradle :massmailing:shadowJar :massmailing:install :massmailing:publishToMavenLocal
 }
@@ -146,9 +146,9 @@ massmailing:buildGradle() {
 
 statistics() {
   if [ "$NO_DOCKER" = "true" ] ; then
-    yarn install && yarn build:statistics-presences
+    pnpm install && pnpm run build:statistics-presences
   else
-    docker compose run -e NPM_TOKEN --rm -u "$USER_UID:$GROUP_GID" node sh -c "yarn install && yarn build:statistics-presences"
+    docker compose run -e NPM_TOKEN --rm -u "$USER_UID:$GROUP_GID" node sh -c "pnpm install && pnpm run build:statistics-presences"
   fi
   docker compose run --rm -u "$USER_UID:$GROUP_GID" gradle gradle :statistics:shadowJar :statistics:install :statistics:publishToMavenLocal
 }

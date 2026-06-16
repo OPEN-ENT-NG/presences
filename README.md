@@ -9,6 +9,42 @@
   - La gestion des incidents, des punitions et des sanctions,
   - Le publipostage de tous ces événements. 
 
+## Développement frontend
+
+### Prérequis
+
+```bash
+pnpm install
+```
+
+### Builder le frontend en local
+
+Chaque module dispose d'un script de build Vite indépendant. Pour builder tous les modules d'un coup :
+
+```bash
+NO_DOCKER=true ./build.sh buildFrontend
+```
+
+Pour builder un seul module :
+
+```bash
+pnpm run build:presences
+pnpm run build:incidents
+pnpm run build:statistics-presences
+pnpm run build:massmailing
+```
+
+Les fichiers générés sont déposés dans le dossier `public/` de chaque module :
+- `dist/application.js` — bundle principal
+- `js/behaviours.js` — bundle behaviours
+- `css/<module>.css` — styles compilés
+
+### Lancer le watcher (proxy Vite)
+
+> Section à venir après mise en place du watcher.
+
+---
+
 ## Configuration
 Le module présences contient plusieurs modules en son sein : incidents, massmailing, presences et statistics-presences.
 Seuls massmailing, presences et statistics-presences contiennent des configurations techniques uniques.
