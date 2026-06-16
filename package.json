@@ -12,6 +12,7 @@
     "coverage:dev": "./node_modules/.bin/jest --config jest.config.js --coverage --watch --verbose false",
     "test:dev": "npm run coverage:dev",
     "build:presences": "vite build --config presences/vite.config.application.ts && vite build --config presences/vite.config.behaviours.ts",
+    "build:incidents": "vite build --config incidents/vite.config.application.ts && vite build --config incidents/vite.config.behaviours.ts",
     "build:sass": "sass --load-path=node_modules/ --no-source-map presences/src/main/resources/public/sass/index.scss presences/src/main/resources/public/css/presences.css"
   },
   "repository": {

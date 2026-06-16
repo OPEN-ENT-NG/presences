@@ -33,8 +33,8 @@ clean () {
 }
 
 
-# Build frontend du module presences uniquement (migré sur Vite).
-# Les autres modules (incidents, massmailing, statistics) utilisent encore buildNode/gulp.
+# Build frontend des modules migrés sur Vite (presences, incidents).
+# Les autres modules (massmailing, statistics) utilisent encore buildNode/gulp.
 buildFrontend () {
   echo "Running yarn install..."
   if [ "$NO_DOCKER" = "true" ] ; then
@@ -42,25 +42,29 @@ buildFrontend () {
   else
     docker compose run -e NPM_TOKEN --rm -u "$USER_UID:$GROUP_GID" node sh -c "yarn install"
   fi
-  if [ ! -e "./presences/src/main/resources/view" ] ; then
-    mkdir "./presences/src/main/resources/view"
-  fi
+
   VERSION=$(date +%s)
-  find ./presences/src/main/resources/view-src -type f \( -name "*.html" -o -name "*.json" \) | while read -r file; do
-    dest="./presences/src/main/resources/view/${file#./presences/src/main/resources/view-src/}"
-    mkdir -p "$(dirname "$dest")"
-    sed "s/@@VERSION/$VERSION/g" "$file" > "$dest"
+
+  for module in presences incidents; do
+    if [ ! -e "./$module/src/main/resources/view" ] ; then
+      mkdir "./$module/src/main/resources/view"
+    fi
+    find "./$module/src/main/resources/view-src" -type f \( -name "*.html" -o -name "*.json" \) | while read -r file; do
+      dest="./$module/src/main/resources/view/${file#./$module/src/main/resources/view-src/}"
+      mkdir -p "$(dirname "$dest")"
+      sed "s/@@VERSION/$VERSION/g" "$file" > "$dest"
+    done
+    echo "Building frontend $module..."
+    if [ "$NO_DOCKER" = "true" ] ; then
+      yarn "build:$module"
+    else
+      docker compose run -e NPM_TOKEN --rm -u "$USER_UID:$GROUP_GID" node sh -c "yarn build:$module"
+    fi
+    status=$?
+    if [ $status != 0 ] ; then
+      exit $status
+    fi
   done
-  echo "Building frontend presences..."
-  if [ "$NO_DOCKER" = "true" ] ; then
-    yarn build:presences
-  else
-    docker compose run -e NPM_TOKEN --rm -u "$USER_UID:$GROUP_GID" node sh -c "yarn build:presences"
-  fi
-  status=$?
-  if [ $status != 0 ] ; then
-    exit $status
-  fi
 }
 
 buildNode() {
