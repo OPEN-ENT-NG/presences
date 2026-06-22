@@ -38,19 +38,19 @@
     <module>statistics-presences</module>
   </modules>
   <properties>
-    <revision>2.2-SNAPSHOT</revision>
+    <revision>2.2.3</revision>
     <toolsVersion>2.0.0-final</toolsVersion>
     <junitVersion>5.1.0</junitVersion>
-    <vertxCronTimerVersion>3.0-SNAPSHOT</vertxCronTimerVersion>
+    <vertxCronTimerVersion>3.0.0</vertxCronTimerVersion>
     <powerMockVersion>2.0.2</powerMockVersion>
     <mockitoVersion>[2.0,3.0)</mockitoVersion>
-    <entCoreVersion>6.15-SNAPSHOT</entCoreVersion>
+    <entCoreVersion>6.15.6</entCoreVersion>
     <reflectionsVersion>0.10.2</reflectionsVersion>
     <gatlingHighchartsVersion>2.2.2</gatlingHighchartsVersion>
-    <modMongoVersion>4.2-SNAPSHOT</modMongoVersion>
-    <modPostgresVersion>2.2-SNAPSHOT</modPostgresVersion>
-    <modJsonSchemaValidatorVersion>2.2-SNAPSHOT</modJsonSchemaValidatorVersion>
-    <entCoreLibsVersion>6.15-SNAPSHOT</entCoreLibsVersion>
+    <modMongoVersion>4.2.0</modMongoVersion>
+    <modPostgresVersion>2.2.0</modPostgresVersion>
+    <modJsonSchemaValidatorVersion>2.2.0</modJsonSchemaValidatorVersion>
+    <entCoreLibsVersion>6.15.2</entCoreLibsVersion>
   </properties>
   <dependencies>
     <dependency>
