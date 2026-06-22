@@ -29,8 +29,7 @@ public class FutureHelper {
                 // In a clustered deployment results are not JsonObject but Map so we need to "transform" them back to
                 // JsonObject so downstream process do not get cast errors, and JsonArray.stream() returns an iterator
                 // that wraps values in Json when they are Maps
-                final JsonArray formatedArray = new JsonArray();
-                event.right().getValue().stream().forEach(formatedArray::add);
+                final JsonArray formatedArray = new JsonArray(event.right().getValue().encode());
                 promise.complete(formatedArray);
             } else {
                 String message = String.format("[PresencesCommon@%s::handlerJsonArray]: %s",
@@ -58,19 +57,15 @@ public class FutureHelper {
         };
     }
 
+    @SuppressWarnings("unchecked")
     public static <L, R> Handler<Either<L, R>> handlerEitherPromise(Promise<R> promise) {
         return event -> {
             if (event.isRight()) {
                 R value = event.right().getValue();
                 // In a clustered deployment results are not JsonObject but Map so we need to "transform" them back to
-                // JsonObject so downstream process do not get cast errors
+                // JsonObject so downstream process do not get cast errors (deep copy via encode/decode)
                 if (value instanceof JsonArray) {
-                    // JsonArray.stream() returns an iterator that wraps values in Json when they are Maps
-                    final JsonArray array = (JsonArray) value;
-                    for (int i = 0; i < array.size(); i++) {
-                        // getValue internally transforms a Map into a JsonObject
-                        array.set(i, array.getValue(i));
-                    }
+                    value = (R) new JsonArray(((JsonArray) value).encode());
                 }
                 promise.complete(value);
             } else {
@@ -86,12 +81,10 @@ public class FutureHelper {
         return event -> {
             if (event.isRight()) {
                 // In a clustered deployment results are not JsonObject but Map so we need to "transform" them back to
-                // JsonObject so downstream process do not get cast errors, and JsonArray.stream() returns an iterator
-                // that wraps values in Json when they are Maps
+                // JsonObject so downstream process do not get cast errors (deep copy via encode/decode)
                 JsonArray formatedArray = null;
                 if(event.right().getValue() != null) {
-                    formatedArray = new JsonArray();
-                    event.right().getValue().stream().forEach(formatedArray::add);
+                    formatedArray = new JsonArray(event.right().getValue().encode());
                 }
                 handler.handle(Future.succeededFuture(formatedArray));
             } else {
