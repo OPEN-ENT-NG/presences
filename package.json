@@ -22,7 +22,8 @@
   "homepage": "",
   "resolutions": {
     "graceful-fs": "^4.2.11",
-    "**/yargs-parser": "21.1.1"
+    "**/yargs-parser": "21.1.1",
+    "**/node-releases": "2.0.14"
   },
   "dependencies": {
     "entcore": "dev",
@@ -43,7 +44,7 @@
     "apexcharts": "^3.26.0"
   },
   "devDependencies": {
-    "sass": "^1.49.9",
+    "sass": "~1.49.9",
     "entcore-css-lib": "npm:ode-csslib@4.0.12",
     "@types/angular": "1.8.9",
     "@types/angular-mocks": "^1.7.1",
