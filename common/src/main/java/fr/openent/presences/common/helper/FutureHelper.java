@@ -27,9 +27,9 @@ public class FutureHelper {
         return event -> {
             if (event.isRight()) {
                 // In a clustered deployment results are not JsonObject but Map so we need to "transform" them back to
-                // JsonObject so downstream process do not get cast errors, and JsonArray.stream() returns an iterator
-                // that wraps values in Json when they are Maps
-                final JsonArray formatedArray = new JsonArray(event.right().getValue().encode());
+                // JsonObject so downstream process do not get cast errors.
+                // JsonArray.copy() uses Vert.x checkAndCopy() which recursively normalizes Map->JsonObject and List->JsonArray.
+                final JsonArray formatedArray = event.right().getValue().copy();
                 promise.complete(formatedArray);
             } else {
                 String message = String.format("[PresencesCommon@%s::handlerJsonArray]: %s",
@@ -65,7 +65,8 @@ public class FutureHelper {
                 // In a clustered deployment results are not JsonObject but Map so we need to "transform" them back to
                 // JsonObject so downstream process do not get cast errors (deep copy via encode/decode)
                 if (value instanceof JsonArray) {
-                    value = (R) new JsonArray(((JsonArray) value).encode());
+                    // JsonArray.copy() uses Vert.x checkAndCopy() which recursively normalizes Map->JsonObject and List->JsonArray.
+                    value = (R) ((JsonArray) value).copy();
                 }
                 promise.complete(value);
             } else {
@@ -81,10 +82,11 @@ public class FutureHelper {
         return event -> {
             if (event.isRight()) {
                 // In a clustered deployment results are not JsonObject but Map so we need to "transform" them back to
-                // JsonObject so downstream process do not get cast errors (deep copy via encode/decode)
+                // JsonObject so downstream process do not get cast errors.
+                // JsonArray.copy() uses Vert.x checkAndCopy() which recursively normalizes Map->JsonObject and List->JsonArray.
                 JsonArray formatedArray = null;
                 if(event.right().getValue() != null) {
-                    formatedArray = new JsonArray(event.right().getValue().encode());
+                    formatedArray = event.right().getValue().copy();
                 }
                 handler.handle(Future.succeededFuture(formatedArray));
             } else {
