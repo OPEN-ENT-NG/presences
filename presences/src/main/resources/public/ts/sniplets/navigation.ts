@@ -80,15 +80,19 @@ export const navigation = {
             return (res !== null && res.length > 1) ? res[1] : '';
         },
         hasRight: (right) => {
+            if (!model.me) return false;
             return model.me.hasWorkflow(rights.workflow[right]);
         },
         hasIncidentRight: (right) => {
+            if (!model.me) return false;
             return model.me.hasWorkflow(incidentsRights.workflow[right]);
         },
         hasMassmailingRight: (right) => {
+            if (!model.me) return false;
             return model.me.hasWorkflow(massmailingRights.workflow[right]);
         },
         hasStatisticsRight: right => {
+            if (!model.me) return false;
             return model.me.hasWorkflow(statisticsRights.workflow[right]);
         },
         hasOneOfEventTabRight: () : boolean => {

@@ -39,10 +39,12 @@ export const mainController = ng.controller('MainController', ['$scope', 'route'
         };
 
         $scope.hasRight = (right: string): boolean => {
+            if (!model.me) return false;
             return model.me.hasWorkflow(rights.workflow[right]);
         };
 
         $scope.hasIncidentRight = (right: string): boolean => {
+            if (!model.me) return false;
             return model.me.hasWorkflow(incidentsRights.workflow[right]);
         };
 

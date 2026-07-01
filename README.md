@@ -11,10 +11,29 @@
 
 ## Développement frontend
 
-### Prérequis
+### 1 - Initialiser les variables d'environnement
+
+* `./build.sh init`
+* Un fichier `.env` minimal est créé.
+
+### 2 - Proxifier le backend avec une URL de recette
+
+* Copier dans `.env` les variables présentes dans le template `env.template` (ou les y coller si le fichier existe déjà).
+* Dans le fichier `.env`, renseigner ensuite les champs `VITE_*` avec les tokens d'authentification et les valeurs attendues.
+
+### 3 - Installer les dépendances
+
+* `pnpm i`
+
+### 4 - Lancer le serveur proxifié
+
+Le projet est multi-modules (presences, incidents, massmailing, statistics-presences) : **un serveur Vite ne watch qu'un seul module à la fois**, on ne peut pas naviguer d'un module à l'autre depuis le même serveur. Pour développer sur un autre module, lancer son propre script `dev:<module>` (ils tournent tous sur le port `4200`, donc un seul à la fois).
 
 ```bash
-pnpm install
+pnpm dev:presences     # http://localhost:4200/presences
+pnpm dev:incidents     # http://localhost:4200/incidents
+pnpm dev:massmailing   # http://localhost:4200/massmailing
+pnpm dev:statistics    # http://localhost:4200/statistics-presences
 ```
 
 ### Builder le frontend en local
@@ -35,13 +54,10 @@ pnpm run build:massmailing
 ```
 
 Les fichiers générés sont déposés dans le dossier `public/` de chaque module :
-- `dist/application.js` — bundle principal
-- `js/behaviours.js` — bundle behaviours
-- `css/<module>.css` — styles compilés
 
-### Lancer le watcher (proxy Vite)
-
-> Section à venir après mise en place du watcher.
+* `dist/application.js` — bundle principal
+* `js/behaviours.js` — bundle behaviours
+* `css/<module>.css` — styles compilés
 
 ---
 

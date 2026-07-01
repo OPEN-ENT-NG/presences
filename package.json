@@ -12,8 +12,12 @@
     "test:dev": "npm run coverage:dev",
     "build:presences": "vite build --config presences/vite.config.application.ts && vite build --config presences/vite.config.behaviours.ts",
     "build:incidents": "vite build --config incidents/vite.config.application.ts && vite build --config incidents/vite.config.behaviours.ts",
-    "build:statistics-presences": "vite build --config statistics-presences/vite.config.application.ts && vite build --config statistics-presences/vite.config.behaviours.ts",
-    "build:massmailing": "vite build --config massmailing/vite.config.application.ts && vite build --config massmailing/vite.config.behaviours.ts"
+    "build:statistics": "vite build --config statistics-presences/vite.config.application.ts && vite build --config statistics-presences/vite.config.behaviours.ts",
+    "build:massmailing": "vite build --config massmailing/vite.config.application.ts && vite build --config massmailing/vite.config.behaviours.ts",
+    "dev:presences": "vite --config presences/vite.config.dev.ts",
+    "dev:statistics": "vite --config statistics-presences/vite.config.dev.ts",
+    "dev:incidents": "vite --config incidents/vite.config.dev.ts",
+    "dev:massmailing": "vite --config massmailing/vite.config.dev.ts"
   },
   "repository": {
     "type": "git",
