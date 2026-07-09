@@ -296,7 +296,7 @@
   "presences.export.lightbox.warning.7": "le fichier sera directement téléchargeable après validation,",
   "presences.export.lightbox.warning.8": "une copie sera tout de même à disposition dans l'espace documentaire.",
   "presences.export.new.csv": "Registre d'appel (CSV)",
-  "presences.export.tocsv": "Exporter CSV",
+  "presences.export.tocsv": "Liste des événements (CSV)",
   "presences.export.topdf": "Exporter PDF",
   "presences.filter.on": "Filtrer sur :",
   "presences.filters": "Filtres",
