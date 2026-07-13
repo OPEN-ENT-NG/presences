@@ -2,10 +2,13 @@ package fr.openent.presences.common.eventbus;
 
 import io.vertx.core.buffer.Buffer;
 import io.vertx.core.eventbus.MessageCodec;
+import io.vertx.core.logging.Logger;
+import io.vertx.core.logging.LoggerFactory;
 
 import java.io.*;
 
 public class GenericCodec<T> implements MessageCodec<T, T> {
+    private static final Logger log = LoggerFactory.getLogger(GenericCodec.class);
     private final Class<T> cls;
 
     public GenericCodec(Class<T> cls) {
@@ -27,6 +30,7 @@ public class GenericCodec<T> implements MessageCodec<T, T> {
             buffer.appendBytes(yourBytes);
             out.close();
         } catch (IOException e) {
+            log.error("[GenericCodec] Failed to encode message of type " + cls.getCanonicalName() + " to wire", e);
         } finally {
             try {
                 bos.close();

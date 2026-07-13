@@ -8,13 +8,15 @@ import fr.openent.presences.model.StructureStatisticsUser;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 
+import java.io.Serializable;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
-public class Report {
+public class Report implements Serializable {
+    private static final long serialVersionUID = 1L;
     private Instant start;
     private Instant end;
     private String indicator;
@@ -101,7 +103,8 @@ public class Report {
                 .ifPresent(reportStudentResult -> reportStudentResult.processed = true);
     }
 
-    private static class ReportStudent implements IModel<ReportStudent> {
+    private static class ReportStudent implements IModel<ReportStudent>, Serializable {
+        private static final long serialVersionUID = 1L;
         protected String studentId;
         protected boolean processed;
 
@@ -125,7 +128,8 @@ public class Report {
         }
     }
 
-    private static class ReportStructure implements IModel<ReportStructure> {
+    private static class ReportStructure implements IModel<ReportStructure>, Serializable {
+        private static final long serialVersionUID = 1L;
         protected String structureId;
         protected List<ReportStudent> reportStudentList;
 

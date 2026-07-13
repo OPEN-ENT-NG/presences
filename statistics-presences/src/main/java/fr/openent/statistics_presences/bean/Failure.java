@@ -1,6 +1,9 @@
 package fr.openent.statistics_presences.bean;
 
-public class Failure {
+import java.io.Serializable;
+
+public class Failure implements Serializable {
+    private static final long serialVersionUID = 1L;
     private String user;
     private String structure;
     private Throwable err;
