@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html>
+
+	<head>
+		<title>Incidents</title>
+		<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+
+		<script src="/assets/js/entcore/ng-app.js" id="context" type="text/javascript"></script>
+		<script type="module" src="/ts/app.ts"></script>
+		<script type="module" src="/ts/behaviours.ts"></script>
+
+		<meta name="viewport" content="width=device-width, initial-scale=1.0">
+		<script type="text/ng-template" id="empty"></script>
+		<script>
+			var structures = [];
+		</script>
+	</head>
+
+	<body ng-controller="MainController" class="presences">
+		<portal>
+			<sniplet template="memento" application="viescolaire"></sniplet>
+			<sniplet template="navigation" application="presences"></sniplet>
+			<container template="main"></container>
+		</portal>
+	</body>
+
+</html>
