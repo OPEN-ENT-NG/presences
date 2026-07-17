@@ -13,7 +13,9 @@
 		<script type="text/ng-template" id="empty"></script>
 		<script>
 			var structures = [];
-			var indicators = [];
+			// En prod, la vue Mustache injecte les indicateurs selon la config du module
+			// (StatisticsController#view). En dev on expose les trois indicateurs standards.
+			var indicators = ["Global", "Monthly", "Weekly"];
 		</script>
 	</head>
 
