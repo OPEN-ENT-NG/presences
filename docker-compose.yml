@@ -12,6 +12,8 @@ services:
   node:
     image: opendigitaleducation/node:22-alpine-pnpm
     working_dir: /home/node/app
+    environment:
+      GIT_CONFIG_GLOBAL: /home/node/app/.docker/gitconfig
     volumes:
       - ./:/home/node/app
       - ~/.npm:/.npm
