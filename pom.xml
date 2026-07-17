@@ -44,13 +44,13 @@
     <vertxCronTimerVersion>3.0-SNAPSHOT</vertxCronTimerVersion>
     <powerMockVersion>2.0.2</powerMockVersion>
     <mockitoVersion>[2.0,3.0)</mockitoVersion>
-    <entCoreVersion>6.16-develop-b2school-SNAPSHOT</entCoreVersion>
+    <entCoreVersion>6.16-SNAPSHOT</entCoreVersion>
     <reflectionsVersion>0.10.2</reflectionsVersion>
     <gatlingHighchartsVersion>2.2.2</gatlingHighchartsVersion>
     <modMongoVersion>4.2-SNAPSHOT</modMongoVersion>
     <modPostgresVersion>2.2-SNAPSHOT</modPostgresVersion>
     <modJsonSchemaValidatorVersion>2.2-SNAPSHOT</modJsonSchemaValidatorVersion>
-    <entCoreLibsVersion>6.16-develop-b2school-SNAPSHOT</entCoreLibsVersion>
+    <entCoreLibsVersion>6.16-SNAPSHOT</entCoreLibsVersion>
   </properties>
   <dependencies>
     <dependency>

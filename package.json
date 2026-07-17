@@ -36,7 +36,7 @@
     }
   },
   "dependencies": {
-    "entcore": "develop-b2school",
+    "entcore": "dev",
     "axios": "0.16.2",
     "core-js": "2.4.1",
     "typescript": "^4.8.3",
