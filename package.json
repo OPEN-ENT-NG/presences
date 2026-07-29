@@ -44,7 +44,7 @@
     "apexcharts": "^3.26.0"
   },
   "devDependencies": {
-    "sass": "~1.49.9",
+    "sass": "^1.49.9",
     "entcore-css-lib": "npm:ode-csslib@4.0.12",
     "@types/angular": "1.8.9",
     "@types/angular-mocks": "^1.7.1",
