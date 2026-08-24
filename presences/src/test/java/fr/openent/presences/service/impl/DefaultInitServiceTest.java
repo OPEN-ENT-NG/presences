@@ -84,36 +84,35 @@ public class DefaultInitServiceTest {
         JsonHttpServerRequest request = Mockito.mock(JsonHttpServerRequest.class);
         String structure = "structureId";
         InitTypeEnum initTypeEnum = InitTypeEnum.TWO_D;
-        String statement = "INSERT INTO null.reason(id, structure_id, label, proving, comment, absence_compliance, reason_type_id)" +
-                " VALUES (nextval('presences.reason_id_seq'), ?,?,?,'',?,?);" +
-                "INSERT INTO null.reason_alert(structure_id, reason_id, reason_alert_exclude_rules_type_id)" +
-                " VALUES (?, currval('presences.reason_id_seq'), 1),(?, currval('presences.reason_id_seq'), 2),(?, currval('presences.reason_id_seq'), 3);" +
-                "INSERT INTO null.reason(id, structure_id, label, proving, comment, absence_compliance, reason_type_id)" +
-                " VALUES (nextval('presences.reason_id_seq'), ?,?,?,'',?,?);" +
-                "INSERT INTO null.reason_alert(structure_id, reason_id, reason_alert_exclude_rules_type_id)" +
-                " VALUES (?, currval('presences.reason_id_seq'), 1),(?, currval('presences.reason_id_seq'), 3);" +
-                "INSERT INTO null.reason(id, structure_id, label, proving, comment, absence_compliance, reason_type_id)" +
-                " VALUES (nextval('presences.reason_id_seq'), ?,?,?,'',?,?);" +
-                "INSERT INTO null.reason_alert(structure_id, reason_id, reason_alert_exclude_rules_type_id)" +
-                " VALUES (?, currval('presences.reason_id_seq'), 2),(?, currval('presences.reason_id_seq'), 3);" +
-                "INSERT INTO null.reason(id, structure_id, label, proving, comment, absence_compliance, reason_type_id)" +
-                " VALUES (nextval('presences.reason_id_seq'), ?,?,?,'',?,?);" +
-                "INSERT INTO null.reason_alert(structure_id, reason_id, reason_alert_exclude_rules_type_id)" +
-                " VALUES (?, currval('presences.reason_id_seq'), 3);" +
-                "INSERT INTO null.reason(id, structure_id, label, proving, comment, absence_compliance, reason_type_id)" +
-                " VALUES (nextval('presences.reason_id_seq'), ?,?,?,'',?,?);" +
-                "INSERT INTO null.reason_alert(structure_id, reason_id, reason_alert_exclude_rules_type_id)" +
-                " VALUES (?, currval('presences.reason_id_seq'), 1),(?, currval('presences.reason_id_seq'), 2),(?, currval('presences.reason_id_seq'), 3);" +
-                "INSERT INTO null.reason(id, structure_id, label, proving, comment, absence_compliance, reason_type_id)" +
-                " VALUES (nextval('presences.reason_id_seq'), ?,?,?,'',?,?);" +
-                "INSERT INTO null.reason_alert(structure_id, reason_id, reason_alert_exclude_rules_type_id)" +
-                " VALUES (?, currval('presences.reason_id_seq'), 1),(?, currval('presences.reason_id_seq'), 2);";
-        String values = "[\"structureId\",\"presences.reasons.init.1d.0\",false,true,1,\"structureId\",\"structureId\",\"structureId\"," +
-                "\"structureId\",\"presences.reasons.init.1d.1\",false,true,1,\"structureId\",\"structureId\"," +
-                "\"structureId\",\"presences.reasons.init.1d.2\",false,true,1,\"structureId\",\"structureId\"," +
-                "\"structureId\",\"presences.reasons.init.1d.3\",false,true,1,\"structureId\"," +
-                "\"structureId\",\"presences.reasons.init.1d.4\",true,false,2,\"structureId\",\"structureId\",\"structureId\"," +
-                "\"structureId\",\"presences.reasons.init.1d.5\",true,false,2,\"structureId\",\"structureId\"]";
+        // Each reason is inserted only when the structure does not already own it, and its alert exclusion
+        // rules are attached by looking the reason up instead of relying on currval: replaying the
+        // initialization (year transition, double submit) must not duplicate anything.
+        String statement =
+                "INSERT INTO null.reason(structure_id, label, proving, comment, absence_compliance, reason_type_id) SELECT ?,?,?,'',?,? WHERE NOT EXISTS (SELECT 1 FROM null.reason WHERE structure_id = ? AND label = ? AND reason_type_id = ?);" +
+                "INSERT INTO null.reason_alert(structure_id, reason_id, reason_alert_exclude_rules_type_id) SELECT ?, reason.id, alert_rule.type_id FROM null.reason CROSS JOIN (VALUES (1),(2),(3)) AS alert_rule(type_id) WHERE reason.structure_id = ? AND reason.label = ? AND reason.reason_type_id = ? ON CONFLICT ON CONSTRAINT uniq_reason_alert DO NOTHING;" +
+                "INSERT INTO null.reason(structure_id, label, proving, comment, absence_compliance, reason_type_id) SELECT ?,?,?,'',?,? WHERE NOT EXISTS (SELECT 1 FROM null.reason WHERE structure_id = ? AND label = ? AND reason_type_id = ?);" +
+                "INSERT INTO null.reason_alert(structure_id, reason_id, reason_alert_exclude_rules_type_id) SELECT ?, reason.id, alert_rule.type_id FROM null.reason CROSS JOIN (VALUES (1),(3)) AS alert_rule(type_id) WHERE reason.structure_id = ? AND reason.label = ? AND reason.reason_type_id = ? ON CONFLICT ON CONSTRAINT uniq_reason_alert DO NOTHING;" +
+                "INSERT INTO null.reason(structure_id, label, proving, comment, absence_compliance, reason_type_id) SELECT ?,?,?,'',?,? WHERE NOT EXISTS (SELECT 1 FROM null.reason WHERE structure_id = ? AND label = ? AND reason_type_id = ?);" +
+                "INSERT INTO null.reason_alert(structure_id, reason_id, reason_alert_exclude_rules_type_id) SELECT ?, reason.id, alert_rule.type_id FROM null.reason CROSS JOIN (VALUES (2),(3)) AS alert_rule(type_id) WHERE reason.structure_id = ? AND reason.label = ? AND reason.reason_type_id = ? ON CONFLICT ON CONSTRAINT uniq_reason_alert DO NOTHING;" +
+                "INSERT INTO null.reason(structure_id, label, proving, comment, absence_compliance, reason_type_id) SELECT ?,?,?,'',?,? WHERE NOT EXISTS (SELECT 1 FROM null.reason WHERE structure_id = ? AND label = ? AND reason_type_id = ?);" +
+                "INSERT INTO null.reason_alert(structure_id, reason_id, reason_alert_exclude_rules_type_id) SELECT ?, reason.id, alert_rule.type_id FROM null.reason CROSS JOIN (VALUES (3)) AS alert_rule(type_id) WHERE reason.structure_id = ? AND reason.label = ? AND reason.reason_type_id = ? ON CONFLICT ON CONSTRAINT uniq_reason_alert DO NOTHING;" +
+                "INSERT INTO null.reason(structure_id, label, proving, comment, absence_compliance, reason_type_id) SELECT ?,?,?,'',?,? WHERE NOT EXISTS (SELECT 1 FROM null.reason WHERE structure_id = ? AND label = ? AND reason_type_id = ?);" +
+                "INSERT INTO null.reason_alert(structure_id, reason_id, reason_alert_exclude_rules_type_id) SELECT ?, reason.id, alert_rule.type_id FROM null.reason CROSS JOIN (VALUES (1),(2),(3)) AS alert_rule(type_id) WHERE reason.structure_id = ? AND reason.label = ? AND reason.reason_type_id = ? ON CONFLICT ON CONSTRAINT uniq_reason_alert DO NOTHING;" +
+                "INSERT INTO null.reason(structure_id, label, proving, comment, absence_compliance, reason_type_id) SELECT ?,?,?,'',?,? WHERE NOT EXISTS (SELECT 1 FROM null.reason WHERE structure_id = ? AND label = ? AND reason_type_id = ?);" +
+                "INSERT INTO null.reason_alert(structure_id, reason_id, reason_alert_exclude_rules_type_id) SELECT ?, reason.id, alert_rule.type_id FROM null.reason CROSS JOIN (VALUES (1),(2)) AS alert_rule(type_id) WHERE reason.structure_id = ? AND reason.label = ? AND reason.reason_type_id = ? ON CONFLICT ON CONSTRAINT uniq_reason_alert DO NOTHING;";
+        String values = "[" +
+                "\"structureId\",\"presences.reasons.init.1d.0\",false,true,1,\"structureId\",\"presences.reasons.init.1d.0\",1," +
+                "\"structureId\",\"structureId\",\"presences.reasons.init.1d.0\",1," +
+                "\"structureId\",\"presences.reasons.init.1d.1\",false,true,1,\"structureId\",\"presences.reasons.init.1d.1\",1," +
+                "\"structureId\",\"structureId\",\"presences.reasons.init.1d.1\",1," +
+                "\"structureId\",\"presences.reasons.init.1d.2\",false,true,1,\"structureId\",\"presences.reasons.init.1d.2\",1," +
+                "\"structureId\",\"structureId\",\"presences.reasons.init.1d.2\",1," +
+                "\"structureId\",\"presences.reasons.init.1d.3\",false,true,1,\"structureId\",\"presences.reasons.init.1d.3\",1," +
+                "\"structureId\",\"structureId\",\"presences.reasons.init.1d.3\",1," +
+                "\"structureId\",\"presences.reasons.init.1d.4\",true,false,2,\"structureId\",\"presences.reasons.init.1d.4\",2," +
+                "\"structureId\",\"structureId\",\"presences.reasons.init.1d.4\",2," +
+                "\"structureId\",\"presences.reasons.init.1d.5\",true,false,2,\"structureId\",\"presences.reasons.init.1d.5\",2," +
+                "\"structureId\",\"structureId\",\"presences.reasons.init.1d.5\",2]";
         Promise<JsonObject> promise = Promise.promise();
         promise.future().onSuccess(result -> {
             ctx.assertEquals(result.getString(Field.STATEMENT), statement);

@@ -123,33 +123,53 @@ public class DefaultInitService implements InitService {
         StringBuilder query = new StringBuilder();
 
         reasons.forEach(reasonModel -> {
+            String label = I18n.getInstance().translate(reasonModel.getLabel(), Renders.getHost(request), I18n.acceptLanguage(request));
+            Integer reasonTypeId = reasonModel.getReasonTypeId().getValue();
+
+            // Initialization must stay idempotent: the year transition resets the initialization status,
+            // so the form can legitimately be submitted again on a structure that already owns its reasons.
             query.append("INSERT INTO ")
                     .append(Presences.dbSchema)
-                    .append(".reason(id, structure_id, label, proving, comment, absence_compliance, reason_type_id)" +
-                            " VALUES (nextval('presences.reason_id_seq'), ?,?,?,'',?,?);");
+                    .append(".reason(structure_id, label, proving, comment, absence_compliance, reason_type_id)")
+                    .append(" SELECT ?,?,?,'',?,?")
+                    .append(" WHERE NOT EXISTS (SELECT 1 FROM ")
+                    .append(Presences.dbSchema)
+                    .append(".reason WHERE structure_id = ? AND label = ? AND reason_type_id = ?);");
             params.add(structure)
-                    .add(I18n.getInstance().translate(reasonModel.getLabel(), Renders.getHost(request), I18n.acceptLanguage(request)))
+                    .add(label)
                     .add(reasonModel.isProving())
                     .add(reasonModel.isAbsenceCompliance())
-                    .add(reasonModel.getReasonTypeId().getValue());
-            if (reasonModel.isRegularizedAlertExclude() || reasonModel.isUnregularizedAlertExclude() || reasonModel.isLatenessAlertExclude()) {
+                    .add(reasonTypeId)
+                    .add(structure)
+                    .add(label)
+                    .add(reasonTypeId);
+
+            List<Integer> excludeRuleTypeIds = new ArrayList<>();
+            if (reasonModel.isRegularizedAlertExclude()) excludeRuleTypeIds.add(1);
+            if (reasonModel.isUnregularizedAlertExclude()) excludeRuleTypeIds.add(2);
+            if (reasonModel.isLatenessAlertExclude()) excludeRuleTypeIds.add(3);
+
+            if (!excludeRuleTypeIds.isEmpty()) {
+                // The reason identifier is resolved by lookup instead of currval: the sequence is no longer
+                // consumed when the reason already exists, so currval would point to another reason.
+                // DO NOTHING preserves an exclusion rule the structure may have deactivated on its own.
                 query.append("INSERT INTO ")
                         .append(Presences.dbSchema)
-                        .append(".reason_alert(structure_id, reason_id, reason_alert_exclude_rules_type_id) VALUES ");
-                if (reasonModel.isRegularizedAlertExclude()) {
-                    query.append("(?, currval('presences.reason_id_seq'), 1),");
-                    params.add(structure);
-                }
-                if (reasonModel.isUnregularizedAlertExclude()) {
-                    query.append("(?, currval('presences.reason_id_seq'), 2),");
-                    params.add(structure);
-                }
-                if (reasonModel.isLatenessAlertExclude()) {
-                    query.append("(?, currval('presences.reason_id_seq'), 3),");
-                    params.add(structure);
+                        .append(".reason_alert(structure_id, reason_id, reason_alert_exclude_rules_type_id)")
+                        .append(" SELECT ?, reason.id, alert_rule.type_id FROM ")
+                        .append(Presences.dbSchema)
+                        .append(".reason CROSS JOIN (VALUES ");
+                for (Integer excludeRuleTypeId : excludeRuleTypeIds) {
+                    query.append("(").append(excludeRuleTypeId).append("),");
                 }
                 query.deleteCharAt(query.length() - 1);
-                query.append(";");
+                query.append(") AS alert_rule(type_id)")
+                        .append(" WHERE reason.structure_id = ? AND reason.label = ? AND reason.reason_type_id = ?")
+                        .append(" ON CONFLICT ON CONSTRAINT uniq_reason_alert DO NOTHING;");
+                params.add(structure)
+                        .add(structure)
+                        .add(label)
+                        .add(reasonTypeId);
             }
         });
 
