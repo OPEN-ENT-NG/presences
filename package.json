@@ -8,7 +8,15 @@
     "test": "npm run coverage",
     "coverage:dev": "./node_modules/.bin/jest --config jest.config.js --coverage --watch --verbose false",
     "test:dev": "npm run coverage:dev",
-    "build:sass": "sass --load-path=node_modules/ --no-source-map presences/src/main/resources/public/sass/index.scss presences/src/main/resources/public/css/presences.css"
+    "build:sass": "sass --load-path=node_modules/ --no-source-map presences/src/main/resources/public/sass/index.scss presences/src/main/resources/public/css/presences.css",
+    "watch:ts": "node node_modules/gulp/bin/gulp.js watch-dev",
+    "watch:sass": "node scripts/dev-sass.js",
+    "dev:server": "node dev-server.js",
+    "dev": "concurrently --kill-others-on-fail -n webpack,sass,serve -c blue,magenta,green \"yarn watch:ts\" \"yarn watch:sass\" \"yarn dev:server\"",
+    "dev:presences": "cross-env MODULE=presences yarn dev",
+    "dev:incidents": "cross-env MODULE=incidents yarn dev",
+    "dev:massmailing": "cross-env MODULE=massmailing yarn dev",
+    "dev:statistics": "cross-env MODULE=statistics-presences yarn dev"
   },
   "repository": {
     "type": "git",
@@ -44,6 +52,10 @@
     "apexcharts": "^3.26.0"
   },
   "devDependencies": {
+    "browser-sync": "^3.0.2",
+    "concurrently": "^9.1.0",
+    "cross-env": "^7.0.3",
+    "http-proxy": "^1.18.1",
     "sass": "^1.49.9",
     "entcore-css-lib": "npm:ode-csslib@4.0.12",
     "@types/angular": "1.8.9",

@@ -9,6 +9,34 @@
   - La gestion des incidents, des punitions et des sanctions,
   - Le publipostage de tous ces événements. 
 
+## Développement local (watcher + proxy vers une recette)
+
+Permet de développer le front TypeScript/AngularJS sans installer le backend en local : le bundle du module
+est reconstruit à la volée (webpack via gulp), le Sass est recompilé, et tout le reste (page HTML, `ng-app.js`,
+thème, i18n, API) est proxyfié vers une recette distante avec la session de l'utilisateur connecté.
+Le navigateur se recharge automatiquement à chaque modification.
+
+1. `yarn install`
+2. `cp .env.template .env` (une seule fois — rend le module détectable par `dev-auth-fetcher`)
+3. `dev-auth-fetcher connect` (`--watch` pour maintenir la session) — ou le skill Claude `auth-user-frontend` —
+   pour remplir le `.env`
+4. Lancer **le module que l'on développe** :
+   ```bash
+   yarn dev:presences        # http://localhost:3000/presences
+   yarn dev:incidents
+   yarn dev:massmailing
+   yarn dev:statistics       # statistics-presences
+   ```
+
+Seul le module lancé est servi depuis le disque ; les 3 autres, la page HTML, le thème, l'i18n et l'API
+viennent de la recette. Modifier `view-src/` ou ajouter une clé i18n n'aura donc aucun effet en local.
+
+Le CSS applicatif est compilé dans le `theme.css` du skin (ode-themes) et non servi depuis
+`/<module>/public/css/`. Pour que le Sass recompilé soit visible, le serveur de dev injecte la feuille
+locale dans la page, après le thème. Le rendu est donc indicatif : les variables du skin déployé ne sont
+pas celles de la compilation locale. Seul `presences` possède un `sass/index.scss` — les autres modules
+n'ont que des partiels, sans point d'entrée, donc rien à compiler.
+
 ## Configuration
 Le module présences contient plusieurs modules en son sein : incidents, massmailing, presences et statistics-presences.
 Seuls massmailing, presences et statistics-presences contiennent des configurations techniques uniques.

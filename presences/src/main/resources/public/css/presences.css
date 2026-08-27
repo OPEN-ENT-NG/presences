@@ -87,24 +87,6 @@
   background-color: #ffffff;
 }
 
-body.presences, .sniplet.presences {
-  /* Button declare absence */
-  /* State color */
-  /* ----------------------------
-      Period bar history
-  ---------------------------- */
-  /* regularized-absence */
-  /* Hide the browser's default checkbox */
-  /* Create a custom regularized checkbox */
-  /* Create the checkmark/indicator (hidden when not checked) */
-  /* Empty state design */
-  /* Table design */
-  /* css editor inside sniplet in general */
-  color: rgba(68, 68, 68, 0.87);
-  /* ----------------------------
-    Spacing Margin
-  ---------------------------- */
-}
 body.presences .async-autocomplete .input-async-autocomplete input[type=text]:focus, .sniplet.presences .async-autocomplete .input-async-autocomplete input[type=text]:focus {
   border-bottom: 2px solid #ffb600 !important;
 }
@@ -187,11 +169,11 @@ body.presences switch .switch .tick:before, .sniplet.presences switch .switch .t
   border: none !important;
 }
 body.presences switch .switch input[type=checkbox]:checked + .tick, .sniplet.presences switch .switch input[type=checkbox]:checked + .tick {
-  background: rgb(180.8010928962, 100.7, 255);
+  background: rgb(70.902389371%, 39.4901960784%, 100%);
 }
 body.presences switch .switch input[type=checkbox]:checked + .tick:before, .sniplet.presences switch .switch input[type=checkbox]:checked + .tick:before {
   left: 20px;
-  background: rgb(114.9180496905, 23.4995580913, 199.6004419087);
+  background: rgb(45.0659018394%, 9.215512977%, 78.2746831015%);
 }
 body.presences switch .switch input[type=checkbox]:disabled + .tick, .sniplet.presences switch .switch input[type=checkbox]:disabled + .tick {
   background: #8c939e;
@@ -200,10 +182,10 @@ body.presences switch .switch input[type=checkbox]:disabled + .tick:before, .sni
   background: #8c939e;
 }
 body.presences switch .switch input[type=checkbox]:disabled:checked + .tick, .sniplet.presences switch .switch input[type=checkbox]:disabled:checked + .tick {
-  background: rgb(217.4391803279, 181.09, 251.11);
+  background: rgb(85.2702667952%, 71.0156862745%, 98.4745098039%);
 }
 body.presences switch .switch input[type=checkbox]:disabled:checked + .tick:before, .sniplet.presences switch .switch input[type=checkbox]:disabled:checked + .tick:before {
-  background: rgb(217.4391803279, 181.09, 251.11);
+  background: rgb(85.2702667952%, 71.0156862745%, 98.4745098039%);
 }
 body.presences .toasts, .sniplet.presences .toasts {
   position: fixed;
@@ -244,34 +226,34 @@ body.presences .toasts .toast-content.show, .sniplet.presences .toasts .toast-co
   overflow: auto !important;
 }
 body.presences .toasts .toast-content.confirm, .sniplet.presences .toasts .toast-content.confirm {
-  color: rgb(27.0444915254, 46.2923728814, 11.2076271186);
-  background-color: rgb(190.9110169492, 231.4152542373, 157.5847457627);
+  color: rgb(10.6056829511%, 18.1538717182%, 4.3951478897%);
+  background-color: rgb(74.8670654703%, 90.7510800931%, 61.7979395148%);
 }
 body.presences .toasts .toast-content.confirm .content:before, .sniplet.presences .toasts .toast-content.confirm .content:before {
   content: "\e871";
 }
 body.presences .toasts .toast-content.confirm .timer, .sniplet.presences .toasts .toast-content.confirm .timer {
-  background-color: rgb(75.0190677966, 128.4110169492, 31.0889830508);
+  background-color: rgb(29.4192422732%, 50.3572615487%, 12.1917580592%);
 }
 body.presences .toasts .toast-content.info, .sniplet.presences .toasts .toast-content.info {
-  color: rgb(14.4642857143, 75.2142857143, 107.0357142857);
-  background-color: rgb(204.7857142857, 233.2857142857, 248.2142857143);
+  color: rgb(5.6722689076%, 29.4957983193%, 41.974789916%);
+  background-color: rgb(80.3081232493%, 91.4845938375%, 97.3389355742%);
 }
 body.presences .toasts .toast-content.info .content:before, .sniplet.presences .toasts .toast-content.info .content:before {
   content: "\e84b";
 }
 body.presences .toasts .toast-content.info .timer, .sniplet.presences .toasts .toast-content.info .timer {
-  background-color: rgb(26.6071428571, 138.3571428571, 196.8928571429);
+  background-color: rgb(10.4341736695%, 54.2577030812%, 77.2128851541%);
 }
 body.presences .toasts .toast-content.warning, .sniplet.presences .toasts .toast-content.warning {
-  color: rgb(134.5, 0, 18.4340101523);
-  background-color: rgb(255, 211, 217.0304568528);
+  color: rgb(52.7450980392%, 0%, 7.2290235891%);
+  background-color: rgb(100%, 82.7450980392%, 85.1099830795%);
 }
 body.presences .toasts .toast-content.warning .content:before, .sniplet.presences .toasts .toast-content.warning .content:before {
   content: "\e903";
 }
 body.presences .toasts .toast-content.warning .timer, .sniplet.presences .toasts .toast-content.warning .timer {
-  background-color: rgb(236.5, 0, 32.4137055838);
+  background-color: rgb(92.7450980392%, 0%, 12.7112570917%);
 }
 body.presences .toasts .toast-content.info .content:before, body.presences .toasts .toast-content.warning .content:before, .sniplet.presences .toasts .toast-content.info .content:before, .sniplet.presences .toasts .toast-content.warning .content:before {
   font-size: 20px !important;
@@ -1610,9 +1592,12 @@ body.presences .date-picker:before, body.presences .time-picker:before, .sniplet
   font-size: 20px;
 }
 body.presences .date-picker input[type=text], body.presences .time-picker input[type=text], .sniplet.presences .date-picker input[type=text], .sniplet.presences .time-picker input[type=text] {
-  width: 80px !important;
+  width: 90px !important;
   margin-bottom: 0;
   box-sizing: border-box;
+}
+body.presences .date-picker input[type=text]::placeholder, body.presences .time-picker input[type=text]::placeholder, .sniplet.presences .date-picker input[type=text]::placeholder, .sniplet.presences .time-picker input[type=text]::placeholder {
+  font-size: 0.8rem;
 }
 body.presences .date-picker input[type=text], body.presences .date-picker input[type=time], body.presences .time-picker input[type=text], body.presences .time-picker input[type=time], .sniplet.presences .date-picker input[type=text], .sniplet.presences .date-picker input[type=time], .sniplet.presences .time-picker input[type=text], .sniplet.presences .time-picker input[type=time] {
   background-color: #ffffff;
@@ -1836,15 +1821,15 @@ body.presences .exemptions .flex-th .avatar, .sniplet.presences .exemptions .fle
 body.presences .exemptions .exemptions-content-empty img, .sniplet.presences .exemptions .exemptions-content-empty img {
   width: 35%;
 }
-body.presences .exemptions-sniplet, .sniplet.presences .exemptions-sniplet {
-  /* Select css */
-}
 body.presences .exemptions-sniplet .start-date, .sniplet.presences .exemptions-sniplet .start-date {
   margin-right: 8px;
 }
 body.presences .exemptions-sniplet .type-exemption, .sniplet.presences .exemptions-sniplet .type-exemption {
   margin-left: 7px;
   padding: 0;
+}
+body.presences .exemptions-sniplet, .sniplet.presences .exemptions-sniplet {
+  /* Select css */
 }
 body.presences .exemptions-sniplet .timeslot, .sniplet.presences .exemptions-sniplet .timeslot {
   padding-top: 8px;
@@ -2121,6 +2106,9 @@ body.presences .register .student .register-event-status > div.incident, .sniple
 body.presences .registers h2, .sniplet.presences .registers h2 {
   color: rgba(68, 68, 68, 0.87);
 }
+body.presences, .sniplet.presences {
+  /* Button declare absence */
+}
 body.presences .register-absence-button, .sniplet.presences .register-absence-button {
   width: 26px;
   height: 40px;
@@ -2150,6 +2138,9 @@ body.presences .register-absence-button.active::before, .sniplet.presences .regi
 body.presences .register-absence-button.disabled::before, .sniplet.presences .register-absence-button.disabled::before {
   background-color: #aaaaaa !important;
   border-color: #aaaaaa !important;
+}
+body.presences, .sniplet.presences {
+  /* State color */
 }
 body.presences .state, .sniplet.presences .state {
   width: 44px;
@@ -2821,6 +2812,11 @@ body.presences .calendar container[template=calendarDefaultDisplayOptionsTemplat
 body.presences .calendar container[template=calendarDefaultDisplayOptionsTemplate] > div h2 ~ div .quarterHours, .sniplet.presences .calendar container[template=calendarDefaultDisplayOptionsTemplate] > div h2 ~ div .quarterHours {
   display: none;
 }
+body.presences, .sniplet.presences {
+  /* ----------------------------
+      Period bar history
+  ---------------------------- */
+}
 body.presences .period li, .sniplet.presences .period li {
   list-style: none;
   float: left;
@@ -3057,6 +3053,9 @@ body.presences i.add:before, .sniplet.presences i.add:before {
 body.presences i.addMultiple:before, .sniplet.presences i.addMultiple:before {
   font-size: 24px;
 }
+body.presences, .sniplet.presences {
+  /* regularized-absence */
+}
 body.presences .regularized-absence, .sniplet.presences .regularized-absence {
   position: relative;
   overflow: visible;
@@ -3066,12 +3065,18 @@ body.presences .regularized-absence, .sniplet.presences .regularized-absence {
   width: 20px;
   height: 20px;
 }
+body.presences, .sniplet.presences {
+  /* Hide the browser's default checkbox */
+}
 body.presences .regularized-absence input, .sniplet.presences .regularized-absence input {
   position: absolute;
   opacity: 0;
   cursor: pointer;
   height: 0;
   width: 0;
+}
+body.presences, .sniplet.presences {
+  /* Create a custom regularized checkbox */
 }
 body.presences .checkmark, .sniplet.presences .checkmark {
   height: 18px;
@@ -3106,6 +3111,9 @@ body.presences .checkmark.half:after, .sniplet.presences .checkmark.half:after {
   border-width: 0 3px 3px 0;
   transform: rotate(91deg);
 }
+body.presences, .sniplet.presences {
+  /* Create the checkmark/indicator (hidden when not checked) */
+}
 body.presences .checkmark:before, .sniplet.presences .checkmark:before {
   display: none;
 }
@@ -3116,13 +3124,12 @@ body.presences .checkmark:after, .sniplet.presences .checkmark:after {
 }
 body.presences .eventFormLightBox, .sniplet.presences .eventFormLightBox {
   /* Header part */
-  /* SubHeader part */
-  /* toggle event type radio part */
-  /* Body part */
-  /* Footer part */
 }
 body.presences .eventFormLightBox-head h3, .sniplet.presences .eventFormLightBox-head h3 {
   margin-left: 5px;
+}
+body.presences .eventFormLightBox, .sniplet.presences .eventFormLightBox {
+  /* SubHeader part */
 }
 body.presences .eventFormLightBox-subHead, .sniplet.presences .eventFormLightBox-subHead {
   background: #f7f7f7;
@@ -3131,9 +3138,15 @@ body.presences .eventFormLightBox-subHead, .sniplet.presences .eventFormLightBox
 body.presences .eventFormLightBox-subHead h3, .sniplet.presences .eventFormLightBox-subHead h3 {
   margin: 0;
 }
+body.presences .eventFormLightBox, .sniplet.presences .eventFormLightBox {
+  /* toggle event type radio part */
+}
 body.presences .eventFormLightBox-eventsTypeRadio, .sniplet.presences .eventFormLightBox-eventsTypeRadio {
   background: #f7f7f7;
   padding: 8px 8px 16px 20px;
+}
+body.presences .eventFormLightBox, .sniplet.presences .eventFormLightBox {
+  /* Body part */
 }
 body.presences .eventFormLightBox-body, .sniplet.presences .eventFormLightBox-body {
   background: #f7f7f7;
@@ -3211,6 +3224,9 @@ body.presences .eventFormLightBox-body-description .latenessText, .sniplet.prese
 }
 body.presences .eventFormLightBox-body-description .latenessText::placeholder, .sniplet.presences .eventFormLightBox-body-description .latenessText::placeholder {
   color: #d6d6d6;
+}
+body.presences .eventFormLightBox, .sniplet.presences .eventFormLightBox {
+  /* Footer part */
 }
 body.presences .eventFormLightBox-footer-button, .sniplet.presences .eventFormLightBox-footer-button {
   padding: 8px;
@@ -3343,6 +3359,9 @@ body.presences .registry-eventTypeFilter .forgotten-notebook:before, .sniplet.pr
 body.presences ul, .sniplet.presences ul {
   list-style-type: none;
 }
+body.presences, .sniplet.presences {
+  /* Empty state design */
+}
 body.presences .registry-table-empty, .sniplet.presences .registry-table-empty {
   text-align: center;
 }
@@ -3358,6 +3377,9 @@ body.presences .registry-table-empty-description-title, .sniplet.presences .regi
 }
 body.presences .registry-table-empty img, .sniplet.presences .registry-table-empty img {
   width: 32%;
+}
+body.presences, .sniplet.presences {
+  /* Table design */
 }
 body.presences .registry-table-title, .sniplet.presences .registry-table-title {
   display: flex;
@@ -3906,6 +3928,8 @@ body.presences button, body.presences a.button, .sniplet.presences button, .snip
   box-shadow: none;
 }
 body.presences button:disabled, body.presences a.button:disabled, .sniplet.presences button:disabled, .sniplet.presences a.button:disabled {
+  cursor: not-allowed;
+  color: #b1b6bf;
   background: #555555;
 }
 body.presences button.cancel, body.presences a.button.cancel, .sniplet.presences button.cancel, .sniplet.presences a.button.cancel {
@@ -4144,14 +4168,13 @@ body.presences .widget-alerts .selected.INCIDENT, .sniplet.presences .widget-ale
 body.presences .widget-alerts .selected.FORGOTTEN_NOTEBOOK, .sniplet.presences .widget-alerts .selected.FORGOTTEN_NOTEBOOK {
   box-shadow: 0 0 0 5px #b0ead5;
 }
-body.presences .statements-widgets, .sniplet.presences .statements-widgets {
-  /* content each card css */
-  /* empty state css */
-}
 body.presences .statements-widgets-content, .sniplet.presences .statements-widgets-content {
   display: flex;
   flex-flow: row wrap;
   justify-content: left;
+}
+body.presences .statements-widgets, .sniplet.presences .statements-widgets {
+  /* content each card css */
 }
 body.presences .statements-widgets .statement, .sniplet.presences .statements-widgets .statement {
   display: flex;
@@ -4169,10 +4192,12 @@ body.presences .statements-widgets .statement:hover, .sniplet.presences .stateme
 body.presences .statements-widgets .statement-description, .sniplet.presences .statements-widgets .statement-description {
   padding: 8px 16px;
   flex: 2;
-  /* description */
 }
 body.presences .statements-widgets .statement-description-title, .sniplet.presences .statements-widgets .statement-description-title {
   margin-bottom: 8px;
+}
+body.presences .statements-widgets .statement-description, .sniplet.presences .statements-widgets .statement-description {
+  /* description */
 }
 body.presences .statements-widgets .statement-date, .sniplet.presences .statements-widgets .statement-date {
   flex: 1;
@@ -4189,6 +4214,9 @@ body.presences .statements-widgets .statement-date.same, .sniplet.presences .sta
 body.presences .statements-widgets .statement-date-time, .sniplet.presences .statements-widgets .statement-date-time {
   display: flex;
   flex-direction: column;
+}
+body.presences .statements-widgets, .sniplet.presences .statements-widgets {
+  /* empty state css */
 }
 body.presences .statements-widgets .empty-state, .sniplet.presences .statements-widgets .empty-state {
   display: flex;
@@ -4539,8 +4567,6 @@ body.presences.presences-manage .presence-navigation-item .presence-icon .add:be
 }
 body.presences.sniplet-presence-form .sniplet-form, .sniplet.presences.sniplet-presence-form .sniplet-form {
   /* title */
-  /* input */
-  /* add / lists */
 }
 body.presences.sniplet-presence-form .sniplet-form .sniplet-header, .sniplet.presences.sniplet-presence-form .sniplet-form .sniplet-header {
   display: flex;
@@ -4556,6 +4582,9 @@ body.presences.sniplet-presence-form .sniplet-form .sniplet-header-icon i::befor
 }
 body.presences.sniplet-presence-form .sniplet-form .sniplet-header-title, .sniplet.presences.sniplet-presence-form .sniplet-form .sniplet-header-title {
   color: rgba(68, 68, 68, 0.87);
+}
+body.presences.sniplet-presence-form .sniplet-form, .sniplet.presences.sniplet-presence-form .sniplet-form {
+  /* input */
 }
 body.presences.sniplet-presence-form .sniplet-form .sniplet-input, .sniplet.presences.sniplet-presence-form .sniplet-form .sniplet-input {
   padding: 0 16px 24px 16px;
@@ -4595,6 +4624,9 @@ body.presences.sniplet-presence-form .sniplet-form .sniplet-input-color li.activ
 }
 body.presences.sniplet-presence-form .sniplet-form .sniplet-input-flex, .sniplet.presences.sniplet-presence-form .sniplet-form .sniplet-input-flex {
   display: flex;
+}
+body.presences.sniplet-presence-form .sniplet-form, .sniplet.presences.sniplet-presence-form .sniplet-form {
+  /* add / lists */
 }
 body.presences.sniplet-presence-form .sniplet-form .sniplet-addList, .sniplet.presences.sniplet-presence-form .sniplet-form .sniplet-addList {
   padding: 0 16px 32px 16px;
@@ -4869,7 +4901,6 @@ body.presences .sniplet-manage-action .sniplet-header-icon .add:before, .sniplet
 }
 body.presences .presenceLightbox, .sniplet.presences .presenceLightbox {
   /* Body part */
-  /* Footer part */
 }
 body.presences .presenceLightbox-body, .sniplet.presences .presenceLightbox-body {
   padding: 1px 20px;
@@ -4950,6 +4981,9 @@ body.presences .presenceLightbox-body-info-discipline-owner, .sniplet.presences 
 body.presences .presenceLightbox-body-info-discipline-owner-info, .sniplet.presences .presenceLightbox-body-info-discipline-owner-info {
   margin: 24px 0;
   font-weight: bolder;
+}
+body.presences .presenceLightbox, .sniplet.presences .presenceLightbox {
+  /* Footer part */
 }
 body.presences .presenceLightbox-footer, .sniplet.presences .presenceLightbox-footer {
   padding: 8px 8px 0 8px;
@@ -5416,13 +5450,15 @@ body.presences .events-card-toggle.grey-event, .sniplet.presences .events-card-t
 }
 body.presences .statements-absence-form, .sniplet.presences .statements-absence-form {
   margin: -18px -35px 0 0;
-  background: #ffffff;
-  box-shadow: 0 5px 5px rgba(0, 0, 0, 0.21);
 }
 @media (max-width: 768px) {
   body.presences .statements-absence-form, .sniplet.presences .statements-absence-form {
     margin: -8px -15px;
   }
+}
+body.presences .statements-absence-form, .sniplet.presences .statements-absence-form {
+  background: #ffffff;
+  box-shadow: 0 5px 5px rgba(0, 0, 0, 0.21);
 }
 body.presences .statements-absence-form-title, .sniplet.presences .statements-absence-form-title {
   display: flex;
@@ -5539,6 +5575,9 @@ body.presences .statements-absence-form .statements-history-list-item-content-in
 }
 body.presences .statements-absence-form .statements-history-list-item-content-infos-download i:before, .sniplet.presences .statements-absence-form .statements-history-list-item-content-infos-download i:before {
   font-size: 32px;
+}
+body.presences, .sniplet.presences {
+  /* css editor inside sniplet in general */
 }
 body.presences editor .table, .sniplet.presences editor .table {
   width: auto;
@@ -5695,6 +5734,9 @@ body.presences .events-table-component-list-item .table-reason label::after, .sn
 }
 body.presences .events-table-component-list-item-calendar, body.presences .events-table-component-list-item-followed, body.presences .events-table-component-list-item-action, body.presences .events-table-component-list-item-regularized, .sniplet.presences .events-table-component-list-item-calendar, .sniplet.presences .events-table-component-list-item-followed, .sniplet.presences .events-table-component-list-item-action, .sniplet.presences .events-table-component-list-item-regularized {
   max-width: 5%;
+}
+body.presences, .sniplet.presences {
+  color: rgba(68, 68, 68, 0.87);
 }
 body.presences textarea, .sniplet.presences textarea {
   font-family: "Roboto", sans-serif;
@@ -5917,6 +5959,11 @@ body.presences i.filter, .sniplet.presences i.filter {
 }
 body.presences .max-height-40, .sniplet.presences .max-height-40 {
   max-height: 40px;
+}
+body.presences, .sniplet.presences {
+  /* ----------------------------
+    Spacing Margin
+  ---------------------------- */
 }
 body.presences .margin-top-md, .sniplet.presences .margin-top-md {
   margin-top: 10px;
