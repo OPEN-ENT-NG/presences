@@ -19,6 +19,9 @@
       "org.entcore.common.http.health.MongoProbe",
       "org.entcore.common.http.health.PostgresProbe"
     ],
+    "publicConf": {
+      "screeb-app-id": "{{ screebAppId | default('') }}"
+    },
     "sql": true,
     "entcore.port" : 8009,
     "mail-max-length": 160,

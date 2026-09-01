@@ -19,6 +19,9 @@
       "org.entcore.common.http.health.MongoProbe",
       "org.entcore.common.http.health.PostgresProbe"
     ],
+    "publicConf": {
+      "screeb-app-id": "{{ screebAppId | default('') }}"
+    },
     "entcore.port" : 8009,
     "sql": true,
     "db-schema": "presences",

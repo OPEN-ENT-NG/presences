@@ -7,3 +7,4 @@ export * from '@common/services/grouping.service';
 export * from '@incidents/services/PunishmentTypeService';
 export * from '@incidents/services/PunishmentService';
 export * from './MailingService';
+export * from '@common/services/screeb.service';

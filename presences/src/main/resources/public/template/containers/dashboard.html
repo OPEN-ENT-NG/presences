@@ -52,6 +52,7 @@
           options="vm.filter.search.items"
           placeholder="presences.dashboard.search.placeholder"
           search="vm.filter.search.item"
+          data-testid="presences-input-search-calendar"
         ></async-autocomplete>
 
         <!-- Search to access registry -->
@@ -65,6 +66,7 @@
           data-options="vm.groupsSearch.groups"
           data-placeholder="presences.dashboard.search.registry.placeholder"
           data-search="vm.groupsSearch.group"
+          data-testid="presences-input-search-registry"
         >
         </async-autocomplete>
       </div>
@@ -149,6 +151,7 @@
         name="'presences.widgets.register'"
         course="vm.course"
         ng-if="::hasRight('widget_current_course')"
+        data-testid="presences-side-widget-register"
       >
         <div
           ng-include="'/presences/public/template/widgets/register.html'"
