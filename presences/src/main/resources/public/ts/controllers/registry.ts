@@ -77,6 +77,8 @@ interface ViewModel {
 
     closeEventCard(): void;
 
+    hasNoGroupSelected(): boolean;
+
     // CSV
     exportEventListCsv(): void;
     exportCallRegisterCsv(): void;
@@ -317,12 +319,18 @@ export const registryController = ng.controller('RegistryController', ['$scope',
             vm.eventCardData = {} as EventRegistryCard;
         };
 
+        vm.hasNoGroupSelected = (): boolean => {
+            return !vm.params.group || vm.params.group.length === 0;
+        };
+
         /* CSV  */
         vm.exportEventListCsv = (): void => {
+            if (vm.hasNoGroupSelected()) return;
             registryService.exportEventListCSV(vm.params);
         };
 
         vm.exportCallRegisterCsv = (): void => {
+            if (vm.hasNoGroupSelected()) return;
             registryService.exportCallRegisterCSV(vm.params);
         };
 

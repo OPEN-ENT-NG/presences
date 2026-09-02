@@ -82,4 +82,55 @@ describe('RegistryController', () => {
         expect(registryControllerTest.isAbsenceRegularized([registryEventRegularized, registryEventLateness])).toEqual(true);
         done();
     });
+
+    describe('CSV export', () => {
+        let exportEventListCSVSpy: jest.SpyInstance;
+        let exportCallRegisterCSVSpy: jest.SpyInstance;
+
+        beforeEach(() => {
+            exportEventListCSVSpy = jest.spyOn(registryService, 'exportEventListCSV').mockImplementation(async () => undefined);
+            exportCallRegisterCSVSpy = jest.spyOn(registryService, 'exportCallRegisterCSV').mockImplementation(async () => undefined);
+        });
+
+        afterEach(() => {
+            exportEventListCSVSpy.mockRestore();
+            exportCallRegisterCSVSpy.mockRestore();
+        });
+
+        it('does not export event list CSV when no group is selected', done => {
+            registryControllerTest.params.group = undefined;
+            registryControllerTest.exportEventListCsv();
+            expect(exportEventListCSVSpy).not.toHaveBeenCalled();
+
+            registryControllerTest.params.group = [];
+            registryControllerTest.exportEventListCsv();
+            expect(exportEventListCSVSpy).not.toHaveBeenCalled();
+            done();
+        });
+
+        it('exports event list CSV when at least one group is selected', done => {
+            registryControllerTest.params.group = ['group-1'];
+            registryControllerTest.exportEventListCsv();
+            expect(exportEventListCSVSpy).toHaveBeenCalledWith(registryControllerTest.params);
+            done();
+        });
+
+        it('does not export call register CSV when no group is selected', done => {
+            registryControllerTest.params.group = undefined;
+            registryControllerTest.exportCallRegisterCsv();
+            expect(exportCallRegisterCSVSpy).not.toHaveBeenCalled();
+
+            registryControllerTest.params.group = [];
+            registryControllerTest.exportCallRegisterCsv();
+            expect(exportCallRegisterCSVSpy).not.toHaveBeenCalled();
+            done();
+        });
+
+        it('exports call register CSV when at least one group is selected', done => {
+            registryControllerTest.params.group = ['group-1'];
+            registryControllerTest.exportCallRegisterCsv();
+            expect(exportCallRegisterCSVSpy).toHaveBeenCalledWith(registryControllerTest.params);
+            done();
+        });
+    });
 });
