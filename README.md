@@ -37,6 +37,11 @@ locale dans la page, après le thème. Le rendu est donc indicatif : les variabl
 pas celles de la compilation locale. Seul `presences` possède un `sass/index.scss` — les autres modules
 n'ont que des partiels, sans point d'entrée, donc rien à compiler.
 
+Le watcher écrit dans `<module>.dev.css`, distinct du `<module>.css` que produit `yarn build:sass`. Ni
+l'un ni l'autre n'est versionné : comme `dist/` et `public/js/`, le CSS est un artefact que le build
+régénère (`build.sh` → `yarn run build:sass`), et le sortir de git évite que la sortie de Sass — qui varie
+d'une version du compilateur à l'autre — ne pollue le diff de toute branche où l'on a lancé `yarn dev`.
+
 ## Configuration
 Le module présences contient plusieurs modules en son sein : incidents, massmailing, presences et statistics-presences.
 Seuls massmailing, presences et statistics-presences contiennent des configurations techniques uniques.

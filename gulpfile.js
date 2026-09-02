@@ -47,11 +47,11 @@ gulp.task('build', ['webpack'], function () {
 });
 
 /* ------------------------------------------------------------------------- *
- * Développement local (cf. dev-server.js et README « Développement local »)
+ * Local development (see dev-server.js and the README's local development section)
  *
- * Un seul module est reconstruit à la fois : les 4 bundles partagent common/
- * et des alias croisés, tout recompiler à chaque save coûterait ~20s.
- * Module ciblé : --targetModule=<module> ou MODULE=<module> (défaut presences).
+ * One module is rebuilt at a time: the 4 bundles share common/ and cross-module
+ * aliases, so recompiling all of them on every save would cost ~20s.
+ * Target module: --targetModule=<module> or MODULE=<module> (default presences).
  * ------------------------------------------------------------------------- */
 
 var devApp = args.targetModule || process.env.MODULE || 'presences';
@@ -61,20 +61,20 @@ gulp.task('copy-behaviours-dev', function () {
         .pipe(gulp.dest('./' + devApp + '/src/main/resources/public/js'));
 });
 
-// Pas de 'drop-cache' ici : webpack doit réécrire dist/ en place pour que le
-// watcher de browser-sync voie des évènements "change" propres (auto-reload).
+// No 'drop-cache' here: webpack must overwrite dist/ in place so that
+// browser-sync's watcher sees clean "change" events (auto-reload).
 gulp.task('watch-dev', function () {
     var config = require('./' + devApp + '/webpack.config.js');
-    // Mode watch natif de webpack : compilation incrémentale (~1s) et suivi des
-    // dépendances réelles, donc une modif dans common/ ou dans un module aliasé
-    // (@incidents, @statistics...) reconstruit bien le bundle ciblé.
+    // webpack's own watch mode: incremental compilation (~1s) and real dependency
+    // tracking, so a change in common/ or in an aliased module (@incidents,
+    // @statistics...) does rebuild the target bundle.
     config.watch = true;
 
     console.log('[watch-dev] module: ' + devApp);
 
     webpack(config)
-        // On log sans émettre 'end' : un emit('end') fermerait le stream et le
-        // watch s'arrêterait à la première erreur de compilation TypeScript.
+        // Log without emitting 'end': emit('end') would close the stream and the
+        // watch would stop at the first TypeScript compilation error.
         .on('error', function (err) {
             console.error('[watch-dev] ' + (err && err.message ? err.message : err));
         })

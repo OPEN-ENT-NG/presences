@@ -1,19 +1,19 @@
 /**
- * Serveur de développement local.
+ * Local development server.
  *
- *   Navigateur ──▶ http://localhost:3000/<module>
- *                    │
- *                    ├─ /<module>/public/**  → disque local (dist/, js/, css/, template/, img/)
- *                    │                          uniquement le module en cours de développement
- *                    └─ tout le reste        → proxy vers la recette (page, ng-app.js,
- *                                               thème, i18n, API, ET les 3 autres modules)
+ *   Browser ──▶ http://localhost:3000/<module>
+ *                 │
+ *                 ├─ /<module>/public/**  → local disk (dist/, js/, css/, template/, img/)
+ *                 │                          the module being developed only
+ *                 └─ everything else      → proxied to the recette (page, ng-app.js,
+ *                                            theme, i18n, API, AND the 3 other modules)
  *
- * Seul le module ciblé est servi depuis le disque. Les autres modules du bundle
- * (ils se référencent entre eux au runtime : sniplets, behaviours.js, images)
- * viennent de la recette, car le watcher n'en reconstruit qu'un : leurs dist/
- * locaux sont ceux du dernier build complet, souvent vieux de plusieurs semaines
- * et issus d'une autre branche. Les servir donnerait un mélange de versions
- * silencieux — typiquement un écran vide sur une app qui fonctionne en recette.
+ * Only the target module is served from disk. The other modules of the bundle
+ * (they reference each other at runtime: sniplets, behaviours.js, images) come
+ * from the recette, because the watcher rebuilds only one of them: their local
+ * dist/ is whatever the last full build produced, often weeks old and from
+ * another branch. Serving those would silently mix versions — typically an
+ * empty screen on an app that works fine on the recette.
  */
 const {exec} = require('child_process');
 const fs = require('fs');
@@ -26,11 +26,11 @@ const PORT = Number(process.env.PORT) || 3000;
 
 const target = process.env.MODULE || 'presences';
 if (MODULES.indexOf(target) === -1) {
-    console.error('Module inconnu : "' + target + '". Attendu : ' + MODULES.join(', '));
+    console.error('Unknown module: "' + target + '". Expected one of: ' + MODULES.join(', '));
     process.exit(1);
 }
 
-// Copié de entcore/admin proxy-development.conf.js (pas de dépendance dotenv)
+// Copied from entcore/admin proxy-development.conf.js (no dotenv dependency)
 const parseEnvFile = (content) => {
     const result = {};
     for (const line of content.split(/\r?\n/)) {
@@ -52,74 +52,74 @@ const parseEnvFile = (content) => {
 const envPath = path.resolve(__dirname, '.env');
 if (!fs.existsSync(envPath)) {
     console.error(
-        'Fichier .env manquant. Copier .env.template vers .env puis lancer ' +
-        '`dev-auth-fetcher connect` (ou le skill auth-user-frontend).'
+        'Missing .env file. Copy .env.template to .env then run ' +
+        '`dev-auth-fetcher connect` (or the auth-user-frontend skill).'
     );
     process.exit(1);
 }
 const env = parseEnvFile(fs.readFileSync(envPath, 'utf-8'));
 const {VITE_RECETTE, VITE_XSRF_TOKEN, VITE_ONE_SESSION_ID} = env;
 if (!VITE_RECETTE) {
-    console.error('VITE_RECETTE absent du .env');
+    console.error('VITE_RECETTE missing in .env');
     process.exit(1);
 }
 
-// Le .env généré par dev-auth-fetcher peut contenir un slash final, qui donnerait
-// des URL en `//presences` côté recette (404).
+// dev-auth-fetcher writes the URL with a trailing slash, which would produce
+// `//presences` upstream (404).
 const recette = VITE_RECETTE.replace(/\/+$/, '');
 const appAddress = '/' + target;
 const cookie = `oneSessionId=${VITE_ONE_SESSION_ID}; authenticated=true; XSRF-TOKEN=${VITE_XSRF_TOKEN}`;
 
-// Proxy manuel plutôt que l'option `proxy` de browser-sync : celle-ci bascule le
-// serveur local en https dès que la cible est en https (non désactivable via
-// `https: false`), ce qui déclenche un certificat auto-signé et l'avertissement
-// « connexion non privée ». Passer par http-proxy dans un middleware garde le
-// serveur local en http tout en proxyfiant vers la recette en https.
+// Manual proxy rather than browser-sync's `proxy` option: that one forces the
+// local server to https as soon as the target is https (not disableable via
+// `https: false`), which triggers a self-signed certificate and the browser's
+// "connection not private" warning. Going through http-proxy in a middleware
+// keeps the local server on http while proxying to the https recette.
 const proxy = httpProxy.createProxyServer({
     target: recette,
     changeOrigin: true,
     secure: true,
     autoRewrite: true,
-    // Le serveur local est en http, la recette en https. `autoRewrite` réécrit
-    // l'HOST des redirections (vers localhost:3000) mais conserve leur PROTOCOLE.
-    // Sans ceci, une redirection (typiquement /auth/login quand la session a
-    // expiré) envoie le navigateur sur https://localhost:3000 → « ce site ne peut
-    // pas fournir de connexion sécurisée », sans indice sur la cause réelle.
+    // The local server is http, the recette is https. `autoRewrite` rewrites the
+    // HOST of redirects (to localhost:3000) but keeps their PROTOCOL. Without
+    // this, a redirect (typically /auth/login once the session has expired)
+    // sends the browser to https://localhost:3000 → "this site can't provide a
+    // secure connection", with no hint about the actual cause.
     protocolRewrite: 'http',
-    // La page HTML est réécrite pour y injecter le client browser-sync et la
-    // feuille de style locale (cf. buildInjection plus bas) : c'est donc à nous
-    // d'écrire la réponse, http-proxy n'y touche plus.
+    // The HTML page is rewritten to inject the browser-sync client and the local
+    // stylesheet (see buildInjection below), so writing the response is up to
+    // us — http-proxy no longer touches it.
     selfHandleResponse: true,
 });
 
-// Seuls les documents de navigation sont réécrits. Les templates partiels chargés
-// par Angular sont aussi du text/html : sans ce filtre, chacun se verrait injecter
-// une copie du client browser-sync.
+// Only navigation documents are rewritten. Angular's partial templates are also
+// text/html: without this filter, each one would get its own copy of the
+// browser-sync client.
 const wantsHtmlDocument = (req) => (req.headers.accept || '').indexOf('text/html') !== -1;
 
-// Injecte la session de recette sur chaque requête sortante (pattern admin)
+// Injects the recette session into every outgoing request (admin pattern)
 proxy.on('proxyReq', (proxyReq, req) => {
     proxyReq.setHeader('cookie', cookie);
     proxyReq.setHeader('X-XSRF-TOKEN', VITE_XSRF_TOKEN || '');
-    // Réponse non compressée pour pouvoir la réécrire (documents HTML seulement)
+    // Uncompressed response so we can rewrite it (HTML documents only)
     if (wantsHtmlDocument(req)) {
         proxyReq.setHeader('accept-encoding', 'identity');
     }
 });
 
-// Une session expirée ne se manifeste QUE par une redirection vers /auth/login :
-// on la signale explicitement, sinon le navigateur affiche une page blanche.
+// An expired session shows up ONLY as a redirect to /auth/login: flag it
+// explicitly, otherwise the browser just shows a blank page.
 let sessionExpiredLogged = false;
 proxy.on('proxyRes', (proxyRes, req, res) => {
     const location = proxyRes.headers['location'];
     if (!sessionExpiredLogged && location && location.indexOf('/auth/login') !== -1) {
         sessionExpiredLogged = true;
         console.error(
-            '\nSession de recette expirée (redirection vers /auth/login).\n' +
-            'Régénérer le .env avec `dev-auth-fetcher connect`, puis relancer.\n'
+            '\nRecette session expired (redirected to /auth/login).\n' +
+            'Regenerate .env with `dev-auth-fetcher connect`, then restart.\n'
         );
     }
-    // Épingle le set-cookie de la réponse : évite la rotation de session
+    // Pins the set-cookie on the response: avoids session rotation
     proxyRes.headers['set-cookie'] = [
         `oneSessionId=${VITE_ONE_SESSION_ID}`,
         `XSRF-TOKEN=${VITE_XSRF_TOKEN}`,
@@ -154,17 +154,16 @@ proxy.on('proxyRes', (proxyRes, req, res) => {
 });
 
 proxy.on('error', (err, req, res) => {
-    console.error('Erreur de proxy vers la recette :', err.message);
+    console.error('Proxy error to recette:', err.message);
     if (!res.headersSent) res.writeHead(502, {'Content-Type': 'text/plain'});
-    res.end('Erreur de proxy vers la recette : ' + err.message);
+    res.end('Proxy error to recette: ' + err.message);
 });
 
-// Sert les dist/, template/, js/, css/, img/ locaux du module ciblé ; un 404
-// retombe sur le proxy (donc template/entcore/*, absent du repo, vient bien de
-// la recette).
-// Les options de serve-static doivent être portées par l'entrée elle-même
-// (`options`) : browser-sync ignore l'option globale `serveStaticOptions` pour
-// les entrées de type objet.
+// Serves the target module's local dist/, template/, js/, css/, img/; a 404
+// falls through to the proxy (so template/entcore/*, absent from the repo, does
+// come from the recette).
+// serve-static options must be carried by the entry itself (`options`):
+// browser-sync ignores the global `serveStaticOptions` option for object entries.
 const publicDir = path.resolve(__dirname, target, 'src/main/resources/public');
 const serveStatic = [{
     route: `${appAddress}/public`,
@@ -177,28 +176,38 @@ const serveStatic = [{
 
 if (!fs.existsSync(path.join(publicDir, 'dist/application.js'))) {
     console.warn(
-        `\n[!] ${target}/src/main/resources/public/dist/application.js est absent : ` +
-        `le premier build de webpack est peut-être encore en cours.\n` +
-        `    Tant qu'il manque, c'est le bundle de la recette qui est servi.\n`
+        `\n[!] ${target}/src/main/resources/public/dist/application.js is missing: ` +
+        `webpack's first build may still be running.\n` +
+        `    Until it lands, the recette's bundle is served instead.\n`
     );
 }
 
-// Injection de la feuille de style locale.
+// Local stylesheet injection.
 //
-// Le CSS applicatif n'est pas servi depuis /<module>/public/css/ : il est compilé
-// dans le theme.css du skin (ode-themes), que la recette sert et que ng-app.js
-// ajoute au <head> à l'exécution. Sans l'injection ci-dessous, recompiler le Sass
-// en local n'a donc strictement aucun effet visible.
+// The app CSS is not served from /<module>/public/css/: it is compiled into the
+// skin's theme.css (ode-themes), which the recette serves and ng-app.js appends
+// to <head> at runtime. Without the injection below, recompiling the Sass
+// locally has no visible effect whatsoever.
 //
-// Le link est ajouté par un script, et non en dur dans le HTML : ng-app.js insère
-// #theme après coup, et à spécificité égale c'est le dernier <link> du DOM qui
-// gagne. On attend donc #theme pour se placer juste après lui, puis on arrête
-// d'observer : maintenir le link en dernière position en permanence entre en
-// conflit avec le remplacement de <link> que fait browser-sync pour injecter le
-// CSS — les deux se relancent mutuellement et finissent par figer la page.
-const localCss = path.join(publicDir, 'css', target + '.css');
-const hasLocalCss = fs.existsSync(localCss);
-const cssUrl = `${appAddress}/public/css/${target}.css`;
+// The link is added by a script rather than hardcoded in the HTML: ng-app.js
+// inserts #theme afterwards, and at equal specificity the last <link> in the DOM
+// wins. So we wait for #theme to place ourselves right after it, then stop
+// observing: permanently keeping the link last conflicts with the <link> swap
+// browser-sync performs to inject CSS — the two retrigger each other and end up
+// freezing the page.
+//
+// What gets injected is the watcher's output (`<module>.dev.css`), not the
+// `<module>.css` of `yarn build:sass`. The choice is based on the presence of
+// the Sass entry point rather than of the file itself: on first launch the
+// server is ready before Sass has written its first output.
+const cssFile = fs.existsSync(path.join(publicDir, 'sass/index.scss'))
+    ? target + '.dev.css'
+    : target + '.css';
+const localCss = path.join(publicDir, 'css', cssFile);
+// Re-evaluated on every page served: freezing this at startup would disable the
+// injection for the whole session if Sass has not finished compiling yet.
+const hasLocalCss = () => fs.existsSync(localCss);
+const cssUrl = `${appAddress}/public/css/${cssFile}`;
 const localCssSnippet = `<script>(function () {
     var ID = 'dev-local-css';
     var observer;
@@ -222,7 +231,7 @@ const localCssSnippet = `<script>(function () {
         if (theme.compareDocumentPosition(el) & Node.DOCUMENT_POSITION_PRECEDING) {
             theme.parentNode.insertBefore(el, theme.nextSibling);
         }
-        if (observer) observer.disconnect(); // le thème n'est inséré qu'une fois
+        if (observer) observer.disconnect(); // the theme is only inserted once
     }
 
     link();
@@ -231,40 +240,40 @@ const localCssSnippet = `<script>(function () {
     place();
 })();</script>`;
 
-if (!hasLocalCss) {
+if (!hasLocalCss()) {
     console.warn(
-        `\n[!] ${path.relative(__dirname, localCss)} est absent : le CSS affiché sera ` +
-        `celui du thème de la recette.\n    Générer la feuille avec \`yarn build:sass\` ` +
-        `si le module en possède une.\n`
+        `\n[!] ${path.relative(__dirname, localCss)} does not exist yet: until it does, ` +
+        `the recette's theme CSS is what you see.\n    The Sass watcher writes it within ` +
+        `a second; if the module has no local Sass, this is permanent.\n`
     );
 }
 
-// Ce qui est ajouté au <head> de la page proxyfiée.
+// What gets appended to the proxied page's <head>.
 //
-// Le client browser-sync en fait partie : sans option `server` ni `proxy`,
-// browser-sync tourne en mode "snippet" et ne réécrit aucune réponse — il se
-// contente d'afficher le snippet en console en attendant qu'on le colle dans la
-// page. Sans lui, aucun client n'est connecté et l'option `files` ne recharge
-// donc jamais rien.
+// The browser-sync client is part of it: with no `server` nor `proxy` option,
+// browser-sync runs in "snippet" mode and rewrites no response — it merely
+// prints the snippet to the console and waits for someone to paste it into the
+// page. Without it no client is connected, so the `files` option never reloads
+// anything.
 function buildInjection() {
     const bsSnippet = browserSync.getOption('snippet') || '';
-    return (hasLocalCss ? localCssSnippet : '') + bsSnippet;
+    return (hasLocalCss() ? localCssSnippet : '') + bsSnippet;
 }
 
 browserSync.init(
     {
         port: PORT,
         startPath: appAddress,
-        // Ne pas confier l'ouverture du navigateur à browser-sync (cf. README,
-        // section « ça ouvre le port 3001 ») : elle est faite manuellement plus bas.
+        // Do not let browser-sync open the browser (see the README, "it opens
+        // port 3001" section): it is done manually below instead.
         open: false,
         ui: false,
         ghostMode: false,
         notify: false,
         serveStatic,
         middleware: [(req, res) => proxy.web(req, res)],
-        // Auto-reload quand webpack ré-émet le bundle, ou qu'un template change.
-        // Les .css sont injectés à chaud par browser-sync, sans rechargement.
+        // Auto-reload when webpack re-emits the bundle, or a template changes.
+        // .css files are hot-injected by browser-sync, without a page reload.
         files: [
             `${target}/src/main/resources/public/dist/*.js`,
             `${target}/src/main/resources/public/js/behaviours.js`,
@@ -276,14 +285,14 @@ browserSync.init(
     },
     () => {
         const appUrl = `http://localhost:${PORT}${appAddress}`;
-        console.log('\n  Module      : ' + target);
-        console.log('  Recette     : ' + recette);
-        console.log('  Application : ' + appUrl + '\n');
+        console.log('\n  Module     : ' + target);
+        console.log('  Recette    : ' + recette);
+        console.log('  Application: ' + appUrl + '\n');
         const opener = process.platform === 'darwin' ? 'open'
             : process.platform === 'win32' ? 'start ""'
                 : 'xdg-open';
         exec(`${opener} "${appUrl}"`, (err) => {
-            if (err) console.log('Ouvrir manuellement : ' + appUrl);
+            if (err) console.log('Open manually: ' + appUrl);
         });
     }
 );

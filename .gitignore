@@ -11,6 +11,7 @@ node_modules
 *.iml
 */build
 */src/main/resources/public/dist
+*/src/main/resources/public/css
 */src/main/resources/public/temp
 */src/main/resources/public/js
 */src/main/resources/public/template/entcore
