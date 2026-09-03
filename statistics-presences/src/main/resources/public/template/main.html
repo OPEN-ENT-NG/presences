@@ -1,7 +1,7 @@
 <!-- header / searchbar -->
-<div class="row">
+<div class="row"  data-testid="statistics-presences-header">
     <h1 class="cell paddingRight">
-        <i18n>statistics-presences.title</i18n>
+    <i18n>statistics-presences.title</i18n>
     </h1>
 
     <!-- Student search bar -->
@@ -13,7 +13,8 @@
                                 data-on-search="vm.searchStudent"
                                 data-options="vm.filter.studentsSearch.students"
                                 data-placeholder="statistics-presences.search.student"
-                                data-search="vm.filter.studentsSearch.student">
+                                data-search="vm.filter.studentsSearch.student"
+                                data-testid="statistics-presences-input-search-student">
             </async-autocomplete>
         </div>
 
@@ -37,7 +38,8 @@
                                 data-on-search="vm.searchAudience"
                                 data-options="vm.filter.groupsSearch.groups"
                                 data-placeholder="statistics-presences.search.audience"
-                                data-search="vm.filter.groupsSearch.group">
+                                data-search="vm.filter.groupsSearch.group"
+                                data-testid="statistics-presences-input-search-audience">
             </async-autocomplete>
         </div>
         <div class="cell twelve">
@@ -74,7 +76,7 @@
 
         <div class="right-magnet">
             <!-- export CSV -->
-            <button class="left-spacing-twice no-margin" data-ng-click="vm.openCSVOptions()" data-ng-disabled="vm.isWeekly(vm.indicator)">
+            <button class="left-spacing-twice no-margin" data-ng-click="vm.openCSVOptions()" data-ng-disabled="vm.isWeekly(vm.indicator)" data-testid="statistics-presences-button-export-csv">
                 <i18n>statistics-presences.csv.export</i18n>
             </button>
         </div>

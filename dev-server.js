@@ -58,7 +58,7 @@ if (!fs.existsSync(envPath)) {
     process.exit(1);
 }
 const env = parseEnvFile(fs.readFileSync(envPath, 'utf-8'));
-const {VITE_RECETTE, VITE_XSRF_TOKEN, VITE_ONE_SESSION_ID} = env;
+const {VITE_RECETTE, VITE_XSRF_TOKEN, VITE_ONE_SESSION_ID, SCREEB_APP_ID_DEV} = env;
 if (!VITE_RECETTE) {
     console.error('VITE_RECETTE missing in .env');
     process.exit(1);
@@ -271,9 +271,22 @@ browserSync.init(
         ghostMode: false,
         notify: false,
         serveStatic,
-        middleware: [(req, res) => proxy.web(req, res)],
+        middleware: [
+            // Local mock of the public conf to test Screeb without depending on the
+            // recette (which may not know about the screeb-app-id yet). Without
+            // SCREEB_APP_ID_DEV, falls through to the proxy (unchanged behavior).
+            (req, res, next) => {
+                if (SCREEB_APP_ID_DEV && req.url === `${appAddress}/conf/public`) {
+                    res.writeHead(200, {'Content-Type': 'application/json'});
+                    res.end(JSON.stringify({'screeb-app-id': SCREEB_APP_ID_DEV}));
+                    return;
+                }
+                next();
+            },
+            (req, res) => proxy.web(req, res),
+        ],
         // Auto-reload when webpack re-emits the bundle, or a template changes.
-        // .css files are hot-injected by browser-sync, without a page reload.
+        // .css files are hot-injected by browser-sync, without a reload.
         files: [
             `${target}/src/main/resources/public/dist/*.js`,
             `${target}/src/main/resources/public/js/behaviours.js`,

@@ -24,6 +24,10 @@ for (let directive in directives) {
     ng.directives.push(directives[directive]);
 }
 
+services.screebService.initFromPublicConf().catch((err) =>
+    console.error('Screeb initialization failed:', err),
+);
+
 routes.define(function ($routeProvider) {
     $routeProvider
         .when('/', {

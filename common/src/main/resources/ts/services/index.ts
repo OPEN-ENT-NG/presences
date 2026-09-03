@@ -3,3 +3,4 @@ export * from './grouping.service';
 export * from './ViescolaireService';
 export * from './SearchService';
 export * from './UserService';
+export * from './screeb.service';

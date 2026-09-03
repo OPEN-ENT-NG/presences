@@ -41,6 +41,12 @@ Le watcher écrit dans `<module>.dev.css`, distinct du `<module>.css` que produi
 l'un ni l'autre n'est versionné : comme `dist/` et `public/js/`, le CSS est un artefact que le build
 régénère (`build.sh` → `yarn run build:sass`), et le sortir de git évite que la sortie de Sass — qui varie
 d'une version du compilateur à l'autre — ne pollue le diff de toute branche où l'on a lancé `yarn dev`.
+### Tester Screeb en local
+
+Screeb est opt-in par plateforme : sans `screeb-app-id` dans la `publicConf` du module, aucun appel
+réseau vers Screeb n'est émis. En local, la recette proxyfiée ne connaît pas forcément encore cette clé.
+Pour tester sans en dépendre, renseigner `SCREEB_APP_ID_DEV` dans `.env` : le serveur de dev mocke alors
+`/<module>/conf/public` avec cet app id.
 
 ## Configuration
 Le module présences contient plusieurs modules en son sein : incidents, massmailing, presences et statistics-presences.

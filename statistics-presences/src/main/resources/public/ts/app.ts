@@ -25,6 +25,10 @@ for (let service in services) {
     ng.services.push(services[service]);
 }
 
+services.screebService.initFromPublicConf().catch((err) =>
+    console.error('Screeb initialization failed:', err),
+);
+
 routes.define(function ($routeProvider) {
     $routeProvider
         .otherwise({

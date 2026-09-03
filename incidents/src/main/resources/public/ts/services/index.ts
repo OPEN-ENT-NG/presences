@@ -12,3 +12,4 @@ export * from './PunishmentService';
 export * from '@common/services/SearchService';
 export * from '@common/services/GroupService';
 export * from '@common/services/grouping.service';
+export * from '@common/services/screeb.service';
