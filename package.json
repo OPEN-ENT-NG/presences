@@ -1,6 +1,6 @@
 {
   "name": "Presences",
-  "version": "2.2.7-dev.1",
+  "version": "2.2-develop-orga.1",
   "description": "Presences",
   "main": "gulpfile.js",
   "scripts": {
@@ -34,7 +34,7 @@
     "**/node-releases": "2.0.14"
   },
   "dependencies": {
-    "entcore": "dev",
+    "entcore": "develop-orga",
     "@screeb/sdk-browser": "0.7.0",
     "awesome-typescript-loader": "3.2.1",
     "axios": "0.16.2",
