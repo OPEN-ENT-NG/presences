@@ -1,6 +1,6 @@
 {
   "name": "Presences",
-  "version": "2.2.8",
+  "version": "2.2.8-dev.0",
   "description": "Presences",
   "main": "gulpfile.js",
   "scripts": {
@@ -34,7 +34,7 @@
     "**/node-releases": "2.0.14"
   },
   "dependencies": {
-    "entcore": "4.8.20",
+    "entcore": "dev",
     "@screeb/sdk-browser": "0.7.0",
     "awesome-typescript-loader": "3.2.1",
     "axios": "0.16.2",
