@@ -38,13 +38,13 @@
     <module>statistics-presences</module>
   </modules>
   <properties>
-    <revision>2.2-SNAPSHOT</revision>
+    <revision>2.2-develop-axios-SNAPSHOT</revision>
     <toolsVersion>2.0.0-final</toolsVersion>
     <junitVersion>5.1.0</junitVersion>
     <vertxCronTimerVersion>3.0-SNAPSHOT</vertxCronTimerVersion>
     <powerMockVersion>2.0.2</powerMockVersion>
     <mockitoVersion>[2.0,3.0)</mockitoVersion>
-    <entCoreVersion>6.16-SNAPSHOT</entCoreVersion>
+    <entCoreVersion></entCoreVersion>
     <reflectionsVersion>0.10.2</reflectionsVersion>
     <gatlingHighchartsVersion>2.2.2</gatlingHighchartsVersion>
     <modMongoVersion>4.2-SNAPSHOT</modMongoVersion>
