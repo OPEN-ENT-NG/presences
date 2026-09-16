@@ -1,5 +1,5 @@
 import {ng} from 'entcore';
-import http from 'axios';
+import { http } from 'entcore-toolkit';
 import {MailTemplateCategory} from "@common/core/enum/mail-template-category";
 
 export interface Template {

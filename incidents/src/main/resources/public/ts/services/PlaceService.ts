@@ -1,5 +1,5 @@
 import {ng} from 'entcore'
-import http, {AxiosResponse} from 'axios';
+import { http, HttpResponse } from 'entcore-toolkit';
 
 export interface Place {
     id: number;
@@ -19,9 +19,9 @@ export interface PlaceRequest {
 
 export interface PlaceService {
     get(structureId: string): Promise<Place[]>;
-    create(placeBody: PlaceRequest): Promise<AxiosResponse>;
-    update(placeBody: PlaceRequest): Promise<AxiosResponse>;
-    delete(placeId: number): Promise<AxiosResponse>;
+    create(placeBody: PlaceRequest): Promise<HttpResponse>;
+    update(placeBody: PlaceRequest): Promise<HttpResponse>;
+    delete(placeId: number): Promise<HttpResponse>;
 }
 
 export const placeService : PlaceService = {
@@ -34,15 +34,15 @@ export const placeService : PlaceService = {
         }
     },
 
-    create: async (placeBody: PlaceRequest): Promise<AxiosResponse> => {
+    create: async (placeBody: PlaceRequest): Promise<HttpResponse> => {
         return await http.post(`/incidents/place`, placeBody);
     },
 
-    update: async (placeBody: PlaceRequest): Promise<AxiosResponse> => {
+    update: async (placeBody: PlaceRequest): Promise<HttpResponse> => {
         return await http.put(`/incidents/place`, placeBody);
     },
 
-    delete: async (placeId: number): Promise<AxiosResponse> => {
+    delete: async (placeId: number): Promise<HttpResponse> => {
         return await http.delete(`/incidents/place?id=${placeId}`);
     },
 };

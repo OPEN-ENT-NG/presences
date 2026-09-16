@@ -1,4 +1,4 @@
-import http, {AxiosResponse} from 'axios';
+import { http, HttpResponse } from 'entcore-toolkit';
 import {moment, toasts} from 'entcore';
 import {DateUtils} from '@common/utils';
 import {EventType, LoadingCollection} from '@common/model';
@@ -155,7 +155,7 @@ export class Event {
         }
     }
 
-    async save(): Promise<AxiosResponse> {
+    async save(): Promise<HttpResponse> {
         if (this.id) {
             return this.update();
         } else {
@@ -163,7 +163,7 @@ export class Event {
         }
     }
 
-    async update(): Promise<AxiosResponse> {
+    async update(): Promise<HttpResponse> {
         try {
             if (this.type_id === EventType.DEPARTURE) {
                 this.start_date = moment(this.start_date_time).format(DateUtils.FORMAT["YEAR-MONTH-DAY-HOUR-MIN-SEC"]);
@@ -177,7 +177,7 @@ export class Event {
         return;
     }
 
-    async create(): Promise<AxiosResponse> {
+    async create(): Promise<HttpResponse> {
         try {
             const {data} = await http.post('/presences/events', this.toJson());
             this.id = data.id;
@@ -188,7 +188,7 @@ export class Event {
         return;
     }
 
-    async delete(): Promise<AxiosResponse> {
+    async delete(): Promise<HttpResponse> {
         try {
             await http.delete(`/presences/events/${this.id}`);
         } catch (err) {
@@ -350,7 +350,7 @@ export class Absence extends Event {
         };
     }
 
-    async getAbsence(absenceId: number): Promise<AxiosResponse> {
+    async getAbsence(absenceId: number): Promise<HttpResponse> {
         try {
             return await http.get(`/presences/absence/${absenceId}`);
         } catch (err) {
@@ -358,7 +358,7 @@ export class Absence extends Event {
         }
     }
 
-    async createAbsence(structureId?: string, reasonId?: number, ownerId?: string): Promise<AxiosResponse> {
+    async createAbsence(structureId?: string, reasonId?: number, ownerId?: string): Promise<HttpResponse> {
         try {
             return await http.post('/presences/absence', this.toAbsenceJson(structureId, reasonId, ownerId));
         } catch (err) {
@@ -366,7 +366,7 @@ export class Absence extends Event {
         }
     }
 
-    async updateAbsence(absenceId?: number, structureId?: string, reasonId?: number, ownerId?: string): Promise<AxiosResponse> {
+    async updateAbsence(absenceId?: number, structureId?: string, reasonId?: number, ownerId?: string): Promise<HttpResponse> {
         try {
             return await http.put(`/presences/absence/${absenceId}`, this.toAbsenceJson(structureId, reasonId, ownerId));
         } catch (err) {
@@ -392,7 +392,7 @@ export class Absence extends Event {
         }
     }
 
-    async deleteAbsence(absenceId?: number): Promise<AxiosResponse> {
+    async deleteAbsence(absenceId?: number): Promise<HttpResponse> {
         try {
             return await http.delete(`/presences/absence/${absenceId}`);
         } catch (err) {
@@ -400,7 +400,7 @@ export class Absence extends Event {
         }
     }
 
-    async deleteEventAbsence(eventId?: number): Promise<AxiosResponse> {
+    async deleteEventAbsence(eventId?: number): Promise<HttpResponse> {
         try {
             return await http.delete(`/presences/events/${eventId}`);
         } catch (err) {

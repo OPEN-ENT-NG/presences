@@ -20,7 +20,7 @@ import {MailTemplateCategory} from "@common/core/enum/mail-template-category";
 import {REASON_TYPE_ID} from "@common/core/enum/reason-type-id";
 import {Student} from "@common/model/Student";
 import {Grouping} from "@common/model/grouping";
-import {AxiosError} from "axios";
+import { HttpError } from 'entcore-toolkit';
 import incidentsRights from "@incidents/rights";
 
 interface Filter {
@@ -263,10 +263,10 @@ export const homeController = ng.controller('HomeController', ['$scope', 'route'
                 $scope.redirectTo(`/history`);
             }
             await loadFormFilter();
-            await getPunishmentTypes().catch((error: AxiosError) => {
+            await getPunishmentTypes().catch((error: HttpError) => {
                 console.error(error)
             });
-            await getReasons().catch((error: AxiosError) => console.error(error));
+            await getReasons().catch((error: HttpError) => console.error(error));
             vm.fetchData();
             $scope.$apply();
         };
@@ -301,7 +301,7 @@ export const homeController = ng.controller('HomeController', ['$scope', 'route'
                         $scope.$apply();
                         resolve(undefined);
                     })
-                    .catch((error: AxiosError) => {
+                    .catch((error: HttpError) => {
                         vm.punishmentsTypes = [];
                         reject(error);
                     });

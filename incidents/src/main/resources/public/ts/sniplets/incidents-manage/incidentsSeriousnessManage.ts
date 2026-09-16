@@ -1,6 +1,6 @@
 import {INCIDENTS_SERIOUSNESS_EVENT} from "@common/core/enum/incidents-event";
 import {Seriousness, SeriousnessRequest, seriousnessService} from "@incidents/services";
-import {AxiosResponse} from "axios";
+import { HttpResponse } from 'entcore-toolkit';
 import {idiom as lang} from "entcore";
 import {safeApply} from "@common/utils";
 
@@ -15,7 +15,7 @@ interface ViewModel {
 
     hasSeriousnesses(): boolean;
 
-    proceedAfterAction(response: AxiosResponse): void;
+    proceedAfterAction(response: HttpResponse): void;
 
     get(): Promise<void>;
 
@@ -84,7 +84,7 @@ export class IncidentsSeriousnessManage implements ViewModel {
         await seriousnessService.update(form);
     }
 
-    proceedAfterAction(response: AxiosResponse): void {
+    proceedAfterAction(response: HttpResponse): void {
         if (response.status === 200 || response.status === 201) {
             this.get();
         }

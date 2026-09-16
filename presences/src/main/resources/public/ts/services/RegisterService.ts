@@ -1,9 +1,9 @@
 import {ng} from 'entcore';
-import http, {AxiosResponse} from 'axios';
+import { http, HttpResponse } from 'entcore-toolkit';
 import {Course} from "@presences/models";
 
 export interface RegisterService {
-    setStatus(registerId: number, state_id: number): Promise<AxiosResponse>;
+    setStatus(registerId: number, state_id: number): Promise<HttpResponse>;
 
     getLastForgottenRegisterCourses(structureId: string, startDate: string, endDate: string, teacherIds?: Array<string>, groupNames?: Array<string>): Promise<Course[]>;
 
@@ -11,7 +11,7 @@ export interface RegisterService {
 
 export const registerService: RegisterService = {
 
-    setStatus: async (registerId: number, state_id: number): Promise<AxiosResponse> => {
+    setStatus: async (registerId: number, state_id: number): Promise<HttpResponse> => {
         return http.put(`/presences/registers/${registerId}/status`, {state_id});
     },
 
@@ -31,7 +31,7 @@ export const registerService: RegisterService = {
             })
         }
 
-        return http.get(`/presences/structures/${structureId}/registers/forgotten${urlParams}`).then((res: AxiosResponse) => {
+        return http.get(`/presences/structures/${structureId}/registers/forgotten${urlParams}`).then((res: HttpResponse) => {
             return res.data;
         });
     }

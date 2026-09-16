@@ -1,5 +1,5 @@
 import {ng} from 'entcore'
-import http, {AxiosResponse} from 'axios';
+import { http, HttpResponse } from 'entcore-toolkit';
 import {IForgottenNotebookResponse, IStudentEventRequest} from "../models";
 
 export interface Notebook {
@@ -21,11 +21,11 @@ export interface NotebookRequest {
 export interface ForgottenNotebookService {
     get(notebook: NotebookRequest): Promise<Notebook[]>;
 
-    create(notebook: NotebookRequest): Promise<AxiosResponse>;
+    create(notebook: NotebookRequest): Promise<HttpResponse>;
 
-    update(notebookId: number, notebook: NotebookRequest): Promise<AxiosResponse>;
+    update(notebookId: number, notebook: NotebookRequest): Promise<HttpResponse>;
 
-    delete(notebookId: number): Promise<AxiosResponse>;
+    delete(notebookId: number): Promise<HttpResponse>;
 
     getStudentNotebooks(studentEventRequest: IStudentEventRequest): Promise<IForgottenNotebookResponse>;
 }
@@ -41,15 +41,15 @@ export const forgottenNotebookService: ForgottenNotebookService = {
         }
     },
 
-    create: async (notebook: NotebookRequest): Promise<AxiosResponse> => {
+    create: async (notebook: NotebookRequest): Promise<HttpResponse> => {
         return await http.post(`/presences/forgotten/notebook`, notebook);
     },
 
-    update: async (notebookId: number, notebook: NotebookRequest): Promise<AxiosResponse> => {
+    update: async (notebookId: number, notebook: NotebookRequest): Promise<HttpResponse> => {
         return await http.put(`/presences/forgotten/notebook/${notebookId}`, {date: notebook.date});
     },
 
-    delete: async (notebookId: number): Promise<AxiosResponse> => {
+    delete: async (notebookId: number): Promise<HttpResponse> => {
         return await http.delete(`/presences/forgotten/notebook/${notebookId}`);
     },
 

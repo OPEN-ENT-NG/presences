@@ -1,5 +1,5 @@
 import {ng} from 'entcore';
-import http, {AxiosResponse} from 'axios';
+import { http, HttpResponse } from 'entcore-toolkit';
 import {ActionBody, EventResponse, Events, IEventBody, IStudentEventRequest, IStudentEventResponse} from '../models';
 import {DateUtils} from '@common/utils';
 import {EventAbsenceSummary} from '@presences/models/Event/EventAbsenceSummary';
@@ -10,11 +10,11 @@ export interface EventService {
 
     getEventActions(event_id: number): Promise<ActionBody[]>;
 
-    createAction(actionBody: ActionBody): Promise<AxiosResponse>;
+    createAction(actionBody: ActionBody): Promise<HttpResponse>;
 
     getStudentEvent(studentEventRequest: IStudentEventRequest): Promise<IStudentEventResponse>;
 
-    export(eventRequest: EventRequest, exportType: ExportType): Promise<AxiosResponse>;
+    export(eventRequest: EventRequest, exportType: ExportType): Promise<HttpResponse>;
 
     getExportRequest(eventRequest: EventRequest, exportType: ExportType): string;
 
@@ -22,11 +22,11 @@ export interface EventService {
 
     getAbsentsCounts(structureId: string, startDate: string, endDate: string): Promise<EventAbsenceSummary>;
 
-    createLatenessEvent(eventBody: IEventBody, structureId: string): Promise<AxiosResponse>;
+    createLatenessEvent(eventBody: IEventBody, structureId: string): Promise<HttpResponse>;
 
-    updateEvent(eventId: number, eventBody: IEventBody): Promise<AxiosResponse>;
+    updateEvent(eventId: number, eventBody: IEventBody): Promise<HttpResponse>;
 
-    deleteEvent(eventId: number): Promise<AxiosResponse>;
+    deleteEvent(eventId: number): Promise<HttpResponse>;
 }
 
 export interface EventRequest {
@@ -87,7 +87,7 @@ export const eventService: EventService = {
             const urlParams: string = `${structureId}${startDate}${endDate}${startTime}${endTime}${noReason}${noReasonLateness}` +
             `${eventType}${listReasonIds}${userId}${userIds}${classes}${classesIds}${regularized}${followed}${page}`;
 
-            const {data}: AxiosResponse = await http.get(`/presences/events${urlParams}`);
+            const {data}: HttpResponse = await http.get(`/presences/events${urlParams}`);
 
             return {
                 pageCount: data.page_count,
@@ -108,7 +108,7 @@ export const eventService: EventService = {
         }
     },
 
-    createAction: async (actionBody: ActionBody): Promise<AxiosResponse> => {
+    createAction: async (actionBody: ActionBody): Promise<HttpResponse> => {
         return http.post(`/presences/events/actions`, actionBody);
     },
 
@@ -143,9 +143,9 @@ export const eventService: EventService = {
         }
     },
 
-    async export(eventRequest: EventRequest, exportType: ExportType): Promise<AxiosResponse> {
+    async export(eventRequest: EventRequest, exportType: ExportType): Promise<HttpResponse> {
         try {
-            const {data}: AxiosResponse = await http.get(this.getExportRequest(eventRequest, exportType));
+            const {data}: HttpResponse = await http.get(this.getExportRequest(eventRequest, exportType));
             return data;
         } catch (err) {
             throw err;
@@ -197,7 +197,7 @@ export const eventService: EventService = {
             && (eventRequest.followed === !eventRequest.notFollowed) ? `&followed=${eventRequest.followed}` : '';
             const request: string = `${url}${structureId}${startDate}${endDate}${noReason}${noReasonLateness}${eventType}${listReasonIds}${userId}${classes}${regularized}${followed}`;
 
-            const {data}: AxiosResponse = await http.get(request);
+            const {data}: HttpResponse = await http.get(request);
             return data;
         } catch (err) {
             throw err;
@@ -225,7 +225,7 @@ export const eventService: EventService = {
                 url += `&startAt=${startDate}&endAt=${endDate}`;
             }
 
-            const {data}: AxiosResponse = await http.get(url);
+            const {data}: HttpResponse = await http.get(url);
             return data;
         } catch (err) {
             throw err;
@@ -238,7 +238,7 @@ export const eventService: EventService = {
      * @param eventBody     eventBody
      * @param structureId   structure identifier
      */
-    createLatenessEvent(eventBody: IEventBody, structureId: string): Promise<AxiosResponse> {
+    createLatenessEvent(eventBody: IEventBody, structureId: string): Promise<HttpResponse> {
         return http.post(`/presences/events/${structureId}/lateness`, eventBody);
     },
 
@@ -248,7 +248,7 @@ export const eventService: EventService = {
      * @param eventId       event identifier
      * @param eventBody     eventBody
      */
-    updateEvent(eventId: number, eventBody: IEventBody): Promise<AxiosResponse> {
+    updateEvent(eventId: number, eventBody: IEventBody): Promise<HttpResponse> {
         return http.put(`/presences/events/${eventId}`, eventBody);
     },
 
@@ -257,7 +257,7 @@ export const eventService: EventService = {
      *
      * @param eventId       event identifier
      */
-    deleteEvent(eventId: number): Promise<AxiosResponse> {
+    deleteEvent(eventId: number): Promise<HttpResponse> {
         return http.delete(`/presences/events/${eventId}`);
     }
 };

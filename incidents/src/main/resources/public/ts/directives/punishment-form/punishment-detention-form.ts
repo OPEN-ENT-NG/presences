@@ -12,7 +12,7 @@ import {User} from "@common/model/User";
 import {SearchService} from "@common/services";
 import {PeriodFormUtils} from "@common/utils/periodForm";
 import {ROOTS} from "@incidents/core/const/roots";
-import {AxiosError} from "axios";
+import { HttpError } from 'entcore-toolkit';
 import {punishmentService} from "@incidents/services";
 
 declare let window: any;
@@ -231,7 +231,7 @@ export const PunishmentDetentionForm = ng.directive('punishmentDetentionForm', [
                     if (vm.editmode && detentionSlotToDelete.detentionField.id) {
                         punishmentService.delete(detentionSlotToDelete.detentionField.id, window.structure.id)
                             .then(() => toasts.confirm(lang.translate('incidents.punishment.delete.succeed')))
-                            .catch((e: AxiosError) => toasts.warning(e.response ? e.response.data : e.message));
+                            .catch((e: HttpError) => toasts.warning(e.response ? e.response.data : e.message));
                     }
                 }
 

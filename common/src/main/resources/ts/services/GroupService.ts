@@ -1,5 +1,5 @@
 import {ng} from 'entcore'
-import http from 'axios';
+import { http } from 'entcore-toolkit';
 import {User} from '@common/model/User';
 import {SearchItem} from "@common/services/SearchService";
 import {StudentDivisionResponse} from "@common/model/grouping";
