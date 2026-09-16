@@ -1,5 +1,5 @@
 import {ng} from 'entcore';
-import http, {AxiosResponse} from 'axios';
+import { http, HttpResponse } from 'entcore-toolkit';
 import {
     IStatementAbsenceBody,
     IStatementsAbsences,
@@ -14,13 +14,13 @@ export interface IStatementsAbsencesService {
 
     download(statementsAbsencesBody: IStatementAbsenceBody): void;
 
-    create(statementsAbsencesBody: IStatementAbsenceBody): Promise<AxiosResponse>;
+    create(statementsAbsencesBody: IStatementAbsenceBody): Promise<HttpResponse>;
 
-    update(statementsAbsencesId: number, statementsAbsencesBody: IStatementAbsenceBody): Promise<AxiosResponse>;
+    update(statementsAbsencesId: number, statementsAbsencesBody: IStatementAbsenceBody): Promise<HttpResponse>;
 
-    validate(statementsAbsencesId: number, statementsAbsencesBody: IStatementAbsenceBody): Promise<AxiosResponse>;
+    validate(statementsAbsencesId: number, statementsAbsencesBody: IStatementAbsenceBody): Promise<HttpResponse>;
 
-    delete(statementsAbsencesId: number): Promise<AxiosResponse>;
+    delete(statementsAbsencesId: number): Promise<HttpResponse>;
 
     export(statementsAbsences: IStatementsAbsencesRequest): string;
 
@@ -33,7 +33,7 @@ export const statementsAbsencesService: IStatementsAbsencesService = {
     get: async (statementsAbsences: IStatementsAbsencesRequest): Promise<IStatementsAbsencesResponse> => {
         try {
             const urlParams: String = statementsAbsencesService.getUrl(statementsAbsences, statementsAbsences.page, statementsAbsences.limit, statementsAbsences.offset);
-            const {data}: AxiosResponse = await http.get(`${statementsAbsencesService.baseUrl}${urlParams}`);
+            const {data}: HttpResponse = await http.get(`${statementsAbsencesService.baseUrl}${urlParams}`);
             return data;
         } catch (err) {
             throw err;
@@ -47,7 +47,7 @@ export const statementsAbsencesService: IStatementsAbsencesService = {
         window.open(`${basicUrl}${urlFetchingData}${structure_id}`);
     },
 
-    create: async (statementsAbsences: IStatementAbsenceBody): Promise<AxiosResponse> => {
+    create: async (statementsAbsences: IStatementAbsenceBody): Promise<HttpResponse> => {
         const formData: FormData = new FormData();
         const headers = {'headers': {'Content-type': 'multipart/form-data'}};
 
@@ -61,15 +61,15 @@ export const statementsAbsencesService: IStatementsAbsencesService = {
         return http.post(`/presences/statements/absences${statementsAbsences.file ? '/attachment' : ''}`, formData, headers);
     },
 
-    validate: async (statementsAbsencesId: number, {isTreated}: IStatementAbsenceBody): Promise<AxiosResponse> => {
+    validate: async (statementsAbsencesId: number, {isTreated}: IStatementAbsenceBody): Promise<HttpResponse> => {
         return http.put(`${statementsAbsencesService.baseUrl}/${statementsAbsencesId}/validate`, {is_treated: isTreated});
     },
 
-    update: async (statementsAbsencesId: number, statementsAbsences: IStatementAbsenceBody): Promise<AxiosResponse> => {
+    update: async (statementsAbsencesId: number, statementsAbsences: IStatementAbsenceBody): Promise<HttpResponse> => {
         return http.put(`${statementsAbsencesService.baseUrl}/${statementsAbsencesId}`, statementsAbsences);
     },
 
-    delete: async (statementsAbsencesId: number): Promise<AxiosResponse> => {
+    delete: async (statementsAbsencesId: number): Promise<HttpResponse> => {
         return http.delete(`${statementsAbsencesService.baseUrl}/${statementsAbsencesId}`);
     },
 

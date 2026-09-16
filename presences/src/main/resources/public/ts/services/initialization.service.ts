@@ -1,5 +1,5 @@
 import {ng, idiom} from 'entcore'
-import http, {AxiosResponse} from 'axios';
+import { http, HttpResponse } from 'entcore-toolkit';
 import {INIT_TYPE} from "../core/enum/init-type";
 import { HOLIDAYS_ZONE, IInitFormZone, InitForm } from '../models/init-form.model';
 
@@ -18,8 +18,8 @@ export interface IInitService {
     getPresencesInitStatus(structureId: string): Promise<boolean>;
     getViescoInitStatus(structureId: string): Promise<IInitStatusResponse>;
 
-    initPresences(structureId: string, initType: INIT_TYPE): Promise<AxiosResponse>;
-    initViesco(structureId: string, initType: INIT_TYPE, initForm: InitForm): Promise<AxiosResponse>;
+    initPresences(structureId: string, initType: INIT_TYPE): Promise<HttpResponse>;
+    initViesco(structureId: string, initType: INIT_TYPE, initForm: InitForm): Promise<HttpResponse>;
 
     getTeachersInitializationStatus(structureId: string): Promise<IInitTeachersResponse>;
     getZones(): IInitFormZone[];
@@ -31,26 +31,26 @@ export const initService: IInitService = {
 
     getPresencesInitStatus: async (structureId: string): Promise<boolean> => {
         return http.get(`/presences/initialization/structures/${structureId}`)
-            .then((res: AxiosResponse) => res.data.initialized);
+            .then((res: HttpResponse) => res.data.initialized);
     },
 
     getViescoInitStatus: async (structureId: string): Promise<IInitStatusResponse> => {
         return http.get(`/viescolaire/structures/${structureId}/initialization`)
-            .then((res: AxiosResponse) => res.data);
+            .then((res: HttpResponse) => res.data);
     },
 
-    initPresences: async (structureId: string, initType: INIT_TYPE): Promise<AxiosResponse> => {
+    initPresences: async (structureId: string, initType: INIT_TYPE): Promise<HttpResponse> => {
         return http.post(`/presences/initialization/structures/${structureId}`, {init_type: initType});
     },
 
-    initViesco: async (structureId: string, initType: INIT_TYPE, initForm: InitForm): Promise<AxiosResponse> => {
+    initViesco: async (structureId: string, initType: INIT_TYPE, initForm: InitForm): Promise<HttpResponse> => {
         initForm.initType = initType;
         return http.post(`/viescolaire/structures/${structureId}/initialize`, initForm.toJSON());
     },
 
     getTeachersInitializationStatus: async (structureId: string): Promise<IInitTeachersResponse> => {
         return http.get(`/viescolaire/structures/${structureId}/initialization/teachers`)
-            .then((res: AxiosResponse) => res.data);
+            .then((res: HttpResponse) => res.data);
     },
 
     getZones: (): IInitFormZone[] => {

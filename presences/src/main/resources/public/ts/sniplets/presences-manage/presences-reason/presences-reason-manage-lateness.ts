@@ -1,7 +1,7 @@
 import {idiom, toasts} from "entcore";
 import {Reason, ReasonRequest} from "../../../models/Reason";
 import {ReasonService, reasonService} from "../../../services/ReasonService";
-import {AxiosError, AxiosResponse} from "axios";
+import { HttpError, HttpResponse } from 'entcore-toolkit';
 import {ReasonSnipletModel} from "./presences-reason-manager";
 import {safeApply} from "@common/utils";
 import {REASON_TYPE_ID} from "@common/core/enum/reason-type-id";
@@ -80,7 +80,7 @@ export class LatenessReasonSniplet implements ReasonSnipletModel {
         }
         this.form.structureId = window.model.vieScolaire.structure.id;
         try {
-            let response: AxiosResponse = await this.reasonService.create(this.form, this.reasonTypeId);
+            let response: HttpResponse = await this.reasonService.create(this.form, this.reasonTypeId);
             this.proceedAfterAction(response);
         } catch (err) {
             console.error(err);
@@ -94,7 +94,7 @@ export class LatenessReasonSniplet implements ReasonSnipletModel {
 
     async deleteReason(reason: Reason): Promise<void> {
         try {
-            let response: AxiosResponse = await this.reasonService.delete(reason.id);
+            let response: HttpResponse = await this.reasonService.delete(reason.id);
             this.proceedAfterAction(response);
         } catch (err) {
             console.error(err)
@@ -116,7 +116,7 @@ export class LatenessReasonSniplet implements ReasonSnipletModel {
 
     async updateReason(): Promise<void> {
         try {
-            let response: AxiosResponse = await this.reasonService.update(this.formEdit);
+            let response: HttpResponse = await this.reasonService.update(this.formEdit);
             this.proceedAfterAction(response);
             this.closeReasonLightbox();
         } catch (err) {
@@ -136,15 +136,15 @@ export class LatenessReasonSniplet implements ReasonSnipletModel {
         form.excludeAlertRegularised = (<any>reason.reason_alert_rules).includes(ALERT_RULE.REGULARIZED);
         form.excludeAlertNoRegularised = (<any>reason.reason_alert_rules).includes(ALERT_RULE.UNREGULARIZED);
         form.structureId = reason.structure_id;
-        await this.reasonService.update(form).catch((err: AxiosError) => {
+        await this.reasonService.update(form).catch((err: HttpError) => {
             toasts.warning('presences.reason.error');
             console.error(err)
         });
     }
 
-    proceedAfterAction(response: AxiosResponse): void {
+    proceedAfterAction(response: HttpResponse): void {
         if (response.status === 200 || response.status === 201) {
-            this.getReasons().catch((e: AxiosError) => console.error(e));
+            this.getReasons().catch((e: HttpError) => console.error(e));
         }
     }
 

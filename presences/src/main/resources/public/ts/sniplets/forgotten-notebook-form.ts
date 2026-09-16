@@ -3,7 +3,7 @@ import {alertService, forgottenNotebookService, NotebookRequest} from "../servic
 import {idiom as lang, moment, toasts} from "entcore";
 import {DateUtils} from "@common/utils";
 import {AlertType} from "../models";
-import {AxiosResponse} from "axios";
+import { HttpResponse } from 'entcore-toolkit';
 
 console.log("forgottenNotebookFormSniplets");
 
@@ -131,7 +131,7 @@ const vm: ViewModel = {
 
     resetForbiddenNotebookCount: async (studentId: string): Promise<void> => {
         try {
-            let response: AxiosResponse = await alertService.resetStudentAlertsCount(window.structure.id, studentId,
+            let response: HttpResponse = await alertService.resetStudentAlertsCount(window.structure.id, studentId,
                 AlertType[AlertType.FORGOTTEN_NOTEBOOK]);
 
             if (response.status === 200 || response.status === 201) {

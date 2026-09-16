@@ -1,4 +1,4 @@
-import http, {AxiosResponse} from 'axios';
+import { http, HttpResponse } from 'entcore-toolkit';
 import {IndicatorBody} from "@statistics/model/Indicator";
 import {IMonthlyGraph} from "@statistics/model/Monthly";
 import {GlobalResponse} from "@statistics/model/Global";
@@ -26,11 +26,11 @@ export interface IMementoService {
 export const MementoService: IMementoService = {
     async getStudentEventsSummaryGraph(structure: string, student: string, body: IndicatorBody): Promise<IMonthlyGraph> {
         return http.post(`/presences/statistics/structures/${structure}/student/${student}/graph`, body)
-            .then((res: AxiosResponse) => (<IMonthlyGraph>res.data));
+            .then((res: HttpResponse) => (<IMonthlyGraph>res.data));
     },
 
     async getStudentEventsSummary(structure: string, student: string, body: IndicatorBody): Promise<GlobalResponse> {
         return http.post(`/presences/statistics/structures/${structure}/student/${student}`, body)
-            .then((res: AxiosResponse) => (<GlobalResponse>res.data));
+            .then((res: HttpResponse) => (<GlobalResponse>res.data));
     }
 }

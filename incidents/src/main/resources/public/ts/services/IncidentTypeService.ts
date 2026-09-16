@@ -1,5 +1,5 @@
 import {ng} from 'entcore'
-import http, {AxiosResponse} from 'axios';
+import { http, HttpResponse } from 'entcore-toolkit';
 
 export interface IncidentType {
     id: number;
@@ -19,9 +19,9 @@ export interface IncidentTypeRequest {
 
 export interface IncidentsTypeService {
     get(structureId: string): Promise<IncidentType[]>;
-    create(incidentsTypeBody: IncidentTypeRequest): Promise<AxiosResponse>;
-    update(incidentsTypeBody: IncidentTypeRequest): Promise<AxiosResponse>;
-    delete(reasonId: number): Promise<AxiosResponse>;
+    create(incidentsTypeBody: IncidentTypeRequest): Promise<HttpResponse>;
+    update(incidentsTypeBody: IncidentTypeRequest): Promise<HttpResponse>;
+    delete(reasonId: number): Promise<HttpResponse>;
 }
 
 export const incidentsTypeService : IncidentsTypeService = {
@@ -34,15 +34,15 @@ export const incidentsTypeService : IncidentsTypeService = {
         }
     },
 
-    create: async (incidentsTypeBody: IncidentTypeRequest): Promise<AxiosResponse> => {
+    create: async (incidentsTypeBody: IncidentTypeRequest): Promise<HttpResponse> => {
         return await http.post(`/incidents/type`, incidentsTypeBody);
     },
 
-    update: async (incidentsTypeBody: IncidentTypeRequest): Promise<AxiosResponse> => {
+    update: async (incidentsTypeBody: IncidentTypeRequest): Promise<HttpResponse> => {
         return await http.put(`/incidents/type`, incidentsTypeBody);
     },
 
-    delete: async (incidentsTypeId: number): Promise<AxiosResponse> => {
+    delete: async (incidentsTypeId: number): Promise<HttpResponse> => {
         return await http.delete(`/incidents/type?id=${incidentsTypeId}`);
     },
 };

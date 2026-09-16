@@ -1,4 +1,4 @@
-import {AxiosResponse} from "axios";
+import { HttpResponse } from 'entcore-toolkit';
 import {PRESENCES_ACTION, PRESENCES_DISCIPLINE} from "@common/core/enum/presences-event";
 import {IAngularEvent} from "angular";
 import {actionService, disciplineService} from "../../services";
@@ -22,7 +22,7 @@ interface ViewModel {
 
     updatePresencesManageLightbox(): Promise<void>;
 
-    proceedAfterAction(response: AxiosResponse): void;
+    proceedAfterAction(response: HttpResponse): void;
 }
 
 const vm: ViewModel = {
@@ -79,7 +79,7 @@ const vm: ViewModel = {
 
     },
 
-    proceedAfterAction(response: AxiosResponse): void {
+    proceedAfterAction(response: HttpResponse): void {
         if (response.status === 200 || response.status === 201) {
             vm.editPresencesManageLightbox = false;
         }

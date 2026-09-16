@@ -17,7 +17,7 @@ import {IAngularEvent} from 'angular';
 import {DateUtils} from '@common/utils';
 import {ABSENCE_FORM_EVENTS, LATENESS_FORM_EVENTS} from '@common/core/enum/presences-event';
 import {EventsUtils} from '../utilities';
-import {AxiosError, AxiosResponse} from 'axios';
+import { HttpError, HttpResponse } from 'entcore-toolkit';
 import {PeriodFormUtils} from "@common/utils/periodForm";
 import {REASON_TYPE_ID} from "@common/core/enum/reason-type-id";
 import {EVENT_TYPE} from "@common/core/enum/event-type";
@@ -299,7 +299,7 @@ const vm: ViewModel = {
         vm.form = {} as IFormData;
         vm.event = new Absence(null, null, null, null);
         vm.switchEventTypeForm(eventType);
-        let response: AxiosResponse = await (<Absence>vm.event).getAbsence(obj.absenceId);
+        let response: HttpResponse = await (<Absence>vm.event).getAbsence(obj.absenceId);
         if (response.status === 200 || response.status === 201) {
             /* Assign response data to form edited */
             vm.form.absences = [response.data];
@@ -434,9 +434,9 @@ const vm: ViewModel = {
                     vm.deleteEvent(formEventType, false)
                         .then(() => vm.createAbsence())
                         .then(() => vm.closeEventLightbox())
-                        .catch((err: AxiosError) => console.error(err));
+                        .catch((err: HttpError) => console.error(err));
                 } else {
-                    vm.updateAbsence().catch((err: AxiosError) => console.error(err));
+                    vm.updateAbsence().catch((err: HttpError) => console.error(err));
                 }
                 break;
             case EVENT_TYPE.LATENESS:
@@ -447,9 +447,9 @@ const vm: ViewModel = {
                     vm.deleteEvent(formEventType, false)
                         .then(() => vm.createLateness())
                         .then(() => vm.closeEventLightbox())
-                        .catch((err: AxiosError) => console.error(err));
+                        .catch((err: HttpError) => console.error(err));
                 } else {
-                    vm.updateLateness().catch((err: AxiosError) => console.error(err));
+                    vm.updateLateness().catch((err: HttpError) => console.error(err));
                 }
                 break;
         }
@@ -510,7 +510,7 @@ const vm: ViewModel = {
             toasts.warning(lang.translate('presences.invalid.form'));
             return;
         }
-        let response: AxiosResponse = await (<Absence>vm.event).createAbsence(window.structure.id, vm.eventBody.reason_id, model.me.userId);
+        let response: HttpResponse = await (<Absence>vm.event).createAbsence(window.structure.id, vm.eventBody.reason_id, model.me.userId);
         if (response.status === 200 || response.status === 201) {
             let presences: Presence[] = await presenceService.get({
                 structureId: window.structure.id,
@@ -546,7 +546,7 @@ const vm: ViewModel = {
             toasts.warning(lang.translate('presences.invalid.form'));
             return;
         }
-        let responses: AxiosResponse[] = [];
+        let responses: HttpResponse[] = [];
         // In this const, we consider vm.form.absences without field "type" can be an event (on calendar view logical)
         // but sometimes we might have type field equal to events (seen on event list) so we double check
         const isEventTypeToInteract: boolean = !vm.form.absences.find((absence: IAbsence) => 'type' in absence) ||
@@ -565,7 +565,7 @@ const vm: ViewModel = {
         // we check if dataResponse contain 'events' field that represents the `createAbsence`'s API response
         // else we use the dataResponse itself as it is the `updateAbsence`'s API response
         const dataResponse: any = responses
-            .find((response: AxiosResponse) => response.status === 200 || response.status === 201).data;
+            .find((response: HttpResponse) => response.status === 200 || response.status === 201).data;
 
         let dataAbsenceEventResponse: AbsenceEventResponse;
         // we remain undefined if dataResponse has not found any response
@@ -624,7 +624,7 @@ const vm: ViewModel = {
     },
 
     async deleteAbsence(canReload: boolean): Promise<void> {
-        let responses: Array<AxiosResponse> = [];
+        let responses: Array<HttpResponse> = [];
         for (const absence of vm.form.absences) {
             if ('type' in absence && absence.type === EventsUtils.ALL_EVENTS.absence) {
                 responses.push(await (<Absence>vm.event).deleteAbsence(absence.id));
@@ -633,7 +633,7 @@ const vm: ViewModel = {
             }
         }
 
-        let failedResponse: AxiosResponse = responses.find((response: AxiosResponse) => response.status != 200 && response.status != 201);
+        let failedResponse: HttpResponse = responses.find((response: HttpResponse) => response.status != 200 && response.status != 201);
         if (failedResponse) {
             toasts.warning(failedResponse.data.toString());
         } else {
@@ -664,7 +664,7 @@ const vm: ViewModel = {
             return;
         }
         eventService.createLatenessEvent(vm.eventBody, window.structure.id)
-            .then((response: AxiosResponse) => {
+            .then((response: HttpResponse) => {
                 if (response.status === 200 || response.status === 201) {
                     vm.closeEventLightbox();
                     toasts.confirm(lang.translate('presences.lateness.form.create.succeed'));
@@ -674,7 +674,7 @@ const vm: ViewModel = {
                     toasts.warning(lang.translate('presences.lateness.form.create.no.register'));
                 }
             })
-            .catch((_: AxiosError) => {
+            .catch((_: HttpError) => {
                 toasts.warning(lang.translate('presences.lateness.form.create.no.register'));
             });
     },
@@ -686,7 +686,7 @@ const vm: ViewModel = {
             return;
         }
         eventService.updateEvent(vm.form.id, vm.eventBody)
-            .then((response: AxiosResponse) => {
+            .then((response: HttpResponse) => {
                 if (response.status === 200 || response.status === 201) {
                     vm.closeEventLightbox();
                     toasts.confirm(lang.translate('presences.lateness.form.edit.succeed'));
@@ -696,14 +696,14 @@ const vm: ViewModel = {
                     toasts.warning(lang.translate('presences.lateness.form.edit.error'));
                 }
             })
-            .catch((_: AxiosError) => {
+            .catch((_: HttpError) => {
                 toasts.warning(lang.translate('presences.lateness.form.edit.error'));
             });
     },
 
     async deleteLateness(canReload: boolean): Promise<void> {
         eventService.deleteEvent(vm.form.id)
-            .then((response: AxiosResponse) => {
+            .then((response: HttpResponse) => {
                 if (response.status === 200 || response.status === 201) {
                     toasts.confirm(lang.translate('presences.lateness.form.delete.succeed'));
                     if (canReload) {
@@ -714,7 +714,7 @@ const vm: ViewModel = {
                     toasts.warning(lang.translate('presences.lateness.form.delete.error'));
                 }
             })
-            .catch((_: AxiosError) => {
+            .catch((_: HttpError) => {
                 toasts.warning(lang.translate('presences.lateness.form.delete.error'));
             });
     },

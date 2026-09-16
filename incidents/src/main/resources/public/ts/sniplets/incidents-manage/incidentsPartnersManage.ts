@@ -1,5 +1,5 @@
 import {Partner, PartnerRequest, partnerService} from "@incidents/services";
-import {AxiosResponse} from "axios";
+import { HttpResponse } from 'entcore-toolkit';
 import {INCIDENTS_PARTNER_EVENT} from "@common/core/enum/incidents-event";
 
 declare let window: any;
@@ -12,7 +12,7 @@ interface ViewModel {
 
     hasPartners(): boolean;
 
-    proceedAfterAction(response: AxiosResponse): void;
+    proceedAfterAction(response: HttpResponse): void;
 
     get(): Promise<void>;
 
@@ -73,7 +73,7 @@ const vm: ViewModel = {
         await partnerService.update(form);
     },
 
-    proceedAfterAction(response: AxiosResponse): void {
+    proceedAfterAction(response: HttpResponse): void {
         if (response.status === 200 || response.status === 201) {
             vm.get();
         }

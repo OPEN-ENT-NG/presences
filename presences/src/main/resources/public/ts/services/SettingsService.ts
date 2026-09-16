@@ -1,5 +1,5 @@
 import {ng} from 'entcore';
-import http, {AxiosResponse} from 'axios';
+import { http, HttpResponse } from 'entcore-toolkit';
 
 export interface Setting {
     alert_absence_threshold?: number
@@ -40,7 +40,7 @@ export const settingService: SettingsService = {
     },
     async retrieveMultipleSlotSetting(structureId: string): Promise<boolean> {
         return http.get(`/presences/structures/${structureId}/settings/multiple-slots`)
-                .then((res: AxiosResponse) => res.data.allow_multiple_slots);
+                .then((res: HttpResponse) => res.data.allow_multiple_slots);
     }
 };
 

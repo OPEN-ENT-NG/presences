@@ -1,5 +1,5 @@
 import {ng} from 'entcore';
-import http, {AxiosResponse} from 'axios';
+import { http, HttpResponse } from 'entcore-toolkit';
 import {
     ICollectiveAbsence, ICollectiveAbsenceBody,
     ICollectiveAbsencesResponse,
@@ -12,13 +12,13 @@ export interface CollectiveAbsenceService {
 
     getCollectiveAbsences(structureId: string, params: ICollectiveAbsenceBody): Promise<ICollectiveAbsencesResponse>;
 
-    createCollectiveAbsence(structureId: string, collectiveAbsence: ICollectiveAbsence): Promise<AxiosResponse>;
+    createCollectiveAbsence(structureId: string, collectiveAbsence: ICollectiveAbsence): Promise<HttpResponse>;
 
-    updateCollectiveAbsence(structureId: string, collectiveAbsence: ICollectiveAbsence): Promise<AxiosResponse>;
+    updateCollectiveAbsence(structureId: string, collectiveAbsence: ICollectiveAbsence): Promise<HttpResponse>;
 
-    removeAbsenceFromCollectiveAbsence(structureId: string, collectiveId: number, studentIds: Array<string>): Promise<AxiosResponse>;
+    removeAbsenceFromCollectiveAbsence(structureId: string, collectiveId: number, studentIds: Array<string>): Promise<HttpResponse>;
 
-    deleteCollectiveAbsence(structureId: string, collectiveId: number): Promise<AxiosResponse>;
+    deleteCollectiveAbsence(structureId: string, collectiveId: number): Promise<HttpResponse>;
 
     exportCollectiveAbsences(structureId: string, startDate: string, endDate: string): void;
 
@@ -35,7 +35,7 @@ export const collectiveAbsenceService: CollectiveAbsenceService = {
     getCollectiveAbsence : async (structureId: string, collectiveId: number): Promise<ICollectiveAbsence> => {
 
         return http.get(`/presences/structures/${structureId}/absences/collectives/${collectiveId}`)
-            .then((res: AxiosResponse) => { return res.data; });
+            .then((res: HttpResponse) => { return res.data; });
     },
 
     /**
@@ -55,7 +55,7 @@ export const collectiveAbsenceService: CollectiveAbsenceService = {
         urlParams += (params.page !== undefined && params.page !== null)  ? `&page=${params.page}` : '';
 
         return http.get(`/presences/structures/${structureId}/absences/collectives${urlParams}`)
-            .then((res: AxiosResponse) => {
+            .then((res: HttpResponse) => {
                 return res.data;
             });
     },
@@ -65,7 +65,7 @@ export const collectiveAbsenceService: CollectiveAbsenceService = {
      * @param structureId           structure identifier
      * @param collectiveAbsence     collective absence to create
      */
-    createCollectiveAbsence : async (structureId: string, collectiveAbsence: ICollectiveAbsence): Promise<AxiosResponse> => {
+    createCollectiveAbsence : async (structureId: string, collectiveAbsence: ICollectiveAbsence): Promise<HttpResponse> => {
         return http.post(`/presences/structures/${structureId}/absences/collectives`, collectiveAbsence);
     },
 
@@ -74,7 +74,7 @@ export const collectiveAbsenceService: CollectiveAbsenceService = {
      * @param structureId           structure identifier
      * @param collectiveAbsence     collective absence to update
      */
-    updateCollectiveAbsence : async (structureId: string, collectiveAbsence: ICollectiveAbsence): Promise<AxiosResponse> => {
+    updateCollectiveAbsence : async (structureId: string, collectiveAbsence: ICollectiveAbsence): Promise<HttpResponse> => {
         return http.put(`/presences/structures/${structureId}/absences/collectives/${collectiveAbsence.id}`, collectiveAbsence);
     },
 
@@ -84,7 +84,7 @@ export const collectiveAbsenceService: CollectiveAbsenceService = {
      * @param collectiveId      collective absence identifier
      * @param studentIds        list of student identifiers
      */
-    removeAbsenceFromCollectiveAbsence : async (structureId: string, collectiveId: number, studentIds: Array<string>): Promise<AxiosResponse> => {
+    removeAbsenceFromCollectiveAbsence : async (structureId: string, collectiveId: number, studentIds: Array<string>): Promise<HttpResponse> => {
         const students: {studentIds: Array<string>} = {
             studentIds: studentIds
         };
@@ -97,7 +97,7 @@ export const collectiveAbsenceService: CollectiveAbsenceService = {
      * @param structureId       structure identifier
      * @param collectiveId      collective absence identifier
      */
-    deleteCollectiveAbsence : async (structureId: string, collectiveId: number): Promise<AxiosResponse> => {
+    deleteCollectiveAbsence : async (structureId: string, collectiveId: number): Promise<HttpResponse> => {
         return http.delete(`/presences/structures/${structureId}/absences/collectives/${collectiveId}`);
     },
 
@@ -118,7 +118,7 @@ export const collectiveAbsenceService: CollectiveAbsenceService = {
      */
     getStudentsAbsencesStatus : async (structureId: string, body: ICollectiveAbsenceBody): Promise<Array<ICollectiveAbsenceStudent>> => {
         return http.post(`/presences/structures/${structureId}/absences/isAbsent`, body)
-            .then((res: AxiosResponse) => { return res.data.all; });
+            .then((res: HttpResponse) => { return res.data.all; });
     }
 };
 

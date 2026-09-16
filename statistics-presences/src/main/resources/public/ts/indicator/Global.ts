@@ -5,7 +5,7 @@ import {IPunishmentType} from '@incidents/models/PunishmentType';
 import {Reason} from '@presences/models';
 import {INDICATOR_TYPE} from "../core/constants/IndicatorType";
 import {GlobalResponse, GlobalStatistics, IGlobal} from "../model/Global";
-import {AxiosError} from "axios";
+import { HttpError } from 'entcore-toolkit';
 import {DISPLAY_TYPE} from "../core/constants/DisplayMode";
 import {DateUtils} from "@common/utils";
 import {model} from "entcore";
@@ -61,7 +61,7 @@ export class Global extends Indicator {
                     };
                     resolve();
                 })
-                .catch((error: AxiosError) => {
+                .catch((error: HttpError) => {
                     reject(error);
                 });
         });

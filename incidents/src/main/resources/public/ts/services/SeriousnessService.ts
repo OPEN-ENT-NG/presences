@@ -1,5 +1,5 @@
 import {ng} from 'entcore'
-import http, {AxiosResponse} from 'axios';
+import { http, HttpResponse } from 'entcore-toolkit';
 
 export interface Seriousness {
     id: number;
@@ -22,9 +22,9 @@ export interface SeriousnessRequest {
 
 export interface SeriousnessService {
     get(structureId: string): Promise<Seriousness[]>;
-    create(seriousnessBody: SeriousnessRequest): Promise<AxiosResponse>;
-    update(seriousnessBody: SeriousnessRequest): Promise<AxiosResponse>;
-    delete(seriousnessId: number): Promise<AxiosResponse>;
+    create(seriousnessBody: SeriousnessRequest): Promise<HttpResponse>;
+    update(seriousnessBody: SeriousnessRequest): Promise<HttpResponse>;
+    delete(seriousnessId: number): Promise<HttpResponse>;
 }
 
 export const seriousnessService : SeriousnessService = {
@@ -37,15 +37,15 @@ export const seriousnessService : SeriousnessService = {
         }
     },
 
-    create: async (seriousnessBody: SeriousnessRequest): Promise<AxiosResponse> => {
+    create: async (seriousnessBody: SeriousnessRequest): Promise<HttpResponse> => {
         return await http.post(`/incidents/seriousness`, seriousnessBody);
     },
 
-    update: async (seriousnessBody: SeriousnessRequest): Promise<AxiosResponse> => {
+    update: async (seriousnessBody: SeriousnessRequest): Promise<HttpResponse> => {
         return await http.put(`/incidents/seriousness`, seriousnessBody);
     },
 
-    delete: async (seriousnessId: number): Promise<AxiosResponse> => {
+    delete: async (seriousnessId: number): Promise<HttpResponse> => {
         return await http.delete(`/incidents/seriousness?id=${seriousnessId}`);
     },
 };

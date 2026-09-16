@@ -33,6 +33,9 @@
       ],
       "@statistics/*": [
         "statistics-presences/src/main/resources/public/ts/*"
+      ],
+      "@test-utils/*": [
+        "test-utils/*"
       ]
     }
   },

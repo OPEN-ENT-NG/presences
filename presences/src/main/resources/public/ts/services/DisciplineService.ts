@@ -1,15 +1,15 @@
 import {ng} from 'entcore'
-import http, {AxiosResponse} from 'axios';
+import { http, HttpResponse } from 'entcore-toolkit';
 import {Discipline, DisciplineRequest} from "../models";
 
 export interface DisciplineService {
     get(structureId: string): Promise<Discipline[]>;
 
-    create(disciplineBody: DisciplineRequest): Promise<AxiosResponse>;
+    create(disciplineBody: DisciplineRequest): Promise<HttpResponse>;
 
-    update(disciplineBody: DisciplineRequest): Promise<AxiosResponse>;
+    update(disciplineBody: DisciplineRequest): Promise<HttpResponse>;
 
-    delete(disciplineId: number): Promise<AxiosResponse>;
+    delete(disciplineId: number): Promise<HttpResponse>;
 }
 
 export const disciplineService: DisciplineService = {
@@ -22,15 +22,15 @@ export const disciplineService: DisciplineService = {
         }
     },
 
-    create: async (disciplineBody: DisciplineRequest): Promise<AxiosResponse> => {
+    create: async (disciplineBody: DisciplineRequest): Promise<HttpResponse> => {
         return http.post(`/presences/discipline`, disciplineBody);
     },
 
-    update: async (disciplineBody: DisciplineRequest): Promise<AxiosResponse> => {
+    update: async (disciplineBody: DisciplineRequest): Promise<HttpResponse> => {
         return http.put(`/presences/discipline`, disciplineBody);
     },
 
-    delete: async (disciplineId: number): Promise<AxiosResponse> => {
+    delete: async (disciplineId: number): Promise<HttpResponse> => {
         return http.delete(`/presences/discipline?id=${disciplineId}`);
     },
 };

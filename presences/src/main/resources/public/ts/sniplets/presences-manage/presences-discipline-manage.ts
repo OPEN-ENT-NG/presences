@@ -1,4 +1,4 @@
-import {AxiosResponse} from "axios";
+import { HttpResponse } from 'entcore-toolkit';
 import {Discipline, DisciplineRequest} from "../../models";
 import {disciplineService} from "../../services";
 import {PRESENCES_DISCIPLINE} from "@common/core/enum/presences-event";
@@ -16,7 +16,7 @@ interface ViewModel {
 
     hasDisciplines(): boolean;
 
-    proceedAfterAction(response: AxiosResponse): void;
+    proceedAfterAction(response: HttpResponse): void;
 
     getDisciplines(): Promise<void>;
 
@@ -82,7 +82,7 @@ const vm: ViewModel = {
         await disciplineService.update(form);
     },
 
-    proceedAfterAction(response: AxiosResponse): void {
+    proceedAfterAction(response: HttpResponse): void {
         if (response.status === 200 || response.status === 201) {
             vm.getDisciplines();
         }

@@ -1,6 +1,6 @@
 import {Grouping, GroupingResponse} from "@common/model/grouping";
 import {ng} from "entcore";
-import http from "axios";
+import { http } from 'entcore-toolkit';
 
 export interface GroupingService {
     search(structureId: string, value: string): Promise<Grouping[]>;

@@ -1,6 +1,6 @@
 import {idiom} from "entcore";
 import {Reason, ReasonRequest} from "@presences/models";
-import {AxiosResponse} from "axios";
+import { HttpResponse } from 'entcore-toolkit';
 
 export interface ReasonSnipletModel {
     lang: typeof idiom;
@@ -34,6 +34,6 @@ export interface ReasonSnipletModel {
 
     deleteReason(reason: Reason): void;
 
-    proceedAfterAction(response: AxiosResponse): void;
+    proceedAfterAction(response: HttpResponse): void;
 
 }

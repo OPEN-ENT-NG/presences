@@ -1,15 +1,15 @@
 import {ng} from 'entcore'
-import http, {AxiosResponse} from 'axios';
+import { http, HttpResponse } from 'entcore-toolkit';
 import {Presence, PresenceBody, PresenceRequest} from "../models";
 
 export interface PresenceService {
     get(presenceRequest: PresenceRequest): Promise<Presence[]>;
 
-    create(presenceBody: PresenceBody): Promise<AxiosResponse>;
+    create(presenceBody: PresenceBody): Promise<HttpResponse>;
 
-    update(presenceBody: PresenceBody): Promise<AxiosResponse>;
+    update(presenceBody: PresenceBody): Promise<HttpResponse>;
 
-    delete(presenceId: number): Promise<AxiosResponse>;
+    delete(presenceId: number): Promise<HttpResponse>;
 
     exportCSV(punishmentRequest: PresenceRequest): Promise<void>;
 
@@ -46,22 +46,22 @@ function filterUrl(presenceRequest: PresenceRequest): string {
 export const presenceService: PresenceService = {
     get: async (presenceRequest: PresenceRequest): Promise<Presence[]> => {
         try {
-            const {data}: AxiosResponse = await http.get(`/presences/presences${filterUrl(presenceRequest)}`);
+            const {data}: HttpResponse = await http.get(`/presences/presences${filterUrl(presenceRequest)}`);
             return data
         } catch (err) {
             throw err;
         }
     },
 
-    create: async (presenceBody: PresenceBody): Promise<AxiosResponse> => {
+    create: async (presenceBody: PresenceBody): Promise<HttpResponse> => {
         return http.post(`/presences/presence`, presenceBody);
     },
 
-    update: async (presenceBody: PresenceBody): Promise<AxiosResponse> => {
+    update: async (presenceBody: PresenceBody): Promise<HttpResponse> => {
         return http.put(`/presences/presence`, presenceBody);
     },
 
-    delete: async (PresenceId: number): Promise<AxiosResponse> => {
+    delete: async (PresenceId: number): Promise<HttpResponse> => {
         return http.delete(`/presences/presence?id=${PresenceId}`);
     },
 

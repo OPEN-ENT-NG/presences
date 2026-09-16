@@ -1,6 +1,5 @@
 import {ng, notify} from 'entcore';
-import {Mix} from 'entcore-toolkit';
-import http, {AxiosResponse} from 'axios';
+import {Mix, http, HttpResponse} from 'entcore-toolkit';
 import {Absence, CounsellorAbsence} from '../models';
 import {EXPORT_TYPE, ExportType} from "@common/core/enum/export-type.enum";
 import {EventAbsenceSummary} from "@presences/models/Event/EventAbsenceSummary";
@@ -12,8 +11,8 @@ export interface AbsenceService {
     getAbsence(structure: string, students: Array<string>, groups: Array<string>, start: string, end: string, justified: boolean,
                regularized: boolean, reasons: Array<number>): Promise<Array<Absence>>;
     getCounsellorAbsence(structure: string, students: string[], groups: string[], start: string, end: string, justified: boolean, regularized: boolean, reasons: number[]): Promise<CounsellorAbsence[]>;
-    updateFollowed(ids: number[], followed: boolean): Promise<AxiosResponse>;
-    regularizeAbsences(ids: Array<number>, regularized: boolean): Promise<AxiosResponse>;
+    updateFollowed(ids: number[], followed: boolean): Promise<HttpResponse>;
+    regularizeAbsences(ids: Array<number>, regularized: boolean): Promise<HttpResponse>;
     export(exportType: ExportType, structureId: string, startDate: string, endDate: string,
            studentIds: Array<string>, audienceIds: Array<string>, regularized: boolean,
            followed: boolean, reasons: Array<number>, noReason: boolean, halfBoarder: boolean, internal: boolean): void;
@@ -29,7 +28,7 @@ async function retrieve(structure: string, students: Array<string>, groups: Arra
             followed, halfBoarder, internal);
         if (page || page === 0) url += `&page=${page}`;
 
-        const {data}: AxiosResponse = await http.get(url);
+        const {data}: HttpResponse = await http.get(url);
         return data;
     } catch (err) {
         throw err;
@@ -75,11 +74,11 @@ export const absenceService: AbsenceService = {
             justified, regularized, reasons)).filter((absence: CounsellorAbsence) => absence.student.name != null);
     },
 
-    async updateFollowed(ids: number[], followed: boolean): Promise<AxiosResponse> {
+    async updateFollowed(ids: number[], followed: boolean): Promise<HttpResponse> {
         return http.put(`/presences/absences/follow`, {absenceIds: ids, followed: followed});
     },
 
-    async regularizeAbsences(ids: Array<number>, regularized: boolean): Promise<AxiosResponse> {
+    async regularizeAbsences(ids: Array<number>, regularized: boolean): Promise<HttpResponse> {
         if (ids.length === 0) return;
         try {
             await http.put(`/presences/absence/regularized`, {ids: ids, regularized: regularized});
@@ -127,7 +126,7 @@ export const absenceService: AbsenceService = {
                 url += `?startAt=${startAt}&endAt=${endAt}`;
             }
 
-            const {data}: AxiosResponse = await http.get(url);
+            const {data}: HttpResponse = await http.get(url);
             return data;
         } catch (err) {
             throw err;

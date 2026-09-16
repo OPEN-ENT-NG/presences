@@ -1,6 +1,5 @@
-import http, {AxiosError, AxiosResponse} from 'axios';
+import {Mix, http, HttpError, HttpResponse} from 'entcore-toolkit';
 import {_, moment, toasts} from 'entcore';
-import {Mix} from 'entcore-toolkit';
 import {Event, EventType, ExemptionRegister, RegisterStatus, Remark} from './index';
 import {LoadingCollection} from '@common/model';
 import {registerService} from '../services';
@@ -159,13 +158,13 @@ export class Register extends LoadingCollection {
         const state_idOld = this.state_id;
         this.state_id = state_id;
         await registerService.setStatus(this.id, this.state_id)
-            .then((response: AxiosResponse) => {
+            .then((response: HttpResponse) => {
                 // Prevent displaying toasts when selecting students in register.
                 if (state_id === RegisterStatus.DONE) {
                     toasts.confirm('presences.register.validation.success');
                 }
             })
-            .catch((_: AxiosError) => {
+            .catch((_: HttpError) => {
                 this.state_id = state_idOld;
                 toasts.warning('presences.register.validation.error');
             });

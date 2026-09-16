@@ -1,5 +1,5 @@
 import {ng} from 'entcore'
-import http, {AxiosResponse} from 'axios';
+import { http, HttpResponse } from 'entcore-toolkit';
 
 export interface Partner {
     id: number;
@@ -19,9 +19,9 @@ export interface PartnerRequest {
 
 export interface PartnerService {
     get(structureId: string): Promise<Partner[]>;
-    create(partnerBody: PartnerRequest): Promise<AxiosResponse>;
-    update(partnerBody: PartnerRequest): Promise<AxiosResponse>;
-    delete(partnerId: number): Promise<AxiosResponse>;
+    create(partnerBody: PartnerRequest): Promise<HttpResponse>;
+    update(partnerBody: PartnerRequest): Promise<HttpResponse>;
+    delete(partnerId: number): Promise<HttpResponse>;
 }
 
 export const partnerService : PartnerService = {
@@ -34,15 +34,15 @@ export const partnerService : PartnerService = {
         }
     },
 
-    create: async (partnerBody: PartnerRequest): Promise<AxiosResponse> => {
+    create: async (partnerBody: PartnerRequest): Promise<HttpResponse> => {
         return await http.post(`/incidents/partner`, partnerBody);
     },
 
-    update: async (partnerBody: PartnerRequest): Promise<AxiosResponse> => {
+    update: async (partnerBody: PartnerRequest): Promise<HttpResponse> => {
         return await http.put(`/incidents/partner`, partnerBody);
     },
 
-    delete: async (partnerId: number): Promise<AxiosResponse> => {
+    delete: async (partnerId: number): Promise<HttpResponse> => {
         return await http.delete(`/incidents/partner?id=${partnerId}`);
     },
 };

@@ -1,6 +1,6 @@
 import {INCIDENTS_PLACE_EVENT} from "@common/core/enum/incidents-event";
 import {Place, PlaceRequest, placeService} from "@incidents/services";
-import {AxiosResponse} from "axios";
+import { HttpResponse } from 'entcore-toolkit';
 
 declare let window: any;
 
@@ -12,7 +12,7 @@ interface ViewModel {
 
     hasPlaces(): boolean;
 
-    proceedAfterAction(response: AxiosResponse): void;
+    proceedAfterAction(response: HttpResponse): void;
 
     get(): Promise<void>;
 
@@ -74,7 +74,7 @@ const vm: ViewModel = {
         await placeService.update(form);
     },
 
-    proceedAfterAction(response: AxiosResponse): void {
+    proceedAfterAction(response: HttpResponse): void {
         if (response.status === 200 || response.status === 201) {
             vm.get();
         }

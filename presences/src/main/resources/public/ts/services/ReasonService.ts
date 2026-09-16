@@ -1,16 +1,16 @@
 import {idiom as lang, ng} from 'entcore'
-import http, {AxiosResponse} from 'axios';
+import { http, HttpResponse } from 'entcore-toolkit';
 import {Reason, ReasonRequest} from "@presences/models/Reason";
 import {REASON_TYPE_ID} from "@common/core/enum/reason-type-id";
 
 export interface ReasonService {
     getReasons(structureId: string, reasonTypeId?: Number): Promise<Reason[]>;
 
-    create(reasonBody: ReasonRequest, reasonTypeId?: Number): Promise<AxiosResponse>;
+    create(reasonBody: ReasonRequest, reasonTypeId?: Number): Promise<HttpResponse>;
 
-    update(reasonBody: ReasonRequest): Promise<AxiosResponse>;
+    update(reasonBody: ReasonRequest): Promise<HttpResponse>;
 
-    delete(reasonId: number): Promise<AxiosResponse>;
+    delete(reasonId: number): Promise<HttpResponse>;
 }
 
 export const reasonService: ReasonService = {
@@ -30,16 +30,16 @@ export const reasonService: ReasonService = {
         }
     },
 
-    create: async (reasonBody: ReasonRequest, reasonTypeId?: Number): Promise<AxiosResponse> => {
+    create: async (reasonBody: ReasonRequest, reasonTypeId?: Number): Promise<HttpResponse> => {
         let reasonTypeIdParam: string = reasonTypeId ? `?reasonTypeId=${reasonTypeId}` : '';
         return http.post(`/presences/reason${reasonTypeIdParam}`, reasonBody);
     },
 
-    update: async (reasonBody: ReasonRequest): Promise<AxiosResponse> => {
+    update: async (reasonBody: ReasonRequest): Promise<HttpResponse> => {
         return http.put(`/presences/reason`, reasonBody);
     },
 
-    delete: async (reasonId: number): Promise<AxiosResponse> => {
+    delete: async (reasonId: number): Promise<HttpResponse> => {
         return http.delete(`/presences/reason?id=${reasonId}`);
     },
 };

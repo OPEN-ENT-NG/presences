@@ -1,5 +1,10 @@
-import axios from 'axios';
-import MockAdapter from 'axios-mock-adapter';
+jest.mock('entcore-toolkit', () => ({
+    ...jest.requireActual('entcore-toolkit'),
+    http: {get: jest.fn(), post: jest.fn(), put: jest.fn(), delete: jest.fn(), postFile: jest.fn(), putFile: jest.fn()}
+}));
+
+import {http} from 'entcore-toolkit';
+import {mockHttpResponse} from '@test-utils/httpMock';
 import {punishmentService} from '@incidents/services';
 import {IPunishmentAbsenceRequest, IPunishmentBody, IPunishmentRequest} from "@incidents/models";
 import {User} from "@common/model/User";
@@ -8,8 +13,6 @@ let windowSpy;
 
 describe('PunishmentService', () => {
     it('checks if the answers of the get with several types are correct', done => {
-        const mock = new MockAdapter(axios);
-
         const punishmentRequest: IPunishmentRequest = {
             end_at: "end_at",
             groups_ids: [],
@@ -29,19 +32,18 @@ describe('PunishmentService', () => {
         const dateUrl: string = `&start_at=start_at&end_at=end_at`;
         const urlParams: string = `&type_id=1&type_id=2`;
         const pageUrl: string = `&page=0`;
-        mock.onGet(`/incidents/punishments${structureUrl}${dateUrl}${urlParams}${pageUrl}`)
-            .reply(200, dataGraph);
+        const url = `/incidents/punishments${structureUrl}${dateUrl}${urlParams}${pageUrl}`;
+        (http.get as jest.Mock).mockResolvedValueOnce(mockHttpResponse(dataGraph, {url}));
 
         punishmentService.get(punishmentRequest)
             .then(response => {
+                expect(http.get).toHaveBeenCalledWith(url);
                 expect(response).toEqual(dataGraph);
                 done();
             });
     });
 
     it('checks if the answers of the get with several students are correct', done => {
-        const mock = new MockAdapter(axios);
-
         const punishmentRequest: IPunishmentRequest = {
             end_at: "end_at",
             groups_ids: [],
@@ -61,19 +63,18 @@ describe('PunishmentService', () => {
         const dateUrl: string = `&start_at=start_at&end_at=end_at`;
         const urlParams: string = `&student_id=students_id_1&student_id=students_id_2`;
         const pageUrl: string = `&page=0`;
-        mock.onGet(`/incidents/punishments${structureUrl}${dateUrl}${urlParams}${pageUrl}`)
-            .reply(200, dataGraph);
+        const url = `/incidents/punishments${structureUrl}${dateUrl}${urlParams}${pageUrl}`;
+        (http.get as jest.Mock).mockResolvedValueOnce(mockHttpResponse(dataGraph, {url}));
 
         punishmentService.get(punishmentRequest)
             .then(response => {
+                expect(http.get).toHaveBeenCalledWith(url);
                 expect(response).toEqual(dataGraph);
                 done();
             });
     });
 
     it('checks if the answers of the get with several groups are correct', done => {
-        const mock = new MockAdapter(axios);
-
         const punishmentRequest: IPunishmentRequest = {
             end_at: "end_at",
             groups_ids: ["groups_id_1", "groups_id_2"],
@@ -93,19 +94,18 @@ describe('PunishmentService', () => {
         const dateUrl: string = `&start_at=start_at&end_at=end_at`;
         const urlParams: string = `&group_id=groups_id_1&group_id=groups_id_2`;
         const pageUrl: string = `&page=0`;
-        mock.onGet(`/incidents/punishments${structureUrl}${dateUrl}${urlParams}${pageUrl}`)
-            .reply(200, dataGraph);
+        const url = `/incidents/punishments${structureUrl}${dateUrl}${urlParams}${pageUrl}`;
+        (http.get as jest.Mock).mockResolvedValueOnce(mockHttpResponse(dataGraph, {url}));
 
         punishmentService.get(punishmentRequest)
             .then(response => {
+                expect(http.get).toHaveBeenCalledWith(url);
                 expect(response).toEqual(dataGraph);
                 done();
             });
     });
 
     it('checks if the answers of the get with several process are correct', done => {
-        const mock = new MockAdapter(axios);
-
         const punishmentRequest: IPunishmentRequest = {
             end_at: "end_at",
             groups_ids: [],
@@ -128,19 +128,18 @@ describe('PunishmentService', () => {
         const dateUrl: string = `&start_at=start_at&end_at=end_at`;
         const urlParams: string = `&process=value1&process=value3`;
         const pageUrl: string = `&page=0`;
-        mock.onGet(`/incidents/punishments${structureUrl}${dateUrl}${urlParams}${pageUrl}`)
-            .reply(200, dataGraph);
+        const url = `/incidents/punishments${structureUrl}${dateUrl}${urlParams}${pageUrl}`;
+        (http.get as jest.Mock).mockResolvedValueOnce(mockHttpResponse(dataGraph, {url}));
 
         punishmentService.get(punishmentRequest)
             .then(response => {
+                expect(http.get).toHaveBeenCalledWith(url);
                 expect(response).toEqual(dataGraph);
                 done();
             });
     });
 
     it('checks if the answers of the get with several option are correct', done => {
-        const mock = new MockAdapter(axios);
-
         const punishmentRequest: IPunishmentRequest = {
             end_at: "end_at",
             groups_ids: ["groups_id_1", "groups_id_2"],
@@ -167,19 +166,18 @@ describe('PunishmentService', () => {
         const urlParams: string = `&type_id=1&type_id=2&student_id=students_id_1&student_id=students_id_2&group_id=groups_id_1&group_id=groups_id_2&process=value1&process=value3`;
         const orderParams: string = `&order=date&reverse=true`;
         const pageUrl: string = `&page=0`;
-        mock.onGet(`/incidents/punishments${structureUrl}${dateUrl}${urlParams}${orderParams}${pageUrl}`)
-            .reply(200, dataGraph);
+        const url = `/incidents/punishments${structureUrl}${dateUrl}${urlParams}${orderParams}${pageUrl}`;
+        (http.get as jest.Mock).mockResolvedValueOnce(mockHttpResponse(dataGraph, {url}));
 
         punishmentService.get(punishmentRequest)
             .then(response => {
+                expect(http.get).toHaveBeenCalledWith(url);
                 expect(response).toEqual(dataGraph);
                 done();
             });
     });
 
     it('check create response is correct', done => {
-        const mock = new MockAdapter(axios);
-
         const punishmentBody: IPunishmentBody = {
             student_ids: []
         }
@@ -189,23 +187,26 @@ describe('PunishmentService', () => {
                 dataExample: "Example"
             }
         };
-        mock.onPost(`/incidents/punishments`, punishmentBody)
-            .reply(200, dataGraph);
+        const url = `/incidents/punishments`;
+        (http.post as jest.Mock).mockResolvedValueOnce(mockHttpResponse(dataGraph, {
+            url,
+            method: 'post',
+            data: JSON.stringify(punishmentBody)
+        }));
 
         punishmentService.create(punishmentBody)
             .then(response => {
-                expect(response.config.data).toEqual(JSON.stringify(punishmentBody));
+                expect(http.post).toHaveBeenCalledWith(url, punishmentBody);
+                expect((response.config as any).data).toEqual(JSON.stringify(punishmentBody));
                 expect(response.data).toEqual(dataGraph);
                 expect(response.status).toEqual(200);
-                expect(response.config.url).toEqual(`/incidents/punishments`);
-                expect(response.config.method).toEqual(`post`);
+                expect((response.config as any).url).toEqual(`/incidents/punishments`);
+                expect((response.config as any).method).toEqual(`post`);
                 done();
             });
     });
 
     it('check update response is correct', done => {
-        const mock = new MockAdapter(axios);
-
         const punishmentBody: IPunishmentBody = {
             student_ids: []
         }
@@ -215,64 +216,67 @@ describe('PunishmentService', () => {
                 dataExample: "Example"
             }
         };
-        mock.onPut(`/incidents/punishments`, punishmentBody)
-            .reply(200, dataGraph);
+        const url = `/incidents/punishments`;
+        (http.put as jest.Mock).mockResolvedValueOnce(mockHttpResponse(dataGraph, {
+            url,
+            method: 'put',
+            data: JSON.stringify(punishmentBody)
+        }));
 
         punishmentService.update(punishmentBody)
             .then(response => {
-                expect(response.config.data).toEqual(JSON.stringify(punishmentBody));
+                expect(http.put).toHaveBeenCalledWith(url, punishmentBody);
+                expect((response.config as any).data).toEqual(JSON.stringify(punishmentBody));
                 expect(response.data).toEqual(dataGraph);
                 expect(response.status).toEqual(200);
-                expect(response.config.url).toEqual(`/incidents/punishments`);
-                expect(response.config.method).toEqual(`put`);
+                expect((response.config as any).url).toEqual(`/incidents/punishments`);
+                expect((response.config as any).method).toEqual(`put`);
                 done();
             });
     });
 
     it('check delete response is correct', done => {
-        const mock = new MockAdapter(axios);
         const punishmentId: string = 'punishmentId';
         const structureId: string = 'structureId';
-
 
         let dataGraph = {
             dataGraph: {
                 dataExample: "Example"
             }
         };
-        mock.onDelete(`/incidents/punishments?id=${punishmentId}&structureId=${structureId}`)
-            .reply(200, dataGraph);
+        const url = `/incidents/punishments?id=${punishmentId}&structureId=${structureId}`;
+        (http.delete as jest.Mock).mockResolvedValueOnce(mockHttpResponse(dataGraph, {url, method: 'delete'}));
 
         punishmentService.delete(punishmentId, structureId)
             .then(response => {
+                expect(http.delete).toHaveBeenCalledWith(url);
                 expect(response.status).toEqual(200);
                 expect(response.data).toEqual(dataGraph);
-                expect(response.config.url).toEqual(`/incidents/punishments?id=${punishmentId}&structureId=${structureId}`);
-                expect(response.config.method).toEqual(`delete`);
+                expect((response.config as any).url).toEqual(`/incidents/punishments?id=${punishmentId}&structureId=${structureId}`);
+                expect((response.config as any).method).toEqual(`delete`);
                 done();
             });
     });
 
     it('check deleteGroupedPunishment response is correct', done => {
-        const mock = new MockAdapter(axios);
         const groupPunishmentId: string = 'groupPunishmentId';
         const structureId: string = 'structureId';
-
 
         let dataGraph = {
             dataGraph: {
                 dataExample: "Example"
             }
         };
-        mock.onDelete(`/incidents/punishments?grouped_punishment_id=${groupPunishmentId}&structureId=${structureId}`)
-            .reply(200, dataGraph);
+        const url = `/incidents/punishments?grouped_punishment_id=${groupPunishmentId}&structureId=${structureId}`;
+        (http.delete as jest.Mock).mockResolvedValueOnce(mockHttpResponse(dataGraph, {url, method: 'delete'}));
 
         punishmentService.deleteGroupedPunishment(groupPunishmentId, structureId)
             .then(response => {
+                expect(http.delete).toHaveBeenCalledWith(url);
                 expect(response.status).toEqual(200);
                 expect(response.data).toEqual(dataGraph);
-                expect(response.config.url).toEqual(`/incidents/punishments?grouped_punishment_id=${groupPunishmentId}&structureId=${structureId}`);
-                expect(response.config.method).toEqual(`delete`);
+                expect((response.config as any).url).toEqual(`/incidents/punishments?grouped_punishment_id=${groupPunishmentId}&structureId=${structureId}`);
+                expect((response.config as any).method).toEqual(`delete`);
                 done();
             });
     });
@@ -311,7 +315,6 @@ describe('PunishmentService', () => {
     });
 
     it('check getStudentsAbsences response is correct', done => {
-        const mock = new MockAdapter(axios);
         const start_at = "start_at";
         const end_at = "end_at";
         const student_ids: Array<User> = [{id: "id_1"}, {id: "id_2"}, {id: "id_3"}];
@@ -325,11 +328,12 @@ describe('PunishmentService', () => {
         const data = {
             all: ["id_1", "id_2"]
         };
-        mock.onPost(`/incidents/punishments/students/absences`, punishment)
-            .reply(200, data);
+        const url = `/incidents/punishments/students/absences`;
+        (http.post as jest.Mock).mockResolvedValueOnce(mockHttpResponse(data, {url, method: 'post'}));
 
         punishmentService.getStudentsAbsences(student_ids, start_at, end_at)
             .then(response => {
+                expect(http.post).toHaveBeenCalledWith(url, punishment);
                 expect(response).toEqual(data.all);
                 done();
             });

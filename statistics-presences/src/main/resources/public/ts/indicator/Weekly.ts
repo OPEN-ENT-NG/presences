@@ -7,7 +7,7 @@ import {IWeekly, IWeeklyResponse, WeeklyStatistics, WeeklyStatisticsResponse} fr
 import {DateUtils} from "@common/utils";
 import {DISPLAY_TYPE} from "../core/constants/DisplayMode";
 import {IndicatorFactory} from '../indicator';
-import {AxiosError} from "axios";
+import { HttpError } from 'entcore-toolkit';
 import {idiom, idiom as lang, model, moment, toasts} from "entcore";
 import {ViescolaireService} from "@common/services";
 import {timeslotClasseService} from "@common/services/TimeslotClasseService";
@@ -66,7 +66,7 @@ export class Weekly extends Indicator {
                     this.values = {slots: this._mapResults(res)}
                     resolve();
                 })
-                .catch((error: AxiosError) => {
+                .catch((error: HttpError) => {
                     reject(error);
                 });
         });

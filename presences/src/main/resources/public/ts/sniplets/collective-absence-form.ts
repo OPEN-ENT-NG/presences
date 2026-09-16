@@ -15,7 +15,7 @@ import {
     COLLECTIVE_ABSENCE_FORM_EVENTS,
     SNIPLET_FORM_EMIT_COLLECTIVE_ABSENCES_EVENTS
 } from '../core/enum/collective-absences-events';
-import {AxiosError, AxiosResponse} from 'axios';
+import { HttpError, HttpResponse } from 'entcore-toolkit';
 import {PeriodFormUtils} from "@common/utils/periodForm";
 import {REASON_TYPE_ID} from "@common/core/enum/reason-type-id";
 
@@ -220,7 +220,7 @@ const vm: IViewModel = {
                 return;
             }
             collectiveAbsenceService.createCollectiveAbsence(window.structure.id, vm.prepareCollectiveForm())
-                .then((res: AxiosResponse) => {
+                .then((res: HttpResponse) => {
                     if (res.status === 200 || res.status === 201) {
                         collectiveAbsenceForm.that.$emit(SNIPLET_FORM_EMIT_COLLECTIVE_ABSENCES_EVENTS.CREATION);
                         vm.closeCollectiveLightBox();
@@ -228,7 +228,7 @@ const vm: IViewModel = {
                     } else {
                         toasts.warning('presences.collective.absences.form.create.error');
                     }
-                }).catch((_: AxiosError) => toasts.warning('presences.collective.absences.form.create.error'));
+                }).catch((_: HttpError) => toasts.warning('presences.collective.absences.form.create.error'));
         }
     },
 
@@ -239,7 +239,7 @@ const vm: IViewModel = {
                 return;
             }
             collectiveAbsenceService.updateCollectiveAbsence(window.structure.id, vm.prepareCollectiveForm())
-                .then((res: AxiosResponse) => {
+                .then((res: HttpResponse) => {
                     if (res.status === 200 || res.status === 201) {
                         collectiveAbsenceForm.that.$emit(SNIPLET_FORM_EMIT_COLLECTIVE_ABSENCES_EVENTS.EDIT);
                         vm.closeCollectiveLightBox();
@@ -247,7 +247,7 @@ const vm: IViewModel = {
                     } else {
                         toasts.warning('presences.collective.absences.form.edit.error');
                     }
-                }).catch((_: AxiosError) => toasts.warning('presences.collective.absences.form.edit.error'));
+                }).catch((_: HttpError) => toasts.warning('presences.collective.absences.form.edit.error'));
         }
     },
 
@@ -317,7 +317,7 @@ const vm: IViewModel = {
     deleteCollectiveAbsence: async (): Promise<void> => {
         if (vm.form && vm.form.id) {
             collectiveAbsenceService.deleteCollectiveAbsence(window.structure.id, vm.form.id)
-                .then((res: AxiosResponse) => {
+                .then((res: HttpResponse) => {
                     if (res.status === 200 || res.status === 201) {
                         collectiveAbsenceForm.that.$emit(SNIPLET_FORM_EMIT_COLLECTIVE_ABSENCES_EVENTS.DELETE);
                         vm.closeCollectiveLightBox();
@@ -325,7 +325,7 @@ const vm: IViewModel = {
                     } else {
                         toasts.warning('presences.collective.absences.form.delete.error');
                     }
-                }).catch((_: AxiosError) => toasts.warning('presences.collective.absences.form.delete.error'));
+                }).catch((_: HttpError) => toasts.warning('presences.collective.absences.form.delete.error'));
         }
     },
 
@@ -452,7 +452,7 @@ const vm: IViewModel = {
                         studentIds.push(student.id);
                     });
                     collectiveAbsenceService.removeAbsenceFromCollectiveAbsence(window.structure.id,
-                        vm.form.id, studentIds).then((res: AxiosResponse) => {
+                        vm.form.id, studentIds).then((res: HttpResponse) => {
                         if (res.status === 200) {
                             vm.form.audiences.splice(index, 1);
                             vm.updateData();
@@ -461,7 +461,7 @@ const vm: IViewModel = {
                         } else {
                             toasts.warning('presences.collective.absences.form.delete.absence.error');
                         }
-                    }).catch((_: AxiosError) => toasts.warning('presences.collective.absences.form.delete.absence.error'));
+                    }).catch((_: HttpError) => toasts.warning('presences.collective.absences.form.delete.absence.error'));
                 } else {
                     vm.form.audiences.splice(index, 1);
                 }
@@ -473,7 +473,7 @@ const vm: IViewModel = {
     removeStudent: (audienceId: string, studentId: string): void => {
         if (vm.form.id && vm.hasBeenAdded(studentId)) {
             collectiveAbsenceService.removeAbsenceFromCollectiveAbsence(window.structure.id,
-                vm.form.id, [studentId]).then((res: AxiosResponse) => {
+                vm.form.id, [studentId]).then((res: HttpResponse) => {
                 if (res.status === 200) {
                     vm.updateData();
                     toasts.confirm('presences.collective.absences.form.delete.absence.success');
@@ -481,7 +481,7 @@ const vm: IViewModel = {
                 } else {
                     toasts.warning('presences.collective.absences.form.delete.absence.error');
                 }
-            }).catch((_: AxiosError) => toasts.warning('presences.collective.absences.form.delete.absence.error'));
+            }).catch((_: HttpError) => toasts.warning('presences.collective.absences.form.delete.absence.error'));
         }
 
         vm.form.audiences.forEach((audience: ICollectiveAbsenceAudience) => {

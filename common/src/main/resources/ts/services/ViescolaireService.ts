@@ -1,6 +1,6 @@
 import {model, ng} from 'entcore'
 import {ISchoolYearPeriod, IStructure, IStructureSlot} from "../model";
-import http from "axios";
+import { http } from 'entcore-toolkit';
 import {Student} from "@common/model/Student";
 
 declare let window: any;

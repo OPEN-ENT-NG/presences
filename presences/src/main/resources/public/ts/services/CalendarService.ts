@@ -1,5 +1,5 @@
 import {moment, ng} from 'entcore'
-import http from 'axios';
+import { http } from 'entcore-toolkit';
 import {Absence, EventType, PresenceRequest, Presences} from '../models';
 import {IPunishment} from '@incidents/models';
 import {User} from '@common/model/User'

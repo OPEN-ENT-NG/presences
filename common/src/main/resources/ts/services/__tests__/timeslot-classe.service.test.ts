@@ -1,18 +1,22 @@
-// tricks to fake "mock" entcore ng class in order to use service
-import axios from 'axios';
-import MockAdapter from 'axios-mock-adapter';
+jest.mock('entcore-toolkit', () => ({
+    ...jest.requireActual('entcore-toolkit'),
+    http: {get: jest.fn(), post: jest.fn(), put: jest.fn(), delete: jest.fn(), postFile: jest.fn(), putFile: jest.fn()}
+}));
+
+import {http} from 'entcore-toolkit';
+import {mockHttpResponse} from '@test-utils/httpMock';
 import {timeslotClasseService, TimeslotClasseService} from "@common/services/TimeslotClasseService";
 import {IStructureSlot} from "@common/model";
 
 describe('TimeslotClasseService', () => {
     it('returns data when API request is correctly called for getAudienceTimeslot method', done => {
         const audienceId = "audienceId";
-        var mock = new MockAdapter(axios);
         const data: IStructureSlot = {_id: "", name: "", slots: []};
-
-        mock.onGet(`/viescolaire/timeslot/audience/${audienceId}`).reply(200, data);
+        const url = `/viescolaire/timeslot/audience/${audienceId}`;
+        (http.get as jest.Mock).mockResolvedValueOnce(mockHttpResponse(data, {url}));
 
         timeslotClasseService.getAudienceTimeslot("audienceId").then(response => {
+            expect(http.get).toHaveBeenCalledWith(url);
             expect(response).toEqual(data);
             done();
         });
@@ -20,12 +24,12 @@ describe('TimeslotClasseService', () => {
 
     it('returns data when API request is correctly called for getAllClassFromTimeslot method', done => {
         const timeslotId = "timeslotId";
-        var mock = new MockAdapter(axios);
         const data = ["ok"];
-
-        mock.onGet(`/viescolaire/timeslot/${timeslotId}`).reply(200, data);
+        const url = `/viescolaire/timeslot/${timeslotId}`;
+        (http.get as jest.Mock).mockResolvedValueOnce(mockHttpResponse(data, {url}));
 
         timeslotClasseService.getAllClassFromTimeslot("timeslotId").then(response => {
+            expect(http.get).toHaveBeenCalledWith(url);
             expect(response).toEqual(data);
             done();
         });
@@ -34,43 +38,48 @@ describe('TimeslotClasseService', () => {
     it('returns data when API request is correctly called for createOrUpdateClassTimeslot method', done => {
         const timeslotId = "timeslotId";
         const classId = "classId";
-        var mock = new MockAdapter(axios);
         const data = {response: true};
-
-        mock.onPost(`/viescolaire/timeslot/audience`, {timeslot_id: timeslotId, class_id: classId}).reply(200, data);
+        const url = `/viescolaire/timeslot/audience`;
+        const body = {timeslot_id: timeslotId, class_id: classId};
+        (http.post as jest.Mock).mockResolvedValueOnce(mockHttpResponse(data, {
+            url,
+            method: 'post',
+            data: JSON.stringify(body)
+        }));
 
         timeslotClasseService.createOrUpdateClassTimeslot("timeslotId", "classId").then(response => {
+            expect(http.post).toHaveBeenCalledWith(url, body);
             expect(response.data).toEqual(data);
-            expect(response.config.url).toEqual(`/viescolaire/timeslot/audience`);
-            expect(response.config.data).toEqual(JSON.stringify({timeslot_id: timeslotId, class_id: classId}));
+            expect((response.config as any).url).toEqual(`/viescolaire/timeslot/audience`);
+            expect((response.config as any).data).toEqual(JSON.stringify({timeslot_id: timeslotId, class_id: classId}));
             done();
         });
     });
 
     it('returns data when API request is correctly called for deleteAllAudienceFromTimeslot method', done => {
         const timeslotId = "timeslotId";
-        var mock = new MockAdapter(axios);
         const data = {response: true};
-
-        mock.onDelete(`/viescolaire/timeslot/${timeslotId}`).reply(200, data);
+        const url = `/viescolaire/timeslot/${timeslotId}`;
+        (http.delete as jest.Mock).mockResolvedValueOnce(mockHttpResponse(data, {url, method: 'delete'}));
 
         timeslotClasseService.deleteAllAudienceFromTimeslot("timeslotId").then(response => {
+            expect(http.delete).toHaveBeenCalledWith(url);
             expect(response.data).toEqual(data);
-            expect(response.config.url).toEqual(`/viescolaire/timeslot/${timeslotId}`);
+            expect((response.config as any).url).toEqual(`/viescolaire/timeslot/${timeslotId}`);
             done();
         });
     });
 
     it('returns data when API request is correctly called for getAudienceTimeslot method', done => {
         const classId = "classId";
-        var mock = new MockAdapter(axios);
         const data = {response: true};
-
-        mock.onDelete(`/viescolaire/timeslot/audience/${classId}`).reply(200, data);
+        const url = `/viescolaire/timeslot/audience/${classId}`;
+        (http.delete as jest.Mock).mockResolvedValueOnce(mockHttpResponse(data, {url, method: 'delete'}));
 
         timeslotClasseService.deleteClassTimeslot("classId").then(response => {
+            expect(http.delete).toHaveBeenCalledWith(url);
             expect(response.data).toEqual(data);
-            expect(response.config.url).toEqual(`/viescolaire/timeslot/audience/${classId}`);
+            expect((response.config as any).url).toEqual(`/viescolaire/timeslot/audience/${classId}`);
             done();
         });
     });

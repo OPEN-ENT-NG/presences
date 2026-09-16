@@ -3,7 +3,7 @@ import {Student} from "@common/model/Student";
 import {ISchoolYearPeriod, IStructureSlot, TimeSlotHourPeriod} from "@common/model";
 import {IStatementAbsenceBody, IStatementsAbsences, IStatementsAbsencesRequest, StatementsAbsences} from "../models";
 import {DateUtils} from "@common/utils";
-import {AxiosResponse} from "axios";
+import { HttpResponse } from 'entcore-toolkit';
 import {
     IStatementsAbsencesService,
     IViescolaireService,
@@ -265,7 +265,7 @@ export const StatementsAbsenceForm = ng.directive('statementsAbsenceForm',
                     toasts.warning(lang.translate('presences.invalid.form'));
                     return;
                 }
-                let response: AxiosResponse = await statementsAbsencesService.create(form);
+                let response: HttpResponse = await statementsAbsencesService.create(form);
                 if (response.status == 200 || response.status == 201) {
                     toasts.confirm(lang.translate('presences.statement.form.create.success'));
                     vm.form.description = "";
