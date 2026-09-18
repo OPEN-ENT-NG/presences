@@ -1,11 +1,15 @@
-import MockAdapter from "axios-mock-adapter";
-import axios from "axios";
+jest.mock('entcore-toolkit', () => ({
+    ...jest.requireActual('entcore-toolkit'),
+    http: {get: jest.fn(), post: jest.fn(), put: jest.fn(), delete: jest.fn(), postFile: jest.fn(), putFile: jest.fn()}
+}));
+
+import {http} from 'entcore-toolkit';
+import {mockHttpResponse} from '@test-utils/httpMock';
 import {massmailingService} from "@massmailing/services";
 import {MassmailingStudent} from "@massmailing/model";
 
 describe('SettingsService', () => {
     it('test getStatus method', done => {
-        const mock = new MockAdapter(axios);
         const data = {response: true};
         const structure: string = "structureId";
         const massmailed: boolean = false;
@@ -21,7 +25,7 @@ describe('SettingsService', () => {
         const noReasons: boolean = false;
         const noLatenessReasons: boolean = true;
 
-        mock.onGet('/massmailing/massmailings/status?structure=structureId' +
+        const url = '/massmailing/massmailings/status?structure=structureId' +
             '&start_at=7' +
             '&start_date=2022-04-12' +
             '&end_date=2022-04-13' +
@@ -39,18 +43,18 @@ describe('SettingsService', () => {
             '&student=student2' +
             '&type=type1' +
             '&type=type2' +
-            '&massmailed=false')
-            .reply(200, data);
+            '&massmailed=false';
+        (http.get as jest.Mock).mockResolvedValueOnce(mockHttpResponse(data, {url}));
         massmailingService.getStatus(structure, massmailed, reasons, punishmentTypes,
             sanctionsTypes, start_at, start_date, end_date,
             groups, students, types, noReasons, noLatenessReasons).then(response => {
+            expect(http.get).toHaveBeenCalledWith(url);
             expect(response).toEqual(data);
             done();
         })
     });
 
     it('test getAnomalies method', done => {
-        const mock = new MockAdapter(axios);
         const data = {response: true};
         const structure: string = "structureId";
         const massmailed: boolean = false;
@@ -66,7 +70,7 @@ describe('SettingsService', () => {
         const noReasons: boolean = false;
         const noLatenessReasons: boolean = true;
 
-        mock.onGet('/massmailing/massmailings/anomalies?structure=structureId' +
+        const url = '/massmailing/massmailings/anomalies?structure=structureId' +
             '&start_at=7' +
             '&start_date=2022-04-12' +
             '&end_date=2022-04-13' +
@@ -84,18 +88,18 @@ describe('SettingsService', () => {
             '&student=student2' +
             '&type=type1' +
             '&type=type2' +
-            '&massmailed=false')
-            .reply(200, data);
+            '&massmailed=false';
+        (http.get as jest.Mock).mockResolvedValueOnce(mockHttpResponse(data, {url}));
         massmailingService.getAnomalies(structure, massmailed, reasons, punishmentTypes,
             sanctionsTypes, start_at, start_date, end_date,
             groups, students, types, noReasons, noLatenessReasons).then(response => {
+            expect(http.get).toHaveBeenCalledWith(url);
             expect(response).toEqual(data);
             done();
         })
     });
 
     it('test prefetch method', done => {
-        const mock = new MockAdapter(axios);
         const student1: MassmailingStudent = {
             className: "",
             displayName: "",
@@ -121,7 +125,7 @@ describe('SettingsService', () => {
         const noReasons: boolean = false;
         const noLatenessReasons: boolean = true;
 
-        mock.onGet('/massmailing/massmailings/prefetch/mailType?structure=structureId' +
+        const url = '/massmailing/massmailings/prefetch/mailType?structure=structureId' +
             '&start_at=7' +
             '&start_date=2022-04-12' +
             '&end_date=2022-04-13' +
@@ -139,11 +143,12 @@ describe('SettingsService', () => {
             '&student=student2' +
             '&type=type1' +
             '&type=type2' +
-            '&massmailed=false')
-            .reply(200, data);
+            '&massmailed=false';
+        (http.get as jest.Mock).mockResolvedValueOnce(mockHttpResponse(data, {url}));
         massmailingService.prefetch(mailType, structure, massmailed, reasons, punishmentTypes,
             sanctionsTypes, start_at, start_date, end_date,
             groups, students, types, noReasons, noLatenessReasons).then(response => {
+            expect(http.get).toHaveBeenCalledWith(url);
             expect(response).toEqual(data);
             done();
         })

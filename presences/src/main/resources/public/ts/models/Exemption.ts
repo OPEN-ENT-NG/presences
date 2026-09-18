@@ -1,5 +1,4 @@
-import http from 'axios';
-import {Mix} from 'entcore-toolkit';
+import {Mix, http} from 'entcore-toolkit';
 import {DateUtils} from "@common/utils";
 import {ITimeSlot, LoadingCollection} from "@common/model";
 import {_, moment} from "entcore";

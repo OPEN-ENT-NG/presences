@@ -1,5 +1,5 @@
 import {ng} from 'entcore';
-import http, {AxiosResponse} from 'axios';
+import { http, HttpResponse } from 'entcore-toolkit';
 import {Alert, DeleteAlertRequest, InfiniteScrollAlert, StudentAlert} from "@presences/models/Alert";
 
 export interface AlertService {
@@ -11,7 +11,7 @@ export interface AlertService {
 
     reset(structureId: string, body: DeleteAlertRequest): Promise<void>;
 
-    resetStudentAlertsCount(structureId: string, studentId: string, type: string): Promise<AxiosResponse>;
+    resetStudentAlertsCount(structureId: string, studentId: string, type: string): Promise<HttpResponse>;
 
     exportCSV(structureId: string, type: string[]): void;
 }
@@ -77,7 +77,7 @@ export const alertService: AlertService = {
         }
     },
 
-    resetStudentAlertsCount(structureId: string, studentId: string, type: string): Promise<AxiosResponse> {
+    resetStudentAlertsCount(structureId: string, studentId: string, type: string): Promise<HttpResponse> {
         return http.delete(`/presences/structures/${structureId}/students/${studentId}/alerts/reset?type=${type}`);
     },
 

@@ -1,7 +1,7 @@
 import {actionService} from "../../services";
 import {Action, ActionRequest} from "../../models";
 import {PRESENCES_ACTION} from "@common/core/enum/presences-event";
-import {AxiosResponse} from "axios";
+import { HttpResponse } from 'entcore-toolkit';
 import {toasts} from "entcore";
 
 declare const window: any;
@@ -22,7 +22,7 @@ interface ViewModel {
 
     deleteAction(action: Action): void;
 
-    proceedAfterAction(response: AxiosResponse): void;
+    proceedAfterAction(response: HttpResponse): void;
 
     openActionLightbox(action: Action): void;
 
@@ -78,7 +78,7 @@ const vm: ViewModel = {
         }
     },
 
-    proceedAfterAction(response: AxiosResponse): void {
+    proceedAfterAction(response: HttpResponse): void {
         if (response.status === 200 || response.status === 201) {
             vm.getAction();
         }

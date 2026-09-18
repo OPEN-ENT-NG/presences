@@ -1,5 +1,5 @@
 import {ng} from 'entcore'
-import http, {AxiosResponse} from 'axios';
+import { http, HttpResponse } from 'entcore-toolkit';
 import {IncidentType, Partner, Place, ProtagonistType, Seriousness} from "@incidents/services";
 import {IStudentEventRequest} from "@presences/models";
 import {IStudentIncidentResponse} from "@incidents/models";
@@ -25,7 +25,7 @@ export interface IncidentService {
 export const incidentService: IncidentService = {
     getIncidentParameterType: async (structureId: string): Promise<IncidentParameterType> => {
         try {
-            const {data}: AxiosResponse = await http.get(`/incidents/incidents/parameter/types?structureId=${structureId}`);
+            const {data}: HttpResponse = await http.get(`/incidents/incidents/parameter/types?structureId=${structureId}`);
             return data;
         } catch (err) {
             throw err;

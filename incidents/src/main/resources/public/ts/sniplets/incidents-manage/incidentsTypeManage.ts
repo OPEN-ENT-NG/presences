@@ -1,5 +1,5 @@
 import {incidentsTypeService, IncidentType, IncidentTypeRequest} from "@incidents/services";
-import {AxiosResponse} from "axios";
+import { HttpResponse } from 'entcore-toolkit';
 import {INCIDENTS_TYPE_EVENT} from "@common/core/enum/incidents-event";
 
 declare let window: any;
@@ -14,7 +14,7 @@ interface ViewModel {
 
     hasIncidentsType(): boolean;
 
-    proceedAfterAction(response: AxiosResponse): void;
+    proceedAfterAction(response: HttpResponse): void;
 
     getIncidentsType(): Promise<void>;
 
@@ -80,7 +80,7 @@ const vm: ViewModel = {
         await incidentsTypeService.update(form);
     },
 
-    proceedAfterAction(response: AxiosResponse): void {
+    proceedAfterAction(response: HttpResponse): void {
         if (response.status === 200 || response.status === 201) {
             vm.getIncidentsType();
         }

@@ -1,5 +1,5 @@
 import {ng} from 'entcore'
-import http from 'axios';
+import { http } from 'entcore-toolkit';
 import {IPunishmentCategory} from "@incidents/models/PunishmentCategory";
 
 export interface IPunishmentsCategoryService {

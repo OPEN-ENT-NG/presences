@@ -1,16 +1,16 @@
 import {ng} from 'entcore'
-import http, {AxiosResponse} from 'axios';
+import { http, HttpResponse } from 'entcore-toolkit';
 import {Action, ActionRequest} from "../models/Action";
 
 export interface ActionService {
     getActions(structureId: string): Promise<Action[]>;
 
     // Settings
-    create(actionBody: ActionRequest): Promise<AxiosResponse>;
+    create(actionBody: ActionRequest): Promise<HttpResponse>;
 
-    update(actionBody: ActionRequest): Promise<AxiosResponse>;
+    update(actionBody: ActionRequest): Promise<HttpResponse>;
 
-    delete(actionId: number): Promise<AxiosResponse>;
+    delete(actionId: number): Promise<HttpResponse>;
 }
 
 export const actionService: ActionService = {
@@ -24,15 +24,15 @@ export const actionService: ActionService = {
     },
 
     // Settings
-    create: (actionBody: ActionRequest): Promise<AxiosResponse> => {
+    create: (actionBody: ActionRequest): Promise<HttpResponse> => {
         return http.post(`/presences/action`, actionBody);
     },
 
-    update: (actionBody: ActionRequest): Promise<AxiosResponse> => {
+    update: (actionBody: ActionRequest): Promise<HttpResponse> => {
         return http.put(`/presences/action`, actionBody);
     },
 
-    delete: (actionId: number): Promise<AxiosResponse> => {
+    delete: (actionId: number): Promise<HttpResponse> => {
         return http.delete(`/presences/action?id=${actionId}`);
     }
 };

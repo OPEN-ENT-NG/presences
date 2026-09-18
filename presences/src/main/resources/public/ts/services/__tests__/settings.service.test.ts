@@ -2,21 +2,24 @@ jest.mock('entcore', () => ({
     ng: {service: jest.fn()}
 }))
 
-import axios from 'axios';
-import MockAdapter from 'axios-mock-adapter';
+jest.mock('entcore-toolkit', () => ({
+    ...jest.requireActual('entcore-toolkit'),
+    http: {get: jest.fn(), post: jest.fn(), put: jest.fn(), delete: jest.fn(), postFile: jest.fn(), putFile: jest.fn()}
+}));
+
+import {http} from 'entcore-toolkit';
+import {mockHttpResponse} from '@test-utils/httpMock';
 import {Setting, settingService} from '../SettingsService';
 describe('SettingsService', () => {
     it('returns data when retrieve request is correctly called', done => {
 
         const structureId: string = 'structureId';
-        const mock = new MockAdapter(axios);
         const data = {response: true};
-
-        mock.onGet(`/presences/structures/${structureId}/settings`)
-            .reply(200, data);
-
+        const url = `/presences/structures/${structureId}/settings`;
+        (http.get as jest.Mock).mockResolvedValueOnce(mockHttpResponse(data, {url}));
 
         settingService.retrieve("structureId").then(response => {
+            expect(http.get).toHaveBeenCalledWith(url);
             expect(response).toEqual(data);
             done();
         });
@@ -25,14 +28,12 @@ describe('SettingsService', () => {
     it('returns data when retrieve multiple slot request is correctly called', done => {
 
         const structureId: string = 'structureId';
-        const mock = new MockAdapter(axios);
         const data: Setting = {"allow_multiple_slots": true};
-
-        mock.onGet(`/presences/structures/${structureId}/settings/multiple-slots`)
-            .reply(200, data);
-
+        const url = `/presences/structures/${structureId}/settings/multiple-slots`;
+        (http.get as jest.Mock).mockResolvedValueOnce(mockHttpResponse(data, {url}));
 
         settingService.retrieveMultipleSlotSetting("structureId").then(response => {
+            expect(http.get).toHaveBeenCalledWith(url);
             expect(response).toEqual(data.allow_multiple_slots);
             done();
         });
@@ -41,13 +42,12 @@ describe('SettingsService', () => {
     it('returns data when put request is correctly called', done => {
 
         const structureId: string = 'structureId';
-        const mock = new MockAdapter(axios);
         const data = {response: true};
-
-        mock.onPut(`/presences/structures/${structureId}/settings`)
-            .reply(200, data);
+        const url = `/presences/structures/${structureId}/settings`;
+        (http.put as jest.Mock).mockResolvedValueOnce(mockHttpResponse(data, {url, method: 'put'}));
 
         settingService.put("structureId", {}).then(response => {
+            expect(http.put).toHaveBeenCalledWith(url, {});
             expect(response).toEqual(data);
             done();
         });

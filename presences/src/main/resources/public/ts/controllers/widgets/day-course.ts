@@ -2,7 +2,7 @@ import {Me, model, moment, ng, notify, idiom as lang} from 'entcore';
 import {CourseUtils, DateUtils, PreferencesUtils, PresencesPreferenceUtils} from '@common/utils';
 import {Course, Courses, Register, RegisterStatus} from '../../models';
 import {RegisterUtils} from '../../utilities';
-import http from 'axios';
+import { http } from 'entcore-toolkit';
 import rights from '../../rights';
 import {Setting, settingService} from '../../services';
 

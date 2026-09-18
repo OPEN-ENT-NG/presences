@@ -1,4 +1,4 @@
-import http from 'axios';
+import { http } from 'entcore-toolkit';
 import {ng} from "entcore";
 
 export interface IPeriod {

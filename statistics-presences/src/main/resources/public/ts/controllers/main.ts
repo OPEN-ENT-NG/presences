@@ -24,7 +24,7 @@ import {EXPORT_TYPE} from "../core/enums/export-type.enum";
 import {Weekly} from "@statistics/indicator/Weekly";
 import {SLOT_HEIGHT} from "../../constants/calendar";
 import {REASON_TYPE_ID} from "@common/core/enum/reason-type-id";
-import {AxiosError} from "axios";
+import { HttpError } from 'entcore-toolkit';
 import {GroupingService} from "@common/services";
 import {Grouping} from "@common/model/grouping";
 
@@ -468,7 +468,7 @@ export const mainController = ng.controller('MainController',
                     .then(() => {
                         toasts.info('statistics-presences.indicator.Global.student.refresh.success');
                         vm.loading = false;
-                    }).catch((err: AxiosError) => {
+                    }).catch((err: HttpError) => {
                     toasts.warning('statistics-presences.indicator.Global.student.refresh.error');
                     console.error(err, err.message);
                     vm.loading = false;

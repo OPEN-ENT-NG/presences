@@ -19,7 +19,7 @@ import {
     INCIDENTS_SERIOUSNESS_EVENT,
     INCIDENTS_TYPE_EVENT
 } from "@common/core/enum/incidents-event";
-import {AxiosResponse} from "axios";
+import { HttpResponse } from 'entcore-toolkit';
 import {IPunishmentTypeBody} from "../../models/PunishmentType";
 import {IPunishmentCategory} from "@incidents/models/PunishmentCategory";
 import {IAngularEvent} from "angular";
@@ -45,7 +45,7 @@ interface ViewModel {
 
     updateIncidentsManageLightbox(): Promise<void>;
 
-    proceedAfterAction(response: AxiosResponse): void;
+    proceedAfterAction(response: HttpResponse): void;
 
     chooseLevel(level: number): void;
 }
@@ -157,7 +157,7 @@ const vm: ViewModel = {
         }
     },
 
-    proceedAfterAction(response: AxiosResponse): void {
+    proceedAfterAction(response: HttpResponse): void {
         if (response.status === 200 || response.status === 201) {
             switch (vm.event.name) {
                 case INCIDENTS_PUNISHMENT_TYPE_EVENT.TRANSMIT: {

@@ -1,5 +1,10 @@
-import axios from 'axios';
-import MockAdapter from 'axios-mock-adapter';
+jest.mock('entcore-toolkit', () => ({
+    ...jest.requireActual('entcore-toolkit'),
+    http: {get: jest.fn(), post: jest.fn(), put: jest.fn(), delete: jest.fn(), postFile: jest.fn(), putFile: jest.fn()}
+}));
+
+import {http} from 'entcore-toolkit';
+import {mockHttpResponse} from '@test-utils/httpMock';
 import {MementoService} from '../MementoService';
 import {IndicatorBody} from "@statistics/model/Indicator";
 import {GlobalResponse} from "@statistics/model/Global";
@@ -11,7 +16,6 @@ describe('MementoService', () => {
         const structure: string = 'structure';
         const start: string = 'start';
         const end: string = 'end';
-        const mock = new MockAdapter(axios);
         const body: IndicatorBody = {
             start: start,
             end: end,
@@ -29,27 +33,11 @@ describe('MementoService', () => {
             rate: {ABSENCE_TOTAL: 10},
             slots: undefined
         };
-        const regularized: Array<MonthlyStats> = [{"2020-01": {count: 1}}];
-        regularized.push({"2020-04": {count: 0}});
-        const no_reason: Array<MonthlyStats> = [{"2020-01": {count: 2}}];
-        no_reason.push({"2020-04": {count: 20}});
-        const lateness: Array<MonthlyStats> = [{"2020-01": {count: 3}}];
-        lateness.push({"2020-04": {count: 0}});
-        const departure: Array<MonthlyStats> = [{"2020-01": {count: 4}}];
-        departure.push({"2020-04": {count: 0}});
-        const dataGraph: IMonthlyGraph = {
-            data: {
-                REGULARIZED: regularized,
-                NO_REASON: no_reason,
-                LATENESS: lateness,
-                DEPARTURE: departure
-            },
-            months: ["2020-01", "2020-04"]
-        };
-        mock.onPost(`/presences/statistics/structures/${structure}/student/${student}`, body)
-            .reply(200, dataGlobal);
+        const url = `/presences/statistics/structures/${structure}/student/${student}`;
+        (http.post as jest.Mock).mockResolvedValueOnce(mockHttpResponse(dataGlobal, {url, method: 'post'}));
 
         MementoService.getStudentEventsSummary('structure', 'student', body).then(response => {
+            expect(http.post).toHaveBeenCalledWith(url, body);
             expect(response).toEqual(dataGlobal);
             done();
         });
@@ -60,7 +48,6 @@ describe('MementoService', () => {
         const structure: string = 'structure';
         const start: string = 'start';
         const end: string = 'end';
-        const mock = new MockAdapter(axios);
         const body: IndicatorBody = {
             start: start,
             end: end,
@@ -72,12 +59,6 @@ describe('MementoService', () => {
             types: [],
             users: [student]
         }
-        const dataGlobal: GlobalResponse = {
-            count: undefined,
-            data: undefined,
-            rate: {ABSENCE_TOTAL: 10},
-            slots: undefined
-        };
         const regularized: Array<MonthlyStats> = [{"2020-01": {count: 1}}];
         regularized.push({"2020-04": {count: 0}});
         const no_reason: Array<MonthlyStats> = [{"2020-01": {count: 2}}];
@@ -95,11 +76,11 @@ describe('MementoService', () => {
             },
             months: ["2020-01", "2020-04"]
         };
-
-        mock.onPost(`/presences/statistics/structures/${structure}/student/${student}/graph`, body)
-            .reply(200, dataGraph);
+        const url = `/presences/statistics/structures/${structure}/student/${student}/graph`;
+        (http.post as jest.Mock).mockResolvedValueOnce(mockHttpResponse(dataGraph, {url, method: 'post'}));
 
         MementoService.getStudentEventsSummaryGraph('structure', 'student', body).then(response => {
+            expect(http.post).toHaveBeenCalledWith(url, body);
             expect(response).toEqual(dataGraph);
             done();
         });

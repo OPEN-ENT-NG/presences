@@ -31,7 +31,7 @@ import {
 } from '@common/utils';
 import rights from '../rights';
 import {Scope} from './main';
-import http, {AxiosError} from 'axios';
+import { http, HttpError } from 'entcore-toolkit';
 import {EventsUtils, RegisterUtils, StudentsSearch} from '../utilities';
 import {Reason} from '@presences/models/Reason';
 import {SNIPLET_FORM_EMIT_EVENTS, SNIPLET_FORM_EVENTS} from '@common/model';
@@ -741,7 +741,7 @@ export const registersController = ng.controller('RegistersController',
                 } else {
                     let reason_id: number = events.reason_id;
                     student.lateness = undefined;
-                    await vm.toggleLateness(student).catch((err: AxiosError) => console.error(err));
+                    await vm.toggleLateness(student).catch((err: HttpError) => console.error(err));
                     if (typeof student.lateness.register_id === 'string') {
                         student.lateness.register_id = parseInt(student.lateness.register_id);
                     }
