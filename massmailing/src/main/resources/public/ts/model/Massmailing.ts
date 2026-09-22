@@ -1,5 +1,5 @@
 import {Template} from '@massmailing/services';
-import http, {AxiosRequestConfig, AxiosResponse} from 'axios';
+import { http, HttpRequestConfig, HttpResponse } from 'entcore-toolkit';
 import {DateUtils} from '@common/utils';
 import {MailingType} from '../model/Mailing';
 import {BlobUtil} from '@common/utils/blob';
@@ -204,7 +204,7 @@ export class Massmailing {
     
     async process(): Promise<void> {
         if (this.type === MailingType[MailingType.PDF]) {
-            const config: AxiosRequestConfig = {
+            const config: HttpRequestConfig = {
                 responseType: 'arraybuffer',
                 headers: {
                     'Content-Type': 'application/json',
@@ -212,7 +212,7 @@ export class Massmailing {
                 }
             };
             http.post(`/massmailing/massmailings/${this.type}`, this.toJson(), config)
-                .then((resp: AxiosResponse) => new BlobUtil(
+                .then((resp: HttpResponse) => new BlobUtil(
                     BlobUtil.getFileNameByContentDisposition(resp.headers['content-disposition']),
                     [resp.data],
                     {type: 'application/pdf'})

@@ -1,5 +1,5 @@
 import {idiom as lang, ng} from 'entcore'
-import http, {AxiosResponse, AxiosError} from 'axios';
+import { http, HttpResponse, HttpError } from 'entcore-toolkit';
 import {Reason} from "@presences/models/Reason";
 
 export interface IPresenceService {
@@ -9,8 +9,8 @@ export interface IPresenceService {
 export const presenceService: IPresenceService = {
     getReasons: async (structureId: string): Promise<Reason[]> => {
         return http.get(`/incidents/structures/${structureId}/reasons`)
-            .then((res: AxiosResponse) => res.data || [])
-            .catch((err: AxiosError) => Promise.reject(err));
+            .then((res: HttpResponse) => res.data || [])
+            .catch((err: HttpError) => Promise.reject(err));
     },
 };
 

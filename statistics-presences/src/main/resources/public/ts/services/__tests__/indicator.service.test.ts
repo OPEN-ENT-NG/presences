@@ -3,10 +3,15 @@ jest.mock('entcore', () => ({
     ng: {service: jest.fn()}
 }))
 
+jest.mock('entcore-toolkit', () => ({
+    ...jest.requireActual('entcore-toolkit'),
+    http: {get: jest.fn(), post: jest.fn(), put: jest.fn(), delete: jest.fn(), postFile: jest.fn(), putFile: jest.fn()}
+}));
+
 import {IndicatorBody} from "../../model/Indicator";
 import {indicatorService} from "../indicator.service";
-import axios from 'axios';
-import MockAdapter from 'axios-mock-adapter';
+import {http} from 'entcore-toolkit';
+import {mockHttpResponse} from '@test-utils/httpMock';
 
 describe('IndicatorService', () => {
     const body: IndicatorBody = {
@@ -25,20 +30,22 @@ describe('IndicatorService', () => {
     const page: number = 1;
 
     it('should return data when API fetchIndicator request is correctly called', done => {
-        let mock = new MockAdapter(axios);
         const data = {response: true};
-        mock.onPost(`/statistics-presences/structures/${structure}/indicators/${name}?page=${page}`, body).reply(200, data);
+        const url = `/statistics-presences/structures/${structure}/indicators/${name}?page=${page}`;
+        (http.post as jest.Mock).mockResolvedValueOnce(mockHttpResponse(data, {url, method: 'post'}));
         indicatorService.fetchIndicator(structure, name, page, body).then(response => {
+            expect(http.post).toHaveBeenCalledWith(url, body);
             expect(response).toEqual(data);
             done();
         });
     });
 
     it('should return data when API fetchGraphIndicator request is correctly called', done => {
-        let mock = new MockAdapter(axios);
         const data = {response: true};
-        mock.onPost(`/statistics-presences/structures/${structure}/indicators/${name}/graph`, body).reply(200, data);
+        const url = `/statistics-presences/structures/${structure}/indicators/${name}/graph`;
+        (http.post as jest.Mock).mockResolvedValueOnce(mockHttpResponse(data, {url, method: 'post'}));
         indicatorService.fetchGraphIndicator(structure, name, body).then(response => {
+            expect(http.post).toHaveBeenCalledWith(url, body);
             expect(response).toEqual(data);
             done();
         });

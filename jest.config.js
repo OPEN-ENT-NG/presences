@@ -29,6 +29,6 @@ module.exports = {
         "^@presences(.*)$": "<rootDir>/presences/src/main/resources/public/ts$1",
         "^@massmailing(.*)$": "<rootDir>/massmailing/src/main/resources/public/ts$1",
         "^@statistics(.*)$": "<rootDir>/statistics-presences/src/main/resources/public/ts$1",
-        '^axios$': require.resolve('axios')
+        "^@test-utils(.*)$": "<rootDir>/test-utils$1"
     }
 };

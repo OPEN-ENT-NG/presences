@@ -6,7 +6,7 @@ import {RegisterUtils} from '../../utilities';
 import {COURSE_EVENTS} from '@common/model';
 import {IAngularEvent} from 'angular';
 import {Setting, settingService} from '../../services';
-import http, {AxiosResponse} from "axios";
+import { http, HttpResponse } from 'entcore-toolkit';
 
 interface ViewModel {
     courses: Courses;
@@ -154,7 +154,7 @@ export const sideRegisterController = ng.controller('SideRegisterController', ['
         }
 
         async function getPreference(): Promise<any> {
-            let response: AxiosResponse = await http.get(`userbook/preference/presences.register`);
+            let response: HttpResponse = await http.get(`userbook/preference/presences.register`);
             if (response.status === 200 || response.status === 201) {
                 return JSON.parse(response.data.preference);
             } else {

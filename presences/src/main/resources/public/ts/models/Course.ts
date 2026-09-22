@@ -1,6 +1,5 @@
-import http, {AxiosResponse} from 'axios';
+import {Mix, http, HttpResponse} from 'entcore-toolkit';
 import {_, moment} from 'entcore';
-import {Mix} from 'entcore-toolkit';
 import {LoadingCollection} from '@common/model/LoadingCollection'
 import {DateUtils} from '@common/utils'
 import {ISubject} from "../models/Subject";
@@ -75,7 +74,7 @@ export class Courses extends LoadingCollection {
             const isSearchTeacher: string = (searchTeacher != null) ? `&searchTeacher=${searchTeacher}` : '';
             const urlParams: string = `${forgottenRegisterParam}${multipleSlotParam}${startTimeParam}${endTimeParam}`
                 +`${limitParam}${offsetParam}${orderParam}${isSearchTeacher}`;
-            const {data}: AxiosResponse = await http.get(
+            const {data}: HttpResponse = await http.get(
                 `/presences/courses?${teacherFilter}${groupFilter}structure=${structure}&start=${start}&end=${end}${urlParams}`
             );
             const newCourses = Mix.castArrayAs(Course, data);

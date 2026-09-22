@@ -5,7 +5,7 @@ import {SNIPLET_FORM_EMIT_EVENTS, SNIPLET_FORM_EVENTS} from '@common/model'
 import {DateUtils, StudentsSearch} from "@common/utils";
 import {SearchService, searchService, ViescolaireService} from "@common/services";
 import {IAngularEvent} from "angular";
-import {AxiosResponse} from "axios";
+import { HttpResponse } from 'entcore-toolkit';
 
 console.log("ExemptionForm sniplet");
 
@@ -232,7 +232,7 @@ const vm: ViewModel = {
             vm.form.endDateRecursive = vm.form.endDate;
         }
         try {
-            let response: AxiosResponse = await vm.form.save();
+            let response: HttpResponse = await vm.form.save();
             if (vm.form.id) {
                 vm.updateAfterSaveOrDelete(response, lang.translate('presences.exemptions.form.edit.succeed'));
             } else {

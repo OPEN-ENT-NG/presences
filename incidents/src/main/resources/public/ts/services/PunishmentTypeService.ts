@@ -1,16 +1,16 @@
 import {model, ng} from 'entcore'
-import http, {AxiosResponse} from 'axios';
+import { http, HttpResponse } from 'entcore-toolkit';
 import {IPunishmentType, IPunishmentTypeBody} from "@incidents/models/PunishmentType";
 import rights from "@incidents/rights";
 
 export interface IPunishmentsTypeService {
     get(structure_id: string): Promise<IPunishmentType[]>;
 
-    create(punishmentsTypeBody: IPunishmentTypeBody): Promise<AxiosResponse>;
+    create(punishmentsTypeBody: IPunishmentTypeBody): Promise<HttpResponse>;
 
-    update(punishmentsTypeBody: IPunishmentTypeBody): Promise<AxiosResponse>;
+    update(punishmentsTypeBody: IPunishmentTypeBody): Promise<HttpResponse>;
 
-    delete(id_deleted: number): Promise<AxiosResponse>;
+    delete(id_deleted: number): Promise<HttpResponse>;
 }
 
 export const punishmentsTypeService: IPunishmentsTypeService = {
@@ -24,15 +24,15 @@ export const punishmentsTypeService: IPunishmentsTypeService = {
         }
     },
 
-    create: async (punishmentsTypeBody: IPunishmentTypeBody): Promise<AxiosResponse> => {
+    create: async (punishmentsTypeBody: IPunishmentTypeBody): Promise<HttpResponse> => {
         return http.post(`/incidents/punishments/type`, punishmentsTypeBody);
     },
 
-    update: async (punishmentsTypeBody: IPunishmentTypeBody): Promise<AxiosResponse> => {
+    update: async (punishmentsTypeBody: IPunishmentTypeBody): Promise<HttpResponse> => {
         return http.put(`/incidents/punishments/type`, punishmentsTypeBody);
     },
 
-    delete: async (id_deleted: number): Promise<AxiosResponse> => {
+    delete: async (id_deleted: number): Promise<HttpResponse> => {
         return http.delete(`/incidents/punishments/type?id=${id_deleted}`);
     },
 };

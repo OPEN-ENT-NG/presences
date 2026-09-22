@@ -9,7 +9,7 @@ import {PunishmentCategoryType} from "@incidents/models/PunishmentCategory";
 import {IPunishmentType} from "@incidents/models/PunishmentType";
 import {User} from "@common/model/User";
 import {PunishmentsUtils} from "@incidents/utilities/punishments";
-import {AxiosResponse} from "axios";
+import { HttpResponse } from 'entcore-toolkit';
 
 declare let window: any;
 
@@ -57,7 +57,7 @@ interface ViewModel {
 
     deleteAll(): Promise<void>;
 
-    validDeleteResponse(response: AxiosResponse): void
+    validDeleteResponse(response: HttpResponse): void
 
     getStudentsFromView(): void;
 
@@ -218,17 +218,17 @@ const vm: ViewModel = {
 
     async delete(): Promise<void> {
         vm.preparePunishmentForm();
-        let response: AxiosResponse = await punishmentService.delete(vm.form.id, window.structure.id);
+        let response: HttpResponse = await punishmentService.delete(vm.form.id, window.structure.id);
         vm.validDeleteResponse(response);
     },
 
     async deleteAll(): Promise<void> {
         vm.preparePunishmentForm();
-        let response: AxiosResponse = await punishmentService.deleteGroupedPunishment(vm.form.grouped_punishment_id, window.structure.id);
+        let response: HttpResponse = await punishmentService.deleteGroupedPunishment(vm.form.grouped_punishment_id, window.structure.id);
         vm.validDeleteResponse(response);
     },
 
-    validDeleteResponse(response: AxiosResponse) {
+    validDeleteResponse(response: HttpResponse) {
         if (response.status == 200 || response.status == 201) {
             vm.closePunishmentLightbox();
             toasts.confirm(lang.translate('incidents.punishment.delete.succeed'));

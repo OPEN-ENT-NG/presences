@@ -2,7 +2,7 @@ import {punishmentsTypeService} from "@incidents/services/PunishmentTypeService"
 import {IPunishmentType, IPunishmentTypeBody} from "@incidents/models/PunishmentType";
 import {IPunishmentCategory} from "@incidents/models/PunishmentCategory";
 import {punishmentsCategoryService} from "@incidents/services/PunishmentCategoryService";
-import {AxiosResponse} from "axios";
+import { HttpResponse } from 'entcore-toolkit';
 import {toasts} from "entcore";
 import {INCIDENTS_PUNISHMENT_TYPE_EVENT} from "@common/core/enum/incidents-event";
 import {PunishmentsUtils} from "@incidents/utilities/punishments";
@@ -32,7 +32,7 @@ interface ViewModel {
 
     deletePunishmentType(punishmentType: IPunishmentTypeBody): Promise<void>;
 
-    proceedAfterAction(response: AxiosResponse): void;
+    proceedAfterAction(response: HttpResponse): void;
 
     switchCategory(): Promise<void>;
 
@@ -116,7 +116,7 @@ const vm: ViewModel = {
         }
     },
 
-    proceedAfterAction(response: AxiosResponse): void {
+    proceedAfterAction(response: HttpResponse): void {
         if (response.status === 200 || response.status === 201) {
             vm.getPunishmentsType();
         }

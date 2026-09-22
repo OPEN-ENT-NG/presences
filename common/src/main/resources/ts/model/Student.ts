@@ -1,5 +1,5 @@
 import {_, notify} from 'entcore';
-import http from 'axios';
+import { http } from 'entcore-toolkit';
 import {IStructure} from "@common/model/Viescolaire";
 import {IAudience} from "@common/model/Audience";
 

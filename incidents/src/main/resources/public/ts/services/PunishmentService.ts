@@ -1,5 +1,5 @@
 import {ng} from 'entcore'
-import http, {AxiosError, AxiosResponse} from 'axios';
+import { http, HttpError, HttpResponse } from 'entcore-toolkit';
 import {
     IPunishment,
     IPunishmentAbsenceRequest,
@@ -18,13 +18,13 @@ export interface IPunishmentService {
 
     getGroupedPunishmentId(groupedPunishmentId: string, structureId: string): Promise<IPunishmentResponse>;
 
-    create(punishmentBody: IPunishmentBody): Promise<AxiosResponse>;
+    create(punishmentBody: IPunishmentBody): Promise<HttpResponse>;
 
-    update(punishmentBody: IPunishmentBody): Promise<AxiosResponse>;
+    update(punishmentBody: IPunishmentBody): Promise<HttpResponse>;
 
-    delete(punishmentId: string, structureId: string): Promise<AxiosResponse>;
+    delete(punishmentId: string, structureId: string): Promise<HttpResponse>;
 
-    deleteGroupedPunishment(groupPunishmentId: string, structureId: string): Promise<AxiosResponse>;
+    deleteGroupedPunishment(groupPunishmentId: string, structureId: string): Promise<HttpResponse>;
 
     exportCSV(punishmentRequest: IPunishmentRequest): void;
 
@@ -77,7 +77,7 @@ export const punishmentService: IPunishmentService = {
             const dateUrl: string = `&start_at=${punishmentRequest.start_at}&end_at=${punishmentRequest.end_at}`;
             const urlParams: string = `${typeParams}${studentParams}${groupParams}${stateParams}`;
             const pageUrl: string = `&page=${punishmentRequest.page}`;
-            const {data}: AxiosResponse = await http.get(`/incidents/punishments${structureUrl}${dateUrl}${urlParams}${orderParams}${pageUrl}`);
+            const {data}: HttpResponse = await http.get(`/incidents/punishments${structureUrl}${dateUrl}${urlParams}${orderParams}${pageUrl}`);
             data.all.filter((punishment: IPunishment) => punishment.type.punishment_category_id === PunishmentCategoryType.DETENTION)
                 .forEach((punishment: IPunishment) => {
                     punishment.fields = [punishment.fields];
@@ -91,29 +91,29 @@ export const punishmentService: IPunishmentService = {
 
     async getFromId(punishmentId: string, structureId: string): Promise<IPunishment> {
         const url: string = `/incidents/punishments?id=${punishmentId}&structure_id=${structureId}`
-        const {data}: AxiosResponse = await http.get(url);
+        const {data}: HttpResponse = await http.get(url);
         return data;
     },
 
     async getGroupedPunishmentId(groupedPunishmentId: string, structureId: string): Promise<IPunishmentResponse> {
         const url: string = `/incidents/punishments?grouped_punishment_id=${groupedPunishmentId}&structure_id=${structureId}`
-        const {data}: AxiosResponse = await http.get(url);
+        const {data}: HttpResponse = await http.get(url);
         return data;
     },
 
-    async create(punishmentBody: IPunishmentBody): Promise<AxiosResponse> {
+    async create(punishmentBody: IPunishmentBody): Promise<HttpResponse> {
         return http.post(`/incidents/punishments`, punishmentBody);
     },
 
-    async update(punishmentBody: IPunishmentBody): Promise<AxiosResponse> {
+    async update(punishmentBody: IPunishmentBody): Promise<HttpResponse> {
         return http.put(`/incidents/punishments`, punishmentBody);
     },
 
-    async delete(punishmentId: string, structureId: string): Promise<AxiosResponse> {
+    async delete(punishmentId: string, structureId: string): Promise<HttpResponse> {
         return http.delete(`/incidents/punishments?id=${punishmentId}&structureId=${structureId}`);
     },
 
-    async deleteGroupedPunishment(groupedPunishmentId: string, structureId: string): Promise<AxiosResponse> {
+    async deleteGroupedPunishment(groupedPunishmentId: string, structureId: string): Promise<HttpResponse> {
         return http.delete(`/incidents/punishments?grouped_punishment_id=${groupedPunishmentId}&structureId=${structureId}`);
     },
 
@@ -162,8 +162,8 @@ export const punishmentService: IPunishmentService = {
             startAt: startAt,
             endAt: endAt
         } as IPunishmentAbsenceRequest)
-            .then((res: AxiosResponse) => res.data.all || [])
-            .catch((err: AxiosError) => Promise.reject(err))
+            .then((res: HttpResponse) => res.data.all || [])
+            .catch((err: HttpError) => Promise.reject(err))
     }
 };
 

@@ -5,7 +5,7 @@ import {IPunishmentType} from '@incidents/models/PunishmentType';
 import {ISchoolYearPeriod, Reason} from '@presences/models';
 import {INDICATOR_TYPE} from "../core/constants/IndicatorType";
 import {IMonthly, IMonthlyGraph, MonthlyStat, MonthlyStatistics, MonthlyStats, MonthlyStudent} from '../model/Monthly';
-import {AxiosError} from 'axios';
+import { HttpError } from 'entcore-toolkit';
 import {DISPLAY_TYPE} from "../core/constants/DisplayMode";
 import {DateUtils} from "@common/utils";
 import {ViescolaireService} from "@common/services";
@@ -58,7 +58,7 @@ export class Monthly extends Indicator {
                     this._mapResults(res);
                     resolve();
                 })
-                .catch((error: AxiosError) => {
+                .catch((error: HttpError) => {
                     reject(error);
                 });
         });
@@ -72,7 +72,7 @@ export class Monthly extends Indicator {
                     this.graphValues = res;
                     resolve();
                 })
-                .catch((error: AxiosError) => {
+                .catch((error: HttpError) => {
                     reject(error);
                 });
         });
