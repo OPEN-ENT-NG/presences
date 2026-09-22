@@ -188,65 +188,84 @@ public class DefaultCourseService extends DBService implements CourseService {
 
         Promise<JsonArray> promise = Promise.promise();
 
-        Future<List<String>> noTeacherFuture = getCourseIdsWithoutTeacher(structureId, startDate, endDate);
-        Future<List<String>> groupIdsFuture = groupService.getGroupsIdList(structureId, groupsList);
+        // A course only becomes eligible for "forgotten" once a register row exists for it (the
+        // computation below only looks at existing registers, cf. SUPPORT-5143): the daily cron that
+        // is supposed to pre-create them can miss courses (late EDT sync, exceptional course, cron
+        // misfire). Backfill any missing register for the requested range first, using the same
+        // idempotent creation the cron itself relies on, so this stays correct regardless of the
+        // cron's health.
+        Promise<JsonObject> backfillPromise = Promise.promise();
+        registerService.createStructureCoursesRegisterFuture(startDate, endDate, null, null, new JsonObject(),
+                structureId, "true", backfillPromise);
 
-        List<Future<List<String>>> futures = new ArrayList<>();
+        backfillPromise.future().onComplete(backfillResult -> {
+            if (backfillResult.failed()) {
+                LOGGER.error(String.format("[Presences@%s::listCoursesWithForgottenRegisters] Failed to backfill " +
+                                "missing registers for structure %s before computing forgotten registers: %s",
+                        this.getClass().getSimpleName(), structureId,
+                        backfillResult.cause() != null ? backfillResult.cause().getMessage() : "unknown error"));
+            }
 
-        futures.add(groupIdsFuture);
+            Future<List<String>> noTeacherFuture = getCourseIdsWithoutTeacher(structureId, startDate, endDate);
+            Future<List<String>> groupIdsFuture = groupService.getGroupsIdList(structureId, groupsList);
 
-        if ((isWithTeacherFilter != null) &&
-                BooleanUtils.toBooleanObject(isWithTeacherFilter).equals(Boolean.FALSE)) {
-            futures.add(noTeacherFuture);
-        }
+            List<Future<List<String>>> futures = new ArrayList<>();
 
-        Future.all(futures)
-                .onFailure(fail -> promise.fail(fail.getCause().getMessage()))
-                .onSuccess(ar -> {
-                    if ((isWithTeacherFilter != null) && BooleanUtils.toBooleanObject(isWithTeacherFilter).equals(Boolean.FALSE)
-                            && (noTeacherFuture.result() == null || noTeacherFuture.result().isEmpty())) {
-                        promise.complete(new JsonArray());
-                    } else {
-                        registerService.list(structureId, startDate, endDate, noTeacherFuture.result(),
-                                        teacherIds, groupIdsFuture.result(),
-                                        true, BooleanUtils.toBooleanObject(isWithTeacherFilter), limit, offset)
-                                .onFailure(fail -> promise.fail(fail.getMessage()))
-                                .onSuccess(registers -> {
+            futures.add(groupIdsFuture);
 
-                                    List<String> courseIds = ((List<JsonObject>) registers.getList())
-                                            .stream()
-                                            .map(register -> register.getString(Field.COURSE_ID))
-                                            .filter(Objects::nonNull)
-                                            .distinct()
-                                            .collect(Collectors.toList());
+            if ((isWithTeacherFilter != null) &&
+                    BooleanUtils.toBooleanObject(isWithTeacherFilter).equals(Boolean.FALSE)) {
+                futures.add(noTeacherFuture);
+            }
+
+            Future.all(futures)
+                    .onFailure(fail -> promise.fail(fail.getCause().getMessage()))
+                    .onSuccess(ar -> {
+                        if ((isWithTeacherFilter != null) && BooleanUtils.toBooleanObject(isWithTeacherFilter).equals(Boolean.FALSE)
+                                && (noTeacherFuture.result() == null || noTeacherFuture.result().isEmpty())) {
+                            promise.complete(new JsonArray());
+                        } else {
+                            registerService.list(structureId, startDate, endDate, noTeacherFuture.result(),
+                                            teacherIds, groupIdsFuture.result(),
+                                            true, BooleanUtils.toBooleanObject(isWithTeacherFilter), limit, offset)
+                                    .onFailure(fail -> promise.fail(fail.getMessage()))
+                                    .onSuccess(registers -> {
+
+                                        List<String> courseIds = ((List<JsonObject>) registers.getList())
+                                                .stream()
+                                                .map(register -> register.getString(Field.COURSE_ID))
+                                                .filter(Objects::nonNull)
+                                                .distinct()
+                                                .collect(Collectors.toList());
 
 
-                                    courseHelper.getCoursesByIds(new JsonArray(courseIds), courseRes -> {
-                                        if (courseRes.isLeft()) {
-                                            promise.fail(courseRes.left().getValue());
-                                        } else {
-                                            JsonArray courses = courseRes.right().getValue();
+                                        courseHelper.getCoursesByIds(new JsonArray(courseIds), courseRes -> {
+                                            if (courseRes.isLeft()) {
+                                                promise.fail(courseRes.left().getValue());
+                                            } else {
+                                                JsonArray courses = courseRes.right().getValue();
 
-                                            Future<JsonArray> teachersFuture = courseHelper.formatCourseTeachersSubjectsAndTags(courses,
-                                                    structureId);
-                                            Promise<JsonArray> slotsFuture = Promise.promise();
+                                                Future<JsonArray> teachersFuture = courseHelper.formatCourseTeachersSubjectsAndTags(courses,
+                                                        structureId);
+                                                Promise<JsonArray> slotsFuture = Promise.promise();
 
-                                            CompositeFuture.all(teachersFuture, slotsFuture.future())
-                                                    .onFailure(fail -> promise.fail(fail.getMessage()))
-                                                    .onSuccess(success -> promise.complete(new JsonArray(
-                                                            getFormattedCourses(slotsFuture.future().result(), courses,
-                                                                    registers, multipleSlot, isWithTeacherFilter).stream()
-                                                                    .filter(course -> course.getRegisterId() != null)
-                                                                    .collect(Collectors.toList())
-                                                    )));
+                                                CompositeFuture.all(teachersFuture, slotsFuture.future())
+                                                        .onFailure(fail -> promise.fail(fail.getMessage()))
+                                                        .onSuccess(success -> promise.complete(new JsonArray(
+                                                                getFormattedCourses(slotsFuture.future().result(), courses,
+                                                                        registers, multipleSlot, isWithTeacherFilter).stream()
+                                                                        .filter(course -> course.getRegisterId() != null)
+                                                                        .collect(Collectors.toList())
+                                                        )));
 
-                                            Viescolaire.getInstance().getSlotsFromProfile(structureId,
-                                                    FutureHelper.handlerJsonArray(slotsFuture));
-                                        }
+                                                Viescolaire.getInstance().getSlotsFromProfile(structureId,
+                                                        FutureHelper.handlerJsonArray(slotsFuture));
+                                            }
+                                        });
                                     });
-                                });
-                    }
-                });
+                        }
+                    });
+        });
 
         return promise.future();
     }
