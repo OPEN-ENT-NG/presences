@@ -17,7 +17,6 @@ import {
     eventService, Group,
     GroupService,
     ReasonService,
-    registerService,
     SearchService,
     settingService
 } from '../services';
@@ -825,11 +824,18 @@ export const registersController = ng.controller('RegistersController',
 
 
             vm.loadCoursesWithForgottenRegisters = async (users?: Array<string>, groups?: Array<string>): Promise<void> => {
-
-                const currentDate: string = DateUtils.format(moment(), DateUtils.FORMAT["YEAR-MONTH-DAY-HOUR-MIN-SEC"]);
-                let startDate: string = DateUtils.format(DateUtils.setFirstTime(moment(currentDate)), DateUtils.FORMAT["YEAR-MONTH-DAY-HOUR-MIN-SEC"]);
-                let endDate: string = DateUtils.format(moment(currentDate).add(-14.9, 'minutes'), DateUtils.FORMAT["YEAR-MONTH-DAY-HOUR-MIN-SEC"]);
-                vm.courses.all = await registerService.getLastForgottenRegisterCourses(window.structure.id, startDate, endDate, users, groups);
+                // registerService.getLastForgottenRegisterCourses only returns courses that already
+                // have a register row in base, missing any course whose register was never created
+                // (cf. SUPPORT-5143). We fetch today's full (unfiltered) course list instead and apply
+                // the same "forgotten" predicate as Courses.sync(), which also covers courses with no
+                // register at all.
+                const today: string = DateUtils.format(moment(), DateUtils.FORMAT["YEAR-MONTH-DAY"]);
+                const widgetCourses = new Courses();
+                await widgetCourses.sync(users, groups, window.structure.id, today, today, null, null,
+                    true, vm.isMultipleSlot ? vm.isMultipleSlotUserPreference : false);
+                vm.courses.all = widgetCourses.all
+                    .filter((course: Course) => course.teachers && course.teachers.length > 0)
+                    .slice(-16);
             };
 
 

@@ -4,6 +4,7 @@ import {Mix} from 'entcore-toolkit';
 import {LoadingCollection} from '@common/model/LoadingCollection'
 import {DateUtils} from '@common/utils'
 import {ISubject} from "../models/Subject";
+import {RegisterStatus} from "./RegisterStatus";
 
 export interface Course {
     id: string;
@@ -17,6 +18,7 @@ export interface Course {
     startDate: string;
     endDate: string;
     registerId?: number;
+    register_state_id?: RegisterStatus;
     timestamp?: number;
     subject?: ISubject;
     teachers: { id: string, displayName: string }[];
@@ -27,6 +29,17 @@ export interface Course {
 }
 
 export class Course {
+}
+
+/**
+ * A course is considered "forgotten" if its register is not DONE and its
+ * start time (+ grace period) has already passed, regardless of whether a
+ * register row exists yet (a course with no register at all is treated the
+ * same as a TODO register).
+ */
+export function isCourseForgotten(course: Course): boolean {
+    return course.register_state_id !== RegisterStatus.DONE
+        && moment().isAfter(moment(course.startDate).add(15, 'm'));
 }
 
 export class Courses extends LoadingCollection {
@@ -67,7 +80,12 @@ export class Courses extends LoadingCollection {
 
             const startTimeParam: string = (startTime !== null && startTime !== undefined) ? `&startTime=${startTime}` : ``;
             const endTimeParam: string = (endTime !== null && endTime !== undefined) ? `&endTime=${endTime}` : ``;
-            const forgottenRegisterParam: string = `&forgotten_registers=${forgottenRegisters}`;
+            // The backend "forgotten_registers" filter only returns courses that already have a
+            // register row: a course whose register was never created (e.g. not yet opened by the
+            // teacher) is silently excluded, even when it is genuinely forgotten (cf. SUPPORT-5143).
+            // We always fetch the full (unfiltered) course list and apply the "forgotten" predicate
+            // ourselves below, which correctly covers courses without any register.
+            const forgottenRegisterParam: string = `&forgotten_registers=false`;
             const multipleSlotParam: string = `&multiple_slot=${multipleSlot}`;
             const limitParam: string = limit || limit === 0 ? `&limit=${limit}` : '';
             const offsetParam: string = offset || offset === 0 ? `&offset=${offset}` : '';
@@ -78,9 +96,13 @@ export class Courses extends LoadingCollection {
             const {data}: AxiosResponse = await http.get(
                 `/presences/courses?${teacherFilter}${groupFilter}structure=${structure}&start=${start}&end=${end}${urlParams}`
             );
-            const newCourses = Mix.castArrayAs(Course, data);
-            newCourses.forEach((course: Course) => course.subject.label = course.subject.name);
-            this.hasCourses = newCourses.length > 0;
+            const fetchedCourses = Mix.castArrayAs(Course, data);
+            fetchedCourses.forEach((course: Course) => course.subject.label = course.subject.name);
+            // Infinite scroll relies on this flag to know whether more (raw) pages remain to fetch:
+            // it must reflect the unfiltered page size, not the post-filter count, otherwise scroll
+            // stops as soon as one page happens to contain no forgotten course.
+            this.hasCourses = fetchedCourses.length > 0;
+            const newCourses = forgottenRegisters ? fetchedCourses.filter(isCourseForgotten) : fetchedCourses;
             this.all = [...this.all, ...newCourses];
             this.all.map((course: Course) => course.timestamp = moment(course.startDate).valueOf());
             this.all = _.sortBy(this.all, 'timestamp');
