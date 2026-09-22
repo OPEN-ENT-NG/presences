@@ -1194,17 +1194,30 @@ public class DefaultRegisterService extends DBService implements RegisterService
                                                  String startDate, String endDate, boolean multipleSlot,
                                                  Handler<AsyncResult<JsonArray>> handler) {
 
-        getLastForgottenRegisters(structureId, startDate, endDate)
-                .compose(registers -> getCoursesFromRegisters(structureId, registers, teacherIds, groupNames, multipleSlot))
-                .onComplete(ar -> {
-                    if (ar.failed()) {
-                        String message = "[Presences@DefaultCourseService::getLastForgottenRegistersCourses] " +
-                                "Error fetching courses with last forgotten registers: " + ar.cause().getMessage();
-                        LOGGER.error(message);
-                        handler.handle(Future.failedFuture(message));
-                    } else {
-                        handler.handle(Future.succeededFuture(ar.result()));
+        // Same rationale as DefaultCourseService#listCoursesWithForgottenRegisters (cf. SUPPORT-5143):
+        // getLastForgottenRegisters below only looks at existing register rows, so backfill any
+        // missing one for this range first, best-effort, before reading them back.
+        createMultipleRegisters(structureId, startDate, endDate)
+                .onComplete(backfillResult -> {
+                    if (backfillResult.failed()) {
+                        LOGGER.error(String.format("[Presences@%s::getLastForgottenRegistersCourses] Failed to backfill " +
+                                        "missing registers for structure %s before computing last forgotten registers: %s",
+                                this.getClass().getSimpleName(), structureId,
+                                backfillResult.cause() != null ? backfillResult.cause().getMessage() : "unknown error"));
                     }
+
+                    getLastForgottenRegisters(structureId, startDate, endDate)
+                            .compose(registers -> getCoursesFromRegisters(structureId, registers, teacherIds, groupNames, multipleSlot))
+                            .onComplete(ar -> {
+                                if (ar.failed()) {
+                                    String message = "[Presences@DefaultCourseService::getLastForgottenRegistersCourses] " +
+                                            "Error fetching courses with last forgotten registers: " + ar.cause().getMessage();
+                                    LOGGER.error(message);
+                                    handler.handle(Future.failedFuture(message));
+                                } else {
+                                    handler.handle(Future.succeededFuture(ar.result()));
+                                }
+                            });
                 });
     }
 
