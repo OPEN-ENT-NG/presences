@@ -34,7 +34,7 @@
     "**/node-releases": "2.0.14"
   },
   "dependencies": {
-    "entcore": "develop-orga",
+    "entcore": "dev",
     "@screeb/sdk-browser": "0.7.0",
     "awesome-typescript-loader": "3.2.1",
     "core-js": "2.4.1",
