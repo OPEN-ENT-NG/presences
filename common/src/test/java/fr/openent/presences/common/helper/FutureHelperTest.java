@@ -162,4 +162,29 @@ public class FutureHelperTest {
         assertEquals("nested", ((JsonObject) nestedVal).getString("name"));
     }
 
+    @Test
+    @DisplayName("handlerJsonArray / handlerEitherPromise should keep non Json values (e.g. model instances) as is")
+    public void handlers_should_keep_non_json_values() {
+        Object model = new Object();
+        LinkedHashMap<String, Object> item = new LinkedHashMap<>();
+        item.put("id", "item-1");
+
+        Promise<JsonArray> promise = Promise.promise();
+        FutureHelper.handlerJsonArray(promise).handle(new Either.Right<>(new JsonArray().add(model).add(item)));
+        assertTrue(promise.future().succeeded());
+        assertTrue(promise.future().result().getValue(0) == model);
+        assertEquals("item-1", promise.future().result().getJsonObject(1).getString("id"));
+
+        final JsonArray[] captured = new JsonArray[1];
+        FutureHelper.handlerJsonArray((Handler<AsyncResult<JsonArray>>) ar -> captured[0] = ar.result())
+                .handle(new Either.Right<>(new JsonArray().add(model)));
+        assertTrue(captured[0].getValue(0) == model);
+
+        Promise<JsonArray> eitherPromise = Promise.promise();
+        Handler<Either<String, JsonArray>> handler = handlerEitherPromise(eitherPromise);
+        handler.handle(new Either.Right<>(new JsonArray().add(model)));
+        assertTrue(eitherPromise.future().succeeded());
+        assertTrue(eitherPromise.future().result().getValue(0) == model);
+    }
+
 }

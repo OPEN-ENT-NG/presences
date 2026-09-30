@@ -8,6 +8,7 @@ import io.vertx.core.json.JsonObject;
 import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
 
+import java.util.List;
 import java.util.Map;
 
 public class FutureHelper {
@@ -27,9 +28,8 @@ public class FutureHelper {
         return event -> {
             if (event.isRight()) {
                 // In a clustered deployment results are not JsonObject but Map so we need to "transform" them back to
-                // JsonObject so downstream process do not get cast errors.
-                // JsonArray.copy() uses Vert.x checkAndCopy() which recursively normalizes Map->JsonObject and List->JsonArray.
-                final JsonArray formatedArray = event.right().getValue().copy();
+                // JsonObject so downstream process do not get cast errors (see normalize).
+                final JsonArray formatedArray = normalize(event.right().getValue());
                 promise.complete(formatedArray);
             } else {
                 String message = String.format("[PresencesCommon@%s::handlerJsonArray]: %s",
@@ -63,10 +63,9 @@ public class FutureHelper {
             if (event.isRight()) {
                 R value = event.right().getValue();
                 // In a clustered deployment results are not JsonObject but Map so we need to "transform" them back to
-                // JsonObject so downstream process do not get cast errors (deep copy via encode/decode)
+                // JsonObject so downstream process do not get cast errors (see normalize)
                 if (value instanceof JsonArray) {
-                    // JsonArray.copy() uses Vert.x checkAndCopy() which recursively normalizes Map->JsonObject and List->JsonArray.
-                    value = (R) ((JsonArray) value).copy();
+                    value = (R) normalize((JsonArray) value);
                 }
                 promise.complete(value);
             } else {
@@ -82,11 +81,10 @@ public class FutureHelper {
         return event -> {
             if (event.isRight()) {
                 // In a clustered deployment results are not JsonObject but Map so we need to "transform" them back to
-                // JsonObject so downstream process do not get cast errors.
-                // JsonArray.copy() uses Vert.x checkAndCopy() which recursively normalizes Map->JsonObject and List->JsonArray.
+                // JsonObject so downstream process do not get cast errors (see normalize).
                 JsonArray formatedArray = null;
                 if(event.right().getValue() != null) {
-                    formatedArray = event.right().getValue().copy();
+                    formatedArray = normalize(event.right().getValue());
                 }
                 handler.handle(Future.succeededFuture(formatedArray));
             } else {
@@ -105,6 +103,38 @@ public class FutureHelper {
                 handler.handle(Future.failedFuture(event.left().getValue()));
             }
         };
+    }
+
+    /**
+     * Deeply rebuild a {@link JsonArray}, converting nested {@link Map} into {@link JsonObject} and {@link List} into
+     * {@link JsonArray} (clustered event bus results). Unlike {@link JsonArray#copy()}, any other value (e.g. a model
+     * instance such as a Course) is kept as is instead of throwing "Illegal type in Json".
+     *
+     * @param array array to normalize
+     * @return a new normalized {@link JsonArray}
+     */
+    public static JsonArray normalize(JsonArray array) {
+        return (JsonArray) normalizeValue(array);
+    }
+
+    @SuppressWarnings("unchecked")
+    private static Object normalizeValue(Object value) {
+        if (value instanceof JsonObject) {
+            value = ((JsonObject) value).getMap();
+        } else if (value instanceof JsonArray) {
+            value = ((JsonArray) value).getList();
+        }
+
+        if (value instanceof Map) {
+            JsonObject object = new JsonObject();
+            ((Map<String, Object>) value).forEach((key, val) -> object.put(key, normalizeValue(val)));
+            return object;
+        } else if (value instanceof List) {
+            JsonArray array = new JsonArray();
+            ((List<Object>) value).forEach(val -> array.add(normalizeValue(val)));
+            return array;
+        }
+        return value;
     }
 
     public static void busArrayHandler(Future<JsonArray> future, Message<JsonObject> message) {
