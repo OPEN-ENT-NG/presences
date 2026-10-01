@@ -16,6 +16,7 @@ import static fr.openent.presences.common.helper.FutureHelper.handlerEitherPromi
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertSame;
 
 public class FutureHelperTest {
 
@@ -165,26 +166,64 @@ public class FutureHelperTest {
     @Test
     @DisplayName("handlerJsonArray / handlerEitherPromise should keep non Json values (e.g. model instances) as is")
     public void handlers_should_keep_non_json_values() {
-        Object model = new Object();
-        LinkedHashMap<String, Object> item = new LinkedHashMap<>();
-        item.put("id", "item-1");
+        InnerDTO model = new InnerDTO("one", "two");
 
         Promise<JsonArray> promise = Promise.promise();
-        FutureHelper.handlerJsonArray(promise).handle(new Either.Right<>(new JsonArray().add(model).add(item)));
+        FutureHelper.handlerJsonArray(promise).handle(new Either.Right<>(arrayWithNonJsonValues(model)));
         assertTrue(promise.future().succeeded());
-        assertTrue(promise.future().result().getValue(0) == model);
-        assertEquals("item-1", promise.future().result().getJsonObject(1).getString("id"));
+        assertNonJsonValuesKept(promise.future().result(), model);
 
         final JsonArray[] captured = new JsonArray[1];
-        FutureHelper.handlerJsonArray((Handler<AsyncResult<JsonArray>>) ar -> captured[0] = ar.result())
-                .handle(new Either.Right<>(new JsonArray().add(model)));
-        assertTrue(captured[0].getValue(0) == model);
+        FutureHelper.handlerJsonArray((Handler<AsyncResult<JsonArray>>) ar -> {
+            assertTrue(ar.succeeded());
+            captured[0] = ar.result();
+        }).handle(new Either.Right<>(arrayWithNonJsonValues(model)));
+        assertNonJsonValuesKept(captured[0], model);
 
         Promise<JsonArray> eitherPromise = Promise.promise();
         Handler<Either<String, JsonArray>> handler = handlerEitherPromise(eitherPromise);
-        handler.handle(new Either.Right<>(new JsonArray().add(model)));
+        handler.handle(new Either.Right<>(arrayWithNonJsonValues(model)));
         assertTrue(eitherPromise.future().succeeded());
-        assertTrue(eitherPromise.future().result().getValue(0) == model);
+        assertNonJsonValuesKept(eitherPromise.future().result(), model);
+    }
+
+    /**
+     * Builds [model, {id, model, models: [model]}] with raw Map / List, as received in a clustered deployment,
+     * and with the model at top level (as in DefaultCourseService#listRegistersWithCourses) and nested.
+     */
+    private static JsonArray arrayWithNonJsonValues(Object model) {
+        LinkedHashMap<String, Object> item = new LinkedHashMap<>();
+        item.put("id", "item-1");
+        item.put("model", model);
+        item.put("models", new ArrayList<>(Collections.singletonList(model)));
+
+        return new JsonArray(new ArrayList<>(Arrays.asList(model, item)));
+    }
+
+    private static void assertNonJsonValuesKept(JsonArray result, Object model) {
+        assertNotNull(result);
+        assertEquals(2, result.size());
+        assertSame(model, result.getValue(0));
+
+        // getValue rather than getJsonObject / getJsonArray, which would wrap a raw Map / List on their own
+        Object item = result.getValue(1);
+        assertTrue(item instanceof JsonObject);
+        assertEquals("item-1", ((JsonObject) item).getString("id"));
+        assertSame(model, ((JsonObject) item).getValue("model"));
+
+        Object models = ((JsonObject) item).getValue("models");
+        assertTrue(models instanceof JsonArray);
+        assertSame(model, ((JsonArray) models).getValue(0));
+    }
+
+    private static class InnerDTO {
+        private final String fieldOne;
+        private final String fieldTwo;
+
+        InnerDTO(String fieldOne, String fieldTwo) {
+            this.fieldOne = fieldOne;
+            this.fieldTwo = fieldTwo;
+        }
     }
 
 }
