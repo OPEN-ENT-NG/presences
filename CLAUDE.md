@@ -1,6 +1,6 @@
 # Présences — bundle multi-modules (Maven + fronts AngularJS)
 
-Module « vie scolaire » d'Edifice : gestion des absences et des appels, des présences, des incidents / punitions / sanctions, et publipostage. Backend **Java/Vert.x (ent-core)** ; fronts **AngularJS legacy** (webpack + gulp + yarn). Une application **React** de prise d'appel (epic Jira ORGA-493, spec `FS-01`) est en cours de création dans ce même dépôt : elle n'existe pas encore.
+Module « vie scolaire » d'Edifice : gestion des absences et des appels, des présences, des incidents / punitions / sanctions, et publipostage. Backend **Java/Vert.x (ent-core)** ; fronts **AngularJS legacy** (webpack + gulp + yarn). Une application **React** de prise d'appel (epic Jira ORGA-493, spec `FS-01`) est en cours de création dans `frontend/` à la racine (Vite 8, React 18, **pnpm**, Node 24 ; voir son `README.md`). Ce front React est **centralisé** : il remplacera à terme les fronts AngularJS de tous les modules.
 
 ## Architecture
 
@@ -16,6 +16,7 @@ Maven multi-projet : `pom.xml` racine (parent `io.edifice:app-parent`, repo `OPE
 
 - Java : `<module>/src/main/java/fr/openent/<module>/` (controller, service, model, cron, worker, event, security…). SQL dans `src/main/resources/sql`, i18n dans `src/main/resources/i18n`, vues dans `view` / `view-src`.
 - Front AngularJS : `<module>/src/main/resources/public/ts/` (+ `sass/` pour `presences`). Alias TS : `@common`, `@presences`, `@incidents`, `@massmailing`, `@statistics`.
+- Front React : `frontend/` à la racine, unique pour tout le bundle (pnpm, son propre `build.sh` + `docker-compose.yml` en `node:24-alpine-pnpm`). Build synchronisé par `./build.sh buildReact` : assets dans `presences/src/main/resources/public/app/`, `index.html` dans `view/`. Routes front sous `/presences/app/*` (préfixe dédié pour ne pas heurter l'API à plat sous `/presences/*`).
 - `presences/specs/` : spécifications fonctionnelles (ex. `FS-ORGA-448-prise-appel-1d.md`).
 - `build.sh` mélange des cibles Maven et des cibles Gradle historiques (`*:buildGradle`) ; la chaîne actuelle est **Maven** (cf. `pom.xml`).
 
@@ -31,6 +32,7 @@ Gestionnaire front : **yarn** (`yarn.lock`). Le build « officiel » passe par D
 | Build d'un module (front + Maven) | `./build.sh presences` (idem `incidents`, `massmailing`, `statistics`) |
 | Build Maven seul | `./build.sh buildMaven` ou `./build.sh presences:buildMaven` |
 | Build front seul | `./build.sh buildGulp buildCss` |
+| Build du front React seul (+ sync dans le module) | `./build.sh buildReact` ; dev : `cd frontend && pnpm dev` (http://localhost:4200) |
 | Tests | `./build.sh test` (front + Maven) · `testNode` · `testMaven` |
 | Install local | `./build.sh install` (Maven, `-DskipTests`) |
 
