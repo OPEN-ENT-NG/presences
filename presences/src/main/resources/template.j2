@@ -30,14 +30,12 @@
         "enabled": false,
         "cron": "0 0 7,10,13,16,19 ? * * 2099"
       },
-      "export-cron": "{{ presencesExportCron | default('0 0 1/3 * *') }} ? 2099",
       "registers-cron": "0 15 * * * ? 2099",
     {% else %}
       "cron-check-regularization" : {
         "enabled": true,
         "cron": "0 0 7,10,13,16,19 ? * * *"
       },
-      "export-cron": "{{ presencesExportCron | default('0 0 1/3 * *') }} ? *",
       "registers-cron": "0 15,45 7-20 * * ? *",
     {% endif %}
     "mails-list-export" : {{ presencesMailListExport | default('[]') }},

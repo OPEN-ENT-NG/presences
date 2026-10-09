@@ -89,7 +89,6 @@ Il est nécessaire de mettre ***massmailing:true*** dans services du module vie 
 {
 "config": {
   ...
-  "export-cron": "0 0 0 1/3 * ? *",
   "registers-cron": "0 15,45 7-20 * * ? *",
   "cron-check-regularization" : {
             "enabled": true,
