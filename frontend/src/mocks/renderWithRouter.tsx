@@ -1,7 +1,11 @@
 import { createMemoryRouter, RouterProvider } from 'react-router-dom';
 import { render } from './setup';
 
-export const renderWithRouter = (path = '/', element: JSX.Element) => {
+export const renderWithRouter = (
+  path = '/',
+  element: JSX.Element,
+  initialEntry = path,
+) => {
   const routes = [
     {
       path,
@@ -10,7 +14,7 @@ export const renderWithRouter = (path = '/', element: JSX.Element) => {
   ];
 
   const router = createMemoryRouter(routes, {
-    initialEntries: [path],
+    initialEntries: [initialEntry],
   });
 
   return {
