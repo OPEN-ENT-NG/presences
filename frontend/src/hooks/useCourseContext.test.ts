@@ -25,6 +25,8 @@ describe('parseCourseContext', () => {
   it.each([
     ['date', '13/10/2026'],
     ['date', '2026-13-01'],
+    ['date', '2026-02-31'],
+    ['date', '2026-04-31'],
     ['startTime', '8:30'],
     ['endTime', '24:00'],
   ])('returns null when %s is malformed (%s)', (key, value) => {

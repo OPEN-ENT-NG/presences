@@ -8,7 +8,6 @@ export const ANGULAR_APP_URL = '/presences';
 export const Registers = () => {
   const { t } = useTranslation('presences');
   const courseContext = useCourseContext();
-  console.log('courseContext:', courseContext);
 
   return (
     <div className="py-16">
