@@ -7,6 +7,8 @@ tmp
 
 # dependencies
 node_modules
+# regenerated on each build (build.sh clean) to follow the @edifice.io dist-tags, like timeline
+pnpm-lock.yaml
 
 # IDEs and editors
 /.idea

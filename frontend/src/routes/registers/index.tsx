@@ -1,11 +1,14 @@
 import { Button, Heading } from '@edifice.io/react';
 import { useTranslation } from 'react-i18next';
+import { useCourseContext } from '~/hooks/useCourseContext';
 
-/** URL de l'application AngularJS existante (navigation complète, hors router). */
+/** URL of the existing AngularJS application (full page navigation, outside the router). */
 export const ANGULAR_APP_URL = '/presences';
 
 export const Registers = () => {
   const { t } = useTranslation('presences');
+  const courseContext = useCourseContext();
+  console.log('courseContext:', courseContext);
 
   return (
     <div className="py-16">
@@ -13,12 +16,17 @@ export const Registers = () => {
         {t('presences.register')}
       </Heading>
       <h1>Prise d'appel</h1>
+      <p>
+        {courseContext
+          ? t('presences.register.context', { ...courseContext })
+          : t('presences.register.context.invalid')}
+      </p>
       <Button
         color="tertiary"
         variant="ghost"
         onClick={() => window.location.assign(ANGULAR_APP_URL)}
       >
-        {t('presences.react.back')}
+        {t('presences.back')}
       </Button>
     </div>
   );

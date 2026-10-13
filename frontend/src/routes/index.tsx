@@ -39,9 +39,9 @@ const routes = (_queryClient: QueryClient): RouteObject[] => [
 ];
 
 /**
- * Préfixe dédié à l'application React : les routes de l'API Présences sont à
- * plat sous `/presences/*` (ex. `GET /presences/registers/:id`), le front ne
- * doit pas entrer en collision avec elles.
+ * Dedicated prefix for the React application: the Présences API routes are
+ * flat under `/presences/*` (e.g. `GET /presences/registers/:id`), the front
+ * must not collide with them.
  */
 export const basename = import.meta.env.PROD ? '/presences/app' : '/';
 
