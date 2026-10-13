@@ -91,8 +91,8 @@ export default ({ mode }: { mode: string }) => {
       commonjsOptions: {
         transformMixedEsModules: true,
       },
-      // Dossier dédié : ne pas entrer en collision avec les dossiers de
-      // l'AngularJS sous public/ (css, dist, img, js, template, ts).
+      // Dedicated folder: must not collide with the AngularJS folders
+      // under public/ (css, dist, img, js, template, ts).
       assetsDir: 'public/app',
       chunkSizeWarningLimit: 4000,
     },

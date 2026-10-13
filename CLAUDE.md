@@ -48,13 +48,15 @@ Dev local : voir le `README.md` (`cp .env.template .env`, `dev-auth-fetcher conn
 
 - Branche courante de travail : `develop-orga` ; branche principale pour les PR : `dev`.
 - Commits : Conventional Commits avec la clé Jira (`#ORGA-XXX`) ; branches `<type>-<ORGA-XXX>-<slug>` (skills `shared-conventions`).
+- **Toujours demander validation avant chaque commit, push ou merge**, même si une autorisation a déjà été donnée plus tôt.
 - Le CSS compilé (`*.css`, `dist/`, `public/js/`) n'est pas versionné : c'est un artefact de build.
 - Droits d'accès : `rights.ts` côté front, `security/` côté Java ; ne pas contourner.
+- Commentaires du code (Java, TS, scripts) **en anglais**, jamais en français. Le français reste réservé à la doc (`*.md`, specs) et aux traductions i18n.
 
 ## À faire / à éviter
 
 - ✅ Maintenance du front AngularJS sans le moderniser, sauf demande explicite.
 - ✅ Retrouver dans le code (controller / service / SQL) ce que le back sait faire avant de supposer une capacité.
 - ❌ Ne pas unifier les chaînes de build front (webpack legacy vs future app Vite/React).
-- ❌ Ne pas modifier l'API Présences pour la refonte React de la prise d'appel : le périmètre de l'epic ORGA-493 est front uniquement.
+- ❌ Ne pas modifier les routes métier de l'API Présences pour la refonte React de la prise d'appel (epic ORGA-493). Seul back admis : la bascule (droit Workflow `presences.beta` dans `FakeRight` + route `GET /presences/app/*` dans `PresencesController`, ORGA-610).
 - ❌ Ne pas présumer qu'un module ressemble à un autre : les fronts et configs diffèrent.
