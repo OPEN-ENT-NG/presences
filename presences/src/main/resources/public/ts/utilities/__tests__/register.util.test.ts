@@ -1,5 +1,7 @@
 import {Course, Register} from "@presences/models";
 import { RegisterUtils } from "@presences/utilities";
+import {model} from "entcore";
+import rights from "@presences/rights";
 
 describe('RegisterUtils', () => {
 
@@ -83,6 +85,30 @@ describe('RegisterUtils', () => {
         expect(register.splitSlot).toEqual(course.splitSlot);
 
         done();
+    });
+
+    it('test getReactRegisterUrl builds the URL with the course context', () => {
+        const course: Course = {
+            ...RegisterUtils.initCourseToFilter(),
+            id: "course-1",
+            structureId: "structure-1",
+            startDate: "2026-10-13 08:30:00",
+            endDate: "2026-10-13 11:45:00"
+        };
+
+        expect(RegisterUtils.getReactRegisterUrl(course)).toEqual('/presences/app/registers?courseId=course-1'
+            + '&structureId=structure-1&date=2026-10-13&startTime=08%3A30&endTime=11%3A45');
+    });
+
+    it('test canOpenReactRegister depends on the "Présences Beta" workflow right', () => {
+        const hasWorkflow: jest.Mock = jest.fn();
+        model.me = {hasWorkflow} as any;
+
+        hasWorkflow.mockReturnValue(true);
+        expect(RegisterUtils.canOpenReactRegister()).toBe(true);
+        hasWorkflow.mockReturnValue(false);
+        expect(RegisterUtils.canOpenReactRegister()).toBe(false);
+        expect(hasWorkflow).toHaveBeenCalledWith(rights.workflow.presencesBeta);
     });
 
 });

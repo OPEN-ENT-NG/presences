@@ -1,7 +1,7 @@
 /**
  * Course context passed to the register page through URL parameters
  * (`/presences/app/registers?courseId=&structureId=&date=&startTime=&endTime=`).
- * Parameter names: hypothesis to be validated (FS-01 §6).
+ * TODO: parameter names are still to be validated.
  */
 export interface CourseContext {
   courseId: string;
