@@ -1,6 +1,6 @@
 # Présences — bundle multi-modules (Maven + fronts AngularJS)
 
-Module « vie scolaire » d'Edifice : gestion des absences et des appels, des présences, des incidents / punitions / sanctions, et publipostage. Backend **Java/Vert.x (ent-core)** ; fronts **AngularJS legacy** (webpack + gulp + yarn). Une application **React** de prise d'appel (epic Jira ORGA-493, spec `FS-01`) est en cours de création dans `frontend/` à la racine (Vite 8, React 18, **pnpm**, Node 24 ; voir son `README.md`). Ce front React est **centralisé** : il remplacera à terme les fronts AngularJS de tous les modules.
+Module « vie scolaire » d'Edifice : gestion des absences et des appels, des présences, des incidents / punitions / sanctions, et publipostage. Backend **Java/Vert.x (ent-core)** ; fronts **AngularJS legacy** (webpack + gulp + yarn). Une application **React** de prise d'appel est en cours de création dans `frontend/` à la racine (Vite 8, React 18, **pnpm**, Node 24 ; voir son `README.md`). Ce front React est **centralisé** : il remplacera à terme les fronts AngularJS de tous les modules.
 
 ## Architecture
 
@@ -17,7 +17,7 @@ Maven multi-projet : `pom.xml` racine (parent `io.edifice:app-parent`, repo `OPE
 - Java : `<module>/src/main/java/fr/openent/<module>/` (controller, service, model, cron, worker, event, security…). SQL dans `src/main/resources/sql`, i18n dans `src/main/resources/i18n`, vues dans `view` / `view-src`.
 - Front AngularJS : `<module>/src/main/resources/public/ts/` (+ `sass/` pour `presences`). Alias TS : `@common`, `@presences`, `@incidents`, `@massmailing`, `@statistics`.
 - Front React : `frontend/` à la racine, unique pour tout le bundle (pnpm, son propre `build.sh` + `docker-compose.yml` en `node:24-alpine-pnpm`). Build synchronisé par `./build.sh buildReact` : assets dans `presences/src/main/resources/public/app/`, `index.html` dans `view/`. Routes front sous `/presences/app/*` (préfixe dédié pour ne pas heurter l'API à plat sous `/presences/*`).
-- `presences/specs/` : spécifications fonctionnelles (ex. `FS-ORGA-448-prise-appel-1d.md`).
+- `presences/specs/` : spécifications fonctionnelles.
 - `build.sh` mélange des cibles Maven et des cibles Gradle historiques (`*:buildGradle`) ; la chaîne actuelle est **Maven** (cf. `pom.xml`).
 
 ## Commandes
@@ -48,13 +48,16 @@ Dev local : voir le `README.md` (`cp .env.template .env`, `dev-auth-fetcher conn
 
 - Branche courante de travail : `develop-orga` ; branche principale pour les PR : `dev`.
 - Commits : Conventional Commits avec la clé Jira (`#ORGA-XXX`) ; branches `<type>-<ORGA-XXX>-<slug>` (skills `shared-conventions`).
+- **Toujours demander validation avant chaque commit, push ou merge**, même si une autorisation a déjà été donnée plus tôt.
 - Le CSS compilé (`*.css`, `dist/`, `public/js/`) n'est pas versionné : c'est un artefact de build.
 - Droits d'accès : `rights.ts` côté front, `security/` côté Java ; ne pas contourner.
+- **Jamais de numéro de ticket (Jira, spec) dans le repo** (code, commentaires, README, CLAUDE.md), sauf dans un `TODO` qui annonce une modification prévue (ex. `// TODO ORGA-XXX: …`). Les clés Jira vont dans les commits, les branches et les PR.
+- Commentaires du code (Java, TS, scripts) **en anglais**, jamais en français. Le français reste réservé à la doc (`*.md`, specs) et aux traductions i18n.
 
 ## À faire / à éviter
 
 - ✅ Maintenance du front AngularJS sans le moderniser, sauf demande explicite.
 - ✅ Retrouver dans le code (controller / service / SQL) ce que le back sait faire avant de supposer une capacité.
 - ❌ Ne pas unifier les chaînes de build front (webpack legacy vs future app Vite/React).
-- ❌ Ne pas modifier l'API Présences pour la refonte React de la prise d'appel : le périmètre de l'epic ORGA-493 est front uniquement.
+- ❌ Ne pas modifier les routes métier de l'API Présences pour la refonte React de la prise d'appel. Seul back admis : la bascule (droit Workflow `presences.beta` dans `FakeRight` + route `GET /presences/app/*` dans `PresencesController`).
 - ❌ Ne pas présumer qu'un module ressemble à un autre : les fronts et configs diffèrent.

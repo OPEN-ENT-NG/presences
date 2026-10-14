@@ -82,6 +82,10 @@ export const dayCourse = ng.controller('DayCourse', ['$scope', function ($scope)
             return;
         }
         if (vm.isFutureCourse(course) || !course.allowRegister) return;
+        if (RegisterUtils.canOpenReactRegister()) {
+            window.location.href = RegisterUtils.getReactRegisterUrl(course);
+            return;
+        }
         vm.register = RegisterUtils.createRegisterFromCourse(course);
         if (!course.registerId) {
             try {

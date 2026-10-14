@@ -86,6 +86,25 @@ public class PresencesController extends ControllerHelper {
         eventStore.createAndStoreEvent("ACCESS", request);
     }
 
+    /**
+     * Renders the React application (centralized front) for /presences/app and all its sub-routes:
+     * routing is then handled by React (basename /presences/app).
+     * Restricted to the "Présences Beta" workflow right; without it, redirects to the AngularJS application.
+     */
+    @Get(value = "/app(?:/.*)?", regex = true)
+    @ApiDoc("Render React application view")
+    @SecuredAction(value = "", type = ActionType.AUTHENTICATED)
+    public void viewApp(HttpServerRequest request) {
+        UserUtils.getUserInfos(eb, request, user -> {
+            if (user == null || !WorkflowHelper.hasRight(user, WorkflowActions.PRESENCES_BETA.toString())) {
+                redirect(request, "/presences");
+                return;
+            }
+            renderView(request, new JsonObject(), "index.html", null);
+            eventStore.createAndStoreEvent("ACCESS", request);
+        });
+    }
+
     @Get("/presences")
     @ApiDoc("Retrieve presences")
     @SecuredAction(value = "", type = ActionType.RESOURCE)

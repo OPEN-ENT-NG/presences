@@ -127,4 +127,8 @@ public class FakeRight extends ControllerHelper {
     @SecuredAction(Presences.PRESENCES_1D)
     public void presences1D(HttpServerRequest request) {notImplemented(request);}
 
+    @Get("/rights/presences/beta")
+    @SecuredAction(Presences.PRESENCES_BETA)
+    public void presencesBeta(HttpServerRequest request) {notImplemented(request);}
+
 }
