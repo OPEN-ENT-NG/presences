@@ -1,8 +1,30 @@
 import {Course, ExemptionRegister, Register, RegisterStudent} from "../models";
 import {model} from "entcore";
 import rights from "../rights";
+import {DateUtils} from "@common/utils";
 
 export class RegisterUtils {
+
+    static REACT_REGISTER_PATH: string = '/presences/app/registers';
+
+    /**
+     * Users with the "Présences Beta" workflow right open registers in the React application.
+     */
+    static canOpenReactRegister = (): boolean => model.me.hasWorkflow(rights.workflow.presencesBeta);
+
+    /**
+     * Builds the React register URL with the course context (the React page creates the register if needed).
+     */
+    static getReactRegisterUrl = (course: Course): string => {
+        const params: URLSearchParams = new URLSearchParams({
+            courseId: course.id,
+            structureId: course.structureId,
+            date: DateUtils.format(course.startDate, DateUtils.FORMAT['YEAR-MONTH-DAY']),
+            startTime: DateUtils.format(course.startDate, DateUtils.FORMAT['HOUR-MIN']),
+            endTime: DateUtils.format(course.endDate, DateUtils.FORMAT['HOUR-MIN'])
+        });
+        return `${RegisterUtils.REACT_REGISTER_PATH}?${params.toString()}`;
+    }
 
     static createRegisterFromCourse = (course: Course): Register => {
         if (!course.allowRegister) {

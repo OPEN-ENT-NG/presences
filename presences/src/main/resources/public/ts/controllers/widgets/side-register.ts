@@ -93,6 +93,10 @@ export const sideRegisterController = ng.controller('SideRegisterController', ['
         };
 
         vm.openRegister = async function (course: Course) {
+            if (RegisterUtils.canOpenReactRegister()) {
+                window.location.href = RegisterUtils.getReactRegisterUrl(course);
+                return;
+            }
             window.filter = {course: course};
             $scope.redirectTo(`/registers/${course.registerId}`);
             $scope.safeApply();

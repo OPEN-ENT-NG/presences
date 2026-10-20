@@ -1,0 +1,31 @@
+import React, { StrictMode } from 'react';
+
+import { EdificeThemeProvider } from '@edifice.io/react';
+import * as ReactDOM from 'react-dom';
+import { createRoot } from 'react-dom/client';
+
+import { RouterProvider } from 'react-router-dom';
+import './i18n';
+import { Providers, queryClient } from './providers';
+import { router } from './routes';
+
+import '@edifice.io/bootstrap/dist/index.css';
+
+const rootElement = document.getElementById('root');
+const root = createRoot(rootElement!);
+
+if (import.meta.env.DEV) {
+  import('@axe-core/react').then((axe) => {
+    axe.default(React, ReactDOM, 1000);
+  });
+}
+
+root.render(
+  <StrictMode>
+    <Providers>
+      <EdificeThemeProvider>
+        <RouterProvider router={router(queryClient)} />
+      </EdificeThemeProvider>
+    </Providers>
+  </StrictMode>,
+);

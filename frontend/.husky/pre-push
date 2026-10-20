@@ -1,0 +1,6 @@
+# Run the full build before pushing, only when the pushed commits touch the React front.
+# Without an upstream (first push of a branch), compare with origin/dev.
+UPSTREAM=$(git rev-parse --abbrev-ref --symbolic-full-name '@{u}' 2>/dev/null || echo origin/dev)
+if git diff --name-only "$UPSTREAM"...HEAD | grep -q '^frontend/'; then
+  cd frontend && pnpm run pre-push
+fi

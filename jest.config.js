@@ -14,7 +14,8 @@ module.exports = {
         "<rootDir>/presences/out/",
         "<rootDir>/incidents/build/",
         "<rootDir>/incidents/out/",
-        "<rootDir>/common/build/"
+        "<rootDir>/common/build/",
+        "<rootDir>/frontend/"
     ],
     "verbose": true,
     "testURL": "http://localhost/",

@@ -48,6 +48,37 @@ réseau vers Screeb n'est émis. En local, la recette proxyfiée ne connaît pas
 Pour tester sans en dépendre, renseigner `SCREEB_APP_ID_DEV` dans `.env` : le serveur de dev mocke alors
 `/<module>/conf/public` avec cet app id.
 
+### Tester la beta React (prise d'appel) en local
+
+La nouvelle prise d'appel React est réservée aux utilisateurs qui ont le droit Workflow
+« Présences Beta » (`presences.beta`). Avec ce droit, les boutons de prise d'appel de l'AngularJS (liste des
+appels, widget des cours du jour, panneau latéral) ouvrent `/presences/app/registers?courseId=…&structureId=…&date=…&startTime=…&endTime=…`
+au lieu de la page AngularJS. Sans le droit, rien ne change, et un accès direct à `/presences/app/*` renvoie
+vers `/presences`.
+
+Prérequis sur la recette :
+
+- la version déployée contient la route `/presences/app/*` ;
+- le droit « Présences Beta » est attribué, dans la console d'admin, à un rôle du compte utilisé.
+
+1. S'authentifier comme pour le watcher (`dev-auth-fetcher connect` ou skill `auth-user-frontend`) : le
+   `.env` racine est rempli.
+2. Copier **les mêmes valeurs** de `VITE_RECETTE`, `VITE_XSRF_TOKEN` et `VITE_ONE_SESSION_ID` dans
+   `frontend/.env` (la première fois : `cp frontend/env.template frontend/.env`). Les deux fichiers doivent
+   porter la même session : à chaque renouvellement de session, recopier les trois valeurs.
+3. Lancer le watcher normalement :
+   ```bash
+   yarn dev:presences        # http://localhost:3000/presences
+   ```
+   Cliquer sur une prise d'appel : le navigateur part sur `/presences/app/registers?…`. Cette page React est
+   celle **déployée sur la recette** (proxyfiée) ; seul le code AngularJS est local.
+4. Pour travailler sur la page React elle-même, lancer en parallèle le serveur Vite :
+   ```bash
+   cd frontend && pnpm dev   # http://localhost:4200
+   ```
+   et ouvrir `http://localhost:4200/registers?…` en reprenant la query string obtenue à l'étape 3 (en dev,
+   l'application est servie à la racine, sans le préfixe `/presences/app`).
+
 ## Configuration
 Le module présences contient plusieurs modules en son sein : incidents, massmailing, presences et statistics-presences.
 Seuls massmailing, presences et statistics-presences contiennent des configurations techniques uniques.
