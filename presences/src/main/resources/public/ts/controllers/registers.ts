@@ -485,6 +485,10 @@ export const registersController = ng.controller('RegistersController',
                     return;
                 }
                 if (vm.isFuturCourse(course) || !course.allowRegister) return;
+                if (RegisterUtils.canOpenReactRegister()) {
+                    window.location.href = RegisterUtils.getReactRegisterUrl(course);
+                    return;
+                }
                 vm.register = RegisterUtils.createRegisterFromCourse(course);
                 if (!course.registerId) {
                     try {

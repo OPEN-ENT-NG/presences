@@ -1,6 +1,6 @@
 # Présences — frontend React
 
-Application React 18 + TypeScript + Vite de Présences (prise d'appel, epic ORGA-493), générée depuis
+Application React 18 + TypeScript + Vite de Présences (prise d'appel), générée depuis
 `edifice-react-boilerplate`. C'est le front unique et centralisé de tout le bundle : les pages des
 modules (`presences`, `incidents`, `massmailing`, `statistics-presences`) y seront migrées
 progressivement, à la place des fronts AngularJS de chaque module. Le build est servi par le module
