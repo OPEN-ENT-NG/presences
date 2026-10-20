@@ -1,6 +1,7 @@
 import React, { StrictMode } from 'react';
 
 import { EdificeThemeProvider } from '@edifice.io/react';
+import * as ReactDOM from 'react-dom';
 import { createRoot } from 'react-dom/client';
 
 import { RouterProvider } from 'react-router-dom';
@@ -15,7 +16,7 @@ const root = createRoot(rootElement!);
 
 if (import.meta.env.DEV) {
   import('@axe-core/react').then((axe) => {
-    axe.default(React, root, 1000);
+    axe.default(React, ReactDOM, 1000);
   });
 }
 
