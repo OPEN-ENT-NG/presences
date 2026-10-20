@@ -1,0 +1,5 @@
+# Lint & format only the staged files (fast), only when the React front changed.
+# The git root is the repository root: AngularJS / Java commits skip this hook.
+if git diff --cached --name-only | grep -q '^frontend/'; then
+  cd frontend && pnpm run pre-commit
+fi

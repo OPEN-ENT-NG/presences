@@ -527,6 +527,8 @@
   "presences.recovery.method.day": "jour",
   "presences.recovery.method.half_day": "demi-journées",
   "presences.recovery.method.method.hour": "créneau",
+  "presences.react.back": "Retour",
+  "presences.react.notfound.or.unauthorized": "La page n'existe pas ou vous n'avez pas les droits pour y accéder.",
   "presences.register": "Appels",
   "presences.register.creation.err": "Une erreur est survenue lors de la création de l'appel",
   "presences.register.csv.filename": "export_appels.csv",
