@@ -1,34 +1,20 @@
-import { Button, Heading } from '@edifice.io/react';
-import { useTranslation } from 'react-i18next';
-import { useCourseContext } from '~/hooks/useCourseContext';
+import { LoaderFunctionArgs, replace } from 'react-router-dom';
+import { parseCourseContext } from '~/models/course-context';
+import { HttpError } from '~/services/api';
+import { openRegister } from '~/services/register-opening';
 
-/** URL of the existing AngularJS application (full page navigation, outside the router). */
-export const ANGULAR_APP_URL = '/presences';
+/**
+ * Entry point of the AngularJS buttons: opens (and creates if needed) the
+ * register of the course given in the URL, then goes to its page.
+ * The redirection replaces this intermediate URL in the history, otherwise
+ * the back button would come back here, and redirect again: a loop.
+ */
+export const loader = async ({ request }: LoaderFunctionArgs) => {
+  const courseContext = parseCourseContext(new URL(request.url).searchParams);
+  if (!courseContext) {
+    throw new HttpError(400, 'Invalid course context');
+  }
 
-export const Registers = () => {
-  const { t } = useTranslation('presences');
-  const courseContext = useCourseContext();
-
-  return (
-    <div className="py-16">
-      <Heading level="h1" headingStyle="h1">
-        {t('presences.register')}
-      </Heading>
-      <h1>Prise d'appel</h1>
-      <p>
-        {courseContext
-          ? t('presences.register.context', { ...courseContext })
-          : t('presences.register.context.invalid')}
-      </p>
-      <Button
-        color="tertiary"
-        variant="ghost"
-        onClick={() => window.location.assign(ANGULAR_APP_URL)}
-      >
-        {t('presences.back')}
-      </Button>
-    </div>
-  );
+  const registerId = await openRegister(courseContext);
+  return replace(`/registers/${registerId}`);
 };
-
-export default Registers;

@@ -191,7 +191,6 @@
   "presences.friday": "Friday",
   "presences.notfound.or.unauthorized": "This page does not exist or you are not allowed to access it.",
   "presences.register.context": "Course on [[date]] from [[startTime]] to [[endTime]]",
-  "presences.register.context.invalid": "The course of this register could not be identified.",
   "presences.saturday": "Saturday",
   "presences.home": "Home",
   "presences.hour": "Hour",
