@@ -20,12 +20,22 @@ if (import.meta.env.DEV) {
   });
 }
 
-root.render(
-  <StrictMode>
-    <Providers>
-      <EdificeThemeProvider>
-        <RouterProvider router={router(queryClient)} />
-      </EdificeThemeProvider>
-    </Providers>
-  </StrictMode>,
-);
+/** Mock mode (`pnpm dev:mock`): the API is mocked by MSW before the first request. */
+async function enableMocking() {
+  if (import.meta.env.DEV && import.meta.env.VITE_MOCK === 'true') {
+    const { worker } = await import('./mocks/browser');
+    await worker.start({ onUnhandledRequest: 'bypass' });
+  }
+}
+
+enableMocking().then(() => {
+  root.render(
+    <StrictMode>
+      <Providers>
+        <EdificeThemeProvider>
+          <RouterProvider router={router(queryClient)} />
+        </EdificeThemeProvider>
+      </Providers>
+    </StrictMode>,
+  );
+});

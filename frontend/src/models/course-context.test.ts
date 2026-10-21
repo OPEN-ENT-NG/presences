@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { parseCourseContext } from './useCourseContext';
+import { parseCourseContext } from './course-context';
 
 const VALID = {
   courseId: 'course-1',

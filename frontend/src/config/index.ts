@@ -1,7 +1,2 @@
-/*
- * * * * * * * * * * * * * * * * * * * * * * * * * * * *
- This is a starter file and can be deleted.
- * * * * * * * * * * * * * * * * * * * * * * * * * * * *
- This folder should contain all config and constants
- * * * * * * * * * * * * * * * * * * * * * * * * * * * *
- */
+/** URL of the existing AngularJS application (full page navigation, outside the router). */
+export const ANGULAR_APP_URL = '/presences';
