@@ -1,4 +1,4 @@
-import { Heading } from '@edifice.io/react';
+import { Flex, Heading } from '@edifice.io/react';
 import { QueryClient, useSuspenseQuery } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 import { LoaderFunctionArgs, useParams } from 'react-router-dom';
@@ -36,13 +36,13 @@ export const Register = () => {
   const endTime = register.end_date.slice(11, 16);
 
   return (
-    <div className="py-16">
-      <Heading level="h1" headingStyle="h1">
+    <Flex direction="column" align="start" gap="8">
+      <Heading level="h2" headingStyle="h1">
         {t('presences.register')}
       </Heading>
       <p>{t('presences.register.context', { date, startTime, endTime })}</p>
       <BackButton />
-    </div>
+    </Flex>
   );
 };
 

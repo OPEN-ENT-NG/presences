@@ -1,4 +1,10 @@
-import { ButtonBeta as Button, Heading, PageLayout } from '@edifice.io/react';
+import {
+  ButtonBeta as Button,
+  EmptyScreen,
+  Flex,
+  PageLayout,
+} from '@edifice.io/react';
+import illuSearch from '@images/emptyscreen/illu-search.svg';
 import { t } from 'i18next';
 import { useNavigate, useRouteError } from 'react-router-dom';
 
@@ -8,19 +14,27 @@ export const NotFound = () => {
   console.error(error);
 
   return (
-    <PageLayout>
-      <div className="d-flex flex-column gap-16 align-items-center mt-64">
-        <Heading level="h2" headingStyle="h2" className="text-secondary">
-          {t('oops')}
-        </Heading>
-        <div className="text">{t('e404.page')}</div>
+    <Flex as={PageLayout} direction="column">
+      <Flex
+        as={PageLayout.Content}
+        fill
+        direction="column"
+        align="center"
+        justify="center"
+        gap="16"
+      >
+        <EmptyScreen
+          imageSrc={illuSearch}
+          title={t('oops')}
+          text={t('e404.page')}
+        />
         <Button
           data-testid="presences-button-not-found-back"
           onClick={() => navigate(-1)}
         >
           {t('back')}
         </Button>
-      </div>
-    </PageLayout>
+      </Flex>
+    </Flex>
   );
 };

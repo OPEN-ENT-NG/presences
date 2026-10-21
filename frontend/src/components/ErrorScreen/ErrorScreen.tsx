@@ -1,4 +1,4 @@
-import { ButtonBeta as Button, EmptyScreen } from '@edifice.io/react';
+import { ButtonBeta as Button, EmptyScreen, Flex } from '@edifice.io/react';
 import illuError from '@images/emptyscreen/illu-error.svg';
 import illuSearch from '@images/emptyscreen/illu-search.svg';
 import { useTranslation } from 'react-i18next';
@@ -89,7 +89,7 @@ export const ErrorScreen = ({ kind }: { kind: ErrorKind }) => {
   const Action = ACTIONS[action];
 
   return (
-    <div className="d-flex flex-column gap-16 align-items-center mt-64">
+    <Flex fill direction="column" align="center" justify="center" gap="16">
       <EmptyScreen
         imageSrc={image}
         imageAlt=""
@@ -97,6 +97,6 @@ export const ErrorScreen = ({ kind }: { kind: ErrorKind }) => {
         text={t(`${key}.text`)}
       />
       <Action />
-    </div>
+    </Flex>
   );
 };

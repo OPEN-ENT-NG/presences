@@ -1,4 +1,11 @@
-import { LoadingScreen, PageLayout, useEdificeClient } from '@edifice.io/react';
+import {
+  AppHeader,
+  Breadcrumb,
+  Flex,
+  LoadingScreen,
+  PageLayout,
+  useEdificeClient,
+} from '@edifice.io/react';
 import { Outlet } from 'react-router-dom';
 
 export const loader = async () => {
@@ -9,15 +16,24 @@ export const loader = async () => {
 export const HydrateFallback = () => <LoadingScreen position={false} />;
 
 export const Root = () => {
-  const { init } = useEdificeClient();
+  const { init, currentApp } = useEdificeClient();
 
   if (!init) return <LoadingScreen position={false} />;
 
   return (
-    <PageLayout>
+    <Flex as={PageLayout} direction="column">
       <PageLayout.Header />
-      <Outlet />
-    </PageLayout>
+      {currentApp && (
+        <PageLayout.Breadcrumb>
+          <AppHeader>
+            <Breadcrumb app={currentApp} />
+          </AppHeader>
+        </PageLayout.Breadcrumb>
+      )}
+      <Flex as={PageLayout.Content} fill direction="column">
+        <Outlet />
+      </Flex>
+    </Flex>
   );
 };
 
