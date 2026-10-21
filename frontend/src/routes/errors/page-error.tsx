@@ -1,5 +1,5 @@
 import {
-  Button,
+  ButtonBeta as Button,
   Heading,
   PageLayout,
   useEdificeClient,
@@ -22,9 +22,7 @@ export const PageError = () => {
           {t('oops')}
         </Heading>
         <div className="text">{t('presences.notfound.or.unauthorized')}</div>
-        <Button color="primary" onClick={() => navigate(-1)}>
-          {t('back')}
-        </Button>
+        <Button onClick={() => navigate(-1)}>{t('back')}</Button>
       </div>
     </PageLayout>
   );

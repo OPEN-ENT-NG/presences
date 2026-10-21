@@ -1,4 +1,4 @@
-import { Button } from '@edifice.io/react';
+import { ButtonBeta as Button } from '@edifice.io/react';
 import { useTranslation } from 'react-i18next';
 import { useGoBack } from '~/hooks/useGoBack';
 
