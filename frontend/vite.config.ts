@@ -1,11 +1,17 @@
 import react from '@vitejs/plugin-react';
 import { resolve } from 'node:path';
+import { loadEnv } from 'vite';
 import { defineConfig } from 'vitest/config';
+import { mockEntryPoints } from './src/mocks/datas/entry-points.ts';
 import { createDevProxyConfig } from './vite/plugins/devProxy.ts';
+import { mockMode } from './vite/plugins/mockMode.ts';
 import { serveLocalI18n } from './vite/plugins/serveLocalI18n.ts';
 
 // https://vitejs.dev/config/
 export default ({ mode }: { mode: string }) => {
+  // `pnpm dev:mock`: the API is mocked in the browser, see `src/mocks/browser.ts`
+  const isMockMode =
+    loadEnv(mode, import.meta.dirname, 'VITE_').VITE_MOCK === 'true';
   const { headers, proxy } = createDevProxyConfig({
     mode,
     routes: [
@@ -56,6 +62,8 @@ export default ({ mode }: { mode: string }) => {
       port: 4200,
       headers,
       host: 'localhost',
+      // Mock mode: open a URL that works with the mocked data
+      open: isMockMode ? mockEntryPoints[0].path : false,
     },
 
     preview: {
@@ -82,6 +90,7 @@ export default ({ mode }: { mode: string }) => {
         ),
       }),
       react(),
+      isMockMode && mockMode({ entryPoints: mockEntryPoints }),
     ],
 
     build: {

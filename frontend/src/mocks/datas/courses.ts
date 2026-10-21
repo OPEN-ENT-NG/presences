@@ -1,13 +1,18 @@
 import { Course } from '~/models/course';
 import { RegisterState } from '~/models/register';
+import {
+  MOCK_AFTERNOON,
+  MOCK_DATE,
+  MOCK_MORNING,
+  MOCK_STRUCTURE_ID,
+} from './entry-points';
 
-export const MOCK_STRUCTURE_ID = 'structure-1';
+export { MOCK_DATE, MOCK_STRUCTURE_ID };
+
 /** Identifiers of the mocked registers, see `registers.ts` */
 export const MOCK_REGISTER_MORNING_ID = 101;
 export const MOCK_REGISTER_AFTERNOON_ID = 102;
 export const MOCK_REGISTER_EMPTY_CLASS_ID = 103;
-/** A Tuesday: two courses for the CE1 A class (1D: two courses a day at most). */
-export const MOCK_DATE = '2026-10-13';
 
 const mockTeacher = { id: 'teacher-1', displayName: 'MARTIN Claire' };
 
@@ -20,8 +25,8 @@ export const mockCourseMorning: Course = {
   classes: ['CE1 A'],
   groups: [],
   teachers: [mockTeacher],
-  startDate: `${MOCK_DATE} 08:30:00`,
-  endDate: `${MOCK_DATE} 11:45:00`,
+  startDate: `${MOCK_DATE} ${MOCK_MORNING.startTime}:00`,
+  endDate: `${MOCK_DATE} ${MOCK_MORNING.endTime}:00`,
   splitSlot: false,
   allowRegister: true,
   registerId: null,
@@ -32,8 +37,8 @@ export const mockCourseMorning: Course = {
 export const mockCourseAfternoon: Course = {
   ...mockCourseMorning,
   id: 'course-afternoon',
-  startDate: `${MOCK_DATE} 13:30:00`,
-  endDate: `${MOCK_DATE} 16:30:00`,
+  startDate: `${MOCK_DATE} ${MOCK_AFTERNOON.startTime}:00`,
+  endDate: `${MOCK_DATE} ${MOCK_AFTERNOON.endTime}:00`,
   registerId: MOCK_REGISTER_AFTERNOON_ID,
   registerStateId: RegisterState.DONE,
 };

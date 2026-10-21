@@ -82,9 +82,19 @@ backend. Les traductions restent servies par `serveLocalI18n`, comme en `pnpm de
 - Le worker MSW (`public/mockServiceWorker.js`, généré par `msw init`) n'est servi qu'en dev :
   `public/` n'est pas copié dans le build (`copyPublicDir: false`).
 
-Jeu de données : structure `structure-1`, mardi `2026-10-13`, classe CE1 A (matin sans prise
-d'appel créée, après-midi validée) et classe CP B sans élève. Exemple :
-`http://localhost:4200/registers?courseId=course-morning&structureId=structure-1&date=2026-10-13&startTime=08:30&endTime=11:45`
+Au démarrage, le terminal affiche les URL qui fonctionnent avec les données mockées et le
+navigateur s'ouvre sur la première. Elles reproduisent ce que transmettent les boutons de
+l'AngularJS (le contexte du cours dans l'URL) :
+
+| Cas                                      | `courseId`           |
+| ---------------------------------------- | -------------------- |
+| Matin, prise d'appel créée à l'ouverture | `course-morning`     |
+| Après-midi, prise d'appel déjà validée   | `course-afternoon`   |
+| Matin, classe sans élève                 | `course-empty-class` |
+
+Exemple : `http://localhost:4200/registers?courseId=course-morning&structureId=structure-1&date=2026-10-13&startTime=08:30&endTime=11:45`.
+Les URL sont définies dans `src/mocks/datas/entry-points.ts`, avec le jeu de données (structure
+`structure-1`, mardi `2026-10-13`, classe CE1 A).
 
 Les tests Vitest ne chargent aucune traduction (`src/mocks/i18n.ts`) : ils vérifient les clés i18n.
 

@@ -531,7 +531,6 @@
   "presences.recovery.method.method.hour": "créneau",
   "presences.register": "Appels",
   "presences.register.context": "Cours du [[date]] de [[startTime]] à [[endTime]]",
-  "presences.register.context.invalid": "Le cours de la prise d'appel n'a pas pu être identifié.",
   "presences.register.creation.err": "Une erreur est survenue lors de la création de l'appel",
   "presences.register.csv.filename": "export_appels.csv",
   "presences.register.csv.header.date": "Date/heure",
