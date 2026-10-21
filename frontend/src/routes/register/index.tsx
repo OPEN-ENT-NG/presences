@@ -5,6 +5,7 @@ import { LoaderFunctionArgs, useParams } from 'react-router-dom';
 import { BackButton } from '~/components/BackButton/BackButton';
 import { HttpError } from '~/services/api';
 import { registerQueryOptions } from '~/services/queries/register';
+import { sortStudentsByName } from './sortStudents';
 
 export const loader =
   (queryClient: QueryClient) =>
@@ -41,6 +42,13 @@ export const Register = () => {
         {t('presences.register')}
       </Heading>
       <p>{t('presences.register.context', { date, startTime, endTime })}</p>
+      <Flex as="ul" direction="column" gap="4">
+        {sortStudentsByName(register.students).map(({ id, name }) => (
+          <li key={id} data-testid={`presences-label-student-${id}`}>
+            {name}
+          </li>
+        ))}
+      </Flex>
       <BackButton />
     </Flex>
   );
