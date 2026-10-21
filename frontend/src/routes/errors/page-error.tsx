@@ -1,4 +1,9 @@
-import { Button, Heading, Layout, useEdificeClient } from '@edifice.io/react';
+import {
+  Button,
+  Heading,
+  PageLayout,
+  useEdificeClient,
+} from '@edifice.io/react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate, useRouteError } from 'react-router-dom';
 
@@ -10,7 +15,8 @@ export const PageError = () => {
   console.error(error);
 
   return (
-    <Layout>
+    <PageLayout>
+      <PageLayout.Header />
       <div className="d-flex flex-column gap-16 align-items-center mt-64">
         <Heading level="h2" headingStyle="h2" className="text-secondary">
           {t('oops')}
@@ -20,6 +26,6 @@ export const PageError = () => {
           {t('back')}
         </Button>
       </div>
-    </Layout>
+    </PageLayout>
   );
 };

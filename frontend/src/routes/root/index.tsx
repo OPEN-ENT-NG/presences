@@ -1,4 +1,4 @@
-import { Layout, LoadingScreen, useEdificeClient } from '@edifice.io/react';
+import { LoadingScreen, PageLayout, useEdificeClient } from '@edifice.io/react';
 import { Outlet } from 'react-router-dom';
 
 export const loader = async () => {
@@ -11,9 +11,10 @@ export const Root = () => {
   if (!init) return <LoadingScreen position={false} />;
 
   return (
-    <Layout>
+    <PageLayout>
+      <PageLayout.Header />
       <Outlet />
-    </Layout>
+    </PageLayout>
   );
 };
 
