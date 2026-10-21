@@ -94,6 +94,8 @@ export default ({ mode }: { mode: string }) => {
       // Dedicated folder: must not collide with the AngularJS folders
       // under public/ (css, dist, img, js, template, ts).
       assetsDir: 'public/app',
+      // public/ only holds the MSW worker of the mock mode: dev only.
+      copyPublicDir: false,
       chunkSizeWarningLimit: 4000,
     },
 

@@ -6,7 +6,7 @@ import '@testing-library/jest-dom/vitest';
 import { RenderOptions, render } from '@testing-library/react';
 import { ReactElement } from 'react';
 import { afterAll, afterEach, beforeAll } from 'vitest';
-import '../i18n';
+import './i18n';
 import { Providers } from '../providers';
 import { server } from './server';
 

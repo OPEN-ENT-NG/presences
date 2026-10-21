@@ -8,6 +8,7 @@
   "scripts": {
     "build": "pnpm run typecheck && vite build",
     "dev": "vite",
+    "dev:mock": "VITE_MOCK=true vite",
     "format": "prettier --write .",
     "lint": "eslint .",
     "pre-commit": "lint-staged",
@@ -71,5 +72,10 @@
   "engines": {
     "node": "^20.19.0 || >=22.12.0"
   },
-  "nx": {}
+  "nx": {},
+  "msw": {
+    "workerDirectory": [
+      "public"
+    ]
+  }
 }

@@ -1,4 +1,4 @@
-import { Button, Heading, Layout } from '@edifice.io/react';
+import { Button, Heading, PageLayout } from '@edifice.io/react';
 import { t } from 'i18next';
 import { useNavigate, useRouteError } from 'react-router-dom';
 
@@ -8,7 +8,7 @@ export const NotFound = () => {
   console.error(error);
 
   return (
-    <Layout>
+    <PageLayout>
       <div className="d-flex flex-column gap-16 align-items-center mt-64">
         <Heading level="h2" headingStyle="h2" className="text-secondary">
           {t('oops')}
@@ -18,6 +18,6 @@ export const NotFound = () => {
           {t('back')}
         </Button>
       </div>
-    </Layout>
+    </PageLayout>
   );
 };

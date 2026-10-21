@@ -3,9 +3,6 @@ import { renderWithRouter } from '~/mocks/renderWithRouter';
 import { fireEvent, screen } from '~/mocks/setup';
 import { ANGULAR_APP_URL, Registers } from '.';
 
-// Translations are loaded asynchronously (mocked /presences/i18n): leave them time to resolve.
-const I18N_TIMEOUT = { timeout: 5000 };
-
 const CONTEXT_QUERY =
   'courseId=course-1&structureId=structure-1&date=2026-10-13&startTime=08:30&endTime=11:45';
 
@@ -17,15 +14,10 @@ describe('Registers', () => {
     renderWithRouter('/registers', <Registers />);
 
     expect(
-      await screen.findByRole('heading', { name: 'Appels' }, I18N_TIMEOUT),
+      await screen.findByRole('heading', { name: 'presences.register' }),
     ).toBeInTheDocument();
 
-    const button = await screen.findByRole(
-      'button',
-      { name: /retour/i },
-      I18N_TIMEOUT,
-    );
-    fireEvent.click(button);
+    fireEvent.click(screen.getByRole('button', { name: 'presences.back' }));
 
     expect(assign).toHaveBeenCalledWith(ANGULAR_APP_URL);
     vi.unstubAllGlobals();
@@ -39,11 +31,7 @@ describe('Registers', () => {
     );
 
     expect(
-      await screen.findByText(
-        'Cours du 2026-10-13 de 08:30 à 11:45',
-        {},
-        I18N_TIMEOUT,
-      ),
+      await screen.findByText('presences.register.context'),
     ).toBeInTheDocument();
   });
 
@@ -51,11 +39,7 @@ describe('Registers', () => {
     renderWithRouter('/registers', <Registers />);
 
     expect(
-      await screen.findByText(
-        "Le cours de la prise d'appel n'a pas pu être identifié.",
-        {},
-        I18N_TIMEOUT,
-      ),
+      await screen.findByText('presences.register.context.invalid'),
     ).toBeInTheDocument();
   });
 });
