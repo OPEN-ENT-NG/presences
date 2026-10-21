@@ -35,7 +35,8 @@ export const courseHandlers = [
 
     // Structures made to fail, to see the error screens
     if (structure === MOCK_STRUCTURE_FORBIDDEN) {
-      return new HttpResponse(null, { status: 403 });
+      // How the ENT refuses a missing right: a 401 with an HTML error page
+      return HttpResponse.html('<html>Erreur</html>', { status: 401 });
     }
     if (structure === MOCK_STRUCTURE_SESSION_EXPIRED) {
       // What the ENT answers once the session expired: the login page

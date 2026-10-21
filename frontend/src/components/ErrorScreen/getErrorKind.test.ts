@@ -1,4 +1,4 @@
-import { HttpError } from '~/services/api';
+import { HttpError, SessionExpiredError } from '~/services/api';
 import { getErrorKind } from './getErrorKind';
 
 describe('getErrorKind', () => {
@@ -14,14 +14,14 @@ describe('getErrorKind', () => {
     },
   );
 
-  it('maps a 401 to the session expired screen', () => {
-    expect(getErrorKind(new HttpError(401, ''), 'course')).toBe(
-      'sessionExpired',
-    );
+  it.each([401, 403])('maps a %i to the forbidden screen', (status) => {
+    expect(getErrorKind(new HttpError(status, ''), 'course')).toBe('forbidden');
   });
 
-  it('maps a 403 to the forbidden screen', () => {
-    expect(getErrorKind(new HttpError(403, ''), 'course')).toBe('forbidden');
+  it('maps an expired session to the session expired screen, not to a 401', () => {
+    expect(getErrorKind(new SessionExpiredError(), 'course')).toBe(
+      'sessionExpired',
+    );
   });
 
   it('maps a 408 (no answer from the network) to the offline screen', () => {

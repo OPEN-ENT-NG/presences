@@ -1,5 +1,5 @@
 import { isRouteErrorResponse } from 'react-router-dom';
-import { HttpError } from '~/services/api';
+import { HttpError, SessionExpiredError } from '~/services/api';
 
 export type ErrorKind =
   | 'sessionExpired'
@@ -21,7 +21,8 @@ const getStatus = (error: unknown): number | undefined => {
 /**
  * Picks the error screen from the status of the failed request. Anything
  * unexpected (e.g. an exception while rendering) is a server error.
- * A 401 is a session that expired (the API answered with the login page).
+ * An expired session (the API answered with the login page) is not a 401: the
+ * ENT answers a 401 when the user has no right on the resource.
  * A 400 is a course context the AngularJS page did not give properly: the
  * course cannot be identified, like a 404.
  */
@@ -29,12 +30,13 @@ export const getErrorKind = (
   error: unknown,
   notFound: NotFoundTarget,
 ): ErrorKind => {
+  if (error instanceof SessionExpiredError) return 'sessionExpired';
+
   switch (getStatus(error)) {
     case 400:
     case 404:
       return notFound === 'course' ? 'courseNotFound' : 'registerNotFound';
     case 401:
-      return 'sessionExpired';
     case 403:
       return 'forbidden';
     case 408:

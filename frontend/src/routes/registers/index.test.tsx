@@ -152,6 +152,18 @@ describe('registers entry point errors', () => {
     expect(await errorTitle('forbidden')).toBeInTheDocument();
   });
 
+  it('shows the forbidden screen, not the session one, when the ENT answers a 401 for a missing right', async () => {
+    server.use(
+      http.get(`${baseUrl}/courses`, () =>
+        HttpResponse.html('<html>Erreur</html>', { status: 401 }),
+      ),
+    );
+
+    renderWithRoutes(routes, [entry('course-morning')]);
+
+    expect(await errorTitle('forbidden')).toBeInTheDocument();
+  });
+
   it('shows the session expired screen when the API answers with the login page', async () => {
     server.use(
       http.get(`${baseUrl}/courses`, () =>

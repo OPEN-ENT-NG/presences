@@ -5,7 +5,7 @@ import {
   mockCourses,
 } from '~/mocks/datas/courses';
 import { server } from '~/mocks/server';
-import { HttpError, baseUrl, courseService } from '.';
+import { HttpError, SessionExpiredError, baseUrl, courseService } from '.';
 
 describe('courseService.getCourses', () => {
   test('gets the courses of the structure for the day', async () => {
@@ -72,7 +72,7 @@ describe('courseService.getCourses', () => {
     ).rejects.toMatchObject({ name: 'HttpError', status: 408 });
   });
 
-  test('rejects with a 401 when the session expired (HTML login page)', async () => {
+  test('rejects with a session expired error when the API answers with the login page', async () => {
     server.use(
       http.get(`${baseUrl}/courses`, () =>
         HttpResponse.html('<html>login</html>'),
@@ -83,7 +83,23 @@ describe('courseService.getCourses', () => {
       .getCourses({ structureId: MOCK_STRUCTURE_ID, date: MOCK_DATE })
       .catch((error: unknown) => error);
 
+    expect(error).toBeInstanceOf(SessionExpiredError);
+  });
+
+  test('rejects with a plain 401 when the ENT refuses with its HTML error page', async () => {
+    // What the recette answers for a structure the user does not belong to
+    server.use(
+      http.get(`${baseUrl}/courses`, () =>
+        HttpResponse.html('<html>Erreur</html>', { status: 401 }),
+      ),
+    );
+
+    const error = await courseService
+      .getCourses({ structureId: MOCK_STRUCTURE_ID, date: MOCK_DATE })
+      .catch((error: unknown) => error);
+
     expect(error).toBeInstanceOf(HttpError);
+    expect(error).not.toBeInstanceOf(SessionExpiredError);
     expect(error).toMatchObject({ status: 401 });
   });
 });
