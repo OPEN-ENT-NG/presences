@@ -22,7 +22,12 @@ export const PageError = () => {
           {t('oops')}
         </Heading>
         <div className="text">{t('presences.notfound.or.unauthorized')}</div>
-        <Button onClick={() => navigate(-1)}>{t('back')}</Button>
+        <Button
+          data-testid="presences-button-page-error-back"
+          onClick={() => navigate(-1)}
+        >
+          {t('back')}
+        </Button>
       </div>
     </PageLayout>
   );

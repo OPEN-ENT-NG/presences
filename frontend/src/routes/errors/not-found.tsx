@@ -14,7 +14,12 @@ export const NotFound = () => {
           {t('oops')}
         </Heading>
         <div className="text">{t('e404.page')}</div>
-        <Button onClick={() => navigate(-1)}>{t('back')}</Button>
+        <Button
+          data-testid="presences-button-not-found-back"
+          onClick={() => navigate(-1)}
+        >
+          {t('back')}
+        </Button>
       </div>
     </PageLayout>
   );

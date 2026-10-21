@@ -14,9 +14,7 @@ describe('BackButton', () => {
     vi.spyOn(window.history, 'length', 'get').mockReturnValue(2);
     const { router } = renderWithRoutes(routes, ['/previous', '/page']);
 
-    fireEvent.click(
-      await screen.findByRole('button', { name: 'presences.back' }),
-    );
+    fireEvent.click(await screen.findByTestId('presences-button-back'));
 
     expect(await screen.findByText('previous page')).toBeInTheDocument();
     expect(router.state.location.pathname).toBe('/previous');
@@ -28,9 +26,7 @@ describe('BackButton', () => {
     vi.stubGlobal('location', { ...window.location, assign });
     const { router } = renderWithRoutes(routes, ['/previous', '/page']);
 
-    fireEvent.click(
-      await screen.findByRole('button', { name: 'presences.back' }),
-    );
+    fireEvent.click(await screen.findByTestId('presences-button-back'));
 
     expect(assign).toHaveBeenCalledWith(ANGULAR_APP_URL);
     expect(router.state.location.pathname).toBe('/page');

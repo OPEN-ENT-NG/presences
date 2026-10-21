@@ -8,7 +8,11 @@ export const BackButton = () => {
   const goBack = useGoBack();
 
   return (
-    <Button leftIcon={<IconRafterLeft />} onClick={goBack}>
+    <Button
+      data-testid="presences-button-back"
+      leftIcon={<IconRafterLeft />}
+      onClick={goBack}
+    >
       {t('presences.back')}
     </Button>
   );

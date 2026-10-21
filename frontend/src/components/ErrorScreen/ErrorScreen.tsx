@@ -49,6 +49,7 @@ const RetryButton = () => {
 
   return (
     <Button
+      data-testid="presences-button-retry"
       leftIcon={<IconRefresh />}
       isLoading={state === 'loading'}
       onClick={() => revalidate()}
@@ -67,6 +68,7 @@ const ReconnectButton = () => {
 
   return (
     <Button
+      data-testid="presences-button-reconnect"
       leftIcon={<IconRafterLeft />}
       onClick={() => window.location.reload()}
     >

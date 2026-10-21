@@ -186,9 +186,7 @@ describe('registers entry point errors', () => {
     vi.stubGlobal('location', { ...window.location, reload });
     renderWithRoutes(routes, [entry('course-morning')]);
 
-    fireEvent.click(
-      await screen.findByRole('button', { name: 'presences.reconnect' }),
-    );
+    fireEvent.click(await screen.findByTestId('presences-button-reconnect'));
 
     expect(reload).toHaveBeenCalledOnce();
     vi.unstubAllGlobals();
@@ -249,10 +247,10 @@ describe('registers entry point errors', () => {
     renderWithRoutes(routes, [entry('unknown-course')]);
 
     expect(
-      await screen.findByRole('button', { name: 'presences.back' }),
+      await screen.findByTestId('presences-button-back'),
     ).toBeInTheDocument();
     expect(
-      screen.queryByRole('button', { name: 'presences.retry' }),
+      screen.queryByTestId('presences-button-retry'),
     ).not.toBeInTheDocument();
   });
 
@@ -267,10 +265,10 @@ describe('registers entry point errors', () => {
     renderWithRoutes(routes, [entry('course-morning')]);
 
     expect(
-      await screen.findByRole('button', { name: 'presences.retry' }),
+      await screen.findByTestId('presences-button-retry'),
     ).toBeInTheDocument();
     expect(
-      screen.queryByRole('button', { name: 'presences.back' }),
+      screen.queryByTestId('presences-button-back'),
     ).not.toBeInTheDocument();
   });
 
@@ -285,9 +283,7 @@ describe('registers entry point errors', () => {
       }),
     );
     const { router } = renderWithRoutes(routes, [entry('course-morning')]);
-    fireEvent.click(
-      await screen.findByRole('button', { name: 'presences.retry' }),
-    );
+    fireEvent.click(await screen.findByTestId('presences-button-retry'));
 
     expect(await registerTitle()).toBeInTheDocument();
     expect(router.state.location.pathname).toBe('/registers/101');
@@ -301,14 +297,10 @@ describe('registers entry point errors', () => {
       ),
     );
     renderWithRoutes(routes, [entry('course-morning')]);
-    fireEvent.click(
-      await screen.findByRole('button', { name: 'presences.retry' }),
-    );
+    fireEvent.click(await screen.findByTestId('presences-button-retry'));
 
     expect(await errorTitle('server')).toBeInTheDocument();
-    expect(
-      await screen.findByRole('button', { name: 'presences.retry' }),
-    ).toBeEnabled();
+    expect(await screen.findByTestId('presences-button-retry')).toBeEnabled();
   });
 
   it('lets the user retry from the offline screen', async () => {
@@ -317,7 +309,7 @@ describe('registers entry point errors', () => {
     renderWithRoutes(routes, [entry('course-morning')]);
 
     expect(
-      await screen.findByRole('button', { name: 'presences.retry' }),
+      await screen.findByTestId('presences-button-retry'),
     ).toBeInTheDocument();
   });
 });
