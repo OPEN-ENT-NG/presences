@@ -3,6 +3,7 @@ import { RouteObject, createBrowserRouter, redirect } from 'react-router-dom';
 
 import { NotFound } from './errors/not-found';
 import { PageError } from './errors/page-error';
+import { RouteError } from './errors/route-error';
 
 export const routes = (queryClient: QueryClient): RouteObject[] => [
   /* Main route */
@@ -29,6 +30,7 @@ export const routes = (queryClient: QueryClient): RouteObject[] => [
       /* Register entry point: opens the course given by the AngularJS page */
       {
         path: 'registers',
+        errorElement: <RouteError notFound="course" />,
         async lazy() {
           const { loader } = await import('~/routes/registers');
           return { loader };
@@ -37,6 +39,7 @@ export const routes = (queryClient: QueryClient): RouteObject[] => [
       /* Opened register */
       {
         path: 'registers/:registerId',
+        errorElement: <RouteError notFound="register" />,
         async lazy() {
           const { loader, Register: Component } =
             await import('~/routes/register');

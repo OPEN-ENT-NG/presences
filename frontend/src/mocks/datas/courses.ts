@@ -51,8 +51,19 @@ export const mockCourseEmptyClass: Course = {
   teachers: [{ id: 'teacher-2', displayName: 'DURAND Paul' }],
 };
 
+/** Course that does not allow a register (set by the structure tags). */
+export const mockCourseNotAllowed: Course = {
+  ...mockCourseMorning,
+  id: 'course-not-allowed',
+  startDate: `${MOCK_DATE} ${MOCK_AFTERNOON.startTime}:00`,
+  endDate: `${MOCK_DATE} ${MOCK_AFTERNOON.endTime}:00`,
+  classes: ['CM1 C'],
+  allowRegister: false,
+};
+
 export const mockCourses: Course[] = [
   mockCourseMorning,
   mockCourseAfternoon,
   mockCourseEmptyClass,
+  mockCourseNotAllowed,
 ];

@@ -96,6 +96,11 @@ Exemple : `http://localhost:4200/registers?courseId=course-morning&structureId=s
 Les URL sont définies dans `src/mocks/datas/entry-points.ts`, avec le jeu de données (structure
 `structure-1`, mardi `2026-10-13`, classe CE1 A).
 
+Le terminal liste aussi des URL qui déclenchent chaque écran d'erreur (cours introuvable, cours
+sans prise d'appel autorisée, accès refusé, session expirée, erreur serveur, hors ligne, contexte d'URL invalide,
+prise d'appel introuvable). Les structures qui échouent sont `structure-forbidden`,
+`structure-session-expired`, `structure-server-error` et `structure-offline`.
+
 Les tests Vitest ne chargent aucune traduction (`src/mocks/i18n.ts`) : ils vérifient les clés i18n.
 
 ## Hooks git (Husky + lint-staged)
