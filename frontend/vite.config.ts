@@ -1,4 +1,4 @@
-import react from '@vitejs/plugin-react';
+import react, { reactCompilerPreset } from '@vitejs/plugin-react';
 import { resolve } from 'node:path';
 import { loadEnv } from 'vite';
 import { defineConfig } from 'vitest/config';
@@ -6,6 +6,7 @@ import { mockEntryPoints } from './src/mocks/datas/entry-points.ts';
 import { createDevProxyConfig } from './vite/plugins/devProxy.ts';
 import { mockMode } from './vite/plugins/mockMode.ts';
 import { serveLocalI18n } from './vite/plugins/serveLocalI18n.ts';
+import babel from '@rolldown/plugin-babel';
 
 // https://vitejs.dev/config/
 export default ({ mode }: { mode: string }) => {
@@ -88,6 +89,10 @@ export default ({ mode }: { mode: string }) => {
           import.meta.dirname,
           '../../entcore/portal/backend/src/main/resources/i18n/fr.json',
         ),
+      }),
+      babel({
+        include: /\.[jt]sx?$/,
+        presets: [reactCompilerPreset({ target: '18' })],
       }),
       react(),
       isMockMode && mockMode({ entryPoints: mockEntryPoints }),
