@@ -8,6 +8,7 @@ jobs:
 
     container:
       image: opendigitaleducation/node:24-alpine-pnpm
+      options: --user root -v ${{ github.workspace }}:/home/node/:rw
 
     steps:
       - uses: actions/checkout@v4
