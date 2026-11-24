@@ -12,29 +12,25 @@ defaults:
     working-directory: frontend
 
 jobs:
-  tests:
+  check:
     runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        target: [lint, typecheck, test]
     steps:
       - uses: actions/checkout@v4
-        with:
-          fetch-depth: "0"
-
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 24
 
       - uses: pnpm/action-setup@v4
-        id: pnpm-install
         with:
           package_json_file: frontend/package.json
           run_install: false
 
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: pnpm
+          cache-dependency-path: frontend/package.json
+
       - run: pnpm install --no-frozen-lockfile
-      - name: Lint
-        run: pnpm exec nx lint
-
-      - name: Typecheck
-        run: pnpm exec nx typecheck
-
-      - name: Test
-        run: pnpm exec nx test
+      - run: pnpm exec nx ${{ matrix.target }}
