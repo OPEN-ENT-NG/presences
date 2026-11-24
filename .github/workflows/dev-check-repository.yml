@@ -7,11 +7,11 @@ jobs:
     runs-on: ubuntu-latest
 
     container:
-      image: opendigitaleducation/node:16-alpine-pnpm
+      image: opendigitaleducation/node:24-alpine-pnpm
       options: --user root -v ${{ github.workspace }}:/home/node/:rw
 
     steps:
-      - uses: actions/checkout@v1
+      - uses: actions/checkout@v4
       - name: Run yarn install
         run: yarn install
       - name: Run build node with Gulp
