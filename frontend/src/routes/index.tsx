@@ -3,16 +3,22 @@ import { RouteObject, createBrowserRouter, redirect } from 'react-router-dom';
 
 import { NotFound } from './errors/not-found';
 import { PageError } from './errors/page-error';
+import { RouteError } from './errors/route-error';
 
-const routes = (_queryClient: QueryClient): RouteObject[] => [
+export const routes = (queryClient: QueryClient): RouteObject[] => [
   /* Main route */
   {
     path: '/',
     async lazy() {
-      const { loader, Root: Component } = await import('~/routes/root');
+      const {
+        loader,
+        Root: Component,
+        HydrateFallback,
+      } = await import('~/routes/root');
       return {
         loader,
         Component,
+        HydrateFallback,
       };
     },
     errorElement: <PageError />,
@@ -21,12 +27,23 @@ const routes = (_queryClient: QueryClient): RouteObject[] => [
         index: true,
         loader: () => redirect('/registers'),
       },
-      /* Prise d'appel */
+      /* Register entry point: opens the course given by the AngularJS page */
       {
         path: 'registers',
+        errorElement: <RouteError notFound="course" />,
         async lazy() {
-          const { Registers: Component } = await import('~/routes/registers');
-          return { Component };
+          const { loader } = await import('~/routes/registers');
+          return { loader };
+        },
+      },
+      /* Opened register */
+      {
+        path: 'registers/:registerId',
+        errorElement: <RouteError notFound="register" />,
+        async lazy() {
+          const { loader, Register: Component } =
+            await import('~/routes/register');
+          return { loader: loader(queryClient), Component };
         },
       },
     ],

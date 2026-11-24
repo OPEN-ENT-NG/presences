@@ -30,13 +30,14 @@ pnpm dev       # serveur de dev Vite
 
 ## Scripts utiles
 
-| Script        | Rôle                                  |
-| ------------- | ------------------------------------- |
-| `pnpm dev`    | Serveur de dev Vite                   |
-| `pnpm build`  | Build de production                   |
-| `pnpm lint`   | ESLint sur tout le projet             |
-| `pnpm format` | Prettier `--write` sur tout le projet |
-| `pnpm test`   | Tests Vitest                          |
+| Script          | Rôle                                     |
+| --------------- | ---------------------------------------- |
+| `pnpm dev`      | Serveur de dev Vite                      |
+| `pnpm dev:mock` | Serveur de dev en mode mock (hors ligne) |
+| `pnpm build`    | Build de production                      |
+| `pnpm lint`     | ESLint sur tout le projet                |
+| `pnpm format`   | Prettier `--write` sur tout le projet    |
+| `pnpm test`     | Tests Vitest                             |
 
 ## Serveur de dev : proxy & i18n local
 
@@ -69,6 +70,38 @@ serveLocalI18n({
 
 Pour activer l'i18n local : déposer un `fr.json` au chemin pointé par `filePath` (ou adapter ce
 chemin). Le plugin n'agit qu'en dev (`apply: 'serve'`).
+
+## Mode mock (hors ligne)
+
+`pnpm dev:mock` (`VITE_MOCK=true`) démarre le serveur de dev avec [MSW](https://mswjs.io/) dans le
+navigateur : l'API Présences et les routes de session de l'ENT sont mockées, sans recette ni
+backend. Les traductions restent servies par `serveLocalI18n`, comme en `pnpm dev`.
+
+- Handlers : `src/mocks/handlers/` ; données : `src/mocks/datas/` (partagés avec les tests Vitest).
+- Les réponses de l'API Présences sont retardées de 500 ms pour voir les états de chargement.
+- Le worker MSW (`public/mockServiceWorker.js`, généré par `msw init`) n'est servi qu'en dev :
+  `public/` n'est pas copié dans le build (`copyPublicDir: false`).
+
+Au démarrage, le terminal affiche les URL qui fonctionnent avec les données mockées et le
+navigateur s'ouvre sur la première. Elles reproduisent ce que transmettent les boutons de
+l'AngularJS (le contexte du cours dans l'URL) :
+
+| Cas                                      | `courseId`           |
+| ---------------------------------------- | -------------------- |
+| Matin, prise d'appel créée à l'ouverture | `course-morning`     |
+| Après-midi, prise d'appel déjà validée   | `course-afternoon`   |
+| Matin, classe sans élève                 | `course-empty-class` |
+
+Exemple : `http://localhost:4200/registers?courseId=course-morning&structureId=structure-1&date=2026-10-13&startTime=08:30&endTime=11:45`.
+Les URL sont définies dans `src/mocks/datas/entry-points.ts`, avec le jeu de données (structure
+`structure-1`, mardi `2026-10-13`, classe CE1 A).
+
+Le terminal liste aussi des URL qui déclenchent chaque écran d'erreur (cours introuvable, cours
+sans prise d'appel autorisée, accès refusé, session expirée, erreur serveur, hors ligne, contexte d'URL invalide,
+prise d'appel introuvable). Les structures qui échouent sont `structure-forbidden`,
+`structure-session-expired`, `structure-server-error` et `structure-offline`.
+
+Les tests Vitest ne chargent aucune traduction (`src/mocks/i18n.ts`) : ils vérifient les clés i18n.
 
 ## Hooks git (Husky + lint-staged)
 
