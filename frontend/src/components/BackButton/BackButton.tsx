@@ -1,5 +1,5 @@
 import { ButtonBeta as Button } from '@edifice.io/react';
-import { IconRafterLeft } from '@edifice.io/react/icons';
+import { IconArrowLeft } from '@edifice.io/react/icons';
 import { useTranslation } from 'react-i18next';
 import { useGoBack } from '~/hooks/useGoBack';
 
@@ -9,8 +9,10 @@ export const BackButton = () => {
 
   return (
     <Button
+      color="tertiary"
+      variant="ghost"
       data-testid="presences-button-back"
-      leftIcon={<IconRafterLeft />}
+      leftIcon={<IconArrowLeft />}
       onClick={goBack}
     >
       {t('presences.back')}
