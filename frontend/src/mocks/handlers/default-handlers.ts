@@ -57,8 +57,9 @@ export const defaultHandlers = [
     return HttpResponse.json({
       template: '/public/template/portal.html',
       logoutCallback: '',
-      skin: '/assets/themes/fake/skins/default/',
-      themeName: 'fake-theme',
+      // 1D theme: the register targets primary schools
+      skin: '/assets/themes/fake-panda/skins/default/',
+      themeName: 'fake-panda',
       skinName: 'default',
     });
   }),
@@ -194,7 +195,7 @@ export const defaultHandlers = [
           child: 'fake-theme',
           skins: ['default', 'colorful'],
           help: '/help-fake',
-          bootstrapVersion: 'ode-bootstrap-fake',
+          bootstrapVersion: 'ode-bootstrap-neo',
           edumedia: {
             uri: 'https://www.fake-edumedia.com',
             pattern: 'uai-token-hash-[[uai]]',
@@ -215,7 +216,7 @@ export const defaultHandlers = [
             'monthly',
           ],
           help: '/help-fake-panda',
-          bootstrapVersion: 'ode-bootstrap-fake',
+          bootstrapVersion: 'ode-bootstrap-one',
           edumedia: {
             uri: 'https://junior.fake-edumedia.com',
             pattern: 'uai-token-hash-[[uai]]',
