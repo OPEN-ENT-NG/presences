@@ -1,0 +1,144 @@
+.register {
+  display: flex;
+  flex-direction: column;
+  gap: var(--primitive-spacer-16);
+  width: 100%;
+  margin-inline: auto;
+  padding-top: var(--primitive-spacer-8);
+  /* Room for the floating assistance button, over the end of the page otherwise */
+  padding-bottom: var(--primitive-spacer-8);
+}
+
+.register__heading {
+  display: flex;
+  flex-direction: column;
+  gap: var(--primitive-spacer-12);
+}
+
+.register__students {
+  display: flex;
+  flex-direction: column;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  border: 1px solid var(--color-primary-pale);
+  border-radius: var(--primitive-border-radius-xl);
+}
+
+.register__footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--primitive-spacer-16);
+}
+
+.register-student {
+  display: flex;
+  align-items: center;
+  gap: var(--primitive-spacer-16);
+  padding: var(--primitive-spacer-8) var(--primitive-spacer-16);
+}
+
+.register-student + .register-student {
+  border-top: 1px solid var(--color-primary-pale);
+}
+
+.register-student__identity {
+  display: flex;
+  flex: 1;
+  align-items: center;
+  gap: var(--primitive-spacer-12);
+  min-width: 0;
+}
+
+.register-student__name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.register-student__last-absent {
+  display: block;
+  width: 2rem;
+  height: 2rem;
+  /* Mirrored in the mockup */
+  transform: scaleX(-1);
+}
+
+.register-student__actions {
+  display: flex;
+  align-items: center;
+  gap: var(--primitive-spacer-16);
+}
+
+/* Skeleton: block modifier + element, to win over the radius of the framework blocks */
+
+.register__students--skeleton,
+.register-student--skeleton + .register-student--skeleton {
+  border-color: var(--primitive-grey-200);
+}
+
+.register--skeleton .register__skeleton-back {
+  width: 11.6rem;
+  height: 4.2rem;
+  border-radius: var(--primitive-border-radius-lg);
+}
+
+/* Text placeholders are as tall as the line height of the text they stand for */
+
+.register--skeleton .register__skeleton-title {
+  width: 32rem;
+  max-width: 100%;
+  height: var(--primitive-font-lineheight-l);
+  border-radius: var(--primitive-border-radius-md);
+}
+
+.register--skeleton .register__skeleton-text,
+.register-student--skeleton .register-student__skeleton-name {
+  width: 21.5rem;
+  max-width: 100%;
+  height: var(--primitive-font-lineheight-xs);
+  border-radius: var(--primitive-border-radius-md);
+}
+
+.register-student--skeleton .register-student__skeleton-toggle {
+  width: 16rem;
+  height: 3.8rem;
+  border-radius: var(--primitive-border-radius-lg);
+}
+
+.register-student--skeleton .register-student__skeleton-menu {
+  width: 3.6rem;
+  height: 3.6rem;
+  border-radius: var(--primitive-border-radius-lg);
+}
+
+@media (max-width: 767.98px) {
+  .register {
+    padding-inline: var(--primitive-spacer-16);
+  }
+
+  .register__footer {
+    flex-direction: column;
+    align-items: flex-end;
+  }
+
+  .register-student {
+    padding: var(--primitive-spacer-8);
+  }
+
+  /* Mobile: identity, then the buttons on their own line, aligned right */
+  .register-student--skeleton {
+    flex-direction: column;
+    align-items: stretch;
+    gap: var(--primitive-spacer-8);
+  }
+
+  .register-student--skeleton .register-student__actions {
+    justify-content: flex-end;
+  }
+
+  .register-student--skeleton:nth-child(n + 6) {
+    display: none;
+  }
+}

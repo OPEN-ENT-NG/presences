@@ -1,3 +1,4 @@
+import { QueryClient } from '@tanstack/react-query';
 import { LoaderFunctionArgs, replace } from 'react-router-dom';
 import { parseCourseContext } from '~/models/course-context';
 import { HttpError } from '~/services/api';
@@ -9,12 +10,14 @@ import { openRegister } from '~/services/register-opening';
  * The redirection replaces this intermediate URL in the history, otherwise
  * the back button would come back here, and redirect again: a loop.
  */
-export const loader = async ({ request }: LoaderFunctionArgs) => {
-  const courseContext = parseCourseContext(new URL(request.url).searchParams);
-  if (!courseContext) {
-    throw new HttpError(400, 'Invalid course context');
-  }
+export const loader =
+  (queryClient: QueryClient) =>
+  async ({ request }: LoaderFunctionArgs) => {
+    const courseContext = parseCourseContext(new URL(request.url).searchParams);
+    if (!courseContext) {
+      throw new HttpError(400, 'Invalid course context');
+    }
 
-  const registerId = await openRegister(courseContext);
-  return replace(`/registers/${registerId}`);
-};
+    const registerId = await openRegister(queryClient, courseContext);
+    return replace(`/registers/${registerId}`);
+  };

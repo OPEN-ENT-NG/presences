@@ -1,3 +1,4 @@
+import { QueryClient } from '@tanstack/react-query';
 import { HttpResponse, http } from 'msw';
 import {
   MOCK_DATE,
@@ -33,13 +34,24 @@ const recordRequests = () => {
   return requests;
 };
 
+let queryClient: QueryClient;
+
+beforeEach(() => {
+  queryClient = new QueryClient({
+    defaultOptions: { queries: { retry: false } },
+  });
+});
+
 afterEach(() => server.events.removeAllListeners());
 
 describe('openRegister', () => {
   test('creates the register when the course has none yet', async () => {
     const requests = recordRequests();
 
-    const registerId = await openRegister(contextOf('course-morning'));
+    const registerId = await openRegister(
+      queryClient,
+      contextOf('course-morning'),
+    );
 
     expect(registerId).toBe(MOCK_REGISTER_MORNING_ID);
     expect(requests).toStrictEqual([
@@ -51,29 +63,43 @@ describe('openRegister', () => {
   test('finds the existing register without writing anything', async () => {
     const requests = recordRequests();
 
-    const registerId = await openRegister(contextOf('course-afternoon'));
+    const registerId = await openRegister(
+      queryClient,
+      contextOf('course-afternoon'),
+    );
 
     expect(registerId).toBe(MOCK_REGISTER_AFTERNOON_ID);
     expect(requests).toStrictEqual([`GET ${baseUrl}/courses`]);
   });
 
+  test('keeps the courses of the day in the query cache', async () => {
+    await openRegister(queryClient, contextOf('course-afternoon'));
+
+    expect(
+      queryClient.getQueryData(['courses', MOCK_STRUCTURE_ID, MOCK_DATE]),
+    ).toStrictEqual(mockCourses);
+  });
+
   test('picks the course by its identifier among courses of the same time', async () => {
     // Two courses start at 08:30 the same day: only the identifier tells them apart
-    const registerId = await openRegister(contextOf('course-empty-class'));
+    const registerId = await openRegister(
+      queryClient,
+      contextOf('course-empty-class'),
+    );
 
     expect(registerId).toBe(MOCK_REGISTER_EMPTY_CLASS_ID);
   });
 
   test('does not create a duplicate when the register is opened twice', async () => {
-    const first = await openRegister(contextOf('course-morning'));
-    const second = await openRegister(contextOf('course-morning'));
+    const first = await openRegister(queryClient, contextOf('course-morning'));
+    const second = await openRegister(queryClient, contextOf('course-morning'));
 
     expect(second).toBe(first);
   });
 
   test('rejects with a 404 when the course is not in the day', async () => {
     await expect(
-      openRegister(contextOf('unknown-course')),
+      openRegister(queryClient, contextOf('unknown-course')),
     ).rejects.toMatchObject({ name: 'HttpError', status: 404 });
   });
 
@@ -92,7 +118,7 @@ describe('openRegister', () => {
     const requests = recordRequests();
 
     await expect(
-      openRegister(contextOf('course-morning')),
+      openRegister(queryClient, contextOf('course-morning')),
     ).rejects.toMatchObject({ name: 'HttpError', status: 403 });
     expect(requests).not.toContain(`POST ${baseUrl}/registers`);
   });
@@ -106,7 +132,7 @@ describe('openRegister', () => {
     );
 
     await expect(
-      openRegister(contextOf('course-morning')),
+      openRegister(queryClient, contextOf('course-morning')),
     ).rejects.toMatchObject({ name: 'HttpError', status: 403 });
   });
 
@@ -119,7 +145,7 @@ describe('openRegister', () => {
     );
 
     await expect(
-      openRegister(contextOf('course-morning')),
+      openRegister(queryClient, contextOf('course-morning')),
     ).rejects.toMatchObject({ name: 'HttpError', status: 500 });
   });
 });

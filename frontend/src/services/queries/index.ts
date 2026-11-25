@@ -7,4 +7,5 @@
  */
 
 export * from './actions';
+export * from './course';
 export * from './register';
