@@ -7,6 +7,7 @@ export * from './api';
  * Queries
  */
 export * from './queries/actions';
+export * from './queries/course';
 export * from './queries/register';
 
 /**

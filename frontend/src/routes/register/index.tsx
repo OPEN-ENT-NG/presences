@@ -1,11 +1,30 @@
-import { Flex, Heading } from '@edifice.io/react';
-import { QueryClient, useSuspenseQuery } from '@tanstack/react-query';
+import { Heading } from '@edifice.io/react';
+import { Suspense } from 'react';
+import { QueryClient, useQuery, useSuspenseQuery } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 import { LoaderFunctionArgs, useParams } from 'react-router-dom';
 import { BackButton } from '~/components/BackButton/BackButton';
+import {
+  RegisterFooter,
+  RegisterSkeleton,
+  StudentRow,
+  formatCourseGroups,
+  formatRegisterDay,
+  getDayPeriod,
+  readRegisterStart,
+  sortStudentsByName,
+} from '~/features/register';
+import { CourseDay, findCourse } from '~/models/course';
+import { Register as RegisterModel } from '~/models/register';
 import { HttpError } from '~/services/api';
+import { coursesQueryOptions } from '~/services/queries/course';
 import { registerQueryOptions } from '~/services/queries/register';
-import { sortStudentsByName } from './sortStudents';
+
+/** The day of the register, where its course is. */
+const courseDayOf = (register: RegisterModel): CourseDay => ({
+  structureId: register.structure_id,
+  date: readRegisterStart(register.start_date).day,
+});
 
 export const loader =
   (queryClient: QueryClient) =>
@@ -16,42 +35,63 @@ export const loader =
     }
 
     // Static: reuse the register already in the cache, fetch it otherwise
-    await queryClient.query({
+    const register = await queryClient.query({
       ...registerQueryOptions(registerId),
       staleTime: 'static',
     });
+
+    await queryClient
+      .query(coursesQueryOptions(courseDayOf(register)))
+      .catch(() => undefined);
     return null;
   };
 
-export const Register = () => {
-  const { t } = useTranslation('presences');
+const RegisterContent = () => {
+  const { t, i18n } = useTranslation('presences');
   const { registerId } = useParams();
   // Already in the cache: the loader waited for it
   const { data: register } = useSuspenseQuery(
     registerQueryOptions(Number(registerId)),
   );
+  const { data: course } = useQuery({
+    ...coursesQueryOptions(courseDayOf(register)),
+    select: (courses) => findCourse(courses, register.course_id),
+  });
 
-  // `YYYY-MM-DDTHH:mm:ss.SSS`
-  const date = register.start_date.slice(0, 10);
-  const startTime = register.start_date.slice(11, 16);
-  const endTime = register.end_date.slice(11, 16);
+  const date = formatRegisterDay(register.start_date, i18n.language);
+  const groups = course ? formatCourseGroups(course) : '';
 
   return (
-    <Flex direction="column" align="start" gap="8">
-      <Heading level="h2" headingStyle="h1">
-        {t('presences.register')}
-      </Heading>
-      <p>{t('presences.register.context', { date, startTime, endTime })}</p>
-      <Flex as="ul" direction="column" gap="4">
-        {sortStudentsByName(register.students).map(({ id, name }) => (
-          <li key={id} data-testid={`presences-label-student-${id}`}>
-            {name}
-          </li>
+    <div className="register">
+      <div>
+        <BackButton />
+      </div>
+      <div className="register__heading">
+        <Heading level="h1" headingStyle="h2">
+          {groups
+            ? t('presences.register.groups.title', { groups })
+            : t('presences.register')}
+        </Heading>
+        <p>
+          {t(`presences.register.period.${getDayPeriod(register.start_date)}`, {
+            date,
+          })}
+        </p>
+      </div>
+      <ul className="register__students">
+        {sortStudentsByName(register.students).map((student) => (
+          <StudentRow key={student.id} student={student} />
         ))}
-      </Flex>
-      <BackButton />
-    </Flex>
+      </ul>
+      <RegisterFooter />
+    </div>
   );
 };
+
+export const Register = () => (
+  <Suspense fallback={<RegisterSkeleton />}>
+    <RegisterContent />
+  </Suspense>
+);
 
 export default Register;

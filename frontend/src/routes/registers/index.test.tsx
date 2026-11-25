@@ -1,5 +1,5 @@
-import i18n from 'i18next';
 import { HttpResponse, http } from 'msw';
+import { RegisterSkeleton } from '~/features/register';
 import { RouteObject } from 'react-router-dom';
 import { mockCourses } from '~/mocks/datas/courses';
 import { renderWithRoutes } from '~/mocks/renderWithRoutes';
@@ -18,12 +18,14 @@ const routes: RouteObject[] = [
     children: [
       {
         path: 'registers',
-        loader,
+        loader: loader(queryClient),
+        HydrateFallback: RegisterSkeleton,
         errorElement: <RouteError notFound="course" />,
       },
       {
         path: 'registers/:registerId',
         loader: registerLoader(queryClient),
+        HydrateFallback: RegisterSkeleton,
         Component: Register,
         errorElement: <RouteError notFound="register" />,
       },
@@ -39,14 +41,20 @@ const errorTitle = (kind: string) =>
   screen.findByRole('heading', { name: `presences.error.${kind}.title` });
 
 const registerTitle = () =>
-  screen.findByRole('heading', { name: 'presences.register' });
+  screen.findByRole('heading', { name: 'presences.register.groups.title' });
+
+const skeleton = () =>
+  screen.queryByRole('status', { name: 'presences.register.loading.text' });
 
 beforeEach(() => {
   // The error elements log the error
   vi.spyOn(console, 'error').mockImplementation(() => {});
 });
 
-afterEach(() => queryClient.clear());
+afterEach(() => {
+  queryClient.clear();
+  server.events.removeAllListeners();
+});
 
 describe('registers entry point', () => {
   it('opens the existing register of the course', async () => {
@@ -56,20 +64,50 @@ describe('registers entry point', () => {
     expect(router.state.location.pathname).toBe('/registers/102');
   });
 
-  it('displays the day and the time of the register', async () => {
-    i18n.addResource(
-      'fr',
-      'presences',
-      'presences.register.context',
-      'Cours du [[date]] de [[startTime]] à [[endTime]]',
+  it('shows the skeleton of the page until the register is loaded', async () => {
+    // Holds the register until the test checks the second loading step
+    let releaseRegister = () => {};
+    const registerHeld = new Promise<void>((resolve) => {
+      releaseRegister = resolve;
+    });
+    let registerRequested = false;
+    server.events.on('request:start', ({ request }) => {
+      if (new URL(request.url).pathname === `${baseUrl}/registers/101`) {
+        registerRequested = true;
+      }
+    });
+    server.use(
+      http.get(`${baseUrl}/registers/:id`, async () => {
+        await registerHeld;
+      }),
     );
 
-    renderWithRoutes(routes, [entry('course-afternoon')]);
+    renderWithRoutes(routes, [entry('course-morning')]);
 
-    expect(
-      await screen.findByText('Cours du 2026-10-13 de 13:30 à 16:30'),
-    ).toBeInTheDocument();
-    i18n.removeResourceBundle('fr', 'presences');
+    // Opening: reading the day and creating the register
+    expect(skeleton()).toBeInTheDocument();
+    // Loading the register, after the redirection
+    await waitFor(() => expect(registerRequested).toBe(true));
+    expect(skeleton()).toBeInTheDocument();
+
+    releaseRegister();
+
+    expect(await registerTitle()).toBeInTheDocument();
+    expect(skeleton()).not.toBeInTheDocument();
+  });
+
+  it('reads the courses of the day only once to open the register', async () => {
+    let coursesRequests = 0;
+    server.events.on('request:start', ({ request }) => {
+      if (new URL(request.url).pathname === `${baseUrl}/courses`) {
+        coursesRequests++;
+      }
+    });
+
+    renderWithRoutes(routes, [entry('course-morning')]);
+    await registerTitle();
+
+    expect(coursesRequests).toBe(1);
   });
 
   it('creates the register when the course has none yet', async () => {

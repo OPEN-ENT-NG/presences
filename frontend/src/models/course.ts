@@ -29,3 +29,16 @@ export interface CourseTeacher {
   id: string;
   displayName: string;
 }
+
+/** A day of courses in a structure: what the courses API is asked for. */
+export interface CourseDay {
+  structureId: string;
+  /** `YYYY-MM-DD` */
+  date: string;
+}
+
+/** Picks a course in its day, by identifier. */
+export const findCourse = (
+  courses: Course[],
+  courseId: string,
+): Course | undefined => courses.find((course) => course.id === courseId);
